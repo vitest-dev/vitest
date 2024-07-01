@@ -27,16 +27,17 @@ const colorsMap = {
   bgWhite: ['\x1B[47m', '\x1B[49m'],
 } as const
 
-type ColorName = keyof typeof colorsMap
-type ColorsMethods = {
-  [Key in ColorName]: {
-    (input: unknown): string
-    open: string
-    close: string
-  }
+export type ColorName = keyof typeof colorsMap
+export interface ColorMethod {
+  (input: unknown): string
+  open: string
+  close: string
+}
+export type ColorsMethods = {
+  [Key in ColorName]: ColorMethod;
 }
 
-type Colors = ColorsMethods & {
+export type Colors = ColorsMethods & {
   isColorSupported: boolean
   reset: (input: unknown) => string
 }
@@ -49,10 +50,13 @@ function string(str: unknown) {
 string.open = ''
 string.close = ''
 
-const defaultColors = /* #__PURE__ */ colorsEntries.reduce((acc, [key]) => {
-  acc[key as ColorName] = string
-  return acc
-}, { isColorSupported: false } as Colors)
+const defaultColors = /* #__PURE__ */ colorsEntries.reduce(
+  (acc, [key]) => {
+    acc[key as ColorName] = string
+    return acc
+  },
+  { isColorSupported: false } as Colors,
+)
 
 export function getDefaultColors(): Colors {
   return { ...defaultColors }
@@ -63,7 +67,8 @@ export function getColors(): Colors {
 }
 
 export function createColors(isTTY = false): Colors {
-  const enabled = typeof process !== 'undefined'
+  const enabled
+    = typeof process !== 'undefined'
     && !('NO_COLOR' in process.env || process.argv.includes('--no-color'))
     && !('GITHUB_ACTIONS' in process.env)
     && ('FORCE_COLOR' in process.env
@@ -72,11 +77,20 @@ export function createColors(isTTY = false): Colors {
     || (isTTY && process.env.TERM !== 'dumb')
     || 'CI' in process.env)
 
-  const replaceClose = (string: string, close: string, replace: string, index: number): string => {
-    const start = string.substring(0, index) + replace
-    const end = string.substring(index + close.length)
-    const nextIndex = end.indexOf(close)
-    return ~nextIndex ? start + replaceClose(end, close, replace, nextIndex) : start + end
+  const replaceClose = (
+    string: string,
+    close: string,
+    replace: string,
+    index: number,
+  ): string => {
+    let result = ''
+    let cursor = 0
+    do {
+      result += string.substring(cursor, index) + replace
+      cursor = index + close.length
+      index = string.indexOf(close, cursor)
+    } while (~index)
+    return result + string.substring(cursor)
   }
 
   const formatter = (open: string, close: string, replace = open) => {
@@ -100,7 +114,7 @@ export function createColors(isTTY = false): Colors {
 
   for (const [name, formatterArgs] of colorsEntries) {
     colorsObject[name as ColorName] = enabled
-      ? formatter(...formatterArgs as [string, string])
+      ? formatter(...(formatterArgs as [string, string]))
       : string
   }
 

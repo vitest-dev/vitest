@@ -1,16 +1,47 @@
 import { Writable } from 'node:stream'
 import { Console } from 'node:console'
-import { getSafeTimers } from '@vitest/utils'
+import { relative } from 'node:path'
+import { getColors, getSafeTimers } from '@vitest/utils'
 import { RealDate } from '../integrations/mock/date'
+import { getWorkerState } from '../utils'
 import type { WorkerGlobalState } from '../types'
 
-export function createCustomConsole(state: WorkerGlobalState) {
+export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
+
+function getTaskIdByStack(root: string) {
+  const stack = new Error('STACK_TRACE_ERROR').stack?.split('\n')
+
+  if (!stack) {
+    return UNKNOWN_TEST_ID
+  }
+
+  const index = stack.findIndex(line => line.includes('at Console.value'))
+  const line = index === -1 ? null : stack[index + 2]
+
+  if (!line) {
+    return UNKNOWN_TEST_ID
+  }
+
+  const filepath = line.match(/at\s(.*)\s?/)?.[1]
+
+  if (filepath) {
+    return relative(root, filepath)
+  }
+
+  return UNKNOWN_TEST_ID
+}
+
+export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
-  const timers = new Map<string, { stdoutTime: number; stderrTime: number; timer: any }>()
-  const unknownTestId = '__vitest__unknown_test__'
+  const timers = new Map<
+    string,
+    { stdoutTime: number; stderrTime: number; timer: any }
+  >()
 
   const { setTimeout, clearTimeout } = getSafeTimers()
+
+  const state = () => defaultState || getWorkerState()
 
   // group sync console.log calls with macro task
   function schedule(taskId: string) {
@@ -29,47 +60,75 @@ export function createCustomConsole(state: WorkerGlobalState) {
     })
   }
   function sendStdout(taskId: string) {
-    const buffer = stdoutBuffer.get(taskId)
-    if (!buffer)
-      return
-    const content = buffer.map(i => String(i)).join('')
-    const timer = timers.get(taskId)!
-    state.rpc.onUserConsoleLog({
-      type: 'stdout',
-      content: content || '<empty line>',
-      taskId,
-      time: timer.stdoutTime || RealDate.now(),
-      size: buffer.length,
-    })
-    stdoutBuffer.set(taskId, [])
-    timer.stdoutTime = 0
+    sendBuffer('stdout', taskId)
   }
+
   function sendStderr(taskId: string) {
-    const buffer = stderrBuffer.get(taskId)
-    if (!buffer)
+    sendBuffer('stderr', taskId)
+  }
+
+  function sendBuffer(type: 'stdout' | 'stderr', taskId: string) {
+    const buffers = type === 'stdout' ? stdoutBuffer : stderrBuffer
+    const buffer = buffers.get(taskId)
+    if (!buffer) {
       return
-    const content = buffer.map(i => String(i)).join('')
+    }
+    if (state().config.printConsoleTrace) {
+      buffer.forEach(([buffer, origin]) => {
+        sendLog(type, taskId, String(buffer), buffer.length, origin)
+      })
+    }
+    else {
+      const content = buffer.map(i => String(i[0])).join('')
+      sendLog(type, taskId, content, buffer.length)
+    }
     const timer = timers.get(taskId)!
-    state.rpc.onUserConsoleLog({
-      type: 'stderr',
+    buffers.set(taskId, [])
+    if (type === 'stderr') {
+      timer.stderrTime = 0
+    }
+    else {
+      timer.stdoutTime = 0
+    }
+  }
+
+  function sendLog(
+    type: 'stderr' | 'stdout',
+    taskId: string,
+    content: string,
+    size: number,
+    origin?: string,
+  ) {
+    const timer = timers.get(taskId)!
+    const time = type === 'stderr' ? timer.stderrTime : timer.stdoutTime
+    state().rpc.onUserConsoleLog({
+      type,
       content: content || '<empty line>',
       taskId,
-      time: timer.stderrTime || RealDate.now(),
-      size: buffer.length,
+      time: time || RealDate.now(),
+      size,
+      origin,
     })
-    stderrBuffer.set(taskId, [])
-    timer.stderrTime = 0
   }
 
   const stdout = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? unknownTestId
+      const s = state()
+      const id
+        = s?.current?.id
+        || s?.current?.suite?.id
+        || s.current?.file.id
+        || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
       }
       else {
-        timer = { stdoutTime: RealDate.now(), stderrTime: RealDate.now(), timer: 0 }
+        timer = {
+          stdoutTime: RealDate.now(),
+          stderrTime: RealDate.now(),
+          timer: 0,
+        }
         timers.set(id, timer)
       }
       let buffer = stdoutBuffer.get(id)
@@ -77,20 +136,39 @@ export function createCustomConsole(state: WorkerGlobalState) {
         buffer = []
         stdoutBuffer.set(id, buffer)
       }
-      buffer.push(data)
+      if (state().config.printConsoleTrace) {
+        const limit = Error.stackTraceLimit
+        Error.stackTraceLimit = limit + 6
+        const stack = new Error('STACK_TRACE').stack
+        const trace = stack?.split('\n').slice(7).join('\n')
+        Error.stackTraceLimit = limit
+        buffer.push([data, trace])
+      }
+      else {
+        buffer.push([data, undefined])
+      }
       schedule(id)
       callback()
     },
   })
   const stderr = new Writable({
     write(data, encoding, callback) {
-      const id = state?.current?.id ?? unknownTestId
+      const s = state()
+      const id
+        = s?.current?.id
+        || s?.current?.suite?.id
+        || s.current?.file.id
+        || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
       }
       else {
-        timer = { stderrTime: RealDate.now(), stdoutTime: RealDate.now(), timer: 0 }
+        timer = {
+          stderrTime: RealDate.now(),
+          stdoutTime: RealDate.now(),
+          timer: 0,
+        }
         timers.set(id, timer)
       }
       let buffer = stderrBuffer.get(id)
@@ -98,7 +176,26 @@ export function createCustomConsole(state: WorkerGlobalState) {
         buffer = []
         stderrBuffer.set(id, buffer)
       }
-      buffer.push(data)
+      if (state().config.printConsoleTrace) {
+        const limit = Error.stackTraceLimit
+        Error.stackTraceLimit = limit + 6
+        const stack = new Error('STACK_TRACE').stack?.split('\n')
+        Error.stackTraceLimit = limit
+        const isTrace = stack?.some(line =>
+          line.includes('at Console.trace'),
+        )
+        if (isTrace) {
+          buffer.push([data, undefined])
+        }
+        else {
+          const trace = stack?.slice(7).join('\n')
+          Error.stackTraceLimit = limit
+          buffer.push([data, trace])
+        }
+      }
+      else {
+        buffer.push([data, undefined])
+      }
       schedule(id)
       callback()
     },
@@ -106,7 +203,7 @@ export function createCustomConsole(state: WorkerGlobalState) {
   return new Console({
     stdout,
     stderr,
-    colorMode: true,
+    colorMode: getColors().isColorSupported,
     groupIndentation: 2,
   })
 }

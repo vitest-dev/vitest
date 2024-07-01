@@ -1,12 +1,12 @@
-import { importModule } from 'local-pkg'
 import type { Environment } from '../../types'
 import { populateGlobal } from './utils'
+import { KEYS } from './jsdom-keys'
 
-export default <Environment>({
+export default <Environment>{
   name: 'edge-runtime',
   transformMode: 'ssr',
   async setupVM() {
-    const { EdgeVM } = await importModule('@edge-runtime/vm') as typeof import('@edge-runtime/vm')
+    const { EdgeVM } = await import('@edge-runtime/vm')
     const vm = new EdgeVM({
       extend: (context) => {
         context.global = context
@@ -24,20 +24,27 @@ export default <Environment>({
     }
   },
   async setup(global) {
-    const { EdgeVM } = await importModule('@edge-runtime/vm') as typeof import('@edge-runtime/vm')
+    const { EdgeVM } = await import('@edge-runtime/vm')
     const vm = new EdgeVM({
       extend: (context) => {
         context.global = context
         context.Buffer = Buffer
+        KEYS.forEach((key) => {
+          if (key in global) {
+            context[key] = global[key]
+          }
+        })
         return context
       },
     })
-    const { keys, originals } = populateGlobal(global, vm.context, { bindFunctions: true })
+    const { keys, originals } = populateGlobal(global, vm.context, {
+      bindFunctions: true,
+    })
     return {
       teardown(global) {
         keys.forEach(key => delete global[key])
-        originals.forEach((v, k) => global[k] = v)
+        originals.forEach((v, k) => (global[k] = v))
       },
     }
   },
-})
+}

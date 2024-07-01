@@ -5,19 +5,32 @@
  * LICENSE file in the root directory of facebook/jest GitHub project tree.
  */
 
-import { cpus } from 'node:os'
+import * as nodeos from 'node:os'
 import type { ResolvedConfig } from '../types'
 
 function getDefaultThreadsCount(config: ResolvedConfig) {
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
+
   return config.watch
-    ? Math.max(Math.floor(cpus().length / 2), 1)
-    : Math.max(cpus().length - 1, 1)
+    ? Math.max(Math.floor(numCpus / 2), 1)
+    : Math.max(numCpus - 1, 1)
 }
 
 export function getWorkerMemoryLimit(config: ResolvedConfig) {
-  if (config.experimentalVmWorkerMemoryLimit)
-    return config.experimentalVmWorkerMemoryLimit
-  return 1 / (config.maxThreads ?? getDefaultThreadsCount(config))
+  const memoryLimit = config.poolOptions?.vmThreads?.memoryLimit
+
+  if (memoryLimit) {
+    return memoryLimit
+  }
+
+  return (
+    1
+    / (config.poolOptions?.vmThreads?.maxThreads
+    ?? getDefaultThreadsCount(config))
+  )
 }
 
 /**
@@ -30,13 +43,15 @@ export function stringToBytes(
   input: string | number | null | undefined,
   percentageReference?: number,
 ): number | null | undefined {
-  if (input === null || input === undefined)
+  if (input === null || input === undefined) {
     return input
+  }
 
   if (typeof input === 'string') {
     if (Number.isNaN(Number.parseFloat(input.slice(-1)))) {
       let [, numericString, trailingChars]
-        = input.match(/(.*?)([^0-9.-]+)$/i) || []
+        // eslint-disable-next-line regexp/no-super-linear-backtracking
+        = input.match(/(.*?)([^0-9.-]+)$/) || []
 
       if (trailingChars && numericString) {
         const numericValue = Number.parseFloat(numericString)
@@ -86,7 +101,7 @@ export function stringToBytes(
       return Math.floor(input)
     }
     else {
-      throw new Error('Unexpected numerical input for "experimentalVmWorkerMemoryLimit"')
+      throw new Error('Unexpected numerical input for "memoryLimit"')
     }
   }
 

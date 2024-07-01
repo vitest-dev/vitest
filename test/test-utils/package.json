@@ -1,5 +1,6 @@
 {
-  "name": "@vitest/test-utils",
+  "name": "@vitest/internal-testing-helpers",
+  "type": "module",
   "private": true,
   "main": "./index.ts",
   "scripts": {

@@ -5,6 +5,8 @@ describe('jest mock compat layer', () => {
 
   const r = returnFactory('return')
   const e = returnFactory('throw')
+  const f = returnFactory('fulfilled')
+  const h = returnFactory('rejected')
 
   it('works with name', () => {
     const spy = vi.fn()
@@ -41,6 +43,35 @@ describe('jest mock compat layer', () => {
     expect(Spy.mock.instances).toHaveLength(0)
   })
 
+  it('collects contexts', () => {
+    // eslint-disable-next-line prefer-arrow-callback
+    const Spy = vi.fn(function () {})
+
+    expect(Spy.mock.contexts).toHaveLength(0)
+    const ctx = new Spy()
+    expect(Spy.mock.contexts).toHaveLength(1)
+    expect(Spy.mock.contexts[0]).toBe(ctx)
+
+    Spy.mockReset()
+
+    expect(Spy.mock.contexts).toHaveLength(0)
+
+    const ctx2 = {}
+    Spy.call(ctx2)
+    expect(Spy.mock.contexts).toHaveLength(1)
+    expect(Spy.mock.contexts[0]).toBe(ctx2)
+
+    Spy.bind(ctx2)()
+
+    expect(Spy.mock.contexts).toHaveLength(2)
+    expect(Spy.mock.contexts[1]).toBe(ctx2)
+
+    Spy.apply(ctx2)
+
+    expect(Spy.mock.contexts).toHaveLength(3)
+    expect(Spy.mock.contexts[2]).toBe(ctx2)
+  })
+
   it('implementation is set correctly on init', () => {
     const impl = () => 1
     const mock1 = vi.fn(impl)
@@ -50,6 +81,27 @@ describe('jest mock compat layer', () => {
     const mock2 = vi.fn()
 
     expect(mock2.getMockImplementation()).toBeUndefined()
+  })
+
+  it('implementation types allow only function returned types', () => {
+    function fn() {
+      return 1
+    }
+
+    function asyncFn() {
+      return Promise.resolve(1)
+    }
+
+    const mock1 = vi.fn(fn)
+    const mock2 = vi.fn(asyncFn)
+
+    mock1.mockImplementation(() => 2)
+    // @ts-expect-error promise is not allowed
+    mock1.mockImplementation(() => Promise.resolve(2))
+
+    // @ts-expect-error non-promise is not allowed
+    mock2.mockImplementation(() => 2)
+    mock2.mockImplementation(() => Promise.resolve(2))
   })
 
   it('implementation sync fn', () => {
@@ -131,12 +183,12 @@ describe('jest mock compat layer', () => {
     await spy()
     await spy()
 
-    expect(spy.mock.results).toEqual([
-      r('original'),
-      r('3-once'),
-      r('4-once'),
-      r('unlimited'),
-      r('unlimited'),
+    expect(spy.mock.settledResults).toEqual([
+      f('original'),
+      f('3-once'),
+      f('4-once'),
+      f('unlimited'),
+      f('unlimited'),
     ])
   })
 
@@ -296,8 +348,12 @@ describe('jest mock compat layer', () => {
     await safeCall(spy)
     await safeCall(spy)
 
-    expect(spy.mock.results[0]).toEqual(e(new Error('once')))
-    expect(spy.mock.results[1]).toEqual(e(new Error('error')))
+    expect(spy.mock.results[0]).toEqual({
+      type: 'return',
+      value: expect.any(Promise),
+    })
+    expect(spy.mock.settledResults[0]).toEqual(h(new Error('once')))
+    expect(spy.mock.settledResults[1]).toEqual(h(new Error('error')))
   })
   it('mockResolvedValue', async () => {
     const spy = vi.fn()
@@ -307,8 +363,12 @@ describe('jest mock compat layer', () => {
     await spy()
     await spy()
 
-    expect(spy.mock.results[0]).toEqual(r('once'))
-    expect(spy.mock.results[1]).toEqual(r('resolved'))
+    expect(spy.mock.results[0]).toEqual({
+      type: 'return',
+      value: expect.any(Promise),
+    })
+    expect(spy.mock.settledResults[0]).toEqual(f('once'))
+    expect(spy.mock.settledResults[1]).toEqual(f('resolved'))
   })
 
   it('tracks instances made by mocks', () => {

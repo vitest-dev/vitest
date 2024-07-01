@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     reporters: 'verbose',
     include: ['test/**/*.test.*'],
+    pool: 'forks',
     chaiConfig: {
       truncateThreshold: 0,
     },
@@ -12,6 +13,10 @@ export default defineConfig({
     testTimeout: process.env.CI ? 60_000 : 10_000,
 
     // Test cases may have side effects, e.g. files under fixtures/ are modified on the fly to trigger file watchers
-    singleThread: true,
+    fileParallelism: false,
+
+    // TODO: Fix flakiness and remove
+    allowOnly: true,
+    bail: 1,
   },
 })

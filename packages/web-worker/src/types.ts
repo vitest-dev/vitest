@@ -12,7 +12,10 @@ export interface InlineWorkerContext {
   dispatchEvent: (e: Event) => void
   addEventListener: (e: string, fn: Procedure) => void
   removeEventListener: (e: string, fn: Procedure) => void
-  postMessage: (data: any, transfer?: Transferable[] | StructuredSerializeOptions) => void
+  postMessage: (
+    data: any,
+    transfer?: Transferable[] | StructuredSerializeOptions
+  ) => void
   self: InlineWorkerContext
   global: InlineWorkerContext
   importScripts?: any

@@ -1,34 +1,37 @@
-import { relative } from 'pathe'
 import { processError } from '@vitest/utils/error'
-import type { File } from './types'
+import type { File, SuiteHooks } from './types'
 import type { VitestRunner } from './types/runner'
-import { calculateSuiteHash, generateHash, interpretTaskModes, someTasksAreOnly } from './utils/collect'
-import { clearCollectorContext, getDefaultSuite } from './suite'
+import {
+  calculateSuiteHash,
+  createFileTask,
+  interpretTaskModes,
+  someTasksAreOnly,
+} from './utils/collect'
+import {
+  clearCollectorContext,
+  createSuiteHooks,
+  getDefaultSuite,
+} from './suite'
 import { getHooks, setHooks } from './map'
 import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
 const now = Date.now
 
-export async function collectTests(paths: string[], runner: VitestRunner): Promise<File[]> {
+export async function collectTests(
+  paths: string[],
+  runner: VitestRunner,
+): Promise<File[]> {
   const files: File[] = []
 
   const config = runner.config
 
   for (const filepath of paths) {
-    const path = relative(config.root, filepath)
-    const file: File = {
-      id: generateHash(`${path}${config.name || ''}`),
-      name: path,
-      type: 'suite',
-      mode: 'run',
-      filepath,
-      tasks: [],
-      meta: Object.create(null),
-      projectName: config.name,
-    }
+    const file = createFileTask(filepath, config.root, config.name, runner.pool)
 
-    clearCollectorContext(runner)
+    runner.onCollectStart?.(file)
+
+    clearCollectorContext(filepath, runner)
 
     try {
       const setupStart = now()
@@ -41,31 +44,33 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
 
       const defaultTasks = await getDefaultSuite().collect(file)
 
-      setHooks(file, getHooks(defaultTasks))
+      const fileHooks = createSuiteHooks()
+      mergeHooks(fileHooks, getHooks(defaultTasks))
 
       for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
-        if (c.type === 'test') {
-          file.tasks.push(c)
-        }
-        else if (c.type === 'custom') {
-          file.tasks.push(c)
-        }
-        else if (c.type === 'suite') {
+        if (c.type === 'test' || c.type === 'custom' || c.type === 'suite') {
           file.tasks.push(c)
         }
         else if (c.type === 'collector') {
           const suite = await c.collect(file)
-          if (suite.name || suite.tasks.length)
+          if (suite.name || suite.tasks.length) {
+            mergeHooks(fileHooks, getHooks(suite))
             file.tasks.push(suite)
+          }
+        }
+        else {
+          // check that types are exhausted
+          c satisfies never
         }
       }
+
+      setHooks(file, fileHooks)
       file.collectDuration = now() - collectStart
     }
     catch (e) {
       const error = processError(e)
       file.result = {
         state: 'fail',
-        error,
         errors: [error],
       }
     }
@@ -73,10 +78,32 @@ export async function collectTests(paths: string[], runner: VitestRunner): Promi
     calculateSuiteHash(file)
 
     const hasOnlyTasks = someTasksAreOnly(file)
-    interpretTaskModes(file, config.testNamePattern, hasOnlyTasks, false, config.allowOnly)
+    interpretTaskModes(
+      file,
+      config.testNamePattern,
+      hasOnlyTasks,
+      false,
+      config.allowOnly,
+    )
 
+    file.tasks.forEach((task) => {
+      // task.suite refers to the internal default suite object
+      // it should not be reported
+      if (task.suite?.id === '') {
+        delete task.suite
+      }
+    })
     files.push(file)
   }
 
   return files
+}
+
+function mergeHooks(baseHooks: SuiteHooks, hooks: SuiteHooks): SuiteHooks {
+  for (const _key in hooks) {
+    const key = _key as keyof SuiteHooks
+    baseHooks[key].push(...(hooks[key] as any))
+  }
+
+  return baseHooks
 }

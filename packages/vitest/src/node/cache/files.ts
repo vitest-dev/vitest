@@ -21,16 +21,18 @@ export class FilesStatsCache {
   }
 
   public async updateStats(fsPath: string, key: string) {
-    if (!fs.existsSync(fsPath))
+    if (!fs.existsSync(fsPath)) {
       return
+    }
     const stats = await fs.promises.stat(fsPath)
     this.cache.set(key, { size: stats.size })
   }
 
   public removeStats(fsPath: string) {
     this.cache.forEach((_, key) => {
-      if (key.endsWith(fsPath))
+      if (key.endsWith(fsPath)) {
         this.cache.delete(key)
+      }
     })
   }
 }

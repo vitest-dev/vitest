@@ -1,0 +1,21 @@
+{
+  "name": "@vitest/test-cli",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.12",
+    "@types/ws": "^8.5.9",
+    "@vitejs/plugin-basic-ssl": "^1.0.2",
+    "@vitest/runner": "workspace:^",
+    "@vitest/utils": "workspace:*",
+    "debug": "^4.3.4",
+    "execa": "^8.0.1",
+    "unplugin-swc": "^1.4.4",
+    "vite": "latest",
+    "vitest": "workspace:*",
+    "ws": "^8.14.2"
+  }
+}

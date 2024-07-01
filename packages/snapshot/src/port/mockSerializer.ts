@@ -24,21 +24,21 @@ export const serialize: NewPlugin['serialize'] = (
   let callsString = ''
   if (val.mock.calls.length !== 0) {
     const indentationNext = indentation + config.indent
-    callsString
-       = ` {${
-       config.spacingOuter
-       }${indentationNext
-       }"calls": ${
-       printer(val.mock.calls, config, indentationNext, depth, refs)
-       }${config.min ? ', ' : ','
-       }${config.spacingOuter
-       }${indentationNext
-       }"results": ${
-       printer(val.mock.results, config, indentationNext, depth, refs)
-       }${config.min ? '' : ','
-       }${config.spacingOuter
-       }${indentation
-       }}`
+    callsString = ` {${config.spacingOuter}${indentationNext}"calls": ${printer(
+      val.mock.calls,
+      config,
+      indentationNext,
+      depth,
+      refs,
+    )}${config.min ? ', ' : ','}${
+      config.spacingOuter
+    }${indentationNext}"results": ${printer(
+      val.mock.results,
+      config,
+      indentationNext,
+      depth,
+      refs,
+    )}${config.min ? '' : ','}${config.spacingOuter}${indentation}}`
   }
 
   return `[MockFunction${nameString}]${callsString}`

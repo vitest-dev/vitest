@@ -1,5 +1,6 @@
-import { getColors, stringify } from '@vitest/utils'
-import type { MatcherHintOptions } from './types'
+import { getColors, getType, stringify } from '@vitest/utils'
+import type { MatcherHintOptions, Tester } from './types'
+import { JEST_MATCHERS_OBJECT } from './constants'
 
 export { diff } from '@vitest/utils/diff'
 export { stringify }
@@ -48,12 +49,12 @@ export function getMatcherUtils() {
     }
 
     if (matcherName.includes('.')) {
-    // Old format: for backward compatibility,
-    // especially without promise or isNot options
+      // Old format: for backward compatibility,
+      // especially without promise or isNot options
       dimString += matcherName
     }
     else {
-    // New format: omit period from matcherName arg
+      // New format: omit period from matcherName arg
       hint += DIM_COLOR(`${dimString}.`) + matcherName
       dimString = ''
     }
@@ -63,16 +64,19 @@ export function getMatcherUtils() {
     }
     else {
       hint += DIM_COLOR(`${dimString}(`) + expectedColor(expected)
-      if (secondArgument)
+      if (secondArgument) {
         hint += DIM_COLOR(', ') + secondArgumentColor(secondArgument)
+      }
       dimString = ')'
     }
 
-    if (comment !== '')
+    if (comment !== '') {
       dimString += ` // ${comment}`
+    }
 
-    if (dimString !== '')
+    if (dimString !== '') {
       hint += DIM_COLOR(dimString)
+    }
 
     return hint
   }
@@ -100,4 +104,22 @@ export function getMatcherUtils() {
     printReceived,
     printExpected,
   }
+}
+
+export function addCustomEqualityTesters(newTesters: Array<Tester>): void {
+  if (!Array.isArray(newTesters)) {
+    throw new TypeError(
+      `expect.customEqualityTesters: Must be set to an array of Testers. Was given "${getType(
+        newTesters,
+      )}"`,
+    )
+  }
+
+  (globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters.push(
+    ...newTesters,
+  )
+}
+
+export function getCustomEqualityTesters(): Array<Tester> {
+  return (globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters
 }

@@ -1,0 +1,174 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index 4f7e3bc8d1bba4feb51044ff9eb77b41f972f957..0000000000000000000000000000000000000000
+diff --git a/index.d.ts b/index.d.ts
+index ee7b286844f2bf96357218166e26e1c338f774cf..657531b7c75f43e9a4e957dd1f10797e44da5bb1 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -1,5 +1,7 @@
+ /// <reference types="node" />
+ 
++// Patch applied: https://github.com/istanbuljs/v8-to-istanbul/pull/244
++
+ import { Profiler } from 'inspector'
+ import { CoverageMapData } from 'istanbul-lib-coverage'
+ import { SourceMapInput } from '@jridgewell/trace-mapping'
+@@ -20,6 +22,6 @@ declare class V8ToIstanbul {
+   toIstanbul(): CoverageMapData
+ }
+ 
+-declare function v8ToIstanbul(scriptPath: string, wrapperLength?: number, sources?: Sources, excludePath?: (path: string) => boolean): V8ToIstanbul
++declare function v8ToIstanbul(scriptPath: string, wrapperLength?: number, sources?: Sources, excludePath?: (path: string) => boolean, excludeEmptyLines?: boolean): V8ToIstanbul
+ 
+ export = v8ToIstanbul
+diff --git a/index.js b/index.js
+index 4db27a7d84324d0e6605c5506e3eee5665ddfeb0..7bfb839634b1e3c54efedc3c270d82edc4167a64 100644
+--- a/index.js
++++ b/index.js
+@@ -1,5 +1,6 @@
++// Patch applied: https://github.com/istanbuljs/v8-to-istanbul/pull/244
+ const V8ToIstanbul = require('./lib/v8-to-istanbul')
+ 
+-module.exports = function (path, wrapperLength, sources, excludePath) {
+-  return new V8ToIstanbul(path, wrapperLength, sources, excludePath)
++module.exports = function (path, wrapperLength, sources, excludePath, excludeEmptyLines) {
++  return new V8ToIstanbul(path, wrapperLength, sources, excludePath, excludeEmptyLines)
+ }
+diff --git a/lib/source.js b/lib/source.js
+index d8ebc215f6ad83d472abafe976935acfe5c61b04..021fd2aed1f73ebb4adc449ce6e96f2d89c295a5 100644
+--- a/lib/source.js
++++ b/lib/source.js
+@@ -1,23 +1,32 @@
++// Patch applied: https://github.com/istanbuljs/v8-to-istanbul/pull/244
+ const CovLine = require('./line')
+ const { sliceRange } = require('./range')
+-const { originalPositionFor, generatedPositionFor, GREATEST_LOWER_BOUND, LEAST_UPPER_BOUND } = require('@jridgewell/trace-mapping')
++const { originalPositionFor, generatedPositionFor, eachMapping, GREATEST_LOWER_BOUND, LEAST_UPPER_BOUND } = require('@jridgewell/trace-mapping')
+ 
+ module.exports = class CovSource {
+-  constructor (sourceRaw, wrapperLength) {
++  constructor (sourceRaw, wrapperLength, traceMap) {
+     sourceRaw = sourceRaw ? sourceRaw.trimEnd() : ''
+     this.lines = []
+     this.eof = sourceRaw.length
+     this.shebangLength = getShebangLength(sourceRaw)
+     this.wrapperLength = wrapperLength - this.shebangLength
+-    this._buildLines(sourceRaw)
++    this._buildLines(sourceRaw, traceMap)
+   }
+ 
+-  _buildLines (source) {
++  _buildLines (source, traceMap) {
+     let position = 0
+     let ignoreCount = 0
+     let ignoreAll = false
++    const linesToCover = traceMap && this._parseLinesToCover(traceMap)
++
+     for (const [i, lineStr] of source.split(/(?<=\r?\n)/u).entries()) {
+-      const line = new CovLine(i + 1, position, lineStr)
++      const lineNumber = i + 1
++      const line = new CovLine(lineNumber, position, lineStr)
++
++      if (linesToCover && !linesToCover.has(lineNumber)) {
++        line.ignore = true
++      }
++
+       if (ignoreCount > 0) {
+         line.ignore = true
+         ignoreCount--
+@@ -125,6 +134,18 @@ module.exports = class CovSource {
+     if (this.lines[line - 1] === undefined) return this.eof
+     return Math.min(this.lines[line - 1].startCol + relCol, this.lines[line - 1].endCol)
+   }
++
++  _parseLinesToCover (traceMap) {
++    const linesToCover = new Set()
++
++    eachMapping(traceMap, (mapping) => {
++      if (mapping.originalLine !== null) {
++        linesToCover.add(mapping.originalLine)
++      }
++    })
++
++    return linesToCover
++  }
+ }
+ 
+ // this implementation is pulled over from istanbul-lib-sourcemap:
+diff --git a/lib/v8-to-istanbul.js b/lib/v8-to-istanbul.js
+index 3616437b00658861dc5a8910c64d1449e9fdf467..4642ca4818ce982e2f186abe4289793768e7cdf9 100644
+--- a/lib/v8-to-istanbul.js
++++ b/lib/v8-to-istanbul.js
+@@ -1,3 +1,4 @@
++// Patch applied: https://github.com/istanbuljs/v8-to-istanbul/pull/244
+ const assert = require('assert')
+ const convertSourceMap = require('convert-source-map')
+ const util = require('util')
+@@ -8,14 +9,9 @@ const CovBranch = require('./branch')
+ const CovFunction = require('./function')
+ const CovSource = require('./source')
+ const { sliceRange } = require('./range')
+-const compatError = Error(`requires Node.js ${require('../package.json').engines.node}`)
+-const { readFileSync } = require('fs')
+-let readFile = () => { throw compatError }
+-try {
+-  readFile = require('fs').promises.readFile
+-} catch (_err) {
+-  // most likely we're on an older version of Node.js.
+-}
++const { readFileSync, promises } = require('fs')
++const readFile = promises.readFile
++
+ const { TraceMap } = require('@jridgewell/trace-mapping')
+ const isOlderNode10 = /^v10\.(([0-9]\.)|(1[0-5]\.))/u.test(process.version)
+ const isNode8 = /^v8\./.test(process.version)
+@@ -25,12 +21,13 @@ const isNode8 = /^v8\./.test(process.version)
+ const cjsWrapperLength = isOlderNode10 ? require('module').wrapper[0].length : 0
+ 
+ module.exports = class V8ToIstanbul {
+-  constructor (scriptPath, wrapperLength, sources, excludePath) {
++  constructor (scriptPath, wrapperLength, sources, excludePath, excludeEmptyLines) {
+     assert(typeof scriptPath === 'string', 'scriptPath must be a string')
+     assert(!isNode8, 'This module does not support node 8 or lower, please upgrade to node 10')
+     this.path = parsePath(scriptPath)
+     this.wrapperLength = wrapperLength === undefined ? cjsWrapperLength : wrapperLength
+     this.excludePath = excludePath || (() => false)
++    this.excludeEmptyLines = excludeEmptyLines === true
+     this.sources = sources || {}
+     this.generatedLines = []
+     this.branches = {}
+@@ -58,8 +55,8 @@ module.exports = class V8ToIstanbul {
+         if (!this.sourceMap.sourcesContent) {
+           this.sourceMap.sourcesContent = await this.sourcesContentFromSources()
+         }
+-        this.covSources = this.sourceMap.sourcesContent.map((rawSource, i) => ({ source: new CovSource(rawSource, this.wrapperLength), path: this.sourceMap.sources[i] }))
+-        this.sourceTranspiled = new CovSource(rawSource, this.wrapperLength)
++        this.covSources = this.sourceMap.sourcesContent.map((rawSource, i) => ({ source: new CovSource(rawSource, this.wrapperLength, this.excludeEmptyLines ? this.sourceMap : null), path: this.sourceMap.sources[i] }))
++        this.sourceTranspiled = new CovSource(rawSource, this.wrapperLength, this.excludeEmptyLines ? this.sourceMap : null)
+       } else {
+         const candidatePath = this.rawSourceMap.sourcemap.sources.length >= 1 ? this.rawSourceMap.sourcemap.sources[0] : this.rawSourceMap.sourcemap.file
+         this.path = this._resolveSource(this.rawSourceMap, candidatePath || this.path)
+@@ -82,8 +79,8 @@ module.exports = class V8ToIstanbul {
+           // We fallback to reading the original source from disk.
+           originalRawSource = await readFile(this.path, 'utf8')
+         }
+-        this.covSources = [{ source: new CovSource(originalRawSource, this.wrapperLength), path: this.path }]
+-        this.sourceTranspiled = new CovSource(rawSource, this.wrapperLength)
++        this.covSources = [{ source: new CovSource(originalRawSource, this.wrapperLength, this.excludeEmptyLines ? this.sourceMap : null), path: this.path }]
++        this.sourceTranspiled = new CovSource(rawSource, this.wrapperLength, this.excludeEmptyLines ? this.sourceMap : null)
+       }
+     } else {
+       this.covSources = [{ source: new CovSource(rawSource, this.wrapperLength), path: this.path }]
+@@ -281,8 +278,10 @@ module.exports = class V8ToIstanbul {
+       s: {}
+     }
+     source.lines.forEach((line, index) => {
+-      statements.statementMap[`${index}`] = line.toIstanbul()
+-      statements.s[`${index}`] = line.ignore ? 1 : line.count
++      if (!line.ignore) {
++        statements.statementMap[`${index}`] = line.toIstanbul()
++        statements.s[`${index}`] = line.count
++      }
+     })
+     return statements
+   }

@@ -1,5 +1,10 @@
 import type MagicString from 'magic-string'
-import { getCallLastIndex, lineSplitRE, offsetToLineNumber, positionToOffset } from '@vitest/utils'
+import {
+  getCallLastIndex,
+  lineSplitRE,
+  offsetToLineNumber,
+  positionToOffset,
+} from '../../../utils/src/index'
 import type { SnapshotEnvironment } from '../types'
 
 export interface InlineSnapshot {
@@ -15,38 +20,77 @@ export async function saveInlineSnapshots(
 ) {
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
-  await Promise.all(Array.from(files).map(async (file) => {
-    const snaps = snapshots.filter(i => i.file === file)
-    const code = await environment.readSnapshotFile(file) as string
-    const s = new MagicString(code)
+  await Promise.all(
+    Array.from(files).map(async (file) => {
+      const snaps = snapshots.filter(i => i.file === file)
+      const code = await environment.readSnapshotFile(file) as string
+      const s = new MagicString(code)
 
-    for (const snap of snaps) {
-      const index = positionToOffset(code, snap.line, snap.column)
-      replaceInlineSnap(code, s, index, snap.snapshot)
-    }
+      for (const snap of snaps) {
+        const index = positionToOffset(code, snap.line, snap.column)
+        replaceInlineSnap(code, s, index, snap.snapshot)
+      }
 
-    const transformed = s.toString()
-    if (transformed !== code)
-      await environment.saveSnapshotFile(file, transformed)
-  }))
+      const transformed = s.toString()
+      if (transformed !== code) {
+        await environment.saveSnapshotFile(file, transformed)
+      }
+    }),
+  )
 }
 
-const startObjectRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\S\s]*\*\/\s*|\/\/.*\s+)*\s*({)/m
+const startObjectRegex
+  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*\{/
 
-function replaceObjectSnap(code: string, s: MagicString, index: number, newSnap: string) {
-  code = code.slice(index)
-  const startMatch = startObjectRegex.exec(code)
-  if (!startMatch)
+function replaceObjectSnap(
+  code: string,
+  s: MagicString,
+  index: number,
+  newSnap: string,
+) {
+  let _code = code.slice(index)
+  const startMatch = startObjectRegex.exec(_code)
+  if (!startMatch) {
     return false
+  }
 
-  code = code.slice(startMatch.index)
-  const charIndex = getCallLastIndex(code)
-  if (charIndex === null)
+  _code = _code.slice(startMatch.index)
+
+  let callEnd = getCallLastIndex(_code)
+  if (callEnd === null) {
     return false
+  }
+  callEnd += index + startMatch.index
 
-  s.appendLeft(index + startMatch.index + charIndex, `, ${prepareSnapString(newSnap, code, index)}`)
+  const shapeStart = index + startMatch.index + startMatch[0].length
+  const shapeEnd = getObjectShapeEndIndex(code, shapeStart)
+  const snap = `, ${prepareSnapString(newSnap, code, index)}`
+
+  if (shapeEnd === callEnd) {
+    // toMatchInlineSnapshot({ foo: expect.any(String) })
+    s.appendLeft(callEnd, snap)
+  }
+  else {
+    // toMatchInlineSnapshot({ foo: expect.any(String) }, ``)
+    s.overwrite(shapeEnd, callEnd, snap)
+  }
 
   return true
+}
+
+function getObjectShapeEndIndex(code: string, index: number) {
+  let startBraces = 1
+  let endBraces = 0
+  while (startBraces !== endBraces && index < code.length) {
+    const s = code[index++]
+    if (s === '{') {
+      startBraces++
+    }
+    else if (s === '}') {
+      endBraces++
+    }
+  }
+  return index
 }
 
 function prepareSnapString(snap: string, source: string, index: number) {
@@ -55,27 +99,70 @@ function prepareSnapString(snap: string, source: string, index: number) {
   const indent = line.match(/^\s*/)![0] || ''
   const indentNext = indent.includes('\t') ? `${indent}\t` : `${indent}  `
 
-  const lines = snap
-    .trim()
-    .replace(/\\/g, '\\\\')
-    .split(/\n/g)
+  const lines = snap.trim().replace(/\\/g, '\\\\').split(/\n/g)
 
   const isOneline = lines.length <= 1
-  const quote = isOneline ? '\'' : '`'
-  if (isOneline)
-    return `'${lines.join('\n').replace(/'/g, '\\\'')}'`
-  else
-    return `${quote}\n${lines.map(i => i ? indentNext + i : '').join('\n').replace(/`/g, '\\`').replace(/\${/g, '\\${')}\n${indent}${quote}`
+  const quote = '`'
+  if (isOneline) {
+    return `${quote}${lines
+      .join('\n')
+      .replace(/`/g, '\\`')
+      .replace(/\$\{/g, '\\${')}${quote}`
+  }
+  return `${quote}\n${lines
+    .map(i => (i ? indentNext + i : ''))
+    .join('\n')
+    .replace(/`/g, '\\`')
+    .replace(/\$\{/g, '\\${')}\n${indent}${quote}`
 }
 
-const startRegex = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\S\s]*\*\/\s*|\/\/.*\s+)*\s*[\w_$]*(['"`\)])/m
-export function replaceInlineSnap(code: string, s: MagicString, index: number, newSnap: string) {
-  const startMatch = startRegex.exec(code.slice(index))
-  if (!startMatch)
+const toMatchInlineName = 'toMatchInlineSnapshot'
+const toThrowErrorMatchingInlineName = 'toThrowErrorMatchingInlineSnapshot'
+
+// on webkit, the line number is at the end of the method, not at the start
+function getCodeStartingAtIndex(code: string, index: number) {
+  const indexInline = index - toMatchInlineName.length
+  if (code.slice(indexInline, index) === toMatchInlineName) {
+    return {
+      code: code.slice(indexInline),
+      index: indexInline,
+    }
+  }
+  const indexThrowInline = index - toThrowErrorMatchingInlineName.length
+  if (code.slice(index - indexThrowInline, index) === toThrowErrorMatchingInlineName) {
+    return {
+      code: code.slice(index - indexThrowInline),
+      index: index - indexThrowInline,
+    }
+  }
+  return {
+    code: code.slice(index),
+    index,
+  }
+}
+
+const startRegex
+  = /(?:toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot)\s*\(\s*(?:\/\*[\s\S]*\*\/\s*|\/\/.*(?:[\n\r\u2028\u2029]\s*|[\t\v\f \xA0\u1680\u2000-\u200A\u202F\u205F\u3000\uFEFF]))*[\w$]*(['"`)])/
+export function replaceInlineSnap(
+  code: string,
+  s: MagicString,
+  currentIndex: number,
+  newSnap: string,
+) {
+  const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex)
+
+  const startMatch = startRegex.exec(codeStartingAtIndex)
+
+  const firstKeywordMatch = /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/.exec(
+    codeStartingAtIndex,
+  )
+
+  if (!startMatch || startMatch.index !== firstKeywordMatch?.index) {
     return replaceObjectSnap(code, s, index, newSnap)
+  }
 
   const quote = startMatch[1]
-  const startIndex = index + startMatch.index! + startMatch[0].length
+  const startIndex = index + startMatch.index + startMatch[0].length
   const snapString = prepareSnapString(newSnap, code, index)
 
   if (quote === ')') {
@@ -85,8 +172,9 @@ export function replaceInlineSnap(code: string, s: MagicString, index: number, n
 
   const quoteEndRE = new RegExp(`(?:^|[^\\\\])${quote}`)
   const endMatch = quoteEndRE.exec(code.slice(startIndex))
-  if (!endMatch)
+  if (!endMatch) {
     return false
+  }
   const endIndex = startIndex + endMatch.index! + endMatch[0].length
   s.overwrite(startIndex - 1, endIndex, snapString)
 

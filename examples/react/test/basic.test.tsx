@@ -1,31 +1,22 @@
-import React from 'react'
-import renderer from 'react-test-renderer'
-import Link from '../components/Link'
+import { expect, test } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { userEvent } from '@testing-library/user-event'
+import Link from '../components/Link.jsx'
 
-function toJson(component: renderer.ReactTestRenderer) {
-  const result = component.toJSON()
-  expect(result).toBeDefined()
-  expect(result).not.toBeInstanceOf(Array)
-  return result as renderer.ReactTestRendererJSON
-}
-
-test('Link changes the class when hovered', () => {
-  const component = renderer.create(
+test('Link changes the state when hovered', async () => {
+  render(
     <Link page="http://antfu.me">Anthony Fu</Link>,
   )
-  let tree = toJson(component)
-  expect(tree).toMatchSnapshot()
 
-  // manually trigger the callback
-  tree.props.onMouseEnter()
+  const link = screen.getByText('Anthony Fu')
 
-  // re-rendering
-  tree = toJson(component)
-  expect(tree).toMatchSnapshot()
+  expect(link).toHaveAccessibleName('Link is normal')
 
-  // manually trigger the callback
-  tree.props.onMouseLeave()
-  // re-rendering
-  tree = toJson(component)
-  expect(tree).toMatchSnapshot()
+  await userEvent.hover(link)
+
+  expect(link).toHaveAccessibleName('Link is hovered')
+
+  await userEvent.unhover(link)
+
+  expect(link).toHaveAccessibleName('Link is normal')
 })

@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "0.34.1",
+  "version": "2.0.0-beta.12",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -18,44 +18,60 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./diff": {
       "types": "./dist/diff.d.ts",
-      "import": "./dist/diff.js"
+      "default": "./dist/diff.js"
+    },
+    "./ast": {
+      "types": "./dist/ast.d.ts",
+      "default": "./dist/ast.js"
     },
     "./error": {
       "types": "./dist/error.d.ts",
-      "import": "./dist/error.js"
+      "default": "./dist/error.js"
     },
     "./helpers": {
       "types": "./dist/helpers.d.ts",
-      "import": "./dist/helpers.js"
+      "default": "./dist/helpers.js"
     },
     "./source-map": {
       "types": "./dist/source-map.d.ts",
-      "import": "./dist/source-map.js"
+      "default": "./dist/source-map.js"
     },
     "./*": "./*"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ast": [
+        "dist/ast.d.ts"
+      ],
+      "source-map": [
+        "dist/source-map.d.ts"
+      ]
+    }
+  },
   "files": [
-    "dist",
-    "*.d.ts"
+    "*.d.ts",
+    "dist"
   ],
   "scripts": {
     "build": "rimraf dist && rollup -c",
-    "dev": "rollup -c --watch",
-    "prepublishOnly": "pnpm build"
+    "dev": "rollup -c --watch"
   },
   "dependencies": {
-    "diff-sequences": "^29.4.3",
-    "loupe": "^2.3.6",
-    "pretty-format": "^29.5.0"
+    "diff-sequences": "^29.6.3",
+    "estree-walker": "^3.0.3",
+    "loupe": "^3.1.1",
+    "pretty-format": "^29.7.0"
   },
   "devDependencies": {
-    "@jridgewell/trace-mapping": "^0.3.18"
+    "@jridgewell/trace-mapping": "^0.3.25",
+    "@types/estree": "^1.0.5",
+    "tinyhighlight": "^0.3.2"
   }
 }

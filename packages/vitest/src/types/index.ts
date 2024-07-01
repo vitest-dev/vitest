@@ -13,21 +13,23 @@ export type * from './worker'
 export type * from './general'
 export type * from './coverage'
 export type * from './benchmark'
+export type { CancelReason } from '@vitest/runner'
+export type { DiffOptions } from '@vitest/utils/diff'
 export type {
-  EnhancedSpy,
   MockedFunction,
   MockedObject,
-  SpyInstance,
   MockInstance,
   Mock,
   MockContext,
   Mocked,
   MockedClass,
 } from '../integrations/spy'
+export type { BrowserUI } from './ui'
 
 export type {
   ExpectStatic,
   AsymmetricMatchersContaining,
   JestAssertion,
   Assertion,
+  ExpectPollOptions,
 } from '@vitest/expect'

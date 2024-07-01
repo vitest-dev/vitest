@@ -15,8 +15,9 @@ export async function setup() {
 }
 
 export async function teardown() {
-  if (teardownHappened)
+  if (teardownHappened) {
     throw new Error('teardown called twice')
+  }
   teardownHappened = true
   // tear it down here
   // await server.close()

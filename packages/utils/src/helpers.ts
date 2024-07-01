@@ -8,15 +8,24 @@ export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
   return v != null
 }
 
-export function assertTypes(value: unknown, name: string, types: string[]): void {
+export function assertTypes(
+  value: unknown,
+  name: string,
+  types: string[],
+): void {
   const receivedType = typeof value
   const pass = types.includes(receivedType)
-  if (!pass)
-    throw new TypeError(`${name} value must be ${types.join(' or ')}, received "${receivedType}"`)
+  if (!pass) {
+    throw new TypeError(
+      `${name} value must be ${types.join(' or ')}, received "${receivedType}"`,
+    )
+  }
 }
 
 export function isPrimitive(value: unknown) {
-  return value === null || (typeof value !== 'function' && typeof value !== 'object')
+  return (
+    value === null || (typeof value !== 'function' && typeof value !== 'object')
+  )
 }
 
 export function slash(path: string) {
@@ -26,26 +35,32 @@ export function slash(path: string) {
 // convert RegExp.toString to RegExp
 export function parseRegexp(input: string): RegExp {
   // Parse input
+  // eslint-disable-next-line regexp/no-misleading-capturing-group
   const m = input.match(/(\/?)(.+)\1([a-z]*)/i)
 
   // match nothing
-  if (!m)
+  if (!m) {
     return /$^/
+  }
 
   // Invalid flags
-  if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3]))
+  // eslint-disable-next-line regexp/optimal-quantifier-concatenation
+  if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3])) {
     return RegExp(input)
+  }
 
   // Create the regular expression
   return new RegExp(m[2], m[3])
 }
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  if (array === null || array === undefined)
+  if (array === null || array === undefined) {
     array = []
+  }
 
-  if (Array.isArray(array))
+  if (Array.isArray(array)) {
     return array
+  }
 
   return [array]
 }
@@ -55,23 +70,34 @@ export function isObject(item: unknown): boolean {
 }
 
 function isFinalObj(obj: any) {
-  return obj === Object.prototype || obj === Function.prototype || obj === RegExp.prototype
+  return (
+    obj === Object.prototype
+    || obj === Function.prototype
+    || obj === RegExp.prototype
+  )
 }
 
 export function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
 }
 
-function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key: string | symbol) => void)) {
-  const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
+function collectOwnProperties(
+  obj: any,
+  collector: Set<string | symbol> | ((key: string | symbol) => void),
+) {
+  const collect
+    = typeof collector === 'function'
+      ? collector
+      : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
 export function getOwnProperties(obj: any) {
   const ownProps = new Set<string | symbol>()
-  if (isFinalObj(obj))
+  if (isFinalObj(obj)) {
     return []
+  }
   collectOwnProperties(obj, ownProps)
   return Array.from(ownProps)
 }
@@ -92,12 +118,15 @@ export function clone<T>(
   options: CloneOptions = defaultCloneOptions,
 ): T {
   let k: any, out: any
-  if (seen.has(val))
+  if (seen.has(val)) {
     return seen.get(val)
+  }
   if (Array.isArray(val)) {
     out = Array((k = val.length))
     seen.set(val, out)
-    while (k--) out[k] = clone(val[k], seen)
+    while (k--) {
+      out[k] = clone(val[k], seen, options)
+    }
     return out as any
   }
 
@@ -108,10 +137,19 @@ export function clone<T>(
     const props = getOwnProperties(val)
     for (const k of props) {
       const descriptor = Object.getOwnPropertyDescriptor(val, k)
-      if (!descriptor)
+      if (!descriptor) {
         continue
-      const cloned = clone((val as any)[k], seen)
-      if ('get' in descriptor) {
+      }
+      const cloned = clone((val as any)[k], seen, options)
+      if (options.forceWritable) {
+        Object.defineProperty(out, k, {
+          enumerable: descriptor.enumerable,
+          configurable: true,
+          writable: true,
+          value: cloned,
+        })
+      }
+      else if ('get' in descriptor) {
         Object.defineProperty(out, k, {
           ...descriptor,
           get() {
@@ -122,7 +160,6 @@ export function clone<T>(
       else {
         Object.defineProperty(out, k, {
           ...descriptor,
-          writable: options.forceWritable ? true : descriptor.writable,
           value: cloned,
         })
       }
@@ -135,19 +172,24 @@ export function clone<T>(
 
 export function noop() {}
 
-export function objectAttr(source: any, path: string, defaultValue = undefined) {
+export function objectAttr(
+  source: any,
+  path: string,
+  defaultValue = undefined,
+) {
   // a[3].b -> a.3.b
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
   for (const p of paths) {
     result = Object(result)[p]
-    if (result === undefined)
+    if (result === undefined) {
       return defaultValue
+    }
   }
   return result
 }
 
-type DeferPromise<T> = Promise<T> & {
+export type DeferPromise<T> = Promise<T> & {
   resolve: (value: T | PromiseLike<T>) => void
   reject: (reason?: any) => void
 }
@@ -189,21 +231,38 @@ export function getCallLastIndex(code: string) {
     const isCharString = char === '"' || char === '\'' || char === '`'
 
     if (isCharString && beforeChar !== '\\') {
-      if (inString === char)
+      if (inString === char) {
         inString = null
-      else if (!inString)
+      }
+      else if (!inString) {
         inString = char
+      }
     }
 
     if (!inString) {
-      if (char === '(')
+      if (char === '(') {
         startedBracers++
-      if (char === ')')
+      }
+      if (char === ')') {
         endedBracers++
+      }
     }
 
-    if (startedBracers && endedBracers && startedBracers === endedBracers)
+    if (startedBracers && endedBracers && startedBracers === endedBracers) {
       return charIndex
+    }
   }
   return null
+}
+
+export function isNegativeNaN(val: number) {
+  if (!Number.isNaN(val)) {
+    return false
+  }
+  const f64 = new Float64Array(1)
+  f64[0] = val
+  const u32 = new Uint32Array(f64.buffer)
+  const isNegative = u32[1] >>> 31 === 1
+
+  return isNegative
 }

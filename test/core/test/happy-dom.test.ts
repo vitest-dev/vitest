@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-globals */
-
 /**
  * @vitest-environment happy-dom
  */
@@ -11,7 +9,17 @@ import { expect, it, vi } from 'vitest'
 declare global {
   // eslint-disable-next-line no-var
   var __property_dom: unknown
+  // eslint-disable-next-line no-var
+  var happyDOM: any
 }
+
+it('defaults URL to localhost:3000', () => {
+  expect(location.href).toBe('http://localhost:3000/')
+})
+
+it('disableCSSFileLoading is false by default because we didn\'t change options', () => {
+  expect(window.happyDOM?.settings.disableCSSFileLoading).toBe(false)
+})
 
 it('defined on self/window are defined on global', () => {
   expect(self).toBeDefined()

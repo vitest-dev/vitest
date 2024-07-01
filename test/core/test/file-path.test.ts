@@ -2,35 +2,17 @@ import { existsSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/utils'
 
-// @ts-expect-error aliased to ../src/aliased-mod.ts
-import { getPaths as getAbsoluteAliasedPaths } from '$/aliased-mod'
-
-// @ts-expect-error aliased to ../src/aliased-mod.ts
-import { getPaths as getRelativeAliasedPath } from '#/aliased-mod'
-
 vi.mock('fs')
 
-describe('test aliased paths', () => {
-  it('expect functions to be part of the same module', () => {
-    expect(getAbsoluteAliasedPaths).toBe(getRelativeAliasedPath)
-  })
-
-  it.runIf(!isWindows)('paths on unix', () => {
-    const paths = getAbsoluteAliasedPaths()
-    expect(paths.url).toMatch(/\/aliased-mod.ts$/)
-    expect(paths.__filename).toMatch(/\/aliased-mod.ts$/)
-    expect(paths.__dirname).toMatch(/\/core\/src$/)
-  })
-
-  it.runIf(isWindows)('paths on windows', () => {
-    const paths = getAbsoluteAliasedPaths()
-    expect(paths.url).toMatch(/\/aliased-mod.ts$/)
-    expect(paths.__filename).toMatch(/\\aliased-mod.ts$/)
-    expect(paths.__dirname).toMatch(/\\core\\src$/)
-  })
-})
-
 describe('current url', () => {
+  it('__filename is equal to import.meta.url', () => {
+    expect(__filename).toEqual(import.meta.filename)
+  })
+
+  it('__dirname is equal to import.meta.dirname', () => {
+    expect(__dirname).toEqual(import.meta.dirname)
+  })
+
   describe.runIf(!isWindows)('unix', () => {
     it('__filename', () => {
       expect(__filename.startsWith('file://')).toBe(false)

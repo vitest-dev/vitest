@@ -14,7 +14,7 @@ describe('html reporter', async () => {
   it('resolves to "passing" status for test file "all-passing-or-skipped"', async () => {
     const [expected, testFile, basePath] = ['passing', 'all-passing-or-skipped', 'html/all-passing-or-skipped']
 
-    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root }, [testFile])
+    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root, env: { NO_COLOR: '1' } }, [testFile])
 
     const metaJsonGzipeed = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
     const metaJson = zlib.gunzipSync(metaJsonGzipeed).toString('utf-8')
@@ -33,16 +33,16 @@ describe('html reporter', async () => {
     task.id = 0
     task.result.duration = 0
     task.result.startTime = 0
-    expect(task.result.error).not.toBeDefined()
+    expect(task.result.errors).not.toBeDefined()
     expect(task.result.logs).not.toBeDefined()
     expect(resultJson).toMatchSnapshot(`tests are ${expected}`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)
 
   it('resolves to "failing" status for test file "json-fail"', async () => {
-    const [expected, testFile, basePath] = ['failing', 'json-fail', 'html/fail']
+    const [expected, testFile, basePath] = ['failing', 'json-fail.test', 'html/fail']
 
-    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root }, [testFile])
+    await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root, env: { NO_COLOR: '1' } }, [testFile])
 
     const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
     const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
@@ -61,11 +61,8 @@ describe('html reporter', async () => {
     task.id = 0
     task.result.duration = 0
     task.result.startTime = 0
-    expect(task.result.error).toBeDefined()
     expect(task.result.errors).toBeDefined()
-    task.result.error.stack = task.result.error.stack.split('\n')[0]
     task.result.errors[0].stack = task.result.errors[0].stack.split('\n')[0]
-    task.result.error.stackStr = task.result.error.stackStr.split('\n')[0]
     task.result.errors[0].stackStr = task.result.errors[0].stackStr.split('\n')[0]
     expect(task.logs).toBeDefined()
     expect(task.logs).toHaveLength(1)

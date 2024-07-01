@@ -10,7 +10,7 @@ Inspired by [Playwright Fixtures](https://playwright.dev/docs/test-fixtures), Vi
 
 The first argument for each test callback is a test context.
 
-```ts
+```ts twoslash
 import { it } from 'vitest'
 
 it('should work', (ctx) => {
@@ -27,17 +27,48 @@ A readonly object containing metadata about the test.
 
 #### `context.expect`
 
-The `expect` API bound to the current test.
+The `expect` API bound to the current test:
+
+```ts twoslash
+import { it } from 'vitest'
+
+it('math is easy', ({ expect }) => {
+  expect(2 + 2).toBe(4)
+})
+```
+
+This API is useful for running snapshot tests concurrently because global expect cannot track them:
+
+```ts twoslash
+import { it } from 'vitest'
+
+it.concurrent('math is easy', ({ expect }) => {
+  expect(2 + 2).toMatchInlineSnapshot()
+})
+
+it.concurrent('math is hard', ({ expect }) => {
+  expect(2 * 2).toMatchInlineSnapshot()
+})
+```
+
+#### `context.skip`
+
+Skips subsequent test execution and marks test as skipped:
+
+```ts
+import { expect, it } from 'vitest'
+
+it('math is hard', ({ skip }) => {
+  skip()
+  expect(2 + 2).toBe(5)
+})
+```
 
 ## Extend Test Context
 
-Vitest provides two diffident ways to help you extend the test context.
+Vitest provides two different ways to help you extend the test context.
 
 ### `test.extend`
-
-::: warning
-This API is available since Vitest 0.32.3.
-:::
 
 Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you can use this method to define your own `test` API with custom fixtures and reuse it anywhere.
 
@@ -51,7 +82,7 @@ const todos = []
 const archive = []
 
 export const myTest = test.extend({
-  todos: async ({ task }, use) => {
+  todos: async ({}, use) => {
     // setup the fixture before each test function
     todos.push(1, 2, 3)
 
@@ -69,12 +100,12 @@ Then we can import and use it.
 
 ```ts
 import { expect } from 'vitest'
-import { myTest } from './my-test.ts'
+import { myTest } from './my-test.js'
 
 myTest('add items to todos', ({ todos }) => {
   expect(todos.length).toBe(3)
 
-  todos.add(4)
+  todos.push(4)
   expect(todos.length).toBe(4)
 })
 
@@ -116,7 +147,7 @@ const myTest = test.extend({
 
 // todosFn will not run
 myTest('', () => {})
-myTets('', ({ archive }) => {})
+myTest('', ({ archive }) => {})
 
 // todosFn will run
 myTest('', ({ todos }) => {})
@@ -125,6 +156,28 @@ myTest('', ({ todos }) => {})
 ::: warning
 When using `test.extend()` with fixtures, you should always use the object destructuring pattern `{ todos }` to access context both in fixture function and test function.
 :::
+
+#### Automatic fixture
+
+Vitest also supports the tuple syntax for fixtures, allowing you to pass options for each fixture. For example, you can use it to explicitly initialize a fixture, even if it's not being used in tests.
+
+```ts
+import { test as base } from 'vitest'
+
+const test = base.extend({
+  fixture: [
+    async ({}, use) => {
+      // this function will run
+      setup()
+      await use()
+      teardown()
+    },
+    { auto: true } // Mark as an automatic fixture
+  ],
+})
+
+test('', () => {})
+```
 
 #### TypeScript
 

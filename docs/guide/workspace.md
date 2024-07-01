@@ -1,12 +1,22 @@
+---
+title: Workspace | Guide
+---
+
 # Workspace
 
-Vitest provides built-in support for monorepositories through a workspace configuration file. You can create a workspace to define your project's setups.
+::: tip Sample Project
 
-## Defining a workspace
+[GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/workspace) - [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/workspace?initialPath=__vitest__/)
+
+:::
+
+Vitest provides built-in support for monorepos through a workspace configuration file. You can create a workspace to define your project's setups.
+
+## Defining a Workspace
 
 A workspace should have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder as your config file if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
 
-Workspace configuration file should have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder with your projects named `packages`, you can define a workspace with this config file:
+Workspace configuration file should have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder named `packages` that contains your projects, you can define a workspace with this config file:
 
 :::code-group
 ```ts [vitest.workspace.ts]
@@ -41,7 +51,7 @@ If you are referencing filenames with glob pattern, make sure your config file s
 You can also define projects with inline config. Workspace file supports using both syntaxes at the same time.
 
 :::code-group
-```ts [vitest.workspace.ts]
+```ts [vitest.workspace.ts] twoslash
 import { defineWorkspace } from 'vitest/config'
 
 // defineWorkspace provides a nice type hinting DX
@@ -85,7 +95,7 @@ If you don't rely on inline configs, you can just create a small json file in yo
 Workspace projects don't support all configuration properties. For better type safety, use `defineProject` instead of `defineConfig` method inside project configuration files:
 
 :::code-group
-```ts [packages/a/vitest.config.ts]
+```ts [packages/a/vitest.config.ts] twoslash
 import { defineProject } from 'vitest/config'
 
 export default defineProject({
@@ -96,6 +106,49 @@ export default defineProject({
     reporters: ['json']
   }
 })
+```
+:::
+
+## Running tests
+
+To run tests inside the workspace, define a script in your root `package.json`:
+
+```json
+{
+  "scripts": {
+    "test": "vitest"
+  }
+}
+```
+
+Now tests can be run using your package manager:
+
+::: code-group
+```bash [npm]
+npm run test
+```
+```bash [yarn]
+yarn test
+```
+```bash [pnpm]
+pnpm run test
+```
+```bash [bun]
+bun test
+```
+:::
+
+If you need to run tests only inside a single project, use the `--project` CLI option:
+
+```bash
+npm run test --project e2e
+```
+
+::: tip
+CLI option `--project` can be used multiple times to filter out several projects:
+
+```bash
+npm run test --project e2e --project unit
 ```
 :::
 

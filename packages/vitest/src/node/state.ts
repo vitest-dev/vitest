@@ -1,14 +1,15 @@
-import { relative } from 'pathe'
 import type { File, Task, TaskResultPack } from '@vitest/runner'
 
 // can't import actual functions from utils, because it's incompatible with @vitest/browsers
+import { createFileTask } from '@vitest/runner/utils'
 import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
 
 export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
-  if (typeof AggregateError !== 'undefined' && err instanceof AggregateError)
+  if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {
     return true
+  }
 
   return err instanceof Error && 'errors' in err
 }
@@ -17,20 +18,33 @@ export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
 export class StateManager {
   filesMap = new Map<string, File[]>()
   pathsSet: Set<string> = new Set()
-  browserTestPromises = new Map<string, { resolve: (v: unknown) => void; reject: (v: unknown) => void }>()
   idMap = new Map<string, Task>()
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
   processTimeoutCauses = new Set<string>()
 
   catchError(err: unknown, type: string): void {
-    if (isAggregateError(err))
+    if (isAggregateError(err)) {
       return err.errors.forEach(error => this.catchError(error, type))
+    }
 
-    if (err === Object(err))
+    if (err === Object(err)) {
       (err as Record<string, unknown>).type = type
-    else
+    }
+    else {
       err = { type, message: err }
+    }
+
+    const _err = err as Record<string, any>
+    if (_err && typeof _err === 'object' && _err.code === 'VITEST_PENDING') {
+      const task = this.idMap.get(_err.taskId)
+      if (task) {
+        task.mode = 'skip'
+        task.result ??= { state: 'skip' }
+        task.result.state = 'skip'
+      }
+      return
+    }
 
     this.errorsSet.add(err)
   }
@@ -56,8 +70,12 @@ export class StateManager {
   }
 
   getFiles(keys?: string[]): File[] {
-    if (keys)
-      return keys.map(key => this.filesMap.get(key)!).filter(Boolean).flat()
+    if (keys) {
+      return keys
+        .map(key => this.filesMap.get(key)!)
+        .filter(Boolean)
+        .flat()
+    }
     return Array.from(this.filesMap.values()).flat()
   }
 
@@ -79,32 +97,59 @@ export class StateManager {
 
   collectFiles(files: File[] = []) {
     files.forEach((file) => {
-      const existing = (this.filesMap.get(file.filepath) || [])
-      const otherProject = existing.filter(i => i.projectName !== file.projectName)
+      const existing = this.filesMap.get(file.filepath) || []
+      const otherProject = existing.filter(
+        i => i.projectName !== file.projectName,
+      )
+      const currentFile = existing.find(
+        i => i.projectName === file.projectName,
+      )
+      // keep logs for the previous file because it should always be initiated before the collections phase
+      // which means that all logs are collected during the collection and not inside tests
+      if (currentFile) {
+        file.logs = currentFile.logs
+      }
       otherProject.push(file)
       this.filesMap.set(file.filepath, otherProject)
       this.updateId(file)
     })
   }
 
-  // this file is reused by ws-client, and shoult not rely on heavy dependencies like workspace
-  clearFiles(_project: { config: { name: string } }, paths: string[] = []) {
+  // this file is reused by ws-client, and should not rely on heavy dependencies like workspace
+  clearFiles(
+    _project: { config: { name: string | undefined; root: string } },
+    paths: string[] = [],
+  ) {
     const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
-      if (!files)
+      const fileTask = createFileTask(
+        path,
+        project.config.root,
+        project.config.name,
+      )
+      this.idMap.set(fileTask.id, fileTask)
+      if (!files) {
+        this.filesMap.set(path, [fileTask])
         return
-      const filtered = files.filter(file => file.projectName !== project.config.name)
-      if (!filtered.length)
-        this.filesMap.delete(path)
-      else
-        this.filesMap.set(path, filtered)
+      }
+      const filtered = files.filter(
+        file => file.projectName !== project.config.name,
+      )
+      // always keep a File task, so we can associate logs with it
+      if (!filtered.length) {
+        this.filesMap.set(path, [fileTask])
+      }
+      else {
+        this.filesMap.set(path, [...filtered, fileTask])
+      }
     })
   }
 
   updateId(task: Task) {
-    if (this.idMap.get(task.id) === task)
+    if (this.idMap.get(task.id) === task) {
       return
+    }
     this.idMap.set(task.id, task)
     if (task.type === 'suite') {
       task.tasks.forEach((task) => {
@@ -119,6 +164,10 @@ export class StateManager {
       if (task) {
         task.result = result
         task.meta = meta
+        // skipped with new PendingError
+        if (result?.state === 'skip') {
+          task.mode = 'skip'
+        }
       }
     }
   }
@@ -126,29 +175,22 @@ export class StateManager {
   updateUserLog(log: UserConsoleLog) {
     const task = log.taskId && this.idMap.get(log.taskId)
     if (task) {
-      if (!task.logs)
+      if (!task.logs) {
         task.logs = []
+      }
       task.logs.push(log)
     }
   }
 
   getCountOfFailedTests() {
-    return Array.from(this.idMap.values()).filter(t => t.result?.state === 'fail').length
+    return Array.from(this.idMap.values()).filter(
+      t => t.result?.state === 'fail',
+    ).length
   }
 
-  cancelFiles(files: string[], root: string) {
-    this.collectFiles(files.map(filepath => ({
-      filepath,
-      name: relative(root, filepath),
-      id: filepath,
-      mode: 'skip',
-      type: 'suite',
-      result: {
-        state: 'skip',
-      },
-      meta: {},
-      // Cancelled files have not yet collected tests
-      tasks: [],
-    })))
+  cancelFiles(files: string[], root: string, projectName: string) {
+    this.collectFiles(
+      files.map(filepath => createFileTask(filepath, root, projectName)),
+    )
   }
 }

@@ -7,7 +7,10 @@ export interface DotRendererOptions {
   logger: Logger
 }
 
-interface Icon { char: string; color: (char: string) => string }
+interface Icon {
+  char: string
+  color: (char: string) => string
+}
 
 const check: Icon = { char: '·', color: c.green }
 const cross: Icon = { char: 'x', color: c.red }
@@ -15,8 +18,9 @@ const pending: Icon = { char: '*', color: c.yellow }
 const skip: Icon = { char: '-', color: (char: string) => c.dim(c.gray(char)) }
 
 function getIcon(task: Task) {
-  if (task.mode === 'skip' || task.mode === 'todo')
+  if (task.mode === 'skip' || task.mode === 'todo') {
     return skip
+  }
   switch (task.result?.state) {
     case 'pass':
       return check
@@ -92,15 +96,17 @@ export function createDotRenderer(_tasks: Task[], options: DotRendererOptions) {
   let timer: any
 
   const { logUpdate: log, outputStream } = options.logger
+  const columns = 'columns' in outputStream ? outputStream.columns : 80
 
   function update() {
-    log(render(tasks, outputStream.columns))
+    log(render(tasks, columns))
   }
 
   return {
     start() {
-      if (timer)
+      if (timer) {
         return this
+      }
       timer = setInterval(update, 16)
       return this
     },
@@ -114,7 +120,7 @@ export function createDotRenderer(_tasks: Task[], options: DotRendererOptions) {
         timer = undefined
       }
       log.clear()
-      options.logger.log(render(tasks, outputStream.columns))
+      options.logger.log(render(tasks, columns))
       return this
     },
     clear() {

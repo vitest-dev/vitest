@@ -5,45 +5,52 @@
 
 import path from 'node:path'
 import fs from 'node:fs'
-import type { OriginalMapping, SourceMapInput } from '@jridgewell/trace-mapping'
+import type {
+  OriginalMapping,
+  SourceMapInput,
+} from '@jridgewell/trace-mapping'
 import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 
 // Only install once if called multiple times
 let errorFormatterInstalled = false
 
-// If true, the caches are reset before a stack trace formatting operation
-const emptyCacheBetweenOperations = false
-
 // Maps a file path to a string containing the file contents
-let fileContentsCache: Record<string, string> = {}
+const fileContentsCache: Record<string, string> = {}
 
 // Maps a file path to a source map for that file
-let sourceMapCache: Record<string, { url: string | null; map: TraceMap | null }> = {}
+const sourceMapCache: Record<
+  string,
+  { url: string | null; map: TraceMap | null }
+> = {}
 
 // Regex for detecting source maps
 const reSourceMap = /^data:application\/json[^,]+base64,/
 
 type RetrieveFileHandler = (path: string) => string | null | undefined
-type RetrieveMapHandler = (source: string) => { url: string; map?: string | SourceMapInput | null } | null | undefined
+type RetrieveMapHandler = (
+  source: string
+) => { url: string; map?: string | SourceMapInput | null } | null | undefined
 
 // Priority list of retrieve handlers
 let retrieveFileHandlers: RetrieveFileHandler[] = []
 let retrieveMapHandlers: RetrieveMapHandler[] = []
 
 function globalProcessVersion() {
-  if ((typeof process === 'object') && (process !== null))
+  if (typeof process === 'object' && process !== null) {
     return process.version
-
-  else
+  }
+  else {
     return ''
+  }
 }
 
 function handlerExec<T>(list: ((arg: string) => T)[]) {
   return function (arg: string) {
     for (let i = 0; i < list.length; i++) {
       const ret = list[i](arg)
-      if (ret)
+      if (ret) {
         return ret
+      }
     }
     return null
   }
@@ -62,33 +69,39 @@ retrieveFileHandlers.push((path) => {
         : '/' // file:///root-dir/file -> /root-dir/file
     })
   }
-  if (path in fileContentsCache)
+  if (path in fileContentsCache) {
     return fileContentsCache[path]
+  }
 
   let contents = ''
   try {
-    if (fs.existsSync(path))
+    if (fs.existsSync(path)) {
       contents = fs.readFileSync(path, 'utf8')
+    }
   }
   catch (er) {
     /* ignore any errors */
   }
 
-  return fileContentsCache[path] = contents
+  return (fileContentsCache[path] = contents)
 })
 
 // Support URLs relative to a directory, but be careful about a protocol prefix
 function supportRelativeURL(file: string, url: string) {
-  if (!file)
+  if (!file) {
     return url
+  }
   const dir = path.dirname(file)
-  const match = /^\w+:\/\/[^\/]*/.exec(dir)
+  const match = /^\w+:\/\/[^/]*/.exec(dir)
   let protocol = match ? match[0] : ''
   const startPath = dir.slice(protocol.length)
-  if (protocol && /^\/\w\:/.test(startPath)) {
+  if (protocol && /^\/\w:/.test(startPath)) {
     // handle file:///C:/ paths
     protocol += '/'
-    return protocol + path.resolve(dir.slice(protocol.length), url).replace(/\\/g, '/')
+    return (
+      protocol
+      + path.resolve(dir.slice(protocol.length), url).replace(/\\/g, '/')
+    )
   }
   return protocol + path.resolve(dir.slice(protocol.length), url)
 }
@@ -96,16 +109,21 @@ function supportRelativeURL(file: string, url: string) {
 function retrieveSourceMapURL(source: string) {
   // Get the URL of the source map
   const fileData = retrieveFile(source)
-  if (!fileData)
+  if (!fileData) {
     return null
-  const re = /(?:\/\/[@#][\s]*sourceMappingURL=([^\s'"]+)[\s]*$)|(?:\/\*[@#][\s]*sourceMappingURL=([^\s*'"]+)[\s]*(?:\*\/)[\s]*$)/mg
+  }
+  const re
+    = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
   // Keep executing the search to find the *last* sourceMappingURL to avoid
   // picking up sourceMappingURLs from comments, strings, etc.
   let lastMatch, match
   // eslint-disable-next-line no-cond-assign
-  while (match = re.exec(fileData)) lastMatch = match
-  if (!lastMatch)
+  while ((match = re.exec(fileData))) {
+    lastMatch = match
+  }
+  if (!lastMatch) {
     return null
+  }
   return lastMatch[1]
 }
 
@@ -117,8 +135,9 @@ function retrieveSourceMapURL(source: string) {
 let retrieveSourceMap = handlerExec(retrieveMapHandlers)
 retrieveMapHandlers.push((source) => {
   let sourceMappingURL = retrieveSourceMapURL(source)
-  if (!sourceMappingURL)
+  if (!sourceMappingURL) {
     return null
+  }
 
   // Read the contents of the source map
   let sourceMapData
@@ -134,8 +153,9 @@ retrieveMapHandlers.push((source) => {
     sourceMapData = retrieveFile(sourceMappingURL)
   }
 
-  if (!sourceMapData)
+  if (!sourceMapData) {
     return null
+  }
 
   return {
     url: sourceMappingURL,
@@ -150,11 +170,12 @@ retrieveMapHandlers.push((source) => {
 // }
 
 function mapSourcePosition(position: OriginalMapping) {
-  if (!position.source)
+  if (!position.source) {
     return position
+  }
   let sourceMap = sourceMapCache[position.source]
   if (!sourceMap) {
-    // Call the (overrideable) retrieveSourceMap function to get the source map.
+    // Call the (overridable) retrieveSourceMap function to get the source map.
     const urlAndMap = retrieveSourceMap(position.source)
     if (urlAndMap && urlAndMap.map) {
       sourceMap = sourceMapCache[position.source] = {
@@ -193,7 +214,9 @@ function mapSourcePosition(position: OriginalMapping) {
     // location in the original file.
     if (originalPosition.source !== null) {
       originalPosition.source = supportRelativeURL(
-        sourceMap.url, originalPosition.source)
+        sourceMap.url,
+        originalPosition.source,
+      )
       return originalPosition
     }
   }
@@ -213,20 +236,23 @@ function mapEvalOrigin(origin: string): string {
       line: +match[3],
       column: +match[4] - 1,
     })
-    return `eval at ${match[1]} (${position.source}:${position.line}:${position.column + 1})`
+    return `eval at ${match[1]} (${position.source}:${position.line}:${
+      position.column + 1
+    })`
   }
 
   // Parse nested eval() calls using recursion
   match = /^eval at ([^(]+) \((.+)\)$/.exec(origin)
-  if (match)
+  if (match) {
     return `eval at ${match[1]} (${mapEvalOrigin(match[2])})`
+  }
 
   // Make sure we still return useful information if we didn't find anything
   return origin
 }
 
 interface CallSite extends NodeJS.CallSite {
-  getScriptNameOrSourceURL(): string
+  getScriptNameOrSourceURL: () => string
 }
 
 // This is copied almost verbatim from the V8 source code at
@@ -261,8 +287,9 @@ function CallSiteToString(this: CallSite) {
     if (lineNumber != null) {
       fileLocation += `:${lineNumber}`
       const columnNumber = this.getColumnNumber()
-      if (columnNumber)
+      if (columnNumber) {
         fileLocation += `:${columnNumber}`
+      }
     }
   }
 
@@ -273,18 +300,25 @@ function CallSiteToString(this: CallSite) {
   const isMethodCall = !(this.isToplevel() || isConstructor)
   if (isMethodCall) {
     let typeName = this.getTypeName()
-    // Fixes shim to be backward compatable with Node v0 to v4
-    if (typeName === '[object Object]')
+    // Fixes shim to be backward compatible with Node v0 to v4
+    if (typeName === '[object Object]') {
       typeName = 'null'
+    }
 
     const methodName = this.getMethodName()
     if (functionName) {
-      if (typeName && functionName.indexOf(typeName) !== 0)
+      if (typeName && functionName.indexOf(typeName) !== 0) {
         line += `${typeName}.`
+      }
 
       line += functionName
-      if (methodName && functionName.indexOf(`.${methodName}`) !== functionName.length - methodName.length - 1)
+      if (
+        methodName
+        && functionName.indexOf(`.${methodName}`)
+        !== functionName.length - methodName.length - 1
+      ) {
         line += ` [as ${methodName}]`
+      }
     }
     else {
       line += `${typeName}.${methodName || '<anonymous>'}`
@@ -300,8 +334,9 @@ function CallSiteToString(this: CallSite) {
     line += fileLocation
     addSuffix = false
   }
-  if (addSuffix)
+  if (addSuffix) {
     line += ` (${fileLocation})`
+  }
 
   return line
 }
@@ -329,8 +364,9 @@ interface State {
 
 function wrapCallSite(frame: CallSite, state: State) {
   // provides interface backward compatibility
-  if (state === undefined)
+  if (state === undefined) {
     state = { nextPosition: null, curPosition: null }
+  }
 
   if (frame.isNative()) {
     state.curPosition = null
@@ -350,10 +386,12 @@ function wrapCallSite(frame: CallSite, state: State) {
     // Header removed in node at ^10.16 || >=11.11.0
     // v11 is not an LTS candidate, we can just test the one version with it.
     // Test node versions for: 10.16-19, 10.20+, 12-19, 20-99, 100+, or 11.11
-    const noHeader = /^v(10\.1[6-9]|10\.[2-9][0-9]|10\.[0-9]{3,}|1[2-9]\d*|[2-9]\d|\d{3,}|11\.11)/
+    const noHeader
+      = /^v(?:10\.1[6-9]|10\.[2-9]\d|10\.\d{3,}|1[2-9]\d*|[2-9]\d|\d{3,}|11\.11)/
     const headerLength = noHeader.test(globalProcessVersion()) ? 0 : 62
-    if (line === 1 && column > headerLength && !frame.isEval())
+    if (line === 1 && column > headerLength && !frame.isEval()) {
       column -= headerLength
+    }
 
     const position = mapSourcePosition({
       name: null,
@@ -365,8 +403,9 @@ function wrapCallSite(frame: CallSite, state: State) {
     frame = cloneCallSite(frame)
     const originalFunctionName = frame.getFunctionName
     frame.getFunctionName = function () {
-      if (state.nextPosition == null)
+      if (state.nextPosition == null) {
         return originalFunctionName()
+      }
 
       return state.nextPosition.name || originalFunctionName()
     }
@@ -403,11 +442,6 @@ function wrapCallSite(frame: CallSite, state: State) {
 // This function is part of the V8 stack trace API, for more info see:
 // https://v8.dev/docs/stack-trace-api
 function prepareStackTrace(error: Error, stack: CallSite[]) {
-  if (emptyCacheBetweenOperations) {
-    fileContentsCache = {}
-    sourceMapCache = {}
-  }
-
   const name = error.name || 'Error'
   const message = error.message || ''
   const errorString = `${name}: ${message}`
@@ -439,8 +473,9 @@ export const install = function (options: Options) {
   // Allow sources to be found by methods other than reading the files
   // directly from disk.
   if (options.retrieveFile) {
-    if (options.overrideRetrieveFile)
+    if (options.overrideRetrieveFile) {
       retrieveFileHandlers.length = 0
+    }
 
     retrieveFileHandlers.unshift(options.retrieveFile)
   }
@@ -448,8 +483,9 @@ export const install = function (options: Options) {
   // Allow source maps to be found by methods other than reading the files
   // directly from disk.
   if (options.retrieveSourceMap) {
-    if (options.overrideRetrieveSourceMap)
+    if (options.overrideRetrieveSourceMap) {
       retrieveMapHandlers.length = 0
+    }
 
     retrieveMapHandlers.unshift(options.retrieveSourceMap)
   }
@@ -457,7 +493,8 @@ export const install = function (options: Options) {
   // Install the error reformatter
   if (!errorFormatterInstalled) {
     errorFormatterInstalled = true
-    Error.prepareStackTrace = prepareStackTrace as ErrorConstructor['prepareStackTrace']
+    Error.prepareStackTrace
+      = prepareStackTrace as ErrorConstructor['prepareStackTrace']
   }
 }
 

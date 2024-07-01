@@ -10,6 +10,7 @@ export type {
   SnapshotStateOptions,
   SnapshotMatchOptions,
   SnapshotResult,
+  SnapshotSerializer,
   UncheckedSnapshot,
   SnapshotSummary,
 } from './types'

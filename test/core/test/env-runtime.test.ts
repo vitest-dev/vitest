@@ -1,5 +1,5 @@
-import { populateGlobal } from 'vitest/src/integrations/env/utils'
 import { expect, test, vi } from 'vitest'
+import { populateGlobal } from '../../../packages/vitest/src/integrations/env/utils'
 
 test('returns valid globals', () => {
   const globalEvent = vi.fn()

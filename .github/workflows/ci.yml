@@ -9,21 +9,20 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
-  VITEST_SEGFAULT_RETRY: 3
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
-  CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cache/Cypress
-  PUPPETEER_DOWNLOAD_PATH: ${{ github.workspace }}/.cache/Puppeteer
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
 
@@ -33,22 +32,6 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
   test:
     runs-on: ${{ matrix.os }}
 
@@ -57,23 +40,30 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node_version: [16, 18]
+        # Reset back to 20 after https://github.com/nodejs/node/issues/53648
+        node_version: [18, 20.14]
+        # node_version: [18, 20, 22] 22 when LTS is close enough
         include:
-          - os: macos-latest
-            node_version: 18
+          - os: macos-14
+            node_version: 20.14
           - os: windows-latest
-            node_version: 18
+            node_version: 20.14
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
           node-version: ${{ matrix.node_version }}
 
+      - uses: browser-actions/setup-chrome@v1
+
       - name: Install
         run: pnpm i
+
+      - name: Install Playwright Dependencies
+        run: pnpm exec playwright install --with-deps
 
       - name: Build
         run: pnpm run build
@@ -81,64 +71,73 @@ jobs:
       - name: Test
         run: pnpm run test:ci
 
-      - name: Test Single Thread
-        run: pnpm run test:ci:single-thread
-
-      - name: Test Vm Threads
-        run: pnpm run test:ci:vm-threads
+      - name: Test Examples
+        run: pnpm run test:examples
 
   test-ui:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+      fail-fast: false
 
-    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 16.16
+          node-version: 20
 
       - name: Install
         run: pnpm i
 
-      - name: Test UI
-        run: pnpm run ui:test
+      - name: Install Playwright Dependencies
+        run: pnpm exec playwright install chromium
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Unit Test UI
+        run: pnpm run -C packages/ui test:ui
+
+      - name: E2E Test UI
+        run: pnpm -C test/ui test-e2e
 
   test-browser:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
+      fail-fast: false
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-firefox@v1
-      - uses: browser-actions/setup-edge@v1
-        with:
-          edge-version: beta
 
       - name: Install
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpx playwright install-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Build
         run: pnpm run build
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
@@ -150,17 +149,16 @@ jobs:
     strategy:
       matrix:
         browser: [[chrome, chromium], [edge, webkit]]
+      fail-fast: false
 
     timeout-minutes: 30
 
-    env:
-      BROWSER: ${{ matrix.browser[0] }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
       - uses: browser-actions/setup-edge@v1
@@ -169,41 +167,17 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpx playwright install-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Build
         run: pnpm run build
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
-
-  test-browser-safari:
-    runs-on: macos-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 18
-
-      - name: Install
-        run: sudo pnpm i --frozen-lockfile
-
-      - name: Build
-        run: sudo pnpm run build
-
-      - name: Enable
-        run: sudo safaridriver --enable
-
-      - name: Test Browser (webdriverio)
-        run: sudo BROWSER=safari pnpm run test:browser:webdriverio
-
-      - name: Test Browser (playwright)
-        run: sudo BROWSER=webkit pnpm run test:browser:playwright

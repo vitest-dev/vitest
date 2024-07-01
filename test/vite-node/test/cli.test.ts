@@ -39,10 +39,10 @@ it('script args in -- after', async () => {
   expect(parseResult(cli1.stdout)).include('--version').include('--help')
 })
 
-it('correctly runs --watch', async () => {
-  const entryPath = resolve(__dirname, '../src/watched.js')
-  const cli = await runViteNodeCli('--watch', entryPath)
-  await cli.waitForStdout('test 1')
+it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', async (file) => {
+  const entryPath = resolve(__dirname, '../src/watch', file)
+  const { viteNode } = await runViteNodeCli('--watch', entryPath)
+  await viteNode.waitForStdout('test 1')
   editFile(entryPath, c => c.replace('test 1', 'test 2'))
-  await cli.waitForStdout('test 2')
+  await viteNode.waitForStdout('test 2')
 })

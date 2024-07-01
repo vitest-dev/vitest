@@ -1,14 +1,14 @@
 # Node API
 
 ::: warning
-Vitest exposes experimental private API. Breaking changes might not follow semver, please pin Vitest's version when using it.
+Vitest exposes experimental private API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
 ## startVitest
 
 You can start running Vitest tests using its Node API:
 
-```js
+```js twoslash
 import { startVitest } from 'vitest/node'
 
 const vitest = await startVitest('test')
@@ -18,7 +18,7 @@ await vitest?.close()
 
 `startVitest` function returns `Vitest` instance if tests can be started. It returns `undefined`, if one of the following occurs:
 
-- Vitest didn't find "vite" package (usually installed with Vitest)
+- Vitest didn't find the `vite` package (usually installed with Vitest)
 - If coverage is enabled and run mode is "test", but the coverage package is not installed (`@vitest/coverage-v8` or `@vitest/coverage-istanbul`)
 - If the environment package is not installed (`jsdom`/`happy-dom`/`@edge-runtime/vm`)
 
@@ -38,12 +38,22 @@ Alternatively, you can pass in the complete Vite config as the fourth argument, 
 
 You can create Vitest instance yourself using `createVitest` function. It returns the same `Vitest` instance as `startVitest`, but it doesn't start tests and doesn't validate installed packages.
 
-```js
+```js twoslash
 import { createVitest } from 'vitest/node'
 
 const vitest = await createVitest('test', {
   watch: false,
 })
+```
+
+## parseCLI
+
+You can use this method to parse CLI arguments. It accepts a string (where arguments are split by a single space) or a strings array of CLI arguments in the same format that Vitest CLI uses. It returns a filter and `options` that you can later pass down to `createVitest` or `startVitest` methods.
+
+```ts twoslash
+import { parseCLI } from 'vitest/node'
+
+parseCLI('vitest ./files.ts --coverage --browser=chrome')
 ```
 
 ## Vitest
@@ -52,7 +62,6 @@ Vitest instance requires the current test mode. It can be either:
 
 - `test` when running runtime tests
 - `benchmark` when running benchmarks
-- `typecheck` when running type tests
 
 ### mode
 
@@ -64,10 +73,48 @@ Test mode will only call functions inside `test` or `it`, and throws an error wh
 
 Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
 
-#### typecheck
-
-Typecheck mode doesn't _run_ tests. It only analyses types and gives a summary. This mode uses `typecheck.include` and `typecheck.exclude` options in the config to find files to analyze.
-
 ### start
 
 You can start running tests or benchmarks with `start` method. You can pass an array of strings to filter test files.
+
+### `provide`
+
+Vitest exposes `provide` method which is a shorthand for `vitest.getCoreWorkspaceProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
+
+To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
+
+```ts
+import { inject } from 'vitest'
+const port = inject('wsPort') // 3000
+```
+
+For better type safety, we encourage you to augment the type of `ProvidedContext`:
+
+```ts
+import { createVitest } from 'vitest/node'
+
+const vitest = await createVitest('test', {
+  watch: false,
+})
+vitest.provide('wsPort', 3000)
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    wsPort: number
+  }
+}
+```
+
+::: warning
+Technically, `provide` is a method of `WorkspaceProject`, so it is limited to the specific project. However, all projects inherit the values from the core project which makes `vitest.provide` universal way of passing down values to tests.
+:::
+
+::: tip
+This method is also available to [global setup files](/config/#globalsetup) for cases where you don't want to use the public API:
+
+```js
+export default function setup({ provide }) {
+  provide('wsPort', 3000)
+}
+```
+:::

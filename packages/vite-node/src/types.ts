@@ -1,4 +1,4 @@
-import type { ViteHotContext } from 'vite/types/hot'
+import type { ViteHotContext } from 'vite/types/hot.js'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
@@ -31,13 +31,17 @@ export interface StartOfSourceMap {
   sourceRoot?: string
 }
 
-export type { EncodedSourceMap, DecodedSourceMap } from '@jridgewell/trace-mapping'
+export type {
+  EncodedSourceMap,
+  DecodedSourceMap,
+  SourceMapInput,
+} from '@jridgewell/trace-mapping'
 
 export interface RawSourceMap extends StartOfSourceMap {
-  version: string
+  version: number
   sources: string[]
   names: string[]
-  sourcesContent?: string[]
+  sourcesContent?: (string | null)[]
   mappings: string
 }
 
@@ -51,9 +55,15 @@ export type HotContext = Omit<ViteHotContext, 'acceptDeps' | 'decline'>
 
 export type FetchFunction = (id: string) => Promise<FetchResult>
 
-export type ResolveIdFunction = (id: string, importer?: string) => Awaitable<ViteNodeResolveId | null | undefined | void>
+export type ResolveIdFunction = (
+  id: string,
+  importer?: string
+) => Awaitable<ViteNodeResolveId | null | undefined | void>
 
-export type CreateHotContextFunction = (runner: ViteNodeRunner, url: string) => HotContext
+export type CreateHotContextFunction = (
+  runner: ViteNodeRunner,
+  url: string
+) => HotContext
 
 export interface ModuleCache {
   promise?: Promise<any>
@@ -87,6 +97,12 @@ export interface ViteNodeResolveId {
   meta?: Record<string, any> | null
   moduleSideEffects?: boolean | 'no-treeshake' | null
   syntheticNamedExports?: boolean | string | null
+}
+
+export interface ViteNodeResolveModule {
+  external: string | null
+  id: string
+  fsPath: string
 }
 
 export interface ViteNodeServerOptions {

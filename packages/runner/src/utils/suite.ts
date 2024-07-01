@@ -15,8 +15,9 @@ export function partitionSuiteChildren(suite: Suite) {
       tasksGroup = [c]
     }
   }
-  if (tasksGroup.length > 0)
+  if (tasksGroup.length > 0) {
     tasksGroups.push(tasksGroup)
+  }
 
   return tasksGroups
 }

@@ -12,8 +12,9 @@ export default async function () {
   await sleep(25)
 
   return async () => {
-    if (teardownHappened)
+    if (teardownHappened) {
       throw new Error('teardown called twice')
+    }
     teardownHappened = true
     // tear it down here
     // await server.close()

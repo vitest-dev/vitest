@@ -1,5 +1,6 @@
 import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
 import type { ChainableFunction } from '../utils/chain'
+import type { FixtureItem } from '../fixture'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -13,27 +14,35 @@ export interface TaskBase {
   concurrent?: boolean
   shuffle?: boolean
   suite?: Suite
-  file?: File
   result?: TaskResult
   retry?: number
   repeats?: number
+  location?: {
+    line: number
+    column: number
+  }
+}
+
+export interface TaskPopulated extends TaskBase {
+  file: File
+  pending?: boolean
+  result?: TaskResult
+  fails?: boolean
+  onFailed?: OnTestFailedHandler[]
+  onFinished?: OnTestFinishedHandler[]
+  /**
+   * Store promises (from async expects) to wait for them before finishing the test
+   */
+  promises?: Promise<any>[]
 }
 
 export interface TaskMeta {}
-
-export interface TaskCustom extends TaskBase {
-  type: 'custom'
-}
 
 export interface TaskResult {
   state: TaskState
   duration?: number
   startTime?: number
   heap?: number
-  /**
-   * @deprecated Use "errors" instead
-   */
-  error?: ErrorWithDiff
   errors?: ErrorWithDiff[]
   htmlError?: string
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
@@ -41,38 +50,42 @@ export interface TaskResult {
   repeatCount?: number
 }
 
-export type TaskResultPack = [id: string, result: TaskResult | undefined, meta: TaskMeta]
+export type TaskResultPack = [
+  id: string,
+  result: TaskResult | undefined,
+  meta: TaskMeta,
+]
 
 export interface Suite extends TaskBase {
+  file: File
   type: 'suite'
   tasks: Task[]
-  filepath?: string
-  projectName?: string
 }
 
 export interface File extends Suite {
+  pool?: string
   filepath: string
+  projectName: string | undefined
   collectDuration?: number
   setupDuration?: number
 }
 
-export interface Test<ExtraContext = {}> extends TaskBase {
+export interface Test<ExtraContext = {}> extends TaskPopulated {
   type: 'test'
-  suite: Suite
-  result?: TaskResult
-  fails?: boolean
-  context: TestContext & ExtraContext
-  onFailed?: OnTestFailedHandler[]
-  /**
-   * Store promises (from async expects) to wait for them before finishing the test
-   */
-  promises?: Promise<any>[]
+  context: TaskContext<Test> & ExtraContext & TestContext
 }
 
-export type Task = Test | Suite | TaskCustom | File
+export interface Custom<ExtraContext = {}> extends TaskPopulated {
+  type: 'custom'
+  context: TaskContext<Custom> & ExtraContext & TestContext
+}
+
+export type Task = Test | Suite | Custom | File
 
 export type DoneCallback = (error?: any) => void
-export type TestFunction<ExtraContext = {}> = (context: TestContext & ExtraContext) => Awaitable<any> | void
+export type TestFunction<ExtraContext = {}> = (
+  context: ExtendedContext<Test> & ExtraContext
+) => Awaitable<any> | void
 
 // jest's ExtractEachCallbackArgs
 type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
@@ -109,51 +122,94 @@ type ExtractEachCallbackArgs<T extends ReadonlyArray<any>> = {
                     ? 10
                     : 'fallback']
 
-interface SuiteEachFunction {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+interface EachFunctionReturn<T extends any[]> {
+  /**
+   * @deprecated Use options as the second argument instead
+   */
+  (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
-  ) => void
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    options: TestOptions
+  ): void
+  (
     name: string | Function,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
-  ) => void
-  <T>(cases: ReadonlyArray<T>): (
+    fn: (...args: T) => Awaitable<void>,
+    options?: number | TestOptions
+  ): void
+  (
     name: string | Function,
-    fn: (...args: T[]) => Awaitable<void>,
-  ) => void
+    options: TestOptions,
+    fn: (...args: T) => Awaitable<void>
+  ): void
 }
 
 interface TestEachFunction {
-  <T extends any[] | [any]>(cases: ReadonlyArray<T>): (
+  <T extends any[] | [any]>(cases: ReadonlyArray<T>): EachFunctionReturn<T>
+  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): EachFunctionReturn<
+    ExtractEachCallbackArgs<T>
+  >
+  <T>(cases: ReadonlyArray<T>): EachFunctionReturn<T[]>
+  (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
+}
+
+interface TestForFunctionReturn<Arg, Context> {
+  (
     name: string | Function,
-    fn: (...args: T) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T extends ReadonlyArray<any>>(cases: ReadonlyArray<T>): (
+    fn: (arg: Arg, context: Context) => Awaitable<void>
+  ): void
+  (
     name: string | Function,
-    fn: (...args: ExtractEachCallbackArgs<T>) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  <T>(cases: ReadonlyArray<T>): (
+    options: TestOptions,
+    fn: (args: Arg, context: Context) => Awaitable<void>
+  ): void
+}
+
+interface TestForFunction<ExtraContext> {
+  // test.for([1, 2, 3])
+  // test.for([[1, 2], [3, 4, 5]])
+  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
+    T,
+    ExtendedContext<Test> & ExtraContext
+  >
+
+  // test.for`
+  //    a  |  b
+  //   {1} | {2}
+  //   {3} | {4}
+  // `
+  (strings: TemplateStringsArray, ...values: any[]): TestForFunctionReturn<
+    any,
+    ExtendedContext<Test> & ExtraContext
+  >
+}
+
+interface TestCollectorCallable<C = {}> {
+  /**
+   * @deprecated Use options as the second argument instead
+   */
+  <ExtraContext extends C>(
     name: string | Function,
-    fn: (...args: T[]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
-  (...args: [TemplateStringsArray, ...any]): (
+    fn: TestFunction<ExtraContext>,
+    options: TestOptions
+  ): void
+  <ExtraContext extends C>(
     name: string | Function,
-    fn: (...args: any[]) => Awaitable<void>,
-    options?: number | TestOptions,
-  ) => void
+    fn?: TestFunction<ExtraContext>,
+    options?: number | TestOptions
+  ): void
+  <ExtraContext extends C>(
+    name: string | Function,
+    options?: TestOptions,
+    fn?: TestFunction<ExtraContext>
+  ): void
 }
 
 type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
-  'concurrent' | 'only' | 'skip' | 'todo' | 'fails',
-  [name: string | Function, fn?: TestFunction<ExtraContext>, options?: number | TestOptions],
-  void,
+  'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
+  TestCollectorCallable<ExtraContext>,
   {
     each: TestEachFunction
-    <T extends ExtraContext>(name: string | Function, fn?: TestFunction<T>, options?: number | TestOptions): void
+    for: TestForFunction<ExtraContext>
   }
 >
 
@@ -176,53 +232,159 @@ export interface TestOptions {
    * @default 0
    */
   repeats?: number
+  /**
+   * Whether suites and tests run concurrently.
+   * Tests inherit `concurrent` from `describe()` and nested `describe()` will inherit from parent's `concurrent`.
+   */
+  concurrent?: boolean
+  /**
+   * Whether tests run sequentially.
+   * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
+   */
+  sequential?: boolean
+  /**
+   * Whether the test should be skipped.
+   */
+  skip?: boolean
+  /**
+   * Should this test be the only one running in a suite.
+   */
+  only?: boolean
+  /**
+   * Whether the test should be skipped and marked as a todo.
+   */
+  todo?: boolean
+  /**
+   * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
+   */
+  fails?: boolean
 }
 
-export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> & {
-  each: TestEachFunction
-  skipIf(condition: any): ChainableTestAPI<ExtraContext>
-  runIf(condition: any): ChainableTestAPI<ExtraContext>
-  extend<T extends Record<string, any> = {}>(fixtures: Fixtures<T, ExtraContext>): TestAPI<{
-    [K in keyof T | keyof ExtraContext]:
-    K extends keyof T ? T[K] :
-      K extends keyof ExtraContext ? ExtraContext[K] : never }>
+interface ExtendedAPI<ExtraContext> {
+  skipIf: (condition: any) => ChainableTestAPI<ExtraContext>
+  runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
+export type CustomAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> &
+  ExtendedAPI<ExtraContext> & {
+    extend: <T extends Record<string, any> = {}>(
+      fixtures: Fixtures<T, ExtraContext>
+    ) => CustomAPI<{
+      [K in keyof T | keyof ExtraContext]: K extends keyof T
+        ? T[K]
+        : K extends keyof ExtraContext
+          ? ExtraContext[K]
+          : never;
+    }>
+  }
+
+export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> &
+  ExtendedAPI<ExtraContext> & {
+    extend: <T extends Record<string, any> = {}>(
+      fixtures: Fixtures<T, ExtraContext>
+    ) => TestAPI<{
+      [K in keyof T | keyof ExtraContext]: K extends keyof T
+        ? T[K]
+        : K extends keyof ExtraContext
+          ? ExtraContext[K]
+          : never;
+    }>
+  }
+
+export interface FixtureOptions {
+  /**
+   * Whether to automatically set up current fixture, even though it's not being used in tests.
+   */
+  auto?: boolean
+}
+
+export type Use<T> = (value: T) => Promise<void>
+export type FixtureFn<T, K extends keyof T, ExtraContext> = (
+  context: Omit<T, K> & ExtraContext,
+  use: Use<T[K]>
+) => Promise<void>
+export type Fixture<T, K extends keyof T, ExtraContext = {}> = ((
+  ...args: any
+) => any) extends T[K]
+  ? T[K] extends any
+    ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
+    : never
+  :
+    | T[K]
+    | (T[K] extends any
+      ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
+      : never)
 export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
-  [K in keyof T]: T[K] | ((context: {
-    [P in keyof T | keyof ExtraContext as P extends K ?
-      P extends keyof ExtraContext ? P : never : P
-    ]:
-    K extends P ? K extends keyof ExtraContext ? ExtraContext[K] : never :
-      P extends keyof T ? T[P] : never
-  } & TestContext, use: (fixture: T[K]) => Promise<void>) => Promise<void>)
+  [K in keyof T]:
+    | Fixture<T, K, ExtraContext & ExtendedContext<Test>>
+    | [Fixture<T, K, ExtraContext & ExtendedContext<Test>>, FixtureOptions?];
+}
+
+export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
+
+interface SuiteCollectorCallable<ExtraContext = {}> {
+  /**
+   * @deprecated Use options as the second argument instead
+   */
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(
+    name: string | Function,
+    fn: SuiteFactory<OverrideExtraContext>,
+    options: TestOptions
+  ): SuiteCollector<OverrideExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(
+    name: string | Function,
+    fn?: SuiteFactory<OverrideExtraContext>,
+    options?: number | TestOptions
+  ): SuiteCollector<OverrideExtraContext>
+  <OverrideExtraContext extends ExtraContext = ExtraContext>(
+    name: string | Function,
+    options: TestOptions,
+    fn?: SuiteFactory<OverrideExtraContext>
+  ): SuiteCollector<OverrideExtraContext>
 }
 
 type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
-  [name: string | Function, factory?: SuiteFactory<ExtraContext>, options?: number | TestOptions],
-  SuiteCollector<ExtraContext>,
+  SuiteCollectorCallable<ExtraContext>,
   {
     each: TestEachFunction
-    <T extends ExtraContext>(name: string | Function, factory?: SuiteFactory<T>): SuiteCollector<T>
   }
 >
 
 export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
-  each: SuiteEachFunction
-  skipIf(condition: any): ChainableSuiteAPI<ExtraContext>
-  runIf(condition: any): ChainableSuiteAPI<ExtraContext>
+  skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
+  runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
 
-export type HookListener<T extends any[], Return = void> = (...args: T) => Awaitable<Return>
+export type HookListener<T extends any[], Return = void> = (
+  ...args: T
+) => Awaitable<Return>
 
 export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
 export interface SuiteHooks<ExtraContext = {}> {
   beforeAll: HookListener<[Readonly<Suite | File>], HookCleanupCallback>[]
   afterAll: HookListener<[Readonly<Suite | File>]>[]
-  beforeEach: HookListener<[TestContext & ExtraContext, Readonly<Suite>], HookCleanupCallback>[]
-  afterEach: HookListener<[TestContext & ExtraContext, Readonly<Suite>]>[]
+  beforeEach: HookListener<
+    [ExtendedContext<Test | Custom> & ExtraContext, Readonly<Suite>],
+    HookCleanupCallback
+  >[]
+  afterEach: HookListener<
+    [ExtendedContext<Test | Custom> & ExtraContext, Readonly<Suite>]
+  >[]
+}
+
+export interface TaskCustomOptions extends TestOptions {
+  concurrent?: boolean
+  sequential?: boolean
+  skip?: boolean
+  only?: boolean
+  todo?: boolean
+  fails?: boolean
+  each?: boolean
+  meta?: Record<string, unknown>
+  fixtures?: FixtureItem[]
+  handler?: (context: TaskContext<Custom>) => Awaitable<void>
 }
 
 export interface SuiteCollector<ExtraContext = {}> {
@@ -231,40 +393,59 @@ export interface SuiteCollector<ExtraContext = {}> {
   options?: TestOptions
   type: 'collector'
   test: TestAPI<ExtraContext>
-  tasks: (Suite | TaskCustom | Test | SuiteCollector<ExtraContext>)[]
-  custom: (name: string) => TaskCustom
-  collect: (file?: File) => Promise<Suite>
+  tasks: (
+    | Suite
+    | Custom<ExtraContext>
+    | Test<ExtraContext>
+    | SuiteCollector<ExtraContext>
+  )[]
+  task: (name: string, options?: TaskCustomOptions) => Custom<ExtraContext>
+  collect: (file: File) => Promise<Suite>
   clear: () => void
-  on: <T extends keyof SuiteHooks<ExtraContext>>(name: T, ...fn: SuiteHooks<ExtraContext>[T]) => void
+  on: <T extends keyof SuiteHooks<ExtraContext>>(
+    name: T,
+    ...fn: SuiteHooks<ExtraContext>[T]
+  ) => void
 }
 
-export type SuiteFactory<ExtraContext = {}> = (test: (name: string | Function, fn: TestFunction<ExtraContext>) => void) => Awaitable<void>
+export type SuiteFactory<ExtraContext = {}> = (
+  test: TestAPI<ExtraContext>
+) => Awaitable<void>
 
 export interface RuntimeContext {
   tasks: (SuiteCollector | Test)[]
   currentSuite: SuiteCollector | null
 }
 
-export interface TestContext {
-  /**
-   * Metadata of the current test
-   *
-   * @deprecated Use `task` instead
-   */
-  meta: Readonly<Test>
+export interface TestContext {}
 
+export interface TaskContext<Task extends Custom | Test = Custom | Test> {
   /**
    * Metadata of the current test
    */
-  task: Readonly<Test>
+  task: Readonly<Task>
 
   /**
    * Extract hooks on test failed
    */
   onTestFailed: (fn: OnTestFailedHandler) => void
+
+  /**
+   * Extract hooks on test failed
+   */
+  onTestFinished: (fn: OnTestFinishedHandler) => void
+
+  /**
+   * Mark tests as skipped. All execution after this call will be skipped.
+   */
+  skip: () => void
 }
 
+export type ExtendedContext<T extends Custom | Test> = TaskContext<T> &
+  TestContext
+
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
+export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
 export type SequenceSetupFiles = 'list' | 'parallel'

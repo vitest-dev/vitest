@@ -1,27 +1,40 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
-import { configDefaults } from '../../defaults'
+import { configDefaults, coverageConfigDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
-import { deepMerge, notNullish, removeUndefinedValues } from '../../utils'
-import { ensurePackageInstalled } from '../pkg'
+import {
+  deepMerge,
+  notNullish,
+  removeUndefinedValues,
+  toArray,
+} from '../../utils'
 import { resolveApiServerConfig } from '../config'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { defaultPort } from '../../constants'
 import { SsrReplacerPlugin } from './ssrReplacer'
-import { GlobalSetupPlugin } from './globalSetup'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
-import { MocksPlugin } from './mocks'
-import { deleteDefineConfig, resolveOptimizerConfig } from './utils'
+import { MocksPlugins } from './mocks'
+import {
+  deleteDefineConfig,
+  hijackVitePluginInject,
+  resolveFsAllow,
+} from './utils'
 import { VitestResolver } from './vitestResolver'
+import { VitestOptimizer } from './optimizer'
+import { NormalizeURLPlugin } from './normalizeURL'
 
-export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('test')): Promise<VitePlugin[]> {
+export async function VitestPlugin(
+  options: UserConfig = {},
+  ctx = new Vitest('test'),
+): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    await ensurePackageInstalled('@vitest/ui', getRoot())
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
     return (await import('@vitest/ui')).default(ctx)
   }
 
@@ -45,97 +58,159 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         const testConfig = deepMerge(
           {} as UserConfig,
           configDefaults,
-          options,
           removeUndefinedValues(viteConfig.test ?? {}),
+          options,
         )
-        testConfig.api = resolveApiServerConfig(testConfig)
+        testConfig.api = resolveApiServerConfig(testConfig, defaultPort)
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig);
 
-        ;(options as ResolvedConfig).defines = defines
+        (options as ResolvedConfig).defines = defines
 
-        let open: string | boolean | undefined
+        let open: string | boolean | undefined = false
 
-        if (testConfig.ui && testConfig.open)
+        if (testConfig.ui && testConfig.open) {
           open = testConfig.uiBase ?? '/__vitest__/'
+        }
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
-          esbuild: {
-            sourcemap: 'external',
+          esbuild:
+            viteConfig.esbuild === false
+              ? false
+              : {
+                  sourcemap: 'external',
 
-            // Enables using ignore hint for coverage providers with @preserve keyword
-            legalComments: 'inline',
-          },
+                  // Enables using ignore hint for coverage providers with @preserve keyword
+                  legalComments: 'inline',
+                },
           resolve: {
             // by default Vite resolves `module` field, which not always a native ESM module
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
             alias: testConfig.alias,
             conditions: ['node'],
-            // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error
-            // @ts-ignore we support Vite ^3.0, but browserField is available in Vite ^3.2
-            browserField: false,
           },
           server: {
             ...testConfig.api,
-            watch: {
-              ignored: testConfig.watchExclude,
-            },
             open,
             hmr: false,
             preTransformRequests: false,
+            fs: {
+              allow: resolveFsAllow(getRoot(), testConfig.config),
+            },
+          },
+          build: {
+            // Vitest doesn't use outputDir, but this value affects what folders are watched
+            // https://github.com/vitest-dev/vitest/issues/5429
+            // This works for Vite <5.2.10
+            outDir: 'dummy-non-existing-folder',
+            // This works for Vite >=5.2.10
+            // https://github.com/vitejs/vite/pull/16453
+            emptyOutDir: false,
+          },
+          test: {
+            poolOptions: {
+              threads: {
+                isolate:
+                  options.poolOptions?.threads?.isolate
+                  ?? options.isolate
+                  ?? testConfig.poolOptions?.threads?.isolate
+                  ?? viteConfig.test?.isolate,
+              },
+              forks: {
+                isolate:
+                  options.poolOptions?.forks?.isolate
+                  ?? options.isolate
+                  ?? testConfig.poolOptions?.forks?.isolate
+                  ?? viteConfig.test?.isolate,
+              },
+            },
           },
         }
 
-        // chokidar fsevents is unstable on macos when emitting "ready" event
-        if (process.platform === 'darwin' && process.env.VITE_TEST_WATCHER_DEBUG) {
-          config.server!.watch!.useFsEvents = false
-          config.server!.watch!.usePolling = false
+        // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
+        if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
+          config.test.coverage = {
+            exclude: [...coverageConfigDefaults.exclude, ...userConfig.include],
+          }
         }
 
-        const classNameStrategy = (typeof testConfig.css !== 'boolean' && testConfig.css?.modules?.classNameStrategy) || 'stable'
+        // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
+        if (viteConfig.ssr?.noExternal !== true) {
+          const inline = testConfig.server?.deps?.inline
+          if (inline === true) {
+            config.ssr = { noExternal: true }
+          }
+          else {
+            const noExternal = viteConfig.ssr?.noExternal
+            const noExternalArray
+              = typeof noExternal !== 'undefined'
+                ? toArray(noExternal)
+                : undefined
+            // filter the same packages
+            const uniqueInline
+              = inline && noExternalArray
+                ? inline.filter(dep => !noExternalArray.includes(dep))
+                : inline
+            config.ssr = {
+              noExternal: uniqueInline,
+            }
+          }
+        }
+
+        // chokidar fsevents is unstable on macos when emitting "ready" event
+        if (
+          process.platform === 'darwin'
+          && process.env.VITE_TEST_WATCHER_DEBUG
+        ) {
+          const watch = config.server!.watch
+          if (watch) {
+            watch.useFsEvents = false
+            watch.usePolling = false
+          }
+        }
+
+        const classNameStrategy
+          = (typeof testConfig.css !== 'boolean'
+          && testConfig.css?.modules?.classNameStrategy)
+          || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
           config.css.modules ??= {}
           if (config.css.modules) {
-            config.css.modules.generateScopedName = (name: string, filename: string) => {
+            config.css.modules.generateScopedName = (
+              name: string,
+              filename: string,
+            ) => {
               const root = getRoot()
-              return generateScopedClassName(classNameStrategy, name, relative(root, filename))!
+              return generateScopedClassName(
+                classNameStrategy,
+                name,
+                relative(root, filename),
+              )!
             }
           }
-        }
-
-        const webOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.web, viteConfig.optimizeDeps, testConfig)
-        const ssrOptimizer = resolveOptimizerConfig(testConfig.deps?.optimizer?.ssr, viteConfig.ssr?.optimizeDeps, testConfig)
-
-        config.cacheDir = webOptimizer.cacheDir || ssrOptimizer.cacheDir || config.cacheDir
-        config.optimizeDeps = webOptimizer.optimizeDeps
-        config.ssr = {
-          optimizeDeps: ssrOptimizer.optimizeDeps,
         }
 
         return config
       },
       async configResolved(viteConfig) {
         const viteConfigTest = (viteConfig.test as any) || {}
-        if (viteConfigTest.watch === false)
+        if (viteConfigTest.watch === false) {
           viteConfigTest.run = true
+        }
 
-        if ('alias' in viteConfigTest)
+        if ('alias' in viteConfigTest) {
           delete viteConfigTest.alias
+        }
 
         // viteConfig.test is final now, merge it for real
-        options = deepMerge(
-          {},
-          configDefaults,
-          viteConfigTest,
-          options,
-        )
-        options.api = resolveApiServerConfig(options)
+        options = deepMerge({}, configDefaults, viteConfigTest, options)
+        options.api = resolveApiServerConfig(options, defaultPort)
 
         // we replace every "import.meta.env" with "process.env"
         // to allow reassigning, so we need to put all envs on process.env
@@ -145,19 +220,17 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
         // so we are making them truthy
         process.env.PROD ??= PROD ? '1' : ''
         process.env.DEV ??= DEV ? '1' : ''
-        process.env.SSR ??= '1'
 
-        for (const name in envs)
+        for (const name in envs) {
           process.env[name] ??= envs[name]
+        }
 
         // don't watch files in run mode
         if (!options.watch) {
-          viteConfig.server.watch = {
-            persistent: false,
-            depth: 0,
-            ignored: ['**/*'],
-          }
+          viteConfig.server.watch = null
         }
+
+        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
@@ -166,30 +239,24 @@ export async function VitestPlugin(options: UserConfig = {}, ctx = new Vitest('t
             console.log('[debug] watcher is ready')
           })
         }
-        try {
-          await ctx.setServer(options, server, userConfig)
-          if (options.api && options.watch)
-            (await import('../../api/setup')).setup(ctx)
-        }
-        catch (err) {
-          await ctx.logger.printError(err, { fullStack: true })
-          process.exit(1)
+        await ctx.setServer(options, server, userConfig)
+        if (options.api && options.watch) {
+          (await import('../../api/setup')).setup(ctx)
         }
 
         // #415, in run mode we don't need the watcher, close it would improve the performance
-        if (!options.watch)
+        if (!options.watch) {
           await server.watcher.close()
+        }
       },
     },
     SsrReplacerPlugin(),
-    GlobalSetupPlugin(ctx, ctx.logger),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
-    options.ui
-      ? await UIPlugin()
-      : null,
-    MocksPlugin(),
+    options.ui ? await UIPlugin() : null,
+    ...MocksPlugins(),
     VitestResolver(ctx),
-  ]
-    .filter(notNullish)
+    VitestOptimizer(),
+    NormalizeURLPlugin(),
+  ].filter(notNullish)
 }

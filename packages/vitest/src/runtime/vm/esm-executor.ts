@@ -1,6 +1,6 @@
-/* eslint-disable antfu/no-cjs-exports */
-
 import type vm from 'node:vm'
+import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path'
 import type { ExternalModulesExecutor } from '../external-executor'
 import type { VMModule } from './types'
 import { SourceTextModule, SyntheticModule } from './utils'
@@ -18,7 +18,12 @@ export class EsmExecutor {
   private esmLinkMap = new WeakMap<VMModule, Promise<void>>()
   private context: vm.Context
 
-  constructor(private executor: ExternalModulesExecutor, options: EsmExecutorOptions) {
+  #httpIp = IPnumber('127.0.0.0')
+
+  constructor(
+    private executor: ExternalModulesExecutor,
+    options: EsmExecutorOptions,
+  ) {
     this.context = options.context
   }
 
@@ -34,50 +39,99 @@ export class EsmExecutor {
 
     await this.esmLinkMap.get(m)
 
-    if (m.status === 'linked')
+    if (m.status === 'linked') {
       await m.evaluate()
+    }
 
     return m
   }
 
-  public async createEsModule(fileUrl: string, code: string) {
-    const cached = this.moduleCache.get(fileUrl)
-    if (cached)
+  public async createEsModule(
+    fileURL: string,
+    getCode: () => Promise<string> | string,
+  ) {
+    const cached = this.moduleCache.get(fileURL)
+    if (cached) {
       return cached
+    }
+    const promise = this.loadEsModule(fileURL, getCode)
+    this.moduleCache.set(fileURL, promise)
+    return promise
+  }
+
+  private async loadEsModule(
+    fileURL: string,
+    getCode: () => string | Promise<string>,
+  ) {
+    const code = await getCode()
     // TODO: should not be allowed in strict mode, implement in #2854
-    if (fileUrl.endsWith('.json')) {
-      const m = new SyntheticModule(
-        ['default'],
-        () => {
-          const result = JSON.parse(code)
-          m.setExport('default', result)
-        },
-      )
-      this.moduleCache.set(fileUrl, m)
+    if (fileURL.endsWith('.json')) {
+      const m = new SyntheticModule(['default'], () => {
+        const result = JSON.parse(code)
+        m.setExport('default', result)
+      })
+      this.moduleCache.set(fileURL, m)
       return m
     }
-    const m = new SourceTextModule(
-      code,
-      {
-        identifier: fileUrl,
-        context: this.context,
-        importModuleDynamically: this.executor.importModuleDynamically,
-        initializeImportMeta: (meta, mod) => {
-          meta.url = mod.identifier
-          meta.resolve = (specifier: string, importer?: string) => {
-            return this.executor.resolve(specifier, importer ?? mod.identifier)
-          }
-        },
+    const m = new SourceTextModule(code, {
+      identifier: fileURL,
+      context: this.context,
+      importModuleDynamically: this.executor.importModuleDynamically,
+      initializeImportMeta: (meta, mod) => {
+        meta.url = mod.identifier
+        if (mod.identifier.startsWith('file:')) {
+          const filename = fileURLToPath(mod.identifier)
+          meta.filename = filename
+          meta.dirname = dirname(filename)
+        }
+        meta.resolve = (specifier: string, importer?: string | URL) => {
+          return this.executor.resolve(
+            specifier,
+            importer != null ? importer.toString() : mod.identifier,
+          )
+        }
       },
-    )
+    })
+    this.moduleCache.set(fileURL, m)
+    return m
+  }
+
+  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer) {
+    const cached = this.moduleCache.get(fileUrl)
+    if (cached) {
+      return cached
+    }
+    const m = this.loadWebAssemblyModule(getCode(), fileUrl)
     this.moduleCache.set(fileUrl, m)
     return m
   }
 
+  public async createNetworkModule(fileUrl: string) {
+    // https://nodejs.org/api/esm.html#https-and-http-imports
+    if (fileUrl.startsWith('http:')) {
+      const url = new URL(fileUrl)
+      if (
+        url.hostname !== 'localhost'
+        && url.hostname !== '::1'
+        && (IPnumber(url.hostname) & IPmask(8)) !== this.#httpIp
+      ) {
+        throw new Error(
+          // we don't know the importer, so it's undefined (the same happens in --pool=threads)
+          `import of '${fileUrl}' by undefined is not supported: `
+          + 'http can only be used to load local resources (use https instead).',
+        )
+      }
+    }
+
+    return this.createEsModule(fileUrl, () =>
+      fetch(fileUrl).then(r => r.text()))
+  }
+
   public async loadWebAssemblyModule(source: Buffer, identifier: string) {
     const cached = this.moduleCache.get(identifier)
-    if (cached)
+    if (cached) {
       return cached
+    }
 
     const wasmModule = await WebAssembly.compile(source)
 
@@ -87,31 +141,33 @@ export class EsmExecutor {
     const moduleLookup: Record<string, VMModule> = {}
     for (const { module } of imports) {
       if (moduleLookup[module] === undefined) {
-        const resolvedModule = await this.executor.resolveModule(
+        moduleLookup[module] = await this.executor.resolveModule(
           module,
           identifier,
         )
-
-        moduleLookup[module] = await this.evaluateModule(resolvedModule)
       }
     }
 
     const syntheticModule = new SyntheticModule(
       exports.map(({ name }) => name),
-      () => {
+      async () => {
         const importsObject: WebAssembly.Imports = {}
         for (const { module, name } of imports) {
-          if (!importsObject[module])
+          if (!importsObject[module]) {
             importsObject[module] = {}
-
-          importsObject[module][name] = (moduleLookup[module].namespace as any)[name]
+          }
+          await this.evaluateModule(moduleLookup[module])
+          importsObject[module][name] = (moduleLookup[module].namespace as any)[
+            name
+          ]
         }
         const wasmInstance = new WebAssembly.Instance(
           wasmModule,
           importsObject,
         )
-        for (const { name } of exports)
+        for (const { name } of exports) {
           syntheticModule.setExport(name, wasmInstance.exports[name])
+        }
       },
       { context: this.context, identifier },
     )
@@ -129,25 +185,29 @@ export class EsmExecutor {
 
   public async createDataModule(identifier: string): Promise<VMModule> {
     const cached = this.moduleCache.get(identifier)
-    if (cached)
+    if (cached) {
       return cached
+    }
 
     const match = identifier.match(dataURIRegex)
 
-    if (!match || !match.groups)
+    if (!match || !match.groups) {
       throw new Error('Invalid data URI')
+    }
 
     const mime = match.groups.mime
     const encoding = match.groups.encoding
 
     if (mime === 'application/wasm') {
-      if (!encoding)
+      if (!encoding) {
         throw new Error('Missing data URI encoding')
+      }
 
-      if (encoding !== 'base64')
+      if (encoding !== 'base64') {
         throw new Error(`Invalid data URI encoding: ${encoding}`)
+      }
 
-      const module = await this.loadWebAssemblyModule(
+      const module = this.loadWebAssemblyModule(
         Buffer.from(match.groups.code, 'base64'),
         identifier,
       )
@@ -156,13 +216,15 @@ export class EsmExecutor {
     }
 
     let code = match.groups.code
-    if (!encoding || encoding === 'charset=utf-8')
+    if (!encoding || encoding === 'charset=utf-8') {
       code = decodeURIComponent(code)
-
-    else if (encoding === 'base64')
+    }
+    else if (encoding === 'base64') {
       code = Buffer.from(code, 'base64').toString()
-    else
+    }
+    else {
       throw new Error(`Invalid data URI encoding: ${encoding}`)
+    }
 
     if (mime === 'application/json') {
       const module = new SyntheticModule(
@@ -177,6 +239,19 @@ export class EsmExecutor {
       return module
     }
 
-    return this.createEsModule(identifier, code)
+    return this.createEsModule(identifier, () => code)
   }
+}
+
+function IPnumber(address: string) {
+  const ip = address.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
+  if (ip) {
+    return (+ip[1] << 24) + (+ip[2] << 16) + (+ip[3] << 8) + +ip[4]
+  }
+
+  throw new Error(`Expected IP address, received ${address}`)
+}
+
+function IPmask(maskSize: number) {
+  return -1 << (32 - maskSize)
 }

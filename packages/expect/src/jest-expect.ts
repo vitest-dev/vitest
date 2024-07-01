@@ -1,37 +1,71 @@
-import { AssertionError } from 'chai'
 import { assertTypes, getColors } from '@vitest/utils'
 import type { Constructable } from '@vitest/utils'
-import type { EnhancedSpy } from '@vitest/spy'
+import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
 import type { Test } from '@vitest/runner'
 import type { Assertion, ChaiPlugin } from './types'
-import { arrayBufferEquality, generateToBeMessage, iterableEquality, equals as jestEquals, sparseArrayEquality, subsetEquality, typeEquality } from './jest-utils'
+import {
+  arrayBufferEquality,
+  generateToBeMessage,
+  getObjectSubset,
+  iterableEquality,
+  equals as jestEquals,
+  sparseArrayEquality,
+  subsetEquality,
+  typeEquality,
+} from './jest-utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { diff, stringify } from './jest-matcher-utils'
+import {
+  diff,
+  getCustomEqualityTesters,
+  stringify,
+} from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapSoft } from './utils'
 
+// polyfill globals because expect can be used in node environment
+declare class Node {
+  contains(item: unknown): boolean
+}
+declare class DOMTokenList {
+  value: string
+  contains(item: unknown): boolean
+}
+
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
+  const { AssertionError } = chai
   const c = () => getColors()
+  const customTesters = getCustomEqualityTesters()
 
-  function def(name: keyof Assertion | (keyof Assertion)[], fn: ((this: Chai.AssertionStatic & Assertion, ...args: any[]) => any)) {
+  function def(
+    name: keyof Assertion | (keyof Assertion)[],
+    fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => any,
+  ) {
     const addMethod = (n: keyof Assertion) => {
       const softWrapper = wrapSoft(utils, fn)
       utils.addMethod(chai.Assertion.prototype, n, softWrapper)
-      utils.addMethod((globalThis as any)[JEST_MATCHERS_OBJECT].matchers, n, softWrapper)
+      utils.addMethod(
+        (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
+        n,
+        softWrapper,
+      )
     }
 
-    if (Array.isArray(name))
+    if (Array.isArray(name)) {
       name.forEach(n => addMethod(n))
-
-    else
+    }
+    else {
       addMethod(name)
+    }
   }
 
   (['throw', 'throws', 'Throw'] as const).forEach((m) => {
     utils.overwriteMethod(chai.Assertion.prototype, m, (_super: any) => {
-      return function (this: Chai.Assertion & Chai.AssertionStatic, ...args: any[]) {
+      return function (
+        this: Chai.Assertion & Chai.AssertionStatic,
+        ...args: any[]
+      ) {
         const promise = utils.flag(this, 'promise')
         const object = utils.flag(this, 'object')
         const isNot = utils.flag(this, 'negate') as boolean
@@ -45,7 +79,9 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         // called as '.resolves[.not].toThrow()`
         else if (promise === 'resolves' && typeof object !== 'function') {
           if (!isNot) {
-            const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
+            const message
+              = utils.flag(this, 'message')
+              || 'expected promise to throw an error, but it didn\'t'
             const error = {
               showDiff: false,
             }
@@ -68,11 +104,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
 
   def('toEqual', function (expected) {
     const actual = utils.flag(this, 'object')
-    const equal = jestEquals(
-      actual,
-      expected,
-      [iterableEquality],
-    )
+    const equal = jestEquals(actual, expected, [
+      ...customTesters,
+      iterableEquality,
+    ])
 
     return this.assert(
       equal,
@@ -89,6 +124,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       obj,
       expected,
       [
+        ...customTesters,
         iterableEquality,
         typeEquality,
         sparseArrayEquality,
@@ -116,6 +152,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         actual,
         expected,
         [
+          ...customTesters,
           iterableEquality,
           typeEquality,
           sparseArrayEquality,
@@ -128,14 +165,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         deepEqualityName = 'toStrictEqual'
       }
       else {
-        const toEqualPass = jestEquals(
-          actual,
-          expected,
-          [iterableEquality],
-        )
+        const toEqualPass = jestEquals(actual, expected, [
+          ...customTesters,
+          iterableEquality,
+        ])
 
-        if (toEqualPass)
+        if (toEqualPass) {
           deepEqualityName = 'toEqual'
+        }
       }
     }
 
@@ -149,27 +186,113 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
   def('toMatchObject', function (expected) {
     const actual = this._obj
+    const pass = jestEquals(actual, expected, [
+      ...customTesters,
+      iterableEquality,
+      subsetEquality,
+    ])
+    const isNot = utils.flag(this, 'negate') as boolean
+    const { subset: actualSubset, stripped } = getObjectSubset(
+      actual,
+      expected,
+    )
+    if ((pass && isNot) || (!pass && !isNot)) {
+      const msg = utils.getMessage(this, [
+        pass,
+        'expected #{this} to match object #{exp}',
+        'expected #{this} to not match object #{exp}',
+        expected,
+        actualSubset,
+        false,
+      ])
+      const message
+        = stripped === 0
+          ? msg
+          : `${msg}\n(${stripped} matching ${
+              stripped === 1 ? 'property' : 'properties'
+            } omitted from actual)`
+      throw new AssertionError(message, {
+        showDiff: true,
+        expected,
+        actual: actualSubset,
+      })
+    }
+  })
+  def('toMatch', function (expected: string | RegExp) {
+    const actual = this._obj as string
+    if (typeof actual !== 'string') {
+      throw new TypeError(
+        `.toMatch() expects to receive a string, but got ${typeof actual}`,
+      )
+    }
+
     return this.assert(
-      jestEquals(actual, expected, [iterableEquality, subsetEquality]),
-      'expected #{this} to match object #{exp}',
-      'expected #{this} to not match object #{exp}',
+      typeof expected === 'string'
+        ? actual.includes(expected)
+        : actual.match(expected),
+      `expected #{this} to match #{exp}`,
+      `expected #{this} not to match #{exp}`,
       expected,
       actual,
     )
   })
-  def('toMatch', function (expected: string | RegExp) {
-    if (typeof expected === 'string')
-      return this.include(expected)
-    else
-      return this.match(expected)
-  })
   def('toContain', function (item) {
+    const actual = this._obj as
+      | Iterable<unknown>
+      | string
+      | Node
+      | DOMTokenList
+
+    if (typeof Node !== 'undefined' && actual instanceof Node) {
+      if (!(item instanceof Node)) {
+        throw new TypeError(
+          `toContain() expected a DOM node as the argument, but got ${typeof item}`,
+        )
+      }
+
+      return this.assert(
+        actual.contains(item),
+        'expected #{this} to contain element #{exp}',
+        'expected #{this} not to contain element #{exp}',
+        item,
+        actual,
+      )
+    }
+
+    if (typeof DOMTokenList !== 'undefined' && actual instanceof DOMTokenList) {
+      assertTypes(item, 'class name', ['string'])
+      const isNot = utils.flag(this, 'negate') as boolean
+      const expectedClassList = isNot
+        ? actual.value.replace(item, '').trim()
+        : `${actual.value} ${item}`
+      return this.assert(
+        actual.contains(item),
+        `expected "${actual.value}" to contain "${item}"`,
+        `expected "${actual.value}" not to contain "${item}"`,
+        expectedClassList,
+        actual.value,
+      )
+    }
+    // handle simple case on our own using `this.assert` to include diff in error message
+    if (typeof actual === 'string' && typeof item === 'string') {
+      return this.assert(
+        actual.includes(item),
+        `expected #{this} to contain #{exp}`,
+        `expected #{this} not to contain #{exp}`,
+        item,
+        actual,
+      )
+    }
+    // make "actual" indexable to have compatibility with jest
+    if (actual != null && typeof actual !== 'string') {
+      utils.flag(this, 'object', Array.from(actual as Iterable<unknown>))
+    }
     return this.contain(item)
   })
   def('toContainEqual', function (expected) {
     const obj = utils.flag(this, 'object')
     const index = Array.from(obj).findIndex((item) => {
-      return jestEquals(item, expected)
+      return jestEquals(item, expected, customTesters)
     })
 
     this.assert(
@@ -200,7 +323,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -213,7 +336,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeGreaterThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -226,7 +349,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThan', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -239,7 +362,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeLessThanOrEqual', function (expected: number | bigint) {
-    const actual = this._obj
+    const actual = this._obj as number | bigint
     assertTypes(actual, 'actual', ['number', 'bigint'])
     assertTypes(expected, 'expected', ['number', 'bigint'])
     return this.assert(
@@ -264,22 +387,36 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const negate = utils.flag(this, 'negate')
     utils.flag(this, 'negate', false)
 
-    if (negate)
+    if (negate) {
       return this.be.undefined
+    }
 
     return this.not.be.undefined
   })
-  def('toBeTypeOf', function (expected: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') {
-    const actual = typeof this._obj
-    const equal = expected === actual
-    return this.assert(
-      equal,
-      'expected #{this} to be type of #{exp}',
-      'expected #{this} not to be type of #{exp}',
-      expected,
-      actual,
-    )
-  })
+  def(
+    'toBeTypeOf',
+    function (
+      expected:
+        | 'bigint'
+        | 'boolean'
+        | 'function'
+        | 'number'
+        | 'object'
+        | 'string'
+        | 'symbol'
+        | 'undefined',
+    ) {
+      const actual = typeof this._obj
+      const equal = expected === actual
+      return this.assert(
+        equal,
+        'expected #{this} to be type of #{exp}',
+        'expected #{this} not to be type of #{exp}',
+        expected,
+        actual,
+      )
+    },
+  )
   def('toBeInstanceOf', function (obj: any) {
     return this.instanceOf(obj)
   })
@@ -287,40 +424,60 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.have.length(length)
   })
   // destructuring, because it checks `arguments` inside, and value is passing as `undefined`
-  def('toHaveProperty', function (...args: [property: string | (string | number)[], value?: any]) {
-    if (Array.isArray(args[0]))
-      args[0] = args[0].map(key => String(key).replace(/([.[\]])/g, '\\$1')).join('.')
+  def(
+    'toHaveProperty',
+    function (...args: [property: string | (string | number)[], value?: any]) {
+      if (Array.isArray(args[0])) {
+        args[0] = args[0]
+          .map(key => String(key).replace(/([.[\]])/g, '\\$1'))
+          .join('.')
+      }
 
-    const actual = this._obj
-    const [propertyName, expected] = args
-    const getValue = () => {
-      const hasOwn = Object.prototype.hasOwnProperty.call(actual, propertyName)
-      if (hasOwn)
-        return { value: actual[propertyName], exists: true }
-      return utils.getPathInfo(actual, propertyName)
-    }
-    const { value, exists } = getValue()
-    const pass = exists && (args.length === 1 || jestEquals(expected, value))
+      const actual = this._obj as any
+      const [propertyName, expected] = args
+      const getValue = () => {
+        const hasOwn = Object.prototype.hasOwnProperty.call(
+          actual,
+          propertyName,
+        )
+        if (hasOwn) {
+          return { value: actual[propertyName], exists: true }
+        }
+        return utils.getPathInfo(actual, propertyName)
+      }
+      const { value, exists } = getValue()
+      const pass
+        = exists
+        && (args.length === 1 || jestEquals(expected, value, customTesters))
 
-    const valueString = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
+      const valueString
+        = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
 
-    return this.assert(
-      pass,
-      `expected #{this} to have property "${propertyName}"${valueString}`,
-      `expected #{this} to not have property "${propertyName}"${valueString}`,
-      actual,
-    )
-  })
+      return this.assert(
+        pass,
+        `expected #{this} to have property "${propertyName}"${valueString}`,
+        `expected #{this} to not have property "${propertyName}"${valueString}`,
+        expected,
+        exists ? value : undefined,
+      )
+    },
+  )
   def('toBeCloseTo', function (received: number, precision = 2) {
     const expected = this._obj
     let pass = false
     let expectedDiff = 0
     let receivedDiff = 0
 
-    if (received === Number.POSITIVE_INFINITY && expected === Number.POSITIVE_INFINITY) {
+    if (
+      received === Number.POSITIVE_INFINITY
+      && expected === Number.POSITIVE_INFINITY
+    ) {
       pass = true
     }
-    else if (received === Number.NEGATIVE_INFINITY && expected === Number.NEGATIVE_INFINITY) {
+    else if (
+      received === Number.NEGATIVE_INFINITY
+      && expected === Number.NEGATIVE_INFINITY
+    ) {
       pass = true
     }
     else {
@@ -339,56 +496,101 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   const assertIsMock = (assertion: any) => {
-    if (!isMockFunction(assertion._obj))
-      throw new TypeError(`${utils.inspect(assertion._obj)} is not a spy or a call to a spy!`)
+    if (!isMockFunction(assertion._obj)) {
+      throw new TypeError(
+        `${utils.inspect(assertion._obj)} is not a spy or a call to a spy!`,
+      )
+    }
   }
   const getSpy = (assertion: any) => {
     assertIsMock(assertion)
-    return assertion._obj as EnhancedSpy
+    return assertion._obj as MockInstance
   }
   const ordinalOf = (i: number) => {
     const j = i % 10
     const k = i % 100
 
-    if (j === 1 && k !== 11)
+    if (j === 1 && k !== 11) {
       return `${i}st`
+    }
 
-    if (j === 2 && k !== 12)
+    if (j === 2 && k !== 12) {
       return `${i}nd`
+    }
 
-    if (j === 3 && k !== 13)
+    if (j === 3 && k !== 13) {
       return `${i}rd`
+    }
 
     return `${i}th`
   }
-  const formatCalls = (spy: EnhancedSpy, msg: string, actualCall?: any) => {
+  const formatCalls = (
+    spy: MockInstance,
+    msg: string,
+    showActualCall?: any,
+  ) => {
     if (spy.mock.calls) {
-      msg += c().gray(`\n\nReceived: \n\n${spy.mock.calls.map((callArg, i) => {
-        let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`)
-        if (actualCall)
-          methodCall += diff(actualCall, callArg, { omitAnnotationLines: true })
-        else
-          methodCall += stringify(callArg).split('\n').map(line => `    ${line}`).join('\n')
+      msg += c().gray(
+        `\n\nReceived: \n\n${spy.mock.calls
+          .map((callArg, i) => {
+            let methodCall = c().bold(
+              `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
+            )
+            if (showActualCall) {
+              methodCall += diff(showActualCall, callArg, {
+                omitAnnotationLines: true,
+              })
+            }
+ else {
+              methodCall += stringify(callArg)
+                .split('\n')
+                .map(line => `    ${line}`)
+                .join('\n')
+            }
 
-        methodCall += '\n'
-        return methodCall
-      }).join('\n')}`)
+            methodCall += '\n'
+            return methodCall
+          })
+          .join('\n')}`,
+      )
     }
-    msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
+    msg += c().gray(
+      `\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`,
+    )
     return msg
   }
-  const formatReturns = (spy: EnhancedSpy, msg: string, actualReturn?: any) => {
-    msg += c().gray(`\n\nReceived: \n\n${spy.mock.results.map((callReturn, i) => {
-      let methodCall = c().bold(`  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`)
-      if (actualReturn)
-        methodCall += diff(actualReturn, callReturn.value, { omitAnnotationLines: true })
-      else
-        methodCall += stringify(callReturn).split('\n').map(line => `    ${line}`).join('\n')
+  const formatReturns = (
+    spy: MockInstance,
+    results: MockResult<any>[] | MockSettledResult<any>[],
+    msg: string,
+    showActualReturn?: any,
+  ) => {
+    msg += c().gray(
+      `\n\nReceived: \n\n${results
+        .map((callReturn, i) => {
+          let methodCall = c().bold(
+            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
+          )
+          if (showActualReturn) {
+            methodCall += diff(showActualReturn, callReturn.value, {
+              omitAnnotationLines: true,
+            })
+          }
+ else {
+            methodCall += stringify(callReturn)
+              .split('\n')
+              .map(line => `    ${line}`)
+              .join('\n')
+          }
 
-      methodCall += '\n'
-      return methodCall
-    }).join('\n')}`)
-    msg += c().gray(`\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`)
+          methodCall += '\n'
+          return methodCall
+        })
+        .join('\n')}`,
+    )
+    msg += c().gray(
+      `\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`,
+    )
     return msg
   }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function (number: number) {
@@ -423,300 +625,519 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const callCount = spy.mock.calls.length
     const called = callCount > 0
     const isNot = utils.flag(this, 'negate') as boolean
-    let msg = utils.getMessage(
-      this,
-      [
-        called,
-        `expected "${spyName}" to be called at least once`,
-        `expected "${spyName}" to not be called at all, but actually been called ${callCount} times`,
-        true,
-        called,
-      ],
-    )
-    if (called && isNot)
+    let msg = utils.getMessage(this, [
+      called,
+      `expected "${spyName}" to be called at least once`,
+      `expected "${spyName}" to not be called at all, but actually been called ${callCount} times`,
+      true,
+      called,
+    ])
+    if (called && isNot) {
       msg = formatCalls(spy, msg)
+    }
 
     if ((called && isNot) || (!called && !isNot)) {
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
+      throw new AssertionError(msg)
     }
   })
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function (...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.mock.calls.some(callArg => jestEquals(callArg, args, [iterableEquality]))
+    const pass = spy.mock.calls.some(callArg =>
+      jestEquals(callArg, args, [...customTesters, iterableEquality]),
+    )
     const isNot = utils.flag(this, 'negate') as boolean
 
-    let msg = utils.getMessage(
-      this,
-      [
-        pass,
-        `expected "${spyName}" to be called with arguments: #{exp}`,
-        `expected "${spyName}" to not be called with arguments: #{exp}`,
-        args,
-      ],
-    )
+    const msg = utils.getMessage(this, [
+      pass,
+      `expected "${spyName}" to be called with arguments: #{exp}`,
+      `expected "${spyName}" to not be called with arguments: #{exp}`,
+      args,
+    ])
 
     if ((pass && isNot) || (!pass && !isNot)) {
-      msg = formatCalls(spy, msg, args)
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
+      throw new AssertionError(formatCalls(spy, msg, args))
     }
   })
-  def(['toHaveBeenNthCalledWith', 'nthCalledWith'], function (times: number, ...args: any[]) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const nthCall = spy.mock.calls[times - 1]
+  def(
+    ['toHaveBeenNthCalledWith', 'nthCalledWith'],
+    function (times: number, ...args: any[]) {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const nthCall = spy.mock.calls[times - 1]
+      const callCount = spy.mock.calls.length
+      const isCalled = times <= callCount
+      this.assert(
+        jestEquals(nthCall, args, [...customTesters, iterableEquality]),
+        `expected ${ordinalOf(
+          times,
+        )} "${spyName}" call to have been called with #{exp}${
+          isCalled ? `` : `, but called only ${callCount} times`
+        }`,
+        `expected ${ordinalOf(
+          times,
+        )} "${spyName}" call to not have been called with #{exp}`,
+        args,
+        nthCall,
+        isCalled,
+      )
+    },
+  )
+  def(
+    ['toHaveBeenLastCalledWith', 'lastCalledWith'],
+    function (...args: any[]) {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
 
-    this.assert(
-      jestEquals(nthCall, args, [iterableEquality]),
-      `expected ${ordinalOf(times)} "${spyName}" call to have been called with #{exp}`,
-      `expected ${ordinalOf(times)} "${spyName}" call to not have been called with #{exp}`,
-      args,
-      nthCall,
-    )
-  })
-  def(['toHaveBeenLastCalledWith', 'lastCalledWith'], function (...args: any[]) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
+      this.assert(
+        jestEquals(lastCall, args, [...customTesters, iterableEquality]),
+        `expected last "${spyName}" call to have been called with #{exp}`,
+        `expected last "${spyName}" call to not have been called with #{exp}`,
+        args,
+        lastCall,
+      )
+    },
+  )
+  def(
+    ['toThrow', 'toThrowError'],
+    function (expected?: string | Constructable | RegExp | Error) {
+      if (
+        typeof expected === 'string'
+        || typeof expected === 'undefined'
+        || expected instanceof RegExp
+      ) {
+        return this.throws(expected)
+      }
 
-    this.assert(
-      jestEquals(lastCall, args, [iterableEquality]),
-      `expected last "${spyName}" call to have been called with #{exp}`,
-      `expected last "${spyName}" call to not have been called with #{exp}`,
-      args,
-      lastCall,
-    )
-  })
-  def(['toThrow', 'toThrowError'], function (expected?: string | Constructable | RegExp | Error) {
-    if (typeof expected === 'string' || typeof expected === 'undefined' || expected instanceof RegExp)
-      return this.throws(expected)
+      const obj = this._obj
+      const promise = utils.flag(this, 'promise')
+      const isNot = utils.flag(this, 'negate') as boolean
+      let thrown: any = null
 
-    const obj = this._obj
-    const promise = utils.flag(this, 'promise')
-    const isNot = utils.flag(this, 'negate') as boolean
-    let thrown: any = null
-
-    if (promise === 'rejects') {
-      thrown = obj
-    }
-    // if it got here, it's already resolved
-    // unless it tries to resolve to a function that should throw
-    // called as .resolves.toThrow(Error)
-    else if (promise === 'resolves' && typeof obj !== 'function') {
-      if (!isNot) {
-        const message = utils.flag(this, 'message') || 'expected promise to throw an error, but it didn\'t'
-        const error = {
-          showDiff: false,
+      if (promise === 'rejects') {
+        thrown = obj
+      }
+      // if it got here, it's already resolved
+      // unless it tries to resolve to a function that should throw
+      // called as .resolves.toThrow(Error)
+      else if (promise === 'resolves' && typeof obj !== 'function') {
+        if (!isNot) {
+          const message
+            = utils.flag(this, 'message')
+            || 'expected promise to throw an error, but it didn\'t'
+          const error = {
+            showDiff: false,
+          }
+          throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
         }
-        throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+        else {
+          return
+        }
       }
       else {
-        return
+        let isThrow = false
+        try {
+          obj()
+        }
+        catch (err) {
+          isThrow = true
+          thrown = err
+        }
+
+        if (!isThrow && !isNot) {
+          const message
+            = utils.flag(this, 'message')
+            || 'expected function to throw an error, but it didn\'t'
+          const error = {
+            showDiff: false,
+          }
+          throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
+        }
       }
-    }
-    else {
-      try {
-        obj()
+
+      if (typeof expected === 'function') {
+        const name = expected.name || expected.prototype.constructor.name
+        return this.assert(
+          thrown && thrown instanceof expected,
+          `expected error to be instance of ${name}`,
+          `expected error not to be instance of ${name}`,
+          expected,
+          thrown,
+        )
       }
-      catch (err) {
-        thrown = err
+
+      if (expected instanceof Error) {
+        return this.assert(
+          thrown && expected.message === thrown.message,
+          `expected error to have message: ${expected.message}`,
+          `expected error not to have message: ${expected.message}`,
+          expected.message,
+          thrown && thrown.message,
+        )
       }
-    }
 
-    if (typeof expected === 'function') {
-      const name = expected.name || expected.prototype.constructor.name
-      return this.assert(
-        thrown && thrown instanceof expected,
-        `expected error to be instance of ${name}`,
-        `expected error not to be instance of ${name}`,
-        expected,
-        thrown,
-        false,
+      if (
+        typeof expected === 'object'
+        && 'asymmetricMatch' in expected
+        && typeof (expected as any).asymmetricMatch === 'function'
+      ) {
+        const matcher = expected as any as AsymmetricMatcher<any>
+        return this.assert(
+          thrown && matcher.asymmetricMatch(thrown),
+          'expected error to match asymmetric matcher',
+          'expected error not to match asymmetric matcher',
+          matcher,
+          thrown,
+        )
+      }
+
+      throw new Error(
+        `"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`,
       )
-    }
+    },
+  )
 
-    if (expected instanceof Error) {
-      return this.assert(
-        thrown && expected.message === thrown.message,
-        `expected error to have message: ${expected.message}`,
-        `expected error not to have message: ${expected.message}`,
-        expected.message,
-        thrown && thrown.message,
-      )
-    }
+  interface ReturnMatcher<T extends any[] = []> {
+    name: keyof Assertion | (keyof Assertion)[]
+    condition: (spy: MockInstance, ...args: T) => boolean
+    action: string
+  }
 
-    if (typeof expected === 'object' && 'asymmetricMatch' in expected && typeof (expected as any).asymmetricMatch === 'function') {
-      const matcher = expected as any as AsymmetricMatcher<any>
-      return this.assert(
-        thrown && matcher.asymmetricMatch(thrown),
-        'expected error to match asymmetric matcher',
-        'expected error not to match asymmetric matcher',
-        matcher.toString(),
-        thrown,
-        false,
-      )
-    }
-
-    throw new Error(`"toThrow" expects string, RegExp, function, Error instance or asymmetric matcher, got "${typeof expected}"`)
-  })
-  def(['toHaveReturned', 'toReturn'], function () {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const calledAndNotThrew = spy.mock.calls.length > 0 && spy.mock.results.some(({ type }) => type !== 'throw')
-    this.assert(
-      calledAndNotThrew,
-      `expected "${spyName}" to be successfully called at least once`,
-      `expected "${spyName}" to not be successfully called`,
-      calledAndNotThrew,
-      !calledAndNotThrew,
-      false,
-    )
-  })
-  def(['toHaveReturnedTimes', 'toReturnTimes'], function (times: number) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const successfulReturns = spy.mock.results.reduce((success, { type }) => type === 'throw' ? success : ++success, 0)
-    this.assert(
-      successfulReturns === times,
-      `expected "${spyName}" to be successfully called ${times} times`,
-      `expected "${spyName}" to not be successfully called ${times} times`,
-      `expected number of returns: ${times}`,
-      `received number of returns: ${successfulReturns}`,
-      false,
-    )
-  })
-  def(['toHaveReturnedWith', 'toReturnWith'], function (value: any) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const pass = spy.mock.results.some(({ type, value: result }) => type === 'return' && jestEquals(value, result))
-    const isNot = utils.flag(this, 'negate') as boolean
-
-    let msg = utils.getMessage(
-      this,
-      [
+  (
+    [
+      {
+        name: 'toHaveResolved',
+        condition: spy =>
+          spy.mock.settledResults.length > 0
+          && spy.mock.settledResults.some(({ type }) => type === 'fulfilled'),
+        action: 'resolved',
+      },
+      {
+        name: ['toHaveReturned', 'toReturn'],
+        condition: spy =>
+          spy.mock.calls.length > 0
+          && spy.mock.results.some(({ type }) => type !== 'throw'),
+        action: 'called',
+      },
+    ] satisfies ReturnMatcher[]
+  ).forEach(({ name, condition, action }) => {
+    def(name, function () {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const pass = condition(spy)
+      this.assert(
         pass,
-        `expected "${spyName}" to return with: #{exp} at least once`,
-        `expected "${spyName}" to not return with: #{exp}`,
+        `expected "${spyName}" to be successfully ${action} at least once`,
+        `expected "${spyName}" to not be successfully ${action}`,
+        pass,
+        !pass,
+        false,
+      )
+    })
+  });
+  (
+    [
+      {
+        name: 'toHaveResolvedTimes',
+        condition: (spy, times) =>
+          spy.mock.settledResults.reduce(
+            (s, { type }) => (type === 'fulfilled' ? ++s : s),
+            0,
+          ) === times,
+        action: 'resolved',
+      },
+      {
+        name: ['toHaveReturnedTimes', 'toReturnTimes'],
+        condition: (spy, times) =>
+          spy.mock.results.reduce(
+            (s, { type }) => (type === 'throw' ? s : ++s),
+            0,
+          ) === times,
+        action: 'called',
+      },
+    ] satisfies ReturnMatcher<[number]>[]
+  ).forEach(({ name, condition, action }) => {
+    def(name, function (times: number) {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const pass = condition(spy, times)
+      this.assert(
+        pass,
+        `expected "${spyName}" to be successfully ${action} ${times} times`,
+        `expected "${spyName}" to not be successfully ${action} ${times} times`,
+        `expected resolved times: ${times}`,
+        `received resolved times: ${pass}`,
+        false,
+      )
+    })
+  });
+  (
+    [
+      {
+        name: 'toHaveResolvedWith',
+        condition: (spy, value) =>
+          spy.mock.settledResults.some(
+            ({ type, value: result }) =>
+              type === 'fulfilled' && jestEquals(value, result),
+          ),
+        action: 'resolve',
+      },
+      {
+        name: ['toHaveReturnedWith', 'toReturnWith'],
+        condition: (spy, value) =>
+          spy.mock.results.some(
+            ({ type, value: result }) =>
+              type === 'return' && jestEquals(value, result),
+          ),
+        action: 'return',
+      },
+    ] satisfies ReturnMatcher<[any]>[]
+  ).forEach(({ name, condition, action }) => {
+    def(name, function (value: any) {
+      const spy = getSpy(this)
+      const pass = condition(spy, value)
+      const isNot = utils.flag(this, 'negate') as boolean
+
+      if ((pass && isNot) || (!pass && !isNot)) {
+        const spyName = spy.getMockName()
+        const msg = utils.getMessage(this, [
+          pass,
+          `expected "${spyName}" to ${action} with: #{exp} at least once`,
+          `expected "${spyName}" to not ${action} with: #{exp}`,
+          value,
+        ])
+
+        const results
+          = action === 'return' ? spy.mock.results : spy.mock.settledResults
+        throw new AssertionError(formatReturns(spy, results, msg, value))
+      }
+    })
+  });
+  (
+    [
+      {
+        name: 'toHaveLastResolvedWith',
+        condition: (spy, value) => {
+          const result
+            = spy.mock.settledResults[spy.mock.settledResults.length - 1]
+          return (
+            result
+            && result.type === 'fulfilled'
+            && jestEquals(result.value, value)
+          )
+        },
+        action: 'resolve',
+      },
+      {
+        name: ['toHaveLastReturnedWith', 'lastReturnedWith'],
+        condition: (spy, value) => {
+          const result = spy.mock.results[spy.mock.results.length - 1]
+          return (
+            result
+            && result.type === 'return'
+            && jestEquals(result.value, value)
+          )
+        },
+        action: 'return',
+      },
+    ] satisfies ReturnMatcher<[any]>[]
+  ).forEach(({ name, condition, action }) => {
+    def(name, function (value: any) {
+      const spy = getSpy(this)
+      const results
+        = action === 'return' ? spy.mock.results : spy.mock.settledResults
+      const result = results[results.length - 1]
+      const spyName = spy.getMockName()
+      this.assert(
+        condition(spy, value),
+        `expected last "${spyName}" call to ${action} #{exp}`,
+        `expected last "${spyName}" call to not ${action} #{exp}`,
         value,
-      ],
-    )
+        result?.value,
+      )
+    })
+  });
+  (
+    [
+      {
+        name: 'toHaveNthResolvedWith',
+        condition: (spy, index, value) => {
+          const result = spy.mock.settledResults[index - 1]
+          return (
+            result
+            && result.type === 'fulfilled'
+            && jestEquals(result.value, value)
+          )
+        },
+        action: 'resolve',
+      },
+      {
+        name: ['toHaveNthReturnedWith', 'nthReturnedWith'],
+        condition: (spy, index, value) => {
+          const result = spy.mock.results[index - 1]
+          return (
+            result
+            && result.type === 'return'
+            && jestEquals(result.value, value)
+          )
+        },
+        action: 'return',
+      },
+    ] satisfies ReturnMatcher<[number, any]>[]
+  ).forEach(({ name, condition, action }) => {
+    def(name, function (nthCall: number, value: any) {
+      const spy = getSpy(this)
+      const spyName = spy.getMockName()
+      const results
+        = action === 'return' ? spy.mock.results : spy.mock.settledResults
+      const result = results[nthCall - 1]
+      const ordinalCall = `${ordinalOf(nthCall)} call`
 
-    if ((pass && isNot) || (!pass && !isNot)) {
-      msg = formatReturns(spy, msg, value)
-      const err = new Error(msg)
-      err.name = 'AssertionError'
-      throw err
-    }
-  })
-  def(['toHaveLastReturnedWith', 'lastReturnedWith'], function (value: any) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const { value: lastResult } = spy.mock.results[spy.mock.results.length - 1]
-    const pass = jestEquals(lastResult, value)
-    this.assert(
-      pass,
-      `expected last "${spyName}" call to return #{exp}`,
-      `expected last "${spyName}" call to not return #{exp}`,
-      value,
-      lastResult,
-    )
-  })
-  def(['toHaveNthReturnedWith', 'nthReturnedWith'], function (nthCall: number, value: any) {
-    const spy = getSpy(this)
-    const spyName = spy.getMockName()
-    const isNot = utils.flag(this, 'negate') as boolean
-    const { type: callType, value: callResult } = spy.mock.results[nthCall - 1]
-    const ordinalCall = `${ordinalOf(nthCall)} call`
-
-    if (!isNot && callType === 'throw')
-      chai.assert.fail(`expected ${ordinalCall} to return #{exp}, but instead it threw an error`)
-
-    const nthCallReturn = jestEquals(callResult, value)
-
-    this.assert(
-      nthCallReturn,
-      `expected ${ordinalCall} "${spyName}" call to return #{exp}`,
-      `expected ${ordinalCall} "${spyName}" call to not return #{exp}`,
-      value,
-      callResult,
-    )
+      this.assert(
+        condition(spy, nthCall, value),
+        `expected ${ordinalCall} "${spyName}" call to ${action} #{exp}`,
+        `expected ${ordinalCall} "${spyName}" call to not ${action} #{exp}`,
+        value,
+        result?.value,
+      )
+    })
   })
   def('toSatisfy', function (matcher: Function, message?: string) {
     return this.be.satisfy(matcher, message)
   })
 
-  utils.addProperty(chai.Assertion.prototype, 'resolves', function __VITEST_RESOLVES__(this: any) {
-    utils.flag(this, 'promise', 'resolves')
-    utils.flag(this, 'error', new Error('resolves'))
-    const test: Test = utils.flag(this, 'vitest-test')
-    const obj = utils.flag(this, 'object')
-
-    if (typeof obj?.then !== 'function')
-      throw new TypeError(`You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`)
-
-    const proxy: any = new Proxy(this, {
-      get: (target, key, receiver) => {
-        const result = Reflect.get(target, key, receiver)
-
-        if (typeof result !== 'function')
-          return result instanceof chai.Assertion ? proxy : result
-
-        return async (...args: any[]) => {
-          const promise = obj.then(
-            (value: any) => {
-              utils.flag(this, 'object', value)
-              return result.call(this, ...args)
-            },
-            (err: any) => {
-              throw new Error(`promise rejected "${String(err)}" instead of resolving`)
-            },
-          )
-
-          return recordAsyncExpect(test, promise)
-        }
-      },
-    })
-
-    return proxy
+  // @ts-expect-error @internal
+  def('withContext', function (this: any, context: Record<string, any>) {
+    for (const key in context) {
+      utils.flag(this, key, context[key])
+    }
+    return this
   })
 
-  utils.addProperty(chai.Assertion.prototype, 'rejects', function __VITEST_REJECTS__(this: any) {
-    utils.flag(this, 'promise', 'rejects')
-    utils.flag(this, 'error', new Error('rejects'))
-    const test: Test = utils.flag(this, 'vitest-test')
-    const obj = utils.flag(this, 'object')
-    const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+  utils.addProperty(
+    chai.Assertion.prototype,
+    'resolves',
+    function __VITEST_RESOLVES__(this: any) {
+      const error = new Error('resolves')
+      utils.flag(this, 'promise', 'resolves')
+      utils.flag(this, 'error', error)
+      const test: Test = utils.flag(this, 'vitest-test')
+      const obj = utils.flag(this, 'object')
 
-    if (typeof wrapper?.then !== 'function')
-      throw new TypeError(`You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`)
+      if (utils.flag(this, 'poll')) {
+        throw new SyntaxError(
+          `expect.poll() is not supported in combination with .resolves`,
+        )
+      }
 
-    const proxy: any = new Proxy(this, {
-      get: (target, key, receiver) => {
-        const result = Reflect.get(target, key, receiver)
+      if (typeof obj?.then !== 'function') {
+        throw new TypeError(
+          `You must provide a Promise to expect() when using .resolves, not '${typeof obj}'.`,
+        )
+      }
 
-        if (typeof result !== 'function')
-          return result instanceof chai.Assertion ? proxy : result
+      const proxy: any = new Proxy(this, {
+        get: (target, key, receiver) => {
+          const result = Reflect.get(target, key, receiver)
 
-        return async (...args: any[]) => {
-          const promise = wrapper.then(
-            (value: any) => {
-              throw new Error(`promise resolved "${String(value)}" instead of rejecting`)
-            },
-            (err: any) => {
-              utils.flag(this, 'object', err)
-              return result.call(this, ...args)
-            },
-          )
+          if (typeof result !== 'function') {
+            return result instanceof chai.Assertion ? proxy : result
+          }
 
-          return recordAsyncExpect(test, promise)
-        }
-      },
-    })
+          return async (...args: any[]) => {
+            const promise = obj.then(
+              (value: any) => {
+                utils.flag(this, 'object', value)
+                return result.call(this, ...args)
+              },
+              (err: any) => {
+                const _error = new AssertionError(
+                  `promise rejected "${utils.inspect(
+                    err,
+                  )}" instead of resolving`,
+                  { showDiff: false },
+                ) as Error
+                _error.cause = err
+                _error.stack = (error.stack as string).replace(
+                  error.message,
+                  _error.message,
+                )
+                throw _error
+              },
+            )
 
-    return proxy
-  })
+            return recordAsyncExpect(test, promise)
+          }
+        },
+      })
+
+      return proxy
+    },
+  )
+
+  utils.addProperty(
+    chai.Assertion.prototype,
+    'rejects',
+    function __VITEST_REJECTS__(this: any) {
+      const error = new Error('rejects')
+      utils.flag(this, 'promise', 'rejects')
+      utils.flag(this, 'error', error)
+      const test: Test = utils.flag(this, 'vitest-test')
+      const obj = utils.flag(this, 'object')
+      const wrapper = typeof obj === 'function' ? obj() : obj // for jest compat
+
+      if (utils.flag(this, 'poll')) {
+        throw new SyntaxError(
+          `expect.poll() is not supported in combination with .rejects`,
+        )
+      }
+
+      if (typeof wrapper?.then !== 'function') {
+        throw new TypeError(
+          `You must provide a Promise to expect() when using .rejects, not '${typeof wrapper}'.`,
+        )
+      }
+
+      const proxy: any = new Proxy(this, {
+        get: (target, key, receiver) => {
+          const result = Reflect.get(target, key, receiver)
+
+          if (typeof result !== 'function') {
+            return result instanceof chai.Assertion ? proxy : result
+          }
+
+          return async (...args: any[]) => {
+            const promise = wrapper.then(
+              (value: any) => {
+                const _error = new AssertionError(
+                  `promise resolved "${utils.inspect(
+                    value,
+                  )}" instead of rejecting`,
+                  {
+                    showDiff: true,
+                    expected: new Error('rejected promise'),
+                    actual: value,
+                  },
+                ) as any
+                _error.stack = (error.stack as string).replace(
+                  error.message,
+                  _error.message,
+                )
+                throw _error
+              },
+              (err: any) => {
+                utils.flag(this, 'object', err)
+                return result.call(this, ...args)
+              },
+            )
+
+            return recordAsyncExpect(test, promise)
+          }
+        },
+      })
+
+      return proxy
+    },
+  )
 }

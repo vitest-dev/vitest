@@ -1,35 +1,34 @@
 <script setup lang="ts">
-import { files } from '../composables/client'
-import { filesFailed, filesSuccess, finished } from '../composables/summary'
+import { explorerTree } from '~/composables/explorer'
+import { finished } from '~/composables/client/state'
 
 const { width } = useWindowSize()
 const classes = computed(() => {
-  // if there is no files, then in progress and gray
-  if (files.value.length === 0)
+  // if there are no files, then in progress and gray
+  if (explorerTree.summary.files === 0) {
     return '!bg-gray-4 !dark:bg-gray-7 in-progress'
-  else if (!finished.value)
+  }
+  else if (!finished.value) {
     return 'in-progress'
+  }
 
   return null
 })
-const total = computed(() => files.value.length)
-const pass = computed(() => filesSuccess.value.length)
-const failed = computed(() => filesFailed.value.length)
 
 const widthPass = computed(() => {
-  const t = unref(total)
-  return t > 0 ? (width.value * pass.value / t) : 0
+  const t = explorerTree.summary.files
+  return t > 0 ? (width.value * explorerTree.summary.filesSuccess / t) : 0
 })
 const widthFailed = computed(() => {
-  const t = unref(total)
-  return t > 0 ? (width.value * failed.value / t) : 0
+  const t = explorerTree.summary.files
+  return t > 0 ? (width.value * explorerTree.summary.filesFailed / t) : 0
 })
 const pending = computed(() => {
-  const t = unref(total)
-  return t - failed.value - pass.value
+  const t = explorerTree.summary.files
+  return t - explorerTree.summary.filesFailed - explorerTree.summary.filesSuccess
 })
 const widthPending = computed(() => {
-  const t = unref(total)
+  const t = explorerTree.summary.files
   return t > 0 ? (width.value * pending.value / t) : 0
 })
 </script>
@@ -89,7 +88,16 @@ const widthPending = computed(() => {
 
 <style scoped>
 .in-progress {
-  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
   background-size: 40px 40px;
   animation: in-progress-stripes 2s linear infinite;
 }

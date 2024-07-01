@@ -1,61 +1,82 @@
 import { promises as fs } from 'node:fs'
+import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import { dirname, relative, resolve, toNamespacedPath } from 'pathe'
-import { createServer } from 'vite'
-import type { ViteDevServer, InlineConfig as ViteInlineConfig } from 'vite'
+import {
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  toNamespacedPath,
+} from 'pathe'
+import type {
+  TransformResult,
+  ViteDevServer,
+  InlineConfig as ViteInlineConfig,
+} from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import { createBrowserServer } from '../integrations/browser/server'
-import type { ArgumentsType, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, Vitest } from '../types'
-import { deepMerge, hasFailed } from '../utils'
-import { Typechecker } from '../typecheck/typechecker'
-import type { BrowserProvider } from '../types/browser'
-import { getBrowserProvider } from '../integrations/browser'
+import type {
+  ProvidedContext,
+  ResolvedConfig,
+  UserConfig,
+  UserWorkspaceConfig,
+  Vitest,
+} from '../types'
+import type { Typechecker } from '../typecheck/typechecker'
+import { deepMerge, nanoid } from '../utils/base'
+import { setup } from '../api/setup'
+import type { BrowserServer } from '../types/browser'
 import { isBrowserEnabled, resolveConfig } from './config'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
-
-interface InitializeServerOptions {
-  server?: ViteNodeServer
-  runner?: ViteNodeRunner
-}
+import { createViteServer } from './vite'
+import type { GlobalSetupFile } from './globalSetup'
+import { loadGlobalSetupFiles } from './globalSetup'
+import { MocksPlugins } from './plugins/mocks'
+import { CoverageTransform } from './plugins/coverageTransform'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
   extends?: string
 }
 
-export async function initializeProject(workspacePath: string | number, ctx: Vitest, options: InitializeProjectOptions) {
-  const project = new WorkspaceProject(workspacePath, ctx)
+export async function initializeProject(
+  workspacePath: string | number,
+  ctx: Vitest,
+  options: InitializeProjectOptions,
+) {
+  const project = new WorkspaceProject(workspacePath, ctx, options)
 
   const configFile = options.extends
     ? resolve(dirname(options.workspaceConfigPath), options.extends)
-    : (typeof workspacePath === 'number' || workspacePath.endsWith('/'))
-        ? false
-        : workspacePath
+    : typeof workspacePath === 'number' || workspacePath.endsWith('/')
+      ? false
+      : workspacePath
 
-  const root = options.root || (typeof workspacePath === 'number' ? undefined : dirname(workspacePath))
+  const root
+    = options.root
+    || (typeof workspacePath === 'number'
+      ? undefined
+      : workspacePath.endsWith('/')
+        ? workspacePath
+        : dirname(workspacePath))
 
   const config: ViteInlineConfig = {
     ...options,
     root,
     logLevel: 'error',
     configFile,
-    // this will make "mode" = "test" inside defineConfig
-    mode: options.mode || ctx.config.mode || process.env.NODE_ENV,
+    // this will make "mode": "test" | "benchmark" inside defineConfig
+    mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [
-      ...options.plugins || [],
+      ...(options.plugins || []),
       WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
     ],
   }
 
-  const server = await createServer(config)
-
-  // optimizer needs .listen() to be called
-  if (ctx.config.api?.port || project.config.deps?.optimizer?.web?.enabled || project.config.deps?.optimizer?.ssr?.enabled)
-    await server.listen()
-  else
-    await server.pluginContainer.buildStart({})
+  await createViteServer(config)
 
   return project
 }
@@ -67,18 +88,24 @@ export class WorkspaceProject {
   server!: ViteDevServer
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
-  browser?: ViteDevServer
+  browser?: BrowserServer
   typechecker?: Typechecker
 
   closingPromise: Promise<unknown> | undefined
-  browserProvider: BrowserProvider | undefined
 
-  testFilesList: string[] = []
+  testFilesList: string[] | null = null
+
+  public readonly id = nanoid()
+  public readonly tmpDir = join(tmpdir(), this.id)
+
+  private _globalSetups: GlobalSetupFile[] | undefined
+  private _provided: ProvidedContext = {} as any
 
   constructor(
     public path: string | number,
     public ctx: Vitest,
-  ) { }
+    public options?: InitializeProjectOptions,
+  ) {}
 
   getName(): string {
     return this.config.name || ''
@@ -88,18 +115,100 @@ export class WorkspaceProject {
     return this.ctx.getCoreWorkspaceProject() === this
   }
 
-  getModuleById(id: string) {
-    return this.server.moduleGraph.getModuleById(id)
-      || this.browser?.moduleGraph.getModuleById(id)
+  provide<T extends keyof ProvidedContext & string>(
+    key: T,
+    value: ProvidedContext[T],
+  ) {
+    try {
+      structuredClone(value)
+    }
+    catch (err) {
+      throw new Error(
+        `Cannot provide "${key}" because it's not serializable.`,
+        {
+          cause: err,
+        },
+      )
+    }
+    (this._provided as any)[key] = value
   }
 
-  getSourceMapModuleById(id: string) {
+  getProvidedContext(): ProvidedContext {
+    if (this.isCore()) {
+      return this._provided
+    }
+    // globalSetup can run even if core workspace is not part of the test run
+    // so we need to inherit its provided context
+    return {
+      ...this.ctx.getCoreWorkspaceProject().getProvidedContext(),
+      ...this._provided,
+    }
+  }
+
+  async initializeGlobalSetup() {
+    if (this._globalSetups) {
+      return
+    }
+
+    this._globalSetups = await loadGlobalSetupFiles(
+      this.runner,
+      this.config.globalSetup,
+    )
+
+    for (const globalSetupFile of this._globalSetups) {
+      const teardown = await globalSetupFile.setup?.({
+        provide: (key, value) => this.provide(key, value),
+        config: this.config,
+      })
+      if (teardown == null || !!globalSetupFile.teardown) {
+        continue
+      }
+      if (typeof teardown !== 'function') {
+        throw new TypeError(
+          `invalid return value in globalSetup file ${globalSetupFile.file}. Must return a function`,
+        )
+      }
+      globalSetupFile.teardown = teardown
+    }
+  }
+
+  async teardownGlobalSetup() {
+    if (!this._globalSetups) {
+      return
+    }
+    for (const globalSetupFile of [...this._globalSetups].reverse()) {
+      await globalSetupFile.teardown?.()
+    }
+  }
+
+  get logger() {
+    return this.ctx.logger
+  }
+
+  // it's possible that file path was imported with different queries (?raw, ?url, etc)
+  getModulesByFilepath(file: string) {
+    const set
+      = this.server.moduleGraph.getModulesByFile(file)
+      || this.browser?.vite.moduleGraph.getModulesByFile(file)
+    return set || new Set()
+  }
+
+  getModuleById(id: string) {
+    return (
+      this.server.moduleGraph.getModuleById(id)
+      || this.browser?.vite.moduleGraph.getModuleById(id)
+    )
+  }
+
+  getSourceMapModuleById(id: string): TransformResult['map'] | undefined {
     const mod = this.server.moduleGraph.getModuleById(id)
     return mod?.ssrTransformResult?.map || mod?.transformResult?.map
   }
 
-  getBrowserSourceMapModuleById(id: string) {
-    return this.browser?.moduleGraph.getModuleById(id)?.transformResult?.map
+  getBrowserSourceMapModuleById(
+    id: string,
+  ): TransformResult['map'] | undefined {
+    return this.browser?.vite.moduleGraph.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {
@@ -109,29 +218,53 @@ export class WorkspaceProject {
   async globTestFiles(filters: string[] = []) {
     const dir = this.config.dir || this.config.root
 
-    const testFiles = await this.globAllTestFiles(this.config, dir)
+    const { include, exclude, includeSource } = this.config
+    const typecheck = this.config.typecheck
 
-    return this.filterFiles(testFiles, filters, dir)
+    const [testFiles, typecheckTestFiles] = await Promise.all([
+      typecheck.enabled && typecheck.only
+        ? []
+        : this.globAllTestFiles(include, exclude, includeSource, dir),
+      typecheck.enabled
+        ? this.globFiles(typecheck.include, typecheck.exclude, dir)
+        : [],
+    ])
+
+    return this.filterFiles(
+      [...testFiles, ...typecheckTestFiles],
+      filters,
+      dir,
+    )
   }
 
-  async globAllTestFiles(config: ResolvedConfig, cwd: string) {
-    const { include, exclude, includeSource } = config
+  async globAllTestFiles(
+    include: string[],
+    exclude: string[],
+    includeSource: string[] | undefined,
+    cwd: string,
+  ) {
+    if (this.testFilesList) {
+      return this.testFilesList
+    }
 
     const testFiles = await this.globFiles(include, exclude, cwd)
 
-    if (includeSource) {
+    if (includeSource?.length) {
       const files = await this.globFiles(includeSource, exclude, cwd)
 
-      await Promise.all(files.map(async (file) => {
-        try {
-          const code = await fs.readFile(file, 'utf-8')
-          if (this.isInSourceTestFile(code))
-            testFiles.push(file)
-        }
-        catch {
-          return null
-        }
-      }))
+      await Promise.all(
+        files.map(async (file) => {
+          try {
+            const code = await fs.readFile(file, 'utf-8')
+            if (this.isInSourceTestFile(code)) {
+              testFiles.push(file)
+            }
+          }
+          catch {
+            return null
+          }
+        }),
+      )
     }
 
     this.testFilesList = testFiles
@@ -140,28 +273,33 @@ export class WorkspaceProject {
   }
 
   isTestFile(id: string) {
-    return this.testFilesList.includes(id)
+    return this.testFilesList && this.testFilesList.includes(id)
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
-      absolute: true,
       dot: true,
       cwd,
       ignore: exclude,
     }
 
-    return fg(include, globOptions)
+    const files = await fg(include, globOptions)
+    return files.map(file => resolve(cwd, file))
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
     const relativeId = relative(this.config.dir || this.config.root, id)
-    if (mm.isMatch(relativeId, this.config.exclude))
+    if (mm.isMatch(relativeId, this.config.exclude)) {
       return false
-    if (mm.isMatch(relativeId, this.config.include))
+    }
+    if (mm.isMatch(relativeId, this.config.include)) {
       return true
-    if (this.config.includeSource?.length && mm.isMatch(relativeId, this.config.includeSource)) {
-      source = source || await fs.readFile(id, 'utf-8')
+    }
+    if (
+      this.config.includeSource?.length
+      && mm.isMatch(relativeId, this.config.includeSource)
+    ) {
+      source = source || (await fs.readFile(id, 'utf-8'))
       return this.isInSourceTestFile(source)
     }
     return false
@@ -171,15 +309,27 @@ export class WorkspaceProject {
     return code.includes('import.meta.vitest')
   }
 
-  filterFiles(testFiles: string[], filters: string[] = [], dir: string) {
-    if (filters.length && process.platform === 'win32')
+  filterFiles(testFiles: string[], filters: string[], dir: string) {
+    if (filters.length && process.platform === 'win32') {
       filters = filters.map(f => toNamespacedPath(f))
+    }
 
     if (filters.length) {
       return testFiles.filter((t) => {
-        const testFile = relative(dir, t)
+        const testFile = relative(dir, t).toLocaleLowerCase()
         return filters.some((f) => {
-          return testFile.includes(f) || testFile.includes(relative(dir, f))
+          // if filter is a full file path, we should include it if it's in the same folder
+          if (isAbsolute(f) && t.startsWith(f)) {
+            return true
+          }
+
+          const relativePath = f.endsWith('/')
+            ? join(relative(dir, f), '/')
+            : relative(dir, f)
+          return (
+            testFile.includes(f.toLocaleLowerCase())
+            || testFile.includes(relativePath.toLocaleLowerCase())
+          )
         })
       })
     }
@@ -187,20 +337,59 @@ export class WorkspaceProject {
     return testFiles
   }
 
-  async initBrowserServer(options: UserConfig) {
-    if (!this.isBrowserEnabled())
+  async initBrowserServer(configFile: string | undefined) {
+    if (!this.isBrowserEnabled()) {
       return
+    }
+    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root)
+    const { createBrowserServer } = await import('@vitest/browser')
     await this.browser?.close()
-    this.browser = await createBrowserServer(this, options)
+    const browser = await createBrowserServer(
+      this,
+      configFile,
+      [...MocksPlugins()],
+      [CoverageTransform(this.ctx)],
+    )
+    this.browser = browser
+    if (this.config.browser.ui) {
+      setup(this.ctx, browser.vite)
+    }
   }
 
-  async setServer(options: UserConfig, server: ViteDevServer, params: InitializeServerOptions = {}) {
-    this.config = resolveConfig(this.ctx.mode, options, server.config)
+  static createBasicProject(ctx: Vitest) {
+    const project = new WorkspaceProject(
+      ctx.config.name || ctx.config.root,
+      ctx,
+    )
+    project.vitenode = ctx.vitenode
+    project.server = ctx.server
+    project.runner = ctx.runner
+    project.config = ctx.config
+    return project
+  }
+
+  static async createCoreProject(ctx: Vitest) {
+    const project = WorkspaceProject.createBasicProject(ctx)
+    await project.initBrowserServer(ctx.server.config.configFile)
+    return project
+  }
+
+  async setServer(options: UserConfig, server: ViteDevServer) {
+    this.config = resolveConfig(
+      this.ctx.mode,
+      {
+        ...options,
+        coverage: this.ctx.config.coverage,
+      },
+      server.config,
+      this.ctx.logger,
+    )
+
     this.server = server
 
-    this.vitenode = params.server ?? new ViteNodeServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config.server)
     const node = this.vitenode
-    this.runner = params.runner ?? new ViteNodeRunner({
+    this.runner = new ViteNodeRunner({
       root: server.config.root,
       base: server.config.base,
       fetchModule(id: string) {
@@ -211,73 +400,7 @@ export class WorkspaceProject {
       },
     })
 
-    await this.initBrowserServer(options)
-  }
-
-  async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    return this.ctx.report(name, ...args)
-  }
-
-  async typecheck(filters: string[] = []) {
-    const dir = this.config.dir || this.config.root
-    const { include, exclude } = this.config.typecheck
-
-    const testFiles = await this.globFiles(include, exclude, dir)
-    const testsFilesList = this.filterFiles(testFiles, filters, dir)
-
-    const checker = new Typechecker(this, testsFilesList)
-    this.typechecker = checker
-    checker.onParseEnd(async ({ files, sourceErrors }) => {
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onTaskUpdate', checker.getTestPacks())
-      await this.report('onCollected')
-      const failedTests = hasFailed(files)
-      const exitCode = !failedTests && checker.getExitCode()
-      if (exitCode) {
-        const error = new Error(checker.getOutput())
-        error.stack = ''
-        this.ctx.state.catchError(error, 'Typecheck Error')
-      }
-      if (!files.length) {
-        this.ctx.logger.printNoTestFound()
-      }
-      else {
-        if (failedTests)
-          process.exitCode = 1
-        await this.report('onFinished', files)
-      }
-      if (sourceErrors.length && !this.config.typecheck.ignoreSourceErrors) {
-        process.exitCode = 1
-        await this.ctx.logger.printSourceTypeErrors(sourceErrors)
-      }
-      // if there are source errors, we are showing it, and then terminating process
-      if (!files.length) {
-        const exitCode = this.config.passWithNoTests ? (process.exitCode ?? 0) : 1
-        await this.close()
-        process.exit(exitCode)
-      }
-      if (this.config.watch) {
-        await this.report('onWatcherStart', files, [
-          ...(this.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
-          ...this.ctx.state.getUnhandledErrors(),
-        ])
-      }
-    })
-    checker.onParseStart(async () => {
-      await this.report('onInit', this.ctx)
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onCollected')
-    })
-    checker.onWatcherRerun(async () => {
-      await this.report('onWatcherRerun', testsFilesList, 'File change detected. Triggering rerun.')
-      await checker.collectTests()
-      this.ctx.state.collectFiles(checker.getTestFiles())
-      await this.report('onTaskUpdate', checker.getTestPacks())
-      await this.report('onCollected')
-    })
-    await checker.prepare()
-    await checker.collectTests()
-    await checker.start()
+    await this.initBrowserServer(this.server.config.configFile)
   }
 
   isBrowserEnabled() {
@@ -285,64 +408,125 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig() {
-    return deepMerge({
-      ...this.config,
-      coverage: this.ctx.config.coverage,
-      reporters: [],
-      deps: {
-        ...this.config.deps,
-        optimizer: {
-          web: {
-            enabled: this.config.deps?.optimizer?.web?.enabled ?? true,
+    const optimizer = this.config.deps?.optimizer
+    const poolOptions = this.config.poolOptions
+
+    // Resolve from server.config to avoid comparing against default value
+    const isolate = this.server?.config?.test?.isolate
+
+    return deepMerge(
+      {
+        ...this.config,
+
+        poolOptions: {
+          forks: {
+            singleFork:
+              poolOptions?.forks?.singleFork
+              ?? this.ctx.config.poolOptions?.forks?.singleFork
+              ?? false,
+            isolate:
+              poolOptions?.forks?.isolate
+              ?? isolate
+              ?? this.ctx.config.poolOptions?.forks?.isolate
+              ?? true,
           },
-          ssr: {
-            enabled: this.config.deps?.optimizer?.ssr?.enabled ?? true,
+          threads: {
+            singleThread:
+              poolOptions?.threads?.singleThread
+              ?? this.ctx.config.poolOptions?.threads?.singleThread
+              ?? false,
+            isolate:
+              poolOptions?.threads?.isolate
+              ?? isolate
+              ?? this.ctx.config.poolOptions?.threads?.isolate
+              ?? true,
+          },
+          vmThreads: {
+            singleThread:
+              poolOptions?.vmThreads?.singleThread
+              ?? this.ctx.config.poolOptions?.vmThreads?.singleThread
+              ?? false,
           },
         },
-      },
-      snapshotOptions: {
-        ...this.config.snapshotOptions,
-        resolveSnapshotPath: undefined,
-      },
-      onConsoleLog: undefined!,
-      sequence: {
-        ...this.ctx.config.sequence,
-        sequencer: undefined!,
-      },
-      benchmark: {
-        ...this.config.benchmark,
+
         reporters: [],
+        deps: {
+          ...this.config.deps,
+          optimizer: {
+            web: {
+              enabled: optimizer?.web?.enabled ?? true,
+            },
+            ssr: {
+              enabled: optimizer?.ssr?.enabled ?? true,
+            },
+          },
+        },
+        snapshotOptions: {
+          ...this.ctx.config.snapshotOptions,
+          expand:
+            this.config.snapshotOptions.expand
+            ?? this.ctx.config.snapshotOptions.expand,
+          resolveSnapshotPath: undefined,
+        },
+        onConsoleLog: undefined!,
+        onStackTrace: undefined!,
+        sequence: {
+          ...this.ctx.config.sequence,
+          sequencer: undefined!,
+        },
+        benchmark: {
+          ...this.config.benchmark,
+          reporters: [],
+        },
+        inspect: this.ctx.config.inspect,
+        inspectBrk: this.ctx.config.inspectBrk,
+        inspector: this.ctx.config.inspector,
+        alias: [],
+        includeTaskLocation:
+          this.config.includeTaskLocation
+          ?? this.ctx.config.includeTaskLocation,
+        env: {
+          ...this.server?.config.env,
+          ...this.config.env,
+        },
+        browser: {
+          ...this.ctx.config.browser,
+          orchestratorScripts: [],
+          testerScripts: [],
+          commands: {},
+        },
+        printConsoleTrace:
+          this.config.printConsoleTrace ?? this.ctx.config.printConsoleTrace,
       },
-      inspect: this.ctx.config.inspect,
-      inspectBrk: this.ctx.config.inspectBrk,
-    }, this.ctx.configOverride || {} as any,
+      this.ctx.configOverride || ({} as any),
     ) as ResolvedConfig
   }
 
   close() {
     if (!this.closingPromise) {
-      this.closingPromise = Promise.all([
-        this.server.close(),
-        this.typechecker?.stop(),
-        this.browser?.close(),
-      ].filter(Boolean))
+      this.closingPromise = Promise.all(
+        [
+          this.server.close(),
+          this.typechecker?.stop(),
+          this.browser?.close(),
+          this.clearTmpDir(),
+        ].filter(Boolean),
+      ).then(() => (this._provided = {} as any))
     }
     return this.closingPromise
   }
 
+  private async clearTmpDir() {
+    try {
+      await rm(this.tmpDir, { force: true, recursive: true })
+    }
+    catch {}
+  }
+
   async initBrowserProvider() {
-    if (!this.isBrowserEnabled())
+    if (!this.isBrowserEnabled()) {
       return
-    if (this.browserProvider)
-      return
-    const Provider = await getBrowserProvider(this.config.browser, this.runner)
-    this.browserProvider = new Provider()
-    const browser = this.config.browser.name
-    const supportedBrowsers = this.browserProvider.getSupportedBrowsers()
-    if (!browser)
-      throw new Error(`[${this.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`)
-    if (!supportedBrowsers.includes(browser))
-      throw new Error(`[${this.getName()}] Browser "${browser}" is not supported by the browser provider "${this.browserProvider.name}". Supported browsers: ${supportedBrowsers.join(', ')}.`)
-    await this.browserProvider.initialize(this, { browser })
+    }
+    await this.browser?.initBrowserProvider()
   }
 }

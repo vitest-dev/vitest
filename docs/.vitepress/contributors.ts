@@ -21,29 +21,44 @@ function getAvatarUrl(name: string) {
   return import.meta.hot ? `https://github.com/${name}.png` : `/user-avatars/${name}.png`
 }
 
-export const contributors = (contributorNames as string[]).reduce((acc, name) => {
+export const contributors = (contributorNames).reduce<Contributor[]>((acc, name) => {
   contributorsAvatars[name] = getAvatarUrl(name)
   acc.push({ name, avatar: contributorsAvatars[name] })
   return acc
-}, [] as Contributor[])
+}, [])
+
 function createLinks(tm: CoreTeam): CoreTeam {
   tm.links = [{ icon: 'github', link: `https://github.com/${tm.github}` }]
-  if (tm.mastodon)
+  if (tm.mastodon) {
     tm.links.push({ icon: 'mastodon', link: tm.mastodon })
+  }
 
-  if (tm.discord)
+  if (tm.discord) {
     tm.links.push({ icon: 'discord', link: tm.discord })
+  }
 
-  if (tm.youtube)
+  if (tm.youtube) {
     tm.links.push({ icon: 'youtube', link: `https://www.youtube.com/@${tm.youtube}` })
+  }
 
-  if (tm.twitter)
-    tm.links.push({ icon: 'twitter', link: `https://twitter.com/${tm.twitter}` })
+  if (tm.twitter) {
+    tm.links.push({ icon: 'x', link: `https://twitter.com/${tm.twitter}` })
+  }
 
   return tm
 }
 
 const plainTeamMembers: CoreTeam[] = [
+  {
+    avatar: contributorsAvatars['sheremet-va'],
+    name: 'Vladimir',
+    github: 'sheremet-va',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
+    twitter: 'sheremet_va',
+    sponsor: 'https://github.com/sponsors/sheremet-va',
+    title: 'An open source fullstack developer',
+    desc: 'Core team member of Vitest & Vite',
+  },
   {
     avatar: contributorsAvatars.antfu,
     name: 'Anthony Fu',
@@ -59,21 +74,14 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Core team member of Vite & Vue',
   },
   {
-    avatar: contributorsAvatars['sheremet-va'],
-    name: 'Vladimir',
-    github: 'sheremet-va',
-    mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
-    twitter: 'sheremet_va',
-    sponsor: 'https://github.com/sponsors/sheremet-va',
-    title: 'An open source fullstack developer',
-    desc: 'Core team member of Vitest',
-  },
-  {
     avatar: contributorsAvatars.AriPerkkio,
     name: 'Ari Perkkiö',
     github: 'AriPerkkio',
+    mastodon: 'https://elk.zone/m.webtoo.ls/@AriPerkkio',
+    twitter: 'ari_perkkio',
+    sponsor: 'https://github.com/sponsors/AriPerkkio',
     title: 'A fullstack developer, working',
-    desc: 'Team member of Vitest',
+    desc: 'Core team member of Vitest',
     org: 'Cloudamite',
     orgLink: 'https://cloudamite.com/',
   },
@@ -99,6 +107,25 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Vite\'s fanatical follower',
   },
   {
+    avatar: contributorsAvatars.Dunqing,
+    name: 'Dunqing',
+    github: 'Dunqing',
+    twitter: '@Dunqingg',
+    title: 'A passionate enthusiast of open source contributions',
+    desc: 'Team member of Vitest & UnoCSS',
+  },
+  {
+    avatar: contributorsAvatars['hi-ogawa'],
+    name: 'Hiroshi Ogawa',
+    github: 'hi-ogawa',
+    twitter: 'hiroshi_18181',
+    title: 'Open source enthusiast',
+    desc: 'Team member of Vitest',
+  },
+]
+
+const plainTeamEmeritiMembers: CoreTeam[] = [
+  {
     avatar: contributorsAvatars.Aslemammad,
     name: 'Mohammad Bagher',
     github: 'Aslemammad',
@@ -116,6 +143,14 @@ const plainTeamMembers: CoreTeam[] = [
     desc: 'Author of fluent-vue',
   },
   {
+    avatar: contributorsAvatars.poyoho,
+    name: 'Yoho Po',
+    github: 'poyoho',
+    twitter: '@yoho_po',
+    title: 'It\'s no problem in my locall',
+    desc: 'Core team member of Vite & Team member of Vitest',
+  },
+  {
     avatar: contributorsAvatars.zxch3n,
     name: 'Zixuan Chen',
     github: 'zxch3n',
@@ -124,16 +159,9 @@ const plainTeamMembers: CoreTeam[] = [
     title: 'A fullstack developer',
     desc: 'Working on CRDTs & local-first software',
   },
-  {
-    avatar: contributorsAvatars.poyoho,
-    name: 'Yoho Po',
-    github: 'poyoho',
-    twitter: '@yoho_po',
-    title: 'It\'s no problem in my locall',
-    desc: 'Core team member of Vite & Team member of Vitest',
-  },
 ]
 
 const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
+const teamEmeritiMembers = plainTeamEmeritiMembers.map(tm => createLinks(tm))
 
-export { teamMembers }
+export { teamMembers, teamEmeritiMembers }
