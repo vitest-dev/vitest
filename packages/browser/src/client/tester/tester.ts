@@ -131,3 +131,5 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
 
 // @ts-expect-error untyped global for internal use
 window.__vitest_browser_runner__.runTests = files => executeTests('run', files)
+// @ts-expect-error untyped global for internal use
+window.__vitest_browser_runner__.collectTests = files => executeTests('collect', files)

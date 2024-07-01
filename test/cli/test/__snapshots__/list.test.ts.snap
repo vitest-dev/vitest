@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`correctly outputs all tests with args: "--browser=chromium" 1`] = `
+"basic.test.ts > basic suite > inner suite > some test
+basic.test.ts > basic suite > inner suite > another test
+basic.test.ts > basic suite > basic test
+basic.test.ts > outside test
+math.test.ts > 1 plus 1
+math.test.ts > failing test
+"
+`;
+
+exports[`correctly outputs all tests with args: "--pool=forks" 1`] = `
+"basic.test.ts > basic suite > inner suite > some test
+basic.test.ts > basic suite > inner suite > another test
+basic.test.ts > basic suite > basic test
+basic.test.ts > outside test
+math.test.ts > 1 plus 1
+math.test.ts > failing test
+"
+`;
+
+exports[`correctly outputs all tests with args: "--pool=threads" 1`] = `
+"basic.test.ts > basic suite > inner suite > some test
+basic.test.ts > basic suite > inner suite > another test
+basic.test.ts > basic suite > basic test
+basic.test.ts > outside test
+math.test.ts > 1 plus 1
+math.test.ts > failing test
+"
+`;
+
+exports[`correctly outputs all tests with args: "--pool=vmForks" 1`] = `
+"basic.test.ts > basic suite > inner suite > some test
+basic.test.ts > basic suite > inner suite > another test
+basic.test.ts > basic suite > basic test
+basic.test.ts > outside test
+math.test.ts > 1 plus 1
+math.test.ts > failing test
+"
+`;
