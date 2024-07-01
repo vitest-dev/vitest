@@ -156,14 +156,8 @@
             }
           },
           {
-            "start": {
-              "line": 2,
-              "column": 2
-            },
-            "end": {
-              "line": 5,
-              "column": 3
-            }
+            "start": {},
+            "end": {}
           }
         ]
       },
@@ -191,14 +185,8 @@
             }
           },
           {
-            "start": {
-              "line": 10,
-              "column": 2
-            },
-            "end": {
-              "line": 13,
-              "column": 3
-            }
+            "start": {},
+            "end": {}
           }
         ]
       },
@@ -226,14 +214,8 @@
             }
           },
           {
-            "start": {
-              "line": 15,
-              "column": 2
-            },
-            "end": {
-              "line": 18,
-              "column": 3
-            }
+            "start": {},
+            "end": {}
           }
         ]
       }
