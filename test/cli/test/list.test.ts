@@ -14,31 +14,31 @@ test.each([
 
 test('correctly outputs json', async () => {
   const { stdout } = await runVitestCli('list', '-r=./fixtures/list', '--json')
-  expect(stdout).toMatchInlineSnapshot(`
+  expect(relative(stdout)).toMatchInlineSnapshot(`
     "[
       {
         "name": "basic suite > inner suite > some test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "basic suite > inner suite > another test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "basic suite > basic test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "outside test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "1 plus 1",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts"
       },
       {
         "name": "failing test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts"
       }
     ]
     "
@@ -49,31 +49,31 @@ test('correctly saves json', async () => {
   const { stdout } = await runVitestCli('list', '-r=./fixtures/list', '--json=./list.json')
   const json = readFileSync('./fixtures/list/list.json', 'utf-8')
   expect(stdout).toBe('')
-  expect(json).toMatchInlineSnapshot(`
+  expect(relative(json)).toMatchInlineSnapshot(`
     "[
       {
         "name": "basic suite > inner suite > some test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "basic suite > inner suite > another test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "basic suite > basic test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "outside test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+        "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
         "name": "1 plus 1",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts"
       },
       {
         "name": "failing test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts"
+        "file": "<root>/fixtures/list/math.test.ts"
       }
     ]"
   `)
@@ -99,11 +99,11 @@ test('correctly prints project name in basic report', async () => {
 
 test('correctly prints project name and locations in json report', async () => {
   const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--json', '--config=./custom.config.ts')
-  expect(stdout).toMatchInlineSnapshot(`
+  expect(relative(stdout)).toMatchInlineSnapshot(`
     "[
       {
         "name": "1 plus 1",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts",
+        "file": "<root>/fixtures/list/math.test.ts",
         "projectName": "custom",
         "location": {
           "line": 3,
@@ -112,7 +112,7 @@ test('correctly prints project name and locations in json report', async () => {
       },
       {
         "name": "failing test",
-        "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts",
+        "file": "<root>/fixtures/list/math.test.ts",
         "projectName": "custom",
         "location": {
           "line": 7,
@@ -146,3 +146,7 @@ test('ignores watch flag', async () => {
     "
   `)
 })
+
+function relative(stdout: string) {
+  return stdout.replace(new RegExp(process.cwd(), 'g'), '<root>')
+}
