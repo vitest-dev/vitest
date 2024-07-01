@@ -155,7 +155,7 @@
     "@vitest/utils": "workspace:*",
     "chai": "^5.1.1",
     "debug": "^4.3.5",
-    "execa": "^8.0.1",
+    "execa": "^9.3.0",
     "magic-string": "^0.30.10",
     "pathe": "^1.1.2",
     "picocolors": "^1.0.1",
