@@ -67,7 +67,7 @@ export interface UserEvent {
   /**
    * Triggers a triple click event on an element. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API: using `click` with `clickCount: 3`
-   * @see {@link https://webdriver.io/docs/api/browser/actions/} WebdriverIO API: using actions with `move` and 3 `down + up + down` events in a row
+   * @see {@link https://webdriver.io/docs/api/browser/actions/} WebdriverIO API: using actions api with `move` plus three `down + up + pause` events in a row
    * @see {@link https://testing-library.com/docs/user-event/convenience/#tripleclick} testing-library API
    */
   tripleClick: (element: Element, options?: UserEventTripleClickOptions) => Promise<void>
@@ -222,7 +222,7 @@ export const server: {
   browser: string
   /**
    * Available commands for the browser.
-   * @see {@link https://vitest.dev/guide/browser#commands}
+   * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands: BrowserCommands
 }
@@ -237,7 +237,7 @@ export const userEvent: UserEvent
 /**
  * Available commands for the browser.
  * A shortcut to `server.commands`.
- * @see {@link https://vitest.dev/guide/browser#commands}
+ * @see {@link https://vitest.dev/guide/browser/commands}
  */
 export const commands: BrowserCommands
 

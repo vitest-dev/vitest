@@ -412,7 +412,7 @@ or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
 If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
 
 ::: tip
-You can also use [Browser Mode](/guide/browser) to run integration or unit tests in the browser without mocking the environment.
+You can also use [Browser Mode](/guide/browser/) to run integration or unit tests in the browser without mocking the environment.
 :::
 
 By adding a `@vitest-environment` docblock or comment at the top of the file,
@@ -1507,7 +1507,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 Run Vitest tests in a browser. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](#browser-provider) option.
 
 ::: tip NOTE
-Read more about testing in a real browser in the [guide page](/guide/browser).
+Read more about testing in a real browser in the [guide page](/guide/browser/).
 :::
 
 ::: warning
@@ -1697,7 +1697,7 @@ The script `src` and `content` will be processed by Vite plugins.
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser#commands) that can be import during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be import during browser tests from `@vitest/browser/commands`.
 
 ### clearMocks
 
@@ -2308,7 +2308,7 @@ The `location` property has `column` and `line` values that correspond to the `t
 
 This option will be auto-enabled if you don't disable it explicitly, and you are running Vitest with:
 - [Vitest UI](/guide/ui)
-- or using the [Browser Mode](/guide/browser) without [headless](/guide/browser#headless) mode
+- or using the [Browser Mode](/guide/browser/) without [headless](/guide/browser/#headless) mode
 - or using [HTML Reporter](/guide/reporters#html-reporter)
 
 ::: tip

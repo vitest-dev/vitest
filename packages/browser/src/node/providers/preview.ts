@@ -24,7 +24,7 @@ export class PreviewBrowserProvider implements BrowserProvider {
     this.open = false
     if (ctx.config.browser.headless) {
       throw new Error(
-        'You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser#configuration',
+        'You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser/#configuration',
       )
     }
   }
