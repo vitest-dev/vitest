@@ -1,4 +1,3 @@
-import limit from 'p-limit'
 import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
@@ -20,6 +19,7 @@ import type {
   Test,
 } from './types'
 import { partitionSuiteChildren } from './utils/suite'
+import { limitConcurrency } from './utils/limit-concurrency'
 import { getFn, getHooks } from './map'
 import { collectTests } from './collect'
 import { setCurrentTest } from './test-state'
@@ -466,7 +466,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner) {
   }
 }
 
-let limitMaxConcurrency: ReturnType<typeof limit>
+let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
   if (c.type === 'test' || c.type === 'custom') {
@@ -478,7 +478,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
 }
 
 export async function runFiles(files: File[], runner: VitestRunner) {
-  limitMaxConcurrency ??= limit(runner.config.maxConcurrency)
+  limitMaxConcurrency ??= limitConcurrency(runner.config.maxConcurrency)
 
   for (const file of files) {
     if (!file.tasks.length && !runner.config.passWithNoTests) {

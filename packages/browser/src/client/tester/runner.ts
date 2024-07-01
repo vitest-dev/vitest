@@ -56,7 +56,7 @@ export function createBrowserRunner(
 
     onTaskFinished = async (task: Task) => {
       if (this.config.browser.screenshotFailures && task.result?.state === 'fail') {
-        await page.screenshot()
+        task.meta.failScreenshotPath = await page.screenshot()
       }
     }
 

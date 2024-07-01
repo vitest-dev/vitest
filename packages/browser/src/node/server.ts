@@ -9,8 +9,10 @@ import type {
   WorkspaceProject,
 } from 'vitest/node'
 import { join, resolve } from 'pathe'
+import type { ErrorWithDiff } from '@vitest/utils'
 import { slash } from '@vitest/utils'
 import type { ResolvedConfig } from 'vitest'
+import { type StackTraceParserOptions, parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 import { BrowserServerCDPHandler } from './cdp'
@@ -33,10 +35,31 @@ export class BrowserServer implements IBrowserServer {
 
   public vite!: Vite.ViteDevServer
 
+  private stackTraceOptions: StackTraceParserOptions
+
   constructor(
     public project: WorkspaceProject,
     public base: string,
   ) {
+    this.stackTraceOptions = {
+      frameFilter: project.config.onStackTrace,
+      getSourceMap: (id) => {
+        const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
+        return result?.map
+      },
+      getFileName: (id) => {
+        const mod = this.vite.moduleGraph.getModuleById(id)
+        if (mod?.file) {
+          return mod.file
+        }
+        const modUrl = this.vite.moduleGraph.urlToModuleMap.get(id)
+        if (modUrl?.file) {
+          return modUrl.file
+        }
+        return id
+      },
+    }
+
     this.state = new BrowserServerState()
 
     const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
@@ -136,6 +159,26 @@ export class BrowserServer implements IBrowserServer {
     await this.provider.initialize(this.project, {
       browser,
       options: providerOptions,
+    })
+  }
+
+  public parseErrorStacktrace(
+    e: ErrorWithDiff,
+    options: StackTraceParserOptions = {},
+  ) {
+    return parseErrorStacktrace(e, {
+      ...this.stackTraceOptions,
+      ...options,
+    })
+  }
+
+  public parseStacktrace(
+    trace: string,
+    options: StackTraceParserOptions = {},
+  ) {
+    return parseStacktrace(trace, {
+      ...this.stackTraceOptions,
+      ...options,
     })
   }
 

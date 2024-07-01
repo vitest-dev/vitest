@@ -2,11 +2,13 @@
 import type { Task, TaskState } from '@vitest/runner'
 import { nextTick } from 'vue'
 import { hasFailedSnapshot } from '@vitest/ws-client'
+import { Tooltip as VueTooltip } from 'floating-vue'
 import { client, isReport, runFiles } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer'
 import { search } from '~/composables/explorer/state'
+import { showSource } from '~/composables/codemirror'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
@@ -19,6 +21,7 @@ const {
   expandable,
   typecheck,
   type,
+  disableTaskLocation,
   onItemClick,
 } = defineProps<{
   taskId: string
@@ -34,12 +37,21 @@ const {
   search?: string
   projectName?: string
   projectNameColor: string
+  disableTaskLocation?: boolean
   onItemClick?: (task: Task) => void
 }>()
 
 const task = computed(() => client.state.idMap.get(taskId))
 
-const failedSnapshot = computed(() => task.value && hasFailedSnapshot(task.value))
+const failedSnapshot = computed(() => {
+  // don't traverse the tree if it's a report
+  if (isReport) {
+    return false
+  }
+
+  const t = task.value
+  return t && hasFailedSnapshot(t)
+})
 
 function toggleOpen() {
   if (!expandable) {
@@ -86,10 +98,9 @@ const gridStyles = computed(() => {
   }
   // text content
   gridColumns.push('minmax(0, 1fr)')
-  // buttons
-  if (type === 'file') {
-    gridColumns.push('min-content')
-  }
+  // action buttons
+  gridColumns.push('min-content')
+
   // all the vertical lines with width 1rem and mx-2: always centered
   return `grid-template-columns: ${
     entries.map(() => '1rem').join(' ')
@@ -107,6 +118,26 @@ const highlighted = computed(() => {
     ? name.replace(regex, match => `<span class="highlight">${match}</span>`)
     : name
 })
+
+const disableShowDetails = computed(() => type !== 'file' && disableTaskLocation)
+const showDetailsTooltip = computed(() => {
+  return type === 'file'
+    ? 'Open test details'
+    : type === 'suite'
+      ? 'View Suite Source Code'
+      : 'View Test Source Code'
+})
+const showDetailsClasses = computed(() => disableShowDetails.value ? 'color-red5 dark:color-#f43f5e' : null)
+
+function showDetails() {
+  const t = task.value!
+  if (type === 'file') {
+    onItemClick?.(t)
+  }
+  else {
+    showSource(t)
+  }
+}
 </script>
 
 <template>
@@ -136,7 +167,6 @@ const highlighted = computed(() => {
     <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
     <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
       <span text-sm truncate font-light>
-        <!-- only show [] in files view -->
         <span v-if="type === 'file' && projectName" :style="{ color: projectNameColor }">
           [{{ projectName }}]
         </span>
@@ -146,29 +176,46 @@ const highlighted = computed(() => {
         {{ duration > 0 ? duration : '< 1' }}ms
       </span>
     </div>
-    <div v-if="type === 'file'" gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
+    <div gap-1 justify-end flex-grow-1 pl-1 class="test-actions">
       <IconAction
         v-if="!isReport && failedSnapshot"
         v-tooltip.bottom="'Fix failed snapshot(s)'"
         data-testid="btn-fix-snapshot"
         title="Fix failed snapshot(s)"
-        icon="i-carbon-result-old"
+        icon="i-carbon:result-old"
         @click.prevent.stop="updateSnapshot(task)"
       />
-      <IconAction
-        v-tooltip.bottom="'Open test details'"
-        data-testid="btn-open-details"
-        title="Open test details"
-        icon="i-carbon-intrusion-prevention"
-        @click.prevent.stop="onItemClick?.(task)"
-      />
-      <IconAction
+      <VueTooltip
+        placement="bottom"
+        class="w-1.4em h-1.4em op100 rounded flex"
+        :class="showDetailsClasses"
+      >
+        <IconButton
+          data-testid="btn-open-details"
+          icon="i-carbon:intrusion-prevention"
+          @click.prevent.stop="showDetails"
+        />
+        <template #popper>
+          <div v-if="disableShowDetails" class="op100 gap-1 p-y-1" grid="~ items-center cols-[1.5em_1fr]">
+            <div class="i-carbon:information-square w-1.5em h-1.5em" />
+            <div>{{ showDetailsTooltip }}: this feature is not available, you have disabled <span class="text-[#add467]">includeTaskLocation</span> in your configuration file.</div>
+            <div style="grid-column: 2">
+              Clicking this button the code tab will position the cursor at first line in the source code since the UI doesn't have the information available.
+            </div>
+          </div>
+          <div v-else>
+            {{ showDetailsTooltip }}
+          </div>
+        </template>
+      </VueTooltip>
+      <IconButton
         v-if="!isReport"
         v-tooltip.bottom="'Run current test'"
         data-testid="btn-run-test"
         title="Run current test"
         icon="i-carbon:play-filled-alt"
         text-green5
+        :disabled="type !== 'file'"
         @click.prevent.stop="onRun(task)"
       />
     </div>
@@ -185,8 +232,7 @@ const highlighted = computed(() => {
 .test-actions {
   display: none;
 }
-.item-wrapper:hover .test-actions,
-.item-wrapper[data-current="true"] .test-actions {
+.item-wrapper:hover .test-actions {
   display: flex;
 }
 </style>

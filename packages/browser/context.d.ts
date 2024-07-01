@@ -29,6 +29,10 @@ export interface ScreenshotOptions {
    * Path relative to the `screenshotDirectory` in the test config.
    */
   path?: string
+  /**
+   * Will also return the base64 encoded screenshot alongside the path.
+   */
+  base64?: boolean
 }
 
 export interface BrowserCommands {
@@ -60,6 +64,13 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/convenience/#dblClick} testing-library API
    */
   dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
+  /**
+   * Triggers a triple click event on an element. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API: using `click` with `clickCount: 3`
+   * @see {@link https://webdriver.io/docs/api/browser/actions/} WebdriverIO API: using actions with `move` and 3 `down + up + down` events in a row
+   * @see {@link https://testing-library.com/docs/user-event/convenience/#tripleclick} testing-library API
+   */
+  tripleClick: (element: Element, options?: UserEventTripleClickOptions) => Promise<void>
   /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
@@ -165,6 +176,7 @@ export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
 export interface UserEventDoubleClickOptions {}
+export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
 
 export interface UserEventTabOptions {
@@ -237,12 +249,16 @@ export interface BrowserPage {
   /**
    * Change the size of iframe's viewport.
    */
-  viewport: (width: number, height: number) => Promise<void>
+  viewport(width: number, height: number): Promise<void>
   /**
    * Make a screenshot of the test iframe or a specific element.
-   * @returns Path to the screenshot file.
+   * @returns Path to the screenshot file or path and base64.
    */
-  screenshot: (options?: ScreenshotOptions) => Promise<string>
+  screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
+    path: string
+    base64: string
+  }>
+  screenshot(options?: ScreenshotOptions): Promise<string>
 }
 
 export const page: BrowserPage

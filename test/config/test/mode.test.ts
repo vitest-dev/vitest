@@ -17,7 +17,7 @@ test.each([
   const { stdout, stderr } = await testUtils.runVitestCli(...(command), 'fixtures/mode', '-c', `fixtures/mode/vitest.${expectedMode}.config.ts`)
 
   expect(stderr).toContain(`env.mode:  ${actualMode}`)
-  expect(stderr).toContain('⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯')
+  expect(stderr).toContain('Startup Error')
   expect(stderr).toContain(`Error: env.mode should be equal to "${expectedMode}"`)
   expect(stdout).toBe('')
 })

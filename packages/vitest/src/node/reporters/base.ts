@@ -309,13 +309,15 @@ export abstract class BaseReporter implements Reporter {
       if (log.browser) {
         write('\n')
       }
+
       const project = log.taskId
         ? this.ctx.getProjectByTaskId(log.taskId)
         : this.ctx.getCoreWorkspaceProject()
-      const stack = parseStacktrace(log.origin, {
-        getSourceMap: file => project.getBrowserSourceMapModuleById(file),
-        frameFilter: project.config.onStackTrace,
-      })
+
+      const stack = log.browser
+        ? (project.browser?.parseStacktrace(log.origin) || [])
+        : parseStacktrace(log.origin)
+
       const highlight = task
         ? stack.find(i => i.file === task.file.filepath)
         : null
@@ -603,8 +605,14 @@ export abstract class BaseReporter implements Reporter {
           )}${name}`,
         )
       }
+      const screenshots = tasks.filter(t => t.meta?.failScreenshotPath).map(t => t.meta?.failScreenshotPath as string)
       const project = this.ctx.getProjectByTaskId(tasks[0].id)
-      this.ctx.logger.printError(error, { project, verbose: this.verbose })
+      this.ctx.logger.printError(error, {
+        project,
+        verbose: this.verbose,
+        screenshotPaths: screenshots,
+        task: tasks[0],
+      })
       errorDivider()
     }
   }
@@ -617,7 +625,7 @@ export abstract class BaseReporter implements Reporter {
         type: 'Unhandled Rejection',
       })
       this.ctx.logger.error('\n\n')
-      process.exit(1)
+      process.exit()
     }
     process.on('unhandledRejection', onUnhandledRejection)
     this._offUnhandledRejection = () => {

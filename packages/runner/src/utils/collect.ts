@@ -118,6 +118,7 @@ export function createFileTask(
   filepath: string,
   root: string,
   projectName: string,
+  pool?: string,
 ) {
   const path = relative(root, filepath)
   const file: File = {
@@ -130,6 +131,7 @@ export function createFileTask(
     meta: Object.create(null),
     projectName,
     file: undefined!,
+    pool,
   }
   file.file = file
   return file

@@ -67,6 +67,7 @@ export default defineWorkspace([
 
         // Other non-provider-specific tests that should be run on browser mode as well
         '**/ignore-hints.test.ts',
+        '**/import-attributes.test.ts',
         '**/multi-suite.test.ts',
         '**/setup-files.test.ts',
         '**/results-snapshot.test.ts',

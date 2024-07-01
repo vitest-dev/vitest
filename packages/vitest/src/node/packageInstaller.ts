@@ -2,7 +2,6 @@ import url from 'node:url'
 import { createRequire } from 'node:module'
 import c from 'picocolors'
 import { isPackageExists } from 'local-pkg'
-import { EXIT_CODE_RESTART } from '../constants'
 import { isCI } from '../utils/env'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -59,7 +58,7 @@ export class VitestPackageInstaller {
           `\nPackage ${dependency} installed, re-run the command to start.\n`,
         ),
       )
-      process.exit(EXIT_CODE_RESTART)
+      process.exit()
       return true
     }
 

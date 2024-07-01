@@ -81,6 +81,7 @@ declare module '@vitest/runner' {
   interface TaskMeta {
     typecheck?: boolean
     benchmark?: boolean
+    failScreenshotPath?: string
   }
 
   interface File {
