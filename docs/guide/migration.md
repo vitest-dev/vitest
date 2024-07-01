@@ -78,6 +78,10 @@ This makes `.suite` optional; if the task is defined at the top level, it will n
 
 This change also removes the file from `expect.getState().currentTestName` and makes `expect.getState().testPath` required.
 
+### `task.meta` is added to the JSON reporter
+
+JSON reporter now prints `task.meta` for every assertion result.
+
 ### Simplified generic types of mock functions (e.g. `vi.fn<T>`, `Mock<T>`)
 
 Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguemnts and return value. This is changed to directly accept a function type `vi.fn<T>` to simplify the usage.
@@ -96,9 +100,50 @@ const mockAdd: Mock<Parameters<typeof add>, ReturnType<typeof add>> = vi.fn() //
 const mockAdd: Mock<typeof add> = vi.fn() // [!code ++]
 ```
 
-## Migrating to Vitest 1.0
+### Accessing resolved `mock.results`
 
-<!-- introduction -->
+Previously Vitest resolved `mock.results` values if the function returned a Promise. Now there is a separate [`mock.settledResults`](/api/mock#mock-settledresults) property that populates only when the returned Promise is resolved or rejected.
+
+```ts
+const fn = vi.fn().mockResolvedValueOnce('result')
+await fn()
+
+const result = fn.mock.results[0] // 'result' // [!code --]
+const result = fn.mock.results[0] // 'Promise<result>' // [!code ++]
+
+const settledResult = fn.mock.settledResults[0] // 'result'
+```
+
+With this change, we also introduce new [`toHaveResolved*`](/api/expect#tohaveresolved) matchers simillar to `toHaveReturned` to make migration easier if you used `toHaveReturned` before:
+
+```ts
+const fn = vi.fn().mockResolvedValueOnce('result')
+await fn()
+
+expect(fn).toHaveReturned('result') // [!code --]
+expect(fn).toHaveResolved('result') // [!code ++]
+```
+
+### Browser Mode
+
+Vitest Browser Mode had a lot of changes during the beta cycle. You can read about our philosophy on the Browser Mode in the [GitHub discussion page](https://github.com/vitest-dev/vitest/discussions/5828).
+
+Most of the changes were additive, but there were some small breaking changes:
+
+- `none` provider was renamed to `preview` [#5842](https://github.com/vitest-dev/vitest/pull/5826)
+- `preview` provider is now a default [#5842](https://github.com/vitest-dev/vitest/pull/5826)
+- `indexScripts` is renamed to `orchestratorScripts` [#5842](https://github.com/vitest-dev/vitest/pull/5842)
+
+### Deprecated options removed
+
+Some deprecated options were removed:
+
+- `vitest typecheck` command - use `vitest --typecheck` instead
+- `VITEST_JUNIT_CLASSNAME` and `VITEST_JUNIT_SUITE_NAME` env variables (use reporter options instead)
+- check for `c8` coverage (use coverage-v8 instead)
+- export of `SnapshotEnvironment` from `vitest` - import it from `vitest/snapshot` instead
+
+## Migrating to Vitest 1.0
 
 ### Minimum Requirements
 
@@ -283,16 +328,6 @@ Where Jest does it by default, when mocking a module and wanting this mocking to
 
 ```
 server.deps.inline: ["lib-name"]
-```
-
-### Accessing the Return Values of a Mocked Promise
-
-Both Jest and Vitest store the results of all mock calls in the [`mock.results`](/api/mock.html#mock-results) array, where the return values of each call are stored in the `value` property.
-However, when mocking or spying on a promise (e.g. using `mockResolvedValue`), in Jest the `value` property will be a promise, while in Vitest, it will become a resolved value when a promise is resolved.
-
-```ts
-await expect(spy.mock.results[0].value).resolves.toBe(123) // [!code --]
-expect(spy.mock.results[0].value).toBe(123) // [!code ++]
 ```
 
 ### Envs
