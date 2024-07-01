@@ -17,7 +17,7 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable, ParsedStack } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
-import type { Pool, PoolOptions } from './pool-options'
+import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 
 export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
@@ -343,13 +343,13 @@ export interface InlineConfig {
   poolOptions?: PoolOptions
 
   /**
-   * Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+   * Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
    */
-  maxWorkers?: number
+  maxWorkers?: number | string
   /**
-   * Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
+   * Minimum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
    */
-  minWorkers?: number
+  minWorkers?: number | string
 
   /**
    * Should all test files run in parallel. Doesn't affect tests running in the same file.
@@ -969,7 +969,7 @@ export interface ResolvedConfig
 
   browser: ResolvedBrowserOptions
   pool: Pool
-  poolOptions?: PoolOptions
+  poolOptions?: ResolvedPoolOptions
 
   reporters: (InlineReporter | ReporterWithOptions)[]
 
@@ -1009,6 +1009,9 @@ export interface ResolvedConfig
     enabled: boolean
   }
   runner?: string
+
+  maxWorkers: number
+  minWorkers: number
 }
 
 export type ProjectConfig = Omit<

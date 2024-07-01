@@ -156,7 +156,7 @@ export interface BrowserConfigOptions {
   /**
    * Commands that will be executed on the server
    * via the browser `import("@vitest/browser/context").commands` API.
-   * @see {@link https://vitest.dev/guide/browser#commands}
+   * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
 }

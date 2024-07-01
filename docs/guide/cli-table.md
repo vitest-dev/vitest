@@ -61,27 +61,27 @@
 | `--pool <pool>` | Specify pool, if not running in the browser (default: `threads`) |
 | `--poolOptions.threads.isolate` | Isolate tests in threads pool (default: `true`) |
 | `--poolOptions.threads.singleThread` | Run tests inside a single thread (default: `false`) |
-| `--poolOptions.threads.maxThreads <workers>` | Maximum number of threads to run tests in |
-| `--poolOptions.threads.minThreads <workers>` | Minimum number of threads to run tests in |
+| `--poolOptions.threads.maxThreads <workers>` | Maximum number or percentage of threads to run tests in |
+| `--poolOptions.threads.minThreads <workers>` | Minimum number or percentage of threads to run tests in |
 | `--poolOptions.threads.useAtomics` | Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: `false`) |
 | `--poolOptions.vmThreads.isolate` | Isolate tests in threads pool (default: `true`) |
 | `--poolOptions.vmThreads.singleThread` | Run tests inside a single thread (default: `false`) |
-| `--poolOptions.vmThreads.maxThreads <workers>` | Maximum number of threads to run tests in |
-| `--poolOptions.vmThreads.minThreads <workers>` | Minimum number of threads to run tests in |
+| `--poolOptions.vmThreads.maxThreads <workers>` | Maximum number or percentage of threads to run tests in |
+| `--poolOptions.vmThreads.minThreads <workers>` | Minimum number or percentage of threads to run tests in |
 | `--poolOptions.vmThreads.useAtomics` | Use Atomics to synchronize threads. This can improve performance in some cases, but might cause segfault in older Node versions (default: `false`) |
 | `--poolOptions.vmThreads.memoryLimit <limit>` | Memory limit for VM threads pool. If you see memory leaks, try to tinker this value. |
 | `--poolOptions.forks.isolate` | Isolate tests in forks pool (default: `true`) |
 | `--poolOptions.forks.singleFork` | Run tests inside a single child_process (default: `false`) |
-| `--poolOptions.forks.maxForks <workers>` | Maximum number of processes to run tests in |
-| `--poolOptions.forks.minForks <workers>` | Minimum number of processes to run tests in |
+| `--poolOptions.forks.maxForks <workers>` | Maximum number or percentage of processes to run tests in |
+| `--poolOptions.forks.minForks <workers>` | Minimum number or percentage of processes to run tests in |
 | `--poolOptions.vmForks.isolate` | Isolate tests in forks pool (default: `true`) |
 | `--poolOptions.vmForks.singleFork` | Run tests inside a single child_process (default: `false`) |
-| `--poolOptions.vmForks.maxForks <workers>` | Maximum number of processes to run tests in |
-| `--poolOptions.vmForks.minForks <workers>` | Minimum number of processes to run tests in |
+| `--poolOptions.vmForks.maxForks <workers>` | Maximum number or percentage of processes to run tests in |
+| `--poolOptions.vmForks.minForks <workers>` | Minimum number or percentage of processes to run tests in |
 | `--poolOptions.vmForks.memoryLimit <limit>` | Memory limit for VM forks pool. If you see memory leaks, try to tinker this value. |
 | `--fileParallelism` | Should all test files run in parallel. Use `--no-file-parallelism` to disable (default: `true`) |
-| `--maxWorkers <workers>` | Maximum number of workers to run tests in |
-| `--minWorkers <workers>` | Minimum number of workers to run tests in |
+| `--maxWorkers <workers>` | Maximum number or percentage of workers to run tests in |
+| `--minWorkers <workers>` | Minimum number or percentage of workers to run tests in |
 | `--environment <name>` | Specify runner environment, if not running in the browser (default: `node`) |
 | `--passWithNoTests` | Pass when no tests are found |
 | `--logHeapUsage` | Show the size of heap for each test when running in node |
