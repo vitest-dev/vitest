@@ -625,7 +625,7 @@ export abstract class BaseReporter implements Reporter {
         type: 'Unhandled Rejection',
       })
       this.ctx.logger.error('\n\n')
-      process.exit(1)
+      process.exit()
     }
     process.on('unhandledRejection', onUnhandledRejection)
     this._offUnhandledRejection = () => {
