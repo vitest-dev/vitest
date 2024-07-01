@@ -186,6 +186,9 @@ export function formatCollectedAsJSON(files: File[]) {
       if (test.file.projectName) {
         result.projectName = test.file.projectName
       }
+      if (test.location) {
+        result.location = test.location
+      }
       return result
     })
   }).flat()
