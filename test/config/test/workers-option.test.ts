@@ -4,8 +4,10 @@ import { getWorkersCountByPercentage } from 'vitest/src/utils/workers.js'
 import * as testUtils from '../../test-utils'
 
 vi.mock(import('node:os'), async importOriginal => ({
-  ...await importOriginal(),
-  cpus: () => Array.from({ length: 10 }),
+  default: {
+    ...(await importOriginal()).default,
+    availableParallelism: () => 10,
+  },
 }))
 
 describe('workers util', () => {
