@@ -83,10 +83,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     if (this.ctx.config.browser.ui) {
       await this.browser.maximizeWindow()
     }
-    else {
-      const { width, height } = this.ctx.config.browser.viewport
-      await this.browser.setWindowSize(width, height)
-    }
 
     return this.browser
   }
