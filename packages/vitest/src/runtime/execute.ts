@@ -54,8 +54,19 @@ function listenForErrors(state: () => WorkerGlobalState) {
   dispose.forEach(fn => fn())
   dispose.length = 0
 
-  function catchError(err: unknown, type: string) {
+  function catchError(err: unknown, type: string, event: 'uncaughtException' | 'unhandledRejection') {
     const worker = state()
+
+    // if error happens during a test
+    if (worker.current) {
+      const listeners = process.listeners(event as 'uncaughtException')
+      // if there is another listener, assume that it's handled by user code
+      // one is Vitest's own listener
+      if (listeners.length > 1) {
+        return
+      }
+    }
+
     const error = processError(err)
     if (!isPrimitive(error)) {
       error.VITEST_TEST_NAME = worker.current?.name
@@ -67,8 +78,8 @@ function listenForErrors(state: () => WorkerGlobalState) {
     state().rpc.onUnhandledError(error, type)
   }
 
-  const uncaughtException = (e: Error) => catchError(e, 'Uncaught Exception')
-  const unhandledRejection = (e: Error) => catchError(e, 'Unhandled Rejection')
+  const uncaughtException = (e: Error) => catchError(e, 'Uncaught Exception', 'uncaughtException')
+  const unhandledRejection = (e: Error) => catchError(e, 'Unhandled Rejection', 'unhandledRejection')
 
   process.on('uncaughtException', uncaughtException)
   process.on('unhandledRejection', unhandledRejection)
