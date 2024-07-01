@@ -80,10 +80,6 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       capabilities: this.buildCapabilities(),
     })
 
-    if (this.ctx.config.browser.ui) {
-      await this.browser.maximizeWindow()
-    }
-
     return this.browser
   }
 
@@ -106,6 +102,19 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       const currentValues = (this.options?.capabilities as any)?.[key] || {}
       const newArgs = [...(currentValues.args || []), ...args]
       capabilities[key] = { ...currentValues, args: newArgs as any }
+    }
+
+    // start Vitest UI maximized only on supported browsers
+    if (options.ui && (browser === 'chrome' || browser === 'edge')) {
+      const key = browser === 'chrome'
+        ? 'goog:chromeOptions'
+        : 'ms:edgeOptions'
+      const args = capabilities[key]?.args || []
+      if (!args.includes('--start-maximized') && !args.includes('--start-fullscreen')) {
+        args.push('--start-maximized')
+      }
+      capabilities[key] ??= {}
+      capabilities[key]!.args = args
     }
 
     return capabilities

@@ -71,7 +71,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         headless: options.headless,
       } satisfies LaunchOptions
 
-      if (this.ctx.config.browser.ui) {
+      // start Vitest UI maximized only on supported browsers
+      if (this.ctx.config.browser.ui && this.browserName === 'chromium') {
         if (!launchOptions.args) {
           launchOptions.args = []
         }
