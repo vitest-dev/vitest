@@ -178,13 +178,28 @@ export function processCollected(files: File[], options: CliOptions) {
 export function formatCollectedAsJSON(files: File[]) {
   return files.map((file) => {
     const tests = getTests(file)
-    return tests.map(test => ({ name: getNames(test).slice(1).join(' > '), file: file.filepath }))
+    return tests.map((test) => {
+      const result: any = {
+        name: getNames(test).slice(1).join(' > '),
+        file: file.filepath,
+      }
+      if (test.file.projectName) {
+        result.projectName = test.file.projectName
+      }
+      return result
+    })
   }).flat()
 }
 
 export function formatCollectedAsString(files: File[]) {
   return files.map((file) => {
     const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
-    return tests.map(test => getNames(test).join(' > '))
+    return tests.map((test) => {
+      const name = getNames(test).join(' > ')
+      if (test.file.projectName) {
+        return `[${test.file.projectName}] ${name}`
+      }
+      return name
+    })
   }).flat()
 }
