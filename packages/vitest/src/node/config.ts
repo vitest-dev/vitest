@@ -454,16 +454,8 @@ export function resolveConfig(
   ] as const satisfies [keyof PoolOptions, keyof ThreadsOptions][]
 
   for (const [poolOptionKey, workerOptionKey] of poolThreadsOptions) {
-    const workerInlineOption = resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]
-
-    if (workerInlineOption) {
-      resolved.poolOptions = {
-        ...resolved.poolOptions,
-        [poolOptionKey]: {
-          ...resolved.poolOptions?.[poolOptionKey],
-          [workerOptionKey]: resolveInlineWorkerOption(workerInlineOption),
-        },
-      }
+    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
+      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
     }
   }
 
@@ -475,16 +467,8 @@ export function resolveConfig(
   ] as const satisfies [keyof PoolOptions, keyof ForksOptions][]
 
   for (const [poolOptionKey, workerOptionKey] of poolForksOptions) {
-    const workerInlineOption = resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]
-
-    if (workerInlineOption) {
-      resolved.poolOptions = {
-        ...resolved.poolOptions,
-        [poolOptionKey]: {
-          ...resolved.poolOptions?.[poolOptionKey],
-          [workerOptionKey]: resolveInlineWorkerOption(workerInlineOption),
-        },
-      }
+    if (resolved.poolOptions?.[poolOptionKey]?.[workerOptionKey]) {
+      resolved.poolOptions[poolOptionKey]![workerOptionKey] = resolveInlineWorkerOption(resolved.poolOptions[poolOptionKey]![workerOptionKey]!)
     }
   }
 
