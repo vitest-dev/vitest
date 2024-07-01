@@ -792,6 +792,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   snapshotEnvironment: null,
   compare: null,
   outputJson: null,
+  json: null,
 }
 
 export const benchCliOptionsConfig: Pick<
@@ -799,11 +800,21 @@ export const benchCliOptionsConfig: Pick<
   'compare' | 'outputJson'
 > = {
   compare: {
-    description: 'benchmark output file to compare against',
+    description: 'Benchmark output file to compare against',
     argument: '<filename>',
   },
   outputJson: {
-    description: 'benchmark output file',
+    description: 'Benchmark output file',
     argument: '<filename>',
+  },
+}
+
+export const collectCliOptionsConfig: Pick<
+  VitestCLIOptions,
+  'json'
+> = {
+  json: {
+    description: 'Print collected tests as JSON or write to a file (Default: false)',
+    argument: '[true/path]',
   },
 }

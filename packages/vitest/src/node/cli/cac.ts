@@ -3,10 +3,10 @@ import cac, { type CAC, type Command } from 'cac'
 import c from 'picocolors'
 import { version } from '../../../package.json' with { type: 'json' }
 import { toArray } from '../../utils/base'
-import type { Vitest, VitestRunMode } from '../../types'
+import type { VitestRunMode } from '../../types'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
-import { benchCliOptionsConfig, cliOptionsConfig } from './cli-config'
+import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
@@ -182,6 +182,13 @@ export function createCLI(options: CLIOptions = {}) {
     .command('init <project>', undefined, options)
     .action(init)
 
+  addCliOptions(
+    cli
+      .command('list [...filters]', undefined, options)
+      .action((filters, options) => collect('test', filters, options)),
+    collectCliOptionsConfig,
+  )
+
   cli
     .command('[...filters]', undefined, options)
     .action((filters, options) => start('test', filters, options))
@@ -249,7 +256,7 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
   return argv
 }
 
-async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<Vitest | undefined> {
+async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     process.title = 'node (vitest)'
   }
@@ -261,7 +268,6 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     if (!ctx?.shouldKeepServer()) {
       await ctx?.exit()
     }
-    return ctx
   }
   catch (e) {
     const { divider } = await import('../reporters/renderers/utils')
@@ -285,4 +291,45 @@ async function init(project: string) {
 
   const { create } = await import('../../create/browser/creator')
   await create()
+}
+
+async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
+  try {
+    process.title = 'node (vitest)'
+  }
+  catch {}
+
+  try {
+    const { prepareVitest, processCollected } = await import('./cli-api')
+    const ctx = await prepareVitest(mode, {
+      ...normalizeCliOptions(options),
+      watch: false,
+      run: true,
+    })
+
+    const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
+
+    if (errors.length) {
+      console.error('\nThere were unhandled errors during test collection')
+      errors.forEach(e => console.error(e))
+      console.error('\n\n')
+      await ctx.close()
+      return
+    }
+
+    processCollected(tests, options)
+    await ctx.close()
+  }
+  catch (e) {
+    const { divider } = await import('../reporters/renderers/utils')
+    console.error(`\n${c.red(divider(c.bold(c.inverse(' Collect Error '))))}`)
+    console.error(e)
+    console.error('\n\n')
+
+    if (process.exitCode == null) {
+      process.exitCode = 1
+    }
+
+    process.exit()
+  }
 }

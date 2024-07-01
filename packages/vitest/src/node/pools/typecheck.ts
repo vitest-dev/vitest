@@ -87,9 +87,29 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     })
 
     await checker.prepare()
-    await checker.collectTests()
-    checker.start()
     return checker
+  }
+
+  async function startTypechecker(project: WorkspaceProject, files: string[]) {
+    if (project.typechecker) {
+      return project.typechecker
+    }
+    const checker = await createWorkspaceTypechecker(project, files)
+    await checker.collectTests()
+    await checker.start()
+  }
+
+  async function collectTests(specs: WorkspaceSpec[]) {
+    const specsByProject = groupBy(specs, ([project]) => project.getName())
+    for (const name in specsByProject) {
+      const project = specsByProject[name][0][0]
+      const files = specsByProject[name].map(([_, file]) => file)
+      const checker = await createWorkspaceTypechecker(project, files)
+      checker.setFiles(files)
+      await checker.collectTests()
+      ctx.state.collectFiles(checker.getTestFiles())
+      await ctx.report('onCollected')
+    }
   }
 
   async function runTests(specs: WorkspaceSpec[]) {
@@ -122,7 +142,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
       promises.push(promise)
       promisesMap.set(project, promise)
-      createWorkspaceTypechecker(project, files)
+      startTypechecker(project, files)
     }
 
     await Promise.all(promises)
@@ -131,6 +151,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   return {
     name: 'typescript',
     runTests,
+    collectTests,
     async close() {
       const promises = ctx.projects.map(project =>
         project.typechecker?.stop(),

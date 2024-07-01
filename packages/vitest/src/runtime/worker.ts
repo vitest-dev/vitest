@@ -13,7 +13,7 @@ if (isChildProcess()) {
 }
 
 // this is what every pool executes when running tests
-export async function run(ctx: ContextRPC) {
+async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
   const prepareStart = performance.now()
 
   const inspectorCleanup = setupInspect(ctx)
@@ -75,16 +75,26 @@ export async function run(ctx: ContextRPC) {
       providedContext: ctx.providedContext,
     }
 
-    if (!worker.runTests || typeof worker.runTests !== 'function') {
+    const methodName = mehtod === 'collect' ? 'collectTests' : 'runTests'
+
+    if (!worker[methodName] || typeof worker[methodName] !== 'function') {
       throw new TypeError(
         `Test worker should expose "runTests" method. Received "${typeof worker.runTests}".`,
       )
     }
 
-    await worker.runTests(state)
+    await worker[methodName](state)
   }
   finally {
     await rpcDone().catch(() => {})
     inspectorCleanup()
   }
+}
+
+export function run(ctx: ContextRPC) {
+  return execute('run', ctx)
+}
+
+export function collect(ctx: ContextRPC) {
+  return execute('collect', ctx)
 }

@@ -8,7 +8,8 @@
     "test:forks": "vitest --project forks",
     "test:vmThreads": "vitest --project vmThreads",
     "dev": "vite",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "collect": "vitest list"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

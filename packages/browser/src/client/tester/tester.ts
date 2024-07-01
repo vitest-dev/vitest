@@ -1,4 +1,4 @@
-import { SpyModule, setupCommonEnv, startTests } from 'vitest/browser'
+import { SpyModule, collectTests, setupCommonEnv, startTests } from 'vitest/browser'
 import { getBrowserState, getConfig, getWorkerState } from '../utils'
 import { channel, client, onCancel } from '../client'
 import { setupDialogsSpy } from './dialog'
@@ -65,8 +65,6 @@ async function prepareTestEnvironment(files: string[]) {
     runner,
     config,
     state,
-    setupCommonEnv,
-    startTests,
   }
 }
 
@@ -78,7 +76,7 @@ function done(files: string[]) {
   })
 }
 
-async function runTests(files: string[]) {
+async function executeTests(method: 'run' | 'collect', files: string[]) {
   await client.waitForConnection()
 
   debug('client is connected to ws server')
@@ -107,7 +105,7 @@ async function runTests(files: string[]) {
 
   debug('runner resolved successfully')
 
-  const { config, runner, state, setupCommonEnv, startTests } = preparedData
+  const { config, runner, state } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
 
@@ -116,7 +114,12 @@ async function runTests(files: string[]) {
   try {
     await setupCommonEnv(config)
     for (const file of files) {
-      await startTests([file], runner)
+      if (method === 'run') {
+        await startTests([file], runner)
+      }
+      else {
+        await collectTests([file], runner)
+      }
     }
   }
   finally {
@@ -127,4 +130,4 @@ async function runTests(files: string[]) {
 }
 
 // @ts-expect-error untyped global for internal use
-window.__vitest_browser_runner__.runTests = runTests
+window.__vitest_browser_runner__.runTests = files => executeTests('run', files)

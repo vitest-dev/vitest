@@ -170,6 +170,7 @@ export interface BrowserCommandContext {
 
 export interface BrowserServerStateContext {
   files: string[]
+  method: 'run' | 'collect'
   resolve: () => void
   reject: (v: unknown) => void
 }
@@ -182,7 +183,7 @@ export interface BrowserOrchestrator {
 export interface BrowserServerState {
   orchestrators: Map<string, BrowserOrchestrator>
   getContext: (contextId: string) => BrowserServerStateContext | undefined
-  createAsyncContext: (contextId: string, files: string[]) => Promise<void>
+  createAsyncContext: (method: 'collect' | 'run', contextId: string, files: string[]) => Promise<void>
 }
 
 export interface BrowserServer {
