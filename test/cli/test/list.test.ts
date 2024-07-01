@@ -148,5 +148,9 @@ test('ignores watch flag', async () => {
 })
 
 function relative(stdout: string) {
-  return stdout.replace(new RegExp(process.cwd(), 'g'), '<root>')
+  return stdout.replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')
+}
+
+function slash(stdout: string) {
+  return stdout.replace(/\\/g, '/')
 }
