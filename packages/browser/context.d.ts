@@ -222,7 +222,7 @@ export const server: {
   browser: string
   /**
    * Available commands for the browser.
-   * @see {@link https://vitest.dev/guide/browser#commands}
+   * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands: BrowserCommands
 }
@@ -237,7 +237,7 @@ export const userEvent: UserEvent
 /**
  * Available commands for the browser.
  * A shortcut to `server.commands`.
- * @see {@link https://vitest.dev/guide/browser#commands}
+ * @see {@link https://vitest.dev/guide/browser/commands}
  */
 export const commands: BrowserCommands
 
