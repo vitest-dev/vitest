@@ -292,7 +292,7 @@ importers:
         version: 13.4.0(react-dom@18.0.0)(react@18.2.0)
       '@testing-library/user-event':
         specifier: ^14.5.2
-        version: 14.5.2(@testing-library/dom@9.3.4)
+        version: 14.5.2(@testing-library/dom@10.2.0)
       '@types/react':
         specifier: ^18.2.79
         version: 18.2.79
@@ -395,7 +395,7 @@ importers:
         version: 13.4.0(react-dom@18.0.0)(react@18.2.0)
       '@testing-library/user-event':
         specifier: ^14.5.2
-        version: 14.5.2(@testing-library/dom@9.3.4)
+        version: 14.5.2(@testing-library/dom@10.2.0)
       '@types/react':
         specifier: ^18.2.79
         version: 18.2.79
@@ -5386,7 +5386,6 @@ packages:
       dom-accessibility-api: 0.5.16
       lz-string: 1.5.0
       pretty-format: 27.5.1
-    dev: false
 
   /@testing-library/dom@8.19.0:
     resolution: {integrity: sha512-6YWYPPpxG3e/xOo6HIWwB/58HukkwIVTOaZ0VwdMVjhRUX/01E4FtQbck9GazOOj7MXHc5RBzMrU86iBJHbI+A==}
@@ -5540,16 +5539,6 @@ packages:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
       '@testing-library/dom': 10.2.0
-    dev: false
-
-  /@testing-library/user-event@14.5.2(@testing-library/dom@9.3.4):
-    resolution: {integrity: sha512-YAh82Wh4TIrxYLmfGcixwD18oIjyC1pFQC2Y01F2lzV2HTMiYrI0nze0FD0ocB//CKS/7jIUgae+adPqxK5yCQ==}
-    engines: {node: '>=12', npm: '>=6'}
-    peerDependencies:
-      '@testing-library/dom': '>=7.21.4'
-    dependencies:
-      '@testing-library/dom': 9.3.4
-    dev: true
 
   /@testing-library/vue@8.1.0(@vue/compiler-sfc@3.4.29)(vue@3.4.31):
     resolution: {integrity: sha512-ls4RiHO1ta4mxqqajWRh8158uFObVrrtAPoxk7cIp4HrnQUj/ScKzqz53HxYpG3X6Zb7H2v+0eTGLSoy8HQ2nA==}
@@ -5678,7 +5667,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@types/jsonfile': 6.1.4
-      '@types/node': 20.14.9
+      '@types/node': 20.12.11
     dev: true
     optional: true
 
@@ -5766,7 +5755,7 @@ packages:
     resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
     requiresBuild: true
     dependencies:
-      '@types/node': 20.14.9
+      '@types/node': 20.12.11
     dev: true
     optional: true
 
@@ -5974,7 +5963,7 @@ packages:
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
     requiresBuild: true
     dependencies:
-      '@types/node': 20.14.9
+      '@types/node': 20.12.11
     dev: true
     optional: true
 
@@ -15245,7 +15234,7 @@ packages:
     hasBin: true
     dependencies:
       '@jridgewell/source-map': 0.3.5
-      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
+      acorn: 8.12.0
       commander: 2.20.3
       source-map-support: 0.5.21
     dev: true
@@ -17202,7 +17191,7 @@ packages:
     hasBin: true
     optionalDependencies:
       '@types/fs-extra': 11.0.4
-      '@types/node': 20.14.9
+      '@types/node': 20.12.11
     dev: true
 
   file:test/config/fixtures/conditions-subpackage:

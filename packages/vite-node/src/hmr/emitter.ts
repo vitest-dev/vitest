@@ -14,8 +14,8 @@ export interface Emitter<Events extends Record<EventType, unknown>> {
   ) => void
   emit: (<Key extends keyof Events>(type: Key, event: Events[Key]) => void) &
   (<Key extends keyof Events>(
-      type: undefined extends Events[Key] ? Key : never
-    ) => void)
+    type: undefined extends Events[Key] ? Key : never
+  ) => void)
 }
 
 export type HMREmitter = Emitter<{

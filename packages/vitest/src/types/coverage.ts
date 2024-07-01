@@ -221,9 +221,9 @@ export interface BaseCoverageOptions {
     | Thresholds
     | ({
       [glob: string]: Pick<
-          Thresholds,
+        Thresholds,
           'statements' | 'functions' | 'branches' | 'lines'
-        >
+      >
     } & Thresholds)
 
   /**
