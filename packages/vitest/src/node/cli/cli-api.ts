@@ -177,7 +177,7 @@ export function processCollected(files: File[], options: CliOptions) {
 
 export function formatCollectedAsJSON(files: File[]) {
   return files.map((file) => {
-    const tests = getTests(file)
+    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
     return tests.map((test) => {
       const result: any = {
         name: getNames(test).slice(1).join(' > '),
