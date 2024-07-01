@@ -70,7 +70,7 @@ export const page: {
   /**
    * Change the size of iframe's viewport.
    */
-  viewport(width: number | string, height: number | string): Promise<void>
+  viewport(width: number, height: number): Promise<void>
   /**
    * Make a screenshot of the test iframe or a specific element.
    * @returns Path to the screenshot file or path and base64.
