@@ -1,12 +1,12 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { EXIT_CODE_RESTART } from '../../constants'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { getEnvPackageName } from '../../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../../types'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
 import type { VitestOptions } from '../core'
+import { FilesNotFoundError, GitNotFoundError } from '../errors'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -86,11 +86,6 @@ export async function startVitest(
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
-
-    // if it's in a CLI wrapper, exit with a special code to request restart
-    if (process.env.VITEST_CLI_WRAPPER) {
-      process.exit(EXIT_CODE_RESTART)
-    }
   })
 
   ctx.onAfterSetServer(() => {
@@ -114,6 +109,15 @@ export async function startVitest(
     }
   }
   catch (e) {
+    if (e instanceof FilesNotFoundError) {
+      return ctx
+    }
+
+    if (e instanceof GitNotFoundError) {
+      ctx.logger.error(e.message)
+      return ctx
+    }
+
     process.exitCode = 1
     ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
     ctx.logger.error('\n\n')

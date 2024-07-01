@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
-import { configDefaults } from '../../defaults'
+import { configDefaults, coverageConfigDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../../types'
 import {
   deepMerge,
@@ -129,6 +129,13 @@ export async function VitestPlugin(
               },
             },
           },
+        }
+
+        // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
+        if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
+          config.test.coverage = {
+            exclude: [...coverageConfigDefaults.exclude, ...userConfig.include],
+          }
         }
 
         // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly

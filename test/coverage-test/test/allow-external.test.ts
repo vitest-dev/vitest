@@ -6,7 +6,7 @@ import * as ExternalMath from '../../test-utils/fixtures/math'
 test('{ allowExternal: true } includes files outside project root', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
-    coverage: { allowExternal: true, reporter: 'json' },
+    coverage: { allowExternal: true, reporter: 'json', include: ['**/fixtures/**'] },
   })
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
@@ -21,7 +21,7 @@ test('{ allowExternal: true } includes files outside project root', async () => 
 test('{ allowExternal: false } excludes files outside project root', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
-    coverage: { allowExternal: false, reporter: 'json' },
+    coverage: { allowExternal: false, reporter: 'json', include: ['**/fixtures/**'] },
   })
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()

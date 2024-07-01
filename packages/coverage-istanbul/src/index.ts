@@ -4,6 +4,7 @@ export async function getProvider() {
   // to not bundle the provider
   const providerPath = './provider.js'
   const { IstanbulCoverageProvider } = (await import(
+    /* @vite-ignore */
     providerPath
   )) as typeof import('./provider')
   return new IstanbulCoverageProvider()

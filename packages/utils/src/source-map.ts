@@ -14,6 +14,7 @@ export type { SourceMapInput } from '@jridgewell/trace-mapping'
 export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
   getSourceMap?: (file: string) => unknown
+  getFileName?: (id: string) => string
   frameFilter?: (error: Error, frame: ParsedStack) => boolean | void
 }
 
@@ -192,6 +193,10 @@ export function parseStacktrace(
     )
   }
   return stacks.map((stack) => {
+    if (options.getFileName) {
+      stack.file = options.getFileName(stack.file)
+    }
+
     const map = options.getSourceMap?.(stack.file) as
       | SourceMapInput
       | null

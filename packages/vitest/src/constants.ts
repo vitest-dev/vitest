@@ -3,8 +3,6 @@ export const defaultPort = 51204
 export const defaultBrowserPort = 63315
 export const defaultInspectPort = 9229
 
-export const EXIT_CODE_RESTART = 43
-
 export const API_PATH = '/__vitest_api__'
 
 export const extraInlineDeps = [

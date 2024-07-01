@@ -29,28 +29,29 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
     if (options.element) {
       const { element: elementXpath, ...config } = options
       const element = context.iframe.locator(`xpath=${elementXpath}`)
-      await element.screenshot({ ...config, path: savePath })
+      const buffer = await element.screenshot({ ...config, path: savePath })
+      return returnResult(options, path, buffer)
     }
-    else {
-      await context.iframe.locator('body').screenshot({
-        ...options,
-        path: savePath,
-      })
-    }
-    return path
+
+    const buffer = await context.iframe.locator('body').screenshot({
+      ...options,
+      path: savePath,
+    })
+    return returnResult(options, path, buffer)
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
     const page = context.provider.browser!
     if (!options.element) {
       const body = await page.$('body')
-      await body.saveScreenshot(savePath)
-      return path
+      const buffer = await body.saveScreenshot(savePath)
+      return returnResult(options, path, buffer)
     }
+
     const xpath = `//${options.element}`
     const element = await page.$(xpath)
-    await element.saveScreenshot(savePath)
-    return path
+    const buffer = await element.saveScreenshot(savePath)
+    return returnResult(options, path, buffer)
   }
 
   throw new Error(
@@ -74,4 +75,15 @@ function resolveScreenshotPath(
     )
   }
   return resolve(dir, '__screenshots__', base, name)
+}
+
+function returnResult(
+  options: ScreenshotOptions,
+  path: string,
+  buffer: Buffer,
+) {
+  if (options.base64) {
+    return { path, base64: buffer.toString('base64') }
+  }
+  return path
 }
