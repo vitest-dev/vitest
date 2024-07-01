@@ -6,7 +6,6 @@ import { mergeConfig } from 'vite'
 import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import c from 'picocolors'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
@@ -29,6 +28,7 @@ import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
 import { BlobReporter, readBlobs } from './reporters/blob'
+import { FilesNotFoundError, GitNotFoundError } from './errors'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -492,7 +492,8 @@ export class Vitest {
 
       if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
         const exitCode = this.config.passWithNoTests ? 0 : 1
-        process.exit(exitCode)
+        process.exitCode = exitCode
+        throw new FilesNotFoundError(this.mode)
       }
     }
 
@@ -564,8 +565,8 @@ export class Vitest {
         changedSince: this.config.changed,
       })
       if (!related) {
-        this.logger.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
-        process.exit(1)
+        process.exitCode = 1
+        throw new GitNotFoundError()
       }
       this.config.related = Array.from(new Set(related))
     }
