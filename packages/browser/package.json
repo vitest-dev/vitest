@@ -73,7 +73,7 @@
     }
   },
   "dependencies": {
-    "@testing-library/dom": "^10.1.0",
+    "@testing-library/dom": "^10.2.0",
     "@testing-library/user-event": "^14.5.2",
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.10",
@@ -92,10 +92,10 @@
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
     "periscopic": "^4.0.2",
-    "playwright": "^1.44.1",
-    "playwright-core": "^1.44.1",
+    "playwright": "^1.45.0",
+    "playwright-core": "^1.45.0",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",
-    "webdriverio": "^8.38.2"
+    "webdriverio": "^8.39.0"
   }
 }
