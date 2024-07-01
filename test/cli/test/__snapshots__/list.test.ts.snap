@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`correctly outputs all tests with args: "--browser=chromium" 1`] = `
+exports[`correctly outputs all tests with args: "--browser.enabled" 1`] = `
 "basic.test.ts > basic suite > inner suite > some test
 basic.test.ts > basic suite > inner suite > another test
 basic.test.ts > basic suite > basic test
