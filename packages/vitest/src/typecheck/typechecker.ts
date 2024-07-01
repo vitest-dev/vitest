@@ -266,6 +266,7 @@ export class Typechecker {
   public async stop() {
     await this.clear()
     this.process?.kill()
+    this.process = undefined
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string) {
