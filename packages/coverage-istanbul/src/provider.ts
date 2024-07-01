@@ -28,6 +28,8 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import { type Instrumenter, createInstrumenter } from 'istanbul-lib-instrument'
+// @ts-expect-error @istanbuljs/schema has no type definitions
+import { defaults as istanbulDefaults } from '@istanbuljs/schema'
 
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
@@ -116,6 +118,13 @@ export class IstanbulCoverageProvider
       coverageGlobalScope: 'globalThis',
       coverageGlobalScopeFunc: false,
       ignoreClassMethods: this.options.ignoreClassMethods,
+      parserPlugins: [
+        ...istanbulDefaults.instrumenter.parserPlugins,
+        ['importAttributes', { deprecatedAssertSyntax: true }],
+      ],
+      generatorOpts: {
+        importAttributesKeyword: 'with',
+      },
     })
 
     this.testExclude = new _TestExclude({
