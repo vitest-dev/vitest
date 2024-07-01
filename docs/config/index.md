@@ -32,6 +32,10 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 
 A list of glob patterns that match your test files.
 
+::: tip NOTE
+When using coverage, Vitest automatically adds test files `include` patterns to coverage's default `exclude` patterns. See [`coverage.exclude`](#coverage-exclude).
+:::
+
 ### exclude
 
 - **Type:** `string[]`
@@ -1111,6 +1115,7 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
+  '**/node_modules/**',
   '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
@@ -1120,9 +1125,9 @@ List of files included in coverage as glob patterns
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec}?(-d).?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
   '**/vitest.{workspace,projects}.[jt]s?(on)',
   '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
@@ -1145,6 +1150,10 @@ export default defineConfig({
   },
 })
 ```
+
+::: tip NOTE
+Vitest automatically adds test files `include` patterns to the default value of `coverage.exclude`.
+:::
 
 #### coverage.all
 

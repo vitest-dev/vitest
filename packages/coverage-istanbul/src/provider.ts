@@ -15,8 +15,6 @@ import type {
 } from 'vitest'
 import {
   coverageConfigDefaults,
-  defaultExclude,
-  defaultInclude,
 } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import c from 'picocolors'
@@ -129,11 +127,8 @@ export class IstanbulCoverageProvider
 
     this.testExclude = new _TestExclude({
       cwd: ctx.config.root,
-      include:
-        typeof this.options.include === 'undefined'
-          ? undefined
-          : [...this.options.include],
-      exclude: [...defaultExclude, ...defaultInclude, ...this.options.exclude],
+      include: this.options.include,
+      exclude: this.options.exclude,
       excludeNodeModules: true,
       extension: this.options.extension,
       relativePath: !this.options.allowExternal,
