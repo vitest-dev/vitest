@@ -7,7 +7,7 @@ outline: deep
 
 ## Migrating to Vitest 2.0
 
-### Default pool is `forks`
+### Default Pool is `forks`
 
 Vitest 2.0 changes the default configuration for `pool` to `'forks'` for better stability. You can read the full motivation in [PR](https://github.com/vitest-dev/vitest/pull/5047).
 
@@ -28,11 +28,11 @@ export default defineConfig({
 })
 ```
 
-### Hooks are running in a stack
+### Hooks are Running in a Stack
 
-Before Vitest 2.0, all hooks were running in parallel. In 2.0, all hooks run serially. In addition to this, `afterAll`/`afterEach` are running in a reverse order.
+Before Vitest 2.0, all hooks ran in parallel. In 2.0, all hooks run serially. Additionally, `afterAll`/`afterEach` hooks run in reverse order.
 
-You can revert to the previous behaviour by changing [`sequence.hooks`](/config/#sequence-hooks) to `'parallel'`:
+To revert to the parallel execution of hooks, change [`sequence.hooks`](/config/#sequence-hooks) to `'parallel'`:
 
 ```ts
 export default defineConfig({
@@ -44,17 +44,17 @@ export default defineConfig({
 })
 ```
 
-### `suite.concurrent` runs all its tests concurrently
+### `suite.concurrent` Runs All Tests Concurrently
 
-Previously, specifying `concurrent` on a suite would still group concurrent tests by suites and run them together one by one. Now, it follows jest's behaviour and runs all of them at once (still limited by [`maxConcurrency`](/config/#maxConcurrency))
+Previously, specifying `concurrent` on a suite would group concurrent tests by suites, running them sequentially. Now, following Jest's behavior, all tests run concurrently (subject to [`maxConcurrency`](/config/#maxconcurrency) limits).
 
-### enable V8 coverage's `coverage.ignoreEmptyLines` by default
+### V8 Coverage's `coverage.ignoreEmptyLines` is Enabled by Default
 
-Changes default value of `coverage.ignoreEmptyLines` to `true`. This change will have major impact on users' code coverage reports. It is likely that projects using coverage thresholds need to adjust those values after this. This change affects only the default `coverage.provider: 'v8'`.
+The default value of `coverage.ignoreEmptyLines` is now true. This significant change may affect code coverage reports, requiring adjustments to coverage thresholds for some projects. This adjustment only affects the default setting when `coverage.provider` is `'v8'`.
 
-### No more `watchExclude` option
+### Removal of the `watchExclude` Option
 
-Vitest uses Vite's watcher. You can add your excludes to `server.watch.ignored` instead:
+Vitest uses Vite's watcher. Exclude files or directories by adding them to `server.watch.ignored`:
 
 ```ts
 export default defineConfig({
@@ -66,11 +66,11 @@ export default defineConfig({
 })
 ```
 
-### `--segfault-retry` removed
+### `--segfault-retry` Removed
 
 With the changes to default pool, this option is no longer needed. If you experience segfault errors, try switching to `'forks'` pool. If the problem persists, please open a new issue with a reproduction.
 
-### Empty task in suite tasks removed
+### Empty Task In Suite Tasks Removed
 
 This is the change to the advanced [task API](/advanced/runner#your-task-function). Previously, traversing `.suite` would eventually lead to the empty internal suite that was used instead of a file task.
 
@@ -78,13 +78,13 @@ This makes `.suite` optional; if the task is defined at the top level, it will n
 
 This change also removes the file from `expect.getState().currentTestName` and makes `expect.getState().testPath` required.
 
-### `task.meta` is added to the JSON reporter
+### `task.meta` is Added to the JSON Reporter
 
 JSON reporter now prints `task.meta` for every assertion result.
 
-### Simplified generic types of mock functions (e.g. `vi.fn<T>`, `Mock<T>`)
+### Simplified Generic Types of Mock Functions (e.g. `vi.fn<T>`, `Mock<T>`)
 
-Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguemnts and return value. This is changed to directly accept a function type `vi.fn<T>` to simplify the usage.
+Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguments and return value. This is changed to directly accept a function type `vi.fn<T>` to simplify the usage.
 
 ```ts
 import { type Mock, vi } from 'vitest'
@@ -100,7 +100,7 @@ const mockAdd: Mock<Parameters<typeof add>, ReturnType<typeof add>> = vi.fn() //
 const mockAdd: Mock<typeof add> = vi.fn() // [!code ++]
 ```
 
-### Accessing resolved `mock.results`
+### Accessing Resolved `mock.results`
 
 Previously Vitest resolved `mock.results` values if the function returned a Promise. Now there is a separate [`mock.settledResults`](/api/mock#mock-settledresults) property that populates only when the returned Promise is resolved or rejected.
 
@@ -114,7 +114,7 @@ const result = fn.mock.results[0] // 'Promise<result>' // [!code ++]
 const settledResult = fn.mock.settledResults[0] // 'result'
 ```
 
-With this change, we also introduce new [`toHaveResolved*`](/api/expect#tohaveresolved) matchers simillar to `toHaveReturned` to make migration easier if you used `toHaveReturned` before:
+With this change, we also introduce new [`toHaveResolved*`](/api/expect#tohaveresolved) matchers similar to `toHaveReturned` to make migration easier if you used `toHaveReturned` before:
 
 ```ts
 const fn = vi.fn().mockResolvedValueOnce('result')
@@ -134,7 +134,7 @@ Most of the changes were additive, but there were some small breaking changes:
 - `preview` provider is now a default [#5842](https://github.com/vitest-dev/vitest/pull/5826)
 - `indexScripts` is renamed to `orchestratorScripts` [#5842](https://github.com/vitest-dev/vitest/pull/5842)
 
-### Deprecated options removed
+### Deprecated Options Removed
 
 Some deprecated options were removed:
 
@@ -282,7 +282,7 @@ A few types were removed in favor of Jest-style "Mock" naming.
 ### Timer mocks [#3925](https://github.com/vitest-dev/vitest/pull/3925)
 
 `vi.useFakeTimers()` no longer automatically mocks [`process.nextTick`](https://nodejs.org/api/process.html#processnexttickcallback-args).
-It's still possible to mock `process.nextTick` by explicitly specifying it by using `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+It is still possible to mock `process.nextTick` by explicitly specifying it by using `vi.useFakeTimers({ toFake: ['nextTick'] })`.
 
 However, mocking `process.nextTick` is not possible when using `--pool=forks`. Use a different `--pool` option if you need `process.nextTick` mocking.
 
