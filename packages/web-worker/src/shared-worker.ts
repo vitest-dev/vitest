@@ -36,7 +36,7 @@ function convertNodePortToWebPort(port: NodeMessagePort): MessagePort {
     })
   }
   if (!('dispatchEvent' in port)) {
-    const emit = port.emit.bind(port)
+    const emit = (port as any).emit.bind(port)
     Object.defineProperty(port, 'emit', {
       value(event: any) {
         if (event.name === 'message') {

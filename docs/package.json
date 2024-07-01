@@ -15,12 +15,12 @@
   },
   "dependencies": {
     "@vueuse/core": "^10.11.0",
-    "vue": "^3.4.29"
+    "vue": "^3.4.31"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.1.35",
+    "@iconify-json/carbon": "^1.1.36",
     "@iconify-json/logos": "^1.1.43",
-    "@shikijs/vitepress-twoslash": "^1.7.0",
+    "@shikijs/vitepress-twoslash": "^1.10.0",
     "@unocss/reset": "^0.61.0",
     "@vite-pwa/assets-generator": "^0.2.4",
     "@vite-pwa/vitepress": "^0.5.0",
@@ -28,7 +28,7 @@
     "fast-glob": "^3.3.2",
     "https-localhost": "^4.7.1",
     "unocss": "^0.61.0",
-    "unplugin-vue-components": "^0.27.0",
+    "unplugin-vue-components": "^0.27.2",
     "vite": "^5.2.8",
     "vite-plugin-pwa": "^0.20.0",
     "vitepress": "^1.2.3",
