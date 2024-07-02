@@ -242,7 +242,7 @@ export abstract class BaseReporter implements Reporter {
     this.resetLastRunLog()
     this.watchFilters = files
     this.failedUnwatchedFiles = this.ctx.state.getFiles().filter((file) => {
-      return hasFailed(file) && !files.includes(file.filepath)
+      return !files.includes(file.filepath) && hasFailed(file)
     })
 
     files.forEach((filepath) => {
