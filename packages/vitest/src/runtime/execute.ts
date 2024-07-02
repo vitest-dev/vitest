@@ -1,6 +1,6 @@
 import vm from 'node:vm'
 import { pathToFileURL } from 'node:url'
-import { readFileSync } from 'node:fs'
+import fs from 'node:fs'
 import type { ModuleCacheMap } from 'vite-node/client'
 import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
 import {
@@ -17,6 +17,8 @@ import type { MockMap } from '../types/mocker'
 import type { WorkerGlobalState } from '../types'
 import { VitestMocker } from './mocker'
 import type { ExternalModulesExecutor } from './external-executor'
+
+const { readFileSync } = fs
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
   mockMap: MockMap

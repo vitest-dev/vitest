@@ -1,7 +1,7 @@
 import vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname } from 'node:path'
-import { existsSync, statSync } from 'node:fs'
+import fs from 'node:fs'
 import { extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
 import type { RuntimeRPC } from '../types/rpc'
@@ -13,6 +13,8 @@ import { interopCommonJsModule } from './vm/utils'
 import { ViteExecutor } from './vm/vite-executor'
 
 const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
+
+const { existsSync, statSync } = fs
 
 // always defined when we use vm pool
 const nativeResolve = import.meta.resolve!
