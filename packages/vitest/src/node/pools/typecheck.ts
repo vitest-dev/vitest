@@ -40,7 +40,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
 
     // triggered by TSC watcher, not Vitest watcher, so we need to emulate what Vitest does in this case
     if (ctx.config.watch && !ctx.runningPromise) {
-      await ctx.report('onFinished', files)
+      await ctx.report('onFinished', files, [])
       await ctx.report('onWatcherStart', files, [
         ...(project.config.typecheck.ignoreSourceErrors ? [] : sourceErrors),
         ...ctx.state.getUnhandledErrors(),

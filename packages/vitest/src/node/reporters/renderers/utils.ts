@@ -19,6 +19,12 @@ export const hookSpinnerMap = new WeakMap<Task, Map<string, () => string>>()
 export const pointer = c.yellow(F_POINTER)
 export const skipped = c.dim(c.gray(F_DOWN))
 
+const benchmarkPass = c.green(F_DOT)
+const testPass = c.green(F_CHECK)
+const taskFail = c.red(F_CROSS)
+const suiteFail = c.red(F_POINTER)
+const pending = c.gray('·')
+
 export function getCols(delta = 0) {
   let length = process.stdout?.columns
   if (!length || Number.isNaN(length)) {
@@ -154,10 +160,9 @@ export function getStateSymbol(task: Task) {
   }
 
   if (!task.result) {
-    return c.gray('·')
+    return pending
   }
 
-  // pending
   if (task.result.state === 'run') {
     if (task.type === 'suite') {
       return pointer
@@ -171,11 +176,11 @@ export function getStateSymbol(task: Task) {
   }
 
   if (task.result.state === 'pass') {
-    return task.meta?.benchmark ? c.green(F_DOT) : c.green(F_CHECK)
+    return task.meta?.benchmark ? benchmarkPass : testPass
   }
 
   if (task.result.state === 'fail') {
-    return task.type === 'suite' ? pointer : c.red(F_CROSS)
+    return task.type === 'suite' ? suiteFail : taskFail
   }
 
   return ' '

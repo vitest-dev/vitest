@@ -8,8 +8,8 @@ export interface Reporter {
   onSpecsCollected?: (specs?: SerializableSpec[]) => Awaitable<void>
   onCollected?: (files?: File[]) => Awaitable<void>
   onFinished?: (
-    files?: File[],
-    errors?: unknown[],
+    files: File[],
+    errors: unknown[],
     coverage?: unknown
   ) => Awaitable<void>
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>

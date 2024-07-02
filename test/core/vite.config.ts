@@ -50,7 +50,6 @@ export default defineConfig({
     port: 3022,
   },
   test: {
-    reporters: ['dot'],
     api: {
       port: 3023,
     },
