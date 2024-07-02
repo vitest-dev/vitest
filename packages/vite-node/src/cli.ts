@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import cac from 'cac'
 import c from 'picocolors'
-import { createServer } from 'vite'
+import { createServer, loadEnv } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
@@ -94,6 +94,12 @@ async function run(files: string[], options: CliOptions = {}) {
     plugins: [options.watch && viteNodeHmrPlugin()],
   })
   await server.pluginContainer.buildStart({})
+
+  const env = loadEnv(server.config.mode, server.config.envDir, '')
+
+  for (const key in env) {
+    process.env[key] ??= env[key]
+  }
 
   const node = new ViteNodeServer(server, serverOptions)
 

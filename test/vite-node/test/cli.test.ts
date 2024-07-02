@@ -39,6 +39,12 @@ it('script args in -- after', async () => {
   expect(parseResult(cli1.stdout)).include('--version').include('--help')
 })
 
+it('exposes .env variables', async () => {
+  const { stdout } = await runViteNodeCli(resolve(__dirname, '../src/cli-print-env.js'))
+  const env = JSON.parse(stdout)
+  expect(env.MY_TEST_ENV).toBe('hello')
+})
+
 it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', async (file) => {
   const entryPath = resolve(__dirname, '../src/watch', file)
   const { viteNode } = await runViteNodeCli('--watch', entryPath)
