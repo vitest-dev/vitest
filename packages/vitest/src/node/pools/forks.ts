@@ -290,6 +290,7 @@ export function createForksPool(
   return {
     name: 'forks',
     runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: () => pool.destroy(),
   }
 }

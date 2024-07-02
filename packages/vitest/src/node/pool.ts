@@ -21,6 +21,7 @@ type LocalPool = Exclude<Pool, 'browser'>
 export interface ProcessPool {
   name: string
   runTests: RunWithFiles
+  collectTests: RunWithFiles
   close?: () => Awaitable<void>
 }
 
@@ -104,7 +105,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       || execArg.startsWith('--diagnostic-dir'),
   )
 
-  async function runTests(files: WorkspaceSpec[], invalidate?: string[]) {
+  async function executeTests(method: 'runTests' | 'collectTests', files: WorkspaceSpec[], invalidate?: string[]) {
     const options: PoolProcessOptions = {
       execArgv: [...execArgv, ...conditions],
       env: {
@@ -144,9 +145,9 @@ export function createPool(ctx: Vitest): ProcessPool {
           `Custom pool "${filepath}" should return an object with "name" property`,
         )
       }
-      if (typeof poolInstance?.runTests !== 'function') {
+      if (typeof poolInstance?.[method] !== 'function') {
         throw new TypeError(
-          `Custom pool "${filepath}" should return an object with "runTests" method`,
+          `Custom pool "${filepath}" should return an object with "${method}" method`,
         )
       }
 
@@ -201,7 +202,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         if (pool in factories) {
           const factory = factories[pool]
           pools[pool] ??= factory()
-          return pools[pool]!.runTests(specs, invalidate)
+          return pools[pool]![method](specs, invalidate)
         }
 
         if (pool === 'browser') {
@@ -209,19 +210,20 @@ export function createPool(ctx: Vitest): ProcessPool {
             const { createBrowserPool } = await import('@vitest/browser')
             return createBrowserPool(ctx)
           })()
-          return pools[pool]!.runTests(specs, invalidate)
+          return pools[pool]![method](specs, invalidate)
         }
 
         const poolHandler = await resolveCustomPool(pool)
         pools[poolHandler.name] ??= poolHandler
-        return poolHandler.runTests(specs, invalidate)
+        return poolHandler[method](specs, invalidate)
       }),
     )
   }
 
   return {
     name: 'default',
-    runTests,
+    runTests: (files, invalidates) => executeTests('runTests', files, invalidates),
+    collectTests: (files, invalidates) => executeTests('collectTests', files, invalidates),
     async close() {
       await Promise.all(Object.values(pools).map(p => p?.close?.()))
     },

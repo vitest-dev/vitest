@@ -407,14 +407,14 @@ export class WorkspaceProject {
     return isBrowserEnabled(this.config)
   }
 
-  getSerializableConfig() {
+  getSerializableConfig(method: 'run' | 'collect' = 'run') {
     const optimizer = this.config.deps?.optimizer
     const poolOptions = this.config.poolOptions
 
     // Resolve from server.config to avoid comparing against default value
     const isolate = this.server?.config?.test?.isolate
 
-    return deepMerge(
+    const config = deepMerge(
       {
         ...this.config,
 
@@ -500,6 +500,18 @@ export class WorkspaceProject {
       },
       this.ctx.configOverride || ({} as any),
     ) as ResolvedConfig
+
+    // disable heavy features when collecting because they are not needed
+    if (method === 'collect') {
+      config.coverage.enabled = false
+      if (config.browser.provider && config.browser.provider !== 'preview') {
+        config.browser.headless = true
+      }
+      config.snapshotSerializers = []
+      config.diff = undefined
+    }
+
+    return config
   }
 
   close() {

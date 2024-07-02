@@ -29,7 +29,9 @@ export async function resolveTester(
       ? '__vitest_browser_runner__.files'
       : JSON.stringify([testFile])
   const iframeId = JSON.stringify(testFile)
-  const files = state.getContext(contextId)?.files ?? []
+  const context = state.getContext(contextId)
+  const files = context?.files ?? []
+  const method = context?.method ?? 'run'
 
   const injectorJs = typeof server.injectorJs === 'string'
     ? server.injectorJs
@@ -74,7 +76,7 @@ export async function resolveTester(
       `<script type="module">
 __vitest_browser_runner__.runningFiles = ${tests}
 __vitest_browser_runner__.iframeId = ${iframeId}
-__vitest_browser_runner__.runTests(__vitest_browser_runner__.runningFiles)
+__vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
 </script>`,
   })
 }

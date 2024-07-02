@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import util from 'node:util'
 import timers from 'node:timers'
 import { performance } from 'node:perf_hooks'
-import { startTests } from '@vitest/runner'
+import { collectTests, startTests } from '@vitest/runner'
 import { createColors, setupColors } from '@vitest/utils'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { setupChaiConfig } from '../integrations/chai/config'
@@ -21,6 +21,7 @@ import { setupCommonEnv } from './setup-common'
 import { closeInspector } from './inspector'
 
 export async function run(
+  method: 'run' | 'collect',
   files: string[],
   config: ResolvedConfig,
   executor: VitestExecutor,
@@ -81,7 +82,12 @@ export async function run(
   for (const file of files) {
     workerState.filepath = file
 
-    await startTests([file], runner)
+    if (method === 'run') {
+      await startTests([file], runner)
+    }
+    else {
+      await collectTests([file], runner)
+    }
 
     // reset after tests, because user might call `vi.setConfig` in setupFile
     vi.resetConfig()

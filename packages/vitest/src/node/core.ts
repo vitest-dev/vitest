@@ -466,6 +466,28 @@ export class Vitest {
     await this.coverageProvider?.mergeReports?.(coverages)
   }
 
+  async collect(filters?: string[]) {
+    this._onClose = []
+
+    await this.initBrowserProviders()
+
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
+
+    // if run with --changed, don't exit if no tests are found
+    if (!files.length) {
+      return { tests: [], errors: [] }
+    }
+
+    await this.collectFiles(files)
+
+    return {
+      tests: this.state.getFiles(),
+      errors: this.state.getUnhandledErrors(),
+    }
+  }
+
   async start(filters?: string[]) {
     this._onClose = []
 
@@ -696,6 +718,56 @@ export class Vitest {
 
         this.runningPromise = undefined
         this.isFirstRun = false
+
+        // all subsequent runs will treat this as a fresh run
+        this.config.changed = false
+        this.config.related = undefined
+      })
+
+    return await this.runningPromise
+  }
+
+  async collectFiles(specs: WorkspaceSpec[]) {
+    await this.initializeDistPath()
+
+    const filepaths = specs.map(([, file]) => file)
+    this.state.collectPaths(filepaths)
+
+    // previous run
+    await this.runningPromise
+    this._onCancelListeners = []
+    this.isCancelling = false
+
+    // schedule the new run
+    this.runningPromise = (async () => {
+      if (!this.pool) {
+        this.pool = createPool(this)
+      }
+
+      const invalidates = Array.from(this.invalidates)
+      this.invalidates.clear()
+      this.snapshot.clear()
+      this.state.clearErrors()
+
+      await this.initializeGlobalSetup(specs)
+
+      try {
+        await this.pool.collectTests(specs, invalidates)
+      }
+      catch (err) {
+        this.state.catchError(err, 'Unhandled Error')
+      }
+
+      const files = this.state.getFiles()
+
+      // can only happen if there was a synax error in describe block
+      // or there was an error importing a file
+      if (hasFailed(files)) {
+        process.exitCode = 1
+      }
+    })()
+      .finally(async () => {
+        this.runningPromise = undefined
 
         // all subsequent runs will treat this as a fresh run
         this.config.changed = false

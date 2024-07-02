@@ -10,7 +10,11 @@ class ThreadsBaseWorker implements VitestWorker {
   }
 
   runTests(state: WorkerGlobalState): unknown {
-    return runBaseTests(state)
+    return runBaseTests('run', state)
+  }
+
+  collectTests(state: WorkerGlobalState): unknown {
+    return runBaseTests('collect', state)
   }
 }
 

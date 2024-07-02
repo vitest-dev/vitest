@@ -512,3 +512,14 @@ export async function startTests(paths: string[], runner: VitestRunner) {
 
   return files
 }
+
+async function publicCollect(paths: string[], runner: VitestRunner) {
+  await runner.onBeforeCollect?.(paths)
+
+  const files = await collectTests(paths, runner)
+
+  await runner.onCollected?.(files)
+  return files
+}
+
+export { publicCollect as collectTests }

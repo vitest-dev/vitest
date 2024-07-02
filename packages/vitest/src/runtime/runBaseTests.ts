@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks'
-import { startTests } from '@vitest/runner'
+import { collectTests, startTests } from '@vitest/runner'
 import type { ResolvedConfig, ResolvedTestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
@@ -15,6 +15,7 @@ import { closeInspector } from './inspector'
 
 // browser shouldn't call this!
 export async function run(
+  method: 'run' | 'collect',
   files: string[],
   config: ResolvedConfig,
   environment: ResolvedTestEnvironment,
@@ -62,7 +63,12 @@ export async function run(
 
         workerState.filepath = file
 
-        await startTests([file], runner)
+        if (method === 'run') {
+          await startTests([file], runner)
+        }
+        else {
+          await collectTests([file], runner)
+        }
 
         // reset after tests, because user might call `vi.setConfig` in setupFile
         vi.resetConfig()

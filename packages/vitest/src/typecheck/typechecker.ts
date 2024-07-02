@@ -266,6 +266,7 @@ export class Typechecker {
   public async stop() {
     await this.clear()
     this.process?.kill()
+    this.process = undefined
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string) {
@@ -294,6 +295,10 @@ export class Typechecker {
   }
 
   public async start() {
+    if (this.process) {
+      return
+    }
+
     if (!this.tempConfigPath) {
       throw new Error('tsconfig was not initialized')
     }

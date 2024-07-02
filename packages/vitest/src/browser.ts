@@ -1,4 +1,4 @@
-export { startTests, processError } from '@vitest/runner'
+export { startTests, collectTests, processError } from '@vitest/runner'
 export {
   setupCommonEnv,
   loadDiffConfig,

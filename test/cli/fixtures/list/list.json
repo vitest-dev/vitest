@@ -1,0 +1,26 @@
+[
+  {
+    "name": "basic suite > inner suite > some test",
+    "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+  },
+  {
+    "name": "basic suite > inner suite > another test",
+    "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+  },
+  {
+    "name": "basic suite > basic test",
+    "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+  },
+  {
+    "name": "outside test",
+    "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/basic.test.ts"
+  },
+  {
+    "name": "1 plus 1",
+    "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts"
+  },
+  {
+    "name": "failing test",
+    "file": "/Users/sheremet.mac/Projects/vitest/test/cli/fixtures/list/math.test.ts"
+  }
+]
