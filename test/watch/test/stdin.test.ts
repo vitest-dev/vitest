@@ -95,7 +95,7 @@ test('2 - test that is cancelled', async () => {
 })
 
 test('rerun failed tests', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  const { vitest } = await runVitest({ ..._options })
   const testPath = 'fixtures/error.test.ts'
   const testCase = `
   import { test, expect } from 'vitest'
@@ -113,9 +113,6 @@ test('rerun failed tests', async () => {
   writeFileSync(testPath, testCase, 'utf8')
   writeFileSync(testTwoPath, testTwoCase, 'utf8')
 
-  cleanups.push(() => rmSync(testPath))
-  cleanups.push(() => rmSync(testTwoPath))
-
   await vitest.waitForStdout('1 failed')
 
   writeFileSync(testTwoPath, testCase.replace(/1/g, '2'), 'utf8')
@@ -127,7 +124,7 @@ test('rerun failed tests', async () => {
   writeFileSync(testTwoPath, testCase.replace(/2/g, '3'), 'utf8')
   await vitest.waitForStdout('1 failed')
 })
-  
+
 test('rerun current pattern tests', async () => {
   const { vitest } = await runVitest({ ..._options, testNamePattern: 'sum' })
 
