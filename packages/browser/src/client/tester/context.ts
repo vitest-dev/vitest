@@ -1,5 +1,5 @@
 import type { Task, WorkerGlobalState } from 'vitest'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type { BrowserPage, PointerInput, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
 import type { BrowserRPC } from '../client'
 
@@ -116,6 +116,36 @@ export const userEvent: UserEvent = {
     const sourceXpath = convertElementToXPath(source)
     const targetXpath = convertElementToXPath(target)
     return triggerCommand('__vitest_dragAndDrop', sourceXpath, targetXpath, options)
+  },
+  pointer(input: PointerInput) {
+    const inputs = (Array.isArray(input) ? input : [input]).map((i) => {
+      if (typeof i === 'string') {
+        return i
+      }
+
+      const { target, node, ...rest } = i
+
+      if (!target && !node) {
+        return i
+      }
+
+      if (target && !node) {
+        return { target: convertElementToXPath(target), ...rest }
+      }
+
+      if (!target && node) {
+        return { node: convertElementToXPath(node), ...rest }
+      }
+
+      return {
+        target: convertElementToXPath(target),
+        node: convertElementToXPath(node),
+        ...rest,
+      }
+    })
+
+    // todo: add options?
+    return triggerCommand('__vitest_pointer', inputs)
   },
 }
 
