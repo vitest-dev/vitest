@@ -1,6 +1,8 @@
 import { parseKeyDef } from '@testing-library/user-event/dist/esm/pointer/parseKeyDef.js'
 import { defaultKeyMap } from '@testing-library/user-event/dist/esm/pointer/keyMap.js'
+// @ts-expect-error no types
 import type { PointerCoords } from '@testing-library/user-event/dist/types/event'
+// @ts-expect-error no types
 import type { pointerKey } from '@testing-library/user-event/dist/types/system/pointer'
 import type { UserEvent } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
