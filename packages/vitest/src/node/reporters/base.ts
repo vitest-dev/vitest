@@ -35,7 +35,7 @@ import {
   getStateString,
   getStateSymbol,
   renderSnapshotSummary,
-  suiteFail,
+  taskFail,
 } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -64,6 +64,7 @@ export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
+  failedUnwatchedFiles: Task[] = []
   isTTY: boolean
   ctx: Vitest = undefined!
 
@@ -168,7 +169,7 @@ export abstract class BaseReporter implements Reporter {
 
     // print short errors, full errors will be at the end in summary
     for (const test of failed) {
-      logger.log(c.red(`   ${suiteFail} ${getTestName(test, c.dim(' > '))}`))
+      logger.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}`))
       test.result?.errors?.forEach((e) => {
         logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
       })
@@ -240,6 +241,9 @@ export abstract class BaseReporter implements Reporter {
   onWatcherRerun(files: string[], trigger?: string) {
     this.resetLastRunLog()
     this.watchFilters = files
+    this.failedUnwatchedFiles = this.ctx.state.getFiles().filter((file) => {
+      return hasFailed(file) && !files.includes(file.filepath)
+    })
 
     files.forEach((filepath) => {
       let reruns = this._filesInWatchMode.get(filepath) ?? 0
@@ -382,7 +386,11 @@ export abstract class BaseReporter implements Reporter {
   }
 
   reportTestSummary(files: File[], errors: unknown[]) {
-    const tests = getTests(files)
+    const affectedFiles = [
+      ...this.failedUnwatchedFiles,
+      ...files,
+    ]
+    const tests = getTests(affectedFiles)
     const logger = this.ctx.logger
 
     const executionTime = this.end - this.start
@@ -444,7 +452,7 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    logger.log(padTitle('Test Files'), getStateString(files))
+    logger.log(padTitle('Test Files'), getStateString(affectedFiles))
     logger.log(padTitle('Tests'), getStateString(tests))
     if (this.ctx.projects.some(c => c.config.typecheck.enabled)) {
       const failed = tests.filter(

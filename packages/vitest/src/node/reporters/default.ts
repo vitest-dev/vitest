@@ -1,5 +1,4 @@
 import c from 'picocolors'
-import { hasFailed } from '@vitest/runner/utils'
 import type { UserConsoleLog } from '../../types/general'
 import { BaseReporter } from './base'
 import type { ListRendererOptions } from './renderers/listRenderer'
@@ -63,7 +62,7 @@ export class DefaultReporter extends BaseReporter {
     // the error for the test they are currently working on, but still keep track of
     // the other failed tests
     this.renderer?.update([
-      ...this.ctx.state.getFiles().filter(file => hasFailed(file) && !files.includes(file)),
+      ...this.failedUnwatchedFiles,
       ...files,
     ])
 
