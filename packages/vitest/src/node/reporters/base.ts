@@ -14,6 +14,7 @@ import {
   getFullName,
   getSafeTimers,
   getSuites,
+  getTestName,
   getTests,
   hasFailed,
   hasFailedSnapshot,
@@ -33,8 +34,8 @@ import {
   formatTimeString,
   getStateString,
   getStateSymbol,
-  pointer,
   renderSnapshotSummary,
+  suiteFail,
 } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -115,56 +116,62 @@ export abstract class BaseReporter implements Reporter {
     if (this.isTTY) {
       return
     }
-    const logger = this.ctx.logger
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
-      if (
-        task
-        && 'filepath' in task
-        && task.result?.state
-        && task.result?.state !== 'run'
-      ) {
-        const tests = getTests(task)
-        const failed = tests.filter(t => t.result?.state === 'fail')
-        const skipped = tests.filter(
-          t => t.mode === 'skip' || t.mode === 'todo',
-        )
-        let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
-        if (failed.length) {
-          state += ` ${c.dim('|')} ${c.red(`${failed.length} failed`)}`
-        }
-        if (skipped.length) {
-          state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
-        }
-        let suffix = c.dim(' (') + state + c.dim(')')
-        if (task.result.duration) {
-          const color
-            = task.result.duration > this.ctx.config.slowTestThreshold
-              ? c.yellow
-              : c.gray
-          suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
-        }
-        if (this.ctx.config.logHeapUsage && task.result.heap != null) {
-          suffix += c.magenta(
-            ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
-          )
-        }
-
-        let title = ` ${getStateSymbol(task)} `
-        if (task.projectName) {
-          title += formatProjectName(task.projectName)
-        }
-        title += `${task.name} ${suffix}`
-        logger.log(title)
-
-        // print short errors, full errors will be at the end in summary
-        for (const test of failed) {
-          logger.log(c.red(`   ${pointer} ${getFullName(test, c.dim(' > '))}`))
-          test.result?.errors?.forEach((e) => {
-            logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
-          })
-        }
+      if (task) {
+        this.printTask(task)
       }
+    }
+  }
+
+  protected printTask(task: Task) {
+    if (
+      !('filepath' in task)
+      || !task.result?.state
+      || task.result?.state === 'run') {
+      return
+    }
+    const logger = this.ctx.logger
+
+    const tests = getTests(task)
+    const failed = tests.filter(t => t.result?.state === 'fail')
+    const skipped = tests.filter(
+      t => t.mode === 'skip' || t.mode === 'todo',
+    )
+    let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
+    if (failed.length) {
+      state += ` ${c.dim('|')} ${c.red(`${failed.length} failed`)}`
+    }
+    if (skipped.length) {
+      state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
+    }
+    let suffix = c.dim(' (') + state + c.dim(')')
+    if (task.result.duration) {
+      const color
+        = task.result.duration > this.ctx.config.slowTestThreshold
+          ? c.yellow
+          : c.gray
+      suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+    }
+    if (this.ctx.config.logHeapUsage && task.result.heap != null) {
+      suffix += c.magenta(
+        ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
+      )
+    }
+
+    let title = ` ${getStateSymbol(task)} `
+    if (task.projectName) {
+      title += formatProjectName(task.projectName)
+    }
+    title += `${task.name} ${suffix}`
+    logger.log(title)
+
+    // print short errors, full errors will be at the end in summary
+    for (const test of failed) {
+      logger.log(c.red(`   ${suiteFail} ${getTestName(test, c.dim(' > '))}`))
+      test.result?.errors?.forEach((e) => {
+        logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
+      })
     }
   }
 

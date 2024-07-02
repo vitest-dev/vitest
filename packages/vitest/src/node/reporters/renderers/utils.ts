@@ -19,11 +19,11 @@ export const hookSpinnerMap = new WeakMap<Task, Map<string, () => string>>()
 export const pointer = c.yellow(F_POINTER)
 export const skipped = c.dim(c.gray(F_DOWN))
 
-const benchmarkPass = c.green(F_DOT)
-const testPass = c.green(F_CHECK)
-const taskFail = c.red(F_CROSS)
-const suiteFail = c.red(F_POINTER)
-const pending = c.gray('·')
+export const benchmarkPass = c.green(F_DOT)
+export const testPass = c.green(F_CHECK)
+export const taskFail = c.red(F_CROSS)
+export const suiteFail = c.red(F_POINTER)
+export const pending = c.gray('·')
 
 export function getCols(delta = 0) {
   let length = process.stdout?.columns
