@@ -143,6 +143,7 @@ export function processError(
     err.diff = diff(replacedExpected, replacedActual, {
       ...diffOptions,
       ...err.diffOptions,
+      expected: err.expected,
     })
   }
 
