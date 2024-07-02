@@ -2,14 +2,9 @@ import type { File } from '../../types/tasks'
 import { BaseReporter } from './base'
 
 export class BasicReporter extends BaseReporter {
-  isTTY = false
-
-  onWatcherRerun(files: string[], trigger?: string) {
-    super.onWatcherRerun(files, trigger)
-
-    for (const task of this.failedUnwatchedFiles) {
-      this.printTask(task)
-    }
+  constructor() {
+    super()
+    this.isTTY = false
   }
 
   reportSummary(files: File[], errors: unknown[]) {

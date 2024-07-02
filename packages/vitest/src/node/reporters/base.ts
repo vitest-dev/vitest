@@ -285,6 +285,12 @@ export abstract class BaseReporter implements Reporter {
       )
     }
 
+    if (!this.isTTY) {
+      for (const task of this.failedUnwatchedFiles) {
+        this.printTask(task)
+      }
+    }
+
     this._timeStart = new Date()
     this.start = performance.now()
   }
