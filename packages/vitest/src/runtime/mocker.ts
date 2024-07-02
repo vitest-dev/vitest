@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs'
+import fs from 'node:fs'
 import vm from 'node:vm'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import { getType, highlight } from '@vitest/utils'
@@ -7,6 +7,8 @@ import { distDir } from '../paths'
 import { getAllMockableProperties } from '../utils/base'
 import type { MockFactory, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
+
+const { existsSync, readdirSync } = fs
 
 const spyModulePath = resolve(distDir, 'spy.js')
 
