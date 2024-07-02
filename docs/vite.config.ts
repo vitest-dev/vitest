@@ -1,10 +1,8 @@
-import fs from 'node:fs'
 import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import Components from 'unplugin-vue-components/vite'
 import Unocss from 'unocss/vite'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
-import { resolve } from 'pathe'
 
 export default defineConfig({
   optimizeDeps: {
@@ -37,23 +35,5 @@ export default defineConfig({
         }),
       ],
     }),
-    IncludesPlugin(),
   ],
 })
-
-function IncludesPlugin(): Plugin {
-  return {
-    name: 'include-plugin',
-    enforce: 'pre',
-    transform(code, id) {
-      let changed = false
-      code = code.replace(/\[@@include\]\((.*?)\)/, (_, url) => {
-        changed = true
-        const full = resolve(id, url)
-        return fs.readFileSync(full, 'utf-8')
-      })
-      if (changed)
-        return code
-    },
-  }
-}

@@ -8,13 +8,17 @@ title: Snapshot | Guide
 
 Snapshot tests are a very useful tool whenever you want to make sure the output of your functions does not change unexpectedly.
 
-When using snapshot, Vitest will take a snapshot of the given value, then compares it to a reference snapshot file stored alongside the test. The test will fail if the two snapshots do not match: either the change is unexpected, or the reference snapshot needs to be updated to the new version of the result.
+When using snapshot, Vitest will take a snapshot of the given value, then compare it to a reference snapshot file stored alongside the test. The test will fail if the two snapshots do not match: either the change is unexpected, or the reference snapshot needs to be updated to the new version of the result.
 
 ## Use Snapshots
 
 To snapshot a value, you can use the [`toMatchSnapshot()`](/api/expect#tomatchsnapshot) from `expect()` API:
 
-```ts
+```ts twoslash
+function toUpperCase(str: string) {
+  return str
+}
+// ---cut---
 import { expect, it } from 'vitest'
 
 it('toUpperCase', () => {
@@ -34,14 +38,18 @@ exports['toUpperCase 1'] = '"FOOBAR"'
 The snapshot artifact should be committed alongside code changes, and reviewed as part of your code review process. On subsequent test runs, Vitest will compare the rendered output with the previous snapshot. If they match, the test will pass. If they don't match, either the test runner found a bug in your code that should be fixed, or the implementation has changed and the snapshot needs to be updated.
 
 ::: warning
-When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
 
 ## Inline Snapshots
 
 Similarly, you can use the [`toMatchInlineSnapshot()`](/api/expect#tomatchinlinesnapshot) to store the snapshot inline within the test file.
 
-```ts
+```ts twoslash
+function toUpperCase(str: string) {
+  return str
+}
+// ---cut---
 import { expect, it } from 'vitest'
 
 it('toUpperCase', () => {
@@ -52,7 +60,11 @@ it('toUpperCase', () => {
 
 Instead of creating a snapshot file, Vitest will modify the test file directly to update the snapshot as a string:
 
-```ts
+```ts  twoslash
+function toUpperCase(str: string) {
+  return str
+}
+// ---cut---
 import { expect, it } from 'vitest'
 
 it('toUpperCase', () => {
@@ -64,7 +76,7 @@ it('toUpperCase', () => {
 This allows you to see the expected output directly without jumping across different files.
 
 ::: warning
-When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context.md) must be used to ensure the right test is detected.
+When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
 
 ## Updating Snapshots
@@ -81,7 +93,7 @@ vitest -u
 
 ## File Snapshots
 
-When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escaping some characters (namely the double-quote `"` and backtick `\``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
+When calling `toMatchSnapshot()`, we store all snapshots in a formatted snap file. That means we need to escape some characters (namely the double-quote `"` and backtick `` ` ``) in the snapshot string. Meanwhile, you might lose the syntax highlighting for the snapshot content (if they are in some language).
 
 To improve this case, we introduce [`toMatchFileSnapshot()`](/api/expect#tomatchfilesnapshot) to explicitly snapshot in a file. This allows you to assign any file extension to the snapshot file, and making them more readable.
 
@@ -111,22 +123,58 @@ test('image snapshot', () => {
 })
 ```
 
-You can learn more in the [`examples/image-snapshot`](https://github.com/vitest-dev/vitest/blob/main/examples/image-snapshot) example.
-
 ## Custom Serializer
 
 You can add your own logic to alter how your snapshots are serialized. Like Jest, Vitest has default serializers for built-in JavaScript types, HTML elements, ImmutableJS and for React elements.
 
-Example serializer module:
+You can explicitly add custom serializer by using [`expect.addSnapshotSerializer`](/api/expect#expect-addsnapshotserializer) API.
 
 ```ts
 expect.addSnapshotSerializer({
   serialize(val, config, indentation, depth, refs, printer) {
     // `printer` is a function that serializes a value using existing plugins.
-    return `Pretty foo: ${printer(val.foo)}`
+    return `Pretty foo: ${printer(
+      val.foo,
+      config,
+      indentation,
+      depth,
+      refs,
+    )}`
   },
   test(val) {
     return val && Object.prototype.hasOwnProperty.call(val, 'foo')
+  },
+})
+```
+
+We also support [snapshotSerializers](/config/#snapshotserializers) option to implicitly add custom serializers.
+
+```ts
+import { SnapshotSerializer } from 'vitest'
+
+export default {
+  serialize(val, config, indentation, depth, refs, printer) {
+    // `printer` is a function that serializes a value using existing plugins.
+    return `Pretty foo: ${printer(
+      val.foo,
+      config,
+      indentation,
+      depth,
+      refs,
+    )}`
+  },
+  test(val) {
+    return val && Object.prototype.hasOwnProperty.call(val, 'foo')
+  },
+} satisfies SnapshotSerializer
+```
+
+```ts
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    snapshotSerializers: ['path/to/custom-serializer.ts']
   },
 })
 ```
@@ -174,7 +222,7 @@ This does not really affect the functionality but might affect your commit diff 
 
 Both Jest and Vitest's snapshots are powered by [`pretty-format`](https://github.com/facebook/jest/blob/main/packages/pretty-format). In Vitest we set `printBasicPrototype` default to `false` to provide a cleaner snapshot output, while in Jest <29.0.0 it's `true` by default.
 
-```ts
+```ts twoslash
 import { expect, test } from 'vitest'
 
 test('snapshot', () => {
@@ -237,5 +285,34 @@ exports[`toThrowErrorMatchingSnapshot: hint 1`] = `"error"`;
 
 In Vitest, the equivalent snapshot will be:
 ```console
-exports[`toThrowErrorMatchingSnapshot > hint 1`] = `"error"`;
+exports[`toThrowErrorMatchingSnapshot > hint 1`] = `[Error: error]`;
+```
+
+#### 4. default `Error` snapshot is different for `toThrowErrorMatchingSnapshot` and `toThrowErrorMatchingInlineSnapshot`
+
+```js twoslash
+import { expect, test } from 'vitest'
+// ---cut---
+test('snapshot', () => {
+  //
+  // in Jest
+  //
+
+  expect(new Error('error')).toMatchInlineSnapshot(`[Error: error]`)
+
+  // Jest snapshots `Error.message` for `Error` instance
+  expect(() => {
+    throw new Error('error')
+  }).toThrowErrorMatchingInlineSnapshot(`"error"`)
+
+  //
+  // in Vitest
+  //
+
+  expect(new Error('error')).toMatchInlineSnapshot(`[Error: error]`)
+
+  expect(() => {
+    throw new Error('error')
+  }).toThrowErrorMatchingInlineSnapshot(`[Error: error]`)
+})
 ```

@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index 1b8dc76afc3cf5890cc3693c2975577fd3117dd6..d215ae8677dc8b82c0f4d9b9af557b860ac16292 100644
+--- a/package.json
++++ b/package.json
+@@ -5,6 +5,7 @@
+   "main": "dist/acorn.js",
+   "types": "dist/acorn.d.ts",
+   "module": "dist/acorn.mjs",
++  "sideEffects": false,
+   "exports": {
+     ".": [
+       {

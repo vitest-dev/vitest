@@ -25,9 +25,7 @@ export class BaseSequencer implements TestSequencer {
         const specPath = fullPath?.slice(config.root.length)
         return {
           spec,
-          hash: createHash('sha1')
-            .update(specPath)
-            .digest('hex'),
+          hash: createHash('sha1').update(specPath).digest('hex'),
         }
       })
       .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
@@ -50,18 +48,21 @@ export class BaseSequencer implements TestSequencer {
         const statsB = cache.getFileStats(keyB)
 
         // run unknown first
-        if (!statsA || !statsB)
-          return (!statsA && statsB) ? -1 : (!statsB && statsA) ? 1 : 0
+        if (!statsA || !statsB) {
+          return !statsA && statsB ? -1 : !statsB && statsA ? 1 : 0
+        }
 
         // run larger files first
         return statsB.size - statsA.size
       }
 
       // run failed first
-      if (aState.failed && !bState.failed)
+      if (aState.failed && !bState.failed) {
         return -1
-      if (!aState.failed && bState.failed)
+      }
+      if (!aState.failed && bState.failed) {
         return 1
+      }
 
       // run longer first
       return bState.duration - aState.duration

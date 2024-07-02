@@ -1,4 +1,4 @@
-import { expect } from 'vitest'
+import { expect, test } from 'vitest'
 
 test('something has been added to global by setupFiles entry', async () => {
   // @ts-expect-error type

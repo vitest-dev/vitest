@@ -1,11 +1,19 @@
-import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
+import type {
+  OptionsReceived as PrettyFormatOptions,
+  Plugin as PrettyFormatPlugin,
+} from 'pretty-format'
 import type { RawSnapshotInfo } from '../port/rawSnapshot'
-import type { SnapshotEnvironment } from './environment'
+import type {
+  SnapshotEnvironment,
+  SnapshotEnvironmentOptions,
+} from './environment'
 
-export type { SnapshotEnvironment }
+export type { SnapshotEnvironment, SnapshotEnvironmentOptions }
 export type SnapshotData = Record<string, string>
 
 export type SnapshotUpdateState = 'all' | 'new' | 'none'
+
+export type SnapshotSerializer = PrettyFormatPlugin
 
 export interface SnapshotStateOptions {
   updateSnapshot: SnapshotUpdateState

@@ -9,27 +9,28 @@ import { SnapshotClient } from '@vitest/snapshot'
 import { NodeSnapshotEnvironment } from '@vitest/snapshot/environment'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 
-export class CustomSnapshotClient extends SnapshotClient {
-  // by default, @vitest/snapshot checks equality with `!==`
-  // you need to provide your own equality check implementation
+const client = new SnapshotClient({
+  // you need to provide your own equality check implementation if you use it
   // this function is called when `.toMatchSnapshot({ property: 1 })` is called
-  equalityCheck(received, expected) {
-    return equals(received, expected, [iterableEquality, subsetEquality])
-  }
-}
+  isEqual: (received, expected) =>
+    equals(received, expected, [iterableEquality, subsetEquality]),
+})
 
-const client = new CustomSnapshotClient()
 // class that implements snapshot saving and reading
 // by default uses fs module, but you can provide your own implementation depending on the environment
 const environment = new NodeSnapshotEnvironment()
 
+// you need to implement this yourselves,
+// this depends on your runner
 function getCurrentFilepath() {
-  return '/file.spec.ts'
+  return '/file.spec.js'
 }
 function getCurrentTestName() {
   return 'test1'
 }
 
+// example for inline snapshots, nothing is required to support regular snapshots,
+// just call `assert` with `isInline: false`
 function wrapper(received) {
   function __INLINE_SNAPSHOT__(inlineSnapshot, message) {
     client.assert({
@@ -37,8 +38,6 @@ function wrapper(received) {
       message,
       isInline: true,
       inlineSnapshot,
-      // you need to implement this yourselves,
-      // this depends on your runner
       filepath: getCurrentFilepath(),
       name: getCurrentTestName(),
     })
@@ -55,14 +54,24 @@ const options = {
   snapshotEnvironment: environment,
 }
 
-await client.setTest(getCurrentFilepath(), getCurrentTestName(), options)
+await client.startCurrentRun(
+  getCurrentFilepath(),
+  getCurrentTestName(),
+  options
+)
+
+// this will save snapshot to a file which is returned by "snapshotEnvironment.resolvePath"
+client.assert({
+  received: 'some text',
+  isInline: false,
+})
 
 // uses "pretty-format", so it requires quotes
 // also naming is hard-coded when parsing test files
 wrapper('text 1').toMatchInlineSnapshot()
 wrapper('text 2').toMatchInlineSnapshot('"text 2"')
 
-const result = await client.resetCurrent() // this saves files and returns SnapshotResult
+const result = await client.finishCurrentRun() // this saves files and returns SnapshotResult
 
 // you can use manager to manage several clients
 const manager = new SnapshotManager(options)

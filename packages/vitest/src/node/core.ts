@@ -1,20 +1,23 @@
 import { existsSync, promises as fs } from 'node:fs'
+import type { Writable } from 'node:stream'
+import { isMainThread } from 'node:worker_threads'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
-import { basename, dirname, join, normalize, relative } from 'pathe'
+import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import c from 'picocolors'
-import { normalizeRequestId } from 'vite-node/utils'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import type { CancelReason } from '@vitest/runner'
+import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, Reporter, ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from '../types'
-import { hasFailed, noop, slash, toArray } from '../utils'
+import type { defineWorkspace } from 'vitest/config'
+import { version } from '../../package.json' with { type: 'json' }
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, ProvidedContext, Reporter, ResolvedConfig, SerializableSpec, UserConfig, UserConsoleLog, UserWorkspaceConfig, VitestRunMode } from '../types'
+import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
-import type { BrowserProvider } from '../types/browser'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
+import { rootDir } from '../paths'
+import { WebSocketReporter } from '../api/setup'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -23,10 +26,22 @@ import { resolveConfig } from './config'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
+import { VitestPackageInstaller } from './packageInstaller'
+import { BlobReporter, readBlobs } from './reporters/blob'
+import { FilesNotFoundError, GitNotFoundError } from './errors'
 
 const WATCHER_DEBOUNCE = 100
 
+export interface VitestOptions {
+  packageInstaller?: VitestPackageInstaller
+  stdin?: NodeJS.ReadStream
+  stdout?: NodeJS.WriteStream | Writable
+  stderr?: NodeJS.WriteStream | Writable
+}
+
 export class Vitest {
+  version = version
+
   config: ResolvedConfig = undefined!
   configOverride: Partial<ResolvedConfig> = {}
 
@@ -36,7 +51,6 @@ export class Vitest {
   cache: VitestCache = undefined!
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
-  browserProvider: BrowserProvider | undefined
   logger: Logger
   pool: ProcessPool | undefined
   isFailedModel = false
@@ -45,6 +59,7 @@ export class Vitest {
 
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
+  watchedTests: Set<string> = new Set()
   filenamePattern?: string
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
@@ -54,18 +69,26 @@ export class Vitest {
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
-  private coreWorkspace!: WorkspaceProject
+  public packageInstaller: VitestPackageInstaller
 
+  private coreWorkspaceProject!: WorkspaceProject
+
+  private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
   private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
+  public distPath!: string
+
   constructor(
     public readonly mode: VitestRunMode,
+    options: VitestOptions = {},
   ) {
-    this.logger = new Logger(this)
+    this.logger = new Logger(this, options.stdout, options.stderr)
+    this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
+  private _onClose: (() => Awaited<unknown>)[] = []
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
 
@@ -73,24 +96,27 @@ export class Vitest {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
-    this.pool?.close()
+    this.pool?.close?.()
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
+    this.distPath = undefined!
     this.projectsTestFiles.clear()
 
-    const resolved = resolveConfig(this.mode, options, server.config)
+    const resolved = resolveConfig(this.mode, options, server.config, this.logger)
 
     this.server = server
     this.config = resolved
     this.state = new StateManager()
-    this.cache = new VitestCache()
+    this.cache = new VitestCache(this.version)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch && this.mode !== 'typecheck')
+    if (this.config.watch) {
       this.registerWatcher()
+    }
 
-    this.vitenode = new ViteNodeServer(server, this.config)
+    this.vitenode = new ViteNodeServer(server, this.config.server)
+
     const node = this.vitenode
     this.runner = new ViteNodeRunner({
       root: server.config.root,
@@ -108,7 +134,10 @@ export class Vitest {
       const serverRestart = server.restart
       server.restart = async (...args) => {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
-        return await serverRestart(...args)
+        await serverRestart(...args)
+        // watcher is recreated on restart
+        this.unregisterWatcher()
+        this.registerWatcher()
       }
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
@@ -118,13 +147,16 @@ export class Vitest {
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
           await serverRestart()
+          // watcher is recreated on restart
+          this.unregisterWatcher()
+          this.registerWatcher()
         }
       })
     }
 
     this.reporters = resolved.mode === 'benchmark'
       ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
-      : await createReporters(resolved.reporters, this.runner)
+      : await createReporters(resolved.reporters, this)
 
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
@@ -134,55 +166,106 @@ export class Vitest {
 
     await Promise.all(this._onSetServer.map(fn => fn()))
 
-    this.projects = await this.resolveWorkspace(options, cliOptions)
+    const projects = await this.resolveWorkspace(cliOptions)
+    this.resolvedProjects = projects
+    this.projects = projects
+    const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
+    if (filters.length > 0) {
+      this.projects = this.projects.filter(p =>
+        filters.some(pattern => pattern.test(p.getName())),
+      )
+    }
+    if (!this.coreWorkspaceProject) {
+      this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
+    }
 
-    if (this.config.testNamePattern)
+    if (this.config.testNamePattern) {
       this.configOverride.testNamePattern = this.config.testNamePattern
+    }
   }
 
-  private async createCoreWorkspace(options: UserConfig) {
-    const coreWorkspace = new WorkspaceProject(this.config.root, this)
-    await coreWorkspace.setServer(options, this.server, {
-      runner: this.runner,
-      server: this.vitenode,
-    })
-    this.coreWorkspace = coreWorkspace
-    return coreWorkspace
+  public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
+    this.getCoreWorkspaceProject().provide(key, value)
   }
 
-  public getCoreWorkspaceProject(): WorkspaceProject | null {
-    return this.coreWorkspace || null
+  private async createCoreProject() {
+    this.coreWorkspaceProject = await WorkspaceProject.createCoreProject(this)
+    return this.coreWorkspaceProject
   }
 
-  private async resolveWorkspace(options: UserConfig, cliOptions: UserConfig) {
+  public getCoreWorkspaceProject(): WorkspaceProject {
+    return this.coreWorkspaceProject
+  }
+
+  public getProjectByTaskId(taskId: string): WorkspaceProject {
+    const task = this.state.idMap.get(taskId)
+    const projectName = (task as File).projectName || task?.file?.projectName || ''
+    return this.projects.find(p => p.getName() === projectName)
+      || this.getCoreWorkspaceProject()
+      || this.projects[0]
+  }
+
+  public getProjectByName(name: string = '') {
+    return this.projects.find(p => p.getName() === name)
+      || this.getCoreWorkspaceProject()
+      || this.projects[0]
+  }
+
+  private async getWorkspaceConfigPath() {
+    if (this.config.workspace) {
+      return this.config.workspace
+    }
+
     const configDir = this.server.config.configFile
       ? dirname(this.server.config.configFile)
       : this.config.root
+
     const rootFiles = await fs.readdir(configDir)
+
     const workspaceConfigName = workspaceFiles.find((configFile) => {
       return rootFiles.includes(configFile)
     })
 
-    if (!workspaceConfigName)
-      return [await this.createCoreWorkspace(options)]
-
-    const workspaceConfigPath = join(configDir, workspaceConfigName)
-
-    const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
-      default: (string | UserWorkspaceConfig)[]
+    if (!workspaceConfigName) {
+      return null
     }
 
-    if (!workspaceModule.default || !Array.isArray(workspaceModule.default))
+    return join(configDir, workspaceConfigName)
+  }
+
+  private async resolveWorkspace(cliOptions: UserConfig) {
+    const workspaceConfigPath = await this.getWorkspaceConfigPath()
+
+    if (!workspaceConfigPath) {
+      return [await this.createCoreProject()]
+    }
+
+    const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
+      default: ReturnType<typeof defineWorkspace>
+    }
+
+    if (!workspaceModule.default || !Array.isArray(workspaceModule.default)) {
       throw new Error(`Workspace config file ${workspaceConfigPath} must export a default array of project paths.`)
+    }
 
     const workspaceGlobMatches: string[] = []
     const projectsOptions: UserWorkspaceConfig[] = []
 
     for (const project of workspaceModule.default) {
-      if (typeof project === 'string')
+      if (typeof project === 'string') {
         workspaceGlobMatches.push(project.replace('<rootDir>', this.config.root))
-      else
-        projectsOptions.push(project)
+      }
+      else if (typeof project === 'function') {
+        projectsOptions.push(await project({
+          command: this.server.config.command,
+          mode: this.server.config.mode,
+          isPreview: false,
+          isSsrBuild: false,
+        }))
+      }
+      else {
+        projectsOptions.push(await project)
+      }
     }
 
     const globOptions: fg.Options = {
@@ -191,7 +274,7 @@ export class Vitest {
       onlyFiles: false,
       markDirectories: true,
       cwd: this.config.root,
-      ignore: ['**/node_modules/**'],
+      ignore: ['**/node_modules/**', '**/*.timestamp-*'],
     }
 
     const workspacesFs = await fg(workspaceGlobMatches, globOptions)
@@ -214,47 +297,96 @@ export class Vitest {
       return filepath
     }))
 
+    const workspacesByFolder = resolvedWorkspacesPaths
+      .reduce((configByFolder, filepath) => {
+        const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
+        configByFolder[dir] ??= []
+        configByFolder[dir].push(filepath)
+        return configByFolder
+      }, {} as Record<string, string[]>)
+
+    const filteredWorkspaces = Object.values(workspacesByFolder).map((configFiles) => {
+      if (configFiles.length === 1) {
+        return configFiles[0]
+      }
+      const vitestConfig = configFiles.find(configFile => basename(configFile).startsWith('vitest.config'))
+      return vitestConfig || configFiles[0]
+    })
+
     const overridesOptions = [
       'logHeapUsage',
       'allowOnly',
       'sequence',
       'testTimeout',
-      'threads',
-      'singleThread',
-      'isolate',
+      'pool',
+      'update',
       'globals',
-      'mode',
+      'expandSnapshotDiff',
+      'disableConsoleIntercept',
+      'retry',
+      'testNamePattern',
+      'passWithNoTests',
+      'bail',
+      'isolate',
+      'printConsoleTrace',
     ] as const
 
     const cliOverrides = overridesOptions.reduce((acc, name) => {
-      if (name in cliOptions)
+      if (name in cliOptions) {
         acc[name] = cliOptions[name] as any
+      }
       return acc
     }, {} as UserConfig)
 
-    const projects = resolvedWorkspacesPaths.map(async (workspacePath) => {
-      // don't start a new server, but reuse existing one
-      if (
-        this.server.config.configFile === workspacePath
-      )
-        return this.createCoreWorkspace(options)
-      return initializeProject(workspacePath, this, { workspaceConfigPath, test: cliOverrides })
-    })
+    const cwd = process.cwd()
+
+    const projects: WorkspaceProject[] = []
+
+    try {
+      // we have to resolve them one by one because CWD should depend on the project
+      for (const filepath of filteredWorkspaces) {
+        if (this.server.config.configFile === filepath) {
+          const project = await this.createCoreProject()
+          projects.push(project)
+          continue
+        }
+        const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
+        if (isMainThread) {
+          process.chdir(dir)
+        }
+        projects.push(
+          await initializeProject(filepath, this, { workspaceConfigPath, test: cliOverrides }),
+        )
+      }
+    }
+    finally {
+      if (isMainThread) {
+        process.chdir(cwd)
+      }
+    }
+
+    const projectPromises: Promise<WorkspaceProject>[] = []
 
     projectsOptions.forEach((options, index) => {
-      projects.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
+      // we can resolve these in parallel because process.cwd() is not changed
+      projectPromises.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
     })
 
-    if (!projects.length)
-      return [await this.createCoreWorkspace(options)]
+    if (!projects.length && !projectPromises.length) {
+      return [await this.createCoreProject()]
+    }
 
-    const resolvedProjects = await Promise.all(projects)
+    const resolvedProjects = await Promise.all([
+      ...projects,
+      ...await Promise.all(projectPromises),
+    ])
     const names = new Set<string>()
 
     for (const project of resolvedProjects) {
       const name = project.getName()
-      if (names.has(name))
+      if (names.has(name)) {
         throw new Error(`Project name "${name}" is not unique. All projects in a workspace should have unique names.`)
+      }
       names.add(name)
     }
 
@@ -262,8 +394,9 @@ export class Vitest {
   }
 
   private async initCoverageProvider() {
-    if (this.coverageProvider !== undefined)
+    if (this.coverageProvider !== undefined) {
       return
+    }
     this.coverageProvider = await getCoverageProvider(this.config.coverage, this.runner)
     if (this.coverageProvider) {
       await this.coverageProvider.initialize(this)
@@ -276,15 +409,66 @@ export class Vitest {
     return Promise.all(this.projects.map(w => w.initBrowserProvider()))
   }
 
-  typecheck(filters?: string[]) {
-    return Promise.all(this.projects.map(project => project.typecheck(filters)))
+  async mergeReports() {
+    if (this.reporters.some(r => r instanceof BlobReporter)) {
+      throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
+    }
+
+    const { files, errors, coverages } = await readBlobs(this.config.mergeReports, this.projects)
+
+    await this.report('onInit', this)
+    await this.report('onPathsCollected', files.flatMap(f => f.filepath))
+
+    const workspaceSpecs = new Map<WorkspaceProject, File[]>()
+    for (const file of files) {
+      const project = this.getProjectByName(file.projectName)
+      const specs = workspaceSpecs.get(project) || []
+      specs.push(file)
+      workspaceSpecs.set(project, specs)
+    }
+
+    for (const [project, files] of workspaceSpecs) {
+      const filepaths = files.map(f => f.filepath)
+      this.state.clearFiles(project, filepaths)
+      files.forEach((file) => {
+        file.logs?.forEach(log => this.state.updateUserLog(log))
+      })
+      this.state.collectFiles(files)
+    }
+
+    await this.report('onCollected', files).catch(noop)
+
+    for (const file of files) {
+      const logs: UserConsoleLog[] = []
+      const taskPacks: TaskResultPack[] = []
+
+      const tasks = getTasks(file)
+      for (const task of tasks) {
+        if (task.logs) {
+          logs.push(...task.logs)
+        }
+        taskPacks.push([task.id, task.result, task.meta])
+      }
+      logs.sort((log1, log2) => log1.time - log2.time)
+
+      for (const log of logs) {
+        await this.report('onUserConsoleLog', log).catch(noop)
+      }
+
+      await this.report('onTaskUpdate', taskPacks).catch(noop)
+    }
+
+    if (hasFailed(files)) {
+      process.exitCode = 1
+    }
+
+    await this.report('onFinished', files, errors)
+    await this.initCoverageProvider()
+    await this.coverageProvider?.mergeReports?.(coverages)
   }
 
   async start(filters?: string[]) {
-    if (this.mode === 'typecheck') {
-      await this.typecheck(filters)
-      return
-    }
+    this._onClose = []
 
     try {
       await this.initCoverageProvider()
@@ -299,46 +483,77 @@ export class Vitest {
       await this.globTestFiles(filters),
     )
 
+    // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      const exitCode = this.config.passWithNoTests ? 0 : 1
+      // Report coverage for uncovered files
+      const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
+      await this.reportCoverage(coverage, true)
 
-      await this.reportCoverage(true)
       this.logger.printNoTestFound(filters)
 
-      process.exit(exitCode)
-    }
-
-    // populate once, update cache on watch
-    await this.cache.stats.populateStats(this.config.root, files)
-
-    await this.runFiles(files)
-
-    await this.reportCoverage(true)
-
-    if (this.config.watch)
-      await this.report('onWatcherStart')
-  }
-
-  private async getTestDependencies(filepath: WorkspaceSpec) {
-    const deps = new Set<string>()
-
-    const addImports = async ([project, filepath]: WorkspaceSpec) => {
-      const transformed = await project.vitenode.transformRequest(filepath)
-      if (!transformed)
-        return
-      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
-      for (const dep of dependencies) {
-        const path = await this.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
-        const fsPath = path && !path.external && path.id.split('?')[0]
-        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
-          deps.add(fsPath)
-
-          await addImports([project, fsPath])
-        }
+      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
+        const exitCode = this.config.passWithNoTests ? 0 : 1
+        process.exitCode = exitCode
+        throw new FilesNotFoundError(this.mode)
       }
     }
 
+    if (files.length) {
+      // populate once, update cache on watch
+      await this.cache.stats.populateStats(this.config.root, files)
+
+      await this.runFiles(files, true)
+    }
+
+    if (this.config.watch) {
+      await this.report('onWatcherStart')
+    }
+  }
+
+  async init() {
+    this._onClose = []
+
+    try {
+      await this.initCoverageProvider()
+      await this.coverageProvider?.clean(this.config.coverage.clean)
+      await this.initBrowserProviders()
+    }
+    finally {
+      await this.report('onInit', this)
+    }
+
+    // populate test files cache so watch mode can trigger a file rerun
+    await this.globTestFiles()
+
+    if (this.config.watch) {
+      await this.report('onWatcherStart')
+    }
+  }
+
+  private async getTestDependencies(filepath: WorkspaceSpec, deps = new Set<string>()) {
+    const addImports = async ([project, filepath]: WorkspaceSpec) => {
+      if (deps.has(filepath)) {
+        return
+      }
+      deps.add(filepath)
+
+      const mod = project.server.moduleGraph.getModuleById(filepath)
+      const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
+      if (!transformed) {
+        return
+      }
+      const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
+      await Promise.all(dependencies.map(async (dep) => {
+        const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const fsPath = path && !path.external && path.id.split('?')[0]
+        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
+          await addImports([project, fsPath])
+        }
+      }))
+    }
+
     await addImports(filepath)
+    deps.delete(filepath[1])
 
     return deps
   }
@@ -351,23 +566,27 @@ export class Vitest {
         changedSince: this.config.changed,
       })
       if (!related) {
-        this.logger.error(c.red('Could not find Git root. Have you initialized git with `git init`?\n'))
-        process.exit(1)
+        process.exitCode = 1
+        throw new GitNotFoundError()
       }
       this.config.related = Array.from(new Set(related))
     }
 
     const related = this.config.related
-    if (!related)
+    if (!related) {
       return specs
+    }
 
     const forceRerunTriggers = this.config.forceRerunTriggers
-    if (forceRerunTriggers.length && mm(related, forceRerunTriggers).length)
+    if (forceRerunTriggers.length && mm(related, forceRerunTriggers).length) {
       return specs
+    }
 
     // don't run anything if no related sources are found
-    if (!related.length)
+    // if we are in watch mode, we want to process all tests
+    if (!this.config.watch && !related.length) {
       return []
+    }
 
     const testGraphs = await Promise.all(
       specs.map(async (spec) => {
@@ -380,8 +599,9 @@ export class Vitest {
 
     for (const [filepath, deps] of testGraphs) {
       // if deps or the test itself were changed
-      if (related.some(path => path === filepath[1] || deps.has(path)))
+      if (related.some(path => path === filepath[1] || deps.has(path))) {
         runningTests.push(filepath)
+      }
     }
 
     return runningTests
@@ -389,16 +609,45 @@ export class Vitest {
 
   getProjectsByTestFile(file: string) {
     const projects = this.projectsTestFiles.get(file)
-    if (!projects)
+    if (!projects) {
       return []
+    }
     return Array.from(projects).map(project => [project, file] as WorkspaceSpec)
   }
 
-  async runFiles(paths: WorkspaceSpec[]) {
-    const filepaths = paths.map(([, file]) => file)
+  async initializeGlobalSetup(paths: WorkspaceSpec[]) {
+    const projects = new Set(paths.map(([project]) => project))
+    const coreProject = this.getCoreWorkspaceProject()
+    if (!projects.has(coreProject)) {
+      projects.add(coreProject)
+    }
+    for await (const project of projects) {
+      await project.initializeGlobalSetup()
+    }
+  }
+
+  private async initializeDistPath() {
+    if (this.distPath) {
+      return
+    }
+
+    // if Vitest is running globally, then we should still import local vitest if possible
+    const projectVitestPath = await this.vitenode.resolveId('vitest')
+    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
+    this.distPath = join(vitestDir, 'dist')
+  }
+
+  async runFiles(specs: WorkspaceSpec[], allTestsRun: boolean) {
+    await this.initializeDistPath()
+
+    const filepaths = specs.map(([, file]) => file)
     this.state.collectPaths(filepaths)
 
     await this.report('onPathsCollected', filepaths)
+    await this.report('onSpecsCollected', specs.map(
+      ([project, file]) =>
+        [{ name: project.config.name, root: project.config.root }, file] as SerializableSpec,
+    ))
 
     // previous run
     await this.runningPromise
@@ -407,15 +656,23 @@ export class Vitest {
 
     // schedule the new run
     this.runningPromise = (async () => {
-      if (!this.pool)
+      if (!this.pool) {
         this.pool = createPool(this)
+      }
 
       const invalidates = Array.from(this.invalidates)
       this.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
+
+      if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
+        await this.coverageProvider?.clean()
+      }
+
+      await this.initializeGlobalSetup(specs)
+
       try {
-        await this.pool.runTests(paths, invalidates)
+        await this.pool.runTests(specs, invalidates)
       }
       catch (err) {
         this.state.catchError(err, 'Unhandled Error')
@@ -423,17 +680,27 @@ export class Vitest {
 
       const files = this.state.getFiles()
 
-      if (hasFailed(files))
+      if (hasFailed(files)) {
         process.exitCode = 1
+      }
 
       this.cache.results.updateResults(files)
       await this.cache.results.writeToCache()
     })()
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
-        const specs = Array.from(new Set(paths.map(([, p]) => p)))
-        await this.report('onFinished', this.state.getFiles(specs), this.state.getUnhandledErrors())
+        const files = Array.from(new Set(specs.map(([, p]) => p)))
+        const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
+
+        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors(), coverage)
+        await this.reportCoverage(coverage, allTestsRun)
+
         this.runningPromise = undefined
+        this.isFirstRun = false
+
+        // all subsequent runs will treat this as a fresh run
+        this.config.changed = false
+        this.config.related = undefined
       })
 
     return await this.runningPromise
@@ -450,30 +717,47 @@ export class Vitest {
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
-    if (this.coverageProvider && this.config.coverage.cleanOnRerun)
-      await this.coverageProvider.clean()
-
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
-
-    await this.reportCoverage(!trigger)
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), !trigger)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
+  async changeProjectName(pattern: string) {
+    if (pattern === '') {
+      delete this.configOverride.project
+    }
+    else { this.configOverride.project = pattern }
+
+    this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
+    const files = (await this.globTestFiles()).map(([, file]) => file)
+    await this.rerunFiles(files, 'change project filter')
+  }
+
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
     // Empty test name pattern should reset filename pattern as well
-    if (pattern === '')
+    if (pattern === '') {
       this.filenamePattern = undefined
+    }
 
-    this.configOverride.testNamePattern = pattern ? new RegExp(pattern) : undefined
+    const testNamePattern = pattern ? new RegExp(pattern) : undefined
+    this.configOverride.testNamePattern = testNamePattern
+    // filter only test files that have tests matching the pattern
+    if (testNamePattern) {
+      files = files.filter((filepath) => {
+        const files = this.state.getFiles([filepath])
+        return !files.length || files.some((file) => {
+          const tasks = getTasks(file)
+          return !tasks.length || tasks.some(task => testNamePattern.test(task.name))
+        })
+      })
+    }
     await this.rerunFiles(files, trigger)
   }
 
-  async changeFilenamePattern(pattern: string) {
+  async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
     this.filenamePattern = pattern
 
-    const files = this.state.getFilepaths()
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
 
     await this.rerunFiles(files, trigger)
@@ -512,18 +796,29 @@ export class Vitest {
     clearTimeout(this._rerunTimer)
 
     // server restarted
-    if (this.restartsCount !== currentCount)
+    if (this.restartsCount !== currentCount) {
       return
+    }
 
     this._rerunTimer = setTimeout(async () => {
+      // run only watched tests
+      if (this.watchedTests.size) {
+        this.changedTests.forEach((test) => {
+          if (!this.watchedTests.has(test)) {
+            this.changedTests.delete(test)
+          }
+        })
+      }
+
       if (this.changedTests.size === 0) {
         this.invalidates.clear()
         return
       }
 
       // server restarted
-      if (this.restartsCount !== currentCount)
+      if (this.restartsCount !== currentCount) {
         return
+      }
 
       this.isFirstRun = false
 
@@ -536,8 +831,9 @@ export class Vitest {
         if (failedTest.length && this.isFailedModel)
           files = [...new Set(files.concat(failedTest))]
         // A file that does not match the current filename pattern was changed
-        if (files.length === 0)
+        if (files.length === 0) {
           return
+        }
       }
       else {
         if (failedTest.length && this.isFailedModel)
@@ -546,49 +842,59 @@ export class Vitest {
 
       this.changedTests.clear()
 
-      if (this.coverageProvider && this.config.coverage.cleanOnRerun)
-        await this.coverageProvider.clean()
-
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
       await this.report('onWatcherRerun', files, triggerLabel)
 
-      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)))
-
-      await this.reportCoverage(false)
+      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), false)
 
       await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
 
-  public getModuleProjects(id: string) {
+  public getModuleProjects(filepath: string) {
     return this.projects.filter((project) => {
-      return project.server.moduleGraph.getModuleById(id)
-        || project.browser?.moduleGraph.getModuleById(id)
-        || project.browser?.moduleGraph.getModulesByFile(id)?.size
+      return project.getModulesByFilepath(filepath).size
+      // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
     })
+  }
+
+  /**
+   * Watch only the specified tests. If no tests are provided, all tests will be watched.
+   */
+  public watchTests(tests: string[]) {
+    this.watchedTests = new Set(
+      tests.map(test => slash(test)),
+    )
   }
 
   private unregisterWatcher = noop
   private registerWatcher() {
-    const updateLastChanged = (id: string) => {
-      const projects = this.getModuleProjects(id)
+    const updateLastChanged = (filepath: string) => {
+      const projects = this.getModuleProjects(filepath)
       projects.forEach(({ server, browser }) => {
-        const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
-        if (mod)
-          server.moduleGraph.invalidateModule(mod)
+        const serverMods = server.moduleGraph.getModulesByFile(filepath)
+        serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
+
+        if (browser) {
+          const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
+          browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
+        }
       })
     }
 
     const onChange = (id: string) => {
       id = slash(id)
+      this.logger.clearHighlightCache(id)
       updateLastChanged(id)
       const needsRerun = this.handleFileChanged(id)
-      if (needsRerun.length)
+      if (needsRerun.length) {
         this.scheduleRerun(needsRerun)
+      }
     }
     const onUnlink = (id: string) => {
       id = slash(id)
+      this.logger.clearHighlightCache(id)
       this.invalidates.add(id)
 
       if (this.state.filesMap.has(id)) {
@@ -605,8 +911,10 @@ export class Vitest {
 
       const matchingProjects: WorkspaceProject[] = []
       await Promise.all(this.projects.map(async (project) => {
-        if (await project.isTargetFile(id))
+        if (await project.isTargetFile(id)) {
           matchingProjects.push(project)
+          project.testFilesList?.push(id)
+        }
       }))
 
       if (matchingProjects.length > 0) {
@@ -614,13 +922,19 @@ export class Vitest {
         this.changedTests.add(id)
         this.scheduleRerun([id])
       }
+      else {
+        // it's possible that file was already there but watcher triggered "add" event instead
+        const needsRerun = this.handleFileChanged(id)
+        if (needsRerun.length) {
+          this.scheduleRerun(needsRerun)
+        }
+      }
     }
     const watcher = this.server.watcher
 
-    if (this.config.forceRerunTriggers.length)
+    if (this.config.forceRerunTriggers.length) {
       watcher.add(this.config.forceRerunTriggers)
-
-    watcher.unwatch(this.config.watchExclude)
+    }
 
     watcher.on('change', onChange)
     watcher.on('unlink', onUnlink)
@@ -637,91 +951,120 @@ export class Vitest {
   /**
    * @returns A value indicating whether rerun is needed (changedTests was mutated)
    */
-  private handleFileChanged(id: string): string[] {
-    if (this.changedTests.has(id) || this.invalidates.has(id))
-      return []
-
-    if (mm.isMatch(id, this.config.forceRerunTriggers)) {
-      this.state.getFilepaths().forEach(file => this.changedTests.add(file))
+  private handleFileChanged(filepath: string): string[] {
+    if (this.changedTests.has(filepath) || this.invalidates.has(filepath)) {
       return []
     }
 
-    const projects = this.getModuleProjects(id)
-    if (!projects.length)
+    if (mm.isMatch(filepath, this.config.forceRerunTriggers)) {
+      this.state.getFilepaths().forEach(file => this.changedTests.add(file))
+      return [filepath]
+    }
+
+    const projects = this.getModuleProjects(filepath)
+    if (!projects.length) {
+      // if there are no modules it's possible that server was restarted
+      // we don't have information about importers anymore, so let's check if the file is a test file at least
+      if (this.state.filesMap.has(filepath) || this.projects.some(project => project.isTestFile(filepath))) {
+        this.changedTests.add(filepath)
+        return [filepath]
+      }
       return []
+    }
 
     const files: string[] = []
 
-    for (const { server, browser } of projects) {
-      const mod = server.moduleGraph.getModuleById(id) || browser?.moduleGraph.getModuleById(id)
-      if (!mod) {
-        // files with `?v=` query from the browser
-        const mods = browser?.moduleGraph.getModulesByFile(id)
-        if (!mods?.size)
-          return []
-        let rerun = false
-        mods.forEach((m) => {
-          if (m.id && this.handleFileChanged(m.id))
-            rerun = true
-        })
-        if (rerun)
-          files.push(id)
+    for (const project of projects) {
+      const mods = project.getModulesByFilepath(filepath)
+      if (!mods.size) {
         continue
       }
 
-      // remove queries from id
-      id = normalizeRequestId(id, server.config.base)
+      this.invalidates.add(filepath)
 
-      this.invalidates.add(id)
-
-      if (this.state.filesMap.has(id)) {
-        this.changedTests.add(id)
-        files.push(id)
+      // one of test files that we already run, or one of test files that we can run
+      if (this.state.filesMap.has(filepath) || project.isTestFile(filepath)) {
+        this.changedTests.add(filepath)
+        files.push(filepath)
         continue
       }
 
       let rerun = false
-      mod.importers.forEach((i) => {
-        if (!i.id)
-          return
+      for (const mod of mods) {
+        mod.importers.forEach((i) => {
+          if (!i.file) {
+            return
+          }
 
-        const heedsRerun = this.handleFileChanged(i.id)
-        if (heedsRerun)
-          rerun = true
-      })
+          const heedsRerun = this.handleFileChanged(i.file)
+          if (heedsRerun.length) {
+            rerun = true
+          }
+        })
+      }
 
-      if (rerun)
-        files.push(id)
+      if (rerun) {
+        files.push(filepath)
+      }
     }
 
-    return files
+    return Array.from(new Set(files))
   }
 
-  private async reportCoverage(allTestsRun: boolean) {
-    if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0)
+  private async reportCoverage(coverage: unknown, allTestsRun: boolean) {
+    if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0) {
       return
+    }
 
     if (this.coverageProvider) {
-      this.logger.log(c.blue(' % ') + c.dim('Coverage report from ') + c.yellow(this.coverageProvider.name))
-      await this.coverageProvider.reportCoverage({ allTestsRun })
+      await this.coverageProvider.reportCoverage(coverage, { allTestsRun })
+      // notify coverage iframe reload
+      for (const reporter of this.reporters) {
+        if (reporter instanceof WebSocketReporter) {
+          reporter.onFinishedReportCoverage()
+        }
+      }
     }
   }
 
   async close() {
     if (!this.closingPromise) {
-      const closePromises = this.projects.map(w => w.close().then(() => w.server = undefined as any))
-      // close the core workspace server only once
-      if (this.coreWorkspace && !this.projects.includes(this.coreWorkspace))
-        closePromises.push(this.server.close().then(() => this.server = undefined as any))
+      this.closingPromise = (async () => {
+        const teardownProjects = [...this.projects]
+        if (!teardownProjects.includes(this.coreWorkspaceProject)) {
+          teardownProjects.push(this.coreWorkspaceProject)
+        }
+        // do teardown before closing the server
+        for await (const project of teardownProjects.reverse()) {
+          await project.teardownGlobalSetup()
+        }
 
-      if (this.pool)
-        closePromises.push(this.pool.close().then(() => this.pool = undefined))
+        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close().then(() => w.server = undefined as any))
+        // close the core workspace server only once
+        // it's possible that it's not initialized at all because it's not running any tests
+        if (!this.resolvedProjects.includes(this.coreWorkspaceProject)) {
+          closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
+        }
 
-      this.closingPromise = Promise.allSettled(closePromises).then((results) => {
-        results.filter(r => r.status === 'rejected').forEach((err) => {
-          this.logger.error('error during close', (err as PromiseRejectedResult).reason)
+        if (this.pool) {
+          closePromises.push((async () => {
+            await this.pool?.close?.()
+
+            this.pool = undefined
+          })())
+        }
+
+        closePromises.push(...this._onClose.map(fn => fn()))
+
+        return Promise.allSettled(closePromises).then((results) => {
+          results.forEach((r) => {
+            if (r.status === 'rejected') {
+              this.logger.error('error during close', r.reason)
+            }
+          })
+          this.logger.logUpdate.done() // restore terminal cursor
         })
-      })
+      })()
     }
     return this.closingPromise
   }
@@ -736,14 +1079,15 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this.server, ...this.projects.map(p => p.server)].filter(Boolean).length
+          const runningServers = [this.server, ...this.resolvedProjects.map(p => p.server)].filter(Boolean).length
 
-          if (runningServers === 1)
+          if (runningServers === 1) {
             console.warn('Tests closed successfully but something prevents Vite server from exiting')
-          else if (runningServers > 1)
+          }
+          else if (runningServers > 1) {
             console.warn(`Tests closed successfully but something prevents ${runningServers} Vite servers from exiting`)
-          else
-            console.warn('Tests closed successfully but something prevents the main process from exiting')
+          }
+          else { console.warn('Tests closed successfully but something prevents the main process from exiting') }
 
           console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
         }
@@ -753,8 +1097,9 @@ export class Vitest {
     }, this.config.teardownTimeout).unref()
 
     await this.close()
-    if (force)
+    if (force) {
       process.exit()
+    }
   }
 
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
@@ -762,6 +1107,10 @@ export class Vitest {
       // @ts-expect-error let me go
       ...args,
     )))
+  }
+
+  public async getTestFilepaths() {
+    return this.globTestFiles().then(files => files.map(([, file]) => file))
   }
 
   public async globTestFiles(filters: string[] = []) {
@@ -793,5 +1142,9 @@ export class Vitest {
 
   onCancel(fn: (reason: CancelReason) => void) {
     this._onCancelListeners.push(fn)
+  }
+
+  onClose(fn: () => void) {
+    this._onClose.push(fn)
   }
 }

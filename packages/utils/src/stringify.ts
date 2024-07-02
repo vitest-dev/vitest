@@ -1,5 +1,8 @@
 import type { PrettyFormatOptions } from 'pretty-format'
-import { format as prettyFormat, plugins as prettyFormatPlugins } from 'pretty-format'
+import {
+  format as prettyFormat,
+  plugins as prettyFormatPlugins,
+} from 'pretty-format'
 
 const {
   AsymmetricMatcher,
@@ -19,7 +22,11 @@ const PLUGINS = [
   AsymmetricMatcher,
 ]
 
-export function stringify(object: unknown, maxDepth = 10, { maxLength, ...options }: PrettyFormatOptions & { maxLength?: number } = {}): string {
+export function stringify(
+  object: unknown,
+  maxDepth = 10,
+  { maxLength, ...options }: PrettyFormatOptions & { maxLength?: number } = {},
+): string {
   const MAX_LENGTH = maxLength ?? 10000
   let result
 
@@ -43,7 +50,7 @@ export function stringify(object: unknown, maxDepth = 10, { maxLength, ...option
     })
   }
 
-  return (result.length >= MAX_LENGTH && maxDepth > 1)
+  return result.length >= MAX_LENGTH && maxDepth > 1
     ? stringify(object, Math.floor(maxDepth / 2))
     : result
 }

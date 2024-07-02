@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import type { ParsedStack } from '@vitest/utils'
+import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from '../../node'
 import type { Reporter } from '../../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
@@ -26,23 +26,30 @@ export class TapReporter implements Reporter {
   }
 
   static getComment(task: Task): string {
-    if (task.mode === 'skip')
+    if (task.mode === 'skip') {
       return ' # SKIP'
-    else if (task.mode === 'todo')
+    }
+    else if (task.mode === 'todo') {
       return ' # TODO'
-    else if (task.result?.duration != null)
+    }
+    else if (task.result?.duration != null) {
       return ` # time=${task.result.duration.toFixed(2)}ms`
-    else
+    }
+    else {
       return ''
+    }
   }
 
-  private logErrorDetails(error: Error, stack?: ParsedStack) {
-    this.logger.log(`name: ${yamlString(error.name)}`)
-    this.logger.log(`message: ${yamlString(error.message)}`)
+  private logErrorDetails(error: ErrorWithDiff, stack?: ParsedStack) {
+    const errorName = error.name || error.nameStr || 'Unknown Error'
+    this.logger.log(`name: ${yamlString(String(errorName))}`)
+    this.logger.log(`message: ${yamlString(String(error.message))}`)
 
     if (stack) {
       // For compatibility with tap-mocha-reporter
-      this.logger.log(`stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
+      this.logger.log(
+        `stack: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`,
+      )
     }
   }
 
@@ -52,7 +59,12 @@ export class TapReporter implements Reporter {
     for (const [i, task] of tasks.entries()) {
       const id = i + 1
 
-      const ok = (task.result?.state === 'pass' || task.mode === 'skip' || task.mode === 'todo') ? 'ok' : 'not ok'
+      const ok
+        = task.result?.state === 'pass'
+        || task.mode === 'skip'
+        || task.mode === 'todo'
+          ? 'ok'
+          : 'not ok'
 
       const comment = TapReporter.getComment(task)
 
@@ -68,11 +80,17 @@ export class TapReporter implements Reporter {
       else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
+        const project = this.ctx.getProjectByTaskId(task.id)
+
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
 
           task.result.errors.forEach((error) => {
-            const stacks = parseErrorStacktrace(error)
+            const stacks = task.file.pool === 'browser'
+              ? (project.browser?.parseErrorStacktrace(error) || [])
+              : parseErrorStacktrace(error, {
+                frameFilter: this.ctx.config.onStackTrace,
+              })
             const stack = stacks[0]
 
             this.logger.log('---')
@@ -82,8 +100,13 @@ export class TapReporter implements Reporter {
             this.logErrorDetails(error)
             this.logger.unindent()
 
-            if (stack)
-              this.logger.log(`at: ${yamlString(`${stack.file}:${stack.line}:${stack.column}`)}`)
+            if (stack) {
+              this.logger.log(
+                `at: ${yamlString(
+                  `${stack.file}:${stack.line}:${stack.column}`,
+                )}`,
+              )
+            }
 
             if (error.showDiff) {
               this.logger.log(`actual: ${yamlString(error.actual)}`)
@@ -98,7 +121,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  onFinished(files = this.ctx.state.getFiles()) {
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

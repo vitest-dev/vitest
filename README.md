@@ -6,7 +6,7 @@
 Vitest
 </h1>
 <p align="center">
-A blazing fast unit test framework powered by Vite.
+Next generation testing framework powered by Vite.
 <p>
 <p align="center">
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
@@ -22,7 +22,6 @@ A blazing fast unit test framework powered by Vite.
 <a href="https://cn.vitest.dev">中文文档</a>
 </p>
 
-
 <h4 align="center">
 
 </h4>
@@ -33,21 +32,22 @@ A blazing fast unit test framework powered by Vite.
 
 - [Vite](https://vitejs.dev/)'s config, transformers, resolvers, and plugins. Use the same setup from your app!
 - [Jest Snapshot](https://jestjs.io/docs/snapshot-testing)
-- [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs.
+- [Chai](https://www.chaijs.com/) built-in for assertions, with [Jest expect](https://jestjs.io/docs/expect) compatible APIs
 - [Smart & instant watch mode](https://vitest.dev/guide/features.html#watch-mode), like HMR for tests!
 - [Native code coverage](https://vitest.dev/guide/features.html#coverage) via [`v8`](https://v8.dev/blog/javascript-code-coverage) or [`istanbul`](https://istanbul.js.org/).
 - [Tinyspy](https://github.com/tinylibs/tinyspy) built-in for mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
-- Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse))
+- Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse), [Marko](https://github.com/marko-js/examples/tree/master/examples/library-ts))
 - Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - Benchmarking support with [Tinybench](https://github.com/tinylibs/tinybench)
 - [Workspace](https://vitest.dev/guide/workspace) support
+- [expect-type](https://github.com/mmkal/expect-type) for type-level testing
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support
 - Filtering, timeouts, concurrent for suite and tests
+- Sharding support
 
-> Vitest requires Vite >=v3.0.0 and Node >=v14.18
-
+> Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
 
 ```ts
 import { assert, describe, expect, it } from 'vitest'
@@ -74,19 +74,19 @@ $ npx vitest
 
 ## Sponsors
 
-### Anthony Fu Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
-    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
-  </a>
-</p>
-
 ### Vladimir Sponsors
 
 <p align="center">
   <a href="https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg">
     <img src='https://cdn.jsdelivr.net/gh/sheremet-va/static/sponsors.svg'/>
+  </a>
+</p>
+
+### Anthony Fu Sponsors
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/antfu/static/sponsors.svg'/>
   </a>
 </p>
 

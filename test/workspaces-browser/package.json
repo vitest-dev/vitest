@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-workspaces-browser",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@vitest/browser": "workspace:^",
+    "vitest": "workspace:*"
+  }
+}

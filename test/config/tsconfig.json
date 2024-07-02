@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ESNext"],
+    "types": ["vite/client"]
+  },
+  "exclude": [
+    "**/dist/**"
+  ]
+}

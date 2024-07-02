@@ -1,16 +1,11 @@
 {
-  "extends": ["config:base", "schedule:weekly"],
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base", "schedule:weekly", "group:allNonMajor"],
   "labels": ["dependencies"],
-  "pin": false,
   "rangeStrategy": "bump",
-  "node": false,
   "packageRules": [
     {
       "depTypeList": ["peerDependencies"],
-      "enabled": false
-    },
-    {
-      "packageNames": ["node"],
       "enabled": false
     },
     {
@@ -23,24 +18,23 @@
       ],
       "groupName": "all non-major examples dependencies",
       "groupSlug": "all-minor-patch-examples"
-    },
-    {
-      "excludePackagePatterns": [
-        "@vitest/test-"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "all non-major dependencies",
-      "groupSlug": "all-minor-patch"
     }
   ],
   "ignoreDeps": [
-    // wait for ecosystem to upgrade to React v18
-    "@testing-library/react",
-    "@testing-library/user-event",
-    // user can install any version
-    "vite"
+    // manually bumping
+    "node",
+    "vite",
+    // we patch these packages
+    "@types/chai",
+    "@sinonjs/fake-timers",
+    "cac",
+    // Pinned due to https://github.com/vitest-dev/vitest/issues/4710
+    "log-update",
+    // Pinned because it requires "node" condition in the new version
+    // But we intentionally build Vitest ambiguously
+    "find-up",
+    // Pinned because we use execa, and the newer version replaces it with another pkg
+    // We should remove execa entirely
+    "@antfu/install-pkg"
   ]
 }

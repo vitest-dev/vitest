@@ -1,5 +1,5 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ tail?: boolean }>(), { tail: false })
+// const { tail = false } = defineProps<{ tail?: boolean }>()
 </script>
 
 <template>

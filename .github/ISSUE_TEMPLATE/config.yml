@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: VS Code Extension Issues
+    url: https://github.com/vitest-dev/vscode/issues/new/choose
+    about: VS Code extension related issues should be reported on the vitest-dev/vscode repository.
   - name: Discord Chat
     url: https://chat.vitest.dev
     about: Ask questions and discuss with other Vitest users in real time.

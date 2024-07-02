@@ -1,9 +1,25 @@
-import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
+import os from 'node:os'
+import type {
+  BenchmarkUserOptions,
+  CoverageV8Options,
+  ResolvedCoverageOptions,
+  UserConfig,
+} from './types'
 import { isCI } from './utils/env'
 
+export { defaultBrowserPort } from './constants'
+
 export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']
-export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile'>> = {
+export const defaultExclude = [
+  '**/node_modules/**',
+  '**/dist/**',
+  '**/cypress/**',
+  '**/.{idea,git,cache,output,temp}/**',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+]
+export const benchmarkConfigDefaults: Required<
+  Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+> = {
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
@@ -13,14 +29,20 @@ export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outpu
 const defaultCoverageExcludes = [
   'coverage/**',
   'dist/**',
+  '**/node_modules/**',
+  '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
+  '**/virtual:*',
+  '**/__x00__*',
+  '**/\x00*',
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec}.?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+  '**/vitest.{workspace,projects}.[jt]s?(on)',
   '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
 
@@ -28,13 +50,37 @@ const defaultCoverageExcludes = [
 export const coverageConfigDefaults: ResolvedCoverageOptions = {
   provider: 'v8',
   enabled: false,
+  all: true,
   clean: true,
   cleanOnRerun: true,
   reportsDirectory: './coverage',
   exclude: defaultCoverageExcludes,
   reportOnFailure: false,
-  reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
-  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
+  reporter: [
+    ['text', {}],
+    ['html', {}],
+    ['clover', {}],
+    ['json', {}],
+  ],
+  extension: [
+    '.js',
+    '.cjs',
+    '.mjs',
+    '.ts',
+    '.mts',
+    '.cts',
+    '.tsx',
+    '.jsx',
+    '.vue',
+    '.svelte',
+    '.marko',
+  ],
+  allowExternal: false,
+  ignoreEmptyLines: true,
+  processingConcurrency: Math.min(
+    20,
+    os.availableParallelism?.() ?? os.cpus().length,
+  ),
 }
 
 export const fakeTimersDefaults = {
@@ -53,24 +99,18 @@ export const fakeTimersDefaults = {
 
 const config = {
   allowOnly: !isCI,
+  isolate: true,
   watch: !isCI,
   globals: false,
   environment: 'node' as const,
-  threads: true,
+  pool: 'forks' as const,
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
   include: defaultInclude,
   exclude: defaultExclude,
-  testTimeout: 5000,
-  hookTimeout: 10000,
   teardownTimeout: 10000,
-  isolate: true,
-  watchExclude: ['**/node_modules/**', '**/dist/**'],
-  forceRerunTriggers: [
-    '**/package.json/**',
-    '**/{vitest,vite}.config.*/**',
-  ],
+  forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
   update: false,
   reporters: [],
   silent: false,
@@ -78,7 +118,7 @@ const config = {
   api: false,
   ui: false,
   uiBase: '/__vitest__/',
-  open: true,
+  open: !isCI,
   css: {
     include: [],
   },
@@ -92,6 +132,7 @@ const config = {
     exclude: defaultExclude,
   },
   slowTestThreshold: 300,
-}
+  disableConsoleIntercept: false,
+} satisfies UserConfig
 
-export const configDefaults: Required<Pick<UserConfig, keyof typeof config>> = Object.freeze(config)
+export const configDefaults = Object.freeze(config)

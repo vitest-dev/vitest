@@ -1,10 +1,12 @@
-import { builtinModules } from 'node:module'
+import { builtinModules, createRequire } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import dts from 'rollup-plugin-dts'
 import commonjs from '@rollup/plugin-commonjs'
 import { defineConfig } from 'rollup'
-import pkg from './package.json' assert { type: 'json' }
+
+const require = createRequire(import.meta.url)
+const pkg = require('./package.json')
 
 const external = [
   ...builtinModules,
@@ -49,15 +51,14 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [
-      dts({ respectExternal: true }),
-    ],
+    plugins: [dts({ respectExternal: true })],
     onwarn,
   },
 ])
 
 function onwarn(message) {
-  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code)) {
     return
+  }
   console.error(message)
 }

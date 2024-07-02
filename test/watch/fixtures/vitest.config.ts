@@ -10,5 +10,9 @@ export default defineConfig({
 
     // This configuration is edited by tests
     reporters: 'verbose',
+
+    forceRerunTriggers: [
+      '**/force-watch/**',
+    ],
   },
 })

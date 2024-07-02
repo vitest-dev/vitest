@@ -10,7 +10,6 @@ describe('vitest runs code in strict mode', () => {
 
   test('cannot defined non existing variable', () => {
     expect(() => {
-      // eslint-disable-next-line no-undef
       someGlobalVariableICameUpWith = 22
     }).toThrowError()
   })

@@ -1,3 +1,5 @@
+import type { ResolvedConfig } from 'vitest'
+
 export interface WSMessage {
   /**
    * Message type
@@ -11,3 +13,10 @@ export interface WSMessage {
 }
 
 export type RunState = 'idle' | 'running'
+
+export interface BrowserRunnerState {
+  files: string[]
+  config: ResolvedConfig
+  type: 'orchestrator'
+  wrapModule: <T>(module: () => T) => T
+}

@@ -1,3 +1,7 @@
+---
+title: Test Environment | Guide
+---
+
 # Test Environment
 
 Vitest provides [`environment`](/config/#environment) option to run code inside a specific environment. You can modify how environment behaves with [`environmentOptions`](/config/#environmentoptions) option.
@@ -9,14 +13,14 @@ By default, you can use these environments:
 - `happy-dom` emulates browser environment by providing Browser API, and considered to be faster than jsdom, but lacks some API, uses [`happy-dom`](https://github.com/capricorn86/happy-dom) package
 - `edge-runtime` emulates Vercel's [edge-runtime](https://edge-runtime.vercel.app/), uses [`@edge-runtime/vm`](https://www.npmjs.com/package/@edge-runtime/vm) package
 
-## Environments for specific files
+## Environments for Specific Files
 
 When setting `environment` option in your config, it will apply to all the test files in your project. To have more fine-grained control, you can use control comments to specify environment for specific files. Control comments are comments that start with `@vitest-environment` and are followed by the environment name:
 
-```ts
+```ts twoslash
 // @vitest-environment jsdom
 
-import { test } from 'vitest'
+import { expect, test } from 'vitest'
 
 test('test', () => {
   expect(typeof window).not.toBe('undefined')
@@ -27,13 +31,27 @@ Or you can also set [`environmentMatchGlobs`](https://vitest.dev/config/#environ
 
 ## Custom Environment
 
-Starting from 0.23.0, you can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
+You can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file. That package should export an object with the shape of `Environment`:
 
-```ts
+```ts twoslash
 import type { Environment } from 'vitest'
 
 export default <Environment>{
   name: 'custom',
+  transformMode: 'ssr',
+  // optional - only if you support "experimental-vm" pool
+  async setupVM() {
+    const vm = await import('node:vm')
+    const context = vm.createContext()
+    return {
+      getVmContext() {
+        return context
+      },
+      teardown() {
+        // called after all tests with this env have been run
+      }
+    }
+  },
   setup() {
     // custom setup
     return {
@@ -45,9 +63,13 @@ export default <Environment>{
 }
 ```
 
+::: warning
+Vitest requires `transformMode` option on environment object. It should be equal to `ssr` or `web`. This value determines how plugins will transform source code. If it's set to `ssr`, plugin hooks will receive `ssr: true` when transforming or resolving files. Otherwise, `ssr` is set to `false`.
+:::
+
 You also have access to default Vitest environments through `vitest/environments` entry:
 
-```ts
+```ts twoslash
 import { builtinEnvironments, populateGlobal } from 'vitest/environments'
 
 console.log(builtinEnvironments) // { jsdom, happy-dom, node, edge-runtime }

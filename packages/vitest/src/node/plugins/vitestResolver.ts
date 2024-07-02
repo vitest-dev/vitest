@@ -8,11 +8,9 @@ export function VitestResolver(ctx: Vitest): Plugin {
     enforce: 'pre',
     async resolveId(id) {
       if (id === 'vitest' || id.startsWith('@vitest/')) {
-        return this.resolve(
-          id,
-          join(ctx.config.root, 'index.html'),
-          { skipSelf: true },
-        )
+        return this.resolve(id, join(ctx.config.root, 'index.html'), {
+          skipSelf: true,
+        })
       }
     },
   }

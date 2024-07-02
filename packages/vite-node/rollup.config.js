@@ -1,12 +1,13 @@
-import { builtinModules } from 'node:module'
+import { builtinModules, createRequire } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import alias from '@rollup/plugin-alias'
 import { defineConfig } from 'rollup'
-import pkg from './package.json'
+
+const require = createRequire(import.meta.url)
+const pkg = require('./package.json')
 
 const entries = {
   'index': 'src/index.ts',
@@ -15,6 +16,7 @@ const entries = {
   'client': 'src/client.ts',
   'utils': 'src/utils.ts',
   'cli': 'src/cli.ts',
+  'constants': 'src/constants.ts',
   'hmr': 'src/hmr/index.ts',
   'source-map': 'src/source-map.ts',
 }
@@ -26,9 +28,9 @@ const external = [
   'pathe',
   'birpc',
   'vite',
-  'vite/types/hot',
   'node:url',
   'node:events',
+  'node:vm',
 ]
 
 const plugins = [
@@ -39,6 +41,9 @@ const plugins = [
   commonjs(),
   esbuild({
     target: 'node14',
+    define: process.env.NO_VITE_TEST_WATCHER_DEBUG
+      ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
+      : {},
   }),
 ]
 
@@ -64,16 +69,7 @@ export default defineConfig([
       chunkFileNames: 'chunk-[name].cjs',
     },
     external,
-    plugins: [
-      alias({
-        entries: [
-          // cjs in Node 14 doesn't support node: prefix
-          // can be dropped, when we drop support for Node 14
-          { find: /^node:(.+)$/, replacement: '$1' },
-        ],
-      }),
-      ...plugins,
-    ],
+    plugins,
     onwarn,
   },
   {
@@ -84,15 +80,14 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [
-      dts({ respectExternal: true }),
-    ],
+    plugins: [dts({ respectExternal: true })],
     onwarn,
   },
 ])
 
 function onwarn(message) {
-  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code))
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code)) {
     return
+  }
   console.error(message)
 }

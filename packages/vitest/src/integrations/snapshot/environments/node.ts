@@ -1,12 +1,13 @@
 import { NodeSnapshotEnvironment } from '@vitest/snapshot/environment'
-import { rpc } from '../../../runtime/rpc'
+import { getWorkerState } from '../../../utils'
 
-export class VitestSnapshotEnvironment extends NodeSnapshotEnvironment {
+export class VitestNodeSnapshotEnvironment extends NodeSnapshotEnvironment {
   getHeader(): string {
     return `// Vitest Snapshot v${this.getVersion()}, https://vitest.dev/guide/snapshot.html`
   }
 
   resolvePath(filepath: string): Promise<string> {
-    return rpc().resolveSnapshotPath(filepath)
+    const rpc = getWorkerState().rpc
+    return rpc.resolveSnapshotPath(filepath)
   }
 }

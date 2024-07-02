@@ -1,17 +1,34 @@
 {
   "name": "@vitest/test-core",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "vitest",
+    "test:threads": "vitest --project threads",
+    "test:forks": "vitest --project forks",
+    "test:vmThreads": "vitest --project vmThreads",
+    "dev": "vite",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.12",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
+    "@vitest/test-dep1": "file:./deps/dep1",
+    "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
-    "acorn": "^8.8.2",
+    "@vitest/web-worker": "workspace:^",
+    "@vueuse/integrations": "^10.9.0",
+    "axios": "^0.26.1",
+    "debug": "^4.3.4",
+    "immutable": "5.0.0-beta.5",
+    "strip-ansi": "^7.1.0",
+    "sweetalert2": "^11.6.16",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
-    "vitest": "workspace:*"
+    "vitest": "workspace:*",
+    "vitest-environment-custom": "file:./vitest-environment-custom",
+    "vue": "^3.4.26",
+    "zustand": "^4.1.1"
   }
 }

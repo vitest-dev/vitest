@@ -3,11 +3,8 @@ import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import alias from '@rollup/plugin-alias'
 
-const entry = [
-  'src/index.ts',
-]
+const entry = ['src/index.ts']
 
 const external = [
   'ws',
@@ -31,32 +28,23 @@ export default () => [
     },
     external,
     plugins: [
-      alias({
-        entries: [
-          { find: /^node:(.+)$/, replacement: '$1' },
-        ],
-      }),
       resolve({
         preferBuiltins: true,
       }),
       json(),
       commonjs(),
       esbuild({
-        target: 'node14',
+        target: 'node18',
       }),
     ],
   },
   {
-    input: [
-      'src/index.ts',
-    ],
+    input: ['src/index.ts'],
     output: {
       file: 'dist/index.d.ts',
       format: 'esm',
     },
     external,
-    plugins: [
-      dts(),
-    ],
+    plugins: [dts()],
   },
 ]

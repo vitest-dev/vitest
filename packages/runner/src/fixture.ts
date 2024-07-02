@@ -1,9 +1,10 @@
-import type { TestContext } from './types'
+import { createDefer, isObject } from '@vitest/utils'
+import { getFixture } from './map'
+import type { FixtureOptions, TestContext } from './types'
 
-export interface FixtureItem {
+export interface FixtureItem extends FixtureOptions {
   prop: string
   value: any
-  index: number
   /**
    * Indicates whether the fixture is a function
    */
@@ -14,73 +15,190 @@ export interface FixtureItem {
   deps?: FixtureItem[]
 }
 
-export function mergeContextFixtures(fixtures: Record<string, any>, context: { fixtures?: FixtureItem[] } = {}) {
-  const fixtureArray: FixtureItem[] = Object.entries(fixtures)
-    .map(([prop, value], index) => {
-      const isFn = typeof value === 'function'
-      return {
-        prop,
-        value,
-        index,
-        isFn,
-      }
-    })
+export function mergeContextFixtures(
+  fixtures: Record<string, any>,
+  context: { fixtures?: FixtureItem[] } = {},
+) {
+  const fixtureOptionKeys = ['auto']
+  const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
+    ([prop, value]) => {
+      const fixtureItem = { value } as FixtureItem
 
-  if (Array.isArray(context.fixtures))
+      if (
+        Array.isArray(value)
+        && value.length >= 2
+        && isObject(value[1])
+        && Object.keys(value[1]).some(key => fixtureOptionKeys.includes(key))
+      ) {
+        // fixture with options
+        Object.assign(fixtureItem, value[1])
+        fixtureItem.value = value[0]
+      }
+
+      fixtureItem.prop = prop
+      fixtureItem.isFn = typeof fixtureItem.value === 'function'
+      return fixtureItem
+    },
+  )
+
+  if (Array.isArray(context.fixtures)) {
     context.fixtures = context.fixtures.concat(fixtureArray)
-  else
+  }
+  else {
     context.fixtures = fixtureArray
+  }
 
   // Update dependencies of fixture functions
   fixtureArray.forEach((fixture) => {
     if (fixture.isFn) {
       const usedProps = getUsedProps(fixture.value)
-      if (usedProps.length)
-        fixture.deps = context.fixtures!.filter(({ index, prop }) => index !== fixture.index && usedProps.includes(prop))
+      if (usedProps.length) {
+        fixture.deps = context.fixtures!.filter(
+          ({ prop }) => prop !== fixture.prop && usedProps.includes(prop),
+        )
+      }
     }
   })
 
   return context
 }
 
-export function withFixtures(fn: Function, fixtures: FixtureItem[], context: TestContext & Record<string, any>) {
-  if (!fixtures.length)
-    return () => fn(context)
+const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
+const cleanupFnArrayMap = new Map<
+  TestContext,
+  Array<() => void | Promise<void>>
+>()
 
-  const usedProps = getUsedProps(fn)
-  if (!usedProps.length)
-    return () => fn(context)
-
-  const usedFixtures = fixtures.filter(({ prop }) => usedProps.includes(prop))
-  const pendingFixtures = resolveDeps(usedFixtures)
-  let cursor = 0
-
-  async function use(fixtureValue: any) {
-    const { prop } = pendingFixtures[cursor++]
-    context[prop] = fixtureValue
-    if (cursor < pendingFixtures.length)
-      await next()
-    else await fn(context)
+export async function callFixtureCleanup(context: TestContext) {
+  const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
+  for (const cleanup of cleanupFnArray.reverse()) {
+    await cleanup()
   }
-
-  async function next() {
-    const { value } = pendingFixtures[cursor]
-    typeof value === 'function' ? await value(context, use) : await use(value)
-  }
-
-  return () => next()
+  cleanupFnArrayMap.delete(context)
 }
 
-function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), pendingFixtures: FixtureItem[] = []) {
-  fixtures.forEach((fixture) => {
-    if (pendingFixtures.includes(fixture))
+export function withFixtures(fn: Function, testContext?: TestContext) {
+  return (hookContext?: TestContext) => {
+    const context: (TestContext & { [key: string]: any }) | undefined
+      = hookContext || testContext
+
+    if (!context) {
+      return fn({})
+    }
+
+    const fixtures = getFixture(context)
+    if (!fixtures?.length) {
+      return fn(context)
+    }
+
+    const usedProps = getUsedProps(fn)
+    const hasAutoFixture = fixtures.some(({ auto }) => auto)
+    if (!usedProps.length && !hasAutoFixture) {
+      return fn(context)
+    }
+
+    if (!fixtureValueMaps.get(context)) {
+      fixtureValueMaps.set(context, new Map<FixtureItem, any>())
+    }
+    const fixtureValueMap: Map<FixtureItem, any>
+      = fixtureValueMaps.get(context)!
+
+    if (!cleanupFnArrayMap.has(context)) {
+      cleanupFnArrayMap.set(context, [])
+    }
+    const cleanupFnArray = cleanupFnArrayMap.get(context)!
+
+    const usedFixtures = fixtures.filter(
+      ({ prop, auto }) => auto || usedProps.includes(prop),
+    )
+    const pendingFixtures = resolveDeps(usedFixtures)
+
+    if (!pendingFixtures.length) {
+      return fn(context)
+    }
+
+    async function resolveFixtures() {
+      for (const fixture of pendingFixtures) {
+        // fixture could be already initialized during "before" hook
+        if (fixtureValueMap.has(fixture)) {
+          continue
+        }
+
+        const resolvedValue = fixture.isFn
+          ? await resolveFixtureFunction(fixture.value, context, cleanupFnArray)
+          : fixture.value
+        context![fixture.prop] = resolvedValue
+        fixtureValueMap.set(fixture, resolvedValue)
+        cleanupFnArray.unshift(() => {
+          fixtureValueMap.delete(fixture)
+        })
+      }
+    }
+
+    return resolveFixtures().then(() => fn(context))
+  }
+}
+
+async function resolveFixtureFunction(
+  fixtureFn: (
+    context: unknown,
+    useFn: (arg: unknown) => Promise<void>
+  ) => Promise<void>,
+  context: unknown,
+  cleanupFnArray: (() => void | Promise<void>)[],
+): Promise<unknown> {
+  // wait for `use` call to extract fixture value
+  const useFnArgPromise = createDefer()
+  let isUseFnArgResolved = false
+
+  const fixtureReturn = fixtureFn(context, async (useFnArg: unknown) => {
+    // extract `use` argument
+    isUseFnArgResolved = true
+    useFnArgPromise.resolve(useFnArg)
+
+    // suspend fixture teardown by holding off `useReturnPromise` resolution until cleanup
+    const useReturnPromise = createDefer<void>()
+    cleanupFnArray.push(async () => {
+      // start teardown by resolving `use` Promise
+      useReturnPromise.resolve()
+      // wait for finishing teardown
+      await fixtureReturn
+    })
+    await useReturnPromise
+  }).catch((e: unknown) => {
+    // treat fixture setup error as test failure
+    if (!isUseFnArgResolved) {
+      useFnArgPromise.reject(e)
       return
+    }
+    // otherwise re-throw to avoid silencing error during cleanup
+    throw e
+  })
+
+  return useFnArgPromise
+}
+
+function resolveDeps(
+  fixtures: FixtureItem[],
+  depSet = new Set<FixtureItem>(),
+  pendingFixtures: FixtureItem[] = [],
+) {
+  fixtures.forEach((fixture) => {
+    if (pendingFixtures.includes(fixture)) {
+      return
+    }
     if (!fixture.isFn || !fixture.deps) {
       pendingFixtures.push(fixture)
       return
     }
-    if (depSet.has(fixture))
-      throw new Error('circular fixture dependency')
+    if (depSet.has(fixture)) {
+      throw new Error(
+        `Circular fixture dependency detected: ${fixture.prop} <- ${[...depSet]
+          .reverse()
+          .map(d => d.prop)
+          .join(' <- ')}`,
+      )
+    }
 
     depSet.add(fixture)
     resolveDeps(fixture.deps, depSet, pendingFixtures)
@@ -93,25 +211,40 @@ function resolveDeps(fixtures: FixtureItem[], depSet = new Set<FixtureItem>(), p
 
 function getUsedProps(fn: Function) {
   const match = fn.toString().match(/[^(]*\(([^)]*)/)
-  if (!match)
+  if (!match) {
     return []
+  }
 
   const args = splitByComma(match[1])
-  if (!args.length)
+  if (!args.length) {
     return []
+  }
 
-  const first = args[0]
-  if (!(first.startsWith('{') && first.endsWith('}')))
-    throw new Error('the first argument must use object destructuring pattern')
+  let first = args[0]
+  if ('__VITEST_FIXTURE_INDEX__' in fn) {
+    first = args[(fn as any).__VITEST_FIXTURE_INDEX__]
+    if (!first) {
+      return []
+    }
+  }
+
+  if (!(first.startsWith('{') && first.endsWith('}'))) {
+    throw new Error(
+      `The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "${first}".`,
+    )
+  }
 
   const _first = first.slice(1, -1).replace(/\s/g, '')
   const props = splitByComma(_first).map((prop) => {
-    return prop.replace(/\:.*|\=.*/g, '')
+    return prop.replace(/:.*|=.*/g, '')
   })
 
   const last = props.at(-1)
-  if (last && last.startsWith('...'))
-    throw new Error('Rest parameters are not supported')
+  if (last && last.startsWith('...')) {
+    throw new Error(
+      `Rest parameters are not supported in fixtures, received "${last}".`,
+    )
+  }
 
   return props
 }
@@ -129,13 +262,15 @@ function splitByComma(s: string) {
     }
     else if (!stack.length && s[i] === ',') {
       const token = s.substring(start, i).trim()
-      if (token)
+      if (token) {
         result.push(token)
+      }
       start = i + 1
     }
   }
   const lastToken = s.substring(start).trim()
-  if (lastToken)
+  if (lastToken) {
     result.push(lastToken)
+  }
   return result
 }

@@ -8,30 +8,27 @@ const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
 const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')
 const root = resolve(__dirname, '..')
 
-async function run(...runOptions: string[]): Promise<string> {
-  const vitest = await runVitestCli({ cwd: root, windowsHide: false }, 'run', ...runOptions)
-
-  return vitest.stdout
-}
-
 async function runWithRetry(...runOptions: string[]) {
   const count = 3
 
   for (let i = count; i >= 0; i--) {
     try {
-      return await run(...runOptions)
+      const vitest = await runVitestCli({ cwd: root, windowsHide: false }, 'run', ...runOptions)
+      return vitest.stdout
     }
     catch (e) {
-      if (i <= 0)
+      if (i <= 0) {
         throw e
+      }
     }
   }
 }
 
 describe('custom reporters', () => {
   // On Windows and macOS child_process is very unstable, we skip testing it as the functionality is tested on Linux
-  if ((process.platform === 'win32' || process.platform === 'darwin') && process.env.CI)
+  if ((process.platform === 'win32' || process.platform === 'darwin') && process.env.CI) {
     return test.skip('skip on windows')
+  }
 
   const TIMEOUT = 60_000
 
@@ -41,7 +38,8 @@ describe('custom reporters', () => {
   }, TIMEOUT)
 
   test('load no base on root custom reporter instances defined in configuration works', async () => {
-    const stdout = await runWithRetry('--config', './reportTest2/custom-reporter-path.vitest.config.ts')
+    const { stdout, stderr } = await runVitest({ reporters: 'none', config: './reportTest2/custom-reporter-path.vitest.config.ts' })
+    expect(stderr).toBe('')
     expect(stdout).includes('hello from custom reporter')
   }, TIMEOUT)
 
@@ -74,5 +72,11 @@ describe('custom reporters', () => {
     const stdout = await runWithRetry('--config', 'deps-reporter.vitest.config.ts', '--reporter', customJSReporterPath)
     expect(stdout).not.includes('hello from package reporter')
     expect(stdout).includes('hello from custom reporter')
+  }, TIMEOUT)
+
+  test('custom reporter with options', async () => {
+    const { stdout } = await runVitest({ root, reporters: [[customTsReporterPath, { some: { custom: 'option here' } }]], include: ['tests/reporters.spec.ts'] })
+    expect(stdout).includes('hello from custom reporter')
+    expect(stdout).includes('custom reporter options {"some":{"custom":"option here"}}')
   }, TIMEOUT)
 })

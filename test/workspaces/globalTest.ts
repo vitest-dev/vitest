@@ -1,14 +1,40 @@
 import { readFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
+import type { GlobalSetupContext } from 'vitest/node'
+
+declare module 'vitest' {
+  interface ProvidedContext {
+    globalSetup: boolean
+    globalSetupOverriden: boolean
+    invalidValue: unknown
+  }
+}
+
+export function setup({ provide }: GlobalSetupContext) {
+  provide('globalSetup', true)
+  provide('globalSetupOverriden', false)
+  try {
+    provide('invalidValue', () => {})
+    throw new Error('Should throw')
+  }
+  catch (err: any) {
+    assert.equal(err.message, 'Cannot provide "invalidValue" because it\'s not serializable.')
+    assert.match(err.cause.message, /could not be cloned/)
+    assert.equal(err.cause.name, 'DataCloneError')
+  }
+}
+
+let teardownCalled = false
 
 export async function teardown() {
+  teardownCalled = true
   const results = JSON.parse(await readFile('./results.json', 'utf-8'))
 
   try {
     assert.ok(results.success)
-    assert.equal(results.numTotalTestSuites, 6)
-    assert.equal(results.numTotalTests, 7)
-    assert.equal(results.numPassedTests, 7)
+    assert.equal(results.numTotalTestSuites, 28)
+    assert.equal(results.numTotalTests, 31)
+    assert.equal(results.numPassedTests, 31)
 
     const shared = results.testResults.filter((r: any) => r.name.includes('space_shared/test.spec.ts'))
 
@@ -16,6 +42,15 @@ export async function teardown() {
   }
   catch (err) {
     console.error(err)
+    // eslint-disable-next-line no-console
+    console.dir(results, { depth: null })
     process.exit(1)
   }
 }
+
+process.on('beforeExit', () => {
+  if (!teardownCalled) {
+    console.error('teardown was not called')
+    process.exitCode = 1
+  }
+})

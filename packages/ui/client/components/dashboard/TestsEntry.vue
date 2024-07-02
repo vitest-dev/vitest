@@ -1,15 +1,5 @@
 <script setup lang="ts">
-import { tests, testsFailed, testsSkipped, testsSuccess, testsTodo } from '../../composables/summary'
-
-const total = computed(() => tests.value.length)
-const pass = computed(() => testsSuccess.value.length)
-const failed = computed(() => testsFailed.value.length)
-const skipped = computed(() => testsSkipped.value.length)
-const todo = computed(() => testsTodo.value.length)
-// const pending = computed(() => {
-//   const t = unref(total)
-//   return t - failed.value - pass.value
-// })
+import { explorerTree } from '~/composables/explorer'
 </script>
 
 <template>
@@ -19,31 +9,40 @@ const todo = computed(() => testsTodo.value.length)
         Pass
       </template>
       <template #body>
-        {{ pass }}
+        {{ explorerTree.summary.testsSuccess }}
       </template>
     </DashboardEntry>
-    <DashboardEntry :class="{ 'text-red5': failed, 'op50': !failed }" data-testid="fail-entry">
+    <DashboardEntry
+      :class="{ 'text-red5': explorerTree.summary.testsFailed, 'op50': !explorerTree.summary.testsFailed }"
+      data-testid="fail-entry"
+    >
       <template #header>
         Fail
       </template>
       <template #body>
-        {{ failed }}
+        {{ explorerTree.summary.testsFailed }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="skipped" op50 data-testid="skipped-entry">
+    <DashboardEntry
+      v-if="explorerTree.summary.testsSkipped"
+      op50 data-testid="skipped-entry"
+    >
       <template #header>
         Skip
       </template>
       <template #body>
-        {{ skipped }}
+        {{ explorerTree.summary.testsSkipped }}
       </template>
     </DashboardEntry>
-    <DashboardEntry v-if="todo" op50 data-testid="todo-entry">
+    <DashboardEntry
+      v-if="explorerTree.summary.testsTodo" op50
+      data-testid="todo-entry"
+    >
       <template #header>
         Todo
       </template>
       <template #body>
-        {{ todo }}
+        {{ explorerTree.summary.testsTodo }}
       </template>
     </DashboardEntry>
     <DashboardEntry :tail="true" data-testid="total-entry">
@@ -51,7 +50,7 @@ const todo = computed(() => testsTodo.value.length)
         Total
       </template>
       <template #body>
-        {{ total }}
+        {{ explorerTree.summary.totalTests }}
       </template>
     </DashboardEntry>
   </div>

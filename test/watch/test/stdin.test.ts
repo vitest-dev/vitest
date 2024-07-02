@@ -1,30 +1,97 @@
 import { rmSync, writeFileSync } from 'node:fs'
-import { afterEach, expect, test } from 'vitest'
+import { describe, expect, onTestFinished, test } from 'vitest'
 
-import { runVitestCli } from '../../test-utils'
+import { runVitest } from '../../test-utils'
 
-const cliArgs = ['--root', 'fixtures', '--watch']
-const cleanups: (() => void)[] = []
+const _options = { root: 'fixtures', watch: true }
 
-afterEach(() => {
-  cleanups.splice(0).forEach(fn => fn())
+describe.each([true, false])('standalone mode is %s', (standalone) => {
+  const options = { ..._options, standalone }
+
+  test('quit watch mode', async () => {
+    const { vitest, waitForClose } = await runVitest(options)
+
+    vitest.write('q')
+
+    await waitForClose()
+  })
+
+  test('filter by filename', async () => {
+    const { vitest } = await runVitest(options)
+
+    vitest.write('p')
+
+    await vitest.waitForStdout('Input filename pattern')
+
+    vitest.write('math')
+
+    await vitest.waitForStdout('Pattern matches 1 result')
+    await vitest.waitForStdout('› math.test.ts')
+
+    vitest.write('\n')
+
+    await vitest.waitForStdout('Filename pattern: math')
+    await vitest.waitForStdout('1 passed')
+  })
+
+  test('filter by test name', async () => {
+    const { vitest } = await runVitest(options)
+
+    vitest.write('t')
+
+    await vitest.waitForStdout('Input test name pattern')
+
+    vitest.write('sum')
+    if (standalone) {
+      await vitest.waitForStdout('Pattern matches no results')
+    }
+    else {
+      await vitest.waitForStdout('Pattern matches 1 result')
+    }
+    await vitest.waitForStdout('› sum')
+
+    vitest.write('\n')
+
+    await vitest.waitForStdout('Test name pattern: /sum/')
+    await vitest.waitForStdout('1 passed')
+  })
+
+  test.skipIf(process.env.GITHUB_ACTIONS)('cancel test run', async () => {
+    const { vitest } = await runVitest(options)
+
+    const testPath = 'fixtures/cancel.test.ts'
+    const testCase = `// Dynamic test case
+import { afterAll, afterEach, test } from 'vitest'
+
+// These should be called even when test is cancelled
+afterAll(() => console.log('[cancel-test]: afterAll'))
+afterEach(() => console.log('[cancel-test]: afterEach'))
+
+test('1 - test that finishes', async () => {
+  console.log('[cancel-test]: test')
+
+  await new Promise(resolve => setTimeout(resolve, 1000))
 })
 
-test('quit watch mode', async () => {
-  const vitest = await runVitestCli(...cliArgs)
-
-  vitest.write('q')
-
-  await vitest.isDone
+test('2 - test that is cancelled', async () => {
+  console.log('[cancel-test]: should not run')
 })
+`
 
-test('rerun current pattern tests', async () => {
-  const vitest = await runVitestCli(...cliArgs, '-t', 'sum')
+    onTestFinished(() => rmSync(testPath))
+    writeFileSync(testPath, testCase, 'utf8')
 
-  vitest.write('r')
+    // Test case is running, cancel it
+    await vitest.waitForStdout('[cancel-test]: test')
+    vitest.write('c')
 
-  await vitest.waitForStdout('Test name pattern: /sum/')
-  await vitest.waitForStdout('1 passed')
+    // Test hooks should still be called
+    await vitest.waitForStdout('CANCELLED')
+    await vitest.waitForStdout('[cancel-test]: afterAll')
+    await vitest.waitForStdout('[cancel-test]: afterEach')
+
+    expect(vitest.stdout).not.include('[cancel-test]: should not run')
+  })
 })
 
 test('rerun failed tests', async () => {
@@ -60,66 +127,13 @@ test('rerun failed tests', async () => {
   writeFileSync(testTwoPath, testCase.replace(/2/g, '3'), 'utf8')
   await vitest.waitForStdout('1 failed')
 })
+  
+test('rerun current pattern tests', async () => {
+  const { vitest } = await runVitest({ ..._options, testNamePattern: 'sum' })
 
-test('filter by filename', async () => {
-  const vitest = await runVitestCli(...cliArgs)
+  vitest.write('r')
 
-  vitest.write('p')
-
-  await vitest.waitForStdout('Input filename pattern')
-
-  vitest.write('math\n')
-
-  await vitest.waitForStdout('Filename pattern: math')
-  await vitest.waitForStdout('1 passed')
-})
-
-test('filter by test name', async () => {
-  const vitest = await runVitestCli(...cliArgs)
-
-  vitest.write('t')
-
-  await vitest.waitForStdout('Input test name pattern')
-
-  vitest.write('sum\n')
-
+  await vitest.waitForStdout('RERUN')
   await vitest.waitForStdout('Test name pattern: /sum/')
   await vitest.waitForStdout('1 passed')
-})
-
-test('cancel test run', async () => {
-  const vitest = await runVitestCli(...cliArgs)
-
-  const testPath = 'fixtures/cancel.test.ts'
-  const testCase = `// Dynamic test case
-import { afterAll, afterEach, test } from 'vitest'
-
-// These should be called even when test is cancelled
-afterAll(() => console.log('[cancel-test]: afterAll'))
-afterEach(() => console.log('[cancel-test]: afterEach'))
-
-test('1 - test that finishes', async () => {
-  console.log('[cancel-test]: test')
-
-  await new Promise(resolve => setTimeout(resolve, 1000))
-})
-
-test('2 - test that is cancelled', async () => {
-  console.log('[cancel-test]: should not run')
-})
-`
-
-  cleanups.push(() => rmSync(testPath))
-  writeFileSync(testPath, testCase, 'utf8')
-
-  // Test case is running, cancel it
-  await vitest.waitForStdout('[cancel-test]: test')
-  vitest.write('c')
-
-  // Test hooks should still be called
-  await vitest.waitForStdout('CANCELLED')
-  await vitest.waitForStdout('[cancel-test]: afterAll')
-  await vitest.waitForStdout('[cancel-test]: afterEach')
-
-  expect(vitest.stdout).not.include('[cancel-test]: should not run')
 })

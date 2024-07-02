@@ -1,19 +1,20 @@
 import c from 'picocolors'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { Benchmark, BenchmarkResult, Task } from '../../../../types'
+import type { BenchmarkResult, Task } from '../../../../types'
 import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
+import type { FlatBenchmarkReport } from '.'
 
-export interface ListRendererOptions {
+export interface TableRendererOptions {
   renderSucceed?: boolean
   logger: Logger
   showHeap: boolean
+  slowTestThreshold: number
+  compare?: FlatBenchmarkReport
 }
-
-const DURATION_LONG = 300
 
 const outputMap = new WeakMap<Task, string>()
 
@@ -21,33 +22,38 @@ function formatFilepath(path: string) {
   const lastSlash = Math.max(path.lastIndexOf('/') + 1, 0)
   const basename = path.slice(lastSlash)
   let firstDot = basename.indexOf('.')
-  if (firstDot < 0)
+  if (firstDot < 0) {
     firstDot = basename.length
+  }
   firstDot += lastSlash
 
-  return c.dim(path.slice(0, lastSlash)) + path.slice(lastSlash, firstDot) + c.dim(path.slice(firstDot))
+  return (
+    c.dim(path.slice(0, lastSlash))
+    + path.slice(lastSlash, firstDot)
+    + c.dim(path.slice(firstDot))
+  )
 }
 
 function formatNumber(number: number) {
   const res = String(number.toFixed(number < 100 ? 4 : 2)).split('.')
-  return res[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ',')
-    + (res[1] ? `.${res[1]}` : '')
+  return (
+    res[0].replace(/(?=(?:\d{3})+$)\B/g, ',') + (res[1] ? `.${res[1]}` : '')
+  )
 }
 
-const tableHead = ['name', 'hz', 'min', 'max', 'mean', 'p75', 'p99', 'p995', 'p999', 'rme', 'samples']
-
-function renderTableHead(tasks: Task[]) {
-  const benches = tasks
-    .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
-    .filter(notNullish)
-  const allItems = benches.map(renderBenchmarkItems).concat([tableHead])
-  return `${' '.repeat(3)}${tableHead.map((i, idx) => {
-    const width = Math.max(...allItems.map(i => i[idx].length))
-    return idx
-      ? i.padStart(width, ' ')
-      : i.padEnd(width, ' ') // name
-  }).map(c.bold).join('  ')}`
-}
+const tableHead = [
+  'name',
+  'hz',
+  'min',
+  'max',
+  'mean',
+  'p75',
+  'p99',
+  'p995',
+  'p999',
+  'rme',
+  'samples',
+]
 
 function renderBenchmarkItems(result: BenchmarkResult) {
   return [
@@ -64,23 +70,25 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     result.samples.length.toString(),
   ]
 }
-function renderBenchmark(task: Benchmark, tasks: Task[]): string {
-  const result = task.result?.benchmark
-  if (!result)
-    return task.name
 
-  const benches = tasks
-    .map(i => i.meta?.benchmark ? i.result?.benchmark : undefined)
-    .filter(notNullish)
-  const allItems = benches.map(renderBenchmarkItems).concat([tableHead])
-  const items = renderBenchmarkItems(result)
-  const padded = items.map((i, idx) => {
-    const width = Math.max(...allItems.map(i => i[idx].length))
-    return idx
-      ? i.padStart(width, ' ')
-      : i.padEnd(width, ' ') // name
-  })
+function computeColumnWidths(results: BenchmarkResult[]): number[] {
+  const rows = [tableHead, ...results.map(v => renderBenchmarkItems(v))]
+  return Array.from(tableHead, (_, i) =>
+    Math.max(...rows.map(row => stripAnsi(row[i]).length)))
+}
 
+function padRow(row: string[], widths: number[]) {
+  return row.map(
+    (v, i) => (i ? v.padStart(widths[i], ' ') : v.padEnd(widths[i], ' ')), // name
+  )
+}
+
+function renderTableHead(widths: number[]) {
+  return ' '.repeat(3) + padRow(tableHead, widths).map(c.bold).join('  ')
+}
+
+function renderBenchmark(result: BenchmarkResult, widths: number[]) {
+  const padded = padRow(renderBenchmarkItems(result), widths)
   return [
     padded[0], // name
     c.blue(padded[1]), // hz
@@ -93,57 +101,126 @@ function renderBenchmark(task: Benchmark, tasks: Task[]): string {
     c.cyan(padded[8]), // p999
     c.dim(padded[9]), // rem
     c.dim(padded[10]), // sample
-    result.rank === 1
-      ? c.bold(c.green(' fastest'))
-      : (result.rank === benches.length && benches.length > 2)
-          ? c.bold(c.gray(' slowest'))
-          : '',
   ].join('  ')
 }
 
-export function renderTree(tasks: Task[], options: ListRendererOptions, level = 0): string {
+export function renderTree(
+  tasks: Task[],
+  options: TableRendererOptions,
+  level = 0,
+  shallow = false,
+): string {
   const output: string[] = []
+
+  const benchMap: Record<
+    string,
+    { current: BenchmarkResult; baseline?: BenchmarkResult }
+  > = {}
+  for (const t of tasks) {
+    if (t.meta.benchmark && t.result?.benchmark) {
+      benchMap[t.id] = {
+        current: t.result.benchmark,
+      }
+      const baseline = options.compare?.[t.id]
+      if (baseline) {
+        benchMap[t.id].baseline = {
+          ...baseline,
+          samples: Array(baseline.sampleCount),
+        }
+      }
+    }
+  }
+  const benchCount = Object.entries(benchMap).length
+
+  // compute column widths
+  const columnWidths = computeColumnWidths(
+    Object.values(benchMap)
+      .flatMap(v => [v.current, v.baseline])
+      .filter(notNullish),
+  )
 
   let idx = 0
   for (const task of tasks) {
     const padding = '  '.repeat(level ? 1 : 0)
     let prefix = ''
-    if (idx === 0 && task.meta?.benchmark)
-      prefix += `${renderTableHead(tasks)}\n${padding}`
+    if (idx === 0 && task.meta?.benchmark) {
+      prefix += `${renderTableHead(columnWidths)}\n${padding}`
+    }
 
     prefix += ` ${getStateSymbol(task)} `
 
     let suffix = ''
-    if (task.type === 'suite')
+    if (task.type === 'suite') {
       suffix += c.dim(` (${getTests(task).length})`)
-
-    if (task.mode === 'skip' || task.mode === 'todo')
-      suffix += ` ${c.dim(c.gray('[skipped]'))}`
-
-    if (task.result?.duration != null) {
-      if (task.result.duration > DURATION_LONG)
-        suffix += c.yellow(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
     }
 
-    if (options.showHeap && task.result?.heap != null)
-      suffix += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
+    if (task.mode === 'skip' || task.mode === 'todo') {
+      suffix += ` ${c.dim(c.gray('[skipped]'))}`
+    }
+
+    if (task.result?.duration != null) {
+      if (task.result.duration > options.slowTestThreshold) {
+        suffix += c.yellow(
+          ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
+        )
+      }
+    }
+
+    if (options.showHeap && task.result?.heap != null) {
+      suffix += c.magenta(
+        ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
+      )
+    }
 
     let name = task.name
-    if (level === 0)
+    if (level === 0) {
       name = formatFilepath(name)
+    }
 
-    const body = task.meta?.benchmark
-      ? renderBenchmark(task as Benchmark, tasks)
-      : name
+    const bench = benchMap[task.id]
+    if (bench) {
+      let body = renderBenchmark(bench.current, columnWidths)
+      if (options.compare && bench.baseline) {
+        if (bench.current.hz) {
+          const diff = bench.current.hz / bench.baseline.hz
+          const diffFixed = diff.toFixed(2)
+          if (diffFixed === '1.0.0') {
+            body += `  ${c.gray(`[${diffFixed}x]`)}`
+          }
+          if (diff > 1) {
+            body += `  ${c.blue(`[${diffFixed}x] ⇑`)}`
+          }
+          else {
+            body += `  ${c.red(`[${diffFixed}x] ⇓`)}`
+          }
+        }
+        output.push(padding + prefix + body + suffix)
+        const bodyBaseline = renderBenchmark(bench.baseline, columnWidths)
+        output.push(`${padding}   ${bodyBaseline}  ${c.dim('(baseline)')}`)
+      }
+      else {
+        if (bench.current.rank === 1 && benchCount > 1) {
+          body += `  ${c.bold(c.green(' fastest'))}`
+        }
 
-    output.push(padding + prefix + body + suffix)
+        if (bench.current.rank === benchCount && benchCount > 2) {
+          body += `  ${c.bold(c.gray(' slowest'))}`
+        }
 
-    if ((task.result?.state !== 'pass') && outputMap.get(task) != null) {
+        output.push(padding + prefix + body + suffix)
+      }
+    }
+    else {
+      output.push(padding + prefix + name + suffix)
+    }
+
+    if (task.result?.state !== 'pass' && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
       if (typeof data === 'string') {
         data = stripAnsi(data.trim().split('\n').filter(Boolean).pop()!)
-        if (data === '')
+        if (data === '') {
           data = undefined
+        }
       }
 
       if (data != null) {
@@ -152,9 +229,10 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
       }
     }
 
-    if (task.type === 'suite' && task.tasks.length > 0) {
-      if (task.result?.state)
+    if (!shallow && task.type === 'suite' && task.tasks.length > 0) {
+      if (task.result?.state) {
         output.push(renderTree(task.tasks, options, level + 1))
+      }
     }
     idx++
   }
@@ -162,7 +240,10 @@ export function renderTree(tasks: Task[], options: ListRendererOptions, level = 
   return output.filter(Boolean).join('\n')
 }
 
-export function createTableRenderer(_tasks: Task[], options: ListRendererOptions) {
+export function createTableRenderer(
+  _tasks: Task[],
+  options: TableRendererOptions,
+) {
   let tasks = _tasks
   let timer: any
 
@@ -174,8 +255,9 @@ export function createTableRenderer(_tasks: Task[], options: ListRendererOptions
 
   return {
     start() {
-      if (timer)
+      if (timer) {
         return this
+      }
       timer = setInterval(update, 200)
       return this
     },
@@ -184,7 +266,7 @@ export function createTableRenderer(_tasks: Task[], options: ListRendererOptions
       update()
       return this
     },
-    async stop() {
+    stop() {
       if (timer) {
         clearInterval(timer)
         timer = undefined

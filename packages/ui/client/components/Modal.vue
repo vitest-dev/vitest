@@ -1,4 +1,4 @@
-<script setup lang='ts'>
+<script setup lang="ts">
 const { direction = 'bottom' } = defineProps<{
   direction?: string
 }>()
@@ -35,7 +35,7 @@ const transform = computed(() => {
   }
 })
 
-const closeModal = () => modelValue.value = false
+const closeModal = () => (modelValue.value = false)
 </script>
 
 <template>

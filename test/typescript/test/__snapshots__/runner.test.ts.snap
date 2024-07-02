@@ -1,18 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should fail > typecheck files 1`] = `
-"TypeCheckError: Expected 1 arguments, but got 0.
-TypeCheckError: Expected 1 arguments, but got 0.
-TypeCheckError: Expected 1 arguments, but got 0.
-TypeCheckError: Expected 1 arguments, but got 0.
-TypeCheckError: Expected 1 arguments, but got 0.
+"TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
+TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
+TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
 TypeCheckError: Unused '@ts-expect-error' directive.
-TypeCheckError: Expected 1 arguments, but got 0."
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures."
 `;
 
 exports[`should fail > typecheck files 2`] = `
 " FAIL  fail.test-d.ts > nested suite
-TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:15:19
      13|   })
      14| 
@@ -34,18 +34,18 @@ TypeCheckError: Unused '@ts-expect-error' directive.
 
 exports[`should fail > typecheck files 4`] = `
 " FAIL  fail.test-d.ts > failing test
-TypeCheckError: Expected 1 arguments, but got 0.
- ❯ fail.test-d.ts:4:19
+TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
+ ❯ fail.test-d.ts:4:33
       2| 
       3| test('failing test', () => {
       4|   expectTypeOf(1).toEqualTypeOf<string>()
-       |                   ^
+       |                                 ^
       5| })"
 `;
 
 exports[`should fail > typecheck files 5`] = `
 " FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
-TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:10:23
       8|   describe('nested 2', () => {
       9|     test('failing test 2', () => {
@@ -56,7 +56,7 @@ TypeCheckError: Expected 1 arguments, but got 0.
 
 exports[`should fail > typecheck files 6`] = `
 " FAIL  fail.test-d.ts > nested suite > nested 2 > failing test 2
-TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
  ❯ fail.test-d.ts:11:23
       9|     test('failing test 2', () => {
      10|       expectTypeOf(1).toBeVoid()
@@ -67,7 +67,7 @@ TypeCheckError: Expected 1 arguments, but got 0.
 
 exports[`should fail > typecheck files 7`] = `
 " FAIL  js-fail.test-d.js > js test fails
-TypeCheckError: Expected 1 arguments, but got 0.
+TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has no call signatures.
  ❯ js-fail.test-d.js:6:19
       4| 
       5| test('js test fails', () => {
@@ -78,29 +78,29 @@ TypeCheckError: Expected 1 arguments, but got 0.
 
 exports[`should fail > typecheck files 8`] = `
 " FAIL  only.test-d.ts > failing test
-TypeCheckError: Expected 1 arguments, but got 0.
- ❯ only.test-d.ts:4:19
+TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
+ ❯ only.test-d.ts:4:33
       2| 
       3| test.only('failing test', () => {
       4|   expectTypeOf(1).toEqualTypeOf<string>()
-       |                   ^
+       |                                 ^
       5| })"
 `;
 
 exports[`should fail > typechecks empty "include" but with tests 1`] = `
 "Testing types with tsc and vue-tsc is an experimental feature.
-Breaking changes might not follow semver, please pin Vitest's version when using it.
+Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 
 ⎯⎯⎯⎯⎯⎯ Typecheck Error ⎯⎯⎯⎯⎯⎯⎯
-Error: error TS18003: No inputs were found in config file '<root>/tsconfig.vitest-temp.json'. Specified 'include' paths were '[\\"src\\"]' and 'exclude' paths were '[\\"**/dist/**\\",\\"./dist\\"]'.
+Error: error TS18003: No inputs were found in config file '<root>/tsconfig.vitest-temp.json'. Specified 'include' paths were '["src"]' and 'exclude' paths were '["**/dist/**"]'.
 
 
 "
 `;
 
 exports[`should fail > typecheks with custom tsconfig 1`] = `
-"TypeCheckError: Expected 1 arguments, but got 0.
-TypeCheckError: Expected 1 arguments, but got 0.
-TypeCheckError: Expected 1 arguments, but got 0.
-TypeCheckError: Expected 1 arguments, but got 0."
+"TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
+TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures."
 `;

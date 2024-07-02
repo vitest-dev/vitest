@@ -7,11 +7,13 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
     {
       "collectDuration": 0,
       "environmentLoad": 0,
+      "file": [Circular],
       "filepath": "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
       "id": 0,
       "meta": {},
       "mode": "run",
       "name": "json-fail.test.ts",
+      "pool": "forks",
       "prepareDuration": 0,
       "result": {
         "duration": 0,
@@ -27,6 +29,10 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
         {
           "file": [Circular],
           "id": 0,
+          "location": {
+            "column": 1,
+            "line": 5,
+          },
           "logs": [
             {
               "content": "json-fail>should fail
@@ -42,29 +48,9 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
           "name": "should fail",
           "result": {
             "duration": 0,
-            "error": {
-              "actual": "2",
-              "constructor": "Function<AssertionError>",
-              "diff": "- Expected
-+ Received
-
-- 1
-+ 2",
-              "expected": "1",
-              "message": "expected 2 to deeply equal 1",
-              "name": "AssertionError",
-              "nameStr": "AssertionError",
-              "operator": "strictEqual",
-              "showDiff": true,
-              "stack": "AssertionError: expected 2 to deeply equal 1",
-              "stackStr": "AssertionError: expected 2 to deeply equal 1",
-              "toJSON": "Function<anonymous>",
-              "toString": "Function<toString>",
-            },
             "errors": [
               {
                 "actual": "2",
-                "constructor": "Function<AssertionError>",
                 "diff": "- Expected
 + Received
 
@@ -74,12 +60,11 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "message": "expected 2 to deeply equal 1",
                 "name": "AssertionError",
                 "nameStr": "AssertionError",
+                "ok": false,
                 "operator": "strictEqual",
                 "showDiff": true,
                 "stack": "AssertionError: expected 2 to deeply equal 1",
                 "stackStr": "AssertionError: expected 2 to deeply equal 1",
-                "toJSON": "Function<anonymous>",
-                "toString": "Function<toString>",
               },
             ],
             "hooks": {
@@ -91,17 +76,6 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "startTime": 0,
             "state": "fail",
           },
-          "suite": {
-            "file": [Circular],
-            "id": "",
-            "meta": {},
-            "mode": "run",
-            "name": "",
-            "tasks": [
-              [Circular],
-            ],
-            "type": "suite",
-          },
           "type": "test",
         },
       ],
@@ -109,19 +83,34 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
     },
   ],
   "moduleGraph": {
-    "<rootDir>/test/reporters/fixtures/json-fail.test.ts": {
-      "externalized": [],
-      "graph": {
-        "<rootDir>/test/reporters/fixtures/json-fail.test.ts": [],
+    "": {
+      "<rootDir>/test/reporters/fixtures/json-fail.test.ts": {
+        "externalized": [],
+        "graph": {
+          "<rootDir>/test/reporters/fixtures/json-fail.test.ts": [],
+        },
+        "inlined": [
+          "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
+        ],
       },
-      "inlined": [
-        "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
-      ],
     },
   },
   "paths": [
     "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
   ],
+  "sources": {
+    "<rootDir>/test/reporters/fixtures/json-fail.test.ts": "import { expect, test } from 'vitest'
+
+// I am comment1
+// I am comment2
+test('should fail', () => {
+  // eslint-disable-next-line no-console
+  console.log('json-fail>should fail')
+  expect(2).toEqual(1)
+})
+",
+  },
+  "unhandledErrors": [],
 }
 `;
 
@@ -132,11 +121,13 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
     {
       "collectDuration": 0,
       "environmentLoad": 0,
+      "file": [Circular],
       "filepath": "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
       "id": 0,
       "meta": {},
       "mode": "run",
       "name": "all-passing-or-skipped.test.ts",
+      "pool": "forks",
       "prepareDuration": 0,
       "result": {
         "duration": 0,
@@ -152,6 +143,10 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
         {
           "file": [Circular],
           "id": 0,
+          "location": {
+            "column": 1,
+            "line": 3,
+          },
           "meta": {},
           "mode": "run",
           "name": "2 + 3 = 5",
@@ -166,65 +161,18 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "startTime": 0,
             "state": "pass",
           },
-          "suite": {
-            "file": [Circular],
-            "id": "",
-            "meta": {},
-            "mode": "run",
-            "name": "",
-            "tasks": [
-              [Circular],
-              {
-                "file": [Circular],
-                "id": "1111755131_1",
-                "meta": {},
-                "mode": "skip",
-                "name": "3 + 3 = 6",
-                "suite": [Circular],
-                "type": "test",
-              },
-            ],
-            "type": "suite",
-          },
           "type": "test",
         },
         {
           "file": [Circular],
           "id": "1111755131_1",
+          "location": {
+            "column": 6,
+            "line": 7,
+          },
           "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
-          "suite": {
-            "file": [Circular],
-            "id": "",
-            "meta": {},
-            "mode": "run",
-            "name": "",
-            "tasks": [
-              {
-                "file": [Circular],
-                "id": 0,
-                "meta": {},
-                "mode": "run",
-                "name": "2 + 3 = 5",
-                "result": {
-                  "duration": 0,
-                  "hooks": {
-                    "afterEach": "pass",
-                    "beforeEach": "pass",
-                  },
-                  "repeatCount": 0,
-                  "retryCount": 0,
-                  "startTime": 0,
-                  "state": "pass",
-                },
-                "suite": [Circular],
-                "type": "test",
-              },
-              [Circular],
-            ],
-            "type": "suite",
-          },
           "type": "test",
         },
       ],
@@ -232,18 +180,33 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
     },
   ],
   "moduleGraph": {
-    "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": {
-      "externalized": [],
-      "graph": {
-        "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": [],
+    "": {
+      "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": {
+        "externalized": [],
+        "graph": {
+          "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": [],
+        },
+        "inlined": [
+          "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
+        ],
       },
-      "inlined": [
-        "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
-      ],
     },
   },
   "paths": [
     "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
   ],
+  "sources": {
+    "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": "import { expect, test } from 'vitest'
+
+test('2 + 3 = 5', () => {
+  expect(2 + 3).toBe(5)
+})
+
+test.skip('3 + 3 = 6', () => {
+  expect(3 + 3).toBe(6)
+})
+",
+  },
+  "unhandledErrors": [],
 }
 `;

@@ -1,4 +1,4 @@
-import { getWorkerState } from '../utils'
+import { getWorkerState } from '../utils/global'
 
 const filesCount = new Map<string, number>()
 const cache = new Map<string, any>()
@@ -7,11 +7,11 @@ const cache = new Map<string, any>()
  * This utils allows computational intensive tasks to only be ran once
  * across test reruns to improve the watch mode performance.
  *
- * Currently only works with `isolate: false`
+ * Currently only works with `poolOptions.<pool>.isolate: false`
  *
  * @experimental
  */
-export function runOnce<T>(fn: (() => T), key?: string): T {
+export function runOnce<T>(fn: () => T, key?: string): T {
   const filepath = getWorkerState().filepath || '__unknown_files__'
 
   if (!key) {
@@ -21,8 +21,9 @@ export function runOnce<T>(fn: (() => T), key?: string): T {
 
   const id = `${filepath}:${key}`
 
-  if (!cache.has(id))
+  if (!cache.has(id)) {
     cache.set(id, fn())
+  }
 
   return cache.get(id)
 }

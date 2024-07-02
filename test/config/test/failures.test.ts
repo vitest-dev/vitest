@@ -1,11 +1,12 @@
 import { expect, test } from 'vitest'
-import type { UserConfig } from 'vitest/config'
+import type { UserConfig } from 'vitest'
 import { version } from 'vitest/package.json'
 
+import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
-function runVitest(config: NonNullable<UserConfig['test']> & { shard?: any }) {
-  return testUtils.runVitest(config, ['fixtures/test/'])
+function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
+  return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
 }
 
 function runVitestCli(...cliArgs: string[]) {
@@ -30,35 +31,72 @@ test('shard index must be smaller than count', async () => {
   expect(stderr).toMatch('Error: --shard <index> must be a positive number less then <count>')
 })
 
-test('inspect requires changing threads or singleThread', async () => {
+test('inspect requires changing pool and singleThread/singleFork', async () => {
   const { stderr } = await runVitest({ inspect: true })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "threads: false" or "singleThread: true"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('inspect cannot be used with threads', async () => {
-  const { stderr } = await runVitest({ inspect: true, threads: true })
+test('inspect cannot be used with multi-threading', async () => {
+  const { stderr } = await runVitest({ inspect: true, pool: 'threads', poolOptions: { threads: { singleThread: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect without "threads: false" or "singleThread: true"')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('inspect-brk cannot be used with threads', async () => {
-  const { stderr } = await runVitest({ inspectBrk: true, threads: true })
+test('inspect-brk cannot be used with multi processing', async () => {
+  const { stderr } = await runVitest({ inspect: true, pool: 'forks', poolOptions: { forks: { singleFork: false } } })
 
-  expect(stderr).toMatch('Error: You cannot use --inspect-brk without "threads: false" or "singleThread: true"')
-})
-
-test('c8 coverage provider is not supported', async () => {
-  // @ts-expect-error -- check for removed API option
-  const { stderr } = await runVitest({ coverage: { enabled: true, provider: 'c8' } })
-
-  expect(stderr).toMatch('Error: "coverage.provider: c8" is not supported anymore. Use "coverage.provider: v8" instead')
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
 test('v8 coverage provider cannot be used with browser', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
 
   expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+})
+
+test('v8 coverage provider cannot be used with browser in workspace', async () => {
+  const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
+
+  expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+})
+
+test('coverage reportsDirectory cannot be current working directory', async () => {
+  const { stderr } = await runVitest({
+    root: undefined,
+    coverage: {
+      enabled: true,
+      reportsDirectory: './',
+
+      // Additional options to make sure this test doesn't accidentally remove whole vitest project
+      clean: false,
+      cleanOnRerun: false,
+      provider: 'custom',
+      customProviderModule: 'non-existing-provider-so-that-reportsDirectory-is-not-removed',
+    },
+  })
+
+  const directory = normalize(resolve('./'))
+  expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
+})
+
+test('coverage reportsDirectory cannot be root', async () => {
+  const { stderr } = await runVitest({
+    root: './fixtures/test',
+    coverage: {
+      enabled: true,
+      reportsDirectory: './',
+
+      // Additional options to make sure this test doesn't accidentally remove whole vitest project
+      clean: false,
+      cleanOnRerun: false,
+      provider: 'custom',
+      customProviderModule: 'non-existing-provider-so-that-reportsDirectory-is-not-removed',
+    },
+  })
+
+  const directory = normalize(resolve('./fixtures/test'))
+  expect(stderr).toMatch(`Error: You cannot set "coverage.reportsDirectory" as ${directory}. Vitest needs to be able to remove this directory before test run`)
 })
 
 test('version number is printed when coverage provider fails to load', async () => {
@@ -71,19 +109,54 @@ test('version number is printed when coverage provider fails to load', async () 
   })
 
   expect(stdout).toMatch(`RUN  v${version}`)
-  expect(stderr).toMatch('Error: Failed to load custom CoverageProviderModule from ./non-existing-module.ts')
+  expect(stderr).toMatch('Error: Failed to load custom CoverageProviderModule from')
+  expect(stderr).toMatch('non-existing-module.ts')
 })
 
-test('boolean coverage flag without dot notation, with more dot notation options', async () => {
-  const { stderr } = await runVitestCli('--coverage', '--coverage.reporter', 'text')
+test('coverage.autoUpdate cannot update thresholds when configuration file doesnt define them', async () => {
+  const { stderr } = await runVitest({
+    coverage: {
+      enabled: true,
+      thresholds: {
+        autoUpdate: true,
+        lines: 0,
+      },
+    },
+  })
 
-  expect(stderr).toMatch('Error: A boolean argument "--coverage" was used with dot notation arguments "--coverage.reporter".')
-  expect(stderr).toMatch('Please specify the "--coverage" argument with dot notation as well: "--coverage.enabled"')
+  expect(stderr).toMatch('Error: Unable to parse thresholds from configuration file: Expected config.test.coverage.thresholds to be an object')
 })
 
-test('boolean browser flag without dot notation, with more dot notation options', async () => {
-  const { stderr } = await runVitestCli('run', '--browser', '--browser.name', 'chrome')
+test('boolean flag 100 should not crash CLI', async () => {
+  const { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
 
-  expect(stderr).toMatch('Error: A boolean argument "--browser" was used with dot notation arguments "--browser.name".')
-  expect(stderr).toMatch('Please specify the "--browser" argument with dot notation as well: "--browser.enabled"')
+  expect(stderr).toMatch('ERROR: Coverage for lines (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for functions (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for statements (0%) does not meet global threshold (100%)')
+  expect(stderr).toMatch('ERROR: Coverage for branches (0%) does not meet global threshold (100%)')
+})
+
+test('nextTick cannot be mocked inside child_process', async () => {
+  const { stderr } = await runVitest({
+    fakeTimers: { toFake: ['nextTick'] },
+    include: ['./fake-timers.test.ts'],
+  })
+
+  expect(stderr).toMatch('Error: vi.useFakeTimers({ toFake: ["nextTick"] }) is not supported in node:child_process. Use --pool=threads if mocking nextTick is required.')
+})
+
+test('nextTick can be mocked inside worker_threads', async () => {
+  const { stderr } = await runVitest({
+    pool: 'threads',
+    fakeTimers: { toFake: ['nextTick'] },
+    include: ['./fixtures/test/fake-timers.test.ts'],
+  })
+
+  expect(stderr).not.toMatch('Error')
+})
+
+test('mergeReports doesn\'t work with watch mode enabled', async () => {
+  const { stderr } = await runVitest({ watch: true, mergeReports: '.vitest-reports' })
+
+  expect(stderr).toMatch('Cannot merge reports with --watch enabled')
 })

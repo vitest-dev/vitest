@@ -23,7 +23,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import { isObject } from '@vitest/utils'
-import type { Tester } from './types'
+import type { Tester, TesterContext } from './types'
 
 // Extracted out of jasmine 2.5.2
 export function equals(
@@ -39,21 +39,31 @@ export function equals(
 const functionToString = Function.prototype.toString
 
 export function isAsymmetric(obj: any) {
-  return !!obj && typeof obj === 'object' && 'asymmetricMatch' in obj && isA('Function', obj.asymmetricMatch)
+  return (
+    !!obj
+    && typeof obj === 'object'
+    && 'asymmetricMatch' in obj
+    && isA('Function', obj.asymmetricMatch)
+  )
 }
 
 export function hasAsymmetric(obj: any, seen = new Set()): boolean {
-  if (seen.has(obj))
+  if (seen.has(obj)) {
     return false
+  }
   seen.add(obj)
-  if (isAsymmetric(obj))
+  if (isAsymmetric(obj)) {
     return true
-  if (Array.isArray(obj))
+  }
+  if (Array.isArray(obj)) {
     return obj.some(i => hasAsymmetric(i, seen))
-  if (obj instanceof Set)
+  }
+  if (obj instanceof Set) {
     return Array.from(obj).some(i => hasAsymmetric(i, seen))
-  if (isObject(obj))
+  }
+  if (isObject(obj)) {
     return Object.values(obj).some(v => hasAsymmetric(v, seen))
+  }
   return false
 }
 
@@ -61,14 +71,17 @@ function asymmetricMatch(a: any, b: any) {
   const asymmetricA = isAsymmetric(a)
   const asymmetricB = isAsymmetric(b)
 
-  if (asymmetricA && asymmetricB)
+  if (asymmetricA && asymmetricB) {
     return undefined
+  }
 
-  if (asymmetricA)
+  if (asymmetricA) {
     return a.asymmetricMatch(b)
+  }
 
-  if (asymmetricB)
+  if (asymmetricB) {
     return b.asymmetricMatch(a)
+  }
 }
 
 // Equality function lovingly adapted from isEqual in
@@ -84,28 +97,44 @@ function eq(
   let result = true
 
   const asymmetricResult = asymmetricMatch(a, b)
-  if (asymmetricResult !== undefined)
+  if (asymmetricResult !== undefined) {
     return asymmetricResult
-
-  for (let i = 0; i < customTesters.length; i++) {
-    const customTesterResult = customTesters[i](a, b)
-    if (customTesterResult !== undefined)
-      return customTesterResult
   }
 
-  if (a instanceof Error && b instanceof Error)
-    return a.message === b.message
+  const testerContext: TesterContext = { equals }
+  for (let i = 0; i < customTesters.length; i++) {
+    const customTesterResult = customTesters[i].call(
+      testerContext,
+      a,
+      b,
+      customTesters,
+    )
+    if (customTesterResult !== undefined) {
+      return customTesterResult
+    }
+  }
 
-  if (Object.is(a, b))
+  if (a instanceof Error && b instanceof Error) {
+    return a.message === b.message
+  }
+
+  if (typeof URL === 'function' && a instanceof URL && b instanceof URL) {
+    return a.href === b.href
+  }
+
+  if (Object.is(a, b)) {
     return true
+  }
 
   // A strict comparison is necessary because `null == undefined`.
-  if (a === null || b === null)
+  if (a === null || b === null) {
     return a === b
+  }
 
   const className = Object.prototype.toString.call(a)
-  if (className !== Object.prototype.toString.call(b))
+  if (className !== Object.prototype.toString.call(b)) {
     return false
+  }
 
   switch (className) {
     case '[object Boolean]':
@@ -129,18 +158,20 @@ function eq(
       // Coerce dates to numeric primitive values. Dates are compared by their
       // millisecond representations. Note that invalid dates with millisecond representations
       // of `NaN` are equivalent.
-      return (numA === numB) || (Number.isNaN(numA) && Number.isNaN(numB))
+      return numA === numB || (Number.isNaN(numA) && Number.isNaN(numB))
     }
     // RegExps are compared by their source patterns and flags.
     case '[object RegExp]':
       return a.source === b.source && a.flags === b.flags
   }
-  if (typeof a !== 'object' || typeof b !== 'object')
+  if (typeof a !== 'object' || typeof b !== 'object') {
     return false
+  }
 
   // Use DOM3 method isEqualNode (IE>=9)
-  if (isDomNode(a) && isDomNode(b))
+  if (isDomNode(a) && isDomNode(b)) {
     return a.isEqualNode(b)
+  }
 
   // Used to detect circular references.
   let length = aStack.length
@@ -149,19 +180,21 @@ function eq(
     // unique nested structures.
     // circular references at same depth are equal
     // circular reference is not equal to non-circular one
-    if (aStack[length] === a)
+    if (aStack[length] === a) {
       return bStack[length] === b
-
-    else if (bStack[length] === b)
+    }
+    else if (bStack[length] === b) {
       return false
+    }
   }
   // Add the first object to the stack of traversed objects.
   aStack.push(a)
   bStack.push(b)
   // Recursively compare objects and arrays.
   // Compare array lengths to determine if a deep comparison is necessary.
-  if (className === '[object Array]' && a.length !== b.length)
+  if (className === '[object Array]' && a.length !== b.length) {
     return false
+  }
 
   // Deep compare objects.
   const aKeys = keys(a, hasKey)
@@ -169,8 +202,9 @@ function eq(
   let size = aKeys.length
 
   // Ensure that both objects contain the same number of properties before comparing deep equality.
-  if (keys(b, hasKey).length !== size)
+  if (keys(b, hasKey).length !== size) {
     return false
+  }
 
   while (size--) {
     key = aKeys[size]
@@ -180,8 +214,9 @@ function eq(
       = hasKey(b, key)
       && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
 
-    if (!result)
+    if (!result) {
       return false
+    }
   }
   // Remove the first object from the stack of traversed objects.
   aStack.pop()
@@ -194,8 +229,9 @@ function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
   const keys = []
 
   for (const key in obj) {
-    if (hasKey(obj, key))
+    if (hasKey(obj, key)) {
       keys.push(key)
+    }
   }
   return keys.concat(
     (Object.getOwnPropertySymbols(obj) as Array<any>).filter(
@@ -232,31 +268,36 @@ function isDomNode(obj: any): boolean {
 }
 
 export function fnNameFor(func: Function) {
-  if (func.name)
+  if (func.name) {
     return func.name
+  }
 
   const matches = functionToString
     .call(func)
-    .match(/^(?:async)?\s*function\s*\*?\s*([\w$]+)\s*\(/)
+    .match(/^(?:async)?\s*function\s*(?:\*\s*)?([\w$]+)\s*\(/)
   return matches ? matches[1] : '<anonymous>'
 }
 
 function getPrototype(obj: object) {
-  if (Object.getPrototypeOf)
+  if (Object.getPrototypeOf) {
     return Object.getPrototypeOf(obj)
+  }
 
-  if (obj.constructor.prototype === obj)
+  if (obj.constructor.prototype === obj) {
     return null
+  }
 
   return obj.constructor.prototype
 }
 
 export function hasProperty(obj: object | null, property: string): boolean {
-  if (!obj)
+  if (!obj) {
     return false
+  }
 
-  if (Object.prototype.hasOwnProperty.call(obj, property))
+  if (Object.prototype.hasOwnProperty.call(obj, property)) {
     return true
+  }
 
   return hasProperty(getPrototype(obj), property)
 }
@@ -264,7 +305,9 @@ export function hasProperty(obj: object | null, property: string): boolean {
 // SENTINEL constants are from https://github.com/facebook/immutable-js
 const IS_KEYED_SENTINEL = '@@__IMMUTABLE_KEYED__@@'
 const IS_SET_SENTINEL = '@@__IMMUTABLE_SET__@@'
+const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'
 const IS_ORDERED_SENTINEL = '@@__IMMUTABLE_ORDERED__@@'
+const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 
 export function isImmutableUnorderedKeyed(maybeKeyed: any) {
   return !!(
@@ -282,6 +325,36 @@ export function isImmutableUnorderedSet(maybeSet: any) {
   )
 }
 
+function isObjectLiteral(source: unknown): source is Record<string, unknown> {
+  return source != null && typeof source === 'object' && !Array.isArray(source)
+}
+
+function isImmutableList(source: unknown): boolean {
+  return Boolean(source && isObjectLiteral(source) && source[IS_LIST_SENTINEL])
+}
+
+function isImmutableOrderedKeyed(source: unknown): boolean {
+  return Boolean(
+    source
+    && isObjectLiteral(source)
+    && source[IS_KEYED_SENTINEL]
+    && source[IS_ORDERED_SENTINEL],
+  )
+}
+
+function isImmutableOrderedSet(source: unknown): boolean {
+  return Boolean(
+    source
+    && isObjectLiteral(source)
+    && source[IS_SET_SENTINEL]
+    && source[IS_ORDERED_SENTINEL],
+  )
+}
+
+function isImmutableRecord(source: unknown): boolean {
+  return Boolean(source && isObjectLiteral(source) && source[IS_RECORD_SYMBOL])
+}
+
 /**
  * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
  *
@@ -295,10 +368,13 @@ function hasIterator(object: any) {
   return !!(object != null && object[IteratorSymbol])
 }
 
-export function iterableEquality(a: any,
+export function iterableEquality(
+  a: any,
   b: any,
+  customTesters: Array<Tester> = [],
   aStack: Array<any> = [],
-  bStack: Array<any> = []): boolean | undefined {
+  bStack: Array<any> = [],
+): boolean | undefined {
   if (
     typeof a !== 'object'
     || typeof b !== 'object'
@@ -306,11 +382,13 @@ export function iterableEquality(a: any,
     || Array.isArray(b)
     || !hasIterator(a)
     || !hasIterator(b)
-  )
+  ) {
     return undefined
+  }
 
-  if (a.constructor !== b.constructor)
+  if (a.constructor !== b.constructor) {
     return false
+  }
 
   let length = aStack.length
   while (length--) {
@@ -318,14 +396,21 @@ export function iterableEquality(a: any,
     // unique nested structures.
     // circular references at same depth are equal
     // circular reference is not equal to non-circular one
-    if (aStack[length] === a)
+    if (aStack[length] === a) {
       return bStack[length] === b
+    }
   }
   aStack.push(a)
   bStack.push(b)
 
-  const iterableEqualityWithStack = (a: any, b: any) =>
-    iterableEquality(a, b, [...aStack], [...bStack])
+  const filteredCustomTesters: Array<Tester> = [
+    ...customTesters.filter(t => t !== iterableEquality),
+    iterableEqualityWithStack,
+  ]
+
+  function iterableEqualityWithStack(a: any, b: any) {
+    return iterableEquality(a, b, [...customTesters], [...aStack], [...bStack])
+  }
 
   if (a.size !== undefined) {
     if (a.size !== b.size) {
@@ -337,9 +422,10 @@ export function iterableEquality(a: any,
         if (!b.has(aValue)) {
           let has = false
           for (const bValue of b) {
-            const isEqual = equals(aValue, bValue, [iterableEqualityWithStack])
-            if (isEqual === true)
+            const isEqual = equals(aValue, bValue, filteredCustomTesters)
+            if (isEqual === true) {
               has = true
+            }
           }
 
           if (has === false) {
@@ -358,22 +444,28 @@ export function iterableEquality(a: any,
       for (const aEntry of a) {
         if (
           !b.has(aEntry[0])
-          || !equals(aEntry[1], b.get(aEntry[0]), [iterableEqualityWithStack])
+          || !equals(aEntry[1], b.get(aEntry[0]), filteredCustomTesters)
         ) {
           let has = false
           for (const bEntry of b) {
-            const matchedKey = equals(aEntry[0], bEntry[0], [
-              iterableEqualityWithStack,
-            ])
+            const matchedKey = equals(
+              aEntry[0],
+              bEntry[0],
+              filteredCustomTesters,
+            )
 
             let matchedValue = false
             if (matchedKey === true) {
-              matchedValue = equals(aEntry[1], bEntry[1], [
-                iterableEqualityWithStack,
-              ])
+              matchedValue = equals(
+                aEntry[1],
+                bEntry[1],
+                filteredCustomTesters,
+              )
             }
-            if (matchedValue === true)
+
+            if (matchedValue === true) {
               has = true
+            }
           }
 
           if (has === false) {
@@ -393,14 +485,26 @@ export function iterableEquality(a: any,
 
   for (const aValue of a) {
     const nextB = bIterator.next()
-    if (
-      nextB.done
-      || !equals(aValue, nextB.value, [iterableEqualityWithStack])
-    )
+    if (nextB.done || !equals(aValue, nextB.value, filteredCustomTesters)) {
       return false
+    }
   }
-  if (!bIterator.next().done)
+  if (!bIterator.next().done) {
     return false
+  }
+
+  if (
+    !isImmutableList(a)
+    && !isImmutableOrderedKeyed(a)
+    && !isImmutableOrderedSet(a)
+    && !isImmutableRecord(a)
+  ) {
+    const aEntries = Object.entries(a)
+    const bEntries = Object.entries(b)
+    if (!equals(aEntries, bEntries)) {
+      return false
+    }
+  }
 
   // Remove the first value from the stack of traversed values.
   aStack.pop()
@@ -411,12 +515,13 @@ export function iterableEquality(a: any,
 /**
  * Checks if `hasOwnProperty(object, key)` up the prototype chain, stopping at `Object.prototype`.
  */
-function hasPropertyInObject(object: object, key: string): boolean {
+function hasPropertyInObject(object: object, key: string | symbol): boolean {
   const shouldTerminate
     = !object || typeof object !== 'object' || object === Object.prototype
 
-  if (shouldTerminate)
+  if (shouldTerminate) {
     return false
+  }
 
   return (
     Object.prototype.hasOwnProperty.call(object, key)
@@ -425,27 +530,37 @@ function hasPropertyInObject(object: object, key: string): boolean {
 }
 
 function isObjectWithKeys(a: any) {
-  return isObject(a)
-  && !(a instanceof Error)
-  && !(Array.isArray(a))
-  && !(a instanceof Date)
+  return (
+    isObject(a)
+    && !(a instanceof Error)
+    && !Array.isArray(a)
+    && !(a instanceof Date)
+  )
 }
 
-export function subsetEquality(object: unknown,
-  subset: unknown): boolean | undefined {
+export function subsetEquality(
+  object: unknown,
+  subset: unknown,
+  customTesters: Array<Tester> = [],
+): boolean | undefined {
+  const filteredCustomTesters = customTesters.filter(
+    t => t !== subsetEquality,
+  )
   // subsetEquality needs to keep track of the references
   // it has already visited to avoid infinite loops in case
   // there are circular references in the subset passed to it.
   const subsetEqualityWithContext
     = (seenReferences: WeakMap<object, boolean> = new WeakMap()) =>
       (object: any, subset: any): boolean | undefined => {
-        if (!isObjectWithKeys(subset))
+        if (!isObjectWithKeys(subset)) {
           return undefined
+        }
 
         return Object.keys(subset).every((key) => {
-          if (isObjectWithKeys(subset[key])) {
-            if (seenReferences.has(subset[key]))
-              return equals(object[key], subset[key], [iterableEquality])
+          if (subset[key] != null && typeof subset[key] === 'object') {
+            if (seenReferences.has(subset[key])) {
+              return equals(object[key], subset[key], filteredCustomTesters)
+            }
 
             seenReferences.set(subset[key], true)
           }
@@ -453,7 +568,7 @@ export function subsetEquality(object: unknown,
           = object != null
           && hasPropertyInObject(object, key)
           && equals(object[key], subset[key], [
-            iterableEquality,
+            ...filteredCustomTesters,
             subsetEqualityWithContext(seenReferences),
           ])
           // The main goal of using seenReference is to avoid circular node on tree.
@@ -470,58 +585,161 @@ export function subsetEquality(object: unknown,
 }
 
 export function typeEquality(a: any, b: any): boolean | undefined {
-  if (a == null || b == null || a.constructor === b.constructor)
+  if (a == null || b == null || a.constructor === b.constructor) {
     return undefined
+  }
 
   return false
 }
 
-export function arrayBufferEquality(a: unknown,
-  b: unknown): boolean | undefined {
+export function arrayBufferEquality(
+  a: unknown,
+  b: unknown,
+): boolean | undefined {
   let dataViewA = a as DataView
   let dataViewB = b as DataView
 
   if (!(a instanceof DataView && b instanceof DataView)) {
-    if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer))
+    if (!(a instanceof ArrayBuffer) || !(b instanceof ArrayBuffer)) {
       return undefined
+    }
 
-    dataViewA = new DataView(a)
-    dataViewB = new DataView(b)
+    try {
+      dataViewA = new DataView(a)
+      dataViewB = new DataView(b)
+    }
+    catch {
+      return undefined
+    }
   }
 
   // Buffers are not equal when they do not have the same byte length
-  if (dataViewA.byteLength !== dataViewB.byteLength)
+  if (dataViewA.byteLength !== dataViewB.byteLength) {
     return false
+  }
 
   // Check if every byte value is equal to each other
   for (let i = 0; i < dataViewA.byteLength; i++) {
-    if (dataViewA.getUint8(i) !== dataViewB.getUint8(i))
+    if (dataViewA.getUint8(i) !== dataViewB.getUint8(i)) {
       return false
+    }
   }
 
   return true
 }
 
-export function sparseArrayEquality(a: unknown,
-  b: unknown): boolean | undefined {
-  if (!Array.isArray(a) || !Array.isArray(b))
+export function sparseArrayEquality(
+  a: unknown,
+  b: unknown,
+  customTesters: Array<Tester> = [],
+): boolean | undefined {
+  if (!Array.isArray(a) || !Array.isArray(b)) {
     return undefined
+  }
 
   // A sparse array [, , 1] will have keys ["2"] whereas [undefined, undefined, 1] will have keys ["0", "1", "2"]
   const aKeys = Object.keys(a)
   const bKeys = Object.keys(b)
-  return (
-    equals(a, b, [iterableEquality, typeEquality], true) && equals(aKeys, bKeys)
+  const filteredCustomTesters = customTesters.filter(
+    t => t !== sparseArrayEquality,
   )
+  return equals(a, b, filteredCustomTesters, true) && equals(aKeys, bKeys)
 }
 
-export function generateToBeMessage(deepEqualityName: string,
+export function generateToBeMessage(
+  deepEqualityName: string,
   expected = '#{this}',
-  actual = '#{exp}') {
+  actual = '#{exp}',
+) {
   const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
 
-  if (['toStrictEqual', 'toEqual'].includes(deepEqualityName))
+  if (['toStrictEqual', 'toEqual'].includes(deepEqualityName)) {
     return `${toBeMessage}\n\nIf it should pass with deep equality, replace "toBe" with "${deepEqualityName}"\n\nExpected: ${expected}\nReceived: serializes to the same string\n`
+  }
 
   return toBeMessage
+}
+
+export function pluralize(word: string, count: number): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`
+}
+
+export function getObjectKeys(object: object): Array<string | symbol> {
+  return [
+    ...Object.keys(object),
+    ...Object.getOwnPropertySymbols(object).filter(
+      s => Object.getOwnPropertyDescriptor(object, s)?.enumerable,
+    ),
+  ]
+}
+
+export function getObjectSubset(
+  object: any,
+  subset: any,
+  customTesters: Array<Tester> = [],
+): { subset: any; stripped: number } {
+  let stripped = 0
+
+  const getObjectSubsetWithContext
+    = (seenReferences: WeakMap<object, boolean> = new WeakMap()) =>
+      (object: any, subset: any): any => {
+        if (Array.isArray(object)) {
+          if (Array.isArray(subset) && subset.length === object.length) {
+          // The map method returns correct subclass of subset.
+            return subset.map((sub: any, i: number) =>
+              getObjectSubsetWithContext(seenReferences)(object[i], sub),
+            )
+          }
+        }
+        else if (object instanceof Date) {
+          return object
+        }
+        else if (isObject(object) && isObject(subset)) {
+          if (
+            equals(object, subset, [
+              ...customTesters,
+              iterableEquality,
+              subsetEquality,
+            ])
+          ) {
+          // Avoid unnecessary copy which might return Object instead of subclass.
+            return subset
+          }
+
+          const trimmed: any = {}
+          seenReferences.set(object, trimmed)
+
+          for (const key of getObjectKeys(object)) {
+            if (hasPropertyInObject(subset, key)) {
+              trimmed[key] = seenReferences.has(object[key])
+                ? seenReferences.get(object[key])
+                : getObjectSubsetWithContext(seenReferences)(
+                  object[key],
+                  subset[key],
+                )
+            }
+            else {
+              if (!seenReferences.has(object[key])) {
+                stripped += 1
+                if (isObject(object[key])) {
+                  stripped += getObjectKeys(object[key]).length
+                }
+
+                getObjectSubsetWithContext(seenReferences)(
+                  object[key],
+                  subset[key],
+                )
+              }
+            }
+          }
+
+          if (getObjectKeys(trimmed).length > 0) {
+            return trimmed
+          }
+        }
+
+        return object
+      }
+
+  return { subset: getObjectSubsetWithContext()(object, subset), stripped }
 }

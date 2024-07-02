@@ -3,31 +3,33 @@ import './global'
 
 export { expectTypeOf, type ExpectTypeOf } from '../typecheck/expectTypeOf'
 export { assertType, type AssertType } from '../typecheck/assertType'
-export * from '../typecheck/types'
-export * from './config'
-export * from './tasks'
-export * from './rpc'
-export * from './reporter'
-export * from './snapshot'
-export * from './worker'
-export * from './general'
-export * from './coverage'
-export * from './benchmark'
+export type * from '../typecheck/types'
+export type * from './config'
+export type * from './tasks'
+export type * from './rpc'
+export type * from './reporter'
+export type * from './snapshot'
+export type * from './worker'
+export type * from './general'
+export type * from './coverage'
+export type * from './benchmark'
+export type { CancelReason } from '@vitest/runner'
+export type { DiffOptions } from '@vitest/utils/diff'
 export type {
-  EnhancedSpy,
   MockedFunction,
   MockedObject,
-  SpyInstance,
   MockInstance,
   Mock,
   MockContext,
   Mocked,
   MockedClass,
 } from '../integrations/spy'
+export type { BrowserUI } from './ui'
 
 export type {
   ExpectStatic,
   AsymmetricMatchersContaining,
   JestAssertion,
   Assertion,
+  ExpectPollOptions,
 } from '@vitest/expect'

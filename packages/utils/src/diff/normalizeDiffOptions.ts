@@ -12,6 +12,7 @@ import type { DiffOptions, DiffOptionsNormalized } from './types'
 export const noColor = (string: string): string => string
 
 const DIFF_CONTEXT_DEFAULT = 5
+const DIFF_TRUNCATE_THRESHOLD_DEFAULT = 0 // not truncate
 
 function getDefaultOptions(): DiffOptionsNormalized {
   const c = getColors()
@@ -35,25 +36,30 @@ function getDefaultOptions(): DiffOptionsNormalized {
     includeChangeCounts: false,
     omitAnnotationLines: false,
     patchColor: c.yellow,
+    truncateThreshold: DIFF_TRUNCATE_THRESHOLD_DEFAULT,
+    truncateAnnotation: '... Diff result is truncated',
+    truncateAnnotationColor: noColor,
   }
 }
 
 function getCompareKeys(compareKeys?: CompareKeys): CompareKeys {
-  return (compareKeys && typeof compareKeys === 'function')
+  return compareKeys && typeof compareKeys === 'function'
     ? compareKeys
     : undefined
 }
 
 function getContextLines(contextLines?: number): number {
-  return (typeof contextLines === 'number'
-  && Number.isSafeInteger(contextLines)
-  && contextLines >= 0)
+  return typeof contextLines === 'number'
+    && Number.isSafeInteger(contextLines)
+    && contextLines >= 0
     ? contextLines
     : DIFF_CONTEXT_DEFAULT
 }
 
 // Pure function returns options with all properties.
-export function normalizeDiffOptions(options: DiffOptions = {}): DiffOptionsNormalized {
+export function normalizeDiffOptions(
+  options: DiffOptions = {},
+): DiffOptionsNormalized {
   return {
     ...getDefaultOptions(),
     ...options,

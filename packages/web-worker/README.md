@@ -45,8 +45,9 @@ You can also import `defineWebWorkers` from `@vitest/web-worker/pure` to define 
 ```js
 import { defineWebWorkers } from '@vitest/web-worker/pure'
 
-if (process.env.SUPPORT_WORKERS)
+if (process.env.SUPPORT_WORKERS) {
   defineWebWorkers({ clone: 'none' })
+}
 ```
 
 It accepts options:

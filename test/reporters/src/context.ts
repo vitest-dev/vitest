@@ -32,6 +32,10 @@ export function getContext(): Context {
     state: state as StateManager,
     config: config as ResolvedConfig,
     server: server as ViteDevServer,
+    getProjectByTaskId: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
+    snapshot: {
+      summary: { added: 100, _test: true },
+    } as any,
   }
 
   context.logger = {

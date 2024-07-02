@@ -11,10 +11,12 @@ export function generateScopedClassName(
   filename: string,
 ) {
   // should be configured by Vite defaults
-  if (strategy === 'scoped')
+  if (strategy === 'scoped') {
     return null
-  if (strategy === 'non-scoped')
+  }
+  if (strategy === 'non-scoped') {
     return name
+  }
   const hash = generateCssFilenameHash(filename)
   return `_${name}_${hash}`
 }

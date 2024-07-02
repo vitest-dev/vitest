@@ -1,51 +1,126 @@
-import { resolve } from 'node:path'
-import { beforeAll, describe, expect, it } from 'vitest'
-import { browserErrors, isWindows, page, ports, startServerCommand, untilUpdated } from '../setup'
+import { Writable } from 'node:stream'
+import { expect, test } from '@playwright/test'
+import { type Vitest, startVitest } from 'vitest/node'
 
-const root = resolve(__dirname, '../fixtures')
-const port = ports.ui
+const port = 9000
+const pageUrl = `http://localhost:${port}/__vitest__/`
 
-// TODO: fix flakyness on windows
-describe.skipIf(isWindows)('ui', () => {
-  beforeAll(async () => {
-    const exit = await startServerCommand(
-      root,
-    `npx vitest --ui --open false --api.port ${port} --watch --allowOnly`,
-    `http://localhost:${port}/__vitest__/`,
+test.describe('ui', () => {
+  let vitest: Vitest | undefined
+
+  test.beforeAll(async () => {
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
+    vitest = await startVitest('test', [], {
+      watch: true,
+      ui: true,
+      open: false,
+      api: { port },
+      coverage: { enabled: true },
+      reporters: [],
+    }, {}, {
+      stdout,
+      stderr,
+    })
+    expect(vitest).toBeDefined()
+  })
+
+  test.afterAll(async () => {
+    await vitest?.close()
+  })
+
+  test('basic', async ({ page }) => {
+    const pageErrors: unknown[] = []
+    page.on('pageerror', error => pageErrors.push(error))
+
+    await page.goto(pageUrl)
+
+    // dashbaord
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('6 Pass 1 Fail 7 Total')
+
+    // unhandled errors
+    await expect(page.getByTestId('unhandled-errors')).toContainText(
+      'Vitest caught 2 errors during the test run. This might cause false positive tests. '
+      + 'Resolve unhandled errors to make sure your tests are not affected.',
     )
 
-    return exit
+    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Error: error')
+    await expect(page.getByTestId('unhandled-errors-details')).toContainText('Unknown Error: 1')
+
+    // report
+    const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
+    await sample.hover()
+    await sample.getByTestId('btn-open-details').click()
+    await page.getByText('All tests passed in this file').click()
+
+    // graph tab
+    await page.getByTestId('btn-graph').click()
+    await expect(page.locator('[data-testid=graph] text')).toContainText('sample.test.ts')
+
+    // console tab
+    await page.getByTestId('btn-console').click()
+    await expect(page.getByTestId('console')).toContainText('log test')
+
+    expect(pageErrors).toEqual([])
   })
 
-  it('dashboard', async () => {
-    await untilUpdated(() => page.textContent('[aria-labelledby]'), '1 Pass 0 Fail 1 Total ')
+  test('coverage', async ({ page }) => {
+    await page.goto(pageUrl)
+    await page.getByLabel('Show coverage').click()
+    await page.frameLocator('#vitest-ui-coverage').getByRole('heading', { name: 'All files' }).click()
   })
 
-  describe('file detail', async () => {
-    beforeAll(async () => {
-      await page.click('.details-panel span')
-    })
+  test('console', async ({ page }) => {
+    await page.goto(pageUrl)
+    const item = page.getByLabel('fixtures/console.test.ts')
+    await item.hover()
+    await item.getByTestId('btn-open-details').click()
+    await page.getByTestId('btn-console').click()
+    await page.getByText('/(?<char>\\w)/').click()
 
-    it('report', async () => {
-      await page.click('[data-testid=btn-report]')
-      await untilUpdated(() => page.textContent('[data-testid=report]'), 'All tests passed in this file')
-      await untilUpdated(() => page.textContent('[data-testid=filenames]'), 'sample.test.ts')
-    })
-
-    it('graph', async () => {
-      await page.click('[data-testid=btn-graph]')
-      expect(page.url()).toMatch('graph')
-      await untilUpdated(() => page.textContent('[data-testid=graph] text'), 'sample.test.ts')
-    })
-
-    it('console', async () => {
-      await page.click('[data-testid=btn-console]')
-      expect(page.url()).toMatch('console')
-      await untilUpdated(() => page.textContent('[data-testid=console] pre'), 'log test')
-    })
+    expect(await page.getByText('beforeAll').all()).toHaveLength(6)
+    expect(await page.getByText('afterAll').all()).toHaveLength(6)
   })
 
-  it('no error happen', () => {
-    expect(browserErrors.length).toEqual(0)
+  test('error', async ({ page }) => {
+    await page.goto(pageUrl)
+    const item = page.getByLabel('fixtures/error.test.ts')
+    await item.hover()
+    await item.getByTestId('btn-open-details').click()
+    await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
+  })
+
+  test('file-filter', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    // match all files when no filter
+    await page.getByPlaceholder('Search...').fill('')
+    await page.getByText('PASS (3)').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+
+    // match nothing
+    await page.getByPlaceholder('Search...').fill('nothing')
+    await page.getByText('No matched test').click()
+
+    // searching "add" will match "sample.test.ts" since it includes a test case named "add"
+    await page.getByPlaceholder('Search...').fill('add')
+    await page.getByText('PASS (1)').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
+
+    // match only failing files when fail filter applied
+    await page.getByPlaceholder('Search...').fill('')
+    await page.getByText(/^Fail$/, { exact: true }).click()
+    await page.getByText('FAIL (1)').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/error.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+
+    // match only pass files when fail filter applied
+    await page.getByPlaceholder('Search...').fill('console')
+    await page.getByText(/^Fail$/, { exact: true }).click()
+    await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+    await page.getByText('PASS (1)').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
   })
 })

@@ -5,7 +5,12 @@ import { defineConfig } from 'vite'
 // https://vitejs.dev/config/
 export default defineConfig({
   test: {
-    globals: true,
-    environment: 'jsdom',
+    // Lit recommends using browser environment for testing
+    // https://lit.dev/docs/tools/testing/#testing-in-the-browser
+    browser: {
+      enabled: true,
+      name: 'chrome',
+      provider: 'webdriverio',
+    },
   },
 })
