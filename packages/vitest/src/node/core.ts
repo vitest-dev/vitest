@@ -828,16 +828,18 @@ export class Vitest {
       if (this.filenamePattern) {
         const filteredFiles = await this.globTestFiles([this.filenamePattern])
         files = files.filter(file => filteredFiles.some(f => f[1] === file))
-        if (failedTest.length && this.isFailedModel)
+        if (failedTest.length && this.isFailedModel) {
           files = [...new Set(files.concat(failedTest))]
+        }
         // A file that does not match the current filename pattern was changed
         if (files.length === 0) {
           return
         }
       }
       else {
-        if (failedTest.length && this.isFailedModel)
+        if (failedTest.length && this.isFailedModel) {
           files = [...new Set(files.concat(failedTest))]
+        }
       }
 
       this.changedTests.clear()
