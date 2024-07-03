@@ -158,6 +158,9 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
 
         return {
           define,
+          resolve: {
+            dedupe: ['vitest'],
+          },
           optimizeDeps: {
             entries,
             exclude: [
@@ -188,6 +191,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               'vitest > pretty-format > ansi-regex',
               'vitest > chai',
               'vitest > chai > loupe',
+              'vitest > @vitest/runner > pretty-format',
               'vitest > @vitest/utils > diff-sequences',
               'vitest > @vitest/utils > loupe',
               '@vitest/browser > @testing-library/user-event',
