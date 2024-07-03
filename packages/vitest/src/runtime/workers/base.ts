@@ -19,7 +19,7 @@ async function startViteNode(options: ContextExecutorOptions) {
   return _viteNode
 }
 
-export async function runBaseTests(state: WorkerGlobalState) {
+export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState) {
   const { ctx } = state
   // state has new context, but we want to reuse existing ones
   state.moduleCache = moduleCache
@@ -40,6 +40,7 @@ export async function runBaseTests(state: WorkerGlobalState) {
     import('../runBaseTests'),
   ])
   await run(
+    method,
     ctx.files,
     ctx.config,
     { environment: state.environment, options: ctx.environment.options },

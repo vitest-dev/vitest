@@ -286,6 +286,7 @@ export function createThreadsPool(
   return {
     name: 'threads',
     runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: () => pool.destroy(),
   }
 }

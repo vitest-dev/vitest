@@ -11,4 +11,5 @@ export type WorkerRpcOptions = Pick<
 export interface VitestWorker {
   getRpcOptions: (ctx: ContextRPC) => WorkerRpcOptions
   runTests: (state: WorkerGlobalState) => Awaitable<unknown>
+  collectTests: (state: WorkerGlobalState) => Awaitable<unknown>
 }
