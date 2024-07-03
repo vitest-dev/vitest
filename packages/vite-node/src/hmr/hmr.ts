@@ -35,10 +35,7 @@ interface CacheData {
   disposeMap: Map<string, (data: any) => void | Promise<void>>
   pruneMap: Map<string, (data: any) => void | Promise<void>>
   customListenersMap: Map<string, ((data: any) => void)[]>
-  ctxToListenersMap: Map<
-    string,
-    Map<string, ((data: any) => void)[]>
-  >
+  ctxToListenersMap: Map<string, Map<string, ((data: any) => void)[]>>
   messageBuffer: string[]
   isFirstUpdate: boolean
   pending: boolean
@@ -73,11 +70,11 @@ export function sendMessageBuffer(runner: ViteNodeRunner, emitter: HMREmitter) {
 
 export async function reload(runner: ViteNodeRunner, files: string[]) {
   // invalidate module cache but not node_modules
-  Array.from(runner.moduleCache.keys())
-    .forEach((fsPath) => {
-      if (!fsPath.includes('node_modules'))
-        runner.moduleCache.delete(fsPath)
-    })
+  Array.from(runner.moduleCache.keys()).forEach((fsPath) => {
+    if (!fsPath.includes('node_modules')) {
+      runner.moduleCache.delete(fsPath)
+    }
+  })
 
   return Promise.all(files.map(file => runner.executeId(file)))
 }
@@ -85,16 +82,24 @@ export async function reload(runner: ViteNodeRunner, files: string[]) {
 async function notifyListeners<T extends string>(
   runner: ViteNodeRunner,
   event: T,
-  data: InferCustomEventPayload<T>,
+  data: InferCustomEventPayload<T>
 ): Promise<void>
-async function notifyListeners(runner: ViteNodeRunner, event: string, data: any): Promise<void> {
+async function notifyListeners(
+  runner: ViteNodeRunner,
+  event: string,
+  data: any,
+): Promise<void> {
   const maps = getCache(runner)
   const cbs = maps.customListenersMap.get(event)
-  if (cbs)
+  if (cbs) {
     await Promise.all(cbs.map(cb => cb(data)))
+  }
 }
 
-async function queueUpdate(runner: ViteNodeRunner, p: Promise<(() => void) | undefined>) {
+async function queueUpdate(
+  runner: ViteNodeRunner,
+  p: Promise<(() => void) | undefined>,
+) {
   const maps = getCache(runner)
   maps.queued.push(p)
   if (!maps.pending) {
@@ -102,12 +107,15 @@ async function queueUpdate(runner: ViteNodeRunner, p: Promise<(() => void) | und
     await Promise.resolve()
     maps.pending = false
     const loading = [...maps.queued]
-    maps.queued = []
-    ;(await Promise.all(loading)).forEach(fn => fn && fn())
+    maps.queued = [];
+    (await Promise.all(loading)).forEach(fn => fn && fn())
   }
 }
 
-async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Update) {
+async function fetchUpdate(
+  runner: ViteNodeRunner,
+  { path, acceptedPath }: Update,
+) {
   path = normalizeRequestId(path)
   acceptedPath = normalizeRequestId(acceptedPath)
 
@@ -131,8 +139,9 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
 
   if (isSelfUpdate || qualifiedCallbacks.length > 0) {
     const disposer = maps.disposeMap.get(acceptedPath)
-    if (disposer)
+    if (disposer) {
       await disposer(maps.dataMap.get(acceptedPath))
+    }
     try {
       [fetchedModule] = await reload(runner, [acceptedPath])
     }
@@ -142,8 +151,9 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
   }
 
   return () => {
-    for (const { deps, fn } of qualifiedCallbacks)
+    for (const { deps, fn } of qualifiedCallbacks) {
       fn(deps.map(dep => (dep === acceptedPath ? fetchedModule : undefined)))
+    }
 
     const loggedPath = isSelfUpdate ? path : `${acceptedPath} via ${path}`
     console.log(`${c.cyan('[vite-node]')} hot updated: ${loggedPath}`)
@@ -151,8 +161,9 @@ async function fetchUpdate(runner: ViteNodeRunner, { path, acceptedPath }: Updat
 }
 
 function warnFailedFetch(err: Error, path: string | string[]) {
-  if (!err.message.match('fetch'))
+  if (!err.message.match('fetch')) {
     console.error(err)
+  }
 
   console.error(
     `[hmr] Failed to reload ${path}. `
@@ -161,7 +172,12 @@ function warnFailedFetch(err: Error, path: string | string[]) {
   )
 }
 
-export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter, files: string[], payload: HMRPayload) {
+export async function handleMessage(
+  runner: ViteNodeRunner,
+  emitter: HMREmitter,
+  files: string[],
+  payload: HMRPayload,
+) {
   const maps = getCache(runner)
   switch (payload.type) {
     case 'connected':
@@ -169,14 +185,17 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       break
     case 'update':
       await notifyListeners(runner, 'vite:beforeUpdate', payload)
-      await Promise.all(payload.updates.map((update) => {
-        if (update.type === 'js-update')
-          return queueUpdate(runner, fetchUpdate(runner, update))
+      await Promise.all(
+        payload.updates.map((update) => {
+          if (update.type === 'js-update') {
+            return queueUpdate(runner, fetchUpdate(runner, update))
+          }
 
-        // css-update
-        console.error(`${c.cyan('[vite-node]')} no support css hmr.}`)
-        return null
-      }))
+          // css-update
+          console.error(`${c.cyan('[vite-node]')} no support css hmr.}`)
+          return null
+        }),
+      )
       await notifyListeners(runner, 'vite:afterUpdate', payload)
       break
     case 'full-reload':
@@ -191,14 +210,19 @@ export async function handleMessage(runner: ViteNodeRunner, emitter: HMREmitter,
       await notifyListeners(runner, 'vite:beforePrune', payload)
       payload.paths.forEach((path) => {
         const fn = maps.pruneMap.get(path)
-        if (fn)
+        if (fn) {
           fn(maps.dataMap.get(path))
+        }
       })
       break
     case 'error': {
       await notifyListeners(runner, 'vite:error', payload)
       const err = payload.err
-      console.error(`${c.cyan('[vite-node]')} Internal Server Error\n${err.message}\n${err.stack}`)
+      console.error(
+        `${c.cyan('[vite-node]')} Internal Server Error\n${err.message}\n${
+          err.stack
+        }`,
+      )
       break
     }
   }
@@ -212,14 +236,16 @@ export function createHotContext(
 ): HotContext {
   debugHmr('createHotContext', ownerPath)
   const maps = getCache(runner)
-  if (!maps.dataMap.has(ownerPath))
+  if (!maps.dataMap.has(ownerPath)) {
     maps.dataMap.set(ownerPath, {})
+  }
 
   // when a file is hot updated, a new context is created
   // clear its stale callbacks
   const mod = maps.hotModulesMap.get(ownerPath)
-  if (mod)
+  if (mod) {
     mod.callbacks = []
+  }
 
   const newListeners = new Map()
   maps.ctxToListenersMap.set(ownerPath, newListeners)
@@ -271,7 +297,10 @@ export function createHotContext(
     },
 
     invalidate() {
-      notifyListeners(runner, 'vite:invalidate', { path: ownerPath, message: undefined })
+      notifyListeners(runner, 'vite:invalidate', {
+        path: ownerPath,
+        message: undefined,
+      })
       return reload(runner, files)
     },
 
@@ -294,8 +323,9 @@ export function createHotContext(
     ) {
       const removeFromMap = (map: Map<string, any[]>) => {
         const existing = map.get(event)
-        if (existing === undefined)
+        if (existing === undefined) {
           return
+        }
 
         const pruned = existing.filter(l => l !== cb)
         if (pruned.length === 0) {

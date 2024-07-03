@@ -6,7 +6,7 @@ import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Unocss from 'unocss/vite'
 import Pages from 'vite-plugin-pages'
-import { presetAttributify, presetIcons, presetUno } from 'unocss'
+import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
 
 // for debug:
 // open a static file serve to share the report json
@@ -34,11 +34,7 @@ export const config: UserConfig = {
       },
     }),
     Unocss({
-      presets: [
-        presetUno(),
-        presetAttributify(),
-        presetIcons(),
-      ],
+      presets: [presetUno(), presetAttributify(), presetIcons()],
       shortcuts: {
         'bg-base': 'bg-white dark:bg-[#111]',
         'bg-overlay': 'bg-[#eee]:50 dark:bg-[#222]:50',
@@ -46,10 +42,15 @@ export const config: UserConfig = {
         'bg-active': 'bg-gray-500:8',
         'bg-hover': 'bg-gray-500:20',
         'border-base': 'border-gray-500:10',
+        'focus-base': 'border-gray-500 dark:border-gray-400',
+        'highlight': 'bg-[#eab306] text-[#323238] dark:bg-[#323238] dark:text-[#eab306]',
 
         'tab-button': 'font-light op50 hover:op80 h-full px-4',
         'tab-button-active': 'op100 bg-gray-500:10',
       },
+      transformers: [
+        transformerDirectives(),
+      ],
     }),
     Components({
       dirs: ['client/components'],
@@ -60,14 +61,8 @@ export const config: UserConfig = {
     }),
     AutoImport({
       dts: resolve(__dirname, './client/auto-imports.d.ts'),
-      dirs: [
-        './client/composables',
-      ],
-      imports: [
-        'vue',
-        'vue-router',
-        '@vueuse/core',
-      ],
+      dirs: ['./client/composables'],
+      imports: ['vue', 'vue-router', '@vueuse/core'],
       injectAtEnd: true,
     }),
     // {
@@ -82,10 +77,7 @@ export const config: UserConfig = {
     outDir: './dist/client',
   },
   optimizeDeps: {
-    include: [
-      'vue',
-      '@vue/test-utils',
-    ],
+    include: ['vue', '@vue/test-utils'],
   },
   test: {
     browser: {

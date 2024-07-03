@@ -1,12 +1,12 @@
 import { resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { EXIT_CODE_RESTART } from '../../constants'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { getEnvPackageName } from '../../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../../types'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
 import type { VitestOptions } from '../core'
+import { FilesNotFoundError, GitNotFoundError } from '../errors'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -35,18 +35,21 @@ export async function startVitest(
   process.env.VITEST = 'true'
   process.env.NODE_ENV ??= 'test'
 
-  if (options.run)
+  if (options.run) {
     options.watch = false
+  }
 
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
   // running "vitest --browser.headless"
-  if (typeof options.browser === 'object' && !('enabled' in options.browser))
+  if (typeof options.browser === 'object' && !('enabled' in options.browser)) {
     options.browser.enabled = true
+  }
 
-  if (typeof options.typecheck?.only === 'boolean')
+  if (typeof options.typecheck?.only === 'boolean') {
     options.typecheck.enabled ??= true
+  }
 
   const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
 
@@ -55,7 +58,9 @@ export async function startVitest(
     const requiredPackages = CoverageProviderMap[provider]
 
     if (requiredPackages) {
-      if (!await ctx.packageInstaller.ensureInstalled(requiredPackages, root)) {
+      if (
+        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root))
+      ) {
         process.exitCode = 1
         return ctx
       }
@@ -64,7 +69,10 @@ export async function startVitest(
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)
 
-  if (environmentPackage && !await ctx.packageInstaller.ensureInstalled(environmentPackage, root)) {
+  if (
+    environmentPackage
+    && !(await ctx.packageInstaller.ensureInstalled(environmentPackage, root))
+  ) {
     process.exitCode = 1
     return ctx
   }
@@ -72,41 +80,53 @@ export async function startVitest(
   const stdin = vitestOptions?.stdin || process.stdin
   const stdout = vitestOptions?.stdout || process.stdout
   let stdinCleanup
-  if (stdin.isTTY && ctx.config.watch)
+  if (stdin.isTTY && ctx.config.watch) {
     stdinCleanup = registerConsoleShortcuts(ctx, stdin, stdout)
+  }
 
   ctx.onServerRestart((reason) => {
     ctx.report('onServerRestart', reason)
-
-    // if it's in a CLI wrapper, exit with a special code to request restart
-    if (process.env.VITEST_CLI_WRAPPER)
-      process.exit(EXIT_CODE_RESTART)
   })
 
   ctx.onAfterSetServer(() => {
-    if (ctx.config.standalone)
+    if (ctx.config.standalone) {
       ctx.init()
-    else
+    }
+    else {
       ctx.start(cliFilters)
+    }
   })
 
   try {
-    if (ctx.config.mergeReports)
+    if (ctx.config.mergeReports) {
       await ctx.mergeReports()
-    else if (ctx.config.standalone)
+    }
+    else if (ctx.config.standalone) {
       await ctx.init()
-    else
+    }
+    else {
       await ctx.start(cliFilters)
+    }
   }
   catch (e) {
+    if (e instanceof FilesNotFoundError) {
+      return ctx
+    }
+
+    if (e instanceof GitNotFoundError) {
+      ctx.logger.error(e.message)
+      return ctx
+    }
+
     process.exitCode = 1
     ctx.logger.printError(e, { fullStack: true, type: 'Unhandled Error' })
     ctx.logger.error('\n\n')
     return ctx
   }
 
-  if (ctx.shouldKeepServer())
+  if (ctx.shouldKeepServer()) {
     return ctx
+  }
 
   stdinCleanup?.()
   await ctx.close()

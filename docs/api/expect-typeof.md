@@ -263,8 +263,9 @@ This matcher extracts assert value (e.g., `assert v is number`), so you can perf
 import { expectTypeOf } from 'vitest'
 
 function assertNumber(v: any): asserts v is number {
-  if (typeof v !== 'number')
+  if (typeof v !== 'number') {
     throw new TypeError('Nope !')
+  }
 }
 
 expectTypeOf(assertNumber).asserts.toBeNumber()

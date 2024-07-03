@@ -3,7 +3,10 @@ import type { PrettyFormatOptions } from 'pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { ViteNodeServerOptions } from 'vite-node'
-import type { BuiltinReporterOptions, BuiltinReporters } from '../node/reporters'
+import type {
+  BuiltinReporterOptions,
+  BuiltinReporters,
+} from '../node/reporters'
 import type { TestSequencerConstructor } from '../node/sequencers/types'
 import type { ChaiConfig } from '../integrations/chai/config'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
@@ -14,18 +17,27 @@ import type { SnapshotStateOptions } from './snapshot'
 import type { Arrayable, ParsedStack } from './general'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
-import type { Pool, PoolOptions } from './pool-options'
+import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 
 export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
-export type BuiltinEnvironment = 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime'
+export type BuiltinEnvironment =
+  | 'node'
+  | 'jsdom'
+  | 'happy-dom'
+  | 'edge-runtime'
 // Record is used, so user can get intellisense for builtin environments, but still allow custom environments
-export type VitestEnvironment = BuiltinEnvironment | (string & Record<never, never>)
+export type VitestEnvironment =
+  | BuiltinEnvironment
+  | (string & Record<never, never>)
 export type { Pool, PoolOptions }
 export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 
-export type ApiConfig = Pick<ServerOptions, 'port' | 'strictPort' | 'host' | 'middlewareMode'>
+export type ApiConfig = Pick<
+  ServerOptions,
+  'port' | 'strictPort' | 'host' | 'middlewareMode'
+>
 
 export type { JSDOMOptions, HappyDOMOptions }
 
@@ -52,19 +64,21 @@ interface SequenceOptions {
    * Should files and tests run in random order.
    * @default false
    */
-  shuffle?: boolean | {
-    /**
-     * Should files run in random order. Long running tests will not start
-     * earlier if you enable this option.
-     * @default false
-     */
-    files?: boolean
-    /**
-     * Should tests run in random order.
-     * @default false
-     */
-    tests?: boolean
-  }
+  shuffle?:
+    | boolean
+    | {
+      /**
+       * Should files run in random order. Long running tests will not start
+       * earlier if you enable this option.
+       * @default false
+       */
+      files?: boolean
+      /**
+       * Should tests run in random order.
+       * @default false
+       */
+      tests?: boolean
+    }
   /**
    * Should tests run in parallel.
    * @default false
@@ -92,7 +106,10 @@ interface SequenceOptions {
   hooks?: SequenceHooks
 }
 
-export type DepsOptimizationOptions = Omit<DepOptimizationConfig, 'disabled' | 'noDiscovery'> & {
+export type DepsOptimizationOptions = Omit<
+  DepOptimizationConfig,
+  'disabled' | 'noDiscovery'
+> & {
   enabled?: boolean
 }
 
@@ -326,13 +343,13 @@ export interface InlineConfig {
   poolOptions?: PoolOptions
 
   /**
-   * Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+   * Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
    */
-  maxWorkers?: number
+  maxWorkers?: number | string
   /**
-   * Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
+   * Minimum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
    */
-  minWorkers?: number
+  minWorkers?: number | string
 
   /**
    * Should all test files run in parallel. Doesn't affect tests running in the same file.
@@ -389,13 +406,21 @@ export interface InlineConfig {
    *
    * @default []
    */
-  reporters?: Arrayable<ReporterName | InlineReporter> | ((ReporterName | InlineReporter) | [ReporterName] | ReporterWithOptions)[]
+  reporters?:
+    | Arrayable<ReporterName | InlineReporter>
+    | (
+        | (ReporterName | InlineReporter)
+        | [ReporterName]
+        | ReporterWithOptions
+    )[]
 
   /**
    * Write test results to a file when the --reporter=json` or `--reporter=junit` option is also specified.
    * Also definable individually per reporter by using an object instead.
    */
-  outputFile?: string | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
+  outputFile?:
+    | string
+    | (Partial<Record<BuiltinReporters, string>> & Record<string, string>)
 
   /**
    * Default timeout of a test in milliseconds
@@ -555,7 +580,7 @@ export interface InlineConfig {
   resolveSnapshotPath?: (path: string, extension: string) => string
 
   /**
-   * Path to a custom snapshot environment module that has a defualt export of `SnapshotEnvironment` object.
+   * Path to a custom snapshot environment module that has a default export of `SnapshotEnvironment` object.
    */
   snapshotEnvironment?: string
 
@@ -608,13 +633,15 @@ export interface InlineConfig {
    *
    * @default { include: [], modules: { classNameStrategy: false } }
    */
-  css?: boolean | {
-    include?: RegExp | RegExp[]
-    exclude?: RegExp | RegExp[]
-    modules?: {
-      classNameStrategy?: CSSModuleScopeStrategy
+  css?:
+    | boolean
+    | {
+      include?: RegExp | RegExp[]
+      exclude?: RegExp | RegExp[]
+      modules?: {
+        classNameStrategy?: CSSModuleScopeStrategy
+      }
     }
-  }
   /**
    * A number of tests that are allowed to run at the same time marked with `test.concurrent`.
    * @default 5
@@ -625,12 +652,14 @@ export interface InlineConfig {
    * Options for configuring cache policy.
    * @default { dir: 'node_modules/.vite/vitest' }
    */
-  cache?: false | {
-    /**
-     * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
-     */
-    dir: string
-  }
+  cache?:
+    | false
+    | {
+      /**
+       * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
+       */
+      dir: string
+    }
 
   /**
    * Options for configuring the order of running tests.
@@ -904,7 +933,28 @@ export interface UserConfig extends InlineConfig {
   mergeReports?: string
 }
 
-export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'filters' | 'browser' | 'coverage' | 'testNamePattern' | 'related' | 'api' | 'reporters' | 'resolveSnapshotPath' | 'benchmark' | 'shard' | 'cache' | 'sequence' | 'typecheck' | 'runner' | 'poolOptions' | 'pool' | 'cliExclude'> {
+export interface ResolvedConfig
+  extends Omit<
+    Required<UserConfig>,
+    | 'config'
+    | 'filters'
+    | 'browser'
+    | 'coverage'
+    | 'testNamePattern'
+    | 'related'
+    | 'api'
+    | 'reporters'
+    | 'resolveSnapshotPath'
+    | 'benchmark'
+    | 'shard'
+    | 'cache'
+    | 'sequence'
+    | 'typecheck'
+    | 'runner'
+    | 'poolOptions'
+    | 'pool'
+    | 'cliExclude'
+  > {
   mode: VitestRunMode
 
   base?: string
@@ -919,7 +969,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   browser: ResolvedBrowserOptions
   pool: Pool
-  poolOptions?: PoolOptions
+  poolOptions?: ResolvedPoolOptions
 
   reporters: (InlineReporter | ReporterWithOptions)[]
 
@@ -928,18 +978,23 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
   api?: ApiConfig
   cliExclude?: string[]
 
-  benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>> & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  benchmark?: Required<
+    Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+  > &
+  Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   shard?: {
     index: number
     count: number
   }
 
-  cache: {
-    /**
-     * @deprecated
-     */
-    dir: string
-  } | false
+  cache:
+    | {
+      /**
+       * @deprecated
+       */
+      dir: string
+    }
+    | false
 
   sequence: {
     sequencer: TestSequencerConstructor
@@ -954,6 +1009,9 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
     enabled: boolean
   }
   runner?: string
+
+  maxWorkers: number
+  minWorkers: number
 }
 
 export type ProjectConfig = Omit<
@@ -986,11 +1044,17 @@ export type ProjectConfig = Omit<
   | 'inspectBrk'
   | 'deps'
   | 'coverage'
+  | 'maxWorkers'
+  | 'minWorkers'
+  | 'fileParallelism'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
   poolOptions?: {
-    threads?: Pick<NonNullable<PoolOptions['threads']>, 'singleThread' | 'isolate'>
+    threads?: Pick<
+      NonNullable<PoolOptions['threads']>,
+      'singleThread' | 'isolate'
+    >
     vmThreads?: Pick<NonNullable<PoolOptions['vmThreads']>, 'singleThread'>
     forks?: Pick<NonNullable<PoolOptions['forks']>, 'singleFork' | 'isolate'>
   }

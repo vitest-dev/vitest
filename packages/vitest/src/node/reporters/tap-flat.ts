@@ -6,13 +6,17 @@ function flattenTasks(task: Task, baseName = ''): Task[] {
   const base = baseName ? `${baseName} > ` : ''
 
   if (task.type === 'suite' && task.tasks.length > 0) {
-    return task.tasks.flatMap(child => flattenTasks(child, `${base}${task.name}`))
+    return task.tasks.flatMap(child =>
+      flattenTasks(child, `${base}${task.name}`),
+    )
   }
   else {
-    return [{
-      ...task,
-      name: `${base}${task.name}`,
-    }]
+    return [
+      {
+        ...task,
+        name: `${base}${task.name}`,
+      },
+    ]
   }
 }
 

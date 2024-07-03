@@ -33,8 +33,9 @@ export default <Environment>{
         delete global.testEnvironment
         delete global.option
 
-        if (global.__exists)
+        if (global.__exists) {
           log('should not log')
+        }
       },
     }
   },

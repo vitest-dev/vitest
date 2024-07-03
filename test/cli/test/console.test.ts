@@ -41,8 +41,8 @@ test('can run custom pools with Vitest', async () => {
   `)
   const stderrArray = vitest.stderr.split('\n')
   // remove stack trace
-  const stderr = stderrArray.slice(0, -9).join('\n')
-  const stackStderr = stderrArray.slice(-9).join('\n')
+  const stderr = stderrArray.slice(0, -14).join('\n')
+  const stackStderr = stderrArray.slice(-14).join('\n')
   expect(stderr).toMatchInlineSnapshot(`
     "stderr | trace.test.ts > logging to stdout
     warn with trace
@@ -64,7 +64,7 @@ test('can run custom pools with Vitest', async () => {
   expect(stackStderr).not.toMatch('❯ ')
   if (process.platform !== 'win32') {
     const root = resolve(process.cwd(), '../..')
-    expect(stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl')).toMatchInlineSnapshot(`
+    expect(stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl').replace(/\.\w+\.js:/g, '.<chunk>.js:')).toMatchInlineSnapshot(`
       "stderr | trace.test.ts > logging to stdout
       Trace: trace with trace
           at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl
@@ -72,6 +72,11 @@ test('can run custom pools with Vitest', async () => {
           at file://<root>/packages/runner/dist/index.js:ln:cl
           at runTest (file://<root>/packages/runner/dist/index.js:ln:cl)
           at processTicksAndRejections (node:internal/process/task_queues:ln:cl)
+          at runSuite (file://<root>/packages/runner/dist/index.js:ln:cl)
+          at runFiles (file://<root>/packages/runner/dist/index.js:ln:cl)
+          at startTests (file://<root>/packages/runner/dist/index.js:ln:cl)
+          at file://<root>/packages/vitest/dist/chunks/runtime-runBaseTests.<chunk>.js:ln:cl
+          at withEnv (file://<root>/packages/vitest/dist/chunks/runtime-runBaseTests.<chunk>.js:ln:cl)
 
       "
     `)

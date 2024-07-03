@@ -1,4 +1,10 @@
-export type BuiltinPool = 'browser' | 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'
+export type BuiltinPool =
+  | 'browser'
+  | 'threads'
+  | 'forks'
+  | 'vmThreads'
+  | 'vmForks'
+  | 'typescript'
 export type Pool = BuiltinPool | (string & {})
 
 export interface PoolOptions extends Record<string, unknown> {
@@ -36,12 +42,19 @@ export interface PoolOptions extends Record<string, unknown> {
   vmForks?: ForksOptions & VmOptions
 }
 
+export interface ResolvedPoolOptions extends PoolOptions {
+  threads?: ResolvedThreadsOptions & WorkerContextOptions
+  forks?: ResolvedForksOptions & WorkerContextOptions
+  vmThreads?: ResolvedThreadsOptions & VmOptions
+  vmForks?: ResolvedForksOptions & VmOptions
+}
+
 export interface ThreadsOptions {
   /** Minimum amount of threads to use */
-  minThreads?: number
+  minThreads?: number | string
 
   /** Maximum amount of threads to use */
-  maxThreads?: number
+  maxThreads?: number | string
 
   /**
    * Run tests inside a single thread.
@@ -60,12 +73,17 @@ export interface ThreadsOptions {
   useAtomics?: boolean
 }
 
+export interface ResolvedThreadsOptions extends ThreadsOptions {
+  minThreads?: number
+  maxThreads?: number
+}
+
 export interface ForksOptions {
   /** Minimum amount of child processes to use */
-  minForks?: number
+  minForks?: number | string
 
   /** Maximum amount of child processes to use */
-  maxForks?: number
+  maxForks?: number | string
 
   /**
    * Run tests inside a single fork.
@@ -73,6 +91,11 @@ export interface ForksOptions {
    * @default false
    */
   singleFork?: boolean
+}
+
+export interface ResolvedForksOptions extends ForksOptions {
+  minForks?: number
+  maxForks?: number
 }
 
 export interface WorkerContextOptions {

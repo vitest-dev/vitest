@@ -1,24 +1,86 @@
-import type { Page } from 'playwright'
 import type { UserEvent } from '../../../context'
+import { PlaywrightBrowserProvider } from '../providers/playwright'
+import { WebdriverBrowserProvider } from '../providers/webdriver'
 import type { UserEventCommand } from './utils'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
-  { provider },
-  element,
+  context,
+  xpath,
   options = {},
 ) => {
-  if (provider.name === 'playwright') {
-    const page = (provider as any).page as Page
-    await page.frameLocator('iframe[data-vitest]').locator(`xpath=${element}`).click(options)
-    return
+  const provider = context.provider
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const tester = context.iframe
+    await tester.locator(`xpath=${xpath}`).click({
+      timeout: 1000,
+      ...options,
+    })
   }
-  if (provider.name === 'webdriverio') {
-    const page = (provider as any).browser as WebdriverIO.Browser
-    const frame = await page.findElement('css selector', 'iframe[data-vitest]')
-    await page.switchToFrame(frame)
-    const xpath = `//${element}`
-    await (await page.$(xpath)).click(options)
-    return
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const browser = context.browser
+    const markedXpath = `//${xpath}`
+    await browser.$(markedXpath).click(options as any)
   }
-  throw new Error(`Provider "${provider.name}" doesn't support click command`)
+  else {
+    throw new TypeError(`Provider "${provider.name}" doesn't support click command`)
+  }
+}
+
+export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
+  context,
+  xpath,
+  options = {},
+) => {
+  const provider = context.provider
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const tester = context.iframe
+    await tester.locator(`xpath=${xpath}`).dblclick(options)
+  }
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const browser = context.browser
+    const markedXpath = `//${xpath}`
+    await browser.$(markedXpath).doubleClick()
+  }
+  else {
+    throw new TypeError(`Provider "${provider.name}" doesn't support dblClick command`)
+  }
+}
+
+export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
+  context,
+  xpath,
+  options = {},
+) => {
+  const provider = context.provider
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const tester = context.iframe
+    await tester.locator(`xpath=${xpath}`).click({
+      timeout: 1000,
+      ...options,
+      clickCount: 3,
+    })
+  }
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const browser = context.browser
+    const markedXpath = `//${xpath}`
+    await browser
+      .action('pointer', { parameters: { pointerType: 'mouse' } })
+      // move the pointer over the button
+      .move({ origin: await browser.$(markedXpath) })
+      // simulate 3 clicks
+      .down()
+      .up()
+      .pause(50)
+      .down()
+      .up()
+      .pause(50)
+      .down()
+      .up()
+      .pause(50)
+      // run the sequence
+      .perform()
+  }
+  else {
+    throw new TypeError(`Provider "${provider.name}" doesn't support tripleClick command`)
+  }
 }

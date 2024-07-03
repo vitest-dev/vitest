@@ -1,6 +1,12 @@
 import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
-import type { File, ModuleGraphData, ResolvedConfig, WebSocketEvents, WebSocketHandlers } from 'vitest'
+import type {
+  File,
+  ModuleGraphData,
+  ResolvedConfig,
+  WebSocketEvents,
+  WebSocketHandlers,
+} from 'vitest'
 import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
 import { StateManager } from '../../../../vitest/src/node/state'
@@ -11,6 +17,8 @@ interface HTMLReportMetadata {
   config: ResolvedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
+  // filename -> source
+  sources: Record<string, string>
 }
 
 const noop: any = () => {}
@@ -45,13 +53,7 @@ export function createStaticClient(): VitestClient {
     getUnhandledErrors: () => {
       return metadata.unhandledErrors
     },
-    getTransformResult: async (id) => {
-      return {
-        code: id,
-        source: '',
-        map: null,
-      }
-    },
+    getTransformResult: asyncNoop,
     onDone: noop,
     onCollected: asyncNoop,
     onTaskUpdate: noop,
@@ -67,7 +69,9 @@ export function createStaticClient(): VitestClient {
     resolveSnapshotRawPath: asyncNoop,
     readSnapshotFile: asyncNoop,
     saveSnapshotFile: asyncNoop,
-    readTestFile: asyncNoop,
+    readTestFile: async (id: string) => {
+      return metadata.sources[id]
+    },
     removeSnapshotFile: asyncNoop,
     onUnhandledError: noop,
     saveTestFile: asyncNoop,
@@ -86,7 +90,10 @@ export function createStaticClient(): VitestClient {
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
     const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    if (contentType.includes('application/gzip') || contentType.includes('application/x-gzip')) {
+    if (
+      contentType.includes('application/gzip')
+      || contentType.includes('application/x-gzip')
+    ) {
       const compressed = new Uint8Array(await res.arrayBuffer())
       const decompressed = strFromU8(decompressSync(compressed))
       metadata = parse(decompressed) as HTMLReportMetadata

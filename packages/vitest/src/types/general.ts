@@ -5,7 +5,9 @@ export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
 export type ArgumentsType<T> = T extends (...args: infer U) => any ? U : never
 
-export type MutableArray<T extends readonly any[]> = { -readonly [k in keyof T]: T[k] }
+export type MutableArray<T extends readonly any[]> = {
+  -readonly [k in keyof T]: T[k];
+}
 
 export interface Constructable {
   new (...args: any[]): any
@@ -30,7 +32,10 @@ export interface Environment {
   name: string
   transformMode: 'web' | 'ssr'
   setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
-  setup: (global: any, options: Record<string, any>) => Awaitable<EnvironmentReturn>
+  setup: (
+    global: any,
+    options: Record<string, any>
+  ) => Awaitable<EnvironmentReturn>
 }
 
 export interface UserConsoleLog {

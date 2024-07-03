@@ -2,8 +2,8 @@
  * @vitest-environment jsdom
  */
 
-import type { MockedFunction, MockedObject } from 'vitest'
-import { describe, expect, test, vi } from 'vitest'
+import type { Mock, MockedFunction, MockedObject } from 'vitest'
+import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { getWorkerState } from '../../../packages/vitest/src/utils'
 
 function expectType<T>(obj: T) {
@@ -41,6 +41,12 @@ describe('testing vi utils', () => {
     })
     expectType<MockedFunction<() => boolean>>(vi.fn(() => true))
     expectType<MockedFunction<() => boolean>>(vi.fn())
+
+    expectType<MockedFunction<() => boolean>>(vi.fn<() => boolean>(() => true))
+    expectType<Mock<() => boolean>>(vi.fn<() => boolean>(() => true))
+    expectType<() => boolean>(vi.fn(() => true))
+
+    expectType<(v: number) => boolean>(vi.fn())
   })
 
   test('vi partial mocked', () => {
@@ -50,37 +56,66 @@ describe('testing vi utils', () => {
       baz: string
     }
 
-    type FooBarFactory = () => FooBar
-
-    const mockFactory: FooBarFactory = vi.fn()
+    const mockFactory = vi.fn<() => FooBar>()
 
     vi.mocked(mockFactory, { partial: true }).mockReturnValue({
       foo: vi.fn(),
     })
 
     vi.mocked(mockFactory, { partial: true, deep: false }).mockReturnValue({
-      bar: vi.fn(),
+      bar: vi.fn<FooBar['bar']>(),
     })
 
     vi.mocked(mockFactory, { partial: true, deep: true }).mockReturnValue({
       baz: 'baz',
     })
 
-    type FooBarAsyncFactory = () => Promise<FooBar>
-
-    const mockFactoryAsync: FooBarAsyncFactory = vi.fn()
+    const mockFactoryAsync = vi.fn<() => Promise<FooBar>>()
 
     vi.mocked(mockFactoryAsync, { partial: true }).mockResolvedValue({
       foo: vi.fn(),
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: false }).mockResolvedValue({
-      bar: vi.fn(),
+      bar: vi.fn<FooBar['bar']>(),
     })
 
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
       baz: 'baz',
     })
+  })
+
+  test('vi.fn and Mock type', () => {
+    // use case from https://github.com/vitest-dev/vitest/issues/4723#issuecomment-1851034249
+
+    // hypotetical library to be tested
+    type SomeFn = (v: string) => number
+    function acceptSomeFn(f: SomeFn) {
+      f('hi')
+    }
+
+    // SETUP
+    // no args are allowed even though it's not type safe
+    const someFn1: Mock<SomeFn> = vi.fn()
+
+    // argument types are infered
+    const someFn2: Mock<SomeFn> = vi.fn((v) => {
+      expectTypeOf(v).toEqualTypeOf<string>()
+      return 0
+    })
+
+    // arguments are not necessary
+    const someFn3: Mock<SomeFn> = vi.fn(() => 0)
+
+    // @ts-expect-error wrong return type will be caught
+    const someFn4: Mock<SomeFn> = vi.fn(() => '0')
+
+    // TEST
+    acceptSomeFn(someFn1)
+    expect(someFn1).toBeCalledWith('hi')
+    expect(someFn2).not.toBeCalled()
+    expect(someFn3).not.toBeCalled()
+    expect(someFn4).not.toBeCalled()
   })
 
   test('can change config', () => {

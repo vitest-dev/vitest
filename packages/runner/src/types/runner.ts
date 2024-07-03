@@ -40,13 +40,13 @@ export interface VitestRunnerConfig {
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
-  new(config: VitestRunnerConfig): VitestRunner
+  new (config: VitestRunnerConfig): VitestRunner
 }
 
 export type CancelReason =
   | 'keyboard-input'
   | 'test-failure'
-  | string & Record<string, never>
+  | (string & Record<string, never>)
 
 export interface VitestRunner {
   /**
@@ -76,7 +76,14 @@ export interface VitestRunner {
   /**
    * Called before actually running the test function. Already has "result" with "state" and "startTime".
    */
-  onBeforeTryTask?: (test: Task, options: { retry: number; repeats: number }) => unknown
+  onBeforeTryTask?: (
+    test: Task,
+    options: { retry: number; repeats: number }
+  ) => unknown
+  /**
+   * When the task has finished running, but before cleanup hooks are called
+   */
+  onTaskFinished?: (test: Task) => unknown
   /**
    * Called after result and state are set.
    */
@@ -141,4 +148,8 @@ export interface VitestRunner {
    * Publicly available configuration.
    */
   config: VitestRunnerConfig
+  /**
+   * The name of the current pool. Can affect how stack trace is inferred on the server side.
+   */
+  pool?: string
 }

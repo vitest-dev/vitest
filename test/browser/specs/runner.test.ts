@@ -23,8 +23,8 @@ describe('running browser tests', async () => {
       console.error(stderr)
     })
 
-    expect(browserResultJson.testResults).toHaveLength(16)
-    expect(passedTests).toHaveLength(14)
+    expect(browserResultJson.testResults).toHaveLength(19)
+    expect(passedTests).toHaveLength(17)
     expect(failedTests).toHaveLength(2)
 
     expect(stderr).not.toContain('has been externalized for browser compatibility')
@@ -36,6 +36,8 @@ describe('running browser tests', async () => {
     expect(stderr).toMatch(/- 2\s+\+ 1/)
     expect(stderr).toContain('Expected to be')
     expect(stderr).toContain('But got')
+    expect(stderr).toContain('Failure screenshot')
+    expect(stderr).toContain('__screenshots__/failing')
   })
 
   test('logs are redirected to stdout', () => {
@@ -43,8 +45,16 @@ describe('running browser tests', async () => {
     expect(stdout).toContain('hello from console.log')
     expect(stdout).toContain('hello from console.info')
     expect(stdout).toContain('hello from console.debug')
-    expect(stdout).toContain('{ hello: \'from dir\' }')
-    expect(stdout).toContain('{ hello: \'from dirxml\' }')
+    expect(stdout).toContain(`
+{
+  "hello": "from dir",
+}
+      `.trim())
+    expect(stdout).toContain(`
+{
+  "hello": "from dirxml",
+}
+      `.trim())
     expect(stdout).toContain('dom <div />')
     expect(stdout).toContain('default: 1')
     expect(stdout).toContain('default: 2')
@@ -95,7 +105,10 @@ error with a stack
 
   test(`stack trace points to correct file in every browser`, () => {
     // dependeing on the browser it references either `.toBe()` or `expect()`
-    expect(stderr).toMatch(/test\/failing.test.ts:4:(12|17)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:5:(12|17)/)
+
+    // column is 18 in safari, 8 in others
+    expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
   })
 
   test('popup apis should log a warning', () => {

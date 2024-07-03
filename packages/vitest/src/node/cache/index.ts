@@ -23,7 +23,11 @@ export class VitestCache {
   static resolveCacheDir(root: string, dir?: string, projectName?: string) {
     const baseDir = slash(dir || 'node_modules/.vite/vitest')
     return projectName
-      ? resolve(root, baseDir, crypto.createHash('md5').update(projectName, 'utf-8').digest('hex'))
+      ? resolve(
+        root,
+        baseDir,
+        crypto.createHash('md5').update(projectName, 'utf-8').digest('hex'),
+      )
       : resolve(root, baseDir)
   }
 }

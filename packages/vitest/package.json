@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "2.0.0-beta.9",
+  "version": "2.0.0-beta.12",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -147,6 +147,7 @@
     }
   },
   "dependencies": {
+    "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
@@ -166,19 +167,19 @@
     "why-is-node-running": "^2.2.2"
   },
   "devDependencies": {
-    "@ampproject/remapping": "^2.3.0",
     "@antfu/install-pkg": "0.3.1",
     "@edge-runtime/vm": "^3.2.0",
     "@sinonjs/fake-timers": "11.1.0",
+    "@types/debug": "^4.1.12",
     "@types/estree": "^1.0.5",
     "@types/istanbul-lib-coverage": "^2.0.6",
     "@types/istanbul-reports": "^3.0.4",
     "@types/jsdom": "^21.1.7",
-    "@types/micromatch": "^4.0.7",
-    "@types/node": "^20.14.2",
+    "@types/micromatch": "^4.0.9",
+    "@types/node": "^20.14.9",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
-    "acorn-walk": "^8.3.2",
+    "acorn-walk": "^8.3.3",
     "birpc": "0.2.17",
     "cac": "^6.7.14",
     "chai-subset": "^1.6.0",
@@ -188,7 +189,7 @@
     "find-up": "^6.3.0",
     "flatted": "^3.3.1",
     "get-tsconfig": "^4.7.5",
-    "happy-dom": "^14.12.0",
+    "happy-dom": "^14.12.3",
     "jsdom": "^24.1.0",
     "local-pkg": "^0.5.0",
     "log-update": "^5.0.1",
@@ -197,6 +198,6 @@
     "prompts": "^2.4.2",
     "strip-ansi": "^7.1.0",
     "strip-literal": "^2.1.0",
-    "ws": "^8.17.0"
+    "ws": "^8.17.1"
   }
 }

@@ -9,8 +9,9 @@ export default (): Plugin => {
     enforce: 'post',
     transform(source, id) {
       // TODO: test is not called for static imports
-      if (!regexDynamicImport.test(source))
+      if (!regexDynamicImport.test(source)) {
         return
+      }
       return injectDynamicImport(source, id, this.parse)
     },
   }

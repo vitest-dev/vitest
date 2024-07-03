@@ -16,9 +16,13 @@ function getDefs(c: Colors): TokenColors {
     SingleLineComment: c.gray,
     RegularExpressionLiteral: c.cyan,
     NumericLiteral: c.blue,
-    TemplateHead: text => c.green(text.slice(0, text.length - 2)) + c.cyan(text.slice(-2)),
+    TemplateHead: text =>
+      c.green(text.slice(0, text.length - 2)) + c.cyan(text.slice(-2)),
     TemplateTail: text => c.cyan(text.slice(0, 1)) + c.green(text.slice(1)),
-    TemplateMiddle: text => c.cyan(text.slice(0, 1)) + c.green(text.slice(1, text.length - 2)) + c.cyan(text.slice(-2)),
+    TemplateMiddle: text =>
+      c.cyan(text.slice(0, 1))
+      + c.green(text.slice(1, text.length - 2))
+      + c.cyan(text.slice(-2)),
     IdentifierCallable: c.blue,
     PrivateIdentifierCallable: text => `#${c.blue(text.slice(1))}`,
     Invalid,
@@ -35,7 +39,10 @@ interface HighlightOptions {
   colors?: Colors
 }
 
-export function highlight(code: string, options: HighlightOptions = { jsx: false }) {
+export function highlight(
+  code: string,
+  options: HighlightOptions = { jsx: false },
+) {
   return baseHighlight(code, {
     jsx: options.jsx,
     colors: getDefs(options.colors || getColors()),

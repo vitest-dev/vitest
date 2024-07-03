@@ -11,9 +11,7 @@ export class VitestGit {
 
   constructor(private cwd: string) {}
 
-  private async resolveFilesWithGitCommand(
-    args: string[],
-  ): Promise<string[]> {
+  private async resolveFilesWithGitCommand(args: string[]): Promise<string[]> {
     let result: ExecaReturnValue
 
     try {
@@ -33,8 +31,9 @@ export class VitestGit {
 
   async findChangedFiles(options: GitOptions) {
     const root = await this.getRoot(this.cwd)
-    if (!root)
+    if (!root) {
       return null
+    }
 
     this.root = root
 
@@ -55,26 +54,24 @@ export class VitestGit {
   }
 
   private getFilesSince(hash: string) {
-    return this.resolveFilesWithGitCommand(
-      ['diff', '--name-only', `${hash}...HEAD`],
-    )
+    return this.resolveFilesWithGitCommand([
+      'diff',
+      '--name-only',
+      `${hash}...HEAD`,
+    ])
   }
 
   private getStagedFiles() {
-    return this.resolveFilesWithGitCommand(
-      ['diff', '--cached', '--name-only'],
-    )
+    return this.resolveFilesWithGitCommand(['diff', '--cached', '--name-only'])
   }
 
   private getUnstagedFiles() {
-    return this.resolveFilesWithGitCommand(
-      [
-        'ls-files',
-        '--other',
-        '--modified',
-        '--exclude-standard',
-      ],
-    )
+    return this.resolveFilesWithGitCommand([
+      'ls-files',
+      '--other',
+      '--modified',
+      '--exclude-standard',
+    ])
   }
 
   async getRoot(cwd: string) {

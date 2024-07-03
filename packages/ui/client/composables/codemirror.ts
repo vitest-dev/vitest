@@ -11,20 +11,21 @@ import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/scroll/simplescrollbars'
 import 'codemirror/addon/scroll/simplescrollbars.css'
+import type { Task } from '@vitest/runner'
+import { navigateTo } from '~/composables/navigation'
+
+export const codemirrorRef = shallowRef<CodeMirror.EditorFromTextArea>()
 
 export function useCodeMirror(
   textarea: Ref<HTMLTextAreaElement | null | undefined>,
   input: Ref<string> | WritableComputedRef<string>,
   options: CodeMirror.EditorConfiguration = {},
 ) {
-  const cm = CodeMirror.fromTextArea(
-    textarea.value!,
-    {
-      theme: 'vars',
-      ...options,
-      scrollbarStyle: 'simple',
-    },
-  )
+  const cm = CodeMirror.fromTextArea(textarea.value!, {
+    theme: 'vars',
+    ...options,
+    scrollbarStyle: 'simple',
+  })
 
   let skip = false
 
@@ -42,12 +43,24 @@ export function useCodeMirror(
       if (v !== cm.getValue()) {
         skip = true
         const selections = cm.listSelections()
-        cm.replaceRange(v, cm.posFromIndex(0), cm.posFromIndex(Number.POSITIVE_INFINITY))
+        cm.replaceRange(
+          v,
+          cm.posFromIndex(0),
+          cm.posFromIndex(Number.POSITIVE_INFINITY),
+        )
         cm.setSelections(selections)
       }
     },
     { immediate: true },
   )
 
+  onUnmounted(() => {
+    codemirrorRef.value = undefined
+  })
+
   return markRaw(cm)
+}
+
+export async function showSource(task: Task) {
+  navigateTo(task, task.location?.line ?? 0)
 }

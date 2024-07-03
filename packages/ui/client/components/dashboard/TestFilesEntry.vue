@@ -1,46 +1,51 @@
 <script setup lang="ts">
-import { files, unhandledErrors } from '~/composables/client'
-import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composables/summary'
+import { unhandledErrors } from '~/composables/client/state'
+import { explorerTree } from '~/composables/explorer'
 </script>
 
 <template>
   <div
     data-testid="test-files-entry"
     grid="~ cols-[min-content_1fr_min-content]"
-    items-center gap="x-2 y-3" p="x4" relative font-light w-80
+    items-center
+    gap="x-2 y-3"
+    p="x4"
+    relative
+    font-light
+    w-80
     op80
   >
     <div i-carbon-document />
     <div>Files</div>
     <div class="number" data-testid="num-files">
-      {{ files.length }}
+      {{ explorerTree.summary.files }}
     </div>
 
-    <template v-if="filesSuccess.length">
+    <template v-if="explorerTree.summary.filesSuccess">
       <div i-carbon-checkmark />
       <div>Pass</div>
       <div class="number">
-        {{ filesSuccess.length }}
+        {{ explorerTree.summary.filesSuccess }}
       </div>
     </template>
 
-    <template v-if="filesFailed.length">
+    <template v-if="explorerTree.summary.filesFailed">
       <div i-carbon-close />
       <div>
         Fail
       </div>
       <div class="number" text-red5>
-        {{ filesFailed.length }}
+        {{ explorerTree.summary.filesFailed }}
       </div>
     </template>
 
-    <template v-if="filesSnapshotFailed.length">
+    <template v-if="explorerTree.summary.filesSnapshotFailed">
       <div i-carbon-compare />
       <div>
         Snapshot Fail
       </div>
       <div class="number" text-red5>
-        {{ filesSnapshotFailed.length }}
+        {{ explorerTree.summary.filesSnapshotFailed }}
       </div>
     </template>
 
@@ -57,7 +62,7 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
     <div i-carbon-timer />
     <div>Time</div>
     <div class="number" data-testid="run-time">
-      {{ time }}
+      {{ explorerTree.summary.time }}
     </div>
   </div>
   <template v-if="unhandledErrors.length">
@@ -72,10 +77,16 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
       <details
         data-testid="unhandled-errors-details"
         class="scrolls unhandled-errors"
-        text="sm" font-thin pe-2.5 open:max-h-52 overflow-auto
+        text="sm"
+        font-thin
+        pe-2.5
+        open:max-h-52
+        overflow-auto
       >
-        <summary font-bold cursor-pointer>Errors</summary>
-        <ErrorEntry v-for="e in unhandledErrors" :error="e" />
+        <summary font-bold cursor-pointer>
+          Errors
+        </summary>
+        <ErrorEntry v-for="(e, idx) in unhandledErrors" :key="idx" :error="e" />
       </details>
     </div>
   </template>
@@ -88,7 +99,7 @@ import { filesFailed, filesSnapshotFailed, filesSuccess, time } from '~/composab
 }
 
 .unhandled-errors {
-  --cm-ttc-c-thumb: #CCC;
+  --cm-ttc-c-thumb: #ccc;
 }
 
 html.dark .unhandled-errors {

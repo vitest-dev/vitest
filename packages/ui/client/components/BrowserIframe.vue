@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import { viewport, customViewport } from '~/composables/browser'
+import { customViewport, viewport } from '~/composables/browser'
 import type { ViewportSize } from '~/composables/browser'
-import { setIframeViewport, getCurrentBrowserIframe } from '~/composables/api'
+import { getCurrentBrowserIframe, setIframeViewport } from '~/composables/api'
 
 const sizes: Record<ViewportSize, [width: string, height: string] | null> = {
   'small-mobile': ['320px', '568px'],
   'large-mobile': ['414px', '896px'],
-  tablet: ['834px', '1112px'],
-  full: ['100%', '100%'],
+  'tablet': ['834px', '1112px'],
+  'full': ['100%', '100%'],
   // should not be used manually, this is just
   // a fallback for the case when the viewport is not set correctly
-  custom: null,
+  'custom': null,
 }
 
 async function changeViewport(name: ViewportSize) {
   if (viewport.value === name) {
     viewport.value = customViewport.value ? 'custom' : 'full'
-  } else {
+  }
+  else {
     viewport.value = name
   }
 
@@ -26,7 +27,8 @@ async function changeViewport(name: ViewportSize) {
     return
   }
 
-  const [width, height] = sizes[viewport.value] || customViewport.value || sizes.full
+  const [width, height]
+    = (sizes[viewport.value] || customViewport.value || sizes.full)!
 
   await setIframeViewport(width, height)
 }
@@ -34,32 +36,11 @@ async function changeViewport(name: ViewportSize) {
 
 <template>
   <div h="full" flex="~ col">
-    <div
-      p="3"
-      h-10
-      flex="~ gap-2"
-      items-center
-      bg-header
-      border="b base"
-    >
+    <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <div class="i-carbon-content-delivery-network" />
-      <span
-        pl-1
-        font-bold
-        text-sm
-        flex-auto
-        ws-nowrap
-        overflow-hidden
-        truncate
-      >Browser UI</span>
+      <span pl-1 font-bold text-sm flex-auto ws-nowrap overflow-hidden truncate>Browser UI</span>
     </div>
-    <div
-      p="l3 y2 r2"
-      flex="~ gap-2"
-      items-center
-      bg-header
-      border="b-2 base"
-    >
+    <div p="l3 y2 r2" flex="~ gap-2" items-center bg-header border="b-2 base">
       <!-- TODO: these are only for preview (thank you Storybook!), we need to support more different and custom sizes (as a dropdown) -->
       <IconButton
         v-tooltip.bottom="'Flexible'"
@@ -91,7 +72,11 @@ async function changeViewport(name: ViewportSize) {
       />
     </div>
     <div flex-auto class="scrolls">
-      <div id="tester-ui" class="flex h-full justify-center items-center font-light op70" style="overflow: auto; width: 100%; height: 100%">
+      <div
+        id="tester-ui"
+        class="flex h-full justify-center items-center font-light op70"
+        style="overflow: auto; width: 100%; height: 100%"
+      >
         Select a test to run
       </div>
     </div>

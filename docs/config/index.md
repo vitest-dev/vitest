@@ -32,6 +32,10 @@ All configuration options that are not supported inside a [workspace](/guide/wor
 
 A list of glob patterns that match your test files.
 
+::: tip NOTE
+When using coverage, Vitest automatically adds test files `include` patterns to coverage's default `exclude` patterns. See [`coverage.exclude`](#coverage-exclude).
+:::
+
 ### exclude
 
 - **Type:** `string[]`
@@ -407,6 +411,10 @@ browser-like environment through either [`jsdom`](https://github.com/jsdom/jsdom
 or [`happy-dom`](https://github.com/capricorn86/happy-dom) instead.
 If you are building edge functions, you can use [`edge-runtime`](https://edge-runtime.vercel.app/packages/vm) environment
 
+::: tip
+You can also use [Browser Mode](/guide/browser/) to run integration or unit tests in the browser without mocking the environment.
+:::
+
 By adding a `@vitest-environment` docblock or comment at the top of the file,
 you can specify another environment to be used for all tests in that file:
 
@@ -650,17 +658,17 @@ export default defineConfig({
 
 ##### poolOptions.threads.maxThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment variable.
+Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
 ##### poolOptions.threads.minThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
+Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ##### poolOptions.threads.singleThread
 
@@ -722,17 +730,17 @@ export default defineConfig({
 
 ##### poolOptions.forks.maxForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of forks.
+Maximum number or percentage of forks.
 
 ##### poolOptions.forks.minForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of forks.
+Minimum number or percentage of forks.
 
 ##### poolOptions.forks.isolate
 
@@ -785,17 +793,17 @@ export default defineConfig({
 
 ##### poolOptions.vmThreads.maxThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of threads. You can also use `VITEST_MAX_THREADS` environment variable.
+Maximum number or percentage of threads. You can also use `VITEST_MAX_THREADS` environment variable.
 
 ##### poolOptions.vmThreads.minThreads<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of threads. You can also use `VITEST_MIN_THREADS` environment variable.
+Minimum number or percentage of threads. You can also use `VITEST_MIN_THREADS` environment variable.
 
 ##### poolOptions.vmThreads.memoryLimit<NonProjectOption />
 
@@ -866,17 +874,17 @@ export default defineConfig({
 
 ##### poolOptions.vmForks.maxForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number of threads. You can also use `VITEST_MAX_FORKS` environment variable.
+Maximum number or percentage of threads. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.vmForks.minForks<NonProjectOption />
 
-- **Type:** `number`
+- **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number of threads. You can also use `VITEST_MIN_FORKS` environment variable.
+Minimum number or percentage of threads. You can also use `VITEST_MIN_FORKS` environment variable.
 
 ##### poolOptions.vmForks.memoryLimit<NonProjectOption />
 
@@ -896,7 +904,7 @@ Pass additional arguments to `node` process in the VM context. See [Command-line
 Be careful when using, it as some options may crash worker, e.g. --prof, --title. See https://github.com/nodejs/node/issues/41103.
 :::
 
-### fileParallelism {#fileparallelism}
+### fileParallelism<NonProjectOption /> {#fileparallelism}
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -908,22 +916,22 @@ Should all test files run in parallel. Setting this to `false` will override `ma
 This option doesn't affect tests running in the same file. If you want to run those in parallel, use `concurrent` option on [describe](/api/#describe-concurrent) or via [a config](#sequence-concurrent).
 :::
 
-### maxWorkers {#maxworkers}
+### maxWorkers<NonProjectOption /> {#maxworkers}
 
-- **Type:** `number`
+- **Type:** `number | string`
 
-Maximum number of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
+Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
 
-### minWorkers {#minworkers}
+### minWorkers<NonProjectOption /> {#minworkers}
 
-- **Type:** `number`
+- **Type:** `number | string`
 
-Minimum number of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
+Minimum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.minThreads`/`poolOptions.forks.minForks` has higher priority.
 
 ### testTimeout
 
 - **Type:** `number`
-- **Default:** `5000`
+- **Default:** `5_000` in Node.js, `15_000` if `browser.enabled` is `true`
 - **CLI:** `--test-timeout=5000`, `--testTimeout=5000`
 
 Default timeout of a test in milliseconds
@@ -931,7 +939,7 @@ Default timeout of a test in milliseconds
 ### hookTimeout
 
 - **Type:** `number`
-- **Default:** `10000`
+- **Default:** `10_000` in Node.js, `30_000` if `browser.enabled` is `true`
 - **CLI:** `--hook-timeout=10000`, `--hookTimeout=10000`
 
 Default timeout of a hook in milliseconds
@@ -1107,6 +1115,7 @@ List of files included in coverage as glob patterns
 [
   'coverage/**',
   'dist/**',
+  '**/node_modules/**',
   '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
@@ -1116,9 +1125,9 @@ List of files included in coverage as glob patterns
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec}?(-d).?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
   '**/vitest.{workspace,projects}.[jt]s?(on)',
   '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
@@ -1141,6 +1150,10 @@ export default defineConfig({
   },
 })
 ```
+
+::: tip NOTE
+Vitest automatically adds test files `include` patterns to the default value of `coverage.exclude`.
+:::
 
 #### coverage.all
 
@@ -1494,7 +1507,7 @@ Listen to port and serve API. When set to true, the default port is 51204
 Run Vitest tests in a browser. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](#browser-provider) option.
 
 ::: tip NOTE
-Read more about testing in a real browser in the [guide page](/guide/browser).
+Read more about testing in a real browser in the [guide page](/guide/browser/).
 :::
 
 ::: warning
@@ -1616,6 +1629,20 @@ Should Vitest UI be injected into the page. By default, injects UI iframe during
 
 Default iframe's viewport.
 
+#### browser.screenshotDirectory {#browser-screenshotdirectory}
+
+- **Type:** `string`
+- **Default:** `__snapshots__` in the test file directory
+
+Path to the snapshots directory relative to the `root`.
+
+#### browser.screenshotFailures {#browser-screenshotfailures}
+
+- **Type:** `boolean`
+- **Default:** `!browser.ui`
+
+Should Vitest take screenshots if the test fails.
+
 #### browser.orchestratorScripts {#browser-orchestratorscripts}
 
 - **Type:** `BrowserScript[]`
@@ -1670,7 +1697,7 @@ The script `src` and `content` will be processed by Vite plugins.
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser#commands) that can be import during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be import during browser tests from `@vitest/browser/commands`.
 
 ### clearMocks
 
@@ -2131,12 +2158,14 @@ export default defineConfig({
   test: {
     onStackTrace(error: Error, { file }: ParsedStack): boolean | void {
       // If we've encountered a ReferenceError, show the whole stack.
-      if (error.name === 'ReferenceError')
+      if (error.name === 'ReferenceError') {
         return
+      }
 
       // Reject all frames from third party libraries.
-      if (file.includes('node_modules'))
+      if (file.includes('node_modules')) {
         return false
+      }
     },
   },
 })
@@ -2276,6 +2305,11 @@ You can disable isolation for specific pools by using [`poolOptions`](#pooloptio
 Should `location` property be included when Vitest API receives tasks in [reporters](#reporters). If you have a lot of tests, this might cause a small performance regression.
 
 The `location` property has `column` and `line` values that correspond to the `test` or `describe` position in the original file.
+
+This option will be auto-enabled if you don't disable it explicitly, and you are running Vitest with:
+- [Vitest UI](/guide/ui)
+- or using the [Browser Mode](/guide/browser/) without [headless](/guide/browser/#headless) mode
+- or using [HTML Reporter](/guide/reporters#html-reporter)
 
 ::: tip
 This option has no effect if you do not use custom code that relies on this.

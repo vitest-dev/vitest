@@ -67,8 +67,9 @@ class Diff {
  */
 const diff_commonPrefix = function (text1: string, text2: string): number {
   // Quick check for common null cases.
-  if (!text1 || !text2 || text1.charAt(0) !== text2.charAt(0))
+  if (!text1 || !text2 || text1.charAt(0) !== text2.charAt(0)) {
     return 0
+  }
 
   // Binary search.
   // Performance analysis: https://neil.fraser.name/news/2007/10/09/
@@ -77,7 +78,10 @@ const diff_commonPrefix = function (text1: string, text2: string): number {
   let pointermid = pointermax
   let pointerstart = 0
   while (pointermin < pointermid) {
-    if (text1.substring(pointerstart, pointermid) === text2.substring(pointerstart, pointermid)) {
+    if (
+      text1.substring(pointerstart, pointermid)
+      === text2.substring(pointerstart, pointermid)
+    ) {
       pointermin = pointermid
       pointerstart = pointermin
     }
@@ -97,8 +101,11 @@ const diff_commonPrefix = function (text1: string, text2: string): number {
  */
 const diff_commonSuffix = function (text1: string, text2: string): number {
   // Quick check for common null cases.
-  if (!text1 || !text2
-    || text1.charAt(text1.length - 1) !== text2.charAt(text2.length - 1)) {
+  if (
+    !text1
+    || !text2
+    || text1.charAt(text1.length - 1) !== text2.charAt(text2.length - 1)
+  ) {
     return 0
   }
 
@@ -109,8 +116,10 @@ const diff_commonSuffix = function (text1: string, text2: string): number {
   let pointermid = pointermax
   let pointerend = 0
   while (pointermin < pointermid) {
-    if (text1.substring(text1.length - pointermid, text1.length - pointerend)
-      === text2.substring(text2.length - pointermid, text2.length - pointerend)) {
+    if (
+      text1.substring(text1.length - pointermid, text1.length - pointerend)
+      === text2.substring(text2.length - pointermid, text2.length - pointerend)
+    ) {
       pointermin = pointermid
       pointerend = pointermin
     }
@@ -135,20 +144,23 @@ const diff_commonOverlap_ = function (text1: string, text2: string): number {
   const text1_length = text1.length
   const text2_length = text2.length
   // Eliminate the null case.
-  if (text1_length === 0 || text2_length === 0)
+  if (text1_length === 0 || text2_length === 0) {
     return 0
+  }
 
   // Truncate the longer string.
-  if (text1_length > text2_length)
+  if (text1_length > text2_length) {
     text1 = text1.substring(text1_length - text2_length)
-
-  else if (text1_length < text2_length)
+  }
+  else if (text1_length < text2_length) {
     text2 = text2.substring(0, text1_length)
+  }
 
   const text_length = Math.min(text1_length, text2_length)
   // Quick check for the worst case.
-  if (text1 === text2)
+  if (text1 === text2) {
     return text_length
+  }
 
   // Start by looking for a single character match
   // and increase length until no match is found.
@@ -158,12 +170,15 @@ const diff_commonOverlap_ = function (text1: string, text2: string): number {
   while (true) {
     const pattern = text1.substring(text_length - length)
     const found = text2.indexOf(pattern)
-    if (found === -1)
+    if (found === -1) {
       return best
+    }
 
     length += found
-    if (found === 0 || text1.substring(text_length - length)
-      === text2.substring(0, length)) {
+    if (
+      found === 0
+      || text1.substring(text_length - length) === text2.substring(0, length)
+    ) {
       best = length
       length++
     }
@@ -189,7 +204,8 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
   let length_insertions2 = 0
   let length_deletions2 = 0
   while (pointer < diffs.length) {
-    if (diffs[pointer][0] === DIFF_EQUAL) { // Equality found.
+    if (diffs[pointer][0] === DIFF_EQUAL) {
+      // Equality found.
       equalities[equalitiesLength++] = pointer
       length_insertions1 = length_insertions2
       length_deletions1 = length_deletions2
@@ -197,20 +213,29 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
       length_deletions2 = 0
       lastEquality = diffs[pointer][1]
     }
-    else { // An insertion or deletion.
-      if (diffs[pointer][0] === DIFF_INSERT)
+    else {
+      // An insertion or deletion.
+      if (diffs[pointer][0] === DIFF_INSERT) {
         length_insertions2 += diffs[pointer][1].length
-
-      else
+      }
+      else {
         length_deletions2 += diffs[pointer][1].length
+      }
 
       // Eliminate an equality that is smaller or equal to the edits on both
       // sides of it.
-      if (lastEquality && (lastEquality.length
-        <= Math.max(length_insertions1, length_deletions1))
-        && (lastEquality.length <= Math.max(length_insertions2, length_deletions2))) {
+      if (
+        lastEquality
+        && lastEquality.length
+        <= Math.max(length_insertions1, length_deletions1)
+        && lastEquality.length <= Math.max(length_insertions2, length_deletions2)
+      ) {
         // Duplicate record.
-        diffs.splice(equalities[equalitiesLength - 1], 0, new Diff(DIFF_DELETE, lastEquality))
+        diffs.splice(
+          equalities[equalitiesLength - 1],
+          0,
+          new Diff(DIFF_DELETE, lastEquality),
+        )
         // Change second copy to insert.
         diffs[equalities[equalitiesLength - 1] + 1][0] = DIFF_INSERT
         // Throw away the equality we just deleted.
@@ -230,8 +255,9 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
   }
 
   // Normalize the diff.
-  if (changes)
+  if (changes) {
     diff_cleanupMerge(diffs)
+  }
 
   diff_cleanupSemanticLossless(diffs)
 
@@ -243,35 +269,52 @@ const diff_cleanupSemantic = function (diffs: Array<Diff>) {
   // Only extract an overlap if it is as big as the edit ahead or behind it.
   pointer = 1
   while (pointer < diffs.length) {
-    if (diffs[pointer - 1][0] === DIFF_DELETE
-      && diffs[pointer][0] === DIFF_INSERT) {
+    if (
+      diffs[pointer - 1][0] === DIFF_DELETE
+      && diffs[pointer][0] === DIFF_INSERT
+    ) {
       const deletion = diffs[pointer - 1][1]
       const insertion = diffs[pointer][1]
       const overlap_length1 = diff_commonOverlap_(deletion, insertion)
       const overlap_length2 = diff_commonOverlap_(insertion, deletion)
       if (overlap_length1 >= overlap_length2) {
-        if (overlap_length1 >= deletion.length / 2
-          || overlap_length1 >= insertion.length / 2) {
+        if (
+          overlap_length1 >= deletion.length / 2
+          || overlap_length1 >= insertion.length / 2
+        ) {
           // Overlap found.  Insert an equality and trim the surrounding edits.
-          diffs.splice(pointer, 0, new Diff(DIFF_EQUAL, insertion.substring(0, overlap_length1)))
-          diffs[pointer - 1][1]
-              = deletion.substring(0, deletion.length - overlap_length1)
+          diffs.splice(
+            pointer,
+            0,
+            new Diff(DIFF_EQUAL, insertion.substring(0, overlap_length1)),
+          )
+          diffs[pointer - 1][1] = deletion.substring(
+            0,
+            deletion.length - overlap_length1,
+          )
           diffs[pointer + 1][1] = insertion.substring(overlap_length1)
           pointer++
         }
       }
       else {
-        if (overlap_length2 >= deletion.length / 2
-          || overlap_length2 >= insertion.length / 2) {
+        if (
+          overlap_length2 >= deletion.length / 2
+          || overlap_length2 >= insertion.length / 2
+        ) {
           // Reverse overlap found.
           // Insert an equality and swap and trim the surrounding edits.
-          diffs.splice(pointer, 0, new Diff(DIFF_EQUAL, deletion.substring(0, overlap_length2)))
+          diffs.splice(
+            pointer,
+            0,
+            new Diff(DIFF_EQUAL, deletion.substring(0, overlap_length2)),
+          )
           diffs[pointer - 1][0] = DIFF_INSERT
-          diffs[pointer - 1][1]
-              = insertion.substring(0, insertion.length - overlap_length2)
+          diffs[pointer - 1][1] = insertion.substring(
+            0,
+            insertion.length - overlap_length2,
+          )
           diffs[pointer + 1][0] = DIFF_DELETE
-          diffs[pointer + 1][1]
-              = deletion.substring(overlap_length2)
+          diffs[pointer + 1][1] = deletion.substring(overlap_length2)
           pointer++
         }
       }
@@ -320,18 +363,12 @@ function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
     const char2 = two.charAt(0)
     const nonAlphaNumeric1 = char1.match(nonAlphaNumericRegex_)
     const nonAlphaNumeric2 = char2.match(nonAlphaNumericRegex_)
-    const whitespace1 = nonAlphaNumeric1
-      && char1.match(whitespaceRegex_)
-    const whitespace2 = nonAlphaNumeric2
-      && char2.match(whitespaceRegex_)
-    const lineBreak1 = whitespace1
-      && char1.match(linebreakRegex_)
-    const lineBreak2 = whitespace2
-      && char2.match(linebreakRegex_)
-    const blankLine1 = lineBreak1
-      && one.match(blanklineEndRegex_)
-    const blankLine2 = lineBreak2
-      && two.match(blanklineStartRegex_)
+    const whitespace1 = nonAlphaNumeric1 && char1.match(whitespaceRegex_)
+    const whitespace2 = nonAlphaNumeric2 && char2.match(whitespaceRegex_)
+    const lineBreak1 = whitespace1 && char1.match(linebreakRegex_)
+    const lineBreak2 = whitespace2 && char2.match(linebreakRegex_)
+    const blankLine1 = lineBreak1 && one.match(blanklineEndRegex_)
+    const blankLine2 = lineBreak2 && two.match(blanklineStartRegex_)
 
     if (blankLine1 || blankLine2) {
       // Five points for blank lines.
@@ -359,8 +396,10 @@ function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
   let pointer = 1
   // Intentionally ignore the first and last element (don't need checking).
   while (pointer < diffs.length - 1) {
-    if (diffs[pointer - 1][0] === DIFF_EQUAL
-      && diffs[pointer + 1][0] === DIFF_EQUAL) {
+    if (
+      diffs[pointer - 1][0] === DIFF_EQUAL
+      && diffs[pointer + 1][0] === DIFF_EQUAL
+    ) {
       // This is a single edit surrounded by equalities.
       let equality1 = diffs[pointer - 1][1]
       let edit = diffs[pointer][1]
@@ -379,13 +418,15 @@ function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
       let bestEquality1 = equality1
       let bestEdit = edit
       let bestEquality2 = equality2
-      let bestScore = diff_cleanupSemanticScore_(equality1, edit)
+      let bestScore
+        = diff_cleanupSemanticScore_(equality1, edit)
         + diff_cleanupSemanticScore_(edit, equality2)
       while (edit.charAt(0) === equality2.charAt(0)) {
         equality1 += edit.charAt(0)
         edit = edit.substring(1) + equality2.charAt(0)
         equality2 = equality2.substring(1)
-        const score = diff_cleanupSemanticScore_(equality1, edit)
+        const score
+          = diff_cleanupSemanticScore_(equality1, edit)
           + diff_cleanupSemanticScore_(edit, equality2)
         // The >= encourages trailing rather than leading whitespace on edits.
         if (score >= bestScore) {
@@ -452,14 +493,20 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
             // Factor out any common prefixies.
             commonlength = diff_commonPrefix(text_insert, text_delete)
             if (commonlength !== 0) {
-              if ((pointer - count_delete - count_insert) > 0
+              if (
+                pointer - count_delete - count_insert > 0
                 && diffs[pointer - count_delete - count_insert - 1][0]
-                === DIFF_EQUAL) {
+                === DIFF_EQUAL
+              ) {
                 diffs[pointer - count_delete - count_insert - 1][1]
-                    += text_insert.substring(0, commonlength)
+                  += text_insert.substring(0, commonlength)
               }
               else {
-                diffs.splice(0, 0, new Diff(DIFF_EQUAL, text_insert.substring(0, commonlength)))
+                diffs.splice(
+                  0,
+                  0,
+                  new Diff(DIFF_EQUAL, text_insert.substring(0, commonlength)),
+                )
                 pointer++
               }
               text_insert = text_insert.substring(commonlength)
@@ -468,12 +515,17 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
             // Factor out any common suffixies.
             commonlength = diff_commonSuffix(text_insert, text_delete)
             if (commonlength !== 0) {
-              diffs[pointer][1] = text_insert.substring(text_insert.length
-              - commonlength) + diffs[pointer][1]
-              text_insert = text_insert.substring(0, text_insert.length
-              - commonlength)
-              text_delete = text_delete.substring(0, text_delete.length
-              - commonlength)
+              diffs[pointer][1]
+                = text_insert.substring(text_insert.length - commonlength)
+                + diffs[pointer][1]
+              text_insert = text_insert.substring(
+                0,
+                text_insert.length - commonlength,
+              )
+              text_delete = text_delete.substring(
+                0,
+                text_delete.length - commonlength,
+              )
             }
           }
           // Delete the offending records and add the merged ones.
@@ -504,8 +556,9 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         break
     }
   }
-  if (diffs[diffs.length - 1][1] === '')
-    diffs.pop() // Remove the dummy entry at the end.
+  if (diffs[diffs.length - 1][1] === '') {
+    diffs.pop()
+  } // Remove the dummy entry at the end.
 
   // Second pass: look for single edits surrounded on both sides by equalities
   // which can be shifted sideways to eliminate an equality.
@@ -514,26 +567,36 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
   pointer = 1
   // Intentionally ignore the first and last element (don't need checking).
   while (pointer < diffs.length - 1) {
-    if (diffs[pointer - 1][0] === DIFF_EQUAL
-      && diffs[pointer + 1][0] === DIFF_EQUAL) {
+    if (
+      diffs[pointer - 1][0] === DIFF_EQUAL
+      && diffs[pointer + 1][0] === DIFF_EQUAL
+    ) {
       // This is a single edit surrounded by equalities.
-      if (diffs[pointer][1].substring(diffs[pointer][1].length
-        - diffs[pointer - 1][1].length) === diffs[pointer - 1][1]) {
+      if (
+        diffs[pointer][1].substring(
+          diffs[pointer][1].length - diffs[pointer - 1][1].length,
+        ) === diffs[pointer - 1][1]
+      ) {
         // Shift the edit over the previous equality.
-        diffs[pointer][1] = diffs[pointer - 1][1]
-        + diffs[pointer][1].substring(0, diffs[pointer][1].length
-        - diffs[pointer - 1][1].length)
+        diffs[pointer][1]
+          = diffs[pointer - 1][1]
+          + diffs[pointer][1].substring(
+            0,
+            diffs[pointer][1].length - diffs[pointer - 1][1].length,
+          )
         diffs[pointer + 1][1] = diffs[pointer - 1][1] + diffs[pointer + 1][1]
         diffs.splice(pointer - 1, 1)
         changes = true
       }
-      else if (diffs[pointer][1].substring(0, diffs[pointer + 1][1].length)
-        === diffs[pointer + 1][1]) {
+      else if (
+        diffs[pointer][1].substring(0, diffs[pointer + 1][1].length)
+        === diffs[pointer + 1][1]
+      ) {
         // Shift the edit over the next equality.
         diffs[pointer - 1][1] += diffs[pointer + 1][1]
         diffs[pointer][1]
-            = diffs[pointer][1].substring(diffs[pointer + 1][1].length)
-            + diffs[pointer + 1][1]
+          = diffs[pointer][1].substring(diffs[pointer + 1][1].length)
+          + diffs[pointer + 1][1]
         diffs.splice(pointer + 1, 1)
         changes = true
       }
@@ -541,8 +604,9 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
     pointer++
   }
   // If shifts were made, the diff needs reordering and another shift sweep.
-  if (changes)
+  if (changes) {
     diff_cleanupMerge(diffs)
+  }
 }
 
 export {

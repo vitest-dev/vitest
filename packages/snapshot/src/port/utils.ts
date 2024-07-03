@@ -7,9 +7,7 @@
 
 import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
-import {
-  format as prettyFormat,
-} from 'pretty-format'
+import { format as prettyFormat } from 'pretty-format'
 import { isObject } from '../../../utils/src/index'
 import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
@@ -22,16 +20,20 @@ export function testNameToKey(testName: string, count: number): string {
 }
 
 export function keyToTestName(key: string): string {
-  if (!/ \d+$/.test(key))
+  if (!/ \d+$/.test(key)) {
     throw new Error('Snapshot keys must end with a number.')
+  }
 
   return key.replace(/ \d+$/, '')
 }
 
-export function getSnapshotData(content: string | null, options: SnapshotStateOptions): {
-  data: SnapshotData
-  dirty: boolean
-} {
+export function getSnapshotData(
+  content: string | null,
+  options: SnapshotStateOptions,
+): {
+    data: SnapshotData
+    dirty: boolean
+  } {
   const update = options.updateSnapshot
   const data = Object.create(null)
   let snapshotContents = ''
@@ -53,8 +55,9 @@ export function getSnapshotData(content: string | null, options: SnapshotStateOp
   // if (update === 'none' && isInvalid)
   //   throw validationResult
 
-  if ((update === 'all' || update === 'new') && isInvalid)
+  if ((update === 'all' || update === 'new') && isInvalid) {
     dirty = true
+  }
 
   return { data, dirty }
 }
@@ -69,7 +72,7 @@ export function addExtraLineBreaks(string: string): string {
 // Instead of trim, which can remove additional newlines or spaces
 // at beginning or end of the content from a custom serializer.
 export function removeExtraLineBreaks(string: string): string {
-  return (string.length > 2 && string.startsWith('\n') && string.endsWith('\n'))
+  return string.length > 2 && string.startsWith('\n') && string.endsWith('\n')
     ? string.slice(1, -1)
     : string
 }
@@ -90,7 +93,11 @@ export function removeExtraLineBreaks(string: string): string {
 const escapeRegex = true
 const printFunctionName = false
 
-export function serialize(val: unknown, indent = 2, formatOverrides: PrettyFormatOptions = {}): string {
+export function serialize(
+  val: unknown,
+  indent = 2,
+  formatOverrides: PrettyFormatOptions = {},
+): string {
   return normalizeNewlines(
     prettyFormat(val, {
       escapeRegex,
@@ -136,20 +143,21 @@ export async function saveSnapshotFile(
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(
-      key => `exports[${printBacktickString(key)}] = ${printBacktickString(normalizeNewlines(snapshotData[key]))};`,
+      key =>
+        `exports[${printBacktickString(key)}] = ${printBacktickString(
+          normalizeNewlines(snapshotData[key]),
+        )};`,
     )
 
   const content = `${environment.getHeader()}\n\n${snapshots.join('\n\n')}\n`
   const oldContent = await environment.readSnapshotFile(snapshotPath)
   const skipWriting = oldContent != null && oldContent === content
 
-  if (skipWriting)
+  if (skipWriting) {
     return
+  }
 
-  await environment.saveSnapshotFile(
-    snapshotPath,
-    content,
-  )
+  await environment.saveSnapshotFile(snapshotPath, content)
 }
 
 export async function saveSnapshotFileRaw(
@@ -160,13 +168,11 @@ export async function saveSnapshotFileRaw(
   const oldContent = await environment.readSnapshotFile(snapshotPath)
   const skipWriting = oldContent != null && oldContent === content
 
-  if (skipWriting)
+  if (skipWriting) {
     return
+  }
 
-  await environment.saveSnapshotFile(
-    snapshotPath,
-    content,
-  )
+  await environment.saveSnapshotFile(snapshotPath, content)
 }
 
 export function prepareExpected(expected?: string) {
@@ -176,8 +182,9 @@ export function prepareExpected(expected?: string) {
     const matchObject = /^( +)\}\s+$/m.exec(expected || '')
     const objectIndent = matchObject?.[1]?.length
 
-    if (objectIndent)
+    if (objectIndent) {
       return objectIndent
+    }
 
     // Attempts to find indentation for texts.
     // Matches the quote of first line.
@@ -191,7 +198,8 @@ export function prepareExpected(expected?: string) {
 
   if (startIndent) {
     expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '').replace(/ +\}$/, '}')
+      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '')
+      .replace(/ +\}$/, '}')
   }
 
   return expectedTrimmed
@@ -235,9 +243,12 @@ export function deepMergeSnapshot(target: any, source: any): any {
     const mergedOutput = { ...target }
     Object.keys(source).forEach((key) => {
       if (isObject(source[key]) && !source[key].$$typeof) {
-        if (!(key in target))
+        if (!(key in target)) {
           Object.assign(mergedOutput, { [key]: source[key] })
-        else mergedOutput[key] = deepMergeSnapshot(target[key], source[key])
+        }
+        else {
+          mergedOutput[key] = deepMergeSnapshot(target[key], source[key])
+        }
       }
       else if (Array.isArray(source[key])) {
         mergedOutput[key] = deepMergeArray(target[key], source[key])

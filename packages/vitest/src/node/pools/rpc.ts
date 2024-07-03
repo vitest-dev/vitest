@@ -8,8 +8,13 @@ import type { WorkspaceProject } from '../workspace'
 const created = new Set()
 const promises = new Map<string, Promise<void>>()
 
-export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
+interface MethodsOptions {
+  cacheFs?: boolean
+}
+
+export function createMethodsRPC(project: WorkspaceProject, options: MethodsOptions = {}): RuntimeRPC {
   const ctx = project.ctx
+  const cacheFs = options.cacheFs ?? false
   return {
     snapshotSaved(snapshot) {
       ctx.snapshot.add(snapshot)
@@ -20,8 +25,9 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     async getSourceMap(id, force) {
       if (force) {
         const mod = project.server.moduleGraph.getModuleById(id)
-        if (mod)
+        if (mod) {
           project.server.moduleGraph.invalidateModule(mod)
+        }
       }
       const r = await project.vitenode.transformRequest(id)
       return r?.map as RawSourceMap | undefined
@@ -29,13 +35,16 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
     async fetch(id, transformMode) {
       const result = await project.vitenode.fetchResult(id, transformMode)
       const code = result.code
-      if (result.externalize)
+      if (!cacheFs || result.externalize) {
         return result
-      if ('id' in result && typeof result.id === 'string')
+      }
+      if ('id' in result && typeof result.id === 'string') {
         return { id: result.id as string }
+      }
 
-      if (code == null)
+      if (code == null) {
         throw new Error(`Failed to fetch module ${id}`)
+      }
 
       const dir = join(project.tmpDir, transformMode)
       const name = createHash('sha1').update(id).digest('hex')
@@ -48,7 +57,10 @@ export function createMethodsRPC(project: WorkspaceProject): RuntimeRPC {
         await mkdir(dir, { recursive: true })
         created.add(dir)
       }
-      promises.set(tmp, writeFile(tmp, code, 'utf-8').finally(() => promises.delete(tmp)))
+      promises.set(
+        tmp,
+        writeFile(tmp, code, 'utf-8').finally(() => promises.delete(tmp)),
+      )
       await promises.get(tmp)
       Object.assign(result, { id: tmp })
       return { id: tmp }

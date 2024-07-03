@@ -12,7 +12,10 @@ export async function resolveSnapshotEnvironment(
   }
 
   const mod = await executor.executeId(config.snapshotEnvironment)
-  if (typeof mod.default !== 'object' || !mod.default)
-    throw new Error('Snapshot environment module must have a default export object with a shape of `SnapshotEnvironment`')
+  if (typeof mod.default !== 'object' || !mod.default) {
+    throw new Error(
+      'Snapshot environment module must have a default export object with a shape of `SnapshotEnvironment`',
+    )
+  }
   return mod.default
 }

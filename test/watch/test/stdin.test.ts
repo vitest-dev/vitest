@@ -42,10 +42,12 @@ describe.each([true, false])('standalone mode is %s', (standalone) => {
     await vitest.waitForStdout('Input test name pattern')
 
     vitest.write('sum')
-    if (standalone)
+    if (standalone) {
       await vitest.waitForStdout('Pattern matches no results')
-    else
+    }
+    else {
       await vitest.waitForStdout('Pattern matches 1 result')
+    }
     await vitest.waitForStdout('› sum')
 
     vitest.write('\n')

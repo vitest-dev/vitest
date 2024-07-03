@@ -10,13 +10,22 @@ export interface GlobalConstructors {
   Map: MapConstructor
 }
 
-function collectOwnProperties(obj: any, collector: Set<string | symbol> | ((key: string | symbol) => void)) {
-  const collect = typeof collector === 'function' ? collector : (key: string | symbol) => collector.add(key)
+function collectOwnProperties(
+  obj: any,
+  collector: Set<string | symbol> | ((key: string | symbol) => void),
+) {
+  const collect
+    = typeof collector === 'function'
+      ? collector
+      : (key: string | symbol) => collector.add(key)
   Object.getOwnPropertyNames(obj).forEach(collect)
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
-export function groupBy<T, K extends string | number | symbol>(collection: T[], iteratee: (item: T) => K) {
+export function groupBy<T, K extends string | number | symbol>(
+  collection: T[],
+  iteratee: (item: T) => K,
+) {
   return collection.reduce((acc, item) => {
     const key = iteratee(item)
     acc[key] ||= []
@@ -26,37 +35,47 @@ export function groupBy<T, K extends string | number | symbol>(collection: T[], 
 }
 
 export function isPrimitive(value: unknown) {
-  return value === null || (typeof value !== 'function' && typeof value !== 'object')
+  return (
+    value === null || (typeof value !== 'function' && typeof value !== 'object')
+  )
 }
 
-export function getAllMockableProperties(obj: any, isModule: boolean, constructors: GlobalConstructors) {
-  const {
-    Map,
-    Object,
-    Function,
-    RegExp,
-    Array,
-  } = constructors
+export function getAllMockableProperties(
+  obj: any,
+  isModule: boolean,
+  constructors: GlobalConstructors,
+) {
+  const { Map, Object, Function, RegExp, Array } = constructors
 
-  const allProps = new Map<string | symbol, { key: string | symbol; descriptor: PropertyDescriptor }>()
+  const allProps = new Map<
+    string | symbol,
+    { key: string | symbol; descriptor: PropertyDescriptor }
+  >()
   let curr = obj
   do {
     // we don't need properties from these
-    if (curr === Object.prototype || curr === Function.prototype || curr === RegExp.prototype)
+    if (
+      curr === Object.prototype
+      || curr === Function.prototype
+      || curr === RegExp.prototype
+    ) {
       break
+    }
 
     collectOwnProperties(curr, (key) => {
       const descriptor = Object.getOwnPropertyDescriptor(curr, key)
-      if (descriptor)
+      if (descriptor) {
         allProps.set(key, { key, descriptor })
+      }
     })
-  // eslint-disable-next-line no-cond-assign
-  } while (curr = Object.getPrototypeOf(curr))
+    // eslint-disable-next-line no-cond-assign
+  } while ((curr = Object.getPrototypeOf(curr)))
   // default is not specified in ownKeys, if module is interoped
   if (isModule && !allProps.has('default') && 'default' in obj) {
     const descriptor = Object.getOwnPropertyDescriptor(obj, 'default')
-    if (descriptor)
+    if (descriptor) {
       allProps.set('default', { key: 'default', descriptor })
+    }
   }
   return Array.from(allProps.values())
 }
@@ -65,7 +84,7 @@ export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
 
-export function noop() { }
+export function noop() {}
 
 export function getType(value: unknown): string {
   return Object.prototype.toString.apply(value).slice(8, -1)
@@ -78,11 +97,13 @@ export function getType(value: unknown): string {
  */
 
 export function toArray<T>(array?: Nullable<Arrayable<T>>): Array<T> {
-  if (array === null || array === undefined)
+  if (array === null || array === undefined) {
     array = []
+  }
 
-  if (Array.isArray(array))
+  if (Array.isArray(array)) {
     return array
+  }
 
   return [array]
 }
@@ -91,7 +112,10 @@ export function toString(v: any) {
   return Object.prototype.toString.call(v)
 }
 export function isPlainObject(val: any): val is object {
-  return toString(val) === '[object Object]' && (!val.constructor || val.constructor.name === 'Object')
+  return (
+    toString(val) === '[object Object]'
+    && (!val.constructor || val.constructor.name === 'Object')
+  )
 }
 
 export function isObject(item: unknown): boolean {
@@ -105,19 +129,25 @@ export function isObject(item: unknown): boolean {
  *
  * Do not merge types - it is very expensive and usually it's better to case a type here
  */
-export function deepMerge<T extends object = object>(target: T, ...sources: any[]): T {
-  if (!sources.length)
+export function deepMerge<T extends object = object>(
+  target: T,
+  ...sources: any[]
+): T {
+  if (!sources.length) {
     return target as any
+  }
 
   const source = sources.shift()
-  if (source === undefined)
+  if (source === undefined) {
     return target as any
+  }
 
   if (isMergeableObject(target) && isMergeableObject(source)) {
     (Object.keys(source) as (keyof T)[]).forEach((key) => {
       if (isMergeableObject(source[key])) {
-        if (!target[key])
+        if (!target[key]) {
           target[key] = {} as any
+        }
 
         deepMerge(target[key] as any, source[key] as any)
       }
@@ -167,7 +197,10 @@ export function escapeRegExp(s: string) {
 }
 
 export function wildcardPatternToRegExp(pattern: string): RegExp {
-  return new RegExp(`^${pattern.split('*').map(escapeRegExp).join('.*')}$`, 'i')
+  return new RegExp(
+    `^${pattern.split('*').map(escapeRegExp).join('.*')}$`,
+    'i',
+  )
 }
 
 // port from nanoid
@@ -177,6 +210,8 @@ const urlAlphabet
 export function nanoid(size = 21) {
   let id = ''
   let i = size
-  while (i--) id += urlAlphabet[(Math.random() * 64) | 0]
+  while (i--) {
+    id += urlAlphabet[(Math.random() * 64) | 0]
+  }
   return id
 }

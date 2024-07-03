@@ -28,8 +28,9 @@ vitest.mock('../src/mockedD')
 function getPropertyDescriptor(object: any, property: PropertyKey) {
   for (let o = object; o; o = Object.getPrototypeOf(o)) {
     const descriptor = Object.getOwnPropertyDescriptor(o, property)
-    if (descriptor)
+    if (descriptor) {
       return descriptor
+    }
   }
   return undefined
 }

@@ -6,11 +6,13 @@ import { $ } from 'zx'
 
 let version = process.argv[2]
 
-if (!version)
+if (!version) {
   throw new Error('No tag specified')
+}
 
-if (version.startsWith('v'))
+if (version.startsWith('v')) {
   version = version.slice(1)
+}
 
 const pkgPath = fileURLToPath(new URL('../package.json', import.meta.url))
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
@@ -29,7 +31,9 @@ const releaseTag = version.includes('beta')
 
 console.log('Publishing version', version, 'with tag', releaseTag || 'latest')
 
-if (releaseTag)
+if (releaseTag) {
   await $`pnpm -r publish --access public --no-git-checks --tag ${releaseTag}`
-else
+}
+else {
   await $`pnpm -r publish --access public --no-git-checks`
+}

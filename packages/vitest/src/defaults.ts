@@ -1,10 +1,25 @@
 import os from 'node:os'
-import type { BenchmarkUserOptions, CoverageV8Options, ResolvedCoverageOptions, UserConfig } from './types'
+import type {
+  BenchmarkUserOptions,
+  CoverageV8Options,
+  ResolvedCoverageOptions,
+  UserConfig,
+} from './types'
 import { isCI } from './utils/env'
 
+export { defaultBrowserPort } from './constants'
+
 export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude = ['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
-export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>> = {
+export const defaultExclude = [
+  '**/node_modules/**',
+  '**/dist/**',
+  '**/cypress/**',
+  '**/.{idea,git,cache,output,temp}/**',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+]
+export const benchmarkConfigDefaults: Required<
+  Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
+> = {
   include: ['**/*.{bench,benchmark}.?(c|m)[jt]s?(x)'],
   exclude: defaultExclude,
   includeSource: [],
@@ -14,6 +29,7 @@ export const benchmarkConfigDefaults: Required<Omit<BenchmarkUserOptions, 'outpu
 const defaultCoverageExcludes = [
   'coverage/**',
   'dist/**',
+  '**/node_modules/**',
   '**/[.]**',
   'packages/*/test?(s)/**',
   '**/*.d.ts',
@@ -23,9 +39,9 @@ const defaultCoverageExcludes = [
   'cypress/**',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
-  '**/*{.,-}{test,spec}?(-d).?(c|m)[jt]s?(x)',
+  '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
   '**/__tests__/**',
-  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+  '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
   '**/vitest.{workspace,projects}.[jt]s?(on)',
   '**/.{eslint,mocha,prettier}rc.{?(c|m)js,yml}',
 ]
@@ -40,11 +56,31 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   reportsDirectory: './coverage',
   exclude: defaultCoverageExcludes,
   reportOnFailure: false,
-  reporter: [['text', {}], ['html', {}], ['clover', {}], ['json', {}]],
-  extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko'],
+  reporter: [
+    ['text', {}],
+    ['html', {}],
+    ['clover', {}],
+    ['json', {}],
+  ],
+  extension: [
+    '.js',
+    '.cjs',
+    '.mjs',
+    '.ts',
+    '.mts',
+    '.cts',
+    '.tsx',
+    '.jsx',
+    '.vue',
+    '.svelte',
+    '.marko',
+  ],
   allowExternal: false,
   ignoreEmptyLines: true,
-  processingConcurrency: Math.min(20, os.availableParallelism?.() ?? os.cpus().length),
+  processingConcurrency: Math.min(
+    20,
+    os.availableParallelism?.() ?? os.cpus().length,
+  ),
 }
 
 export const fakeTimersDefaults = {
@@ -73,13 +109,8 @@ const config = {
   mockReset: false,
   include: defaultInclude,
   exclude: defaultExclude,
-  testTimeout: 5000,
-  hookTimeout: 10000,
   teardownTimeout: 10000,
-  forceRerunTriggers: [
-    '**/package.json/**',
-    '**/{vitest,vite}.config.*/**',
-  ],
+  forceRerunTriggers: ['**/package.json/**', '**/{vitest,vite}.config.*/**'],
   update: false,
   reporters: [],
   silent: false,

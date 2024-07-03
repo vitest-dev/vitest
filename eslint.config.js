@@ -2,6 +2,7 @@ import antfu, { GLOB_SRC } from '@antfu/eslint-config'
 
 export default antfu(
   {
+    vue: true,
     // Disable tests rules because we need to test with various setup
     test: false,
     // This replaces the old `.gitignore`
@@ -11,6 +12,7 @@ export default antfu(
       '**/bench.json',
       '**/fixtures',
       '**/assets/**',
+      '**/*.d.ts',
       '**/*.timestamp-*',
       'test/core/src/self',
       'test/cache/cache/.vitest-base/results.json',
@@ -44,6 +46,8 @@ export default antfu(
       // let TypeScript handle this
       'no-undef': 'off',
       'ts/no-invalid-this': 'off',
+      'eslint-comments/no-unlimited-disable': 'off',
+      'curly': ['error', 'all'],
 
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
@@ -96,6 +100,7 @@ export default antfu(
       'import/newline-after-import': 'off',
       'import/first': 'off',
       'unused-imports/no-unused-imports': 'off',
+      'ts/method-signature-style': 'off',
     },
   },
   {

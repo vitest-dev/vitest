@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import type { ResizeContext } from 'd3-graph-controller'
-import { GraphController, Markers, PositionInitializers, defineGraphConfig } from 'd3-graph-controller'
+import {
+  GraphController,
+  Markers,
+  PositionInitializers,
+  defineGraphConfig,
+} from 'd3-graph-controller'
 import type { Selection } from 'd3-selection'
 import { isReport } from '~/composables/client'
-import type { ModuleGraph, ModuleGraphController, ModuleLink, ModuleNode, ModuleType } from '~/composables/module-graph'
+import type {
+  ModuleGraph,
+  ModuleGraphController,
+  ModuleLink,
+  ModuleNode,
+  ModuleType,
+} from '~/composables/module-graph'
 
 const props = defineProps<{
   graph: ModuleGraph
@@ -18,10 +29,14 @@ const modalShow = ref(false)
 const selectedModule = ref<string | null>()
 const controller = ref<ModuleGraphController | undefined>()
 
-watchEffect(() => {
-  if (modalShow.value === false)
-    setTimeout(() => selectedModule.value = undefined, 300)
-}, { flush: 'post' })
+watchEffect(
+  () => {
+    if (modalShow.value === false) {
+      setTimeout(() => (selectedModule.value = undefined), 300)
+    }
+  },
+  { flush: 'post' },
+)
 
 onMounted(() => {
   resetGraphController()
@@ -44,8 +59,9 @@ function setSelectedModule(id: string) {
 
 function resetGraphController() {
   controller.value?.shutdown()
-  if (!graph.value || !el.value)
+  if (!graph.value || !el.value) {
     return
+  }
 
   controller.value = new GraphController(
     el.value!,
@@ -59,8 +75,9 @@ function resetGraphController() {
           initialize: 1,
           resize: ({ newHeight, newWidth }: ResizeContext) => {
             const willBeHidden = newHeight === 0 && newWidth === 0
-            if (willBeHidden)
+            if (willBeHidden) {
               return 0
+            }
             return 0.25
           },
         },
@@ -77,9 +94,10 @@ function resetGraphController() {
       modifiers: {
         node: bindOnClick,
       },
-      positionInitializer: graph.value.nodes.length > 1
-        ? PositionInitializers.Randomized
-        : PositionInitializers.Centered,
+      positionInitializer:
+        graph.value.nodes.length > 1
+          ? PositionInitializers.Randomized
+          : PositionInitializers.Centered,
       zoom: {
         min: 0.5,
         max: 2,
@@ -88,9 +106,12 @@ function resetGraphController() {
   )
 }
 
-function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>) {
-  if (isReport)
+function bindOnClick(
+  selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>,
+) {
+  if (isReport) {
     return
+  }
   // Only trigger on left-click and primary touch
   const isValidClick = (event: PointerEvent) => event.button === 0
 
@@ -100,25 +121,31 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
 
   selection
     .on('pointerdown', (event: PointerEvent, node) => {
-      if (node.type === 'external')
+      if (node.type === 'external') {
         return
-      if (!node.x || !node.y || !isValidClick(event))
+      }
+      if (!node.x || !node.y || !isValidClick(event)) {
         return
+      }
       px = node.x
       py = node.y
       pt = Date.now()
     })
     .on('pointerup', (event: PointerEvent, node: ModuleNode) => {
-      if (node.type === 'external')
+      if (node.type === 'external') {
         return
-      if (!node.x || !node.y || !isValidClick(event))
+      }
+      if (!node.x || !node.y || !isValidClick(event)) {
         return
-      if (Date.now() - pt > 500)
+      }
+      if (Date.now() - pt > 500) {
         return
+      }
       const dx = node.x - px
       const dy = node.y - py
-      if (dx ** 2 + dy ** 2 < 100)
+      if (dx ** 2 + dy ** 2 < 100) {
         setSelectedModule(node.id)
+      }
     })
 }
 </script>
@@ -154,7 +181,11 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
         </div>
         <div flex-auto />
         <div>
-          <IconButton v-tooltip.bottom="'Reset'" icon="i-carbon-reset" @click="resetGraphController" />
+          <IconButton
+            v-tooltip.bottom="'Reset'"
+            icon="i-carbon-reset"
+            @click="resetGraphController"
+          />
         </div>
       </div>
     </div>
@@ -162,7 +193,11 @@ function bindOnClick(selection: Selection<SVGCircleElement, ModuleNode, SVGGElem
     <Modal v-model="modalShow" direction="right">
       <template v-if="selectedModule">
         <Suspense>
-          <ModuleTransformResultView :id="selectedModule" :project-name="projectName" @close="modalShow = false" />
+          <ModuleTransformResultView
+            :id="selectedModule"
+            :project-name="projectName"
+            @close="modalShow = false"
+          />
         </Suspense>
       </template>
     </Modal>

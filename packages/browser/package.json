@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "2.0.0-beta.9",
+  "version": "2.0.0-beta.12",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -28,6 +28,9 @@
       "types": "./context.d.ts",
       "default": "./context.js"
     },
+    "./matchers": {
+      "types": "./matchers.d.ts"
+    },
     "./providers/webdriverio": {
       "types": "./providers/webdriverio.d.ts"
     },
@@ -41,6 +44,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "*.d.ts",
+    "context.js",
     "dist",
     "providers"
   ],
@@ -69,13 +73,16 @@
     }
   },
   "dependencies": {
-    "@testing-library/dom": "^9.3.4",
+    "@testing-library/dom": "^10.2.0",
     "@testing-library/user-event": "^14.5.2",
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.10",
-    "sirv": "^2.0.4"
+    "msw": "^2.3.1",
+    "sirv": "^2.0.4",
+    "ws": "^8.17.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.6",
     "@types/ws": "^8.5.10",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
@@ -83,11 +90,12 @@
     "@wdio/protocols": "^8.38.0",
     "birpc": "0.2.17",
     "flatted": "^3.3.1",
+    "pathe": "^1.1.2",
     "periscopic": "^4.0.2",
-    "playwright": "^1.44.1",
-    "playwright-core": "^1.44.1",
+    "playwright": "^1.45.0",
+    "playwright-core": "^1.45.0",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",
-    "webdriverio": "^8.38.2"
+    "webdriverio": "^8.39.0"
   }
 }

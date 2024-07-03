@@ -1,5 +1,10 @@
 <script setup lang="ts">
-defineProps<{ icon?: `i-${string}` | `dark:i-${string}`; title?: string; disabled?: boolean; active?: boolean }>()
+defineProps<{
+  icon?: `i-${string}` | `dark:i-${string}`
+  title?: string
+  disabled?: boolean
+  active?: boolean
+}>()
 </script>
 
 <template>
@@ -10,10 +15,10 @@ defineProps<{ icon?: `i-${string}` | `dark:i-${string}`; title?: string; disable
     rounded
     :disabled="disabled"
     :hover="disabled || active ? '' : 'bg-active op100'"
-    :class="['w-1.4em h-1.4em flex', { 'bg-gray-500:35 op100': active }]"
+    class="w-1.4em h-1.4em flex" :class="[{ 'bg-gray-500:35 op100': active }]"
   >
     <slot>
-      <div :class="icon" ma />
+      <span :class="icon" ma block />
     </slot>
   </button>
 </template>

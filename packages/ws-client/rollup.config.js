@@ -4,9 +4,7 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 
-const entry = [
-  'src/index.ts',
-]
+const entry = ['src/index.ts']
 
 const external = [
   'ws',
@@ -41,16 +39,12 @@ export default () => [
     ],
   },
   {
-    input: [
-      'src/index.ts',
-    ],
+    input: ['src/index.ts'],
     output: {
       file: 'dist/index.d.ts',
       format: 'esm',
     },
     external,
-    plugins: [
-      dts(),
-    ],
+    plugins: [dts()],
   },
 ]
