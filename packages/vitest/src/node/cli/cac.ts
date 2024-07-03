@@ -317,7 +317,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       return
     }
 
-    processCollected(tests, options)
+    processCollected(ctx, tests, options)
     await ctx.close()
   }
   catch (e) {

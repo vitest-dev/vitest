@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs'
-import { expect, test } from 'vitest'
+import { readFileSync, rmSync } from 'node:fs'
+import { expect, onTestFinished, test } from 'vitest'
 import { runVitestCli } from '../../test-utils'
 
 test.each([
@@ -8,12 +8,24 @@ test.each([
   ['--pool=vmForks'],
   ['--browser.enabled'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
-  const { stdout } = await runVitestCli('list', '-r=./fixtures/list', ...args)
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
   expect(stdout).toMatchSnapshot()
+  expect(exitCode).toBe(0)
+})
+
+test.each([
+  ['basic'],
+  ['json', '--json'],
+  ['json with a file', '--json=./list.json'],
+])('%s output shows error', async () => {
+  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts')
+  expect(stdout).toBe('')
+  expect(stderr).toMatchSnapshot()
+  expect(exitCode).toBe(1)
 })
 
 test('correctly outputs json', async () => {
-  const { stdout } = await runVitestCli('list', '-r=./fixtures/list', '--json')
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json')
   expect(relative(stdout)).toMatchInlineSnapshot(`
     "[
       {
@@ -43,10 +55,14 @@ test('correctly outputs json', async () => {
     ]
     "
   `)
+  expect(exitCode).toBe(0)
 })
 
 test('correctly saves json', async () => {
-  const { stdout } = await runVitestCli('list', '-r=./fixtures/list', '--json=./list.json')
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json=./list.json')
+  onTestFinished(() => {
+    rmSync('./fixtures/list/list.json')
+  })
   const json = readFileSync('./fixtures/list/list.json', 'utf-8')
   expect(stdout).toBe('')
   expect(relative(json)).toMatchInlineSnapshot(`
@@ -77,15 +93,17 @@ test('correctly saves json', async () => {
       }
     ]"
   `)
+  expect(exitCode).toBe(0)
 })
 
 test('correctly filters by file', async () => {
-  const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list')
+  const { stdout, exitCode } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list')
   expect(stdout).toMatchInlineSnapshot(`
     "math.test.ts > 1 plus 1
     math.test.ts > failing test
     "
   `)
+  expect(exitCode).toBe(0)
 })
 
 test('correctly prints project name in basic report', async () => {

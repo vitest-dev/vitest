@@ -3,7 +3,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { File } from '@vitest/runner'
+import type { File, Suite, Task } from '@vitest/runner'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { getEnvPackageName } from '../../integrations/env'
 import type { UserConfig, Vitest, VitestRunMode } from '../../types'
@@ -160,7 +160,31 @@ export async function prepareVitest(
   return ctx
 }
 
-export function processCollected(files: File[], options: CliOptions) {
+export function processCollected(ctx: Vitest, files: File[], options: CliOptions) {
+  let errorsPrinted = false
+
+  forEachSuite(files, (suite) => {
+    const errors = suite.result?.errors || []
+    errors.forEach((error) => {
+      errorsPrinted = true
+      ctx.logger.printError(error, {
+        project: ctx.getProjectByName(suite.file.projectName),
+      })
+    })
+  })
+
+  if (errorsPrinted) {
+    return
+  }
+
+  if (typeof options.json !== 'undefined') {
+    return processJsonOutput(files, options)
+  }
+
+  return formatCollectedAsString(files).forEach(test => console.log(test))
+}
+
+function processJsonOutput(files: File[], options: CliOptions) {
   if (typeof options.json === 'boolean') {
     return console.log(JSON.stringify(formatCollectedAsJSON(files), null, 2))
   }
@@ -169,10 +193,16 @@ export function processCollected(files: File[], options: CliOptions) {
     const jsonPath = resolve(options.root || process.cwd(), options.json)
     mkdirSync(dirname(jsonPath), { recursive: true })
     writeFileSync(jsonPath, JSON.stringify(formatCollectedAsJSON(files), null, 2))
-    return
   }
+}
 
-  return formatCollectedAsString(files).forEach(test => console.log(test))
+function forEachSuite(tasks: Task[], callback: (suite: Suite) => void) {
+  tasks.forEach((task) => {
+    if (task.type === 'suite') {
+      callback(task)
+      forEachSuite(task.tasks, callback)
+    }
+  })
 }
 
 export function formatCollectedAsJSON(files: File[]) {

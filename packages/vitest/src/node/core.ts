@@ -760,7 +760,7 @@ export class Vitest {
 
       const files = this.state.getFiles()
 
-      // can only happen if there was a synax error in describe block
+      // can only happen if there was a syntax error in describe block
       // or there was an error importing a file
       if (hasFailed(files)) {
         process.exitCode = 1
