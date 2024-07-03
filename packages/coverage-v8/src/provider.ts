@@ -443,11 +443,11 @@ export class V8CoverageProvider
     transformResults: TransformResults,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
-    source: string
-    originalSource: string
-    sourceMap?: { sourcemap: EncodedSourceMap }
-    isExecuted: boolean
-  }> {
+      source: string
+      originalSource: string
+      sourceMap?: { sourcemap: EncodedSourceMap }
+      isExecuted: boolean
+    }> {
     const filePath = normalize(fileURLToPath(url))
 
     let isExecuted = true

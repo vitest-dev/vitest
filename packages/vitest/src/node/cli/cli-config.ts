@@ -9,9 +9,9 @@ import type {
 import type { CliOptions } from './cli-api'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
-  | never
-  | RegExp
-  | unknown[]
+| never
+| RegExp
+| unknown[]
   ? never
   : V
 
