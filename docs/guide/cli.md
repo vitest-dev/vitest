@@ -65,7 +65,7 @@ vitest init browser
 
 ### `vitest list`
 
-`vitest list` command inherits all `vitest` options to print the list of all matching tests. By default, it will print the names of all tests that matched the file filter and name pattern:
+`vitest list` command inherits all `vitest` options to print the list of all matching tests. This command ignores `reporters` option. By default, it will print the names of all tests that matched the file filter and name pattern:
 
 ```shell
 vitest list filename.spec.ts -t="some-test"
