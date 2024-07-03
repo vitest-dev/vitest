@@ -14,6 +14,7 @@ import {
   getFullName,
   getSafeTimers,
   getSuites,
+  getTestName,
   getTests,
   hasFailed,
   hasFailedSnapshot,
@@ -33,8 +34,8 @@ import {
   formatTimeString,
   getStateString,
   getStateSymbol,
-  pointer,
   renderSnapshotSummary,
+  taskFail,
 } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -63,6 +64,7 @@ export abstract class BaseReporter implements Reporter {
   start = 0
   end = 0
   watchFilters?: string[]
+  failedUnwatchedFiles: Task[] = []
   isTTY: boolean
   ctx: Vitest = undefined!
 
@@ -115,56 +117,62 @@ export abstract class BaseReporter implements Reporter {
     if (this.isTTY) {
       return
     }
-    const logger = this.ctx.logger
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
-      if (
-        task
-        && 'filepath' in task
-        && task.result?.state
-        && task.result?.state !== 'run'
-      ) {
-        const tests = getTests(task)
-        const failed = tests.filter(t => t.result?.state === 'fail')
-        const skipped = tests.filter(
-          t => t.mode === 'skip' || t.mode === 'todo',
-        )
-        let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
-        if (failed.length) {
-          state += ` ${c.dim('|')} ${c.red(`${failed.length} failed`)}`
-        }
-        if (skipped.length) {
-          state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
-        }
-        let suffix = c.dim(' (') + state + c.dim(')')
-        if (task.result.duration) {
-          const color
-            = task.result.duration > this.ctx.config.slowTestThreshold
-              ? c.yellow
-              : c.gray
-          suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
-        }
-        if (this.ctx.config.logHeapUsage && task.result.heap != null) {
-          suffix += c.magenta(
-            ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
-          )
-        }
-
-        let title = ` ${getStateSymbol(task)} `
-        if (task.projectName) {
-          title += formatProjectName(task.projectName)
-        }
-        title += `${task.name} ${suffix}`
-        logger.log(title)
-
-        // print short errors, full errors will be at the end in summary
-        for (const test of failed) {
-          logger.log(c.red(`   ${pointer} ${getFullName(test, c.dim(' > '))}`))
-          test.result?.errors?.forEach((e) => {
-            logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
-          })
-        }
+      if (task) {
+        this.printTask(task)
       }
+    }
+  }
+
+  protected printTask(task: Task) {
+    if (
+      !('filepath' in task)
+      || !task.result?.state
+      || task.result?.state === 'run') {
+      return
+    }
+    const logger = this.ctx.logger
+
+    const tests = getTests(task)
+    const failed = tests.filter(t => t.result?.state === 'fail')
+    const skipped = tests.filter(
+      t => t.mode === 'skip' || t.mode === 'todo',
+    )
+    let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
+    if (failed.length) {
+      state += ` ${c.dim('|')} ${c.red(`${failed.length} failed`)}`
+    }
+    if (skipped.length) {
+      state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
+    }
+    let suffix = c.dim(' (') + state + c.dim(')')
+    if (task.result.duration) {
+      const color
+        = task.result.duration > this.ctx.config.slowTestThreshold
+          ? c.yellow
+          : c.gray
+      suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
+    }
+    if (this.ctx.config.logHeapUsage && task.result.heap != null) {
+      suffix += c.magenta(
+        ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
+      )
+    }
+
+    let title = ` ${getStateSymbol(task)} `
+    if (task.projectName) {
+      title += formatProjectName(task.projectName)
+    }
+    title += `${task.name} ${suffix}`
+    logger.log(title)
+
+    // print short errors, full errors will be at the end in summary
+    for (const test of failed) {
+      logger.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}`))
+      test.result?.errors?.forEach((e) => {
+        logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
+      })
     }
   }
 
@@ -233,6 +241,9 @@ export abstract class BaseReporter implements Reporter {
   onWatcherRerun(files: string[], trigger?: string) {
     this.resetLastRunLog()
     this.watchFilters = files
+    this.failedUnwatchedFiles = this.ctx.state.getFiles().filter((file) => {
+      return !files.includes(file.filepath) && hasFailed(file)
+    })
 
     files.forEach((filepath) => {
       let reruns = this._filesInWatchMode.get(filepath) ?? 0
@@ -272,6 +283,12 @@ export abstract class BaseReporter implements Reporter {
           `x${rerun}`,
         )}\n${PROJECT_FILTER}${FILENAME_PATTERN}${TESTNAME_PATTERN}`,
       )
+    }
+
+    if (!this.isTTY) {
+      for (const task of this.failedUnwatchedFiles) {
+        this.printTask(task)
+      }
     }
 
     this._timeStart = new Date()
@@ -375,7 +392,11 @@ export abstract class BaseReporter implements Reporter {
   }
 
   reportTestSummary(files: File[], errors: unknown[]) {
-    const tests = getTests(files)
+    const affectedFiles = [
+      ...this.failedUnwatchedFiles,
+      ...files,
+    ]
+    const tests = getTests(affectedFiles)
     const logger = this.ctx.logger
 
     const executionTime = this.end - this.start
@@ -437,7 +458,7 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    logger.log(padTitle('Test Files'), getStateString(files))
+    logger.log(padTitle('Test Files'), getStateString(affectedFiles))
     logger.log(padTitle('Tests'), getStateString(tests))
     if (this.ctx.projects.some(c => c.config.typecheck.enabled)) {
       const failed = tests.filter(

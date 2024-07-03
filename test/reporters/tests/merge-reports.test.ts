@@ -89,13 +89,13 @@ test('merge reports', async () => {
     test 1-2
 
      ❯ first.test.ts  (2 tests | 1 failed) <time>
-       ❯ first.test.ts > test 1-2
+       × test 1-2
          → expected 1 to be 2 // Object.is equality
     stdout | second.test.ts > test 2-1
     test 2-1
 
      ❯ second.test.ts  (3 tests | 1 failed) <time>
-       ❯ second.test.ts > test 2-1
+       × test 2-1
          → expected 1 to be 2 // Object.is equality
 
      Test Files  2 failed (2)

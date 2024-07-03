@@ -506,8 +506,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       istanbul-lib-source-maps:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.6
+        version: 5.0.6
       istanbul-reports:
         specifier: ^3.1.7
         version: 3.1.7
@@ -564,8 +564,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       istanbul-lib-source-maps:
-        specifier: ^5.0.5
-        version: 5.0.5
+        specifier: ^5.0.6
+        version: 5.0.6
       istanbul-reports:
         specifier: ^3.1.7
         version: 3.1.7
@@ -11492,8 +11492,8 @@ packages:
       make-dir: 4.0.0
       supports-color: 7.2.0
 
-  /istanbul-lib-source-maps@5.0.5:
-    resolution: {integrity: sha512-gKf4eJ8bHmSX/ljiOCpnd8vtmHTwG71uugm0kXYd5aqFCl6z8cj8k7QduXSwU6QOst6LCdSXTlaoc8W4554crQ==}
+  /istanbul-lib-source-maps@5.0.6:
+    resolution: {integrity: sha512-yg2d+Em4KizZC5niWhQaIomgf5WlL4vOOjZ5xGCmF8SnPE/mDWWXgvRExdcpCgh9lLRRa1/fSYp2ymmbJ1pI+A==}
     engines: {node: '>=10'}
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25

@@ -44,5 +44,5 @@ export type { JsonOptions } from './reporters/json'
 export type { JUnitOptions } from './reporters/junit'
 export type { HTMLOptions } from './reporters/html'
 
-export { isFileServingAllowed, createServer } from 'vite'
+export { isFileServingAllowed, createServer, parseAst, parseAstAsync } from 'vite'
 export type * as Vite from 'vite'

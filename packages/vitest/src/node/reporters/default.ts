@@ -56,6 +56,16 @@ export class DefaultReporter extends BaseReporter {
     files = this.ctx.state.getFiles(),
     errors = this.ctx.state.getUnhandledErrors(),
   ) {
+    // print failed tests without their errors to keep track of previously failed tests
+    // this can happen if there are multiple test errors, and user changed a file
+    // that triggered a rerun of unrelated tests - in that case they want to see
+    // the error for the test they are currently working on, but still keep track of
+    // the other failed tests
+    this.renderer?.update([
+      ...this.failedUnwatchedFiles,
+      ...files,
+    ])
+
     this.stopListRender()
     this.ctx.logger.log()
     super.onFinished(files, errors)

@@ -201,7 +201,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onFinished(files?: File[], errors?: unknown[]) {
+  onFinished(files: File[], errors: unknown[]) {
     this.clients.forEach((client) => {
       client.onFinished?.(files, errors)?.catch?.(noop)
     })

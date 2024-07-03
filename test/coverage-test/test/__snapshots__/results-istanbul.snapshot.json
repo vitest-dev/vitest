@@ -438,14 +438,8 @@
             }
           },
           {
-            "start": {
-              "line": 33,
-              "column": 2
-            },
-            "end": {
-              "line": 36,
-              "column": null
-            }
+            "start": {},
+            "end": {}
           }
         ]
       },
@@ -473,14 +467,8 @@
             }
           },
           {
-            "start": {
-              "line": 39,
-              "column": 2
-            },
-            "end": {
-              "line": 42,
-              "column": null
-            }
+            "start": {},
+            "end": {}
           }
         ]
       }

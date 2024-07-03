@@ -1,4 +1,6 @@
-import { promises as fs, readFileSync } from 'node:fs'
+import fs from 'node:fs'
+
+const { promises, readFileSync } = fs
 
 export class FileMap {
   private fsCache = new Map<string, string>()
@@ -9,7 +11,7 @@ export class FileMap {
     if (cached != null) {
       return cached
     }
-    const source = await fs.readFile(path, 'utf-8')
+    const source = await promises.readFile(path, 'utf-8')
     this.fsCache.set(path, source)
     return source
   }
