@@ -1,8 +1,9 @@
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import type { PartialResolvedId } from 'rollup'
 import type { ResolvedConfig } from 'vitest'
+import type { ResolvedConfig as ViteConfig } from 'vite'
 import type { WorkspaceProject } from 'vitest/node'
 
 export async function resolveMock(
@@ -14,7 +15,9 @@ export async function resolveMock(
   const { id, fsPath, external } = await resolveId(project, rawId, importer)
 
   if (hasFactory) {
-    return { type: 'factory' as const, resolvedId: id }
+    const needsInteropMap = viteDepsInteropMap(project.browser!.vite.config)
+    const needsInterop = needsInteropMap?.get(fsPath) ?? false
+    return { type: 'factory' as const, resolvedId: id, needsInterop }
   }
 
   const mockPath = resolveMockPath(project.config.root, fsPath, external)
@@ -125,4 +128,30 @@ export function isNodeBuiltin(id: string): boolean {
 const postfixRE = /[?#].*$/
 export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
+}
+
+const metadata = new WeakMap<ViteConfig, Map<string, boolean>>()
+
+function viteDepsInteropMap(config: ViteConfig) {
+  if (metadata.has(config)) {
+    return metadata.get(config)!
+  }
+  const cacheDirPath = getDepsCacheDir(config)
+  const metadataPath = resolve(cacheDirPath, '_metadata.json')
+  if (!existsSync(metadataPath)) {
+    return null
+  }
+  const { optimized } = JSON.parse(readFileSync(metadataPath, 'utf-8'))
+  const needsInteropMap = new Map()
+  for (const name in optimized) {
+    const dep = optimized[name]
+    const file = resolve(cacheDirPath, dep.file)
+    needsInteropMap.set(file, dep.needsInterop)
+  }
+  metadata.set(config, needsInteropMap)
+  return needsInteropMap
+}
+
+function getDepsCacheDir(config: ViteConfig): string {
+  return resolve(config.cacheDir, 'deps')
 }
