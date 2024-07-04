@@ -1,6 +1,8 @@
 import { expect, it } from 'vitest'
 
-it('"v" flag in regexp', () => {
+const [version] = process.version.split('.')
+
+it.skipIf(Number(version) < 20)('"v" flag in regexp', () => {
   const regexp = /\p{RGI_Emoji}|\P{Mark}\p{Mark}*/gv
   expect('👍🏼👍🏼👍🏼'.match(regexp)).toEqual(['👍🏼', '👍🏼', '👍🏼'])
 })
