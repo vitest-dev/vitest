@@ -57,7 +57,7 @@ Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experim
 
 ### `vitest init`
 
-`vitest init <name>` can be used to setup project configuration. At the moment, it only supports [`browser`](/guide/browser) value:
+`vitest init <name>` can be used to setup project configuration. At the moment, it only supports [`browser`](/guide/browser/) value:
 
 ```bash
 vitest init browser
