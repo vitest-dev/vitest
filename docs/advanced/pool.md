@@ -45,6 +45,7 @@ import { ProcessPool, WorkspaceProject } from 'vitest/node'
 export interface ProcessPool {
   name: string
   runTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
+  collectTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
   close?: () => Promise<void>
 }
 ```
@@ -56,6 +57,8 @@ Vitest calls `runTest` when new tests are scheduled to run. It will not call it 
 Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onFinished`](/guide/reporters) only after `runTests` is resolved).
 
 If you are using a custom pool, you will have to provide test files and their results yourself - you can reference [`vitest.state`](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/state.ts) for that (most important are `collectFiles` and `updateTasks`). Vitest uses `startTests` function from `@vitest/runner` package to do that.
+
+Vitest will call `collectTests` if `vitest.collect` is called or `vitest list` is invoked via a CLI command. It works the same way as `runTests`, but you don't have to run test callbacks, only report their tasks by calling `vitest.state.collectFiles(files)`.
 
 To communicate between different processes, you can create methods object using `createMethodsRPC` from `vitest/node`, and use any form of communication that you prefer. For example, to use WebSockets with `birpc` you can write something like this:
 

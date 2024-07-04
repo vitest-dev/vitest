@@ -954,10 +954,12 @@ export interface ResolvedConfig
     | 'poolOptions'
     | 'pool'
     | 'cliExclude'
+    | 'diff'
   > {
   mode: VitestRunMode
 
   base?: string
+  diff?: string
 
   config?: string
   filters?: string[]

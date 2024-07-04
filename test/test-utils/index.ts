@@ -136,7 +136,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     return output()
   }
 
-  if (args.includes('--watch')) {
+  if (args[0] !== 'list' && args.includes('--watch')) {
     if (command === 'vitest') {
       // Wait for initial test run to complete
       await cli.waitForStdout('Waiting for file changes')

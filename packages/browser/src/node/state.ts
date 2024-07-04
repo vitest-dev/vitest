@@ -14,10 +14,11 @@ export class BrowserServerState implements IBrowserServerState {
     return this.contexts.get(contextId)
   }
 
-  createAsyncContext(contextId: string, files: string[]): Promise<void> {
+  createAsyncContext(method: 'run' | 'collect', contextId: string, files: string[]): Promise<void> {
     const defer = createDefer<void>()
     this.contexts.set(contextId, {
       files,
+      method,
       resolve: () => {
         defer.resolve()
         this.contexts.delete(contextId)

@@ -70,12 +70,15 @@ export function WorkspaceVitestPlugin(
             alias: testConfig.alias,
             conditions: ['node'],
           },
-          esbuild: {
-            sourcemap: 'external',
-
-            // Enables using ignore hint for coverage providers with @preserve keyword
-            legalComments: 'inline',
-          },
+          esbuild: viteConfig.esbuild === false
+            ? false
+            : {
+                // Lowest target Vitest supports is Node18
+                target: viteConfig.esbuild?.target || 'node18',
+                sourcemap: 'external',
+                // Enables using ignore hint for coverage providers with @preserve keyword
+                legalComments: 'inline',
+              },
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher

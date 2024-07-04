@@ -8,6 +8,9 @@ export default (ctx: Vitest): ProcessPool => {
   const options = ctx.config.poolOptions?.custom as any
   return {
     name: 'custom',
+    async collectTests() {
+      throw new Error('Not implemented')
+    },
     async runTests(specs) {
       ctx.logger.console.warn('[pool] printing:', options.print)
       ctx.logger.console.warn('[pool] array option', options.array)

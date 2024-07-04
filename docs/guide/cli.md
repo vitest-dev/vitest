@@ -55,6 +55,36 @@ export default {
 
 Run only [benchmark](https://vitest.dev/guide/features.html#benchmarking-experimental) tests, which compare performance results.
 
+### `vitest init`
+
+`vitest init <name>` can be used to setup project configuration. At the moment, it only supports [`browser`](/guide/browser) value:
+
+```bash
+vitest init browser
+```
+
+### `vitest list`
+
+`vitest list` command inherits all `vitest` options to print the list of all matching tests. This command ignores `reporters` option. By default, it will print the names of all tests that matched the file filter and name pattern:
+
+```shell
+vitest list filename.spec.ts -t="some-test"
+```
+
+```txt
+describe > some-test
+describe > some-test > test 1
+describe > some-test > test 2
+```
+
+You can pass down `--json` flag to print tests in JSON format or save it in a separate file:
+
+```bash
+vitest list filename.spec.ts -t="some-test" --json=./file.json
+```
+
+If `--json` flag doesn't receive a value, it will output the JSON into stdout.
+
 ## Options
 
 <!--@include: ./cli-table.md-->

@@ -37,6 +37,37 @@ describe('userEvent.click', () => {
 
     expect(onClick).not.toHaveBeenCalled()
   })
+
+  test('click inside shadow dom', async () => {
+    const shadowRoot = createShadowRoot()
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    shadowRoot.appendChild(button)
+
+    const onClick = vi.fn()
+    button.addEventListener('click', onClick)
+
+    await userEvent.click(button)
+
+    expect(onClick).toHaveBeenCalled()
+  })
+
+  test('clicks inside svg', async () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+    circle.setAttribute('cx', '50')
+    circle.setAttribute('cy', '50')
+    circle.setAttribute('r', '40')
+    svg.appendChild(circle)
+    document.body.appendChild(svg)
+
+    const onClick = vi.fn()
+    circle.addEventListener('click', onClick)
+
+    await userEvent.click(circle)
+
+    expect(onClick).toHaveBeenCalled()
+  })
 })
 
 describe('userEvent.dblClick', () => {
@@ -154,6 +185,79 @@ describe('userEvent.hover, userEvent.unhover', () => {
     expect(pointerEntered).toBe(false)
     expect(mouseEntered).toBe(false)
   })
+
+  test('hover works with shadow root', async () => {
+    const shadowRoot = createShadowRoot()
+    const target = document.createElement('div')
+    target.style.width = '100px'
+    target.style.height = '100px'
+
+    let mouseEntered = false
+    let pointerEntered = false
+    target.addEventListener('mouseover', () => {
+      mouseEntered = true
+    })
+    target.addEventListener('pointerenter', () => {
+      pointerEntered = true
+    })
+    target.addEventListener('pointerleave', () => {
+      pointerEntered = false
+    })
+    target.addEventListener('mouseout', () => {
+      mouseEntered = false
+    })
+
+    shadowRoot.appendChild(target)
+
+    await userEvent.hover(target)
+
+    expect(pointerEntered).toBe(true)
+    expect(mouseEntered).toBe(true)
+
+    await userEvent.unhover(target)
+
+    expect(pointerEntered).toBe(false)
+    expect(mouseEntered).toBe(false)
+  })
+
+  test('hover works with svg', async () => {
+    const target = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+    circle.setAttribute('cx', '50')
+    circle.setAttribute('cy', '50')
+    circle.setAttribute('r', '40')
+    target.appendChild(circle)
+    document.body.appendChild(target)
+    target.style.width = '100px'
+    target.style.height = '100px'
+
+    let mouseEntered = false
+    let pointerEntered = false
+    target.addEventListener('mouseover', () => {
+      mouseEntered = true
+    })
+    target.addEventListener('pointerenter', () => {
+      pointerEntered = true
+    })
+    target.addEventListener('pointerleave', () => {
+      pointerEntered = false
+    })
+    target.addEventListener('mouseout', () => {
+      mouseEntered = false
+    })
+
+    document.body.appendChild(target)
+
+    await userEvent.hover(target)
+
+    expect(pointerEntered).toBe(true)
+    expect(mouseEntered).toBe(true)
+
+    await userEvent.unhover(target)
+
+    expect(pointerEntered).toBe(false)
+    expect(mouseEntered).toBe(false)
+  })
 })
 
 const inputLike = [
@@ -161,19 +265,16 @@ const inputLike = [
     const input = document.createElement('input')
     input.type = 'text'
     input.placeholder = 'Type here'
-    document.body.appendChild(input)
     return input
   },
   () => {
     const input = document.createElement('textarea')
     input.placeholder = 'Type here'
-    document.body.appendChild(input)
     return input
   },
   () => {
     const contentEditable = document.createElement('div')
     contentEditable.contentEditable = 'true'
-    document.body.appendChild(contentEditable)
     return contentEditable
   },
 ]
@@ -301,6 +402,21 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     ])
   })
 
+  test('types into a shadow root input', async () => {
+    const shadowRoot = createShadowRoot()
+    const { input, keydown, value } = createTextInput(shadowRoot)
+
+    await userEvent.type(input, 'Hello')
+    expect(value()).toBe('Hello')
+    expect(keydown).toEqual([
+      'H',
+      'e',
+      'l',
+      'l',
+      'o',
+    ])
+  })
+
   // strangly enough, original userEvent doesn't support this,
   // but we can implement it
   test.skipIf(server.provider === 'preview')('selectall works correctly', async () => {
@@ -314,7 +430,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     expect(input.value).toBe('')
   })
 
-  function createTextInput() {
+  function createTextInput(root: Node = document.body) {
     const input = getElement()
     const keydown: string[] = []
     const keyup: string[] = []
@@ -324,7 +440,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     input.addEventListener('keyup', (event: KeyboardEvent) => {
       keyup.push(event.key)
     })
-    document.body.appendChild(input)
+    root.appendChild(input)
     return {
       input,
       keydown,
@@ -362,6 +478,7 @@ describe('userEvent.tab', () => {
 describe.each(inputLike)('userEvent.fill', async (getInput) => {
   test('correctly fills the input value', async () => {
     const input = getInput()
+    document.body.appendChild(input)
     function value() {
       if ('value' in input) {
         return input.value
@@ -374,6 +491,21 @@ describe.each(inputLike)('userEvent.fill', async (getInput) => {
 
     await userEvent.fill(input, 'Another Value')
     expect(value()).toBe('Another Value')
+  })
+
+  test('fill input in shadow root', async () => {
+    const input = getInput()
+    const shadowRoot = createShadowRoot()
+    shadowRoot.appendChild(input)
+    function value() {
+      if ('value' in input) {
+        return input.value
+      }
+      return input.textContent
+    }
+
+    await userEvent.fill(input, 'Hello')
+    expect(value()).toBe('Hello')
   })
 })
 
@@ -772,3 +904,10 @@ describe('userEvent.pointer', () => {
     expect(mouseEntered).toBe(false)
   })
 })
+
+function createShadowRoot() {
+  const div = document.createElement('div')
+  const shadowRoot = div.attachShadow({ mode: 'open' })
+  document.body.appendChild(div)
+  return shadowRoot
+}
