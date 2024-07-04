@@ -138,16 +138,24 @@ export class VitestBrowserClientMocker {
   public queueMock(id: string, importer: string, factory?: () => any) {
     const promise = rpc()
       .resolveMock(id, importer, !!factory)
-      .then(async ({ mockPath, resolvedId }) => {
+      .then(async ({ mockPath, resolvedId, needsInterop }) => {
         this.ids.add(resolvedId)
         const urlPaths = resolveMockPaths(cleanVersion(resolvedId))
         const resolvedMock
           = typeof mockPath === 'string'
             ? new URL(resolvedMockedPath(cleanVersion(mockPath)), location.href).toString()
             : mockPath
+        const _factory = factory && needsInterop
+          ? async () => {
+            const data = await factory()
+            return { default: data }
+          }
+          : factory
         urlPaths.forEach((url) => {
           this.mocks[url] = resolvedMock
-          this.factories[url] = factory!
+          if (_factory) {
+            this.factories[url] = _factory
+          }
         })
         channel.postMessage({
           type: 'mock',
