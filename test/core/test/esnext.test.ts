@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-const [version] = process.version.split('.')
+const [version] = process.version.slice(1).split('.')
 
 it.skipIf(Number(version) < 20)('"v" flag in regexp', () => {
   const regexp = /\p{RGI_Emoji}|\P{Mark}\p{Mark}*/gv
