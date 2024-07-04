@@ -12,8 +12,8 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const frame = await context.frame()
     await frame.dragAndDrop(
-      `xpath=${source}`,
-      `xpath=${target}`,
+      `css=${source}`,
+      `css=${target}`,
       {
         timeout: 1000,
         ...options,
@@ -21,10 +21,8 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
     )
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
-    const sourceXpath = `//${source}`
-    const targetXpath = `//${target}`
-    const $source = context.browser.$(sourceXpath)
-    const $target = context.browser.$(targetXpath)
+    const $source = context.browser.$(source)
+    const $target = context.browser.$(target)
     const duration = (options as any)?.duration ?? 10
 
     // https://github.com/webdriverio/webdriverio/issues/8022#issuecomment-1700919670

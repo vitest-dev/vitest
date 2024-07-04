@@ -5,21 +5,20 @@ import type { UserEventCommand } from './utils'
 
 export const click: UserEventCommand<UserEvent['click']> = async (
   context,
-  xpath,
+  selector,
   options = {},
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
-    await tester.locator(`xpath=${xpath}`).click({
+    await tester.locator(`css=${selector}`).click({
       timeout: 1000,
       ...options,
     })
   }
   else if (provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
-    const markedXpath = `//${xpath}`
-    await browser.$(markedXpath).click(options as any)
+    await browser.$(selector).click(options as any)
   }
   else {
     throw new TypeError(`Provider "${provider.name}" doesn't support click command`)
@@ -28,18 +27,17 @@ export const click: UserEventCommand<UserEvent['click']> = async (
 
 export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
   context,
-  xpath,
+  selector,
   options = {},
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
-    await tester.locator(`xpath=${xpath}`).dblclick(options)
+    await tester.locator(`css=${selector}`).dblclick(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
-    const markedXpath = `//${xpath}`
-    await browser.$(markedXpath).doubleClick()
+    await browser.$(selector).doubleClick()
   }
   else {
     throw new TypeError(`Provider "${provider.name}" doesn't support dblClick command`)
@@ -48,13 +46,13 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
 
 export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
   context,
-  xpath,
+  selector,
   options = {},
 ) => {
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
-    await tester.locator(`xpath=${xpath}`).click({
+    await tester.locator(`css=${selector}`).click({
       timeout: 1000,
       ...options,
       clickCount: 3,
@@ -62,11 +60,10 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
   }
   else if (provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
-    const markedXpath = `//${xpath}`
     await browser
       .action('pointer', { parameters: { pointerType: 'mouse' } })
       // move the pointer over the button
-      .move({ origin: await browser.$(markedXpath) })
+      .move({ origin: await browser.$(selector) })
       // simulate 3 clicks
       .down()
       .up()

@@ -27,9 +27,13 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     if (options.element) {
-      const { element: elementXpath, ...config } = options
-      const element = context.iframe.locator(`xpath=${elementXpath}`)
-      const buffer = await element.screenshot({ ...config, path: savePath })
+      const { element: css, ...config } = options
+      const element = context.iframe.locator(`css=${css}`)
+      const buffer = await element.screenshot({
+        timeout: 1000,
+        ...config,
+        path: savePath,
+      })
       return returnResult(options, path, buffer)
     }
 
@@ -48,8 +52,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
       return returnResult(options, path, buffer)
     }
 
-    const xpath = `//${options.element}`
-    const element = await page.$(xpath)
+    const element = await page.$(`${options.element}`)
     const buffer = await element.saveScreenshot(savePath)
     return returnResult(options, path, buffer)
   }
