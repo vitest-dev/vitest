@@ -130,17 +130,6 @@ export const userEvent: UserEvent = {
     const css = convertElementToCssSelector(element.ownerDocument.body)
     return triggerCommand('__vitest_hover', css)
   },
-
-  // non userEvent events, but still useful
-  fill(element: Element, text: string, options) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_fill', css, text, options)
-  },
-  dragAndDrop(source: Element, target: Element, options = {}) {
-    const sourceCss = convertElementToCssSelector(source)
-    const targetCss = convertElementToCssSelector(target)
-    return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
-  },
   pointer(input: PointerInput) {
     const inputs = (Array.isArray(input) ? input : [input]).map((i) => {
       if (typeof i === 'string') {
@@ -154,22 +143,33 @@ export const userEvent: UserEvent = {
       }
 
       if (target && !node) {
-        return { target: convertElementToXPath(target), ...rest }
+        return { target: convertElementToCssSelector(target), ...rest }
       }
 
       if (!target && node) {
-        return { node: convertElementToXPath(node), ...rest }
+        return { node: convertElementToCssSelector(node), ...rest }
       }
 
       return {
-        target: convertElementToXPath(target),
-        node: convertElementToXPath(node),
+        target: convertElementToCssSelector(target),
+        node: convertElementToCssSelector(node),
         ...rest,
       }
     })
 
     // todo: add options?
     return triggerCommand('__vitest_pointer', inputs)
+  },
+
+  // non userEvent events, but still useful
+  fill(element: Element, text: string, options) {
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_fill', css, text, options)
+  },
+  dragAndDrop(source: Element, target: Element, options = {}) {
+    const sourceCss = convertElementToCssSelector(source)
+    const targetCss = convertElementToCssSelector(target)
+    return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
   },
 }
 

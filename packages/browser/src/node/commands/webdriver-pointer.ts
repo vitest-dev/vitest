@@ -29,13 +29,13 @@ async function* collectWDIOActions(
     if ('target' in action) {
       const target = action.target
       if (target && !targets.has(target)) {
-        targets.set(target, await browser.$(`//${target}`))
+        targets.set(target, await browser.$(target))
       }
     }
     if ('node' in action) {
       const node = action.node
       if (node && !targets.has(node)) {
-        targets.set(node, await browser.$(`//${node}`))
+        targets.set(node, await browser.$(node))
       }
     }
     if ('keyDef' in action) {
