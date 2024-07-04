@@ -140,10 +140,10 @@ export class VitestBrowserClientMocker {
       .resolveMock(id, importer, !!factory)
       .then(async ({ mockPath, resolvedId }) => {
         this.ids.add(resolvedId)
-        const urlPaths = resolveMockPaths(resolvedId)
+        const urlPaths = resolveMockPaths(cleanVersion(resolvedId))
         const resolvedMock
           = typeof mockPath === 'string'
-            ? new URL(resolvedMockedPath(mockPath), location.href).toString()
+            ? new URL(resolvedMockedPath(cleanVersion(mockPath)), location.href).toString()
             : mockPath
         urlPaths.forEach((url) => {
           this.mocks[url] = resolvedMock
@@ -170,7 +170,7 @@ export class VitestBrowserClientMocker {
           return
         }
         this.ids.delete(resolved.id)
-        const urlPaths = resolveMockPaths(resolved.id)
+        const urlPaths = resolveMockPaths(cleanVersion(resolved.id))
         urlPaths.forEach((url) => {
           delete this.mocks[url]
           delete this.factories[url]
@@ -444,4 +444,9 @@ function resolveMockPaths(path: string) {
   }
 
   return paths
+}
+
+const versionRegexp = /(\?|&)v=\w{8}/
+function cleanVersion(url: string) {
+  return url.replace(versionRegexp, '')
 }
