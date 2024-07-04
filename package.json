@@ -63,7 +63,7 @@
     "simple-git-hooks": "^2.11.1",
     "tsx": "^4.16.0",
     "typescript": "^5.5.2",
-    "vite": "^5.2.6",
+    "vite": "^5.3.3",
     "vitest": "workspace:*",
     "zx": "^8.1.3"
   },
