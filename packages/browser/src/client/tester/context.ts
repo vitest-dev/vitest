@@ -5,44 +5,6 @@ import type { BrowserRPC } from '../client'
 
 // this file should not import anything directly, only types
 
-function convertElementToXPath(element: Element) {
-  if (!element || !(element instanceof Element)) {
-    throw new Error(
-      `Expected DOM element to be an instance of Element, received ${typeof element}`,
-    )
-  }
-
-  return getPathTo(element)
-}
-
-function getPathTo(element: Element): string {
-  if (element.id !== '') {
-    return `id("${element.id}")`
-  }
-
-  if (!element.parentNode || element === document.documentElement) {
-    return element.tagName
-  }
-
-  let ix = 0
-  const siblings = element.parentNode.childNodes
-  for (let i = 0; i < siblings.length; i++) {
-    const sibling = siblings[i]
-    if (sibling === element) {
-      return `${getPathTo(element.parentNode as Element)}/${element.tagName}[${
-        ix + 1
-      }]`
-    }
-    if (
-      sibling.nodeType === 1
-      && (sibling as Element).tagName === element.tagName
-    ) {
-      ix++
-    }
-  }
-  return 'invalid xpath'
-}
-
 // @ts-expect-error not typed global
 const state = (): WorkerGlobalState => __vitest_worker__
 // @ts-expect-error not typed global
@@ -60,37 +22,99 @@ function triggerCommand<T>(command: string, ...args: any[]) {
 
 const provider = runner().provider
 
+function convertElementToCssSelector(element: Element) {
+  if (!element || !(element instanceof Element)) {
+    throw new Error(
+      `Expected DOM element to be an instance of Element, received ${typeof element}`,
+    )
+  }
+
+  return getUniqueCssSelector(element)
+}
+
+function getUniqueCssSelector(el: Element) {
+  const path = []
+  let parent: null | ParentNode
+  let hasShadowRoot = false
+  // eslint-disable-next-line no-cond-assign
+  while (parent = getParent(el)) {
+    if ((parent as Element).shadowRoot) {
+      hasShadowRoot = true
+    }
+
+    const tag = el.tagName
+    if (el.id) {
+      path.push(`#${el.id}`)
+    }
+    else if (!el.nextElementSibling && !el.previousElementSibling) {
+      path.push(tag)
+    }
+    else {
+      let index = 0
+      let sameTagSiblings = 0
+      let elementIndex = 0
+
+      for (const sibling of parent.children) {
+        index++
+        if (sibling.tagName === tag) {
+          sameTagSiblings++
+        }
+        if (sibling === el) {
+          elementIndex = index
+        }
+      }
+
+      if (sameTagSiblings > 1) {
+        path.push(`${tag}:nth-child(${elementIndex})`)
+      }
+      else {
+        path.push(tag)
+      }
+    }
+    el = parent as Element
+  };
+  return `${provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`.toLowerCase()
+}
+
+function getParent(el: Element) {
+  const parent = el.parentNode
+  if (parent instanceof ShadowRoot) {
+    return parent.host
+  }
+  return parent
+}
+
 export const userEvent: UserEvent = {
   // TODO: actually setup userEvent with config options
   setup() {
     return userEvent
   },
   click(element: Element, options: UserEventClickOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_click', xpath, options)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_click', css, options)
   },
   dblClick(element: Element, options: UserEventClickOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_dblClick', xpath, options)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_dblClick', css, options)
   },
   tripleClick(element: Element, options: UserEventClickOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_tripleClick', xpath, options)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_tripleClick', css, options)
   },
   selectOptions(element, value) {
     const values = provider === 'webdriverio'
       ? getWebdriverioSelectOptions(element, value)
       : getSimpleSelectOptions(element, value)
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_selectOptions', xpath, values)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_selectOptions', css, values)
   },
   type(element: Element, text: string, options: UserEventTypeOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_type', xpath, text, options)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_type', css, text, options)
   },
   clear(element: Element) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_clear', xpath)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_clear', css)
   },
   tab(options: UserEventTabOptions = {}) {
     return triggerCommand('__vitest_tab', options)
@@ -99,23 +123,23 @@ export const userEvent: UserEvent = {
     return triggerCommand('__vitest_keyboard', text)
   },
   hover(element: Element) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_hover', xpath)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_hover', css)
   },
   unhover(element: Element) {
-    const xpath = convertElementToXPath(element.ownerDocument.body)
-    return triggerCommand('__vitest_hover', xpath)
+    const css = convertElementToCssSelector(element.ownerDocument.body)
+    return triggerCommand('__vitest_hover', css)
   },
 
   // non userEvent events, but still useful
   fill(element: Element, text: string, options) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_fill', xpath, text, options)
+    const css = convertElementToCssSelector(element)
+    return triggerCommand('__vitest_fill', css, text, options)
   },
   dragAndDrop(source: Element, target: Element, options = {}) {
-    const sourceXpath = convertElementToXPath(source)
-    const targetXpath = convertElementToXPath(target)
-    return triggerCommand('__vitest_dragAndDrop', sourceXpath, targetXpath, options)
+    const sourceCss = convertElementToCssSelector(source)
+    const targetCss = convertElementToCssSelector(target)
+    return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
   },
 }
 
@@ -137,7 +161,7 @@ function getWebdriverioSelectOptions(element: Element, value: string | string[] 
   if (typeof optionValue !== 'string') {
     const index = options.indexOf(optionValue as HTMLOptionElement)
     if (index === -1) {
-      throw new Error(`The element ${convertElementToXPath(optionValue)} was not found in the "select" options.`)
+      throw new Error(`The element ${convertElementToCssSelector(optionValue)} was not found in the "select" options.`)
     }
 
     return [{ index }]
@@ -162,7 +186,7 @@ function getWebdriverioSelectOptions(element: Element, value: string | string[] 
 function getSimpleSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
   return (Array.isArray(value) ? value : [value]).map((v) => {
     if (typeof v !== 'string') {
-      return { element: convertElementToXPath(v) }
+      return { element: convertElementToCssSelector(v) }
     }
     return v
   })
@@ -220,7 +244,7 @@ export const page: BrowserPage = {
     return triggerCommand('__vitest_screenshot', name, {
       ...options,
       element: options.element
-        ? convertElementToXPath(options.element)
+        ? convertElementToCssSelector(options.element)
         : undefined,
     })
   },
