@@ -13,7 +13,7 @@ export function createModuleMocker() {
 
   const worker = setupWorker(
     http.get(/.+/, async ({ request }) => {
-      const path = removeTimestamp(request.url.slice(location.origin.length))
+      const path = cleanQuery(request.url.slice(location.origin.length))
       if (!mocks.has(path)) {
         return passthrough()
       }
@@ -112,9 +112,9 @@ function getFactoryExports(id: string) {
 }
 
 const timestampRegexp = /(\?|&)t=\d{13}/
-
-function removeTimestamp(url: string) {
-  return url.replace(timestampRegexp, '')
+const versionRegexp = /(\?|&)v=\w{8}/
+function cleanQuery(url: string) {
+  return url.replace(timestampRegexp, '').replace(versionRegexp, '')
 }
 
 function passthrough() {

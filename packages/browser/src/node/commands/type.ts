@@ -6,7 +6,7 @@ import { keyboardImplementation } from './keyboard'
 
 export const type: UserEventCommand<UserEvent['type']> = async (
   context,
-  xpath,
+  selector,
   text,
   options = {},
 ) => {
@@ -14,7 +14,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
-    const element = iframe.locator(`xpath=${xpath}`)
+    const element = iframe.locator(`css=${selector}`)
 
     if (!skipClick) {
       await element.focus()
@@ -30,8 +30,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
-    const markedXpath = `//${xpath}`
-    const element = browser.$(markedXpath)
+    const element = browser.$(selector)
 
     if (!skipClick && !await element.isFocused()) {
       await element.click()

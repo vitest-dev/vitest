@@ -10,15 +10,16 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
   const waitForTests = async (
+    method: 'run' | 'collect',
     contextId: string,
     project: WorkspaceProject,
     files: string[],
   ) => {
-    const context = project.browser!.state.createAsyncContext(contextId, files)
+    const context = project.browser!.state.createAsyncContext(method, contextId, files)
     return await context
   }
 
-  const runTests = async (project: WorkspaceProject, files: string[]) => {
+  const executeTests = async (method: 'run' | 'collect', project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
     const browser = project.browser!
 
@@ -67,13 +68,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
           contextId,
           [...files.map(f => relative(project.config.root, f))].join(', '),
         )
-        const promise = waitForTests(contextId, project, files)
+        const promise = waitForTests(method, contextId, project, files)
         promises.push(promise)
         orchestrator.createTesters(files)
       }
       else {
         const contextId = crypto.randomUUID()
-        const waitPromise = waitForTests(contextId, project, files)
+        const waitPromise = waitForTests(method, contextId, project, files)
         debug?.(
           'Opening a new context %s for files: %s',
           contextId,
@@ -91,7 +92,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     await Promise.all(promises)
   }
 
-  const runWorkspaceTests = async (specs: [WorkspaceProject, string][]) => {
+  const runWorkspaceTests = async (method: 'run' | 'collect', specs: [WorkspaceProject, string][]) => {
     const groupedFiles = new Map<WorkspaceProject, string[]>()
     for (const [project, file] of specs) {
       const files = groupedFiles.get(project) || []
@@ -110,7 +111,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         break
       }
 
-      await runTests(project, files)
+      await executeTests(method, project, files)
     }
   }
 
@@ -140,6 +141,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
     },
-    runTests: runWorkspaceTests,
+    runTests: files => runWorkspaceTests('run', files),
+    collectTests: files => runWorkspaceTests('collect', files),
   }
 }

@@ -208,6 +208,7 @@ export function createVmForksPool(
   return {
     name: 'vmForks',
     runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: () => pool.destroy(),
   }
 }

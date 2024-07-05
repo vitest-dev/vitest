@@ -5,19 +5,18 @@ import type { UserEventCommand } from './utils'
 
 export const clear: UserEventCommand<UserEvent['clear']> = async (
   context,
-  xpath,
+  selector,
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
-    const element = iframe.locator(`xpath=${xpath}`)
+    const element = iframe.locator(`css=${selector}`)
     await element.clear({
       timeout: 1000,
     })
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
-    const markedXpath = `//${xpath}`
-    const element = await browser.$(markedXpath)
+    const element = await browser.$(selector)
     await element.clearValue()
   }
   else {

@@ -35,6 +35,7 @@ export interface WebSocketBrowserHandlers {
     type: 'factory' | 'redirect' | 'automock'
     mockPath?: string | null
     resolvedId: string
+    needsInterop?: boolean
   }>
   invalidate: (ids: string[]) => void
   getBrowserFileSourceMap: (

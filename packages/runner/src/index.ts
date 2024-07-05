@@ -1,4 +1,4 @@
-export { startTests, updateTask } from './run'
+export { startTests, updateTask, collectTests } from './run'
 export {
   test,
   it,
