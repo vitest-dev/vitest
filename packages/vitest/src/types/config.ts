@@ -333,7 +333,7 @@ export interface InlineConfig {
    *
    * Supports 'threads', 'forks', 'vmThreads'
    *
-   * @default 'threads'
+   * @default 'forks'
    */
   pool?: Exclude<Pool, 'browser'>
 
