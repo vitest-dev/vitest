@@ -4,7 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "Node16",
     "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": false,
     "isolatedDeclarations": true
   },
   "include": ["./src/**/*.ts"],

@@ -1,8 +1,8 @@
 import { existsSync, promises as fsp } from 'node:fs'
 import { dirname, extname, join } from 'pathe'
-import type { DepsHandlingOptions } from './types.ts'
-import { findNearestPackageData, isNodeBuiltin, slash } from './utils.ts'
-import { KNOWN_ASSET_RE } from './constants.ts'
+import type { DepsHandlingOptions } from './types.js'
+import { findNearestPackageData, isNodeBuiltin, slash } from './utils.js'
+import { KNOWN_ASSET_RE } from './constants.js'
 
 const BUILTIN_EXTENSIONS = new Set(['.mjs', '.cjs', '.node', '.wasm'])
 

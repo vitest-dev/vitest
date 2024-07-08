@@ -76,11 +76,11 @@ export default defineConfig([
     input: entries,
     output: {
       dir: 'dist',
-      entryFileNames: '[name].d.ts',
+      entryFileNames: '[name].ts',
       format: 'esm',
     },
     external,
-    plugins: [decl({ transformer: 'oxc' })],
+    plugins: [decl({ transformer: 'oxc' }), { name: 'raw', transform: () => '' }],
     onwarn,
   },
 ])

@@ -32,7 +32,7 @@ export const KNOWN_ASSET_TYPES: string[] = [
   'webmanifest',
   'pdf',
   'txt',
-]
+] as const
 
 export const KNOWN_ASSET_RE: RegExp = new RegExp(
   `\\.(${KNOWN_ASSET_TYPES.join('|')})$`,

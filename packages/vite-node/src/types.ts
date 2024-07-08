@@ -1,6 +1,6 @@
 import type { ViteHotContext } from 'vite/types/hot.js'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
-import type { ModuleCacheMap, ViteNodeRunner } from './client.ts'
+import type { ModuleCacheMap, ViteNodeRunner } from './client.js'
 
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>

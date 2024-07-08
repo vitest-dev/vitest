@@ -16,9 +16,9 @@ import {
   normalizeRequestId,
   slash,
   toFilePath,
-} from './utils.ts'
-import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types.ts'
-import { extractSourceMap } from './source-map.ts'
+} from './utils.js'
+import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types.js'
+import { extractSourceMap } from './source-map.js'
 
 const { setTimeout, clearTimeout } = globalThis
 
@@ -162,7 +162,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   /**
    * Return parsed source map based on inlined source map of the module
    */
-  getSourceMap(id: string): import('./types.ts').EncodedSourceMap | null {
+  getSourceMap(id: string): import('./types.js').EncodedSourceMap | null {
     const cache = this.get(id)
     if (cache.map) {
       return cache.map

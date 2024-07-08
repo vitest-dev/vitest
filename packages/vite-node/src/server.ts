@@ -10,18 +10,18 @@ import type {
   FetchResult,
   ViteNodeResolveId,
   ViteNodeServerOptions,
-} from './types.ts'
-import { shouldExternalize } from './externalize.ts'
+} from './types.js'
+import { shouldExternalize } from './externalize.js'
 import {
   normalizeModuleId,
   toArray,
   toFilePath,
   withTrailingSlash,
-} from './utils.ts'
-import { Debugger } from './debug.ts'
-import { withInlineSourcemap } from './source-map.ts'
+} from './utils.js'
+import { Debugger } from './debug.js'
+import { withInlineSourcemap } from './source-map.js'
 
-export * from './externalize.ts'
+export * from './externalize.js'
 
 interface FetchCache {
   duration?: number

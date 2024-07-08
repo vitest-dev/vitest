@@ -2,7 +2,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { builtinModules } from 'node:module'
 import { existsSync, promises as fsp } from 'node:fs'
 import { dirname, join, resolve } from 'pathe'
-import type { Arrayable, Nullable } from './types.ts'
+import type { Arrayable, Nullable } from './types.js'
 
 export const isWindows: boolean = process.platform === 'win32'
 
