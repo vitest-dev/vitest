@@ -135,7 +135,40 @@ export default ({ mode }: { mode: string }) => {
         },
         {
           text: `v${version}`,
-          link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
+          items: [
+            {
+              items: [
+                {
+                  text: `v${version}`,
+                  link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
+                },
+                {
+                  text: 'Releases Notes',
+                  link: releases,
+                },
+                {
+                  text: 'Contributing ',
+                  link: contributing,
+                },
+              ],
+            },
+            {
+              items: [
+                {
+                  text: 'unreleased',
+                  link: 'https://main.vitest.dev/',
+                },
+                {
+                  text: 'v0.x',
+                  link: 'https://v0.vitest.dev/',
+                },
+                {
+                  text: 'v2.x',
+                  link: 'https://vitest.dev/',
+                },
+              ],
+            },
+          ],
         },
       ],
 
