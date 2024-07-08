@@ -163,7 +163,7 @@ importers:
         version: 4.7.1
       unocss:
         specifier: ^0.61.0
-        version: 0.61.0(postcss@8.4.38)(rollup@4.18.0)(vite@5.3.3)
+        version: 0.61.0(postcss@8.4.39)(rollup@4.18.0)(vite@5.3.3)
       unplugin-vue-components:
         specifier: ^0.27.2
         version: 0.27.2(rollup@4.18.0)(vue@3.4.31)
@@ -175,7 +175,7 @@ importers:
         version: 0.20.0(@vite-pwa/assets-generator@0.2.4)(vite@5.3.3)(workbox-build@7.1.0)(workbox-window@7.1.0)
       vitepress:
         specifier: ^1.2.3
-        version: 1.2.3(@types/node@20.14.9)(postcss@8.4.38)(search-insights@2.9.0)(typescript@5.5.2)
+        version: 1.2.3(@types/node@20.14.9)(postcss@8.4.39)(search-insights@2.9.0)(typescript@5.5.2)
       workbox-window:
         specifier: ^7.1.0
         version: 7.1.0
@@ -704,9 +704,6 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../vitest
-      vue-virtual-scroller:
-        specifier: 2.0.0-beta.8
-        version: 2.0.0-beta.8(vue@3.4.31)
     devDependencies:
       '@faker-js/faker':
         specifier: ^8.4.1
@@ -770,7 +767,7 @@ importers:
         version: 3.1.5
       unocss:
         specifier: ^0.61.0
-        version: 0.61.0(postcss@8.4.38)(rollup@4.18.0)(vite@5.3.3)
+        version: 0.61.0(postcss@8.4.39)(rollup@4.18.0)(vite@5.3.3)
       unplugin-auto-import:
         specifier: ^0.17.6
         version: 0.17.6(@vueuse/core@10.11.0)(rollup@4.18.0)
@@ -789,6 +786,9 @@ importers:
       vue-router:
         specifier: ^4.4.0
         version: 4.4.0(vue@3.4.31)
+      vue-virtual-scroller:
+        specifier: 2.0.0-beta.8
+        version: 2.0.0-beta.8(vue@3.4.31)
 
   packages/utils:
     dependencies:
@@ -6014,7 +6014,7 @@ packages:
       sirv: 2.0.4
     dev: true
 
-  /@unocss/postcss@0.61.0(postcss@8.4.38):
+  /@unocss/postcss@0.61.0(postcss@8.4.39):
     resolution: {integrity: sha512-0ZHUeLYu057xL1vXg2coV62ly6zaCgYdA/oHKCMaU9KT0TI49+DE73GouHypRNM5YXfuUPfXhPGGUuFWkAbI1A==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -6026,7 +6026,7 @@ packages:
       css-tree: 2.3.1
       fast-glob: 3.3.2
       magic-string: 0.30.10
-      postcss: 8.4.38
+      postcss: 8.4.39
     dev: true
 
   /@unocss/preset-attributify@0.61.0:
@@ -12465,7 +12465,7 @@ packages:
 
   /mitt@2.1.0:
     resolution: {integrity: sha512-ILj2TpLiysu2wkBbWjAmww7TkZb65aiQO+DkVdUTBpBXq+MHYiETENkKFMtsJZX1Lf4pe4QOrTSjIfUwN5lRdg==}
-    dev: false
+    dev: true
 
   /mitt@3.0.0:
     resolution: {integrity: sha512-7dX2/10ITVyqh4aOSVI9gdape+t9l2/8QxHrFmUXu4EEUpdlxl6RudZUPZoc+zuY2hk1j7XxVroIVIan/pD/SQ==}
@@ -15433,7 +15433,7 @@ packages:
     engines: {node: '>= 10.0.0'}
     dev: true
 
-  /unocss@0.61.0(postcss@8.4.38)(rollup@4.18.0)(vite@5.3.3):
+  /unocss@0.61.0(postcss@8.4.39)(rollup@4.18.0)(vite@5.3.3):
     resolution: {integrity: sha512-7642v5tHpEpHO9dl9sqYbKT/Ri4X4lmGHhj/znE4uheEfXcptPPiZ1/hVmQVciHUSI8CnQBqDwkZuxNPDG3bTQ==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -15449,7 +15449,7 @@ packages:
       '@unocss/cli': 0.61.0(rollup@4.18.0)
       '@unocss/core': 0.61.0
       '@unocss/extractor-arbitrary-variants': 0.61.0
-      '@unocss/postcss': 0.61.0(postcss@8.4.38)
+      '@unocss/postcss': 0.61.0(postcss@8.4.39)
       '@unocss/preset-attributify': 0.61.0
       '@unocss/preset-icons': 0.61.0
       '@unocss/preset-mini': 0.61.0
@@ -15865,7 +15865,7 @@ packages:
       vite: 5.3.3(@types/node@20.14.9)
     dev: true
 
-  /vitepress@1.2.3(@types/node@20.14.9)(postcss@8.4.38)(search-insights@2.9.0)(typescript@5.5.2):
+  /vitepress@1.2.3(@types/node@20.14.9)(postcss@8.4.39)(search-insights@2.9.0)(typescript@5.5.2):
     resolution: {integrity: sha512-GvEsrEeNLiDE1+fuwDAYJCYLNZDAna+EtnXlPajhv/MYeTjbNK6Bvyg6NoTdO1sbwuQJ0vuJR99bOlH53bo6lg==}
     hasBin: true
     peerDependencies:
@@ -15890,7 +15890,7 @@ packages:
       focus-trap: 7.5.4
       mark.js: 8.11.1
       minisearch: 6.3.0
-      postcss: 8.4.38
+      postcss: 8.4.39
       shiki: 1.6.4
       vite: 5.3.3(@types/node@20.14.9)
       vue: 3.4.31(typescript@5.5.2)
@@ -16003,7 +16003,7 @@ packages:
       vue: ^3.0.0
     dependencies:
       vue: 3.4.31(typescript@5.5.2)
-    dev: false
+    dev: true
 
   /vue-resize@2.0.0-alpha.1(vue@3.4.31):
     resolution: {integrity: sha512-7+iqOueLU7uc9NrMfrzbG8hwMqchfVfSzpVlCMeJQe4pyibqyoifDNbKTZvwxZKDvGkB+PdFeKvnGZMoEb8esg==}
@@ -16011,6 +16011,7 @@ packages:
       vue: ^3.0.0
     dependencies:
       vue: 3.4.31(typescript@5.5.2)
+    dev: true
 
   /vue-router@4.4.0(vue@3.4.31):
     resolution: {integrity: sha512-HB+t2p611aIZraV2aPSRNXf0Z/oLZFrlygJm+sZbdJaW6lcFqEDQwnzUBXn+DApw+/QzDU/I9TeWx9izEjTmsA==}
@@ -16050,7 +16051,7 @@ packages:
       vue: 3.4.31(typescript@5.5.2)
       vue-observe-visibility: 2.0.0-alpha.1(vue@3.4.31)
       vue-resize: 2.0.0-alpha.1(vue@3.4.31)
-    dev: false
+    dev: true
 
   /vue@2.7.10:
     resolution: {integrity: sha512-HmFC70qarSHPXcKtW8U8fgIkF6JGvjEmDiVInTkKZP0gIlEPhlVlcJJLkdGIDiNkIeA2zJPQTWJUI4iWe+AVfg==}

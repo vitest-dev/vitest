@@ -53,8 +53,7 @@
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
     "picocolors": "^1.0.1",
-    "sirv": "^2.0.4",
-    "vue-virtual-scroller": "2.0.0-beta.8"
+    "sirv": "^2.0.4"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
@@ -83,6 +82,7 @@
     "vite": "^5.0.0",
     "vite-plugin-pages": "^0.32.3",
     "vue": "^3.4.31",
-    "vue-router": "^4.4.0"
+    "vue-router": "^4.4.0",
+    "vue-virtual-scroller": "2.0.0-beta.8"
   }
 }
