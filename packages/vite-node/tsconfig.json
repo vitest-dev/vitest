@@ -1,5 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "Node16",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "isolatedDeclarations": true
+  },
   "include": ["./src/**/*.ts"],
   "exclude": ["./dist"]
 }

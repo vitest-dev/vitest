@@ -2,9 +2,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { builtinModules } from 'node:module'
 import { existsSync, promises as fsp } from 'node:fs'
 import { dirname, join, resolve } from 'pathe'
-import type { Arrayable, Nullable } from './types'
+import type { Arrayable, Nullable } from './types.ts'
 
-export const isWindows = process.platform === 'win32'
+export const isWindows: boolean = process.platform === 'win32'
 
 const drive = isWindows ? process.cwd()[0] : null
 const driveOpposite = drive
@@ -17,7 +17,7 @@ const driveOppositeRegext = driveOpposite
   ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`)
   : null
 
-export function slash(str: string) {
+export function slash(str: string): string {
   return str.replace(/\\/g, '/')
 }
 
@@ -83,7 +83,7 @@ const builtins = new Set([
   'wasi',
 ])
 
-export function normalizeModuleId(id: string) {
+export function normalizeModuleId(id: string): string {
   // unique id that is not available as "test"
   if (prefixedBuiltins.has(id)) {
     return id
@@ -96,7 +96,7 @@ export function normalizeModuleId(id: string) {
     .replace(/^\/+/, '/')
 }
 
-export function isPrimitive(v: any) {
+export function isPrimitive(v: any): boolean {
   return v !== Object(v)
 }
 
@@ -171,7 +171,7 @@ export function getCachedData<T>(
   cache: Map<string, T>,
   basedir: string,
   originalBasedir: string,
-) {
+): NonNullable<T> | undefined {
   const pkgData = cache.get(getFnpdCacheKey(basedir))
   if (pkgData) {
     traverseBetweenDirs(originalBasedir, basedir, (dir) => {
@@ -186,7 +186,7 @@ export function setCacheData<T>(
   data: T,
   basedir: string,
   originalBasedir: string,
-) {
+): void {
   cache.set(getFnpdCacheKey(basedir), data)
   traverseBetweenDirs(originalBasedir, basedir, (dir) => {
     cache.set(getFnpdCacheKey(dir), data)
@@ -221,7 +221,7 @@ export function withTrailingSlash(path: string): string {
   return path
 }
 
-export function createImportMetaEnvProxy() {
+export function createImportMetaEnvProxy(): NodeJS.ProcessEnv {
   // packages/vitest/src/node/plugins/index.ts:146
   const booleanKeys = ['DEV', 'PROD', 'SSR']
   return new Proxy(process.env, {

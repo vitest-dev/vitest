@@ -90,6 +90,7 @@
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
-    "@types/debug": "^4.1.12"
+    "@types/debug": "^4.1.12",
+    "unplugin-isolated-decl": "^0.4.1"
   }
 }

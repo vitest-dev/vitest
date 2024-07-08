@@ -1,8 +1,8 @@
 import { existsSync, promises as fsp } from 'node:fs'
 import { dirname, extname, join } from 'pathe'
-import type { DepsHandlingOptions } from './types'
-import { findNearestPackageData, isNodeBuiltin, slash } from './utils'
-import { KNOWN_ASSET_RE } from './constants'
+import type { DepsHandlingOptions } from './types.ts'
+import { findNearestPackageData, isNodeBuiltin, slash } from './utils.ts'
+import { KNOWN_ASSET_RE } from './constants.ts'
 
 const BUILTIN_EXTENSIONS = new Set(['.mjs', '.cjs', '.node', '.wasm'])
 
@@ -86,8 +86,8 @@ const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
 export async function shouldExternalize(
   id: string,
   options?: DepsHandlingOptions,
-  cache = _defaultExternalizeCache,
-) {
+  cache: Map<string, Promise<string | false>> = _defaultExternalizeCache,
+): Promise<string | false> {
   if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))
   }

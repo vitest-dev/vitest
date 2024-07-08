@@ -1,2 +1,2 @@
-export * from './emitter'
-export * from './hmr'
+export * from './emitter.ts'
+export * from './hmr.ts'

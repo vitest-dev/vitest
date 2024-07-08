@@ -1,13 +1,13 @@
 import { builtinModules, createRequire } from 'node:module'
 import esbuild from 'rollup-plugin-esbuild'
-import dts from 'rollup-plugin-dts'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
+import decl from 'unplugin-isolated-decl/rollup'
 import { defineConfig } from 'rollup'
 
-const require = createRequire(import.meta.url)
-const pkg = require('./package.json')
+const _require = createRequire(import.meta.url)
+const pkg = _require('./package.json')
 
 const entries = {
   'index': 'src/index.ts',
@@ -80,7 +80,7 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [dts({ respectExternal: true })],
+    plugins: [decl({ transformer: 'oxc' })],
     onwarn,
   },
 ])

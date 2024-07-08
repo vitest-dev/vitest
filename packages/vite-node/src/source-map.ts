@@ -1,8 +1,8 @@
 import type { TransformResult } from 'vite'
 import { dirname, isAbsolute, relative, resolve } from 'pathe'
-import { withTrailingSlash } from './utils'
-import { install } from './source-map-handler'
-import type { EncodedSourceMap } from './types'
+import { withTrailingSlash } from './utils.ts'
+import { install } from './source-map-handler.ts'
+import type { EncodedSourceMap } from './types.ts'
 
 interface InstallSourceMapSupportOptions {
   getSourceMap: (source: string) => EncodedSourceMap | null | undefined
@@ -23,7 +23,7 @@ export function withInlineSourcemap(
     root: string // project root path of this resource
     filepath: string
   },
-) {
+): TransformResult {
   const map = result.map
   let code = result.code
 
@@ -85,7 +85,7 @@ export function extractSourceMap(code: string): EncodedSourceMap | null {
 
 export function installSourcemapsSupport(
   options: InstallSourceMapSupportOptions,
-) {
+): void {
   install({
     retrieveSourceMap(source) {
       const map = options.getSourceMap(source)

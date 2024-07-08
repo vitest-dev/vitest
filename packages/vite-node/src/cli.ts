@@ -1,14 +1,14 @@
 import { resolve } from 'node:path'
-import cac from 'cac'
+import { cac } from 'cac'
 import c from 'picocolors'
 import { createServer, loadEnv } from 'vite'
-import { version } from '../package.json'
-import { ViteNodeServer } from './server'
-import { ViteNodeRunner } from './client'
-import type { ViteNodeServerOptions } from './types'
-import { toArray } from './utils'
-import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr'
-import { installSourcemapsSupport } from './source-map'
+import { version } from '../package.json' with { type: 'json' }
+import { ViteNodeServer } from './server.ts'
+import { ViteNodeRunner } from './client.ts'
+import type { ViteNodeServerOptions } from './types.ts'
+import { toArray } from './utils.ts'
+import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr/index.js'
+import { installSourcemapsSupport } from './source-map.ts'
 
 const cli = cac('vite-node')
 
