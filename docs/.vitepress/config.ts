@@ -37,8 +37,8 @@ export default ({ mode }: { mode: string }) => {
     },
     head: [
       ['meta', { name: 'theme-color', content: '#729b1a' }],
-      ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
-      ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
+      ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+      ['link', { rel: 'icon', href: '/logo.svg', sizes: 'any', type: 'image/svg+xml' }],
       ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
       ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, node' }],
       ['meta', { property: 'og:title', content: vitestName }],
@@ -139,7 +139,7 @@ export default ({ mode }: { mode: string }) => {
                   link: releases,
                 },
                 {
-                  text: 'Contributing ',
+                  text: 'Contributing',
                   link: contributing,
                 },
               ],
