@@ -69,14 +69,17 @@ export class StateManager {
     return Array.from(this.pathsSet)
   }
 
+  /**
+   * Return files that were running or collected.
+   */
   getFiles(keys?: string[]): File[] {
     if (keys) {
       return keys
         .map(key => this.filesMap.get(key)!)
-        .filter(Boolean)
         .flat()
+        .filter(file => file && !file.local)
     }
-    return Array.from(this.filesMap.values()).flat()
+    return Array.from(this.filesMap.values()).flat().filter(file => !file.local)
   }
 
   getFilepaths(): string[] {
@@ -128,6 +131,7 @@ export class StateManager {
         project.config.root,
         project.config.name,
       )
+      fileTask.local = true
       this.idMap.set(fileTask.id, fileTask)
       if (!files) {
         this.filesMap.set(path, [fileTask])
