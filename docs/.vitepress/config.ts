@@ -100,12 +100,36 @@ export default withPwa(defineConfig({
         text: `v${version}`,
         items: [
           {
-            text: 'Release Notes ',
-            link: releases,
+            items: [
+              {
+                text: `v${version}`,
+                link: `https://github.com/vitest-dev/vitest/releases/tag/v${version}`,
+              },
+              {
+                text: 'Releases Notes',
+                link: releases,
+              },
+              {
+                text: 'Contributing ',
+                link: contributing,
+              },
+            ],
           },
           {
-            text: 'Contributing ',
-            link: contributing,
+            items: [
+              {
+                text: 'unreleased',
+                link: 'https://main.vitest.dev/',
+              },
+              {
+                text: 'v1.x',
+                link: 'https://v1.vitest.dev/',
+              },
+              {
+                text: 'v2.x',
+                link: 'https://vitest.dev/',
+              },
+            ],
           },
         ],
       },
