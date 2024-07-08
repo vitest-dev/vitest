@@ -490,7 +490,7 @@ export class WorkspaceProject {
           ...this.config.env,
         },
         browser: {
-          ...this.ctx.config.browser,
+          ...this.config.browser,
           orchestratorScripts: [],
           testerScripts: [],
           commands: {},
