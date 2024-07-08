@@ -68,6 +68,10 @@ export interface File extends Suite {
   projectName: string | undefined
   collectDuration?: number
   setupDuration?: number
+  /**
+   * Whether the file is initiated without running any tests.
+   */
+  local?: boolean
 }
 
 export interface Test<ExtraContext = {}> extends TaskPopulated {

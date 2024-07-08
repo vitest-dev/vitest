@@ -41,6 +41,7 @@ export const userEvent: {
   setup: () => UserEvent
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
   dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
+  tripleClick: (element: Element, options?: UserEventTripleClickOptions) => Promise<void>
   selectOptions: (
     element: Element,
     values: HTMLElement | HTMLElement[] | string | string[],
