@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 
 describe('jest mock compat layer', () => {
   const returnFactory = (type: string) => (value: any) => ({ type, value })
@@ -70,6 +70,22 @@ describe('jest mock compat layer', () => {
 
     expect(Spy.mock.contexts).toHaveLength(3)
     expect(Spy.mock.contexts[2]).toBe(ctx2)
+  })
+
+  it('tracks spied class contexts and instances', () => {
+    interface SpyClass {}
+    interface SpyConstructor {
+      (): SpyClass
+      new (): SpyClass
+    }
+    const Spy = (function () {}) as SpyConstructor
+    const obj = { Spy }
+    const spy = vi.spyOn(obj, 'Spy')
+    const instance = new obj.Spy()
+
+    expectTypeOf(spy.mock.contexts[0]).toEqualTypeOf<SpyClass>()
+    expect(spy.mock.instances).toEqual([instance])
+    expect(spy.mock.contexts).toEqual([instance])
   })
 
   it('implementation is set correctly on init', () => {
