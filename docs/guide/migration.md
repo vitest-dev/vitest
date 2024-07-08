@@ -142,6 +142,7 @@ Some deprecated options were removed:
 - `VITEST_JUNIT_CLASSNAME` and `VITEST_JUNIT_SUITE_NAME` env variables (use reporter options instead)
 - check for `c8` coverage (use coverage-v8 instead)
 - export of `SnapshotEnvironment` from `vitest` - import it from `vitest/snapshot` instead
+- `SpyInstance` is removed in favor of `MockInstance`
 
 ## Migrating to Vitest 1.0
 
