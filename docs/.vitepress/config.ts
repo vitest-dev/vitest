@@ -154,6 +154,10 @@ export default ({ mode }: { mode: string }) => {
                   text: 'v0.x',
                   link: 'https://v0.vitest.dev/',
                 },
+                {
+                  text: 'v1.x',
+                  link: 'https://v1.vitest.dev/',
+                },
               ],
             },
           ],
