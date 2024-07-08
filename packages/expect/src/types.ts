@@ -6,6 +6,7 @@
  *
  */
 
+import type { MockInstance } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
@@ -654,6 +655,9 @@ export interface Assertion<T = any>
    * expect(age).toSatisfy(val => val >= 18, 'Age must be at least 18');
    */
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
+
+  toHaveBeenCalledBefore: (mock: MockInstance) => void
+  toHaveBeenCalledAfter: (mock: MockInstance) => void
 
   /**
    * Checks that a promise resolves successfully at least once.

@@ -698,6 +698,54 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
   })
 })
 
+describe('toHaveBeenCalledBefore', () => {
+  it('works', () => {
+    const mock1 = vi.fn()
+    const mock2 = vi.fn()
+
+    mock1()
+    mock2()
+
+    expect(mock1).toHaveBeenCalledBefore(mock2)
+  })
+
+  it('throws if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock2()
+    mock1()
+
+    expect(() => {
+      expect(mock1).toHaveBeenCalledBefore(mock2)
+    }).toThrow(/^expected "mock1" to have been called before "mock2"/)
+  })
+})
+
+describe('toHaveBeenCalledAfter', () => {
+  it('works', () => {
+    const mock1 = vi.fn()
+    const mock2 = vi.fn()
+
+    mock1()
+    mock2()
+
+    expect(mock2).toHaveBeenCalledAfter(mock1)
+  })
+
+  it('throws if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock2()
+    mock1()
+
+    expect(() => {
+      expect(mock2).toHaveBeenCalledAfter(mock1)
+    }).toThrow(/^expected "mock2" to have been called after "mock1"/)
+  })
+})
+
 describe('async expect', () => {
   it('resolves', async () => {
     await expect((async () => 'true')()).resolves.toBe('true')

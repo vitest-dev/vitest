@@ -657,6 +657,42 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     },
   )
   def(
+    ['toHaveBeenCalledBefore'],
+    function (resultSpy: MockInstance) {
+      const expectSpy = getSpy(this)
+
+      const [firstExpectSpyCall] = expectSpy.mock.invocationCallOrder
+
+      const [firstResultSpyCall] = resultSpy.mock.invocationCallOrder
+
+      this.assert(
+        firstExpectSpyCall < firstResultSpyCall,
+        `expected "${expectSpy.getMockName()}" to have been called before "${resultSpy.getMockName()}"`,
+        `expected "${expectSpy.getMockName()}" to not have been called before "${resultSpy.getMockName()}"`,
+        resultSpy,
+        expectSpy,
+      )
+    },
+  )
+  def(
+    ['toHaveBeenCalledAfter'],
+    function (resultSpy: MockInstance) {
+      const expectSpy = getSpy(this)
+
+      const [firstExpectSpyCall] = expectSpy.mock.invocationCallOrder
+
+      const [firstResultSpyCall] = resultSpy.mock.invocationCallOrder
+
+      this.assert(
+        firstExpectSpyCall > firstResultSpyCall,
+        `expected "${expectSpy.getMockName()}" to have been called after "${resultSpy.getMockName()}"`,
+        `expected "${expectSpy.getMockName()}" to not have been called after "${resultSpy.getMockName()}"`,
+        resultSpy,
+        expectSpy,
+      )
+    },
+  )
+  def(
     ['toThrow', 'toThrowError'],
     function (expected?: string | Constructable | RegExp | Error) {
       if (
