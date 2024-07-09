@@ -38,7 +38,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "vitest": "^1.0.0"
+    "vitest": "workspace:*"
   },
   "dependencies": {
     "debug": "^4.3.5"
