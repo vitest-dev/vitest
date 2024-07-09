@@ -116,6 +116,11 @@ export interface TaskResult {
    */
   state: TaskState
   /**
+   * Errors that occurred during the task execution. It is possible to have several errors
+   * if `expect.soft()` failed multiple times.
+   */
+  errors?: ErrorWithDiff[]
+  /**
    * How long in milliseconds the task took to run.
    */
   duration?: number
@@ -128,11 +133,6 @@ export interface TaskResult {
    * Only available if `logHeapUsage` option is set and `process.memoryUsage` is defined.
    */
   heap?: number
-  /**
-   * Errors that occurred during the task. It is possible to have several errors
-   * if `expect.soft()` failed multiple times.
-   */
-  errors?: ErrorWithDiff[]
   /**
    * State of related to this task hooks. Useful during reporting.
    */
