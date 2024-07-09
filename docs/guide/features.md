@@ -115,7 +115,7 @@ fn('hello', 1)
 expect(vi.isMockFunction(fn)).toBe(true)
 expect(fn.mock.calls[0]).toEqual(['hello', 1])
 
-fn.mockImplementation(arg => arg)
+fn.mockImplementation((arg: string) => arg)
 
 fn('world', 2)
 
@@ -243,3 +243,18 @@ vitest --merge-reports --reporter=junit --coverage.reporter=text
 ```
 
 See [`Improving Performance | Sharding`](/guide/improving-performance#sharding) for more information.
+
+## Environment Variables
+
+Vitest exclusively autoloads environment variables prefixed with `VITE_` from `.env` files to maintain compatibility with frontend-related tests, adhering to [Vite's established convention](https://vitejs.dev/guide/env-and-mode.html#env-files). To load every environmental variable from `.env` files anyway, you can use `loadEnv` method imported from `vite`:
+
+```ts twoslash
+import { loadEnv } from 'vite'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig(({ mode }) => ({
+  test: {
+    // mode defines what ".env.{mode}" file to choose if exists
+    env: loadEnv(mode, process.cwd(), ''),
+  },
+}))
