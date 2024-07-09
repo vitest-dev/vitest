@@ -7,6 +7,7 @@ import { tab } from './tab'
 import { keyboard } from './keyboard'
 import { dragAndDrop } from './dragAndDrop'
 import { hover } from './hover'
+import { pointer } from './pointer'
 import {
   readFile,
   removeFile,
@@ -30,4 +31,5 @@ export default {
   __vitest_selectOptions: selectOptions,
   __vitest_dragAndDrop: dragAndDrop,
   __vitest_hover: hover,
+  __vitest_pointer: pointer,
 }

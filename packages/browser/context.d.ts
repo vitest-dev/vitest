@@ -1,4 +1,7 @@
 import type { ResolvedConfig } from 'vitest'
+import type { PointerInput } from '@testing-library/user-event/dist/types/pointer'
+
+export type { PointerInput }
 
 export type BufferEncoding =
   | 'ascii'
@@ -169,6 +172,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/dragAndDrop/} WebdriverIO API
    */
   dragAndDrop: (source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>
+  pointer: (input: PointerInput) => Promise<void>
 }
 
 export interface UserEventFillOptions {}

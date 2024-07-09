@@ -733,6 +733,178 @@ describe.each([
   })
 })
 
+describe('userEvent.pointer', () => {
+  test('correctly clicks a button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    const dblClick = vi.fn()
+    button.addEventListener('click', onClick)
+
+    await userEvent.pointer([{ target: button }, { keys: '[MouseLeft]', target: button }])
+
+    // todo: cleanup
+    if (server.provider === 'playwright') {
+      expect(onClick).not.toHaveBeenCalled()
+      expect(dblClick).not.toHaveBeenCalled()
+    }
+    else {
+      expect(onClick).toHaveBeenCalled()
+      expect(dblClick).not.toHaveBeenCalled()
+    }
+  })
+
+  test('correctly doesn\'t click on a disabled button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    button.disabled = true
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    button.addEventListener('click', onClick)
+
+    await userEvent.pointer([{ target: button }, { keys: '[MouseLeft]', target: button }])
+
+    expect(onClick).not.toHaveBeenCalled()
+  })
+  test('correctly double clicks a button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    const dblClick = vi.fn()
+    button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', dblClick)
+
+    await userEvent.pointer([
+      { target: button },
+      { keys: '[MouseLeft][MouseLeft]', target: button },
+    ])
+
+    // todo: cleanup
+    if (server.provider === 'playwright') {
+      expect(onClick).not.toHaveBeenCalled()
+      expect(dblClick).not.toHaveBeenCalled()
+    }
+    else {
+      expect(onClick).toHaveBeenCalledTimes(2)
+      expect(dblClick).toHaveBeenCalledTimes(1)
+    }
+  })
+
+  test('correctly doesn\'t double click on a disabled button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    button.disabled = true
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    const dblClick = vi.fn()
+    button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', dblClick)
+
+    await userEvent.pointer([
+      { target: button },
+      { keys: '[MouseLeft][MouseLeft]', target: button },
+    ])
+
+    expect(onClick).not.toHaveBeenCalled()
+    expect(dblClick).not.toHaveBeenCalled()
+  })
+  test('correctly triple clicks a button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    const dblClick = vi.fn()
+    const tripleClick = vi.fn()
+    button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', dblClick)
+    button.addEventListener('click', tripleClick)
+
+    await userEvent.pointer([
+      { target: button },
+      { keys: '[MouseLeft][MouseLeft][MouseLeft]', target: button },
+    ])
+
+    // todo: cleanup
+    if (server.provider === 'playwright') {
+      expect(onClick).not.toHaveBeenCalled()
+      expect(dblClick).not.toHaveBeenCalled()
+      expect(tripleClick).not.toHaveBeenCalled()
+    }
+    else {
+      expect(onClick).toHaveBeenCalledTimes(3)
+      expect(dblClick).toHaveBeenCalledTimes(1)
+      expect(tripleClick).toHaveBeenCalledTimes(3)
+      expect(tripleClick.mock.calls.length).toBe(3)
+      expect(tripleClick.mock.calls
+        .map(c => c[0] as MouseEvent)
+        .filter(c => c.detail === 3)).toHaveLength(1)
+    }
+  })
+
+  test('correctly doesn\'t triple click on a disabled button', async () => {
+    const button = document.createElement('button')
+    button.textContent = 'Click me'
+    button.disabled = true
+    document.body.appendChild(button)
+    const onClick = vi.fn()
+    const dblClick = vi.fn()
+    const tripleClick = vi.fn()
+    button.addEventListener('click', onClick)
+    button.addEventListener('dblclick', dblClick)
+    button.addEventListener('click', tripleClick)
+
+    await userEvent.pointer([
+      { target: button },
+      { keys: '[MouseLeft][MouseLeft][MouseLeft]', target: button },
+    ])
+
+    expect(onClick).not.toHaveBeenCalled()
+    expect(dblClick).not.toHaveBeenCalled()
+    expect(tripleClick).not.toHaveBeenCalled()
+  })
+  test('hover works correctly', async () => {
+    const target = document.createElement('div')
+    target.style.width = '100px'
+    target.style.height = '100px'
+
+    let mouseEntered = false
+    let pointerEntered = false
+    target.addEventListener('mouseover', () => {
+      mouseEntered = true
+    })
+    target.addEventListener('pointerenter', () => {
+      pointerEntered = true
+    })
+    target.addEventListener('pointerleave', () => {
+      pointerEntered = false
+    })
+    target.addEventListener('mouseout', () => {
+      mouseEntered = false
+    })
+
+    document.body.appendChild(target)
+
+    await userEvent.pointer({ target })
+
+    // todo: cleanup
+    if (server.provider === 'playwright') {
+      expect(pointerEntered).toBe(false)
+      expect(mouseEntered).toBe(false)
+    }
+    else {
+      expect(pointerEntered).toBe(true)
+      expect(mouseEntered).toBe(true)
+    }
+
+    await userEvent.pointer({ target: target.ownerDocument.body })
+
+    expect(pointerEntered).toBe(false)
+    expect(mouseEntered).toBe(false)
+  })
+})
+
 function createShadowRoot() {
   const div = document.createElement('div')
   const shadowRoot = div.attachShadow({ mode: 'open' })

@@ -1,5 +1,5 @@
 import type { Task, WorkerGlobalState } from 'vitest'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type { BrowserPage, PointerInput, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
 import type { BrowserRPC } from '../client'
 
@@ -129,6 +129,36 @@ export const userEvent: UserEvent = {
   unhover(element: Element) {
     const css = convertElementToCssSelector(element.ownerDocument.body)
     return triggerCommand('__vitest_hover', css)
+  },
+  pointer(input: PointerInput) {
+    const inputs = (Array.isArray(input) ? input : [input]).map((i) => {
+      if (typeof i === 'string') {
+        return i
+      }
+
+      const { target, node, ...rest } = i
+
+      if (!target && !node) {
+        return i
+      }
+
+      if (target && !node) {
+        return { target: convertElementToCssSelector(target), ...rest }
+      }
+
+      if (!target && node) {
+        return { node: convertElementToCssSelector(node), ...rest }
+      }
+
+      return {
+        target: convertElementToCssSelector(target),
+        node: convertElementToCssSelector(node),
+        ...rest,
+      }
+    })
+
+    // todo: add options?
+    return triggerCommand('__vitest_pointer', inputs)
   },
 
   // non userEvent events, but still useful
