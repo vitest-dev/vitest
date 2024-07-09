@@ -122,5 +122,15 @@ test.describe('ui', () => {
     await page.getByText('PASS (1)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+
+    // html entities in task names are escaped
+    await page.getByPlaceholder('Search...').fill('<MyComponent />')
+    await page.getByText('<MyComponent />').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+
+    // html entities in task names are escaped
+    await page.getByPlaceholder('Search...').fill('<>\'">')
+    await page.getByText('<>\'">').click()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
   })
 })

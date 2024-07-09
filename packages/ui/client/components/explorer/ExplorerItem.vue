@@ -7,7 +7,7 @@ import { client, isReport, runFiles } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer'
-import { search } from '~/composables/explorer/state'
+import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { showSource } from '~/composables/codemirror'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
@@ -107,16 +107,13 @@ const gridStyles = computed(() => {
   } ${gridColumns.join(' ')};`
 })
 
-const highlightRegex = computed(() => {
-  const searchString = search.value.toLowerCase()
-  return searchString.length ? new RegExp(`(${searchString})`, 'gi') : null
-})
-
+const escapedName = computed(() => escapeHtml(name))
 const highlighted = computed(() => {
   const regex = highlightRegex.value
+  const useName = escapedName.value
   return regex
-    ? name.replace(regex, match => `<span class="highlight">${match}</span>`)
-    : name
+    ? useName.replace(regex, match => `<span class="highlight">${match}</span>`)
+    : useName
 })
 
 const disableShowDetails = computed(() => type !== 'file' && disableTaskLocation)
