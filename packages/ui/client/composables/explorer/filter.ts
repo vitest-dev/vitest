@@ -5,6 +5,7 @@ import {
   isFileNode,
   isParentNode,
   isTestNode,
+  sortedRootTasks,
 } from '~/composables/explorer/utils'
 import { client, findById } from '~/composables/client'
 import { filteredFiles, uiEntries } from '~/composables/explorer/state'
@@ -35,7 +36,7 @@ export function* filterAll(
   search: string,
   filter: Filter,
 ) {
-  for (const node of explorerTree.root.tasks) {
+  for (const node of sortedRootTasks()) {
     yield * filterNode(node, search, filter)
   }
 }

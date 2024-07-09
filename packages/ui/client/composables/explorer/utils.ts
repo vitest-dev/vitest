@@ -33,6 +33,12 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
   return node.type === 'file' || node.type === 'suite'
 }
 
+export function sortedRootTasks(tasks = explorerTree.root.tasks) {
+  return tasks.sort((a, b) => {
+    return `${a.filepath}:${a.projectName}`.localeCompare(`${b.filepath}:${b.projectName}`)
+  })
+}
+
 export function createOrUpdateFileNode(
   file: File,
   collect = false,
