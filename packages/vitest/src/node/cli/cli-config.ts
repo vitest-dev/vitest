@@ -469,11 +469,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Should all test files run in parallel. Use `--no-file-parallelism` to disable (default: `true`)',
   },
   maxWorkers: {
-    description: 'Maximum number of workers to run tests in',
+    description: 'Maximum number or percentage of workers to run tests in',
     argument: '<workers>',
   },
   minWorkers: {
-    description: 'Minimum number of workers to run tests in',
+    description: 'Minimum number or percentage of workers to run tests in',
     argument: '<workers>',
   },
   environment: {
