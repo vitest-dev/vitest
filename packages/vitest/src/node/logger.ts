@@ -1,7 +1,7 @@
 import { Console } from 'node:console'
 import type { Writable } from 'node:stream'
 import { createLogUpdate } from 'log-update'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import type { ErrorWithDiff, Task } from '../types'
 import type { TypeCheckError } from '../typecheck/typechecker'

@@ -1,6 +1,6 @@
 import readline from 'node:readline'
 import type { Writable } from 'node:stream'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import prompt from 'prompts'
 import { relative, resolve } from 'pathe'
 import { getTests, isWindows, stdout } from '../utils'

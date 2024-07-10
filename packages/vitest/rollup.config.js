@@ -8,7 +8,7 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import license from 'rollup-plugin-license'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import fg from 'fast-glob'
 import { defineConfig } from 'rollup'
 

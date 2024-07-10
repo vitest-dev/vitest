@@ -28,6 +28,9 @@
       "types": "./context.d.ts",
       "default": "./context.js"
     },
+    "./client": {
+      "default": "./dist/client.js"
+    },
     "./matchers": {
       "types": "./matchers.d.ts"
     },

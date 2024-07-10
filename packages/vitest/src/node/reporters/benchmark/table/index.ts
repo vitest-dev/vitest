@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import * as pathe from 'pathe'
 import type { TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../../../../types/general'

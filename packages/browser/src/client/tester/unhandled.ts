@@ -1,14 +1,18 @@
-import { processError } from 'vitest/browser'
-import type { client } from '../client'
+import { client } from '@vitest/browser/client'
 
 function on(event: string, listener: (...args: any[]) => void) {
   window.addEventListener(event, listener)
   return () => window.removeEventListener(event, listener)
 }
 
-export function serializeError(unhandledError: any) {
+function serializeError(unhandledError: any) {
+  if (typeof unhandledError !== 'object' || !unhandledError) {
+    return {
+      message: String(unhandledError),
+    }
+  }
+
   return {
-    ...unhandledError,
     name: unhandledError.name,
     message: unhandledError.message,
     stack: String(unhandledError.stack),
@@ -49,19 +53,20 @@ function catchWindowErrors(cb: (e: ErrorEvent) => void) {
   }
 }
 
-export function registerUnexpectedErrors(rpc: typeof client.rpc) {
+function registerUnexpectedErrors() {
   catchWindowErrors(event =>
-    reportUnexpectedError(rpc, 'Error', event.error),
+    reportUnexpectedError('Error', event.error),
   )
   on('unhandledrejection', event =>
-    reportUnexpectedError(rpc, 'Unhandled Rejection', event.reason))
+    reportUnexpectedError('Unhandled Rejection', event.reason))
 }
 
 async function reportUnexpectedError(
-  rpc: typeof client.rpc,
   type: string,
   error: any,
 ) {
-  const processedError = processError(error)
-  await rpc.onUnhandledError(processedError, type)
+  const processedError = serializeError(error)
+  await client.rpc.onUnhandledError(processedError, type)
 }
+
+registerUnexpectedErrors()

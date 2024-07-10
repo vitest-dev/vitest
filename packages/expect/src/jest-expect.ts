@@ -1,4 +1,5 @@
-import { assertTypes, getColors } from '@vitest/utils'
+import { assertTypes } from '@vitest/utils'
+import c from 'tinyrainbow'
 import type { Constructable } from '@vitest/utils'
 import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
 import { isMockFunction } from '@vitest/spy'
@@ -35,7 +36,6 @@ declare class DOMTokenList {
 // Jest Expect Compact
 export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   const { AssertionError } = chai
-  const c = () => getColors()
   const customTesters = getCustomEqualityTesters()
 
   function def(
@@ -530,10 +530,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     showActualCall?: any,
   ) => {
     if (spy.mock.calls) {
-      msg += c().gray(
+      msg += c.gray(
         `\n\nReceived: \n\n${spy.mock.calls
           .map((callArg, i) => {
-            let methodCall = c().bold(
+            let methodCall = c.bold(
               `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
             )
             if (showActualCall) {
@@ -554,8 +554,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           .join('\n')}`,
       )
     }
-    msg += c().gray(
-      `\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`,
+    msg += c.gray(
+      `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
     )
     return msg
   }
@@ -565,10 +565,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     msg: string,
     showActualReturn?: any,
   ) => {
-    msg += c().gray(
+    msg += c.gray(
       `\n\nReceived: \n\n${results
         .map((callReturn, i) => {
-          let methodCall = c().bold(
+          let methodCall = c.bold(
             `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
           )
           if (showActualReturn) {
@@ -588,8 +588,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         })
         .join('\n')}`,
     )
-    msg += c().gray(
-      `\n\nNumber of calls: ${c().bold(spy.mock.calls.length)}\n`,
+    msg += c.gray(
+      `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
     )
     return msg
   }

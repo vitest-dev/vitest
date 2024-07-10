@@ -25,6 +25,7 @@
     "immutable": "5.0.0-beta.5",
     "strip-ansi": "^7.1.0",
     "sweetalert2": "^11.6.16",
+    "tinyrainbow": "^1.2.0",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
     "vitest": "workspace:*",

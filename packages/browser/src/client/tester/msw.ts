@@ -1,10 +1,10 @@
+import { channel } from '@vitest/browser/client'
 import type {
   IframeChannelEvent,
   IframeMockEvent,
   IframeMockingDoneEvent,
   IframeUnmockEvent,
-} from '../channel'
-import { channel } from '../channel'
+} from '@vitest/browser/client'
 
 export function createModuleMocker() {
   const mocks: Map<string, string | null | undefined> = new Map()

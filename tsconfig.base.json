@@ -7,6 +7,7 @@
     "paths": {
       "@vitest/ws-client": ["./packages/ws-client/src/index.ts"],
       "@vitest/ui": ["./packages/ui/node/index.ts"],
+      "@vitest/pretty-format": ["./packages/pretty-format/src/index.ts"],
       "@vitest/utils": ["./packages/utils/src/index.ts"],
       "@vitest/utils/*": ["./packages/utils/src/*"],
       "@vitest/spy": ["./packages/spy/src/index.ts"],
@@ -16,6 +17,7 @@
       "@vitest/runner": ["./packages/runner/src/index.ts"],
       "@vitest/runner/*": ["./packages/runner/src/*"],
       "@vitest/browser": ["./packages/browser/src/node/index.ts"],
+      "@vitest/browser/client": ["./packages/browser/src/client/client.ts"],
       "~/*": ["./packages/ui/client/*"],
       "vitest": ["./packages/vitest/src/index.ts"],
       "vitest/globals": ["./packages/vitest/globals.d.ts"],

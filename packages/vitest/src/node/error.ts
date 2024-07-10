@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { normalize, relative } from 'pathe'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
 import { inspect } from '@vitest/utils'
 import stripAnsi from 'strip-ansi'
@@ -319,7 +319,7 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
     return
   }
   if (error.message.length > 5000) {
-    // Protect against infinite stack trace in picocolors
+    // Protect against infinite stack trace in tinyrainbow
     logger.error(`${c.red(c.bold(errorName))}: ${error.message}`)
   }
   else {

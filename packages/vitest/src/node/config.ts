@@ -1,6 +1,6 @@
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type {
   ApiConfig,

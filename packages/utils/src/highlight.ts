@@ -1,8 +1,5 @@
 import { type TokenColors, highlight as baseHighlight } from 'tinyhighlight'
-import type { ColorName } from './colors'
-import { getColors } from './colors'
-
-type Colors = Record<ColorName, (input: string) => string>
+import c, { type Colors } from 'tinyrainbow'
 
 function getDefs(c: Colors): TokenColors {
   const Invalid = (text: string) => c.white(c.bgRed(c.bold(text)))
@@ -45,6 +42,6 @@ export function highlight(
 ) {
   return baseHighlight(code, {
     jsx: options.jsx,
-    colors: getDefs(options.colors || getColors()),
+    colors: getDefs(options.colors || c),
   })
 }

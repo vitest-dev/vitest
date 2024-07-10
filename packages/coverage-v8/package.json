@@ -53,10 +53,10 @@
     "istanbul-reports": "^3.1.7",
     "magic-string": "^0.30.10",
     "magicast": "^0.3.4",
-    "picocolors": "^1.0.1",
     "std-env": "^3.7.0",
     "strip-literal": "^2.1.0",
-    "test-exclude": "^7.0.1"
+    "test-exclude": "^7.0.1",
+    "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

@@ -1,6 +1,6 @@
 import readline from 'node:readline'
 import type { Writable } from 'node:stream'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import stripAnsi from 'strip-ansi'
 import { createDefer } from '@vitest/utils'
 import { stdout as getStdout } from '../utils'

@@ -1,4 +1,4 @@
-import type { Formatter } from 'picocolors/types'
+import type { Formatter } from 'tinyrainbow'
 
 export interface MatcherHintOptions {
   comment?: string

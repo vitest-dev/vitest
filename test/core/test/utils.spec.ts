@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest'
-import { assertTypes, createColors, deepClone, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
+import { assertTypes, deepClone, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
 import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
 import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
@@ -283,16 +283,6 @@ describe('objDisplay', () => {
     // note: our code should not split surrogate pairs, but may split graphemes
     expect(() => encodeURI(objDisplay(value))).not.toThrow()
     expect(objDisplay(value)).toEqual(expected)
-  })
-})
-
-describe(createColors, () => {
-  test('no maximum call stack error', () => {
-    process.env.FORCE_COLOR = '1'
-    delete process.env.GITHUB_ACTIONS
-    const c = createColors()
-    expect(c.isColorSupported).toBe(true)
-    expect(c.blue(c.blue('x').repeat(10000))).toBeTruthy()
   })
 })
 

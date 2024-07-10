@@ -1,11 +1,7 @@
 import { SpyModule, collectTests, setupCommonEnv, startTests } from 'vitest/browser'
+import { channel, client, onCancel } from '@vitest/browser/client'
 import { getBrowserState, getConfig, getWorkerState } from '../utils'
-import { channel, client, onCancel } from '../client'
 import { setupDialogsSpy } from './dialog'
-import {
-  registerUnexpectedErrors,
-  serializeError,
-} from './unhandled'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
@@ -59,8 +55,6 @@ async function prepareTestEnvironment(files: string[]) {
     runner.onCancel?.(reason)
   })
 
-  registerUnexpectedErrors(rpc)
-
   return {
     runner,
     config,
@@ -92,7 +86,11 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   }
   catch (error: any) {
     debug('runner cannot be loaded because it threw an error', error.stack || error.message)
-    await client.rpc.onUnhandledError(serializeError(error), 'Preload Error')
+    await client.rpc.onUnhandledError({
+      name: error.name,
+      message: error.message,
+      stack: String(error.stack),
+    }, 'Preload Error')
     done(files)
     return
   }

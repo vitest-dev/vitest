@@ -8,8 +8,8 @@
 import type {
   Plugin as PrettyFormatPlugin,
   Plugins as PrettyFormatPlugins,
-} from 'pretty-format'
-import { plugins as prettyFormatPlugins } from 'pretty-format'
+} from '@vitest/pretty-format'
+import { plugins as prettyFormatPlugins } from '@vitest/pretty-format'
 
 import MockSerializer from './mockSerializer'
 

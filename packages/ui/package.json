@@ -52,8 +52,8 @@
     "fflate": "^0.8.2",
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
-    "picocolors": "^1.0.1",
-    "sirv": "^2.0.4"
+    "sirv": "^2.0.4",
+    "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
@@ -68,6 +68,7 @@
     "@vitejs/plugin-vue": "^5.0.5",
     "@vitest/runner": "workspace:*",
     "@vitest/ws-client": "workspace:*",
+    "@vue/test-utils": "^2.4.6",
     "@vueuse/core": "^10.11.0",
     "ansi-to-html": "^0.7.2",
     "birpc": "0.2.17",

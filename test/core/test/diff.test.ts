@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest'
-import { getDefaultColors, setupColors } from '@vitest/utils'
+import stripAnsi from 'strip-ansi'
 import type { DiffOptions } from '@vitest/utils/diff'
 import { diff, diffStringsUnified } from '@vitest/utils/diff'
 import { processError } from '@vitest/runner'
@@ -9,9 +9,8 @@ test('displays object diff', () => {
   const objectA = { a: 1, b: 2 }
   const objectB = { a: 1, b: 3 }
   const console = { log: vi.fn(), error: vi.fn() }
-  setupColors(getDefaultColors())
   displayDiff(diff(objectA, objectB), console as any)
-  expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -29,9 +28,8 @@ test('display truncated object diff', () => {
   const objectA = { a: 1, b: 2, c: 3, d: 4, e: 5 }
   const objectB = { a: 1, b: 3, c: 4, d: 5, e: 6 }
   const console = { log: vi.fn(), error: vi.fn() }
-  setupColors(getDefaultColors())
   displayDiff(diff(objectA, objectB, { truncateThreshold: 4 }), console as any)
-  expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -51,9 +49,8 @@ test('display one line string diff', () => {
   const string1 = 'string1'
   const string2 = 'string2'
   const console = { log: vi.fn(), error: vi.fn() }
-  setupColors(getDefaultColors())
   displayDiff(diff(string1, string2), console as any)
-  expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -68,9 +65,8 @@ test('display one line string diff should not be affected by truncateThreshold',
   const string1 = 'string1'
   const string2 = 'string2'
   const console = { log: vi.fn(), error: vi.fn() }
-  setupColors(getDefaultColors())
   displayDiff(diff(string1, string2, { truncateThreshold: 3 }), console as any)
-  expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -85,9 +81,8 @@ test('display multiline string diff', () => {
   const string1 = 'string1\nstring2\nstring3'
   const string2 = 'string2\nstring2\nstring1'
   const console = { log: vi.fn(), error: vi.fn() }
-  setupColors(getDefaultColors())
   displayDiff(diff(string1, string2), console as any)
-  expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -105,9 +100,8 @@ test('display truncated multiline string diff', () => {
   const string1 = 'string1\nstring2\nstring3'
   const string2 = 'string2\nstring2\nstring1'
   const console = { log: vi.fn(), error: vi.fn() }
-  setupColors(getDefaultColors())
   displayDiff(diff(string1, string2, { truncateThreshold: 2 }), console as any)
-  expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -124,9 +118,8 @@ test('display truncated multiple items array diff', () => {
   const array1 = Array(45000).fill('foo')
   const array2 = Array(45000).fill('bar')
   const console = { log: vi.fn(), error: vi.fn() }
-  setupColors(getDefaultColors())
   displayDiff(diff(array1, array2, { truncateThreshold: 3 }), console as any)
-  expect(console.error.mock.calls[0][0]).toMatchInlineSnapshot(`
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -142,8 +135,7 @@ test('display truncated multiple items array diff', () => {
 })
 
 test('asymmetric matcher in object', () => {
-  setupColors(getDefaultColors())
-  expect(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() })).toMatchInlineSnapshot(`
+  expect(stripAnsi(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() }))).toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -156,13 +148,12 @@ test('asymmetric matcher in object', () => {
 })
 
 test('asymmetric matcher in object with truncated diff', () => {
-  setupColors(getDefaultColors())
   expect(
-    getErrorDiff(
+    stripAnsi(getErrorDiff(
       { w: 'foo', x: 0, y: 'bar', z: 'baz' },
       { w: expect.anything(), x: 1, y: expect.anything(), z: 'bar' },
       { truncateThreshold: 3 },
-    ),
+    )),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -176,8 +167,7 @@ test('asymmetric matcher in object with truncated diff', () => {
 })
 
 test('asymmetric matcher in array', () => {
-  setupColors(getDefaultColors())
-  expect(getErrorDiff([0, 'foo'], [1, expect.anything()])).toMatchInlineSnapshot(`
+  expect(stripAnsi(getErrorDiff([0, 'foo'], [1, expect.anything()]))).toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -190,13 +180,12 @@ test('asymmetric matcher in array', () => {
 })
 
 test('asymmetric matcher in array  with truncated diff', () => {
-  setupColors(getDefaultColors())
   expect(
-    getErrorDiff(
+    stripAnsi(getErrorDiff(
       [0, 'foo', 2],
       [1, expect.anything(), 3],
       { truncateThreshold: 2 },
-    ),
+    )),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -209,12 +198,11 @@ test('asymmetric matcher in array  with truncated diff', () => {
 })
 
 test('asymmetric matcher in nested', () => {
-  setupColors(getDefaultColors())
   expect(
-    getErrorDiff(
+    stripAnsi(getErrorDiff(
       [{ x: 0, y: 'foo' }, [0, 'bar']],
       [{ x: 1, y: expect.anything() }, [1, expect.anything()]],
-    ),
+    )),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -235,13 +223,12 @@ test('asymmetric matcher in nested', () => {
 })
 
 test('asymmetric matcher in nested with truncated diff', () => {
-  setupColors(getDefaultColors())
   expect(
-    getErrorDiff(
+    stripAnsi(getErrorDiff(
       [{ x: 0, y: 'foo', z: 'bar' }, [0, 'bar', 'baz']],
       [{ x: 1, y: expect.anything(), z: expect.anything() }, [1, expect.anything(), expect.anything()]],
       { truncateThreshold: 5 },
-    ),
+    )),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -265,9 +252,8 @@ test('diff for multi-line string compared by characters', () => {
   FOO,
   bar,
   `
-  setupColors(getDefaultColors())
   expect(
-    diffStringsUnified(string1, string2),
+    stripAnsi(diffStringsUnified(string1, string2)),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -291,9 +277,8 @@ test('truncated diff for multi-line string compared by characters', () => {
   bar,
   BAZ,
   `
-  setupColors(getDefaultColors())
   expect(
-    diffStringsUnified(string1, string2, { truncateThreshold: 3 }),
+    stripAnsi(diffStringsUnified(string1, string2, { truncateThreshold: 3 })),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -307,7 +292,6 @@ test('truncated diff for multi-line string compared by characters', () => {
 })
 
 test('getter only property', () => {
-  setupColors(getDefaultColors())
   const x = { normalProp: 1 }
   const y = { normalProp: 2 }
   Object.defineProperty(x, 'getOnlyProp', {
@@ -319,7 +303,7 @@ test('getter only property', () => {
     get: () => ({ a: 'b' }),
   })
   expect(
-    getErrorDiff(x, y),
+    stripAnsi(getErrorDiff(x, y)),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received

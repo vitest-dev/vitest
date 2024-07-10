@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { basename, dirname, relative, resolve } from 'pathe'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import fg from 'fast-glob'
 import { stringify } from 'flatted'
 import type {

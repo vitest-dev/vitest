@@ -1,5 +1,5 @@
 import type { AliasOptions, DepOptimizationConfig, ServerOptions } from 'vite'
-import type { PrettyFormatOptions } from 'pretty-format'
+import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { ViteNodeServerOptions } from 'vite-node'

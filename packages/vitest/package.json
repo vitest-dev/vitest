@@ -149,6 +149,7 @@
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
+    "@vitest/pretty-format": "workspace:^",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
     "@vitest/spy": "workspace:*",
@@ -158,10 +159,10 @@
     "execa": "^8.0.1",
     "magic-string": "^0.30.10",
     "pathe": "^1.1.2",
-    "picocolors": "^1.0.1",
     "std-env": "^3.7.0",
     "tinybench": "^2.8.0",
     "tinypool": "^1.0.0",
+    "tinyrainbow": "^1.2.0",
     "vite": "^5.0.0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"
