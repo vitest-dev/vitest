@@ -1,6 +1,15 @@
 import type { Task, WorkerGlobalState } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventDragAndDropOptions, UserEventHoverOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type {
+  BrowserPage,
+  Locator,
+  UserEvent,
+  UserEventClickOptions,
+  UserEventDragAndDropOptions,
+  UserEventHoverOptions,
+  UserEventTabOptions,
+  UserEventTypeOptions,
+} from '../../../context'
 import type { BrowserRunnerState } from '../utils'
 
 // this file should not import anything directly, only types
@@ -29,7 +38,11 @@ function convertElementToCssSelector(element: Element) {
     )
   }
 
-  return getUniqueCssSelector(element)
+  const css = getUniqueCssSelector(element)
+  if (provider === 'playwright') {
+    return `css=${css}`
+  }
+  return css
 }
 
 function escapeIdForCSSSelector(id: string) {
@@ -123,17 +136,14 @@ function createUserEvent(): UserEvent {
     setup() {
       return createUserEvent()
     },
-    click(element: Element, options: UserEventClickOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_click', css, processClickOptions(options))
+    click(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).click(processClickOptions(options))
     },
-    dblClick(element: Element, options: UserEventClickOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_dblClick', css, processClickOptions(options))
+    dblClick(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).dblClick(processClickOptions(options))
     },
-    tripleClick(element: Element, options: UserEventClickOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_tripleClick', css, processClickOptions(options))
+    tripleClick(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).tripleClick(processClickOptions(options))
     },
     selectOptions(element, value) {
       const values = provider === 'webdriverio'
@@ -142,8 +152,8 @@ function createUserEvent(): UserEvent {
       const css = convertElementToCssSelector(element)
       return triggerCommand('__vitest_selectOptions', css, values)
     },
-    async type(element: Element, text: string, options: UserEventTypeOptions = {}) {
-      const css = convertElementToCssSelector(element)
+    async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
+      const css = convertToLocator(element).selector
       const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
         '__vitest_type',
         css,
@@ -152,9 +162,8 @@ function createUserEvent(): UserEvent {
       )
       keyboard.unreleased = unreleased
     },
-    clear(element: Element) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_clear', css)
+    clear(element: Element | Locator) {
+      return convertToLocator(element).clear()
     },
     tab(options: UserEventTabOptions = {}) {
       return triggerCommand('__vitest_tab', options)
@@ -167,29 +176,21 @@ function createUserEvent(): UserEvent {
       )
       keyboard.unreleased = unreleased
     },
-    hover(element: Element, options: UserEventHoverOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_hover', css, processHoverOptions(options))
+    hover(element: Element | Locator, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).hover(processHoverOptions(options))
     },
-    unhover(element: Element, options: UserEventHoverOptions = {}) {
-      const css = convertElementToCssSelector(element.ownerDocument.body)
-      return triggerCommand('__vitest_hover', css, options)
+    unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).unhover(options)
     },
 
     // non userEvent events, but still useful
-    fill(element: Element, text: string, options) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_fill', css, text, options)
+    fill(element: Element | Locator, text: string, options) {
+      return convertToLocator(element).fill(text, options)
     },
-    dragAndDrop(source: Element, target: Element, options = {}) {
-      const sourceCss = convertElementToCssSelector(source)
-      const targetCss = convertElementToCssSelector(target)
-      return triggerCommand(
-        '__vitest_dragAndDrop',
-        sourceCss,
-        targetCss,
-        processDragAndDropOptions(options),
-      )
+    dragAndDrop(source: Element | Locator, target: Element | Locator, options = {}) {
+      const sourceLocator = convertToLocator(source)
+      const targetLocator = convertToLocator(target)
+      return sourceLocator.dropTo(targetLocator, processDragAndDropOptions(options))
     },
   }
 }
@@ -294,16 +295,60 @@ export const page: BrowserPage = {
     return triggerCommand('__vitest_screenshot', name, {
       ...options,
       element: options.element
-        ? convertElementToCssSelector(options.element)
+        ? convertToSelector(options.element)
         : undefined,
     })
   },
+  getByRole() {
+    throw new Error('Method "getByRole" is not implemented in the current provider.')
+  },
+  getByLabelText() {
+    throw new Error('Method "getByLabelText" is not implemented in the current provider.')
+  },
+  getByTestId() {
+    throw new Error('Method "getByTestId" is not implemented in the current provider.')
+  },
+  getByAltText() {
+    throw new Error('Method "getByAltText" is not implemented in the current provider.')
+  },
+  getByPlaceholder() {
+    throw new Error('Method "getByPlaceholder" is not implemented in the current provider.')
+  },
+  getByText() {
+    throw new Error('Method "getByText" is not implemented in the current provider.')
+  },
+  getByTitle() {
+    throw new Error('Method "getByTitle" is not implemented in the current provider.')
+  },
+  elementLocator() {
+    throw new Error('Method "elementLocator" is not implemented in the current provider.')
+  },
   extend(methods) {
     for (const key in methods) {
-      (page as any)[key] = methods[key]
+      (page as any)[key] = (methods as any)[key]
     }
     return page
   },
+}
+
+function convertToLocator(element: Element | Locator): Locator {
+  if (element instanceof Element) {
+    return page.elementLocator(element)
+  }
+  return element
+}
+
+function convertToSelector(elementOrLocator: Element | Locator): string {
+  if (!elementOrLocator) {
+    throw new Error('Expected element or locator to be defined.')
+  }
+  if (elementOrLocator instanceof Element) {
+    return convertElementToCssSelector(elementOrLocator)
+  }
+  if ('selector' in elementOrLocator) {
+    return elementOrLocator.selector
+  }
+  throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }
 
 function getTaskFullName(task: Task): string {

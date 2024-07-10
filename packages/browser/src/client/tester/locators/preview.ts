@@ -7,9 +7,9 @@ import {
   getByText,
   getByTitle,
 } from '@testing-library/dom'
-import { page } from '@vitest/browser/context'
+import { page, Locator } from '@vitest/browser/context'
+import { UserEvent, userEvent } from '@testing-library/user-event'
 import { convertElementToCssSelector } from '../../utils'
-import { Locator } from './index'
 
 // TODO: type options
 page.extend({
@@ -40,12 +40,53 @@ page.extend({
   },
 })
 
-class PreviewLocator extends Locator {
+class PreviewLocator implements Locator {
+  public selector: string
   private _element: HTMLElement
+  private _userEvent: UserEvent
 
   constructor(element: Element) {
-    super(convertElementToCssSelector(element))
+    this.selector = convertElementToCssSelector(element)
     this._element = element as HTMLElement
+    this._userEvent = userEvent.setup({
+      document: this._element.ownerDocument,
+    })
+  }
+
+  click(): Promise<void> {
+    return this._userEvent.click(this._element)
+  }
+
+  dblClick(): Promise<void> {
+    return this._userEvent.dblClick(this._element)
+  }
+
+  tripleClick(): Promise<void> {
+    return this._userEvent.tripleClick(this._element)
+  }
+
+  hover(): Promise<void> {
+    return this._userEvent.hover(this._element)
+  }
+
+  unhover(): Promise<void> {
+    return this._userEvent.unhover(this._element)
+  }
+
+  fill(text: string): Promise<void> {
+    return this._userEvent.type(this._element, text)
+  }
+
+  dropTo(): Promise<void> {
+    throw new Error('The "preview" provider doesn\'t support `dropTo` method.')
+  }
+
+  clear(): Promise<void> {
+    return this._userEvent.clear(this._element)
+  }
+
+  async screenshot(): Promise<never> {
+    throw new Error('The "preview" provider doesn\'t support `screenshot` method.')
   }
 
   getByRole(role: string): Locator {
@@ -74,5 +115,9 @@ class PreviewLocator extends Locator {
 
   getByTitle(title: string | RegExp): Locator {
     return new PreviewLocator(getByTitle(this._element, title))
+  }
+
+  protected element() {
+    return this._element
   }
 }

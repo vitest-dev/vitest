@@ -1,8 +1,10 @@
 import type {
+  LocatorScreenshotOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
   UserEventFillOptions,
 } from '@vitest/browser/context'
+import { page } from '@vitest/browser/context'
 import type { BrowserRPC } from '@vitest/browser/client'
 import { getBrowserState, getWorkerState } from '../../utils'
 
@@ -50,6 +52,21 @@ export abstract class Locator {
     )
   }
 
+  screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
+    path: string
+    base64: string
+  }>
+  screenshot(options?: LocatorScreenshotOptions): Promise<string>
+  screenshot(options?: LocatorScreenshotOptions): Promise<string | {
+    path: string
+    base64: string
+  }> {
+    return page.screenshot({
+      ...options,
+      element: this,
+    })
+  }
+
   // TODO: support options
   abstract getByRole(role: string): Locator
   abstract getByLabelText(text: string | RegExp): Locator
@@ -75,6 +92,7 @@ export abstract class Locator {
     const filepath = this.worker.filepath
       || this.worker.current?.file?.filepath
       || undefined
+
     return this.rpc.triggerCommand<T>(
       this.state.contextId,
       command,

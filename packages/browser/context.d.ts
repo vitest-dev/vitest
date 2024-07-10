@@ -24,7 +24,7 @@ export interface CDPSession {
 }
 
 export interface ScreenshotOptions {
-  element?: Element
+  element?: Element | Locator
   /**
    * Path relative to the `screenshotDirectory` in the test config.
    */
@@ -64,21 +64,21 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/click/} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/convenience/#click} testing-library API
    */
-  click: (element: Element, options?: UserEventClickOptions) => Promise<void>
+  click: (element: Element | Locator, options?: UserEventClickOptions) => Promise<void>
   /**
    * Triggers a double click event on an element. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-dblclick} Playwright API
    * @see {@link https://webdriver.io/docs/api/element/doubleClick/} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/convenience/#dblClick} testing-library API
    */
-  dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
+  dblClick: (element: Element | Locator, options?: UserEventDoubleClickOptions) => Promise<void>
   /**
    * Triggers a triple click event on an element. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API: using `click` with `clickCount: 3`
    * @see {@link https://webdriver.io/docs/api/browser/actions/} WebdriverIO API: using actions api with `move` plus three `down + up + pause` events in a row
    * @see {@link https://testing-library.com/docs/user-event/convenience/#tripleclick} testing-library API
    */
-  tripleClick: (element: Element, options?: UserEventTripleClickOptions) => Promise<void>
+  tripleClick: (element: Element | Locator, options?: UserEventTripleClickOptions) => Promise<void>
   /**
    * Choose one or more values from a select element. Uses provider's API under the hood.
    * If select doesn't have `multiple` attribute, only the first value will be selected.
@@ -127,14 +127,14 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/browser/action#key-input-source} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
    */
-  type: (element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>
+  type: (element: Element | Locator, text: string, options?: UserEventTypeOptions) => Promise<void>
   /**
    * Removes all text from an element. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-clear} Playwright API
    * @see {@link https://webdriver.io/docs/api/element/clearValue} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#clear} testing-library API
    */
-  clear: (element: Element) => Promise<void>
+  clear: (element: Element | Locator) => Promise<void>
   /**
    * Sends a `Tab` key event. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -148,7 +148,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/moveTo/} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/convenience/#hover} testing-library API
    */
-  hover: (element: Element, options?: UserEventHoverOptions) => Promise<void>
+  hover: (element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>
   /**
    * Moves cursor position to the body element. Uses provider's API under the hood.
    * By default, the cursor position is in the center (in webdriverio) or in some visible place (in playwright)
@@ -157,7 +157,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/moveTo/} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/convenience/#hover} testing-library API
    */
-  unhover: (element: Element, options?: UserEventHoverOptions) => Promise<void>
+  unhover: (element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>
   /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
@@ -170,13 +170,13 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/setValue} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#type} testing-library API
    */
-  fill: (element: Element, text: string, options?: UserEventFillOptions) => Promise<void>
+  fill: (element: Element | Locator, text: string, options?: UserEventFillOptions) => Promise<void>
   /**
    * Drags a source element on top of the target element. This API is not supported by "preview" provider.
    * @see {@link https://playwright.dev/docs/api/class-frame#frame-drag-and-drop} Playwright API
    * @see {@link https://webdriver.io/docs/api/element/dragAndDrop/} WebdriverIO API
    */
-  dragAndDrop: (source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>
+  dragAndDrop: (source: Element | Locator, target: Element | Locator, options?: UserEventDragAndDropOptions) => Promise<void>
 }
 
 export interface UserEventFillOptions {}
@@ -186,6 +186,51 @@ export interface UserEventClickOptions {}
 export interface UserEventDoubleClickOptions {}
 export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
+
+export interface LocatorOptions {
+  exact?: boolean
+}
+
+export interface LocatorByRoleOptions {
+  checked?: boolean
+  disabled?: boolean
+  exact?: boolean
+  expanded?: boolean
+  includeHidden?: boolean
+  level?: number
+  name?: string | RegExp
+  pressed?: boolean
+  selected?: boolean
+}
+
+interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
+
+export interface Locator {
+  selector: string
+
+  getByRole(role: string, options?: LocatorByRoleOptions): Locator
+  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTestId(text: string | RegExp): Locator
+  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
+
+  dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void>
+  click(options?: UserEventClickOptions): Promise<void>
+  dblClick(options?: UserEventDoubleClickOptions): Promise<void>
+  tripleClick(options?: UserEventTripleClickOptions): Promise<void>
+  clear(): Promise<void>
+  hover(options?: UserEventHoverOptions): Promise<void>
+  unhover(options?: UserEventHoverOptions): Promise<void>
+  fill(text: string, options?: UserEventFillOptions): Promise<void>
+
+  screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
+    path: string
+    base64: string
+  }>
+  screenshot(options?: LocatorScreenshotOptions): Promise<string>
+}
 
 export interface UserEventTabOptions {
   shift?: boolean
@@ -267,7 +312,15 @@ export interface BrowserPage {
     base64: string
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
-  extend(methods: Record<string | symbol, (this: BrowserPage, ...args: any[]) => void>): BrowserPage
+  extend(methods: Partial<BrowserPage>): BrowserPage
+  getByRole(role: string, options?: LocatorByRoleOptions): Locator
+  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTestId(text: string | RegExp): Locator
+  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
+  elementLocator(element: Element): Locator
 }
 
 export const page: BrowserPage
