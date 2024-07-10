@@ -41,38 +41,38 @@ page.extend({
 })
 
 class PreviewLocator extends Locator {
-  private element: HTMLElement
+  private _element: HTMLElement
 
   constructor(element: Element) {
     super(convertElementToCssSelector(element))
-    this.element = element as HTMLElement
+    this._element = element as HTMLElement
   }
 
   getByRole(role: string): Locator {
-    return new PreviewLocator(getByRole(this.element, role))
+    return new PreviewLocator(getByRole(this._element, role))
   }
 
   getByAltText(text: string | RegExp): Locator {
-    return new PreviewLocator(getByAltText(this.element, text))
+    return new PreviewLocator(getByAltText(this._element, text))
   }
 
   getByLabelText(text: string | RegExp): Locator {
-    return new PreviewLocator(getByLabelText(this.element, text))
+    return new PreviewLocator(getByLabelText(this._element, text))
   }
 
   getByPlaceholder(text: string | RegExp): Locator {
-    return new PreviewLocator(getByPlaceholderText(this.element, text))
+    return new PreviewLocator(getByPlaceholderText(this._element, text))
   }
 
   getByText(text: string | RegExp): Locator {
-    return new PreviewLocator(getByText(this.element, text))
+    return new PreviewLocator(getByText(this._element, text))
   }
 
   getByTestId(testId: string | RegExp): Locator {
-    return new PreviewLocator(getByTestId(this.element, testId))
+    return new PreviewLocator(getByTestId(this._element, testId))
   }
 
   getByTitle(title: string | RegExp): Locator {
-    return new PreviewLocator(getByTitle(this.element, title))
+    return new PreviewLocator(getByTitle(this._element, title))
   }
 }
