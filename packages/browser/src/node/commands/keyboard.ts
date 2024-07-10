@@ -50,7 +50,7 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
         throw new TypeError(`Provider "${context.provider.name}" does not support selecting all text`)
       }
     },
-    false,
+    true,
   )
 }
 
