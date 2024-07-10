@@ -53,7 +53,7 @@
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
     "sirv": "^2.0.4",
-    "tinyrainbow": "^1.1.2"
+    "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",

@@ -518,8 +518,8 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       '@types/debug':
         specifier: ^4.1.12
@@ -585,8 +585,8 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       '@types/debug':
         specifier: ^4.1.12
@@ -628,8 +628,8 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       '@types/chai':
         specifier: 4.3.6
@@ -644,8 +644,8 @@ importers:
   packages/pretty-format:
     dependencies:
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       react-is:
         specifier: ^18.3.1
@@ -709,8 +709,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -812,8 +812,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
     devDependencies:
       '@jridgewell/trace-mapping':
         specifier: ^0.3.25
@@ -846,8 +846,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
@@ -910,8 +910,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
@@ -1186,8 +1186,8 @@ importers:
         specifier: ^11.6.16
         version: 11.6.16
       tinyrainbow:
-        specifier: ^1.1.2
-        version: 1.1.2
+        specifier: ^1.2.0
+        version: 1.2.0
       tinyspy:
         specifier: ^1.0.2
         version: 1.0.2
@@ -15010,8 +15010,8 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     dev: false
 
-  /tinyrainbow@1.1.2:
-    resolution: {integrity: sha512-oMttVNy8VdB46XUh054C63bGS2t8WhjTWbtdJNewItd0/eZZSDLxf76eUvkysWtYAJDRgcfWBuxOq9qRn0Dm3w==}
+  /tinyrainbow@1.2.0:
+    resolution: {integrity: sha512-weEDEq7Z5eTHPDh4xjX789+fHfF+P8boiFB+0vbWzpbnbsEr/GRaohi/uMKxg8RZMXnl1ItAi/IUHWMsjDV7kQ==}
     engines: {node: '>=14.0.0'}
 
   /tinyspy@1.0.2:

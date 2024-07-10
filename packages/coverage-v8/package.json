@@ -56,7 +56,7 @@
     "std-env": "^3.7.0",
     "strip-literal": "^2.1.0",
     "test-exclude": "^7.0.1",
-    "tinyrainbow": "^1.1.2"
+    "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
