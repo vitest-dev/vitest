@@ -656,8 +656,8 @@ export interface Assertion<T = any>
    */
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
 
-  toHaveBeenCalledBefore: (mock: MockInstance) => void
-  toHaveBeenCalledAfter: (mock: MockInstance) => void
+  toHaveBeenCalledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+  toHaveBeenCalledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
 
   /**
    * Checks that a promise resolves successfully at least once.
