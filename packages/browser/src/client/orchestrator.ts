@@ -245,7 +245,7 @@ async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   return document.querySelector('#vitest-tester') as HTMLDivElement
 }
 
-client.ws.addEventListener('open', async () => {
+client.waitForConnection().then(async () => {
   const testFiles = getBrowserState().files
 
   await orchestrator.init()

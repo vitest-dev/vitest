@@ -73,7 +73,7 @@ export async function resolveOrchestrator(
     __VITEST_TITLE__: 'Vitest Browser Runner',
     __VITEST_SCRIPTS__: server.orchestratorScripts,
     __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
-    __VITEST_ERROR_CATCHER__: `<script type="module">${server.errorCatcherJs}</script>`,
+    __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherPath}"></script>`,
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
   })
 }

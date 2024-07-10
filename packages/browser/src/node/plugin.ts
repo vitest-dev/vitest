@@ -166,6 +166,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               'vitest/utils',
               'vitest/browser',
               'vitest/runners',
+              '@vitest/browser',
+              '@vitest/browser/client',
               '@vitest/utils',
               '@vitest/utils/source-map',
               '@vitest/runner',

@@ -1,4 +1,4 @@
-import { channel, client } from '/@id/@vitest/browser/client'
+import { channel, client } from '@vitest/browser/client'
 
 function on(event, listener) {
   window.addEventListener(event, listener)
