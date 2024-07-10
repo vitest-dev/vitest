@@ -28,6 +28,7 @@ export interface BrowserRunnerState {
   wrapModule: <T>(module: () => T) => T
   iframeId?: string
   contextId: string
+  testerId: string
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
   cdp?: {
