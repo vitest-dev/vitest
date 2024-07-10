@@ -178,6 +178,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               'std-env',
               'tinybench',
               'tinyspy',
+              'tinyrainbow',
               'pathe',
               'msw',
               'msw/browser',
