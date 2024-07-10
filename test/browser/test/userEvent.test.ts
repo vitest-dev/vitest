@@ -557,6 +557,22 @@ describe('userEvent.keyboard', async () => {
     ])
   })
 
+  test('should not auto release', async () => {
+    const spyKeydown = vi.fn()
+    const spyKeyup = vi.fn()
+    const button = document.createElement('button')
+    document.body.appendChild(button)
+    button.addEventListener('keydown', spyKeydown)
+    button.addEventListener('keyup', spyKeyup)
+    button.focus()
+    await userEvent.keyboard('{Enter>}')
+    expect(spyKeydown).toHaveBeenCalledOnce()
+    expect(spyKeyup).not.toHaveBeenCalled()
+    await userEvent.keyboard('{/Enter}')
+    // userEvent doesn't fire any event here, but should we?
+    expect(spyKeyup).not.toHaveBeenCalled()
+  })
+
   test('standalone keyboard works correctly with active input', async () => {
     const documentKeydown: string[] = []
     const inputKeydown: string[] = []
