@@ -37,6 +37,7 @@
     "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
+    "@types/react-is": "^18.3.0",
     "react-is": "^18.3.1"
   }
 }

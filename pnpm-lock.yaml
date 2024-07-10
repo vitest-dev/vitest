@@ -647,6 +647,9 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
     devDependencies:
+      '@types/react-is':
+        specifier: ^18.3.0
+        version: 18.3.0
       react-is:
         specifier: ^18.3.1
         version: 18.3.1
@@ -821,15 +824,9 @@ importers:
       '@types/estree':
         specifier: ^1.0.5
         version: 1.0.5
-      '@types/react-is':
-        specifier: ^18.3.0
-        version: 18.3.0
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
-      react-is:
-        specifier: ^18.3.1
-        version: 18.3.1
       tinyhighlight:
         specifier: ^0.3.2
         version: 0.3.2

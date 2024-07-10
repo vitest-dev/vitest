@@ -72,9 +72,7 @@
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
     "@types/estree": "^1.0.5",
-    "@types/react-is": "^18.3.0",
     "diff-sequences": "^29.6.3",
-    "react-is": "^18.3.1",
     "tinyhighlight": "^0.3.2"
   }
 }
