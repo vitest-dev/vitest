@@ -1143,7 +1143,7 @@ function snapshotError(f: () => unknown) {
     const e = processError(error)
     expect({
       message: e.message,
-      diff: e.diff,
+      diff: e.diff ? stripAnsi(e.diff) : e.diff,
       expected: e.expected,
       actual: e.actual,
     }).toMatchSnapshot()
