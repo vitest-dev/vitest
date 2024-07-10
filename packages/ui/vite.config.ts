@@ -88,8 +88,6 @@ export const config: UserConfig = {
     browser: {
       name: 'chromium',
       provider: 'playwright',
-      ui: true,
-      headless: false,
     },
   },
 }
