@@ -28,7 +28,7 @@ export class BrowserServer implements IBrowserServer {
   public testerHtml: Promise<string> | string
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
-  public errorCatcherJs: Promise<string> | string
+  public errorCatcherPath: Promise<string> | string
   public stateJs: Promise<string> | string
 
   public state: BrowserServerState
@@ -87,10 +87,7 @@ export class BrowserServer implements IBrowserServer {
       resolve(distRoot, 'client/esm-client-injector.js'),
       'utf8',
     ).then(js => (this.injectorJs = js))
-    this.errorCatcherJs = readFile(
-      resolve(distRoot, 'client/error-catcher.js'),
-      'utf8',
-    ).then(js => (this.errorCatcherJs = js))
+    this.errorCatcherPath = resolve(distRoot, 'client/error-catcher.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',
