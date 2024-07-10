@@ -22,8 +22,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
   const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
 
-  let loupePath: string
-
   return [
     {
       enforce: 'pre',
@@ -228,11 +226,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           return resolve(distRoot, 'client', id.slice(1))
         }
       },
-      configResolved(config) {
-        loupePath = resolve(config.cacheDir, 'deps/loupe.js')
-      },
       transform(code, id) {
-        if (id.startsWith(loupePath)) {
+        if (id.includes(browserServer.vite.config.cacheDir) && id.includes('loupe.js')) {
           // loupe bundle has a nastry require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
