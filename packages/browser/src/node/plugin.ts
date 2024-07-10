@@ -220,20 +220,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId.startsWith('/__virtual_vitest__')) {
-          const url = new URL(rawId, 'http://localhost')
-          if (!url.searchParams.has('id')) {
-            return
-          }
-
-          const id = decodeURIComponent(url.searchParams.get('id')!)
-
-          const resolved = await this.resolve(id, distRoot, {
-            skipSelf: true,
-          })
-          return resolved
-        }
-
         if (rawId === '/__vitest_msw__') {
           return this.resolve('msw/mockServiceWorker.js', distRoot, {
             skipSelf: true,
