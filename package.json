@@ -52,7 +52,6 @@
     "esbuild": "^0.22.0",
     "eslint": "^9.6.0",
     "fast-glob": "^3.3.2",
-    "lint-staged": "^15.2.7",
     "magic-string": "^0.30.10",
     "pathe": "^1.1.2",
     "rimraf": "^5.0.7",
@@ -60,7 +59,6 @@
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-esbuild": "^6.1.1",
     "rollup-plugin-license": "^3.5.1",
-    "simple-git-hooks": "^2.11.1",
     "tsx": "^4.16.0",
     "typescript": "^5.5.2",
     "vite": "^5.3.3",
@@ -87,13 +85,5 @@
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
     }
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
-  },
-  "lint-staged": {
-    "*.{?([cm])[jt]s?(x),vue,md}": [
-      "eslint --cache --fix"
-    ]
   }
 }
