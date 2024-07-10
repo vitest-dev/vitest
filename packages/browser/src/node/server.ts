@@ -182,7 +182,7 @@ export class BrowserServer implements IBrowserServer {
     })
   }
 
-  private cdpSessions = new Map<string, Promise<CDPSession>>()
+  private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
   async ensureCDPHandler(contextId: string, sessionId: string) {
     const cachedHandler = this.state.cdps.get(sessionId)
@@ -195,11 +195,11 @@ export class BrowserServer implements IBrowserServer {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessions.get(sessionId) ?? await (async () => {
+    const promise = this.cdpSessionsPromises.get(sessionId) ?? await (async () => {
       const promise = provider.getCDPSession!(contextId).finally(() => {
-        this.cdpSessions.delete(sessionId)
+        this.cdpSessionsPromises.delete(sessionId)
       })
-      this.cdpSessions.set(sessionId, promise)
+      this.cdpSessionsPromises.set(sessionId, promise)
       return promise
     })()
 

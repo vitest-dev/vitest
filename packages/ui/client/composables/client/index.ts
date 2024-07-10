@@ -9,7 +9,6 @@ import { parseError } from '../error'
 import { activeFileId } from '../params'
 import { createStaticClient } from './static'
 import { testRunState, unhandledErrors } from './state'
-import { uiFiles } from '~/composables/explorer/state'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 
@@ -51,8 +50,7 @@ export const status = ref<WebSocketStatus>('CONNECTING')
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
-  const entry = uiFiles.value.find(file => file.id === currentFileId)!
-  return entry ? findById(entry.id) : undefined
+  return currentFileId ? findById(currentFileId) : undefined
 })
 export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
 

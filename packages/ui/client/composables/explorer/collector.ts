@@ -122,6 +122,16 @@ function updateRunningTodoTests() {
 }
 
 function traverseFiles(collect: boolean) {
+  // add missing files: now we have only files with running tests on the initial ws open event
+  const files = client.state.getFiles()
+  const currentFiles = explorerTree.nodes
+  const missingFiles = files.filter(f => !currentFiles.has(f.id))
+  for (let i = 0; i < missingFiles.length; i++) {
+    createOrUpdateFileNode(missingFiles[i], collect)
+    createOrUpdateEntry(missingFiles[i].tasks)
+  }
+
+  // update pending tasks
   const rootTasks = explorerTree.root.tasks
   // collect remote children
   for (let i = 0; i < rootTasks.length; i++) {
@@ -142,11 +152,29 @@ function traverseFiles(collect: boolean) {
 }
 
 function traverseReceivedFiles(collect: boolean) {
-  const rootTasks = explorerTree.root.tasks
   const updatedFiles = new Map(explorerTree.pendingTasks.entries())
   explorerTree.pendingTasks.clear()
-  const idMap = client.state.idMap
+
+  // add missing files: now we have only files with running tests on the initial ws open event
+  const currentFiles = explorerTree.nodes
+  const missingFiles = Array
+    .from(updatedFiles.keys())
+    .filter(id => !currentFiles.has(id))
+    .map(id => findById(id))
+    .filter(Boolean) as File[]
+
+  let newFile: File
+  for (let i = 0; i < missingFiles.length; i++) {
+    newFile = missingFiles[i]
+    createOrUpdateFileNode(newFile, false)
+    createOrUpdateEntry(newFile.tasks)
+    // remove the file from the updated files
+    updatedFiles.delete(newFile.id)
+  }
+
   // collect remote children
+  const idMap = client.state.idMap
+  const rootTasks = explorerTree.root.tasks
   for (let i = 0; i < rootTasks.length; i++) {
     const fileNode = rootTasks[i]
     const file = findById(fileNode.id)
