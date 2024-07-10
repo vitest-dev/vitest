@@ -64,6 +64,11 @@ export const config: UserConfig = {
       dirs: ['./client/composables'],
       imports: ['vue', 'vue-router', '@vueuse/core'],
       injectAtEnd: true,
+      exclude: [
+        /node_modules/,
+        /dist/,
+        /\.git/,
+      ],
     }),
     // {
     //   name: 'debug-html-report',
