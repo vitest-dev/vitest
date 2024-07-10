@@ -120,7 +120,7 @@ describe('server correctly caches data', () => {
     )
 
     // wait so TS are different
-    await wait(10)
+    await wait(100)
 
     await viteNode.fetchModule('/src/foo.js', 'ssr')
 
@@ -139,7 +139,7 @@ describe('server correctly caches data', () => {
     )
 
     // wait so TS are different
-    await wait(10)
+    await wait(100)
 
     await viteNode.fetchModule('/src/foo.js', 'ssr')
 
@@ -177,7 +177,7 @@ describe('server correctly caches data', () => {
     )
 
     // wait so TS are different
-    await wait(10)
+    await wait(100)
 
     await viteNode.fetchModule('/src/foo.js', 'web')
 
@@ -196,7 +196,7 @@ describe('server correctly caches data', () => {
     )
 
     // wait so TS are different
-    await wait(10)
+    await wait(100)
 
     await viteNode.fetchModule('/src/foo.js', 'web')
 
