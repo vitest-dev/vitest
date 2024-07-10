@@ -1,11 +1,11 @@
-import { client } from '@vitest/browser/client'
+import { channel, client } from '/@id/@vitest/browser/client'
 
-function on(event: string, listener: (...args: any[]) => void) {
+function on(event, listener) {
   window.addEventListener(event, listener)
   return () => window.removeEventListener(event, listener)
 }
 
-function serializeError(unhandledError: any) {
+function serializeError(unhandledError) {
   if (typeof unhandledError !== 'object' || !unhandledError) {
     return {
       message: String(unhandledError),
@@ -19,9 +19,9 @@ function serializeError(unhandledError: any) {
   }
 }
 
-function catchWindowErrors(cb: (e: ErrorEvent) => void) {
+function catchWindowErrors(cb) {
   let userErrorListenerCount = 0
-  function throwUnhandlerError(e: ErrorEvent) {
+  function throwUnhandlerError(e) {
     if (userErrorListenerCount === 0 && e.error != null) {
       cb(e)
     }
@@ -32,17 +32,13 @@ function catchWindowErrors(cb: (e: ErrorEvent) => void) {
   const addEventListener = window.addEventListener.bind(window)
   const removeEventListener = window.removeEventListener.bind(window)
   window.addEventListener('error', throwUnhandlerError)
-  window.addEventListener = function (
-    ...args: Parameters<typeof addEventListener>
-  ) {
+  window.addEventListener = function (...args) {
     if (args[0] === 'error') {
       userErrorListenerCount++
     }
     return addEventListener.apply(this, args)
   }
-  window.removeEventListener = function (
-    ...args: Parameters<typeof removeEventListener>
-  ) {
+  window.removeEventListener = function (...args) {
     if (args[0] === 'error' && userErrorListenerCount) {
       userErrorListenerCount--
     }
@@ -62,11 +58,24 @@ function registerUnexpectedErrors() {
 }
 
 async function reportUnexpectedError(
-  type: string,
-  error: any,
+  type,
+  error,
 ) {
   const processedError = serializeError(error)
   await client.rpc.onUnhandledError(processedError, type)
+  const state = __vitest_browser_runner__
+
+  if (state.type === 'orchestrator') {
+    return
+  }
+
+  if (!state.runTests || !__vitest_worker__.current) {
+    channel.postMessage({
+      type: 'done',
+      filenames: state.files,
+      id: state.iframeId,
+    })
+  }
 }
 
 registerUnexpectedErrors()

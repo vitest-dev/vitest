@@ -870,6 +870,9 @@ importers:
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
+      '@vitest/pretty-format':
+        specifier: workspace:^
+        version: link:../pretty-format
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner

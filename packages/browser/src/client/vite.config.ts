@@ -22,7 +22,13 @@ export default defineConfig({
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester/tester.html'),
       },
-      external: [/^vitest\//, 'vitest', /^msw/, '@vitest/browser/context'],
+      external: [
+        /^vitest\//,
+        'vitest',
+        /^msw/,
+        '@vitest/browser/context',
+        '@vitest/browser/client',
+      ],
     },
   },
   plugins: [

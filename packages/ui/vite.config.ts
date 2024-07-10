@@ -77,12 +77,14 @@ export const config: UserConfig = {
     outDir: './dist/client',
   },
   optimizeDeps: {
-    include: ['vue', '@vue/test-utils'],
+    include: ['vue', '@vue/test-utils', '@vueuse/core'],
   },
   test: {
     browser: {
       name: 'chromium',
       provider: 'playwright',
+      ui: true,
+      headless: false,
     },
   },
 }

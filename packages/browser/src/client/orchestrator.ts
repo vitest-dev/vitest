@@ -1,10 +1,10 @@
 import type { ResolvedConfig } from 'vitest'
+import { channel, client } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
+import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from '@vitest/browser/client'
 import { relative } from 'pathe'
-import { channel, client } from './client'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
-import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from './channel'
 import { createModuleMocker } from './tester/msw'
 
 const url = new URL(location.href)
