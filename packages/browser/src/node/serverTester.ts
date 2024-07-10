@@ -49,7 +49,7 @@ export async function resolveTester(
     }),
     __VITEST_TYPE__: '"tester"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
-    __VITEST_TESTER_CONTEXT_ID__: JSON.stringify(crypto.randomUUID()),
+    __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 

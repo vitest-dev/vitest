@@ -11,7 +11,7 @@ export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const SESSION_ID
   = PAGE_TYPE === 'orchestrator'
     ? getBrowserState().contextId
-    : getBrowserState().testerContextId
+    : getBrowserState().testerId
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
 }//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&sessionId=${SESSION_ID}`
