@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import cac from 'cac'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { createServer, loadEnv } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeServer } from './server'

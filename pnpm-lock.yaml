@@ -514,12 +514,12 @@ importers:
       magicast:
         specifier: ^0.3.4
         version: 0.3.4
-      picocolors:
-        specifier: ^1.0.1
-        version: 1.0.1
       test-exclude:
         specifier: ^7.0.1
         version: 7.0.1
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
     devDependencies:
       '@types/debug':
         specifier: ^4.1.12
@@ -575,9 +575,6 @@ importers:
       magicast:
         specifier: ^0.3.4
         version: 0.3.4
-      picocolors:
-        specifier: ^1.0.1
-        version: 1.0.1
       std-env:
         specifier: ^3.7.0
         version: 3.7.0
@@ -587,6 +584,9 @@ importers:
       test-exclude:
         specifier: ^7.0.1
         version: 7.0.1
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
     devDependencies:
       '@types/debug':
         specifier: ^4.1.12
@@ -627,6 +627,9 @@ importers:
       chai:
         specifier: ^5.1.1
         version: 5.1.1
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
     devDependencies:
       '@types/chai':
         specifier: 4.3.6
@@ -634,12 +637,19 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
-      picocolors:
-        specifier: ^1.0.1
-        version: 1.0.1
       rollup-plugin-copy:
         specifier: ^3.5.0
         version: 3.5.0
+
+  packages/pretty-format:
+    dependencies:
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
+    devDependencies:
+      react-is:
+        specifier: ^18.3.1
+        version: 18.3.1
 
   packages/runner:
     dependencies:
@@ -652,15 +662,15 @@ importers:
 
   packages/snapshot:
     dependencies:
+      '@vitest/pretty-format':
+        specifier: workspace:*
+        version: link:../pretty-format
       magic-string:
         specifier: ^0.30.10
         version: 0.30.10
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
-      pretty-format:
-        specifier: ^29.7.0
-        version: 29.7.0
     devDependencies:
       '@types/natural-compare':
         specifier: ^1.4.3
@@ -695,12 +705,12 @@ importers:
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
-      picocolors:
-        specifier: ^1.0.1
-        version: 1.0.1
       sirv:
         specifier: ^2.0.4
         version: 2.0.4
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -792,18 +802,18 @@ importers:
 
   packages/utils:
     dependencies:
-      diff-sequences:
-        specifier: ^29.6.3
-        version: 29.6.3
+      '@vitest/pretty-format':
+        specifier: workspace:*
+        version: link:../pretty-format
       estree-walker:
         specifier: ^3.0.3
         version: 3.0.3
       loupe:
         specifier: ^3.1.1
         version: 3.1.1
-      pretty-format:
-        specifier: ^29.7.0
-        version: 29.7.0
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
     devDependencies:
       '@jridgewell/trace-mapping':
         specifier: ^0.3.25
@@ -811,6 +821,15 @@ importers:
       '@types/estree':
         specifier: ^1.0.5
         version: 1.0.5
+      '@types/react-is':
+        specifier: ^18.3.0
+        version: 18.3.0
+      diff-sequences:
+        specifier: ^29.6.3
+        version: 29.6.3
+      react-is:
+        specifier: ^18.3.1
+        version: 18.3.1
       tinyhighlight:
         specifier: ^0.3.2
         version: 0.3.2
@@ -826,9 +845,9 @@ importers:
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
-      picocolors:
-        specifier: ^1.0.1
-        version: 1.0.1
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
@@ -881,9 +900,6 @@ importers:
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
-      picocolors:
-        specifier: ^1.0.1
-        version: 1.0.1
       std-env:
         specifier: ^3.7.0
         version: 3.7.0
@@ -893,6 +909,9 @@ importers:
       tinypool:
         specifier: ^1.0.0
         version: 1.0.0
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
       vite:
         specifier: ^5.3.3
         version: 5.3.3(@types/node@20.14.9)
@@ -1166,6 +1185,9 @@ importers:
       sweetalert2:
         specifier: ^11.6.16
         version: 11.6.16
+      tinyrainbow:
+        specifier: ^1.1.2
+        version: 1.1.2
       tinyspy:
         specifier: ^1.0.2
         version: 1.0.2
@@ -4271,6 +4293,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@sinclair/typebox': 0.27.8
+    dev: true
 
   /@jest/types@29.0.1:
     resolution: {integrity: sha512-ft01rxzVsbh9qZPJ6EFgAIj3PT9FCRfBF9Xljo2/33VDOUjLZr0ZJ2oKANqh9S/K0/GERCsHDAQlBwj7RxA+9g==}
@@ -4836,6 +4859,7 @@ packages:
 
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
+    dev: true
 
   /@sindresorhus/is@5.3.0:
     resolution: {integrity: sha512-CX6t4SYQ37lzxicAqsBtxA3OseeoVrh9cSJ5PFYam0GksYlupRfy1A+Q4aYD3zvcfECLc0zO2u+ZnR2UYKvCrw==}
@@ -5645,6 +5669,12 @@ packages:
 
   /@types/react-dom@18.2.14:
     resolution: {integrity: sha512-V835xgdSVmyQmI1KLV2BEIUgqEuinxp9O4G6g3FqO/SqLac049E53aysv0oEFD2kHfejeKU+ZqL2bcFWj9gLAQ==}
+    dependencies:
+      '@types/react': 18.2.79
+    dev: true
+
+  /@types/react-is@18.3.0:
+    resolution: {integrity: sha512-KZJpHUkAdzyKj/kUHJDc6N7KyidftICufJfOFpiG6haL/BDQNQt5i4n1XDUL/nDZAtGLHDSWRYpLzKTAKSvX6w==}
     dependencies:
       '@types/react': 18.2.79
     dev: true
@@ -8662,6 +8692,7 @@ packages:
   /diff-sequences@29.6.3:
     resolution: {integrity: sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
+    dev: true
 
   /dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
@@ -13286,7 +13317,8 @@ packages:
     dependencies:
       '@jest/schemas': 29.6.3
       ansi-styles: 5.2.0
-      react-is: 18.2.0
+      react-is: 18.3.1
+    dev: true
 
   /process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
@@ -13516,8 +13548,9 @@ packages:
   /react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
-  /react-is@18.2.0:
-    resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
+  /react-is@18.3.1:
+    resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
+    dev: true
 
   /react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
@@ -14976,6 +15009,10 @@ packages:
     resolution: {integrity: sha512-KIKExllK7jp3uvrNtvRBYBWBOAXSX8ZvoaD8T+7KB/QHIuoJW3Pmr60zucywjAlMb5TeXUkcs/MWeWLu0qvuAQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     dev: false
+
+  /tinyrainbow@1.1.2:
+    resolution: {integrity: sha512-oMttVNy8VdB46XUh054C63bGS2t8WhjTWbtdJNewItd0/eZZSDLxf76eUvkysWtYAJDRgcfWBuxOq9qRn0Dm3w==}
+    engines: {node: '>=14.0.0'}
 
   /tinyspy@1.0.2:
     resolution: {integrity: sha512-bSGlgwLBYf7PnUsQ6WOc6SJ3pGOcd+d8AA6EUnLDDM0kWEstC1JIlSZA3UNliDXhd9ABoS7hiRBDCu+XP/sf1Q==}

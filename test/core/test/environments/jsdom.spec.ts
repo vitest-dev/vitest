@@ -1,12 +1,8 @@
 // @vitest-environment jsdom
 
-import { createColors, getDefaultColors, setupColors } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
-import { afterEach, expect, test } from 'vitest'
-
-afterEach(() => {
-  setupColors(createColors(true))
-})
+import { expect, test } from 'vitest'
+import stripAnsi from 'strip-ansi'
 
 const nodeMajor = Number(process.version.slice(1).split('.')[0])
 
@@ -69,14 +65,12 @@ test('toContain correctly handles DOM nodes', () => {
     expect(wrapper.classList).toContain(2)
   }).toThrowErrorMatchingInlineSnapshot(`[TypeError: class name value must be string, received "number"]`)
 
-  setupColors(getDefaultColors())
-
   try {
     expect(wrapper.classList).toContain('flex-row')
     expect.unreachable()
   }
   catch (err: any) {
-    expect(processError(err).diff).toMatchInlineSnapshot(`
+    expect(stripAnsi(processError(err).diff)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
@@ -90,7 +84,7 @@ test('toContain correctly handles DOM nodes', () => {
     expect.unreachable()
   }
   catch (err: any) {
-    expect(processError(err).diff).toMatchInlineSnapshot(`
+    expect(stripAnsi(processError(err).diff)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 

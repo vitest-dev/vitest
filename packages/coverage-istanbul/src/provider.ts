@@ -17,7 +17,7 @@ import {
   coverageConfigDefaults,
 } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { parseModule } from 'magicast'
 import createDebug from 'debug'
 import libReport from 'istanbul-lib-report'

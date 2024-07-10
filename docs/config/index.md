@@ -2181,7 +2181,7 @@ Path to a diff config that will be used to generate diff interface. Useful if yo
 :::code-group
 ```ts [vitest.diff.ts]
 import type { DiffOptions } from 'vitest'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 
 export default {
   aIndicator: c.bold('--'),

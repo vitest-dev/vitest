@@ -1,4 +1,5 @@
-import { getColors, getType, stringify } from '@vitest/utils'
+import { getType, stringify } from '@vitest/utils'
+import c from 'tinyrainbow'
 import type { MatcherHintOptions, Tester } from './types'
 import { JEST_MATCHERS_OBJECT } from './constants'
 
@@ -6,13 +7,11 @@ export { diff } from '@vitest/utils/diff'
 export { stringify }
 
 export function getMatcherUtils() {
-  const c = () => getColors()
-
-  const EXPECTED_COLOR = c().green
-  const RECEIVED_COLOR = c().red
-  const INVERTED_COLOR = c().inverse
-  const BOLD_WEIGHT = c().bold
-  const DIM_COLOR = c().dim
+  const EXPECTED_COLOR = c.green
+  const RECEIVED_COLOR = c.red
+  const INVERTED_COLOR = c.inverse
+  const BOLD_WEIGHT = c.bold
+  const DIM_COLOR = c.dim
 
   function matcherHint(
     matcherName: string,

@@ -7,11 +7,11 @@
 
 // This is a fork of Jest's jest-diff package, but it doesn't depend on Node environment (like chalk).
 
-import type { PrettyFormatOptions } from 'pretty-format'
+import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
-} from 'pretty-format'
+} from '@vitest/pretty-format'
 import { getType } from './getType'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'

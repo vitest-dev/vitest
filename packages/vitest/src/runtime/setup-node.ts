@@ -1,9 +1,7 @@
 import { createRequire } from 'node:module'
 import util from 'node:util'
 import timers from 'node:timers'
-import { isatty } from 'node:tty'
 import { installSourcemapsSupport } from 'vite-node/source-map'
-import { createColors, setupColors } from '@vitest/utils'
 import type {
   EnvironmentOptions,
   ResolvedConfig,
@@ -42,7 +40,6 @@ export async function setupGlobalEnv(
   }
 
   globalSetup = true
-  setupColors(createColors(isatty(1)))
 
   if (environment.transformMode === 'web') {
     const _require = createRequire(import.meta.url)

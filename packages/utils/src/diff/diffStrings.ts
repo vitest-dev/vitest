@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as diff from 'diff-sequences'
+import diffSequences from 'diff-sequences'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import type { DiffOptions } from './types'
 
@@ -66,9 +66,6 @@ function diffStrings(
     bIndex = bCommon + nCommon // number of characters compared in b
     diffs.push(new Diff(DIFF_EQUAL, b.slice(bCommon, bIndex)))
   }
-
-  // @ts-expect-error wrong bundling
-  const diffSequences = diff.default.default || diff.default
 
   diffSequences(aLength, bLength, isCommon, foundSubsequence)
 

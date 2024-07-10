@@ -2,7 +2,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { join, resolve } from 'pathe'
 import type { TransformResult } from 'vite'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import type { DebuggerOptions } from './types'
 
 function hashCode(s: string) {

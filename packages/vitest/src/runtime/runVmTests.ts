@@ -1,10 +1,8 @@
-import { isatty } from 'node:tty'
 import { createRequire } from 'node:module'
 import util from 'node:util'
 import timers from 'node:timers'
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
-import { createColors, setupColors } from '@vitest/utils'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
@@ -34,8 +32,6 @@ export async function run(
     value: VitestIndex,
     enumerable: false,
   })
-
-  setupColors(createColors(isatty(1)))
 
   if (workerState.environment.transformMode === 'web') {
     const _require = createRequire(import.meta.url)

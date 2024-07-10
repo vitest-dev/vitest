@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
+import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
 import type { ParsedStack } from '../../../utils/src/index'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import type {

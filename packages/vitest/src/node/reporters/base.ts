@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import type {

@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`mocked function which fails on toReturnWith > just one call 1`] = `
-[AssertionError: expected "spy" to return with: 2 at least once
+"expected "spy" to return with: 2 at least once
 
 Received: 
 
@@ -12,11 +12,11 @@ Received:
 
 
 Number of calls: 1
-]
+"
 `;
 
 exports[`mocked function which fails on toReturnWith > multi calls 1`] = `
-[AssertionError: expected "spy" to return with: 2 at least once
+"expected "spy" to return with: 2 at least once
 
 Received: 
 
@@ -37,11 +37,11 @@ Received:
 
 
 Number of calls: 3
-]
+"
 `;
 
 exports[`mocked function which fails on toReturnWith > oject type 1`] = `
-[AssertionError: expected "spy" to return with: { a: '4' } at least once
+"expected "spy" to return with: { a: '4' } at least once
 
 Received: 
 
@@ -68,16 +68,16 @@ Received:
 
 
 Number of calls: 3
-]
+"
 `;
 
 exports[`mocked function which fails on toReturnWith > zero call 1`] = `
-[AssertionError: expected "spy" to return with: 2 at least once
+"expected "spy" to return with: 2 at least once
 
 Received: 
 
 
 
 Number of calls: 0
-]
+"
 `;

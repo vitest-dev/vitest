@@ -158,10 +158,10 @@
     "execa": "^8.0.1",
     "magic-string": "^0.30.10",
     "pathe": "^1.1.2",
-    "picocolors": "^1.0.1",
     "std-env": "^3.7.0",
     "tinybench": "^2.8.0",
     "tinypool": "^1.0.0",
+    "tinyrainbow": "^1.1.2",
     "vite": "^5.0.0",
     "vite-node": "workspace:*",
     "why-is-node-running": "^2.2.2"

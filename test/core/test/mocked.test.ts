@@ -1,8 +1,7 @@
-import { afterEach, assert, beforeEach, describe, expect, test, vi, vitest } from 'vitest'
-
+import { assert, describe, expect, test, vi, vitest } from 'vitest'
+import stripAnsi from 'strip-ansi'
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
-import { createColors, getDefaultColors, setupColors } from '@vitest/utils'
 import { two } from '../src/submodule'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
@@ -137,23 +136,27 @@ test('async functions should be mocked', () => {
   expect(asyncFunc()).resolves.toBe('foo')
 })
 
-describe('mocked function which fails on toReturnWith', () => {
-  beforeEach(() => {
-    setupColors(getDefaultColors())
-  })
-  afterEach(() => {
-    setupColors(createColors(true))
-  })
+function getError(cb: () => void): string {
+  try {
+    cb()
+  }
+  catch (e: any) {
+    return stripAnsi(e.message)
+  }
+  expect.unreachable()
+  return 'unreachable'
+}
 
+describe('mocked function which fails on toReturnWith', () => {
   test('zero call', () => {
     const mock = vi.fn(() => 1)
-    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()
+    expect(getError(() => expect(mock).toReturnWith(2))).toMatchSnapshot()
   })
 
   test('just one call', () => {
     const mock = vi.fn(() => 1)
     mock()
-    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()
+    expect(getError(() => expect(mock).toReturnWith(2))).toMatchSnapshot()
   })
 
   test('multi calls', () => {
@@ -161,7 +164,7 @@ describe('mocked function which fails on toReturnWith', () => {
     mock()
     mock()
     mock()
-    expect(() => expect(mock).toReturnWith(2)).toThrowErrorMatchingSnapshot()
+    expect(getError(() => expect(mock).toReturnWith(2))).toMatchSnapshot()
   })
 
   test('oject type', () => {
@@ -171,7 +174,7 @@ describe('mocked function which fails on toReturnWith', () => {
     mock()
     mock()
     mock()
-    expect(() => expect(mock).toReturnWith({ a: '4' })).toThrowErrorMatchingSnapshot()
+    expect(getError(() => expect(mock).toReturnWith({ a: '4' }))).toMatchSnapshot()
   })
 })
 

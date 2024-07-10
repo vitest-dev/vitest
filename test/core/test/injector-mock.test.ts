@@ -1,7 +1,7 @@
 import { parseAst } from 'rollup/parseAst'
 import { describe, expect, it, test } from 'vitest'
 import stripAnsi from 'strip-ansi'
-import { getDefaultColors } from '@vitest/utils'
+import { getDefaultColors } from 'tinyrainbow'
 import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
 
 function parse(code: string, options: any) {

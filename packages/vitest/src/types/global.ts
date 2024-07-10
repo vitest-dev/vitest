@@ -1,4 +1,4 @@
-import type { Plugin as PrettyFormatPlugin } from 'pretty-format'
+import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
 import type { SnapshotState } from '@vitest/snapshot'
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { UserConsoleLog } from './general'

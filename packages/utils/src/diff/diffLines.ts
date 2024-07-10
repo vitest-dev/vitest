@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as diff from 'diff-sequences'
+import diffSequences from 'diff-sequences'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import {
   joinAlignedDiffsExpand,
@@ -217,9 +217,6 @@ export function diffLinesRaw(
       diffs.push(new Diff(DIFF_EQUAL, bLines[bIndex]))
     }
   }
-
-  // @ts-expect-error wrong bundling
-  const diffSequences = diff.default.default || diff.default
 
   diffSequences(aLength, bLength, isCommon, foundSubsequence)
 

@@ -52,8 +52,8 @@
     "fflate": "^0.8.2",
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
-    "picocolors": "^1.0.1",
-    "sirv": "^2.0.4"
+    "sirv": "^2.0.4",
+    "tinyrainbow": "^1.1.2"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",

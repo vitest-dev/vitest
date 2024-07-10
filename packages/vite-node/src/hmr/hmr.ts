@@ -2,7 +2,7 @@
 
 import type { HMRPayload, Update } from 'vite/types/hmrPayload.js'
 import type { CustomEventMap } from 'vite/types/customEvent.js'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import createDebug from 'debug'
 import type { ViteNodeRunner } from '../client'
 import type { HotContext } from '../types'

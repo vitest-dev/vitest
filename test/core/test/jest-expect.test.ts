@@ -1,9 +1,9 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
 import { describe, expect, it, vi } from 'vitest'
-import { generateToBeMessage, setupColors } from '@vitest/expect'
+import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import { getDefaultColors } from '@vitest/utils'
+import stripAnsi from 'strip-ansi'
 
 class TestError extends Error {}
 
@@ -876,10 +876,10 @@ it('correctly prints diff', () => {
     expect.unreachable()
   }
   catch (err) {
-    setupColors(getDefaultColors())
     const error = processError(err)
-    expect(error.diff).toContain('-   "a": 2')
-    expect(error.diff).toContain('+   "a": 1')
+    const diff = stripAnsi(error.diff)
+    expect(diff).toContain('-   "a": 2')
+    expect(diff).toContain('+   "a": 1')
   }
 })
 
@@ -889,10 +889,10 @@ it('correctly prints diff for the cause', () => {
     expect.unreachable()
   }
   catch (err) {
-    setupColors(getDefaultColors())
     const error = processError(new Error('wrapper', { cause: err }))
-    expect(error.cause.diff).toContain('-   "a": 2')
-    expect(error.cause.diff).toContain('+   "a": 1')
+    const diff = stripAnsi(error.cause.diff)
+    expect(diff).toContain('-   "a": 2')
+    expect(diff).toContain('+   "a": 1')
   }
 })
 
@@ -905,9 +905,8 @@ it('correctly prints diff with asymmetric matchers', () => {
     expect.unreachable()
   }
   catch (err) {
-    setupColors(getDefaultColors())
     const error = processError(err)
-    expect(error.diff).toMatchInlineSnapshot(`
+    expect(stripAnsi(error.diff)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
@@ -932,13 +931,11 @@ function getError(f: () => unknown) {
   }
   catch (error) {
     const processed = processError(error)
-    return [processed.message, trim(processed.diff)]
+    return [stripAnsi(processed.message), stripAnsi(trim(processed.diff))]
   }
 }
 
 it('toMatchObject error diff', () => {
-  setupColors(getDefaultColors())
-
   // single property on root (3 total properties, 1 expected)
   expect(getError(() => expect({ a: 1, b: 2, c: 3 }).toMatchObject({ c: 4 }))).toMatchInlineSnapshot(`
     [
@@ -1065,8 +1062,6 @@ it('toMatchObject error diff', () => {
 })
 
 it('toHaveProperty error diff', () => {
-  setupColors(getDefaultColors())
-
   // non match value
   expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
     [
@@ -1158,8 +1153,6 @@ function snapshotError(f: () => unknown) {
 }
 
 it('asymmetric matcher error', () => {
-  setupColors(getDefaultColors())
-
   expect.extend({
     stringContainingCustom(received: unknown, other: string) {
       return {

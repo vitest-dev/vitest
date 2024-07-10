@@ -23,13 +23,13 @@ exports[`asymmetric matcher error 3`] = `
   "actual": "Object {
   "foo": "hello",
 }",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-  Object {
--   "foo": StringContaining "xx",
-+   "foo": "hello",
-  }",
+[2m  Object {[22m
+[32m-   "foo": StringContaining "xx",[39m
+[31m+   "foo": "hello",[39m
+[2m  }[22m",
   "expected": "Object {
   "foo": StringContaining "xx",
 }",
@@ -42,13 +42,13 @@ exports[`asymmetric matcher error 4`] = `
   "actual": "Object {
   "foo": "hello",
 }",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-  Object {
--   "foo": StringNotContaining "ll",
-+   "foo": "hello",
-  }",
+[2m  Object {[22m
+[32m-   "foo": StringNotContaining "ll",[39m
+[31m+   "foo": "hello",[39m
+[2m  }[22m",
   "expected": "Object {
   "foo": StringNotContaining "ll",
 }",
@@ -59,10 +59,10 @@ exports[`asymmetric matcher error 4`] = `
 exports[`asymmetric matcher error 5`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 stringContainingCustom<xx>
 
-+ Received: 
+[31m+ Received:[39m 
 "hello"",
   "expected": "stringContainingCustom<xx>",
   "message": "expected 'hello' to deeply equal stringContainingCustom<xx>",
@@ -72,10 +72,10 @@ stringContainingCustom<xx>
 exports[`asymmetric matcher error 6`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 not.stringContainingCustom<ll>
 
-+ Received: 
+[31m+ Received:[39m 
 "hello"",
   "expected": "not.stringContainingCustom<ll>",
   "message": "expected 'hello' to deeply equal not.stringContainingCustom<ll>",
@@ -87,13 +87,13 @@ exports[`asymmetric matcher error 7`] = `
   "actual": "Object {
   "foo": "hello",
 }",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-  Object {
--   "foo": stringContainingCustom<xx>,
-+   "foo": "hello",
-  }",
+[2m  Object {[22m
+[32m-   "foo": stringContainingCustom<xx>,[39m
+[31m+   "foo": "hello",[39m
+[2m  }[22m",
   "expected": "Object {
   "foo": stringContainingCustom<xx>,
 }",
@@ -106,13 +106,13 @@ exports[`asymmetric matcher error 8`] = `
   "actual": "Object {
   "foo": "hello",
 }",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-  Object {
--   "foo": not.stringContainingCustom<ll>,
-+   "foo": "hello",
-  }",
+[2m  Object {[22m
+[32m-   "foo": not.stringContainingCustom<ll>,[39m
+[31m+   "foo": "hello",[39m
+[2m  }[22m",
   "expected": "Object {
   "foo": not.stringContainingCustom<ll>,
 }",
@@ -125,7 +125,7 @@ exports[`asymmetric matcher error 9`] = `
   "actual": "undefined",
   "diff": undefined,
   "expected": "undefined",
-  "message": "expected "hello" to contain "xx"",
+  "message": "expected [31m"hello"[39m to contain [32m"xx"[39m",
 }
 `;
 
@@ -134,17 +134,17 @@ exports[`asymmetric matcher error 10`] = `
   "actual": "undefined",
   "diff": undefined,
   "expected": "undefined",
-  "message": "expected "hello" not to contain "ll"",
+  "message": "expected [31m"hello"[39m not to contain [32m"ll"[39m",
 }
 `;
 
 exports[`asymmetric matcher error 11`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 testComplexMatcher<[object Object]>
 
-+ Received: 
+[31m+ Received:[39m 
 "hello"",
   "expected": "testComplexMatcher<[object Object]>",
   "message": "expected 'hello' to deeply equal testComplexMatcher<[object Object]>",
@@ -157,15 +157,15 @@ exports[`asymmetric matcher error 12`] = `
   "k": "v",
   "k2": "v2",
 }",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-- ObjectContaining {
-+ Object {
-    "k": "v",
--   "k3": "v3",
-+   "k2": "v2",
-  }",
+[32m- ObjectContaining {[39m
+[31m+ Object {[39m
+[2m    "k": "v",[22m
+[32m-   "k3": "v3",[39m
+[31m+   "k2": "v2",[39m
+[2m  }[22m",
   "expected": "ObjectContaining {
   "k": "v",
   "k3": "v3",
@@ -180,15 +180,15 @@ exports[`asymmetric matcher error 13`] = `
   "a",
   "b",
 ]",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-- ArrayContaining [
-+ Array [
-    "a",
--   "c",
-+   "b",
-  ]",
+[32m- ArrayContaining [[39m
+[31m+ Array [[39m
+[2m    "a",[22m
+[32m-   "c",[39m
+[31m+   "b",[39m
+[2m  ][22m",
   "expected": "ArrayContaining [
   "a",
   "c",
@@ -209,11 +209,11 @@ exports[`asymmetric matcher error 14`] = `
 exports[`asymmetric matcher error 15`] = `
 {
   "actual": "2.5",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-- NumberCloseTo 2 (1 digit)
-+ 2.5",
+[32m- NumberCloseTo 2 (1 digit)[39m
+[31m+ 2.5[39m",
   "expected": "NumberCloseTo 2 (1 digit)",
   "message": "expected 2.5 to deeply equal NumberCloseTo 2 (1 digit)",
 }
@@ -240,10 +240,10 @@ exports[`asymmetric matcher error 17`] = `
 exports[`asymmetric matcher error 18`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 stringContainingCustom<xx>
 
-+ Received: 
+[31m+ Received:[39m 
 "hello"",
   "expected": "stringContainingCustom<xx>",
   "message": "expected error to match asymmetric matcher",
@@ -262,10 +262,10 @@ exports[`asymmetric matcher error 19`] = `
 exports[`asymmetric matcher error 20`] = `
 {
   "actual": "hello",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 stringContainingCustom<ll>
 
-+ Received: 
+[31m+ Received:[39m 
 "hello"",
   "expected": "stringContainingCustom<ll>",
   "message": "expected error not to match asymmetric matcher",
@@ -275,10 +275,10 @@ stringContainingCustom<ll>
 exports[`asymmetric matcher error 21`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 StringContaining "ll"
 
-+ Received: 
+[31m+ Received:[39m 
 [Error: hello]",
   "expected": "StringContaining "ll"",
   "message": "expected error to match asymmetric matcher",
@@ -288,10 +288,10 @@ StringContaining "ll"
 exports[`asymmetric matcher error 22`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 stringContainingCustom<ll>
 
-+ Received: 
+[31m+ Received:[39m 
 [Error: hello]",
   "expected": "stringContainingCustom<ll>",
   "message": "expected error to match asymmetric matcher",
@@ -301,10 +301,10 @@ stringContainingCustom<ll>
 exports[`asymmetric matcher error 23`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 [Function MyError1]
 
-+ Received: 
+[31m+ Received:[39m 
 [Error: hello]",
   "expected": "[Function MyError1]",
   "message": "expected error to be instance of MyError1",
@@ -316,13 +316,13 @@ exports[`toHaveBeenNthCalledWith error 1`] = `
   "actual": "Array [
   "Hi",
 ]",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-  Array [
--   "hey",
-+   "Hi",
-  ]",
+[2m  Array [[22m
+[32m-   "hey",[39m
+[31m+   "Hi",[39m
+[2m  ][22m",
   "expected": "Array [
   "hey",
 ]",
@@ -344,11 +344,11 @@ exports[`toHaveBeenNthCalledWith error 2`] = `
 exports[`toMatch/toContain diff 1`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-- world
-+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+[32m- world[39m
+[31m+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello[39m",
   "expected": "world",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to contain 'world'",
 }
@@ -357,11 +357,11 @@ exports[`toMatch/toContain diff 1`] = `
 exports[`toMatch/toContain diff 2`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected
-+ Received
+  "diff": "[32m- Expected[39m
+[31m+ Received[39m
 
-- world
-+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+[32m- world[39m
+[31m+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello[39m",
   "expected": "world",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to match 'world'",
 }
@@ -370,10 +370,10 @@ exports[`toMatch/toContain diff 2`] = `
 exports[`toMatch/toContain diff 3`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected: 
+  "diff": "[32m- Expected:[39m 
 /world/
 
-+ Received: 
+[31m+ Received:[39m 
 "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
   "expected": "/world/",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to match /world/",

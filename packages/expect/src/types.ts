@@ -6,7 +6,7 @@
  *
  */
 
-import type { Formatter } from 'picocolors/types'
+import type { Formatter } from 'tinyrainbow'
 import type { Constructable } from '@vitest/utils'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
