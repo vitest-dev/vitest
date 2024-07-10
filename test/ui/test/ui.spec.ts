@@ -123,15 +123,18 @@ test.describe('ui', () => {
     await expect(page.getByTestId('details-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
 
-    // todo: PW cannot detect these nodes, any locator selector (css, xpath) will fail (even with custom evaluate + querySelectorAll)
     // html entities in task names are escaped
-    /* await page.getByPlaceholder('Search...').fill('<MyComponent />')
-    await page.getByText('<MyComponent />').click()
+    await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+    await page.getByPlaceholder('Search...').fill('<MyComponent />')
+    // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
+    await page.getByTestId('collapse-all').click()
+    await page.getByTestId('expand-all').click()
+    await expect(page.getByText('<MyComponent />')).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
 
     // html entities in task names are escaped
     await page.getByPlaceholder('Search...').fill('<>\'"')
-    await page.getByText('<>\'"').click()
-    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible() */
+    await expect(page.getByText('<>\'"')).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
   })
 })
