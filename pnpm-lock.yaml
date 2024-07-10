@@ -754,6 +754,9 @@ importers:
       '@vitest/ws-client':
         specifier: workspace:*
         version: link:../ws-client
+      '@vue/test-utils':
+        specifier: ^2.4.6
+        version: 2.4.6
       '@vueuse/core':
         specifier: ^10.11.0
         version: 10.11.0(vue@3.4.31)
