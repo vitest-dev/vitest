@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import crypto from 'node:crypto'
 import { stringify } from 'flatted'
 import { replacer } from './utils'
 import type { BrowserServer } from './server'
@@ -48,6 +49,7 @@ export async function resolveTester(
     }),
     __VITEST_TYPE__: '"tester"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_TESTER_CONTEXT_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 

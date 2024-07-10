@@ -23,6 +23,7 @@ window.__vitest_browser_runner__ = {
   files: { __VITEST_FILES__ },
   type: { __VITEST_TYPE__ },
   contextId: { __VITEST_CONTEXT_ID__ },
+  testerContextId: { __VITEST_TESTER_CONTEXT_ID__ },
   provider: { __VITEST_PROVIDER__ },
   providedContext: { __VITEST_PROVIDED_CONTEXT__ },
 };

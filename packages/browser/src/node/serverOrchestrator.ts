@@ -31,6 +31,7 @@ export async function resolveOrchestrator(
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_TESTER_CONTEXT_ID__: '"none"',
     __VITEST_PROVIDED_CONTEXT__: '{}',
   })
 
