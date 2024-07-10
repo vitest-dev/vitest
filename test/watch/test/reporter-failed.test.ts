@@ -9,6 +9,7 @@ describe.each([
   it('prints previously failed tests on rerun', async () => {
     const { vitest, ctx } = await runVitest({
       watch: true,
+      fileParallelism: false,
       root: './fixtures/single-failed',
       reporters: [[reporter, { isTTY }]],
     })
@@ -39,6 +40,7 @@ describe.each([
   it('prints tests once if changed test is the same', async () => {
     const { vitest, ctx } = await runVitest({
       watch: true,
+      fileParallelism: false,
       root: './fixtures/single-failed',
       reporters: [[reporter, { isTTY }]],
     })
