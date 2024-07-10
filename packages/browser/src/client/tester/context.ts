@@ -298,6 +298,12 @@ export const page: BrowserPage = {
         : undefined,
     })
   },
+  extend(methods) {
+    for (const key in methods) {
+      (page as any)[key] = methods[key]
+    }
+    return page
+  },
 }
 
 function getTaskFullName(task: Task): string {

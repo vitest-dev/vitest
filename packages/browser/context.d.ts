@@ -267,6 +267,7 @@ export interface BrowserPage {
     base64: string
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
+  extend(methods: Record<string | symbol, (this: BrowserPage, ...args: any[]) => void>): BrowserPage
 }
 
 export const page: BrowserPage
