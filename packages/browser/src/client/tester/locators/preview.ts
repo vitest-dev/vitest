@@ -1,6 +1,14 @@
-import { getByAltText, getByLabelText, getByPlaceholderText, getByRole, getByTestId, getByText, getByTitle } from '@testing-library/dom'
+import {
+  getByAltText,
+  getByLabelText,
+  getByPlaceholderText,
+  getByRole,
+  getByTestId,
+  getByText,
+  getByTitle,
+} from '@testing-library/dom'
 import { page } from '@vitest/browser/context'
-import { getBrowserState } from '../../utils'
+import { convertElementToCssSelector } from '../../utils'
 import { Locator } from './index'
 
 // TODO: type options
@@ -26,72 +34,45 @@ page.extend({
   getByTitle(title: string | RegExp) {
     return new PreviewLocator(getByTitle(document.body, title))
   },
+
+  elementLocator(element: Element) {
+    return new PreviewLocator(element)
+  },
 })
 
 class PreviewLocator extends Locator {
+  private element: HTMLElement
+
   constructor(element: Element) {
     super(convertElementToCssSelector(element))
-  }
-}
-
-function convertElementToCssSelector(element: Element) {
-  if (!element || !(element instanceof Element)) {
-    throw new Error(
-      `Expected DOM element to be an instance of Element, received ${typeof element}`,
-    )
+    this.element = element as HTMLElement
   }
 
-  return getUniqueCssSelector(element)
-}
-
-function getUniqueCssSelector(el: Element) {
-  const path = []
-  let parent: null | ParentNode
-  let hasShadowRoot = false
-  // eslint-disable-next-line no-cond-assign
-  while (parent = getParent(el)) {
-    if ((parent as Element).shadowRoot) {
-      hasShadowRoot = true
-    }
-
-    const tag = el.tagName
-    if (el.id) {
-      path.push(`#${el.id}`)
-    }
-    else if (!el.nextElementSibling && !el.previousElementSibling) {
-      path.push(tag)
-    }
-    else {
-      let index = 0
-      let sameTagSiblings = 0
-      let elementIndex = 0
-
-      for (const sibling of parent.children) {
-        index++
-        if (sibling.tagName === tag) {
-          sameTagSiblings++
-        }
-        if (sibling === el) {
-          elementIndex = index
-        }
-      }
-
-      if (sameTagSiblings > 1) {
-        path.push(`${tag}:nth-child(${elementIndex})`)
-      }
-      else {
-        path.push(tag)
-      }
-    }
-    el = parent as Element
-  };
-  return `${getBrowserState().provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`.toLowerCase()
-}
-
-function getParent(el: Element) {
-  const parent = el.parentNode
-  if (parent instanceof ShadowRoot) {
-    return parent.host
+  getByRole(role: string): Locator {
+    return new PreviewLocator(getByRole(this.element, role))
   }
-  return parent
+
+  getByAltText(text: string | RegExp): Locator {
+    return new PreviewLocator(getByAltText(this.element, text))
+  }
+
+  getByLabelText(text: string | RegExp): Locator {
+    return new PreviewLocator(getByLabelText(this.element, text))
+  }
+
+  getByPlaceholder(text: string | RegExp): Locator {
+    return new PreviewLocator(getByPlaceholderText(this.element, text))
+  }
+
+  getByText(text: string | RegExp): Locator {
+    return new PreviewLocator(getByText(this.element, text))
+  }
+
+  getByTestId(testId: string | RegExp): Locator {
+    return new PreviewLocator(getByTestId(this.element, testId))
+  }
+
+  getByTitle(title: string | RegExp): Locator {
+    return new PreviewLocator(getByTitle(this.element, title))
+  }
 }

@@ -1,46 +1,63 @@
-import type { UserEventClickOptions, UserEventFillOptions } from '@vitest/browser/context'
+import type {
+  UserEventClickOptions,
+  UserEventDragAndDropOptions,
+  UserEventFillOptions,
+} from '@vitest/browser/context'
 import type { BrowserRPC } from '@vitest/browser/client'
 import { getBrowserState, getWorkerState } from '../../utils'
 
-export class Locator {
-  path: string
+export abstract class Locator {
+  selector: string
 
-  constructor(path: string) {
-    this.path = path
+  constructor(selector: string) {
+    this.selector = selector
   }
 
   click(options: UserEventClickOptions = {}) {
-    return this.triggerCommand('__vitest_click', this.path, options)
+    return this.triggerCommand<void>('__vitest_click', this.selector, options)
   }
 
   dblClick(options: UserEventClickOptions = {}) {
-    return this.triggerCommand('__vitest_dblClick', this.path, options)
+    return this.triggerCommand<void>('__vitest_dblClick', this.selector, options)
   }
 
   tripleClick(options: UserEventClickOptions = {}) {
-    return this.triggerCommand('__vitest_tripleClick', this.path, options)
+    return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
   clear() {
-    return this.triggerCommand('__vitest_clear', this.path)
+    return this.triggerCommand<void>('__vitest_clear', this.selector)
   }
 
   hover() {
-    return this.triggerCommand('__vitest_hover', this.path)
+    return this.triggerCommand<void>('__vitest_hover', this.selector)
+  }
+
+  unhover() {
+    return this.triggerCommand<void>('__vitest_hover', 'html > body')
   }
 
   fill(text: string, options?: UserEventFillOptions) {
-    return this.triggerCommand('__vitest_fill', this.path, text, options)
+    return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
   }
 
-  // dropTo(target: Element, options = {}) {
-  //   const targetCss = convertElementToCssSelector(target)
-  //   return this.triggerCommand('__vitest_dragAndDrop', this.path, targetCss, options)
-  // }
+  dropTo(target: Locator, options: UserEventDragAndDropOptions = {}) {
+    return this.triggerCommand<void>(
+      '__vitest_dragAndDrop',
+      this.selector,
+      target.selector,
+      options,
+    )
+  }
 
-  // unhover() {
-  //   return triggerCommand('__vitest_hover', css)
-  // }
+  // TODO: support options
+  abstract getByRole(role: string): Locator
+  abstract getByLabelText(text: string | RegExp): Locator
+  abstract getByAltText(text: string | RegExp): Locator
+  abstract getByTestId(testId: string | RegExp): Locator
+  abstract getByPlaceholder(text: string | RegExp): Locator
+  abstract getByText(text: string | RegExp): Locator
+  abstract getByTitle(title: string | RegExp): Locator
 
   protected get state() {
     return getBrowserState()
@@ -55,7 +72,14 @@ export class Locator {
   }
 
   protected triggerCommand<T>(command: string, ...args: any[]) {
-    const filepath = this.worker.filepath || this.worker.current?.file?.filepath || undefined
-    return this.rpc.triggerCommand<T>(this.state.contextId, command, filepath, args)
+    const filepath = this.worker.filepath
+      || this.worker.current?.file?.filepath
+      || undefined
+    return this.rpc.triggerCommand<T>(
+      this.state.contextId,
+      command,
+      filepath,
+      args,
+    )
   }
 }
