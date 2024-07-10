@@ -22,6 +22,20 @@ export const treeFilter = useLocalStorage<TreeFilterState>(
   },
 )
 export const search = ref<string>(treeFilter.value.search)
+const htmlEntities: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  '\'': '&#39;',
+}
+export function escapeHtml(str: string) {
+  return str.replace(/[&<>"']/g, m => htmlEntities[m])
+}
+export const highlightRegex = computed(() => {
+  const searchString = search.value.toLowerCase()
+  return searchString.length ? new RegExp(`(${escapeHtml(searchString)})`, 'gi') : null
+})
 export const isFiltered = computed(() => search.value.trim() !== '')
 export const filter = reactive<Filter>({
   failed: treeFilter.value.failed,
