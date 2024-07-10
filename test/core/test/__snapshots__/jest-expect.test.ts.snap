@@ -125,7 +125,7 @@ exports[`asymmetric matcher error 9`] = `
   "actual": "undefined",
   "diff": undefined,
   "expected": "undefined",
-  "message": "expected [31m"hello"[39m to contain [32m"xx"[39m",
+  "message": "expected "hello" to contain "xx"",
 }
 `;
 
@@ -134,7 +134,7 @@ exports[`asymmetric matcher error 10`] = `
   "actual": "undefined",
   "diff": undefined,
   "expected": "undefined",
-  "message": "expected [31m"hello"[39m not to contain [32m"ll"[39m",
+  "message": "expected "hello" not to contain "ll"",
 }
 `;
 
