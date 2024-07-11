@@ -1,3 +1,4 @@
+import type { LocatorByRoleOptions, LocatorOptions } from '@vitest/browser/context'
 import { page } from '@vitest/browser/context'
 import { convertElementToCssSelector } from '../../utils'
 import {
@@ -16,29 +17,28 @@ import { Locator } from './index'
 
 const selector = new PlaywrightSelector()
 
-// TODO: type options
 page.extend({
-  getByLabelText(text: string | RegExp) {
-    return new PlaywrightLocator(getByLabelSelector(text))
+  getByLabelText(text, options) {
+    return new PlaywrightLocator(getByLabelSelector(text, options))
   },
-  getByRole(role: string, options?: any) {
+  getByRole(role, options) {
     return new PlaywrightLocator(getByRoleSelector(role, options))
   },
-  getByTestId(testId: string | RegExp) {
+  getByTestId(testId) {
     // TODO: custom testid attribute
     return new PlaywrightLocator(getByTestIdSelector('data-testid', testId))
   },
-  getByAltText(text: string | RegExp) {
-    return new PlaywrightLocator(getByAltTextSelector(text))
+  getByAltText(text, options) {
+    return new PlaywrightLocator(getByAltTextSelector(text, options))
   },
-  getByPlaceholder(text: string | RegExp) {
-    return new PlaywrightLocator(getByPlaceholderSelector(text))
+  getByPlaceholder(text, options) {
+    return new PlaywrightLocator(getByPlaceholderSelector(text, options))
   },
-  getByText(text: string | RegExp) {
-    return new PlaywrightLocator(getByTextSelector(text))
+  getByText(text, options) {
+    return new PlaywrightLocator(getByTextSelector(text, options))
   },
-  getByTitle(title: string | RegExp) {
-    return new PlaywrightLocator(getByTitleSelector(title))
+  getByTitle(title, options) {
+    return new PlaywrightLocator(getByTitleSelector(title, options))
   },
 
   elementLocator(element: Element) {
@@ -53,32 +53,32 @@ class PlaywrightLocator extends Locator {
     super(selector)
   }
 
-  getByRole(role: string, options?: any): Locator {
+  getByRole(role: string, options?: LocatorByRoleOptions): Locator {
     return this.locator(getByRoleSelector(role, options))
   }
 
-  getByAltText(text: string | RegExp): Locator {
-    return this.locator(getByAltTextSelector(text))
+  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByAltTextSelector(text, options))
   }
 
-  getByLabelText(text: string | RegExp): Locator {
-    return this.locator(getByLabelSelector(text))
+  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByLabelSelector(text, options))
   }
 
-  getByPlaceholder(text: string | RegExp): Locator {
-    return this.locator(getByPlaceholderSelector(text))
+  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByPlaceholderSelector(text, options))
   }
 
   getByTestId(testId: string | RegExp): Locator {
     return this.locator(getByTestIdSelector('data-testid', testId))
   }
 
-  getByText(text: string | RegExp): Locator {
-    return this.locator(getByTextSelector(text))
+  getByText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByTextSelector(text, options))
   }
 
-  getByTitle(title: string | RegExp): Locator {
-    return this.locator(getByTitleSelector(title))
+  getByTitle(title: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByTitleSelector(title, options))
   }
 
   private locator(selector: string) {

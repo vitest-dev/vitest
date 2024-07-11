@@ -1,3 +1,4 @@
+import type { LocatorByRoleOptions, LocatorOptions } from '@vitest/browser/context'
 import { page } from '@vitest/browser/context'
 import {
   getByAltText,
@@ -47,32 +48,32 @@ class WebdriverIOLocator extends Locator {
     this._element = element as HTMLElement
   }
 
-  getByRole(role: string): Locator {
-    return new WebdriverIOLocator(getByRole(this._element, role))
+  getByRole(role: string, options?: LocatorByRoleOptions) {
+    return new WebdriverIOLocator(getByRole(this._element, role, options))
   }
 
-  getByAltText(text: string | RegExp): Locator {
-    return new WebdriverIOLocator(getByAltText(this._element, text))
+  getByAltText(text: string | RegExp, options?: LocatorOptions) {
+    return new WebdriverIOLocator(getByAltText(this._element, text, options))
   }
 
-  getByLabelText(text: string | RegExp): Locator {
-    return new WebdriverIOLocator(getByLabelText(this._element, text))
+  getByLabelText(text: string | RegExp, options?: LocatorOptions) {
+    return new WebdriverIOLocator(getByLabelText(this._element, text, options))
   }
 
-  getByPlaceholder(text: string | RegExp): Locator {
-    return new WebdriverIOLocator(getByPlaceholderText(this._element, text))
+  getByPlaceholder(text: string | RegExp, options?: LocatorOptions) {
+    return new WebdriverIOLocator(getByPlaceholderText(this._element, text, options))
   }
 
-  getByText(text: string | RegExp): Locator {
-    return new WebdriverIOLocator(getByText(this._element, text))
+  getByText(text: string | RegExp, options?: LocatorOptions) {
+    return new WebdriverIOLocator(getByText(this._element, text, options))
   }
 
-  getByTestId(testId: string | RegExp): Locator {
+  getByTestId(testId: string | RegExp) {
     return new WebdriverIOLocator(getByTestId(this._element, testId))
   }
 
-  getByTitle(title: string | RegExp): Locator {
-    return new WebdriverIOLocator(getByTitle(this._element, title))
+  getByTitle(title: string | RegExp, options?: LocatorOptions) {
+    return new WebdriverIOLocator(getByTitle(this._element, title, options))
   }
 
   public element() {

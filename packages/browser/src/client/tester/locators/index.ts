@@ -1,4 +1,6 @@
 import type {
+  LocatorByRoleOptions,
+  LocatorOptions,
   LocatorScreenshotOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
@@ -68,13 +70,13 @@ export abstract class Locator {
   }
 
   // TODO: support options
-  abstract getByRole(role: string): Locator
-  abstract getByLabelText(text: string | RegExp): Locator
-  abstract getByAltText(text: string | RegExp): Locator
+  abstract getByRole(role: string, options?: LocatorByRoleOptions): Locator
+  abstract getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  abstract getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
   abstract getByTestId(testId: string | RegExp): Locator
-  abstract getByPlaceholder(text: string | RegExp): Locator
-  abstract getByText(text: string | RegExp): Locator
-  abstract getByTitle(title: string | RegExp): Locator
+  abstract getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  abstract getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  abstract getByTitle(title: string | RegExp, options?: LocatorOptions): Locator
 
   abstract element(): Element | undefined
 

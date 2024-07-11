@@ -7,7 +7,7 @@ import {
   getByText,
   getByTitle,
 } from '@testing-library/dom'
-import type { Locator } from '@vitest/browser/context'
+import type { Locator, LocatorByRoleOptions, LocatorOptions } from '@vitest/browser/context'
 import { page } from '@vitest/browser/context'
 import type { UserEvent } from '@testing-library/user-event'
 import { userEvent } from '@testing-library/user-event'
@@ -91,32 +91,32 @@ class PreviewLocator implements Locator {
     throw new Error('The "preview" provider doesn\'t support `screenshot` method.')
   }
 
-  getByRole(role: string): Locator {
-    return new PreviewLocator(getByRole(this._element, role))
+  getByRole(role: string, options?: LocatorByRoleOptions): Locator {
+    return new PreviewLocator(getByRole(this._element, role, options))
   }
 
-  getByAltText(text: string | RegExp): Locator {
-    return new PreviewLocator(getByAltText(this._element, text))
+  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return new PreviewLocator(getByAltText(this._element, text, options))
   }
 
-  getByLabelText(text: string | RegExp): Locator {
-    return new PreviewLocator(getByLabelText(this._element, text))
+  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return new PreviewLocator(getByLabelText(this._element, text, options))
   }
 
-  getByPlaceholder(text: string | RegExp): Locator {
-    return new PreviewLocator(getByPlaceholderText(this._element, text))
+  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator {
+    return new PreviewLocator(getByPlaceholderText(this._element, text, options))
   }
 
-  getByText(text: string | RegExp): Locator {
-    return new PreviewLocator(getByText(this._element, text))
+  getByText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return new PreviewLocator(getByText(this._element, text, options))
   }
 
   getByTestId(testId: string | RegExp): Locator {
     return new PreviewLocator(getByTestId(this._element, testId))
   }
 
-  getByTitle(title: string | RegExp): Locator {
-    return new PreviewLocator(getByTitle(this._element, title))
+  getByTitle(title: string | RegExp, options?: LocatorOptions): Locator {
+    return new PreviewLocator(getByTitle(this._element, title, options))
   }
 
   public element() {
