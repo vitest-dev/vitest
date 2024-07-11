@@ -119,11 +119,20 @@ describe('testing vi utils', () => {
   })
 
   test(`vi.spyOn for function overload types`, () => {
+    /* eslint-disable ts/method-signature-style */
+    interface MyElement {
+      scrollTo(options?: ScrollToOptions): void
+      scrollTo(x: number, y: number): void
+    }
+    /* eslint-enable ts/method-signature-style */
+
+    const myElement: MyElement = {
+      scrollTo() {},
+    }
+
     // verify `spyOn` is assignable to `MockInstance` for overload
-    //   scrollTo(options?: ScrollToOptions): void;
-    //   scrollTo(x: number, y: number): void;
-    const scrollToSpy: MockInstance<Element['scrollTo']> = vi.spyOn(
-      Element.prototype,
+    const scrollToSpy: MockInstance<MyElement['scrollTo']> = vi.spyOn(
+      myElement,
       'scrollTo',
     )
 
