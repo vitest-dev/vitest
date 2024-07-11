@@ -119,7 +119,7 @@ class PreviewLocator implements Locator {
     return new PreviewLocator(getByTitle(this._element, title))
   }
 
-  protected element() {
+  public element() {
     return this._element
   }
 }

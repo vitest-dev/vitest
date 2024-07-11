@@ -75,7 +75,7 @@ class WebdriverIOLocator extends Locator {
     return new WebdriverIOLocator(getByTitle(this._element, title))
   }
 
-  protected element() {
+  public element() {
     return this._element
   }
 }
