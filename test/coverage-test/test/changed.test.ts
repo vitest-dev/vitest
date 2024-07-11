@@ -29,6 +29,7 @@ afterAll(() => {
 test('{ changed: "HEAD" }', async () => {
   await runVitest({
     include: ['fixtures/test/**'],
+    exclude: ['**/custom-1-syntax**'],
     changed: 'HEAD',
     coverage: {
       include: ['fixtures/src/**'],

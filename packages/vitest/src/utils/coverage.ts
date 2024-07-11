@@ -1,7 +1,7 @@
 import { relative } from 'pathe'
 import mm from 'micromatch'
 import type { CoverageMap } from 'istanbul-lib-coverage'
-import type { BaseCoverageOptions, ResolvedCoverageOptions } from '../types'
+import type { BaseCoverageOptions, ResolvedCoverageOptions, Vitest } from '../types'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -292,6 +292,37 @@ export class BaseCoverageProvider {
 
       return chunks
     }, [])
+  }
+
+  createUncoveredFileTransformer(ctx: Vitest) {
+    const servers = [
+      ...ctx.projects.map(project => ({
+        root: project.config.root,
+        vitenode: project.vitenode,
+      })),
+      // Check core last as it will match all files anyway
+      { root: ctx.config.root, vitenode: ctx.vitenode },
+    ]
+
+    return async function transformFile(filename: string) {
+      let lastError
+
+      for (const { root, vitenode } of servers) {
+        if (!filename.startsWith(root)) {
+          continue
+        }
+
+        try {
+          return await vitenode.transformRequest(filename)
+        }
+        catch (error) {
+          lastError = error
+        }
+      }
+
+      // All vite-node servers failed to transform the file
+      throw lastError
+    }
   }
 }
 
