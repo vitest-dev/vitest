@@ -660,16 +660,20 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   /**
    * Used for `toHaveBeenCalledBefore` and `toHaveBeenCalledAfter` to determine if the expected spy was called before the result spy.
    */
-  function predicate(expectInvocationCallOrder: number[], resultInvocationCallOrder: number[], failIfNoFirstInvocation: number): boolean {
-    if (expectInvocationCallOrder.length === 0) {
+  function isSpyCalledBeforeAnotherSpy(beforeSpy: MockInstance, afterSpy: MockInstance, failIfNoFirstInvocation: number): boolean {
+    const beforeInvocationCallOrder = beforeSpy.mock.invocationCallOrder
+
+    const afterInvocationCallOrder = afterSpy.mock.invocationCallOrder
+
+    if (beforeInvocationCallOrder.length === 0) {
       return !failIfNoFirstInvocation
     }
 
-    if (resultInvocationCallOrder.length === 0) {
+    if (afterInvocationCallOrder.length === 0) {
       return false
     }
 
-    return expectInvocationCallOrder[0] < resultInvocationCallOrder[0]
+    return beforeInvocationCallOrder[0] < afterInvocationCallOrder[0]
   }
 
   def(
@@ -683,16 +687,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      if (!isMockFunction(expectSpy)) {
-        throw new TypeError(
-          `${utils.inspect(expectSpy)} is not a spy or a call to a spy`,
-        )
-      }
-
       this.assert(
-        predicate(
-          expectSpy.mock.invocationCallOrder,
-          resultSpy.mock.invocationCallOrder,
+        isSpyCalledBeforeAnotherSpy(
+          expectSpy,
+          resultSpy,
           failIfNoFirstInvocation,
         ),
         `expected "${expectSpy.getMockName()}" to have been called before "${resultSpy.getMockName()}"`,
@@ -713,16 +711,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      if (!isMockFunction(expectSpy)) {
-        throw new TypeError(
-          `${utils.inspect(expectSpy)} is not a spy or a call to a spy`,
-        )
-      }
-
       this.assert(
-        predicate(
-          resultSpy.mock.invocationCallOrder,
-          expectSpy.mock.invocationCallOrder,
+        isSpyCalledBeforeAnotherSpy(
+          resultSpy,
+          expectSpy,
           failIfNoFirstInvocation,
         ),
         `expected "${expectSpy.getMockName()}" to have been called after "${resultSpy.getMockName()}"`,
