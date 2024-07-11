@@ -76,6 +76,8 @@ export abstract class Locator {
   abstract getByText(text: string | RegExp): Locator
   abstract getByTitle(title: string | RegExp): Locator
 
+  abstract element(): Element | undefined
+
   protected get state() {
     return getBrowserState()
   }
