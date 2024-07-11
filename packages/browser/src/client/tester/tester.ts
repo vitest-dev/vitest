@@ -6,7 +6,7 @@ import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { VitestBrowserClientMocker } from './mocker'
-import { setupExpectDom } from './expect-dom'
+import { setupExpectDom } from './expect-element'
 
 const url = new URL(location.href)
 const reloadStart = url.searchParams.get('__reloadStart')
