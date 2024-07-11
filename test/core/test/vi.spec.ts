@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import type { Mock, MockedFunction, MockedObject } from 'vitest'
+import type { Mock, MockInstance, MockedFunction, MockedObject } from 'vitest'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { getWorkerState } from '../../../packages/vitest/src/utils'
 
@@ -116,6 +116,40 @@ describe('testing vi utils', () => {
     expect(someFn2).not.toBeCalled()
     expect(someFn3).not.toBeCalled()
     expect(someFn4).not.toBeCalled()
+  })
+
+  test(`vi.spyOn for function overload types`, () => {
+    class MyElement {
+      scrollTo(options?: ScrollToOptions): void
+      scrollTo(x: number, y: number): void
+      scrollTo() {}
+    }
+
+    // verify `spyOn` is assignable to `MockInstance` with overload
+    const spy: MockInstance<MyElement['scrollTo']> = vi.spyOn(
+      MyElement.prototype,
+      'scrollTo',
+    )
+
+    // however `Parameters` only picks up the last overload
+    // due to typescript limitation
+    expectTypeOf(spy.mock.calls).toEqualTypeOf<
+      [x: number, y: number][]
+    >()
+  })
+
+  test(`mock.contexts types`, () => {
+    class TestClass {
+      f(this: TestClass) {}
+      g() {}
+    }
+
+    const fSpy = vi.spyOn(TestClass.prototype, 'f')
+    const gSpy = vi.spyOn(TestClass.prototype, 'g')
+
+    // contexts inferred only when `this` is explicitly annotated
+    expectTypeOf(fSpy.mock.contexts).toEqualTypeOf<TestClass[]>()
+    expectTypeOf(gSpy.mock.contexts).toEqualTypeOf<unknown[]>()
   })
 
   test('can change config', () => {
