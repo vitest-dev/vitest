@@ -119,25 +119,23 @@ describe('testing vi utils', () => {
   })
 
   test(`vi.spyOn for function overload types`, () => {
-    /* eslint-disable ts/method-signature-style */
-    interface MyElement {
+    class MyElement {
       scrollTo(options?: ScrollToOptions): void
       scrollTo(x: number, y: number): void
-    }
-    /* eslint-enable ts/method-signature-style */
-
-    const myElement: MyElement = {
-      scrollTo() {},
+      scrollTo() {}
     }
 
-    // verify `spyOn` is assignable to `MockInstance` for overload
-    const scrollToSpy: MockInstance<MyElement['scrollTo']> = vi.spyOn(
+    const myElement = new MyElement()
+
+    // verify `spyOn` is assignable to `MockInstance` with overload
+    const spy: MockInstance<MyElement['scrollTo']> = vi.spyOn(
       myElement,
       'scrollTo',
     )
 
     // however `Parameters` only picks up the last overload
-    expectTypeOf(scrollToSpy.mock.calls).toEqualTypeOf<
+    // due to typescript limitation
+    expectTypeOf(spy.mock.calls).toEqualTypeOf<
       [x: number, y: number][]
     >()
   })
