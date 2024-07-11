@@ -8,8 +8,14 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
-} from './playwright-utils'
+} from './playwright-selector/locatorUtils'
+import { PlaywrightSelector } from './playwright-selector/selector'
+import type { ParsedSelector } from './playwright-selector/selectorParser'
+import { parseSelector } from './playwright-selector/selectorParser'
+import { asLocator } from './playwright-selector/locatorGenerators'
 import { Locator } from './index'
+
+const selector = new PlaywrightSelector()
 
 // TODO: type options
 page.extend({
@@ -42,6 +48,8 @@ page.extend({
 })
 
 class PlaywrightLocator extends Locator {
+  private _parsedSelector: ParsedSelector | undefined
+
   constructor(selector: string) {
     super(selector)
   }
@@ -76,5 +84,14 @@ class PlaywrightLocator extends Locator {
 
   private locator(selector: string) {
     return new PlaywrightLocator(`${this.selector} >> ${selector}`)
+  }
+
+  public element() {
+    const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this.selector))
+    const element = selector.querySelector(parsedSelector, document.body, true)
+    if (!element) {
+      throw new Error(`Element not found: ${asLocator('javascript', this.selector)}`)
+    }
+    return element
   }
 }

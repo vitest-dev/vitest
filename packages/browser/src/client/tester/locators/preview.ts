@@ -7,8 +7,10 @@ import {
   getByText,
   getByTitle,
 } from '@testing-library/dom'
-import { page, Locator } from '@vitest/browser/context'
-import { UserEvent, userEvent } from '@testing-library/user-event'
+import type { Locator } from '@vitest/browser/context'
+import { page } from '@vitest/browser/context'
+import type { UserEvent } from '@testing-library/user-event'
+import { userEvent } from '@testing-library/user-event'
 import { convertElementToCssSelector } from '../../utils'
 
 // TODO: type options
