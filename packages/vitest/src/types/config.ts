@@ -486,6 +486,8 @@ export interface InlineConfig {
    */
   testNamePattern?: string | RegExp
 
+  testLocations?: Record<string, [line: number, column: number][]>
+
   /**
    * Will call `.mockClear()` on all spies before each test
    * @default false

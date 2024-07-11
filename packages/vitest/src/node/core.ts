@@ -1179,7 +1179,23 @@ export class Vitest {
     return this.globTestFiles().then(files => files.map(([, file]) => file))
   }
 
+  private parseFilters(filters: string[] = []) {
+    const fileLocations: Record<string, [start: number, end: number][]> = {}
+
+    filters.forEach((filter) => {
+      const [file, locs] = filter.split(':', 2)
+      fileLocations[file] ??= []
+      locs?.split(',').forEach((loc) => {
+        const [start, end] = loc.split('-')
+        fileLocations[file].push([Number(start), Number(end)])
+      })
+    })
+
+    return fileLocations
+  }
+
   public async globTestFiles(filters: string[] = []) {
+    const parsedFilters = this.parseFilters(filters)
     const files: WorkspaceSpec[] = []
     await Promise.all(this.projects.map(async (project) => {
       const specs = await project.globTestFiles(filters)
