@@ -84,64 +84,82 @@ function getParent(el: Element) {
   return parent
 }
 
-export const userEvent: UserEvent = {
-  // TODO: actually setup userEvent with config options
-  setup() {
-    return userEvent
-  },
-  click(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_click', css, options)
-  },
-  dblClick(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_dblClick', css, options)
-  },
-  tripleClick(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_tripleClick', css, options)
-  },
-  selectOptions(element, value) {
-    const values = provider === 'webdriverio'
-      ? getWebdriverioSelectOptions(element, value)
-      : getSimpleSelectOptions(element, value)
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_selectOptions', css, values)
-  },
-  type(element: Element, text: string, options: UserEventTypeOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_type', css, text, options)
-  },
-  clear(element: Element) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_clear', css)
-  },
-  tab(options: UserEventTabOptions = {}) {
-    return triggerCommand('__vitest_tab', options)
-  },
-  keyboard(text: string) {
-    return triggerCommand('__vitest_keyboard', text)
-  },
-  hover(element: Element) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_hover', css)
-  },
-  unhover(element: Element) {
-    const css = convertElementToCssSelector(element.ownerDocument.body)
-    return triggerCommand('__vitest_hover', css)
-  },
+function createUserEvent(): UserEvent {
+  const keyboard = {
+    unreleased: [] as string[],
+  }
 
-  // non userEvent events, but still useful
-  fill(element: Element, text: string, options) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_fill', css, text, options)
-  },
-  dragAndDrop(source: Element, target: Element, options = {}) {
-    const sourceCss = convertElementToCssSelector(source)
-    const targetCss = convertElementToCssSelector(target)
-    return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
-  },
+  return {
+    setup() {
+      return createUserEvent()
+    },
+    click(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_click', css, options)
+    },
+    dblClick(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_dblClick', css, options)
+    },
+    tripleClick(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_tripleClick', css, options)
+    },
+    selectOptions(element, value) {
+      const values = provider === 'webdriverio'
+        ? getWebdriverioSelectOptions(element, value)
+        : getSimpleSelectOptions(element, value)
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_selectOptions', css, values)
+    },
+    async type(element: Element, text: string, options: UserEventTypeOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_type',
+        css,
+        text,
+        { ...options, unreleased: keyboard.unreleased },
+      )
+      keyboard.unreleased = unreleased
+    },
+    clear(element: Element) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_clear', css)
+    },
+    tab(options: UserEventTabOptions = {}) {
+      return triggerCommand('__vitest_tab', options)
+    },
+    async keyboard(text: string) {
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_keyboard',
+        text,
+        keyboard,
+      )
+      keyboard.unreleased = unreleased
+    },
+    hover(element: Element) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_hover', css)
+    },
+    unhover(element: Element) {
+      const css = convertElementToCssSelector(element.ownerDocument.body)
+      return triggerCommand('__vitest_hover', css)
+    },
+
+    // non userEvent events, but still useful
+    fill(element: Element, text: string, options) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_fill', css, text, options)
+    },
+    dragAndDrop(source: Element, target: Element, options = {}) {
+      const sourceCss = convertElementToCssSelector(source)
+      const targetCss = convertElementToCssSelector(target)
+      return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
+    },
+  }
 }
+
+export const userEvent: UserEvent = createUserEvent()
 
 function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
   const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]

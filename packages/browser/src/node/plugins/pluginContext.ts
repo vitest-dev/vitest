@@ -94,10 +94,17 @@ function getUserEvent(provider: BrowserProvider) {
   }
   // TODO: have this in a separate file
   return `{
-  ...__vitest_user_event__,
-  fill: async (element, text) => {
-    await __vitest_user_event__.clear(element)
-    await __vitest_user_event__.type(element, text)
+  ..._userEventSetup,
+  setup() {
+    const userEvent = __vitest_user_event__.setup()
+    userEvent.setup = this.setup
+    userEvent.fill = this.fill.bind(userEvent)
+    userEvent.dragAndDrop = this.dragAndDrop
+    return userEvent
+  },
+  async fill(element, text) {
+    await this.clear(element)
+    await this.type(element, text)
   },
   dragAndDrop: async () => {
     throw new Error('Provider "preview" does not support dragging elements')
@@ -115,5 +122,5 @@ async function getUserEventImport(provider: BrowserProvider, resolve: (id: strin
   }
   return `import { userEvent as __vitest_user_event__ } from '${slash(
     `/@fs/${resolved.id}`,
-  )}'`
+  )}'\nconst _userEventSetup = __vitest_user_event__.setup()\n`
 }
