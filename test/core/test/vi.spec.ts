@@ -125,11 +125,9 @@ describe('testing vi utils', () => {
       scrollTo() {}
     }
 
-    const myElement = new MyElement()
-
     // verify `spyOn` is assignable to `MockInstance` with overload
     const spy: MockInstance<MyElement['scrollTo']> = vi.spyOn(
-      myElement,
+      MyElement.prototype,
       'scrollTo',
     )
 
@@ -138,6 +136,20 @@ describe('testing vi utils', () => {
     expectTypeOf(spy.mock.calls).toEqualTypeOf<
       [x: number, y: number][]
     >()
+  })
+
+  test(`mock.contexts types`, () => {
+    class TestClass {
+      f(this: TestClass) {}
+      g() {}
+    }
+
+    const fSpy = vi.spyOn(TestClass.prototype, 'f')
+    const gSpy = vi.spyOn(TestClass.prototype, 'g')
+
+    // contexts inferred only when `this` is explicitly annotated
+    expectTypeOf(fSpy.mock.contexts).toEqualTypeOf<TestClass[]>()
+    expectTypeOf(gSpy.mock.contexts).toEqualTypeOf<unknown[]>()
   })
 
   test('can change config', () => {
