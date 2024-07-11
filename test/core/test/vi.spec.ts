@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import type { Mock, MockedFunction, MockedObject } from 'vitest'
+import type { Mock, MockInstance, MockedFunction, MockedObject } from 'vitest'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { getWorkerState } from '../../../packages/vitest/src/utils'
 
@@ -116,6 +116,21 @@ describe('testing vi utils', () => {
     expect(someFn2).not.toBeCalled()
     expect(someFn3).not.toBeCalled()
     expect(someFn4).not.toBeCalled()
+  })
+
+  test(`vi.spyOn for function overload types`, () => {
+    // verify `spyOn` is assignable to `MockInstance` for overload
+    //   scrollTo(options?: ScrollToOptions): void;
+    //   scrollTo(x: number, y: number): void;
+    const scrollToSpy: MockInstance<Element['scrollTo']> = vi.spyOn(
+      Element.prototype,
+      'scrollTo',
+    )
+
+    // however `Parameters` only picks up the last overload
+    expectTypeOf(scrollToSpy.mock.calls).toEqualTypeOf<
+      [x: number, y: number][]
+    >()
   })
 
   test('can change config', () => {
