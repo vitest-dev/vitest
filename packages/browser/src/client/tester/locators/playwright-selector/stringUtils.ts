@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/utils/isomorphic/stringUtils.ts
+
 // NOTE: this function should not be used to escape any selectors.
 export function escapeWithQuotes(text: string, char: string = '\'') {
   const stringified = JSON.stringify(text)
@@ -28,19 +30,6 @@ export function escapeWithQuotes(text: string, char: string = '\'') {
     return char + escapedText.replace(/`/g, '`') + char
   }
   throw new Error('Invalid escape char')
-}
-
-export function isString(obj: any): obj is string {
-  return typeof obj === 'string' || obj instanceof String
-}
-
-export function toTitleCase(name: string) {
-  return name.charAt(0).toUpperCase() + name.substring(1)
-}
-
-export function toSnakeCase(name: string): string {
-  // E.g. ignoreHTTPSErrors => ignore_https_errors.
-  return name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').replace(/([A-Z])([A-Z][a-z])/g, '$1_$2').toLowerCase()
 }
 
 export function cssEscape(s: string): string {
@@ -75,18 +64,8 @@ function cssEscapeOne(s: string, i: number): string {
   return `\\${s.charAt(i)}`
 }
 
-let normalizedWhitespaceCache: Map<string, string> | undefined
-
-export function cacheNormalizedWhitespaces() {
-  normalizedWhitespaceCache = new Map()
-}
-
 export function normalizeWhiteSpace(text: string): string {
-  let result = normalizedWhitespaceCache?.get(text)
-  if (result === undefined) {
-    result = text.replace(/\u200B/g, '').trim().replace(/\s+/g, ' ')
-    normalizedWhitespaceCache?.set(text, result)
-  }
+  const result = text.replace(/\u200B/g, '').trim().replace(/\s+/g, ' ')
   return result
 }
 
@@ -126,7 +105,7 @@ export function escapeForAttributeSelector(value: string | RegExp, exact: boolea
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"${exact ? 's' : 'i'}`
 }
 
-export function trimString(input: string, cap: number, suffix: string = ''): string {
+function trimString(input: string, cap: number, suffix: string = ''): string {
   if (input.length <= cap) {
     return input
   }

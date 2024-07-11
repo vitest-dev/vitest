@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/roleSelectorEngine.ts
+
 import { type AttributeSelectorOperator, type AttributeSelectorPart, parseAttributeSelector } from './selectorParser'
 import { normalizeWhiteSpace } from './stringUtils'
 import type { SelectorEngine, SelectorRoot } from './selector'

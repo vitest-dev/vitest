@@ -89,4 +89,9 @@ class PlaywrightLocator extends Locator {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this.selector))
     return selector.querySelector(parsedSelector, document.body, true)
   }
+
+  public elements() {
+    const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this.selector))
+    return selector.querySelectorAll(parsedSelector, document.body)
+  }
 }

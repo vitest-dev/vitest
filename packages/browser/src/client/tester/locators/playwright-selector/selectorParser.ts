@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/selectorParser.ts
+
 import type { CSSComplexSelectorList } from './cssParser'
 import { InvalidSelectorError, parseCSS } from './cssParser'
 

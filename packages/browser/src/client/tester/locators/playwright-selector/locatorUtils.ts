@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/utils/isomorphic/locatorUtils.ts
+
 import { escapeForAttributeSelector, escapeForTextSelector } from './stringUtils'
 
 export interface ByRoleOptions {

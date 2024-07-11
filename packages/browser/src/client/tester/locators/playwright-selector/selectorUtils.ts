@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/selectorUtils.ts
+
 import type { AttributeSelectorPart } from './selectorParser'
 import { normalizeWhiteSpace } from './stringUtils'
 import { getAriaLabelledByElements } from './roleUtils'
-
-export function matchesComponentAttribute(obj: any, attr: AttributeSelectorPart) {
-  for (const token of attr.jsonPath) {
-    if (obj !== undefined && obj !== null) {
-      obj = obj[token]
-    }
-  }
-  return matchesAttributePart(obj, attr)
-}
 
 export function matchesAttributePart(value: any, attr: AttributeSelectorPart) {
   const objValue = typeof value === 'string' && !attr.caseSensitive ? value.toUpperCase() : value

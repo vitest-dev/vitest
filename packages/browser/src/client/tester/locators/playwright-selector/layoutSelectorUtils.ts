@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/utils/isomorphic/layoutSelectorUtils.ts
+
 function boxRightOf(box1: DOMRect, box2: DOMRect, maxDistance: number | undefined): number | undefined {
   const distance = box1.left - box2.right
   if (distance < 0 || (maxDistance !== undefined && distance > maxDistance)) {

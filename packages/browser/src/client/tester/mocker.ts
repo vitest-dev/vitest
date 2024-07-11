@@ -389,7 +389,7 @@ class RefTracker {
 
 type Key = string | symbol
 
-export function getAllMockableProperties(obj: any, isModule: boolean) {
+function getAllMockableProperties(obj: any, isModule: boolean) {
   const allProps = new Map<
     string | symbol,
     { key: string | symbol; descriptor: PropertyDescriptor }

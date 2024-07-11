@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/utils/isomorphic/cssParser.ts
+
 import * as css from './cssTokenizer'
 
 export class InvalidSelectorError extends Error {
@@ -276,23 +278,4 @@ export function parseCSS(selector: string, customNames: Set<string>): { selector
     throw new InvalidSelectorError(`Error while parsing selector "${selector}"`)
   }
   return { selector: result as CSSComplexSelector[], names: Array.from(names) }
-}
-
-export function serializeSelector(args: CSSFunctionArgument[]) {
-  return args.map((arg) => {
-    if (typeof arg === 'string') {
-      return `"${arg}"`
-    }
-    if (typeof arg === 'number') {
-      return String(arg)
-    }
-    return arg.simples.map(({ selector, combinator }) => {
-      let s = selector.css || ''
-      s = s + selector.functions.map(func => `:${func.name}(${serializeSelector(func.args)})`).join('')
-      if (combinator) {
-        s += ` ${combinator}`
-      }
-      return s
-    }).join(' ')
-  }).join(', ')
 }

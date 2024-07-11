@@ -554,44 +554,6 @@ export function getElementAccessibleName(element: Element, includeHidden: boolea
   return accessibleName
 }
 
-export function getElementAccessibleDescription(element: Element, includeHidden: boolean): string {
-  const cache = (includeHidden ? cacheAccessibleDescriptionHidden : cacheAccessibleDescription)
-  let accessibleDescription = cache?.get(element)
-
-  if (accessibleDescription === undefined) {
-    // https://w3c.github.io/accname/#mapping_additional_nd_description
-    // https://www.w3.org/TR/html-aam-1.0/#accdesc-computation
-    accessibleDescription = ''
-
-    if (element.hasAttribute('aria-describedby')) {
-      // precedence 1
-      const describedBy = getIdRefs(element, element.getAttribute('aria-describedby'))
-      accessibleDescription = asFlatString(describedBy.map(ref => getTextAlternativeInternal(ref, {
-        includeHidden,
-        visitedElements: new Set(),
-        embeddedInLabelledBy: undefined,
-        embeddedInLabel: undefined,
-        embeddedInNativeTextAlternative: undefined,
-        embeddedInTargetElement: 'none',
-        embeddedInDescribedBy: { element: ref, hidden: isElementHiddenForAria(ref) },
-      })).join(' '))
-    }
-    else if (element.hasAttribute('aria-description')) {
-      // precedence 2
-      accessibleDescription = asFlatString(element.getAttribute('aria-description') || '')
-    }
-    else {
-      // TODO: handle precedence 3 - html-aam-specific cases like table>caption.
-      // https://www.w3.org/TR/html-aam-1.0/#accdesc-computation
-      // precedence 4
-      accessibleDescription = asFlatString(element.getAttribute('title') || '')
-    }
-
-    cache?.set(element, accessibleDescription)
-  }
-  return accessibleDescription
-}
-
 interface AccessibleNameOptions {
   includeHidden: boolean
   visitedElements: Set<Element>
@@ -992,7 +954,7 @@ export function getAriaChecked(element: Element): boolean | 'mixed' {
   const result = getChecked(element, true)
   return result === 'error' ? false : result
 }
-export function getChecked(element: Element, allowMixed: boolean): boolean | 'mixed' | 'error' {
+function getChecked(element: Element, allowMixed: boolean): boolean | 'mixed' | 'error' {
   const tagName = elementSafeTagName(element)
   // https://www.w3.org/TR/wai-aria-1.2/#aria-checked
   // https://www.w3.org/TR/html-aam-1.0/#html-attribute-state-and-property-mappings
@@ -1068,7 +1030,7 @@ export function getAriaLevel(element: Element): number {
   return 0
 }
 
-export const kAriaDisabledRoles = ['application', 'button', 'composite', 'gridcell', 'group', 'input', 'link', 'menuitem', 'scrollbar', 'separator', 'tab', 'checkbox', 'columnheader', 'combobox', 'grid', 'listbox', 'menu', 'menubar', 'menuitemcheckbox', 'menuitemradio', 'option', 'radio', 'radiogroup', 'row', 'rowheader', 'searchbox', 'select', 'slider', 'spinbutton', 'switch', 'tablist', 'textbox', 'toolbar', 'tree', 'treegrid', 'treeitem']
+const kAriaDisabledRoles = ['application', 'button', 'composite', 'gridcell', 'group', 'input', 'link', 'menuitem', 'scrollbar', 'separator', 'tab', 'checkbox', 'columnheader', 'combobox', 'grid', 'listbox', 'menu', 'menubar', 'menuitemcheckbox', 'menuitemradio', 'option', 'radio', 'radiogroup', 'row', 'rowheader', 'searchbox', 'select', 'slider', 'spinbutton', 'switch', 'tablist', 'textbox', 'toolbar', 'tree', 'treegrid', 'treeitem']
 export function getAriaDisabled(element: Element): boolean {
   // https://www.w3.org/TR/wai-aria-1.2/#aria-disabled
   // Note that aria-disabled applies to all descendants, so we look up the hierarchy.

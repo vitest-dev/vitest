@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+// copied from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/utils/isomorphic/locatorGenerators.ts
+// removed support for all languages except javascript
+
 import { escapeWithQuotes, normalizeEscapedRegexQuotes } from './stringUtils'
 import type { NestedSelectorBody, ParsedSelector } from './selectorParser'
 import { parseAttributeSelector, parseSelector, stringifySelector } from './selectorParser'
@@ -39,7 +42,7 @@ export function asLocator(lang: Language, selector: string, isFrameLocator: bool
   return asLocators(lang, selector, isFrameLocator)[0]
 }
 
-export function asLocators(lang: Language, selector: string, isFrameLocator: boolean = false, maxOutputSize = 20, preferredQuote?: Quote): string[] {
+function asLocators(lang: Language, selector: string, isFrameLocator: boolean = false, maxOutputSize = 20, preferredQuote?: Quote): string[] {
   try {
     // eslint-disable-next-line ts/no-use-before-define
     return innerAsLocators(new generators[lang](preferredQuote), parseSelector(selector), isFrameLocator, maxOutputSize)

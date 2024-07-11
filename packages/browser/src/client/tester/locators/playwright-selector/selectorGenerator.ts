@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/selectorGenerator.ts
+
 import { cssEscape, escapeForAttributeSelector, escapeForTextSelector, escapeRegExp, quoteCSSAttributeValue } from './stringUtils'
 import { closestCrossShadow, isInsideScope, parentElementOrShadowHost } from './domUtils'
 import type { PlaywrightSelector } from './selector'

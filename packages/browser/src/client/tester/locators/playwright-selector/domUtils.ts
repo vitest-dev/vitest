@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-let browserNameForWorkarounds = ''
-export function setBrowserName(name: string) {
-  browserNameForWorkarounds = name
-}
+// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/domUtils.ts
+
+import { server } from '@vitest/browser/context'
 
 export function isInsideScope(scope: Node, element: Element | undefined): boolean {
   while (element) {
@@ -27,13 +26,6 @@ export function isInsideScope(scope: Node, element: Element | undefined): boolea
     element = enclosingShadowHost(element)
   }
   return false
-}
-
-export function enclosingElement(node: Node) {
-  if (node.nodeType === 1 /* Node.ELEMENT_NODE */) {
-    return node as Element
-  }
-  return node.parentElement ?? undefined
 }
 
 export function parentElementOrShadowHost(element: Element): Element | undefined {
@@ -94,7 +86,7 @@ export function isElementStyleVisibilityVisible(element: Element, style?: CSSSty
   // All the browser implement it, but WebKit has a bug which prevents us from using it:
   // https://bugs.webkit.org/show_bug.cgi?id=264733
   // @ts-expect-error explained above
-  if (Element.prototype.checkVisibility && browserNameForWorkarounds !== 'webkit') {
+  if (Element.prototype.checkVisibility && server.browser !== 'webkit') {
     if (!element.checkVisibility()) {
       return false
     }
