@@ -93,7 +93,7 @@ export class BrowserServer implements IBrowserServer {
     const builtinProviders = ['playwright', 'webdriverio', 'preview']
     const providerName = project.config.browser.provider || 'preview'
     if (builtinProviders.includes(providerName)) {
-      this.locatorsPath = resolve(distRoot, `locators/${providerName}.js`)
+      this.locatorsPath = resolve(distRoot, `locators', '${providerName}.js`)
     }
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
