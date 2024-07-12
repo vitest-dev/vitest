@@ -48,14 +48,44 @@ export function* filterNode(
 ) {
   const treeNodes = new Set<string>()
 
+  const parentsMap = new Map<string, boolean>()
   const list: FilterResult[] = []
 
-  for (const entry of visitNode(
-    node,
-    treeNodes,
-    n => matcher(n, search, filter),
-  )) {
-    list.push(entry)
+  let fileId: string | undefined
+
+  if (filter.onlyTests) {
+    for (const [match, child] of visitNode(
+      node,
+      treeNodes,
+      n => matcher(n, search, filter),
+    )) {
+      list.push([match, child])
+    }
+  }
+  else {
+    for (const [match, child] of visitNode(
+      node,
+      treeNodes,
+      n => matcher(n, search, filter),
+    )) {
+      if (isParentNode(child)) {
+        parentsMap.set(child.id, match)
+        if (isFileNode(child)) {
+          match && (fileId = child.id)
+          list.push([match, child])
+        }
+        else {
+          list.push([match || parentsMap.get(child.parentId) === true, child])
+        }
+      }
+      else {
+        list.push([match || parentsMap.get(child.parentId) === true, child])
+      }
+    }
+    // when expanding a non-file node
+    if (!fileId && !isFileNode(node) && 'fileId' in node) {
+      fileId = node.fileId as string
+    }
   }
 
   const filesToShow = new Set<string>()
@@ -65,6 +95,7 @@ export function* filterNode(
     filter.onlyTests,
     treeNodes,
     filesToShow,
+    fileId,
   )].reverse()
 
   // We show only the files and parents whose parent is expanded.
@@ -129,10 +160,28 @@ function* filterParents(
   collapseParents: boolean,
   treeNodes: Set<string>,
   filesToShow: Set<string>,
+  nodeId?: string,
 ) {
   for (let i = list.length - 1; i >= 0; i--) {
     const [match, child] = list[i]
-    if (isParentNode(child)) {
+    const isParent = isParentNode(child)
+    if (!collapseParents && nodeId && treeNodes.has(nodeId) && 'fileId' in child && child.fileId === nodeId) {
+      if (isParent) {
+        treeNodes.add(child.id)
+      }
+      let parent = explorerTree.nodes.get(child.parentId)
+      while (parent) {
+        treeNodes.add(parent.id)
+        if (isFileNode(parent)) {
+          filesToShow.add(parent.id)
+        }
+        parent = explorerTree.nodes.get(parent.parentId)
+      }
+      yield child
+      continue
+    }
+
+    if (isParent) {
       const node = expandCollapseNode(
         match,
         child,
