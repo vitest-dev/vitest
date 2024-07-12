@@ -27,6 +27,10 @@ export function createModuleMocker() {
         http.get(/.+/, async ({ request }) => {
           const path = cleanQuery(request.url.slice(location.origin.length))
           if (!mocks.has(path)) {
+            if (path.includes('/deps/')) {
+              return fetch(bypass(request))
+            }
+
             return passthrough()
           }
 
@@ -126,6 +130,20 @@ function passthrough() {
       'x-msw-intention': 'passthrough',
     },
   })
+}
+
+function bypass(request: Request) {
+  const clonedRequest = request.clone()
+  clonedRequest.headers.set('x-msw-intention', 'bypass')
+  const cacheControl = clonedRequest.headers.get('cache-control')
+  if (cacheControl) {
+    clonedRequest.headers.set(
+      'cache-control',
+      // allow reinvalidation of the cache so mocks can be updated
+      cacheControl.replace(', immutable', ''),
+    )
+  }
+  return clonedRequest
 }
 
 const postfixRE = /[?#].*$/
