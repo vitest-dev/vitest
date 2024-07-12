@@ -293,7 +293,7 @@ function convertToSelector(elementOrLocator: Element | Locator): string {
     return convertElementToCssSelector(elementOrLocator)
   }
   if ('selector' in elementOrLocator) {
-    return elementOrLocator.selector
+    return (elementOrLocator as any).selector
   }
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }
