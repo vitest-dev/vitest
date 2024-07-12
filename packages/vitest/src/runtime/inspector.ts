@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module'
-
+import { pathToFileURL } from 'node:url'
 import type { ContextRPC, ResolvedConfig } from '../types'
 
 const __require = createRequire(import.meta.url)
@@ -37,7 +37,7 @@ export function setupInspect(ctx: ContextRPC) {
           session.post('Debugger.enable')
           session.post('Debugger.setBreakpointByUrl', {
             lineNumber: 0,
-            url: new URL(firstTestFile, import.meta.url).href,
+            url: pathToFileURL(firstTestFile),
           })
         }
       }
