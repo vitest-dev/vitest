@@ -40,8 +40,8 @@ export class PlaywrightSelector {
   constructor() {
     this._evaluator = new SelectorEvaluatorImpl(new Map())
     this._engines = new Map()
-    // this._engines.set('xpath', XPathEngine)
-    // this._engines.set('xpath:light', XPathEngine)
+    this._engines.set('xpath', XPathEngine)
+    this._engines.set('xpath:light', XPathEngine)
     this._engines.set('role', createRoleEngine(false))
     this._engines.set('text', this._createTextEngine(true, false))
     this._engines.set('text:light', this._createTextEngine(false, false))
@@ -482,4 +482,24 @@ function createTextMatcher(selector: string, internal: boolean): { matcher: Text
   }
   selector = selector.toLowerCase()
   return { kind: 'lax', matcher: (elementText: ElementText) => elementText.normalized.toLowerCase().includes(selector) }
+}
+
+export const XPathEngine: SelectorEngine = {
+  queryAll(root: SelectorRoot, selector: string): Element[] {
+    if (selector.startsWith('/') && root.nodeType !== Node.DOCUMENT_NODE) {
+      selector = `.${selector}`
+    }
+    const result: Element[] = []
+    const document = root.ownerDocument || root
+    if (!document) {
+      return result
+    }
+    const it = document.evaluate(selector, root, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
+    for (let node = it.iterateNext(); node; node = it.iterateNext()) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        result.push(node as Element)
+      }
+    }
+    return result
+  },
 }
