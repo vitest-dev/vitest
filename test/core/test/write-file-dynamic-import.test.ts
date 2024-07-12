@@ -6,7 +6,7 @@ const filename = 'bar.js'
 
 afterEach(() => unlinkSync(filename))
 
-it('write file and dynamic import created file, it should be works.', async () => {
+it('write file and import created file it should return created content.', async () => {
   writeFileSync(filename, 'export default 123')
 
   const mod = await import(pathToFileURL(filename).href)
