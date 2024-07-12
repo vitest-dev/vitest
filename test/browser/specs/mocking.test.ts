@@ -27,7 +27,7 @@ test.each([true, false])('mocking works correctly - isolated %s', async (isolate
   expect(result.exitCode).toBe(0)
 })
 
-test.only('mocking dependency correctly invalidates it on rerun', async () => {
+test('mocking dependency correctly invalidates it on rerun', async () => {
   const { vitest, ctx } = await runVitest({
     root: 'fixtures/mocking-watch',
     watch: true,
