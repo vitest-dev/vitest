@@ -53,10 +53,6 @@ export class ExplorerTree {
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
   }
 
-  async uiEntries() {
-    return import('./state').then(({ uiEntries }) => uiEntries.value)
-  }
-
   loadFiles(remoteFiles: File[]) {
     runLoadFiles(
       remoteFiles,
