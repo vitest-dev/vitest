@@ -46,7 +46,11 @@ class WebdriverIOLocator extends Locator {
   }
 
   override get selector() {
-    return convertElementToCssSelector(this.element())
+    const selectors = this.elements().map(element => convertElementToCssSelector(element))
+    if (!selectors.length) {
+      throw new Error(`element not found: ${this._pwSelector}`)
+    }
+    return selectors.join(', ')
   }
 
   locator(selector: string) {

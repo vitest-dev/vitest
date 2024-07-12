@@ -50,8 +50,12 @@ export class PreviewLocator extends Locator {
     this._userEvent = userEvent.setup()
   }
 
-  get selector() {
-    return convertElementToCssSelector(this.element())
+  override get selector() {
+    const selectors = this.elements().map(element => convertElementToCssSelector(element))
+    if (!selectors.length) {
+      throw new Error(`element not found: ${this._pwSelector}`)
+    }
+    return selectors.join(', ')
   }
 
   click(): Promise<void> {
