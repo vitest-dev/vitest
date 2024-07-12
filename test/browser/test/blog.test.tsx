@@ -4,11 +4,13 @@ import { page } from '@vitest/browser/context'
 import Blog from '../src/blog-app/blog'
 
 test('renders blog posts', async () => {
-  render(<Blog />)
+  const { container } = render(<Blog />)
 
-  await expect.element(page.getByRole('heading', { name: 'Blog' })).toBeInTheDocument()
+  const screen = page.elementLocator(container)
 
-  const posts = page.getByRole('listitem').all()
+  await expect.element(screen.getByRole('heading', { name: 'Blog' })).toBeInTheDocument()
+
+  const posts = screen.getByRole('listitem').all()
 
   expect(posts).toHaveLength(4)
 
@@ -21,7 +23,7 @@ test('renders blog posts', async () => {
 
   await secondPost.getByRole('button', { name: 'Delete' }).click()
 
-  expect(page.getByRole('listitem').all()).toHaveLength(3)
+  expect(screen.getByRole('listitem').all()).toHaveLength(3)
 
-  expect(page.getByPlaceholder('non-existing').query()).not.toBeInTheDocument()
+  expect(screen.getByPlaceholder('non-existing').query()).not.toBeInTheDocument()
 })
