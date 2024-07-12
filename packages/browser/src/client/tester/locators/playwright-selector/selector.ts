@@ -92,7 +92,7 @@ export class PlaywrightSelector {
   }
 
   generateSelectorSimple(targetElement: Element, options?: GenerateSelectorOptions): string {
-    return generateSelector(this, targetElement, { ...options, testIdAttributeName: 'data-testid' }).selector
+    return generateSelector(this, targetElement, { ...options, testIdAttributeName: 'data-testid' })
   }
 
   parseSelector(selector: string): ParsedSelector {

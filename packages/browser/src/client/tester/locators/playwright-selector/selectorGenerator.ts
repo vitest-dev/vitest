@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-// copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/selectorGenerator.ts
+// copied from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/selectorGenerator.ts
+// with some modifications (removed options that we are not using)
 
 import { cssEscape, escapeForAttributeSelector, escapeForTextSelector, escapeRegExp, quoteCSSAttributeValue } from './stringUtils'
 import { closestCrossShadow, parentElementOrShadowHost } from './domUtils'
@@ -67,21 +68,17 @@ export interface GenerateSelectorOptions {
   testIdAttributeName: string
 }
 
-export function generateSelector(injectedScript: PlaywrightSelector, targetElement: Element, options: GenerateSelectorOptions): { selector: string; selectors: string[]; elements: Element[] } {
+export function generateSelector(
+  injectedScript: PlaywrightSelector,
+  targetElement: Element,
+  options: GenerateSelectorOptions,
+): string {
   injectedScript._evaluator.begin()
   beginAriaCaches()
   try {
-    let selectors: string[] = []
     targetElement = closestCrossShadow(targetElement, 'button,select,input,[role=button],[role=checkbox],[role=radio],a,[role=link]') || targetElement
     const targetTokens = generateSelectorFor(injectedScript, targetElement, options) || cssFallback(injectedScript, targetElement, options)
-    selectors = [joinTokens(targetTokens)]
-    const selector = selectors[0]
-    const parsedSelector = injectedScript.parseSelector(selector)
-    return {
-      selector,
-      selectors,
-      elements: injectedScript.querySelectorAll(parsedSelector, targetElement.ownerDocument),
-    }
+    return joinTokens(targetTokens)
   }
   finally {
     cacheAllowText.clear()
