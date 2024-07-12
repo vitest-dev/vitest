@@ -105,7 +105,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
 
         // eslint-disable-next-line prefer-arrow-callback
-        screenshotFailures && server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res, next) {
+        screenshotFailures && server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
           if (!req.url || !browserServer.provider) {
             res.statusCode = 404
             res.end()
