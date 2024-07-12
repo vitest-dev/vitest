@@ -81,9 +81,6 @@ export const config: UserConfig = {
   build: {
     outDir: './dist/client',
   },
-  optimizeDeps: {
-    include: ['vue', '@vue/test-utils', '@vueuse/core'],
-  },
   test: {
     browser: {
       name: 'chromium',
