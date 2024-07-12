@@ -115,7 +115,7 @@ export function createOrUpdateNodeTask(id: string) {
   }
 
   const task = client.state.idMap.get(id)
-  // if no children just return
+  // if it is not a test just return
   if (!task || !isAtomTest(task)) {
     return
   }
@@ -149,6 +149,7 @@ export function createOrUpdateNode(
       if (isAtomTest(task)) {
         taskNode = {
           id: task.id,
+          fileId: task.file.id,
           parentId,
           name: task.name,
           mode: task.mode,
@@ -158,11 +159,12 @@ export function createOrUpdateNode(
           indent: node.indent + 1,
           duration: task.result?.duration,
           state: task.result?.state,
-        }
+        } as TestTreeNode | CustomTestTreeNode
       }
       else {
         taskNode = {
           id: task.id,
+          fileId: task.file.id,
           parentId,
           name: task.name,
           mode: task.mode,
