@@ -27,6 +27,7 @@ declare module 'vue' {
     ProgressBar: typeof import('./components/ProgressBar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScreenshotError: typeof import('./components/views/ScreenshotError.vue')['default']
     StatusIcon: typeof import('./components/StatusIcon.vue')['default']
     TestFilesEntry: typeof import('./components/dashboard/TestFilesEntry.vue')['default']
     TestsEntry: typeof import('./components/dashboard/TestsEntry.vue')['default']
