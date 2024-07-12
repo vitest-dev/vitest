@@ -34,12 +34,12 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element))
+    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
   },
 })
 
 class PlaywrightLocator extends Locator {
-  constructor(public selector: string) {
+  constructor(public selector: string, protected _forceElement?: Element) {
     super()
   }
 

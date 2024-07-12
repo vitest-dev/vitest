@@ -24,7 +24,8 @@ export abstract class Locator {
   public abstract selector: string
 
   private _parsedSelector: ParsedSelector | undefined
-  protected _pwSelector: string | undefined
+  protected _pwSelector?: string | undefined
+  protected _forceElement?: Element | undefined
 
   public click(options: UserEventClickOptions = {}): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)
@@ -119,6 +120,9 @@ export abstract class Locator {
   }
 
   public query(): Element | null {
+    if (this._forceElement) {
+      return this._forceElement
+    }
     const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
     return selectorEngine.querySelector(parsedSelector, document.body, true)
   }
@@ -132,6 +136,9 @@ export abstract class Locator {
   }
 
   public elements(): Element[] {
+    if (this._forceElement) {
+      return [this._forceElement]
+    }
     const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
     return selectorEngine.querySelectorAll(parsedSelector, document.body)
   }

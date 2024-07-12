@@ -35,12 +35,12 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
+    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
   },
 })
 
 class WebdriverIOLocator extends Locator {
-  constructor(protected _pwSelector: string) {
+  constructor(protected _pwSelector: string, protected _forceElement?: Element) {
     super()
   }
 

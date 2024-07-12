@@ -37,14 +37,14 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PreviewLocator(selectorEngine.generateSelectorSimple(element))
+    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
   },
 })
 
 class PreviewLocator extends Locator {
   private _userEvent: UserEvent
 
-  constructor(protected _pwSelector: string) {
+  constructor(protected _pwSelector: string, protected _forceElement?: Element) {
     super()
     this._userEvent = userEvent.setup()
   }
