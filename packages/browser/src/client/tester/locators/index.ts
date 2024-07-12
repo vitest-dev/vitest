@@ -8,44 +8,53 @@ import type {
 } from '@vitest/browser/context'
 import { page } from '@vitest/browser/context'
 import type { BrowserRPC } from '@vitest/browser/client'
+import type { WorkerGlobalState } from 'vitest'
+import type { BrowserRunnerState } from '../../utils'
 import { getBrowserState, getWorkerState } from '../../utils'
+import { getByAltTextSelector, getByLabelSelector, getByPlaceholderSelector, getByRoleSelector, getByTestIdSelector, getByTextSelector, getByTitleSelector } from './playwright-selector/locatorUtils'
+import type { ParsedSelector } from './playwright-selector/selectorParser'
+import { parseSelector } from './playwright-selector/selectorParser'
+import { PlaywrightSelector } from './playwright-selector/selector'
+import { asLocator } from './playwright-selector/locatorGenerators'
+
+// we prefer using playwright locators because they are more powerful and support Shdow DOM
+const selector = new PlaywrightSelector()
 
 export abstract class Locator {
-  selector: string
+  public abstract selector: string
 
-  constructor(selector: string) {
-    this.selector = selector
-  }
+  private _parsedSelector: ParsedSelector | undefined
+  protected _pwSelector: string | undefined
 
-  click(options: UserEventClickOptions = {}) {
+  public click(options: UserEventClickOptions = {}): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)
   }
 
-  dblClick(options: UserEventClickOptions = {}) {
+  public dblClick(options: UserEventClickOptions = {}): Promise<void> {
     return this.triggerCommand<void>('__vitest_dblClick', this.selector, options)
   }
 
-  tripleClick(options: UserEventClickOptions = {}) {
+  public tripleClick(options: UserEventClickOptions = {}): Promise<void> {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
-  clear() {
+  public clear(): Promise<void> {
     return this.triggerCommand<void>('__vitest_clear', this.selector)
   }
 
-  hover() {
+  public hover(): Promise<void> {
     return this.triggerCommand<void>('__vitest_hover', this.selector)
   }
 
-  unhover() {
+  public unhover(): Promise<void> {
     return this.triggerCommand<void>('__vitest_hover', 'html > body')
   }
 
-  fill(text: string, options?: UserEventFillOptions) {
+  public fill(text: string, options?: UserEventFillOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
   }
 
-  dropTo(target: Locator, options: UserEventDragAndDropOptions = {}) {
+  public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {
     return this.triggerCommand<void>(
       '__vitest_dragAndDrop',
       this.selector,
@@ -54,12 +63,12 @@ export abstract class Locator {
     )
   }
 
-  screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
+  public screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string
   }>
-  screenshot(options?: LocatorScreenshotOptions): Promise<string>
-  screenshot(options?: LocatorScreenshotOptions): Promise<string | {
+  public screenshot(options?: LocatorScreenshotOptions): Promise<string>
+  public screenshot(options?: LocatorScreenshotOptions): Promise<string | {
     path: string
     base64: string
   }> {
@@ -69,26 +78,63 @@ export abstract class Locator {
     })
   }
 
-  // TODO: support options
-  abstract getByRole(role: string, options?: LocatorByRoleOptions): Locator
-  abstract getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
-  abstract getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
-  abstract getByTestId(testId: string | RegExp): Locator
-  abstract getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
-  abstract getByText(text: string | RegExp, options?: LocatorOptions): Locator
-  abstract getByTitle(title: string | RegExp, options?: LocatorOptions): Locator
+  protected abstract locator(selector: string): Locator
 
-  abstract element(): Element | undefined
+  public getByRole(role: string, options?: LocatorByRoleOptions): Locator {
+    return this.locator(getByRoleSelector(role, options))
+  }
 
-  protected get state() {
+  public getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByAltTextSelector(text, options))
+  }
+
+  public getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByLabelSelector(text, options))
+  }
+
+  public getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByPlaceholderSelector(text, options))
+  }
+
+  public getByTestId(testId: string | RegExp): Locator {
+    return this.locator(getByTestIdSelector('data-testid', testId))
+  }
+
+  public getByText(text: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByTextSelector(text, options))
+  }
+
+  public getByTitle(title: string | RegExp, options?: LocatorOptions): Locator {
+    return this.locator(getByTitleSelector(title, options))
+  }
+
+  public query(): Element | null {
+    const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
+    return selector.querySelector(parsedSelector, document.body, true)
+  }
+
+  public element(): Element {
+    const element = this.query()
+    if (!element) {
+      throw new Error(`element not found: ${asLocator('javascript', this._pwSelector || this.selector)}`)
+    }
+    return element
+  }
+
+  public elements() {
+    const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
+    return selector.querySelectorAll(parsedSelector, document.body)
+  }
+
+  protected get state(): BrowserRunnerState {
     return getBrowserState()
   }
 
-  protected get worker() {
+  protected get worker(): WorkerGlobalState {
     return getWorkerState()
   }
 
-  private get rpc() {
+  private get rpc(): BrowserRPC {
     return this.worker.rpc as any as BrowserRPC
   }
 

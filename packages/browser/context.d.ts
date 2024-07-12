@@ -225,7 +225,10 @@ export interface Locator {
   unhover(options?: UserEventHoverOptions): Promise<void>
   fill(text: string, options?: UserEventFillOptions): Promise<void>
 
-  element(): Element | undefined
+  element(): Element
+  elements(): Element[]
+  query(): Element | null
+
   screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string

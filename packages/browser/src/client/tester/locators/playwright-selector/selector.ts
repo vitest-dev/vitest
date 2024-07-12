@@ -71,12 +71,12 @@ export class PlaywrightSelector {
     this._engines.set('internal:role', createRoleEngine(true))
   }
 
-  querySelector(selector: ParsedSelector, root: Node, strict: boolean): Element | undefined {
+  querySelector(selector: ParsedSelector, root: Node, strict: boolean): Element | null {
     const result = this.querySelectorAll(selector, root)
     if (strict && result.length > 1) {
       throw this.strictModeViolationError(selector, result)
     }
-    return result[0]
+    return result[0] || null
   }
 
   strictModeViolationError(selector: ParsedSelector, matches: Element[]): Error {

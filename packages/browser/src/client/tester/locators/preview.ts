@@ -1,82 +1,81 @@
-import {
-  getByAltText,
-  getByLabelText,
-  getByPlaceholderText,
-  getByRole,
-  getByTestId,
-  getByText,
-  getByTitle,
-} from '@testing-library/dom'
-import type { Locator, LocatorByRoleOptions, LocatorOptions } from '@vitest/browser/context'
 import { page } from '@vitest/browser/context'
 import type { UserEvent } from '@testing-library/user-event'
 import { userEvent } from '@testing-library/user-event'
 import { convertElementToCssSelector } from '../../utils'
+import {
+  getByAltTextSelector,
+  getByLabelSelector,
+  getByPlaceholderSelector,
+  getByRoleSelector,
+  getByTestIdSelector,
+  getByTextSelector,
+  getByTitleSelector,
+} from './playwright-selector/locatorUtils'
+import { Locator } from './index'
 
-// TODO: type options
 page.extend({
-  getByLabelText(text: string | RegExp) {
-    return new PreviewLocator(getByLabelText(document.body, text))
+  getByLabelText(text, options) {
+    return new PreviewLocator(getByLabelSelector(text, options))
   },
-  getByRole(role: string, options?: any) {
-    return new PreviewLocator(getByRole(document.body, role, options))
+  getByRole(role, options) {
+    return new PreviewLocator(getByRoleSelector(role, options))
   },
-  getByTestId(testId: string | RegExp) {
-    return new PreviewLocator(getByTestId(document.body, testId))
+  getByTestId(testId) {
+    // TODO: custom testid attribute
+    return new PreviewLocator(getByTestIdSelector('data-testid', testId))
   },
-  getByAltText(text: string | RegExp) {
-    return new PreviewLocator(getByAltText(document.body, text))
+  getByAltText(text, options) {
+    return new PreviewLocator(getByAltTextSelector(text, options))
   },
-  getByPlaceholder(text: string | RegExp) {
-    return new PreviewLocator(getByPlaceholderText(document.body, text))
+  getByPlaceholder(text, options) {
+    return new PreviewLocator(getByPlaceholderSelector(text, options))
   },
-  getByText(text: string | RegExp) {
-    return new PreviewLocator(getByText(document.body, text))
+  getByText(text, options) {
+    return new PreviewLocator(getByTextSelector(text, options))
   },
-  getByTitle(title: string | RegExp) {
-    return new PreviewLocator(getByTitle(document.body, title))
+  getByTitle(title, options) {
+    return new PreviewLocator(getByTitleSelector(title, options))
   },
 
   elementLocator(element: Element) {
-    return new PreviewLocator(element)
+    return new PreviewLocator(convertElementToCssSelector(element))
   },
 })
 
-class PreviewLocator implements Locator {
-  public selector: string
-  private _element: HTMLElement
+export class PreviewLocator extends Locator {
   private _userEvent: UserEvent
 
-  constructor(element: Element) {
-    this.selector = convertElementToCssSelector(element)
-    this._element = element as HTMLElement
-    this._userEvent = userEvent.setup({
-      document: this._element.ownerDocument,
-    })
+  constructor(protected _pwSelector: string) {
+    super()
+    this._userEvent = userEvent.setup()
+  }
+
+  get selector() {
+    return convertElementToCssSelector(this.element())
   }
 
   click(): Promise<void> {
-    return this._userEvent.click(this._element)
+    return this._userEvent.click(this.element())
   }
 
   dblClick(): Promise<void> {
-    return this._userEvent.dblClick(this._element)
+    return this._userEvent.dblClick(this.element())
   }
 
   tripleClick(): Promise<void> {
-    return this._userEvent.tripleClick(this._element)
+    return this._userEvent.tripleClick(this.element())
   }
 
   hover(): Promise<void> {
-    return this._userEvent.hover(this._element)
+    return this._userEvent.hover(this.element())
   }
 
   unhover(): Promise<void> {
-    return this._userEvent.unhover(this._element)
+    return this._userEvent.unhover(this.element())
   }
 
   fill(text: string): Promise<void> {
-    return this._userEvent.type(this._element, text)
+    return this._userEvent.type(this.element(), text)
   }
 
   dropTo(): Promise<void> {
@@ -84,42 +83,14 @@ class PreviewLocator implements Locator {
   }
 
   clear(): Promise<void> {
-    return this._userEvent.clear(this._element)
+    return this._userEvent.clear(this.element())
   }
 
   async screenshot(): Promise<never> {
     throw new Error('The "preview" provider doesn\'t support `screenshot` method.')
   }
 
-  getByRole(role: string, options?: LocatorByRoleOptions): Locator {
-    return new PreviewLocator(getByRole(this._element, role, options))
-  }
-
-  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator {
-    return new PreviewLocator(getByAltText(this._element, text, options))
-  }
-
-  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator {
-    return new PreviewLocator(getByLabelText(this._element, text, options))
-  }
-
-  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator {
-    return new PreviewLocator(getByPlaceholderText(this._element, text, options))
-  }
-
-  getByText(text: string | RegExp, options?: LocatorOptions): Locator {
-    return new PreviewLocator(getByText(this._element, text, options))
-  }
-
-  getByTestId(testId: string | RegExp): Locator {
-    return new PreviewLocator(getByTestId(this._element, testId))
-  }
-
-  getByTitle(title: string | RegExp, options?: LocatorOptions): Locator {
-    return new PreviewLocator(getByTitle(this._element, title, options))
-  }
-
-  public element() {
-    return this._element
+  protected locator(selector: string) {
+    return new PreviewLocator(`${this._pwSelector} >> ${selector}`)
   }
 }
