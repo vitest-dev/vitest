@@ -11,7 +11,7 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from './playwright-selector/locatorUtils'
-import { Locator, selectorEngine } from './index'
+import { Locator } from './index'
 
 page.extend({
   getByLabelText(text, options) {
@@ -37,7 +37,7 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new PreviewLocator(convertElementToCssSelector(element), element)
   },
 })
 
