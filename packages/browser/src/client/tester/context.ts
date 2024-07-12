@@ -146,11 +146,7 @@ function createUserEvent(): UserEvent {
       return convertToLocator(element).tripleClick(processClickOptions(options))
     },
     selectOptions(element, value) {
-      const values = provider === 'webdriverio'
-        ? getWebdriverioSelectOptions(element, value)
-        : getSimpleSelectOptions(element, value)
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_selectOptions', css, values)
+      return convertToLocator(element).selectOptions(value)
     },
     async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
       const css = convertToLocator(element).selector
@@ -195,56 +191,7 @@ function createUserEvent(): UserEvent {
   }
 }
 
-export const userEvent: UserEvent = createUserEvent()
-
-function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
-  const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
-
-  const arrayValues = Array.isArray(value) ? value : [value]
-
-  if (!arrayValues.length) {
-    return []
-  }
-
-  if (arrayValues.length > 1) {
-    throw new Error('Provider "webdriverio" doesn\'t support selecting multiple values at once')
-  }
-
-  const optionValue = arrayValues[0]
-
-  if (typeof optionValue !== 'string') {
-    const index = options.indexOf(optionValue as HTMLOptionElement)
-    if (index === -1) {
-      throw new Error(`The element ${convertElementToCssSelector(optionValue)} was not found in the "select" options.`)
-    }
-
-    return [{ index }]
-  }
-
-  const valueIndex = options.findIndex(option => option.value === optionValue)
-  if (valueIndex !== -1) {
-    return [{ index: valueIndex }]
-  }
-
-  const labelIndex = options.findIndex(option =>
-    option.textContent?.trim() === optionValue || option.ariaLabel === optionValue,
-  )
-
-  if (labelIndex === -1) {
-    throw new Error(`The option "${optionValue}" was not found in the "select" options.`)
-  }
-
-  return [{ index: labelIndex }]
-}
-
-function getSimpleSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
-  return (Array.isArray(value) ? value : [value]).map((v) => {
-    if (typeof v !== 'string') {
-      return { element: convertElementToCssSelector(v) }
-    }
-    return v
-  })
-}
+export const userEvent = createUserEvent()
 
 export function cdp() {
   return runner().cdp!

@@ -21,8 +21,7 @@ page.extend({
     return new PreviewLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    // TODO: custom testid attribute
-    return new PreviewLocator(getByTestIdSelector('data-testid', testId))
+    return new PreviewLocator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
   },
   getByAltText(text, options) {
     return new PreviewLocator(getByAltTextSelector(text, options))

@@ -18,8 +18,7 @@ page.extend({
     return new PlaywrightLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    // TODO: custom testid attribute
-    return new PlaywrightLocator(getByTestIdSelector('data-testid', testId))
+    return new PlaywrightLocator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
   },
   getByAltText(text, options) {
     return new PlaywrightLocator(getByAltTextSelector(text, options))

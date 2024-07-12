@@ -19,8 +19,7 @@ page.extend({
     return new WebdriverIOLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    // TODO: custom testid attribute
-    return new WebdriverIOLocator(getByTestIdSelector('data-testid', testId))
+    return new WebdriverIOLocator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
   },
   getByAltText(text, options) {
     return new WebdriverIOLocator(getByAltTextSelector(text, options))
@@ -53,7 +52,52 @@ class WebdriverIOLocator extends Locator {
     return selectors.join(', ')
   }
 
+  public selectOptions(value: HTMLElement | HTMLElement[] | string | string[]): Promise<void> {
+    const values = getWebdriverioSelectOptions(this.element(), value)
+    return this.triggerCommand('__vitest_selectOptions', this.selector, values)
+  }
+
   locator(selector: string) {
     return new WebdriverIOLocator(`${this._pwSelector} >> ${selector}`)
   }
+}
+
+function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
+  const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
+
+  const arrayValues = Array.isArray(value) ? value : [value]
+
+  if (!arrayValues.length) {
+    return []
+  }
+
+  if (arrayValues.length > 1) {
+    throw new Error('Provider "webdriverio" doesn\'t support selecting multiple values at once')
+  }
+
+  const optionValue = arrayValues[0]
+
+  if (typeof optionValue !== 'string') {
+    const index = options.indexOf(optionValue as HTMLOptionElement)
+    if (index === -1) {
+      throw new Error(`The element ${convertElementToCssSelector(optionValue)} was not found in the "select" options.`)
+    }
+
+    return [{ index }]
+  }
+
+  const valueIndex = options.findIndex(option => option.value === optionValue)
+  if (valueIndex !== -1) {
+    return [{ index: valueIndex }]
+  }
+
+  const labelIndex = options.findIndex(option =>
+    option.textContent?.trim() === optionValue || option.ariaLabel === optionValue,
+  )
+
+  if (labelIndex === -1) {
+    throw new Error(`The option "${optionValue}" was not found in the "select" options.`)
+  }
+
+  return [{ index: labelIndex }]
 }

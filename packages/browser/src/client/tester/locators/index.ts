@@ -63,6 +63,16 @@ export abstract class Locator {
     )
   }
 
+  public selectOptions(value: HTMLElement | HTMLElement[] | string | string[]): Promise<void> {
+    const values = (Array.isArray(value) ? value : [value]).map((v) => {
+      if (typeof v !== 'string') {
+        return { element: selectorEngine.generateSelectorSimple(v) }
+      }
+      return v
+    })
+    return this.triggerCommand('__vitest_selectOptions', this.selector, values)
+  }
+
   public screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string
@@ -97,7 +107,7 @@ export abstract class Locator {
   }
 
   public getByTestId(testId: string | RegExp): Locator {
-    return this.locator(getByTestIdSelector('data-testid', testId))
+    return this.locator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
   }
 
   public getByText(text: string | RegExp, options?: LocatorOptions): Locator {
