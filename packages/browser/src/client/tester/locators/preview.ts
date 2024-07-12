@@ -1,5 +1,4 @@
 import { page } from '@vitest/browser/context'
-import type { UserEvent } from '@testing-library/user-event'
 import { userEvent } from '@testing-library/user-event'
 import { convertElementToCssSelector } from '../../utils'
 import {
@@ -42,11 +41,8 @@ page.extend({
 })
 
 class PreviewLocator extends Locator {
-  private _userEvent: UserEvent
-
   constructor(protected _pwSelector: string, protected _forceElement?: Element) {
     super()
-    this._userEvent = userEvent.setup()
   }
 
   override get selector() {
@@ -58,31 +54,31 @@ class PreviewLocator extends Locator {
   }
 
   click(): Promise<void> {
-    return this._userEvent.click(this.element())
+    return userEvent.click(this.element())
   }
 
   dblClick(): Promise<void> {
-    return this._userEvent.dblClick(this.element())
+    return userEvent.dblClick(this.element())
   }
 
   tripleClick(): Promise<void> {
-    return this._userEvent.tripleClick(this.element())
+    return userEvent.tripleClick(this.element())
   }
 
   hover(): Promise<void> {
-    return this._userEvent.hover(this.element())
+    return userEvent.hover(this.element())
   }
 
   unhover(): Promise<void> {
-    return this._userEvent.unhover(this.element())
+    return userEvent.unhover(this.element())
   }
 
   fill(text: string): Promise<void> {
-    return this._userEvent.type(this.element(), text)
+    return userEvent.type(this.element(), text)
   }
 
   selectOptions(options: string | string[] | HTMLElement | HTMLElement[]): Promise<void> {
-    return this._userEvent.selectOptions(this.element(), options)
+    return userEvent.selectOptions(this.element(), options)
   }
 
   async dropTo(): Promise<void> {
@@ -90,7 +86,7 @@ class PreviewLocator extends Locator {
   }
 
   clear(): Promise<void> {
-    return this._userEvent.clear(this.element())
+    return userEvent.clear(this.element())
   }
 
   async screenshot(): Promise<never> {
