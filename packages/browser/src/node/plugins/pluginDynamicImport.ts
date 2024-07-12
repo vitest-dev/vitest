@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Plugin } from 'vitest/config'
 import { injectDynamicImport } from '../esmInjector'
 
 const regexDynamicImport = /import\s*\(/
