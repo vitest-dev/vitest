@@ -1060,6 +1060,12 @@ importers:
 
   test/browser:
     devDependencies:
+      '@testing-library/react':
+        specifier: ^13.2.0
+        version: 13.4.0(react-dom@18.3.1)(react@18.3.1)
+      '@types/react':
+        specifier: ^18.2.79
+        version: 18.2.79
       '@vitejs/plugin-basic-ssl':
         specifier: ^1.0.2
         version: 1.0.2(vite@5.3.3(@types/node@20.14.14)(terser@5.22.0))
@@ -1078,6 +1084,12 @@ importers:
       playwright:
         specifier: ^1.41.0
         version: 1.41.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       url:
         specifier: ^0.11.3
         version: 0.11.3
@@ -1209,7 +1221,7 @@ importers:
         version: 3.4.26(typescript@5.5.4)
       zustand:
         specifier: ^4.1.1
-        version: 4.1.1(react@18.2.0)
+        version: 4.1.1(react@18.3.1)
 
   test/coverage-test:
     devDependencies:
