@@ -1,5 +1,4 @@
 import { page } from '@vitest/browser/context'
-import { convertElementToCssSelector } from '../../utils'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -9,7 +8,7 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from './playwright-selector/locatorUtils'
-import { Locator } from './index'
+import { Locator, selectorEngine } from './index'
 
 page.extend({
   getByLabelText(text, options) {
@@ -36,7 +35,7 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PlaywrightLocator(convertElementToCssSelector(element))
+    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element))
   },
 })
 

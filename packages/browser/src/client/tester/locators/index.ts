@@ -18,7 +18,7 @@ import { PlaywrightSelector } from './playwright-selector/selector'
 import { asLocator } from './playwright-selector/locatorGenerators'
 
 // we prefer using playwright locators because they are more powerful and support Shdow DOM
-const selector = new PlaywrightSelector()
+export const selectorEngine = new PlaywrightSelector()
 
 export abstract class Locator {
   public abstract selector: string
@@ -110,7 +110,7 @@ export abstract class Locator {
 
   public query(): Element | null {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
-    return selector.querySelector(parsedSelector, document.body, true)
+    return selectorEngine.querySelector(parsedSelector, document.body, true)
   }
 
   public element(): Element {
@@ -121,9 +121,13 @@ export abstract class Locator {
     return element
   }
 
-  public elements() {
+  public elements(): Element[] {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
-    return selector.querySelectorAll(parsedSelector, document.body)
+    return selectorEngine.querySelectorAll(parsedSelector, document.body)
+  }
+
+  public all(): Locator[] {
+    return this.elements().map(element => this.locator(selectorEngine.generateSelectorSimple(element)))
   }
 
   protected get state(): BrowserRunnerState {

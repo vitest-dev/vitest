@@ -228,6 +228,7 @@ export interface Locator {
   element(): Element
   elements(): Element[]
   query(): Element | null
+  all(): Locator[]
 
   screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string

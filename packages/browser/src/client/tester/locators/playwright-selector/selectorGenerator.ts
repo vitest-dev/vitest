@@ -18,7 +18,7 @@
 // copied without changes from https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/selectorGenerator.ts
 
 import { cssEscape, escapeForAttributeSelector, escapeForTextSelector, escapeRegExp, quoteCSSAttributeValue } from './stringUtils'
-import { closestCrossShadow, isInsideScope, parentElementOrShadowHost } from './domUtils'
+import { closestCrossShadow, parentElementOrShadowHost } from './domUtils'
 import type { PlaywrightSelector } from './selector'
 import { beginAriaCaches, endAriaCaches, getAriaRole, getElementAccessibleName } from './roleUtils'
 import { elementText, getElementLabels } from './selectorUtils'
@@ -63,14 +63,8 @@ const kCSSTagNameScore = 530
 const kNthScore = 10000
 const kCSSFallbackScore = 10000000
 
-const kScoreThresholdForTextExpect = 1000
-
 export interface GenerateSelectorOptions {
   testIdAttributeName: string
-  omitInternalEngines?: boolean
-  root?: Element | Document
-  forTextExpect?: boolean
-  multiple?: boolean
 }
 
 export function generateSelector(injectedScript: PlaywrightSelector, targetElement: Element, options: GenerateSelectorOptions): { selector: string; selectors: string[]; elements: Element[] } {
@@ -78,60 +72,15 @@ export function generateSelector(injectedScript: PlaywrightSelector, targetEleme
   beginAriaCaches()
   try {
     let selectors: string[] = []
-    if (options.forTextExpect) {
-      let targetTokens = cssFallback(injectedScript, targetElement.ownerDocument.documentElement, options)
-      for (let element: Element | undefined = targetElement; element; element = parentElementOrShadowHost(element)) {
-        const tokens = generateSelectorFor(injectedScript, element, { ...options, noText: true })
-        if (!tokens) {
-          continue
-        }
-        const score = combineScores(tokens)
-        if (score <= kScoreThresholdForTextExpect) {
-          targetTokens = tokens
-          break
-        }
-      }
-      selectors = [joinTokens(targetTokens)]
-    }
-    else {
-      targetElement = closestCrossShadow(targetElement, 'button,select,input,[role=button],[role=checkbox],[role=radio],a,[role=link]', options.root) || targetElement
-      if (options.multiple) {
-        const withText = generateSelectorFor(injectedScript, targetElement, options)
-        const withoutText = generateSelectorFor(injectedScript, targetElement, { ...options, noText: true })
-        let tokens = [withText, withoutText]
-
-        // Clear cache to re-generate without css id.
-        cacheAllowText.clear()
-        cacheDisallowText.clear()
-
-        if (withText && hasCSSIdToken(withText)) {
-          tokens.push(generateSelectorFor(injectedScript, targetElement, { ...options, noCSSId: true }))
-        }
-        if (withoutText && hasCSSIdToken(withoutText)) {
-          tokens.push(generateSelectorFor(injectedScript, targetElement, { ...options, noText: true, noCSSId: true }))
-        }
-
-        tokens = tokens.filter(Boolean)
-        if (!tokens.length) {
-          const css = cssFallback(injectedScript, targetElement, options)
-          tokens.push(css)
-          if (hasCSSIdToken(css)) {
-            tokens.push(cssFallback(injectedScript, targetElement, { ...options, noCSSId: true }))
-          }
-        }
-        selectors = [...new Set(tokens.map(t => joinTokens(t!)))]
-      }
-      else {
-        const targetTokens = generateSelectorFor(injectedScript, targetElement, options) || cssFallback(injectedScript, targetElement, options)
-        selectors = [joinTokens(targetTokens)]
-      }
-    }
+    targetElement = closestCrossShadow(targetElement, 'button,select,input,[role=button],[role=checkbox],[role=radio],a,[role=link]') || targetElement
+    const targetTokens = generateSelectorFor(injectedScript, targetElement, options) || cssFallback(injectedScript, targetElement, options)
+    selectors = [joinTokens(targetTokens)]
     const selector = selectors[0]
     const parsedSelector = injectedScript.parseSelector(selector)
     return {
       selector,
       selectors,
-      elements: injectedScript.querySelectorAll(parsedSelector, options.root ?? targetElement.ownerDocument),
+      elements: injectedScript.querySelectorAll(parsedSelector, targetElement.ownerDocument),
     }
   }
   finally {
@@ -150,13 +99,6 @@ function filterRegexTokens(textCandidates: SelectorToken[][]): SelectorToken[][]
 type InternalOptions = GenerateSelectorOptions & { noText?: boolean; noCSSId?: boolean }
 
 function generateSelectorFor(injectedScript: PlaywrightSelector, targetElement: Element, options: InternalOptions): SelectorToken[] | null {
-  if (options.root && !isInsideScope(options.root, targetElement)) {
-    throw new Error(`Target element must belong to the root's subtree`)
-  }
-
-  if (targetElement === options.root) {
-    return [{ engine: 'css', selector: ':scope', score: 1 }]
-  }
   if (targetElement.ownerDocument.documentElement === targetElement) {
     return [{ engine: 'css', selector: 'html', score: 1 }]
   }
@@ -170,11 +112,10 @@ function generateSelectorFor(injectedScript: PlaywrightSelector, targetElement: 
       textCandidates = filterRegexTokens(textCandidates)
     }
     const noTextCandidates = buildNoTextCandidates(injectedScript, element, options)
-      .filter(token => !options.omitInternalEngines || !token.engine.startsWith('internal:'))
       .map(token => [token])
 
     // First check all text and non-text candidates for the element.
-    let result = chooseFirstSelector(injectedScript, options.root ?? targetElement.ownerDocument, element, [...textCandidates, ...noTextCandidates], allowNthMatch)
+    let result = chooseFirstSelector(injectedScript, targetElement.ownerDocument, element, [...textCandidates, ...noTextCandidates], allowNthMatch)
 
     // Do not use regex for chained selectors (for performance).
     textCandidates = filterRegexTokens(textCandidates)
@@ -198,7 +139,7 @@ function generateSelectorFor(injectedScript: PlaywrightSelector, targetElement: 
         return
       }
 
-      for (let parent = parentElementOrShadowHost(element); parent && parent !== options.root; parent = parentElementOrShadowHost(parent)) {
+      for (let parent = parentElementOrShadowHost(element); parent; parent = parentElementOrShadowHost(parent)) {
         const parentTokens = calculateCached(parent, allowParentText)
         if (!parentTokens) {
           continue
@@ -388,12 +329,8 @@ function makeSelectorForId(id: string) {
   return /^[a-z][\w\-]+$/i.test(id) ? `#${id}` : `[id="${cssEscape(id)}"]`
 }
 
-function hasCSSIdToken(tokens: SelectorToken[]) {
-  return tokens.some(token => token.engine === 'css' && (token.selector.startsWith('#') || token.selector.startsWith('[id="')))
-}
-
 function cssFallback(injectedScript: PlaywrightSelector, targetElement: Element, options: InternalOptions): SelectorToken[] {
-  const root: Node = options.root ?? targetElement.ownerDocument
+  const root: Node = targetElement.ownerDocument
   const tokens: string[] = []
 
   function uniqueCSSSelector(prefix?: string): string | undefined {
