@@ -9,7 +9,7 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from './playwright-selector/locatorUtils'
-import { Locator } from './index'
+import { Locator, selectorEngine } from './index'
 
 page.extend({
   getByLabelText(text, options) {
@@ -35,7 +35,7 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new WebdriverIOLocator(convertElementToCssSelector(element), element)
+    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
   },
 })
 

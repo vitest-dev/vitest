@@ -19,7 +19,7 @@
 // with some modifications (removed options that we are not using)
 
 import { cssEscape, escapeForAttributeSelector, escapeForTextSelector, escapeRegExp, quoteCSSAttributeValue } from './stringUtils'
-import { closestCrossShadow, parentElementOrShadowHost } from './domUtils'
+import { parentElementOrShadowHost } from './domUtils'
 import type { PlaywrightSelector } from './selector'
 import { beginAriaCaches, endAriaCaches, getAriaRole, getElementAccessibleName } from './roleUtils'
 import { elementText, getElementLabels } from './selectorUtils'
@@ -76,7 +76,6 @@ export function generateSelector(
   injectedScript._evaluator.begin()
   beginAriaCaches()
   try {
-    targetElement = closestCrossShadow(targetElement, 'button,select,input,[role=button],[role=checkbox],[role=radio],a,[role=link]') || targetElement
     const targetTokens = generateSelectorFor(injectedScript, targetElement, options) || cssFallback(injectedScript, targetElement, options)
     return joinTokens(targetTokens)
   }
