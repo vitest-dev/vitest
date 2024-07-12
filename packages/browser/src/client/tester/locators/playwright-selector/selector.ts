@@ -17,7 +17,7 @@
 
 // based on https://github.com/microsoft/playwright/blob/4554372e456154d7365b6902ef9f3e1e7de76e94/packages/playwright-core/src/server/injected/injectedScript.ts
 
-import { server } from '@vitest/browser/context'
+import { page, server } from '@vitest/browser/context'
 import { createRoleEngine } from './roleSelectorEngine'
 import type { NestedSelectorBody, ParsedSelector, ParsedSelectorPart } from './selectorParser'
 import { parseAttributeSelector, parseSelector, stringifySelector, visitAllSelectorParts } from './selectorParser'
@@ -92,7 +92,7 @@ export class PlaywrightSelector {
   }
 
   generateSelectorSimple(targetElement: Element, options?: GenerateSelectorOptions): string {
-    return generateSelector(this, targetElement, { ...options, testIdAttributeName: 'data-testid' })
+    return generateSelector(this, targetElement, { ...options, testIdAttributeName: page.config.browser.locators.testIdAttribute })
   }
 
   parseSelector(selector: string): ParsedSelector {

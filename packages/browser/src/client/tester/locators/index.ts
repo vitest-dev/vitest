@@ -10,7 +10,7 @@ import { page } from '@vitest/browser/context'
 import type { BrowserRPC } from '@vitest/browser/client'
 import type { WorkerGlobalState } from 'vitest'
 import type { BrowserRunnerState } from '../../utils'
-import { getBrowserState, getWorkerState } from '../../utils'
+import { convertElementToCssSelector, getBrowserState, getWorkerState } from '../../utils'
 import { getByAltTextSelector, getByLabelSelector, getByPlaceholderSelector, getByRoleSelector, getByTestIdSelector, getByTextSelector, getByTitleSelector } from './playwright-selector/locatorUtils'
 import type { ParsedSelector } from './playwright-selector/selectorParser'
 import { parseSelector } from './playwright-selector/selectorParser'
@@ -67,7 +67,8 @@ export abstract class Locator {
   public selectOptions(value: HTMLElement | HTMLElement[] | string | string[]): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        return { element: selectorEngine.generateSelectorSimple(v) }
+        const selector = convertElementToCssSelector(v)
+        return { element: selector }
       }
       return v
     })
