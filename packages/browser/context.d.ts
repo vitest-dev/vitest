@@ -1,4 +1,5 @@
 import type { SerializedConfig } from 'vitest'
+import { ARIARole } from './aria-role.d.ts'
 
 export type BufferEncoding =
   | 'ascii'
@@ -208,7 +209,7 @@ interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 export interface Locator {
   selector: string
 
-  getByRole(role: string, options?: LocatorByRoleOptions): Locator
+  getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
   getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
   getByTestId(text: string | RegExp): Locator
   getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
@@ -224,6 +225,10 @@ export interface Locator {
   hover(options?: UserEventHoverOptions): Promise<void>
   unhover(options?: UserEventHoverOptions): Promise<void>
   fill(text: string, options?: UserEventFillOptions): Promise<void>
+  selectOptions(
+    values: HTMLElement | HTMLElement[] | string | string[],
+    options?: UserEventSelectOptions,
+  ): Promise<void>
 
   element(): Element
   elements(): Element[]
@@ -318,7 +323,7 @@ export interface BrowserPage {
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
   extend(methods: Partial<BrowserPage>): BrowserPage
-  getByRole(role: string, options?: LocatorByRoleOptions): Locator
+  getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
   getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
   getByTestId(text: string | RegExp): Locator
   getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
