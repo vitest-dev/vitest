@@ -46,4 +46,8 @@ class PlaywrightLocator extends Locator {
   protected locator(selector: string) {
     return new PlaywrightLocator(`${this.selector} >> ${selector}`)
   }
+
+  protected elementLocator(element: Element) {
+    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
+  }
 }

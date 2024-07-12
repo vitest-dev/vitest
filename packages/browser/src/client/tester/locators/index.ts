@@ -91,6 +91,7 @@ export abstract class Locator {
   }
 
   protected abstract locator(selector: string): Locator
+  protected abstract elementLocator(element: Element): Locator
 
   public getByRole(role: string, options?: LocatorByRoleOptions): Locator {
     return this.locator(getByRoleSelector(role, options))
@@ -145,7 +146,7 @@ export abstract class Locator {
   }
 
   public all(): Locator[] {
-    return this.elements().map(element => this.locator(selectorEngine.generateSelectorSimple(element)))
+    return this.elements().map(element => this.elementLocator(element))
   }
 
   private get state(): BrowserRunnerState {

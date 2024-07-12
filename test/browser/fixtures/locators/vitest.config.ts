@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 const provider = process.env.PROVIDER || 'playwright'
@@ -8,6 +9,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react/jsx-dev-runtime'],
   },
+  cacheDir: fileURLToPath(new URL("./node_modules/.vite", import.meta.url)),
   test: {
     browser: {
       enabled: true,

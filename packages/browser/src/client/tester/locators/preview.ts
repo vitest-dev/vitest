@@ -81,6 +81,10 @@ class PreviewLocator extends Locator {
     return this._userEvent.type(this.element(), text)
   }
 
+  selectOptions(options: string | string[] | HTMLElement | HTMLElement[]): Promise<void> {
+    return this._userEvent.selectOptions(this.element(), options)
+  }
+
   async dropTo(): Promise<void> {
     throw new Error('The "preview" provider doesn\'t support `dropTo` method.')
   }
@@ -95,5 +99,9 @@ class PreviewLocator extends Locator {
 
   protected locator(selector: string) {
     return new PreviewLocator(`${this._pwSelector} >> ${selector}`)
+  }
+
+  protected elementLocator(element: Element) {
+    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
   }
 }

@@ -57,8 +57,12 @@ class WebdriverIOLocator extends Locator {
     return this.triggerCommand('__vitest_selectOptions', this.selector, values)
   }
 
-  locator(selector: string) {
+  protected locator(selector: string) {
     return new WebdriverIOLocator(`${this._pwSelector} >> ${selector}`)
+  }
+
+  protected elementLocator(element: Element) {
+    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
   }
 }
 
