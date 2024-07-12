@@ -41,3 +41,7 @@ export async function getBrowserProvider(
 
   return customProviderModule.default
 }
+
+export function slash(path: string) {
+  return path.replace(/\\/g, '/').replace(/\/+/g, '/')
+}

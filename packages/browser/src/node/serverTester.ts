@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import crypto from 'node:crypto'
 import { stringify } from 'flatted'
-import { replacer } from './utils'
+import { replacer, slash } from './utils'
 import type { BrowserServer } from './server'
 
 export async function resolveTester(
@@ -73,8 +73,8 @@ export async function resolveTester(
     __VITEST_SCRIPTS__: server.testerScripts,
     __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
     __VITEST_INTERNAL_SCRIPTS__: [
-      `<script type="module" src="${server.errorCatcherPath}"></script>`,
-      server.locatorsPath ? `<script type="module" src="${server.locatorsPath}"></script>` : '',
+      `<script type="module" src="${slash(`/@fs/${server.errorCatcherPath}`)}"></script>`,
+      server.locatorsPath ? `<script type="module" src="${slash(`/@fs/${server.locatorsPath}`)}"></script>` : '',
     ].join('\n'),
     __VITEST_APPEND__:
       `<script type="module">
