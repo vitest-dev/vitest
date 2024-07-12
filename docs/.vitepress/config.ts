@@ -186,6 +186,11 @@ export default ({ mode }: { mode: string }) => {
             docFooterText: 'Interactivity API | Browser Mode',
           },
           {
+            text: 'Locators',
+            link: '/guide/browser/locators',
+            docFooterText: 'Locators | Browser Mode',
+          },
+          {
             text: 'Assertion API',
             link: '/guide/browser/assertion-api',
             docFooterText: 'Assertion API | Browser Mode',

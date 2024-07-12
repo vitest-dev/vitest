@@ -120,6 +120,7 @@ export interface UserEvent {
   /**
    * Types text into an element. Uses provider's API under the hood.
    * **Supports** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`) even with `playwright` and `webdriverio` providers.
+   * This method can be significantly slower than `userEvent.fill`, so it should be used only when necessary.
    * @example
    * await userEvent.type(input, 'foo') // translates to: f, o, o
    * await userEvent.type(input, '{{a[[') // translates to: {, a, [
@@ -189,16 +190,23 @@ export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
 
 export interface LocatorOptions {
+  /**
+   * Whether to find an exact match: case-sensitive and whole-string. Default to false. Ignored when locating by a
+   * regular expression. Note that exact match still trims whitespace.
+   */
   exact?: boolean
 }
 
-export interface LocatorByRoleOptions {
+export interface LocatorByRoleOptions extends LocatorOptions {
   checked?: boolean
   disabled?: boolean
-  exact?: boolean
   expanded?: boolean
   includeHidden?: boolean
   level?: number
+  /**
+   * Option to match the [accessible name](https://w3c.github.io/accname/#dfn-accessible-name). By default, matching is
+   * case-insensitive and searches for a substring, use `exact` to control this behavior.
+   */
   name?: string | RegExp
   pressed?: boolean
   selected?: boolean
@@ -207,39 +215,116 @@ export interface LocatorByRoleOptions {
 interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
 export interface Locator {
-  selector: string
-
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getByRole}
+   */
   getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getByLabelText}
+   */
   getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
-  getByTestId(text: string | RegExp): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getByAltText}
+   */
   getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getByPlaceholder}
+   */
   getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getByText}
+   */
   getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getByTitle}
+   */
   getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getByTestId}
+   */
+  getByTestId(text: string | RegExp): Locator
 
-  dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#click}
+   */
   click(options?: UserEventClickOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#dblClick}
+   */
   dblClick(options?: UserEventDoubleClickOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#tripleClick}
+   */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#clear}
+   */
   clear(): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#hover}
+   */
   hover(options?: UserEventHoverOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#unhover}
+   */
   unhover(options?: UserEventHoverOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#fill}
+   */
   fill(text: string, options?: UserEventFillOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#dropTo}
+   */
+  dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void>
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#selectOptions}
+   */
   selectOptions(
     values: HTMLElement | HTMLElement[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void>
 
-  element(): Element
-  elements(): Element[]
-  query(): Element | null
-  all(): Locator[]
-
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#screenshot}
+   */
   screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string
   }>
   screenshot(options?: LocatorScreenshotOptions): Promise<string>
+
+  /**
+   * Returns an element matching the selector.
+   *
+   * - If multiple elements match the selector, an error is thrown.
+   * - If no elements match the selector, an error is thrown.
+   *
+   * @see {@link https://vitest.dev/guide/browser/locators#element}
+   */
+  element(): Element
+  /**
+   * Returns an array of elements matching the selector.
+   *
+   * If no elements match the selector, an empty array is returned.
+   *
+   * @see {@link https://vitest.dev/guide/browser/locators#elements}
+   */
+  elements(): Element[]
+  /**
+   * Returns an element matching the selector.
+   *
+   * - If multiple elements match the selector, an error is thrown.
+   * - If no elements match the selector, returns `null`.
+   *
+   * @see {@link https://vitest.dev/guide/browser/locators#query}
+   */
+  query(): Element | null
+  /**
+   * Wraps an array of `.elements()` matching the selector in a new `Locator`.
+   *
+   * @see {@link https://vitest.dev/guide/browser/locators#all}
+   */
+  all(): Locator[]
 }
 
 export interface UserEventTabOptions {

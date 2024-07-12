@@ -114,7 +114,7 @@ export class PlaywrightSelector {
     }
     const element = node as Element
 
-    const attrs = []
+    const attrs: string[] = []
     for (let i = 0; i < element.attributes.length; i++) {
       const { name, value } = element.attributes[i]
       if (name === 'style') {
