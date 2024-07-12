@@ -40,6 +40,10 @@
     "./providers/playwright": {
       "types": "./providers/playwright.d.ts"
     },
+    "./locator": {
+      "types": "./dist/locators/index.d.ts",
+      "default": "./dist/locators/index.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",

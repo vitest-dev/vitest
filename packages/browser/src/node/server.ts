@@ -28,7 +28,8 @@ export class BrowserServer implements IBrowserServer {
   public testerHtml: Promise<string> | string
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
-  public errorCatcherPath: Promise<string> | string
+  public errorCatcherPath: string
+  public locatorsPath: string | undefined
   public stateJs: Promise<string> | string
 
   public state: BrowserServerState
@@ -88,6 +89,12 @@ export class BrowserServer implements IBrowserServer {
       'utf8',
     ).then(js => (this.injectorJs = js))
     this.errorCatcherPath = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
+
+    const builtinProviders = ['playwright', 'webdriverio', 'preview']
+    const providerName = project.config.browser.provider || 'preview'
+    if (builtinProviders.includes(providerName)) {
+      this.locatorsPath = resolve(distRoot, `locators/${providerName}.js`)
+    }
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',

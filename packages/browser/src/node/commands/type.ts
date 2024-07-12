@@ -15,7 +15,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
-    const element = iframe.locator(`css=${selector}`)
+    const element = iframe.locator(selector)
 
     if (!skipClick) {
       await element.focus()

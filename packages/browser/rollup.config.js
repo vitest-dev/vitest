@@ -61,6 +61,20 @@ export default () =>
       ],
     },
     {
+      input: {
+        'locators/playwright': './src/client/tester/locators/playwright.ts',
+        'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
+        'locators/preview': './src/client/tester/locators/preview.ts',
+        'locators/index': './src/client/tester/locators/index.ts',
+      },
+      output: {
+        dir: 'dist',
+        format: 'esm',
+      },
+      external,
+      plugins,
+    },
+    {
       input: './src/client/tester/context.ts',
       output: {
         file: 'dist/context.js',
@@ -105,6 +119,19 @@ export default () =>
       input: input.index,
       output: {
         file: 'dist/index.d.ts',
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        dts({
+          respectExternal: true,
+        }),
+      ],
+    },
+    {
+      input: './src/client/tester/locators/index.ts',
+      output: {
+        file: 'dist/locators/index.d.ts',
         format: 'esm',
       },
       external,

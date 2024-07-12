@@ -42,7 +42,7 @@ page.extend({
   },
 })
 
-export class PreviewLocator extends Locator {
+class PreviewLocator extends Locator {
   private _userEvent: UserEvent
 
   constructor(protected _pwSelector: string) {
@@ -82,7 +82,7 @@ export class PreviewLocator extends Locator {
     return this._userEvent.type(this.element(), text)
   }
 
-  dropTo(): Promise<void> {
+  async dropTo(): Promise<void> {
     throw new Error('The "preview" provider doesn\'t support `dropTo` method.')
   }
 

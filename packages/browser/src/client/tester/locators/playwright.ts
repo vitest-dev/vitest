@@ -39,7 +39,7 @@ page.extend({
   },
 })
 
-export class PlaywrightLocator extends Locator {
+class PlaywrightLocator extends Locator {
   constructor(public selector: string) {
     super()
   }

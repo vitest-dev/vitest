@@ -26,8 +26,8 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     if (options.element) {
-      const { element: css, ...config } = options
-      const element = context.iframe.locator(`css=${css}`)
+      const { element: selector, ...config } = options
+      const element = context.iframe.locator(`${selector}`)
       const buffer = await element.screenshot({
         timeout: 1000,
         ...config,

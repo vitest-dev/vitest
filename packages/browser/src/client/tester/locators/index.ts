@@ -130,11 +130,11 @@ export abstract class Locator {
     return this.elements().map(element => this.locator(selectorEngine.generateSelectorSimple(element)))
   }
 
-  protected get state(): BrowserRunnerState {
+  private get state(): BrowserRunnerState {
     return getBrowserState()
   }
 
-  protected get worker(): WorkerGlobalState {
+  private get worker(): WorkerGlobalState {
     return getWorkerState()
   }
 
