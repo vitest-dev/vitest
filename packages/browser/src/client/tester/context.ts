@@ -1,4 +1,4 @@
-import type { Task, WorkerGlobalState } from 'vitest'
+import type { Task } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
 import type {
   BrowserPage,
@@ -10,121 +10,19 @@ import type {
   UserEventTabOptions,
   UserEventTypeOptions,
 } from '../../../context'
-import type { BrowserRunnerState } from '../utils'
+import { convertElementToCssSelector, getBrowserState, getWorkerState } from '../utils'
 
-// this file should not import anything directly, only types
+// this file should not import anything directly, only types and utils
 
-// @ts-expect-error not typed global
-const state = (): WorkerGlobalState => __vitest_worker__
-// @ts-expect-error not typed global
-const runner = (): BrowserRunnerState => __vitest_browser_runner__
 function filepath() {
-  return state().filepath || state().current?.file?.filepath || undefined
+  return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
 }
-const rpc = () => state().rpc as any as BrowserRPC
-const contextId = runner().contextId
+const rpc = () => getWorkerState().rpc as any as BrowserRPC
+const contextId = getBrowserState().contextId
 const channel = new BroadcastChannel(`vitest:${contextId}`)
 
 function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(contextId, command, filepath(), args)
-}
-
-const provider = runner().provider
-
-function convertElementToCssSelector(element: Element) {
-  if (!element || !(element instanceof Element)) {
-    throw new Error(
-      `Expected DOM element to be an instance of Element, received ${typeof element}`,
-    )
-  }
-
-  const css = getUniqueCssSelector(element)
-  if (provider === 'playwright') {
-    return `css=${css}`
-  }
-  return css
-}
-
-function escapeIdForCSSSelector(id: string) {
-  return id
-    .split('')
-    .map((char) => {
-      const code = char.charCodeAt(0)
-
-      if (char === ' ' || char === '#' || char === '.' || char === ':' || char === '[' || char === ']' || char === '>' || char === '+' || char === '~' || char === '\\') {
-        // Escape common special characters with backslashes
-        return `\\${char}`
-      }
-      else if (code >= 0x10000) {
-        // Unicode escape for characters outside the BMP
-        return `\\${code.toString(16).toUpperCase().padStart(6, '0')} `
-      }
-      else if (code < 0x20 || code === 0x7F) {
-        // Non-printable ASCII characters (0x00-0x1F and 0x7F) are escaped
-        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else if (code >= 0x80) {
-        // Non-ASCII characters (0x80 and above) are escaped
-        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else {
-        // Allowable characters are used directly
-        return char
-      }
-    })
-    .join('')
-}
-
-function getUniqueCssSelector(el: Element) {
-  const path = []
-  let parent: null | ParentNode
-  let hasShadowRoot = false
-  // eslint-disable-next-line no-cond-assign
-  while (parent = getParent(el)) {
-    if ((parent as Element).shadowRoot) {
-      hasShadowRoot = true
-    }
-
-    const tag = el.tagName
-    if (el.id) {
-      path.push(`#${escapeIdForCSSSelector(el.id)}`)
-    }
-    else if (!el.nextElementSibling && !el.previousElementSibling) {
-      path.push(tag.toLowerCase())
-    }
-    else {
-      let index = 0
-      let sameTagSiblings = 0
-      let elementIndex = 0
-
-      for (const sibling of parent.children) {
-        index++
-        if (sibling.tagName === tag) {
-          sameTagSiblings++
-        }
-        if (sibling === el) {
-          elementIndex = index
-        }
-      }
-
-      if (sameTagSiblings > 1) {
-        path.push(`${tag.toLowerCase()}:nth-child(${elementIndex})`)
-      }
-      else {
-        path.push(tag.toLowerCase())
-      }
-    }
-    el = parent as Element
-  };
-  return `${provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`
-}
-
-function getParent(el: Element) {
-  const parent = el.parentNode
-  if (parent instanceof ShadowRoot) {
-    return parent.host
-  }
-  return parent
 }
 
 function createUserEvent(): UserEvent {
@@ -194,13 +92,13 @@ function createUserEvent(): UserEvent {
 export const userEvent = createUserEvent()
 
 export function cdp() {
-  return runner().cdp!
+  return getBrowserState().cdp!
 }
 
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
   viewport(width, height) {
-    const id = runner().iframeId
+    const id = getBrowserState().iframeId
     channel.postMessage({ type: 'viewport', width, height, id })
     return new Promise((resolve, reject) => {
       channel.addEventListener('message', function handler(e) {
@@ -216,7 +114,7 @@ export const page: BrowserPage = {
     })
   },
   async screenshot(options = {}) {
-    const currentTest = state().current
+    const currentTest = getWorkerState().current
     if (!currentTest) {
       throw new Error('Cannot take a screenshot outside of a test.')
     }

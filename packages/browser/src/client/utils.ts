@@ -64,7 +64,11 @@ export function convertElementToCssSelector(element: Element) {
     )
   }
 
-  return getUniqueCssSelector(element)
+  const css = getUniqueCssSelector(element)
+  if (getBrowserState().provider === 'playwright') {
+    return `css=${css}`
+  }
+  return css
 }
 
 function getUniqueCssSelector(el: Element) {
