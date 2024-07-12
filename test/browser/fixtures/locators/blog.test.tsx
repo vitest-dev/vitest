@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { render } from '@testing-library/react'
 import { page } from '@vitest/browser/context'
-import Blog from '../src/blog-app/blog'
+import Blog from '../../src/blog-app/blog'
 
 test('renders blog posts', async () => {
   const { container } = render(<Blog />)
