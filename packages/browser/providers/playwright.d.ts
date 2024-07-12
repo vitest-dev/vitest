@@ -39,6 +39,7 @@ declare module '@vitest/browser/context' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
   export interface UserEventClickOptions extends PWClickOptions {}
   export interface UserEventDoubleClickOptions extends PWDoubleClickOptions {}
+  export interface UserEventTripleClickOptions extends PWClickOptions {}
   export interface UserEventFillOptions extends PWFillOptions {}
   export interface UserEventSelectOptions extends PWSelectOptions {}
   export interface UserEventDragAndDropOptions extends PWDragAndDropOptions {}
