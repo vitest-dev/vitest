@@ -41,7 +41,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         })
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(async function vitestBrowserMode(req, res, next) {
-          if (!req.url) {
+          if (!req.url || !browserServer.provider) {
             return next()
           }
           const url = new URL(req.url, 'http://localhost')
