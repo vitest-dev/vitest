@@ -101,7 +101,7 @@ export async function collectTests(
       } = node as any
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
-      if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf'].includes(mode)) {
+      if (!['run', 'skip', 'todo', 'each', 'only', 'skipIf', 'runIf'].includes(mode)) {
         throw new Error(
           `${name}.${mode} syntax is not supported when testing types`,
         )
