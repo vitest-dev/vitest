@@ -85,6 +85,19 @@ describe('should fail', async () => {
 
     expect(stderr.replace(resolve(__dirname, '..'), '<root>')).toMatchSnapshot()
   })
+
+  it('should check type files that without -d prefix by default.', async () => {
+    const { stderr } = await runVitest({
+      root,
+      dir: './failing',
+      typecheck: {
+        enabled: true,
+      },
+    })
+
+    expect(stderr).toMatch('FAIL  fail-without-prefix.test.ts')
+    expect(stderr).toMatch(`TypeCheckError: Type 'string' is not assignable to type 'number'.`)
+  })
 })
 
 describe('ignoreSourceErrors', () => {
