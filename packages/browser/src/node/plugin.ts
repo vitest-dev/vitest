@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { lstatSync, readFileSync } from 'node:fs'
 import type { Stats } from 'node:fs'
-import { basename, resolve } from 'pathe'
+import { basename, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
@@ -133,13 +133,18 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             return
           }
 
+          const ext = extname(file)
           const buffer = readFileSync(file)
           res.setHeader(
             'Cache-Control',
             'public,max-age=0,must-revalidate',
           )
           res.setHeader('Content-Length', buffer.length)
-          res.setHeader('Content-Type', 'image/png')
+          res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
+            ? 'image/jpeg'
+            : ext === 'webp'
+              ? 'image/webp'
+              : 'image/png')
           res.end(buffer)
         })
       },
