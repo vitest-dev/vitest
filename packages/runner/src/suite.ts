@@ -74,7 +74,7 @@ import { getCurrentTest } from './test-state'
  *   });
  * });
  */
-export const suite = createSuite()
+export const suite: SuiteAPI = createSuite()
 /**
  * Defines a test case with a given name and test function. The test function can optionally be configured with test options.
  *
@@ -95,7 +95,7 @@ export const suite = createSuite()
  *   expect(subtract(5, 2)).toBe(3);
  * });
  */
-export const test = createTest(function (
+export const test: TestAPI = createTest(function (
   name: string | Function,
   optionsOrFn?: TestOptions | TestFunction,
   optionsOrTest?: number | TestOptions | TestFunction,
@@ -149,7 +149,7 @@ export const test = createTest(function (
  *   });
  * });
  */
-export const describe = suite
+export const describe: SuiteAPI = suite
 /**
  * Defines a test case with a given name and test function. The test function can optionally be configured with test options.
  *
@@ -170,21 +170,21 @@ export const describe = suite
  *   expect(subtract(5, 2)).toBe(3);
  * });
  */
-export const it = test
+export const it: TestAPI = test
 
 let runner: VitestRunner
 let defaultSuite: SuiteCollector
 let currentTestFilepath: string
 
-export function getDefaultSuite() {
+export function getDefaultSuite(): SuiteCollector<{}> {
   return defaultSuite
 }
 
-export function getTestFilepath() {
+export function getTestFilepath(): string {
   return currentTestFilepath
 }
 
-export function getRunner() {
+export function getRunner(): VitestRunner {
   return runner
 }
 
@@ -197,7 +197,7 @@ function createDefaultSuite(runner: VitestRunner) {
 export function clearCollectorContext(
   filepath: string,
   currentRunner: VitestRunner,
-) {
+): void {
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
@@ -213,7 +213,7 @@ export function getCurrentSuite<ExtraContext = object>() {
     || defaultSuite) as SuiteCollector<ExtraContext>
 }
 
-export function createSuiteHooks() {
+export function createSuiteHooks(): SuiteHooks {
   return {
     beforeAll: [],
     afterAll: [],
@@ -576,7 +576,7 @@ function createSuite() {
 export function createTaskCollector(
   fn: (...args: any[]) => any,
   context?: Record<string, unknown>,
-) {
+): CustomAPI {
   const taskFn = fn as any
 
   taskFn.each = function <T>(

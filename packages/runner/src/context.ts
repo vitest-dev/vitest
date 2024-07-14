@@ -16,14 +16,14 @@ export const collectorContext: RuntimeContext = {
   currentSuite: null,
 }
 
-export function collectTask(task: SuiteCollector) {
+export function collectTask(task: SuiteCollector): void {
   collectorContext.currentSuite?.tasks.push(task)
 }
 
 export async function runWithSuite(
   suite: SuiteCollector,
   fn: () => Awaitable<void>,
-) {
+): Promise<void> {
   const prev = collectorContext.currentSuite
   collectorContext.currentSuite = suite
   await fn()

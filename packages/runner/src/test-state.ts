@@ -1,8 +1,8 @@
-import type { Custom, Test } from './types/tasks'
+import type { Custom, Test } from './types/tasks.ts'
 
 let _test: Test | Custom | undefined
 
-export function setCurrentTest<T extends Test | Custom>(test: T | undefined) {
+export function setCurrentTest<T extends Test | Custom>(test: T | undefined): void {
   _test = test
 }
 

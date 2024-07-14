@@ -360,22 +360,42 @@ export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & 
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
 
+/**
+ * @deprecated
+ */
 export type HookListener<T extends any[], Return = void> = (
   ...args: T
 ) => Awaitable<Return>
 
 export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
+export interface BeforeAllListener {
+  (suite: Readonly<Suite | File>): Awaitable<HookCleanupCallback>
+}
+
+export interface AfterAllListener {
+  (suite: Readonly<Suite | File>): Awaitable<void>
+}
+
+export interface BeforeEachListener<ExtraContext = object> {
+  (
+    context: ExtendedContext<Test | Custom> & ExtraContext,
+    suite: Readonly<Suite>
+  ): Awaitable<HookCleanupCallback>
+}
+
+export interface AfterEachListener<ExtraContext = object> {
+  (
+    context: ExtendedContext<Test | Custom> & ExtraContext,
+    suite: Readonly<Suite>
+  ): Awaitable<void>
+}
+
 export interface SuiteHooks<ExtraContext = object> {
-  beforeAll: HookListener<[Readonly<Suite | File>], HookCleanupCallback>[]
-  afterAll: HookListener<[Readonly<Suite | File>]>[]
-  beforeEach: HookListener<
-    [ExtendedContext<Test | Custom> & ExtraContext, Readonly<Suite>],
-    HookCleanupCallback
-  >[]
-  afterEach: HookListener<
-    [ExtendedContext<Test | Custom> & ExtraContext, Readonly<Suite>]
-  >[]
+  beforeAll: BeforeAllListener[]
+  afterAll: AfterAllListener[]
+  beforeEach: BeforeEachListener<ExtraContext>[]
+  afterEach: AfterEachListener<ExtraContext>[]
 }
 
 export interface TaskCustomOptions extends TestOptions {
@@ -450,6 +470,10 @@ export type ExtendedContext<T extends Custom | Test> = TaskContext<T> &
 
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
 export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
+
+export interface TaskHook<HookListener> {
+  (fn: HookListener, timeout?: number): void
+}
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
 export type SequenceSetupFiles = 'list' | 'parallel'

@@ -54,7 +54,7 @@ export function hasFailed(suite: Arrayable<Task>): boolean {
   )
 }
 
-export function getNames(task: Task) {
+export function getNames(task: Task): string[] {
   const names = [task.name]
   let current: Task | undefined = task
 

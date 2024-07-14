@@ -11,7 +11,7 @@ export function interpretTaskModes(
   onlyMode?: boolean,
   parentIsOnly?: boolean,
   allowOnly?: boolean,
-) {
+): void {
   const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
   suite.tasks.forEach((t) => {
@@ -105,7 +105,7 @@ export function generateHash(str: string): string {
   return `${hash}`
 }
 
-export function calculateSuiteHash(parent: Suite) {
+export function calculateSuiteHash(parent: Suite): void {
   parent.tasks.forEach((t, idx) => {
     t.id = `${parent.id}_${idx}`
     if (t.type === 'suite') {
@@ -119,7 +119,7 @@ export function createFileTask(
   root: string,
   projectName: string,
   pool?: string,
-) {
+): File {
   const path = relative(root, filepath)
   const file: File = {
     id: generateHash(`${path}${projectName || ''}`),

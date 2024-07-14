@@ -1,7 +1,11 @@
 import type {
+  AfterAllListener,
+  AfterEachListener,
+  BeforeAllListener,
+  BeforeEachListener,
   OnTestFailedHandler,
   OnTestFinishedHandler,
-  SuiteHooks,
+  TaskHook,
   TaskPopulated,
 } from './types/tasks'
 import { getCurrentSuite, getRunner } from './suite'
@@ -35,7 +39,7 @@ function getDefaultHookTimeout() {
  *   // Initialization code that might take longer than the default timeout
  * }, 5000);
  */
-export function beforeAll(fn: SuiteHooks['beforeAll'][0], timeout?: number): void {
+export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
   return getCurrentSuite().on(
     'beforeAll',
     withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
@@ -64,7 +68,7 @@ export function beforeAll(fn: SuiteHooks['beforeAll'][0], timeout?: number): voi
  *   // Cleanup code that might take longer than the default timeout
  * }, 5000);
  */
-export function afterAll(fn: SuiteHooks['afterAll'][0], timeout?: number): void {
+export function afterAll(fn: AfterAllListener, timeout?: number): void {
   return getCurrentSuite().on(
     'afterAll',
     withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
@@ -88,7 +92,7 @@ export function afterAll(fn: SuiteHooks['afterAll'][0], timeout?: number): void 
  * });
  */
 export function beforeEach<ExtraContext = object>(
-  fn: SuiteHooks<ExtraContext>['beforeEach'][0],
+  fn: BeforeEachListener<ExtraContext>,
   timeout?: number,
 ): void {
   return getCurrentSuite<ExtraContext>().on(
@@ -114,7 +118,7 @@ export function beforeEach<ExtraContext = object>(
  * });
  */
 export function afterEach<ExtraContext = object>(
-  fn: SuiteHooks<ExtraContext>['afterEach'][0],
+  fn: AfterEachListener<ExtraContext>,
   timeout?: number,
 ): void {
   return getCurrentSuite<ExtraContext>().on(
@@ -140,7 +144,7 @@ export function afterEach<ExtraContext = object>(
  *   console.log(`Test failed: ${test.name}`, errors);
  * });
  */
-export const onTestFailed = createTestHook<OnTestFailedHandler>(
+export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   'onTestFailed',
   (test, handler, timeout) => {
     test.onFailed ||= []
@@ -170,7 +174,7 @@ export const onTestFailed = createTestHook<OnTestFailedHandler>(
  *   await db.disconnect();
  * });
  */
-export const onTestFinished = createTestHook<OnTestFinishedHandler>(
+export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   'onTestFinished',
   (test, handler, timeout) => {
     test.onFinished ||= []
@@ -182,8 +186,8 @@ export const onTestFinished = createTestHook<OnTestFinishedHandler>(
 
 function createTestHook<T>(
   name: string,
-  handler: (test: TaskPopulated, handler: T) => void,
-) {
+  handler: (test: TaskPopulated, handler: T, timeout?: number) => void,
+): TaskHook<T> {
   return (fn: T, timeout?: number) => {
     const current = getCurrentTest()
 

@@ -18,7 +18,9 @@ export interface FixtureItem extends FixtureOptions {
 export function mergeContextFixtures(
   fixtures: Record<string, any>,
   context: { fixtures?: FixtureItem[] } = {},
-) {
+): {
+    fixtures?: FixtureItem[]
+  } {
   const fixtureOptionKeys = ['auto']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
     ([prop, value]) => {
@@ -69,7 +71,7 @@ const cleanupFnArrayMap = new Map<
   Array<() => void | Promise<void>>
 >()
 
-export async function callFixtureCleanup(context: TestContext) {
+export async function callFixtureCleanup(context: TestContext): Promise<void> {
   const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
   for (const cleanup of cleanupFnArray.reverse()) {
     await cleanup()
@@ -78,7 +80,7 @@ export async function callFixtureCleanup(context: TestContext) {
 }
 
 export function withFixtures(fn: Function, testContext?: TestContext) {
-  return (hookContext?: TestContext) => {
+  return (hookContext?: TestContext): any => {
     const context: (TestContext & { [key: string]: any }) | undefined
       = hookContext || testContext
 
