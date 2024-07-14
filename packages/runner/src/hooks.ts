@@ -142,9 +142,11 @@ export function afterEach<ExtraContext = object>(
  */
 export const onTestFailed = createTestHook<OnTestFailedHandler>(
   'onTestFailed',
-  (test, handler) => {
+  (test, handler, timeout) => {
     test.onFailed ||= []
-    test.onFailed.push(handler)
+    test.onFailed.push(
+      withTimeout(withFixtures(handler), timeout ?? getDefaultHookTimeout(), true),
+    )
   },
 )
 
@@ -170,9 +172,11 @@ export const onTestFailed = createTestHook<OnTestFailedHandler>(
  */
 export const onTestFinished = createTestHook<OnTestFinishedHandler>(
   'onTestFinished',
-  (test, handler) => {
+  (test, handler, timeout) => {
     test.onFinished ||= []
-    test.onFinished.push(handler)
+    test.onFinished.push(
+      withTimeout(withFixtures(handler), timeout ?? getDefaultHookTimeout(), true),
+    )
   },
 )
 
@@ -180,13 +184,13 @@ function createTestHook<T>(
   name: string,
   handler: (test: TaskPopulated, handler: T) => void,
 ) {
-  return (fn: T) => {
+  return (fn: T, timeout?: number) => {
     const current = getCurrentTest()
 
     if (!current) {
       throw new Error(`Hook ${name}() can only be called inside a test`)
     }
 
-    return handler(current, fn)
+    return handler(current, fn, timeout)
   }
 }
