@@ -43,18 +43,8 @@ const stackIgnorePatterns = [
   /\/deps\/vitest_/,
 ]
 
-function extractLocation(urlLike: string) {
-  // Fail-fast but return locations like "(native)"
-  if (!urlLike.includes(':')) {
-    return [urlLike]
-  }
-
-  const regExp = /(.+?)(?::(\d+))?(?::(\d+))?$/
-  const parts = regExp.exec(urlLike.replace(/^\(|\)$/g, ''))
-  if (!parts) {
-    return [urlLike]
-  }
-  let url = parts[1]
+function prepareUrl(urlLike: string) {
+  let url = urlLike
   if (url.startsWith('async ')) {
     url = url.slice(6)
   }
@@ -66,7 +56,20 @@ function extractLocation(urlLike: string) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
     url = url.slice(isWindows ? 5 : 4)
   }
-  return [url, parts[2] || undefined, parts[3] || undefined]
+  return url
+}
+
+function extractLocation(urlLike: string) {
+  // Fail-fast but return locations like "(native)"
+  if (!urlLike.includes(':')) {
+    return [urlLike]
+  }
+
+  const regExp = /(.+?)(?::(\d+))?(?::(\d+))?$/
+  const parts = regExp.exec(urlLike.replace(/^\(|\)$/g, ''))
+  return parts
+    ? [prepareUrl(parts[1]), parts[2] || undefined, parts[3] || undefined]
+    : [urlLike]
 }
 
 export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
@@ -87,23 +90,17 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     return null
   }
 
-  // eslint-disable-next-line regexp/no-super-linear-backtracking, regexp/optimal-quantifier-concatenation
-  const functionNameRegex = /((.*".+"[^@]*)?[^@]*)(@)/
-  const matches = line.match(functionNameRegex)
-  const functionName = matches && matches[1] ? matches[1] : undefined
-  const [url, lineNumber, columnNumber] = extractLocation(
-    line.replace(functionNameRegex, ''),
-  )
-
-  if (!url || !lineNumber || !columnNumber) {
+  // eslint-disable-next-line regexp/no-super-linear-backtracking,regexp/no-misleading-capturing-group,regexp/no-unused-capturing-group
+  const matches = /(at\s+)?(async\s+)?([^\s@]+)?(?:@|\s+\()?([^\s()]+):(\d+):(\d+)\)?/.exec(line)
+  if (!matches) {
     return null
   }
 
   return {
-    file: url,
-    method: functionName || '',
-    line: Number.parseInt(lineNumber),
-    column: Number.parseInt(columnNumber),
+    file: prepareUrl(matches[4]),
+    method: matches[3] || '',
+    line: Number.parseInt(matches[5]),
+    column: Number.parseInt(matches[6]),
   }
 }
 
