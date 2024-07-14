@@ -58,7 +58,7 @@ export async function groupFilesByEnv(
       )
 
       const envOptions = JSON.parse(
-        code.match(/@(?:vitest|jest)-environment-options\s+?(.+)/)?.[1]
+        code.match(/@(?:vitest|jest)-environment-options\s+?(.+?)(?=\s*\*\/)/)?.[1]
         || 'null',
       )
       const envKey = env === 'happy-dom' ? 'happyDOM' : env
