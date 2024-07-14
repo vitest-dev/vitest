@@ -1,6 +1,6 @@
 import { processError } from '@vitest/utils/error'
 import { relative } from 'pathe'
-import type { File, Suite, TaskBase } from '../types'
+import type { File, Suite, TaskBase } from '../types/tasks'
 
 /**
  * If any tasks been marked as `only`, mark all other tasks as `skip`.

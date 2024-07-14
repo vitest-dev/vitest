@@ -1,5 +1,5 @@
 import { toArray } from '@vitest/utils'
-import type { VitestRunner, VitestRunnerConfig } from './types'
+import type { VitestRunner, VitestRunnerConfig } from './types/runner'
 
 export async function runSetupFiles(
   config: VitestRunnerConfig,

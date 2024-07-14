@@ -7,7 +7,7 @@ import type {
   SuiteCollector,
   TaskContext,
   Test,
-} from './types'
+} from './types/tasks'
 import type { VitestRunner } from './types/runner'
 import { PendingError } from './errors'
 

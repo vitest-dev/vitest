@@ -1,5 +1,5 @@
 import { processError } from '@vitest/utils/error'
-import type { File, SuiteHooks } from './types'
+import type { File, SuiteHooks } from './types/tasks'
 import type { VitestRunner } from './types/runner'
 import {
   calculateSuiteHash,

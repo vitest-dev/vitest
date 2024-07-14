@@ -3,7 +3,7 @@ import type {
   OnTestFinishedHandler,
   SuiteHooks,
   TaskPopulated,
-} from './types'
+} from './types/tasks'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
 import { withTimeout } from './context'

@@ -17,7 +17,7 @@ import type {
   TaskResultPack,
   TaskState,
   Test,
-} from './types'
+} from './types/tasks'
 import { partitionSuiteChildren } from './utils/suite'
 import { limitConcurrency } from './utils/limit-concurrency'
 import { getFn, getHooks } from './map'

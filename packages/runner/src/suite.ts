@@ -24,7 +24,7 @@ import type {
   TestAPI,
   TestFunction,
   TestOptions,
-} from './types'
+} from './types/tasks'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import {
@@ -39,8 +39,62 @@ import type { FixtureItem } from './fixture'
 import { mergeContextFixtures, withFixtures } from './fixture'
 import { getCurrentTest } from './test-state'
 
-// apis
+/**
+ * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
+ * Suites can contain both tests and other suites, enabling complex test structures.
+ *
+ * @param {string} name - The name of the suite, used for identification and reporting.
+ * @param {Function} fn - A function that defines the tests and suites within this suite.
+ *
+ * @example
+ * // Define a suite with two tests
+ * suite('Math operations', () => {
+ *   test('should add two numbers', () => {
+ *     expect(add(1, 2)).toBe(3);
+ *   });
+ *
+ *   test('should subtract two numbers', () => {
+ *     expect(subtract(5, 2)).toBe(3);
+ *   });
+ * });
+ *
+ * @example
+ * // Define nested suites
+ * suite('String operations', () => {
+ *   suite('Trimming', () => {
+ *     test('should trim whitespace from start and end', () => {
+ *       expect('  hello  '.trim()).toBe('hello');
+ *     });
+ *   });
+ *
+ *   suite('Concatenation', () => {
+ *     test('should concatenate two strings', () => {
+ *       expect('hello' + ' ' + 'world').toBe('hello world');
+ *     });
+ *   });
+ * });
+ */
 export const suite = createSuite()
+/**
+ * Defines a test case with a given name and test function. The test function can optionally be configured with test options.
+ *
+ * @param {string | Function} name - The name of the test or a function that will be used as a test name.
+ * @param {TestOptions | TestFunction} [optionsOrFn] - Optional. The test options or the test function if no explicit name is provided.
+ * @param {number | TestOptions | TestFunction} [optionsOrTest] - Optional. The test function or options, depending on the previous parameters.
+ * @throws {Error} If called inside another test function.
+ *
+ * @example
+ * // Define a simple test
+ * test('should add two numbers', () => {
+ *   expect(add(1, 2)).toBe(3);
+ * });
+ *
+ * @example
+ * // Define a test with options
+ * test('should subtract two numbers', { retry: 3 }, () => {
+ *   expect(subtract(5, 2)).toBe(3);
+ * });
+ */
 export const test = createTest(function (
   name: string | Function,
   optionsOrFn?: TestOptions | TestFunction,
@@ -60,8 +114,62 @@ export const test = createTest(function (
   )
 })
 
-// alias
+/**
+ * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
+ * Suites can contain both tests and other suites, enabling complex test structures.
+ *
+ * @param {string} name - The name of the suite, used for identification and reporting.
+ * @param {Function} fn - A function that defines the tests and suites within this suite.
+ *
+ * @example
+ * // Define a suite with two tests
+ * describe('Math operations', () => {
+ *   test('should add two numbers', () => {
+ *     expect(add(1, 2)).toBe(3);
+ *   });
+ *
+ *   test('should subtract two numbers', () => {
+ *     expect(subtract(5, 2)).toBe(3);
+ *   });
+ * });
+ *
+ * @example
+ * // Define nested suites
+ * describe('String operations', () => {
+ *   describe('Trimming', () => {
+ *     test('should trim whitespace from start and end', () => {
+ *       expect('  hello  '.trim()).toBe('hello');
+ *     });
+ *   });
+ *
+ *   describe('Concatenation', () => {
+ *     test('should concatenate two strings', () => {
+ *       expect('hello' + ' ' + 'world').toBe('hello world');
+ *     });
+ *   });
+ * });
+ */
 export const describe = suite
+/**
+ * Defines a test case with a given name and test function. The test function can optionally be configured with test options.
+ *
+ * @param {string | Function} name - The name of the test or a function that will be used as a test name.
+ * @param {TestOptions | TestFunction} [optionsOrFn] - Optional. The test options or the test function if no explicit name is provided.
+ * @param {number | TestOptions | TestFunction} [optionsOrTest] - Optional. The test function or options, depending on the previous parameters.
+ * @throws {Error} If called inside another test function.
+ *
+ * @example
+ * // Define a simple test
+ * it('adds two numbers', () => {
+ *   expect(add(1, 2)).toBe(3);
+ * });
+ *
+ * @example
+ * // Define a test with options
+ * it('subtracts two numbers', { retry: 3 }, () => {
+ *   expect(subtract(5, 2)).toBe(3);
+ * });
+ */
 export const it = test
 
 let runner: VitestRunner

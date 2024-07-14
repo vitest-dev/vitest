@@ -1,6 +1,6 @@
 import { createDefer, isObject } from '@vitest/utils'
 import { getFixture } from './map'
-import type { FixtureOptions, TestContext } from './types'
+import type { FixtureOptions, TestContext } from './types/tasks'
 
 export interface FixtureItem extends FixtureOptions {
   prop: string
