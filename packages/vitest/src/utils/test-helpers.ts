@@ -57,10 +57,13 @@ export async function groupFilesByEnv(
         file,
       )
 
-      const envOptions = JSON.parse(
-        code.match(/@(?:vitest|jest)-environment-options\s+?(.+?)(?=\s*\*\/)/)?.[1]
-        || 'null',
-      )
+      let envOptionsJson = code.match(/@(?:vitest|jest)-environment-options\s+(.+)/)?.[1]
+      if (envOptionsJson?.endsWith('*/')) {
+        // Trim closing Docblock characters the above regex might have captured
+        envOptionsJson = envOptionsJson.slice(0, -2)
+      }
+
+      const envOptions = JSON.parse(envOptionsJson || 'null')
       const envKey = env === 'happy-dom' ? 'happyDOM' : env
       const environment: ContextTestEnvironment = {
         name: env as VitestEnvironment,
