@@ -402,7 +402,7 @@ const DEFAULT_THEME_KEYS = Object.keys(DEFAULT_THEME) as Array<
   keyof typeof DEFAULT_THEME
 >
 
-export const DEFAULT_OPTIONS = {
+export const DEFAULT_OPTIONS: Options = {
   callToJSON: true,
   compareKeys: undefined,
   escapeRegex: false,
@@ -528,7 +528,14 @@ export function format(val: unknown, options?: OptionsReceived): string {
   return printComplexValue(val, getConfig(options), '', 0, [])
 }
 
-export const plugins = {
+export const plugins: {
+  AsymmetricMatcher: NewPlugin
+  DOMCollection: NewPlugin
+  DOMElement: NewPlugin
+  Immutable: NewPlugin
+  ReactElement: NewPlugin
+  ReactTestComponent: NewPlugin
+} = {
   AsymmetricMatcher,
   DOMCollection,
   DOMElement,
