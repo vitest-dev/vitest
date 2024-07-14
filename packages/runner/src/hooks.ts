@@ -86,12 +86,6 @@ export function afterAll(fn: SuiteHooks['afterAll'][0], timeout?: number): void 
  * beforeEach(async () => {
  *   await database.reset();
  * });
- *
- * @example
- * // Example of using beforeEach to clear a cache before each test
- * beforeEach(() => {
- *   cache.clear();
- * });
  */
 export function beforeEach<ExtraContext = object>(
   fn: SuiteHooks<ExtraContext>['beforeEach'][0],
@@ -112,12 +106,6 @@ export function beforeEach<ExtraContext = object>(
  * @param {Function} fn - The callback function to be executed after each test. This function receives an `TestContext` parameter if additional test context is needed.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
- * @example
- * // Example of using afterEach to clear a mock function's history
- * afterEach(() => {
- *   vi.clearAllMocks();
- * });
  *
  * @example
  * // Example of using afterEach to delete temporary files created during a test
@@ -172,12 +160,6 @@ export const onTestFailed = createTestHook<OnTestFailedHandler>(
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @throws {Error} Throws an error if the function is not called within a test.
  * @returns {void}
- *
- * @example
- * // Example of using onTestFinished to log test completion
- * onTestFinished(({ status }) => {
- *   console.log(`Test completed: ${test.name} with status: ${status}`);
- * });
  *
  * @example
  * // Example of using onTestFinished for cleanup after each test
