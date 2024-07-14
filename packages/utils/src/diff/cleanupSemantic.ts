@@ -189,7 +189,7 @@ const diff_commonOverlap_ = function (text1: string, text2: string): number {
  * Reduce the number of edits by eliminating semantically trivial equalities.
  * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
  */
-const diff_cleanupSemantic = function (diffs: Array<Diff>) {
+const diff_cleanupSemantic = function (diffs: Array<Diff>): void {
   let changes = false
   const equalities = [] // Stack of indices where equalities are found.
   let equalitiesLength = 0 // Keeping our own length var is faster in JS.

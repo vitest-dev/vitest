@@ -1,6 +1,17 @@
 import { SAFE_TIMERS_SYMBOL } from './constants'
 
-export function getSafeTimers() {
+export interface SafeTimers {
+  nextTick: (cb: () => void) => void
+  setTimeout: typeof setTimeout
+  setInterval: typeof setInterval
+  clearInterval: typeof clearInterval
+  clearTimeout: typeof clearTimeout
+  setImmediate: typeof setImmediate
+  clearImmediate: typeof clearImmediate
+
+}
+
+export function getSafeTimers(): SafeTimers {
   const {
     setTimeout: safeSetTimeout,
     setInterval: safeSetInterval,
@@ -24,7 +35,7 @@ export function getSafeTimers() {
   }
 }
 
-export function setSafeTimers() {
+export function setSafeTimers(): void {
   const {
     setTimeout: safeSetTimeout,
     setInterval: safeSetInterval,

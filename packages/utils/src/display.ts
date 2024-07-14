@@ -20,7 +20,7 @@ type LoupeOptions = Partial<Options>
 
 const formatRegExp = /%[sdjifoOc%]/g
 
-export function format(...args: unknown[]) {
+export function format(...args: unknown[]): string {
   if (typeof args[0] !== 'string') {
     const objects = []
     for (let i = 0; i < args.length; i++) {

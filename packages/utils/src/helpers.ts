@@ -22,13 +22,13 @@ export function assertTypes(
   }
 }
 
-export function isPrimitive(value: unknown) {
+export function isPrimitive(value: unknown): boolean {
   return (
     value === null || (typeof value !== 'function' && typeof value !== 'object')
   )
 }
 
-export function slash(path: string) {
+export function slash(path: string): string {
   return path.replace(/\\/g, '/')
 }
 
@@ -93,7 +93,7 @@ function collectOwnProperties(
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
-export function getOwnProperties(obj: any) {
+export function getOwnProperties(obj: any): (string | symbol)[] {
   const ownProps = new Set<string | symbol>()
   if (isFinalObj(obj)) {
     return []
@@ -170,13 +170,13 @@ export function clone<T>(
   return val
 }
 
-export function noop() {}
+export function noop(): void {}
 
 export function objectAttr(
   source: any,
   path: string,
   defaultValue = undefined,
-) {
+): any {
   // a[3].b -> a.3.b
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
@@ -217,7 +217,7 @@ export function createDefer<T>(): DeferPromise<T> {
  * toBeAliased('123')
  * ```
  */
-export function getCallLastIndex(code: string) {
+export function getCallLastIndex(code: string): number | null {
   let charIndex = -1
   let inString: string | null = null
   let startedBracers = 0
@@ -255,7 +255,7 @@ export function getCallLastIndex(code: string) {
   return null
 }
 
-export function isNegativeNaN(val: number) {
+export function isNegativeNaN(val: number): boolean {
   if (!Number.isNaN(val)) {
     return false
   }

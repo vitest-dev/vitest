@@ -27,7 +27,7 @@ interface Visitors {
 }
 
 const isNodeInPatternWeakSet = new WeakSet<_Node>()
-export function setIsNodeInPattern(node: Property) {
+export function setIsNodeInPattern(node: Property): WeakSet<_Node> {
   return isNodeInPatternWeakSet.add(node)
 }
 export function isNodeInPattern(node: _Node): node is Property {
@@ -41,7 +41,7 @@ export function isNodeInPattern(node: _Node): node is Property {
 export function esmWalker(
   root: Node,
   { onIdentifier, onImportMeta, onDynamicImport }: Visitors,
-) {
+): void {
   const parentStack: Node[] = []
   const varKindStack: VariableDeclaration['kind'][] = []
   const scopeMap = new WeakMap<_Node, Set<string>>()
@@ -292,7 +292,7 @@ export function isStaticProperty(node: _Node): node is Property {
   return node && node.type === 'Property' && !node.computed
 }
 
-export function isStaticPropertyKey(node: _Node, parent: _Node) {
+export function isStaticPropertyKey(node: _Node, parent: _Node): boolean {
   return isStaticProperty(parent) && parent.key === node
 }
 

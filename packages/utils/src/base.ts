@@ -7,7 +7,7 @@ interface ErrorOptions {
  * - Create only 1 stack frame.
  * - Rewrite prepareStackTrace to bypass "support-stack-trace" (usually takes ~250ms).
  */
-export function createSimpleStackTrace(options?: ErrorOptions) {
+export function createSimpleStackTrace(options?: ErrorOptions): string {
   const { message = '$$stack trace error', stackTraceLimit = 1 }
     = options || {}
   const limit = Error.stackTraceLimit
