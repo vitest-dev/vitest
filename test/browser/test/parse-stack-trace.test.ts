@@ -1,4 +1,4 @@
-import { test } from 'vitest'
+import { afterEach, test } from 'vitest'
 
 class PrettyError extends globalThis.Error {
   constructor(e: unknown) {
@@ -7,8 +7,12 @@ class PrettyError extends globalThis.Error {
   }
 }
 
+afterEach(() => {
+  delete Error.stackTraceLimit
+})
+
 test('should not take ages...', async () => {
-  const x = [...Array(100).keys()]
+  const x = Array.from({ length: 100 }, (_, i) => i)
   const obj = Object.fromEntries(x.map(i => [`prop${i}`, i]))
   throw new PrettyError(obj)
 })
