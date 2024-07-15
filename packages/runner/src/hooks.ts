@@ -149,7 +149,7 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFailed ||= []
     test.onFailed.push(
-      withTimeout(withFixtures(handler), timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
     )
   },
 )
@@ -179,7 +179,7 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFinished ||= []
     test.onFinished.push(
-      withTimeout(withFixtures(handler), timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
     )
   },
 )
