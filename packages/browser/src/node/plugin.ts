@@ -315,6 +315,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             project.ctx.config.root,
             project.ctx.server.config.configFile,
           ),
+          distRoot,
         )
 
         return {
