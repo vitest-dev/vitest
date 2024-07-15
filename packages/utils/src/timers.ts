@@ -8,7 +8,6 @@ export interface SafeTimers {
   clearTimeout: typeof clearTimeout
   setImmediate: typeof setImmediate
   clearImmediate: typeof clearImmediate
-
 }
 
 export function getSafeTimers(): SafeTimers {
