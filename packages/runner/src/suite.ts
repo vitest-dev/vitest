@@ -176,7 +176,7 @@ let runner: VitestRunner
 let defaultSuite: SuiteCollector
 let currentTestFilepath: string
 
-export function getDefaultSuite(): SuiteCollector<{}> {
+export function getDefaultSuite(): SuiteCollector<object> {
   return defaultSuite
 }
 
