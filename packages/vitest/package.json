@@ -169,7 +169,7 @@
   },
   "devDependencies": {
     "@antfu/install-pkg": "0.3.1",
-    "@edge-runtime/vm": "^3.2.0",
+    "@edge-runtime/vm": "^4.0.1",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/debug": "^4.1.12",
     "@types/estree": "^1.0.5",
