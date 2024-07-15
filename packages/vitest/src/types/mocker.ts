@@ -1,9 +1,9 @@
 export type MockFactoryWithHelper<M = unknown> = (
-  importOriginal: () => Promise<M>
-) => Partial<Record<keyof M, any>>
+  importOriginal: <T extends M = M>() => Promise<T>
+) => Record<keyof M, any> | null
 export type PromiseMockFactoryWithHelper<M = unknown> = (
-  importOriginal: () => Promise<M>
-) => Promise<Partial<Record<keyof M, any>>>
+  importOriginal: <T extends M = M>() => Promise<T>
+) => Promise<Record<keyof M, any>> | null
 export type MockFactory = () => any
 
 export type MockMap = Map<string, Record<string, string | null | MockFactory>>
