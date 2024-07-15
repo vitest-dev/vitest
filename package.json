@@ -54,7 +54,7 @@
     "fast-glob": "^3.3.2",
     "magic-string": "^0.30.10",
     "pathe": "^1.1.2",
-    "rimraf": "^5.0.7",
+    "rimraf": "^6.0.1",
     "rollup": "^4.18.0",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-esbuild": "^6.1.1",
