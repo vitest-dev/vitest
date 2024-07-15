@@ -232,7 +232,9 @@ function doRunFilter(
 function refreshExplorer(search: string, filter: Filter, end: boolean) {
   runFilter(search, filter)
   // update only at the end
-  end && updateRunningTodoTests()
+  if (end) {
+    updateRunningTodoTests()
+  }
 }
 
 function createOrUpdateEntry(tasks: Task[]) {

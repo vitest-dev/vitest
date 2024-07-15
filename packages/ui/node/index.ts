@@ -21,20 +21,22 @@ export default (ctx: Vitest): Plugin => {
         )
       }
 
-      coverageFolder
-      && server.middlewares.use(
-        coveragePath!,
-        sirv(coverageFolder[0], {
-          single: true,
-          dev: true,
-          setHeaders: (res) => {
-            res.setHeader(
-              'Cache-Control',
-              'public,max-age=0,must-revalidate',
-            )
-          },
-        }),
-      )
+      if (coverageFolder) {
+        server.middlewares.use(
+          coveragePath!,
+          sirv(coverageFolder[0], {
+            single: true,
+            dev: true,
+            setHeaders: (res) => {
+              res.setHeader(
+                'Cache-Control',
+                'public,max-age=0,must-revalidate',
+              )
+            },
+          }),
+        )
+      }
+
       const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
       server.middlewares.use(
         base,

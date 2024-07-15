@@ -47,7 +47,7 @@ function logError(f, args) {
           ? `${e.message}\n\nStack:\n${e.stack}`
           : e.toString()
       }
-      catch (_) {
+      catch {
         return '<failed to stringify thrown value>'
       }
     })()

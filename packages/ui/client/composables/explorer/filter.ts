@@ -71,7 +71,9 @@ export function* filterNode(
       if (isParentNode(child)) {
         parentsMap.set(child.id, match)
         if (isFileNode(child)) {
-          match && (fileId = child.id)
+          if (match) {
+            fileId = child.id
+          }
           list.push([match, child])
         }
         else {

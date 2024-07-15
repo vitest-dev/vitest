@@ -88,65 +88,69 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           )
         }
 
-        coverageFolder && server.middlewares.use(
-          coveragePath!,
-          sirv(coverageFolder[0], {
-            single: true,
-            dev: true,
-            setHeaders: (res) => {
-              res.setHeader(
-                'Cache-Control',
-                'public,max-age=0,must-revalidate',
-              )
-            },
-          }),
-        )
+        if (coverageFolder) {
+          server.middlewares.use(
+            coveragePath!,
+            sirv(coverageFolder[0], {
+              single: true,
+              dev: true,
+              setHeaders: (res) => {
+                res.setHeader(
+                  'Cache-Control',
+                  'public,max-age=0,must-revalidate',
+                )
+              },
+            }),
+          )
+        }
 
         const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
 
+        if (screenshotFailures) {
         // eslint-disable-next-line prefer-arrow-callback
-        screenshotFailures && server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
-          if (!req.url || !browserServer.provider) {
-            res.statusCode = 404
-            res.end()
-            return
-          }
+          server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
+            if (!req.url || !browserServer.provider) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
 
-          const url = new URL(req.url, 'http://localhost')
-          const file = url.searchParams.get('file')
-          if (!file) {
-            res.statusCode = 404
-            res.end()
-            return
-          }
+            const url = new URL(req.url, 'http://localhost')
+            const file = url.searchParams.get('file')
+            if (!file) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
 
-          let stat: Stats | undefined
-          try {
-            stat = lstatSync(file)
-          }
-          catch (_) {
-          }
+            let stat: Stats | undefined
+            try {
+              stat = lstatSync(file)
+            }
+            catch {
+            }
 
-          if (!stat?.isFile()) {
-            res.statusCode = 404
-            res.end()
-            return
-          }
+            if (!stat?.isFile()) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
 
-          const ext = extname(file)
-          const buffer = readFileSync(file)
-          res.setHeader(
-            'Cache-Control',
-            'public,max-age=0,must-revalidate',
-          )
-          res.setHeader('Content-Length', buffer.length)
-          res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
-            ? 'image/jpeg'
-            : ext === 'webp'
-              ? 'image/webp'
-              : 'image/png')
-          res.end(buffer)
-        })
+            const ext = extname(file)
+            const buffer = readFileSync(file)
+            res.setHeader(
+              'Cache-Control',
+              'public,max-age=0,must-revalidate',
+            )
+            res.setHeader('Content-Length', buffer.length)
+            res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
+              ? 'image/jpeg'
+              : ext === 'webp'
+                ? 'image/webp'
+                : 'image/png')
+            res.end(buffer)
+          })
+        }
       },
     },
     {

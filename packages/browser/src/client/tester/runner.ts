@@ -110,7 +110,7 @@ export function createBrowserRunner(
         try {
           await updateFilesLocations(files, this.sourceMapCache)
         }
-        catch (_) {}
+        catch {}
       }
       return rpc().onCollected(files)
     }

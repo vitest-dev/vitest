@@ -4,7 +4,7 @@ export async function retryDynamicImport() {
     try {
       return await import('./dynamic-module')
     }
-    catch (e) {
+    catch {
       if (retryTimes === 3) {
         throw new Error('import dynamic module failed.')
       }

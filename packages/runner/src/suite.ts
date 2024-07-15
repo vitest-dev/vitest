@@ -100,7 +100,7 @@ export function clearCollectorContext(
   collectorContext.currentSuite = defaultSuite
 }
 
-export function getCurrentSuite<ExtraContext = {}>() {
+export function getCurrentSuite<ExtraContext = object>() {
   return (collectorContext.currentSuite
     || defaultSuite) as SuiteCollector<ExtraContext>
 }
@@ -429,19 +429,24 @@ function createSuite() {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
         if (fnFirst) {
-          arrayOnlyCases
-            ? suite(
+          if (arrayOnlyCases) {
+            suite(
               formatTitle(_name, items, idx),
               () => handler(...items),
               options,
             )
-            : suite(formatTitle(_name, items, idx), () => handler(i), options)
+          }
+          else {
+            suite(formatTitle(_name, items, idx), () => handler(i), options)
+          }
         }
         else {
-          arrayOnlyCases
-            ? suite(formatTitle(_name, items, idx), options, () =>
-              handler(...items))
-            : suite(formatTitle(_name, items, idx), options, () => handler(i))
+          if (arrayOnlyCases) {
+            suite(formatTitle(_name, items, idx), options, () => handler(...items))
+          }
+          else {
+            suite(formatTitle(_name, items, idx), options, () => handler(i))
+          }
         }
       })
 
@@ -497,19 +502,24 @@ export function createTaskCollector(
         const items = Array.isArray(i) ? i : [i]
 
         if (fnFirst) {
-          arrayOnlyCases
-            ? test(
+          if (arrayOnlyCases) {
+            test(
               formatTitle(_name, items, idx),
               () => handler(...items),
               options,
             )
-            : test(formatTitle(_name, items, idx), () => handler(i), options)
+          }
+          else {
+            test(formatTitle(_name, items, idx), () => handler(i), options)
+          }
         }
         else {
-          arrayOnlyCases
-            ? test(formatTitle(_name, items, idx), options, () =>
-              handler(...items))
-            : test(formatTitle(_name, items, idx), options, () => handler(i))
+          if (arrayOnlyCases) {
+            test(formatTitle(_name, items, idx), options, () => handler(...items))
+          }
+          else {
+            test(formatTitle(_name, items, idx), options, () => handler(i))
+          }
         }
       })
 

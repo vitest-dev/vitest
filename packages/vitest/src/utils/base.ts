@@ -160,7 +160,7 @@ export function deepMerge<T extends object = object>(
   return deepMerge(target, ...sources)
 }
 
-function isMergeableObject(item: any): item is Object {
+function isMergeableObject(item: any): item is object {
   return isPlainObject(item) && !Array.isArray(item)
 }
 

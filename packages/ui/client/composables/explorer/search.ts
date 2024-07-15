@@ -30,7 +30,9 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
 
   function clearSearch(focus: boolean) {
     search.value = ''
-    focus && searchBox.value?.focus()
+    if (focus) {
+      searchBox.value?.focus()
+    }
   }
 
   function clearFilter(focus: boolean) {
@@ -38,7 +40,9 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filter.success = false
     filter.skipped = false
     filter.onlyTests = false
-    focus && searchBox.value?.focus()
+    if (focus) {
+      searchBox.value?.focus()
+    }
   }
 
   function clearAll() {
