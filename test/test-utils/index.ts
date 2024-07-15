@@ -2,11 +2,12 @@ import { Readable, Writable } from 'node:stream'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach } from 'vitest'
+import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach, onTestFinished } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
 import { type Options, execa } from 'execa'
 import { dirname, resolve } from 'pathe'
+import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
 interface VitestRunnerCLIOptions {
@@ -60,7 +61,22 @@ export async function runVitest(
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...rest,
-    }, viteOverrides, {
+    }, {
+      ...viteOverrides,
+      server: {
+        // we never need a websocket connection for the root config because it doesn't connect to the browser
+        // browser mode uses a separate config that doesn't inherit CLI overrides
+        ws: false,
+        watch: {
+          // During tests we edit the files too fast and sometimes chokidar
+          // misses change events, so enforce polling for consistency
+          // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
+          usePolling: true,
+          interval: 100,
+        },
+        ...viteOverrides?.server,
+      },
+    }, {
       stdin,
       stdout,
       stderr,
@@ -74,11 +90,20 @@ export async function runVitest(
     exitCode = process.exitCode
     process.exitCode = 0
 
-    afterEach(async () => {
-      await ctx?.close()
-      await ctx?.closingPromise
-      process.exit = exit
-    })
+    if (getCurrentTest()) {
+      onTestFinished(async () => {
+        await ctx?.close()
+        await ctx?.closingPromise
+        process.exit = exit
+      })
+    }
+    else {
+      afterEach(async () => {
+        await ctx?.close()
+        await ctx?.closingPromise
+        process.exit = exit
+      })
+    }
   }
 
   return {
