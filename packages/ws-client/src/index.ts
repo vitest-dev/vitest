@@ -49,7 +49,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
   ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
 
-  let onMessage: Function
+  let onMessage: (data: any) => void
   const functions: WebSocketEvents = {
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {

@@ -24,7 +24,7 @@ describe('test', () => {
   })
 
   test('ignored error', () => {
-    // eslint-disable-next-line ts/prefer-ts-expect-error
+    // eslint-disable-next-line ts/prefer-ts-expect-error, ts/ban-ts-comment
     // @ts-ignore 45 is not a string
     expectTypeOf(45).toEqualTypeOf<string>()
   })

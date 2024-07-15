@@ -591,7 +591,7 @@ export function resolveConfig(
       for (const reporter of options.reporters) {
         if (Array.isArray(reporter)) {
           // Reporter with options, e.g. { reporters: [ [ 'json', { outputFile: 'test.json' } ] ] }
-          resolved.reporters.push([reporter[0], reporter[1] || {}])
+          resolved.reporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
         }
         else if (typeof reporter === 'string') {
           // Reporter name in array, e.g. { reporters: ["html", "json"]}

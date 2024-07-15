@@ -83,7 +83,7 @@ export default class HTMLReporter implements Reporter {
               encoding: 'utf-8',
             })
           }
-          catch (_) {
+          catch {
             // just ignore
           }
         }

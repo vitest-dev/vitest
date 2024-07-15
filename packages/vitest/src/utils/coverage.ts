@@ -256,7 +256,7 @@ export class BaseCoverageProvider {
     for (const reporter of configReporters) {
       if (Array.isArray(reporter)) {
         // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
-        resolvedReporters.push([reporter[0], reporter[1] || {}])
+        resolvedReporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
       }
       else {
         // E.g. { reporter: ["html", "json"]}

@@ -134,7 +134,7 @@ export function objDisplay(obj: unknown, options: LoupeOptions = {}): string {
       return `[ Array(${(obj as []).length}) ]`
     }
     else if (type === '[object Object]') {
-      const keys = Object.keys(obj as {})
+      const keys = Object.keys(obj as object)
       const kstr
         = keys.length > 2
           ? `${keys.splice(0, 2).join(', ')}, ...`

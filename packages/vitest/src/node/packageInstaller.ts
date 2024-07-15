@@ -18,7 +18,7 @@ export class VitestPackageInstaller {
         targetRequire.resolve(dependency, { paths: [root, __dirname] })
         return true
       }
-      catch (error) {}
+      catch {}
     }
 
     if (

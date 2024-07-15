@@ -224,7 +224,7 @@ type ReporterName = BuiltinReporters | 'html' | (string & {})
 type ReporterWithOptions<Name extends ReporterName = ReporterName> =
   Name extends keyof BuiltinReporterOptions
     ? BuiltinReporterOptions[Name] extends never
-      ? [Name, {}]
+      ? [Name, object]
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
 

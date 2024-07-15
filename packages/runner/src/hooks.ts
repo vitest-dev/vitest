@@ -26,7 +26,7 @@ export function afterAll(fn: SuiteHooks['afterAll'][0], timeout?: number) {
     withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
   )
 }
-export function beforeEach<ExtraContext = {}>(
+export function beforeEach<ExtraContext = object>(
   fn: SuiteHooks<ExtraContext>['beforeEach'][0],
   timeout?: number,
 ) {
@@ -35,7 +35,7 @@ export function beforeEach<ExtraContext = {}>(
     withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
   )
 }
-export function afterEach<ExtraContext = {}>(
+export function afterEach<ExtraContext = object>(
   fn: SuiteHooks<ExtraContext>['afterEach'][0],
   timeout?: number,
 ) {

@@ -165,7 +165,7 @@
     "tinyrainbow": "^1.2.0",
     "vite": "^5.0.0",
     "vite-node": "workspace:*",
-    "why-is-node-running": "^2.2.2"
+    "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
     "@antfu/install-pkg": "0.3.1",
@@ -177,7 +177,7 @@
     "@types/istanbul-reports": "^3.0.4",
     "@types/jsdom": "^21.1.7",
     "@types/micromatch": "^4.0.9",
-    "@types/node": "^20.14.9",
+    "@types/node": "^20.14.10",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
     "acorn-walk": "^8.3.3",
@@ -199,6 +199,6 @@
     "prompts": "^2.4.2",
     "strip-ansi": "^7.1.0",
     "strip-literal": "^2.1.0",
-    "ws": "^8.17.1"
+    "ws": "^8.18.0"
   }
 }

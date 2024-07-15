@@ -76,17 +76,17 @@
     }
   },
   "dependencies": {
-    "@testing-library/dom": "^10.2.0",
+    "@testing-library/dom": "^10.3.1",
     "@testing-library/user-event": "^14.5.2",
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.10",
     "msw": "^2.3.1",
     "sirv": "^2.0.4",
-    "ws": "^8.17.1"
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.6",
-    "@types/ws": "^8.5.10",
+    "@types/ws": "^8.5.11",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
@@ -95,10 +95,10 @@
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
     "periscopic": "^4.0.2",
-    "playwright": "^1.45.0",
-    "playwright-core": "^1.45.0",
+    "playwright": "^1.45.1",
+    "playwright-core": "^1.45.1",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",
-    "webdriverio": "^8.39.0"
+    "webdriverio": "^8.39.1"
   }
 }

@@ -20,7 +20,12 @@ test.describe('html report', () => {
   test.afterAll(async () => {
     await new Promise<void>((resolve, reject) => {
       previewServer.httpServer.close((err) => {
-        err ? reject(err) : resolve()
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve()
+        }
       })
     })
   })
