@@ -144,15 +144,16 @@ export function deepMerge<T extends object = object>(
 
   if (isMergeableObject(target) && isMergeableObject(source)) {
     (Object.keys(source) as (keyof T)[]).forEach((key) => {
-      if (isMergeableObject(source[key])) {
+      const _source = source as T
+      if (isMergeableObject(_source[key])) {
         if (!target[key]) {
           target[key] = {} as any
         }
 
-        deepMerge(target[key] as any, source[key] as any)
+        deepMerge(target[key] as any, _source[key])
       }
       else {
-        target[key] = source[key] as any
+        target[key] = _source[key] as any
       }
     })
   }
