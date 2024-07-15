@@ -1,7 +1,6 @@
 import { type DiffOptions, diff } from './diff'
-import { format } from './display'
+import { format, stringify } from './display'
 import { deepClone, getOwnProperties, getType } from './helpers'
-import { stringify } from './stringify'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {

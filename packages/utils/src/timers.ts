@@ -1,4 +1,4 @@
-import { SAFE_TIMERS_SYMBOL } from './constants'
+const SAFE_TIMERS_SYMBOL = Symbol('vitest:SAFE_TIMERS')
 
 export interface SafeTimers {
   nextTick: (cb: () => void) => void
