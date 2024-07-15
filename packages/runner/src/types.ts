@@ -37,6 +37,11 @@ export type {
   OnTestFinishedHandler,
   SequenceHooks,
   SequenceSetupFiles,
+  AfterAllListener,
+  AfterEachListener,
+  BeforeAllListener,
+  BeforeEachListener,
+  TaskHook,
 } from './types/tasks'
 export type {
   VitestRunnerConfig,
