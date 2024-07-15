@@ -32,12 +32,6 @@ function getDefaultHookTimeout() {
  * beforeAll(async () => {
  *   await database.connect();
  * });
- *
- * @example
- * // Example of using beforeAll with a timeout
- * beforeAll(() => {
- *   // Initialization code that might take longer than the default timeout
- * }, 5000);
  */
 export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
   return getCurrentSuite().on(
@@ -61,12 +55,6 @@ export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
  * afterAll(async () => {
  *   await database.disconnect();
  * });
- *
- * @example
- * // Example of using afterAll with a timeout
- * afterAll(() => {
- *   // Cleanup code that might take longer than the default timeout
- * }, 5000);
  */
 export function afterAll(fn: AfterAllListener, timeout?: number): void {
   return getCurrentSuite().on(
