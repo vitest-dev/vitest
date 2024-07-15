@@ -168,7 +168,7 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
  * @returns {void}
  *
  * @example
- * // Example of using onTestFinished for cleanup after each test
+ * // Example of using onTestFinished for cleanup
  * const db = await connectToDatabase();
  * onTestFinished(async () => {
  *   await db.disconnect();
