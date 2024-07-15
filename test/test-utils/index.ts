@@ -64,7 +64,8 @@ export async function runVitest(
     }, {
       ...viteOverrides,
       server: {
-        // we never need a websocket connection for the root config
+        // we never need a websocket connection for the root config because it doesn't connect to the browser
+        // browser mode uses a separate config that doesn't inherit CLI overrides
         ws: false,
         watch: {
           // During tests we edit the files too fast and sometimes chokidar
