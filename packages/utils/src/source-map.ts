@@ -90,17 +90,17 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
     return null
   }
 
-  // eslint-disable-next-line regexp/no-super-linear-backtracking,regexp/no-misleading-capturing-group,regexp/no-unused-capturing-group
-  const matches = /(at\s+)?(async\s+)?([^\s@]+)?(?:@|\s+\()?([^\s()]+):(\d+):(\d+)\)?/.exec(line)
+  // eslint-disable-next-line regexp/no-useless-assertions,regexp/no-unused-capturing-group
+  const matches = /^(\bat\s*\b)?(?:\b\s*async\s*\b)?(\b\w+(?!([/:@]|(https?)|(file)))\b)?(?:@|\s+\()?([^\s()]+):(\d+):(\d+)\)?$/.exec(line)
   if (!matches) {
     return null
   }
 
   return {
-    file: prepareUrl(matches[4]),
-    method: matches[3] || '',
-    line: Number.parseInt(matches[5]),
-    column: Number.parseInt(matches[6]),
+    file: prepareUrl(matches[6]),
+    method: matches[2] || '',
+    line: Number.parseInt(matches[7]),
+    column: Number.parseInt(matches[8]),
   }
 }
 
