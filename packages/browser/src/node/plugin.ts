@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
-import { readFileSync } from 'node:fs'
-import { basename, resolve } from 'pathe'
+import { lstatSync, readFileSync } from 'node:fs'
+import type { Stats } from 'node:fs'
+import { basename, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
@@ -100,6 +101,52 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             },
           }),
         )
+
+        const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
+
+        // eslint-disable-next-line prefer-arrow-callback
+        screenshotFailures && server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
+          if (!req.url || !browserServer.provider) {
+            res.statusCode = 404
+            res.end()
+            return
+          }
+
+          const url = new URL(req.url, 'http://localhost')
+          const file = url.searchParams.get('file')
+          if (!file) {
+            res.statusCode = 404
+            res.end()
+            return
+          }
+
+          let stat: Stats | undefined
+          try {
+            stat = lstatSync(file)
+          }
+          catch (_) {
+          }
+
+          if (!stat?.isFile()) {
+            res.statusCode = 404
+            res.end()
+            return
+          }
+
+          const ext = extname(file)
+          const buffer = readFileSync(file)
+          res.setHeader(
+            'Cache-Control',
+            'public,max-age=0,must-revalidate',
+          )
+          res.setHeader('Content-Length', buffer.length)
+          res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
+            ? 'image/jpeg'
+            : ext === 'webp'
+              ? 'image/webp'
+              : 'image/png')
+          res.end(buffer)
+        })
       },
     },
     {

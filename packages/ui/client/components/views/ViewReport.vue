@@ -3,7 +3,7 @@ import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 import type Convert from 'ansi-to-html'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
-import { config } from '~/composables/client'
+import { browserState, config } from '~/composables/client'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
@@ -103,6 +103,30 @@ const failed = computed(() => {
     ? mapLeveledTaskStacks(isDark.value, failedFlatMap)
     : failedFlatMap
 })
+
+function open(task: Task) {
+  const filePath = task.meta?.failScreenshotPath
+  if (filePath) {
+    fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
+  }
+}
+
+const showScreenshot = ref(false)
+const timestamp = ref(Date.now())
+const currentTask = ref<Task | undefined>()
+const currentScreenshotUrl = computed(() => {
+  const file = currentTask.value?.meta.failScreenshotPath
+  // force refresh
+  const t = timestamp.value
+  // browser plugin using /, change this if base can be modified
+  return file ? `/__screenshot-error?file=${encodeURIComponent(file)}&t=${t}` : undefined
+})
+
+function showScreenshotModal(task: Task) {
+  currentTask.value = task
+  timestamp.value = Date.now()
+  showScreenshot.value = true
+}
 </script>
 
 <template>
@@ -121,7 +145,25 @@ const failed = computed(() => {
             }rem`,
           }"
         >
-          {{ task.name }}
+          <div flex="~ gap-2 items-center">
+            <span>{{ task.name }}</span>
+            <template v-if="browserState && task.meta?.failScreenshotPath">
+              <IconButton
+                v-tooltip.bottom="'View screenshot error'"
+                class="!op-100"
+                icon="i-carbon:image"
+                title="View screenshot error"
+                @click="showScreenshotModal(task)"
+              />
+              <IconButton
+                v-tooltip.bottom="'Open screenshot error in editor'"
+                class="!op-100"
+                icon="i-carbon:image-reference"
+                title="Open screenshot error in editor"
+                @click="open(task)"
+              />
+            </template>
+          </div>
           <div
             v-if="task.result?.htmlError"
             class="scrolls scrolls-rounded task-error"
@@ -145,6 +187,20 @@ const failed = computed(() => {
       <div bg="green-500/10" text="green-500 sm" p="x4 y2" m-2 rounded>
         All tests passed in this file
       </div>
+    </template>
+    <template v-if="browserState">
+      <Modal v-model="showScreenshot" direction="right">
+        <template v-if="currentTask">
+          <Suspense>
+            <ScreenshotError
+              :file="currentTask.file.filepath"
+              :name="currentTask.name"
+              :url="currentScreenshotUrl"
+              @close="showScreenshot = false"
+            />
+          </Suspense>
+        </template>
+      </Modal>
     </template>
   </div>
 </template>
