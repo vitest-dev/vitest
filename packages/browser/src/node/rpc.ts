@@ -6,6 +6,7 @@ import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import type { BrowserCommandContext } from 'vitest/node'
 import { createDebugger, isFileServingAllowed } from 'vitest/node'
+import type { ErrorWithDiff } from 'vitest'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import type { BrowserServer } from './server'
 import { cleanUrl, resolveMock } from './resolveMock'
@@ -67,6 +68,10 @@ export function setupBrowserRpc(
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
         async onUnhandledError(error, type) {
+          if (error && typeof error === 'object') {
+            const _error = error as ErrorWithDiff
+            _error.stacks = server.parseErrorStacktrace(_error)
+          }
           ctx.state.catchError(error, type)
         },
         async onCollected(files) {
