@@ -153,18 +153,10 @@ export abstract class SuiteImplementation extends Task {
    * If `name` is a string, it will look for an exact match.
    */
   public findTest(name: string | RegExp): TestCase | undefined {
-    if (typeof name === 'string') {
-      for (const test of this.tests()) {
-        if (test.name === name) {
-          return test
-        }
-      }
-    }
-    else {
-      for (const test of this.tests()) {
-        if (name.test(test.name)) {
-          return test
-        }
+    const isString = typeof name === 'string'
+    for (const test of this.tests()) {
+      if (test.name === name || (!isString && name.test(test.name))) {
+        return test
       }
     }
   }
@@ -174,18 +166,13 @@ export abstract class SuiteImplementation extends Task {
    * If `name` is a string, it will look for an exact match.
    */
   public findSuite(name: string | RegExp): TestSuite | undefined {
-    if (typeof name === 'string') {
-      for (const suite of this.children()) {
-        if (suite.type === 'suite' && suite.name === name) {
-          return suite
-        }
+    const isString = typeof name === 'string'
+    for (const suite of this.children()) {
+      if (suite.type !== 'suite') {
+        continue
       }
-    }
-    else {
-      for (const suite of this.children()) {
-        if (suite.type === 'suite' && name.test(suite.name)) {
-          return suite
-        }
+      if (suite.name === name || (!isString && name.test(suite.name))) {
+        return suite
       }
     }
   }
