@@ -1,4 +1,11 @@
-import type { Custom, File as FileTask, Suite as SuiteTask, TaskMeta, TaskResult, Test } from '@vitest/runner'
+import type {
+  Custom,
+  File as FileTask,
+  Suite as SuiteTask,
+  TaskMeta,
+  TaskResult,
+  Test,
+} from '@vitest/runner'
 import { getFullName } from '../utils'
 import type { ParsedStack } from '../types'
 import type { WorkspaceProject } from './workspace'
@@ -71,7 +78,10 @@ class Task {
 export class TestCase extends Task {
   declare public readonly task: Test | Custom
   public readonly type: 'test' | 'custom' = 'test'
-  #options: TaskOptions | undefined
+  /**
+   * Options that the test was initiated with.
+   */
+  public readonly options: TaskOptions
   /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
    */
@@ -87,6 +97,7 @@ export class TestCase extends Task {
     else {
       this.parent = this.file
     }
+    this.options = buildOptions(task)
   }
 
   /**
@@ -116,18 +127,6 @@ export class TestCase extends Task {
   }
 
   /**
-   * Options that the test was initiated with.
-   */
-  public options(): TaskOptions {
-    if (this.#options === undefined) {
-      this.#options = buildOptions(this.task)
-    }
-    // mode is the only one that can change dinamically
-    this.#options.mode = this.task.mode
-    return this.#options
-  }
-
-  /**
    * Useful information about the test like duration, memory usage, etc.
    */
   public diagnostic(): TestDiagnostic {
@@ -142,74 +141,59 @@ export class TestCase extends Task {
   }
 }
 
-abstract class SuiteImplementation extends Task {
-  declare public readonly task: SuiteTask | FileTask
-  /**
-   * Parent suite. If suite was called directly inside the file, the parent will be the file.
-   */
-  public readonly parent: TestSuite | TestFile
+class TaskCollection {
+  #task: SuiteTask | FileTask
 
-  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
-    super(task, project)
-
-    const suite = this.task.suite
-    if (suite) {
-      this.parent = tasksMap.get(suite) as TestSuite
-    }
-    else {
-      this.parent = this.file
-    }
+  constructor(task: SuiteTask | FileTask) {
+    this.#task = task
   }
 
   /**
-   * Looks for a test by `name`.
+   * The same collection, but in an array form for easier manipulation.
+   */
+  array(): (TestCase | TestSuite)[] {
+    return Array.from(this)
+  }
+
+  /**
+   * Iterates over all tests and suites in the collection.
+   */
+  *values(): IterableIterator<TestCase | TestSuite> {
+    return this[Symbol.iterator]()
+  }
+
+  /**
+   * Looks for a test or a suite by `name` inside that suite and its children.
    * If `name` is a string, it will look for an exact match.
    */
-  public findTest(name: string | RegExp): TestCase | undefined {
+  find(type: 'test', name: string | RegExp): TestCase | undefined
+  find(type: 'suite', name: string | RegExp): TestSuite | undefined
+  find(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined
+  find(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined {
     const isString = typeof name === 'string'
-    for (const test of this.tests()) {
-      if (test.name === name || (!isString && name.test(test.name))) {
-        return test
+    for (const task of this) {
+      if (task.type === type) {
+        if (task.name === name || (!isString && name.test(task.name))) {
+          return task
+        }
+        if (task.type === 'suite') {
+          const result = task.children.find(type, name)
+          if (result) {
+            return result
+          }
+        }
       }
     }
   }
 
   /**
-   * Looks for a test by `name`.
-   * If `name` is a string, it will look for an exact match.
+   * Returns all tests that are part of this suite and its children.
+   * If you only need tests of the current suite, you can iterate over the collection directly and filter by type.
    */
-  public findSuite(name: string | RegExp): TestSuite | undefined {
-    const isString = typeof name === 'string'
-    for (const suite of this.children()) {
-      if (suite.type !== 'suite') {
-        continue
-      }
-      if (suite.name === name || (!isString && name.test(suite.name))) {
-        return suite
-      }
-    }
-  }
-
-  /**
-   * An array of suites and tests that are part of this suite.
-   */
-  public *children(): Iterable<TestSuite | TestCase> {
-    for (const task of this.task.tasks) {
-      const taskInstance = tasksMap.get(task)
-      if (!taskInstance) {
-        throw new Error(`Task instance was not found for task ${task.id}`)
-      }
-      yield taskInstance as TestSuite | TestCase
-    }
-  }
-
-  /**
-   * An array of all tests that are part of this suite and its children.
-   */
-  public *tests(state?: TestResult['state'] | 'running'): Iterable<TestCase> {
-    for (const child of this.children()) {
+  *tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+    for (const child of this) {
       if (child.type === 'suite') {
-        yield * child.tests(state)
+        yield * child.children.tests(state)
       }
       else if (state) {
         const result = child.result()
@@ -225,21 +209,54 @@ abstract class SuiteImplementation extends Task {
       }
     }
   }
+
+  *[Symbol.iterator](): IterableIterator<TestSuite | TestCase> {
+    for (const task of this.#task.tasks) {
+      const taskInstance = tasksMap.get(task)
+      if (!taskInstance) {
+        throw new Error(`Task instance was not found for task ${task.id}`)
+      }
+      yield taskInstance as TestSuite | TestCase
+    }
+  }
+}
+
+abstract class SuiteImplementation extends Task {
+  declare public readonly task: SuiteTask | FileTask
+  /**
+   * Parent suite. If suite was called directly inside the file, the parent will be the file.
+   */
+  public readonly parent: TestSuite | TestFile
+  /**
+   * Collection of suites and tests that are part of this suite.
+   */
+  public readonly children: TaskCollection
+
+  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+    super(task, project)
+
+    const suite = this.task.suite
+    if (suite) {
+      this.parent = tasksMap.get(suite) as TestSuite
+    }
+    else {
+      this.parent = this.file
+    }
+    this.children = new TaskCollection(task)
+  }
 }
 
 export class TestSuite extends SuiteImplementation {
   declare public readonly task: SuiteTask
   public readonly type = 'suite'
-  #options: TaskOptions | undefined
-
   /**
    * Options that suite was initiated with.
    */
-  public options(): TaskOptions {
-    if (this.#options === undefined) {
-      this.#options = buildOptions(this.task)
-    }
-    return this.#options
+  public readonly options: TaskOptions
+
+  constructor(task: SuiteTask, project: WorkspaceProject) {
+    super(task, project)
+    this.options = buildOptions(task)
   }
 }
 
