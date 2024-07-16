@@ -204,13 +204,24 @@ export abstract class SuiteImplementation extends Task {
   /**
    * An array of all tests that are part of this suite and its children.
    */
-  public *tests(): Iterable<TestCase> {
+  public *tests(state?: TestResult['state'] | 'running'): Iterable<TestCase> {
     for (const child of this.children()) {
       if (child.type === 'suite') {
-        yield * child.tests()
+        yield * child.tests(state)
       }
       else {
-        yield child
+        if (state) {
+          const result = child.result()
+          if (!result && state === 'running') {
+            yield child
+          }
+          else if (result && result.state === state) {
+            yield child
+          }
+        }
+        else {
+          yield child
+        }
       }
     }
   }
