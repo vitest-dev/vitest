@@ -149,6 +149,48 @@ export abstract class SuiteImplementation extends Task {
   declare public readonly task: SuiteTask | FileTask
 
   /**
+   * Looks for a test by `name`.
+   * If `name` is a string, it will look for an exact match.
+   */
+  public findTest(name: string | RegExp): TestCase | undefined {
+    if (typeof name === 'string') {
+      for (const test of this.tests()) {
+        if (test.name === name) {
+          return test
+        }
+      }
+    }
+    else {
+      for (const test of this.tests()) {
+        if (name.test(test.name)) {
+          return test
+        }
+      }
+    }
+  }
+
+  /**
+   * Looks for a test by `name`.
+   * If `name` is a string, it will look for an exact match.
+   */
+  public findSuite(name: string | RegExp): TestSuite | undefined {
+    if (typeof name === 'string') {
+      for (const suite of this.children()) {
+        if (suite.type === 'suite' && suite.name === name) {
+          return suite
+        }
+      }
+    }
+    else {
+      for (const suite of this.children()) {
+        if (suite.type === 'suite' && name.test(suite.name)) {
+          return suite
+        }
+      }
+    }
+  }
+
+  /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
    */
   public parent(): TestSuite | TestFile {
