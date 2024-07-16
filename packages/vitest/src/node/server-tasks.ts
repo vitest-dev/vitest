@@ -76,7 +76,7 @@ export class TestCase extends Task {
     }
   }
 
-  public get meta(): TaskMeta {
+  public meta(): TaskMeta {
     return this.task.meta
   }
 
