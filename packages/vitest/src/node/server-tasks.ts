@@ -3,6 +3,10 @@ import { getFullName } from '../utils'
 import type { ParsedStack } from '../types'
 import type { WorkspaceProject } from './workspace'
 
+// rule for function/getter
+// getter is a readonly property that doesn't change in time
+// method can return different objects depending on when it's called
+
 const tasksMap = new WeakMap<
   Test | Custom | FileTask | SuiteTask,
   TestCase | TestFile | TestSuite
