@@ -83,9 +83,9 @@ export class TestCase extends Task {
   public options(): TaskOptions {
     if (this.#options === undefined) {
       this.#options = buildOptions(this.task)
-      // mode is the only one that can change dinamically
-      this.#options.mode = this.task.mode
     }
+    // mode is the only one that can change dinamically
+    this.#options.mode = this.task.mode
     return this.#options
   }
 
