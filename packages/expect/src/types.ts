@@ -98,19 +98,19 @@ export interface ExpectStatic
   AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
   extend: (expects: MatchersObject) => void
-  anything: () => any
-  any: (constructor: unknown) => any
+  anything: () => unknown
+  any: (constructor: unknown) => unknown
   getState: () => MatcherState
   setState: (state: Partial<MatcherState>) => void
   not: AsymmetricMatchersContaining
 }
 
 export interface AsymmetricMatchersContaining {
-  stringContaining: (expected: string) => any
-  objectContaining: <T = any>(expected: T) => any
-  arrayContaining: <T = unknown>(expected: Array<T>) => any
-  stringMatching: (expected: string | RegExp) => any
-  closeTo: (expected: number, precision?: number) => any
+  stringContaining: (expected: string) => unknown
+  objectContaining: <T = any>(expected: T) => unknown
+  arrayContaining: <T = unknown>(expected: Array<T>) => unknown
+  stringMatching: (expected: string | RegExp) => unknown
+  closeTo: (expected: number, precision?: number) => unknown
 }
 
 export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
