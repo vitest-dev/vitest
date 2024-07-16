@@ -1,5 +1,6 @@
 import type { Custom, File as FileTask, Suite as SuiteTask, TaskMeta, TaskResult, Test } from '@vitest/runner'
 import { getFullName } from '../utils'
+import type { ParsedStack } from '../types'
 import type { WorkspaceProject } from './workspace'
 
 const tasksMap = new WeakMap<
@@ -58,6 +59,22 @@ export class TestCase extends Task {
   declare public readonly task: Test | Custom
   public readonly type = 'test'
   #options: TaskOptions | undefined
+
+  public result(): TestResult | undefined {
+    const result = this.task.result
+    if (!result) {
+      return undefined
+    }
+    const state = result.state === 'fail'
+      ? 'failed'
+      : result.state === 'pass'
+        ? 'passed'
+        : 'skipped'
+    return {
+      state,
+      errors: result.errors as TestError[] | undefined,
+    }
+  }
 
   public get meta(): TaskMeta {
     return this.task.meta
@@ -142,6 +159,25 @@ function buildOptions(task: Test | Custom | FileTask | SuiteTask): TaskOptions {
     repeats: task.repeats,
     mode: task.mode,
   }
+}
+
+interface SerialisedError {
+  message: string
+  stack?: string
+  name: string
+  stacks?: ParsedStack[]
+  [key: string]: unknown
+}
+
+interface TestError extends SerialisedError {
+  diff?: string
+  actual?: string
+  expected?: string
+}
+
+interface TestResult {
+  state: 'passed' | 'failed' | 'skipped'
+  errors?: TestError[]
 }
 
 export interface TestDiagnostic {
