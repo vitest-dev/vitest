@@ -163,7 +163,7 @@ class TaskCollection {
   }
 
   /**
-   * Looks for a test or a suite by `name` inside that suite and its children.
+   * Looks for a test or a suite by `name` only inside the current suite.
    * If `name` is a string, it will look for an exact match.
    */
   find(type: 'test', name: string | RegExp): TestCase | undefined
@@ -177,8 +177,26 @@ class TaskCollection {
           return task
         }
       }
+    }
+  }
+
+  /**
+   * Looks for a test or a suite by `name` inside the current suite and its children.
+   * If `name` is a string, it will look for an exact match.
+   */
+  deepFind(type: 'test', name: string | RegExp): TestCase | undefined
+  deepFind(type: 'suite', name: string | RegExp): TestSuite | undefined
+  deepFind(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined
+  deepFind(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined {
+    const isString = typeof name === 'string'
+    for (const task of this) {
+      if (task.type === type) {
+        if (task.name === name || (!isString && name.test(task.name))) {
+          return task
+        }
+      }
       if (task.type === 'suite') {
-        const result = task.children.find(type, name)
+        const result = task.children.deepFind(type, name)
         if (result) {
           return result
         }
@@ -187,25 +205,58 @@ class TaskCollection {
   }
 
   /**
-   * Returns all tests that are part of this suite and its children.
-   * If you only need tests of the current suite, you can iterate over the collection directly and filter by type.
+   * Filters all tests that are part of this collection's suite and its children.
    */
-  *tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+  *deepTests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
     for (const child of this) {
       if (child.type === 'suite') {
-        yield * child.children.tests(state)
+        yield * child.children.deepTests(state)
       }
       else if (state) {
-        const result = child.result()
-        if (!result && state === 'running') {
-          yield child
-        }
-        else if (result && result.state === state) {
+        const testState = getTestState(child)
+        if (state === testState) {
           yield child
         }
       }
       else {
         yield child
+      }
+    }
+  }
+
+  /**
+   * Filters only tests that are part of this collection.
+   */
+  *tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+    for (const child of this) {
+      if (child.type === 'test') {
+        const testState = getTestState(child)
+        if (state === testState) {
+          yield child
+        }
+      }
+    }
+  }
+
+  /**
+   * Filters only suites that are part of this collection.
+   */
+  *suites(): IterableIterator<TestSuite> {
+    for (const child of this) {
+      if (child.type === 'suite') {
+        yield child
+      }
+    }
+  }
+
+  /**
+   * Filters all suites that are part of this collection's suite and its children.
+   */
+  *deepSuites(): IterableIterator<TestSuite> {
+    for (const child of this) {
+      if (child.type === 'suite') {
+        yield child
+        yield * child.children.deepSuites()
       }
     }
   }
@@ -321,4 +372,9 @@ export interface TestDiagnostic {
   startTime: number | undefined
   retryCount: number | undefined
   repeatCount: number | undefined
+}
+
+function getTestState(test: TestCase): TestResult['state'] | 'running' {
+  const result = test.result()
+  return result ? result.state : 'running'
 }
