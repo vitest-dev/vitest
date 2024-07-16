@@ -176,11 +176,11 @@ class TaskCollection {
         if (task.name === name || (!isString && name.test(task.name))) {
           return task
         }
-        if (task.type === 'suite') {
-          const result = task.children.find(type, name)
-          if (result) {
-            return result
-          }
+      }
+      if (task.type === 'suite') {
+        const result = task.children.find(type, name)
+        if (result) {
+          return result
         }
       }
     }
