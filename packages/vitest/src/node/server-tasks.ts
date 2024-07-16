@@ -12,25 +12,45 @@ class Task {
   #fullName: string | undefined
   #project: WorkspaceProject
 
+  /**
+   * Task instance.
+   * @experimental Public task API is experimental and does not follow semver.
+   */
+  public readonly task: Test | Custom | FileTask | SuiteTask
+
   constructor(
-    public readonly task: Test | Custom | FileTask | SuiteTask,
+    task: Test | Custom | FileTask | SuiteTask,
     project: WorkspaceProject,
   ) {
+    this.task = task
     this.#project = project
   }
 
+  /**
+   * Current task's project.
+   * @experimental Public project API is experimental and does not follow semver.
+   */
   public project(): WorkspaceProject {
     return this.#project
   }
 
+  /**
+   * Direct reference to the file task where the test or suite is defined.
+   */
   public file(): File {
     return tasksMap.get(this.task.file) as File
   }
 
+  /**
+   * Name of the test or the suite.
+   */
   public get name(): string {
     return this.task.name
   }
 
+  /**
+   * Full name of the test or the suite including all parent suites separated with `>`.
+   */
   public get fullName(): string {
     if (this.#fullName === undefined) {
       this.#fullName = getFullName(this.task, ' > ')
@@ -38,10 +58,19 @@ class Task {
     return this.#fullName
   }
 
+  /**
+   * Unique identifier.
+   * This ID is deterministic and will be the same for the same test across multiple runs.
+   * The ID is based on the file path and test position.
+   */
   public get id(): string {
     return this.task.id
   }
 
+  /**
+   * Location in the file where the test or suite was defined.
+   * Locations are collected only if `includeTaskLocation` is enabled in the config.
+   */
   public get location(): { line: number; column: number } | undefined {
     return this.task.location
   }
@@ -52,6 +81,9 @@ export class TestCase extends Task {
   public readonly type: 'test' | 'custom' = 'test'
   #options: TaskOptions | undefined
 
+  /**
+   * Parent suite of the test. If test was called directly inside the file, the parent will be the file.
+   */
   public parent(): Suite | File {
     const suite = this.task.suite
     if (suite) {
@@ -60,6 +92,9 @@ export class TestCase extends Task {
     return this.file()
   }
 
+  /**
+   * Result of the test. Will be `undefined` if test is not finished yet or was just collected.
+   */
   public result(): TestResult | undefined {
     const result = this.task.result
     if (!result) {
@@ -76,10 +111,16 @@ export class TestCase extends Task {
     }
   }
 
+  /**
+   * Custom metadata that was attached to the test during its execution.
+   */
   public meta(): TaskMeta {
     return this.task.meta
   }
 
+  /**
+   * Options that the test was initiated with.
+   */
   public options(): TaskOptions {
     if (this.#options === undefined) {
       this.#options = buildOptions(this.task)
@@ -89,6 +130,9 @@ export class TestCase extends Task {
     return this.#options
   }
 
+  /**
+   * Useful information about the test like duration, memory usage, etc.
+   */
   public diagnostic(): TestDiagnostic {
     const result = (this.task.result || {} as TaskResult)
     return {
@@ -104,6 +148,9 @@ export class TestCase extends Task {
 export abstract class SuiteImplementation extends Task {
   declare public readonly task: SuiteTask | FileTask
 
+  /**
+   * Parent suite. If suite was called directly inside the file, the parent will be the file.
+   */
   public parent(): Suite | File {
     const suite = this.task.suite
     if (suite) {
@@ -112,6 +159,9 @@ export abstract class SuiteImplementation extends Task {
     return this.file()
   }
 
+  /**
+   * An array of suites and tests that are part of this suite.
+   */
   public children(): (Suite | TestCase)[] {
     return this.task.tasks.map((task) => {
       const taskInstance = tasksMap.get(task)
@@ -121,6 +171,22 @@ export abstract class SuiteImplementation extends Task {
       return taskInstance as Suite | TestCase
     })
   }
+
+  /**
+   * An array of all tests that are part of this suite and its children.
+   */
+  public tests(): TestCase[] {
+    const tests: TestCase[] = []
+    for (const child of this.children()) {
+      if (child.type === 'test' || child.type === 'custom') {
+        tests.push(child as TestCase)
+      }
+      else {
+        tests.push(...(child as Suite).tests())
+      }
+    }
+    return tests
+  }
 }
 
 export class Suite extends SuiteImplementation {
@@ -128,6 +194,9 @@ export class Suite extends SuiteImplementation {
   public readonly type = 'suite'
   #options: TaskOptions | undefined
 
+  /**
+   * Options that suite was initiated with.
+   */
   public options(): TaskOptions {
     if (this.#options === undefined) {
       this.#options = buildOptions(this.task)
@@ -140,6 +209,11 @@ export class File extends SuiteImplementation {
   declare public readonly task: FileTask
   public readonly type = 'file'
 
+  /**
+   * This is usually an absolute UNIX file path.
+   * It can be a virtual id if the file is not on the disk.
+   * This value corresponds to Vite's `ModuleGraph` id.
+   */
   public get moduleId(): string {
     return this.task.filepath
   }
