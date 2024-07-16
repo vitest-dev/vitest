@@ -380,7 +380,7 @@ export type Mocked<T> = {
       : T[P];
 } & T
 
-export const mocks = new Set<MockInstance>()
+export const mocks: Set<MockInstance> = new Set()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return (

@@ -57,13 +57,11 @@ interface TestExclude {
   }
 }
 
-const DEFAULT_PROJECT = Symbol.for('default-project')
+const DEFAULT_PROJECT: unique symbol = Symbol.for('default-project')
 const debug = createDebug('vitest:coverage')
 let uniqueId = 0
 
-export class IstanbulCoverageProvider
-  extends BaseCoverageProvider
-  implements CoverageProvider {
+export class IstanbulCoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'istanbul'
 
   ctx!: Vitest
@@ -71,11 +69,11 @@ export class IstanbulCoverageProvider
   instrumenter!: Instrumenter
   testExclude!: InstanceType<TestExclude>
 
-  coverageFiles = new Map<ProjectName, CoverageFilesByTransformMode>()
+  coverageFiles: Map<ProjectName, CoverageFilesByTransformMode> = new Map()
   coverageFilesDirectory!: string
   pendingPromises: Promise<void>[] = []
 
-  initialize(ctx: Vitest) {
+  initialize(ctx: Vitest): void {
     const config: CoverageIstanbulOptions = ctx.config.coverage
 
     this.ctx = ctx
@@ -145,11 +143,14 @@ export class IstanbulCoverageProvider
     )
   }
 
-  resolveOptions() {
+  resolveOptions(): Options {
     return this.options
   }
 
-  onFileTransform(sourceCode: string, id: string, pluginCtx: any) {
+  onFileTransform(sourceCode: string, id: string, pluginCtx: any): {
+    code: string
+    map: any
+  } | undefined {
     if (!this.testExclude.shouldInstrument(id)) {
       return
     }
@@ -178,7 +179,7 @@ export class IstanbulCoverageProvider
    * Note that adding new entries here and requiring on those without
    * backwards compatibility is a breaking change.
    */
-  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
+  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
     }
@@ -204,7 +205,7 @@ export class IstanbulCoverageProvider
     this.pendingPromises.push(promise)
   }
 
-  async clean(clean = true) {
+  async clean(clean = true): Promise<void> {
     if (clean && existsSync(this.options.reportsDirectory)) {
       await fs.rm(this.options.reportsDirectory, {
         recursive: true,
@@ -227,7 +228,7 @@ export class IstanbulCoverageProvider
     this.pendingPromises = []
   }
 
-  async generateCoverage({ allTestsRun }: ReportContext) {
+  async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
     const coverageMap = libCoverage.createCoverageMap({})
     let index = 0
     const total = this.pendingPromises.length
@@ -282,7 +283,7 @@ export class IstanbulCoverageProvider
     return coverageMap
   }
 
-  async reportCoverage(coverageMap: unknown, { allTestsRun }: ReportContext) {
+  async reportCoverage(coverageMap: unknown, { allTestsRun }: ReportContext): Promise<void> {
     await this.generateReports(
       (coverageMap as CoverageMap) || libCoverage.createCoverageMap({}),
       allTestsRun,
@@ -305,7 +306,7 @@ export class IstanbulCoverageProvider
   async generateReports(
     coverageMap: CoverageMap,
     allTestsRun: boolean | undefined,
-  ) {
+  ): Promise<void> {
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
@@ -370,7 +371,7 @@ export class IstanbulCoverageProvider
     }
   }
 
-  async mergeReports(coverageMaps: unknown[]) {
+  async mergeReports(coverageMaps: unknown[]): Promise<void> {
     const coverageMap = libCoverage.createCoverageMap({})
 
     for (const coverage of coverageMaps) {
