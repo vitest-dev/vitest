@@ -177,11 +177,11 @@ export abstract class SuiteImplementation extends Task {
    */
   public *tests(): Iterable<TestCase> {
     for (const child of this.children()) {
-      if (child.type === 'test' || child.type === 'custom') {
-        yield child as TestCase
+      if (child.type === 'suite') {
+        yield * child.tests()
       }
       else {
-        yield * (child as TestSuite).tests()
+        yield child
       }
     }
   }
