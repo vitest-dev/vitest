@@ -142,7 +142,7 @@ export class TestCase extends Task {
   }
 }
 
-export abstract class SuiteImplementation extends Task {
+abstract class SuiteImplementation extends Task {
   declare public readonly task: SuiteTask | FileTask
   /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
