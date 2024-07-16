@@ -8,7 +8,7 @@ import { provider } from 'std-env'
 
 const session = new inspector.Session()
 
-export function startCoverage() {
+export function startCoverage(): void {
   session.connect()
   session.post('Profiler.enable')
   session.post('Profiler.startPreciseCoverage', {
@@ -17,7 +17,7 @@ export function startCoverage() {
   })
 }
 
-export async function takeCoverage() {
+export async function takeCoverage(): Promise<unknown> {
   return new Promise((resolve, reject) => {
     session.post('Profiler.takePreciseCoverage', async (error, coverage) => {
       if (error) {
@@ -36,7 +36,7 @@ export async function takeCoverage() {
   })
 }
 
-export function stopCoverage() {
+export function stopCoverage(): void {
   session.post('Profiler.stopPreciseCoverage')
   session.post('Profiler.disable')
   session.disconnect()

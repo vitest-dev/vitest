@@ -15,18 +15,17 @@ export class SnapshotManager {
     this.clear()
   }
 
-  clear() {
+  clear(): void {
     this.summary = emptySummary(this.options)
   }
 
-  add(result: SnapshotResult) {
+  add(result: SnapshotResult): void {
     addSnapshotResult(this.summary, result)
   }
 
-  resolvePath(testPath: string) {
+  resolvePath(testPath: string): string {
     const resolver
-      = this.options.resolveSnapshotPath
-      || (() => {
+      = this.options.resolveSnapshotPath || (() => {
         return join(
           join(dirname(testPath), '__snapshots__'),
           `${basename(testPath)}${this.extension}`,
@@ -37,7 +36,7 @@ export class SnapshotManager {
     return path
   }
 
-  resolveRawPath(testPath: string, rawPath: string) {
+  resolveRawPath(testPath: string, rawPath: string): string {
     return isAbsolute(rawPath) ? rawPath : resolve(dirname(testPath), rawPath)
   }
 }

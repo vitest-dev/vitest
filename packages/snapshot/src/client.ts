@@ -1,6 +1,6 @@
 import { deepMergeSnapshot } from './port/utils'
 import SnapshotState from './port/state'
-import type { SnapshotStateOptions } from './types'
+import type { SnapshotResult, SnapshotStateOptions } from './types'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 
 function createMismatchError(
@@ -53,7 +53,7 @@ export class SnapshotClient {
   filepath?: string
   name?: string
   snapshotState: SnapshotState | undefined
-  snapshotStateMap = new Map<string, SnapshotState>()
+  snapshotStateMap: Map<string, SnapshotState> = new Map()
 
   constructor(private options: SnapshotClientOptions = {}) {}
 
@@ -61,7 +61,7 @@ export class SnapshotClient {
     filepath: string,
     name: string,
     options: SnapshotStateOptions,
-  ) {
+  ): Promise<void> {
     this.filepath = filepath
     this.name = name
 
@@ -78,16 +78,16 @@ export class SnapshotClient {
     }
   }
 
-  getSnapshotState(filepath: string) {
+  getSnapshotState(filepath: string): SnapshotState {
     return this.snapshotStateMap.get(filepath)!
   }
 
-  clearTest() {
+  clearTest(): void {
     this.filepath = undefined
     this.name = undefined
   }
 
-  skipTestSnapshots(name: string) {
+  skipTestSnapshots(name: string): void {
     this.snapshotState?.markSnapshotsAsCheckedForTest(name)
   }
 
@@ -189,7 +189,7 @@ export class SnapshotClient {
     return this.assert(options)
   }
 
-  async finishCurrentRun() {
+  async finishCurrentRun(): Promise<SnapshotResult | null> {
     if (!this.snapshotState) {
       return null
     }
@@ -199,7 +199,7 @@ export class SnapshotClient {
     return result
   }
 
-  clear() {
+  clear(): void {
     this.snapshotStateMap.clear()
   }
 }

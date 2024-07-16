@@ -131,7 +131,7 @@ function printBacktickString(str: string): string {
   return `\`${escapeBacktickString(str)}\``
 }
 
-export function normalizeNewlines(string: string) {
+export function normalizeNewlines(string: string): string {
   return string.replace(/\r\n|\r/g, '\n')
 }
 
@@ -139,7 +139,7 @@ export async function saveSnapshotFile(
   environment: SnapshotEnvironment,
   snapshotData: SnapshotData,
   snapshotPath: string,
-) {
+): Promise<void> {
   const snapshots = Object.keys(snapshotData)
     .sort(naturalCompare)
     .map(
@@ -164,7 +164,7 @@ export async function saveSnapshotFileRaw(
   environment: SnapshotEnvironment,
   content: string,
   snapshotPath: string,
-) {
+): Promise<void> {
   const oldContent = await environment.readSnapshotFile(snapshotPath)
   const skipWriting = oldContent != null && oldContent === content
 
@@ -175,7 +175,7 @@ export async function saveSnapshotFileRaw(
   await environment.saveSnapshotFile(snapshotPath, content)
 }
 
-export function prepareExpected(expected?: string) {
+export function prepareExpected(expected?: string): string | undefined {
   function findStartIndent() {
     // Attempts to find indentation for objects.
     // Matches the ending tag of the object.
