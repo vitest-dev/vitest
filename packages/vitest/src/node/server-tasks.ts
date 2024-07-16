@@ -30,14 +30,14 @@ class Task {
    * Current task's project.
    * @experimental Public project API is experimental and does not follow semver.
    */
-  public project(): WorkspaceProject {
+  public get project(): WorkspaceProject {
     return this.#project
   }
 
   /**
    * Direct reference to the file task where the test or suite is defined.
    */
-  public file(): TestFile {
+  public get file(): TestFile {
     return tasksMap.get(this.task.file) as TestFile
   }
 
@@ -84,12 +84,12 @@ export class TestCase extends Task {
   /**
    * Parent suite of the test. If test was called directly inside the file, the parent will be the file.
    */
-  public parent(): TestSuite | TestFile {
+  public get parent(): TestSuite | TestFile {
     const suite = this.task.suite
     if (suite) {
       return tasksMap.get(suite) as TestSuite
     }
-    return this.file()
+    return this.file
   }
 
   /**
@@ -180,12 +180,12 @@ export abstract class SuiteImplementation extends Task {
   /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
    */
-  public parent(): TestSuite | TestFile {
+  public get parent(): TestSuite | TestFile {
     const suite = this.task.suite
     if (suite) {
       return tasksMap.get(suite) as TestSuite
     }
-    return this.file()
+    return this.file
   }
 
   /**
