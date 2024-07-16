@@ -162,30 +162,28 @@ export abstract class SuiteImplementation extends Task {
   /**
    * An array of suites and tests that are part of this suite.
    */
-  public children(): (TestSuite | TestCase)[] {
-    return this.task.tasks.map((task) => {
+  public *children(): Iterable<TestSuite | TestCase> {
+    for (const task of this.task.tasks) {
       const taskInstance = tasksMap.get(task)
       if (!taskInstance) {
         throw new Error(`Task instance was not found for task ${task.id}`)
       }
-      return taskInstance as TestSuite | TestCase
-    })
+      yield taskInstance as TestSuite | TestCase
+    }
   }
 
   /**
    * An array of all tests that are part of this suite and its children.
    */
-  public tests(): TestCase[] {
-    const tests: TestCase[] = []
+  public *tests(): Iterable<TestCase> {
     for (const child of this.children()) {
       if (child.type === 'test' || child.type === 'custom') {
-        tests.push(child as TestCase)
+        yield child as TestCase
       }
       else {
-        tests.push(...(child as TestSuite).tests())
+        yield * (child as TestSuite).tests()
       }
     }
-    return tests
   }
 }
 
