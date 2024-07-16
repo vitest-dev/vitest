@@ -14,7 +14,6 @@ const tasksMap = new WeakMap<
 
 class Task {
   #fullName: string | undefined
-  #project: WorkspaceProject
 
   /**
    * Task instance.
@@ -22,34 +21,40 @@ class Task {
    */
   public readonly task: Test | Custom | FileTask | SuiteTask
 
+  /**
+   * Current task's project.
+   * @experimental Public project API is experimental and does not follow semver.
+   */
+  public readonly project: WorkspaceProject
+  /**
+   * Direct reference to the test file where the test or suite is defined.
+   */
+  public readonly file: TestFile
+  /**
+   * Name of the test or the suite.
+   */
+  public readonly name: string
+  /**
+   * Unique identifier.
+   * This ID is deterministic and will be the same for the same test across multiple runs.
+   * The ID is based on the file path and test position.
+   */
+  public readonly id: string
+  /**
+   * Full name of the test or the suite including all parent suites separated with `>`.
+   */
+  public readonly location: { line: number; column: number } | undefined
+
   constructor(
     task: Test | Custom | FileTask | SuiteTask,
     project: WorkspaceProject,
   ) {
     this.task = task
-    this.#project = project
-  }
-
-  /**
-   * Current task's project.
-   * @experimental Public project API is experimental and does not follow semver.
-   */
-  public get project(): WorkspaceProject {
-    return this.#project
-  }
-
-  /**
-   * Direct reference to the file task where the test or suite is defined.
-   */
-  public get file(): TestFile {
-    return tasksMap.get(this.task.file) as TestFile
-  }
-
-  /**
-   * Name of the test or the suite.
-   */
-  public get name(): string {
-    return this.task.name
+    this.project = project
+    this.file = tasksMap.get(task.file) as TestFile
+    this.name = task.name
+    this.id = task.id
+    this.location = task.location
   }
 
   /**
@@ -61,39 +66,27 @@ class Task {
     }
     return this.#fullName
   }
-
-  /**
-   * Unique identifier.
-   * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the file path and test position.
-   */
-  public get id(): string {
-    return this.task.id
-  }
-
-  /**
-   * Location in the file where the test or suite was defined.
-   * Locations are collected only if `includeTaskLocation` is enabled in the config.
-   */
-  public get location(): { line: number; column: number } | undefined {
-    return this.task.location
-  }
 }
 
 export class TestCase extends Task {
   declare public readonly task: Test | Custom
   public readonly type: 'test' | 'custom' = 'test'
   #options: TaskOptions | undefined
-
   /**
-   * Parent suite of the test. If test was called directly inside the file, the parent will be the file.
+   * Parent suite. If suite was called directly inside the file, the parent will be the file.
    */
-  public get parent(): TestSuite | TestFile {
+  public readonly parent: TestSuite | TestFile
+
+  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+    super(task, project)
+
     const suite = this.task.suite
     if (suite) {
-      return tasksMap.get(suite) as TestSuite
+      this.parent = tasksMap.get(suite) as TestSuite
     }
-    return this.file
+    else {
+      this.parent = this.file
+    }
   }
 
   /**
@@ -151,6 +144,22 @@ export class TestCase extends Task {
 
 export abstract class SuiteImplementation extends Task {
   declare public readonly task: SuiteTask | FileTask
+  /**
+   * Parent suite. If suite was called directly inside the file, the parent will be the file.
+   */
+  public readonly parent: TestSuite | TestFile
+
+  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+    super(task, project)
+
+    const suite = this.task.suite
+    if (suite) {
+      this.parent = tasksMap.get(suite) as TestSuite
+    }
+    else {
+      this.parent = this.file
+    }
+  }
 
   /**
    * Looks for a test by `name`.
@@ -179,17 +188,6 @@ export abstract class SuiteImplementation extends Task {
         return suite
       }
     }
-  }
-
-  /**
-   * Parent suite. If suite was called directly inside the file, the parent will be the file.
-   */
-  public get parent(): TestSuite | TestFile {
-    const suite = this.task.suite
-    if (suite) {
-      return tasksMap.get(suite) as TestSuite
-    }
-    return this.file
   }
 
   /**
@@ -248,18 +246,16 @@ export class TestSuite extends SuiteImplementation {
 export class TestFile extends SuiteImplementation {
   declare public readonly task: FileTask
   public readonly type = 'file'
-
   /**
    * This is usually an absolute UNIX file path.
    * It can be a virtual id if the file is not on the disk.
    * This value corresponds to Vite's `ModuleGraph` id.
    */
-  public get moduleId(): string {
-    return this.task.filepath
-  }
+  public readonly moduleId: string
 
-  public get location(): undefined {
-    return undefined
+  constructor(task: FileTask, project: WorkspaceProject) {
+    super(task, project)
+    this.moduleId = task.filepath
   }
 }
 
