@@ -27,14 +27,6 @@ class Task {
     return tasksMap.get(this.task.file) as File
   }
 
-  public parent(): Suite | File {
-    const suite = this.task.suite
-    if (suite) {
-      return tasksMap.get(suite) as Suite
-    }
-    return this.file()
-  }
-
   public get name(): string {
     return this.task.name
   }
@@ -57,8 +49,16 @@ class Task {
 
 export class TestCase extends Task {
   declare public readonly task: Test | Custom
-  public readonly type = 'test'
+  public readonly type: 'test' | 'custom' = 'test'
   #options: TaskOptions | undefined
+
+  public parent(): Suite | File {
+    const suite = this.task.suite
+    if (suite) {
+      return tasksMap.get(suite) as Suite
+    }
+    return this.file()
+  }
 
   public result(): TestResult | undefined {
     const result = this.task.result
@@ -103,6 +103,14 @@ export class TestCase extends Task {
 
 export abstract class SuiteImplementation extends Task {
   declare public readonly task: SuiteTask | FileTask
+
+  public parent(): Suite | File {
+    const suite = this.task.suite
+    if (suite) {
+      return tasksMap.get(suite) as Suite
+    }
+    return this.file()
+  }
 
   public children(): (Suite | TestCase)[] {
     return this.task.tasks.map((task) => {
