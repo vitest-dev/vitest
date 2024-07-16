@@ -1,3 +1,4 @@
+import type { Profiler } from 'node:inspector'
 import * as coverage from './takeCoverage'
 import type { V8CoverageProvider } from './provider'
 
@@ -5,7 +6,7 @@ export default {
   startCoverage(): void {
     return coverage.startCoverage()
   },
-  takeCoverage(): Promise<unknown> {
+  takeCoverage(): Promise<{ result: Profiler.ScriptCoverage[] }> {
     return coverage.takeCoverage()
   },
   stopCoverage(): void {

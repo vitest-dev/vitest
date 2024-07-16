@@ -17,7 +17,7 @@ export function startCoverage(): void {
   })
 }
 
-export async function takeCoverage(): Promise<unknown> {
+export async function takeCoverage(): Promise<{ result: Profiler.ScriptCoverage[] }> {
   return new Promise((resolve, reject) => {
     session.post('Profiler.takePreciseCoverage', async (error, coverage) => {
       if (error) {
