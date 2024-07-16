@@ -209,19 +209,17 @@ export abstract class SuiteImplementation extends Task {
       if (child.type === 'suite') {
         yield * child.tests(state)
       }
-      else {
-        if (state) {
-          const result = child.result()
-          if (!result && state === 'running') {
-            yield child
-          }
-          else if (result && result.state === state) {
-            yield child
-          }
-        }
-        else {
+      else if (state) {
+        const result = child.result()
+        if (!result && state === 'running') {
           yield child
         }
+        else if (result && result.state === state) {
+          yield child
+        }
+      }
+      else {
+        yield child
       }
     }
   }
