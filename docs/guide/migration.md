@@ -337,7 +337,7 @@ Vitest's `test` names are joined with a `>` symbol to make it easier to distingu
 
 ```
 - `${describeTitle} ${testTitle}`
-+ ${describeTitle} > ${testTitle}
++ `${describeTitle} > ${testTitle}`
 ```
 
 ### Envs
