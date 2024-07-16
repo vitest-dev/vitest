@@ -5,7 +5,7 @@ import type { WorkspaceProject } from './workspace'
 
 const tasksMap = new WeakMap<
   Test | Custom | FileTask | SuiteTask,
-  TestCase | File | Suite
+  TestCase | TestFile | TestSuite
 >()
 
 class Task {
@@ -37,8 +37,8 @@ class Task {
   /**
    * Direct reference to the file task where the test or suite is defined.
    */
-  public file(): File {
-    return tasksMap.get(this.task.file) as File
+  public file(): TestFile {
+    return tasksMap.get(this.task.file) as TestFile
   }
 
   /**
@@ -84,10 +84,10 @@ export class TestCase extends Task {
   /**
    * Parent suite of the test. If test was called directly inside the file, the parent will be the file.
    */
-  public parent(): Suite | File {
+  public parent(): TestSuite | TestFile {
     const suite = this.task.suite
     if (suite) {
-      return tasksMap.get(suite) as Suite
+      return tasksMap.get(suite) as TestSuite
     }
     return this.file()
   }
@@ -151,10 +151,10 @@ export abstract class SuiteImplementation extends Task {
   /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
    */
-  public parent(): Suite | File {
+  public parent(): TestSuite | TestFile {
     const suite = this.task.suite
     if (suite) {
-      return tasksMap.get(suite) as Suite
+      return tasksMap.get(suite) as TestSuite
     }
     return this.file()
   }
@@ -162,13 +162,13 @@ export abstract class SuiteImplementation extends Task {
   /**
    * An array of suites and tests that are part of this suite.
    */
-  public children(): (Suite | TestCase)[] {
+  public children(): (TestSuite | TestCase)[] {
     return this.task.tasks.map((task) => {
       const taskInstance = tasksMap.get(task)
       if (!taskInstance) {
         throw new Error(`Task instance was not found for task ${task.id}`)
       }
-      return taskInstance as Suite | TestCase
+      return taskInstance as TestSuite | TestCase
     })
   }
 
@@ -182,14 +182,14 @@ export abstract class SuiteImplementation extends Task {
         tests.push(child as TestCase)
       }
       else {
-        tests.push(...(child as Suite).tests())
+        tests.push(...(child as TestSuite).tests())
       }
     }
     return tests
   }
 }
 
-export class Suite extends SuiteImplementation {
+export class TestSuite extends SuiteImplementation {
   declare public readonly task: SuiteTask
   public readonly type = 'suite'
   #options: TaskOptions | undefined
@@ -205,7 +205,7 @@ export class Suite extends SuiteImplementation {
   }
 }
 
-export class File extends SuiteImplementation {
+export class TestFile extends SuiteImplementation {
   declare public readonly task: FileTask
   public readonly type = 'file'
 
