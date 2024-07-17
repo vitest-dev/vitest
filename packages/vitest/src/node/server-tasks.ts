@@ -10,18 +10,15 @@ import { getFullName } from '../utils'
 import type { ParsedStack } from '../types'
 import type { WorkspaceProject } from './workspace'
 
+// naming proposal:
+// @vitest/runner: Task -> RunnerTask, Suite -> RunnerTestSuite, File -> RunnerTestFile, Test -> RunnerTestCase
+// vitest/reporters: Task -> ReportedTask, Suite -> ReportedTestSuite, File -> ReportedTestFile, Test -> ReportedTestCase
+
 // rule for function/getter
 // getter is a readonly property that doesn't change in time
 // method can return different objects depending on when it's called
 
-const tasksMap = new WeakMap<
-  RunnerTask,
-  TestCase | TestFile | TestSuite
->()
-
-export function _experimental_getServerTask(task: RunnerTask) {
-  return tasksMap.get(task)
-}
+export type ReportedTask = TestCase | TestFile | TestSuite
 
 class Task {
   #fullName: string | undefined
@@ -62,7 +59,7 @@ class Task {
   ) {
     this.task = task
     this.project = project
-    this.file = tasksMap.get(task.file) as TestFile
+    this.file = project.ctx.state.reportedTasksMap.get(task.file) as TestFile
     this.name = task.name
     this.id = task.id
     this.location = task.location
@@ -79,8 +76,8 @@ class Task {
   }
 
   static register(task: RunnerTask, project: WorkspaceProject) {
-    const state = new this(task, project)
-    tasksMap.set(task, state as TestCase | TestFile | TestSuite)
+    const state = new this(task, project) as ReportedTask
+    storeTask(project, task, state)
     return state
   }
 }
@@ -102,7 +99,7 @@ export class TestCase extends Task {
 
     const suite = this.task.suite
     if (suite) {
-      this.parent = tasksMap.get(suite) as TestSuite
+      this.parent = getReportedTask(project, suite) as TestSuite
     }
     else {
       this.parent = this.file
@@ -159,9 +156,11 @@ export class TestCase extends Task {
 
 class TaskCollection {
   #task: SuiteTask | FileTask
+  #project: WorkspaceProject
 
-  constructor(task: SuiteTask | FileTask) {
+  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
     this.#task = task
+    this.#project = project
   }
 
   /**
@@ -279,7 +278,7 @@ class TaskCollection {
 
   *[Symbol.iterator](): IterableIterator<TestSuite | TestCase> {
     for (const task of this.#task.tasks) {
-      const taskInstance = tasksMap.get(task)
+      const taskInstance = getReportedTask(this.#project, task)
       if (!taskInstance) {
         throw new Error(`Task instance was not found for task ${task.id}`)
       }
@@ -304,12 +303,12 @@ abstract class SuiteImplementation extends Task {
 
     const suite = this.task.suite
     if (suite) {
-      this.parent = tasksMap.get(suite) as TestSuite
+      this.parent = getReportedTask(project, suite) as TestSuite
     }
     else {
       this.parent = this.file
     }
-    this.children = new TaskCollection(task)
+    this.children = new TaskCollection(task, project)
   }
 }
 
@@ -409,4 +408,16 @@ export interface TestDiagnostic {
 function getTestState(test: TestCase): TestResult['state'] | 'running' {
   const result = test.result()
   return result ? result.state : 'running'
+}
+
+function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTask: ReportedTask) {
+  project.ctx.state.reportedTasksMap.set(runnerTask, reportedTask)
+}
+
+function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): ReportedTask {
+  const reportedTask = project.ctx.state.reportedTasksMap.get(runnerTask)
+  if (!reportedTask) {
+    throw new Error(`Task instance was not found for task ${runnerTask.id}`)
+  }
+  return reportedTask
 }
