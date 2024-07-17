@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-it('runs a test', () => {
+it('runs a test', async () => {
+  await new Promise(r => setTimeout(r, 10))
   expect(1).toBe(1)
 })
 
-it('fails a test', () => {
+it('fails a test', async () => {
+  await new Promise(r => setTimeout(r, 10))
   expect(1).toBe(2)
 })
 

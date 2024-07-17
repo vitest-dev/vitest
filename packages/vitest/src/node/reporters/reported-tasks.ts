@@ -7,12 +7,10 @@ import type {
   TaskMeta,
 } from '@vitest/runner'
 import type { TestError } from '@vitest/utils'
-import { getFullName } from '../../utils/tasks'
+import { getTestName } from '../../utils/tasks'
 import type { WorkspaceProject } from '../workspace'
 
 class ReportedTaskImplementation {
-  #fullName: string | undefined
-
   /**
    * Task instance.
    * @experimental Public runner task API is experimental and does not follow semver.
@@ -24,11 +22,6 @@ class ReportedTaskImplementation {
    * @experimental Public project API is experimental and does not follow semver.
    */
   public readonly project: WorkspaceProject
-
-  /**
-   * Name of the test or the suite.
-   */
-  public readonly name: string
 
   /**
    * Unique identifier.
@@ -48,19 +41,8 @@ class ReportedTaskImplementation {
   ) {
     this.task = task
     this.project = project
-    this.name = task.name
     this.id = task.id
     this.location = task.location
-  }
-
-  /**
-   * Full name of the test or the suite including all parent suites separated with `>`.
-   */
-  public get fullName(): string {
-    if (this.#fullName === undefined) {
-      this.#fullName = getFullName(this.task, ' > ')
-    }
-    return this.#fullName
   }
 
   static register(task: RunnerTask, project: WorkspaceProject) {
@@ -71,6 +53,8 @@ class ReportedTaskImplementation {
 }
 
 export class TestCase extends ReportedTaskImplementation {
+  #fullName: string | undefined
+
   declare public readonly task: RunnerTestCase | RunnerCustomCase
   public readonly type: 'test' | 'custom' = 'test'
 
@@ -78,6 +62,11 @@ export class TestCase extends ReportedTaskImplementation {
    * Direct reference to the test file where the test or suite is defined.
    */
   public readonly file: TestFile
+
+  /**
+   * Name of the test.
+   */
+  public readonly name: string
 
   /**
    * Options that the test was initiated with.
@@ -92,6 +81,7 @@ export class TestCase extends ReportedTaskImplementation {
   protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
     super(task, project)
 
+    this.name = task.name
     this.file = getReportedTask(project, task.file) as TestFile
     const suite = this.task.suite
     if (suite) {
@@ -101,6 +91,16 @@ export class TestCase extends ReportedTaskImplementation {
       this.parent = this.file
     }
     this.options = buildOptions(task)
+  }
+
+  /**
+   * Full name of the test including all parent suites separated with `>`.
+   */
+  public get fullName(): string {
+    if (this.#fullName === undefined) {
+      this.#fullName = getTestName(this.task, ' > ')
+    }
+    return this.#fullName
   }
 
   /**
@@ -317,8 +317,15 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
 }
 
 export class TestSuite extends SuiteImplementation {
+  #fullName: string | undefined
+
   declare public readonly task: RunnerTestSuite
   public readonly type = 'suite'
+
+  /**
+   * Name of the test or the suite.
+   */
+  public readonly name: string
 
   /**
    * Direct reference to the test file where the test or suite is defined.
@@ -338,6 +345,7 @@ export class TestSuite extends SuiteImplementation {
   protected constructor(task: RunnerTestSuite, project: WorkspaceProject) {
     super(task, project)
 
+    this.name = task.name
     this.file = getReportedTask(project, task.file) as TestFile
     const suite = this.task.suite
     if (suite) {
@@ -347,6 +355,16 @@ export class TestSuite extends SuiteImplementation {
       this.parent = this.file
     }
     this.options = buildOptions(task)
+  }
+
+  /**
+   * Full name of the suite including all parent suites separated with `>`.
+   */
+  public get fullName(): string {
+    if (this.#fullName === undefined) {
+      this.#fullName = getTestName(this.task, ' > ')
+    }
+    return this.#fullName
   }
 }
 
@@ -411,7 +429,10 @@ export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
 
 export interface TestResultPassed {
   state: 'passed'
-  errors: undefined
+  /**
+   * If test was retried successfully, errors will still be reported.
+   */
+  errors: TestError[] | undefined
 }
 
 export interface TestResultFailed {
