@@ -3,7 +3,6 @@ import type {
   File as FileTask,
   Suite as SuiteTask,
   TaskMeta,
-  TaskResult,
   Test,
 } from '@vitest/runner'
 import { getFullName } from '../utils'
@@ -105,7 +104,7 @@ export class TestCase extends Task {
    */
   public result(): TestResult | undefined {
     const result = this.task.result
-    if (!result) {
+    if (!result || result.state === 'run') {
       return undefined
     }
     const state = result.state === 'fail'
@@ -128,12 +127,17 @@ export class TestCase extends Task {
 
   /**
    * Useful information about the test like duration, memory usage, etc.
+   * Diagnostic is only available after the test has finished.
    */
-  public diagnostic(): TestDiagnostic {
-    const result = (this.task.result || {} as TaskResult)
+  public diagnostic(): TestDiagnostic | undefined {
+    const result = this.task.result
+    // startTime should always be available if the test has properly finished
+    if (!result || result.state === 'run' || !result.startTime) {
+      return undefined
+    }
     return {
       heap: result.heap,
-      duration: result.duration,
+      duration: result.duration!,
       startTime: result.startTime,
       retryCount: result.retryCount,
       repeatCount: result.repeatCount,
@@ -368,8 +372,8 @@ interface TestResult {
 
 export interface TestDiagnostic {
   heap: number | undefined
-  duration: number | undefined
-  startTime: number | undefined
+  duration: number
+  startTime: number
   retryCount: number | undefined
   repeatCount: number | undefined
 }
