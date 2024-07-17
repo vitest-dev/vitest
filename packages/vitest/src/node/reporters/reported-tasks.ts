@@ -26,11 +26,6 @@ class ReportedTaskImplementation {
   public readonly project: WorkspaceProject
 
   /**
-   * Direct reference to the test file where the test or suite is defined.
-   */
-  public readonly file: TestFile
-
-  /**
    * Name of the test or the suite.
    */
   public readonly name: string
@@ -53,7 +48,6 @@ class ReportedTaskImplementation {
   ) {
     this.task = task
     this.project = project
-    this.file = getReportedTask(project, task.file) as TestFile
     this.name = task.name
     this.id = task.id
     this.location = task.location
@@ -81,6 +75,11 @@ export class TestCase extends ReportedTaskImplementation {
   public readonly type: 'test' | 'custom' = 'test'
 
   /**
+   * Direct reference to the test file where the test or suite is defined.
+   */
+  public readonly file: TestFile
+
+  /**
    * Options that the test was initiated with.
    */
   public readonly options: TaskOptions
@@ -93,6 +92,7 @@ export class TestCase extends ReportedTaskImplementation {
   protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
     super(task, project)
 
+    this.file = getReportedTask(project, task.file) as TestFile
     const suite = this.task.suite
     if (suite) {
       this.parent = getReportedTask(project, suite) as TestSuite
@@ -157,6 +157,20 @@ class TestCollection {
   constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
     this.#task = task
     this.#project = project
+  }
+
+  at(index: number): TestCase | TestSuite | undefined {
+    if (index < 0) {
+      index = this.size + index
+    }
+    return getReportedTask(this.#project, this.#task.tasks[index]) as TestCase | TestSuite | undefined
+  }
+
+  /**
+   * The number of tests and suites in the collection.
+   */
+  get size(): number {
+    return this.#task.tasks.length
   }
 
   /**
@@ -240,11 +254,18 @@ class TestCollection {
    */
   *tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
     for (const child of this) {
-      if (child.type === 'test') {
+      if (child.type !== 'test') {
+        continue
+      }
+
+      if (state) {
         const testState = getTestState(child)
         if (state === testState) {
           yield child
         }
+      }
+      else {
+        yield child
       }
     }
   }
@@ -285,25 +306,12 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
   declare public readonly task: RunnerTestSuite | RunnerTestFile
 
   /**
-   * Parent suite. If suite was called directly inside the file, the parent will be the file.
-   */
-  public readonly parent: TestSuite | TestFile
-
-  /**
    * Collection of suites and tests that are part of this suite.
    */
   public readonly children: TestCollection
 
   protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
     super(task, project)
-
-    const suite = this.task.suite
-    if (suite) {
-      this.parent = getReportedTask(project, suite) as TestSuite
-    }
-    else {
-      this.parent = this.file
-    }
     this.children = new TestCollection(task, project)
   }
 }
@@ -313,18 +321,38 @@ export class TestSuite extends SuiteImplementation {
   public readonly type = 'suite'
 
   /**
+   * Direct reference to the test file where the test or suite is defined.
+   */
+  public readonly file: TestFile
+
+  /**
+   * Parent suite. If suite was called directly inside the file, the parent will be the file.
+   */
+  public readonly parent: TestSuite | TestFile
+
+  /**
    * Options that suite was initiated with.
    */
   public readonly options: TaskOptions
 
   protected constructor(task: RunnerTestSuite, project: WorkspaceProject) {
     super(task, project)
+
+    this.file = getReportedTask(project, task.file) as TestFile
+    const suite = this.task.suite
+    if (suite) {
+      this.parent = getReportedTask(project, suite) as TestSuite
+    }
+    else {
+      this.parent = this.file
+    }
     this.options = buildOptions(task)
   }
 }
 
 export class TestFile extends SuiteImplementation {
   declare public readonly task: RunnerTestFile
+  declare public readonly location: undefined
   public readonly type = 'file'
 
   /**
@@ -337,6 +365,25 @@ export class TestFile extends SuiteImplementation {
   protected constructor(task: RunnerTestFile, project: WorkspaceProject) {
     super(task, project)
     this.moduleId = task.filepath
+  }
+
+  /**
+   * Useful information about the file like duration, memory usage, etc.
+   * If the file was not executed yet, all diagnostic values will return `0`.
+   */
+  public diagnostic(): FileDiagnostic {
+    const setupDuration = this.task.setupDuration || 0
+    const collectDuration = this.task.collectDuration || 0
+    const prepareDuration = this.task.prepareDuration || 0
+    const environmentSetupDuration = this.task.environmentLoad || 0
+    const duration = this.task.result?.duration || 0
+    return {
+      environmentSetupDuration,
+      prepareDuration,
+      collectDuration,
+      setupDuration,
+      duration,
+    }
   }
 }
 
@@ -387,6 +434,30 @@ export interface TestDiagnostic {
    * If test passed on a second retry.
    */
   flaky: boolean
+}
+
+export interface FileDiagnostic {
+  /**
+   * The time it takes to import and initiate an environment.
+   */
+  environmentSetupDuration: number
+  /**
+   * The time it takes Vitest to setup test harness (runner, mocks, etc.).
+   */
+  prepareDuration: number
+  /**
+   * The time it takes to import the test file.
+   * This includes importing everything in the file and executing suite callbacks.
+   */
+  collectDuration: number
+  /**
+   * The time it takes to import the setup file.
+   */
+  setupDuration: number
+  /**
+   * Accumulated duration of all tests and hooks in the file.
+   */
+  duration: number
 }
 
 function getTestState(test: TestCase): TestResult['state'] | 'running' {
