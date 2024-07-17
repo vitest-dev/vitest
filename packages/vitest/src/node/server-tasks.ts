@@ -352,7 +352,7 @@ function buildOptions(task: Test | Custom | FileTask | SuiteTask): TaskOptions {
   }
 }
 
-interface SerialisedError {
+export interface SerialisedError {
   message: string
   stack?: string
   name: string
@@ -360,13 +360,13 @@ interface SerialisedError {
   [key: string]: unknown
 }
 
-interface TestError extends SerialisedError {
+export interface TestError extends SerialisedError {
   diff?: string
   actual?: string
   expected?: string
 }
 
-type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
+export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
 
 interface TestResultPassed {
   state: 'passed'
