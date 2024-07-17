@@ -53,7 +53,7 @@ class ReportedTaskImplementation {
   ) {
     this.task = task
     this.project = project
-    this.file = project.ctx.state.reportedTasksMap.get(task.file) as TestFile
+    this.file = getReportedTask(project, task.file) as TestFile
     this.name = task.name
     this.id = task.id
     this.location = task.location
