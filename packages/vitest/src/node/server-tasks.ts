@@ -49,7 +49,7 @@ class ReportedTaskImplementation {
    */
   public readonly id: string
   /**
-   * Full name of the test or the suite including all parent suites separated with `>`.
+   * Location in the file where the test or suite is defined.
    */
   public readonly location: { line: number; column: number } | undefined
 
