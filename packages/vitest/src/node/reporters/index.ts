@@ -34,6 +34,7 @@ export type {
 
   TaskOptions,
   TestDiagnostic,
+  FileDiagnostic,
 
   TestResult,
   TestResultFailed,
