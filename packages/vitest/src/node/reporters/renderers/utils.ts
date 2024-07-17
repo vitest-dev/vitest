@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, relative } from 'pathe'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import stripAnsi from 'strip-ansi'
 import type { SnapshotSummary, Task } from '../../../types'
 import { slash } from '../../../utils/base'

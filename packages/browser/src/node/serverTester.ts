@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import crypto from 'node:crypto'
 import { stringify } from 'flatted'
 import { replacer } from './utils'
 import type { BrowserServer } from './server'
@@ -48,6 +49,7 @@ export async function resolveTester(
     }),
     __VITEST_TYPE__: '"tester"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 
@@ -71,7 +73,8 @@ export async function resolveTester(
     __VITEST_FAVICON__: server.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Tester',
     __VITEST_SCRIPTS__: server.testerScripts,
-    __VITEST_INJECTOR__: injector,
+    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
+    __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherPath}"></script>`,
     __VITEST_APPEND__:
       `<script type="module">
 __vitest_browser_runner__.runningFiles = ${tests}

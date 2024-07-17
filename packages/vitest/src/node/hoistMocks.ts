@@ -14,7 +14,7 @@ import type {
 import { findNodeAround } from 'acorn-walk'
 import type { PluginContext, ProgramNode } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
-import type { Colors } from '@vitest/utils'
+import type { Colors } from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { generateCodeFrame } from './error'
 

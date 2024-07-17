@@ -1,6 +1,6 @@
 import { normalize } from 'pathe'
 import cac, { type CAC, type Command } from 'cac'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { toArray } from '../../utils/base'
 import type { VitestRunMode } from '../../types'

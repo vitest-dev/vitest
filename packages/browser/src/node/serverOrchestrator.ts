@@ -31,6 +31,7 @@ export async function resolveOrchestrator(
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_TESTER_ID__: '"none"',
     __VITEST_PROVIDED_CONTEXT__: '{}',
   })
 
@@ -59,7 +60,8 @@ export async function resolveOrchestrator(
       .replace(
         '<!-- !LOAD_METADATA! -->',
         [
-          '<script>{__VITEST_INJECTOR__}</script>',
+          '{__VITEST_INJECTOR__}',
+          '{__VITEST_ERROR_CATCHER__}',
           '{__VITEST_SCRIPTS__}',
           `<script type="module" crossorigin src="${base}${jsEntry}"></script>`,
         ].join('\n'),
@@ -70,7 +72,8 @@ export async function resolveOrchestrator(
     __VITEST_FAVICON__: server.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Runner',
     __VITEST_SCRIPTS__: server.orchestratorScripts,
-    __VITEST_INJECTOR__: injector,
+    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
+    __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherPath}"></script>`,
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
   })
 }

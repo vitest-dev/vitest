@@ -20,7 +20,12 @@ test.describe('html report', () => {
   test.afterAll(async () => {
     await new Promise<void>((resolve, reject) => {
       previewServer.httpServer.close((err) => {
-        err ? reject(err) : resolve()
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve()
+        }
       })
     })
   })
@@ -31,8 +36,8 @@ test.describe('html report', () => {
 
     await page.goto(pageUrl)
 
-    // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('6 Pass 1 Fail 7 Total')
+    // dashboard
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('8 Pass 1 Fail 9 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(

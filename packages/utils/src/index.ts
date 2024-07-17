@@ -1,11 +1,50 @@
-export * from './helpers'
-export * from './types'
-export * from './stringify'
-export * from './timers'
-export * from './random'
-export * from './display'
-export * from './constants'
-export * from './colors'
-export * from './base'
-export * from './offset'
-export * from './highlight'
+export {
+  notNullish,
+  assertTypes,
+  isPrimitive,
+  slash,
+  parseRegexp,
+  isObject,
+  getType,
+  getOwnProperties,
+  deepClone,
+  clone,
+  noop,
+  objectAttr,
+  createDefer,
+  getCallLastIndex,
+  isNegativeNaN,
+  createSimpleStackTrace,
+  toArray,
+} from './helpers'
+export type { DeferPromise } from './helpers'
+
+export { getSafeTimers, setSafeTimers } from './timers'
+export type { SafeTimers } from './timers'
+
+export { shuffle } from './random'
+export {
+  stringify,
+  format,
+  inspect,
+  objDisplay,
+} from './display'
+export {
+  positionToOffset,
+  offsetToLineNumber,
+  lineSplitRE,
+} from './offset'
+export { highlight } from './highlight'
+
+export type {
+  Awaitable,
+  Nullable,
+  Arrayable,
+  ArgumentsType,
+  MergeInsertions,
+  DeepMerge,
+  MutableArray,
+  Constructable,
+  ParsedStack,
+  ErrorWithDiff,
+} from './types'

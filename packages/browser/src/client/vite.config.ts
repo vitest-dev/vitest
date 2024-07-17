@@ -22,19 +22,16 @@ export default defineConfig({
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester/tester.html'),
       },
-      external: [/__virtual_vitest__/, '@vitest/browser/context'],
+      external: [
+        /^vitest\//,
+        'vitest',
+        /^msw/,
+        '@vitest/browser/context',
+        '@vitest/browser/client',
+      ],
     },
   },
   plugins: [
-    {
-      name: 'virtual:msw',
-      enforce: 'pre',
-      resolveId(id) {
-        if (id.startsWith('msw') || id.startsWith('vitest') || id.startsWith('@vitest/browser')) {
-          return `/__virtual_vitest__?id=${encodeURIComponent(id)}`
-        }
-      },
-    },
     {
       name: 'copy-ui-plugin',
       /* eslint-disable no-console */

@@ -1,4 +1,4 @@
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import type { UserConsoleLog } from '../../types/general'
 import { BaseReporter } from './base'
 import type { ListRendererOptions } from './renderers/listRenderer'

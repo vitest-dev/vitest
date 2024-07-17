@@ -1,7 +1,6 @@
 import { type DiffOptions, diff } from './diff'
-import { format } from './display'
+import { format, stringify } from './display'
 import { deepClone, getOwnProperties, getType } from './helpers'
-import { stringify } from './stringify'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {
@@ -28,7 +27,7 @@ function getUnserializableMessage(err: unknown) {
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-export function serializeError(val: any, seen = new WeakMap()): any {
+export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakMap()): any {
   if (!val || typeof val === 'string') {
     return val
   }
@@ -113,8 +112,8 @@ function normalizeErrorMessage(message: string) {
 export function processError(
   err: any,
   diffOptions?: DiffOptions,
-  seen = new WeakSet(),
-) {
+  seen: WeakSet<WeakKey> = new WeakSet(),
+): any {
   if (!err || typeof err !== 'object') {
     return { message: err }
   }
@@ -199,9 +198,12 @@ function isReplaceable(obj1: any, obj2: any) {
 export function replaceAsymmetricMatcher(
   actual: any,
   expected: any,
-  actualReplaced = new WeakSet(),
-  expectedReplaced = new WeakSet(),
-) {
+  actualReplaced: WeakSet<WeakKey> = new WeakSet(),
+  expectedReplaced: WeakSet<WeakKey> = new WeakSet(),
+): {
+    replacedActual: any
+    replacedExpected: any
+  } {
   if (!isReplaceable(actual, expected)) {
     return { replacedActual: actual, replacedExpected: expected }
   }

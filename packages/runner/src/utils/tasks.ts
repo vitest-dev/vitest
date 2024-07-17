@@ -1,5 +1,5 @@
 import { type Arrayable, toArray } from '@vitest/utils'
-import type { Custom, Suite, Task, Test } from '../types'
+import type { Custom, Suite, Task, Test } from '../types/tasks'
 
 export function isAtomTest(s: Task): s is Test | Custom {
   return s.type === 'test' || s.type === 'custom'
@@ -54,7 +54,7 @@ export function hasFailed(suite: Arrayable<Task>): boolean {
   )
 }
 
-export function getNames(task: Task) {
+export function getNames(task: Task): string[] {
   const names = [task.name]
   let current: Task | undefined = task
 

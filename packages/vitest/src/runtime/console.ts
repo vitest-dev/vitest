@@ -1,7 +1,8 @@
 import { Writable } from 'node:stream'
 import { Console } from 'node:console'
 import { relative } from 'node:path'
-import { getColors, getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils'
+import c from 'tinyrainbow'
 import { RealDate } from '../integrations/mock/date'
 import { getWorkerState } from '../utils'
 import type { WorkerGlobalState } from '../types'
@@ -203,7 +204,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   return new Console({
     stdout,
     stderr,
-    colorMode: getColors().isColorSupported,
+    colorMode: c.isColorSupported,
     groupIndentation: 2,
   })
 }

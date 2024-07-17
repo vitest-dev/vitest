@@ -60,6 +60,7 @@ function expandTests() {
           v-tooltip.bottom="'Collapse tests'"
           title="Collapse tests"
           :disabled="!initialized"
+          data-testid="collapse-all"
           icon="i-carbon:collapse-all"
           @click="collapseTests()"
         />
@@ -68,6 +69,7 @@ function expandTests() {
           v-tooltip.bottom="'Expand tests'"
           :disabled="!initialized"
           title="Expand tests"
+          data-testid="expand-all"
           icon="i-carbon:expand-all"
           @click="expandTests()"
         />

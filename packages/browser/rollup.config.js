@@ -58,6 +58,21 @@ export default () =>
       ],
     },
     {
+      input: './src/client/client.ts',
+      output: {
+        file: 'dist/client.js',
+        format: 'esm',
+      },
+      plugins: [
+        resolve({
+          preferBuiltins: true,
+        }),
+        esbuild({
+          target: 'node18',
+        }),
+      ],
+    },
+    {
       input: './src/client/tester/state.ts',
       output: {
         file: 'dist/state.js',

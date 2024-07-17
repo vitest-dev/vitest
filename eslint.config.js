@@ -51,6 +51,7 @@ export default antfu(
 
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
+      'ts/no-unsafe-function-type': 'off',
 
       'no-restricted-imports': [
         'error',

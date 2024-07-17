@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "2.0.1",
+  "version": "2.0.3",
   "private": true,
-  "packageManager": "pnpm@8.15.8",
+  "packageManager": "pnpm@9.5.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -36,36 +36,34 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^2.21.2",
-    "@antfu/ni": "^0.21.12",
-    "@playwright/test": "^1.45.0",
+    "@antfu/eslint-config": "^2.22.2",
+    "@antfu/ni": "^0.22.0",
+    "@playwright/test": "^1.45.1",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "@types/node": "^20.14.9",
-    "@types/ws": "^8.5.10",
+    "@types/node": "^20.14.10",
+    "@types/ws": "^8.5.11",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
     "bumpp": "^9.4.1",
-    "esbuild": "^0.22.0",
-    "eslint": "^9.6.0",
+    "esbuild": "^0.23.0",
+    "eslint": "^9.7.0",
     "fast-glob": "^3.3.2",
-    "lint-staged": "^15.2.7",
     "magic-string": "^0.30.10",
     "pathe": "^1.1.2",
-    "rimraf": "^5.0.7",
-    "rollup": "^4.18.0",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.18.1",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-esbuild": "^6.1.1",
-    "rollup-plugin-license": "^3.5.1",
-    "simple-git-hooks": "^2.11.1",
-    "tsx": "^4.16.0",
-    "typescript": "^5.5.2",
+    "rollup-plugin-license": "^3.5.2",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
     "vite": "^5.3.3",
     "vitest": "workspace:*",
-    "zx": "^8.1.3"
+    "zx": "^8.1.4"
   },
   "pnpm": {
     "overrides": {
@@ -87,13 +85,5 @@
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
     }
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
-  },
-  "lint-staged": {
-    "*.{?([cm])[jt]s?(x),vue,md}": [
-      "eslint --cache --fix"
-    ]
   }
 }

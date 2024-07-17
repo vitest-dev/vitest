@@ -36,8 +36,8 @@ test.describe('ui', () => {
 
     await page.goto(pageUrl)
 
-    // dashbaord
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('6 Pass 1 Fail 7 Total')
+    // dashboard
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('8 Pass 1 Fail 9 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -96,7 +96,7 @@ test.describe('ui', () => {
 
     // match all files when no filter
     await page.getByPlaceholder('Search...').fill('')
-    await page.getByText('PASS (3)').click()
+    await page.getByText('PASS (4)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeVisible()
 
     // match nothing
@@ -122,5 +122,19 @@ test.describe('ui', () => {
     await page.getByText('PASS (1)').click()
     await expect(page.getByTestId('details-panel').getByText('fixtures/console.test.ts', { exact: true })).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/sample.test.ts', { exact: true })).toBeHidden()
+
+    // html entities in task names are escaped
+    await page.locator('span').filter({ hasText: /^Pass$/ }).click()
+    await page.getByPlaceholder('Search...').fill('<MyComponent />')
+    // for some reason, the tree is collapsed by default: we need to click on the nav buttons to expand it
+    await page.getByTestId('collapse-all').click()
+    await page.getByTestId('expand-all').click()
+    await expect(page.getByText('<MyComponent />')).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+
+    // html entities in task names are escaped
+    await page.getByPlaceholder('Search...').fill('<>\'"')
+    await expect(page.getByText('<>\'"')).toBeVisible()
+    await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
   })
 })

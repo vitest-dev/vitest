@@ -1,4 +1,4 @@
-import { describe, expect, it, onTestFinished } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
 describe.each([
@@ -7,13 +7,11 @@ describe.each([
   ['basic', false],
 ])('%s reporter with %s tty', (reporter, isTTY) => {
   it('prints previously failed tests on rerun', async () => {
-    const { vitest, ctx } = await runVitest({
+    const { vitest } = await runVitest({
       watch: true,
+      fileParallelism: false,
       root: './fixtures/single-failed',
       reporters: [[reporter, { isTTY }]],
-    })
-    onTestFinished(async () => {
-      await ctx?.close()
     })
 
     expect(vitest.stderr).toContain('failed.test.ts > fails')
@@ -37,13 +35,11 @@ describe.each([
   })
 
   it('prints tests once if changed test is the same', async () => {
-    const { vitest, ctx } = await runVitest({
+    const { vitest } = await runVitest({
       watch: true,
+      fileParallelism: false,
       root: './fixtures/single-failed',
       reporters: [[reporter, { isTTY }]],
-    })
-    onTestFinished(async () => {
-      await ctx?.close()
     })
 
     expect(vitest.stderr).toContain('failed.test.ts > fails')

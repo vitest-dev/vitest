@@ -107,7 +107,7 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   }
 }
 
-export function parseSingleStack(raw: string) {
+export function parseSingleStack(raw: string): ParsedStack | null {
   const line = raw.trim()
   if (!CHROME_IE_STACK_REGEXP.test(line)) {
     return parseSingleFFOrSafariStack(line)

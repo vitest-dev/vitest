@@ -364,7 +364,7 @@ export class VitestMocker {
           try {
             Object.defineProperty(newContainer, property, descriptor)
           }
-          catch (error) {
+          catch {
             // Ignore errors, just move on to the next prop.
           }
           continue

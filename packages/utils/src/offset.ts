@@ -1,4 +1,4 @@
-export const lineSplitRE = /\r?\n/
+export const lineSplitRE: RegExp = /\r?\n/
 
 export function positionToOffset(
   source: string,

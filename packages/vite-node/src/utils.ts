@@ -37,8 +37,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
-    .replace(/^file:/, '')
-    .replace(/^\/+/, '/') // remove duplicate leading slashes
+    .replace(/^file:(\/+)/, isWindows ? '' : '/') // remove file protocol and duplicate leading slashes
     .replace(/\?v=\w+/, '?') // remove ?v= query
     .replace(/&v=\w+/, '') // remove &v= query
     .replace(/\?t=\w+/, '?') // remove ?t= query

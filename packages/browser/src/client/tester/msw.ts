@@ -1,52 +1,13 @@
-import { http } from 'msw/core/http'
-import { setupWorker } from 'msw/browser'
+import { channel } from '@vitest/browser/client'
 import type {
   IframeChannelEvent,
   IframeMockEvent,
   IframeMockingDoneEvent,
   IframeUnmockEvent,
-} from '../channel'
-import { channel } from '../channel'
+} from '@vitest/browser/client'
 
 export function createModuleMocker() {
   const mocks: Map<string, string | null | undefined> = new Map()
-
-  const worker = setupWorker(
-    http.get(/.+/, async ({ request }) => {
-      const path = cleanQuery(request.url.slice(location.origin.length))
-      if (!mocks.has(path)) {
-        return passthrough()
-      }
-
-      const mock = mocks.get(path)
-
-      // using a factory
-      if (mock === undefined) {
-        const exports = await getFactoryExports(path)
-        const module = `const module = __vitest_mocker__.get('${path}');`
-        const keys = exports
-          .map((name) => {
-            if (name === 'default') {
-              return `export default module['default'];`
-            }
-            return `export const ${name} = module['${name}'];`
-          })
-          .join('\n')
-        const text = `${module}\n${keys}`
-        return new Response(text, {
-          headers: {
-            'Content-Type': 'application/javascript',
-          },
-        })
-      }
-
-      if (typeof mock === 'string') {
-        return Response.redirect(mock)
-      }
-
-      return Response.redirect(injectQuery(path, 'mock=auto'))
-    }),
-  )
 
   let started = false
   let startPromise: undefined | Promise<unknown>
@@ -58,13 +19,57 @@ export function createModuleMocker() {
     if (startPromise) {
       return startPromise
     }
-    startPromise = worker
-      .start({
+    startPromise = Promise.all([
+      import('msw/browser'),
+      import('msw/core/http'),
+    ]).then(([{ setupWorker }, { http }]) => {
+      const worker = setupWorker(
+        http.get(/.+/, async ({ request }) => {
+          const path = cleanQuery(request.url.slice(location.origin.length))
+          if (!mocks.has(path)) {
+            if (path.includes('/deps/')) {
+              return fetch(bypass(request))
+            }
+
+            return passthrough()
+          }
+
+          const mock = mocks.get(path)
+
+          // using a factory
+          if (mock === undefined) {
+            const exports = await getFactoryExports(path)
+            const module = `const module = __vitest_mocker__.get('${path}');`
+            const keys = exports
+              .map((name) => {
+                if (name === 'default') {
+                  return `export default module['default'];`
+                }
+                return `export const ${name} = module['${name}'];`
+              })
+              .join('\n')
+            const text = `${module}\n${keys}`
+            return new Response(text, {
+              headers: {
+                'Content-Type': 'application/javascript',
+              },
+            })
+          }
+
+          if (typeof mock === 'string') {
+            return Response.redirect(mock)
+          }
+
+          return Response.redirect(injectQuery(path, 'mock=auto'))
+        }),
+      )
+      return worker.start({
         serviceWorker: {
           url: '/__vitest_msw__',
         },
         quiet: true,
       })
+    })
       .finally(() => {
         started = true
         startPromise = undefined
@@ -125,6 +130,20 @@ function passthrough() {
       'x-msw-intention': 'passthrough',
     },
   })
+}
+
+function bypass(request: Request) {
+  const clonedRequest = request.clone()
+  clonedRequest.headers.set('x-msw-intention', 'bypass')
+  const cacheControl = clonedRequest.headers.get('cache-control')
+  if (cacheControl) {
+    clonedRequest.headers.set(
+      'cache-control',
+      // allow reinvalidation of the cache so mocks can be updated
+      cacheControl.replace(', immutable', ''),
+    )
+  }
+  return clonedRequest
 }
 
 const postfixRE = /[?#].*$/

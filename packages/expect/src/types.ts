@@ -6,7 +6,7 @@
  *
  */
 
-import type { Formatter } from 'picocolors/types'
+import type { Formatter } from 'tinyrainbow'
 import type { Constructable } from '@vitest/utils'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
@@ -119,7 +119,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
   toStrictEqual: <E>(expected: E) => void
   toBe: <E>(expected: E) => void
   toMatch: (expected: string | RegExp) => void
-  toMatchObject: <E extends {} | any[]>(expected: E) => void
+  toMatchObject: <E extends object | any[]>(expected: E) => void
   toContain: <E>(item: E) => void
   toContainEqual: <E>(item: E) => void
   toBeTruthy: () => void
@@ -212,7 +212,7 @@ declare global {
   // support augmenting jest.Matchers by other libraries
   // eslint-disable-next-line ts/no-namespace
   namespace jest {
-    // eslint-disable-next-line unused-imports/no-unused-vars
+    // eslint-disable-next-line unused-imports/no-unused-vars, ts/no-empty-object-type
     interface Matchers<R, T = {}> {}
   }
 }

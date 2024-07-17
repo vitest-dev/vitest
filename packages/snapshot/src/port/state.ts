@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { OptionsReceived as PrettyFormatOptions } from 'pretty-format'
+import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
 import type { ParsedStack } from '../../../utils/src/index'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import type {
@@ -94,7 +94,7 @@ export default class SnapshotState {
     this._environment = options.snapshotEnvironment
   }
 
-  static async create(testFilePath: string, options: SnapshotStateOptions) {
+  static async create(testFilePath: string, options: SnapshotStateOptions): Promise<SnapshotState> {
     const snapshotPath = await options.snapshotEnvironment.resolvePath(
       testFilePath,
     )
@@ -104,7 +104,7 @@ export default class SnapshotState {
     return new SnapshotState(testFilePath, snapshotPath, content, options)
   }
 
-  get environment() {
+  get environment(): SnapshotEnvironment {
     return this._environment
   }
 
@@ -116,7 +116,7 @@ export default class SnapshotState {
     })
   }
 
-  protected _inferInlineSnapshotStack(stacks: ParsedStack[]) {
+  protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
     // if called inside resolves/rejects, stacktrace is different
     const promiseIndex = stacks.findIndex(i =>
       i.method.match(/__VITEST_(RESOLVES|REJECTS)__/),

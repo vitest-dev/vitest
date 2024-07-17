@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import type {
@@ -12,7 +12,6 @@ import type {
 } from '../../types'
 import {
   getFullName,
-  getSafeTimers,
   getSuites,
   getTestName,
   getTests,
@@ -72,7 +71,7 @@ export abstract class BaseReporter implements Reporter {
 
   private _filesInWatchMode = new Map<string, number>()
   private _lastRunTimeout = 0
-  private _lastRunTimer: NodeJS.Timer | undefined
+  private _lastRunTimer: NodeJS.Timeout | undefined
   private _lastRunCount = 0
   private _timeStart = new Date()
   private _offUnhandledRejection?: () => void
@@ -216,7 +215,6 @@ export abstract class BaseReporter implements Reporter {
       ]
       this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
       this._lastRunTimeout = 0
-      const { setInterval } = getSafeTimers()
       this._lastRunTimer = setInterval(() => {
         this._lastRunTimeout += 1
         if (this._lastRunTimeout >= LAST_RUN_TEXTS.length) {
@@ -232,7 +230,6 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private resetLastRunLog() {
-    const { clearInterval } = getSafeTimers()
     clearInterval(this._lastRunTimer)
     this._lastRunTimer = undefined
     this.ctx.logger.logUpdate.clear()

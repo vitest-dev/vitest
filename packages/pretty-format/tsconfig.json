@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "moduleResolution": "Bundler",
+    "isolatedDeclarations": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["**/dist/**"]
+}

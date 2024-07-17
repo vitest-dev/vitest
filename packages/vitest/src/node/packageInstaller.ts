@@ -1,6 +1,6 @@
 import url from 'node:url'
 import { createRequire } from 'node:module'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { isPackageExists } from 'local-pkg'
 import { isCI } from '../utils/env'
 
@@ -18,7 +18,7 @@ export class VitestPackageInstaller {
         targetRequire.resolve(dependency, { paths: [root, __dirname] })
         return true
       }
-      catch (error) {}
+      catch {}
     }
 
     if (

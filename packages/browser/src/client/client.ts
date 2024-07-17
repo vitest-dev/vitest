@@ -6,12 +6,12 @@ import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type
 
-export const PORT = import.meta.hot ? '51204' : location.port
+export const PORT = location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
 export const SESSION_ID
   = PAGE_TYPE === 'orchestrator'
     ? getBrowserState().contextId
-    : crypto.randomUUID()
+    : getBrowserState().testerId
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
 }//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&sessionId=${SESSION_ID}`
@@ -136,4 +136,4 @@ function createClient() {
 
 export const client = createClient()
 
-export { channel, waitForChannel } from './channel'
+export * from './channel'

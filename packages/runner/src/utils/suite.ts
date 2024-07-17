@@ -1,9 +1,9 @@
-import type { Suite, Task } from '../types'
+import type { Suite, Task } from '../types/tasks'
 
 /**
  * Partition in tasks groups by consecutive concurrent
  */
-export function partitionSuiteChildren(suite: Suite) {
+export function partitionSuiteChildren(suite: Suite): Task[][] {
   let tasksGroup: Task[] = []
   const tasksGroups: Task[][] = []
   for (const c of suite.tasks) {

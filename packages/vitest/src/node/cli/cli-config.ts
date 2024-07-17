@@ -24,12 +24,12 @@ export type CLIOption<Value> = {
   array?: boolean
   normalize?: boolean
 } & (NestedOption<Value> extends never // require subcommands for nested options
-  ? {}
+  ? object
   : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
   // require argument for non-boolean options
-  (NonNullable<Value> extends boolean ? {} : { argument: string })
+  (NonNullable<Value> extends boolean ? object : { argument: string })
 
-export type CLIOptions<Config extends {}> = {
+export type CLIOptions<Config extends object> = {
   [Key in keyof Config as NonNullable<Config[Key]> extends Function
     ? never
     : Key]-?: CLIOption<Config[Key]> | null;

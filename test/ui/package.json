@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test-e2e": "GITHUB_ACTIONS=false playwright test",
+    "test-e2e-ui": "GITHUB_ACTIONS=false playwright test --ui",
     "test-fixtures": "vitest"
   },
   "devDependencies": {

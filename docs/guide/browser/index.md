@@ -258,7 +258,7 @@ Vitest browser requires spinning up the provider and the browser during the init
 
 ## Cross-Browser Testing
 
-When you specify a browser name in the browser option, Vitest will try to run the specified browser using [WebdriverIO](https://webdriver.io/) by default, and then run the tests there. This feature makes cross-browser testing easy to use and configure in environments like a CI. If you don't want to use WebdriverIO, you can configure the custom browser provider by using `browser.provider` option.
+When you specify a browser name in the browser option, Vitest will try to run the specified browser using `preview` by default, and then run the tests there. If you don't want to use `preview`, you can configure the custom browser provider by using `browser.provider` option.
 
 To specify a browser using the CLI, use the `--browser` flag followed by the browser name, like this:
 

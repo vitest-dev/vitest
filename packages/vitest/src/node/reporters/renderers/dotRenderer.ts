@@ -1,4 +1,4 @@
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import type { Task } from '../../../types'
 import { getTests } from '../../../utils'
 import type { Logger } from '../../logger'

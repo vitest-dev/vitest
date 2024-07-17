@@ -28,6 +28,7 @@ export class BrowserServer implements IBrowserServer {
   public testerHtml: Promise<string> | string
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
+  public errorCatcherPath: Promise<string> | string
   public stateJs: Promise<string> | string
 
   public state: BrowserServerState
@@ -86,6 +87,7 @@ export class BrowserServer implements IBrowserServer {
       resolve(distRoot, 'client/esm-client-injector.js'),
       'utf8',
     ).then(js => (this.injectorJs = js))
+    this.errorCatcherPath = resolve(distRoot, 'client/error-catcher.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',
@@ -182,7 +184,7 @@ export class BrowserServer implements IBrowserServer {
     })
   }
 
-  private cdpSessions = new Map<string, Promise<CDPSession>>()
+  private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
   async ensureCDPHandler(contextId: string, sessionId: string) {
     const cachedHandler = this.state.cdps.get(sessionId)
@@ -195,11 +197,11 @@ export class BrowserServer implements IBrowserServer {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessions.get(sessionId) ?? await (async () => {
+    const promise = this.cdpSessionsPromises.get(sessionId) ?? await (async () => {
       const promise = provider.getCDPSession!(contextId).finally(() => {
-        this.cdpSessions.delete(sessionId)
+        this.cdpSessionsPromises.delete(sessionId)
       })
-      this.cdpSessions.set(sessionId, promise)
+      this.cdpSessionsPromises.set(sessionId, promise)
       return promise
     })()
 

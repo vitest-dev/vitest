@@ -83,7 +83,7 @@ type CoverageReporterWithOptions<
   ReporterName extends CoverageReporter = CoverageReporter,
 > = ReporterName extends keyof ReportOptions
   ? ReportOptions[ReporterName] extends never
-    ? [ReporterName, {}] // E.g. the "none" reporter
+    ? [ReporterName, object] // E.g. the "none" reporter
     : [ReporterName, Partial<ReportOptions[ReporterName]>]
   : [ReporterName, Record<string, unknown>]
 

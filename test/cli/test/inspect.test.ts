@@ -2,12 +2,11 @@ import type { InspectorNotification } from 'node:inspector'
 import { expect, test } from 'vitest'
 import WebSocket from 'ws'
 
-import { isWindows } from '../../../packages/vite-node/src/utils'
 import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
 
-test.skipIf(isWindows)('--inspect-brk stops at test file', async () => {
+test('--inspect-brk stops at test file', async () => {
   const { vitest, waitForClose } = await runVitestCli(
     '--root',
     'fixtures/inspect',

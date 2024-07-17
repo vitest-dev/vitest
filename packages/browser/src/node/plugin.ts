@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
-import { readFileSync } from 'node:fs'
-import { basename, resolve } from 'pathe'
+import { lstatSync, readFileSync } from 'node:fs'
+import type { Stats } from 'node:fs'
+import { basename, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
@@ -22,8 +23,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
   const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
 
-  let loupePath: string
-
   return [
     {
       enforce: 'pre',
@@ -43,7 +42,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         })
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(async function vitestBrowserMode(req, res, next) {
-          if (!req.url) {
+          if (!req.url || !browserServer.provider) {
             return next()
           }
           const url = new URL(req.url, 'http://localhost')
@@ -89,19 +88,69 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           )
         }
 
-        coverageFolder && server.middlewares.use(
-          coveragePath!,
-          sirv(coverageFolder[0], {
-            single: true,
-            dev: true,
-            setHeaders: (res) => {
-              res.setHeader(
-                'Cache-Control',
-                'public,max-age=0,must-revalidate',
-              )
-            },
-          }),
-        )
+        if (coverageFolder) {
+          server.middlewares.use(
+            coveragePath!,
+            sirv(coverageFolder[0], {
+              single: true,
+              dev: true,
+              setHeaders: (res) => {
+                res.setHeader(
+                  'Cache-Control',
+                  'public,max-age=0,must-revalidate',
+                )
+              },
+            }),
+          )
+        }
+
+        const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
+
+        if (screenshotFailures) {
+        // eslint-disable-next-line prefer-arrow-callback
+          server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
+            if (!req.url || !browserServer.provider) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            const url = new URL(req.url, 'http://localhost')
+            const file = url.searchParams.get('file')
+            if (!file) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            let stat: Stats | undefined
+            try {
+              stat = lstatSync(file)
+            }
+            catch {
+            }
+
+            if (!stat?.isFile()) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            const ext = extname(file)
+            const buffer = readFileSync(file)
+            res.setHeader(
+              'Cache-Control',
+              'public,max-age=0,must-revalidate',
+            )
+            res.setHeader('Content-Length', buffer.length)
+            res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
+              ? 'image/jpeg'
+              : ext === 'webp'
+                ? 'image/webp'
+                : 'image/png')
+            res.end(buffer)
+          })
+        }
       },
     },
     {
@@ -168,6 +217,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               'vitest/utils',
               'vitest/browser',
               'vitest/runners',
+              '@vitest/browser',
+              '@vitest/browser/client',
               '@vitest/utils',
               '@vitest/utils/source-map',
               '@vitest/runner',
@@ -178,21 +229,15 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               'std-env',
               'tinybench',
               'tinyspy',
+              'tinyrainbow',
               'pathe',
               'msw',
               'msw/browser',
             ],
             include: [
-              'vitest > @vitest/utils > pretty-format',
-              'vitest > @vitest/snapshot > pretty-format',
               'vitest > @vitest/snapshot > magic-string',
-              'vitest > pretty-format',
-              'vitest > pretty-format > ansi-styles',
-              'vitest > pretty-format > ansi-regex',
               'vitest > chai',
               'vitest > chai > loupe',
-              'vitest > @vitest/runner > pretty-format',
-              'vitest > @vitest/utils > diff-sequences',
               'vitest > @vitest/utils > loupe',
               '@vitest/browser > @testing-library/user-event',
               '@vitest/browser > @testing-library/dom',
@@ -220,20 +265,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId.startsWith('/__virtual_vitest__')) {
-          const url = new URL(rawId, 'http://localhost')
-          if (!url.searchParams.has('id')) {
-            return
-          }
-
-          const id = decodeURIComponent(url.searchParams.get('id')!)
-
-          const resolved = await this.resolve(id, distRoot, {
-            skipSelf: true,
-          })
-          return resolved
-        }
-
         if (rawId === '/__vitest_msw__') {
           return this.resolve('msw/mockServiceWorker.js', distRoot, {
             skipSelf: true,
@@ -248,11 +279,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           return resolve(distRoot, 'client', id.slice(1))
         }
       },
-      configResolved(config) {
-        loupePath = resolve(config.cacheDir, 'deps/loupe.js')
-      },
       transform(code, id) {
-        if (id.startsWith(loupePath)) {
+        if (id.includes(browserServer.vite.config.cacheDir) && id.includes('loupe.js')) {
           // loupe bundle has a nastry require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
@@ -291,6 +319,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             project.ctx.config.root,
             project.ctx.server.config.configFile,
           ),
+          distRoot,
         )
 
         return {

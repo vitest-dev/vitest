@@ -17,7 +17,7 @@ export interface InlineSnapshot {
 export async function saveInlineSnapshots(
   environment: SnapshotEnvironment,
   snapshots: Array<InlineSnapshot>,
-) {
+): Promise<void> {
   const MagicString = (await import('magic-string')).default
   const files = new Set(snapshots.map(i => i.file))
   await Promise.all(
@@ -148,7 +148,7 @@ export function replaceInlineSnap(
   s: MagicString,
   currentIndex: number,
   newSnap: string,
-) {
+): boolean {
   const { code: codeStartingAtIndex, index } = getCodeStartingAtIndex(code, currentIndex)
 
   const startMatch = startRegex.exec(codeStartingAtIndex)
@@ -182,7 +182,7 @@ export function replaceInlineSnap(
 }
 
 const INDENTATION_REGEX = /^([^\S\n]*)\S/m
-export function stripSnapshotIndentation(inlineSnapshot: string) {
+export function stripSnapshotIndentation(inlineSnapshot: string): string {
   // Find indentation if exists.
   const match = inlineSnapshot.match(INDENTATION_REGEX)
   if (!match || !match[1]) {

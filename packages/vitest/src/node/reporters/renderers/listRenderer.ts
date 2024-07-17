@@ -1,4 +1,4 @@
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
 import type {

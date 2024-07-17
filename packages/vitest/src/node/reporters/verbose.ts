@@ -1,4 +1,4 @@
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import type { TaskResultPack } from '../../types'
 import { getFullName } from '../../utils'
 import { F_RIGHT } from '../../utils/figures'

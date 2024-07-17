@@ -2,6 +2,10 @@
   "name": "@vitest/cjs-lib",
   "type": "commonjs",
   "exports": {
-    "default": "./index.js"
+    "./lib": {
+      "types": "./lib.d.ts",
+      "default": "./lib.mjs"
+    },
+    ".": "./index.js"
   }
 }
