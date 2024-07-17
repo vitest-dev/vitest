@@ -142,10 +142,6 @@ export function processError(
     })
   }
 
-  if (err.diffOptions) {
-    err.diffOptions = undefined
-  }
-
   if (typeof err.expected !== 'string') {
     err.expected = stringify(err.expected, 10)
   }
