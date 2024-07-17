@@ -139,8 +139,9 @@ export class TestCase extends Task {
       heap: result.heap,
       duration: result.duration!,
       startTime: result.startTime,
-      retryCount: result.retryCount,
-      repeatCount: result.repeatCount,
+      retryCount: result.retryCount ?? 0,
+      repeatCount: result.repeatCount ?? 0,
+      flaky: !!result.retryCount && result.state === 'pass' && result.retryCount > 0,
     }
   }
 }
@@ -386,8 +387,12 @@ export interface TestDiagnostic {
   heap: number | undefined
   duration: number
   startTime: number
-  retryCount: number | undefined
-  repeatCount: number | undefined
+  retryCount: number
+  repeatCount: number
+  /**
+   * If test passed on a second retry.
+   */
+  flaky: boolean
 }
 
 function getTestState(test: TestCase): TestResult['state'] | 'running' {
