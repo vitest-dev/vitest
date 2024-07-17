@@ -28,8 +28,18 @@ export {
 }
 export type { BaseReporter, Reporter }
 
-export { TestCase, TestFile, TestSuite } from '../server-tasks'
-export type { TaskOptions, TestDiagnostic, TestError, SerialisedError, ReportedTask } from '../server-tasks'
+export { TestCase, TestFile, TestSuite } from './reported-tasks'
+export type {
+  TestCollection,
+
+  TaskOptions,
+  TestDiagnostic,
+
+  TestResult,
+  TestResultFailed,
+  TestResultPassed,
+  TestResultSkipped,
+} from './reported-tasks'
 
 export type {
   JsonAssertionResult,

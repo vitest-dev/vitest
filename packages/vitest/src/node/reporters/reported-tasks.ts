@@ -1,24 +1,14 @@
 import type {
-  Custom,
-  File as FileTask,
+  Custom as RunnerCustomCase,
   Task as RunnerTask,
-  Suite as SuiteTask,
+  Test as RunnerTestCase,
+  File as RunnerTestFile,
+  Suite as RunnerTestSuite,
   TaskMeta,
-  Test,
 } from '@vitest/runner'
-import { getFullName } from '../utils'
-import type { ParsedStack } from '../types'
-import type { WorkspaceProject } from './workspace'
-
-// naming proposal:
-// @vitest/runner: Task -> RunnerTask, Suite -> RunnerTestSuite, File -> RunnerTestFile, Test -> RunnerTestCase
-// vitest/reporters: Task -> ReportedTask, Suite -> ReportedTestSuite, File -> ReportedTestFile, Test -> ReportedTestCase
-
-// rule for function/getter
-// getter is a readonly property that doesn't change in time
-// method can return different objects depending on when it's called
-
-export type ReportedTask = TestCase | TestFile | TestSuite
+import type { TestError } from '@vitest/utils'
+import { getFullName } from '../../utils/tasks'
+import type { WorkspaceProject } from '../workspace'
 
 class ReportedTaskImplementation {
   #fullName: string | undefined
@@ -34,20 +24,24 @@ class ReportedTaskImplementation {
    * @experimental Public project API is experimental and does not follow semver.
    */
   public readonly project: WorkspaceProject
+
   /**
    * Direct reference to the test file where the test or suite is defined.
    */
   public readonly file: TestFile
+
   /**
    * Name of the test or the suite.
    */
   public readonly name: string
+
   /**
    * Unique identifier.
    * This ID is deterministic and will be the same for the same test across multiple runs.
    * The ID is based on the file path and test position.
    */
   public readonly id: string
+
   /**
    * Location in the file where the test or suite is defined.
    */
@@ -76,25 +70,27 @@ class ReportedTaskImplementation {
   }
 
   static register(task: RunnerTask, project: WorkspaceProject) {
-    const state = new this(task, project) as ReportedTask
+    const state = new this(task, project) as TestCase | TestSuite | TestFile
     storeTask(project, task, state)
     return state
   }
 }
 
 export class TestCase extends ReportedTaskImplementation {
-  declare public readonly task: Test | Custom
+  declare public readonly task: RunnerTestCase | RunnerCustomCase
   public readonly type: 'test' | 'custom' = 'test'
+
   /**
    * Options that the test was initiated with.
    */
   public readonly options: TaskOptions
+
   /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
    */
   public readonly parent: TestSuite | TestFile
 
-  protected constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
     super(task, project)
 
     const suite = this.task.suite
@@ -154,11 +150,11 @@ export class TestCase extends ReportedTaskImplementation {
   }
 }
 
-class TaskCollection {
-  #task: SuiteTask | FileTask
+class TestCollection {
+  #task: RunnerTestSuite | RunnerTestFile
   #project: WorkspaceProject
 
-  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+  constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
     this.#task = task
     this.#project = project
   }
@@ -278,27 +274,27 @@ class TaskCollection {
 
   *[Symbol.iterator](): IterableIterator<TestSuite | TestCase> {
     for (const task of this.#task.tasks) {
-      const taskInstance = getReportedTask(this.#project, task)
-      if (!taskInstance) {
-        throw new Error(`Task instance was not found for task ${task.id}`)
-      }
-      yield taskInstance as TestSuite | TestCase
+      yield getReportedTask(this.#project, task) as TestSuite | TestCase
     }
   }
 }
 
+export type { TestCollection }
+
 abstract class SuiteImplementation extends ReportedTaskImplementation {
-  declare public readonly task: SuiteTask | FileTask
+  declare public readonly task: RunnerTestSuite | RunnerTestFile
+
   /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
    */
   public readonly parent: TestSuite | TestFile
+
   /**
    * Collection of suites and tests that are part of this suite.
    */
-  public readonly children: TaskCollection
+  public readonly children: TestCollection
 
-  protected constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
     super(task, project)
 
     const suite = this.task.suite
@@ -308,27 +304,29 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
     else {
       this.parent = this.file
     }
-    this.children = new TaskCollection(task, project)
+    this.children = new TestCollection(task, project)
   }
 }
 
 export class TestSuite extends SuiteImplementation {
-  declare public readonly task: SuiteTask
+  declare public readonly task: RunnerTestSuite
   public readonly type = 'suite'
+
   /**
    * Options that suite was initiated with.
    */
   public readonly options: TaskOptions
 
-  protected constructor(task: SuiteTask, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestSuite, project: WorkspaceProject) {
     super(task, project)
     this.options = buildOptions(task)
   }
 }
 
 export class TestFile extends SuiteImplementation {
-  declare public readonly task: FileTask
+  declare public readonly task: RunnerTestFile
   public readonly type = 'file'
+
   /**
    * This is usually an absolute UNIX file path.
    * It can be a virtual id if the file is not on the disk.
@@ -336,7 +334,7 @@ export class TestFile extends SuiteImplementation {
    */
   public readonly moduleId: string
 
-  protected constructor(task: FileTask, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestFile, project: WorkspaceProject) {
     super(task, project)
     this.moduleId = task.filepath
   }
@@ -351,7 +349,7 @@ export interface TaskOptions {
   mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
-function buildOptions(task: Test | Custom | FileTask | SuiteTask): TaskOptions {
+function buildOptions(task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite): TaskOptions {
   return {
     each: task.each,
     concurrent: task.concurrent,
@@ -362,33 +360,19 @@ function buildOptions(task: Test | Custom | FileTask | SuiteTask): TaskOptions {
   }
 }
 
-export interface SerialisedError {
-  message: string
-  stack?: string
-  name: string
-  stacks?: ParsedStack[]
-  [key: string]: unknown
-}
-
-export interface TestError extends SerialisedError {
-  diff?: string
-  actual?: string
-  expected?: string
-}
-
 export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
 
-interface TestResultPassed {
+export interface TestResultPassed {
   state: 'passed'
   errors: undefined
 }
 
-interface TestResultFailed {
+export interface TestResultFailed {
   state: 'failed'
   errors: TestError[]
 }
 
-interface TestResultSkipped {
+export interface TestResultSkipped {
   state: 'skipped'
   errors: undefined
 }
@@ -410,11 +394,11 @@ function getTestState(test: TestCase): TestResult['state'] | 'running' {
   return result ? result.state : 'running'
 }
 
-function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTask: ReportedTask) {
+function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTask: TestCase | TestSuite | TestFile) {
   project.ctx.state.reportedTasksMap.set(runnerTask, reportedTask)
 }
 
-function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): ReportedTask {
+function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): TestCase | TestSuite | TestFile {
   const reportedTask = project.ctx.state.reportedTasksMap.get(runnerTask)
   if (!reportedTask) {
     throw new Error(`Task instance was not found for task ${runnerTask.id}`)

@@ -10,7 +10,7 @@ import type {
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { ChaiConfig } from '../../integrations/chai/config'
-import type { Arrayable, ParsedStack } from '../../types/general'
+import type { Arrayable, ErrorWithDiff, ParsedStack } from '../../types/general'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { EnvironmentOptions } from '../../types/environment'
@@ -620,7 +620,7 @@ export interface InlineConfig {
    *
    * Return `false` to omit the frame.
    */
-  onStackTrace?: (error: Error, frame: ParsedStack) => boolean | void
+  onStackTrace?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
 
   /**
    * Indicates if CSS files should be processed.

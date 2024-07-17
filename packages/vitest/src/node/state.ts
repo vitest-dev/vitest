@@ -3,8 +3,7 @@ import { createFileTask } from '@vitest/runner/utils'
 import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
-import type { ReportedTask } from './server-tasks'
-import { TestCase, TestFile, TestSuite } from './server-tasks'
+import { TestCase, TestFile, TestSuite } from './reporters/reported-tasks'
 
 export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {
@@ -21,7 +20,7 @@ export class StateManager {
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
   processTimeoutCauses = new Set<string>()
-  reportedTasksMap = new WeakMap<Task, ReportedTask>()
+  reportedTasksMap = new WeakMap<Task, TestCase | TestFile | TestSuite>()
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err)) {
