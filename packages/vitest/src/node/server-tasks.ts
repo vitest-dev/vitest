@@ -1,6 +1,7 @@
 import type {
   Custom,
   File as FileTask,
+  Task as RunnerTask,
   Suite as SuiteTask,
   TaskMeta,
   Test,
@@ -14,9 +15,13 @@ import type { WorkspaceProject } from './workspace'
 // method can return different objects depending on when it's called
 
 const tasksMap = new WeakMap<
-  Test | Custom | FileTask | SuiteTask,
+  RunnerTask,
   TestCase | TestFile | TestSuite
 >()
+
+export function _experimental_getServerTask(task: RunnerTask) {
+  return tasksMap.get(task)
+}
 
 class Task {
   #fullName: string | undefined
@@ -25,7 +30,7 @@ class Task {
    * Task instance.
    * @experimental Public task API is experimental and does not follow semver.
    */
-  public readonly task: Test | Custom | FileTask | SuiteTask
+  public readonly task: RunnerTask
 
   /**
    * Current task's project.
@@ -51,8 +56,8 @@ class Task {
    */
   public readonly location: { line: number; column: number } | undefined
 
-  constructor(
-    task: Test | Custom | FileTask | SuiteTask,
+  protected constructor(
+    task: RunnerTask,
     project: WorkspaceProject,
   ) {
     this.task = task
@@ -72,6 +77,12 @@ class Task {
     }
     return this.#fullName
   }
+
+  static register(task: RunnerTask, project: WorkspaceProject) {
+    const state = new this(task, project)
+    tasksMap.set(task, state as TestCase | TestFile | TestSuite)
+    return state
+  }
 }
 
 export class TestCase extends Task {
@@ -86,7 +97,7 @@ export class TestCase extends Task {
    */
   public readonly parent: TestSuite | TestFile
 
-  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+  protected constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
     super(task, project)
 
     const suite = this.task.suite
@@ -288,7 +299,7 @@ abstract class SuiteImplementation extends Task {
    */
   public readonly children: TaskCollection
 
-  constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
+  protected constructor(task: SuiteTask | FileTask, project: WorkspaceProject) {
     super(task, project)
 
     const suite = this.task.suite
@@ -310,7 +321,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public readonly options: TaskOptions
 
-  constructor(task: SuiteTask, project: WorkspaceProject) {
+  protected constructor(task: SuiteTask, project: WorkspaceProject) {
     super(task, project)
     this.options = buildOptions(task)
   }
@@ -326,7 +337,7 @@ export class TestFile extends SuiteImplementation {
    */
   public readonly moduleId: string
 
-  constructor(task: FileTask, project: WorkspaceProject) {
+  protected constructor(task: FileTask, project: WorkspaceProject) {
     super(task, project)
     this.moduleId = task.filepath
   }
