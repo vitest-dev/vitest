@@ -115,7 +115,7 @@ export class TestCase extends Task {
     return {
       state,
       errors: result.errors as TestError[] | undefined,
-    }
+    } as TestResult
   }
 
   /**
@@ -365,9 +365,21 @@ interface TestError extends SerialisedError {
   expected?: string
 }
 
-interface TestResult {
-  state: 'passed' | 'failed' | 'skipped'
-  errors?: TestError[]
+type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
+
+interface TestResultPassed {
+  state: 'passed'
+  errors: undefined
+}
+
+interface TestResultFailed {
+  state: 'failed'
+  errors: TestError[]
+}
+
+interface TestResultSkipped {
+  state: 'skipped'
+  errors: undefined
 }
 
 export interface TestDiagnostic {
