@@ -96,7 +96,7 @@ export class StateManager {
     })
   }
 
-  collectFiles(files: File[] = [], project: WorkspaceProject) {
+  collectFiles(project: WorkspaceProject, files: File[] = []) {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
       const otherProject = existing.filter(
@@ -116,12 +116,10 @@ export class StateManager {
     })
   }
 
-  // this file is reused by ws-client, and should not rely on heavy dependencies like workspace
   clearFiles(
-    _project: { config: { name: string | undefined; root: string } },
+    project: WorkspaceProject,
     paths: string[] = [],
   ) {
-    const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       const fileTask = createFileTask(
@@ -208,8 +206,10 @@ export class StateManager {
 
   cancelFiles(files: string[], project: WorkspaceProject) {
     this.collectFiles(
-      files.map(filepath => createFileTask(filepath, project.config.root, project.config.name)),
       project,
+      files.map(filepath =>
+        createFileTask(filepath, project.config.root, project.config.name),
+      ),
     )
   }
 }

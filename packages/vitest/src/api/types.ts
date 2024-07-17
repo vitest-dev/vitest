@@ -27,7 +27,6 @@ export interface TransformResultWithSource {
 }
 
 export interface WebSocketHandlers {
-  onCollected: (files?: File[]) => Promise<void>
   onTaskUpdate: (packs: TaskResultPack[]) => void
   getFiles: () => File[]
   getTestFiles: () => Promise<SerializedSpec[]>

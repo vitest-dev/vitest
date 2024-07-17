@@ -76,7 +76,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       return ctx.report('onPathsCollected', paths)
     },
     onCollected(files) {
-      ctx.state.collectFiles(files)
+      ctx.state.collectFiles(project, files)
       return ctx.report('onCollected', files)
     },
     onAfterSuiteRun(meta) {

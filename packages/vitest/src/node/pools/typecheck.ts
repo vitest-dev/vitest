@@ -61,7 +61,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.setFiles(files)
 
     checker.onParseStart(async () => {
-      ctx.state.collectFiles(checker.getTestFiles())
+      ctx.state.collectFiles(project, checker.getTestFiles())
       await ctx.report('onCollected')
     })
 
@@ -80,7 +80,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
 
       await checker.collectTests()
-      ctx.state.collectFiles(checker.getTestFiles())
+      ctx.state.collectFiles(project, checker.getTestFiles())
 
       await ctx.report('onTaskUpdate', checker.getTestPacks())
       await ctx.report('onCollected')
@@ -107,7 +107,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(checker.getTestFiles())
+      ctx.state.collectFiles(project, checker.getTestFiles())
       await ctx.report('onCollected')
     }
   }
@@ -135,7 +135,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
-        ctx.state.collectFiles(project.typechecker.getTestFiles())
+        ctx.state.collectFiles(project, project.typechecker.getTestFiles())
         await ctx.report('onCollected')
         await onParseEnd(project, project.typechecker.getResult())
         continue
