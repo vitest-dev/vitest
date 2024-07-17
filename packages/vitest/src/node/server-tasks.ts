@@ -20,12 +20,12 @@ import type { WorkspaceProject } from './workspace'
 
 export type ReportedTask = TestCase | TestFile | TestSuite
 
-class Task {
+class ReportedTaskImplementation {
   #fullName: string | undefined
 
   /**
    * Task instance.
-   * @experimental Public task API is experimental and does not follow semver.
+   * @experimental Public runner task API is experimental and does not follow semver.
    */
   public readonly task: RunnerTask
 
@@ -82,7 +82,7 @@ class Task {
   }
 }
 
-export class TestCase extends Task {
+export class TestCase extends ReportedTaskImplementation {
   declare public readonly task: Test | Custom
   public readonly type: 'test' | 'custom' = 'test'
   /**
@@ -287,7 +287,7 @@ class TaskCollection {
   }
 }
 
-abstract class SuiteImplementation extends Task {
+abstract class SuiteImplementation extends ReportedTaskImplementation {
   declare public readonly task: SuiteTask | FileTask
   /**
    * Parent suite. If suite was called directly inside the file, the parent will be the file.
