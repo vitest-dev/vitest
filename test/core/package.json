@@ -28,6 +28,7 @@
     "tinyrainbow": "^1.2.0",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
+    "vite-node": "workspace:*",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
     "vue": "^3.4.26",
