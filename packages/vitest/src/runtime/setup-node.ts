@@ -2,6 +2,7 @@ import { createRequire } from 'node:module'
 import util from 'node:util'
 import timers from 'node:timers'
 import { installSourcemapsSupport } from 'vite-node/source-map'
+import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
 import type {
   EnvironmentOptions,
   ResolvedConfig,
@@ -44,10 +45,14 @@ export async function setupGlobalEnv(
   if (environment.transformMode === 'web') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
-    _require.extensions['.css'] = () => ({})
-    _require.extensions['.scss'] = () => ({})
-    _require.extensions['.sass'] = () => ({})
-    _require.extensions['.less'] = () => ({})
+    _require.extensions['.css'] = resolveCss
+    _require.extensions['.scss'] = resolveCss
+    _require.extensions['.sass'] = resolveCss
+    _require.extensions['.less'] = resolveCss
+    // since we are using Vite, we can assume how these will be resolved
+    KNOWN_ASSET_TYPES.forEach((type) => {
+      _require.extensions[`.${type}`] = resolveAsset
+    })
     process.env.SSR = ''
   }
   else {
@@ -67,6 +72,14 @@ export async function setupGlobalEnv(
   if (!config.disableConsoleIntercept) {
     await setupConsoleLogSpy()
   }
+}
+
+function resolveCss(mod: NodeJS.Module) {
+  mod.exports = ''
+}
+
+function resolveAsset(mod: NodeJS.Module, url: string) {
+  mod.exports = url
 }
 
 export async function setupConsoleLogSpy() {

@@ -4,6 +4,7 @@ import timers from 'node:timers'
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
 import { installSourcemapsSupport } from 'vite-node/source-map'
+import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,
@@ -36,10 +37,14 @@ export async function run(
   if (workerState.environment.transformMode === 'web') {
     const _require = createRequire(import.meta.url)
     // always mock "required" `css` files, because we cannot process them
-    _require.extensions['.css'] = () => ({})
-    _require.extensions['.scss'] = () => ({})
-    _require.extensions['.sass'] = () => ({})
-    _require.extensions['.less'] = () => ({})
+    _require.extensions['.css'] = resolveCss
+    _require.extensions['.scss'] = resolveCss
+    _require.extensions['.sass'] = resolveCss
+    _require.extensions['.less'] = resolveCss
+    // since we are using Vite, we can assume how these will be resolved
+    KNOWN_ASSET_TYPES.forEach((type) => {
+      _require.extensions[`.${type}`] = resolveAsset
+    })
   }
 
   // @ts-expect-error not typed global for patched timers
@@ -92,4 +97,12 @@ export async function run(
   }
 
   await stopCoverageInsideWorker(config.coverage, executor)
+}
+
+function resolveCss(mod: NodeJS.Module) {
+  mod.exports = ''
+}
+
+function resolveAsset(mod: NodeJS.Module, url: string) {
+  mod.exports = url
 }
