@@ -31,11 +31,10 @@ describe('jest mock compat layer', () => {
   })
 
   it('clearing instances', () => {
-    const Spy = vi.fn(() => ({}))
+    const Spy = vi.fn()
 
     expect(Spy.mock.instances).toHaveLength(0)
-    // eslint-disable-next-line no-new
-    new Spy()
+    const _result = new Spy()
     expect(Spy.mock.instances).toHaveLength(1)
 
     Spy.mockReset() // same as mockClear()

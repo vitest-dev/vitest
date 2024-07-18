@@ -476,15 +476,30 @@ function enhanceSpy<T extends Procedure>(
   let implementationChangedTemporarily = false
 
   function mockCall(this: unknown, ...args: any) {
-    instances.push(this)
-    contexts.push(this)
+    if (!new.target) {
+      instances.push(this)
+      contexts.push(this)
+    }
     invocations.push(++callOrder)
     const impl = implementationChangedTemporarily
       ? implementation!
       : onceImplementations.shift()
       || implementation
       || state.getOriginal()
-      || (() => {})
+      || function () {}
+    if (new.target) {
+      try {
+        const result = Reflect.construct(impl, args, state.getOriginal())
+        instances.push(result)
+        contexts.push(result)
+        return result
+      }
+      catch (e) {
+        instances.push(undefined)
+        contexts.push(undefined)
+        throw e
+      }
+    }
     return impl.apply(this, args)
   }
 
@@ -594,9 +609,10 @@ function enhanceSpy<T extends Procedure>(
 export function fn<T extends Procedure = Procedure>(
   implementation?: T,
 ): Mock<T> {
-  const enhancedSpy = enhanceSpy(tinyspy.internalSpyOn({
-    spy: implementation || function () {} as T,
-  }, 'spy'))
+  const inernalSpy = tinyspy.internalSpyOn({
+    spy: implementation || function spy() {} as T,
+  }, 'spy')
+  const enhancedSpy = enhanceSpy(inernalSpy)
   if (implementation) {
     enhancedSpy.mockImplementation(implementation)
   }
