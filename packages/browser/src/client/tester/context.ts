@@ -1,6 +1,6 @@
 import type { Task, WorkerGlobalState } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventHoverOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
 
 // this file should not import anything directly, only types
@@ -137,13 +137,13 @@ function createUserEvent(): UserEvent {
       )
       keyboard.unreleased = unreleased
     },
-    hover(element: Element) {
+    hover(element: Element, options: UserEventHoverOptions = {}) {
       const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_hover', css)
+      return triggerCommand('__vitest_hover', css, options)
     },
-    unhover(element: Element) {
+    unhover(element: Element, options: UserEventHoverOptions = {}) {
       const css = convertElementToCssSelector(element.ownerDocument.body)
-      return triggerCommand('__vitest_hover', css)
+      return triggerCommand('__vitest_hover', css, options)
     },
 
     // non userEvent events, but still useful

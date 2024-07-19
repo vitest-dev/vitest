@@ -8,20 +8,19 @@ export const click: UserEventCommand<UserEvent['click']> = async (
   selector,
   options = {},
 ) => {
-  const provider = context.provider
-  if (provider instanceof PlaywrightBrowserProvider) {
+  if (context.provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
     await tester.locator(`css=${selector}`).click({
       timeout: 1000,
       ...options,
     })
   }
-  else if (provider instanceof WebdriverBrowserProvider) {
+  else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
     await browser.$(selector).click(options as any)
   }
   else {
-    throw new TypeError(`Provider "${provider.name}" doesn't support click command`)
+    throw new TypeError(`Provider "${context.provider.name}" doesn't support click command`)
   }
 }
 
@@ -30,17 +29,16 @@ export const dblClick: UserEventCommand<UserEvent['dblClick']> = async (
   selector,
   options = {},
 ) => {
-  const provider = context.provider
-  if (provider instanceof PlaywrightBrowserProvider) {
+  if (context.provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
     await tester.locator(`css=${selector}`).dblclick(options)
   }
-  else if (provider instanceof WebdriverBrowserProvider) {
+  else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
     await browser.$(selector).doubleClick()
   }
   else {
-    throw new TypeError(`Provider "${provider.name}" doesn't support dblClick command`)
+    throw new TypeError(`Provider "${context.provider.name}" doesn't support dblClick command`)
   }
 }
 
@@ -49,8 +47,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
   selector,
   options = {},
 ) => {
-  const provider = context.provider
-  if (provider instanceof PlaywrightBrowserProvider) {
+  if (context.provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
     await tester.locator(`css=${selector}`).click({
       timeout: 1000,
@@ -58,7 +55,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
       clickCount: 3,
     })
   }
-  else if (provider instanceof WebdriverBrowserProvider) {
+  else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
     await browser
       .action('pointer', { parameters: { pointerType: 'mouse' } })
@@ -78,6 +75,6 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
       .perform()
   }
   else {
-    throw new TypeError(`Provider "${provider.name}" doesn't support tripleClick command`)
+    throw new TypeError(`Provider "${context.provider.name}" doesn't support tripleClick command`)
   }
 }

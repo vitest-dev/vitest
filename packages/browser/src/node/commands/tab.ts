@@ -7,17 +7,16 @@ export const tab: UserEventCommand<UserEvent['tab']> = async (
   context,
   options = {},
 ) => {
-  const provider = context.provider
-  if (provider instanceof PlaywrightBrowserProvider) {
+  if (context.provider instanceof PlaywrightBrowserProvider) {
     const page = context.page
     await page.keyboard.press(options.shift === true ? 'Shift+Tab' : 'Tab')
     return
   }
-  if (provider instanceof WebdriverBrowserProvider) {
+  if (context.provider instanceof WebdriverBrowserProvider) {
     const { Key } = await import('webdriverio')
     const browser = context.browser
     await browser.keys(options.shift === true ? [Key.Shift, Key.Tab] : [Key.Tab])
     return
   }
-  throw new Error(`Provider "${provider.name}" doesn't support tab command`)
+  throw new Error(`Provider "${context.provider.name}" doesn't support tab command`)
 }
