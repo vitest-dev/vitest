@@ -1345,6 +1345,11 @@ Shortcut for `--coverage.thresholds.lines 100 --coverage.thresholds.functions 10
 
 Sets thresholds for files matching the glob pattern.
 
+::: tip NOTE
+Vitest counts all files, including those covered by glob-patterns, into the global coverage thresholds.
+This is different from Jest behavior.
+:::
+
 <!-- eslint-skip -->
 ```ts
 {

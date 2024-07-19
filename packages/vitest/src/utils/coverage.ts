@@ -218,10 +218,8 @@ export class BaseCoverageProvider {
       })
     }
 
-    // Global threshold is for all files that were not included by glob patterns
-    for (const file of files.filter(
-      file => !filesMatchedByGlobs.includes(file),
-    )) {
+    // Global threshold is for all files, even if they are included by glob patterns
+    for (const file of files) {
       const fileCoverage = coverageMap.fileCoverageFor(file)
       globalCoverageMap.addFileCoverage(fileCoverage)
     }
