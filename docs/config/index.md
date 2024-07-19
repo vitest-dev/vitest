@@ -1377,6 +1377,31 @@ This is different from Jest behavior.
 }
 ```
 
+##### coverage.thresholds[glob-pattern].100
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+
+Sets thresholds to 100 for files matching the glob pattern.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Thresholds for all files
+      functions: 95,
+      branches: 70,
+
+      // Thresholds for matching glob pattern
+      'src/utils/**.ts': { 100: true },
+      '**/math.ts': { 100: true }
+    }
+  }
+}
+```
+
 #### coverage.ignoreEmptyLines
 
 - **Type:** `boolean`
