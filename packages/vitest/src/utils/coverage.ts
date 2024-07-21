@@ -182,7 +182,6 @@ export class BaseCoverageProvider {
   }): ResolvedThreshold[] {
     const resolvedThresholds: ResolvedThreshold[] = []
     const files = coverageMap.files()
-    const filesMatchedByGlobs: string[] = []
     const globalCoverageMap = createCoverageMap()
 
     for (const key of Object.keys(
@@ -204,7 +203,6 @@ export class BaseCoverageProvider {
       const matchingFiles = files.filter(file =>
         mm.isMatch(relative(root, file), glob),
       )
-      filesMatchedByGlobs.push(...matchingFiles)
 
       for (const file of matchingFiles) {
         const fileCoverage = coverageMap.fileCoverageFor(file)
