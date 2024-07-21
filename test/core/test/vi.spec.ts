@@ -154,7 +154,7 @@ describe('testing vi utils', () => {
 
   test('mockImplementation types', async () => {
     // overload
-    const fs = await import('node:fs')
+    const fs = { readFileSync() {} } as any as typeof import('node:fs')
     vi.spyOn(fs, 'readFileSync').mockImplementation(() => 'str')
     vi.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from('buf'))
     vi.fn(fs.readFileSync).mockImplementation(() => 'str')
