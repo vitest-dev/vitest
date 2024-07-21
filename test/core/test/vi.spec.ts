@@ -152,6 +152,22 @@ describe('testing vi utils', () => {
     expectTypeOf(gSpy.mock.contexts).toEqualTypeOf<unknown[]>()
   })
 
+  test('mockImplementation types', async () => {
+    // overload
+    const fs = await import("node:fs");
+    vi.spyOn(fs, 'readFileSync').mockImplementation(() => "str");
+    vi.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from("buf"));
+    vi.fn(fs.readFileSync).mockImplementation(() => "str");
+    vi.fn(fs.readFileSync).mockImplementation(() => Buffer.from("buf"));
+
+    // union
+    interface Handler {
+      (v: number): number;
+      other(v: number): number;
+    }
+    vi.fn<Handler>().mockImplementation((v) => v + 1);
+  })
+
   test('can change config', () => {
     const state = getWorkerState()
     expect(state.config.hookTimeout).toBe(10000)
