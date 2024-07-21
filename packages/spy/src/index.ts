@@ -142,7 +142,7 @@ export interface MockContext<T extends Procedure> {
 
 type Procedure = (...args: any[]) => any
 // pick a single function type from function overloads, unions, etc...
-type NormalizedPrecedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>;
+type NormalizedPrecedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];

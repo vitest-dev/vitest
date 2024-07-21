@@ -154,18 +154,18 @@ describe('testing vi utils', () => {
 
   test('mockImplementation types', async () => {
     // overload
-    const fs = await import("node:fs");
-    vi.spyOn(fs, 'readFileSync').mockImplementation(() => "str");
-    vi.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from("buf"));
-    vi.fn(fs.readFileSync).mockImplementation(() => "str");
-    vi.fn(fs.readFileSync).mockImplementation(() => Buffer.from("buf"));
+    const fs = await import('node:fs')
+    vi.spyOn(fs, 'readFileSync').mockImplementation(() => 'str')
+    vi.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from('buf'))
+    vi.fn(fs.readFileSync).mockImplementation(() => 'str')
+    vi.fn(fs.readFileSync).mockImplementation(() => Buffer.from('buf'))
 
     // union
     interface Handler {
-      (v: number): number;
-      other(v: number): number;
+      (v: number): number
+      other: (v: number) => number
     }
-    vi.fn<Handler>().mockImplementation((v) => v + 1);
+    vi.fn<Handler>().mockImplementation(v => v + 1)
   })
 
   test('can change config', () => {
