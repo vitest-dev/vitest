@@ -9,6 +9,11 @@ const globalValue = vi.hoisted(() => {
   return 'globalValue'
 })
 
+let coverageCounter = 0
+const nestedHoist = (coverageCounter++, vi.hoisted(() => {
+  return 'Nested hoist'
+}))
+
 afterAll(() => {
   // @ts-expect-error not typed global
   delete globalThis.someGlobalValue
@@ -16,4 +21,9 @@ afterAll(() => {
 
 it('imported value is equal to returned from hoisted', () => {
   expect(value).toBe(globalValue)
+})
+
+it('nesting vi.hoisted doesnt cause syntax errors', () => {
+  expect(nestedHoist).toBe('Nested hoist')
+  expect(coverageCounter).toBe(1)
 })
