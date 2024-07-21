@@ -301,7 +301,7 @@ function resolveGlobThresholds(
     return {}
   }
 
-  if (100 in thresholds && typeof thresholds['100'] === 'boolean' && thresholds[100] === true) {
+  if (100 in thresholds && thresholds[100] === true) {
     return {
       lines: 100,
       branches: 100,
