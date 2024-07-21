@@ -19,7 +19,6 @@ import remapping from '@ampproject/remapping'
 import { normalize, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { provider } from 'std-env'
-import { stripLiteral } from 'strip-literal'
 import createDebug from 'debug'
 import { cleanUrl } from 'vite-node/utils'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
@@ -391,15 +390,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
       const coverages = await Promise.all(
         chunk.map(async (filename) => {
-          const { originalSource, source } = await this.getSources(
+          const { originalSource } = await this.getSources(
             filename.href,
             transformResults,
           )
-
-          // Ignore empty files, e.g. files that contain only typescript types and no runtime code
-          if (source && stripLiteral(source).trim() === '') {
-            return null
-          }
 
           const coverage = {
             url: filename.href,
