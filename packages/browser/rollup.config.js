@@ -43,7 +43,22 @@ export default () =>
         format: 'esm',
       },
       external,
-      plugins,
+      plugins: [
+        {
+          name: 'no-side-effects',
+          async resolveId(id, importer) {
+            // Clipboard injects "afterEach" callbacks
+            // We mark it as having no side effects to prevent it from being included in the bundle
+            if (id.includes('dataTransfer/Clipboard')) {
+              return {
+                ...await this.resolve(id, importer),
+                moduleSideEffects: false,
+              }
+            }
+          },
+        },
+        ...plugins,
+      ],
     },
     {
       input: './src/client/tester/context.ts',
