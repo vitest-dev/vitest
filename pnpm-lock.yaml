@@ -572,9 +572,6 @@ importers:
       std-env:
         specifier: ^3.7.0
         version: 3.7.0
-      strip-literal:
-        specifier: ^2.1.0
-        version: 2.1.0
       test-exclude:
         specifier: ^7.0.1
         version: 7.0.1
