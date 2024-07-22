@@ -20,7 +20,7 @@
 | `--coverage.enabled` | Enables coverage collection. Can be overridden using the `--coverage` CLI option (default: `false`) |
 | `--coverage.include <pattern>` | Files included in coverage as glob patterns. May be specified more than once when using multiple patterns (default: `**`) |
 | `--coverage.exclude <pattern>` | Files to be excluded in coverage. May be specified more than once when using multiple extensions (default: Visit [`coverage.exclude`](https://vitest.dev/config/#coverage-exclude)) |
-| `--coverage.extension <extension>` | Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"]`) |
+| `--coverage.extension <extension>` | Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`) |
 | `--coverage.clean` | Clean coverage results before running tests (default: true) |
 | `--coverage.cleanOnRerun` | Clean coverage report on watch rerun (default: true) |
 | `--coverage.reportsDirectory <path>` | Directory to write coverage report to (default: ./coverage) |
