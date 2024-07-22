@@ -141,6 +141,8 @@ export interface MockContext<T extends Procedure> {
 }
 
 type Procedure = (...args: any[]) => any
+// pick a single function type from function overloads, unions, etc...
+type NormalizedPrecedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -204,14 +206,14 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): T | undefined
+  getMockImplementation(): NormalizedPrecedure<T> | undefined
   /**
    * Accepts a function that will be used as an implementation of the mock.
    * @example
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: T): this
+  mockImplementation(fn: NormalizedPrecedure<T>): this
   /**
    * Accepts a function that will be used as a mock implementation during the next call. Can be chained so that multiple function calls produce different results.
    * @example
@@ -219,7 +221,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: T): this
+  mockImplementationOnce(fn: NormalizedPrecedure<T>): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    * @example
@@ -231,7 +233,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T2>(fn: T, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
+  withImplementation<T2>(fn: NormalizedPrecedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
 
   /**
    * Use this if you need to return `this` context from the method without invoking actual implementation.
