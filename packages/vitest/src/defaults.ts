@@ -68,7 +68,6 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     '.mjs',
     '.ts',
     '.mts',
-    '.cts',
     '.tsx',
     '.jsx',
     '.vue',

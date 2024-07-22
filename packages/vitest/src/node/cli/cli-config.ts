@@ -203,7 +203,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       extension: {
         description:
-          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
+          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
         argument: '<extension>',
         array: true,
       },
