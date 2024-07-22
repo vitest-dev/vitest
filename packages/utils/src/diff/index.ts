@@ -12,7 +12,10 @@ import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
-import { getType } from './getType'
+import c from 'tinyrainbow'
+import { stringify } from '../display'
+import { deepClone, getOwnProperties, getType as getSimpleType } from '../helpers'
+import { getType, isPrimitive } from './getType'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'
 import { diffLinesRaw, diffLinesUnified, diffLinesUnified2 } from './diffLines'
@@ -210,4 +213,211 @@ function getObjectsDifference(
       options,
     )
   }
+}
+
+const MAX_DIFF_STRING_LENGTH = 20_000
+const MULTILINE_REGEXP = /\n/
+
+function isLineDiffable(expected: unknown, received: unknown): boolean {
+  const expectedType = getSimpleType(expected)
+  const receivedType = getSimpleType(received)
+
+  if (expectedType !== receivedType) {
+    return false
+  }
+
+  if (isPrimitive(expected)) {
+    // Print generic line diff for strings only:
+    // * if neither string is empty
+    // * if either string has more than one line
+    return (
+      typeof expected === 'string'
+      && typeof received === 'string'
+      && expected.length > 0
+      && received.length > 0
+      && (MULTILINE_REGEXP.test(expected) || MULTILINE_REGEXP.test(received))
+    )
+  }
+
+  if (
+    expectedType === 'date'
+    || expectedType === 'function'
+    || expectedType === 'regexp'
+  ) {
+    return false
+  }
+
+  if (expected instanceof Error && received instanceof Error) {
+    return false
+  }
+
+  if (
+    receivedType === 'object'
+    && typeof (received as any).asymmetricMatch === 'function'
+  ) {
+    return false
+  }
+
+  return true
+}
+
+function isAsymmetricMatcher(data: any) {
+  const type = getSimpleType(data)
+  return type === 'Object' && typeof data.asymmetricMatch === 'function'
+}
+
+function isReplaceable(obj1: any, obj2: any) {
+  const obj1Type = getSimpleType(obj1)
+  const obj2Type = getSimpleType(obj2)
+  return (
+    obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
+  )
+}
+
+export function printDiffOrStringify(
+  expected: unknown,
+  received: unknown,
+  options?: DiffOptions,
+): string {
+  const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
+
+  if (
+    typeof expected === 'string'
+    && typeof received === 'string'
+    && expected.length > 0
+    && received.length > 0
+    && expected.length <= MAX_DIFF_STRING_LENGTH
+    && received.length <= MAX_DIFF_STRING_LENGTH
+    && expected !== received
+  ) {
+    if (expected.includes('\n') || received.includes('\n')) {
+      return diffStringsUnified(expected, received, options)
+    }
+
+    const [diffs] = diffStringsRaw(expected, received, true)
+    const hasCommonDiff = diffs.some(diff => diff[0] === DIFF_EQUAL)
+
+    const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
+    const expectedLine
+      = printLabel(aAnnotation)
+      + printExpected(
+        getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff),
+      )
+    const receivedLine
+      = printLabel(bAnnotation)
+      + printReceived(
+        getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff),
+      )
+
+    return `${expectedLine}\n${receivedLine}`
+  }
+
+  if (isLineDiffable(expected, received)) {
+    const clonedExpected = deepClone(expected, { forceWritable: true })
+    const clonedReceived = deepClone(received, { forceWritable: true })
+    const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedExpected, clonedReceived)
+    const difference = diff(replacedExpected, replacedActual, options)
+
+    if (
+      typeof difference === 'string'
+      && difference.includes(`- ${aAnnotation}`)
+      && difference.includes(`+ ${bAnnotation}`)
+    ) {
+      return difference
+    }
+  }
+
+  const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
+  const expectedLine = printLabel(aAnnotation) + printExpected(expected)
+  const receivedLine
+    = printLabel(bAnnotation)
+    + (stringify(expected) === stringify(received)
+      ? 'serializes to the same string'
+      : printReceived(received))
+
+  return `${expectedLine}\n${receivedLine}`
+}
+
+function replaceAsymmetricMatcher(
+  actual: any,
+  expected: any,
+  actualReplaced: WeakSet<WeakKey> = new WeakSet(),
+  expectedReplaced: WeakSet<WeakKey> = new WeakSet(),
+): {
+    replacedActual: any
+    replacedExpected: any
+  } {
+  if (!isReplaceable(actual, expected)) {
+    return { replacedActual: actual, replacedExpected: expected }
+  }
+  if (actualReplaced.has(actual) || expectedReplaced.has(expected)) {
+    return { replacedActual: actual, replacedExpected: expected }
+  }
+  actualReplaced.add(actual)
+  expectedReplaced.add(expected)
+  getOwnProperties(expected).forEach((key) => {
+    const expectedValue = expected[key]
+    const actualValue = actual[key]
+    if (isAsymmetricMatcher(expectedValue)) {
+      if (expectedValue.asymmetricMatch(actualValue)) {
+        actual[key] = expectedValue
+      }
+    }
+    else if (isAsymmetricMatcher(actualValue)) {
+      if (actualValue.asymmetricMatch(expectedValue)) {
+        expected[key] = actualValue
+      }
+    }
+    else if (isReplaceable(actualValue, expectedValue)) {
+      const replaced = replaceAsymmetricMatcher(
+        actualValue,
+        expectedValue,
+        actualReplaced,
+        expectedReplaced,
+      )
+      actual[key] = replaced.replacedActual
+      expected[key] = replaced.replacedExpected
+    }
+  })
+  return {
+    replacedActual: actual,
+    replacedExpected: expected,
+  }
+}
+
+type PrintLabel = (string: string) => string
+export function getLabelPrinter(...strings: Array<string>): PrintLabel {
+  const maxLength = strings.reduce(
+    (max, string) => (string.length > max ? string.length : max),
+    0,
+  )
+  return (string: string): string =>
+    `${string}: ${' '.repeat(maxLength - string.length)}`
+}
+
+const SPACE_SYMBOL = '\u{00B7}' // middle dot
+function replaceTrailingSpaces(text: string): string {
+  return text.replace(/\s+$/gm, spaces => SPACE_SYMBOL.repeat(spaces.length))
+}
+
+function printReceived(object: unknown): string {
+  return c.red(replaceTrailingSpaces(stringify(object)))
+}
+function printExpected(value: unknown): string {
+  return c.green(replaceTrailingSpaces(stringify(value)))
+}
+
+function getCommonAndChangedSubstrings(diffs: Array<Diff>, op: number, hasCommonDiff: boolean): string {
+  return diffs.reduce(
+    (reduced: string, diff: Diff): string =>
+      reduced
+      + (diff[0] === DIFF_EQUAL
+        ? diff[1]
+        : diff[0] === op
+          ? hasCommonDiff
+            ? c.inverse(diff[1])
+            : diff[1]
+          : ''),
+    '',
+  )
 }

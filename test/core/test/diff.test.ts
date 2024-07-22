@@ -1,9 +1,22 @@
 import { expect, test, vi } from 'vitest'
 import stripAnsi from 'strip-ansi'
 import type { DiffOptions } from '@vitest/utils/diff'
-import { diff, diffStringsUnified } from '@vitest/utils/diff'
+import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
 import { processError } from '@vitest/runner'
 import { displayDiff } from '../../../packages/vitest/src/node/error'
+
+test('displays string diff', () => {
+  const stringA = 'Hello AWorld'
+  const stringB = 'Hello BWorld'
+  const console = { log: vi.fn(), error: vi.fn() }
+  displayDiff(printDiffOrStringify(stringA, stringB), console as any)
+  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+    "
+    Expected: "Hello AWorld"
+    Received: "Hello BWorld"
+    "
+  `)
+})
 
 test('displays object diff', () => {
   const objectA = { a: 1, b: 2 }

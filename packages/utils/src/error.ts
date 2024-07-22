@@ -1,6 +1,5 @@
-import { type DiffOptions, diff } from './diff'
+import { type DiffOptions, printDiffOrStringify } from './diff'
 import { format, stringify } from './display'
-import { deepClone, getOwnProperties, getType } from './helpers'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {
@@ -132,14 +131,7 @@ export function processError(
     && err.expected !== undefined
     && err.actual !== undefined)
   ) {
-    const clonedActual = deepClone(err.actual, { forceWritable: true })
-    const clonedExpected = deepClone(err.expected, { forceWritable: true })
-
-    const { replacedActual, replacedExpected } = replaceAsymmetricMatcher(
-      clonedActual,
-      clonedExpected,
-    )
-    err.diff = diff(replacedExpected, replacedActual, {
+    err.diff = printDiffOrStringify(err.actual, err.expected, {
       ...diffOptions,
       ...err.diffOptions,
     })
@@ -179,65 +171,5 @@ export function processError(
         `Failed to fully serialize error: ${e?.message}\nInner error message: ${err?.message}`,
       ),
     )
-  }
-}
-
-function isAsymmetricMatcher(data: any) {
-  const type = getType(data)
-  return type === 'Object' && typeof data.asymmetricMatch === 'function'
-}
-
-function isReplaceable(obj1: any, obj2: any) {
-  const obj1Type = getType(obj1)
-  const obj2Type = getType(obj2)
-  return (
-    obj1Type === obj2Type && (obj1Type === 'Object' || obj1Type === 'Array')
-  )
-}
-
-export function replaceAsymmetricMatcher(
-  actual: any,
-  expected: any,
-  actualReplaced: WeakSet<WeakKey> = new WeakSet(),
-  expectedReplaced: WeakSet<WeakKey> = new WeakSet(),
-): {
-    replacedActual: any
-    replacedExpected: any
-  } {
-  if (!isReplaceable(actual, expected)) {
-    return { replacedActual: actual, replacedExpected: expected }
-  }
-  if (actualReplaced.has(actual) || expectedReplaced.has(expected)) {
-    return { replacedActual: actual, replacedExpected: expected }
-  }
-  actualReplaced.add(actual)
-  expectedReplaced.add(expected)
-  getOwnProperties(expected).forEach((key) => {
-    const expectedValue = expected[key]
-    const actualValue = actual[key]
-    if (isAsymmetricMatcher(expectedValue)) {
-      if (expectedValue.asymmetricMatch(actualValue)) {
-        actual[key] = expectedValue
-      }
-    }
-    else if (isAsymmetricMatcher(actualValue)) {
-      if (actualValue.asymmetricMatch(expectedValue)) {
-        expected[key] = actualValue
-      }
-    }
-    else if (isReplaceable(actualValue, expectedValue)) {
-      const replaced = replaceAsymmetricMatcher(
-        actualValue,
-        expectedValue,
-        actualReplaced,
-        expectedReplaced,
-      )
-      actual[key] = replaced.replacedActual
-      expected[key] = replaced.replacedExpected
-    }
-  })
-  return {
-    replacedActual: actual,
-    replacedExpected: expected,
   }
 }
