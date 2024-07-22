@@ -172,31 +172,29 @@ export default mergeConfig(
 ```
 :::
 
-
 At the `defineWorkspace` level you can use the `extends` option to inherit from your root-level config.
 ::: code-group
 ```ts [packages/a/vitest.config.ts]
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
-    {
-        extends: './vitest.config.ts',
-        test: {
-            name: 'unit',
-            include: ['**/*.unit.test.ts'],
-        },
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'unit',
+      include: ['**/*.unit.test.ts'],
     },
-    {
-        extends: './vitest.config.ts',
-        test: {
-            name: 'integration',
-            include: ['**/*.integration.test.ts'],
-        },
+  },
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'integration',
+      include: ['**/*.integration.test.ts'],
     },
+  },
 ])
 ```
 :::
-
 
 Also, some of the configuration options are not allowed in a project config. Most notably:
 
