@@ -344,11 +344,8 @@ exports[`toHaveBeenNthCalledWith error 2`] = `
 exports[`toMatch/toContain diff 1`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected
-+ Received
-
-- world
-+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "Expected: "world"
+Received: "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
   "expected": "world",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to contain 'world'",
 }
@@ -357,11 +354,8 @@ exports[`toMatch/toContain diff 1`] = `
 exports[`toMatch/toContain diff 2`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected
-+ Received
-
-- world
-+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "Expected: "world"
+Received: "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
   "expected": "world",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to match 'world'",
 }
