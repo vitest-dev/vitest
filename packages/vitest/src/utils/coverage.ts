@@ -182,7 +182,6 @@ export class BaseCoverageProvider {
   }): ResolvedThreshold[] {
     const resolvedThresholds: ResolvedThreshold[] = []
     const files = coverageMap.files()
-    const filesMatchedByGlobs: string[] = []
     const globalCoverageMap = createCoverageMap()
 
     for (const key of Object.keys(
@@ -204,7 +203,6 @@ export class BaseCoverageProvider {
       const matchingFiles = files.filter(file =>
         mm.isMatch(relative(root, file), glob),
       )
-      filesMatchedByGlobs.push(...matchingFiles)
 
       for (const file of matchingFiles) {
         const fileCoverage = coverageMap.fileCoverageFor(file)
@@ -218,10 +216,8 @@ export class BaseCoverageProvider {
       })
     }
 
-    // Global threshold is for all files that were not included by glob patterns
-    for (const file of files.filter(
-      file => !filesMatchedByGlobs.includes(file),
-    )) {
+    // Global threshold is for all files, even if they are included by glob patterns
+    for (const file of files) {
       const fileCoverage = coverageMap.fileCoverageFor(file)
       globalCoverageMap.addFileCoverage(fileCoverage)
     }
@@ -303,6 +299,15 @@ function resolveGlobThresholds(
 ): ResolvedThreshold['thresholds'] {
   if (!thresholds || typeof thresholds !== 'object') {
     return {}
+  }
+
+  if (100 in thresholds && thresholds[100] === true) {
+    return {
+      lines: 100,
+      branches: 100,
+      functions: 100,
+      statements: 100,
+    }
   }
 
   return {
