@@ -112,6 +112,8 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   try {
     await setupCommonEnv(config)
     for (const file of files) {
+      state.filepath = file
+
       if (method === 'run') {
         await startTests([file], runner)
       }
