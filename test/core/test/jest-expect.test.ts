@@ -1066,11 +1066,8 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ name: 'foo' }).toHaveProperty('name', 'bar'))).toMatchInlineSnapshot(`
     [
       "expected { name: 'foo' } to have property "name" with value 'bar'",
-      "- Expected
-    + Received
-
-    - bar
-    + foo",
+      "Expected: "bar"
+    Received: "foo"",
     ]
   `)
 
@@ -1114,11 +1111,8 @@ it('toHaveProperty error diff', () => {
   expect(getError(() => expect({ parent: { name: 'foo' } }).toHaveProperty('parent.name', 'bar'))).toMatchInlineSnapshot(`
     [
       "expected { parent: { name: 'foo' } } to have property "parent.name" with value 'bar'",
-      "- Expected
-    + Received
-
-    - bar
-    + foo",
+      "Expected: "bar"
+    Received: "foo"",
     ]
   `)
 

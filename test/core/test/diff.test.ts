@@ -12,8 +12,8 @@ test('displays string diff', () => {
   displayDiff(printDiffOrStringify(stringA, stringB), console as any)
   expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
-    Expected: "Hello AWorld"
-    Received: "Hello BWorld"
+    Expected: "Hello BWorld"
+    Received: "Hello AWorld"
     "
   `)
 })

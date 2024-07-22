@@ -15,7 +15,7 @@ import {
 import c from 'tinyrainbow'
 import { stringify } from '../display'
 import { deepClone, getOwnProperties, getType as getSimpleType } from '../helpers'
-import { getType, isPrimitive } from './getType'
+import { getType } from './getType'
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'
 import { diffLinesRaw, diffLinesUnified, diffLinesUnified2 } from './diffLines'
@@ -216,50 +216,6 @@ function getObjectsDifference(
 }
 
 const MAX_DIFF_STRING_LENGTH = 20_000
-const MULTILINE_REGEXP = /\n/
-
-function isLineDiffable(expected: unknown, received: unknown): boolean {
-  const expectedType = getSimpleType(expected)
-  const receivedType = getSimpleType(received)
-
-  if (expectedType !== receivedType) {
-    return false
-  }
-
-  if (isPrimitive(expected)) {
-    // Print generic line diff for strings only:
-    // * if neither string is empty
-    // * if either string has more than one line
-    return (
-      typeof expected === 'string'
-      && typeof received === 'string'
-      && expected.length > 0
-      && received.length > 0
-      && (MULTILINE_REGEXP.test(expected) || MULTILINE_REGEXP.test(received))
-    )
-  }
-
-  if (
-    expectedType === 'date'
-    || expectedType === 'function'
-    || expectedType === 'regexp'
-  ) {
-    return false
-  }
-
-  if (expected instanceof Error && received instanceof Error) {
-    return false
-  }
-
-  if (
-    receivedType === 'object'
-    && typeof (received as any).asymmetricMatch === 'function'
-  ) {
-    return false
-  }
-
-  return true
-}
 
 function isAsymmetricMatcher(data: any) {
   const type = getSimpleType(data)
@@ -278,7 +234,7 @@ export function printDiffOrStringify(
   expected: unknown,
   received: unknown,
   options?: DiffOptions,
-): string {
+): string | null {
   const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
 
   if (
@@ -291,10 +247,10 @@ export function printDiffOrStringify(
     && expected !== received
   ) {
     if (expected.includes('\n') || received.includes('\n')) {
-      return diffStringsUnified(expected, received, options)
+      return diffStringsUnified(received, expected, options)
     }
 
-    const [diffs] = diffStringsRaw(expected, received, true)
+    const [diffs] = diffStringsRaw(received, expected, true)
     const hasCommonDiff = diffs.some(diff => diff[0] === DIFF_EQUAL)
 
     const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
@@ -312,33 +268,27 @@ export function printDiffOrStringify(
     return `${expectedLine}\n${receivedLine}`
   }
 
-  if (isLineDiffable(expected, received)) {
-    const clonedExpected = deepClone(expected, { forceWritable: true })
-    const clonedReceived = deepClone(received, { forceWritable: true })
-    const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedExpected, clonedReceived)
-    const difference = diff(replacedExpected, replacedActual, options)
+  // if (isLineDiffable(expected, received)) {
+  const clonedExpected = deepClone(expected, { forceWritable: true })
+  const clonedReceived = deepClone(received, { forceWritable: true })
+  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedExpected, clonedReceived)
+  const difference = diff(replacedExpected, replacedActual, options)
 
-    if (
-      typeof difference === 'string'
-      && difference.includes(`- ${aAnnotation}`)
-      && difference.includes(`+ ${bAnnotation}`)
-    ) {
-      return difference
-    }
-  }
+  return difference
+  // }
 
-  const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
-  const expectedLine = printLabel(aAnnotation) + printExpected(expected)
-  const receivedLine
-    = printLabel(bAnnotation)
-    + (stringify(expected) === stringify(received)
-      ? 'serializes to the same string'
-      : printReceived(received))
+  // const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
+  // const expectedLine = printLabel(aAnnotation) + printExpected(expected)
+  // const receivedLine
+  //   = printLabel(bAnnotation)
+  //   + (stringify(expected) === stringify(received)
+  //     ? 'serializes to the same string'
+  //     : printReceived(received))
 
-  return `${expectedLine}\n${receivedLine}`
+  // return `${expectedLine}\n${receivedLine}`
 }
 
-function replaceAsymmetricMatcher(
+export function replaceAsymmetricMatcher(
   actual: any,
   expected: any,
   actualReplaced: WeakSet<WeakKey> = new WeakSet(),
