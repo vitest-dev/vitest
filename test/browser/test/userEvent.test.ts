@@ -562,6 +562,7 @@ describe('userEvent.keyboard', async () => {
     ])
   })
 
+  // looks like wdio doesn't support releasing Enter on its own
   test('should not auto release', async () => {
     const spyKeydown = vi.fn()
     const spyKeyup = vi.fn()

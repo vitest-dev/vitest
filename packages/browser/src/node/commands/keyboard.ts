@@ -155,7 +155,10 @@ export async function keyboardImplementation(
       }
     }
 
-    await keyboard.perform(skipRelease)
+    // seems like webdriverio doesn't release keys automatically if skipRelease is true and all events are keyUp
+    const allRelease = keyboard.toJSON().actions.every(action => action.type === 'keyUp')
+
+    await keyboard.perform(allRelease ? false : skipRelease)
   }
 
   return {
