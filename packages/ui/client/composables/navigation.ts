@@ -12,9 +12,7 @@ export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
   return (
     coverageConfigured.value
-    && coverage.value.reporter
-      .map(([reporterName]) => reporterName)
-      .includes('html')
+    && !!coverage.value.htmlReporter
   )
 })
 export const detailSizes = useLocalStorage<[left: number, right: number]>(
@@ -31,16 +29,10 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
 export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {
     const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
-    const htmlReporter = coverage.value!.reporter.find((reporter) => {
-      if (reporter[0] !== 'html') {
-        return undefined
-      }
-
-      return reporter
-    })
-    return htmlReporter && 'subdir' in htmlReporter[1]
+    const htmlReporterSubdir = coverage.value!.htmlReporter?.subdir
+    return htmlReporterSubdir
       ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${
-          htmlReporter[1].subdir
+          htmlReporterSubdir
         }/index.html`
       : `/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }

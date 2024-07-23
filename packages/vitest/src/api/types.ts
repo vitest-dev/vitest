@@ -4,7 +4,8 @@ import type {
   File,
   ModuleGraphData,
   Reporter,
-  ResolvedConfig,
+  SerializableSpec,
+  SerializedConfig,
   TaskResultPack,
 } from '../types'
 
@@ -16,9 +17,9 @@ export interface WebSocketHandlers {
   onCollected: (files?: File[]) => Promise<void>
   onTaskUpdate: (packs: TaskResultPack[]) => void
   getFiles: () => File[]
-  getTestFiles: () => Promise<[{ name: string; root: string }, file: string][]>
+  getTestFiles: () => Promise<SerializableSpec[]>
   getPaths: () => string[]
-  getConfig: () => ResolvedConfig
+  getConfig: () => SerializedConfig
   getModuleGraph: (
     projectName: string,
     id: string,

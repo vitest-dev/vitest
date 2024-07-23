@@ -240,4 +240,5 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     width: number
     height: number
   }
+  screenshotFailures: boolean
 }

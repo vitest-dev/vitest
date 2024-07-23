@@ -13,7 +13,7 @@ import type {
   Benchmark,
   BenchmarkResult,
 } from '../../types/benchmark'
-import type { ResolvedConfig } from '../../types/config'
+import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
 
 function createBenchmarkResult(name: string): BenchmarkResult {
@@ -150,7 +150,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 export class NodeBenchmarkRunner implements VitestRunner {
   private __vitest_executor!: VitestExecutor
 
-  constructor(public config: ResolvedConfig) {}
+  constructor(public config: SerializedConfig) {}
 
   async importTinybench() {
     return await import('tinybench')

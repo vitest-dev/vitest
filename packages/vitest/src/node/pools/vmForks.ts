@@ -20,6 +20,7 @@ import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
+import type { SerializedConfig } from '../../types/config'
 import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
@@ -113,7 +114,7 @@ export function createVmForksPool(
 
     async function runFiles(
       project: WorkspaceProject,
-      config: ResolvedConfig,
+      config: SerializedConfig,
       files: string[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
@@ -166,8 +167,8 @@ export function createVmForksPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, ResolvedConfig>()
-      const getConfig = (project: WorkspaceProject): ResolvedConfig => {
+      const configs = new Map<WorkspaceProject, SerializedConfig>()
+      const getConfig = (project: WorkspaceProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }

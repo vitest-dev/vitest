@@ -21,6 +21,7 @@ import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 
 export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
+export type { SerializedConfig, RuntimeConfig } from '../runtime/config'
 
 export type BuiltinEnvironment =
   | 'node'
@@ -955,11 +956,18 @@ export interface ResolvedConfig
     | 'pool'
     | 'cliExclude'
     | 'diff'
+    | 'setupFiles'
+    | 'snapshotEnvironment'
+    | 'bail'
   > {
   mode: VitestRunMode
 
   base?: string
   diff?: string
+  bail?: number
+
+  setupFiles: string[]
+  snapshotEnvironment?: string
 
   config?: string
   filters?: string[]
@@ -1059,25 +1067,6 @@ export type ProjectConfig = Omit<
     >
     vmThreads?: Pick<NonNullable<PoolOptions['vmThreads']>, 'singleThread'>
     forks?: Pick<NonNullable<PoolOptions['forks']>, 'singleFork' | 'isolate'>
-  }
-}
-
-export type RuntimeConfig = Pick<
-  UserConfig,
-  | 'allowOnly'
-  | 'testTimeout'
-  | 'hookTimeout'
-  | 'clearMocks'
-  | 'mockReset'
-  | 'restoreMocks'
-  | 'fakeTimers'
-  | 'maxConcurrency'
-  | 'expect'
-  | 'printConsoleTrace'
-> & {
-  sequence?: {
-    concurrent?: boolean
-    hooks?: SequenceHooks
   }
 }
 

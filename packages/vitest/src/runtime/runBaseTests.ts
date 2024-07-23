@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
-import type { ResolvedConfig, ResolvedTestEnvironment } from '../types'
+import type { ResolvedTestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import {
@@ -8,6 +8,7 @@ import {
   stopCoverageInsideWorker,
 } from '../integrations/coverage'
 import { setupChaiConfig } from '../integrations/chai/config'
+import type { SerializedConfig } from './config'
 import { setupGlobalEnv, withEnv } from './setup-node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
@@ -17,7 +18,7 @@ import { closeInspector } from './inspector'
 export async function run(
   method: 'run' | 'collect',
   files: string[],
-  config: ResolvedConfig,
+  config: SerializedConfig,
   environment: ResolvedTestEnvironment,
   executor: VitestExecutor,
 ): Promise<void> {
@@ -37,8 +38,7 @@ export async function run(
     runner.onCancel?.(reason)
   })
 
-  workerState.durations.prepare
-    = performance.now() - workerState.durations.prepare
+  workerState.durations.prepare = performance.now() - workerState.durations.prepare
   workerState.durations.environment = performance.now()
 
   await withEnv(

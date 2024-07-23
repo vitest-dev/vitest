@@ -38,11 +38,9 @@ export async function resolveTester(
     ? server.injectorJs
     : await server.injectorJs
 
-  const config = server.getSerializableConfig()
-
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
-    __VITEST_CONFIG__: JSON.stringify(config),
+    __VITEST_CONFIG__: JSON.stringify(server.getSerializableConfig()),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: server.vite.config.root,
@@ -57,7 +55,7 @@ export async function resolveTester(
     const testerScripts = await server.formatScripts(
       project.config.browser.testerScripts,
     )
-    const clientScript = `<script type="module" src="${config.base || '/'}@vite/client"></script>`
+    const clientScript = `<script type="module" src="${server.project.config.base || '/'}@vite/client"></script>`
     const stateJs = typeof server.stateJs === 'string'
       ? server.stateJs
       : await server.stateJs

@@ -2,7 +2,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import type { ResolvedConfig, RuntimeConfig } from '../types'
+import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { MockFactoryWithHelper } from '../types/mocker'
 import { getWorkerState } from '../utils/global'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
@@ -373,7 +373,7 @@ export interface VitestUtils {
   /**
    * Updates runtime config. You can only change values that are used when executing tests.
    */
-  setConfig: (config: RuntimeConfig) => void
+  setConfig: (config: RuntimeOptions) => void
 
   /**
    * If config was changed with `vi.setConfig`, this will reset it to the original state.
@@ -383,7 +383,7 @@ export interface VitestUtils {
 
 function createVitest(): VitestUtils {
   let _mockedDate: Date | null = null
-  let _config: null | ResolvedConfig = null
+  let _config: null | SerializedConfig = null
 
   function _mocker(): VitestMocker {
     // @ts-expect-error injected by vite-nide
@@ -712,7 +712,7 @@ function createVitest(): VitestUtils {
       return waitForImportsToResolve()
     },
 
-    setConfig(config: RuntimeConfig) {
+    setConfig(config: RuntimeOptions) {
       if (!_config) {
         _config = { ...workerState.config }
       }

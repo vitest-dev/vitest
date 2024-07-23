@@ -3,7 +3,7 @@ import type { CancelReason } from '@vitest/runner'
 import type {
   EnvironmentOptions,
   Pool,
-  ResolvedConfig,
+  SerializedConfig,
   VitestEnvironment,
 } from './config'
 import type { Environment, UserConsoleLog } from './general'
@@ -65,7 +65,7 @@ export interface ContextRPC {
   pool: Pool
   worker: string
   workerId: number
-  config: ResolvedConfig
+  config: SerializedConfig
   projectName: string
   files: string[]
   environment: ContextTestEnvironment

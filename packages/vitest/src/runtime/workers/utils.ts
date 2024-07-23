@@ -1,7 +1,7 @@
 import type { TinypoolWorkerMessage } from 'tinypool'
 import { parseRegexp } from '@vitest/utils'
 import type { WorkerContext } from '../../types/worker'
-import type { ResolvedConfig } from '../../types/config'
+import type { ResolvedConfig, SerializedConfig } from '../../types/config'
 import type { WorkerRpcOptions } from './types'
 
 const REGEXP_WRAP_PREFIX = '$$vitest:'
@@ -48,7 +48,7 @@ export function createForksRpcOptions(
 /**
  * Reverts the wrapping done by `utils/config-helpers.ts`'s `wrapSerializableConfig`
  */
-export function unwrapSerializableConfig(config: ResolvedConfig) {
+export function unwrapSerializableConfig(config: SerializedConfig) {
   if (config.testNamePattern && typeof config.testNamePattern === 'string') {
     const testNamePattern = config.testNamePattern as string
 

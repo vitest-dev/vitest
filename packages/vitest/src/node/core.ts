@@ -18,11 +18,12 @@ import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
+import type { SerializedCoverageConfig } from '../runtime/config'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
-import { resolveConfig } from './config'
+import { resolveConfig } from './config/resolveConfig'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
 import { WorkspaceProject, initializeProject } from './workspace'
@@ -396,7 +397,10 @@ export class Vitest {
     if (this.coverageProvider !== undefined) {
       return
     }
-    this.coverageProvider = await getCoverageProvider(this.config.coverage, this.runner)
+    this.coverageProvider = await getCoverageProvider(
+      this.config.coverage as unknown as SerializedCoverageConfig,
+      this.runner,
+    )
     if (this.coverageProvider) {
       await this.coverageProvider.initialize(this)
       this.config.coverage = this.coverageProvider.resolveOptions()

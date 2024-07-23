@@ -117,7 +117,7 @@ export function calculateSuiteHash(parent: Suite): void {
 export function createFileTask(
   filepath: string,
   root: string,
-  projectName: string,
+  projectName: string | undefined,
   pool?: string,
 ): File {
   const path = relative(root, filepath)

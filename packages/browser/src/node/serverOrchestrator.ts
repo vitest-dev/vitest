@@ -17,14 +17,13 @@ export async function resolveOrchestrator(
 
   const files = server.state.getContext(contextId!)?.files ?? []
 
-  const config = server.getSerializableConfig()
   const injectorJs = typeof server.injectorJs === 'string'
     ? server.injectorJs
     : await server.injectorJs
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
-    __VITEST_CONFIG__: JSON.stringify(config),
+    __VITEST_CONFIG__: JSON.stringify(server.getSerializableConfig()),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: server.vite.config.root,
     }),
