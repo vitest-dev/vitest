@@ -412,7 +412,7 @@ export class WorkspaceProject {
     const config = serializeConfig(
       this.config,
       this.ctx.config,
-      this.server.config,
+      this.server?.config,
     )
 
     // disable heavy features when collecting because they are not needed
