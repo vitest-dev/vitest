@@ -14,8 +14,8 @@ import type {
 
 export interface VitestRunnerConfig {
   root: string
-  setupFiles: string[] | string
-  name: string
+  setupFiles: string[]
+  name?: string
   passWithNoTests: boolean
   testNamePattern?: RegExp
   allowOnly?: boolean

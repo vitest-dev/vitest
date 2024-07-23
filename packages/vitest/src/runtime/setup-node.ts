@@ -5,7 +5,6 @@ import { installSourcemapsSupport } from 'vite-node/source-map'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
 import type {
   EnvironmentOptions,
-  ResolvedConfig,
   ResolvedTestEnvironment,
 } from '../types'
 import { getSafeTimers, getWorkerState } from '../utils'
@@ -14,11 +13,12 @@ import { expect } from '../integrations/chai'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import { setupCommonEnv } from './setup-common'
 import type { VitestExecutor } from './execute'
+import type { SerializedConfig } from './config'
 
 // this should only be used in Node
 let globalSetup = false
 export async function setupGlobalEnv(
-  config: ResolvedConfig,
+  config: SerializedConfig,
   { environment }: ResolvedTestEnvironment,
   executor: VitestExecutor,
 ) {

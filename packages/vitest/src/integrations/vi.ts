@@ -2,7 +2,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
-import type { ResolvedConfig, RuntimeConfig } from '../types'
+import type { RuntimeConfig, SerializedConfig } from '../runtime/config'
 import type { MockFactoryWithHelper } from '../types/mocker'
 import { getWorkerState } from '../utils/global'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
@@ -383,7 +383,7 @@ export interface VitestUtils {
 
 function createVitest(): VitestUtils {
   let _mockedDate: Date | null = null
-  let _config: null | ResolvedConfig = null
+  let _config: null | SerializedConfig = null
 
   function _mocker(): VitestMocker {
     // @ts-expect-error injected by vite-nide

@@ -21,7 +21,7 @@ import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 
 export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-export type { SerialisableConfig, RuntimeConfig } from '../runtime/config'
+export type { SerializedConfig, RuntimeConfig } from '../runtime/config'
 
 export type BuiltinEnvironment =
   | 'node'
@@ -956,11 +956,18 @@ export interface ResolvedConfig
     | 'pool'
     | 'cliExclude'
     | 'diff'
+    | 'setupFiles'
+    | 'snapshotEnvironment'
+    | 'bail'
   > {
   mode: VitestRunMode
 
   base?: string
   diff?: string
+  bail?: number
+
+  setupFiles: string[]
+  snapshotEnvironment?: string
 
   config?: string
   filters?: string[]

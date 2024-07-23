@@ -1,4 +1,4 @@
-import type { ResolvedConfig } from 'vitest'
+import type { SerializedConfig } from 'vitest'
 
 export type BufferEncoding =
   | 'ascii'
@@ -253,7 +253,7 @@ export interface BrowserPage {
   /**
    * Serialized test config.
    */
-  config: ResolvedConfig
+  config: SerializedConfig
   /**
    * Change the size of iframe's viewport.
    */

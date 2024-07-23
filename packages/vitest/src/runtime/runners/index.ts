@@ -1,17 +1,18 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { resolve } from 'pathe'
-import type { ResolvedConfig } from '../../types/config'
+import type { SerializedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
 import { distDir } from '../../paths'
 import { getWorkerState } from '../../utils/global'
 import { rpc } from '../rpc'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
+import type { SerializedConfig } from '../config'
 
 const runnersFile = resolve(distDir, 'runners.js')
 
 async function getTestRunnerConstructor(
-  config: ResolvedConfig,
+  config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<VitestRunnerConstructor> {
   if (!config.runner) {
@@ -33,7 +34,7 @@ async function getTestRunnerConstructor(
 }
 
 export async function resolveTestRunner(
-  config: ResolvedConfig,
+  config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<VitestRunner> {
   const TestRunner = await getTestRunnerConstructor(config, executor)

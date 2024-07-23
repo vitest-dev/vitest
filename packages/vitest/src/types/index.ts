@@ -79,6 +79,6 @@ export type {
   /** @deprecated import from `vitest/node` instead */
   UserWorkspaceConfig,
 
-  // deprecate all but this one
   RuntimeConfig,
+  SerializedConfig,
 } from './config'

@@ -6,7 +6,6 @@ import Tinypool from 'tinypool'
 import { resolve } from 'pathe'
 import type {
   ContextTestEnvironment,
-  ResolvedConfig,
   RunnerRPC,
   RuntimeRPC,
   Vitest,
@@ -16,6 +15,7 @@ import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
+import type { SerializedConfig } from '../../types/config'
 import { createMethodsRPC } from './rpc'
 
 function createWorkerChannel(project: WorkspaceProject) {
@@ -97,7 +97,7 @@ export function createThreadsPool(
 
     async function runFiles(
       project: WorkspaceProject,
-      config: ResolvedConfig,
+      config: SerializedConfig,
       files: string[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
@@ -154,8 +154,8 @@ export function createThreadsPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, ResolvedConfig>()
-      const getConfig = (project: WorkspaceProject): ResolvedConfig => {
+      const configs = new Map<WorkspaceProject, SerializedConfig>()
+      const getConfig = (project: WorkspaceProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }

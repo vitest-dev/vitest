@@ -1,14 +1,14 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults, coverageConfigDefaults } from '../../defaults'
-import type { ResolvedConfig, UserConfig } from '../../types'
+import type { ResolvedConfig, UserConfig } from '../../types/config'
 import {
   deepMerge,
   notNullish,
   removeUndefinedValues,
   toArray,
 } from '../../utils'
-import { resolveApiServerConfig } from '../config'
+import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { defaultPort } from '../../constants'

@@ -3,7 +3,7 @@ import type { CancelReason, Task } from '@vitest/runner'
 import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { BirpcReturn } from 'birpc'
 import type { MockMap } from './mocker'
-import type { ResolvedConfig } from './config'
+import type { SerializedConfig } from './config'
 import type { ContextRPC, RunnerRPC, RuntimeRPC } from './rpc'
 import type { Environment } from './general'
 
@@ -26,7 +26,7 @@ export type WorkerRPC = BirpcReturn<RuntimeRPC, RunnerRPC>
 
 export interface WorkerGlobalState {
   ctx: ContextRPC
-  config: ResolvedConfig
+  config: SerializedConfig
   rpc: WorkerRPC
   current?: Task
   filepath?: string

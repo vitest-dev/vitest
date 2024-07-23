@@ -10,10 +10,9 @@ import type {
   File,
   ModuleGraphData,
   Reporter,
-  ResolvedConfig,
   Vitest,
 } from 'vitest'
-import type { HTMLOptions } from 'vitest/node'
+import type { HTMLOptions, ResolvedConfig } from 'vitest/node'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 
 interface PotentialConfig {

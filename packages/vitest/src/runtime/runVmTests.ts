@@ -10,7 +10,6 @@ import {
   startCoverageInsideWorker,
   stopCoverageInsideWorker,
 } from '../integrations/coverage'
-import type { ResolvedConfig } from '../types'
 import { getWorkerState } from '../utils/global'
 import * as VitestIndex from '../index'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
@@ -18,11 +17,12 @@ import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
 import { closeInspector } from './inspector'
+import type { SerializedConfig } from './config'
 
 export async function run(
   method: 'run' | 'collect',
   files: string[],
-  config: ResolvedConfig,
+  config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<void> {
   const workerState = getWorkerState()

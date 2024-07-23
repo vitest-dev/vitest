@@ -12,7 +12,7 @@ export { getFilePoolName } from './pool'
 export { VitestPackageInstaller } from './packageInstaller'
 export { createDebugger } from '../utils/debugger'
 export { resolveFsAllow } from './plugins/utils'
-export { resolveApiServerConfig, resolveConfig } from './config'
+export { resolveApiServerConfig, resolveConfig } from './config/resolveConfig'
 
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from './errors'
 
