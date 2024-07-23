@@ -411,6 +411,7 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig(method: 'run' | 'collect' = 'run') {
+    // TODO: call `serializeConfig` only once
     const config = deepMerge(serializeConfig(
       this.config,
       this.ctx.config,
