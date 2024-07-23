@@ -39,6 +39,7 @@ export type {
   BrowserServerState,
   BrowserServerStateContext,
   BrowserOrchestrator,
+  BrowserConfigOptions,
 } from '../types/browser'
 export type { JsonOptions } from './reporters/json'
 export type { JUnitOptions } from './reporters/junit'
@@ -46,3 +47,27 @@ export type { HTMLOptions } from './reporters/html'
 
 export { isFileServingAllowed, createServer, parseAst, parseAstAsync } from 'vite'
 export type * as Vite from 'vite'
+
+export type {
+  SequenceHooks,
+  SequenceSetupFiles,
+  BuiltinEnvironment,
+  VitestEnvironment,
+  Pool,
+  PoolOptions,
+  CSSModuleScopeStrategy,
+  ApiConfig,
+  JSDOMOptions,
+  HappyDOMOptions,
+  EnvironmentOptions,
+  VitestRunMode,
+  DepsOptimizationOptions,
+  TransformModePatterns,
+  InlineConfig,
+  TypecheckConfig,
+  UserConfig,
+  ResolvedConfig,
+  ProjectConfig,
+  UserWorkspaceConfig,
+  RuntimeConfig,
+} from '../types/config'

@@ -106,6 +106,8 @@ const config = {
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
+  unstubGlobals: false,
+  unstubEnvs: false,
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,
