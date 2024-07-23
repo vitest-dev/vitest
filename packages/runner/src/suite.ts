@@ -45,8 +45,8 @@ import { getCurrentTest } from './test-state'
  *
  * @param {string} name - The name of the suite, used for identification and reporting.
  * @param {Function} fn - A function that defines the tests and suites within this suite.
- *
  * @example
+ * ```ts
  * // Define a suite with two tests
  * suite('Math operations', () => {
  *   test('should add two numbers', () => {
@@ -57,8 +57,9 @@ import { getCurrentTest } from './test-state'
  *     expect(subtract(5, 2)).toBe(3);
  *   });
  * });
- *
+ * ```
  * @example
+ * ```ts
  * // Define nested suites
  * suite('String operations', () => {
  *   suite('Trimming', () => {
@@ -73,6 +74,7 @@ import { getCurrentTest } from './test-state'
  *     });
  *   });
  * });
+ * ```
  */
 export const suite: SuiteAPI = createSuite()
 /**
@@ -82,18 +84,20 @@ export const suite: SuiteAPI = createSuite()
  * @param {TestOptions | TestFunction} [optionsOrFn] - Optional. The test options or the test function if no explicit name is provided.
  * @param {number | TestOptions | TestFunction} [optionsOrTest] - Optional. The test function or options, depending on the previous parameters.
  * @throws {Error} If called inside another test function.
- *
  * @example
+ * ```ts
  * // Define a simple test
  * test('should add two numbers', () => {
  *   expect(add(1, 2)).toBe(3);
  * });
- *
+ * ```
  * @example
+ * ```ts
  * // Define a test with options
  * test('should subtract two numbers', { retry: 3 }, () => {
  *   expect(subtract(5, 2)).toBe(3);
  * });
+ * ```
  */
 export const test: TestAPI = createTest(function (
   name: string | Function,
@@ -120,8 +124,8 @@ export const test: TestAPI = createTest(function (
  *
  * @param {string} name - The name of the suite, used for identification and reporting.
  * @param {Function} fn - A function that defines the tests and suites within this suite.
- *
  * @example
+ * ```ts
  * // Define a suite with two tests
  * describe('Math operations', () => {
  *   test('should add two numbers', () => {
@@ -132,8 +136,9 @@ export const test: TestAPI = createTest(function (
  *     expect(subtract(5, 2)).toBe(3);
  *   });
  * });
- *
+ * ```
  * @example
+ * ```ts
  * // Define nested suites
  * describe('String operations', () => {
  *   describe('Trimming', () => {
@@ -148,6 +153,7 @@ export const test: TestAPI = createTest(function (
  *     });
  *   });
  * });
+ * ```
  */
 export const describe: SuiteAPI = suite
 /**
@@ -157,18 +163,20 @@ export const describe: SuiteAPI = suite
  * @param {TestOptions | TestFunction} [optionsOrFn] - Optional. The test options or the test function if no explicit name is provided.
  * @param {number | TestOptions | TestFunction} [optionsOrTest] - Optional. The test function or options, depending on the previous parameters.
  * @throws {Error} If called inside another test function.
- *
  * @example
+ * ```ts
  * // Define a simple test
  * it('adds two numbers', () => {
  *   expect(add(1, 2)).toBe(3);
  * });
- *
+ * ```
  * @example
+ * ```ts
  * // Define a test with options
  * it('subtracts two numbers', { retry: 3 }, () => {
  *   expect(subtract(5, 2)).toBe(3);
  * });
+ * ```
  */
 export const it: TestAPI = test
 

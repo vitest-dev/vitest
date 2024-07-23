@@ -97,8 +97,8 @@ export interface VitestUtils {
 
   /**
    * Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](https://vitest.dev/api/vi#vi-fn). It returns a [mock function](https://vitest.dev/api/mock).
-   *
    * @example
+   * ```ts
    * const cart = {
    *   getApples: () => 42
    * }
@@ -108,6 +108,7 @@ export interface VitestUtils {
    * expect(cart.getApples()).toBe(10)
    * expect(spy).toHaveBeenCalled()
    * expect(spy).toHaveReturnedWith(10)
+   * ```
    */
   spyOn: typeof spyOn
 
@@ -115,8 +116,8 @@ export interface VitestUtils {
    * Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](https://vitest.dev/api/mock).
    *
    * If no function is given, mock will return `undefined`, when invoked.
-   *
    * @example
+   * ```ts
    * const getApples = vi.fn(() => 0)
    *
    * getApples()
@@ -128,6 +129,7 @@ export interface VitestUtils {
    *
    * expect(getApples()).toBe(5)
    * expect(getApples).toHaveNthReturnedWith(2, 5)
+   * ```
    */
   fn: typeof fn
 
@@ -135,8 +137,8 @@ export interface VitestUtils {
    * Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
    *
    * This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
-   *
    * @example
+   * ```ts
    * const server = createServer()
    *
    * await vi.waitFor(
@@ -150,6 +152,7 @@ export interface VitestUtils {
    *     interval: 20, // default is 50
    *   }
    * )
+   * ```
    */
   waitFor: typeof waitFor
 
@@ -157,8 +160,8 @@ export interface VitestUtils {
    * This is similar to [`vi.waitFor`](https://vitest.dev/api/vi#vi-waitfor), but if the callback throws any errors, execution is immediately interrupted and an error message is received.
    *
    * If the callback returns a falsy value, the next check will continue until a truthy value is returned. This is useful when you need to wait for something to exist before taking the next step.
-   *
    * @example
+   * ```ts
    * const element = await vi.waitUntil(
    *   () => document.querySelector('.element'),
    *   {
@@ -169,6 +172,7 @@ export interface VitestUtils {
    *
    * // do something with the element
    * expect(element.querySelector('.element-child')).toBeTruthy()
+   * ```
    */
   waitUntil: typeof waitUntil
 
@@ -234,11 +238,13 @@ export interface VitestUtils {
    * Imports module, bypassing all checks if it should be mocked.
    * Can be useful if you want to mock module partially.
    * @example
+   * ```ts
    * vi.mock('./example.js', async () => {
    *  const axios = await vi.importActual<typeof import('./example.js')>('./example.js')
    *
    *  return { ...axios, get: vi.fn() }
    * })
+   * ```
    * @param path Path to the module. Can be aliased, if your config supports it
    */
   importActual: <T = ESModuleExports>(path: string) => Promise<T>
@@ -248,9 +254,11 @@ export interface VitestUtils {
    *
    * Mocking algorithm is described in [documentation](https://vitest.dev/guide/mocking#modules).
    * @example
+   * ```ts
    * const example = await vi.importMock<typeof import('./example.js')>('./example.js')
    * example.calc.mockReturnValue(10)
    * expect(example.calc()).toBe(10)
+   * ```
    * @param path Path to the module. Can be aliased, if your config supports it
    * @returns Fully mocked module
    */
@@ -264,6 +272,7 @@ export interface VitestUtils {
    * When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that
    * the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
    * @example
+   * ```ts
    * import example from './example.js'
    * vi.mock('./example.js')
    *
@@ -271,6 +280,7 @@ export interface VitestUtils {
    *  vi.mocked(example.calc).mockReturnValue(10)
    *  expect(example.calc(1, '+', 1)).toBe(10)
    * })
+   * ```
    * @param item Anything that can be mocked
    * @param deep If the object is deeply mocked
    * @param options If the object is partially or deeply mocked

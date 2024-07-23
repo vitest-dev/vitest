@@ -26,12 +26,13 @@ function getDefaultHookTimeout() {
  * @param {Function} fn - The callback function to be executed before all tests.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using beforeAll to set up a database connection
  * beforeAll(async () => {
  *   await database.connect();
  * });
+ * ```
  */
 export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
   return getCurrentSuite().on(
@@ -49,12 +50,13 @@ export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
  * @param {Function} fn - The callback function to be executed after all tests.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using afterAll to close a database connection
  * afterAll(async () => {
  *   await database.disconnect();
  * });
+ * ```
  */
 export function afterAll(fn: AfterAllListener, timeout?: number): void {
   return getCurrentSuite().on(
@@ -72,12 +74,13 @@ export function afterAll(fn: AfterAllListener, timeout?: number): void {
  * @param {Function} fn - The callback function to be executed before each test. This function receives an `TestContext` parameter if additional test context is needed.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using beforeEach to reset a database state
  * beforeEach(async () => {
  *   await database.reset();
  * });
+ * ```
  */
 export function beforeEach<ExtraContext = object>(
   fn: BeforeEachListener<ExtraContext>,
@@ -98,12 +101,13 @@ export function beforeEach<ExtraContext = object>(
  * @param {Function} fn - The callback function to be executed after each test. This function receives an `TestContext` parameter if additional test context is needed.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using afterEach to delete temporary files created during a test
  * afterEach(async () => {
  *   await fileSystem.deleteTempFiles();
  * });
+ * ```
  */
 export function afterEach<ExtraContext = object>(
   fn: AfterEachListener<ExtraContext>,
@@ -125,12 +129,13 @@ export function afterEach<ExtraContext = object>(
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @throws {Error} Throws an error if the function is not called within a test.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using onTestFailed to log failure details
  * onTestFailed(({ errors }) => {
  *   console.log(`Test failed: ${test.name}`, errors);
  * });
+ * ```
  */
 export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   'onTestFailed',
@@ -154,13 +159,14 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @throws {Error} Throws an error if the function is not called within a test.
  * @returns {void}
- *
  * @example
+ * ```ts
  * // Example of using onTestFinished for cleanup
  * const db = await connectToDatabase();
  * onTestFinished(async () => {
  *   await db.disconnect();
  * });
+ * ```
  */
 export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   'onTestFinished',

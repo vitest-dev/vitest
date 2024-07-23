@@ -26,6 +26,8 @@ export default antfu(
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
+      // contains technically invalid code to display pretty diff
+      'docs/guide/snapshot.md',
     ],
   },
   {

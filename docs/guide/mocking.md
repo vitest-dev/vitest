@@ -18,7 +18,7 @@ Sometimes you need to be in control of the date to ensure consistency when testi
 
 ### Example
 
-```js twoslash
+```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const businessHours = [9, 17]
@@ -77,7 +77,7 @@ We use [Tinyspy](https://github.com/tinylibs/tinyspy) as a base for mocking func
 
 ### Example
 
-```js twoslash
+```js
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const messages = {
@@ -138,7 +138,7 @@ describe('reading messages', () => {
 
 You can mock global variables that are not present with `jsdom` or `node` by using [`vi.stubGlobal`](/api/vi#vi-stubglobal) helper. It will put the value of the global variable into a `globalThis` object.
 
-```ts twoslash
+```ts
 import { vi } from 'vitest'
 
 const IntersectionObserverMock = vi.fn(() => ({
@@ -440,7 +440,7 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 ### Configuration
 
 You can use it like below in your [setup file](/config/#setupfiles)
-```js twoslash
+```js
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
 import { HttpResponse, graphql, http } from 'msw'
@@ -496,7 +496,7 @@ See the [`vi.useFakeTimers` API section](/api/vi#vi-usefaketimers) for a more in
 
 ### Example
 
-```js twoslash
+```js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 function executeAfterTwoHours(func) {

@@ -15,7 +15,7 @@ npx vitest --reporter=verbose
 
 Using reporters via [`vitest.config.ts`](/config/):
 
-```ts twoslash
+```ts
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
@@ -81,10 +81,12 @@ When using multiple reporters, it's also possible to designate multiple output f
 
 ```ts
 export default defineConfig({
-  reporters: ['junit', 'json', 'verbose'],
-  outputFile: {
-    junit: './junit-report.xml',
-    json: './json-report.json',
+  test: {
+    reporters: ['junit', 'json', 'verbose'],
+    outputFile: {
+      junit: './junit-report.xml',
+      json: './json-report.json',
+    },
   },
 })
 ```
@@ -311,7 +313,8 @@ Example of a JSON report:
           "location": {
             "line": 20,
             "column": 28
-          }
+          },
+          "meta": {}
         }
       ],
       "startTime": 1697737019787,
