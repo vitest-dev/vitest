@@ -21,7 +21,7 @@ export interface SerializedConfig {
   root: string
   setupFiles: string[]
   passWithNoTests: boolean
-  testNamePattern?: RegExp
+  testNamePattern: RegExp | undefined
   allowOnly: boolean
   testTimeout: number
   hookTimeout: number
@@ -41,7 +41,7 @@ export interface SerializedConfig {
       interval?: number
     }
   }
-  printConsoleTrace?: boolean
+  printConsoleTrace: boolean | undefined
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
@@ -123,7 +123,7 @@ export interface SerializedConfig {
     screenshotFailures: boolean
   }
   standalone: boolean
-  logHeapUsage?: boolean
+  logHeapUsage: boolean | undefined
   coverage: SerializedCoverageConfig
 }
 
