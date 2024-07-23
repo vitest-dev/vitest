@@ -23,6 +23,7 @@
     "axios": "^0.26.1",
     "debug": "^4.3.4",
     "immutable": "5.0.0-beta.5",
+    "memfs": "^4.8.2",
     "strip-ansi": "^7.1.0",
     "sweetalert2": "^11.6.16",
     "tinyrainbow": "^1.2.0",

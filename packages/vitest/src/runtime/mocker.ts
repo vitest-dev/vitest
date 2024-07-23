@@ -188,7 +188,7 @@ export class VitestMocker {
     return {
       id,
       fsPath,
-      external,
+      external: external ? this.normalizePath(external) : external,
     }
   }
 
@@ -315,14 +315,28 @@ export class VitestMocker {
       const files = readdirSync(mockFolder)
       const baseOriginal = basename(path)
 
-      for (const file of files) {
-        const baseFile = basename(file, extname(file))
-        if (baseFile === baseOriginal) {
-          return resolve(mockFolder, file)
+      function findFile(files: string[], baseOriginal: string): string | null {
+        for (const file of files) {
+          const baseFile = basename(file, extname(file))
+          if (baseFile === baseOriginal) {
+            const path = resolve(mockFolder, file)
+            // if the same name, return the file
+            if (fs.statSync(path).isFile()) {
+              return path
+            }
+            else {
+              // find folder/index.{js,ts}
+              const indexFile = findFile(readdirSync(path), 'index')
+              if (indexFile) {
+                return indexFile
+              }
+            }
+          }
         }
+        return null
       }
 
-      return null
+      return findFile(files, baseOriginal)
     }
 
     const dir = dirname(path)
@@ -517,7 +531,7 @@ export class VitestMocker {
     const mocks = this.mockMap.get(suitefile) || {}
     const resolves = this.resolveCache.get(suitefile) || {}
 
-    mocks[id] = factory || this.resolveMockPath(path, external)
+    mocks[id] = factory || this.resolveMockPath(id, external)
     resolves[id] = originalId
 
     this.mockMap.set(suitefile, mocks)
@@ -546,7 +560,7 @@ export class VitestMocker {
     let mock = this.getDependencyMock(normalizedId)
 
     if (mock === undefined) {
-      mock = this.resolveMockPath(fsPath, external)
+      mock = this.resolveMockPath(normalizedId, external)
     }
 
     if (mock === null) {
