@@ -2,7 +2,11 @@ import { existsSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import { isWindows, slash, toFilePath } from '../../../packages/vite-node/src/utils'
 
-vi.mock('fs')
+vi.mock('fs', () => {
+  return {
+    existsSync: vi.fn(),
+  }
+})
 
 describe('current url', () => {
   it('__filename is equal to import.meta.url', () => {
