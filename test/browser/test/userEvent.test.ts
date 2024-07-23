@@ -155,37 +155,53 @@ describe('userEvent.tripleClick', () => {
 })
 
 describe('userEvent.hover, userEvent.unhover', () => {
-  test('hover works correctly', async () => {
+  test('hover, unhover works correctly', async () => {
+    const offset = { x: 8, y: 10 }
+    const hoverOptions = { position: { x: 39, y: 50 } }
+    const unhoverOptions = { position: { x: 140, y: 30 } }
+
     const target = document.createElement('div')
+    target.style.backgroundColor = 'red'
+    target.style.marginTop = `${offset.y}px`
+    target.style.marginLeft = `${offset.x}px`
     target.style.width = '100px'
     target.style.height = '100px'
 
     let mouseEntered = false
     let pointerEntered = false
-    target.addEventListener('mouseover', () => {
+    let eventCoordinates = { x: 0, y: 0 }
+    target.addEventListener('mouseover', (e) => {
       mouseEntered = true
+      eventCoordinates = { x: e.clientX, y: e.clientY }
     })
-    target.addEventListener('pointerenter', () => {
+    target.addEventListener('pointerenter', (e) => {
       pointerEntered = true
+      eventCoordinates = { x: e.clientX, y: e.clientY }
     })
-    target.addEventListener('pointerleave', () => {
+    target.addEventListener('pointerleave', (e) => {
       pointerEntered = false
+      eventCoordinates = { x: e.clientX, y: e.clientY }
     })
-    target.addEventListener('mouseout', () => {
+    target.addEventListener('mouseout', (e) => {
       mouseEntered = false
+      eventCoordinates = { x: e.clientX, y: e.clientY }
     })
 
     document.body.appendChild(target)
+    const expectedHoverPosition = { x: hoverOptions.position.x + offset.x, y: hoverOptions.position.y + offset.y }
+    const expectedUnhoverPosition = { x: unhoverOptions.position.x, y: unhoverOptions.position.y + offset.y }
 
-    await userEvent.hover(target)
+    await userEvent.hover(target, hoverOptions)
 
     expect(pointerEntered).toBe(true)
     expect(mouseEntered).toBe(true)
+    expect(eventCoordinates).toEqual(expectedHoverPosition)
 
-    await userEvent.unhover(target)
+    await userEvent.unhover(target, unhoverOptions)
 
     expect(pointerEntered).toBe(false)
     expect(mouseEntered).toBe(false)
+    expect(eventCoordinates).toEqual(expectedUnhoverPosition)
   })
 
   test('hover works with shadow root', async () => {
@@ -210,6 +226,7 @@ describe('userEvent.hover, userEvent.unhover', () => {
     })
 
     shadowRoot.appendChild(target)
+    expect.poll(() => document.body.contains(target)).toBeTruthy()
 
     await userEvent.hover(target)
 
