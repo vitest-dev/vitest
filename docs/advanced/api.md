@@ -8,7 +8,7 @@ Vitest exposes experimental private API. Breaking changes might not follow SemVe
 
 You can start running Vitest tests using its Node API:
 
-```js twoslash
+```js
 import { startVitest } from 'vitest/node'
 
 const vitest = await startVitest('test')
@@ -38,7 +38,7 @@ Alternatively, you can pass in the complete Vite config as the fourth argument, 
 
 You can create Vitest instance yourself using `createVitest` function. It returns the same `Vitest` instance as `startVitest`, but it doesn't start tests and doesn't validate installed packages.
 
-```js twoslash
+```js
 import { createVitest } from 'vitest/node'
 
 const vitest = await createVitest('test', {
@@ -50,7 +50,7 @@ const vitest = await createVitest('test', {
 
 You can use this method to parse CLI arguments. It accepts a string (where arguments are split by a single space) or a strings array of CLI arguments in the same format that Vitest CLI uses. It returns a filter and `options` that you can later pass down to `createVitest` or `startVitest` methods.
 
-```ts twoslash
+```ts
 import { parseCLI } from 'vitest/node'
 
 parseCLI('vitest ./files.ts --coverage --browser=chrome')

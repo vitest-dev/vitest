@@ -335,7 +335,7 @@ server.deps.inline: ["lib-name"]
 
 Vitest's `test` names are joined with a `>` symbol to make it easier to distinguish tests from suites, while Jest uses an empty space (` `).
 
-```
+```diff
 - `${describeTitle} ${testTitle}`
 + `${describeTitle} > ${testTitle}`
 ```
@@ -409,9 +409,8 @@ vi.setConfig({ testTimeout: 5_000 }) // [!code ++]
 
 This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
 
-`vite.config.js`
-
-```js twoslash
+:::code-group
+```js [vite.config.js]
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -420,13 +419,11 @@ export default defineConfig({
   }
 })
 ```
-
-`tests/unit/setup.js`
-
-```js
+```js [tests/unit/setup.js]
 import vueSnapshotSerializer from 'jest-serializer-vue'
 
 expect.addSnapshotSerializer(vueSnapshotSerializer)
 ```
+:::
 
 Otherwise your snapshots will have a lot of escaped `"` characters.

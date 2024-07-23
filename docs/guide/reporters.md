@@ -15,7 +15,7 @@ npx vitest --reporter=verbose
 
 Using reporters via [`vitest.config.ts`](/config/):
 
-```ts twoslash
+```ts
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
@@ -28,9 +28,7 @@ export default defineConfig({
 
 Some reporters can be customized by passing additional options to them. Reporter specific options are described in sections below.
 
-```ts twoslash
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts
 export default defineConfig({
   test: {
     reporters: [
@@ -50,9 +48,7 @@ By default, Vitest's reporters will print their output to the terminal. When usi
 npx vitest --reporter=json --outputFile=./test-output.json
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['json'],
@@ -70,9 +66,7 @@ You can use multiple reporters simultaneously to print your test results in diff
 npx vitest --reporter=json --reporter=default
 ```
 
-```ts twoslash
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts
 export default defineConfig({
   test: {
     reporters: ['json', 'default'],
@@ -85,9 +79,7 @@ The above example will both print the test results to the terminal in the defaul
 
 When using multiple reporters, it's also possible to designate multiple output files, as follows:
 
-```ts twoslash
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts
 export default defineConfig({
   test: {
     reporters: ['junit', 'json', 'verbose'],
@@ -138,9 +130,7 @@ The `basic` reporter displays the test files that have run and a summary of resu
 npx vitest --reporter=basic
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['basic']
@@ -169,9 +159,7 @@ Follows the same hierarchical structure as the `default` reporter, but does not 
 npx vitest --reporter=verbose
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['verbose']
@@ -207,9 +195,7 @@ Prints a single dot for each completed test to provide minimal output while stil
 npx vitest --reporter=dot
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['dot']
@@ -238,9 +224,7 @@ Outputs a report of the test results in JUnit XML format. Can either be printed 
 npx vitest --reporter=junit
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['junit']
@@ -268,9 +252,7 @@ AssertionError: expected 5 to be 4 // Object.is equality
 
 The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively. These can also be customized via reporter options:
 
-```ts twoslash
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts
 export default defineConfig({
   test: {
     reporters: [
@@ -289,9 +271,7 @@ Outputs a report of the test results in JSON format. Can either be printed to th
 npx vitest --reporter=json
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['json']
@@ -358,9 +338,7 @@ Output file can be specified using the [`outputFile`](/config/#outputfile) confi
 npx vitest --reporter=html
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['html']
@@ -382,9 +360,7 @@ Outputs a report following [Test Anything Protocol](https://testanything.org/) (
 npx vitest --reporter=tap
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['tap']
@@ -424,9 +400,7 @@ Outputs a TAP flat report. Like the `tap` reporter, test results are formatted t
 npx vitest --reporter=tap-flat
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['tap-flat']
@@ -460,9 +434,7 @@ Displays a list of hanging processes, if any are preventing Vitest from exiting 
 npx vitest --reporter=hanging-process
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['hanging-process']
@@ -478,9 +450,7 @@ to provide annotations for test failures. This reporter is automatically enabled
 
 If you configure non-default reporters, you need to explicitly add `github-actions`.
 
-```ts twoslash
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts
 export default defineConfig({
   test: {
     reporters: process.env.GITHUB_ACTIONS ? ['dot', 'github-actions'] : ['dot'],
@@ -520,9 +490,7 @@ You can use third-party custom reporters installed from NPM by specifying their 
 npx vitest --reporter=some-published-vitest-reporter
 ```
 
-```ts twoslash [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-// ---cut---
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     reporters: ['some-published-vitest-reporter']

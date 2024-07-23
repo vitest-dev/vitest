@@ -50,7 +50,7 @@ Learn more about [Test Filtering](/guide/filtering).
 
 Use `.concurrent` in consecutive tests to start them in parallel.
 
-```ts twoslash
+```ts
 import { describe, it } from 'vitest'
 
 // The two tests marked with concurrent will be started in parallel
@@ -63,7 +63,7 @@ describe('suite', () => {
 
 If you use `.concurrent` on a suite, every test in it will be started in parallel.
 
-```ts twoslash
+```ts
 import { describe, it } from 'vitest'
 
 // All tests within this suite will be started in parallel
@@ -84,9 +84,7 @@ When running concurrent tests, Snapshots and Assertions must use `expect` from t
 
 [Jest-compatible](https://jestjs.io/docs/snapshot-testing) snapshot support.
 
-```ts twoslash
-declare function render(): string
-// ---cut---
+```ts
 import { expect, it } from 'vitest'
 
 it('renders correctly', () => {
@@ -107,7 +105,7 @@ Notice that if you are using third-party libraries that add matchers, setting [`
 
 [Tinyspy](https://github.com/tinylibs/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
 
-```ts twoslash
+```ts
 import { expect, vi } from 'vitest'
 
 const fn = vi.fn()
@@ -134,7 +132,7 @@ $ npm i -D jsdom
 
 After that, change the `environment` option in your config file:
 
-```ts twoslash
+```ts
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
@@ -168,9 +166,7 @@ Vitest also provides a way to run tests within your source code along with the i
 
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the feedback loop closer for development.
 
-```ts twoslash
-/// <reference types="vitest/importMeta" />
-// ---cut---
+```ts
 // src/index.ts
 
 // the implementation
@@ -195,7 +191,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
-```ts twoslash
+```ts
 import { bench, describe } from 'vitest'
 
 describe('sort', () => {
@@ -222,11 +218,7 @@ describe('sort', () => {
 
 You can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 
-```ts twoslash
-// @filename: mount.ts
-export declare function mount(options: { name: string }): void
-// @filename: mount.test.ts
-// ---cut---
+```ts
 import { assertType, expectTypeOf, test } from 'vitest'
 import { mount } from './mount.js'
 
@@ -256,7 +248,7 @@ See [`Improving Performance | Sharding`](/guide/improving-performance#sharding) 
 
 Vitest exclusively autoloads environment variables prefixed with `VITE_` from `.env` files to maintain compatibility with frontend-related tests, adhering to [Vite's established convention](https://vitejs.dev/guide/env-and-mode.html#env-files). To load every environmental variable from `.env` files anyway, you can use `loadEnv` method imported from `vite`:
 
-```ts twoslash
+```ts
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
 
@@ -266,3 +258,4 @@ export default defineConfig(({ mode }) => ({
     env: loadEnv(mode, process.cwd(), ''),
   },
 }))
+```

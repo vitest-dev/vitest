@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vitepress --port 3333 --open",
-    "build": "NODE_OPTIONS=\"--max-old-space-size=8192\" nr cli-table && nr prefetch && vitepress build",
+    "build": "nr cli-table && nr prefetch && vitepress build",
     "cli-table": "tsx .vitepress/scripts/cli-generator.ts",
     "build-no-prefetch": "vitepress build",
     "serve": "vitepress serve",

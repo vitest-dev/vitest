@@ -45,14 +45,14 @@ The `npx` tool will execute the specified command. By default, `npx` will first 
 
 As an example, we will write a simple test that verifies the output of a function that adds two numbers.
 
-``` js twoslash
+``` js
 // sum.js
 export function sum(a, b) {
   return a + b
 }
 ```
 
-``` js twoslash
+``` js
 // sum.test.js
 import { expect, test } from 'vitest'
 import { sum } from './sum.js'
@@ -106,7 +106,7 @@ Vitest supports the same extensions for your configuration file as Vite does: `.
 
 If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
-```ts twoslash
+```ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -122,7 +122,7 @@ Even if you do not use Vite yourself, Vitest relies heavily on it for its transf
 
 If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
-```ts twoslash
+```ts
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
@@ -139,8 +139,7 @@ See the list of config options in the [Config Reference](../config/)
 If you decide to have two separate config files for Vite and Vitest, make sure to define the same Vite options in your Vitest config file since it will override your Vite file, not extend it. You can also use `mergeConfig` method from `vite` or `vitest/config` entries to merge Vite config with Vitest config:
 
 :::code-group
-```ts twoslash [vitest.config.mjs]
-// @noErrors
+```ts [vitest.config.mjs]
 import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config.mjs'
 
@@ -151,7 +150,7 @@ export default mergeConfig(viteConfig, defineConfig({
 }))
 ```
 
-```ts twoslash [vite.config.mjs]
+```ts [vite.config.mjs]
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 
@@ -167,7 +166,7 @@ However, we recommend using the same file for both Vite and Vitest, instead of c
 
 Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
 
-```ts twoslash
+```ts
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([

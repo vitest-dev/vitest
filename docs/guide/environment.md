@@ -23,7 +23,7 @@ Since Vitest 2.0.4 the `require` of CSS and assets inside the external dependenc
 
 When setting `environment` option in your config, it will apply to all the test files in your project. To have more fine-grained control, you can use control comments to specify environment for specific files. Control comments are comments that start with `@vitest-environment` and are followed by the environment name:
 
-```ts twoslash
+```ts
 // @vitest-environment jsdom
 
 import { expect, test } from 'vitest'
@@ -39,7 +39,7 @@ Or you can also set [`environmentMatchGlobs`](https://vitest.dev/config/#environ
 
 You can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file. That package should export an object with the shape of `Environment`:
 
-```ts twoslash
+```ts
 import type { Environment } from 'vitest'
 
 export default <Environment>{
@@ -75,7 +75,7 @@ Vitest requires `transformMode` option on environment object. It should be equal
 
 You also have access to default Vitest environments through `vitest/environments` entry:
 
-```ts twoslash
+```ts
 import { builtinEnvironments, populateGlobal } from 'vitest/environments'
 
 console.log(builtinEnvironments) // { jsdom, happy-dom, node, edge-runtime }
