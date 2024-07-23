@@ -163,7 +163,7 @@ test('trigger keystrokes', async () => {
 
 References:
 
-- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
 - [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
 
@@ -194,7 +194,7 @@ test('tab works', async () => {
 
 References:
 
-- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
 - [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `tab` API](https://testing-library.com/docs/user-event/convenience/#tab)
 
