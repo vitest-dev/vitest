@@ -11,6 +11,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   options = {},
 ) => {
   const { skipClick = false, skipAutoClose = false } = options
+  const unreleased = new Set(Reflect.get(options, 'unreleased') as string[] ?? [])
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
@@ -21,6 +22,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     }
 
     await keyboardImplementation(
+      unreleased,
       context.provider,
       context.contextId,
       text,
@@ -37,6 +39,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     }
 
     await keyboardImplementation(
+      unreleased,
       context.provider,
       context.contextId,
       text,
@@ -51,5 +54,9 @@ export const type: UserEventCommand<UserEvent['type']> = async (
   }
   else {
     throw new TypeError(`Provider "${context.provider.name}" does not support typing`)
+  }
+
+  return {
+    unreleased: Array.from(unreleased),
   }
 }

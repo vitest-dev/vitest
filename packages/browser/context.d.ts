@@ -49,6 +49,14 @@ export interface BrowserCommands {
 }
 
 export interface UserEvent {
+  /**
+   * Creates a new user event instance. This is useful if you need to keep the
+   * state of keyboard to press and release buttons correctly.
+   *
+   * **Note:** Unlike `@testing-library/user-event`, the default `userEvent` instance
+   * from `@vitest/browser/context` is created once, not every time its methods are called!
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
+   */
   setup: () => UserEvent
   /**
    * Click on an element. Uses provider's API under the hood and supports all its options.
@@ -103,7 +111,7 @@ export interface UserEvent {
    * await userEvent.keyboard('foo') // translates to: f, o, o
    * await userEvent.keyboard('{{a[[') // translates to: {, a, [
    * await userEvent.keyboard('{Shift}{f}{o}{o}') // translates to: Shift, f, o, o
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
    * @see {@link https://webdriver.io/docs/api/browser/keys} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/keyboard} testing-library API
    */
@@ -129,7 +137,7 @@ export interface UserEvent {
   clear: (element: Element) => Promise<void>
   /**
    * Sends a `Tab` key event. Uses provider's API under the hood.
-   * @see {@link https://playwright.dev/docs/api/class-locator#locator-press} Playwright API
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
    * @see {@link https://webdriver.io/docs/api/element/keys} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/convenience/#tab} testing-library API
    */

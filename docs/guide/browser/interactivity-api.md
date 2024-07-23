@@ -29,6 +29,29 @@ Almost every `userEvent` method inherits its provider options. To see all availa
 ```
 :::
 
+## userEvent.setup
+
+- **Type:** `() => UserEvent`
+
+Creates a new user event instance. This is useful if you need to keep the state of keyboard to press and release buttons correctly.
+
+::: warning
+Unlike `@testing-library/user-event`, the default `userEvent` instance from `@vitest/browser/context` is created once, not every time its methods are called! You can see the difference in how it works in this snippet:
+
+```ts
+import { userEvent as vitestUserEvent } from '@vitest/browser/context'
+import { userEvent as originalUserEvent } from '@testing-library/user-event'
+
+await vitestUserEvent.keyboard('{Shift}') // press shift without releasing
+await vitestUserEvent.keyboard('{/Shift}') // releases shift
+
+await originalUserEvent.keyboard('{Shift}') // press shift without releasing
+await originalUserEvent.keyboard('{/Shift}') // DID NOT release shift because the state is different
+```
+
+This behaviour is more useful because we do not emulate the keyboard, we actually press the Shift, so keeping the original behaviour would cause unexpected issues when typing in the field.
+:::
+
 ## userEvent.click
 
 - **Type:** `(element: Element, options?: UserEventClickOptions) => Promise<void>`
@@ -163,7 +186,7 @@ test('trigger keystrokes', async () => {
 
 References:
 
-- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
 - [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
 
@@ -194,7 +217,7 @@ test('tab works', async () => {
 
 References:
 
-- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
 - [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `tab` API](https://testing-library.com/docs/user-event/convenience/#tab)
 

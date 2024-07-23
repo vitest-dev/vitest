@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { server, userEvent } from '@vitest/browser/context'
+import { userEvent as _uE, server } from '@vitest/browser/context'
 import '../src/button.css'
 
 beforeEach(() => {
   // clear body
   document.body.replaceChildren()
 })
+
+const userEvent = _uE.setup()
 
 describe('userEvent.click', () => {
   test('correctly clicks a button', async () => {
@@ -347,11 +349,11 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
   test('repeating without manual up works correctly', async () => {
     const { input, keydown, keyup, value } = createTextInput()
 
-    await userEvent.type(input, '{a>3}4')
-    expect(value()).toBe('aaa4')
+    const userEvent = _uE.setup()
+    await userEvent.type(input, '{a>2}4')
+    expect(value()).toBe('aa4')
 
     expect(keydown).toEqual([
-      'a',
       'a',
       'a',
       '4',
@@ -366,6 +368,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
   test('repeating with manual up works correctly', async () => {
     const { input, keydown, keyup, value } = createTextInput()
 
+    const userEvent = _uE.setup()
     await userEvent.type(input, '{a>3/}4')
     expect(value()).toBe('aaa4')
 
@@ -385,6 +388,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
   test('repeating with disabled up works correctly', async () => {
     const { input, keydown, keyup, value } = createTextInput()
 
+    const userEvent = _uE.setup()
     await userEvent.type(input, '{a>3}4', {
       skipAutoClose: true,
     })
@@ -406,6 +410,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     const shadowRoot = createShadowRoot()
     const { input, keydown, value } = createTextInput(shadowRoot)
 
+    const userEvent = _uE.setup()
     await userEvent.type(input, 'Hello')
     expect(value()).toBe('Hello')
     expect(keydown).toEqual([
@@ -557,6 +562,7 @@ describe('userEvent.keyboard', async () => {
     ])
   })
 
+  // looks like wdio doesn't support releasing Enter on its own
   test('should not auto release', async () => {
     const spyKeydown = vi.fn()
     const spyKeyup = vi.fn()
@@ -569,8 +575,7 @@ describe('userEvent.keyboard', async () => {
     expect(spyKeydown).toHaveBeenCalledOnce()
     expect(spyKeyup).not.toHaveBeenCalled()
     await userEvent.keyboard('{/Enter}')
-    // userEvent doesn't fire any event here, but should we?
-    expect(spyKeyup).not.toHaveBeenCalled()
+    expect(spyKeyup).toHaveBeenCalled()
   })
 
   test('standalone keyboard works correctly with active input', async () => {
