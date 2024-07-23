@@ -49,6 +49,14 @@ export interface BrowserCommands {
 }
 
 export interface UserEvent {
+  /**
+   * Creates a new user event instance. This is useful if you need to keep the
+   * state of keyboard to press and release buttons correctly.
+   *
+   * **Note:** Unlike `@testing-library/user-event`, the default `userEvent` instance
+   * from `@vitest/browser/context` is created once, not every time its methods are called!
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
+   */
   setup: () => UserEvent
   /**
    * Click on an element. Uses provider's API under the hood and supports all its options.
