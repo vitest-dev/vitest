@@ -1,7 +1,7 @@
 [build]
 publish = "docs/.vitepress/dist"
 command = "pnpm ci:docs"
-ignore = "git diff --quiet $COMMIT_REF $CACHED_COMMIT_REF -- docs/ package.json pnpm-lock.yaml"
+ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF docs/ package.json pnpm-lock.yaml"
 
 [build.environment]
 NODE_VERSION = "20"
