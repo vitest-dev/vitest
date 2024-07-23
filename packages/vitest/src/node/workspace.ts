@@ -20,13 +20,15 @@ import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import type {
   ProvidedContext,
+  Vitest,
+} from '../types'
+import type {
   ResolvedConfig,
   UserConfig,
   UserWorkspaceConfig,
-  Vitest,
-} from '../types'
+} from '../types/config'
 import type { Typechecker } from '../typecheck/typechecker'
-import { nanoid } from '../utils/base'
+import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
 import type { BrowserServer } from '../types/browser'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
@@ -409,11 +411,11 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig(method: 'run' | 'collect' = 'run') {
-    const config = serializeConfig(
+    const config = deepMerge(serializeConfig(
       this.config,
       this.ctx.config,
       this.server?.config,
-    )
+    ), (this.ctx.configOverride || {}))
 
     // disable heavy features when collecting because they are not needed
     if (method === 'collect') {
