@@ -6,7 +6,7 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
   constructor(private options: SnapshotEnvironmentOptions = {}) {}
 
   getVersion(): string {
-    return '1'
+    return '2'
   }
 
   getHeader(): string {
