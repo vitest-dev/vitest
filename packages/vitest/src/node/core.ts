@@ -398,7 +398,7 @@ export class Vitest {
       return
     }
     this.coverageProvider = await getCoverageProvider(
-      this.config.coverage as SerializedCoverageConfig,
+      this.config.coverage as unknown as SerializedCoverageConfig,
       this.runner,
     )
     if (this.coverageProvider) {
