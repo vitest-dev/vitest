@@ -3,7 +3,7 @@ import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { ResolvedConfig, RuntimeConfig } from '../types'
-import type { MockFactoryWithHelper, PromiseMockFactoryWithHelper } from '../types/mocker'
+import type { MockFactoryWithHelper } from '../types/mocker'
 import { getWorkerState } from '../utils/global'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { isChildProcess } from '../utils/base'
@@ -194,8 +194,6 @@ export interface VitestUtils {
   mock(path: string, factory?: MockFactoryWithHelper): void
   // eslint-disable-next-line ts/method-signature-style
   mock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
-  // eslint-disable-next-line ts/method-signature-style
-  mock<T>(module: Promise<T>, factory?: PromiseMockFactoryWithHelper<T>): void
 
   /**
    * Removes module from mocked registry. All calls to import will return the original module even if it was mocked before.
@@ -221,8 +219,6 @@ export interface VitestUtils {
   doMock(path: string, factory?: MockFactoryWithHelper): void
   // eslint-disable-next-line ts/method-signature-style
   doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
-  // eslint-disable-next-line ts/method-signature-style
-  doMock<T>(module: Promise<T>, factory?: PromiseMockFactoryWithHelper<T>): void
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
