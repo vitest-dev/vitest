@@ -1,5 +1,6 @@
 ---
 title: Command Line Interface | Guide
+outline: deep
 ---
 
 # Command Line Interface
@@ -87,8 +88,6 @@ If `--json` flag doesn't receive a value, it will output the JSON into stdout.
 
 ## Options
 
-<!--@include: ./cli-table.md-->
-
 ::: tip
 Vitest supports both camel case and kebab case for CLI arguments. For example, `--passWithNoTests` and `--pass-with-no-tests` will both work (`--no-color` and `--inspect-brk` are the exceptions).
 
@@ -108,36 +107,38 @@ vitest --api=false
 ```
 :::
 
+<!--@include: ./cli-generated.md-->
+
 ### changed
 
 - **Type**: `boolean | string`
 - **Default**: false
 
-  Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
+Run tests only against changed files. If no value is provided, it will run tests against uncommitted changes (including staged and unstaged).
 
-  To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash (e.g. `--changed 09a9920`) or branch name (e.g. `--changed origin/develop`).
+To run tests against changes made in the last commit, you can use `--changed HEAD~1`. You can also pass commit hash (e.g. `--changed 09a9920`) or branch name (e.g. `--changed origin/develop`).
 
-  When used with code coverage the report will contain only the files that were related to the changes.
+When used with code coverage the report will contain only the files that were related to the changes.
 
-  If paired with the [`forceRerunTriggers`](/config/#forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
+If paired with the [`forceRerunTriggers`](/config/#forcereruntriggers) config option it will run the whole test suite if at least one of the files listed in the `forceRerunTriggers` list changes. By default, changes to the Vitest config file and `package.json` will always rerun the whole suite.
 
 ### shard
 
 - **Type**: `string`
 - **Default**: disabled
 
-  Test suite shard to execute in a format of `<index>`/`<count>`, where
+Test suite shard to execute in a format of `<index>`/`<count>`, where
 
-  - `count` is a positive integer, count of divided parts
-  - `index` is a positive integer, index of divided part
+- `count` is a positive integer, count of divided parts
+- `index` is a positive integer, index of divided part
 
-  This command will divide all tests into `count` equal parts, and will run only those that happen to be in an `index` part. For example, to split your tests suite into three parts, use this:
+This command will divide all tests into `count` equal parts, and will run only those that happen to be in an `index` part. For example, to split your tests suite into three parts, use this:
 
-  ```sh
-  vitest run --shard=1/3
-  vitest run --shard=2/3
-  vitest run --shard=3/3
-  ```
+```sh
+vitest run --shard=1/3
+vitest run --shard=2/3
+vitest run --shard=3/3
+```
 
 :::warning
 You cannot use this option with `--watch` enabled (enabled in dev by default).

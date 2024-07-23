@@ -167,7 +167,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   outputFile: {
     argument: '<filename/-s>',
     description:
-      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: --outputFile.tap=./tap.txt)',
+      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)',
     subcommands: null,
   },
   coverage: {
@@ -527,7 +527,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       seed: {
         description:
-          'Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
+          'Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
         argument: '<seed>',
       },
       hooks: {

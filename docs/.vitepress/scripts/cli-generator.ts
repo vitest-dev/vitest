@@ -5,9 +5,36 @@ import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cl
 import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config'
 
 const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
-const cliTablePath = resolve(docsDir, './guide/cli-table.md')
+const cliTablePath = resolve(docsDir, './guide/cli-generated.md')
 
 const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined
+
+const skipCli = new Set([
+  'mergeReports',
+  'changed',
+  'shard',
+])
+
+const skipConfig = new Set([
+  'config',
+  'api.port',
+  'api.host',
+  'api.strictPort',
+  'coverage.watermarks.statements',
+  'coverage.watermarks.lines',
+  'coverage.watermarks.branches',
+  'coverage.watermarks.functions',
+  'coverage.thresholds.statements',
+  'coverage.thresholds.branches',
+  'coverage.thresholds.functions',
+  'coverage.thresholds.lines',
+  'standalone',
+  'clearScreen',
+  'color',
+  'run',
+  'hideSkippedTests',
+  'dom',
+])
 
 function resolveOptions(options: CLIOptions<any>, parentName?: string) {
   return Object.entries(options).flatMap(
@@ -19,7 +46,7 @@ function resolveOptions(options: CLIOptions<any>, parentName?: string) {
 }
 
 function resolveCommand(name: string, config: CLIOption<any> | null): any {
-  if (!config) {
+  if (!config || skipCli.has(name)) {
     return null
   }
 
@@ -37,17 +64,19 @@ function resolveCommand(name: string, config: CLIOption<any> | null): any {
   }
 
   return {
-    title,
+    title: name,
+    cli: title,
     description: config.description,
   }
 }
 
 const options = resolveOptions(cliOptionsConfig)
 
-const template = `
-| Options       |               |
-| ------------- | ------------- |
-${options.map(({ title, description }) => `| ${title} | ${description} |`).join('\n')}
-`.trimStart()
+const template = options.map((option) => {
+  const title = option.title
+  const cli = option.cli
+  const config = skipConfig.has(title) ? '' : `[${title}](/config/#${title.toLowerCase().replace(/\./g, '-')})`
+  return `### ${title}\n\n- **CLI:** ${cli}\n${config ? `- **Config:** ${config}\n` : ''}\n${option.description}\n`
+}).join('\n')
 
 writeFileSync(cliTablePath, template, 'utf-8')
