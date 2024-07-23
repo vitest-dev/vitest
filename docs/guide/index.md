@@ -34,7 +34,7 @@ bun add -D vitest
 :::
 
 :::tip
-Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
+Vitest requires Vite >=v5.0.0 and Node >=v18.0.0
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` tool comes with npm and Node.js).
@@ -45,17 +45,17 @@ The `npx` tool will execute the specified command. By default, `npx` will first 
 
 As an example, we will write a simple test that verifies the output of a function that adds two numbers.
 
-``` js
+``` js twoslash
 // sum.js
 export function sum(a, b) {
   return a + b
 }
 ```
 
-``` js
+``` js twoslash
 // sum.test.js
 import { expect, test } from 'vitest'
-import { sum } from './sum'
+import { sum } from './sum.js'
 
 test('adds 1 + 2 to equal 3', () => {
   expect(sum(1, 2)).toBe(3)
@@ -76,17 +76,21 @@ Next, in order to execute the test, add the following section to your `package.j
 }
 ```
 
-Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your package manager, and Vitest will print this message:
+Finally, run `npm run test`, `yarn test` or `pnpm test`, depending on your package manager, and Vitest will print this message:
 
 ```txt
 ✓ sum.test.js (1)
   ✓ adds 1 + 2 to equal 3
 
 Test Files  1 passed (1)
-    Tests  1 passed (1)
+     Tests  1 passed (1)
   Start at  02:15:44
   Duration  311ms
 ```
+
+::: warning
+If you are using Bun as your package manager, make sure to use `bun run test` command instead of `bun test`, otherwise Bun will run its own test runner.
+:::
 
 Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.
 
@@ -118,7 +122,7 @@ Even if you do not use Vite yourself, Vitest relies heavily on it for its transf
 
 If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
-```ts
+```ts twoslash
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
@@ -135,18 +139,19 @@ See the list of config options in the [Config Reference](../config/)
 If you decide to have two separate config files for Vite and Vitest, make sure to define the same Vite options in your Vitest config file since it will override your Vite file, not extend it. You can also use `mergeConfig` method from `vite` or `vitest/config` entries to merge Vite config with Vitest config:
 
 :::code-group
-```ts [vitest.config.mjs]
+```ts twoslash [vitest.config.mjs]
+// @noErrors
 import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config.mjs'
 
 export default mergeConfig(viteConfig, defineConfig({
   test: {
     // ...
-  }
+  },
 }))
 ```
 
-```ts [vite.config.mjs]
+```ts twoslash [vite.config.mjs]
 import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 
@@ -155,7 +160,7 @@ export default defineConfig({
 })
 ```
 
-But we recommend to use the same file for both Vite and Vitest instead of creating two separate files.
+However, we recommend using the same file for both Vite and Vitest, instead of creating two separate files.
 :::
 
 ## Workspaces Support
