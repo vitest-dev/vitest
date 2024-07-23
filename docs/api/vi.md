@@ -34,10 +34,10 @@ If `factory` is defined, all imports will return its result. Vitest calls factor
 Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside. Vitest also supports a module promise instead of a string in `vi.mock` method for better IDE support (when file is moved, path will be updated, `importOriginal` also inherits the type automatically).
 
 ```ts twoslash
-// @filename: ../../../../path/to/module.js
+// @filename: ./path/to/module.js
 export declare function total(...numbers: number[]): number
-// @filename: ../../../../test.js
-import { vi } from './build/repo/packages/vitest'
+// @filename: test.js
+import { vi } from 'vitest'
 // ---cut---
 vi.mock(import('./path/to/module.js'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred

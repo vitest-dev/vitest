@@ -60,7 +60,16 @@ export default ({ mode }: { mode: string }) => {
         light: 'github-light',
         dark: 'github-dark',
       },
-      codeTransformers: mode === 'development' ? [] : [transformerTwoslash()],
+      codeTransformers: mode === 'development'
+        ? []
+        : [transformerTwoslash({
+            processHoverInfo: (info) => {
+              if (info.includes(process.cwd())) {
+                return info.replace(new RegExp(process.cwd(), 'g'), '')
+              }
+              return info
+            },
+          })],
     },
     themeConfig: {
       logo: '/logo.svg',
