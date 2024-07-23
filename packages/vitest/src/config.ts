@@ -48,12 +48,22 @@ export function defineConfig(config: UserConfigExport): UserConfigExport {
   return config
 }
 
-export function defineProject<T extends UserProjectConfigExport>(config: T): T {
+export function defineProject(config: UserWorkspaceConfig): UserWorkspaceConfig
+export function defineProject(config: Promise<UserWorkspaceConfig>): Promise<UserWorkspaceConfig>
+export function defineProject(config: UserProjectConfigFn): UserProjectConfigFn
+export function defineProject(config: UserProjectConfigExport): UserProjectConfigExport
+export function defineProject(config: UserProjectConfigExport): UserProjectConfigExport {
   return config
 }
 
-type Workspace = string | (UserProjectConfigExport & { extends?: string })
+type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
+  /**
+   * Relative path to the extendable config. All other options will be merged with this config.
+   * @example '../vite.config.ts'
+   */
+  extends?: string
+})
 
-export function defineWorkspace(config: Workspace[]): Workspace[] {
+export function defineWorkspace(config: WorkspaceProjectConfiguration[]): WorkspaceProjectConfiguration[] {
   return config
 }

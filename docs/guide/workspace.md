@@ -96,6 +96,7 @@ Workspace projects don't support all configuration properties. For better type s
 
 :::code-group
 ```ts [packages/a/vitest.config.ts] twoslash
+// @errors: 2769
 import { defineProject } from 'vitest/config'
 
 export default defineProject({
