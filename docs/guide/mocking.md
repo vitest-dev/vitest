@@ -383,11 +383,11 @@ module.exports = fs.promises
 :::
 
 ```ts
-// hello-world.js
+// read-hello-world.js
 import { readFileSync } from 'node:fs'
 
 export function readHelloWorld(path) {
-  return readFileSync('./hello-world.txt')
+  return readFileSync(path)
 }
 ```
 
@@ -395,7 +395,7 @@ export function readHelloWorld(path) {
 // hello-world.test.js
 import { beforeEach, expect, it, vi } from 'vitest'
 import { fs, vol } from 'memfs'
-import { readHelloWorld } from './hello-world.js'
+import { readHelloWorld } from './read-hello-world.js'
 
 // tell vitest to use fs mock from __mocks__ folder
 // this can be done in a setup file if fs should always be mocked
@@ -408,7 +408,7 @@ beforeEach(() => {
 })
 
 it('should return correct text', () => {
-  const path = './hello-world.txt'
+  const path = '/hello-world.txt'
   fs.writeFileSync(path, 'hello world')
 
   const text = readHelloWorld(path)
@@ -423,7 +423,7 @@ it('can return a value multiple times', () => {
       './dir2/hw.txt': 'hello dir2',
     },
     // default cwd
-    '/tmp'
+    '/tmp',
   )
 
   expect(readHelloWorld('/tmp/dir1/hw.txt')).toBe('hello dir1')
