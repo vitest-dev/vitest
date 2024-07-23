@@ -43,9 +43,9 @@ it('returns globals on self correctly', async () => {
     worker.onmessage = (e) => {
       try {
         expect(e.data).toEqual({
-          crypto: true,
-          location: true,
-          caches: false,
+          crypto: !!globalThis.crypto,
+          location: !!globalThis.location,
+          caches: !!globalThis.caches,
           origin: 'http://localhost:3000',
         })
         resolve()
