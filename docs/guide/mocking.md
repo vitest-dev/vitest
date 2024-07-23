@@ -759,9 +759,9 @@ it('the value is restored before running an other test', () => {
 
 ```ts
 // vitest.config.ts
-export default {
+export default defineConfig({
   test: {
     unstubAllEnvs: true,
   }
-}
+})
 ```
