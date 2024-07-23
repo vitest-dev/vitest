@@ -1,6 +1,5 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
 import { resolve } from 'pathe'
-import type { SerializedConfig } from '../../types/config'
 import type { VitestExecutor } from '../execute'
 import { distDir } from '../../paths'
 import { getWorkerState } from '../../utils/global'

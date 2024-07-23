@@ -151,3 +151,5 @@ export type RuntimeConfig = Pick<
     hooks?: SequenceHooks
   }
 }
+
+export type RuntimeOptions = Partial<RuntimeConfig>
