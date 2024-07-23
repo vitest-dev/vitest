@@ -112,6 +112,7 @@ export interface SerializedConfig {
   watch: boolean
   env: Record<string, any>
   browser: {
+    name: string
     headless: boolean
     isolate: boolean
     fileParallelism: boolean
@@ -129,6 +130,10 @@ export interface SerializedConfig {
 
 export interface SerializedCoverageConfig {
   provider: 'istanbul' | 'v8' | 'custom' | undefined
+  reportsDirectory: string
+  htmlReporter: {
+    subdir: string | undefined
+  } | undefined
   enabled: boolean
   customProviderModule: string | undefined
 }

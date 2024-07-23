@@ -45,13 +45,24 @@ export function serializeConfig(
     globals: config.globals,
     snapshotEnvironment: config.snapshotEnvironment,
     passWithNoTests: config.passWithNoTests,
-    coverage: {
-      provider: config.coverage.provider,
-      enabled: config.coverage.enabled,
-      customProviderModule: 'customProviderModule' in config.coverage
-        ? config.coverage.customProviderModule
-        : undefined,
-    },
+    coverage: ((coverage) => {
+      const htmlReporter = coverage.reporter.find(([reporterName]) => reporterName === 'html') as [
+        'html',
+        { subdir?: string },
+      ] | undefined
+      const subdir = htmlReporter && htmlReporter[1]?.subdir
+      return {
+        reportsDirectory: coverage.reportsDirectory,
+        provider: coverage.provider,
+        enabled: coverage.enabled,
+        htmlReporter: htmlReporter
+          ? { subdir }
+          : undefined,
+        customProviderModule: 'customProviderModule' in coverage
+          ? coverage.customProviderModule
+          : undefined,
+      }
+    })(config.coverage),
     fakeTimers: config.fakeTimers,
     poolOptions: {
       forks: {
@@ -132,14 +143,17 @@ export function serializeConfig(
       ...viteConfig?.env,
       ...config.env,
     },
-    browser: {
-      headless: config.browser.headless,
-      isolate: config.browser.isolate,
-      fileParallelism: config.browser.fileParallelism,
-      ui: config.browser.ui,
-      viewport: config.browser.viewport,
-      screenshotFailures: config.browser.screenshotFailures,
-    },
+    browser: ((browser) => {
+      return {
+        name: browser.name,
+        headless: browser.headless,
+        isolate: browser.isolate,
+        fileParallelism: browser.fileParallelism,
+        ui: browser.ui,
+        viewport: browser.viewport,
+        screenshotFailures: browser.screenshotFailures,
+      }
+    })(config.browser),
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? coreConfig.printConsoleTrace,
