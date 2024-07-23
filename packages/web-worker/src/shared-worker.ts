@@ -69,9 +69,9 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
       super()
 
       const name = typeof options === 'string' ? options : options?.name
-      let selfProxy: WorkerGlobalScope & typeof globalThis
+      let selfProxy: typeof globalThis
 
-      const context: SharedWorkerGlobalScope = {
+      const context = {
         onmessage: null,
         onmessageerror: null,
         onerror: null,
@@ -88,7 +88,7 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
           )
         },
         crossOriginIsolated: false,
-        onconnect: null,
+        onconnect: null as ((e: MessageEvent) => void) | null,
         name: name || '',
         close: () => this.port.close(),
         dispatchEvent: (event: Event) => {
@@ -101,7 +101,7 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
         get self() {
           return selfProxy
         },
-      } as any as SharedWorkerGlobalScope
+      }
 
       selfProxy = new Proxy(context, {
         get(target, prop, receiver) {

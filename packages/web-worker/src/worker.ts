@@ -44,11 +44,11 @@ export function createWorkerConstructor(
     constructor(url: URL | string, options?: WorkerOptions) {
       super()
 
-      let selfProxy: WorkerGlobalScope & typeof globalThis
+      let selfProxy: typeof globalThis
 
       // should be in sync with DedicatedWorkerGlobalScope, but without globalThis
       const context = {
-        onmessage: null,
+        onmessage: null as null | ((e: MessageEvent) => void),
         onmessageerror: null,
         onerror: null,
         onlanguagechange: null,
@@ -94,7 +94,7 @@ export function createWorkerConstructor(
         get self() {
           return selfProxy
         },
-      } as any as DedicatedWorkerGlobalScope
+      }
 
       selfProxy = new Proxy(context, {
         get(target, prop, receiver) {
