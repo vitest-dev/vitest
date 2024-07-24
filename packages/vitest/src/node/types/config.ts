@@ -3,25 +3,29 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { ViteNodeServerOptions } from 'vite-node'
+import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type {
   BuiltinReporterOptions,
   BuiltinReporters,
-} from '../node/reporters'
-import type { TestSequencerConstructor } from '../node/sequencers/types'
-import type { ChaiConfig } from '../integrations/chai/config'
+} from '../reporters'
+import type { TestSequencerConstructor } from '../sequencers/types'
+import type { ChaiConfig } from '../../integrations/chai/config'
+import type { Arrayable, ParsedStack } from '../../types/general'
+import type { JSDOMOptions } from '../../types/jsdom-options'
+import type { HappyDOMOptions } from '../../types/happy-dom-options'
+import type { EnvironmentOptions } from '../../types/environment'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
-import type { JSDOMOptions } from './jsdom-options'
-import type { HappyDOMOptions } from './happy-dom-options'
-import type { Reporter } from './reporter'
-import type { SnapshotStateOptions } from './snapshot'
-import type { Arrayable, ParsedStack } from './general'
-import type { BenchmarkUserOptions } from './benchmark'
-import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
+import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
+import type { Reporter } from './reporter'
+import type { BenchmarkUserOptions } from './benchmark'
 
+export type { CoverageOptions, ResolvedCoverageOptions }
+export type { BenchmarkUserOptions }
+export type { CoverageV8Options, CoverageIstanbulOptions } from './coverage'
 export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-export type { SerializedConfig, RuntimeConfig } from '../runtime/config'
+export type { SerializedConfig, RuntimeConfig } from '../../runtime/config'
 
 export type BuiltinEnvironment =
   | 'node'
@@ -40,16 +44,7 @@ export type ApiConfig = Pick<
   'port' | 'strictPort' | 'host' | 'middlewareMode'
 >
 
-export type { JSDOMOptions, HappyDOMOptions }
-
-export interface EnvironmentOptions {
-  /**
-   * jsdom options.
-   */
-  jsdom?: JSDOMOptions
-  happyDOM?: HappyDOMOptions
-  [x: string]: unknown
-}
+export type { JSDOMOptions, HappyDOMOptions, EnvironmentOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
 
@@ -1070,4 +1065,4 @@ export type ProjectConfig = Omit<
   }
 }
 
-export type { UserWorkspaceConfig } from '../config'
+export type { UserWorkspaceConfig } from '../../config'

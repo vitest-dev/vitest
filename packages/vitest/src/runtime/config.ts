@@ -2,7 +2,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotUpdateState } from '@vitest/snapshot'
-import type { SnapshotEnvironment } from '@vitest/snapshot/types'
+import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
 
 /**
  * Config that tests have access to.

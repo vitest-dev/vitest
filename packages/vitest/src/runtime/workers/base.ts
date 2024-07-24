@@ -1,6 +1,6 @@
 import { ModuleCacheMap } from 'vite-node/client'
 import type { WorkerGlobalState } from '../../types/worker'
-import { provideWorkerState } from '../../utils/global'
+import { provideWorkerState } from '../utils'
 import type { ContextExecutorOptions, VitestExecutor } from '../execute'
 import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import type { MockMap } from '../../types/mocker'

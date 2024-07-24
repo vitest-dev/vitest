@@ -1,6 +1,6 @@
 import type { ModuleCacheMap } from 'vite-node/client'
 
-import { getWorkerState } from './global'
+import { getWorkerState } from '../runtime/utils'
 import { getSafeTimers } from './timers'
 
 export function resetModules(modules: ModuleCacheMap, resetMocks = false) {

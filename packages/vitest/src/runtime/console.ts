@@ -5,7 +5,7 @@ import { getSafeTimers } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { RealDate } from '../integrations/mock/date'
 import { getWorkerState } from '../utils'
-import type { WorkerGlobalState } from '../types'
+import type { WorkerGlobalState } from '../types/worker'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 

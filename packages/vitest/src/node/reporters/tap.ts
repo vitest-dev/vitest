@@ -1,7 +1,7 @@
 import type { Task } from '@vitest/runner'
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
-import type { Vitest } from '../../node'
-import type { Reporter } from '../../types/reporter'
+import type { Vitest } from '../core'
+import type { Reporter } from '../types/reporter'
 import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
 

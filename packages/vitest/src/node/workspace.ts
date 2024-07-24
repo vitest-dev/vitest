@@ -18,19 +18,16 @@ import type {
 } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type {
-  ProvidedContext,
-  Vitest,
-} from '../types'
+import type { Typechecker } from '../typecheck/typechecker'
+import { deepMerge, nanoid } from '../utils/base'
+import { setup } from '../api/setup'
+import type { ProvidedContext } from '../types/general'
 import type {
   ResolvedConfig,
   UserConfig,
   UserWorkspaceConfig,
-} from '../types/config'
-import type { Typechecker } from '../typecheck/typechecker'
-import { deepMerge, nanoid } from '../utils/base'
-import { setup } from '../api/setup'
-import type { BrowserServer } from '../types/browser'
+} from './types/config'
+import type { BrowserServer } from './types/browser'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
@@ -39,6 +36,7 @@ import { loadGlobalSetupFiles } from './globalSetup'
 import { MocksPlugins } from './plugins/mocks'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
+import type { Vitest } from './core'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string

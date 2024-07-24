@@ -1,4 +1,4 @@
-import type { Reporter } from '../../types'
+import type { Reporter } from '../types/reporter'
 import { BasicReporter } from './basic'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'

@@ -1,8 +1,8 @@
 import { setSafeTimers } from '@vitest/utils'
 import { addSerializer } from '@vitest/snapshot'
 import type { SnapshotSerializer } from '@vitest/snapshot'
+import type { DiffOptions } from '@vitest/expect'
 import { resetRunOnceCounter } from '../integrations/run-once'
-import type { DiffOptions } from '../types/matcher-utils'
 import type { VitestExecutor } from './execute'
 import type { SerializedConfig } from './config'
 

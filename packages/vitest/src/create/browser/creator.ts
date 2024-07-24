@@ -7,7 +7,7 @@ import type { Agent } from '@antfu/install-pkg'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
 import { findUp } from 'find-up'
 import { execa } from 'execa'
-import type { BrowserBuiltinProvider } from '../../types/browser'
+import type { BrowserBuiltinProvider } from '../../node/types/browser'
 import { configFiles } from '../../constants'
 import { generateExampleFiles } from './examples'
 

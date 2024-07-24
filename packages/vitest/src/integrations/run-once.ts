@@ -1,4 +1,4 @@
-import { getWorkerState } from '../utils/global'
+import { getWorkerState } from '../runtime/utils'
 
 const filesCount = new Map<string, number>()
 const cache = new Map<string, any>()

@@ -4,18 +4,15 @@ import { createBirpc } from 'birpc'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { resolve } from 'pathe'
-import type {
-  ContextTestEnvironment,
-  RunnerRPC,
-  RuntimeRPC,
-  Vitest,
-  WorkerContext,
-} from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
-import type { SerializedConfig } from '../../types/config'
+import type { SerializedConfig } from '../types/config'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
+import type { WorkerContext } from '../types/worker'
 import { createMethodsRPC } from './rpc'
 
 function createWorkerChannel(project: WorkspaceProject) {

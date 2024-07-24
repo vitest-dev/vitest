@@ -3,7 +3,7 @@ import cac, { type CAC, type Command } from 'cac'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { toArray } from '../../utils/base'
-import type { VitestRunMode } from '../../types'
+import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'

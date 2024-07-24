@@ -67,6 +67,7 @@
   },
   "pnpm": {
     "overrides": {
+      "acorn": "8.11.3",
       "mlly": "^1.7.1",
       "rollup": "$rollup",
       "vite": "$vite",

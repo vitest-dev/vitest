@@ -1,4 +1,4 @@
-import type { Awaitable } from '../../types'
+import type { Awaitable } from '../../types/general'
 import type { Vitest } from '../core'
 import type { WorkspaceSpec } from '../pool'
 

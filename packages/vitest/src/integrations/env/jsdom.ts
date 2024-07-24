@@ -1,4 +1,4 @@
-import type { Environment } from '../../types'
+import type { Environment } from '../../types/environment'
 import { populateGlobal } from './utils'
 
 function catchWindowErrors(window: Window) {
