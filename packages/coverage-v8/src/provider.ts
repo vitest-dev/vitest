@@ -360,6 +360,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
+    const transform = this.createUncoveredFileTransformer(this.ctx)
 
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
     let includedFiles = allFiles.map(file =>
@@ -393,6 +394,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           const { originalSource } = await this.getSources(
             filename.href,
             transformResults,
+            transform,
           )
 
           const coverage = {
@@ -433,6 +435,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
   private async getSources(
     url: string,
     transformResults: TransformResults,
+    transform: ReturnType<typeof this.createUncoveredFileTransformer>,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
       source: string
@@ -450,9 +453,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await this.ctx.vitenode
-        .transformRequest(filePath)
-        .catch(() => null)
+      transformResult = await transform(filePath).catch(() => null)
     }
 
     const map = transformResult?.map as EncodedSourceMap | undefined
@@ -507,6 +508,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       ? viteNode.fetchCaches[transformMode]
       : viteNode.fetchCache
     const transformResults = normalizeTransformResults(fetchCache)
+    const transform = this.createUncoveredFileTransformer(this.ctx)
 
     const scriptCoverages = coverage.result.filter(result =>
       this.testExclude.shouldInstrument(fileURLToPath(result.url)),
@@ -528,6 +530,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           const sources = await this.getSources(
             url,
             transformResults,
+            transform,
             functions,
           )
 

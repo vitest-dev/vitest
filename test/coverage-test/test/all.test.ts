@@ -4,7 +4,7 @@ import { readCoverageMap, runVitest, test } from '../utils'
 test('{ all: true } includes uncovered files', async () => {
   await runVitest({
     include: ['fixtures/test/**'],
-    exclude: ['**/virtual-files-**'],
+    exclude: ['**/virtual-files-**', '**/custom-1-syntax**'],
     coverage: {
       include: ['fixtures/src/**'],
       all: true,
@@ -25,7 +25,7 @@ test('{ all: true } includes uncovered files', async () => {
 test('{ all: false } excludes uncovered files', async () => {
   await runVitest({
     include: ['fixtures/test/**'],
-    exclude: ['**/virtual-files-**'],
+    exclude: ['**/virtual-files-**', '**/custom-1-syntax**'],
     coverage: {
       include: ['fixtures/src/**'],
       all: false,
