@@ -3,14 +3,11 @@ import util from 'node:util'
 import timers from 'node:timers'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
-import type {
-  EnvironmentOptions,
-  ResolvedTestEnvironment,
-} from '../types'
 import { getSafeTimers, getWorkerState } from '../utils'
 import * as VitestIndex from '../index'
 import { expect } from '../integrations/chai'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
+import type { ResolvedTestEnvironment } from '../types/environment'
 import { setupCommonEnv } from './setup-common'
 import type { VitestExecutor } from './execute'
 import type { SerializedConfig } from './config'
@@ -90,7 +87,7 @@ export async function setupConsoleLogSpy() {
 
 export async function withEnv(
   { environment }: ResolvedTestEnvironment,
-  options: EnvironmentOptions,
+  options: Record<string, any>,
   fn: () => Promise<void>,
 ) {
   // @ts-expect-error untyped global

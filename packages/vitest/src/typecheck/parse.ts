@@ -3,7 +3,7 @@ import os from 'node:os'
 import { writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'pathe'
 import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
-import type { TypecheckConfig } from '../types'
+import type { TypecheckConfig } from '../node/types/config'
 import type { RawErrsMap, TscErrorInfo } from './types'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))

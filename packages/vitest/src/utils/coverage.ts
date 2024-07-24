@@ -1,7 +1,7 @@
 import { relative } from 'pathe'
 import mm from 'micromatch'
 import type { CoverageMap } from 'istanbul-lib-coverage'
-import type { BaseCoverageOptions, ResolvedCoverageOptions } from '../types'
+import type { BaseCoverageOptions, ResolvedCoverageOptions } from '../node/types/coverage'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 

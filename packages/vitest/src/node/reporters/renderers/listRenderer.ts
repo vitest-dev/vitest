@@ -1,16 +1,12 @@
 import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type {
-  Benchmark,
-  BenchmarkResult,
-  SuiteHooks,
-  Task,
-  VitestRunMode,
-} from '../../../types'
+import type { SuiteHooks, Task } from '@vitest/runner'
 import { getTests, notNullish } from '../../../utils'
 import { F_RIGHT } from '../../../utils/figures'
 import type { Logger } from '../../logger'
+import type { VitestRunMode } from '../../types/config'
+import type { Benchmark, BenchmarkResult } from '../../../runtime/types/benchmark'
 import {
   formatProjectName,
   getCols,

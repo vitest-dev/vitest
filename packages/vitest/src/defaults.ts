@@ -4,7 +4,7 @@ import type {
   CoverageV8Options,
   ResolvedCoverageOptions,
   UserConfig,
-} from './types'
+} from './node/types/config'
 import { isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'

@@ -1,16 +1,11 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
+import type { File, Suite, TaskMeta, TaskState } from '@vitest/runner'
+import type { SnapshotSummary } from '@vitest/snapshot'
 import type { Vitest } from '../../node'
-import type {
-  File,
-  Reporter,
-  SnapshotSummary,
-  Suite,
-  TaskMeta,
-  TaskState,
-} from '../../types'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
+import type { Reporter } from '../types/reporter'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)

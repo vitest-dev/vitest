@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
-import type { ContextRPC } from '../types'
+import type { ContextRPC } from '../types/worker'
 import type { SerializedConfig } from './config'
 
 const __require = createRequire(import.meta.url)

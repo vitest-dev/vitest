@@ -1,4 +1,4 @@
-import type { Environment } from '../../types'
+import type { Environment } from '../../node/types/environment'
 import { populateGlobal } from './utils'
 
 async function teardownWindow(win: {

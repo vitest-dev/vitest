@@ -13,7 +13,7 @@ import {
 } from '@vitest/expect'
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
 import { getTestName } from '../../utils/tasks'
-import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
+import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 
 export function createExpect(test?: TaskPopulated) {

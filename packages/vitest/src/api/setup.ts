@@ -5,16 +5,11 @@ import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import type { ViteDevServer } from 'vite'
+import type { File, TaskResultPack } from '@vitest/runner'
 import { API_PATH } from '../constants'
 import type { Vitest } from '../node'
-import type {
-  Awaitable,
-  File,
-  ModuleGraphData,
-  Reporter,
-  TaskResultPack,
-  UserConsoleLog,
-} from '../types'
+import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { Reporter } from '../node/types/reporter'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { SerializedSpec } from '../runtime/types/utils'

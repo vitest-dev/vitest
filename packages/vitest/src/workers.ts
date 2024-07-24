@@ -3,7 +3,7 @@ export {
   createThreadsRpcOptions,
   unwrapSerializableConfig,
 } from './runtime/workers/utils'
-export { provideWorkerState } from './utils/global'
+export { provideWorkerState } from './runtime/utils'
 export { run as runVitestWorker, collect as collectVitestWorkerTests } from './runtime/worker'
 export { runVmTests } from './runtime/workers/vm'
 export { runBaseTests } from './runtime/workers/base'

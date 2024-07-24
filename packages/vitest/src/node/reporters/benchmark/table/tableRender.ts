@@ -1,11 +1,12 @@
 import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
 import stripAnsi from 'strip-ansi'
-import type { BenchmarkResult, Task } from '../../../../types'
+import type { Task } from '@vitest/runner'
 import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
+import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
 import type { FlatBenchmarkReport } from '.'
 
 export interface TableRendererOptions {

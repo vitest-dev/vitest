@@ -4,7 +4,7 @@ import { normalize } from 'pathe'
 import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
 import { toArray } from 'vite-node/utils'
 import type { RuntimeRPC } from '../../types/rpc'
-import type { WorkerGlobalState } from '../../types'
+import type { WorkerGlobalState } from '../../types/worker'
 import type { EsmExecutor } from './esm-executor'
 import { SyntheticModule } from './utils'
 

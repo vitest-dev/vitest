@@ -2,7 +2,7 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type {
   CoverageProvider,
   CoverageProviderModule,
-} from '../types'
+} from '../node/types/coverage'
 
 interface Loader {
   executeId: (id: string) => Promise<{ default: CoverageProviderModule }>

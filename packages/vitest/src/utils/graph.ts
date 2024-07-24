@@ -1,5 +1,6 @@
 import type { ModuleNode } from 'vite'
-import type { ModuleGraphData, Vitest } from '../types'
+import type { Vitest } from '../node/core'
+import type { ModuleGraphData } from '../types/general'
 
 export async function getModuleGraph(
   ctx: Vitest,

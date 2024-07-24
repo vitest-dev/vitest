@@ -97,3 +97,5 @@ export type {
   CoverageV8Options,
   CustomProviderOptions,
 } from './types/coverage'
+
+export type { WorkerContext } from './types/worker'

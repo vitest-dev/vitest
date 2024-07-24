@@ -10,15 +10,18 @@ import type {
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { ChaiConfig } from '../../integrations/chai/config'
+import type { Arrayable, ParsedStack } from '../../types/general'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { JSDOMOptions } from './jsdom-options'
 import type { HappyDOMOptions } from './happy-dom-options'
-import type { Arrayable, ParsedStack } from '../../types/general'
 import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Reporter } from './reporter'
 import type { BenchmarkUserOptions } from './benchmark'
 
+export type { CoverageOptions, ResolvedCoverageOptions }
+export type { BenchmarkUserOptions }
+export type { CoverageV8Options, CoverageIstanbulOptions } from './coverage'
 export type { BrowserScript, BrowserConfigOptions } from './browser'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 export type { SerializedConfig, RuntimeConfig } from '../../runtime/config'

@@ -2,8 +2,8 @@ import type { Custom } from '@vitest/runner'
 import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
 import { noop } from '@vitest/utils'
-import type { BenchFunction, BenchOptions, BenchmarkAPI } from '../types'
 import { isRunningInBenchmark } from '../utils'
+import type { BenchFunction, BenchOptions, BenchmarkAPI } from './types/benchmark'
 
 const benchFns = new WeakMap<Custom, BenchFunction>()
 const benchOptsMap = new WeakMap()
