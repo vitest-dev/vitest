@@ -167,7 +167,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         const define: Record<string, string> = {}
         for (const env in (project.config.env || {})) {
           const stringValue = JSON.stringify(project.config.env[env])
-          define[`process.env.${env}`] = stringValue
           define[`import.meta.env.${env}`] = stringValue
         }
 
@@ -341,7 +340,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
                 'process.env.PTL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.PTL_SKIP_AUTO_CLEANUP),
                 // testing-library/react
                 'process.env.RTL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.RTL_SKIP_AUTO_CLEANUP),
-                'process.env?.RTL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.RTL_SKIP_AUTO_CLEANUP),
                 // testing-library/svelte, testing-library/solid
                 'process.env.STL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.STL_SKIP_AUTO_CLEANUP),
                 // testing-library/vue
