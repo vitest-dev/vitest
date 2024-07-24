@@ -5,6 +5,7 @@ import type { SerializedConfig } from '../runtime/config'
 import type { RunnerRPC, RuntimeRPC } from './rpc'
 import type { MockMap } from './mocker'
 import type { TransformMode } from './general'
+import type { Environment } from './environment'
 
 /** @deprecated unused */
 export type ResolveIdFunction = (
@@ -38,6 +39,7 @@ export interface WorkerGlobalState {
   rpc: WorkerRPC
   current?: Task
   filepath?: string
+  environment: Environment
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap

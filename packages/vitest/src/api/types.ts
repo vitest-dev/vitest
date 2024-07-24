@@ -1,5 +1,5 @@
 import type { BirpcReturn } from 'birpc'
-import type { File, TaskResultPack } from '../types/tasks'
+import type { File, TaskResultPack } from '@vitest/runner'
 import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type { SerializedConfig } from '../runtime/config'
 import type { SerializedSpec } from '../runtime/types/utils'

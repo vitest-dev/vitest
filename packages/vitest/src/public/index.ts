@@ -1,6 +1,6 @@
 // TODO: deprecate <reference types="vitest" /> in favor of `<reference types="vitest/config" />`
-import './node/types/vite'
-import './types/global'
+import '../node/types/vite'
+import '../types/global'
 
 export {
   suite,
@@ -14,20 +14,20 @@ export {
   onTestFailed,
   onTestFinished,
 } from '@vitest/runner'
-export { bench } from './runtime/benchmark'
-export { expectTypeOf } from './typecheck/expectTypeOf'
-export { assertType } from './typecheck/assertType'
+export { bench } from '../runtime/benchmark'
+export { expectTypeOf } from '../typecheck/expectTypeOf'
+export { assertType } from '../typecheck/assertType'
 
-export { runOnce, isFirstRun } from './integrations/run-once'
-export { createExpect, assert, should, chai, expect } from './integrations/chai'
-export { vi, vitest } from './integrations/vi'
-export { getRunningMode, isWatchMode } from './integrations/utils'
-export { inject } from './integrations/inject'
+export { runOnce, isFirstRun } from '../integrations/run-once'
+export { createExpect, assert, should, chai, expect } from '../integrations/chai'
+export { vi, vitest } from '../integrations/vi'
+export { getRunningMode, isWatchMode } from '../integrations/utils'
+export { inject } from '../integrations/inject'
 
-export type { VitestUtils } from './integrations/vi'
+export type { VitestUtils } from '../integrations/vi'
 
-export type { ExpectTypeOf } from './typecheck/expectTypeOf'
-export type { AssertType } from './typecheck/assertType'
+export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
+export type { AssertType } from '../typecheck/assertType'
 export type {
   /** @deprecated import from `vitest/node` instead */
   RawErrsMap,
@@ -41,7 +41,7 @@ export type {
   RootAndTarget,
   /** @deprecated import from `vitest/node` instead */
   Context,
-} from './typecheck/types'
+} from '../typecheck/types'
 
 export type {
   RunMode,
@@ -75,7 +75,7 @@ export type {
 export type {
   RuntimeRPC,
   RunnerRPC,
-} from './types/rpc'
+} from '../types/rpc'
 export type {
   SnapshotData,
   SnapshotUpdateState,
@@ -93,11 +93,11 @@ export type {
   WorkerGlobalState,
   ContextTestEnvironment,
   ContextRPC,
-} from './types/worker'
+} from '../types/worker'
 export type {
   /** @deprecated import from `vitest/node` instead */
   WorkerContext,
-} from './node/types/worker'
+} from '../node/types/worker'
 
 export type {
   ErrorWithDiff,
@@ -121,7 +121,7 @@ export type {
   OnServerRestartHandler,
   ProvidedContext,
   AfterSuiteRunMeta,
-} from './types/general'
+} from '../types/general'
 export type {
   /** @deprecated import from `vitest/environments` instead */
   EnvironmentReturn,
@@ -131,7 +131,7 @@ export type {
   Environment,
   /** @deprecated do not use it */
   ResolvedTestEnvironment,
-} from './types/environment'
+} from '../types/environment'
 export type {
   /** @deprecated import from `vitest/node` instead */
   CoverageProvider,
@@ -153,7 +153,7 @@ export type {
   CoverageV8Options,
   /** @deprecated import from `vitest/node` instead */
   CustomProviderOptions,
-} from './node/types/coverage'
+} from '../node/types/coverage'
 
 export type { CancelReason } from '@vitest/runner'
 export type { DiffOptions } from '@vitest/utils/diff'
@@ -165,17 +165,17 @@ export type {
   MockContext,
   Mocked,
   MockedClass,
-} from './integrations/spy'
-export type { BrowserUI } from './types/ui'
+} from '../integrations/spy'
+export type { BrowserUI } from '../types/ui'
 
 export type {
   /** @deprecated import from `vitest/node` instead */
   Reporter,
-} from './node/types/reporter'
+} from '../node/types/reporter'
 export type {
   /** @deprecated import from `vitest/node` instead */
   Vitest,
-} from './node/core'
+} from '../node/core'
 
 export type {
   ExpectStatic,
@@ -189,7 +189,7 @@ export type {
   SerializedConfig,
   RuntimeConfig,
   SerializedCoverageConfig,
-} from './runtime/config'
+} from '../runtime/config'
 export type {
   /** @deprecated import from `vitest/node` instead */
   BrowserScript,
@@ -235,7 +235,7 @@ export type {
   ProjectConfig,
   /** @deprecated import from `vitest/node` instead */
   UserWorkspaceConfig,
-} from './node/types/config'
+} from '../node/types/config'
 
 export type {
   Benchmark,
@@ -246,15 +246,15 @@ export type {
   BenchOptions,
   BenchFactory,
   BenchTask,
-} from './runtime/types/benchmark'
+} from '../runtime/types/benchmark'
 export type {
   /** @deprecated import from `vitest/node` instead */
   BenchmarkUserOptions,
-} from './node/types/benchmark'
+} from '../node/types/benchmark'
 
 export type {
   TransformResultWithSource,
   WebSocketHandlers,
   WebSocketEvents,
   WebSocketRPC,
-} from './api/types'
+} from '../api/types'

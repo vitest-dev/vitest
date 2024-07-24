@@ -17,7 +17,7 @@ const pkg = require('./package.json')
 
 const entries = {
   'path': 'src/paths.ts',
-  'index': 'src/index.ts',
+  'index': 'src/public/index.ts',
   'cli': 'src/node/cli.ts',
   'node': 'src/node.ts',
   'suite': 'src/suite.ts',
@@ -45,7 +45,7 @@ const entries = {
 }
 
 const dtsEntries = {
-  index: 'src/index.ts',
+  index: 'src/public/index.ts',
   node: 'src/node.ts',
   environments: 'src/environments.ts',
   browser: 'src/browser.ts',

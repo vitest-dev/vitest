@@ -10,7 +10,7 @@ import {
   startCoverageInsideWorker,
   stopCoverageInsideWorker,
 } from '../integrations/coverage'
-import * as VitestIndex from '../index'
+import * as VitestIndex from '../public/index'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import { getWorkerState } from './utils'
 import type { VitestExecutor } from './execute'

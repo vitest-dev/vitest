@@ -23,9 +23,3 @@ export interface ResolvedTestEnvironment {
   environment: Environment
   options: Record<string, any> | null
 }
-
-declare module 'vitest' {
-  interface WorkerGlobalState {
-    environment: Environment
-  }
-}
