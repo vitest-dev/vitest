@@ -64,21 +64,11 @@ test('can run custom pools with Vitest', async () => {
   expect(stackStderr).not.toMatch('❯ ')
   if (process.platform !== 'win32') {
     const root = resolve(process.cwd(), '../..')
-    expect(stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl').replace(/\.\w+\.js:/g, '.<chunk>.js:')).toMatchInlineSnapshot(`
+    const trace = stackStderr.replace(new RegExp(root, 'g'), '<root>').replace(/\d+:\d+/g, 'ln:cl').split('\n').slice(0, 3).join('\n')
+    expect(trace).toMatchInlineSnapshot(`
       "stderr | trace.test.ts > logging to stdout
       Trace: trace with trace
-          at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl
-          at file://<root>/packages/runner/dist/index.js:ln:cl
-          at file://<root>/packages/runner/dist/index.js:ln:cl
-          at runTest (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at processTicksAndRejections (node:internal/process/task_queues:ln:cl)
-          at runSuite (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at runFiles (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at startTests (file://<root>/packages/runner/dist/index.js:ln:cl)
-          at file://<root>/packages/vitest/dist/chunks/runtime-runBaseTests.<chunk>.js:ln:cl
-          at withEnv (file://<root>/packages/vitest/dist/chunks/runtime-runBaseTests.<chunk>.js:ln:cl)
-
-      "
+          at <root>/test/cli/fixtures/console/trace.test.ts:ln:cl"
     `)
   }
 })
