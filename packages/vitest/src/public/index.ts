@@ -78,6 +78,8 @@ import type {
   BenchmarkUserOptions as BenchmarkUserOptions_,
 } from '../node/types/benchmark'
 
+import type { SerializedSpec } from '../runtime/types/utils'
+
 export {
   suite,
   test,
@@ -105,17 +107,17 @@ export type { VitestUtils } from '../integrations/vi'
 export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 export type { AssertType } from '../typecheck/assertType'
 
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import `TypeCheckRawErrorsMap` from `vitest/node` instead */
 export type RawErrsMap = RawErrsMap_
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import `TypeCheckErrorInfo` from `vitest/node` instead */
 export type TscErrorInfo = TscErrorInfo_
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import `TypeCheckCollectLineNumbers` from `vitest/node` instead */
 export type CollectLineNumbers = CollectLineNumbers_
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import `TypeCheckCollectLines` from `vitest/node` instead */
 export type CollectLines = CollectLines_
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import `TypeCheckRootAndTarget` from `vitest/node` instead */
 export type RootAndTarget = RootAndTarget_
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import `TypeCheckContext` from `vitest/node` instead */
 export type Context = Context_
 
 export type {
@@ -316,6 +318,10 @@ export type {
   BenchFactory,
   BenchTask,
 } from '../runtime/types/benchmark'
+
+/** @deprecated use `SerializedSpec` instead */
+export type SerializableSpec = SerializedSpec
+export type { SerializedSpec }
 
 /** @deprecated import from `vitest/node` instead */
 export type BenchmarkUserOptions = BenchmarkUserOptions_

@@ -75,12 +75,12 @@ export type {
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {
-  RawErrsMap,
-  TscErrorInfo,
-  CollectLineNumbers,
-  CollectLines,
-  RootAndTarget,
-  Context,
+  RawErrsMap as TypeCheckRawErrorsMap,
+  TscErrorInfo as TypeCheckErrorInfo,
+  CollectLineNumbers as TypeCheckCollectLineNumbers,
+  CollectLines as TypeCheckCollectLines,
+  RootAndTarget as TypeCheckRootAndTarget,
+  Context as TypeCheckContext,
 } from '../typecheck/types'
 
 export type { OnServerRestartHandler } from '../types/general'
