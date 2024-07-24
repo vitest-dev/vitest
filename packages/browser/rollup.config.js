@@ -114,18 +114,17 @@ export default () =>
         }),
       ],
     },
-    // Should be built only when we update the jest-dom package
-    // {
-    //   input: './src/client/tester/jest-dom.ts',
-    //   output: {
-    //     file: './jest-dom.d.ts',
-    //     format: 'esm',
-    //   },
-    //   external: [],
-    //   plugins: [
-    //     dts({
-    //       respectExternal: true,
-    //     }),
-    //   ],
-    // },
+    {
+      input: './src/client/tester/jest-dom.ts',
+      output: {
+        file: './jest-dom.d.ts',
+        format: 'esm',
+      },
+      external: [],
+      plugins: [
+        dts({
+          respectExternal: true,
+        }),
+      ],
+    },
   ])
