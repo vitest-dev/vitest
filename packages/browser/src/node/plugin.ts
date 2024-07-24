@@ -334,21 +334,21 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       name: 'vitest:browser:support-testing-library',
       config() {
         return {
-          define: {
-            // testing-library/preact
-            'process.env.PTL_SKIP_AUTO_CLEANUP': !!process.env.PTL_SKIP_AUTO_CLEANUP,
-            // testing-library/react
-            'process.env.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            'process.env?.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            // testing-library/svelte, testing-library/solid
-            'process.env.STL_SKIP_AUTO_CLEANUP': !!process.env.STL_SKIP_AUTO_CLEANUP,
-            // testing-library/vue
-            'process.env.VTL_SKIP_AUTO_CLEANUP': !!process.env.VTL_SKIP_AUTO_CLEANUP,
-            // dom.debug()
-            'process.env.DEBUG_PRINT_LIMIT': process.env.DEBUG_PRINT_LIMIT || 7000,
-          },
           optimizeDeps: {
             esbuildOptions: {
+              define: {
+                // testing-library/preact
+                'process.env.PTL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.PTL_SKIP_AUTO_CLEANUP),
+                // testing-library/react
+                'process.env.RTL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.RTL_SKIP_AUTO_CLEANUP),
+                'process.env?.RTL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.RTL_SKIP_AUTO_CLEANUP),
+                // testing-library/svelte, testing-library/solid
+                'process.env.STL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.STL_SKIP_AUTO_CLEANUP),
+                // testing-library/vue
+                'process.env.VTL_SKIP_AUTO_CLEANUP': JSON.stringify(!!process.env.VTL_SKIP_AUTO_CLEANUP),
+                // dom.debug()
+                'process.env.DEBUG_PRINT_LIMIT': process.env.DEBUG_PRINT_LIMIT || '7000',
+              },
               plugins: [
                 {
                   name: 'test-utils-rewrite',
