@@ -20,17 +20,17 @@ const entries = {
   'index': 'src/public/index.ts',
   'cli': 'src/node/cli.ts',
   'node': 'src/public/node.ts',
-  'suite': 'src/suite.ts',
-  'browser': 'src/browser.ts',
-  'runners': 'src/runners.ts',
+  'suite': 'src/public/suite.ts',
+  'browser': 'src/public/browser.ts',
+  'runners': 'src/public/runners.ts',
   'environments': 'src/public/environments.ts',
   'spy': 'src/integrations/spy.ts',
-  'coverage': 'src/coverage.ts',
+  'coverage': 'src/public/coverage.ts',
   'utils': 'src/public/utils.ts',
   'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
   // TODO: advanced docs
-  'workers': 'src/workers.ts',
+  'workers': 'src/public/workers.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   'worker': 'src/runtime/worker.ts',
@@ -41,23 +41,23 @@ const entries = {
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
 
-  'snapshot': 'src/snapshot.ts',
+  'snapshot': 'src/public/snapshot.ts',
 }
 
 const dtsEntries = {
   index: 'src/public/index.ts',
   node: 'src/public/node.ts',
   environments: 'src/public/environments.ts',
-  browser: 'src/browser.ts',
-  runners: 'src/runners.ts',
-  suite: 'src/suite.ts',
-  config: 'src/config.ts',
-  coverage: 'src/coverage.ts',
+  browser: 'src/public/browser.ts',
+  runners: 'src/public/runners.ts',
+  suite: 'src/public/suite.ts',
+  config: 'src/public/config.ts',
+  coverage: 'src/public/coverage.ts',
   utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
-  workers: 'src/workers.ts',
-  snapshot: 'src/snapshot.ts',
+  workers: 'src/public/workers.ts',
+  snapshot: 'src/public/snapshot.ts',
 }
 
 const external = [
@@ -114,7 +114,7 @@ export default ({ watch }) =>
       onwarn,
     },
     {
-      input: 'src/config.ts',
+      input: 'src/public/config.ts',
       output: [
         {
           file: 'dist/config.cjs',

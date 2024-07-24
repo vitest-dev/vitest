@@ -1065,4 +1065,4 @@ export type ProjectConfig = Omit<
   }
 }
 
-export type { UserWorkspaceConfig } from '../../config'
+export type { UserWorkspaceConfig } from '../../public/config'

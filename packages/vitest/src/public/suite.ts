@@ -8,4 +8,4 @@ export {
   setHooks,
 } from '@vitest/runner'
 export { createChainable } from '@vitest/runner/utils'
-export { getBenchFn, getBenchOptions } from './runtime/benchmark'
+export { getBenchFn, getBenchOptions } from '../runtime/benchmark'
