@@ -2,6 +2,81 @@
 import '../node/types/vite'
 import '../types/global'
 
+import type {
+  CollectLineNumbers as CollectLineNumbers_,
+  CollectLines as CollectLines_,
+  Context as Context_,
+  RawErrsMap as RawErrsMap_,
+  RootAndTarget as RootAndTarget_,
+  TscErrorInfo as TscErrorInfo_,
+} from '../typecheck/types'
+
+import type {
+  ArgumentsType as ArgumentsType_,
+  Arrayable as Arrayable_,
+  Awaitable as Awaitable_,
+  Constructable as Constructable_,
+  MutableArray as MutableArray_,
+  Nullable as Nullable_,
+  OnServerRestartHandler as OnServerRestartHandler_,
+} from '../types/general'
+
+import type {
+  EnvironmentReturn as EnvironmentReturn_,
+  Environment as Environment_,
+  ResolvedTestEnvironment as ResolvedTestEnvironment_,
+  VmEnvironmentReturn as VmEnvironmentReturn_,
+} from '../types/environment'
+
+import type {
+  BaseCoverageOptions as BaseCoverageOptions_,
+  CoverageIstanbulOptions as CoverageIstanbulOptions_,
+  CoverageOptions as CoverageOptions_,
+  CoverageProviderModule as CoverageProviderModule_,
+  CoverageProvider as CoverageProvider_,
+  CoverageReporter as CoverageReporter_,
+  CoverageV8Options as CoverageV8Options_,
+  CustomProviderOptions as CustomProviderOptions_,
+  ReportContext as ReportContext_,
+  ResolvedCoverageOptions as ResolvedCoverageOptions_,
+} from '../node/types/coverage'
+
+import type {
+  /** @deprecated import from `vitest/node` instead */
+  Reporter as Reporter_,
+} from '../node/types/reporter'
+import type {
+  /** @deprecated import from `vitest/node` instead */
+  Vitest as Vitest_,
+} from '../node/core'
+import type {
+  ApiConfig as ApiConfig_,
+  BrowserConfigOptions as BrowserConfigOptions_,
+  BrowserScript as BrowserScript_,
+  BuiltinEnvironment as BuiltinEnvironment_,
+  CSSModuleScopeStrategy as CSSModuleScopeStrategy_,
+  DepsOptimizationOptions as DepsOptimizationOptions_,
+  EnvironmentOptions as EnvironmentOptions_,
+  HappyDOMOptions as HappyDOMOptions_,
+  InlineConfig as InlineConfig_,
+  JSDOMOptions as JSDOMOptions_,
+  PoolOptions as PoolOptions_,
+  Pool as Pool_,
+  ProjectConfig as ProjectConfig_,
+  ResolvedConfig as ResolvedConfig_,
+  SequenceHooks as SequenceHooks_,
+  SequenceSetupFiles as SequenceSetupFiles_,
+  TransformModePatterns as TransformModePatterns_,
+  TypecheckConfig as TypecheckConfig_,
+  UserConfig as UserConfig_,
+  UserWorkspaceConfig as UserWorkspaceConfig_,
+  VitestEnvironment as VitestEnvironment_,
+  VitestRunMode as VitestRunMode_,
+} from '../node/types/config'
+import type {
+  BenchmarkUserOptions as BenchmarkUserOptions_,
+} from '../node/types/benchmark'
+
 export {
   suite,
   test,
@@ -28,20 +103,19 @@ export type { VitestUtils } from '../integrations/vi'
 
 export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 export type { AssertType } from '../typecheck/assertType'
-export type {
-  /** @deprecated import from `vitest/node` instead */
-  RawErrsMap,
-  /** @deprecated import from `vitest/node` instead */
-  TscErrorInfo,
-  /** @deprecated import from `vitest/node` instead */
-  CollectLineNumbers,
-  /** @deprecated import from `vitest/node` instead */
-  CollectLines,
-  /** @deprecated import from `vitest/node` instead */
-  RootAndTarget,
-  /** @deprecated import from `vitest/node` instead */
-  Context,
-} from '../typecheck/types'
+
+/** @deprecated import from `vitest/node` instead */
+export type RawErrsMap = RawErrsMap_
+/** @deprecated import from `vitest/node` instead */
+export type TscErrorInfo = TscErrorInfo_
+/** @deprecated import from `vitest/node` instead */
+export type CollectLineNumbers = CollectLineNumbers_
+/** @deprecated import from `vitest/node` instead */
+export type CollectLines = CollectLines_
+/** @deprecated import from `vitest/node` instead */
+export type RootAndTarget = RootAndTarget_
+/** @deprecated import from `vitest/node` instead */
+export type Context = Context_
 
 export type {
   RunMode,
@@ -99,63 +173,60 @@ export type {
   WorkerContext,
 } from '../node/types/worker'
 
+/** @deprecated do not use, internal helper */
+export type Awaitable<T> = Awaitable_<T>
+/** @deprecated do not use, internal helper */
+export type Nullable<T> = Nullable_<T>
+/** @deprecated do not use, internal helper */
+export type Arrayable<T> = Arrayable_<T>
+/** @deprecated do not use, internal helper */
+export type ArgumentsType<T> = ArgumentsType_<T>
+/** @deprecated do not use, internal helper */
+export type MutableArray<T extends readonly any[]> = MutableArray_<T>
+/** @deprecated do not use, internal helper */
+export type Constructable = Constructable_
+/** @deprecated import from `vitest/node` instead */
+export type OnServerRestartHandler = OnServerRestartHandler_
+
 export type {
   ErrorWithDiff,
   ParsedStack,
-  /**
-   * @deprecated do not use, internal helper
-   */
-  Awaitable,
-  /** @deprecated do not use, internal helper */
-  Nullable,
-  /** @deprecated do not use, internal helper */
-  Arrayable,
-  /** @deprecated do not use, internal helper */
-  ArgumentsType,
-  /** @deprecated do not use, internal helper */
-  MutableArray,
-  /** @deprecated do not use, internal helper */
-  Constructable,
   ModuleCache,
   UserConsoleLog,
   ModuleGraphData,
-  /** @deprecated import from `vitest/node` instead */
-  OnServerRestartHandler,
   ProvidedContext,
   AfterSuiteRunMeta,
 } from '../types/general'
-export type {
-  /** @deprecated import from `vitest/environments` instead */
-  EnvironmentReturn,
-  /** @deprecated import from `vitest/environments` instead */
-  VmEnvironmentReturn,
-  /** @deprecated import from `vitest/environments` instead */
-  Environment,
-  /** @deprecated do not use it */
-  ResolvedTestEnvironment,
-} from '../types/environment'
-export type {
-  /** @deprecated import from `vitest/node` instead */
-  CoverageProvider,
-  /** @deprecated import from `vitest/node` instead */
-  ReportContext,
-  /** @deprecated import from `vitest/node` instead */
-  CoverageProviderModule,
-  /** @deprecated import from `vitest/node` instead */
-  CoverageReporter,
-  /** @deprecated import from `vitest/node` instead */
-  CoverageOptions,
-  /** @deprecated import from `vitest/node` instead */
-  ResolvedCoverageOptions,
-  /** @deprecated import from `vitest/node` instead */
-  BaseCoverageOptions,
-  /** @deprecated import from `vitest/node` instead */
-  CoverageIstanbulOptions,
-  /** @deprecated import from `vitest/node` instead */
-  CoverageV8Options,
-  /** @deprecated import from `vitest/node` instead */
-  CustomProviderOptions,
-} from '../node/types/coverage'
+
+/** @deprecated import from `vitest/environments` instead */
+export type EnvironmentReturn = EnvironmentReturn_
+/** @deprecated import from `vitest/environments` instead */
+export type VmEnvironmentReturn = VmEnvironmentReturn_
+/** @deprecated import from `vitest/environments` instead */
+export type Environment = Environment_
+/** @deprecated do not use it */
+export type ResolvedTestEnvironment = ResolvedTestEnvironment_
+
+/** @deprecated import from `vitest/node` instead */
+export type CoverageProvider = CoverageProvider_
+/** @deprecated import from `vitest/node` instead */
+export type ReportContext = ReportContext_
+/** @deprecated import from `vitest/node` instead */
+export type CoverageProviderModule = CoverageProviderModule_
+/** @deprecated import from `vitest/node` instead */
+export type CoverageReporter = CoverageReporter_
+/** @deprecated import from `vitest/node` instead */
+export type CoverageOptions = CoverageOptions_
+/** @deprecated import from `vitest/node` instead */
+export type ResolvedCoverageOptions = ResolvedCoverageOptions_
+/** @deprecated import from `vitest/node` instead */
+export type BaseCoverageOptions = BaseCoverageOptions_
+/** @deprecated import from `vitest/node` instead */
+export type CoverageIstanbulOptions = CoverageIstanbulOptions_
+/** @deprecated import from `vitest/node` instead */
+export type CoverageV8Options = CoverageV8Options_
+/** @deprecated import from `vitest/node` instead */
+export type CustomProviderOptions = CustomProviderOptions_
 
 export type { CancelReason } from '@vitest/runner'
 export type { DiffOptions } from '@vitest/utils/diff'
@@ -170,14 +241,10 @@ export type {
 } from '../integrations/spy'
 export type { BrowserUI } from '../types/ui'
 
-export type {
-  /** @deprecated import from `vitest/node` instead */
-  Reporter,
-} from '../node/types/reporter'
-export type {
-  /** @deprecated import from `vitest/node` instead */
-  Vitest,
-} from '../node/core'
+/** @deprecated import from `vitest/node` instead */
+export type Reporter = Reporter_
+/** @deprecated import from `vitest/node` instead */
+export type Vitest = Vitest_
 
 export type {
   ExpectStatic,
@@ -192,52 +259,51 @@ export type {
   RuntimeConfig,
   SerializedCoverageConfig,
 } from '../runtime/config'
-export type {
-  /** @deprecated import from `vitest/node` instead */
-  BrowserScript,
-  /** @deprecated import from `vitest/node` instead */
-  BrowserConfigOptions,
-  /** @deprecated import from `vitest/node` instead */
-  SequenceHooks,
-  /** @deprecated import from `vitest/node` instead */
-  SequenceSetupFiles,
-  /** @deprecated import from `vitest/node` instead */
-  BuiltinEnvironment,
-  /** @deprecated import from `vitest/node` instead */
-  VitestEnvironment,
-  /** @deprecated import from `vitest/node` instead */
-  Pool,
-  /** @deprecated import from `vitest/node` instead */
-  PoolOptions,
-  /** @deprecated import from `vitest/node` instead */
-  CSSModuleScopeStrategy,
-  /** @deprecated import from `vitest/node` instead */
-  ApiConfig,
-  /** @deprecated import from `vitest/node` instead */
-  JSDOMOptions,
-  /** @deprecated import from `vitest/node` instead */
-  HappyDOMOptions,
-  /** @deprecated import from `vitest/node` instead */
-  EnvironmentOptions,
-  /** @deprecated import from `vitest/node` instead */
-  VitestRunMode,
-  /** @deprecated import from `vitest/node` instead */
-  DepsOptimizationOptions,
-  /** @deprecated import from `vitest/node` instead */
-  TransformModePatterns,
-  /** @deprecated import from `vitest/node` instead */
-  InlineConfig,
-  /** @deprecated import from `vitest/node` instead */
-  TypecheckConfig,
-  /** @deprecated import from `vitest/node` instead */
-  UserConfig,
-  /** @deprecated import from `vitest/node` instead */
-  ResolvedConfig,
-  /** @deprecated import from `vitest/node` instead */
-  ProjectConfig,
-  /** @deprecated import from `vitest/node` instead */
-  UserWorkspaceConfig,
-} from '../node/types/config'
+
+/** @deprecated import from `vitest/node` instead */
+export type BrowserScript = BrowserScript_
+/** @deprecated import from `vitest/node` instead */
+export type BrowserConfigOptions = BrowserConfigOptions_
+/** @deprecated import from `vitest/node` instead */
+export type SequenceHooks = SequenceHooks_
+/** @deprecated import from `vitest/node` instead */
+export type SequenceSetupFiles = SequenceSetupFiles_
+/** @deprecated import from `vitest/node` instead */
+export type BuiltinEnvironment = BuiltinEnvironment_
+/** @deprecated import from `vitest/node` instead */
+export type VitestEnvironment = VitestEnvironment_
+/** @deprecated import from `vitest/node` instead */
+export type Pool = Pool_
+/** @deprecated import from `vitest/node` instead */
+export type PoolOptions = PoolOptions_
+/** @deprecated import from `vitest/node` instead */
+export type CSSModuleScopeStrategy = CSSModuleScopeStrategy_
+/** @deprecated import from `vitest/node` instead */
+export type ApiConfig = ApiConfig_
+/** @deprecated import from `vitest/node` instead */
+export type JSDOMOptions = JSDOMOptions_
+/** @deprecated import from `vitest/node` instead */
+export type HappyDOMOptions = HappyDOMOptions_
+/** @deprecated import from `vitest/node` instead */
+export type EnvironmentOptions = EnvironmentOptions_
+/** @deprecated import from `vitest/node` instead */
+export type VitestRunMode = VitestRunMode_
+/** @deprecated import from `vitest/node` instead */
+export type DepsOptimizationOptions = DepsOptimizationOptions_
+/** @deprecated import from `vitest/node` instead */
+export type TransformModePatterns = TransformModePatterns_
+/** @deprecated import from `vitest/node` instead */
+export type InlineConfig = InlineConfig_
+/** @deprecated import from `vitest/node` instead */
+export type TypecheckConfig = TypecheckConfig_
+/** @deprecated import from `vitest/node` instead */
+export type UserConfig = UserConfig_
+/** @deprecated import from `vitest/node` instead */
+export type ResolvedConfig = ResolvedConfig_
+/** @deprecated import from `vitest/node` instead */
+export type ProjectConfig = ProjectConfig_
+/** @deprecated import from `vitest/node` instead */
+export type UserWorkspaceConfig = UserWorkspaceConfig_
 
 export type {
   Benchmark,
@@ -249,10 +315,9 @@ export type {
   BenchFactory,
   BenchTask,
 } from '../runtime/types/benchmark'
-export type {
-  /** @deprecated import from `vitest/node` instead */
-  BenchmarkUserOptions,
-} from '../node/types/benchmark'
+
+/** @deprecated import from `vitest/node` instead */
+export type BenchmarkUserOptions = BenchmarkUserOptions_
 
 export type {
   TransformResultWithSource,
