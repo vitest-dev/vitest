@@ -102,7 +102,9 @@ export type {
 export type {
   ErrorWithDiff,
   ParsedStack,
-  /** @deprecated do not use, internal helper */
+  /**
+   * @deprecated do not use, internal helper
+   */
   Awaitable,
   /** @deprecated do not use, internal helper */
   Nullable,

@@ -1,7 +1,7 @@
 import type { TransformResult as ViteTransformResult } from 'vite'
 import type { ReportOptions } from 'istanbul-reports'
-import type { Vitest } from '../../node'
 import type { AfterSuiteRunMeta, Arrayable } from '../../types/general'
+import type { Vitest } from '../core'
 
 type TransformResult =
   | string

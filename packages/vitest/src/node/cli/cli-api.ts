@@ -5,13 +5,13 @@ import { dirname, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { File, Suite, Task } from '@vitest/runner'
 import { CoverageProviderMap } from '../../integrations/coverage'
-import { getEnvPackageName } from '../../integrations/env'
+import type { environments } from '../../integrations/env'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
 import type { Vitest, VitestOptions } from '../core'
 import { FilesNotFoundError, GitNotFoundError } from '../errors'
 import { getNames, getTests } from '../../utils'
-import type { UserConfig, VitestRunMode } from '../types/config'
+import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -235,4 +235,26 @@ export function formatCollectedAsString(files: File[]) {
       return name
     })
   }).flat()
+}
+
+const envPackageNames: Record<
+  Exclude<keyof typeof environments, 'node'>,
+  string
+> = {
+  'jsdom': 'jsdom',
+  'happy-dom': 'happy-dom',
+  'edge-runtime': '@edge-runtime/vm',
+}
+
+function getEnvPackageName(env: VitestEnvironment) {
+  if (env === 'node') {
+    return null
+  }
+  if (env in envPackageNames) {
+    return (envPackageNames as any)[env]
+  }
+  if (env[0] === '.' || env[0] === '/') {
+    return null
+  }
+  return `vitest-environment-${env}`
 }

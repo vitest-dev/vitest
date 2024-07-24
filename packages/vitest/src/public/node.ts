@@ -1,28 +1,28 @@
-export type { Vitest } from './core'
-export type { WorkspaceProject } from './workspace'
-export { createVitest } from './create'
-export { VitestPlugin } from './plugins'
-export { startVitest } from './cli/cli-api'
-export { parseCLI } from './cli/cac'
-export { registerConsoleShortcuts } from './stdin'
-export type { GlobalSetupContext } from './globalSetup'
-export type { WorkspaceSpec, ProcessPool } from './pool'
-export { createMethodsRPC } from './pools/rpc'
-export { getFilePoolName } from './pool'
-export { VitestPackageInstaller } from './packageInstaller'
+export type { Vitest } from '../node/core'
+export type { WorkspaceProject } from '../node/workspace'
+export { createVitest } from '../node/create'
+export { VitestPlugin } from '../node/plugins'
+export { startVitest } from '../node/cli/cli-api'
+export { parseCLI } from '../node/cli/cac'
+export { registerConsoleShortcuts } from '../node/stdin'
+export type { GlobalSetupContext } from '../node/globalSetup'
+export type { WorkspaceSpec, ProcessPool } from '../node/pool'
+export { createMethodsRPC } from '../node/pools/rpc'
+export { getFilePoolName } from '../node/pool'
+export { VitestPackageInstaller } from '../node/packageInstaller'
 export { createDebugger } from '../utils/debugger'
-export { resolveFsAllow } from './plugins/utils'
-export { resolveApiServerConfig, resolveConfig } from './config/resolveConfig'
+export { resolveFsAllow } from '../node/plugins/utils'
+export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
 
-export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from './errors'
+export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 
 export { distDir, rootDir } from '../paths'
 
 export type {
   TestSequencer,
   TestSequencerConstructor,
-} from './sequencers/types'
-export { BaseSequencer } from './sequencers/BaseSequencer'
+} from '../node/sequencers/types'
+export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
 export type {
   BrowserProviderInitializationOptions,
@@ -40,10 +40,10 @@ export type {
   BrowserServerStateContext,
   BrowserOrchestrator,
   BrowserConfigOptions,
-} from './types/browser'
-export type { JsonOptions } from './reporters/json'
-export type { JUnitOptions } from './reporters/junit'
-export type { HTMLOptions } from './reporters/html'
+} from '../node/types/browser'
+export type { JsonOptions } from '../node/reporters/json'
+export type { JUnitOptions } from '../node/reporters/junit'
+export type { HTMLOptions } from '../node/reporters/html'
 
 export { isFileServingAllowed, createServer, parseAst, parseAstAsync } from 'vite'
 export type * as Vite from 'vite'
@@ -70,9 +70,9 @@ export type {
   ProjectConfig,
   UserWorkspaceConfig,
   RuntimeConfig,
-} from './types/config'
+} from '../node/types/config'
 
-export type { BenchmarkUserOptions } from './types/benchmark'
+export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
 export type {
   RawErrsMap,
@@ -96,6 +96,6 @@ export type {
   CoverageIstanbulOptions,
   CoverageV8Options,
   CustomProviderOptions,
-} from './types/coverage'
+} from '../node/types/coverage'
 
-export type { WorkerContext } from './types/worker'
+export type { WorkerContext } from '../node/types/worker'

@@ -19,7 +19,7 @@ const entries = {
   'path': 'src/paths.ts',
   'index': 'src/public/index.ts',
   'cli': 'src/node/cli.ts',
-  'node': 'src/node.ts',
+  'node': 'src/public/node.ts',
   'suite': 'src/suite.ts',
   'browser': 'src/browser.ts',
   'runners': 'src/runners.ts',
@@ -46,7 +46,7 @@ const entries = {
 
 const dtsEntries = {
   index: 'src/public/index.ts',
-  node: 'src/node.ts',
+  node: 'src/public/node.ts',
   environments: 'src/environments.ts',
   browser: 'src/browser.ts',
   runners: 'src/runners.ts',

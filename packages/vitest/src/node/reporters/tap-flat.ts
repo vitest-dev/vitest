@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import type { Vitest } from '../../node'
+import type { Vitest } from '../core'
 import { TapReporter } from './tap'
 
 function flattenTasks(task: Task, baseName = ''): Task[] {
