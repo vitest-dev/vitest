@@ -1,5 +1,5 @@
 import type { ResolvedConfig as ViteConfig } from 'vite'
-import type { ResolvedConfig, SerializedConfig } from '../../types/config'
+import type { ResolvedConfig, SerializedConfig } from '../types/config'
 
 export function serializeConfig(
   config: ResolvedConfig,

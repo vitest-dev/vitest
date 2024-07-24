@@ -16,7 +16,7 @@ import type { WorkspaceProject } from '../workspace'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { groupBy, resolve } from '../../utils'
-import type { SerializedConfig } from '../../types/config'
+import type { SerializedConfig } from '../types/config'
 import { createMethodsRPC } from './rpc'
 
 function createChildProcessChannel(project: WorkspaceProject) {

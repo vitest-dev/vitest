@@ -12,12 +12,12 @@ import type {
   File,
   ModuleGraphData,
   Reporter,
-  SerializableSpec,
   TaskResultPack,
   UserConsoleLog,
 } from '../types'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
+import type { SerializedSpec } from '../runtime/types/utils'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -165,7 +165,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onSpecsCollected(specs?: SerializableSpec[] | undefined): Awaitable<void> {
+  onSpecsCollected(specs?: SerializedSpec[] | undefined): Awaitable<void> {
     if (this.clients.size === 0) {
       return
     }

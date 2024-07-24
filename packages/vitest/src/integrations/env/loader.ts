@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { normalize, resolve } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import type { BuiltinEnvironment, VitestEnvironment } from '../../types/config'
+import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
 import type { ContextRPC, Environment, WorkerRPC } from '../../types'
 import { environments } from './index'
 

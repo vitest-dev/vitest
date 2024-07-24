@@ -6,12 +6,12 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { File, Suite, Task } from '@vitest/runner'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { getEnvPackageName } from '../../integrations/env'
-import type { UserConfig, Vitest, VitestRunMode } from '../../types'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
-import type { VitestOptions } from '../core'
+import type { Vitest, VitestOptions } from '../core'
 import { FilesNotFoundError, GitNotFoundError } from '../errors'
 import { getNames, getTests } from '../../utils'
+import type { UserConfig, VitestRunMode } from '../types/config'
 
 export interface CliOptions extends UserConfig {
   /**

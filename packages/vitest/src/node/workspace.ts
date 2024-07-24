@@ -26,11 +26,11 @@ import type {
   ResolvedConfig,
   UserConfig,
   UserWorkspaceConfig,
-} from '../types/config'
+} from './types/config'
 import type { Typechecker } from '../typecheck/typechecker'
 import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
-import type { BrowserServer } from '../types/browser'
+import type { BrowserServer } from './types/browser'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'

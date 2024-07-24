@@ -5,7 +5,7 @@ import type {
   UserConfig as ViteConfig,
 } from 'vite'
 import { dirname } from 'pathe'
-import type { DepsOptimizationOptions, InlineConfig } from '../../types/config'
+import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
 import { VitestCache } from '../cache'
 import { rootDir } from '../../paths'
 

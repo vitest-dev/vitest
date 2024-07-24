@@ -1,14 +1,13 @@
 import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
-import type { CancelReason } from '@vitest/runner'
+import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
+import type { SnapshotResult } from '@vitest/snapshot'
 import type {
   EnvironmentOptions,
   Pool,
   SerializedConfig,
   VitestEnvironment,
-} from './config'
+} from '../node/types/config'
 import type { Environment, UserConsoleLog } from './general'
-import type { SnapshotResult } from './snapshot'
-import type { File, TaskResultPack } from './tasks'
 import type { AfterSuiteRunMeta } from './worker'
 
 type TransformMode = 'web' | 'ssr'
@@ -16,16 +15,16 @@ type TransformMode = 'web' | 'ssr'
 export interface RuntimeRPC {
   fetch: (
     id: string,
-    environment: TransformMode
+    transformMode: TransformMode
   ) => Promise<{
     externalize?: string
     id?: string
   }>
-  transform: (id: string, environment: TransformMode) => Promise<FetchResult>
+  transform: (id: string, transformMode: TransformMode) => Promise<FetchResult>
   resolveId: (
     id: string,
     importer: string | undefined,
-    environment: TransformMode
+    transformMode: TransformMode
   ) => Promise<ViteNodeResolveId | null>
   getSourceMap: (
     id: string,

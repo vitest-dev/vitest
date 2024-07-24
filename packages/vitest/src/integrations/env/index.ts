@@ -1,4 +1,4 @@
-import type { VitestEnvironment } from '../../types/config'
+import type { VitestEnvironment } from '../../node/types/config'
 import node from './node'
 import jsdom from './jsdom'
 import happy from './happy-dom'

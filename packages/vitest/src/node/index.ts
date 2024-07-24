@@ -40,7 +40,7 @@ export type {
   BrowserServerStateContext,
   BrowserOrchestrator,
   BrowserConfigOptions,
-} from '../types/browser'
+} from './types/browser'
 export type { JsonOptions } from './reporters/json'
 export type { JUnitOptions } from './reporters/junit'
 export type { HTMLOptions } from './reporters/html'
@@ -70,4 +70,30 @@ export type {
   ProjectConfig,
   UserWorkspaceConfig,
   RuntimeConfig,
-} from '../types/config'
+} from './types/config'
+
+export type { BenchmarkUserOptions } from './types/benchmark'
+
+export type {
+  RawErrsMap,
+  TscErrorInfo,
+  CollectLineNumbers,
+  CollectLines,
+  RootAndTarget,
+  Context,
+} from '../typecheck/types'
+
+export type { OnServerRestartHandler } from '../types/general'
+
+export type {
+  CoverageProvider,
+  ReportContext,
+  CoverageProviderModule,
+  CoverageReporter,
+  CoverageOptions,
+  ResolvedCoverageOptions,
+  BaseCoverageOptions,
+  CoverageIstanbulOptions,
+  CoverageV8Options,
+  CustomProviderOptions,
+} from './types/coverage'

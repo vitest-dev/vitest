@@ -12,7 +12,7 @@ import type {
   BenchTask,
   Benchmark,
   BenchmarkResult,
-} from '../../types/benchmark'
+} from '../types/benchmark'
 import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
 

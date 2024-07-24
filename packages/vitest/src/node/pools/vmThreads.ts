@@ -18,7 +18,7 @@ import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
-import type { SerializedConfig } from '../../types/config'
+import type { SerializedConfig } from '../types/config'
 import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')

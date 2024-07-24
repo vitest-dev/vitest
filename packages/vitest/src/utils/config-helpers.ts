@@ -1,4 +1,4 @@
-import type { SerializedConfig } from '../types/config'
+import type { SerializedConfig } from '../node/types/config'
 import type {
   BenchmarkBuiltinReporters,
   BuiltinReporters,

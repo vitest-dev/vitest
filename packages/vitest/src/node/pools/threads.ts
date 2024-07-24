@@ -15,7 +15,7 @@ import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
-import type { SerializedConfig } from '../../types/config'
+import type { SerializedConfig } from '../types/config'
 import { createMethodsRPC } from './rpc'
 
 function createWorkerChannel(project: WorkspaceProject) {

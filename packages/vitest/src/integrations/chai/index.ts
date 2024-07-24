@@ -11,8 +11,7 @@ import {
   getState,
   setState,
 } from '@vitest/expect'
-import type { Assertion, ExpectStatic } from '@vitest/expect'
-import type { MatcherState } from '../../types/chai'
+import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
 import { getTestName } from '../../utils/tasks'
 import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
 import { createExpectPoll } from './poll'

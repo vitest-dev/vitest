@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { dirname, relative, resolve } from 'pathe'
 import type { File } from '../../types'
-import type { ResolvedConfig } from '../../types/config'
+import type { ResolvedConfig } from '../types/config'
 
 export interface SuiteResultCache {
   failed: boolean

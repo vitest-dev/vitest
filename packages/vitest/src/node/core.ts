@@ -12,13 +12,14 @@ import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
 import { version } from '../../package.json' with { type: 'json' }
-import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, ProvidedContext, Reporter, ResolvedConfig, SerializableSpec, UserConfig, UserConsoleLog, UserWorkspaceConfig, VitestRunMode } from '../types'
+import type { ArgumentsType, CoverageProvider, OnServerRestartHandler, ProvidedContext, Reporter, ResolvedConfig, UserConfig, UserConsoleLog, UserWorkspaceConfig, VitestRunMode } from '../types'
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
+import type { SerializedSpec } from '../runtime/types/utils'
 import { createPool } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -671,7 +672,7 @@ export class Vitest {
     await this.report('onPathsCollected', filepaths)
     await this.report('onSpecsCollected', specs.map(
       ([project, file]) =>
-        [{ name: project.config.name, root: project.config.root }, file] as SerializableSpec,
+        [{ name: project.config.name, root: project.config.root }, file] as SerializedSpec,
     ))
 
     // previous run
