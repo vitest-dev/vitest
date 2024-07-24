@@ -1,4 +1,6 @@
 import type { Awaitable } from './general'
+import type { HappyDOMOptions } from './happy-dom-options'
+import type { JSDOMOptions } from './jsdom-options'
 
 export interface EnvironmentReturn {
   teardown: (global: any) => Awaitable<void>
@@ -17,6 +19,15 @@ export interface Environment {
     global: any,
     options: Record<string, any>
   ) => Awaitable<EnvironmentReturn>
+}
+
+export interface EnvironmentOptions {
+  /**
+   * jsdom options.
+   */
+  jsdom?: JSDOMOptions
+  happyDOM?: HappyDOMOptions
+  [x: string]: unknown
 }
 
 export interface ResolvedTestEnvironment {

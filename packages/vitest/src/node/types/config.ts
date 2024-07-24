@@ -11,9 +11,10 @@ import type {
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { Arrayable, ParsedStack } from '../../types/general'
+import type { JSDOMOptions } from '../../types/jsdom-options'
+import type { HappyDOMOptions } from '../../types/happy-dom-options'
+import type { EnvironmentOptions } from '../../types/environment'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
-import type { JSDOMOptions } from './jsdom-options'
-import type { HappyDOMOptions } from './happy-dom-options'
 import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Reporter } from './reporter'
@@ -43,16 +44,7 @@ export type ApiConfig = Pick<
   'port' | 'strictPort' | 'host' | 'middlewareMode'
 >
 
-export type { JSDOMOptions, HappyDOMOptions }
-
-export interface EnvironmentOptions {
-  /**
-   * jsdom options.
-   */
-  jsdom?: JSDOMOptions
-  happyDOM?: HappyDOMOptions
-  [x: string]: unknown
-}
+export type { JSDOMOptions, HappyDOMOptions, EnvironmentOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
 

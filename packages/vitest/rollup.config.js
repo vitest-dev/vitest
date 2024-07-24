@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { dirname, join, normalize, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -23,7 +23,7 @@ const entries = {
   'suite': 'src/suite.ts',
   'browser': 'src/browser.ts',
   'runners': 'src/runners.ts',
-  'environments': 'src/environments.ts',
+  'environments': 'src/public/environments.ts',
   'spy': 'src/integrations/spy.ts',
   'coverage': 'src/coverage.ts',
   'utils': 'src/public/utils.ts',
@@ -47,7 +47,7 @@ const entries = {
 const dtsEntries = {
   index: 'src/public/index.ts',
   node: 'src/public/node.ts',
-  environments: 'src/environments.ts',
+  environments: 'src/public/environments.ts',
   browser: 'src/browser.ts',
   runners: 'src/runners.ts',
   suite: 'src/suite.ts',
@@ -107,35 +107,7 @@ export default ({ watch }) =>
       output: {
         dir: 'dist',
         format: 'esm',
-        chunkFileNames: (chunkInfo) => {
-          let id
-            = chunkInfo.facadeModuleId
-            || Object.keys(chunkInfo.moduleIds).find(
-              i =>
-                !i.includes('node_modules')
-                && (i.includes('src/') || i.includes('src\\')),
-            )
-          if (id) {
-            id = normalize(id)
-            const parts = Array.from(
-              new Set(
-                relative(process.cwd(), id)
-                  .split(/\//g)
-                  .map(i => i.replace(/\..*$/, ''))
-                  .filter(
-                    i =>
-                      !['src', 'index', 'dist', 'node_modules'].some(j =>
-                        i.includes(j),
-                      ) && i.match(/^[\w-]+$/),
-                  ),
-              ),
-            )
-            if (parts.length) {
-              return `chunks/${parts.slice(-2).join('-')}.[hash].js`
-            }
-          }
-          return 'vendor/[name].[hash].js'
-        },
+        chunkFileNames: 'chunks/[name].[hash].js',
       },
       external,
       plugins: [...plugins, !watch && licensePlugin()],
@@ -163,6 +135,7 @@ export default ({ watch }) =>
         entryFileNames: chunk =>
           `${normalize(chunk.name).replace('src/', '')}.d.ts`,
         format: 'esm',
+        chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
       external,
       plugins: [dts({ respectExternal: true })],

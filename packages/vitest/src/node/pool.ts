@@ -1,7 +1,7 @@
 import mm from 'micromatch'
 import type { Awaitable } from '@vitest/utils'
-import type { BuiltinPool, Pool } from './types/pool-options'
 import { isWindows } from '../utils/env'
+import type { BuiltinPool, Pool } from './types/pool-options'
 import type { Vitest } from './core'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
