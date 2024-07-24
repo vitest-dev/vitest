@@ -1,4 +1,3 @@
-import { resolve } from 'node:path'
 import antfu, { GLOB_SRC } from '@antfu/eslint-config'
 
 export default antfu(
@@ -78,11 +77,7 @@ export default antfu(
       'no-restricted-imports': [
         'error',
         {
-          paths: [
-            'vitest',
-            'path',
-            resolve(__dirname, 'packages/vitest/src/index.ts'),
-          ],
+          paths: ['vitest', 'path'],
         },
       ],
     },
