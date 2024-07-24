@@ -86,9 +86,9 @@ type CoverageReporterWithOptions<
     : [ReporterName, Partial<ReportOptions[ReporterName]>]
   : [ReporterName, Record<string, unknown>]
 
-type Provider = 'v8' | 'istanbul' | 'custom' | undefined
+export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
 
-export type CoverageOptions<T extends Provider = Provider> =
+export type CoverageOptions<T extends CoverageProviderName = CoverageProviderName> =
   T extends 'istanbul'
     ? { provider: T } & CoverageIstanbulOptions
     : T extends 'v8' ? {
@@ -115,7 +115,7 @@ type FieldsWithDefaultValues =
   | 'allowExternal'
   | 'processingConcurrency'
 
-export type ResolvedCoverageOptions<T extends Provider = Provider> =
+export type ResolvedCoverageOptions<T extends CoverageProviderName = CoverageProviderName> =
   CoverageOptions<T> &
   Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>> & { // Resolved fields which may have different typings as public configuration API has
     reporter: CoverageReporterWithOptions[]

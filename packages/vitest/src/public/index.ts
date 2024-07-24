@@ -33,6 +33,7 @@ import type {
   CoverageIstanbulOptions as CoverageIstanbulOptions_,
   CoverageOptions as CoverageOptions_,
   CoverageProviderModule as CoverageProviderModule_,
+  CoverageProviderName,
   CoverageProvider as CoverageProvider_,
   CoverageReporter as CoverageReporter_,
   CoverageV8Options as CoverageV8Options_,
@@ -216,9 +217,9 @@ export type CoverageProviderModule = CoverageProviderModule_
 /** @deprecated import from `vitest/node` instead */
 export type CoverageReporter = CoverageReporter_
 /** @deprecated import from `vitest/node` instead */
-export type CoverageOptions = CoverageOptions_
+export type CoverageOptions<T extends CoverageProviderName = CoverageProviderName> = CoverageOptions_<T>
 /** @deprecated import from `vitest/node` instead */
-export type ResolvedCoverageOptions = ResolvedCoverageOptions_
+export type ResolvedCoverageOptions<T extends CoverageProviderName = CoverageProviderName> = ResolvedCoverageOptions_<T>
 /** @deprecated import from `vitest/node` instead */
 export type BaseCoverageOptions = BaseCoverageOptions_
 /** @deprecated import from `vitest/node` instead */
