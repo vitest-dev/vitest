@@ -107,10 +107,16 @@ jobs:
         run: pnpm -C test/ui test-e2e
 
   test-browser:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
+        os:
+          - ubuntu-latest
+          - windows-latest
+        browser:
+          - [chrome, chromium]
+          - [firefox, firefox]
+          - [edge, webkit]
       fail-fast: false
 
     timeout-minutes: 30
@@ -123,45 +129,11 @@ jobs:
           node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
+        if: ${{ matrix.browser[0] == 'chrome' }}
       - uses: browser-actions/setup-firefox@v1
-
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
-        env:
-          BROWSER: ${{ matrix.browser[0] }}
-
-      - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[1] }}
-
-  test-browser-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        browser: [[chrome, chromium], [edge, webkit]]
-      fail-fast: false
-
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - uses: browser-actions/setup-chrome@v1
+        if: ${{ matrix.browser[0] == 'firefox' }}
       - uses: browser-actions/setup-edge@v1
+        if: ${{ matrix.browser[0] == 'edge' }}
 
       - name: Install
         run: pnpm i
