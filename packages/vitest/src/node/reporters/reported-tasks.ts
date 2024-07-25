@@ -391,13 +391,18 @@ export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
 export interface TestResultPassed {
   state: 'passed'
   /**
-   * If test was retried successfully, errors will still be reported.
+   * Errors that were thrown during the test execution.
+   *
+   * **Note**: If test was retried successfully, errors will still be reported.
    */
   errors: TestError[] | undefined
 }
 
 export interface TestResultFailed {
   state: 'failed'
+  /**
+   * Errors that were thrown during the test execution.
+   */
   errors: TestError[]
 }
 

@@ -73,7 +73,7 @@ describe.each([1])('each group %s', (groupValue) => {
   })
 })
 
-it('regesters a metadata', (ctx) => {
+it('registers a metadata', (ctx) => {
   ctx.task.meta.key = 'value'
 })
 

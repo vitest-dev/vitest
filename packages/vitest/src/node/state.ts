@@ -171,7 +171,7 @@ export class StateManager {
     }
   }
 
-  _experimental_getReportedEntity(task: Task) {
+  getReportedEntity(task: Task) {
     return this.reportedTasksMap.get(task)
   }
 

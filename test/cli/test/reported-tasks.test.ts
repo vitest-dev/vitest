@@ -36,7 +36,7 @@ beforeAll(async () => {
   project = ctx!.getCoreWorkspaceProject()
   files = state.getFiles()
   expect(files).toHaveLength(1)
-  testFile = state._experimental_getReportedEntity(files[0])! as TestFile
+  testFile = state.getReportedEntity(files[0])! as TestFile
   expect(testFile).toBeDefined()
 })
 
@@ -212,7 +212,7 @@ it('correctly reports repeated tests', () => {
 })
 
 it('correctly passed down metadata', () => {
-  const testMetadata = findTest(testFile.children, 'regesters a metadata')
+  const testMetadata = findTest(testFile.children, 'registers a metadata')
   const meta = testMetadata.meta()
   expect(meta.key).toBe('value')
 })
