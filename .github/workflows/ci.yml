@@ -77,7 +77,7 @@ jobs:
 
       - name: Install Playwright Dependencies
         if: steps.changed-files.outputs.only_changed != 'true'
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Build
         if: steps.changed-files.outputs.only_changed != 'true'
