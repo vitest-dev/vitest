@@ -195,6 +195,6 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'none' }}
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] != 'none' }}
         env:
           BROWSER: ${{ matrix.browser[0] }}
