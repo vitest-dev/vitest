@@ -111,7 +111,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
+          - macos-14
           - windows-latest
         browser:
           - [chrome, chromium]
@@ -133,7 +133,7 @@ jobs:
       - uses: browser-actions/setup-firefox@v1
         if: ${{ matrix.browser[0] == 'firefox' }}
       - uses: browser-actions/setup-edge@v1
-        if: ${{ matrix.browser[0] == 'edge' && matrix.os != 'ubuntu-latest' }}
+        if: ${{ matrix.browser[0] == 'edge' }}
 
       - name: Install
         run: pnpm i
