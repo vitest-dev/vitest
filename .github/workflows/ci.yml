@@ -103,9 +103,9 @@ jobs:
           - macos-14
           - windows-latest
         browser:
-          - [chrome, chromium]
+          - [chromium, chrome]
           - [firefox, firefox]
-          - [none, webkit]
+          - [webkit]
       fail-fast: false
 
     timeout-minutes: 30
@@ -129,7 +129,7 @@ jobs:
           node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
-        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'chrome' }}
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'chromium' }}
       - uses: browser-actions/setup-firefox@v1
         if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'firefox' }}
 
@@ -139,7 +139,7 @@ jobs:
 
       - name: Install Playwright Dependencies
         if: steps.changed-files.outputs.only_changed != 'true'
-        run: pnpm exec playwright install ${{ matrix.browser[1] }} --with-deps
+        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
 
       - name: Build
         if: steps.changed-files.outputs.only_changed != 'true'
@@ -149,10 +149,10 @@ jobs:
         if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:browser:playwright
         env:
-          BROWSER: ${{ matrix.browser[1] }}
+          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] != 'none' }}
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[1] }}
         env:
-          BROWSER: ${{ matrix.browser[0] }}
+          BROWSER: ${{ matrix.browser[1] }}
