@@ -201,6 +201,8 @@ export type {
   AfterSuiteRunMeta,
 } from '../types/general'
 
+export type { TestError, SerializedError } from '@vitest/utils'
+
 /** @deprecated import from `vitest/environments` instead */
 export type EnvironmentReturn = EnvironmentReturn_
 /** @deprecated import from `vitest/environments` instead */

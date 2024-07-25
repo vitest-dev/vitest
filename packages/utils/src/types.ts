@@ -32,16 +32,16 @@ export interface ParsedStack {
   column: number
 }
 
-export interface SerialisedError {
+export interface SerializedError {
   message: string
   stack?: string
   name?: string
   stacks?: ParsedStack[]
-  cause?: SerialisedError
+  cause?: SerializedError
   [key: string]: unknown
 }
 
-export interface TestError extends SerialisedError {
+export interface TestError extends SerializedError {
   cause?: TestError
   diff?: string
   actual?: string
