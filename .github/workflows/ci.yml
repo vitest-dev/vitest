@@ -144,12 +144,12 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
-        env:
-          BROWSER: ${{ matrix.browser[0] }}
-
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
+
+      - name: Test Browser (webdriverio)
+        run: pnpm run test:browser:webdriverio
+        env:
+          BROWSER: ${{ matrix.browser[0] }}
