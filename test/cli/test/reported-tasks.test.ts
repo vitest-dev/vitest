@@ -4,7 +4,7 @@ import type { File } from 'vitest'
 import type { StateManager } from 'vitest/src/node/state.js'
 import type { WorkspaceProject } from 'vitest/node'
 import { runVitest } from '../../test-utils'
-import type { TestFile } from '../../../packages/vitest/src/node/reporters/reported-tasks'
+import type { TestCase, TestCollection, TestFile } from '../../../packages/vitest/src/node/reporters/reported-tasks'
 
 const now = new Date()
 // const finishedFiles: File[] = []
@@ -58,12 +58,12 @@ it('correctly reports a file', () => {
 
   const tests = [...testFile.children.tests()]
   expect(tests).toHaveLength(11)
-  const deepTests = [...testFile.children.deepTests()]
+  const deepTests = [...testFile.children.allTests()]
   expect(deepTests).toHaveLength(19)
 
   const suites = [...testFile.children.suites()]
   expect(suites).toHaveLength(3)
-  const deepSuites = [...testFile.children.deepSuites()]
+  const deepSuites = [...testFile.children.allSuites()]
   expect(deepSuites).toHaveLength(4)
 
   const diagnostic = testFile.diagnostic()
@@ -77,7 +77,7 @@ it('correctly reports a file', () => {
 })
 
 it('correctly reports a passed test', () => {
-  const passedTest = testFile.children.find('test', 'runs a test')!
+  const passedTest = findTest(testFile.children, 'runs a test')
   expect(passedTest.type).toBe('test')
   expect(passedTest.task).toBe(files[0].tasks[0])
   expect(passedTest.name).toBe('runs a test')
@@ -110,7 +110,7 @@ it('correctly reports a passed test', () => {
 })
 
 it('correctly reports failed test', () => {
-  const passedTest = testFile.children.find('test', 'fails a test')!
+  const passedTest = findTest(testFile.children, 'fails a test')
   expect(passedTest.type).toBe('test')
   expect(passedTest.task).toBe(files[0].tasks[1])
   expect(passedTest.name).toBe('fails a test')
@@ -157,7 +157,7 @@ it('correctly reports failed test', () => {
 })
 
 it('correctly reports multiple failures', () => {
-  const testCase = testFile.children.find('test', 'fails multiple times')!
+  const testCase = findTest(testFile.children, 'fails multiple times')
   const result = testCase.result()!
   expect(result).toBeDefined()
   expect(result.state).toBe('failed')
@@ -171,26 +171,26 @@ it('correctly reports multiple failures', () => {
 })
 
 it('correctly reports test assigned options', () => {
-  const testOptionSkip = testFile.children.find('test', 'skips an option test')!
+  const testOptionSkip = findTest(testFile.children, 'skips an option test')
   expect(testOptionSkip.options.mode).toBe('skip')
-  const testModifierSkip = testFile.children.find('test', 'skips a .modifier test')!
+  const testModifierSkip = findTest(testFile.children, 'skips a .modifier test')
   expect(testModifierSkip.options.mode).toBe('skip')
 
-  const testOptionTodo = testFile.children.find('test', 'todos an option test')!
+  const testOptionTodo = findTest(testFile.children, 'todos an option test')
   expect(testOptionTodo.options.mode).toBe('todo')
-  const testModifierTodo = testFile.children.find('test', 'todos a .modifier test')!
+  const testModifierTodo = findTest(testFile.children, 'todos a .modifier test')
   expect(testModifierTodo.options.mode).toBe('todo')
 })
 
 it('correctly reports retried tests', () => {
-  const testRetry = testFile.children.find('test', 'retries a test')!
+  const testRetry = findTest(testFile.children, 'retries a test')
   expect(testRetry.options.retry).toBe(5)
   expect(testRetry.options.repeats).toBeUndefined()
   expect(testRetry.result()!.state).toBe('failed')
 })
 
 it('correctly reports flaky tests', () => {
-  const testFlaky = testFile.children.find('test', 'retries a test with success')!
+  const testFlaky = findTest(testFile.children, 'retries a test with success')
   const diagnostic = testFlaky.diagnostic()!
   expect(diagnostic.flaky).toBe(true)
   expect(diagnostic.retryCount).toBe(2)
@@ -201,7 +201,7 @@ it('correctly reports flaky tests', () => {
 })
 
 it('correctly reports repeated tests', () => {
-  const testRepeated = testFile.children.find('test', 'repeats a test')!
+  const testRepeated = findTest(testFile.children, 'repeats a test')
   const diagnostic = testRepeated.diagnostic()!
   expect(diagnostic.flaky).toBe(false)
   expect(diagnostic.retryCount).toBe(0)
@@ -212,22 +212,35 @@ it('correctly reports repeated tests', () => {
 })
 
 it('correctly passed down metadata', () => {
-  const testMetadata = testFile.children.find('test', 'regesters a metadata')!
+  const testMetadata = findTest(testFile.children, 'regesters a metadata')
   const meta = testMetadata.meta()
   expect(meta.key).toBe('value')
 })
 
-it('correctly finds test in nested suites', () => {
-  const oneNestedTest = testFile.children.deepFind('test', 'runs a test in a group')!
-  const oneTestedSuite = testFile.children.find('suite', 'a group')!
-  expect(oneNestedTest.parent).toEqual(oneTestedSuite)
-
-  const twoNestedTest = testFile.children.deepFind('test', 'runs a test in a nested group')!
-  expect(twoNestedTest.parent).toEqual(
-    oneTestedSuite.children.find('suite', 'a nested group'),
-  )
-})
-
 function date(time: Date) {
   return `${time.getDate()}/${time.getMonth() + 1}/${time.getFullYear()}`
+}
+
+function deepFind(children: TestCollection, name: string): TestCase | undefined {
+  for (const task of children) {
+    if (task.type === 'test') {
+      if (task.name === name) {
+        return task
+      }
+    }
+    if (task.type === 'suite') {
+      const result = deepFind(task.children, name)
+      if (result) {
+        return result
+      }
+    }
+  }
+}
+
+function findTest(children: TestCollection, name: string): TestCase {
+  const testCase = deepFind(children, name)
+  if (!testCase) {
+    throw new Error(`Test "${name}" not found`)
+  }
+  return testCase
 }

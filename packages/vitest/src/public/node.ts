@@ -50,6 +50,8 @@ export type * as Vite from 'vite'
 
 export { TestCase, TestFile, TestSuite } from '../node/reporters/reported-tasks'
 export type {
+  TestCollection,
+
   TaskOptions,
   TestDiagnostic,
   FileDiagnostic,

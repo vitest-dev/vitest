@@ -188,54 +188,12 @@ class TestCollection {
   }
 
   /**
-   * Looks for a test or a suite by `name` only inside the current suite.
-   * If `name` is a string, it will look for an exact match.
-   */
-  find(type: 'test', name: string | RegExp): TestCase | undefined
-  find(type: 'suite', name: string | RegExp): TestSuite | undefined
-  find(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined
-  find(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined {
-    const isString = typeof name === 'string'
-    for (const task of this) {
-      if (task.type === type) {
-        if (task.name === name || (!isString && name.test(task.name))) {
-          return task
-        }
-      }
-    }
-  }
-
-  /**
-   * Looks for a test or a suite by `name` inside the current suite and its children.
-   * If `name` is a string, it will look for an exact match.
-   */
-  deepFind(type: 'test', name: string | RegExp): TestCase | undefined
-  deepFind(type: 'suite', name: string | RegExp): TestSuite | undefined
-  deepFind(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined
-  deepFind(type: 'test' | 'suite', name: string | RegExp): TestCase | TestSuite | undefined {
-    const isString = typeof name === 'string'
-    for (const task of this) {
-      if (task.type === type) {
-        if (task.name === name || (!isString && name.test(task.name))) {
-          return task
-        }
-      }
-      if (task.type === 'suite') {
-        const result = task.children.deepFind(type, name)
-        if (result) {
-          return result
-        }
-      }
-    }
-  }
-
-  /**
    * Filters all tests that are part of this collection's suite and its children.
    */
-  *deepTests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+  *allTests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
     for (const child of this) {
       if (child.type === 'suite') {
-        yield * child.children.deepTests(state)
+        yield * child.children.allTests(state)
       }
       else if (state) {
         const testState = getTestState(child)
@@ -284,11 +242,11 @@ class TestCollection {
   /**
    * Filters all suites that are part of this collection's suite and its children.
    */
-  *deepSuites(): IterableIterator<TestSuite> {
+  *allSuites(): IterableIterator<TestSuite> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
-        yield * child.children.deepSuites()
+        yield * child.children.allSuites()
       }
     }
   }
