@@ -79,6 +79,6 @@ it('registers a metadata', (ctx) => {
 
 declare module 'vitest' {
   interface TaskMeta {
-    key: string
+    key?: string
   }
 }

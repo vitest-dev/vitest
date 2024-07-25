@@ -214,7 +214,7 @@ it('correctly reports repeated tests', () => {
 it('correctly passed down metadata', () => {
   const testMetadata = findTest(testFile.children, 'registers a metadata')
   const meta = testMetadata.meta()
-  expect(meta.key).toBe('value')
+  expect(meta).toHaveProperty('key', 'value')
 })
 
 function date(time: Date) {
