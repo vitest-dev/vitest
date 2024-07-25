@@ -190,6 +190,7 @@ describe('userEvent.hover, userEvent.unhover', () => {
   })
 
   test.runIf(server.provider === 'playwright')('hover, unhover correctly pass options', async () => {
+    interface ModifiersDetected { shift: boolean; control: boolean }
     type ModifierKeys = 'Shift' | 'Control' | 'Alt' | 'ControlOrMeta' | 'Meta'
 
     const hoverOptions = { modifiers: ['Shift'] as ModifierKeys[] }
@@ -199,9 +200,9 @@ describe('userEvent.hover, userEvent.unhover', () => {
     target.style.width = '100px'
     target.style.height = '100px'
 
-    let modifiersDetected: {
-      shift: boolean
-      control: boolean
+    let modifiersDetected: ModifiersDetected = {
+      shift: false,
+      control: false,
     }
 
     target.addEventListener('mouseover', (e) => {
