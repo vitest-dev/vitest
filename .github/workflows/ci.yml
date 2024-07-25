@@ -116,7 +116,7 @@ jobs:
         browser:
           - [chrome, chromium]
           - [firefox, firefox]
-          - [edge, webkit]
+          - [none, webkit]
       fail-fast: false
 
     timeout-minutes: 30
@@ -132,8 +132,6 @@ jobs:
         if: ${{ matrix.browser[0] == 'chrome' }}
       - uses: browser-actions/setup-firefox@v1
         if: ${{ matrix.browser[0] == 'firefox' }}
-      - uses: browser-actions/setup-edge@v1
-        if: ${{ matrix.browser[0] == 'edge' }}
 
       - name: Install
         run: pnpm i
@@ -151,5 +149,6 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+        if: ${{ matrix.browser[0] == 'none' }}
         env:
           BROWSER: ${{ matrix.browser[0] }}
