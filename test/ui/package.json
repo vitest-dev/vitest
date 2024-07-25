@@ -3,6 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "test": "GITHUB_ACTIONS=false playwright test",
     "test-e2e": "GITHUB_ACTIONS=false playwright test",
     "test-e2e-ui": "GITHUB_ACTIONS=false playwright test --ui",
     "test-fixtures": "vitest"
