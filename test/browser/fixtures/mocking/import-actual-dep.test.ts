@@ -2,7 +2,6 @@ import { a, b } from '@vitest/cjs-lib'
 import { expect, test, vi } from 'vitest'
 
 vi.mock(import('@vitest/cjs-lib'), async (importOriginal) => {
-  const original = await importOriginal()
   return {
     ...await importOriginal(),
   }
