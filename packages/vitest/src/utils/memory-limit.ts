@@ -6,7 +6,7 @@
  */
 
 import * as nodeos from 'node:os'
-import type { ResolvedConfig } from '../types/config'
+import type { ResolvedConfig } from '../node/types/config'
 
 function getDefaultThreadsCount(config: ResolvedConfig) {
   const numCpus

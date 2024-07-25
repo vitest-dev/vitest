@@ -1,5 +1,5 @@
 import { globalApis } from '../constants'
-import * as index from '../index'
+import * as index from '../public/index'
 
 export function registerApiGlobally() {
   globalApis.forEach((api) => {

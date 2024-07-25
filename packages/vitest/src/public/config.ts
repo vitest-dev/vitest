@@ -1,5 +1,7 @@
+import '../node/types/vite'
+
 import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
-import type { ProjectConfig } from './types'
+import type { ProjectConfig } from '../node/types/config'
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
   test?: ProjectConfig
@@ -12,9 +14,9 @@ export {
   defaultInclude,
   defaultExclude,
   coverageConfigDefaults,
-} from './defaults'
+} from '../defaults'
 export { mergeConfig } from 'vite'
-export { extraInlineDeps } from './constants'
+export { extraInlineDeps } from '../constants'
 export type { Plugin } from 'vite'
 
 export type { ConfigEnv, ViteUserConfig as UserConfig }

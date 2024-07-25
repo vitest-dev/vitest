@@ -5,20 +5,16 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
-import type {
-  ContextTestEnvironment,
-  ResolvedConfig,
-  RunnerRPC,
-  RuntimeRPC,
-  Vitest,
-  WorkerContext,
-} from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
-import type { SerializedConfig } from '../../types/config'
+import type { ResolvedConfig, SerializedConfig } from '../types/config'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
+import type { WorkerContext } from '../types/worker'
 import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')

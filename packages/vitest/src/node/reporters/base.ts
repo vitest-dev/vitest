@@ -2,14 +2,7 @@ import { performance } from 'node:perf_hooks'
 import c from 'tinyrainbow'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
-import type {
-  ErrorWithDiff,
-  File,
-  Reporter,
-  Task,
-  TaskResultPack,
-  UserConsoleLog,
-} from '../../types'
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 import {
   getFullName,
   getSuites,
@@ -23,9 +16,10 @@ import {
   relativePath,
   toArray,
 } from '../../utils'
-import type { Vitest } from '../../node'
+import type { Vitest } from '../core'
 import { F_POINTER, F_RIGHT } from '../../utils/figures'
-import { UNKNOWN_TEST_ID } from '../../runtime/console'
+import type { Reporter } from '../types/reporter'
+import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
 import {
   countTestErrors,
   divider,
@@ -303,7 +297,7 @@ export abstract class BaseReporter implements Reporter {
           ` | ${
             task
               ? getFullName(task, c.dim(' > '))
-              : log.taskId !== UNKNOWN_TEST_ID
+              : log.taskId !== '__vitest__unknown_test__'
               ? log.taskId
               : 'unknown test'
           }`,

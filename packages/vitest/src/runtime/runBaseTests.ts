@@ -1,6 +1,5 @@
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
-import type { ResolvedTestEnvironment } from '../types'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import {
@@ -8,6 +7,7 @@ import {
   stopCoverageInsideWorker,
 } from '../integrations/coverage'
 import { setupChaiConfig } from '../integrations/chai/config'
+import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import { setupGlobalEnv, withEnv } from './setup-node'
 import type { VitestExecutor } from './execute'

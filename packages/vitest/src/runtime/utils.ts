@@ -1,4 +1,4 @@
-import type { WorkerGlobalState } from '../types'
+import type { WorkerGlobalState } from '../types/worker'
 
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global

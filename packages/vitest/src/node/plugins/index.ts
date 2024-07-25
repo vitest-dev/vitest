@@ -1,7 +1,7 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults, coverageConfigDefaults } from '../../defaults'
-import type { ResolvedConfig, UserConfig } from '../../types/config'
+import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
   deepMerge,
   notNullish,

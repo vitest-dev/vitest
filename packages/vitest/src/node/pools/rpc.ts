@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import type { RawSourceMap } from 'vite-node'
 import { join } from 'pathe'
-import type { RuntimeRPC } from '../../types'
 import type { WorkspaceProject } from '../workspace'
+import type { RuntimeRPC } from '../../types/rpc'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()

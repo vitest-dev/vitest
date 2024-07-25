@@ -1,7 +1,7 @@
 import { relative } from 'pathe'
 import type { Plugin as VitePlugin } from 'vite'
 import { generateCssFilenameHash } from '../../integrations/css/css-modules'
-import type { CSSModuleScopeStrategy, ResolvedConfig } from '../../types/config'
+import type { CSSModuleScopeStrategy, ResolvedConfig } from '../types/config'
 import { toArray } from '../../utils'
 
 const cssLangs = '\\.(?:css|less|sass|scss|styl|stylus|pcss|postcss)(?:$|\\?)'

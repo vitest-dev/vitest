@@ -1,4 +1,4 @@
-import type { File } from '../../types/tasks'
+import type { File } from '@vitest/runner'
 import { BaseReporter } from './base'
 
 export class BasicReporter extends BaseReporter {

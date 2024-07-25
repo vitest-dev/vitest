@@ -4,7 +4,7 @@ export interface JSDOMOptions {
    *
    * @default '<!DOCTYPE html>'
    */
-  html?: string | Buffer | ArrayBufferLike
+  html?: string | ArrayBufferLike
   /**
    * referrer just affects the value read from document.referrer.
    * It defaults to no referrer (which reflects as the empty string).
@@ -75,5 +75,5 @@ export interface JSDOMOptions {
    * @default false
    */
   cookieJar?: boolean
-  resources?: 'usable' | any
+  resources?: 'usable'
 }

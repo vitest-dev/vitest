@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  acorn: 8.11.3
   mlly: ^1.7.1
   rollup: ^4.19.0
   vite: ^5.3.3
@@ -1437,18 +1438,12 @@ packages:
     peerDependencies:
       '@algolia/client-search': '>= 4.9.1 < 6'
       algoliasearch: '>= 4.9.1 < 6'
-    peerDependenciesMeta:
-      '@algolia/client-search':
-        optional: true
 
   '@algolia/autocomplete-shared@1.9.3':
     resolution: {integrity: sha512-Wnm9E4Ye6Rl6sTTqjoymD+l8DjSTHsHboVRYrKgEt8Q7UHm9nYbqhN/i0fhUYA3OAEH7WA8x3jfpnmJm3rKvaQ==}
     peerDependencies:
       '@algolia/client-search': '>= 4.9.1 < 6'
       algoliasearch: '>= 4.9.1 < 6'
-    peerDependenciesMeta:
-      '@algolia/client-search':
-        optional: true
 
   '@algolia/cache-browser-local-storage@4.20.0':
     resolution: {integrity: sha512-uujahcBt4DxduBTvYdwO3sBfHuJvJokiC3BP1+O70fglmE1ShkH8lpXqZBac1rrU3FnNYSUs4pL9lBdTKeRPOQ==}
@@ -4277,7 +4272,7 @@ packages:
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
-      acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
+      acorn: 8.11.3
 
   acorn-walk@8.3.3:
     resolution: {integrity: sha512-MxXdReSRhGO7VlFe1bRG/oI7/mdLV9B9JJT0N8vZOhF7gFRR5l3M8W9G8JxmKV+JC5mGqJ0QvqfSOLsCPa4nUw==}
@@ -4285,11 +4280,6 @@ packages:
 
   acorn@8.11.3:
     resolution: {integrity: sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-
-  acorn@8.12.0:
-    resolution: {integrity: sha512-RTvkC4w+KNXrM39/lWCUaG0IbRkWdCv7W/IOW9oU6SawyxulvkQy5HQPVTKxEjczcUvapcrw3cFx/60VN/NRNw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
 
@@ -9253,15 +9243,13 @@ snapshots:
   '@algolia/autocomplete-preset-algolia@1.9.3(@algolia/client-search@4.20.0)(algoliasearch@4.20.0)':
     dependencies:
       '@algolia/autocomplete-shared': 1.9.3(@algolia/client-search@4.20.0)(algoliasearch@4.20.0)
-      algoliasearch: 4.20.0
-    optionalDependencies:
       '@algolia/client-search': 4.20.0
+      algoliasearch: 4.20.0
 
   '@algolia/autocomplete-shared@1.9.3(@algolia/client-search@4.20.0)(algoliasearch@4.20.0)':
     dependencies:
-      algoliasearch: 4.20.0
-    optionalDependencies:
       '@algolia/client-search': 4.20.0
+      algoliasearch: 4.20.0
 
   '@algolia/cache-browser-local-storage@4.20.0':
     dependencies:
@@ -11338,7 +11326,7 @@ snapshots:
   '@stylistic/eslint-plugin-js@2.6.0-beta.0(eslint@9.7.0)':
     dependencies:
       '@types/eslint': 8.56.10
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       eslint: 9.7.0
       eslint-visitor-keys: 4.0.0
       espree: 10.1.0
@@ -12625,17 +12613,15 @@ snapshots:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
-  acorn-jsx@5.3.2(acorn@8.12.0):
+  acorn-jsx@5.3.2(acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)):
     dependencies:
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
 
   acorn-walk@8.3.3:
     dependencies:
       acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
 
   acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm): {}
-
-  acorn@8.12.0: {}
 
   agent-base@7.1.0:
     dependencies:
@@ -14083,14 +14069,14 @@ snapshots:
 
   espree@10.1.0:
     dependencies:
-      acorn: 8.12.0
-      acorn-jsx: 5.3.2(acorn@8.12.0)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
+      acorn-jsx: 5.3.2(acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm))
       eslint-visitor-keys: 4.0.0
 
   espree@9.6.1:
     dependencies:
-      acorn: 8.12.0
-      acorn-jsx: 5.3.2(acorn@8.12.0)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
+      acorn-jsx: 5.3.2(acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm))
       eslint-visitor-keys: 3.4.3
 
   esprima-extract-comments@1.1.0:
@@ -15276,7 +15262,7 @@ snapshots:
 
   jsonc-eslint-parser@2.4.0:
     dependencies:
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
       semver: 7.6.2
@@ -15868,7 +15854,7 @@ snapshots:
 
   mlly@1.7.1:
     dependencies:
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       pathe: 1.1.2
       pkg-types: 1.1.1
       ufo: 1.5.3
@@ -17303,7 +17289,7 @@ snapshots:
   terser@5.22.0:
     dependencies:
       '@jridgewell/source-map': 0.3.5
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -17548,7 +17534,7 @@ snapshots:
   unimport@3.7.2(rollup@4.19.0):
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.19.0)
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       escape-string-regexp: 5.0.0
       estree-walker: 3.0.3
       fast-glob: 3.3.2
@@ -17676,14 +17662,14 @@ snapshots:
 
   unplugin@1.11.0:
     dependencies:
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       chokidar: 3.6.0
       webpack-sources: 3.2.3
       webpack-virtual-modules: 0.6.1
 
   unplugin@1.7.1:
     dependencies:
-      acorn: 8.12.0
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       chokidar: 3.6.0
       webpack-sources: 3.2.3
       webpack-virtual-modules: 0.6.1

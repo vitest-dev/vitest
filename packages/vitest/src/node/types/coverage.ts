@@ -1,8 +1,7 @@
 import type { TransformResult as ViteTransformResult } from 'vite'
 import type { ReportOptions } from 'istanbul-reports'
-import type { Vitest } from '../node'
-import type { Arrayable } from './general'
-import type { AfterSuiteRunMeta } from './worker'
+import type { AfterSuiteRunMeta, Arrayable } from '../../types/general'
+import type { Vitest } from '../core'
 
 type TransformResult =
   | string
@@ -87,9 +86,9 @@ type CoverageReporterWithOptions<
     : [ReporterName, Partial<ReportOptions[ReporterName]>]
   : [ReporterName, Record<string, unknown>]
 
-type Provider = 'v8' | 'istanbul' | 'custom' | undefined
+export type CoverageProviderName = 'v8' | 'istanbul' | 'custom' | undefined
 
-export type CoverageOptions<T extends Provider = Provider> =
+export type CoverageOptions<T extends CoverageProviderName = CoverageProviderName> =
   T extends 'istanbul'
     ? { provider: T } & CoverageIstanbulOptions
     : T extends 'v8' ? {
@@ -116,7 +115,7 @@ type FieldsWithDefaultValues =
   | 'allowExternal'
   | 'processingConcurrency'
 
-export type ResolvedCoverageOptions<T extends Provider = Provider> =
+export type ResolvedCoverageOptions<T extends CoverageProviderName = CoverageProviderName> =
   CoverageOptions<T> &
   Required<Pick<CoverageOptions<T>, FieldsWithDefaultValues>> & { // Resolved fields which may have different typings as public configuration API has
     reporter: CoverageReporterWithOptions[]

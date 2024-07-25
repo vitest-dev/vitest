@@ -7,7 +7,7 @@ import type {
   ResolvedConfig,
   UserConfig,
   VitestRunMode,
-} from '../../types/config'
+} from '../types/config'
 import {
   defaultBrowserPort,
   defaultInspectPort,
@@ -16,7 +16,7 @@ import {
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider, toArray } from '../../utils'
-import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../../types/pool-options'
+import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { VitestCache } from '../cache'
 import { BaseSequencer } from '../sequencers/BaseSequencer'

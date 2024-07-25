@@ -1,31 +1,21 @@
 import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
-import type { CancelReason } from '@vitest/runner'
-import type {
-  EnvironmentOptions,
-  Pool,
-  SerializedConfig,
-  VitestEnvironment,
-} from './config'
-import type { Environment, UserConsoleLog } from './general'
-import type { SnapshotResult } from './snapshot'
-import type { File, TaskResultPack } from './tasks'
-import type { AfterSuiteRunMeta } from './worker'
-
-type TransformMode = 'web' | 'ssr'
+import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
+import type { SnapshotResult } from '@vitest/snapshot'
+import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
 
 export interface RuntimeRPC {
   fetch: (
     id: string,
-    environment: TransformMode
+    transformMode: TransformMode
   ) => Promise<{
     externalize?: string
     id?: string
   }>
-  transform: (id: string, environment: TransformMode) => Promise<FetchResult>
+  transform: (id: string, transformMode: TransformMode) => Promise<FetchResult>
   resolveId: (
     id: string,
     importer: string | undefined,
-    environment: TransformMode
+    transformMode: TransformMode
   ) => Promise<ViteNodeResolveId | null>
   getSourceMap: (
     id: string,
@@ -48,27 +38,4 @@ export interface RuntimeRPC {
 
 export interface RunnerRPC {
   onCancel: (reason: CancelReason) => void
-}
-
-export interface ContextTestEnvironment {
-  name: VitestEnvironment
-  transformMode?: TransformMode
-  options: EnvironmentOptions | null
-}
-
-export interface ResolvedTestEnvironment {
-  environment: Environment
-  options: EnvironmentOptions | null
-}
-
-export interface ContextRPC {
-  pool: Pool
-  worker: string
-  workerId: number
-  config: SerializedConfig
-  projectName: string
-  files: string[]
-  environment: ContextTestEnvironment
-  providedContext: Record<string, any>
-  invalidates?: string[]
 }
