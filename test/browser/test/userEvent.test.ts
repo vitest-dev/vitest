@@ -156,56 +156,76 @@ describe('userEvent.tripleClick', () => {
 
 describe('userEvent.hover, userEvent.unhover', () => {
   test('hover, unhover works correctly', async () => {
-    type ModifierKeys = 'Shift' | 'Control' | 'Alt' | 'ControlOrMeta' | 'Meta'
-
-    const hoverOptions = { position: { x: 39, y: 50 }, modifiers: ['Shift'] as ModifierKeys[] }
-    const unhoverOptions = { position: { x: 140, y: 30 }, modifiers: ['Control'] as ModifierKeys[] }
-
     const target = document.createElement('div')
     target.style.width = '100px'
     target.style.height = '100px'
 
     let mouseEntered = false
     let pointerEntered = false
-    let shiftModifier = false
-    let controlModifier = false
+
+    target.addEventListener('mouseover', () => {
+      mouseEntered = true
+    })
+    target.addEventListener('pointerenter', () => {
+      pointerEntered = true
+    })
+    target.addEventListener('pointerleave', () => {
+      pointerEntered = false
+    })
+    target.addEventListener('mouseout', () => {
+      mouseEntered = false
+    })
+
+    document.body.appendChild(target)
+
+    await userEvent.hover(target)
+
+    expect(pointerEntered).toBe(true)
+    expect(mouseEntered).toBe(true)
+
+    await userEvent.unhover(target)
+
+    expect(pointerEntered).toBe(false)
+    expect(mouseEntered).toBe(false)
+  })
+
+  test.runIf(server.provider === 'playwright')('hover, unhover correctly pass options', async () => {
+    type ModifierKeys = 'Shift' | 'Control' | 'Alt' | 'ControlOrMeta' | 'Meta'
+
+    const hoverOptions = { modifiers: ['Shift'] as ModifierKeys[] }
+    const unhoverOptions = { modifiers: ['Control'] as ModifierKeys[] }
+
+    const target = document.createElement('div')
+    target.style.width = '100px'
+    target.style.height = '100px'
+
+    let modifiersDetected: {
+      shift: boolean
+      control: boolean
+    }
 
     target.addEventListener('mouseover', (e) => {
-      mouseEntered = true
-      shiftModifier = e.shiftKey
-      controlModifier = e.ctrlKey
+      modifiersDetected.shift = e.shiftKey
+      modifiersDetected.control = e.ctrlKey
     })
-    target.addEventListener('pointerenter', (e) => {
-      pointerEntered = true
-      shiftModifier = e.shiftKey
-      controlModifier = e.ctrlKey
-    })
-    target.addEventListener('pointerleave', (e) => {
-      pointerEntered = false
-      shiftModifier = e.shiftKey
-      controlModifier = e.ctrlKey
-    })
+
     target.addEventListener('mouseout', (e) => {
-      mouseEntered = false
-      shiftModifier = e.shiftKey
-      controlModifier = e.ctrlKey
+      modifiersDetected.shift = e.shiftKey
+      modifiersDetected.control = e.ctrlKey
     })
 
     document.body.appendChild(target)
 
     await userEvent.hover(target, hoverOptions)
 
-    expect(pointerEntered).toBe(true)
-    expect(mouseEntered).toBe(true)
-    expect(shiftModifier).toEqual(hoverOptions.modifiers.includes('Shift'))
-    expect(controlModifier).toEqual(hoverOptions.modifiers.includes('Control'))
+    expect(modifiersDetected.shift).toEqual(hoverOptions.modifiers.includes('Shift'))
+    expect(modifiersDetected.control).toEqual(hoverOptions.modifiers.includes('Control'))
+    modifiersDetected = { shift: false, control: false }
 
     await userEvent.unhover(target, unhoverOptions)
 
-    expect(pointerEntered).toBe(false)
-    expect(mouseEntered).toBe(false)
-    expect(shiftModifier).toEqual(unhoverOptions.modifiers.includes('Shift'))
-    expect(controlModifier).toEqual(unhoverOptions.modifiers.includes('Control'))
+    expect(modifiersDetected.shift).toEqual(unhoverOptions.modifiers.includes('Shift'))
+    expect(modifiersDetected.control).toEqual(unhoverOptions.modifiers.includes('Control'))
   })
 
   test('hover works with shadow root', async () => {
