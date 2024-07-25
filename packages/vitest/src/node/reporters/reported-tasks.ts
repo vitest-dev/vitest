@@ -159,6 +159,9 @@ class TestCollection {
     this.#project = project
   }
 
+  /**
+   * Test or a suite at a specific index in the array.
+   */
   at(index: number): TestCase | TestSuite | undefined {
     if (index < 0) {
       index = this.size + index
@@ -451,7 +454,7 @@ function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTa
 function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): TestCase | TestSuite | TestFile {
   const reportedTask = project.ctx.state.reportedTasksMap.get(runnerTask)
   if (!reportedTask) {
-    throw new Error(`Task instance was not found for task ${runnerTask.id}`)
+    throw new Error(`Task instance was not found for ${runnerTask.type} ${runnerTask.name}`)
   }
   return reportedTask
 }
