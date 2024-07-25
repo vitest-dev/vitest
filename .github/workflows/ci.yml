@@ -109,32 +109,34 @@ jobs:
         uses: tj-actions/changed-files@ea251d4d2f03a9c18841ae1b752f58b82dfb4d5e # v35.3.0
         with:
           files: |
-            packages/ui/**
-            test/ui/**
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
 
       - uses: ./.github/actions/setup-and-cache
-        if: steps.changed-files.outputs.only_changed == 'true'
+        if: steps.changed-files.outputs.only_changed != 'true'
         with:
           node-version: 20
 
       - name: Install
-        if: steps.changed-files.outputs.only_changed == 'true'
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: steps.changed-files.outputs.only_changed == 'true'
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm exec playwright install chromium
 
       - name: Build
-        if: steps.changed-files.outputs.only_changed == 'true'
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run build
 
       - name: Unit Test UI
-        if: steps.changed-files.outputs.only_changed == 'true'
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run -C packages/ui test:ui
 
       - name: E2E Test UI
-        if: steps.changed-files.outputs.only_changed == 'true'
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm -C test/ui test-e2e
 
   test-browser:
