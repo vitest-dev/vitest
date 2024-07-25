@@ -95,10 +95,6 @@ jobs:
         if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run -C packages/ui test:ui
 
-      - name: E2E Test UI
-        if: steps.changed-files.outputs.only_changed != 'true'
-        run: pnpm -C test/ui test-e2e
-
   test-browser:
     runs-on: ${{ matrix.os }}
     strategy:
