@@ -1,3 +1,4 @@
+/* eslint-disable ts/prefer-ts-expect-error */
 /* eslint-disable ts/ban-ts-comment */
 
 import { google, type sheets_v4 } from 'googleapis'
