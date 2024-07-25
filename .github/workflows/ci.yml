@@ -53,25 +53,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ea251d4d2f03a9c18841ae1b752f58b82dfb4d5e # v35.3.0
+        with:
+          files: |
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
+
       - uses: ./.github/actions/setup-and-cache
+        if: steps.changed-files.outputs.only_changed != 'true'
         with:
           node-version: ${{ matrix.node_version }}
 
       - uses: browser-actions/setup-chrome@v1
+        if: steps.changed-files.outputs.only_changed != 'true'
 
       - name: Install
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm exec playwright install --with-deps
 
       - name: Build
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run build
 
       - name: Test
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:ci
 
       - name: Test Examples
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:examples
 
   test-ui:
@@ -87,23 +104,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ea251d4d2f03a9c18841ae1b752f58b82dfb4d5e # v35.3.0
+        with:
+          files: |
+            packages/ui/**
+            test/ui/**
+
       - uses: ./.github/actions/setup-and-cache
+        if: steps.changed-files.outputs.only_changed == 'true'
         with:
           node-version: 20
 
       - name: Install
+        if: steps.changed-files.outputs.only_changed == 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
+        if: steps.changed-files.outputs.only_changed == 'true'
         run: pnpm exec playwright install chromium
 
       - name: Build
+        if: steps.changed-files.outputs.only_changed == 'true'
         run: pnpm run build
 
       - name: Unit Test UI
+        if: steps.changed-files.outputs.only_changed == 'true'
         run: pnpm run -C packages/ui test:ui
 
       - name: E2E Test UI
+        if: steps.changed-files.outputs.only_changed == 'true'
         run: pnpm -C test/ui test-e2e
 
   test-browser:
@@ -124,31 +155,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ea251d4d2f03a9c18841ae1b752f58b82dfb4d5e # v35.3.0
+        with:
+          files: |
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
+
       - uses: ./.github/actions/setup-and-cache
+        if: steps.changed-files.outputs.only_changed != 'true'
         with:
           node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
-        if: ${{ matrix.browser[0] == 'chrome' }}
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'chrome' }}
       - uses: browser-actions/setup-firefox@v1
-        if: ${{ matrix.browser[0] == 'firefox' }}
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'firefox' }}
 
       - name: Install
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm exec playwright install ${{ matrix.browser[1] }} --with-deps
 
       - name: Build
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run build
 
       - name: Test Browser (playwright)
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[1] }}
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        if: ${{ matrix.browser[0] == 'none' }}
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'none' }}
         env:
           BROWSER: ${{ matrix.browser[0] }}
