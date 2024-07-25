@@ -452,12 +452,12 @@ function getTestState(test: TestCase): TestResult['state'] | 'running' {
   return result ? result.state : 'running'
 }
 
-function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTask: TestCase | TestSuite | TestFile) {
+function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTask: TestCase | TestSuite | TestFile): void {
   project.ctx.state.reportedTasksMap.set(runnerTask, reportedTask)
 }
 
 function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): TestCase | TestSuite | TestFile {
-  const reportedTask = project.ctx.state.reportedTasksMap.get(runnerTask)
+  const reportedTask = project.ctx.state.getReportedEntity(runnerTask)
   if (!reportedTask) {
     throw new Error(`Task instance was not found for ${runnerTask.type} ${runnerTask.name}`)
   }
