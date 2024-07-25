@@ -93,7 +93,7 @@ export default defineConfig({
     browser: {
       provider: 'playwright', // or 'webdriverio'
       enabled: true,
-      name: 'chrome', // browser name is required
+      name: 'chromium', // browser name is required
     },
   }
 })
@@ -112,7 +112,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chrome',
+      name: 'chromium',
     }
   }
 })
@@ -127,7 +127,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chrome',
+      name: 'chromium',
     }
   }
 })
@@ -142,7 +142,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chrome',
+      name: 'chromium',
     }
   }
 })
@@ -157,7 +157,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chrome',
+      name: 'chromium',
     }
   }
 })
