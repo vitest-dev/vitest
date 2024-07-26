@@ -43,6 +43,32 @@ export default defineConfig({
 })
 ```
 
+- 4. You used an aliased module with dynamic import.
+
+Since Vitest supports a module promise instead of a string in `vi.mock` method, there is a chance that you tried to use it alongside `paths` aliases configured in your `tsconfig.json`. This behavior however, is not supported by the TypeScript compiler, as such paths are not statically analyzable, and cannot be resolved at runtime.
+
+```ts
+vi.mock(import('@/path/to/module'), async (importOriginal) => {
+  const mod = await importOriginal()
+  return {
+    ...mod,
+    namedExport: vi.fn(),
+  }
+})
+```
+
+This syntax won't work unfortunately, and in order to make it work, `import` calls have to be replaced with a relative path instead.
+
+```ts
+vi.mock(import('./path/to/module.js'), async (importOriginal) => {
+  const mod = await importOriginal()
+  return {
+    ...mod,
+    namedExport: vi.fn(),
+  }
+})
+```
+
 ## Cannot mock "./mocked-file.js" because it is already loaded
 
 This error happens when `vi.mock` method is called on a module that was already loaded. Vitest throws this error because this call has no effect since cached modules are preferred.
