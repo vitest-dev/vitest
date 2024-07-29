@@ -287,10 +287,10 @@ function printModuleWarningForPackage(
     deps: {
       optimizer: {
         web : {
-        include: [
-          ${c.yellow(c.bold(`"${name}"`))}
-        ],
-        enabled: true
+          include: [
+            ${c.yellow(c.bold(`"${name}"`))}
+          ],
+          enabled: true
         }
       }
     }
