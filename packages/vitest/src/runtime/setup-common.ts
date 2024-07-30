@@ -1,13 +1,13 @@
 import { setSafeTimers } from '@vitest/utils'
 import { addSerializer } from '@vitest/snapshot'
 import type { SnapshotSerializer } from '@vitest/snapshot'
+import type { DiffOptions } from '@vitest/expect'
 import { resetRunOnceCounter } from '../integrations/run-once'
-import type { ResolvedConfig } from '../types'
-import type { DiffOptions } from '../types/matcher-utils'
 import type { VitestExecutor } from './execute'
+import type { SerializedConfig } from './config'
 
 let globalSetup = false
-export async function setupCommonEnv(config: ResolvedConfig) {
+export async function setupCommonEnv(config: SerializedConfig) {
   resetRunOnceCounter()
   setupDefines(config.defines)
   setupEnv(config.env)
@@ -44,7 +44,7 @@ function setupEnv(env: Record<string, any>) {
 }
 
 export async function loadDiffConfig(
-  config: ResolvedConfig,
+  config: SerializedConfig,
   executor: VitestExecutor,
 ) {
   if (typeof config.diff !== 'string') {
@@ -68,7 +68,7 @@ export async function loadDiffConfig(
 }
 
 export async function loadSnapshotSerializers(
-  config: ResolvedConfig,
+  config: SerializedConfig,
   executor: VitestExecutor,
 ) {
   const files = config.snapshotSerializers

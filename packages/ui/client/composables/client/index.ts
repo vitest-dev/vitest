@@ -1,6 +1,6 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig, TaskResultPack } from 'vitest'
+import type { File, SerializedConfig, TaskResultPack } from 'vitest'
 import { reactive as reactiveVue } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
 import type { BrowserRunnerState } from '../../../types'
@@ -45,7 +45,7 @@ export const client = (function createVitestClient() {
   }
 })()
 
-export const config = shallowRef<ResolvedConfig>({} as any)
+export const config = shallowRef<SerializedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 
 export const current = computed(() => {

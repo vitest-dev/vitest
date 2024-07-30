@@ -2,7 +2,7 @@ import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { ViteDevServer } from 'vite'
 import type { CancelReason } from '@vitest/runner'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { WorkspaceProject } from '../node/workspace'
+import type { WorkspaceProject } from '../workspace'
 import type { ApiConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
@@ -240,4 +240,5 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     width: number
     height: number
   }
+  screenshotFailures: boolean
 }

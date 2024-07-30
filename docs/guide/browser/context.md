@@ -67,7 +67,7 @@ export const page: {
   /**
    * Serialized test config.
    */
-  config: ResolvedConfig
+  config: SerializedConfig
   /**
    * Change the size of iframe's viewport.
    */

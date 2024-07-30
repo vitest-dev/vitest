@@ -5,12 +5,12 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import { findUp } from 'find-up'
-import type { UserConfig, VitestRunMode } from '../types'
 import { configFiles } from '../constants'
 import type { VitestOptions } from './core'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
+import type { UserConfig, VitestRunMode } from './types/config'
 
 export async function createVitest(
   mode: VitestRunMode,

@@ -18,24 +18,25 @@ import type {
 } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type {
-  ProvidedContext,
-  ResolvedConfig,
-  UserConfig,
-  UserWorkspaceConfig,
-  Vitest,
-} from '../types'
 import type { Typechecker } from '../typecheck/typechecker'
 import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
-import type { BrowserServer } from '../types/browser'
-import { isBrowserEnabled, resolveConfig } from './config'
+import type { ProvidedContext } from '../types/general'
+import type {
+  ResolvedConfig,
+  UserConfig,
+  UserWorkspaceConfig,
+} from './types/config'
+import type { BrowserServer } from './types/browser'
+import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
 import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { MocksPlugins } from './plugins/mocks'
 import { CoverageTransform } from './plugins/coverageTransform'
+import { serializeConfig } from './config/serializeConfig'
+import type { Vitest } from './core'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -408,103 +409,16 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig(method: 'run' | 'collect' = 'run') {
-    const optimizer = this.config.deps?.optimizer
-    const poolOptions = this.config.poolOptions
-
-    // Resolve from server.config to avoid comparing against default value
-    const isolate = this.server?.config?.test?.isolate
-
-    const config = deepMerge(
-      {
-        ...this.config,
-
-        poolOptions: {
-          forks: {
-            singleFork:
-              poolOptions?.forks?.singleFork
-              ?? this.ctx.config.poolOptions?.forks?.singleFork
-              ?? false,
-            isolate:
-              poolOptions?.forks?.isolate
-              ?? isolate
-              ?? this.ctx.config.poolOptions?.forks?.isolate
-              ?? true,
-          },
-          threads: {
-            singleThread:
-              poolOptions?.threads?.singleThread
-              ?? this.ctx.config.poolOptions?.threads?.singleThread
-              ?? false,
-            isolate:
-              poolOptions?.threads?.isolate
-              ?? isolate
-              ?? this.ctx.config.poolOptions?.threads?.isolate
-              ?? true,
-          },
-          vmThreads: {
-            singleThread:
-              poolOptions?.vmThreads?.singleThread
-              ?? this.ctx.config.poolOptions?.vmThreads?.singleThread
-              ?? false,
-          },
-        },
-
-        reporters: [],
-        deps: {
-          ...this.config.deps,
-          optimizer: {
-            web: {
-              enabled: optimizer?.web?.enabled ?? true,
-            },
-            ssr: {
-              enabled: optimizer?.ssr?.enabled ?? true,
-            },
-          },
-        },
-        snapshotOptions: {
-          ...this.ctx.config.snapshotOptions,
-          expand:
-            this.config.snapshotOptions.expand
-            ?? this.ctx.config.snapshotOptions.expand,
-          resolveSnapshotPath: undefined,
-        },
-        onConsoleLog: undefined!,
-        onStackTrace: undefined!,
-        sequence: {
-          ...this.ctx.config.sequence,
-          sequencer: undefined!,
-        },
-        benchmark: {
-          ...this.config.benchmark,
-          reporters: [],
-        },
-        inspect: this.ctx.config.inspect,
-        inspectBrk: this.ctx.config.inspectBrk,
-        inspector: this.ctx.config.inspector,
-        alias: [],
-        includeTaskLocation:
-          this.config.includeTaskLocation
-          ?? this.ctx.config.includeTaskLocation,
-        env: {
-          ...this.server?.config.env,
-          ...this.config.env,
-        },
-        browser: {
-          ...this.config.browser,
-          orchestratorScripts: [],
-          testerScripts: [],
-          commands: {},
-        },
-        printConsoleTrace:
-          this.config.printConsoleTrace ?? this.ctx.config.printConsoleTrace,
-      },
-      this.ctx.configOverride || ({} as any),
-    ) as ResolvedConfig
+    // TODO: call `serializeConfig` only once
+    const config = deepMerge(serializeConfig(
+      this.config,
+      this.ctx.config,
+      this.server?.config,
+    ), (this.ctx.configOverride || {}))
 
     // disable heavy features when collecting because they are not needed
     if (method === 'collect') {
-      config.coverage.enabled = false
-      if (config.browser.provider && config.browser.provider !== 'preview') {
+      if (this.config.browser.provider && this.config.browser.provider !== 'preview') {
         config.browser.headless = true
       }
       config.snapshotSerializers = []

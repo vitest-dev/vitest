@@ -3,7 +3,7 @@ import type { VitestClient } from '@vitest/ws-client'
 import type {
   File,
   ModuleGraphData,
-  ResolvedConfig,
+  SerializedConfig,
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
@@ -14,7 +14,7 @@ import { StateManager } from '../../../../vitest/src/node/state'
 interface HTMLReportMetadata {
   paths: string[]
   files: File[]
-  config: ResolvedConfig
+  config: SerializedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source

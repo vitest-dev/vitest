@@ -1,11 +1,11 @@
 import { defaultBrowserPort, defaultPort } from '../../constants'
-import type { ApiConfig } from '../../types/config'
+import type { ApiConfig } from '../types/config'
 import type {
   ForksOptions,
   ThreadsOptions,
   VmOptions,
   WorkerContextOptions,
-} from '../../types/pool-options'
+} from '../types/pool-options'
 import type { CliOptions } from './cli-api'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
@@ -167,7 +167,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   outputFile: {
     argument: '<filename/-s>',
     description:
-      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: --outputFile.tap=./tap.txt)',
+      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)',
     subcommands: null,
   },
   coverage: {
@@ -203,7 +203,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       extension: {
         description:
-          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
+          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
         argument: '<extension>',
         array: true,
       },
@@ -527,7 +527,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       seed: {
         description:
-          'Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
+          'Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
         argument: '<seed>',
       },
       hooks: {

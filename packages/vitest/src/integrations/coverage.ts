@@ -1,8 +1,8 @@
+import type { SerializedCoverageConfig } from '../runtime/config'
 import type {
-  CoverageOptions,
   CoverageProvider,
   CoverageProviderModule,
-} from '../types'
+} from '../node/types/coverage'
 
 interface Loader {
   executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
@@ -14,7 +14,7 @@ export const CoverageProviderMap: Record<string, string> = {
 }
 
 async function resolveCoverageProviderModule(
-  options: CoverageOptions | undefined,
+  options: SerializedCoverageConfig | undefined,
   loader: Loader,
 ) {
   if (!options?.enabled || !options.provider) {
@@ -40,7 +40,7 @@ async function resolveCoverageProviderModule(
   let customProviderModule
 
   try {
-    customProviderModule = await loader.executeId(options.customProviderModule)
+    customProviderModule = await loader.executeId(options.customProviderModule!)
   }
   catch (error) {
     throw new Error(
@@ -59,7 +59,7 @@ async function resolveCoverageProviderModule(
 }
 
 export async function getCoverageProvider(
-  options: CoverageOptions | undefined,
+  options: SerializedCoverageConfig | undefined,
   loader: Loader,
 ): Promise<CoverageProvider | null> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
@@ -72,7 +72,7 @@ export async function getCoverageProvider(
 }
 
 export async function startCoverageInsideWorker(
-  options: CoverageOptions | undefined,
+  options: SerializedCoverageConfig | undefined,
   loader: Loader,
 ) {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
@@ -85,7 +85,7 @@ export async function startCoverageInsideWorker(
 }
 
 export async function takeCoverageInsideWorker(
-  options: CoverageOptions | undefined,
+  options: SerializedCoverageConfig | undefined,
   loader: Loader,
 ) {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
@@ -98,7 +98,7 @@ export async function takeCoverageInsideWorker(
 }
 
 export async function stopCoverageInsideWorker(
-  options: CoverageOptions | undefined,
+  options: SerializedCoverageConfig | undefined,
   loader: Loader,
 ) {
   const coverageModule = await resolveCoverageProviderModule(options, loader)

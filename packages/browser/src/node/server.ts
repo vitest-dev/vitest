@@ -11,8 +11,8 @@ import type {
 import { join, resolve } from 'pathe'
 import type { ErrorWithDiff } from '@vitest/utils'
 import { slash } from '@vitest/utils'
-import type { ResolvedConfig } from 'vitest'
 import { type StackTraceParserOptions, parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
+import type { SerializedConfig } from 'vitest'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 import { BrowserServerCDPHandler } from './cdp'
@@ -224,7 +224,7 @@ export class BrowserServer implements IBrowserServer {
   }
 }
 
-function wrapConfig(config: ResolvedConfig): ResolvedConfig {
+function wrapConfig(config: SerializedConfig): SerializedConfig {
   return {
     ...config,
     // workaround RegExp serialization

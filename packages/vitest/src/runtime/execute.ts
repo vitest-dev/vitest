@@ -14,7 +14,7 @@ import { normalize, relative } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import { distDir } from '../paths'
 import type { MockMap } from '../types/mocker'
-import type { WorkerGlobalState } from '../types'
+import type { WorkerGlobalState } from '../types/worker'
 import { VitestMocker } from './mocker'
 import type { ExternalModulesExecutor } from './external-executor'
 

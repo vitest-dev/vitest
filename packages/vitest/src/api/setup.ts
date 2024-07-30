@@ -5,19 +5,14 @@ import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import type { ViteDevServer } from 'vite'
+import type { File, TaskResultPack } from '@vitest/runner'
 import { API_PATH } from '../constants'
-import type { Vitest } from '../node'
-import type {
-  Awaitable,
-  File,
-  ModuleGraphData,
-  Reporter,
-  SerializableSpec,
-  TaskResultPack,
-  UserConsoleLog,
-} from '../types'
+import type { Vitest } from '../node/core'
+import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { Reporter } from '../node/types/reporter'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
+import type { SerializedSpec } from '../runtime/types/utils'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -83,7 +78,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           await ctx.rerunFiles(files)
         },
         getConfig() {
-          return ctx.config
+          return ctx.getCoreWorkspaceProject().getSerializableConfig()
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
@@ -165,7 +160,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onSpecsCollected(specs?: SerializableSpec[] | undefined): Awaitable<void> {
+  onSpecsCollected(specs?: SerializedSpec[] | undefined): Awaitable<void> {
     if (this.clients.size === 0) {
       return
     }

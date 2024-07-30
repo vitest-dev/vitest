@@ -1,8 +1,8 @@
-import type { ResolvedConfig } from 'vitest'
 import { channel, client } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
 import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from '@vitest/browser/client'
 import { relative } from 'pathe'
+import type { SerializedConfig } from 'vitest'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
 import { createModuleMocker } from './tester/msw'
@@ -230,7 +230,7 @@ async function done() {
   await client.rpc.finishBrowserTests(getBrowserState().contextId)
 }
 
-async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
+async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
     const element = document.querySelector('#tester-ui')
     if (!element) {

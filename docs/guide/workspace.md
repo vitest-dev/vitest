@@ -51,7 +51,7 @@ If you are referencing filenames with glob pattern, make sure your config file s
 You can also define projects with inline config. Workspace file supports using both syntaxes at the same time.
 
 :::code-group
-```ts [vitest.workspace.ts] twoslash
+```ts [vitest.workspace.ts]
 import { defineWorkspace } from 'vitest/config'
 
 // defineWorkspace provides a nice type hinting DX
@@ -96,6 +96,7 @@ Workspace projects don't support all configuration properties. For better type s
 
 :::code-group
 ```ts [packages/a/vitest.config.ts] twoslash
+// @errors: 2769
 import { defineProject } from 'vitest/config'
 
 export default defineProject({
@@ -156,7 +157,7 @@ npm run test --project e2e --project unit
 
 None of the configuration options are inherited from the root-level config file. You can create a shared config file and merge it with the project config yourself:
 
-:::code-group
+::: code-group
 ```ts [packages/a/vitest.config.ts]
 import { defineProject, mergeConfig } from 'vitest/config'
 import configShared from '../vitest.shared.js'
@@ -169,6 +170,30 @@ export default mergeConfig(
     }
   })
 )
+```
+:::
+
+At the `defineWorkspace` level you can also use the `extends` option instead to inherit from your root-level config.
+::: code-group
+```ts [packages/a/vitest.config.ts]
+import { defineWorkspace } from 'vitest/config'
+
+export default defineWorkspace([
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'unit',
+      include: ['**/*.unit.test.ts'],
+    },
+  },
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'integration',
+      include: ['**/*.integration.test.ts'],
+    },
+  },
+])
 ```
 :::
 

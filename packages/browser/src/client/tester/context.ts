@@ -1,6 +1,6 @@
 import type { Task, WorkerGlobalState } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventHoverOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
 
 // this file should not import anything directly, only types
@@ -32,6 +32,36 @@ function convertElementToCssSelector(element: Element) {
   return getUniqueCssSelector(element)
 }
 
+function escapeIdForCSSSelector(id: string) {
+  return id
+    .split('')
+    .map((char) => {
+      const code = char.charCodeAt(0)
+
+      if (char === ' ' || char === '#' || char === '.' || char === ':' || char === '[' || char === ']' || char === '>' || char === '+' || char === '~' || char === '\\') {
+        // Escape common special characters with backslashes
+        return `\\${char}`
+      }
+      else if (code >= 0x10000) {
+        // Unicode escape for characters outside the BMP
+        return `\\${code.toString(16).toUpperCase().padStart(6, '0')} `
+      }
+      else if (code < 0x20 || code === 0x7F) {
+        // Non-printable ASCII characters (0x00-0x1F and 0x7F) are escaped
+        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
+      }
+      else if (code >= 0x80) {
+        // Non-ASCII characters (0x80 and above) are escaped
+        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
+      }
+      else {
+        // Allowable characters are used directly
+        return char
+      }
+    })
+    .join('')
+}
+
 function getUniqueCssSelector(el: Element) {
   const path = []
   let parent: null | ParentNode
@@ -44,10 +74,10 @@ function getUniqueCssSelector(el: Element) {
 
     const tag = el.tagName
     if (el.id) {
-      path.push(`#${el.id}`)
+      path.push(`#${escapeIdForCSSSelector(el.id)}`)
     }
     else if (!el.nextElementSibling && !el.previousElementSibling) {
-      path.push(tag)
+      path.push(tag.toLowerCase())
     }
     else {
       let index = 0
@@ -65,15 +95,15 @@ function getUniqueCssSelector(el: Element) {
       }
 
       if (sameTagSiblings > 1) {
-        path.push(`${tag}:nth-child(${elementIndex})`)
+        path.push(`${tag.toLowerCase()}:nth-child(${elementIndex})`)
       }
       else {
-        path.push(tag)
+        path.push(tag.toLowerCase())
       }
     }
     el = parent as Element
   };
-  return `${provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`.toLowerCase()
+  return `${provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`
 }
 
 function getParent(el: Element) {
@@ -84,64 +114,82 @@ function getParent(el: Element) {
   return parent
 }
 
-export const userEvent: UserEvent = {
-  // TODO: actually setup userEvent with config options
-  setup() {
-    return userEvent
-  },
-  click(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_click', css, options)
-  },
-  dblClick(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_dblClick', css, options)
-  },
-  tripleClick(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_tripleClick', css, options)
-  },
-  selectOptions(element, value) {
-    const values = provider === 'webdriverio'
-      ? getWebdriverioSelectOptions(element, value)
-      : getSimpleSelectOptions(element, value)
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_selectOptions', css, values)
-  },
-  type(element: Element, text: string, options: UserEventTypeOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_type', css, text, options)
-  },
-  clear(element: Element) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_clear', css)
-  },
-  tab(options: UserEventTabOptions = {}) {
-    return triggerCommand('__vitest_tab', options)
-  },
-  keyboard(text: string) {
-    return triggerCommand('__vitest_keyboard', text)
-  },
-  hover(element: Element) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_hover', css)
-  },
-  unhover(element: Element) {
-    const css = convertElementToCssSelector(element.ownerDocument.body)
-    return triggerCommand('__vitest_hover', css)
-  },
+function createUserEvent(): UserEvent {
+  const keyboard = {
+    unreleased: [] as string[],
+  }
 
-  // non userEvent events, but still useful
-  fill(element: Element, text: string, options) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_fill', css, text, options)
-  },
-  dragAndDrop(source: Element, target: Element, options = {}) {
-    const sourceCss = convertElementToCssSelector(source)
-    const targetCss = convertElementToCssSelector(target)
-    return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
-  },
+  return {
+    setup() {
+      return createUserEvent()
+    },
+    click(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_click', css, options)
+    },
+    dblClick(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_dblClick', css, options)
+    },
+    tripleClick(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_tripleClick', css, options)
+    },
+    selectOptions(element, value) {
+      const values = provider === 'webdriverio'
+        ? getWebdriverioSelectOptions(element, value)
+        : getSimpleSelectOptions(element, value)
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_selectOptions', css, values)
+    },
+    async type(element: Element, text: string, options: UserEventTypeOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_type',
+        css,
+        text,
+        { ...options, unreleased: keyboard.unreleased },
+      )
+      keyboard.unreleased = unreleased
+    },
+    clear(element: Element) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_clear', css)
+    },
+    tab(options: UserEventTabOptions = {}) {
+      return triggerCommand('__vitest_tab', options)
+    },
+    async keyboard(text: string) {
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_keyboard',
+        text,
+        keyboard,
+      )
+      keyboard.unreleased = unreleased
+    },
+    hover(element: Element, options: UserEventHoverOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_hover', css, options)
+    },
+    unhover(element: Element, options: UserEventHoverOptions = {}) {
+      const css = convertElementToCssSelector(element.ownerDocument.body)
+      return triggerCommand('__vitest_hover', css, options)
+    },
+
+    // non userEvent events, but still useful
+    fill(element: Element, text: string, options) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_fill', css, text, options)
+    },
+    dragAndDrop(source: Element, target: Element, options = {}) {
+      const sourceCss = convertElementToCssSelector(source)
+      const targetCss = convertElementToCssSelector(target)
+      return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
+    },
+  }
 }
+
+export const userEvent: UserEvent = createUserEvent()
 
 function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
   const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
