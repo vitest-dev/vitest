@@ -3,6 +3,13 @@ import '../node/types/vite'
 import '../types/global'
 
 import type {
+  Custom as Custom_,
+  File as File_,
+  Suite as Suite_,
+  Task as Task_,
+  Test as Test_,
+} from '@vitest/runner'
+import type {
   CollectLineNumbers as CollectLineNumbers_,
   CollectLines as CollectLines_,
   Context as Context_,
@@ -120,16 +127,28 @@ export type RootAndTarget = RootAndTarget_
 /** @deprecated import `TypeCheckContext` from `vitest/node` instead */
 export type Context = Context_
 
+/** @deprecated use `RunnerTestSuite` instead */
+export type Suite = Suite_
+/** @deprecated use `RunnerTestFile` instead */
+export type File = File_
+/** @deprecated use `RunnerTestCase` instead */
+export type Test = Test_
+/** @deprecated use `RunnerCustomCase` instead */
+export type Custom = Custom_
+/** @deprecated use `RunnerTask` instead */
+export type Task = Task_
+
 export type {
   RunMode,
   TaskState,
   TaskBase,
   TaskResult,
   TaskResultPack,
-  Suite,
-  File,
-  Test,
-  Task,
+  Suite as RunnerTestSuite,
+  File as RunnerTestFile,
+  Test as RunnerTestCase,
+  Task as RunnerTask,
+  Custom as RunnerCustomCase,
   DoneCallback,
   TestFunction,
   TestOptions,
@@ -144,7 +163,6 @@ export type {
   TestContext,
   TaskContext,
   ExtendedContext,
-  Custom,
   TaskCustomOptions,
   OnTestFailedHandler,
   TaskMeta,
