@@ -9,7 +9,7 @@ import type {
 import type { TestError } from '@vitest/utils'
 import { getTestName } from '../../utils/tasks'
 import type { WorkspaceProject } from '../workspace'
-import type { TestProject } from '../reported-workspace'
+import type { TestProject } from '../reported-workspace-project'
 
 class ReportedTaskImplementation {
   /**

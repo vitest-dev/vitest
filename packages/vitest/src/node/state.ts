@@ -4,7 +4,7 @@ import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
 import { TestCase, TestFile, TestSuite } from './reporters/reported-tasks'
-import { TestProject } from './reported-workspace'
+import { TestProject } from './reported-workspace-project'
 
 export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {

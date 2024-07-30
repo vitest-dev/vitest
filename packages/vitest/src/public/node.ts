@@ -49,6 +49,7 @@ export { isFileServingAllowed, createServer, parseAst, parseAstAsync } from 'vit
 export type * as Vite from 'vite'
 
 export { TestCase, TestFile, TestSuite } from '../node/reporters/reported-tasks'
+export { TestProject } from '../node/reported-workspace-project'
 export type {
   TestCollection,
 
