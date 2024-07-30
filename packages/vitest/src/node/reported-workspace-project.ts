@@ -20,10 +20,6 @@ export class TestProject {
    */
   public readonly config: ResolvedProjectConfig
   /**
-   * Serialized project configuration. This is the config that tests receive.
-   */
-  public readonly serializedConfig: SerializedConfig
-  /**
    * Resolved global configuration. If there are no workspace projects, this will be the same as `config`.
    */
   public readonly globalConfig: ResolvedConfig
@@ -33,7 +29,13 @@ export class TestProject {
     this.vitest = workspaceProject.ctx
     this.globalConfig = workspaceProject.ctx.config
     this.config = workspaceProject.config
-    this.serializedConfig = workspaceProject.serializedConfig
+  }
+
+  /**
+   * Serialized project configuration. This is the config that tests receive.
+   */
+  public get serializedConfig() {
+    return this.workspaceProject.getSerializableConfig()
   }
 
   /**

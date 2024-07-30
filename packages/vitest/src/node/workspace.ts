@@ -420,11 +420,17 @@ export class WorkspaceProject {
   }
 
   getSerializableConfig(): SerializedConfig {
+    // TODO: serialize the config _once_ or when needed
+    const config = serializeConfig(
+      this.config,
+      this.ctx.config,
+      this.server.config,
+    )
     if (!this.ctx.configOverride) {
-      return this.serializedConfig
+      return config
     }
     return deepMerge(
-      this.serializedConfig,
+      config,
       this.ctx.configOverride,
     )
   }
