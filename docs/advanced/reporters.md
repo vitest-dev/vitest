@@ -59,7 +59,7 @@ export default defineConfig({
 ## Reported Tasks
 
 ::: warning
-This is experimental API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
+This is an experimental API. Breaking changes might not follow SemVer. Please pin Vitest's version when using it.
 
 You can get access to this API by calling `vitest.state.getReportedEntity(runnerTask)`:
 
@@ -103,7 +103,7 @@ declare class TestCase {
    */
   readonly task: RunnerTestCase | RunnerCustomCase
   /**
-   * The project assosiacted with the test.
+   * The project associated with the test.
    */
   readonly project: TestProject
   /**
@@ -237,7 +237,7 @@ declare class TestSuite {
    */
   readonly task: RunnerTestSuite
   /**
-   * The project assosiacted with the test.
+   * The project associated with the test.
    */
   readonly project: TestProject
   /**
@@ -291,7 +291,7 @@ declare class TestFile extends SuiteImplementation {
    */
   readonly children: TestCollection
   /**
-   * This is usually an absolute UNIX file path.
+   * This is usually an absolute Unix file path.
    * It can be a virtual id if the file is not on the disk.
    * This value corresponds to Vite's `ModuleGraph` id.
    */
