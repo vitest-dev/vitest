@@ -26,7 +26,7 @@ class ReportedTaskImplementation {
   /**
    * Unique identifier.
    * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the file path and test position.
+   * The ID is based on the project name, file path and test position.
    */
   public readonly id: string
 
@@ -59,7 +59,7 @@ export class TestCase extends ReportedTaskImplementation {
   #fullName: string | undefined
 
   declare public readonly task: RunnerTestCase | RunnerCustomCase
-  public readonly type: 'test' | 'custom' = 'test'
+  public readonly type = 'test'
 
   /**
    * Direct reference to the test file where the test or suite is defined.
@@ -77,11 +77,11 @@ export class TestCase extends ReportedTaskImplementation {
   public readonly options: TaskOptions
 
   /**
-   * Parent suite. If suite was called directly inside the file, the parent will be the file.
+   * Parent suite. If the test was called directly inside the file, the parent will be the file.
    */
   public readonly parent: TestSuite | TestFile
 
-  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestCase | RunnerCustomCase, project: WorkspaceProject) {
     super(task, project)
 
     this.name = task.name
@@ -107,7 +107,7 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Result of the test. Will be `undefined` if test is not finished yet or was just collected.
+   * Test results. Will be `undefined` if test is not finished yet or was just collected.
    */
   public result(): TestResult | undefined {
     const result = this.task.result
@@ -126,7 +126,7 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks if the test passed successfully.
+   * Checks if the test did not fail the suite.
    * If the test is not finished yet or was skipped, it will return `true`.
    */
   public ok(): boolean {
@@ -172,7 +172,7 @@ class TestCollection {
   }
 
   /**
-   * Test or a suite at a specific index in the array.
+   * Returns the test or suite at a specific index in the array.
    */
   at(index: number): TestCase | TestSuite | undefined {
     if (index < 0) {
@@ -189,21 +189,14 @@ class TestCollection {
   }
 
   /**
-   * The same collection, but in an array form for easier manipulation.
+   * Returns the collection in array form for easier manipulation.
    */
   array(): (TestCase | TestSuite)[] {
     return Array.from(this)
   }
 
   /**
-   * Iterates over all tests and suites in the collection.
-   */
-  *values(): IterableIterator<TestCase | TestSuite> {
-    return this[Symbol.iterator]()
-  }
-
-  /**
-   * Filters all tests that are part of this collection's suite and its children.
+   * Filters all tests that are part of this collection and its children.
    */
   *allTests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
     for (const child of this) {
@@ -223,7 +216,7 @@ class TestCollection {
   }
 
   /**
-   * Filters only tests that are part of this collection.
+   * Filters only the tests that are part of this collection.
    */
   *tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
     for (const child of this) {
@@ -244,7 +237,7 @@ class TestCollection {
   }
 
   /**
-   * Filters only suites that are part of this collection.
+   * Filters only the suites that are part of this collection.
    */
   *suites(): IterableIterator<TestSuite> {
     for (const child of this) {
@@ -255,7 +248,7 @@ class TestCollection {
   }
 
   /**
-   * Filters all suites that are part of this collection's suite and its children.
+   * Filters all suites that are part of this collection and its children.
    */
   *allSuites(): IterableIterator<TestSuite> {
     for (const child of this) {

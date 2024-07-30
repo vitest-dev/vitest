@@ -52,7 +52,7 @@ export class TestProject {
   }
 
   /**
-   * Provide a custom context to the project. This context will be available for tests once they run.
+   * Provide a custom serializable context to the project. This context will be available for tests once they run.
    */
   public provide<T extends keyof ProvidedContext & string>(
     key: T,

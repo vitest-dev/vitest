@@ -29,6 +29,7 @@ export {
 export type { BaseReporter, Reporter }
 
 export { TestCase, TestFile, TestSuite } from './reported-tasks'
+export type { TestProject } from '../reported-workspace-project'
 export type {
   TestCollection,
 
