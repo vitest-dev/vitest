@@ -70,7 +70,7 @@ export function setupBrowserRpc(
           ctx.state.catchError(error, type)
         },
         async onCollected(files) {
-          ctx.state.collectFiles(files)
+          ctx.state.collectFiles(project, files)
           await ctx.report('onCollected', files)
         },
         async onTaskUpdate(packs) {

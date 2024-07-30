@@ -28,6 +28,20 @@ export {
 }
 export type { BaseReporter, Reporter }
 
+export { TestCase, TestFile, TestSuite } from './reported-tasks'
+export type {
+  TestCollection,
+
+  TaskOptions,
+  TestDiagnostic,
+  FileDiagnostic,
+
+  TestResult,
+  TestResultFailed,
+  TestResultPassed,
+  TestResultSkipped,
+} from './reported-tasks'
+
 export type {
   JsonAssertionResult,
   JsonTestResult,

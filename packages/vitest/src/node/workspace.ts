@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
-import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { rm } from 'node:fs/promises'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import {
@@ -24,6 +24,7 @@ import { setup } from '../api/setup'
 import type { ProvidedContext } from '../types/general'
 import type {
   ResolvedConfig,
+  SerializedConfig,
   UserConfig,
   UserWorkspaceConfig,
 } from './types/config'
@@ -37,6 +38,7 @@ import { MocksPlugins } from './plugins/mocks'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
 import type { Vitest } from './core'
+import { TestProject } from './reported-workspace-project'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -95,6 +97,8 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
 
   testFilesList: string[] | null = null
+
+  public testProject!: TestProject
 
   public readonly id = nanoid()
   public readonly tmpDir = join(tmpdir(), this.id)
@@ -204,12 +208,6 @@ export class WorkspaceProject {
   getSourceMapModuleById(id: string): TransformResult['map'] | undefined {
     const mod = this.server.moduleGraph.getModuleById(id)
     return mod?.ssrTransformResult?.map || mod?.transformResult?.map
-  }
-
-  getBrowserSourceMapModuleById(
-    id: string,
-  ): TransformResult['map'] | undefined {
-    return this.browser?.vite.moduleGraph.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {
@@ -366,6 +364,7 @@ export class WorkspaceProject {
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
+    project.testProject = new TestProject(project)
     return project
   }
 
@@ -385,6 +384,7 @@ export class WorkspaceProject {
       server.config,
       this.ctx.logger,
     )
+    this.testProject = new TestProject(this)
 
     this.server = server
 
@@ -404,28 +404,24 @@ export class WorkspaceProject {
     await this.initBrowserServer(this.server.config.configFile)
   }
 
-  isBrowserEnabled() {
+  isBrowserEnabled(): boolean {
     return isBrowserEnabled(this.config)
   }
 
-  getSerializableConfig(method: 'run' | 'collect' = 'run') {
-    // TODO: call `serializeConfig` only once
-    const config = deepMerge(serializeConfig(
+  getSerializableConfig(): SerializedConfig {
+    // TODO: serialize the config _once_ or when needed
+    const config = serializeConfig(
       this.config,
       this.ctx.config,
-      this.server?.config,
-    ), (this.ctx.configOverride || {}))
-
-    // disable heavy features when collecting because they are not needed
-    if (method === 'collect') {
-      if (this.config.browser.provider && this.config.browser.provider !== 'preview') {
-        config.browser.headless = true
-      }
-      config.snapshotSerializers = []
-      config.diff = undefined
+      this.server.config,
+    )
+    if (!this.ctx.configOverride) {
+      return config
     }
-
-    return config
+    return deepMerge(
+      config,
+      this.ctx.configOverride,
+    )
   }
 
   close() {
@@ -444,7 +440,7 @@ export class WorkspaceProject {
 
   private async clearTmpDir() {
     try {
-      await rm(this.tmpDir, { force: true, recursive: true })
+      await rm(this.tmpDir, { recursive: true })
     }
     catch {}
   }

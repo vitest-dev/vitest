@@ -95,7 +95,7 @@ const plugins = [
   json(),
   commonjs(),
   esbuild({
-    target: 'node14',
+    target: 'node18',
   }),
 ]
 

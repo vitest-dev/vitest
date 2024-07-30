@@ -137,7 +137,7 @@ export function createForksPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
+          ctx.state.cancelFiles(files, project)
         }
         else {
           throw error

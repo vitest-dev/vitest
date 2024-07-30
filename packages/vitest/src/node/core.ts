@@ -440,7 +440,7 @@ export class Vitest {
       files.forEach((file) => {
         file.logs?.forEach(log => this.state.updateUserLog(log))
       })
-      this.state.collectFiles(files)
+      this.state.collectFiles(project, files)
     }
 
     await this.report('onCollected', files).catch(noop)

@@ -9,7 +9,7 @@ import type {
 } from 'vitest'
 import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
-import { StateManager } from '../../../../vitest/src/node/state'
+import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {
   paths: string[]
@@ -55,7 +55,6 @@ export function createStaticClient(): VitestClient {
     },
     getTransformResult: asyncNoop,
     onDone: noop,
-    onCollected: asyncNoop,
     onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,

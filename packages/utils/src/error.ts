@@ -1,5 +1,6 @@
 import { type DiffOptions, printDiffOrStringify } from './diff'
 import { format, stringify } from './display'
+import type { TestError } from './types'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {
@@ -26,7 +27,7 @@ function getUnserializableMessage(err: unknown) {
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakMap()): any {
+export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakMap()): any {
   if (!val || typeof val === 'string') {
     return val
   }
@@ -41,7 +42,7 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
   // cannot serialize immutables as immutables
   if (isImmutable(val)) {
-    return serializeError(val.toJSON(), seen)
+    return serializeValue(val.toJSON(), seen)
   }
   if (
     val instanceof Promise
@@ -56,7 +57,7 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
     return `${val.toString()} ${format(val.sample)}`
   }
   if (typeof val.toJSON === 'function') {
-    return serializeError(val.toJSON(), seen)
+    return serializeValue(val.toJSON(), seen)
   }
 
   if (seen.has(val)) {
@@ -69,7 +70,7 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
     seen.set(val, clone)
     val.forEach((e, i) => {
       try {
-        clone[i] = serializeError(e, seen)
+        clone[i] = serializeValue(e, seen)
       }
       catch (err) {
         clone[i] = getUnserializableMessage(err)
@@ -90,7 +91,7 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
           return
         }
         try {
-          clone[key] = serializeError(val[key], seen)
+          clone[key] = serializeValue(val[key], seen)
         }
         catch (err) {
           // delete in case it has a setter from prototype that might throw
@@ -104,18 +105,22 @@ export function serializeError(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
 }
 
+export { serializeValue as serializeError }
+
 function normalizeErrorMessage(message: string) {
   return message.replace(/__(vite_ssr_import|vi_import)_\d+__\./g, '')
 }
 
 export function processError(
-  err: any,
+  _err: any,
   diffOptions?: DiffOptions,
   seen: WeakSet<WeakKey> = new WeakSet(),
 ): any {
-  if (!err || typeof err !== 'object') {
-    return { message: err }
+  if (!_err || typeof _err !== 'object') {
+    return { message: String(_err) }
   }
+  const err = _err as TestError
+
   // stack is not serialized in worker communication
   // we stringify it first
   if (err.stack) {
@@ -133,7 +138,7 @@ export function processError(
   ) {
     err.diff = printDiffOrStringify(err.actual, err.expected, {
       ...diffOptions,
-      ...err.diffOptions,
+      ...err.diffOptions as DiffOptions,
     })
   }
 
@@ -163,10 +168,10 @@ export function processError(
   catch {}
 
   try {
-    return serializeError(err)
+    return serializeValue(err)
   }
   catch (e: any) {
-    return serializeError(
+    return serializeValue(
       new Error(
         `Failed to fully serialize error: ${e?.message}\nInner error message: ${err?.message}`,
       ),
