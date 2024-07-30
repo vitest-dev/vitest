@@ -24,11 +24,17 @@ export class TestProject {
    */
   public readonly globalConfig: ResolvedConfig
 
+  /**
+   * The name of the project or an empty string if not set.
+   */
+  public readonly name: string
+
   constructor(workspaceProject: WorkspaceProject) {
     this.workspaceProject = workspaceProject
     this.vitest = workspaceProject.ctx
     this.globalConfig = workspaceProject.ctx.config
     this.config = workspaceProject.config
+    this.name = workspaceProject.getName()
   }
 
   /**
@@ -36,13 +42,6 @@ export class TestProject {
    */
   public get serializedConfig() {
     return this.workspaceProject.getSerializableConfig()
-  }
-
-  /**
-   * The name of the project or an empty string if not set.
-   */
-  public name(): string {
-    return this.workspaceProject.getName()
   }
 
   /**
@@ -64,7 +63,7 @@ export class TestProject {
 
   public toJSON(): SerializedTestProject {
     return {
-      name: this.name(),
+      name: this.name,
       serializedConfig: this.serializedConfig,
       context: this.context(),
     }
