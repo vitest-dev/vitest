@@ -4,6 +4,7 @@ import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
 import { TestCase, TestFile, TestSuite } from './reporters/reported-tasks'
+import { TestProject } from './reported-workspace'
 
 export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {
@@ -21,6 +22,7 @@ export class StateManager {
   errorsSet = new Set<unknown>()
   processTimeoutCauses = new Set<string>()
   reportedTasksMap = new WeakMap<Task, TestCase | TestFile | TestSuite>()
+  reportedProjectsMap = new WeakMap<WorkspaceProject, TestProject>()
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err)) {
@@ -173,6 +175,14 @@ export class StateManager {
 
   getReportedEntity(task: Task) {
     return this.reportedTasksMap.get(task)
+  }
+
+  getReportedProject(project: WorkspaceProject) {
+    const reportedProject = this.reportedProjectsMap.get(project)
+    if (!reportedProject) {
+      return TestProject.register(project)
+    }
+    return reportedProject
   }
 
   updateTasks(packs: TaskResultPack[]) {

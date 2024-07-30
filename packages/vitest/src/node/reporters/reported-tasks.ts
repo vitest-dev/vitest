@@ -9,6 +9,7 @@ import type {
 import type { TestError } from '@vitest/utils'
 import { getTestName } from '../../utils/tasks'
 import type { WorkspaceProject } from '../workspace'
+import type { TestProject } from '../reported-workspace'
 
 class ReportedTaskImplementation {
   /**
@@ -18,10 +19,10 @@ class ReportedTaskImplementation {
   public readonly task: RunnerTask
 
   /**
-   * Current task's project.
+   * The project assosiacted with the test or suite.
    * @experimental Public project API is experimental and does not follow semver.
    */
-  public readonly project: WorkspaceProject
+  public readonly project: TestProject
 
   /**
    * Unique identifier.
@@ -40,11 +41,14 @@ class ReportedTaskImplementation {
     project: WorkspaceProject,
   ) {
     this.task = task
-    this.project = project
+    this.project = project.ctx.state.getReportedProject(project)
     this.id = task.id
     this.location = task.location
   }
 
+  /**
+   * Creates a new reported task instance and stores it in the project's state for future use.
+   */
   static register(task: RunnerTask, project: WorkspaceProject) {
     const state = new this(task, project) as TestCase | TestSuite | TestFile
     storeTask(project, task, state)
@@ -120,6 +124,15 @@ export class TestCase extends ReportedTaskImplementation {
       state,
       errors: result.errors as TestError[] | undefined,
     } as TestResult
+  }
+
+  /**
+   * Checks if the test passed successfully.
+   * If the test is not finished yet or was skipped, it will return `true`.
+   */
+  public ok(): boolean {
+    const result = this.result()
+    return !result || result.state !== 'failed'
   }
 
   /**
@@ -389,6 +402,9 @@ function buildOptions(task: RunnerTestCase | RunnerCustomCase | RunnerTestFile |
 export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
 
 export interface TestResultPassed {
+  /**
+   * The test passed successfully.
+   */
   state: 'passed'
   /**
    * Errors that were thrown during the test execution.
@@ -399,6 +415,9 @@ export interface TestResultPassed {
 }
 
 export interface TestResultFailed {
+  /**
+   * The test failed to execute.
+   */
   state: 'failed'
   /**
    * Errors that were thrown during the test execution.
@@ -407,15 +426,39 @@ export interface TestResultFailed {
 }
 
 export interface TestResultSkipped {
+  /**
+   * The test was skipped with `only`, `skip` or `todo` flag.
+   * You can see which one was used in the `mode` option.
+   */
   state: 'skipped'
+  /**
+   * Skipped tests have no errors.
+   */
   errors: undefined
 }
 
 export interface TestDiagnostic {
+  /**
+   * The amount of memory used by the test in bytes.
+   * This value is only available if the test was executed with `logHeapUsage` flag.
+   */
   heap: number | undefined
+  /**
+   * The time it takes to execute the test in ms.
+   */
   duration: number
+  /**
+   * The time in ms when the test started.
+   */
   startTime: number
+  /**
+   * The amount of times the test was retried.
+   */
   retryCount: number
+  /**
+   * The amount of times the test was repeated as configured by `repeats` option.
+   * This value can be lower if the test failed during the repeat and no `retry` is configured.
+   */
   repeatCount: number
   /**
    * If test passed on a second retry.
@@ -459,7 +502,7 @@ function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTa
 function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): TestCase | TestSuite | TestFile {
   const reportedTask = project.ctx.state.getReportedEntity(runnerTask)
   if (!reportedTask) {
-    throw new Error(`Task instance was not found for ${runnerTask.type} ${runnerTask.name}`)
+    throw new Error(`Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`)
   }
   return reportedTask
 }

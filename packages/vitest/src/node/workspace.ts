@@ -24,6 +24,7 @@ import { setup } from '../api/setup'
 import type { ProvidedContext } from '../types/general'
 import type {
   ResolvedConfig,
+  SerializedConfig,
   UserConfig,
   UserWorkspaceConfig,
 } from './types/config'
@@ -86,6 +87,7 @@ export class WorkspaceProject {
   configOverride: Partial<ResolvedConfig> | undefined
 
   config!: ResolvedConfig
+  serializedConfig!: SerializedConfig
   server!: ViteDevServer
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
@@ -204,12 +206,6 @@ export class WorkspaceProject {
   getSourceMapModuleById(id: string): TransformResult['map'] | undefined {
     const mod = this.server.moduleGraph.getModuleById(id)
     return mod?.ssrTransformResult?.map || mod?.transformResult?.map
-  }
-
-  getBrowserSourceMapModuleById(
-    id: string,
-  ): TransformResult['map'] | undefined {
-    return this.browser?.vite.moduleGraph.getModuleById(id)?.transformResult?.map
   }
 
   get reporters() {
@@ -385,6 +381,11 @@ export class WorkspaceProject {
       server.config,
       this.ctx.logger,
     )
+    this.serializedConfig = serializeConfig(
+      this.config,
+      this.ctx.config,
+      server.config,
+    )
 
     this.server = server
 
@@ -404,28 +405,18 @@ export class WorkspaceProject {
     await this.initBrowserServer(this.server.config.configFile)
   }
 
-  isBrowserEnabled() {
+  isBrowserEnabled(): boolean {
     return isBrowserEnabled(this.config)
   }
 
-  getSerializableConfig(method: 'run' | 'collect' = 'run') {
-    // TODO: call `serializeConfig` only once
-    const config = deepMerge(serializeConfig(
-      this.config,
-      this.ctx.config,
-      this.server?.config,
-    ), (this.ctx.configOverride || {}))
-
-    // disable heavy features when collecting because they are not needed
-    if (method === 'collect') {
-      if (this.config.browser.provider && this.config.browser.provider !== 'preview') {
-        config.browser.headless = true
-      }
-      config.snapshotSerializers = []
-      config.diff = undefined
+  getSerializableConfig(): SerializedConfig {
+    if (!this.ctx.configOverride) {
+      return this.serializedConfig
     }
-
-    return config
+    return deepMerge(
+      this.serializedConfig,
+      this.ctx.configOverride,
+    )
   }
 
   close() {

@@ -81,6 +81,7 @@ export type {
   UserConfig,
   ResolvedConfig,
   ProjectConfig,
+  ResolvedProjectConfig,
   UserWorkspaceConfig,
   RuntimeConfig,
 } from '../node/types/config'
