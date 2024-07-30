@@ -362,6 +362,11 @@ export class WorkspaceProject {
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
+    project.serializedConfig = serializeConfig(
+      ctx.config,
+      ctx.config,
+      ctx.server.config,
+    )
     return project
   }
 
