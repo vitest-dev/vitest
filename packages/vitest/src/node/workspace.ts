@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
-import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { rm } from 'node:fs/promises'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import {
@@ -38,6 +38,7 @@ import { MocksPlugins } from './plugins/mocks'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
 import type { Vitest } from './core'
+import { TestProject } from './reported-workspace-project'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -97,6 +98,8 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
 
   testFilesList: string[] | null = null
+
+  public testProject!: TestProject
 
   public readonly id = nanoid()
   public readonly tmpDir = join(tmpdir(), this.id)
@@ -367,6 +370,7 @@ export class WorkspaceProject {
       ctx.config,
       ctx.server.config,
     )
+    project.testProject = new TestProject(project)
     return project
   }
 
@@ -391,6 +395,7 @@ export class WorkspaceProject {
       this.ctx.config,
       server.config,
     )
+    this.testProject = new TestProject(this)
 
     this.server = server
 
@@ -440,7 +445,7 @@ export class WorkspaceProject {
 
   private async clearTmpDir() {
     try {
-      await rm(this.tmpDir, { force: true, recursive: true })
+      await rm(this.tmpDir, { recursive: true })
     }
     catch {}
   }

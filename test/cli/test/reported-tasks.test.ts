@@ -53,7 +53,7 @@ it('correctly reports a file', () => {
   expect(testFile.id).toBe(files[0].id)
   expect(testFile.location).toBeUndefined()
   expect(testFile.moduleId).toBe(resolve('./fixtures/reported-tasks/1_first.test.ts'))
-  expect(testFile.project).toBe(project)
+  expect(testFile.project.workspaceProject).toBe(project)
   expect(testFile.children.size).toBe(14)
 
   const tests = [...testFile.children.tests()]

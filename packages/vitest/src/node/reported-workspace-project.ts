@@ -20,22 +20,20 @@ export class TestProject {
    */
   public readonly config: ResolvedProjectConfig
   /**
+   * Serialized project configuration. This is the config that tests receive.
+   */
+  public readonly serializedConfig: SerializedConfig
+  /**
    * Resolved global configuration. If there are no workspace projects, this will be the same as `config`.
    */
   public readonly globalConfig: ResolvedConfig
 
-  private constructor(workspaceProject: WorkspaceProject) {
+  constructor(workspaceProject: WorkspaceProject) {
     this.workspaceProject = workspaceProject
     this.vitest = workspaceProject.ctx
     this.globalConfig = workspaceProject.ctx.config
     this.config = workspaceProject.config
-  }
-
-  /**
-   * Serialized project configuration. This is the config that tests receive.
-   */
-  public get serializedConfig(): SerializedConfig {
-    return this.workspaceProject.getSerializableConfig()
+    this.serializedConfig = workspaceProject.serializedConfig
   }
 
   /**
@@ -62,9 +60,17 @@ export class TestProject {
     this.workspaceProject.provide(key, value)
   }
 
-  static register(workspaceProject: WorkspaceProject): TestProject {
-    const project = new TestProject(workspaceProject)
-    workspaceProject.ctx.state.reportedProjectsMap.set(workspaceProject, project)
-    return project
+  public toJSON(): SerializedTestProject {
+    return {
+      name: this.name(),
+      serializedConfig: this.serializedConfig,
+      context: this.context(),
+    }
   }
+}
+
+interface SerializedTestProject {
+  name: string
+  serializedConfig: SerializedConfig
+  context: ProvidedContext
 }

@@ -9,7 +9,7 @@ import type {
 import type { TestError } from '@vitest/utils'
 import { getTestName } from '../../utils/tasks'
 import type { WorkspaceProject } from '../workspace'
-import type { TestProject } from '../reported-workspace-project'
+import { TestProject } from '../reported-workspace-project'
 
 class ReportedTaskImplementation {
   /**
@@ -40,7 +40,7 @@ class ReportedTaskImplementation {
     project: WorkspaceProject,
   ) {
     this.task = task
-    this.project = project.ctx.state.getReportedProject(project)
+    this.project = project.testProject || (project.testProject = new TestProject(project))
     this.id = task.id
     this.location = task.location
   }
