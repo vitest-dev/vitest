@@ -88,7 +88,6 @@ export class WorkspaceProject {
   configOverride: Partial<ResolvedConfig> | undefined
 
   config!: ResolvedConfig
-  serializedConfig!: SerializedConfig
   server!: ViteDevServer
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
@@ -365,11 +364,6 @@ export class WorkspaceProject {
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
-    project.serializedConfig = serializeConfig(
-      ctx.config,
-      ctx.config,
-      ctx.server.config,
-    )
     project.testProject = new TestProject(project)
     return project
   }
@@ -389,11 +383,6 @@ export class WorkspaceProject {
       },
       server.config,
       this.ctx.logger,
-    )
-    this.serializedConfig = serializeConfig(
-      this.config,
-      this.ctx.config,
-      server.config,
     )
     this.testProject = new TestProject(this)
 
