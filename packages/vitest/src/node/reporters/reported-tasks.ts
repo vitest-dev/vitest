@@ -20,7 +20,6 @@ class ReportedTaskImplementation {
 
   /**
    * The project assosiacted with the test or suite.
-   * @experimental Public project API is experimental and does not follow semver.
    */
   public readonly project: TestProject
 
