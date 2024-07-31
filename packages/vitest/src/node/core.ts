@@ -650,7 +650,7 @@ export class Vitest {
     if (!projects.has(coreProject)) {
       projects.add(coreProject)
     }
-    for await (const project of projects) {
+    for (const project of projects) {
       await project.initializeGlobalSetup()
     }
   }
