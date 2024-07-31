@@ -87,7 +87,7 @@ export class BrowserServer implements IBrowserServer {
       resolve(distRoot, 'client/esm-client-injector.js'),
       'utf8',
     ).then(js => (this.injectorJs = js))
-    this.errorCatcherPath = resolve(distRoot, 'client/error-catcher.js')
+    this.errorCatcherPath = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',

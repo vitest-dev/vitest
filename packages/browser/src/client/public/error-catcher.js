@@ -1,10 +1,5 @@
 import { channel, client } from '@vitest/browser/client'
 
-function on(event, listener) {
-  window.addEventListener(event, listener)
-  return () => window.removeEventListener(event, listener)
-}
-
 function serializeError(unhandledError) {
   if (typeof unhandledError !== 'object' || !unhandledError) {
     return {
@@ -19,41 +14,40 @@ function serializeError(unhandledError) {
   }
 }
 
-function catchWindowErrors(cb) {
+function catchWindowErrors(errorEvent, prop, cb) {
   let userErrorListenerCount = 0
   function throwUnhandlerError(e) {
-    if (userErrorListenerCount === 0 && e.error != null) {
+    if (userErrorListenerCount === 0 && e[prop] != null) {
       cb(e)
     }
     else {
-      console.error(e.error)
+      console.error(e[prop])
     }
   }
   const addEventListener = window.addEventListener.bind(window)
   const removeEventListener = window.removeEventListener.bind(window)
-  window.addEventListener('error', throwUnhandlerError)
+  window.addEventListener(errorEvent, throwUnhandlerError)
   window.addEventListener = function (...args) {
-    if (args[0] === 'error') {
+    if (args[0] === errorEvent) {
       userErrorListenerCount++
     }
     return addEventListener.apply(this, args)
   }
   window.removeEventListener = function (...args) {
-    if (args[0] === 'error' && userErrorListenerCount) {
+    if (args[0] === errorEvent && userErrorListenerCount) {
       userErrorListenerCount--
     }
     return removeEventListener.apply(this, args)
   }
   return function clearErrorHandlers() {
-    window.removeEventListener('error', throwUnhandlerError)
+    window.removeEventListener(errorEvent, throwUnhandlerError)
   }
 }
 
 function registerUnexpectedErrors() {
-  catchWindowErrors(event =>
-    reportUnexpectedError('Error', event.error),
-  )
-  on('unhandledrejection', event =>
+  catchWindowErrors('error', 'error', event =>
+    reportUnexpectedError('Error', event.error))
+  catchWindowErrors('unhandledrejection', 'reason', event =>
     reportUnexpectedError('Unhandled Rejection', event.reason))
 }
 
