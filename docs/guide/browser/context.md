@@ -6,32 +6,13 @@ title: Context | Browser Mode
 
 Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
 
-```ts
-export const server: {
-  /**
-   * Platform the Vitest server is running on.
-   * The same as calling `process.platform` on the server.
-   */
-  platform: Platform
-  /**
-   * Runtime version of the Vitest server.
-   * The same as calling `process.version` on the server.
-   */
-  version: string
-  /**
-   * Name of the browser provider.
-   */
-  provider: string
-  /**
-   * Name of the current browser.
-   */
-  browser: string
-  /**
-   * Available commands for the browser.
-   */
-  commands: BrowserCommands
-}
+## `userEvent`
 
+::: tip
+The `userEvent` API is explained in detail at [Interactivity API](/guide/browser/interactivity-api).
+:::
+
+```ts
 /**
  * Handler for user interactions. The support is implemented by the browser provider (`playwright` or `webdriverio`).
  * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
@@ -56,18 +37,32 @@ export const userEvent: {
   fill: (element: Element, text: string, options?: UserEventFillOptions) => Promise<void>
   dragAndDrop: (source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>
 }
+```
 
+## `commands`
+
+::: tip
+Commands API is explained in detail at [Commands](/guide/browser/commands).
+:::
+
+```ts
 /**
  * Available commands for the browser.
  * A shortcut to `server.commands`.
  */
 export const commands: BrowserCommands
+```
 
+## `page`
+
+The `page` export provides utilities to interact with the current `page`.
+
+::: warning
+While it exposes some utilities from Playwright's `page`, it is not the same object. Since the browser context is evaluated in the browser, your tests don't have access to Playwright's `page` because it runs on the server.
+:::
+
+```ts
 export const page: {
-  /**
-   * Serialized test config.
-   */
-  config: SerializedConfig
   /**
    * Change the size of iframe's viewport.
    */
@@ -82,6 +77,51 @@ export const page: {
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
 }
+```
 
+## `cdp`
+
+The `cdp` export returns the current Chrome DevTools Protocol session. It is mostly useful to library authors to build tools on top of it.
+
+::: warning
+CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
+:::
+
+```ts
 export const cdp: () => CDPSession
+```
+
+## `server`
+
+The `server` export represents the Node.js environment where the Vitest server is running. It is mostly useful for debugging.
+
+```ts
+export const server: {
+  /**
+   * Platform the Vitest server is running on.
+   * The same as calling `process.platform` on the server.
+   */
+  platform: Platform
+  /**
+   * Runtime version of the Vitest server.
+   * The same as calling `process.version` on the server.
+   */
+  version: string
+  /**
+   * Name of the browser provider.
+   */
+  provider: string
+  /**
+   * Name of the current browser.
+   */
+  browser: string
+  /**
+   * Available commands for the browser.
+   */
+  commands: BrowserCommands
+  /**
+   * Serialized test config.
+   */
+  config: SerializedConfig
+}
 ```

@@ -80,7 +80,8 @@ export const server = {
   browser: ${JSON.stringify(server.project.config.browser.name)},
   commands: {
     ${commandsCode}
-  }
+  },
+  config: __vitest_browser_runner__.config,
 }
 export const commands = server.commands
 export const userEvent = ${getUserEvent(provider)}

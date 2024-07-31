@@ -246,9 +246,6 @@ export function cdp() {
 
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
-  get config() {
-    return runner().config
-  },
   viewport(width, height) {
     const id = runner().iframeId
     channel.postMessage({ type: 'viewport', width, height, id })
