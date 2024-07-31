@@ -139,6 +139,7 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 ### vi.doMock
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => unknown) => void`
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
 
@@ -226,13 +227,13 @@ Imports a module with all of its properties (including nested properties) mocked
 
 ### vi.unmock
 
-- **Type**: `(path: string) => void`
+- **Type**: `(path: string | Promise<Module>) => void`
 
 Removes module from the mocked registry. All calls to import will return the original module even if it was mocked before. This call is hoisted to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
 
 ### vi.doUnmock
 
-- **Type**: `(path: string) => void`
+- **Type**: `(path: string | Promise<Module>) => void`
 
 The same as [`vi.unmock`](#vi-unmock), but is not hoisted to the top of the file. The next import of the module will import the original module instead of the mock. This will not unmock previously imported modules.
 
