@@ -90,6 +90,7 @@ async function run(files: string[], options: CliOptions = {}) {
     mode: options.mode,
     server: {
       hmr: !!options.watch,
+      watch: options.watch ? undefined : null,
     },
     plugins: [options.watch && viteNodeHmrPlugin()],
   })
