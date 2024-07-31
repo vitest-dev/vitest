@@ -47,9 +47,13 @@ bun add -D vitest @vitest/browser
 
 ::: warning
 However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `preview` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
+
+If you don't already use one of these tools, we recommend starting with Playwright because it supports parallel execution, which makes your tests run faster. Additionally, the Chrome DevTools Protocol that Playwright uses is generally faster than WebDriver.
 :::
 
 ### Using Playwright
+
+[Playwright](https://npmjs.com/package/playwright) is a framework for Web Testing and Automation.
 
 ::: code-group
 ```bash [npm]
@@ -67,6 +71,8 @@ bun add -D vitest @vitest/browser playwright
 :::
 
 ### Using Webdriverio
+
+[WebdriverIO](https://www.npmjs.com/package/webdriverio) allows you to run tests locally using the WebDriver protocol.
 
 ::: code-group
 ```bash [npm]
