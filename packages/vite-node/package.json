@@ -83,7 +83,7 @@
   },
   "dependencies": {
     "cac": "^6.7.14",
-    "debug": "^4.3.5",
+    "debug": "^4.3.6",
     "pathe": "^1.1.2",
     "tinyrainbow": "^1.2.0",
     "vite": "^5.0.0"

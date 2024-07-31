@@ -79,14 +79,14 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/user-event": "^14.5.2",
     "@vitest/utils": "workspace:*",
-    "magic-string": "^0.30.10",
-    "msw": "^2.3.2",
+    "magic-string": "^0.30.11",
+    "msw": "^2.3.4",
     "sirv": "^2.0.4",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.4.7",
-    "@types/ws": "^8.5.11",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@types/ws": "^8.5.12",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",

@@ -28,9 +28,11 @@ export const config: UserConfig = {
   },
   plugins: [
     Vue({
+      features: {
+        propsDestructure: true,
+      },
       script: {
         defineModel: true,
-        propsDestructure: true,
       },
     }),
     Unocss({
