@@ -39,14 +39,7 @@ export const builtinPools: BuiltinPool[] = [
   'typescript',
 ]
 
-function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
-  if (project.config.typecheck.enabled) {
-    for (const glob of project.config.typecheck.include) {
-      if (mm.isMatch(file, glob, { cwd: project.config.root })) {
-        return 'typescript'
-      }
-    }
-  }
+function getDefaultPoolName(project: WorkspaceProject): Pool {
   if (project.config.browser.enabled) {
     return 'browser'
   }
@@ -64,7 +57,7 @@ export function getFilePoolName(project: WorkspaceProject, file: string) {
       return pool as Pool
     }
   }
-  return getDefaultPoolName(project, file)
+  return getDefaultPoolName(project)
 }
 
 export function createPool(ctx: Vitest): ProcessPool {
@@ -172,9 +165,19 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     for (const spec of files) {
-      const pool = getFilePoolName(spec[0], spec[1])
+      const [project, file] = spec
+      const pool = getFilePoolName(project, file)
       filesByPool[pool] ??= []
       filesByPool[pool].push(spec)
+
+      if (project.config.typecheck.enabled) {
+        for (const glob of project.config.typecheck.include) {
+          if (mm.isMatch(file, glob, { cwd: project.config.root })) {
+            filesByPool.typescript ??= []
+            filesByPool.typescript.push(spec)
+          }
+        }
+      }
     }
 
     const Sequencer = ctx.config.sequence.sequencer
