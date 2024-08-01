@@ -91,17 +91,19 @@ export class JsonReporter implements Reporter {
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
     const numTotalTests = tests.length
-    const numFailedTestSuites = suites.filter(s => s.result?.errors).length
-    const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites
+
+    const numFailedTestSuites = suites.filter(s => s.result?.state === 'fail').length
     const numPendingTestSuites = suites.filter(
-      s => s.result?.state === 'run',
+      s => s.result?.state === 'run' || s.mode === 'todo',
     ).length
+    const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
+
     const numFailedTests = tests.filter(
       t => t.result?.state === 'fail',
     ).length
-    const numPassedTests = numTotalTests - numFailedTests
+    const numPassedTests = tests.filter(t => t.result?.state === 'pass').length
     const numPendingTests = tests.filter(
-      t => t.result?.state === 'run',
+      t => t.result?.state === 'run' || t.mode === 'skip' || t.result?.state === 'skip',
     ).length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []

@@ -284,15 +284,15 @@ Example of a JSON report:
 
 ```json
 {
-  "numTotalTestSuites": 1,
-  "numPassedTestSuites": 0,
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 2,
   "numFailedTestSuites": 1,
-  "numPendingTestSuites": 0,
-  "numTotalTests": 1,
-  "numPassedTests": 0,
+  "numPendingTestSuites": 1,
+  "numTotalTests": 4,
+  "numPassedTests": 1,
   "numFailedTests": 1,
-  "numPendingTests": 0,
-  "numTodoTests": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
   "startTime": 1697737019307,
   "success": false,
   "testResults": [
