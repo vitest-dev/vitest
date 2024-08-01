@@ -212,7 +212,7 @@ export default defineWorkspace([
 
 :::tabs key:provider
 == Playwright
-You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/guide/config/#browser-provideroptions) field:
+You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/config/#browser-provideroptions) field:
 
 ```ts
 export default defineConfig({
@@ -237,7 +237,7 @@ export default defineConfig({
 
 To have type hints, add `@vitest/browser/providers/playwright` to `compilerOptions.types` in your `tsconfig.json` file.
 == WebdriverIO
-You can configure what [options](https://webdriver.io/docs/configuration#webdriverio) Vitest should use when starting a browser via [`providerOptions`](/guide/config/#browser-provideroptions) field:
+You can configure what [options](https://webdriver.io/docs/configuration#webdriverio) Vitest should use when starting a browser via [`providerOptions`](/config/#browser-provideroptions) field:
 
 ```ts
 export default defineConfig({
