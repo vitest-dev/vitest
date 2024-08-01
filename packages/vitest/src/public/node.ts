@@ -48,6 +48,20 @@ export type { HTMLOptions } from '../node/reporters/html'
 export { isFileServingAllowed, createServer, parseAst, parseAstAsync } from 'vite'
 export type * as Vite from 'vite'
 
+export { TestCase, TestFile, TestSuite } from '../node/reporters/reported-tasks'
+export { TestProject } from '../node/reported-workspace-project'
+export type {
+  TestCollection,
+
+  TaskOptions,
+  TestDiagnostic,
+  FileDiagnostic,
+  TestResult,
+  TestResultPassed,
+  TestResultFailed,
+  TestResultSkipped,
+} from '../node/reporters/reported-tasks'
+
 export type {
   SequenceHooks,
   SequenceSetupFiles,
@@ -68,6 +82,7 @@ export type {
   UserConfig,
   ResolvedConfig,
   ProjectConfig,
+  ResolvedProjectConfig,
   UserWorkspaceConfig,
   RuntimeConfig,
 } from '../node/types/config'

@@ -47,4 +47,6 @@ export type {
   Constructable,
   ParsedStack,
   ErrorWithDiff,
+  SerializedError,
+  TestError,
 } from './types'

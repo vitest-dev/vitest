@@ -10,7 +10,7 @@ import type {
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { ChaiConfig } from '../../integrations/chai/config'
-import type { Arrayable, ParsedStack } from '../../types/general'
+import type { Arrayable, ErrorWithDiff, ParsedStack } from '../../types/general'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { EnvironmentOptions } from '../../types/environment'
@@ -620,7 +620,7 @@ export interface InlineConfig {
    *
    * Return `false` to omit the frame.
    */
-  onStackTrace?: (error: Error, frame: ParsedStack) => boolean | void
+  onStackTrace?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
 
   /**
    * Indicates if CSS files should be processed.
@@ -1019,9 +1019,7 @@ export interface ResolvedConfig
   minWorkers: number
 }
 
-export type ProjectConfig = Omit<
-  UserConfig,
-  | 'sequencer'
+type NonProjectOptions =
   | 'shard'
   | 'watch'
   | 'run'
@@ -1029,7 +1027,6 @@ export type ProjectConfig = Omit<
   | 'update'
   | 'reporters'
   | 'outputFile'
-  | 'poolOptions'
   | 'teardownTimeout'
   | 'silent'
   | 'forceRerunTriggers'
@@ -1047,11 +1044,17 @@ export type ProjectConfig = Omit<
   | 'slowTestThreshold'
   | 'inspect'
   | 'inspectBrk'
-  | 'deps'
   | 'coverage'
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
+
+export type ProjectConfig = Omit<
+  UserConfig,
+  NonProjectOptions
+  | 'sequencer'
+  | 'deps'
+  | 'poolOptions'
 > & {
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
@@ -1064,5 +1067,10 @@ export type ProjectConfig = Omit<
     forks?: Pick<NonNullable<PoolOptions['forks']>, 'singleFork' | 'isolate'>
   }
 }
+
+export type ResolvedProjectConfig = Omit<
+  ResolvedConfig,
+  NonProjectOptions
+>
 
 export type { UserWorkspaceConfig } from '../../public/config'

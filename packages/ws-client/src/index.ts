@@ -4,7 +4,7 @@ import { parse, stringify } from 'flatted'
 
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
-import { StateManager } from '../../vitest/src/node/state'
+import { StateManager } from './state'
 
 export * from '../../vitest/src/utils/tasks'
 

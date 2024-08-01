@@ -69,7 +69,7 @@ const FALLBACK_FORMAT_OPTIONS = {
  * @param options Diff options
  * @returns {string | null} a string diff
  */
-export function diff(a: any, b: any, options?: DiffOptions): string | null {
+export function diff(a: any, b: any, options?: DiffOptions): string | undefined {
   if (Object.is(a, b)) {
     return ''
   }
@@ -80,11 +80,11 @@ export function diff(a: any, b: any, options?: DiffOptions): string | null {
   if (aType === 'object' && typeof a.asymmetricMatch === 'function') {
     if (a.$$typeof !== Symbol.for('jest.asymmetricMatcher')) {
       // Do not know expected type of user-defined asymmetric matcher.
-      return null
+      return undefined
     }
     if (typeof a.getExpectedType !== 'function') {
       // For example, expect.anything() matches either null or undefined
-      return null
+      return undefined
     }
     expectedType = a.getExpectedType()
     // Primitive types boolean and number omit difference below.
@@ -104,7 +104,7 @@ export function diff(a: any, b: any, options?: DiffOptions): string | null {
   }
 
   if (omitDifference) {
-    return null
+    return undefined
   }
 
   switch (aType) {
@@ -234,7 +234,7 @@ export function printDiffOrStringify(
   expected: unknown,
   received: unknown,
   options?: DiffOptions,
-): string | null {
+): string | undefined {
   const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
 
   if (

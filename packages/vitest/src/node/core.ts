@@ -440,7 +440,7 @@ export class Vitest {
       files.forEach((file) => {
         file.logs?.forEach(log => this.state.updateUserLog(log))
       })
-      this.state.collectFiles(files)
+      this.state.collectFiles(project, files)
     }
 
     await this.report('onCollected', files).catch(noop)
@@ -650,7 +650,7 @@ export class Vitest {
     if (!projects.has(coreProject)) {
       projects.add(coreProject)
     }
-    for await (const project of projects) {
+    for (const project of projects) {
       await project.initializeGlobalSetup()
     }
   }

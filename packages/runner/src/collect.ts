@@ -1,4 +1,5 @@
 import { processError } from '@vitest/utils/error'
+import { toArray } from '@vitest/utils'
 import type { File, SuiteHooks } from './types/tasks'
 import type { VitestRunner } from './types/runner'
 import {
@@ -34,11 +35,18 @@ export async function collectTests(
     clearCollectorContext(filepath, runner)
 
     try {
-      const setupStart = now()
-      await runSetupFiles(config, runner)
+      const setupFiles = toArray(config.setupFiles)
+      if (setupFiles.length) {
+        const setupStart = now()
+        await runSetupFiles(config, setupFiles, runner)
+        const setupEnd = now()
+        file.setupDuration = setupEnd - setupStart
+      }
+      else {
+        file.setupDuration = 0
+      }
 
       const collectStart = now()
-      file.setupDuration = collectStart - setupStart
 
       await runner.importFile(filepath, 'collect')
 

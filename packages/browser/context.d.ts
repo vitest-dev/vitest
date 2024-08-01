@@ -233,6 +233,10 @@ export const server: {
    * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands: BrowserCommands
+  /**
+   * Serialized test config.
+   */
+  config: SerializedConfig
 }
 
 /**
@@ -250,10 +254,6 @@ export const userEvent: UserEvent
 export const commands: BrowserCommands
 
 export interface BrowserPage {
-  /**
-   * Serialized test config.
-   */
-  config: SerializedConfig
   /**
    * Change the size of iframe's viewport.
    */

@@ -15,7 +15,7 @@ export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
   getSourceMap?: (file: string) => unknown
   getFileName?: (id: string) => string
-  frameFilter?: (error: Error, frame: ParsedStack) => boolean | void
+  frameFilter?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
 }
 
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
