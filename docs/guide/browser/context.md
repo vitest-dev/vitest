@@ -1,8 +1,8 @@
 ---
-title: Context | Browser Mode
+title: Context API | Browser Mode
 ---
 
-# Context
+# Context API
 
 Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
 
@@ -42,7 +42,7 @@ export const userEvent: {
 ## `commands`
 
 ::: tip
-Commands API is explained in detail at [Commands](/guide/browser/commands).
+This API is explained in detail at [Commands API](/guide/browser/commands).
 :::
 
 ```ts
@@ -93,7 +93,7 @@ export const cdp: () => CDPSession
 
 ## `server`
 
-The `server` export represents the Node.js environment where the Vitest server is running. It is mostly useful for debugging.
+The `server` export represents the Node.js environment where the Vitest server is running. It is mostly useful for debugging or limiting your tests based on the environment.
 
 ```ts
 export const server: {
