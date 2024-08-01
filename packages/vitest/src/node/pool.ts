@@ -158,14 +158,12 @@ export function createPool(ctx: Vitest): ProcessPool {
     const filesByPool: Record<LocalPool, WorkspaceSpec[]> = {
       forks: [],
       threads: [],
-      // browser: [],
       vmThreads: [],
       vmForks: [],
       typescript: [],
     }
 
     const factories: Record<LocalPool, () => ProcessPool> = {
-      // browser: () => createBrowserPool(ctx),
       vmThreads: () => createVmThreadsPool(ctx, options),
       threads: () => createThreadsPool(ctx, options),
       forks: () => createForksPool(ctx, options),

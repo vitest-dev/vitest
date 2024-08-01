@@ -284,7 +284,7 @@ By default, Vite targets browsers which support the native [ES Modules](https://
 - Safari >=15.4
 - Edge >=88
 
-## Cross-Browser Testing
+## Running Tests
 
 When you specify a browser name in the browser option, Vitest will try to run the specified browser using `preview` by default, and then run the tests there. If you don't want to use `preview`, you can configure the custom browser provider by using `browser.provider` option.
 
@@ -300,9 +300,13 @@ Or you can provide browser options to CLI with dot notation:
 npx vitest --browser.name=chrome --browser.headless
 ```
 
+By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/#browser-viewport).
+
 ## Headless
 
 Headless mode is another option available in the browser mode. In headless mode, the browser runs in the background without a user interface, which makes it useful for running automated tests. The headless option in Vitest can be set to a boolean value to enable or disable headless mode.
+
+When using headless mode, Vitest won't open the UI automatically. If you want to continue using the UI but have tests run headlessly, you can install the [`@vitest/ui`](/guide/ui) package and pass the --ui flag when running Vitest.
 
 Here's an example configuration enabling headless mode:
 
