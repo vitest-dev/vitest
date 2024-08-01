@@ -55,7 +55,7 @@ export async function collectTests(
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.getName()
-  const typecheckSubprojectName = projectName ? `${projectName}:typecheck` : 'typecheck'
+  const typecheckSubprojectName = projectName ? `${projectName}:__typecheck__` : '__typecheck__'
   const file: ParsedFile = {
     filepath,
     type: 'suite',
