@@ -59,6 +59,8 @@ The `page` export provides utilities to interact with the current `page`.
 
 ::: warning
 While it exposes some utilities from Playwright's `page`, it is not the same object. Since the browser context is evaluated in the browser, your tests don't have access to Playwright's `page` because it runs on the server.
+
+Use [Commands API](/guide/browser/commands) if you need to have access to Playwright's `page` object.
 :::
 
 ```ts

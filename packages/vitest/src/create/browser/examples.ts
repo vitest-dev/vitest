@@ -145,7 +145,6 @@ const vanillaExample = {
   js: `
 export default function HelloWorld({ name }) {
   const parent = document.createElement('div')
-  document.body.appendChild(parent)
 
   const h1 = document.createElement('h1')
   h1.textContent = 'Hello ' + name + '!'
@@ -157,7 +156,6 @@ export default function HelloWorld({ name }) {
   ts: `
 export default function HelloWorld({ name }: { name: string }): HTMLDivElement {
   const parent = document.createElement('div')
-  document.body.appendChild(parent)
 
   const h1 = document.createElement('h1')
   h1.textContent = 'Hello ' + name + '!'
@@ -169,10 +167,11 @@ export default function HelloWorld({ name }: { name: string }): HTMLDivElement {
   test: `
 import { expect, test } from 'vitest'
 import { getByText } from '@testing-library/dom'
-import HelloWorld from './HelloWorld'
+import HelloWorld from './HelloWorld.js'
 
 test('renders name', () => {
   const parent = HelloWorld({ name: 'Vitest' })
+  document.body.appendChild(parent)
 
   const element = getByText(parent, 'Hello Vitest!')
   expect(element).toBeInTheDocument()
