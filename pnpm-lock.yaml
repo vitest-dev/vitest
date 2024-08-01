@@ -208,6 +208,18 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  examples/in-source-test:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.4
+        version: 5.5.4
+      vite:
+        specifier: ^5.3.3
+        version: 5.3.3(@types/node@20.14.13)(terser@5.22.0)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   examples/lit:
     dependencies:
       lit:
@@ -1221,7 +1233,7 @@ importers:
         version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
-        version: 5.1.1(vite@5.3.3(@types/node@20.14.13)(terser@5.22.0))(vue@3.4.35(typescript@5.5.4))
+        version: 5.1.2(vite@5.3.3(@types/node@20.14.13)(terser@5.22.0))(vue@3.4.35(typescript@5.5.4))
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -3610,14 +3622,8 @@ packages:
   '@types/natural-compare@1.4.3':
     resolution: {integrity: sha512-XCAxy+Gg6+S6VagwzcknnvCKujj/bVv1q+GFuCrFEelqaZPqJoC+FeXLwc2dp+oLP7qDZQ4ZfQiTJQ9sIUmlLw==}
 
-  '@types/node@20.11.19':
-    resolution: {integrity: sha512-7xMnVEcZFu0DikYjWOlRq7NTPETrm7teqUT2WkQjrTIkEgUyyGdWsj/Zg8bEJt5TNklzbPD1X3fqfsHw3SpapQ==}
-
   '@types/node@20.11.5':
     resolution: {integrity: sha512-g557vgQjUUfN76MZAN/dt1z3dzcUsimuysco0KeluHgrPdJXkP/XdAURgyO2W9fZWHRtRBiVKzKn8vyOAwlG+w==}
-
-  '@types/node@20.14.10':
-    resolution: {integrity: sha512-MdiXf+nDuMvY0gJKxyfZ7/6UFsETO7mGKF54MVD/ekJS6HdFtpZFBgrh6Pseu64XTb2MLyFPlbW6hj8HYRQNOQ==}
 
   '@types/node@20.14.13':
     resolution: {integrity: sha512-+bHoGiZb8UiQ0+WEtmph2IWQCjIqg8MDZMAV+ppRRhUZnquF5mQkP/9vpSwJClEiSM/C7fZZExPzfU0vJTyp8w==}
@@ -3964,6 +3970,13 @@ packages:
 
   '@vitejs/plugin-vue@5.1.1':
     resolution: {integrity: sha512-sDckXxlHpMsjRQbAH9WanangrfrblsOd3pNifePs+FOHjJg1jfWq5L/P0PsBRndEt3nmdUnmvieP8ULDeX5AvA==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      vite: ^5.3.3
+      vue: ^3.2.25
+
+  '@vitejs/plugin-vue@5.1.2':
+    resolution: {integrity: sha512-nY9IwH12qeiJqumTCLJLE7IiNx7HZ39cbHaysEUd+Myvbz9KAqd2yq+U01Kab1R/H1BmiyM2ShTYlNH32Fzo3A==}
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
       vite: ^5.3.3
@@ -11379,7 +11392,7 @@ snapshots:
   '@solidjs/testing-library@0.8.4(@solidjs/router@0.8.3(solid-js@1.8.3))(solid-js@1.8.3)':
     dependencies:
       '@solidjs/router': 0.8.3(solid-js@1.8.3)
-      '@testing-library/dom': 9.3.3
+      '@testing-library/dom': 9.3.4
       solid-js: 1.8.3
 
   '@stylistic/eslint-plugin-js@2.6.0-beta.1(eslint@9.8.0)':
@@ -11551,7 +11564,7 @@ snapshots:
 
   '@testing-library/dom@8.19.0':
     dependencies:
-      '@babel/code-frame': 7.24.2
+      '@babel/code-frame': 7.24.7
       '@babel/runtime': 7.24.4
       '@types/aria-query': 4.2.2
       aria-query: 5.3.0
@@ -11812,15 +11825,7 @@ snapshots:
 
   '@types/natural-compare@1.4.3': {}
 
-  '@types/node@20.11.19':
-    dependencies:
-      undici-types: 5.26.5
-
   '@types/node@20.11.5':
-    dependencies:
-      undici-types: 5.26.5
-
-  '@types/node@20.14.10':
     dependencies:
       undici-types: 5.26.5
 
@@ -12303,6 +12308,11 @@ snapshots:
       - supports-color
 
   '@vitejs/plugin-vue@5.1.1(vite@5.3.3(@types/node@20.14.13)(terser@5.22.0))(vue@3.4.35(typescript@5.5.4))':
+    dependencies:
+      vite: 5.3.3(@types/node@20.14.13)(terser@5.22.0)
+      vue: 3.4.35(typescript@5.5.4)
+
+  '@vitejs/plugin-vue@5.1.2(vite@5.3.3(@types/node@20.14.13)(terser@5.22.0))(vue@3.4.35(typescript@5.5.4))':
     dependencies:
       vite: 5.3.3(@types/node@20.14.13)(terser@5.22.0)
       vue: 3.4.35(typescript@5.5.4)
@@ -17318,8 +17328,8 @@ snapshots:
       picocolors: 1.0.0
       sade: 1.8.1
       svelte: 3.59.1
-      svelte-preprocess: 5.0.4(@babel/core@7.24.9)(postcss@8.4.40)(svelte@3.59.1)(typescript@5.4.5)
-      typescript: 5.4.5
+      svelte-preprocess: 5.0.4(@babel/core@7.24.9)(postcss@8.4.40)(svelte@3.59.1)(typescript@5.5.4)
+      typescript: 5.5.4
     transitivePeerDependencies:
       - '@babel/core'
       - coffeescript
@@ -17335,7 +17345,7 @@ snapshots:
     dependencies:
       svelte: 3.59.1
 
-  svelte-preprocess@5.0.4(@babel/core@7.24.9)(postcss@8.4.40)(svelte@3.59.1)(typescript@5.4.5):
+  svelte-preprocess@5.0.4(@babel/core@7.24.9)(postcss@8.4.40)(svelte@3.59.1)(typescript@5.5.4):
     dependencies:
       '@types/pug': 2.0.6
       detect-indent: 6.1.0
@@ -17346,7 +17356,7 @@ snapshots:
     optionalDependencies:
       '@babel/core': 7.24.9
       postcss: 8.4.40
-      typescript: 5.4.5
+      typescript: 5.5.4
 
   svelte@3.59.1: {}
 
@@ -18167,7 +18177,7 @@ snapshots:
 
   webdriverio@8.32.2(typescript@5.5.4):
     dependencies:
-      '@types/node': 20.11.19
+      '@types/node': 20.14.13
       '@wdio/config': 8.32.2
       '@wdio/logger': 8.28.0
       '@wdio/protocols': 8.32.0
@@ -18200,7 +18210,7 @@ snapshots:
 
   webdriverio@8.39.1(typescript@5.5.4):
     dependencies:
-      '@types/node': 20.14.10
+      '@types/node': 20.14.13
       '@wdio/config': 8.39.0
       '@wdio/logger': 8.38.0
       '@wdio/protocols': 8.38.0

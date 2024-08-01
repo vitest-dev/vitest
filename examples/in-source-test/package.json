@@ -1,0 +1,14 @@
+{
+  "name": "@vitest/example-in-source-test",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}
