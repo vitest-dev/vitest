@@ -41,7 +41,7 @@ export const builtinPools: BuiltinPool[] = [
 
 function getDefaultPoolName(project: WorkspaceProject, file: string): Pool | null {
   for (const glob of project.config.include) {
-    if (mm.isMatch(file, glob, { cwd: project.config.root })) {
+    if (mm.isMatch(file, glob, { cwd: project.config.root, ignore: project.config.exclude })) {
       if (project.config.browser.enabled) {
         return 'browser'
       }
@@ -179,7 +179,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
       if (project.config.typecheck.enabled) {
         for (const glob of project.config.typecheck.include) {
-          if (mm.isMatch(file, glob, { cwd: project.config.root })) {
+          if (mm.isMatch(file, glob, { cwd: project.config.root, ignore: project.config.typecheck.exclude })) {
             filesByPool.typescript ??= []
             filesByPool.typescript.push(spec)
           }
