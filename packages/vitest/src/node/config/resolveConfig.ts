@@ -139,6 +139,8 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  resolved.provide ??= {}
+
   const inspector = resolved.inspect || resolved.inspectBrk
 
   resolved.inspector = {
