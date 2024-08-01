@@ -57,9 +57,6 @@ export interface JsonTestResults {
   numPendingTests: number
   numPendingTestSuites: number
   numTodoTests: number
-  numTodoTestSuites: number
-  numSkippedTests: number
-  numSkippedTestSuites: number
   numTotalTests: number
   numTotalTestSuites: number
   startTime: number
@@ -94,20 +91,19 @@ export class JsonReporter implements Reporter {
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
     const numTotalTests = tests.length
+
     const numFailedTestSuites = suites.filter(s => s.result?.state === 'fail').length
-    const numPassedTestSuites = suites.filter(s => s.result?.state === 'pass').length
-    const numSkippedTestSuites = suites.filter(s => s.mode === 'skip' || s.result?.state === 'skip').length
-    const numTodoTestSuites = suites.filter(s => s.mode === 'todo').length
     const numPendingTestSuites = suites.filter(
-      s => s.result?.state === 'run',
+      s => s.result?.state === 'run' || s.mode === 'todo',
     ).length
+    const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
+
     const numFailedTests = tests.filter(
       t => t.result?.state === 'fail',
     ).length
     const numPassedTests = tests.filter(t => t.result?.state === 'pass').length
-    const numSkippedTests = tests.filter(t => t.mode === 'skip' || t.result?.state === 'skip').length
     const numPendingTests = tests.filter(
-      t => t.result?.state === 'run',
+      t => t.result?.state === 'run' || t.mode === 'skip' || t.result?.state === 'skip',
     ).length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []
@@ -181,13 +177,10 @@ export class JsonReporter implements Reporter {
     const result: JsonTestResults = {
       numTotalTestSuites,
       numPassedTestSuites,
-      numSkippedTestSuites,
-      numTodoTestSuites,
       numFailedTestSuites,
       numPendingTestSuites,
       numTotalTests,
       numPassedTests,
-      numSkippedTests,
       numFailedTests,
       numPendingTests,
       numTodoTests,
