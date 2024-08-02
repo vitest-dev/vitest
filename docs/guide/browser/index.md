@@ -336,8 +336,6 @@ In this case, Vitest will run in headless mode using the Chrome browser.
 Headless mode is not available by default. You need to use either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio) providers to enable this feature.
 :::
 
-<!-- TODO: have links to assertions/context/commands -->
-
 ## Examples
 
 Browser Mode is framework agnostic so it doesn't provide any method to render your components. However, you should be able to use your framework's test utils packages.
@@ -351,6 +349,21 @@ We recommend using `testing-library` packages depending on your framework:
 - [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
 - [`solid-testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
+
+Besides rendering components and querying elements using `@testing-library/your-framework`, you will also need to make assertions. Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
+
+```ts
+import { expect } from 'vitest'
+// element is rendered correctly
+await expect.element(screen.getByText('Hello World')).toBeInTheDocument()
+```
+
+Vitest exposes a [Context API](/guide/browser/context) with a small set of utilities that might be useful to you in tests. For example, if you need to make an interaction, like clicking an element or typing text into an input, you can use `userEvent` from `@vitest/browser/context`. Read more at the [Interactivity API](/guide/browser/interactivity-api).
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+await userEvent.type(screen.getByLabelText(/username/i), 'Alice')
+```
 
 ::: warning
 `testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](#interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
@@ -378,7 +391,7 @@ test('properly handles v-model', async () => {
   // is filled correctly, no need to check the value manually.
   await userEvent.fill(usernameInput, 'Bob')
 
-  expect(screen.getByText('Hi, my name is Alice')).toBeInTheDocument()
+  expect(screen.getByText('Hi, my name is Bob')).toBeInTheDocument()
 })
 ```
 ```ts [svelte]

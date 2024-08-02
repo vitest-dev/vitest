@@ -4,7 +4,7 @@ title: Assertion API | Browser Mode
 
 # Assertion API
 
-Vitest bundles [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. For detailed documentation, you can read the `jest-dom` readme:
+Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. For detailed documentation, you can read the `jest-dom` readme:
 
 - [`toBeDisabled`](https://github.com/testing-library/jest-dom#toBeDisabled)
 - [`toBeEnabled`](https://github.com/testing-library/jest-dom#toBeEnabled)
