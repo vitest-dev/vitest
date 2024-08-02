@@ -91,6 +91,53 @@ describe('userEvent.click', () => {
     expect(onClick).toHaveBeenCalled()
     expect(dblClick).not.toHaveBeenCalled()
   })
+
+  test('clicks with x/y coords', async () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 400
+    canvas.height = 300
+    canvas.style.backgroundColor = 'pink'
+
+    const spy = vi.fn()
+
+    // draw a blue square in the middle of the rectangle
+    const ctx: CanvasRenderingContext2D | null = canvas.getContext('2d')
+    // If the user clicks on the blue square, it should turn red, and vice versa
+    const onClick = (event: PointerEvent) => {
+      const x = event.offsetX
+      const y = event.offsetY
+      if (x > 150 && x < 250 && y > 100 && y < 200) {
+        if (!ctx) {
+          throw new Error('I have no idea how canvas works, ctx is null')
+        }
+        if (ctx.fillStyle === '#ff0000') {
+          ctx.fillStyle = 'blue'
+        }
+        else {
+          ctx.fillStyle = 'red'
+        }
+
+        ctx.fillRect(150, 100, 100, 100)
+      }
+
+      spy({ x, y })
+    }
+
+    canvas.addEventListener('click', onClick)
+    document.body.appendChild(canvas)
+
+    await userEvent.click(document.body, {
+      position: {
+        x: 200,
+        y: 150,
+      },
+    })
+
+    expect(spy).toHaveBeenCalledWith({
+      x: 200,
+      y: 150,
+    })
+  })
 })
 
 describe('userEvent.dblClick', () => {
