@@ -116,6 +116,7 @@ const marginLeft = computed(() => {
       <div
         id="tester-ui"
         class="flex h-full justify-center items-center font-light op70"
+        :data-scale="scale"
         :style="{
           '--viewport-width': `${viewport[0]}px`,
           '--viewport-height': `${viewport[1]}px`,
