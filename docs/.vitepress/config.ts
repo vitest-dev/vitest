@@ -111,7 +111,7 @@ export default ({ mode }: { mode: string }) => {
       },
 
       nav: [
-        { text: 'Guide', link: '/guide/', activeMatch: '^/guide/' },
+        { text: 'Guide', link: '/guide/', activeMatch: '^/guide/(?!browser)' },
         { text: 'API', link: '/api/', activeMatch: '^/api/' },
         { text: 'Config', link: '/config/', activeMatch: '^/config/' },
         { text: 'Browser Mode', link: '/guide/browser', activeMatch: '^/guide/browser/' },
@@ -126,22 +126,6 @@ export default ({ mode }: { mode: string }) => {
             {
               text: 'Team',
               link: '/team',
-            },
-            {
-              items: [
-                {
-                  text: 'Mastodon',
-                  link: mastodon,
-                },
-                {
-                  text: 'X (formerly Twitter)',
-                  link: twitter,
-                },
-                {
-                  text: 'Discord Chat',
-                  link: discord,
-                },
-              ],
             },
           ],
         },
