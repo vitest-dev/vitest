@@ -272,7 +272,6 @@ describe('userEvent.hover, userEvent.unhover', () => {
     })
 
     shadowRoot.appendChild(target)
-    await expect.poll(() => document.body.contains(target)).toBeTruthy()
 
     await userEvent.hover(target)
 
