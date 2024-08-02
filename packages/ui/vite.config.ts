@@ -53,6 +53,7 @@ export const config: UserConfig = {
       transformers: [
         transformerDirectives(),
       ],
+      safelist: 'absolute origin-top mt-[8px]'.split(' '),
     }),
     Components({
       dirs: ['client/components'],

@@ -112,15 +112,15 @@ const marginLeft = computed(() => {
         <span v-if="scale < 1">({{ (scale * 100).toFixed(0) }}%)</span>
       </span>
     </div>
-    <div relative>
+    <div id="tester-container" relative>
       <div
         id="tester-ui"
-        class="absolute origin-top mt-[8px]"
+        class="flex h-full justify-center items-center font-light op70"
         :style="{
-          marginLeft,
-          width: `${viewport[0]}px`,
-          height: `${viewport[1]}px`,
-          transform: `scale(${scale})`,
+          '--viewport-width': `${viewport[0]}px`,
+          '--viewport-height': `${viewport[1]}px`,
+          '--tester-transform': `scale(${scale})`,
+          '--tester-margin-left': marginLeft,
         }"
       >
         Select a test to run
@@ -128,3 +128,20 @@ const marginLeft = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+#tester-container:not([data-ready]) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-ready] #tester-ui {
+  width: var(--viewport-width);
+  height: var(--viewport-height);
+  transform: var(--tester-transform);
+  margin-left: var(--tester-margin-left);
+}
+</style>

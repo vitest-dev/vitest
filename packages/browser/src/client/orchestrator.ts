@@ -44,6 +44,7 @@ class IframeOrchestrator {
 
     if (config.browser.ui) {
       container.className = 'absolute origin-top mt-[8px]'
+      container.parentElement!.setAttribute('data-ready', 'true')
       container.textContent = ''
     }
     const { width, height } = config.browser.viewport
