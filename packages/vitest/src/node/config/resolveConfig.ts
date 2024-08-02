@@ -24,6 +24,7 @@ import { RandomSequencer } from '../sequencers/RandomSequencer'
 import type { BenchmarkBuiltinReporters } from '../reporters'
 import { builtinPools } from '../pool'
 import type { Logger } from '../logger'
+import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 
 function resolvePath(path: string, root: string) {
   return normalize(
@@ -229,7 +230,7 @@ export function resolveConfig(
     )
   }
 
-  resolved.coverage.reporter = toArray(resolved.coverage.reporter)
+  resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
 
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
     const reportsDirectory = resolve(
@@ -790,4 +791,26 @@ export function resolveConfig(
 
 export function isBrowserEnabled(config: ResolvedConfig): boolean {
   return Boolean(config.browser?.enabled)
+}
+
+export function resolveCoverageReporters(configReporters: NonNullable<BaseCoverageOptions['reporter']>): CoverageReporterWithOptions[] {
+  // E.g. { reporter: "html" }
+  if (!Array.isArray(configReporters)) {
+    return [[configReporters, {}]]
+  }
+
+  const resolvedReporters: CoverageReporterWithOptions[] = []
+
+  for (const reporter of configReporters) {
+    if (Array.isArray(reporter)) {
+      // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
+      resolvedReporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
+    }
+    else {
+      // E.g. { reporter: ["html", "json"]}
+      resolvedReporters.push([reporter, {}])
+    }
+  }
+
+  return resolvedReporters
 }
