@@ -92,7 +92,7 @@ describe('userEvent.click', () => {
     expect(dblClick).not.toHaveBeenCalled()
   })
 
-  test('clicks with x/y coords', async () => {
+  test.runIf(server.provider === 'playwright')('clicks with x/y coords', async () => {
     const canvas = document.createElement('canvas')
     canvas.width = 400
     canvas.height = 300
