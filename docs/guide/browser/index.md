@@ -173,6 +173,8 @@ export default defineConfig({
 
 If you need to run some tests using Node-based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
 
+{#workspace-config}
+
 ```ts
 // vitest.workspace.ts
 import { defineWorkspace } from 'vitest/config'
