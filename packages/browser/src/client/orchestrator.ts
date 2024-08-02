@@ -99,10 +99,9 @@ class IframeOrchestrator {
     )
     iframe.setAttribute('data-vitest', 'true')
 
-    iframe.style.display = 'block'
     iframe.style.border = 'none'
-    iframe.style.zIndex = '1'
-    iframe.style.position = 'relative'
+    iframe.style.width = '100%'
+    iframe.style.height = '100%'
     iframe.setAttribute('allowfullscreen', 'true')
     iframe.setAttribute('allow', 'clipboard-write;')
     iframe.setAttribute('name', 'vitest-iframe')
