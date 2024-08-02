@@ -320,12 +320,12 @@ function processClickOptions(options_?: UserEventClickOptions) {
   if (provider === 'webdriverio') {
     const options = options_ as import('webdriverio').ClickOptions
     if (options.x != null || options.y != null) {
-      const scale = getIframeScale()
+      const cache = {}
       if (options.x != null) {
-        options.x *= scale
+        options.x = scaleCoordinate(options.x, cache)
       }
       if (options.y != null) {
-        options.y *= scale
+        options.y = scaleCoordinate(options.y, cache)
       }
     }
   }
@@ -348,12 +348,12 @@ function processHoverOptions(options_?: UserEventHoverOptions) {
   }
   if (provider === 'webdriverio') {
     const options = options_ as import('webdriverio').MoveToOptions
-    let scale: number
+    const cache = {}
     if (options.xOffset != null) {
-      options.xOffset *= (scale ??= getIframeScale())
+      options.xOffset = scaleCoordinate(options.xOffset, cache)
     }
     if (options.yOffset != null) {
-      options.yOffset *= (scale ??= getIframeScale())
+      options.yOffset = scaleCoordinate(options.yOffset, cache)
     }
   }
   return options_
@@ -376,7 +376,7 @@ function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
     }
   }
   if (provider === 'webdriverio') {
-    let scale: number
+    const cache = {}
     const options = options_ as import('webdriverio').DragAndDropOptions & {
       targetX?: number
       targetY?: number
@@ -384,19 +384,27 @@ function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
       sourceY?: number
     }
     if (options.sourceX != null) {
-      options.sourceX *= (scale ??= getIframeScale())
+      options.sourceX = scaleCoordinate(options.sourceX, cache)
     }
     if (options.sourceY != null) {
-      options.sourceY *= (scale ??= getIframeScale())
+      options.sourceY = scaleCoordinate(options.sourceY, cache)
     }
     if (options.targetX != null) {
-      options.targetX *= (scale ??= getIframeScale())
+      options.targetX = scaleCoordinate(options.targetX, cache)
     }
     if (options.targetY != null) {
-      options.targetY *= (scale ??= getIframeScale())
+      options.targetY = scaleCoordinate(options.targetY, cache)
     }
   }
   return options_
+}
+
+function scaleCoordinate(coordinate: number, cache: any) {
+  return Math.round(coordinate * getCachedScale(cache))
+}
+
+function getCachedScale(cache: { scale: number | undefined }) {
+  return cache.scale ??= getIframeScale()
 }
 
 function processPlaywrightPosition(position: { x: number; y: number }) {
