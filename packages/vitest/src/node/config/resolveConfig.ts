@@ -229,6 +229,8 @@ export function resolveConfig(
     )
   }
 
+  resolved.coverage.reporter = toArray(resolved.coverage.reporter)
+
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {
     const reportsDirectory = resolve(
       resolved.root,
