@@ -1735,7 +1735,7 @@ The script `src` and `content` will be processed by Vite plugins.
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be import during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
 
 ### clearMocks
 
