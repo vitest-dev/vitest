@@ -43,7 +43,7 @@ class IframeOrchestrator {
     const container = await getContainer(config)
 
     if (config.browser.ui) {
-      container.className = 'scrolls'
+      container.className = 'absolute origin-top mt-[8px]'
       container.textContent = ''
     }
     const { width, height } = config.browser.viewport

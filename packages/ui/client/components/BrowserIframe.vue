@@ -115,14 +115,12 @@ const marginLeft = computed(() => {
     <div relative>
       <div
         id="tester-ui"
-        class="absolute overflow-auto"
+        class="absolute origin-top mt-[8px]"
         :style="{
           marginLeft,
-          marginTop: '8px',
           width: `${viewport[0]}px`,
           height: `${viewport[1]}px`,
           transform: `scale(${scale})`,
-          transformOrigin: 'top',
         }"
       >
         Select a test to run
