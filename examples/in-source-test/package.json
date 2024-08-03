@@ -8,7 +8,6 @@
   },
   "devDependencies": {
     "typescript": "^5.5.4",
-    "vite": "latest",
     "vitest": "latest"
   }
 }

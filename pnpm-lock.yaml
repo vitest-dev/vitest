@@ -213,9 +213,6 @@ importers:
       typescript:
         specifier: ^5.5.4
         version: 5.5.4
-      vite:
-        specifier: ^5.3.3
-        version: 5.3.3(@types/node@20.14.13)(terser@5.22.0)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
