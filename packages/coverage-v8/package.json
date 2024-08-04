@@ -28,6 +28,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",
@@ -41,7 +45,13 @@
     "dev": "rollup -c --watch --watch.include 'src/**'"
   },
   "peerDependencies": {
+    "@vitest/browser": "workspace:*",
     "vitest": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@vitest/browser": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
@@ -63,6 +73,7 @@
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/istanbul-lib-source-maps": "^4.0.4",
     "@types/istanbul-reports": "^3.0.4",
+    "@vitest/browser": "workspace:*",
     "pathe": "^1.1.2",
     "v8-to-istanbul": "^9.3.0",
     "vite-node": "workspace:*",

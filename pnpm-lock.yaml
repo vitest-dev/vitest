@@ -607,6 +607,9 @@ importers:
       '@types/istanbul-reports':
         specifier: ^3.0.4
         version: 3.0.4
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../browser
       pathe:
         specifier: ^1.1.2
         version: 1.1.2

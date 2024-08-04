@@ -1,6 +1,6 @@
-import { SpyModule, collectTests, setupCommonEnv, startTests } from 'vitest/browser'
+import { SpyModule, collectTests, setupCommonEnv, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { channel, client, onCancel } from '@vitest/browser/client'
-import { getBrowserState, getConfig, getWorkerState } from '../utils'
+import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { createSafeRpc } from './rpc'
@@ -111,6 +111,8 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
 
   try {
     await setupCommonEnv(config)
+    await startCoverageInsideWorker(config.coverage, executor)
+
     for (const file of files) {
       state.filepath = file
 
@@ -124,6 +126,8 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   }
   finally {
     state.environmentTeardownRun = true
+    await stopCoverageInsideWorker(config.coverage, executor)
+
     debug('finished running tests')
     done(files)
   }

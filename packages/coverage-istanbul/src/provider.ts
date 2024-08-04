@@ -184,14 +184,14 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       return
     }
 
-    if (transformMode !== 'web' && transformMode !== 'ssr') {
+    if (transformMode !== 'web' && transformMode !== 'ssr' && transformMode !== 'browser') {
       throw new Error(`Invalid transform mode: ${transformMode}`)
     }
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: [], ssr: [] }
+      entry = { web: [], ssr: [], browser: [] }
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
@@ -240,6 +240,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       for (const filenames of [
         coveragePerProject.ssr,
         coveragePerProject.web,
+        coveragePerProject.browser,
       ]) {
         const coverageMapByTransformMode = libCoverage.createCoverageMap({})
 

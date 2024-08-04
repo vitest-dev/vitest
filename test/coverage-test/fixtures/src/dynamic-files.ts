@@ -17,7 +17,7 @@ export function run() {
 function uncovered() {}
   `.trim(), 'utf-8')
 
-  const { run } = await import(filename)
+  const { run } = await import(/* @vite-ignore */ filename)
 
   if (run() !== 'Import works') {
     throw new Error(`Failed to run ${filename}`)
