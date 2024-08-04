@@ -505,9 +505,12 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     project: WorkspaceProject = this.ctx.getCoreWorkspaceProject(),
     transformMode?: keyof CoverageFilesByTransformMode,
   ): Promise<CoverageMap> {
-    const fetchCache = transformMode
-      ? project.vitenode.fetchCaches[transformMode === 'browser' ? 'web' : transformMode]
-      : project.vitenode.fetchCache
+    let fetchCache = project.vitenode.fetchCache
+
+    if (transformMode) {
+      fetchCache = transformMode === 'browser' ? new Map() : project.vitenode.fetchCaches[transformMode]
+    }
+
     const transformResults = normalizeTransformResults(fetchCache)
 
     async function onTransform(filepath: string) {
