@@ -222,16 +222,6 @@ export function resolveConfig(
     }
   }
 
-  if (
-    resolved.coverage.provider === 'v8'
-    && resolved.coverage.enabled
-    && isBrowserEnabled(resolved)
-  ) {
-    throw new Error(
-      '@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead',
-    )
-  }
-
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
 
   if (resolved.coverage.enabled && resolved.coverage.reportsDirectory) {

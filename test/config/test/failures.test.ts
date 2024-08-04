@@ -49,18 +49,6 @@ test('inspect-brk cannot be used with multi processing', async () => {
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('v8 coverage provider cannot be used with browser', async () => {
-  const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
-
-  expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
-})
-
-test('v8 coverage provider cannot be used with browser in workspace', async () => {
-  const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
-
-  expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
-})
-
 test('coverage reportsDirectory cannot be current working directory', async () => {
   const { stderr } = await runVitest({
     root: undefined,

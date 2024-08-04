@@ -60,7 +60,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'browser',
+      name: 'istanbul-browser',
       env: { COVERAGE_PROVIDER: 'istanbul', COVERAGE_BROWSER: 'true' },
       include: [
         BROWSER_TESTS,
@@ -75,6 +75,29 @@ export default defineWorkspace([
         '**/temporary-files.test.ts',
         '**/test-reporter-conflicts.test.ts',
         '**/vue.test.ts',
+      ],
+    },
+  },
+  {
+    test: {
+      ...config.test,
+      name: 'v8-browser',
+      env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
+      include: [
+        BROWSER_TESTS,
+
+        // Other non-provider-specific tests that should be run on browser mode as well
+        '**/ignore-hints.test.ts',
+        '**/import-attributes.test.ts',
+        '**/multi-suite.test.ts',
+        '**/setup-files.test.ts',
+        '**/results-snapshot.test.ts',
+        '**/reporters.test.ts',
+        '**/temporary-files.test.ts',
+        '**/test-reporter-conflicts.test.ts',
+
+        // TODO: Enable, last source map issue here
+        // '**/vue.test.ts',
       ],
     },
   },
