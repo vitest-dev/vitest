@@ -452,7 +452,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await onTransform(filePath).catch(() => undefined)
+      transformResult = await onTransform(url.replace('file://', '')).catch(() => undefined)
     }
 
     const map = transformResult?.map as EncodedSourceMap | undefined
@@ -515,7 +515,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         const result = await project.browser.vite.transformRequest(filepath)
 
         if (result) {
-          return { ...result, code: `${result.code}// manual inline-source-map` }
+          return { ...result, code: `${result.code}// <inline-source-map>` }
         }
       }
       return project.vitenode.transformRequest(filepath)
