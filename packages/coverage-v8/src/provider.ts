@@ -515,7 +515,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     async function onTransform(filepath: string) {
       if (transformMode === 'browser' && project.browser) {
-        const result = await project.browser.vite.transformRequest(filepath)
+        const result = await project.browser.vite.transformRequest(filepath.replace(project.config.root, ''))
 
         if (result) {
           return { ...result, code: `${result.code}// <inline-source-map>` }
