@@ -95,9 +95,7 @@ export default defineWorkspace([
         '**/reporters.test.ts',
         '**/temporary-files.test.ts',
         '**/test-reporter-conflicts.test.ts',
-
-        // TODO: Enable, last source map issue here
-        // '**/vue.test.ts',
+        '**/vue.test.ts',
       ],
     },
   },
