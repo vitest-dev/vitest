@@ -198,17 +198,53 @@ export interface LocatorOptions {
 }
 
 export interface LocatorByRoleOptions extends LocatorOptions {
+  /**
+   * Should checked elements (set by `aria-checked` or `<input type="checkbox"/>`) be included or not. By default, the filter is not applied.
+   *
+   * See [`aria-checked`](https://www.w3.org/TR/wai-aria-1.2/#aria-checked) for more information
+   */
   checked?: boolean
+  /**
+   * Should disabled elements be included or not. By default, the filter is not applied. Note that unlike other attributes, `disable` state is inherited.
+   *
+   * See [`aria-disabled`](https://www.w3.org/TR/wai-aria-1.2/#aria-disabled) for more information
+   */
   disabled?: boolean
+  /**
+   * Should expanded elements be included or not. By default, the filter is not applied.
+   *
+   * See [`aria-expanded`](https://www.w3.org/TR/wai-aria-1.2/#aria-expanded) for more information
+   */
   expanded?: boolean
+  /**
+   * Should elements that are [normally excluded](https://www.w3.org/TR/wai-aria-1.2/#tree_exclusion) from the accessibility tree be queried. By default, only non-hidden elements are matched by role selector.
+   *
+   * Note that roles `none` and `presentation` are always included.
+   * @default false
+   */
   includeHidden?: boolean
+  /**
+   * A number attribute that is usually present for `heading`, `listitem`, `row`, `treeitem` roles with default values for `<h1>-<h6>` elements. By default, the filter is not applied.
+   *
+   * See [`aria-level`](https://www.w3.org/TR/wai-aria-1.2/#aria-level) for more information
+   */
   level?: number
   /**
    * Option to match the [accessible name](https://w3c.github.io/accname/#dfn-accessible-name). By default, matching is
    * case-insensitive and searches for a substring, use `exact` to control this behavior.
    */
   name?: string | RegExp
+  /**
+   * Should pressed elements be included or not. By default, the filter is not applied.
+   *
+   * See [`aria-pressed`](https://www.w3.org/TR/wai-aria-1.2/#aria-pressed) for more information
+   */
   pressed?: boolean
+  /**
+   * Should selected elements be included or not. By default, the filter is not applied.
+   *
+   * See [`aria-selected`](https://www.w3.org/TR/wai-aria-1.2/#aria-selected) for more information
+   */
   selected?: boolean
 }
 
@@ -216,6 +252,7 @@ interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
 export interface Locator {
   /**
+   * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
    * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
    */
   getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
