@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { assert, expect, test } from 'vitest'
+import { act, render, renderHook, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
-import Link from '../components/Link.jsx'
+import { LINK_STATUS, Link, useLinkState } from '../components/Link.jsx'
 
 test('Link changes the state when hovered', async () => {
   render(
@@ -19,4 +19,25 @@ test('Link changes the state when hovered', async () => {
   await userEvent.unhover(link)
 
   expect(link).toHaveAccessibleName('Link is normal')
+})
+
+test('useLinkState updates result', async () => {
+  const { result } = renderHook(() => useLinkState())
+
+  let [status, handlers] = result.current
+
+  assert(status === LINK_STATUS.NORMAL)
+  assert(handlers.onMouseEnter)
+  assert(handlers.onMouseLeave)
+
+  act(() => {
+    handlers.onMouseEnter()
+  })
+
+  ;[status, handlers] = result.current
+
+  assert(
+    status === LINK_STATUS.HOVERED,
+    `status is ${status}, but should be ${LINK_STATUS.HOVERED}`,
+  )
 })
