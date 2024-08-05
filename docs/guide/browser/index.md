@@ -7,6 +7,9 @@ outline: deep
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
+<img alt="Vitest UI" img-light src="/ui-browser-1-light.png">
+<img alt="Vitest UI" img-dark src="/ui-browser-1-dark.png">
+
 ## Installation
 
 For easier setup, you can use `vitest init browser` command to install required dependencies and create browser configuration.

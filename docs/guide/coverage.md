@@ -230,5 +230,5 @@ Vitest UI will enable coverage report when it is enabled explicitly and the html
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
 <img alt="html coverage activation in Vitest UI" img-dark src="/vitest-ui-show-coverage-dark.png">
 
-<img alt="html coverage in Vitest UI" img-light src="/vitest-ui-coverage-light.png">
-<img alt="html coverage in Vitest UI" img-dark src="/vitest-ui-coverage-dark.png">
+<img alt="html coverage in Vitest UI" img-light src="/ui-coverage-1-light.png">
+<img alt="html coverage in Vitest UI" img-dark src="/ui-coverage-1-dark.png">
