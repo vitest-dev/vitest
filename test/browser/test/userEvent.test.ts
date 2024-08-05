@@ -108,7 +108,7 @@ describe('userEvent.click', () => {
       const y = event.offsetY
       if (x > 150 && x < 250 && y > 100 && y < 200) {
         if (!ctx) {
-          throw new Error('I have no idea how canvas works, ctx is null')
+          throw new Error('Canvas is not defined')
         }
         if (ctx.fillStyle === '#ff0000') {
           ctx.fillStyle = 'blue'
