@@ -78,7 +78,7 @@ export interface CoverageProviderModule {
 
 export type CoverageReporter = keyof ReportOptions | (string & {})
 
-type CoverageReporterWithOptions<
+export type CoverageReporterWithOptions<
   ReporterName extends CoverageReporter = CoverageReporter,
 > = ReporterName extends keyof ReportOptions
   ? ReportOptions[ReporterName] extends never

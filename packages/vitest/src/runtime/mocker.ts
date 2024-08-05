@@ -312,10 +312,10 @@ export class VitestMocker {
         return null
       }
 
-      const files = readdirSync(mockFolder)
       const baseOriginal = basename(path)
 
-      function findFile(files: string[], baseOriginal: string): string | null {
+      function findFile(mockFolder: string, baseOriginal: string): string | null {
+        const files = readdirSync(mockFolder)
         for (const file of files) {
           const baseFile = basename(file, extname(file))
           if (baseFile === baseOriginal) {
@@ -326,7 +326,7 @@ export class VitestMocker {
             }
             else {
               // find folder/index.{js,ts}
-              const indexFile = findFile(readdirSync(path), 'index')
+              const indexFile = findFile(path, 'index')
               if (indexFile) {
                 return indexFile
               }
@@ -336,7 +336,7 @@ export class VitestMocker {
         return null
       }
 
-      return findFile(files, baseOriginal)
+      return findFile(mockFolder, baseOriginal)
     }
 
     const dir = dirname(path)

@@ -1,6 +1,6 @@
 import type { Task, WorkerGlobalState } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventHoverOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventDragAndDropOptions, UserEventHoverOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
 
 // this file should not import anything directly, only types
@@ -125,15 +125,15 @@ function createUserEvent(): UserEvent {
     },
     click(element: Element, options: UserEventClickOptions = {}) {
       const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_click', css, options)
+      return triggerCommand('__vitest_click', css, processClickOptions(options))
     },
     dblClick(element: Element, options: UserEventClickOptions = {}) {
       const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_dblClick', css, options)
+      return triggerCommand('__vitest_dblClick', css, processClickOptions(options))
     },
     tripleClick(element: Element, options: UserEventClickOptions = {}) {
       const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_tripleClick', css, options)
+      return triggerCommand('__vitest_tripleClick', css, processClickOptions(options))
     },
     selectOptions(element, value) {
       const values = provider === 'webdriverio'
@@ -169,7 +169,7 @@ function createUserEvent(): UserEvent {
     },
     hover(element: Element, options: UserEventHoverOptions = {}) {
       const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_hover', css, options)
+      return triggerCommand('__vitest_hover', css, processHoverOptions(options))
     },
     unhover(element: Element, options: UserEventHoverOptions = {}) {
       const css = convertElementToCssSelector(element.ownerDocument.body)
@@ -184,7 +184,12 @@ function createUserEvent(): UserEvent {
     dragAndDrop(source: Element, target: Element, options = {}) {
       const sourceCss = convertElementToCssSelector(source)
       const targetCss = convertElementToCssSelector(target)
-      return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
+      return triggerCommand(
+        '__vitest_dragAndDrop',
+        sourceCss,
+        targetCss,
+        processDragAndDropOptions(options),
+      )
     },
   }
 }
@@ -297,4 +302,131 @@ export const page: BrowserPage = {
 
 function getTaskFullName(task: Task): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
+}
+
+function processClickOptions(options_?: UserEventClickOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['click']>[1]
+    >
+    if (options.position) {
+      options.position = processPlaywrightPosition(options.position)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const options = options_ as import('webdriverio').ClickOptions
+    if (options.x != null || options.y != null) {
+      const cache = {}
+      if (options.x != null) {
+        options.x = scaleCoordinate(options.x, cache)
+      }
+      if (options.y != null) {
+        options.y = scaleCoordinate(options.y, cache)
+      }
+    }
+  }
+  return options_
+}
+
+function processHoverOptions(options_?: UserEventHoverOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['hover']>[1]
+    >
+    if (options.position) {
+      options.position = processPlaywrightPosition(options.position)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const options = options_ as import('webdriverio').MoveToOptions
+    const cache = {}
+    if (options.xOffset != null) {
+      options.xOffset = scaleCoordinate(options.xOffset, cache)
+    }
+    if (options.yOffset != null) {
+      options.yOffset = scaleCoordinate(options.yOffset, cache)
+    }
+  }
+  return options_
+}
+
+function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['dragAndDrop']>[2]
+    >
+    if (options.sourcePosition) {
+      options.sourcePosition = processPlaywrightPosition(options.sourcePosition)
+    }
+    if (options.targetPosition) {
+      options.targetPosition = processPlaywrightPosition(options.targetPosition)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const cache = {}
+    const options = options_ as import('webdriverio').DragAndDropOptions & {
+      targetX?: number
+      targetY?: number
+      sourceX?: number
+      sourceY?: number
+    }
+    if (options.sourceX != null) {
+      options.sourceX = scaleCoordinate(options.sourceX, cache)
+    }
+    if (options.sourceY != null) {
+      options.sourceY = scaleCoordinate(options.sourceY, cache)
+    }
+    if (options.targetX != null) {
+      options.targetX = scaleCoordinate(options.targetX, cache)
+    }
+    if (options.targetY != null) {
+      options.targetY = scaleCoordinate(options.targetY, cache)
+    }
+  }
+  return options_
+}
+
+function scaleCoordinate(coordinate: number, cache: any) {
+  return Math.round(coordinate * getCachedScale(cache))
+}
+
+function getCachedScale(cache: { scale: number | undefined }) {
+  return cache.scale ??= getIframeScale()
+}
+
+function processPlaywrightPosition(position: { x: number; y: number }) {
+  const scale = getIframeScale()
+  if (position.x != null) {
+    position.x *= scale
+  }
+  if (position.y != null) {
+    position.y *= scale
+  }
+  return position
+}
+
+function getIframeScale() {
+  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  if (!testerUi) {
+    throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  const scaleAttribute = testerUi.getAttribute('data-scale')
+  const scale = Number(scaleAttribute)
+  if (Number.isNaN(scale)) {
+    throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  return scale
 }

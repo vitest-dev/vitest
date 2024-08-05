@@ -17,7 +17,6 @@
   },
   "keywords": [
     "vite",
-    "vite-node",
     "vitest",
     "test",
     "jest"
@@ -160,7 +159,7 @@
     "magic-string": "^0.30.11",
     "pathe": "^1.1.2",
     "std-env": "^3.7.0",
-    "tinybench": "^2.8.0",
+    "tinybench": "^2.9.0",
     "tinypool": "^1.0.0",
     "tinyrainbow": "^1.2.0",
     "vite": "^5.0.0",
@@ -177,7 +176,7 @@
     "@types/istanbul-reports": "^3.0.4",
     "@types/jsdom": "^21.1.7",
     "@types/micromatch": "^4.0.9",
-    "@types/node": "^20.14.13",
+    "@types/node": "^20.14.14",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
     "acorn-walk": "^8.3.3",

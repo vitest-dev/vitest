@@ -9,6 +9,12 @@ describe('dom related activity', () => {
     document.body.replaceChildren()
   })
 
+  test('viewport works correctly', async () => {
+    await page.viewport(800, 600)
+    expect(window.innerWidth).toBe(800)
+    expect(window.innerHeight).toBe(600)
+  })
+
   test('renders div', async () => {
     const wrapper = createWrapper()
     const div = createNode()

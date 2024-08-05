@@ -2,6 +2,7 @@ import { relative } from 'pathe'
 import mm from 'micromatch'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { BaseCoverageOptions, ResolvedCoverageOptions } from '../node/types/coverage'
+import { resolveCoverageReporters } from '../node/config/resolveConfig'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -242,25 +243,7 @@ export class BaseCoverageProvider {
   resolveReporters(
     configReporters: NonNullable<BaseCoverageOptions['reporter']>,
   ): ResolvedCoverageOptions['reporter'] {
-    // E.g. { reporter: "html" }
-    if (!Array.isArray(configReporters)) {
-      return [[configReporters, {}]]
-    }
-
-    const resolvedReporters: ResolvedCoverageOptions['reporter'] = []
-
-    for (const reporter of configReporters) {
-      if (Array.isArray(reporter)) {
-        // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
-        resolvedReporters.push([reporter[0], reporter[1] as Record<string, unknown> || {}])
-      }
-      else {
-        // E.g. { reporter: ["html", "json"]}
-        resolvedReporters.push([reporter, {}])
-      }
-    }
-
-    return resolvedReporters
+    return resolveCoverageReporters(configReporters) as any
   }
 
   hasTerminalReporter(reporters: ResolvedCoverageOptions['reporter']) {
