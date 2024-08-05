@@ -5,6 +5,7 @@ import type {
   UserEventClickOptions,
   UserEventDragAndDropOptions,
   UserEventFillOptions,
+  UserEventHoverOptions,
 } from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
 import type { BrowserRPC } from '@vitest/browser/client'
@@ -63,12 +64,12 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_clear', this.selector)
   }
 
-  public hover(): Promise<void> {
-    return this.triggerCommand<void>('__vitest_hover', this.selector)
+  public hover(options: UserEventHoverOptions): Promise<void> {
+    return this.triggerCommand<void>('__vitest_hover', this.selector, options)
   }
 
-  public unhover(): Promise<void> {
-    return this.triggerCommand<void>('__vitest_hover', 'html > body')
+  public unhover(options: UserEventHoverOptions): Promise<void> {
+    return this.triggerCommand<void>('__vitest_hover', 'html > body', options)
   }
 
   public fill(text: string, options?: UserEventFillOptions): Promise<void> {
