@@ -1,11 +1,10 @@
 import libCoverage from 'istanbul-lib-coverage'
 import { expect } from 'vitest'
-import { coverageTest, isV8Provider, normalizeURL, readCoverageJson, runVitest, test } from '../utils'
-import * as transpiled from '../fixtures/src/pre-transpiled/transpiled.js'
+import { isV8Provider, readCoverageJson, runVitest, test } from '../utils'
 
 test('pre-transpiled code with source maps to original (#5341)', async () => {
   await runVitest({
-    include: [normalizeURL(import.meta.url)],
+    include: ['fixtures/test/pre-transpiled-fixture.test.ts'],
     coverage: {
       include: ['fixtures/src/**'],
       reporter: 'json',
@@ -24,9 +23,4 @@ test('pre-transpiled code with source maps to original (#5341)', async () => {
   expect(files.find(file => file.includes('transpiled.d.ts'))).toBeFalsy()
 
   expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/pre-transpiled-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
-})
-
-coverageTest('run pre-transpiled sources', () => {
-  expect(transpiled.hello).toBeTypeOf('function')
-  expect(transpiled.hello()).toBeUndefined()
 })

@@ -49,10 +49,6 @@ function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
     return false
   }
 
-  if (coverage.url.includes('@fs')) {
-    return false
-  }
-
   if (coverage.url.includes('/node_modules/')) {
     return false
   }
