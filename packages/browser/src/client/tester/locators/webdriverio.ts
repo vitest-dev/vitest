@@ -1,5 +1,4 @@
-import { page } from '@vitest/browser/context'
-import { convertElementToCssSelector } from '../../utils'
+import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -8,7 +7,8 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
-} from './playwright-selector/locatorUtils'
+} from 'ivya'
+import { convertElementToCssSelector } from '../../utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -19,7 +19,7 @@ page.extend({
     return new WebdriverIOLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    return new WebdriverIOLocator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
+    return new WebdriverIOLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
   },
   getByAltText(text, options) {
     return new WebdriverIOLocator(getByAltTextSelector(text, options))

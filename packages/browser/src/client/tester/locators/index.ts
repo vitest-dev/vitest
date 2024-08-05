@@ -6,19 +6,39 @@ import type {
   UserEventDragAndDropOptions,
   UserEventFillOptions,
 } from '@vitest/browser/context'
-import { page } from '@vitest/browser/context'
+import { page, server } from '@vitest/browser/context'
 import type { BrowserRPC } from '@vitest/browser/client'
+import {
+  Ivya,
+  type ParsedSelector,
+  asLocator,
+  getByAltTextSelector,
+  getByLabelSelector,
+  getByPlaceholderSelector,
+  getByRoleSelector,
+  getByTestIdSelector,
+  getByTextSelector,
+  getByTitleSelector,
+} from 'ivya'
 import type { WorkerGlobalState } from 'vitest'
 import type { BrowserRunnerState } from '../../utils'
 import { getBrowserState, getWorkerState } from '../../utils'
-import { getByAltTextSelector, getByLabelSelector, getByPlaceholderSelector, getByRoleSelector, getByTestIdSelector, getByTextSelector, getByTitleSelector } from './playwright-selector/locatorUtils'
-import type { ParsedSelector } from './playwright-selector/selectorParser'
-import { parseSelector } from './playwright-selector/selectorParser'
-import { PlaywrightSelector } from './playwright-selector/selector'
-import { asLocator } from './playwright-selector/locatorGenerators'
 
-// we prefer using playwright locators because they are more powerful and support Shdow DOM
-export const selectorEngine = new PlaywrightSelector()
+// we prefer using playwright locators because they are more powerful and support Shadow DOM
+export const selectorEngine = Ivya.create({
+  browser: ((name: string) => {
+    switch (name) {
+      case 'edge':
+      case 'chrome':
+        return 'chromium'
+      case 'safari':
+        return 'webkit'
+      default:
+        return name as 'webkit' | 'firefox' | 'chromium'
+    }
+  })(server.config.browser.name),
+  testIdAttribute: server.config.browser.locators.testIdAttribute,
+})
 
 export abstract class Locator {
   public abstract selector: string
@@ -110,7 +130,7 @@ export abstract class Locator {
   }
 
   public getByTestId(testId: string | RegExp): Locator {
-    return this.locator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
+    return this.locator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
   }
 
   public getByText(text: string | RegExp, options?: LocatorOptions): Locator {
@@ -125,7 +145,7 @@ export abstract class Locator {
     if (this._forceElement) {
       return this._forceElement
     }
-    const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
+    const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
     return selectorEngine.querySelector(parsedSelector, document.body, true)
   }
 
@@ -141,7 +161,7 @@ export abstract class Locator {
     if (this._forceElement) {
       return [this._forceElement]
     }
-    const parsedSelector = this._parsedSelector || (this._parsedSelector = parseSelector(this._pwSelector || this.selector))
+    const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
     return selectorEngine.querySelectorAll(parsedSelector, document.body)
   }
 

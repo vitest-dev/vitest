@@ -1,4 +1,4 @@
-import type { Task } from 'vitest'
+import type { RunnerTask } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
 import type {
   BrowserPage,
@@ -47,10 +47,10 @@ function createUserEvent(): UserEvent {
       return convertToLocator(element).selectOptions(value)
     },
     async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
-      const css = convertToLocator(element).selector
+      const selector = convertToSelector(element)
       const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
         '__vitest_type',
-        css,
+        selector,
         text,
         { ...options, unreleased: keyboard.unreleased },
       )
@@ -196,7 +196,7 @@ function convertToSelector(elementOrLocator: Element | Locator): string {
   throw new Error('Expected element or locator to be an instance of Element or Locator.')
 }
 
-function getTaskFullName(task: Task): string {
+function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
 }
 

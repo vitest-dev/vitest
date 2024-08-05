@@ -1,6 +1,5 @@
-import { page } from '@vitest/browser/context'
+import { page, server } from '@vitest/browser/context'
 import { userEvent } from '@testing-library/user-event'
-import { convertElementToCssSelector } from '../../utils'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -9,7 +8,8 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
-} from './playwright-selector/locatorUtils'
+} from 'ivya'
+import { convertElementToCssSelector } from '../../utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -20,7 +20,7 @@ page.extend({
     return new PreviewLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    return new PreviewLocator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
+    return new PreviewLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
   },
   getByAltText(text, options) {
     return new PreviewLocator(getByAltTextSelector(text, options))

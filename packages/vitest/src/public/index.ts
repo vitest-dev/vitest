@@ -136,7 +136,7 @@ export type Test = Test_
 /** @deprecated use `RunnerCustomCase` instead */
 export type Custom = Custom_
 /** @deprecated use `RunnerTask` instead */
-export type Task = Task_
+export type RunnerTask = Task_
 
 export type {
   RunMode,

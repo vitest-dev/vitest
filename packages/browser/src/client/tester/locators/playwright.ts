@@ -1,4 +1,4 @@
-import { page } from '@vitest/browser/context'
+import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -7,7 +7,7 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
-} from './playwright-selector/locatorUtils'
+} from 'ivya'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -18,7 +18,7 @@ page.extend({
     return new PlaywrightLocator(getByRoleSelector(role, options))
   },
   getByTestId(testId) {
-    return new PlaywrightLocator(getByTestIdSelector(page.config.browser.locators.testIdAttribute, testId))
+    return new PlaywrightLocator(getByTestIdSelector(server.config.browser.locators.testIdAttribute, testId))
   },
   getByAltText(text, options) {
     return new PlaywrightLocator(getByAltTextSelector(text, options))
