@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { BrowserServer } from './server'
-import { replacer, slash } from './utils'
+import { replacer } from './utils'
 
 export async function resolveOrchestrator(
   server: BrowserServer,
@@ -72,7 +72,7 @@ export async function resolveOrchestrator(
     __VITEST_TITLE__: 'Vitest Browser Runner',
     __VITEST_SCRIPTS__: server.orchestratorScripts,
     __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
-    __VITEST_ERROR_CATCHER__: `<script type="module" src="${slash(`/@fs/${server.errorCatcherPath}`)}"></script>`,
+    __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherUrl}"></script>`,
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
   })
 }
