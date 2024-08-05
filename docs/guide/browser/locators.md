@@ -1,6 +1,6 @@
 ---
 title: Locators | Browser Mode
-outline: deep
+outline: [2, 3]
 ---
 
 # Locators <Version>2.1.0</Version>
@@ -56,7 +56,7 @@ By default, many semantic elements in HTML have a role; for example, `<input typ
 Providing roles via `role` or `aria-*` attributes to built-in elements that already have an implicit role is **highly discouraged** by ARIA guidelines.
 :::
 
-### Options
+##### Options
 
 - `exact: boolean`
 
@@ -180,18 +180,180 @@ Providing roles via `role` or `aria-*` attributes to built-in elements that alre
   page.getByRole('button', { selected: false }) // ❌
   ```
 
-### See also
+##### See also
 
 - [List of ARIA roles at MDN](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles)
 - [List of ARIA roles at w3.org](https://www.w3.org/TR/wai-aria-1.2/#role_definitions)
 - [testing-library's `ByRole`](https://testing-library.com/docs/queries/byrole/)
 
 ## getByAltText
+
+- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+
+Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has a matching `alt` attribute.
+
+```tsx
+<img alt="Incredibles 2 Poster" src="/incredibles-2.png" />
+
+page.getByAltText(/incredibles.*? poster/i) // ✅
+page.getByAltText('non existing alt text') // ❌
+```
+
+#### Options
+
+- `exact: boolean`
+
+  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+
+#### See also
+
+- [testing-library's `ByAltText`](https://testing-library.com/docs/queries/byalttext/)
+
 ## getByLabelText
+
+- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+
+Creates a locator capable of finding an element that has an assosiated label.
+
+The `page.getByLabelText('Username')` locator will find every input in the example bellow:
+
+```html
+// for/htmlFor relationship between label and form element id
+<label for="username-input">Username</label>
+<input id="username-input" />
+
+// The aria-labelledby attribute with form elements
+<label id="username-label">Username</label>
+<input aria-labelledby="username-label" />
+
+// Wrapper labels
+<label>Username <input /></label>
+
+// Wrapper labels where the label text is in another child element
+<label>
+  <span>Username</span>
+  <input />
+</label>
+
+// aria-label attributes
+// Take care because this is not a label that users can see on the page,
+// so the purpose of your input must be obvious to visual users.
+<input aria-label="Username" />
+```
+
+#### Options
+
+- `exact: boolean`
+
+  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+
+#### See also
+
+- [testing-library's `ByLabelText`](https://testing-library.com/docs/queries/bylabeltext/)
+
 ## getByPlaceholder
-## getByTestId
+
+- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+
+Creates a locator capable of finding an element that has the specified `placeholder` attribute. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
+
+```tsx
+<input placeholder="Username" />
+
+page.getByPlaceholder('Username') // ✅
+page.getByPlaceholder('not found') // ❌
+```
+
+::: warning
+It is generally better to rely on a label using [`getByLabelText`](#getbylabeltext) than a placeholder.
+:::
+
+#### Options
+
+- `exact: boolean`
+
+  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+
+#### See also
+
+- [testing-library's `ByPlaceholderText`](https://testing-library.com/docs/queries/byplaceholdertext/)
+
 ## getByText
+
+- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+
+Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`. Matching by text always normalizes whitespace, even with exact match. For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
+
+```tsx
+<a href="/about">About ℹ️</a>
+
+page.getByText(/about/i) // ✅
+page.getByText('about', { exact: true }) // ❌
+```
+
+::: tip
+This locator is useful for locating non-interactive elements. If you need to locate an interactive element, like a button or an input, prefer [`getByRole`](#getbyrole).
+:::
+
+#### Options
+
+- `exact: boolean`
+
+  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+
+#### See also
+
+- [testing-library's `ByText`](https://testing-library.com/docs/queries/bytext/)
+
 ## getByTitle
+
+- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+
+Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
+
+```tsx
+<span title="Delete" id="2"></span>
+
+page.getByTitle('Delete') // ✅
+page.getByTitle('Create') // ❌
+```
+
+#### Options
+
+- `exact: boolean`
+
+  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+
+#### See also
+
+- [testing-library's `ByTitle`](https://testing-library.com/docs/queries/bytitle/)
+
+## getByTestId
+
+- **Type:** `(text: string | RegExp) => Locator`
+
+Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
+
+```tsx
+<div data-testid="custom-element" />
+
+page.getByTestId('custom-element') // ✅
+page.getByTestId('non-existing-element') // ❌
+```
+
+::: warning
+It is recommended to use this only after the other locators don't work for your use case. Using `data-testid` attributes does not resemble how your software is used and should be avoided if possible.
+:::
+
+#### Options
+
+- `exact: boolean`
+
+  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+
+#### See also
+
+- [testing-library's `ByTestId`](https://testing-library.com/docs/queries/bytestid/)
 
 ## Methods
 
