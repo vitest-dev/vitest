@@ -66,8 +66,10 @@ export default defineWorkspace([
         BROWSER_TESTS,
 
         // Other non-provider-specific tests that should be run on browser mode as well
+        '**/allow-external.test.ts',
         '**/ignore-hints.test.ts',
         '**/import-attributes.test.ts',
+        '**/pre-transpiled-source.test.ts',
         '**/multi-suite.test.ts',
         '**/setup-files.test.ts',
         '**/results-snapshot.test.ts',
@@ -87,8 +89,10 @@ export default defineWorkspace([
         BROWSER_TESTS,
 
         // Other non-provider-specific tests that should be run on browser mode as well
+        '**/allow-external.test.ts',
         '**/ignore-hints.test.ts',
         '**/import-attributes.test.ts',
+        '**/pre-transpiled-source.test.ts',
         '**/multi-suite.test.ts',
         '**/setup-files.test.ts',
         '**/results-snapshot.test.ts',

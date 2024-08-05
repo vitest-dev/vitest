@@ -528,7 +528,12 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     for (const result of coverage.result) {
       if (transformMode === 'browser') {
-        result.url = `file://${project.config.root}${result.url}`
+        if (result.url.includes('@fs/')) {
+          result.url = `file://${result.url.replace('@fs/', '')}`
+        }
+        else {
+          result.url = `file://${project.config.root}${result.url}`
+        }
       }
 
       if (this.testExclude.shouldInstrument(fileURLToPath(result.url))) {
