@@ -27,7 +27,7 @@ export interface CDPSession {
 export interface ScreenshotOptions {
   element?: Element | Locator
   /**
-   * Path relative to the `screenshotDirectory` in the test config.
+   * Path relative to the current test file.
    */
   path?: string
   /**
@@ -101,7 +101,7 @@ export interface UserEvent {
    */
   selectOptions: (
     element: Element,
-    values: HTMLElement | HTMLElement[] | string | string[],
+    values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ) => Promise<void>
   /**
@@ -216,75 +216,84 @@ interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
 export interface Locator {
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getByRole}
+   * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
    */
   getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getByLabelText}
+   * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
    */
   getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getByAltText}
+   * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
    */
   getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getByPlaceholder}
+   * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
    */
   getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getByText}
+   * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
    */
   getByText(text: string | RegExp, options?: LocatorOptions): Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getByTitle}
+   * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
    */
   getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getByTestId}
+   * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
    */
   getByTestId(text: string | RegExp): Locator
 
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#click}
+   * Click on an element. You can use the options to set the cursor position.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
    */
   click(options?: UserEventClickOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#dblClick}
+   * Triggers a double click event on an element. You can use the options to set the cursor position.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-dblclick}
    */
   dblClick(options?: UserEventDoubleClickOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#tripleClick}
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-tripleclick}
    */
   tripleClick(options?: UserEventTripleClickOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#clear}
+   * Clears the input element content
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-clear}
    */
   clear(): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#hover}
+   * Moves the cursor position to the selected element
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-hover}
    */
   hover(options?: UserEventHoverOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#unhover}
+   * This works the same as `locator.hover`, but moves the cursor to the `document.body` element instead.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-unhover}
    */
   unhover(options?: UserEventHoverOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#fill}
+   * Sets the value of the current `input`, `textarea` or `conteneditable` element.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-fill}
    */
   fill(text: string, options?: UserEventFillOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#dropTo}
+   * Drags the current element to the target location.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-dropto}
    */
   dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void>
   /**
-   * @see {@link https://vitest.dev/guide/browser/locators#selectOptions}
+   * Choose one or more values from a `<select>` element.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-selectoptions}
    */
   selectOptions(
-    values: HTMLElement | HTMLElement[] | string | string[],
+    values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void>
 
   /**
+   * Make a screenshot of an element matching the locator.
    * @see {@link https://vitest.dev/guide/browser/locators#screenshot}
    */
   screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
@@ -407,14 +416,42 @@ export interface BrowserPage {
     base64: string
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
+  /**
+   * Extend default `page` object with custom methods.
+   */
   extend(methods: Partial<BrowserPage>): BrowserPage
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
+   */
   getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
+   */
   getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
+   */
   getByTestId(text: string | RegExp): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
+   */
   getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
+   */
   getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
+   */
   getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
+   */
   getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
+  /**
+   * Wrap an HTML element in a `Locator`. When querying for elements, the search will always return this element.
+   * @see {@link https://vitest.dev/guide/browser/locators}
+   */
   elementLocator(element: Element): Locator
 }
 

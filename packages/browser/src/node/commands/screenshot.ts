@@ -6,7 +6,6 @@ import type { ScreenshotOptions } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
-// TODO: expose provider specific options in types
 export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   context,
   name: string,
@@ -16,11 +15,13 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
     throw new Error(`Cannot take a screenshot without a test path`)
   }
 
-  const path = resolveScreenshotPath(
-    context.testPath,
-    name,
-    context.project.config,
-  )
+  const path = options.path
+    ? resolve(context.testPath, options.path)
+    : resolveScreenshotPath(
+      context.testPath,
+      name,
+      context.project.config,
+    )
   const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 
