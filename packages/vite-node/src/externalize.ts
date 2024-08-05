@@ -121,7 +121,7 @@ async function _shouldExternalize(
   }
 
   // Unless the user explicitly opted to inline them, externalize Vite deps.
-  // They are too big to inline.
+  // They are too big to inline by default.
   if (options?.cacheDir && id.includes(options.cacheDir)) {
     return id
   }
