@@ -7,6 +7,8 @@
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
+    "test:ui:coverage": "vitest --ui --open --coverage.enabled=true --coverage.reporter=html",
+    "test:ui:coverage:html": "vitest --ui --open --coverage.enabled=true --coverage.reporter=html --reporter=html",
     "test:run": "vitest run"
   },
   "devDependencies": {

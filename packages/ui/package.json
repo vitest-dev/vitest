@@ -31,7 +31,9 @@
   "types": "./dist/index.d.ts",
   "files": [
     "*.d.ts",
-    "dist"
+    "dist",
+    "istambul-base.css",
+    "istambul-prettify.css"
   ],
   "scripts": {
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
