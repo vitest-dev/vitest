@@ -1,12 +1,10 @@
 import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
-import { basename, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
-import { coverageConfigDefaults } from 'vitest/config'
 import type { Vitest } from 'vitest'
-import { toArray } from '@vitest/utils'
-import { transformCoverageEntryPoint } from './utils'
+import { resolveCoverageFolder, transformCoverageEntryPoint } from './utils'
 
 export default (ctx: Vitest): Plugin => {
   return <Plugin>{
@@ -89,41 +87,4 @@ export default (ctx: Vitest): Plugin => {
       )
     },
   }
-}
-
-function resolveCoverageFolder(ctx: Vitest) {
-  const options = ctx.config
-  const htmlReporter
-    = options.api?.port && options.coverage?.enabled
-      ? toArray(options.coverage.reporter).find((reporter) => {
-        if (typeof reporter === 'string') {
-          return reporter === 'html'
-        }
-
-        return reporter[0] === 'html'
-      })
-      : undefined
-
-  if (!htmlReporter) {
-    return undefined
-  }
-
-  // reportsDirectory not resolved yet
-  const root = resolve(
-    ctx.config?.root || options.root || process.cwd(),
-    options.coverage.reportsDirectory || coverageConfigDefaults.reportsDirectory,
-  )
-
-  const subdir
-    = Array.isArray(htmlReporter)
-    && htmlReporter.length > 1
-    && 'subdir' in htmlReporter[1]
-      ? htmlReporter[1].subdir
-      : undefined
-
-  if (!subdir || typeof subdir !== 'string') {
-    return [root, `/${basename(root)}/`]
-  }
-
-  return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
 }
