@@ -64,11 +64,37 @@ export function convertElementToCssSelector(element: Element) {
     )
   }
 
-  const css = getUniqueCssSelector(element)
-  if (getBrowserState().provider === 'playwright') {
-    return `css=${css}`
-  }
-  return css
+  return getUniqueCssSelector(element)
+}
+
+function escapeIdForCSSSelector(id: string) {
+  return id
+    .split('')
+    .map((char) => {
+      const code = char.charCodeAt(0)
+
+      if (char === ' ' || char === '#' || char === '.' || char === ':' || char === '[' || char === ']' || char === '>' || char === '+' || char === '~' || char === '\\') {
+        // Escape common special characters with backslashes
+        return `\\${char}`
+      }
+      else if (code >= 0x10000) {
+        // Unicode escape for characters outside the BMP
+        return `\\${code.toString(16).toUpperCase().padStart(6, '0')} `
+      }
+      else if (code < 0x20 || code === 0x7F) {
+        // Non-printable ASCII characters (0x00-0x1F and 0x7F) are escaped
+        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
+      }
+      else if (code >= 0x80) {
+        // Non-ASCII characters (0x80 and above) are escaped
+        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
+      }
+      else {
+        // Allowable characters are used directly
+        return char
+      }
+    })
+    .join('')
 }
 
 function getUniqueCssSelector(el: Element) {
@@ -83,10 +109,10 @@ function getUniqueCssSelector(el: Element) {
 
     const tag = el.tagName
     if (el.id) {
-      path.push(`#${el.id}`)
+      path.push(`#${escapeIdForCSSSelector(el.id)}`)
     }
     else if (!el.nextElementSibling && !el.previousElementSibling) {
-      path.push(tag)
+      path.push(tag.toLowerCase())
     }
     else {
       let index = 0
@@ -104,15 +130,15 @@ function getUniqueCssSelector(el: Element) {
       }
 
       if (sameTagSiblings > 1) {
-        path.push(`${tag}:nth-child(${elementIndex})`)
+        path.push(`${tag.toLowerCase()}:nth-child(${elementIndex})`)
       }
       else {
-        path.push(tag)
+        path.push(tag.toLowerCase())
       }
     }
     el = parent as Element
   };
-  return `${getBrowserState().provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`.toLowerCase()
+  return `${getBrowserState().provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`
 }
 
 function getParent(el: Element) {

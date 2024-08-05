@@ -152,6 +152,9 @@ export function serializeConfig(
         ui: browser.ui,
         viewport: browser.viewport,
         screenshotFailures: browser.screenshotFailures,
+        locators: {
+          testIdAttribute: browser.locators.testIdAttribute,
+        },
       }
     })(config.browser),
     standalone: config.standalone,

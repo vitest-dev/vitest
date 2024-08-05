@@ -203,8 +203,6 @@ function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
 }
 
-// const provider = server
-
 function processClickOptions(options_?: UserEventClickOptions) {
   // only ui scales the iframe, so we need to adjust the position
   if (!options_ || !state().config.browser.ui) {
