@@ -77,8 +77,14 @@ class PreviewLocator extends Locator {
     return userEvent.type(this.element(), text)
   }
 
-  selectOptions(options: string | string[] | HTMLElement | HTMLElement[]): Promise<void> {
-    return userEvent.selectOptions(this.element(), options)
+  selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
+    const options = (Array.isArray(options_) ? options_ : [options_]).map((option) => {
+      if (typeof option !== 'string' && 'element' in option) {
+        return option.element() as HTMLElement
+      }
+      return option
+    })
+    return userEvent.selectOptions(this.element(), options as string[] | HTMLElement[])
   }
 
   async dropTo(): Promise<void> {

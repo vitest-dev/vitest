@@ -85,10 +85,10 @@ export abstract class Locator {
     )
   }
 
-  public selectOptions(value: HTMLElement | HTMLElement[] | string | string[]): Promise<void> {
+  public selectOptions(value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[]): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
-        const selector = selectorEngine.generateSelectorSimple(v)
+        const selector = 'element' in v ? v.selector : selectorEngine.generateSelectorSimple(v)
         return { element: selector }
       }
       return v

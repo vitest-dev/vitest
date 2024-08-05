@@ -52,7 +52,7 @@ class WebdriverIOLocator extends Locator {
     return selectors.join(', ')
   }
 
-  public selectOptions(value: HTMLElement | HTMLElement[] | string | string[]): Promise<void> {
+  public selectOptions(value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[]): Promise<void> {
     const values = getWebdriverioSelectOptions(this.element(), value)
     return this.triggerCommand('__vitest_selectOptions', this.selector, values)
   }
@@ -66,7 +66,7 @@ class WebdriverIOLocator extends Locator {
   }
 }
 
-function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
+function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement | Locator | Locator[]) {
   const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
 
   const arrayValues = Array.isArray(value) ? value : [value]
@@ -82,9 +82,10 @@ function getWebdriverioSelectOptions(element: Element, value: string | string[] 
   const optionValue = arrayValues[0]
 
   if (typeof optionValue !== 'string') {
-    const index = options.indexOf(optionValue as HTMLOptionElement)
+    const element = ('element' in optionValue ? optionValue.element() : optionValue) as HTMLOptionElement
+    const index = options.indexOf(element)
     if (index === -1) {
-      throw new Error(`The element ${convertElementToCssSelector(optionValue)} was not found in the "select" options.`)
+      throw new Error(`The element ${selectorEngine.previewNode(element)} was not found in the "select" options.`)
     }
 
     return [{ index }]
