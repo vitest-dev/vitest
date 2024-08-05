@@ -141,15 +141,36 @@ bun test
 
 If you need to run tests only inside a single project, use the `--project` CLI option:
 
-```bash
+::: code-group
+```bash [npm]
 npm run test --project e2e
 ```
+```bash [yarn]
+yarn test --project e2e
+```
+```bash [pnpm]
+pnpm run test --project e2e
+```
+```bash [bun]
+bun test --project e2e
+```
+:::
 
 ::: tip
 CLI option `--project` can be used multiple times to filter out several projects:
 
-```bash
+::: code-group
+```bash [npm]
 npm run test --project e2e --project unit
+```
+```bash [yarn]
+yarn test --project e2e --project unit
+```
+```bash [pnpm]
+pnpm run test --project e2e --project unit
+```
+```bash [bun]
+bun test --project e2e --project unit
 ```
 :::
 

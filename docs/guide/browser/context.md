@@ -1,8 +1,8 @@
 ---
-title: Context | Browser Mode
+title: Context API | Browser Mode
 ---
 
-# Context
+# Context API
 
 Vitest exposes a context module via `@vitest/browser/context` entry point. As of 2.0, it exposes a small set of utilities that might be useful to you in tests.
 
@@ -42,7 +42,7 @@ export const userEvent: {
 ## `commands`
 
 ::: tip
-Commands API is explained in detail at [Commands](/guide/browser/commands).
+This API is explained in detail at [Commands API](/guide/browser/commands).
 :::
 
 ```ts
@@ -59,6 +59,8 @@ The `page` export provides utilities to interact with the current `page`.
 
 ::: warning
 While it exposes some utilities from Playwright's `page`, it is not the same object. Since the browser context is evaluated in the browser, your tests don't have access to Playwright's `page` because it runs on the server.
+
+Use [Commands API](/guide/browser/commands) if you need to have access to Playwright's `page` object.
 :::
 
 ```ts
@@ -93,7 +95,7 @@ export const cdp: () => CDPSession
 
 ## `server`
 
-The `server` export represents the Node.js environment where the Vitest server is running. It is mostly useful for debugging.
+The `server` export represents the Node.js environment where the Vitest server is running. It is mostly useful for debugging or limiting your tests based on the environment.
 
 ```ts
 export const server: {

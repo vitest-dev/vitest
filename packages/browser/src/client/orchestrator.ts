@@ -43,7 +43,8 @@ class IframeOrchestrator {
     const container = await getContainer(config)
 
     if (config.browser.ui) {
-      container.className = 'scrolls'
+      container.className = 'absolute origin-top mt-[8px]'
+      container.parentElement!.setAttribute('data-ready', 'true')
       container.textContent = ''
     }
     const { width, height } = config.browser.viewport
@@ -99,10 +100,9 @@ class IframeOrchestrator {
     )
     iframe.setAttribute('data-vitest', 'true')
 
-    iframe.style.display = 'block'
     iframe.style.border = 'none'
-    iframe.style.zIndex = '1'
-    iframe.style.position = 'relative'
+    iframe.style.width = '100%'
+    iframe.style.height = '100%'
     iframe.setAttribute('allowfullscreen', 'true')
     iframe.setAttribute('allow', 'clipboard-write;')
     iframe.setAttribute('name', 'vitest-iframe')

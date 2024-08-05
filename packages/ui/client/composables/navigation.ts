@@ -15,6 +15,13 @@ export const coverageEnabled = computed(() => {
     && !!coverage.value.htmlReporter
   )
 })
+export const mainSizes = useLocalStorage<[left: number, right: number]>(
+  'vitest-ui_splitpanes-mainSizes',
+  [33, 67],
+  {
+    initOnMounted: true,
+  },
+)
 export const detailSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-detailSizes',
   [33, 67],
@@ -22,6 +29,17 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
     initOnMounted: true,
   },
 )
+
+// live sizes of panels in percentage
+export const panels = reactive({
+  navigation: mainSizes.value[0],
+  details: {
+    size: mainSizes.value[1],
+    // these sizes are relative to the details panel
+    browser: detailSizes.value[0],
+    main: detailSizes.value[1],
+  },
+})
 
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
@@ -100,4 +118,22 @@ export function showCoverage() {
   dashboardVisible.value = false
   currentModule.value = undefined
   activeFileId.value = ''
+}
+
+export function hideRightPanel() {
+  panels.details.browser = 100
+  panels.details.main = 0
+  detailSizes.value = [100, 0]
+}
+
+export function showRightPanel() {
+  panels.details.browser = 33
+  panels.details.main = 67
+  detailSizes.value = [33, 67]
+}
+
+export function showNavigationPanel() {
+  panels.navigation = 33
+  panels.details.size = 67
+  mainSizes.value = [33, 67]
 }

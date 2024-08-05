@@ -6,6 +6,7 @@ import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
 import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
+import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
 import '@shikijs/vitepress-twoslash/style.css'
@@ -24,5 +25,6 @@ export default {
   enhanceApp({ app }) {
     app.component('Version', Version)
     app.use(TwoslashFloatingVue)
+    enhanceAppWithTabs(app)
   },
 } satisfies Theme

@@ -19,6 +19,12 @@ When using `jsdom` or `happy-dom` environments, Vitest follows the same rules th
 Since Vitest 2.0.4 the `require` of CSS and assets inside the external dependencies are resolved automatically.
 :::
 
+::: warning
+"Environments" exist only when running tests in Node.js.
+
+`browser` is not considered an environment in Vitest. If you wish to run part of your tests using [Browser Mode](/guide/browser/), you can create a [workspace project](/guide/browser/#workspace-config).
+:::
+
 ## Environments for Specific Files
 
 When setting `environment` option in your config, it will apply to all the test files in your project. To have more fine-grained control, you can use control comments to specify environment for specific files. Control comments are comments that start with `@vitest-environment` and are followed by the environment name:

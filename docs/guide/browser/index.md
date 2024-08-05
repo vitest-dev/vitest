@@ -7,6 +7,9 @@ outline: deep
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
+<img alt="Vitest UI" img-light src="/ui-browser-1-light.png">
+<img alt="Vitest UI" img-dark src="/ui-browser-1-dark.png">
+
 ## Installation
 
 For easier setup, you can use `vitest init browser` command to install required dependencies and create browser configuration.
@@ -49,10 +52,9 @@ bun add -D vitest @vitest/browser
 However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `preview` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
 
 If you don't already use one of these tools, we recommend starting with Playwright because it supports parallel execution, which makes your tests run faster. Additionally, the Chrome DevTools Protocol that Playwright uses is generally faster than WebDriver.
-:::
 
-### Using Playwright
-
+::: tabs key:provider
+== Playwright
 [Playwright](https://npmjs.com/package/playwright) is a framework for Web Testing and Automation.
 
 ::: code-group
@@ -68,9 +70,7 @@ pnpm add -D vitest @vitest/browser playwright
 ```bash [bun]
 bun add -D vitest @vitest/browser playwright
 ```
-:::
-
-### Using Webdriverio
+== WebdriverIO
 
 [WebdriverIO](https://www.npmjs.com/package/webdriverio) allows you to run tests locally using the WebDriver protocol.
 
@@ -176,6 +176,8 @@ export default defineConfig({
 
 If you need to run some tests using Node-based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
 
+{#workspace-config}
+
 ```ts
 // vitest.workspace.ts
 import { defineWorkspace } from 'vitest/config'
@@ -211,6 +213,57 @@ export default defineWorkspace([
 ])
 ```
 
+### Provider Configuration
+
+:::tabs key:provider
+== Playwright
+You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/config/#browser-provideroptions) field:
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      providerOptions: {
+        launch: {
+          devtools: true,
+        },
+        context: {
+          geolocation: {
+            latitude: 45,
+            longitude: -30,
+          },
+          reducedMotion: 'reduce',
+        },
+      },
+    },
+  },
+})
+```
+
+To have type hints, add `@vitest/browser/providers/playwright` to `compilerOptions.types` in your `tsconfig.json` file.
+== WebdriverIO
+You can configure what [options](https://webdriver.io/docs/configuration#webdriverio) Vitest should use when starting a browser via [`providerOptions`](/config/#browser-provideroptions) field:
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      browser: 'chrome',
+      providerOptions: {
+        region: 'eu',
+        capabilities: {
+          browserVersion: '27.0',
+          platformName: 'Windows 10',
+        },
+      },
+    },
+  },
+})
+```
+
+To have type hints, add `@vitest/browser/providers/webdriverio` to `compilerOptions.types` in your `tsconfig.json` file.
+:::
+
 ## Browser Option Types
 
 The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
@@ -236,33 +289,7 @@ By default, Vite targets browsers which support the native [ES Modules](https://
 - Safari >=15.4
 - Edge >=88
 
-## Motivation
-
-We developed the Vitest browser mode feature to help improve testing workflows and achieve more accurate and reliable test results. This experimental addition to our testing API allows developers to run tests in a native browser environment. In this section, we'll explore the motivations behind this feature and its benefits for testing.
-
-### Different Ways of Testing
-
-There are different ways to test JavaScript code. Some testing frameworks simulate browser environments in Node.js, while others run tests in real browsers. In this context, [jsdom](https://www.npmjs.com/package/jsdom) is an example of a spec implementation that simulates a browser environment by being used with a test runner like Jest or Vitest, while other testing tools such as [WebdriverIO](https://webdriver.io/) or [Cypress](https://www.cypress.io/) allow developers to test their applications in a real browser or in case of [Playwright](https://playwright.dev/) provide you a browser engine.
-
-### The Simulation Caveat
-
-Testing JavaScript programs in simulated environments such as jsdom or happy-dom has simplified the test setup and provided an easy-to-use API, making them suitable for many projects and increasing confidence in test results. However, it is crucial to keep in mind that these tools only simulate a browser environment and not an actual browser, which may result in some discrepancies between the simulated environment and the real environment. Therefore, false positives or negatives in test results may occur.
-
-To achieve the highest level of confidence in our tests, it's crucial to test in a real browser environment. This is why we developed the browser mode feature in Vitest, allowing developers to run tests natively in a browser and gain more accurate and reliable test results. With browser-level testing, developers can be more confident that their application will work as intended in a real-world scenario.
-
-## Drawbacks
-
-When using Vitest browser, it is important to consider the following drawbacks:
-
-### Early Development
-
-The browser mode feature of Vitest is still in its early stages of development. As such, it may not yet be fully optimized, and there may be some bugs or issues that have not yet been ironed out. It is recommended that users augment their Vitest browser experience with a standalone browser-side test runner like WebdriverIO, Cypress or Playwright.
-
-### Longer Initialization
-
-Vitest browser requires spinning up the provider and the browser during the initialization process, which can take some time. This can result in longer initialization times compared to other testing patterns.
-
-## Cross-Browser Testing
+## Running Tests
 
 When you specify a browser name in the browser option, Vitest will try to run the specified browser using `preview` by default, and then run the tests there. If you don't want to use `preview`, you can configure the custom browser provider by using `browser.provider` option.
 
@@ -278,9 +305,13 @@ Or you can provide browser options to CLI with dot notation:
 npx vitest --browser.name=chrome --browser.headless
 ```
 
+By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/#browser-viewport).
+
 ## Headless
 
 Headless mode is another option available in the browser mode. In headless mode, the browser runs in the background without a user interface, which makes it useful for running automated tests. The headless option in Vitest can be set to a boolean value to enable or disable headless mode.
+
+When using headless mode, Vitest won't open the UI automatically. If you want to continue using the UI but have tests run headlessly, you can install the [`@vitest/ui`](/guide/ui) package and pass the --ui flag when running Vitest.
 
 Here's an example configuration enabling headless mode:
 
@@ -306,6 +337,176 @@ In this case, Vitest will run in headless mode using the Chrome browser.
 
 ::: warning
 Headless mode is not available by default. You need to use either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio) providers to enable this feature.
+:::
+
+## Examples
+
+Browser Mode is framework agnostic so it doesn't provide any method to render your components. However, you should be able to use your framework's test utils packages.
+
+We recommend using `testing-library` packages depending on your framework:
+
+- [`@testing-library/dom`](https://testing-library.com/docs/dom-testing-library/intro) if you don't use a framework
+- [`@testing-library/vue`](https://testing-library.com/docs/vue-testing-library/intro) to render [vue](https://vuejs.org) components
+- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) to render [svelte](https://svelte.dev) components
+- [`@testing-library/react`](https://testing-library.com/docs/react-testing-library/intro) to render [react](https://react.dev) components
+- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
+- [`solid-testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
+- [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
+
+Besides rendering components and querying elements using `@testing-library/your-framework`, you will also need to make assertions. Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
+
+```ts
+import { expect } from 'vitest'
+// element is rendered correctly
+await expect.element(screen.getByText('Hello World')).toBeInTheDocument()
+```
+
+Vitest exposes a [Context API](/guide/browser/context) with a small set of utilities that might be useful to you in tests. For example, if you need to make an interaction, like clicking an element or typing text into an input, you can use `userEvent` from `@vitest/browser/context`. Read more at the [Interactivity API](/guide/browser/interactivity-api).
+
+```ts
+import { userEvent } from '@vitest/browser/context'
+await userEvent.type(screen.getByLabelText(/username/i), 'Alice')
+```
+
+::: warning
+`testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](#interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
+:::
+
+::: code-group
+```ts [vue]
+// based on @testing-library/vue example
+// https://testing-library.com/docs/vue-testing-library/examples
+
+import { userEvent } from '@vitest/browser/context'
+import { render, screen } from '@testing-library/vue'
+import Component from './Component.vue'
+
+test('properly handles v-model', async () => {
+  render(Component)
+
+  // Asserts initial state.
+  expect(screen.getByText('Hi, my name is Alice')).toBeInTheDocument()
+
+  // Get the input DOM node by querying the associated label.
+  const usernameInput = await screen.findByLabelText(/username/i)
+
+  // Type the name into the input. This already validates that the input
+  // is filled correctly, no need to check the value manually.
+  await userEvent.fill(usernameInput, 'Bob')
+
+  expect(screen.getByText('Hi, my name is Bob')).toBeInTheDocument()
+})
+```
+```ts [svelte]
+// based on @testing-library/svelte
+// https://testing-library.com/docs/svelte-testing-library/example
+
+import { render, screen } from '@testing-library/svelte'
+import { userEvent } from '@vitest/browser/context'
+import { expect, test } from 'vitest'
+
+import Greeter from './greeter.svelte'
+
+test('greeting appears on click', async () => {
+  const user = userEvent.setup()
+  render(Greeter, { name: 'World' })
+
+  const button = screen.getByRole('button')
+  await user.click(button)
+  const greeting = await screen.findByText(/hello world/iu)
+
+  expect(greeting).toBeInTheDocument()
+})
+```
+```tsx [react]
+// based on @testing-library/react example
+// https://testing-library.com/docs/react-testing-library/example-intro
+
+import { userEvent } from '@vitest/browser/context'
+import { render, screen } from '@testing-library/react'
+import Fetch from './fetch'
+
+test('loads and displays greeting', async () => {
+  // Render a React element into the DOM
+  render(<Fetch url="/greeting" />)
+
+  await userEvent.click(screen.getByText('Load Greeting'))
+  // wait before throwing an error if it cannot find an element
+  const heading = await screen.findByRole('heading')
+
+  // assert that the alert message is correct
+  expect(heading).toHaveTextContent('hello there')
+  expect(screen.getByRole('button')).toBeDisabled()
+})
+```
+```tsx [preact]
+// based on @testing-library/preact example
+// https://testing-library.com/docs/preact-testing-library/example
+
+import { h } from 'preact'
+import { userEvent } from '@vitest/browser/context'
+import { render } from '@testing-library/preact'
+
+import HiddenMessage from '../hidden-message'
+
+test('shows the children when the checkbox is checked', async () => {
+  const testMessage = 'Test Message'
+
+  const { queryByText, getByLabelText, getByText } = render(
+    <HiddenMessage>{testMessage}</HiddenMessage>,
+  )
+
+  // query* functions will return the element or null if it cannot be found.
+  // get* functions will return the element or throw an error if it cannot be found.
+  expect(queryByText(testMessage)).not.toBeInTheDocument()
+
+  // The queries can accept a regex to make your selectors more
+  // resilient to content tweaks and changes.
+  await userEvent.click(getByLabelText(/show/i))
+
+  expect(getByText(testMessage)).toBeInTheDocument()
+})
+```
+```tsx [solid]
+// baed on @testing-library/solid API
+// https://testing-library.com/docs/solid-testing-library/api
+
+import { render } from '@testing-library/solid'
+
+it('uses params', async () => {
+  const App = () => (
+    <>
+      <Route
+        path="/ids/:id"
+        component={() => (
+          <p>
+            Id:
+            {useParams()?.id}
+          </p>
+        )}
+      />
+      <Route path="/" component={() => <p>Start</p>} />
+    </>
+  )
+  const { findByText } = render(() => <App />, { location: 'ids/1234' })
+  expect(await findByText('Id: 1234')).toBeInTheDocument()
+})
+```
+```ts [marko]
+// baed on @testing-library/marko API
+// https://testing-library.com/docs/marko-testing-library/api
+
+import { render, screen } from '@marko/testing-library'
+import Greeting from './greeting.marko'
+
+test('renders a message', async () => {
+  const { container } = await render(Greeting, { name: 'Marko' })
+  expect(screen.getByText(/Marko/)).toBeInTheDocument()
+  expect(container.firstChild).toMatchInlineSnapshot(`
+    <h1>Hello, Marko!</h1>
+  `)
+})
+```
 :::
 
 ## Limitations
