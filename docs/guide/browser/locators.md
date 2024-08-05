@@ -37,7 +37,7 @@ If _no element_ matches the selector, an error is thrown. Consider using [`.quer
 If _multiple elements_ match the selector, an error is thrown. Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
 ::: tip
-This method can be useful if you need to pass it down to an external library. It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/guide/browser/retry-ability):
+This method can be useful if you need to pass it down to an external library. It is called automatically when locator is used with `expect.element` every time the assertion is [retried](/guide/browser/assertion-api):
 
 ```ts
 await expect.element(page.getByRole('button')).toBeDisabled()
