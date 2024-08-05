@@ -14,6 +14,9 @@ import { convertElementToCssSelector, getBrowserState, getWorkerState } from '..
 
 // this file should not import anything directly, only types and utils
 
+const state = () => getWorkerState()
+// @ts-expect-error not typed global
+const provider = __vitest_browser_runner__.provider
 function filepath() {
   return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
 }
@@ -199,6 +202,8 @@ function convertToSelector(elementOrLocator: Element | Locator): string {
 function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
 }
+
+// const provider = server
 
 function processClickOptions(options_?: UserEventClickOptions) {
   // only ui scales the iframe, so we need to adjust the position
