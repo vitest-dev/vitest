@@ -78,8 +78,31 @@ export const page: {
     base64: string
   }>
   screenshot(options?: ScreenshotOptions): Promise<string>
+  /**
+   * Extend default `page` object with custom methods.
+   */
+  extend(methods: Partial<BrowserPage>): BrowserPage
+  /**
+   * Wrap an HTML element in a `Locator`. When querying for elements, the search will always return this element.
+   */
+  elementLocator(element: Element): Locator
+
+  /**
+   * Locator APIs. See its documentation for more details.
+   */
+  getByRole(role: ARIARole | string, options?: LocatorByRoleOptions): Locator
+  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTestId(text: string | RegExp): Locator
+  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
 }
 ```
+
+::: tip
+The `getBy*` API is explained at [Locators API](/guide/browser/locators).
+:::
 
 ## `cdp`
 
