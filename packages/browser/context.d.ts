@@ -1,5 +1,5 @@
 import type { SerializedConfig } from 'vitest'
-import { ARIARole } from './aria-role.d.ts'
+import { ARIARole } from './aria-role'
 
 export type BufferEncoding =
   | 'ascii'
