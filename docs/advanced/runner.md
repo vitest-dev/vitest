@@ -110,9 +110,7 @@ Snapshot support and some other features depend on the runner. If you don't want
 
 Suites and tests are called `tasks` internally. Vitest runner initiates a `File` task before collecting any tests - this is a superset of `Suite` with a few additional properties. It is available on every task (including `File`) as a `file` property.
 
-```ts twoslash
-import type { Suite } from 'vitest'
-// ---cut---
+```ts
 interface File extends Suite {
   /**
    * The name of the pool that the file belongs to.
@@ -146,9 +144,7 @@ interface File extends Suite {
 
 Every suite has a `tasks` property that is populated during collection phase. It is useful to traverse the task tree from the top down.
 
-```ts twoslash
-import type { File, Task, TaskBase } from 'vitest'
-// ---cut---
+```ts
 interface Suite extends TaskBase {
   type: 'suite'
   /**
@@ -164,12 +160,8 @@ interface Suite extends TaskBase {
 
 Every task has a `suite` property that references a suite it is located in. If `test` or `describe` are initiated at the top level, they will not have a `suite` property (it will **not** be equal to `file`!). `File` also never has a `suite` property. It is useful to travers the tasks from the bottom up.
 
-```ts twoslash
-import type { File, TaskBase, TaskContext, TaskResult, TestContext } from 'vitest'
-type OnTestFinishedHandler = (result: TaskResult) => void
-type OnTestFailedHandler = (result: TaskResult) => void
-// ---cut---
-interface Test<ExtraContext = {}> extends TaskBase {
+```ts
+interface Test<ExtraContext = object> extends TaskBase {
   type: 'test'
   /**
    * Test context that will be passed to the test function.
@@ -204,11 +196,7 @@ interface Test<ExtraContext = {}> extends TaskBase {
 
 Every task can have a `result` field. Suites can only have this field if an error thrown within a suite callback or `beforeAll`/`afterAll` callbacks prevents them from collecting tests. Tests always have this field after their callbacks are called - the `state` and `errors` fields are present depending on the outcome. If an error was thrown in `beforeEach` or `afterEach` callbacks, the thrown error will be present in `task.result.errors`.
 
-```ts twoslash
-import type { ErrorWithDiff, TaskState } from 'vitest'
-type OnTestFinishedHandler = (result: TaskResult) => void
-type OnTestFailedHandler = (result: TaskResult) => void
-// ---cut---
+```ts
 export interface TaskResult {
   /**
    * State of the task. Inherits the `task.mode` during collection.
