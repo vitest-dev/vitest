@@ -495,7 +495,7 @@ function createSuite() {
         : this.todo
           ? 'todo'
           : 'run'
-    const currentSuite = getCurrentSuite()
+    const currentSuite: SuiteCollector | undefined = collectorContext.currentSuite || defaultSuite
 
     let { options, handler: factory } = parseArguments(
       factoryOrOptions,
