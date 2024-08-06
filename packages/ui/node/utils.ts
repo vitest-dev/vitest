@@ -30,16 +30,21 @@ export function transformCoverageEntryPoint(
 }
 
 export async function prepareReportCoverageFolder(ctx: Vitest) {
-  const [folder] = resolveCoverageFolder(ctx)!
+  const coverageFolder = resolveCoverageFolder(ctx)
+  if (!coverageFolder) {
+    return
+  }
+
+  const [folder] = coverageFolder
   const root = resolve(fileURLToPath(import.meta.url), '../')
   await Promise.all([
     fs.copyFile(resolve(root, '../istanbul-base.css'), resolve(folder, 'base.css')),
     fs.copyFile(resolve(root, '../istanbul-prettify.css'), resolve(folder, 'prettify.css')),
+    ...fg.sync('**/*.html', { cwd: folder, absolute: true }).map(async (file) => {
+      const content = await fs.readFile(file, 'utf-8')
+      await fs.writeFile(file, transformCoverageEntryPoint(content))
+    }),
   ])
-  await Promise.all(fg.sync('**/*.html', { cwd: folder, absolute: true }).map(async (file) => {
-    const content = await fs.readFile(file, 'utf-8')
-    await fs.writeFile(file, transformCoverageEntryPoint(content))
-  }))
 }
 
 export function resolveCoverageFolder(ctx: Vitest) {
