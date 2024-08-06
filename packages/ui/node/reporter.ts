@@ -136,10 +136,6 @@ export default class HTMLReporter implements Reporter {
       }),
     )
 
-    // TODO: how to run this after coverage is generated?
-    // TODO: At this point, the coverage folder is not yet generated
-    // await prepareReportCoverageFolder(this.ctx)
-
     this.ctx.logger.log(
       `${c.bold(c.inverse(c.magenta(' HTML ')))} ${c.magenta(
         'Report is generated',
