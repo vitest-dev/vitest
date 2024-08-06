@@ -1,5 +1,5 @@
 import { resolve } from 'pathe'
-import fg from 'fast-glob'
+import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
@@ -9,7 +9,7 @@ process.setMaxListeners(20)
 
 describe('stacktraces should respect sourcemaps', async () => {
   const root = resolve(__dirname, '../fixtures/stacktraces')
-  const files = await fg('*.test.*', { cwd: root })
+  const files = await glob(['*.test.*'], { cwd: root, expandDirectories: false })
 
   for (const file of files) {
     it(file, async () => {
