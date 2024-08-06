@@ -1,4 +1,4 @@
-import type { Reporter } from '../../types'
+import type { Reporter } from '../types/reporter'
 import { BasicReporter } from './basic'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
@@ -27,6 +27,21 @@ export {
   GithubActionsReporter,
 }
 export type { BaseReporter, Reporter }
+
+export { TestCase, TestFile, TestSuite } from './reported-tasks'
+export type { TestProject } from '../reported-workspace-project'
+export type {
+  TestCollection,
+
+  TaskOptions,
+  TestDiagnostic,
+  FileDiagnostic,
+
+  TestResult,
+  TestResultFailed,
+  TestResultPassed,
+  TestResultSkipped,
+} from './reported-tasks'
 
 export type {
   JsonAssertionResult,

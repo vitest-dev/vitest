@@ -1,4 +1,4 @@
-import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 
 export async function importId(id: string) {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -10,7 +10,7 @@ export async function importFs(id: string) {
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export function getConfig(): ResolvedConfig {
+export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }
 
@@ -18,7 +18,7 @@ export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
   moduleCache: WorkerGlobalState['moduleCache']
-  config: ResolvedConfig
+  config: SerializedConfig
   provider: string
   viteConfig: {
     root: string

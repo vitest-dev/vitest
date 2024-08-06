@@ -53,64 +53,59 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@c65cd883420fd2eb864698a825fc4162dd94482c # v44.5.7
+        with:
+          files: |
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
+
       - uses: ./.github/actions/setup-and-cache
+        if: steps.changed-files.outputs.only_changed != 'true'
         with:
           node-version: ${{ matrix.node_version }}
 
       - uses: browser-actions/setup-chrome@v1
+        if: steps.changed-files.outputs.only_changed != 'true'
 
       - name: Install
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps
+        if: steps.changed-files.outputs.only_changed != 'true'
+        run: pnpm exec playwright install chromium --with-deps
 
       - name: Build
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run build
 
       - name: Test
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:ci
 
       - name: Test Examples
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run test:examples
 
-  test-ui:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-14, windows-latest]
-      fail-fast: false
-
-    runs-on: ${{ matrix.os }}
-
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium
-
-      - name: Build
-        run: pnpm run build
-
       - name: Unit Test UI
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run -C packages/ui test:ui
 
-      - name: E2E Test UI
-        run: pnpm -C test/ui test-e2e
-
   test-browser:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        browser: [[chrome, chromium], [firefox, firefox], [edge, webkit]]
+        os:
+          - macos-14
+          - windows-latest
+        browser:
+          - [chromium, chrome]
+          - [firefox, firefox]
+          - [webkit]
       fail-fast: false
 
     timeout-minutes: 30
@@ -118,66 +113,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@c65cd883420fd2eb864698a825fc4162dd94482c # v44.5.7
+        with:
+          files: |
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
+
       - uses: ./.github/actions/setup-and-cache
+        if: steps.changed-files.outputs.only_changed != 'true'
         with:
           node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'chromium' }}
       - uses: browser-actions/setup-firefox@v1
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[0] == 'firefox' }}
 
       - name: Install
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps
+        if: steps.changed-files.outputs.only_changed != 'true'
+        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
 
       - name: Build
+        if: steps.changed-files.outputs.only_changed != 'true'
         run: pnpm run build
 
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
+      - name: Test Browser (playwright)
+        if: steps.changed-files.outputs.only_changed != 'true'
+        run: pnpm run test:browser:playwright
         env:
           BROWSER: ${{ matrix.browser[0] }}
 
-      - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[1] }}
-
-  test-browser-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        browser: [[chrome, chromium], [edge, webkit]]
-      fail-fast: false
-
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20
-
-      - uses: browser-actions/setup-chrome@v1
-      - uses: browser-actions/setup-edge@v1
-
-      - name: Install
-        run: pnpm i
-
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install --with-deps
-
-      - name: Build
-        run: pnpm run build
-
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        env:
-          BROWSER: ${{ matrix.browser[0] }}
-
-      - name: Test Browser (playwright)
-        run: pnpm run test:browser:playwright
+        if: ${{ steps.changed-files.outputs.only_changed != 'true' && matrix.browser[1] }}
         env:
           BROWSER: ${{ matrix.browser[1] }}

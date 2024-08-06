@@ -1,7 +1,7 @@
 import mm from 'micromatch'
 import type { Awaitable } from '@vitest/utils'
-import type { BuiltinPool, Pool } from '../types/pool-options'
 import { isWindows } from '../utils/env'
+import type { BuiltinPool, Pool } from './types/pool-options'
 import type { Vitest } from './core'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
@@ -158,14 +158,12 @@ export function createPool(ctx: Vitest): ProcessPool {
     const filesByPool: Record<LocalPool, WorkspaceSpec[]> = {
       forks: [],
       threads: [],
-      // browser: [],
       vmThreads: [],
       vmForks: [],
       typescript: [],
     }
 
     const factories: Record<LocalPool, () => ProcessPool> = {
-      // browser: () => createBrowserPool(ctx),
       vmThreads: () => createVmThreadsPool(ctx, options),
       threads: () => createThreadsPool(ctx, options),
       forks: () => createForksPool(ctx, options),

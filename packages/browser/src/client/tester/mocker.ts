@@ -59,12 +59,19 @@ export class VitestBrowserClientMocker {
       )
     }
     const ext = extname(resolved.id)
-    const url = new URL(`/@id/${resolved.id}`, location.href)
-    const query = `_vitest_original&ext.${ext}`
+    const url = new URL(resolved.url, location.href)
+    const query = `_vitest_original&ext${ext}`
     const actualUrl = `${url.pathname}${
       url.search ? `${url.search}&${query}` : `?${query}`
     }${url.hash}`
-    return getBrowserState().wrapModule(() => import(/* @vite-ignore */ actualUrl))
+    return getBrowserState().wrapModule(() => import(/* @vite-ignore */ actualUrl)).then((mod) => {
+      if (!resolved.optimized || typeof mod.default === 'undefined') {
+        return mod
+      }
+      // vite injects this helper for optimized modules, so we try to follow the same behavior
+      const m = mod.default
+      return m?.__esModule ? m : { ...((typeof m === 'object' && !Array.isArray(m)) || typeof m === 'function' ? m : {}), default: m }
+    })
   }
 
   public async importMock(rawId: string, importer: string) {
@@ -236,7 +243,7 @@ export class VitestBrowserClientMocker {
           try {
             Object.defineProperty(newContainer, property, descriptor)
           }
-          catch (error) {
+          catch {
             // Ignore errors, just move on to the next prop.
           }
           continue

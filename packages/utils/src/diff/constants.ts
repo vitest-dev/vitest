@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export const NO_DIFF_MESSAGE = 'Compared values have no visual difference.'
+export const NO_DIFF_MESSAGE: string = 'Compared values have no visual difference.'
 
-export const SIMILAR_MESSAGE
+export const SIMILAR_MESSAGE: string
   = 'Compared values serialize to the same structure.\n'
   + 'Printing internal object structure without calling `toJSON` instead.'

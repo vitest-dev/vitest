@@ -4,7 +4,7 @@ import { parse, stringify } from 'flatted'
 
 // eslint-disable-next-line no-restricted-imports
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
-import { StateManager } from '../../vitest/src/node/state'
+import { StateManager } from './state'
 
 export * from '../../vitest/src/utils/tasks'
 
@@ -49,7 +49,7 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   ctx.state.filesMap = reactive(ctx.state.filesMap, 'filesMap')
   ctx.state.idMap = reactive(ctx.state.idMap, 'idMap')
 
-  let onMessage: Function
+  let onMessage: (data: any) => void
   const functions: WebSocketEvents = {
     onSpecsCollected(specs) {
       specs?.forEach(([config, file]) => {

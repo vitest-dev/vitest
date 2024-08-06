@@ -1,0 +1,53 @@
+import type { Arrayable } from '@vitest/utils'
+
+import type { BenchmarkBuiltinReporters } from '../reporters'
+import type { Reporter } from './reporter'
+
+export interface BenchmarkUserOptions {
+  /**
+   * Include globs for benchmark test files
+   *
+   * @default ['**\/*.{bench,benchmark}.?(c|m)[jt]s?(x)']
+   */
+  include?: string[]
+
+  /**
+   * Exclude globs for benchmark test files
+   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
+   */
+  exclude?: string[]
+
+  /**
+   * Include globs for in-source benchmark test files
+   *
+   * @default []
+   */
+  includeSource?: string[]
+
+  /**
+   * Custom reporter for output. Can contain one or more built-in report names, reporter instances,
+   * and/or paths to custom reporters
+   *
+   * @default ['default']
+   */
+  reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
+
+  /**
+   * Write test results to a file when the `--reporter=json` option is also specified.
+   * Also definable individually per reporter by using an object instead.
+   */
+  outputFile?:
+    | string
+    | (Partial<Record<BenchmarkBuiltinReporters, string>> &
+    Record<string, string>)
+
+  /**
+   * benchmark output file to compare against
+   */
+  compare?: string
+
+  /**
+   * benchmark output file
+   */
+  outputJson?: string
+}

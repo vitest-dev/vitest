@@ -19,7 +19,6 @@ import remapping from '@ampproject/remapping'
 import { normalize, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import { provider } from 'std-env'
-import { stripLiteral } from 'strip-literal'
 import createDebug from 'debug'
 import { cleanUrl } from 'vite-node/utils'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
@@ -73,25 +72,23 @@ const VITE_EXPORTS_LINE_PATTERN
   = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
 const DECORATOR_METADATA_PATTERN
   = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
-const DEFAULT_PROJECT = Symbol.for('default-project')
+const DEFAULT_PROJECT: unique symbol = Symbol.for('default-project')
 
 const debug = createDebug('vitest:coverage')
 let uniqueId = 0
 
-export class V8CoverageProvider
-  extends BaseCoverageProvider
-  implements CoverageProvider {
+export class V8CoverageProvider extends BaseCoverageProvider implements CoverageProvider {
   name = 'v8'
 
   ctx!: Vitest
   options!: Options
   testExclude!: InstanceType<TestExclude>
 
-  coverageFiles = new Map<ProjectName, CoverageFilesByTransformMode>()
+  coverageFiles: Map<ProjectName, CoverageFilesByTransformMode> = new Map()
   coverageFilesDirectory!: string
   pendingPromises: Promise<void>[] = []
 
-  initialize(ctx: Vitest) {
+  initialize(ctx: Vitest): void {
     const config: CoverageV8Options = ctx.config.coverage
 
     this.ctx = ctx
@@ -142,11 +139,11 @@ export class V8CoverageProvider
     )
   }
 
-  resolveOptions() {
+  resolveOptions(): Options {
     return this.options
   }
 
-  async clean(clean = true) {
+  async clean(clean = true): Promise<void> {
     if (clean && existsSync(this.options.reportsDirectory)) {
       await fs.rm(this.options.reportsDirectory, {
         recursive: true,
@@ -174,7 +171,7 @@ export class V8CoverageProvider
    * Note that adding new entries here and requiring on those without
    * backwards compatibility is a breaking change.
    */
-  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta) {
+  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta): void {
     if (transformMode !== 'web' && transformMode !== 'ssr') {
       throw new Error(`Invalid transform mode: ${transformMode}`)
     }
@@ -196,7 +193,7 @@ export class V8CoverageProvider
     this.pendingPromises.push(promise)
   }
 
-  async generateCoverage({ allTestsRun }: ReportContext) {
+  async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
     const coverageMap = libCoverage.createCoverageMap({})
     let index = 0
     const total = this.pendingPromises.length
@@ -255,7 +252,7 @@ export class V8CoverageProvider
     return coverageMap
   }
 
-  async reportCoverage(coverageMap: unknown, { allTestsRun }: ReportContext) {
+  async reportCoverage(coverageMap: unknown, { allTestsRun }: ReportContext): Promise<void> {
     if (provider === 'stackblitz') {
       this.ctx.logger.log(
         c.blue(' % ')
@@ -284,7 +281,7 @@ export class V8CoverageProvider
     }
   }
 
-  async generateReports(coverageMap: CoverageMap, allTestsRun?: boolean) {
+  async generateReports(coverageMap: CoverageMap, allTestsRun?: boolean): Promise<void> {
     const context = libReport.createContext({
       dir: this.options.reportsDirectory,
       coverageMap,
@@ -349,7 +346,7 @@ export class V8CoverageProvider
     }
   }
 
-  async mergeReports(coverageMaps: unknown[]) {
+  async mergeReports(coverageMaps: unknown[]): Promise<void> {
     const coverageMap = libCoverage.createCoverageMap({})
 
     for (const coverage of coverageMaps) {
@@ -393,15 +390,10 @@ export class V8CoverageProvider
 
       const coverages = await Promise.all(
         chunk.map(async (filename) => {
-          const { originalSource, source } = await this.getSources(
+          const { originalSource } = await this.getSources(
             filename.href,
             transformResults,
           )
-
-          // Ignore empty files, e.g. files that contain only typescript types and no runtime code
-          if (source && stripLiteral(source).trim() === '') {
-            return null
-          }
 
           const coverage = {
             url: filename.href,

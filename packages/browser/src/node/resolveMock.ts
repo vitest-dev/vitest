@@ -2,9 +2,8 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
 import type { PartialResolvedId } from 'rollup'
-import type { ResolvedConfig } from 'vitest'
+import type { ResolvedConfig, WorkspaceProject } from 'vitest/node'
 import type { ResolvedConfig as ViteConfig } from 'vite'
-import type { WorkspaceProject } from 'vitest/node'
 
 export async function resolveMock(
   project: WorkspaceProject,

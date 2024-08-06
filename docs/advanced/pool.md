@@ -14,9 +14,9 @@ Vitest runs tests in pools. By default, there are several pools:
 
 You can provide your own pool by specifying a file path:
 
-```ts twoslash
+```ts
 import { defineConfig } from 'vitest/config'
-// ---cut---
+
 export default defineConfig({
   test: {
     // will run every file with a custom pool by default

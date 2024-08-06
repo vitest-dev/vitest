@@ -13,29 +13,19 @@ export interface Constructable {
   new (...args: any[]): any
 }
 
+export type TransformMode = 'web' | 'ssr'
+
+/** @deprecated not used */
 export interface ModuleCache {
   promise?: Promise<any>
   exports?: any
   code?: string
 }
 
-export interface EnvironmentReturn {
-  teardown: (global: any) => Awaitable<void>
-}
-
-export interface VmEnvironmentReturn {
-  getVmContext: () => { [key: string]: any }
-  teardown: () => Awaitable<void>
-}
-
-export interface Environment {
-  name: string
-  transformMode: 'web' | 'ssr'
-  setupVM?: (options: Record<string, any>) => Awaitable<VmEnvironmentReturn>
-  setup: (
-    global: any,
-    options: Record<string, any>
-  ) => Awaitable<EnvironmentReturn>
+export interface AfterSuiteRunMeta {
+  coverage?: unknown
+  transformMode: TransformMode
+  projectName?: string
 }
 
 export interface UserConsoleLog {

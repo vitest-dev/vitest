@@ -4,9 +4,9 @@ import { Writable } from 'node:stream'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
+import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import { inspect } from '@vitest/utils'
 import stripAnsi from 'strip-ansi'
-import type { ErrorWithDiff, ParsedStack } from '../types'
 import {
   lineSplitRE,
   positionToOffset,
@@ -306,7 +306,7 @@ function printModuleWarningForSourceCode(logger: Logger, path: string) {
   )
 }
 
-export function displayDiff(diff: string | null, console: Console) {
+export function displayDiff(diff: string | undefined, console: Console) {
   if (diff) {
     console.error(`\n${diff}\n`)
   }

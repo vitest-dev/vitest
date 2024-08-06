@@ -34,7 +34,7 @@ Out-of-the-box ES Module / TypeScript / JSX support / PostCSS
 
 ## Threads
 
-By default Vitest runs test files in multiple threads using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If your tests are running code that is not compatible with multi-threading, you can switch to [`--pool=forks`](/config/#pool) which runs tests in multiple processes using [`node:child_process`](https://nodejs.org/api/child_process.html) via Tinypool.
+By default Vitest runs test files in multiple processes using [`node:child_process`](https://nodejs.org/api/child_process.html) via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina)), allowing tests to run simultaneously. If you want to speed up your test suite even further, consider enabling `--pool=threads` to run tests using [`node:worker_threads`](https://nodejs.org/api/worker_threads.html) (beware that some packages might not work with this setup).
 
 To run tests in a single thread or process, see [`poolOptions`](/config/#pooloptions).
 
@@ -48,12 +48,12 @@ Learn more about [Test Filtering](/guide/filtering).
 
 ## Running Tests Concurrently
 
-Use `.concurrent` in consecutive tests to run them in parallel.
+Use `.concurrent` in consecutive tests to start them in parallel.
 
-```ts twoslash
+```ts
 import { describe, it } from 'vitest'
 
-// The two tests marked with concurrent will be run in parallel
+// The two tests marked with concurrent will be started in parallel
 describe('suite', () => {
   it('serial test', async () => { /* ... */ })
   it.concurrent('concurrent test 1', async ({ expect }) => { /* ... */ })
@@ -61,12 +61,12 @@ describe('suite', () => {
 })
 ```
 
-If you use `.concurrent` on a suite, every test in it will be run in parallel.
+If you use `.concurrent` on a suite, every test in it will be started in parallel.
 
-```ts twoslash
+```ts
 import { describe, it } from 'vitest'
 
-// All tests within this suite will be run in parallel
+// All tests within this suite will be started in parallel
 describe.concurrent('suite', () => {
   it('concurrent test 1', async ({ expect }) => { /* ... */ })
   it('concurrent test 2', async ({ expect }) => { /* ... */ })
@@ -97,15 +97,15 @@ Learn more at [Snapshot](/guide/snapshot).
 
 ## Chai and Jest `expect` Compatibility
 
-[Chai](https://www.chaijs.com/) is built-in for assertions plus [Jest `expect`](https://jestjs.io/docs/expect)-compatible APIs.
+[Chai](https://www.chaijs.com/) is built-in for assertions with [Jest `expect`](https://jestjs.io/docs/expect)-compatible APIs.
 
-Notice that if you are using third-party libraries that add matchers, setting `test.globals` to `true` will provide better compatibility.
+Notice that if you are using third-party libraries that add matchers, setting [`test.globals`](/config/#globals) to `true` will provide better compatibility.
 
 ## Mocking
 
 [Tinyspy](https://github.com/tinylibs/tinyspy) is built-in for mocking with `jest`-compatible APIs on `vi` object.
 
-```ts twoslash
+```ts
 import { expect, vi } from 'vitest'
 
 const fn = vi.fn()
@@ -122,7 +122,7 @@ fn('world', 2)
 expect(fn.mock.results[1].value).toBe('world')
 ```
 
-Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you might need to install them:
+Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you will need to install them separately:
 
 ```bash
 $ npm i -D happy-dom
@@ -132,7 +132,7 @@ $ npm i -D jsdom
 
 After that, change the `environment` option in your config file:
 
-```ts twoslash
+```ts
 // vitest.config.ts
 import { defineConfig } from 'vitest/config'
 
@@ -170,7 +170,7 @@ This makes the tests share the same closure as the implementations and able to t
 // src/index.ts
 
 // the implementation
-export function add(...args: number[]) {
+export function add(...args: number[]): number {
   return args.reduce((a, b) => a + b, 0)
 }
 
@@ -191,7 +191,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
-```ts twoslash
+```ts
 import { bench, describe } from 'vitest'
 
 describe('sort', () => {
@@ -219,7 +219,7 @@ describe('sort', () => {
 You can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 
 ```ts
-import { assertType, expectTypeOf } from 'vitest'
+import { assertType, expectTypeOf, test } from 'vitest'
 import { mount } from './mount.js'
 
 test('my types work properly', () => {
@@ -248,7 +248,7 @@ See [`Improving Performance | Sharding`](/guide/improving-performance#sharding) 
 
 Vitest exclusively autoloads environment variables prefixed with `VITE_` from `.env` files to maintain compatibility with frontend-related tests, adhering to [Vite's established convention](https://vitejs.dev/guide/env-and-mode.html#env-files). To load every environmental variable from `.env` files anyway, you can use `loadEnv` method imported from `vite`:
 
-```ts twoslash
+```ts
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
 
@@ -258,3 +258,4 @@ export default defineConfig(({ mode }) => ({
     env: loadEnv(mode, process.cwd(), ''),
   },
 }))
+```

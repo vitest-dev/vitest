@@ -14,7 +14,7 @@ export function test(name: string, fn: TestFunction, skip = false) {
   }
 }
 
-export function describe(name: string, fn: Function) {
+export function describe(name: string, fn: () => void) {
   if (process.env.COVERAGE_TEST !== 'true') {
     return vitestDescribe(name, () => fn())
   }

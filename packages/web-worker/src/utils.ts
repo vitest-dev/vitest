@@ -43,13 +43,14 @@ function createClonedMessageEvent(
   }
   if (clone !== 'none') {
     debug('create message event, using polyfilled structured clone')
-    transfer?.length
-    && console.warn(
-      '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
-      + 'Falling back to polyfill, your transferable options will be lost. '
-      + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,'
-      + 'or update to Node 17+.',
-    )
+    if (transfer?.length) {
+      console.warn(
+        '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
+        + 'Falling back to polyfill, your transferable options will be lost. '
+        + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,'
+        + 'or update to Node 17+.',
+      )
+    }
     return new MessageEvent('message', {
       data: ponyfillStructuredClone(data, { lossy: true } as any),
       origin,

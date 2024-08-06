@@ -1,5 +1,5 @@
 import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
-import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
@@ -12,7 +12,7 @@ import { rpc } from './rpc'
 import type { VitestBrowserClientMocker } from './mocker'
 
 interface BrowserRunnerOptions {
-  config: ResolvedConfig
+  config: SerializedConfig
 }
 
 export const browserHashMap = new Map<
@@ -25,13 +25,13 @@ interface CoverageHandler {
 }
 
 export function createBrowserRunner(
-  runnerClass: { new (config: ResolvedConfig): VitestRunner },
+  runnerClass: { new (config: SerializedConfig): VitestRunner },
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
 ): { new (options: BrowserRunnerOptions): VitestRunner } {
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
-    public config: ResolvedConfig
+    public config: SerializedConfig
     hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
 
@@ -110,7 +110,7 @@ export function createBrowserRunner(
         try {
           await updateFilesLocations(files, this.sourceMapCache)
         }
-        catch (_) {}
+        catch {}
       }
       return rpc().onCollected(files)
     }
@@ -140,7 +140,7 @@ let cachedRunner: VitestRunner | null = null
 export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
-  config: ResolvedConfig,
+  config: SerializedConfig,
 ) {
   if (cachedRunner) {
     return cachedRunner

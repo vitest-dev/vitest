@@ -3,9 +3,11 @@ import { existsSync } from 'node:fs'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
 import { cleanUrl } from 'vite-node/utils'
-import type { File, Reporter, Vitest } from '../../types'
+import type { File } from '@vitest/runner'
 import { getOutputFile } from '../../utils/config-helpers'
 import type { WorkspaceProject } from '../workspace'
+import type { Reporter } from '../types/reporter'
+import type { Vitest } from '../core'
 
 export interface BlobOptions {
   outputFile?: string

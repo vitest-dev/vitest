@@ -23,6 +23,7 @@ const {
   type,
   disableTaskLocation,
   onItemClick,
+  projectNameColor,
 } = defineProps<{
   taskId: string
   name: string
@@ -135,6 +136,17 @@ function showDetails() {
     showSource(t)
   }
 }
+
+const projectNameTextColor = computed(() => {
+  switch (projectNameColor) {
+    case 'blue':
+    case 'green':
+    case 'magenta':
+      return 'white'
+    default:
+      return 'black'
+  }
+})
 </script>
 
 <template>
@@ -162,12 +174,12 @@ function showDetails() {
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
     <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
-    <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
+    <div flex items-end gap-2 overflow-hidden>
       <span text-sm truncate font-light>
-        <span v-if="type === 'file' && projectName" :style="{ color: projectNameColor }">
-          [{{ projectName }}]
+        <span v-if="type === 'file' && projectName" class="rounded-full p-1 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
+          {{ projectName }}
         </span>
-        <span v-html="highlighted" />
+        <span :text="state === 'fail' ? 'red-500' : ''" v-html="highlighted" />
       </span>
       <span v-if="typeof duration === 'number'" text="xs" op20 style="white-space: nowrap">
         {{ duration > 0 ? duration : '< 1' }}ms

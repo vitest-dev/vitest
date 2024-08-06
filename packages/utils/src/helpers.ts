@@ -4,6 +4,30 @@ interface CloneOptions {
   forceWritable?: boolean
 }
 
+interface ErrorOptions {
+  message?: string
+  stackTraceLimit?: number
+}
+
+/**
+ * Get original stacktrace without source map support the most performant way.
+ * - Create only 1 stack frame.
+ * - Rewrite prepareStackTrace to bypass "support-stack-trace" (usually takes ~250ms).
+ */
+export function createSimpleStackTrace(options?: ErrorOptions): string {
+  const { message = '$$stack trace error', stackTraceLimit = 1 }
+    = options || {}
+  const limit = Error.stackTraceLimit
+  const prepareStackTrace = Error.prepareStackTrace
+  Error.stackTraceLimit = stackTraceLimit
+  Error.prepareStackTrace = e => e.stack
+  const err = new Error(message)
+  const stackTrace = err.stack || ''
+  Error.prepareStackTrace = prepareStackTrace
+  Error.stackTraceLimit = limit
+  return stackTrace
+}
+
 export function notNullish<T>(v: T | null | undefined): v is NonNullable<T> {
   return v != null
 }
@@ -22,13 +46,13 @@ export function assertTypes(
   }
 }
 
-export function isPrimitive(value: unknown) {
+export function isPrimitive(value: unknown): boolean {
   return (
     value === null || (typeof value !== 'function' && typeof value !== 'object')
   )
 }
 
-export function slash(path: string) {
+export function slash(path: string): string {
   return path.replace(/\\/g, '/')
 }
 
@@ -93,7 +117,7 @@ function collectOwnProperties(
   Object.getOwnPropertySymbols(obj).forEach(collect)
 }
 
-export function getOwnProperties(obj: any) {
+export function getOwnProperties(obj: any): (string | symbol)[] {
   const ownProps = new Set<string | symbol>()
   if (isFinalObj(obj)) {
     return []
@@ -170,13 +194,13 @@ export function clone<T>(
   return val
 }
 
-export function noop() {}
+export function noop(): void {}
 
 export function objectAttr(
   source: any,
   path: string,
   defaultValue = undefined,
-) {
+): any {
   // a[3].b -> a.3.b
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
@@ -217,7 +241,7 @@ export function createDefer<T>(): DeferPromise<T> {
  * toBeAliased('123')
  * ```
  */
-export function getCallLastIndex(code: string) {
+export function getCallLastIndex(code: string): number | null {
   let charIndex = -1
   let inString: string | null = null
   let startedBracers = 0
@@ -255,7 +279,7 @@ export function getCallLastIndex(code: string) {
   return null
 }
 
-export function isNegativeNaN(val: number) {
+export function isNegativeNaN(val: number): boolean {
   if (!Number.isNaN(val)) {
     return false
   }

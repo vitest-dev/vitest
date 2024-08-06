@@ -571,6 +571,14 @@ Enable watch mode
 
 Project root
 
+### dir
+
+- **Type:** `string`
+- **CLI:** `--dir=<path>`
+- **Default:** same as `root`
+
+Base directory to scan for the test files. You can specify this option to speed up test discovery if your root covers the whole project
+
 ### reporters<NonProjectOption />
 
 - **Type:** `Reporter | Reporter[]`
@@ -1103,7 +1111,7 @@ List of files included in coverage as glob patterns
 #### coverage.extension
 
 - **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']`
+- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
@@ -1345,6 +1353,11 @@ Shortcut for `--coverage.thresholds.lines 100 --coverage.thresholds.functions 10
 
 Sets thresholds for files matching the glob pattern.
 
+::: tip NOTE
+Vitest counts all files, including those covered by glob-patterns, into the global coverage thresholds.
+This is different from Jest behavior.
+:::
+
 <!-- eslint-skip -->
 ```ts
 {
@@ -1367,6 +1380,31 @@ Sets thresholds for files matching the glob pattern.
       '**/math.ts': {
         lines: 100,
       }
+    }
+  }
+}
+```
+
+##### coverage.thresholds[glob-pattern].100
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+
+Sets thresholds to 100 for files matching the glob pattern.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Thresholds for all files
+      functions: 95,
+      branches: 70,
+
+      // Thresholds for matching glob pattern
+      'src/utils/**.ts': { 100: true },
+      '**/math.ts': { 100: true }
     }
   }
 }
@@ -1697,7 +1735,7 @@ The script `src` and `content` will be processed by Vite plugins.
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be import during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
 
 ### clearMocks
 

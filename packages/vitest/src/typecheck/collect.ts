@@ -9,7 +9,7 @@ import {
   interpretTaskModes,
   someTasksAreOnly,
 } from '@vitest/runner/utils'
-import type { File, Suite, Test } from '../types'
+import type { File, Suite, Test } from '@vitest/runner'
 import type { WorkspaceProject } from '../node/workspace'
 
 interface ParsedFile extends File {

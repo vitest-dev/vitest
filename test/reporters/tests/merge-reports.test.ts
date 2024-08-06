@@ -129,9 +129,9 @@ test('merge reports', async () => {
 
   expect(json).toMatchInlineSnapshot(`
     {
-      "numFailedTestSuites": 0,
+      "numFailedTestSuites": 2,
       "numFailedTests": 2,
-      "numPassedTestSuites": 3,
+      "numPassedTestSuites": 1,
       "numPassedTests": 3,
       "numPendingTestSuites": 0,
       "numPendingTests": 0,

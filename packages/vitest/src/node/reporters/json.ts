@@ -1,16 +1,11 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { dirname, resolve } from 'pathe'
-import type { Vitest } from '../../node'
-import type {
-  File,
-  Reporter,
-  SnapshotSummary,
-  Suite,
-  TaskMeta,
-  TaskState,
-} from '../../types'
+import type { File, Suite, TaskMeta, TaskState } from '@vitest/runner'
+import type { SnapshotSummary } from '@vitest/snapshot'
 import { getSuites, getTests } from '../../utils'
 import { getOutputFile } from '../../utils/config-helpers'
+import type { Reporter } from '../types/reporter'
+import type { Vitest } from '../core'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -96,17 +91,19 @@ export class JsonReporter implements Reporter {
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
     const numTotalTests = tests.length
-    const numFailedTestSuites = suites.filter(s => s.result?.errors).length
-    const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites
+
+    const numFailedTestSuites = suites.filter(s => s.result?.state === 'fail').length
     const numPendingTestSuites = suites.filter(
-      s => s.result?.state === 'run',
+      s => s.result?.state === 'run' || s.mode === 'todo',
     ).length
+    const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
+
     const numFailedTests = tests.filter(
       t => t.result?.state === 'fail',
     ).length
-    const numPassedTests = numTotalTests - numFailedTests
+    const numPassedTests = tests.filter(t => t.result?.state === 'pass').length
     const numPendingTests = tests.filter(
-      t => t.result?.state === 'run',
+      t => t.result?.state === 'run' || t.mode === 'skip' || t.result?.state === 'skip',
     ).length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []

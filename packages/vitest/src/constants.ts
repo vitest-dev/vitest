@@ -10,8 +10,6 @@ export const extraInlineDeps = [
   /^(?!.*node_modules).*\.cjs\.js$/,
   // Vite client
   /vite\w*\/dist\/client\/env.mjs/,
-  // Nuxt
-  '@nuxt/test-utils',
 ]
 
 export const CONFIG_NAMES = ['vitest.config', 'vite.config']

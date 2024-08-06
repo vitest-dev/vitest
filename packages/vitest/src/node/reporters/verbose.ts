@@ -1,5 +1,5 @@
 import c from 'tinyrainbow'
-import type { TaskResultPack } from '../../types'
+import type { TaskResultPack } from '@vitest/runner'
 import { getFullName } from '../../utils'
 import { F_RIGHT } from '../../utils/figures'
 import { DefaultReporter } from './default'

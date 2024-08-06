@@ -12,11 +12,16 @@ export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
   return (
     coverageConfigured.value
-    && coverage.value.reporter
-      .map(([reporterName]) => reporterName)
-      .includes('html')
+    && !!coverage.value.htmlReporter
   )
 })
+export const mainSizes = useLocalStorage<[left: number, right: number]>(
+  'vitest-ui_splitpanes-mainSizes',
+  [33, 67],
+  {
+    initOnMounted: true,
+  },
+)
 export const detailSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-detailSizes',
   [33, 67],
@@ -25,22 +30,27 @@ export const detailSizes = useLocalStorage<[left: number, right: number]>(
   },
 )
 
+// live sizes of panels in percentage
+export const panels = reactive({
+  navigation: mainSizes.value[0],
+  details: {
+    size: mainSizes.value[1],
+    // these sizes are relative to the details panel
+    browser: detailSizes.value[0],
+    main: detailSizes.value[1],
+  },
+})
+
 // TODO
 // For html report preview, "coverage.reportsDirectory" must be explicitly set as a subdirectory of html report.
 // Handling other cases seems difficult, so this limitation is mentioned in the documentation for now.
 export const coverageUrl = computed(() => {
   if (coverageEnabled.value) {
     const idx = coverage.value!.reportsDirectory.lastIndexOf('/')
-    const htmlReporter = coverage.value!.reporter.find((reporter) => {
-      if (reporter[0] !== 'html') {
-        return undefined
-      }
-
-      return reporter
-    })
-    return htmlReporter && 'subdir' in htmlReporter[1]
+    const htmlReporterSubdir = coverage.value!.htmlReporter?.subdir
+    return htmlReporterSubdir
       ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${
-          htmlReporter[1].subdir
+          htmlReporterSubdir
         }/index.html`
       : `/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }
@@ -108,4 +118,22 @@ export function showCoverage() {
   dashboardVisible.value = false
   currentModule.value = undefined
   activeFileId.value = ''
+}
+
+export function hideRightPanel() {
+  panels.details.browser = 100
+  panels.details.main = 0
+  detailSizes.value = [100, 0]
+}
+
+export function showRightPanel() {
+  panels.details.browser = 33
+  panels.details.main = 67
+  detailSizes.value = [33, 67]
+}
+
+export function showNavigationPanel() {
+  panels.navigation = 33
+  panels.details.size = 67
+  mainSizes.value = [33, 67]
 }

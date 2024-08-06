@@ -1,5 +1,6 @@
 import { processError } from '@vitest/utils/error'
-import type { File, SuiteHooks } from './types'
+import { toArray } from '@vitest/utils'
+import type { File, SuiteHooks } from './types/tasks'
 import type { VitestRunner } from './types/runner'
 import {
   calculateSuiteHash,
@@ -34,11 +35,18 @@ export async function collectTests(
     clearCollectorContext(filepath, runner)
 
     try {
-      const setupStart = now()
-      await runSetupFiles(config, runner)
+      const setupFiles = toArray(config.setupFiles)
+      if (setupFiles.length) {
+        const setupStart = now()
+        await runSetupFiles(config, setupFiles, runner)
+        const setupEnd = now()
+        file.setupDuration = setupEnd - setupStart
+      }
+      else {
+        file.setupDuration = 0
+      }
 
       const collectStart = now()
-      file.setupDuration = collectStart - setupStart
 
       await runner.importFile(filepath, 'collect')
 
@@ -77,6 +85,14 @@ export async function collectTests(
 
     calculateSuiteHash(file)
 
+    file.tasks.forEach((task) => {
+      // task.suite refers to the internal default suite object
+      // it should not be reported
+      if (task.suite?.id === '') {
+        delete task.suite
+      }
+    })
+
     const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(
       file,
@@ -86,13 +102,6 @@ export async function collectTests(
       config.allowOnly,
     )
 
-    file.tasks.forEach((task) => {
-      // task.suite refers to the internal default suite object
-      // it should not be reported
-      if (task.suite?.id === '') {
-        delete task.suite
-      }
-    })
     files.push(file)
   }
 

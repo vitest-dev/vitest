@@ -26,6 +26,8 @@ export default antfu(
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
+      // contains technically invalid code to display pretty diff
+      'docs/guide/snapshot.md',
     ],
   },
   {
@@ -51,6 +53,7 @@ export default antfu(
 
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
+      'ts/no-unsafe-function-type': 'off',
 
       'no-restricted-imports': [
         'error',

@@ -5,22 +5,17 @@ import { execa } from 'execa'
 import { basename, extname, resolve } from 'pathe'
 import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
 import type { RawSourceMap } from '@ampproject/remapping'
+import type { ParsedStack } from '@vitest/utils'
+import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
 import { getTasks } from '../utils'
-import type {
-  Awaitable,
-  File,
-  ParsedStack,
-  Task,
-  TaskResultPack,
-  TaskState,
-  TscErrorInfo,
-  Vitest,
-} from '../types'
 import type { WorkspaceProject } from '../node/workspace'
+import type { Awaitable } from '../types/general'
+import type { Vitest } from '../node/core'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
 import { collectTests } from './collect'
+import type { TscErrorInfo } from './types'
 
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'

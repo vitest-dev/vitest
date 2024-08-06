@@ -1,4 +1,4 @@
-import type { TaskBase } from './types'
+import type { TaskBase } from './types/tasks'
 
 export class PendingError extends Error {
   public code = 'VITEST_PENDING'

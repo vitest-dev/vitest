@@ -10,7 +10,7 @@ Inspired by [Playwright Fixtures](https://playwright.dev/docs/test-fixtures), Vi
 
 The first argument for each test callback is a test context.
 
-```ts twoslash
+```ts
 import { it } from 'vitest'
 
 it('should work', (ctx) => {
@@ -29,7 +29,7 @@ A readonly object containing metadata about the test.
 
 The `expect` API bound to the current test:
 
-```ts twoslash
+```ts
 import { it } from 'vitest'
 
 it('math is easy', ({ expect }) => {
@@ -39,7 +39,7 @@ it('math is easy', ({ expect }) => {
 
 This API is useful for running snapshot tests concurrently because global expect cannot track them:
 
-```ts twoslash
+```ts
 import { it } from 'vitest'
 
 it.concurrent('math is easy', ({ expect }) => {

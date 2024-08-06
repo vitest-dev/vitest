@@ -71,11 +71,8 @@ test('toContain correctly handles DOM nodes', () => {
   }
   catch (err: any) {
     expect(stripAnsi(processError(err).diff)).toMatchInlineSnapshot(`
-      "- Expected
-      + Received
-
-      - flex flex-col flex-row
-      + flex flex-col"
+      "Expected: "flex flex-col flex-row"
+      Received: "flex flex-col""
     `)
   }
 
@@ -85,11 +82,8 @@ test('toContain correctly handles DOM nodes', () => {
   }
   catch (err: any) {
     expect(stripAnsi(processError(err).diff)).toMatchInlineSnapshot(`
-      "- Expected
-      + Received
-
-      - flex-col
-      + flex flex-col"
+      "Expected: "flex-col"
+      Received: "flex flex-col""
     `)
   }
 })

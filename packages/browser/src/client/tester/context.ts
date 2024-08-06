@@ -1,6 +1,6 @@
 import type { Task, WorkerGlobalState } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
+import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventDragAndDropOptions, UserEventHoverOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
 
 // this file should not import anything directly, only types
@@ -32,6 +32,36 @@ function convertElementToCssSelector(element: Element) {
   return getUniqueCssSelector(element)
 }
 
+function escapeIdForCSSSelector(id: string) {
+  return id
+    .split('')
+    .map((char) => {
+      const code = char.charCodeAt(0)
+
+      if (char === ' ' || char === '#' || char === '.' || char === ':' || char === '[' || char === ']' || char === '>' || char === '+' || char === '~' || char === '\\') {
+        // Escape common special characters with backslashes
+        return `\\${char}`
+      }
+      else if (code >= 0x10000) {
+        // Unicode escape for characters outside the BMP
+        return `\\${code.toString(16).toUpperCase().padStart(6, '0')} `
+      }
+      else if (code < 0x20 || code === 0x7F) {
+        // Non-printable ASCII characters (0x00-0x1F and 0x7F) are escaped
+        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
+      }
+      else if (code >= 0x80) {
+        // Non-ASCII characters (0x80 and above) are escaped
+        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
+      }
+      else {
+        // Allowable characters are used directly
+        return char
+      }
+    })
+    .join('')
+}
+
 function getUniqueCssSelector(el: Element) {
   const path = []
   let parent: null | ParentNode
@@ -44,10 +74,10 @@ function getUniqueCssSelector(el: Element) {
 
     const tag = el.tagName
     if (el.id) {
-      path.push(`#${el.id}`)
+      path.push(`#${escapeIdForCSSSelector(el.id)}`)
     }
     else if (!el.nextElementSibling && !el.previousElementSibling) {
-      path.push(tag)
+      path.push(tag.toLowerCase())
     }
     else {
       let index = 0
@@ -65,15 +95,15 @@ function getUniqueCssSelector(el: Element) {
       }
 
       if (sameTagSiblings > 1) {
-        path.push(`${tag}:nth-child(${elementIndex})`)
+        path.push(`${tag.toLowerCase()}:nth-child(${elementIndex})`)
       }
       else {
-        path.push(tag)
+        path.push(tag.toLowerCase())
       }
     }
     el = parent as Element
   };
-  return `${provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`.toLowerCase()
+  return `${provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`
 }
 
 function getParent(el: Element) {
@@ -84,64 +114,87 @@ function getParent(el: Element) {
   return parent
 }
 
-export const userEvent: UserEvent = {
-  // TODO: actually setup userEvent with config options
-  setup() {
-    return userEvent
-  },
-  click(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_click', css, options)
-  },
-  dblClick(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_dblClick', css, options)
-  },
-  tripleClick(element: Element, options: UserEventClickOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_tripleClick', css, options)
-  },
-  selectOptions(element, value) {
-    const values = provider === 'webdriverio'
-      ? getWebdriverioSelectOptions(element, value)
-      : getSimpleSelectOptions(element, value)
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_selectOptions', css, values)
-  },
-  type(element: Element, text: string, options: UserEventTypeOptions = {}) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_type', css, text, options)
-  },
-  clear(element: Element) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_clear', css)
-  },
-  tab(options: UserEventTabOptions = {}) {
-    return triggerCommand('__vitest_tab', options)
-  },
-  keyboard(text: string) {
-    return triggerCommand('__vitest_keyboard', text)
-  },
-  hover(element: Element) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_hover', css)
-  },
-  unhover(element: Element) {
-    const css = convertElementToCssSelector(element.ownerDocument.body)
-    return triggerCommand('__vitest_hover', css)
-  },
+function createUserEvent(): UserEvent {
+  const keyboard = {
+    unreleased: [] as string[],
+  }
 
-  // non userEvent events, but still useful
-  fill(element: Element, text: string, options) {
-    const css = convertElementToCssSelector(element)
-    return triggerCommand('__vitest_fill', css, text, options)
-  },
-  dragAndDrop(source: Element, target: Element, options = {}) {
-    const sourceCss = convertElementToCssSelector(source)
-    const targetCss = convertElementToCssSelector(target)
-    return triggerCommand('__vitest_dragAndDrop', sourceCss, targetCss, options)
-  },
+  return {
+    setup() {
+      return createUserEvent()
+    },
+    click(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_click', css, processClickOptions(options))
+    },
+    dblClick(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_dblClick', css, processClickOptions(options))
+    },
+    tripleClick(element: Element, options: UserEventClickOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_tripleClick', css, processClickOptions(options))
+    },
+    selectOptions(element, value) {
+      const values = provider === 'webdriverio'
+        ? getWebdriverioSelectOptions(element, value)
+        : getSimpleSelectOptions(element, value)
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_selectOptions', css, values)
+    },
+    async type(element: Element, text: string, options: UserEventTypeOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_type',
+        css,
+        text,
+        { ...options, unreleased: keyboard.unreleased },
+      )
+      keyboard.unreleased = unreleased
+    },
+    clear(element: Element) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_clear', css)
+    },
+    tab(options: UserEventTabOptions = {}) {
+      return triggerCommand('__vitest_tab', options)
+    },
+    async keyboard(text: string) {
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_keyboard',
+        text,
+        keyboard,
+      )
+      keyboard.unreleased = unreleased
+    },
+    hover(element: Element, options: UserEventHoverOptions = {}) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_hover', css, processHoverOptions(options))
+    },
+    unhover(element: Element, options: UserEventHoverOptions = {}) {
+      const css = convertElementToCssSelector(element.ownerDocument.body)
+      return triggerCommand('__vitest_hover', css, options)
+    },
+
+    // non userEvent events, but still useful
+    fill(element: Element, text: string, options) {
+      const css = convertElementToCssSelector(element)
+      return triggerCommand('__vitest_fill', css, text, options)
+    },
+    dragAndDrop(source: Element, target: Element, options = {}) {
+      const sourceCss = convertElementToCssSelector(source)
+      const targetCss = convertElementToCssSelector(target)
+      return triggerCommand(
+        '__vitest_dragAndDrop',
+        sourceCss,
+        targetCss,
+        processDragAndDropOptions(options),
+      )
+    },
+  }
 }
+
+export const userEvent: UserEvent = createUserEvent()
 
 function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
   const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
@@ -198,9 +251,6 @@ export function cdp() {
 
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
-  get config() {
-    return runner().config
-  },
   viewport(width, height) {
     const id = runner().iframeId
     channel.postMessage({ type: 'viewport', width, height, id })
@@ -252,4 +302,131 @@ export const page: BrowserPage = {
 
 function getTaskFullName(task: Task): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
+}
+
+function processClickOptions(options_?: UserEventClickOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['click']>[1]
+    >
+    if (options.position) {
+      options.position = processPlaywrightPosition(options.position)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const options = options_ as import('webdriverio').ClickOptions
+    if (options.x != null || options.y != null) {
+      const cache = {}
+      if (options.x != null) {
+        options.x = scaleCoordinate(options.x, cache)
+      }
+      if (options.y != null) {
+        options.y = scaleCoordinate(options.y, cache)
+      }
+    }
+  }
+  return options_
+}
+
+function processHoverOptions(options_?: UserEventHoverOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['hover']>[1]
+    >
+    if (options.position) {
+      options.position = processPlaywrightPosition(options.position)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const options = options_ as import('webdriverio').MoveToOptions
+    const cache = {}
+    if (options.xOffset != null) {
+      options.xOffset = scaleCoordinate(options.xOffset, cache)
+    }
+    if (options.yOffset != null) {
+      options.yOffset = scaleCoordinate(options.yOffset, cache)
+    }
+  }
+  return options_
+}
+
+function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['dragAndDrop']>[2]
+    >
+    if (options.sourcePosition) {
+      options.sourcePosition = processPlaywrightPosition(options.sourcePosition)
+    }
+    if (options.targetPosition) {
+      options.targetPosition = processPlaywrightPosition(options.targetPosition)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const cache = {}
+    const options = options_ as import('webdriverio').DragAndDropOptions & {
+      targetX?: number
+      targetY?: number
+      sourceX?: number
+      sourceY?: number
+    }
+    if (options.sourceX != null) {
+      options.sourceX = scaleCoordinate(options.sourceX, cache)
+    }
+    if (options.sourceY != null) {
+      options.sourceY = scaleCoordinate(options.sourceY, cache)
+    }
+    if (options.targetX != null) {
+      options.targetX = scaleCoordinate(options.targetX, cache)
+    }
+    if (options.targetY != null) {
+      options.targetY = scaleCoordinate(options.targetY, cache)
+    }
+  }
+  return options_
+}
+
+function scaleCoordinate(coordinate: number, cache: any) {
+  return Math.round(coordinate * getCachedScale(cache))
+}
+
+function getCachedScale(cache: { scale: number | undefined }) {
+  return cache.scale ??= getIframeScale()
+}
+
+function processPlaywrightPosition(position: { x: number; y: number }) {
+  const scale = getIframeScale()
+  if (position.x != null) {
+    position.x *= scale
+  }
+  if (position.y != null) {
+    position.y *= scale
+  }
+  return position
+}
+
+function getIframeScale() {
+  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  if (!testerUi) {
+    throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  const scaleAttribute = testerUi.getAttribute('data-scale')
+  const scale = Number(scaleAttribute)
+  if (Number.isNaN(scale)) {
+    throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  return scale
 }

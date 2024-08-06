@@ -34,7 +34,7 @@ bun add -D vitest
 :::
 
 :::tip
-Vitest 1.0 requires Vite >=v5.0.0 and Node >=v18.0.0
+Vitest requires Vite >=v5.0.0 and Node >=v18.0.0
 :::
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` tool comes with npm and Node.js).
@@ -55,7 +55,7 @@ export function sum(a, b) {
 ``` js
 // sum.test.js
 import { expect, test } from 'vitest'
-import { sum } from './sum'
+import { sum } from './sum.js'
 
 test('adds 1 + 2 to equal 3', () => {
   expect(sum(1, 2)).toBe(3)
@@ -76,17 +76,21 @@ Next, in order to execute the test, add the following section to your `package.j
 }
 ```
 
-Finally, run `npm run test`, `yarn test`, or `pnpm test`, depending on your package manager, and Vitest will print this message:
+Finally, run `npm run test`, `yarn test` or `pnpm test`, depending on your package manager, and Vitest will print this message:
 
 ```txt
 ✓ sum.test.js (1)
   ✓ adds 1 + 2 to equal 3
 
 Test Files  1 passed (1)
-    Tests  1 passed (1)
+     Tests  1 passed (1)
   Start at  02:15:44
   Duration  311ms
 ```
+
+::: warning
+If you are using Bun as your package manager, make sure to use `bun run test` command instead of `bun test`, otherwise Bun will run its own test runner.
+:::
 
 Learn more about the usage of Vitest, see the [API](https://vitest.dev/api/) section.
 
@@ -102,7 +106,7 @@ Vitest supports the same extensions for your configuration file as Vite does: `.
 
 If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
-```ts twoslash
+```ts
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -142,7 +146,7 @@ import viteConfig from './vite.config.mjs'
 export default mergeConfig(viteConfig, defineConfig({
   test: {
     // ...
-  }
+  },
 }))
 ```
 
@@ -155,14 +159,14 @@ export default defineConfig({
 })
 ```
 
-But we recommend to use the same file for both Vite and Vitest instead of creating two separate files.
+However, we recommend using the same file for both Vite and Vitest, instead of creating two separate files.
 :::
 
 ## Workspaces Support
 
 Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
 
-```ts twoslash
+```ts
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
@@ -225,6 +229,7 @@ Learn more about [IDE Integrations](/guide/ide)
 |---|---|---|
 | `basic` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/basic) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/basic?initialPath=__vitest__/) |
 | `fastify` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/fastify) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/fastify?initialPath=__vitest__/) |
+| `in-source-test` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/in-source-test?initialPath=__vitest__/) |
 | `lit` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/lit) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/lit?initialPath=__vitest__/) |
 | `marko` | [GitHub](https://github.com/marko-js/examples/tree/master/examples/library-ts) | [Play Online](https://stackblitz.com/fork/github/marko-js/examples/tree/master/examples/library-ts/) |
 | `preact` | [GitHub](https://github.com/vitest-dev/vitest/tree/main/examples/preact) | [Play Online](https://stackblitz.com/fork/github/vitest-dev/vitest/tree/main/examples/preact?initialPath=__vitest__/) |

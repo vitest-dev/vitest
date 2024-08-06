@@ -6,7 +6,7 @@ import { withInlineSourcemap } from '../../../packages/vite-node/src/source-map'
 
 it('regex match', () => {
   const regex = /\/\/# sourceMappingURL=data:application\/json;charset=utf-8;base64,[A-Za-z0-9+/=]+$/gm
-  expect('function foo(src) {\n  return `//# sourceMappingURL=data:application/json;base64,${src}`;\n}\nObject.defineProperty(__vite_ssr_exports__, "foo", { enumerable: true, configurable: true, get(){ return foo }});\n'.match(regex)).null
+  expect('function foo(src) {\n  return `//# sourceMappingURL=data:application/json;base64,${src}`;\n}\nObject.defineProperty(__vite_ssr_exports__, "foo", { enumerable: true, configurable: true, get(){ return foo }});\n'.match(regex)).toBeNull()
   expect(`function foo(src) {
     return \`//# sourceMappingURL=data:application/json;base64,\${src}\`;
   }

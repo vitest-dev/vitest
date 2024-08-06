@@ -4,19 +4,15 @@ import EventEmitter from 'node:events'
 import { Tinypool } from 'tinypool'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import { createBirpc } from 'birpc'
-import type {
-  ContextRPC,
-  ContextTestEnvironment,
-  ResolvedConfig,
-  RunnerRPC,
-  RuntimeRPC,
-  Vitest,
-} from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { groupBy, resolve } from '../../utils'
+import type { SerializedConfig } from '../types/config'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { Vitest } from '../core'
+import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
 import { createMethodsRPC } from './rpc'
 
 function createChildProcessChannel(project: WorkspaceProject) {
@@ -103,7 +99,7 @@ export function createForksPool(
 
     async function runFiles(
       project: WorkspaceProject,
-      config: ResolvedConfig,
+      config: SerializedConfig,
       files: string[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
@@ -141,7 +137,7 @@ export function createForksPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
+          ctx.state.cancelFiles(files, project)
         }
         else {
           throw error
@@ -156,8 +152,8 @@ export function createForksPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, ResolvedConfig>()
-      const getConfig = (project: WorkspaceProject): ResolvedConfig => {
+      const configs = new Map<WorkspaceProject, SerializedConfig>()
+      const getConfig = (project: WorkspaceProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }

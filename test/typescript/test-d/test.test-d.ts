@@ -1,3 +1,6 @@
+/* eslint-disable ts/prefer-ts-expect-error */
+/* eslint-disable ts/ban-ts-comment */
+
 import { google, type sheets_v4 } from 'googleapis'
 import { describe, expectTypeOf, test, vi } from 'vitest'
 
@@ -24,7 +27,6 @@ describe('test', () => {
   })
 
   test('ignored error', () => {
-    // eslint-disable-next-line ts/prefer-ts-expect-error
     // @ts-ignore 45 is not a string
     expectTypeOf(45).toEqualTypeOf<string>()
   })

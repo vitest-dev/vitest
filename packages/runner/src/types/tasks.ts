@@ -74,12 +74,12 @@ export interface File extends Suite {
   local?: boolean
 }
 
-export interface Test<ExtraContext = {}> extends TaskPopulated {
+export interface Test<ExtraContext = object> extends TaskPopulated {
   type: 'test'
   context: TaskContext<Test> & ExtraContext & TestContext
 }
 
-export interface Custom<ExtraContext = {}> extends TaskPopulated {
+export interface Custom<ExtraContext = object> extends TaskPopulated {
   type: 'custom'
   context: TaskContext<Custom> & ExtraContext & TestContext
 }
@@ -87,7 +87,7 @@ export interface Custom<ExtraContext = {}> extends TaskPopulated {
 export type Task = Test | Suite | Custom | File
 
 export type DoneCallback = (error?: any) => void
-export type TestFunction<ExtraContext = {}> = (
+export type TestFunction<ExtraContext = object> = (
   context: ExtendedContext<Test> & ExtraContext
 ) => Awaitable<any> | void
 
@@ -187,7 +187,7 @@ interface TestForFunction<ExtraContext> {
   >
 }
 
-interface TestCollectorCallable<C = {}> {
+interface TestCollectorCallable<C = object> {
   /**
    * @deprecated Use options as the second argument instead
    */
@@ -208,7 +208,7 @@ interface TestCollectorCallable<C = {}> {
   ): void
 }
 
-type ChainableTestAPI<ExtraContext = {}> = ChainableFunction<
+type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'fails',
   TestCollectorCallable<ExtraContext>,
   {
@@ -269,9 +269,9 @@ interface ExtendedAPI<ExtraContext> {
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
-export type CustomAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> &
+export type CustomAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
   ExtendedAPI<ExtraContext> & {
-    extend: <T extends Record<string, any> = {}>(
+    extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
     ) => CustomAPI<{
       [K in keyof T | keyof ExtraContext]: K extends keyof T
@@ -282,9 +282,9 @@ export type CustomAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> &
     }>
   }
 
-export type TestAPI<ExtraContext = {}> = ChainableTestAPI<ExtraContext> &
+export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
   ExtendedAPI<ExtraContext> & {
-    extend: <T extends Record<string, any> = {}>(
+    extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
     ) => TestAPI<{
       [K in keyof T | keyof ExtraContext]: K extends keyof T
@@ -307,7 +307,7 @@ export type FixtureFn<T, K extends keyof T, ExtraContext> = (
   context: Omit<T, K> & ExtraContext,
   use: Use<T[K]>
 ) => Promise<void>
-export type Fixture<T, K extends keyof T, ExtraContext = {}> = ((
+export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
   ...args: any
 ) => any) extends T[K]
   ? T[K] extends any
@@ -318,7 +318,7 @@ export type Fixture<T, K extends keyof T, ExtraContext = {}> = ((
     | (T[K] extends any
       ? FixtureFn<T, K, Omit<ExtraContext, Exclude<keyof T, K>>>
       : never)
-export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
+export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
   [K in keyof T]:
     | Fixture<T, K, ExtraContext & ExtendedContext<Test>>
     | [Fixture<T, K, ExtraContext & ExtendedContext<Test>>, FixtureOptions?];
@@ -326,7 +326,7 @@ export type Fixtures<T extends Record<string, any>, ExtraContext = {}> = {
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
 
-interface SuiteCollectorCallable<ExtraContext = {}> {
+interface SuiteCollectorCallable<ExtraContext = object> {
   /**
    * @deprecated Use options as the second argument instead
    */
@@ -347,7 +347,7 @@ interface SuiteCollectorCallable<ExtraContext = {}> {
   ): SuiteCollector<OverrideExtraContext>
 }
 
-type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
+type ChainableSuiteAPI<ExtraContext = object> = ChainableFunction<
   'concurrent' | 'sequential' | 'only' | 'skip' | 'todo' | 'shuffle',
   SuiteCollectorCallable<ExtraContext>,
   {
@@ -355,27 +355,47 @@ type ChainableSuiteAPI<ExtraContext = {}> = ChainableFunction<
   }
 >
 
-export type SuiteAPI<ExtraContext = {}> = ChainableSuiteAPI<ExtraContext> & {
+export type SuiteAPI<ExtraContext = object> = ChainableSuiteAPI<ExtraContext> & {
   skipIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
   runIf: (condition: any) => ChainableSuiteAPI<ExtraContext>
 }
 
+/**
+ * @deprecated
+ */
 export type HookListener<T extends any[], Return = void> = (
   ...args: T
 ) => Awaitable<Return>
 
 export type HookCleanupCallback = (() => Awaitable<unknown>) | void
 
-export interface SuiteHooks<ExtraContext = {}> {
-  beforeAll: HookListener<[Readonly<Suite | File>], HookCleanupCallback>[]
-  afterAll: HookListener<[Readonly<Suite | File>]>[]
-  beforeEach: HookListener<
-    [ExtendedContext<Test | Custom> & ExtraContext, Readonly<Suite>],
-    HookCleanupCallback
-  >[]
-  afterEach: HookListener<
-    [ExtendedContext<Test | Custom> & ExtraContext, Readonly<Suite>]
-  >[]
+export interface BeforeAllListener {
+  (suite: Readonly<Suite | File>): Awaitable<HookCleanupCallback>
+}
+
+export interface AfterAllListener {
+  (suite: Readonly<Suite | File>): Awaitable<void>
+}
+
+export interface BeforeEachListener<ExtraContext = object> {
+  (
+    context: ExtendedContext<Test | Custom> & ExtraContext,
+    suite: Readonly<Suite>
+  ): Awaitable<HookCleanupCallback>
+}
+
+export interface AfterEachListener<ExtraContext = object> {
+  (
+    context: ExtendedContext<Test | Custom> & ExtraContext,
+    suite: Readonly<Suite>
+  ): Awaitable<void>
+}
+
+export interface SuiteHooks<ExtraContext = object> {
+  beforeAll: BeforeAllListener[]
+  afterAll: AfterAllListener[]
+  beforeEach: BeforeEachListener<ExtraContext>[]
+  afterEach: AfterEachListener<ExtraContext>[]
 }
 
 export interface TaskCustomOptions extends TestOptions {
@@ -391,7 +411,7 @@ export interface TaskCustomOptions extends TestOptions {
   handler?: (context: TaskContext<Custom>) => Awaitable<void>
 }
 
-export interface SuiteCollector<ExtraContext = {}> {
+export interface SuiteCollector<ExtraContext = object> {
   readonly name: string
   readonly mode: RunMode
   options?: TestOptions
@@ -412,7 +432,7 @@ export interface SuiteCollector<ExtraContext = {}> {
   ) => void
 }
 
-export type SuiteFactory<ExtraContext = {}> = (
+export type SuiteFactory<ExtraContext = object> = (
   test: TestAPI<ExtraContext>
 ) => Awaitable<void>
 
@@ -450,6 +470,10 @@ export type ExtendedContext<T extends Custom | Test> = TaskContext<T> &
 
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
 export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
+
+export interface TaskHook<HookListener> {
+  (fn: HookListener, timeout?: number): void
+}
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
 export type SequenceSetupFiles = 'list' | 'parallel'

@@ -5,19 +5,16 @@ import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
-import type {
-  ContextTestEnvironment,
-  ResolvedConfig,
-  RunnerRPC,
-  RuntimeRPC,
-  Vitest,
-  WorkerContext,
-} from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
+import type { ResolvedConfig, SerializedConfig } from '../types/config'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
+import type { WorkerContext } from '../types/worker'
 import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
@@ -103,7 +100,7 @@ export function createVmThreadsPool(
 
     async function runFiles(
       project: WorkspaceProject,
-      config: ResolvedConfig,
+      config: SerializedConfig,
       files: string[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
@@ -144,7 +141,7 @@ export function createVmThreadsPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
+          ctx.state.cancelFiles(files, project)
         }
         else {
           throw error
@@ -160,8 +157,8 @@ export function createVmThreadsPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, ResolvedConfig>()
-      const getConfig = (project: WorkspaceProject): ResolvedConfig => {
+      const configs = new Map<WorkspaceProject, SerializedConfig>()
+      const getConfig = (project: WorkspaceProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }

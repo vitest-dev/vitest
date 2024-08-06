@@ -16,7 +16,7 @@ import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { getNames, getTestName, getTests, getWorkerState } from '../../utils'
 import { createExpect } from '../../integrations/chai/index'
-import type { ResolvedConfig } from '../../types/config'
+import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
 import { rpc } from '../rpc'
 
@@ -30,7 +30,7 @@ export class VitestTestRunner implements VitestRunner {
 
   public pool = this.workerState.ctx.pool
 
-  constructor(public config: ResolvedConfig) {}
+  constructor(public config: SerializedConfig) {}
 
   importFile(filepath: string, source: VitestRunnerImportSource): unknown {
     if (source === 'setup') {
@@ -191,7 +191,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 }
 
-function clearModuleMocks(config: ResolvedConfig) {
+function clearModuleMocks(config: SerializedConfig) {
   const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals }
     = config
 

@@ -15,7 +15,7 @@ export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
   getSourceMap?: (file: string) => unknown
   getFileName?: (id: string) => string
-  frameFilter?: (error: Error, frame: ParsedStack) => boolean | void
+  frameFilter?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
 }
 
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
@@ -107,7 +107,7 @@ export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
   }
 }
 
-export function parseSingleStack(raw: string) {
+export function parseSingleStack(raw: string): ParsedStack | null {
   const line = raw.trim()
   if (!CHROME_IE_STACK_REGEXP.test(line)) {
     return parseSingleFFOrSafariStack(line)

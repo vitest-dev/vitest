@@ -1,7 +1,7 @@
 export type ChainableFunction<
   T extends string,
   F extends (...args: any) => any,
-  C = {},
+  C = object,
 > = F & {
   [x in T]: ChainableFunction<T, F, C>;
 } & {

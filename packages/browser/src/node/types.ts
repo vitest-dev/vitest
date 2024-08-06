@@ -20,7 +20,7 @@ export interface WebSocketBrowserHandlers {
   resolveId: (
     id: string,
     importer?: string
-  ) => Promise<{ id: string } | null>
+  ) => Promise<{ id: string; url: string; optimized: boolean } | null>
   triggerCommand: <T>(
     contextId: string,
     command: string,

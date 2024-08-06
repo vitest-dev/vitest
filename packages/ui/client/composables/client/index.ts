@@ -1,12 +1,13 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig, TaskResultPack } from 'vitest'
+import type { File, SerializedConfig, TaskResultPack } from 'vitest'
 import { reactive as reactiveVue } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
 import type { BrowserRunnerState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
+import { ui } from '../../composables/api'
 import { createStaticClient } from './static'
 import { testRunState, unhandledErrors } from './state'
 import { explorerTree } from '~/composables/explorer'
@@ -45,7 +46,7 @@ export const client = (function createVitestClient() {
   }
 })()
 
-export const config = shallowRef<ResolvedConfig>({} as any)
+export const config = shallowRef<SerializedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 
 export const current = computed(() => {
@@ -106,10 +107,20 @@ export function runCurrent() {
   }
 }
 
+// for testing during dev
+// export const browserState: BrowserRunnerState = {
+//   files: [],
+//   config: {},
+//   type: 'orchestrator',
+//   wrapModule: () => {},
+// }
 // @ts-expect-error not typed global
 export const browserState = window.__vitest_browser_runner__ as
   | BrowserRunnerState
   | undefined
+
+// @ts-expect-error not typed global
+window.__vitest_ui_api__ = ui
 
 watch(
   () => client.ws,

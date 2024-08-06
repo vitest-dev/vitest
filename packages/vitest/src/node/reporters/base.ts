@@ -2,17 +2,9 @@ import { performance } from 'node:perf_hooks'
 import c from 'tinyrainbow'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
-import type {
-  ErrorWithDiff,
-  File,
-  Reporter,
-  Task,
-  TaskResultPack,
-  UserConsoleLog,
-} from '../../types'
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 import {
   getFullName,
-  getSafeTimers,
   getSuites,
   getTestName,
   getTests,
@@ -24,9 +16,10 @@ import {
   relativePath,
   toArray,
 } from '../../utils'
-import type { Vitest } from '../../node'
+import type { Vitest } from '../core'
 import { F_POINTER, F_RIGHT } from '../../utils/figures'
-import { UNKNOWN_TEST_ID } from '../../runtime/console'
+import type { Reporter } from '../types/reporter'
+import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
 import {
   countTestErrors,
   divider,
@@ -72,7 +65,7 @@ export abstract class BaseReporter implements Reporter {
 
   private _filesInWatchMode = new Map<string, number>()
   private _lastRunTimeout = 0
-  private _lastRunTimer: NodeJS.Timer | undefined
+  private _lastRunTimer: NodeJS.Timeout | undefined
   private _lastRunCount = 0
   private _timeStart = new Date()
   private _offUnhandledRejection?: () => void
@@ -216,7 +209,6 @@ export abstract class BaseReporter implements Reporter {
       ]
       this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
       this._lastRunTimeout = 0
-      const { setInterval } = getSafeTimers()
       this._lastRunTimer = setInterval(() => {
         this._lastRunTimeout += 1
         if (this._lastRunTimeout >= LAST_RUN_TEXTS.length) {
@@ -232,7 +224,6 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private resetLastRunLog() {
-    const { clearInterval } = getSafeTimers()
     clearInterval(this._lastRunTimer)
     this._lastRunTimer = undefined
     this.ctx.logger.logUpdate.clear()
@@ -306,7 +297,7 @@ export abstract class BaseReporter implements Reporter {
           ` | ${
             task
               ? getFullName(task, c.dim(' > '))
-              : log.taskId !== UNKNOWN_TEST_ID
+              : log.taskId !== '__vitest__unknown_test__'
               ? log.taskId
               : 'unknown test'
           }`,

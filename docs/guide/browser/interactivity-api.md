@@ -4,9 +4,15 @@ title: Interactivity API | Browser Mode
 
 # Interactivity API
 
-Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) APIs instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
+Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
 
-Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types to your `tsconfig.json` file:
+```ts
+import { userEvent } from '@vitest/browser/context'
+
+await userEvent.click(document.querySelector('.button'))
+```
+
+Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types (depending on your provider) to your `tsconfig.json` file:
 
 ::: code-group
 ```json [playwright]
@@ -27,6 +33,33 @@ Almost every `userEvent` method inherits its provider options. To see all availa
   }
 }
 ```
+:::
+
+::: warning
+This page uses `@testing-library/dom` in examples to query elements. If you are using a framework like Vue, React or any other, use `@testing-library/{framework-name}` instead. Simple examples are available on the [Browser Mode page](/guide/browser/#examples).
+:::
+
+## userEvent.setup
+
+- **Type:** `() => UserEvent`
+
+Creates a new user event instance. This is useful if you need to keep the state of keyboard to press and release buttons correctly.
+
+::: warning
+Unlike `@testing-library/user-event`, the default `userEvent` instance from `@vitest/browser/context` is created once, not every time its methods are called! You can see the difference in how it works in this snippet:
+
+```ts
+import { userEvent as vitestUserEvent } from '@vitest/browser/context'
+import { userEvent as originalUserEvent } from '@testing-library/user-event'
+
+await vitestUserEvent.keyboard('{Shift}') // press shift without releasing
+await vitestUserEvent.keyboard('{/Shift}') // releases shift
+
+await originalUserEvent.keyboard('{Shift}') // press shift without releasing
+await originalUserEvent.keyboard('{/Shift}') // DID NOT release shift because the state is different
+```
+
+This behaviour is more useful because we do not emulate the keyboard, we actually press the Shift, so keeping the original behaviour would cause unexpected issues when typing in the field.
 :::
 
 ## userEvent.click
@@ -113,7 +146,7 @@ References:
 
 - **Type:** `(element: Element, text: string) => Promise<void>`
 
-Fill an `input/textarea/conteneditable` element with text. This will remove any existing text in the input before typing the new value.
+Set a value to the `input/textarea/conteneditable` field. This will remove any existing text in the input before setting the new value.
 
 ```ts
 import { userEvent } from '@vitest/browser/context'
@@ -128,10 +161,12 @@ test('update input', async () => {
 })
 ```
 
+This methods focuses the element, fills it and triggers an `input` event after filling. You can use an empty string to clear the field.
+
 ::: tip
 This API is faster than using [`userEvent.type`](#userevent-type) or [`userEvent.keyboard`](#userevent-keyboard), but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}{selectall}`).
 
-We recommend using this API over [`userEvent.type`](#userevent-type) in situations when you don't need to enter special characters.
+We recommend using this API over [`userEvent.type`](#userevent-type) in situations when you don't need to enter special characters or have granular control over keypress events.
 :::
 
 References:
@@ -150,7 +185,6 @@ This API supports [user-event `keyboard` syntax](https://testing-library.com/doc
 
 ```ts
 import { userEvent } from '@vitest/browser/context'
-import { screen } from '@testing-library/dom'
 
 test('trigger keystrokes', async () => {
   await userEvent.keyboard('foo') // translates to: f, o, o
@@ -163,7 +197,7 @@ test('trigger keystrokes', async () => {
 
 References:
 
-- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
 - [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `type` API](https://testing-library.com/docs/user-event/utility/#type)
 
@@ -194,7 +228,7 @@ test('tab works', async () => {
 
 References:
 
-- [Playwright `locator.press` API](https://playwright.dev/docs/api/class-locator#locator-press)
+- [Playwright `Keyboard` API](https://playwright.dev/docs/api/class-keyboard)
 - [WebdriverIO `action('key')` API](https://webdriver.io/docs/api/browser/action#key-input-source)
 - [testing-library `tab` API](https://testing-library.com/docs/user-event/convenience/#tab)
 
@@ -337,7 +371,7 @@ References:
 This works the same as [`userEvent.hover`](#userevent-hover), but moves the cursor to the `document.body` element instead.
 
 ::: warning
-By default, the cursor position is in the center (in `webdriverio` provider) or in "some" visible place (in `playwright` provider) of the body element, so if the currently hovered element is already in the same position, this method will have no effect.
+By default, the cursor position is in "some" visible place (in `playwright` provider) or in the center (in `webdriverio` provider) of the body element, so if the currently hovered element is already in the same position, this method will have no effect.
 :::
 
 ```ts
@@ -366,7 +400,6 @@ Drags the source element on top of the target element. Don't forget that the `so
 ```ts
 import { userEvent } from '@vitest/browser/context'
 import { screen } from '@testing-library/dom'
-import '@testing-library/jest-dom' // adds support for "toHaveTextContent"
 
 test('drag and drop works', async () => {
   const source = screen.getByRole('img', { name: /logo/ })
@@ -374,7 +407,7 @@ test('drag and drop works', async () => {
 
   await userEvent.dragAndDrop(source, target)
 
-  expect(target).toHaveTextContent('Logo is processed')
+  await expect.element(target).toHaveTextContent('Logo is processed')
 })
 ```
 

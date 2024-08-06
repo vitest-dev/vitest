@@ -5,7 +5,7 @@ function random(seed: number) {
   return x - Math.floor(x)
 }
 
-export function shuffle<T>(array: T[], seed = RealDate.now()): T[] {
+export function shuffle<T>(array: T[], seed: number = RealDate.now()): T[] {
   let length = array.length
 
   while (length) {

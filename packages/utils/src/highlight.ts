@@ -39,7 +39,7 @@ interface HighlightOptions {
 export function highlight(
   code: string,
   options: HighlightOptions = { jsx: false },
-) {
+): string {
   return baseHighlight(code, {
     jsx: options.jsx,
     colors: getDefs(options.colors || c),

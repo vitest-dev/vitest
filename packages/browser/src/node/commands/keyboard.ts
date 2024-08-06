@@ -3,12 +3,16 @@ import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/key
 import type { BrowserProvider } from 'vitest/node'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEvent } from '../../../context'
 import type { UserEventCommand } from './utils'
 
-export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
+export interface KeyboardState {
+  unreleased: string[]
+}
+
+export const keyboard: UserEventCommand<(text: string, state: KeyboardState) => Promise<{ unreleased: string[] }>> = async (
   context,
   text,
+  state,
 ) => {
   function focusIframe() {
     if (
@@ -28,7 +32,10 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
     await context.browser.execute(focusIframe)
   }
 
+  const pressed = new Set<string>(state.unreleased)
+
   await keyboardImplementation(
+    pressed,
     context.provider,
     context.contextId,
     text,
@@ -52,17 +59,20 @@ export const keyboard: UserEventCommand<UserEvent['keyboard']> = async (
     },
     true,
   )
+
+  return {
+    unreleased: Array.from(pressed),
+  }
 }
 
 export async function keyboardImplementation(
+  pressed: Set<string>,
   provider: BrowserProvider,
   contextId: string,
   text: string,
   selectAll: () => Promise<void>,
   skipRelease: boolean,
 ) {
-  const pressed = new Set<string>()
-
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(contextId)
     const actions = parseKeyDef(defaultKeyMap, text)
@@ -145,7 +155,10 @@ export async function keyboardImplementation(
       }
     }
 
-    await keyboard.perform(skipRelease)
+    // seems like webdriverio doesn't release keys automatically if skipRelease is true and all events are keyUp
+    const allRelease = keyboard.toJSON().actions.every(action => action.type === 'keyUp')
+
+    await keyboard.perform(allRelease ? false : skipRelease)
   }
 
   return {
