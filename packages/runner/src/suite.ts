@@ -184,7 +184,14 @@ let runner: VitestRunner
 let defaultSuite: SuiteCollector
 let currentTestFilepath: string
 
+function assert(condition: any, message: string) {
+  if (!condition) {
+    throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`)
+  }
+}
+
 export function getDefaultSuite(): SuiteCollector<object> {
+  assert(defaultSuite, 'the default suite')
   return defaultSuite
 }
 
@@ -193,6 +200,7 @@ export function getTestFilepath(): string {
 }
 
 export function getRunner(): VitestRunner {
+  assert(runner, 'the runner')
   return runner
 }
 
@@ -216,9 +224,11 @@ export function clearCollectorContext(
   collectorContext.currentSuite = defaultSuite
 }
 
-export function getCurrentSuite<ExtraContext = object>() {
-  return (collectorContext.currentSuite
+export function getCurrentSuite<ExtraContext = object>(): SuiteCollector<ExtraContext> {
+  const currentSuite = (collectorContext.currentSuite
     || defaultSuite) as SuiteCollector<ExtraContext>
+  assert(currentSuite, 'the current suite')
+  return currentSuite
 }
 
 export function createSuiteHooks(): SuiteHooks {
