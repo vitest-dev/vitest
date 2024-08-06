@@ -4,7 +4,7 @@
 This is advanced API. If you are just running tests, you probably don't need this. It is primarily used by library authors.
 :::
 
-You can specify a path to your test runner with the `runner` option in your configuration file. This file should have a default export with a class implementing these methods:
+You can specify a path to your test runner with the `runner` option in your configuration file. This file should have a default export with a class constructor implementing these methods:
 
 ```ts
 export interface VitestRunner {
@@ -106,9 +106,145 @@ Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` prope
 Snapshot support and some other features depend on the runner. If you don't want to lose it, you can extend your runner from `VitestTestRunner` imported from `vitest/runners`. It also exposes `BenchmarkNodeRunner`, if you want to extend benchmark functionality.
 :::
 
+## Tasks
+
+Suites and tests are called `tasks` internally. Vitest runner initiates a `File` task before collecting any tests - this is a superset of `Suite` with a few additional properties. It is available on every task (including `File`) as a `file` property.
+
+```ts
+interface File extends Suite {
+  /**
+   * The name of the pool that the file belongs to.
+   * @default 'forks'
+   */
+  pool?: string
+  /**
+   * The path to the file in UNIX format.
+   */
+  filepath: string
+  /**
+   * The name of the workspace project the file belongs to.
+   */
+  projectName: string | undefined
+  /**
+   * The time it took to collect all tests in the file.
+   * This time also includes importing all the file dependencies.
+   */
+  collectDuration?: number
+  /**
+   * The time it took to import the setup file.
+   */
+  setupDuration?: number
+  /**
+   * Whether the file is initiated without running any tests.
+   * This is done to populate state on the server side by Vitest.
+   */
+  local?: boolean
+}
+```
+
+Every suite has a `tasks` property that is populated during collection phase. It is useful to traverse the task tree from the top down.
+
+```ts
+interface Suite extends TaskBase {
+  type: 'suite'
+  /**
+   * File task. It's the root task of the file.
+   */
+  file: File
+  /**
+   * An array of tasks that are part of the suite.
+   */
+  tasks: Task[]
+}
+```
+
+Every task has a `suite` property that references a suite it is located in. If `test` or `describe` are initiated at the top level, they will not have a `suite` property (it will **not** be equal to `file`!). `File` also never has a `suite` property. It is useful to travers the tasks from the bottom up.
+
+```ts
+interface Test<ExtraContext = object> extends TaskBase {
+  type: 'test'
+  /**
+   * Test context that will be passed to the test function.
+   */
+  context: TaskContext<Test> & ExtraContext & TestContext
+  /**
+   * File task. It's the root task of the file.
+   */
+  file: File
+  /**
+   * Whether the task was skipped by calling `t.skip()`.
+   */
+  pending?: boolean
+  /**
+   * Whether the task should succeed if it fails. If the task fails, it will be marked as passed.
+   */
+  fails?: boolean
+  /**
+   * Hooks that will run if the task fails. The order depends on the `sequence.hooks` option.
+   */
+  onFailed?: OnTestFailedHandler[]
+  /**
+   * Hooks that will run after the task finishes. The order depends on the `sequence.hooks` option.
+   */
+  onFinished?: OnTestFinishedHandler[]
+  /**
+   * Store promises (from async expects) to wait for them before finishing the test
+   */
+  promises?: Promise<any>[]
+}
+```
+
+Every task can have a `result` field. Suites can only have this field if an error thrown within a suite callback or `beforeAll`/`afterAll` callbacks prevents them from collecting tests. Tests always have this field after their callbacks are called - the `state` and `errors` fields are present depending on the outcome. If an error was thrown in `beforeEach` or `afterEach` callbacks, the thrown error will be present in `task.result.errors`.
+
+```ts
+export interface TaskResult {
+  /**
+   * State of the task. Inherits the `task.mode` during collection.
+   * When the task has finished, it will be changed to `pass` or `fail`.
+   * - **pass**: task ran successfully
+   * - **fail**: task failed
+   */
+  state: TaskState
+  /**
+   * Errors that occurred during the task execution. It is possible to have several errors
+   * if `expect.soft()` failed multiple times.
+   */
+  errors?: ErrorWithDiff[]
+  /**
+   * How long in milliseconds the task took to run.
+   */
+  duration?: number
+  /**
+   * Time in milliseconds when the task started running.
+   */
+  startTime?: number
+  /**
+   * Heap size in bytes after the task finished.
+   * Only available if `logHeapUsage` option is set and `process.memoryUsage` is defined.
+   */
+  heap?: number
+  /**
+   * State of related to this task hooks. Useful during reporting.
+   */
+  hooks?: Partial<Record<'afterAll' | 'beforeAll' | 'beforeEach' | 'afterEach', TaskState>>
+  /**
+   * The amount of times the task was retried. The task is retried only if it
+   * failed and `retry` option is set.
+   */
+  retryCount?: number
+  /**
+   * The amount of times the task was repeated. The task is repeated only if
+   * `repeats` option is set. This number also contains `retryCount`.
+   */
+  repeatCount?: number
+}
+```
+
 ## Your Task Function
 
-You can extend Vitest task system with your tasks. A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
+Vitest exposes a `Custom` task type that allows users to reuse built-int reporters. It is virtually the same as `Test`, but has a type of `'custom'`.
+
+A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
 ```js
 // ./utils/custom.js
@@ -166,8 +302,4 @@ vitest ./garden/tasks.test.js
 
 ::: warning
 If you don't have a custom runner or didn't define `runTest` method, Vitest will try to retrieve a task automatically. If you didn't add a function with `setFn`, it will fail.
-:::
-
-::: tip
-Custom task system supports hooks and contexts. If you want to support property chaining (like, `only`, `skip`, and your custom ones), you can import `createChainable` from `vitest/suite` and wrap your function with it. You will need to call `custom` as `custom.call(this)`, if you decide to do this.
 :::

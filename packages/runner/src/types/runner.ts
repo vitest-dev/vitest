@@ -12,6 +12,9 @@ import type {
   Test,
 } from './tasks'
 
+/**
+ * This is a subset of Vitest config that's required for the runner to work.
+ */
 export interface VitestRunnerConfig {
   root: string
   setupFiles: string[]
@@ -83,7 +86,7 @@ export interface VitestRunner {
   /**
    * When the task has finished running, but before cleanup hooks are called
    */
-  onTaskFinished?: (test: Task) => unknown
+  onTaskFinished?: (test: Test | Custom) => unknown
   /**
    * Called after result and state are set.
    */
@@ -130,7 +133,7 @@ export interface VitestRunner {
    */
   onAfterRunFiles?: (files: File[]) => unknown
   /**
-   * Called when new context for a test is defined. Useful, if you want to add custom properties to the context.
+   * Called when new context for a test is defined. Useful if you want to add custom properties to the context.
    * If you only want to define custom context, consider using "beforeAll" in "setupFiles" instead.
    *
    * This method is called for both "test" and "custom" handlers.
@@ -141,7 +144,7 @@ export interface VitestRunner {
     context: TaskContext<T>
   ) => ExtendedContext<T>
   /**
-   * Called, when files are imported. Can be called in two situations: when collecting tests and when importing setup files.
+   * Called when test and setup files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */
   importFile: (filepath: string, source: VitestRunnerImportSource) => unknown
   /**
