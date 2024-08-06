@@ -58,6 +58,7 @@ export async function run(
 
         if (isIsolatedThreads || isIsolatedForks) {
           workerState.mockMap.clear()
+          executor.mocker.behaviourMap.clear()
           resetModules(workerState.moduleCache, true)
         }
 
