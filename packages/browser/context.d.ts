@@ -250,7 +250,7 @@ export interface LocatorByRoleOptions extends LocatorOptions {
 
 interface LocatorScreenshotOptions extends Omit<ScreenshotOptions, 'element'> {}
 
-export interface Locator {
+interface LocatorSelectors {
   /**
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
    * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
@@ -287,7 +287,9 @@ export interface Locator {
    * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
    */
   getByTestId(text: string | RegExp): Locator
+}
 
+export interface Locator extends LocatorSelectors {
   /**
    * Click on an element. You can use the options to set the cursor position.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
@@ -446,7 +448,7 @@ export const userEvent: UserEvent
  */
 export const commands: BrowserCommands
 
-export interface BrowserPage {
+export interface BrowserPage extends LocatorSelectors {
   /**
    * Change the size of iframe's viewport.
    */
@@ -464,42 +466,6 @@ export interface BrowserPage {
    * Extend default `page` object with custom methods.
    */
   extend(methods: Partial<BrowserPage>): BrowserPage
-  /**
-   * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
-   */
-  getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
-  /**
-   * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
-   */
-  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
-  /**
-   * Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has an `alt` attribute.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
-   */
-  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
-  /**
-   * Creates a locator capable of finding an element that has the specified placeholder text. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
-   */
-  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
-  /**
-   * Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`.
-   * Matching by text always normalizes whitespace, even with exact match.
-   * For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
-   */
-  getByText(text: string | RegExp, options?: LocatorOptions): Locator
-  /**
-   * Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
-   */
-  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
-  /**
-   * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
-   * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
-   */
-  getByTestId(text: string | RegExp): Locator
   /**
    * Wrap an HTML element in a `Locator`. When querying for elements, the search will always return this element.
    * @see {@link https://vitest.dev/guide/browser/locators}
