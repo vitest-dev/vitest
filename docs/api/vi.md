@@ -17,7 +17,28 @@ This section describes the API that you can use when [mocking a module](/guide/m
 ### vi.mock
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
-- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => unknown) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => T | Promise<T>) => void`
+
+::: warning
+`vi.mock` forces the type to return all exports in the module by default.
+You can skip this with call importOriginal
+```ts
+vi.mock(import('./path/to/module.js'), async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    namedExport: vi.fn(),
+  }
+})
+```
+or through type assertion.
+```ts
+vi.mock(import('./path/to/module.js'), () => {
+  return {
+    namedExport: vi.fn(),
+  } as typeof import('./path/to/module.js')
+})
+```
+:::
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
@@ -163,6 +184,28 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 ### vi.doMock
 
 - **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => T | Promise<T>) => void`
+
+::: warning
+`vi.doMock` forces the type to return all exports in the module by default.
+You can skip this with call importOriginal
+```ts
+vi.doMock(import('./path/to/module.js'), async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    namedExport: vi.fn(),
+  }
+})
+```
+or through type assertion.
+```ts
+vi.doMock(import('./path/to/module.js'), () => {
+  return {
+    namedExport: vi.fn(),
+  } as typeof import('./path/to/module.js')
+})
+```
+:::
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
 
