@@ -74,6 +74,7 @@ const VITE_EXPORTS_LINE_PATTERN
 const DECORATOR_METADATA_PATTERN
   = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
 const DEFAULT_PROJECT: unique symbol = Symbol.for('default-project')
+const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
 let uniqueId = 0
@@ -452,7 +453,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await onTransform(url.replace('file://', '')).catch(() => undefined)
+      transformResult = await onTransform(removeRoot(url, FILE_PROTOCOL)).catch(() => undefined)
     }
 
     const map = transformResult?.map as EncodedSourceMap | undefined
@@ -515,7 +516,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     async function onTransform(filepath: string) {
       if (transformMode === 'browser' && project.browser) {
-        const result = await project.browser.vite.transformRequest(filepath.replace(project.config.root, ''))
+        const result = await project.browser.vite.transformRequest(removeRoot(filepath, project.config.root))
 
         if (result) {
           return { ...result, code: `${result.code}// <inline-source-map>` }
@@ -528,11 +529,11 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     for (const result of coverage.result) {
       if (transformMode === 'browser') {
-        if (result.url.includes('@fs/')) {
-          result.url = `file://${result.url.replace('@fs/', '')}`
+        if (result.url.startsWith('/@fs')) {
+          result.url = `${FILE_PROTOCOL}${removeRoot(result.url, '/@fs')}`
         }
         else {
-          result.url = `file://${project.config.root}${result.url}`
+          result.url = `${FILE_PROTOCOL}${project.config.root}${result.url}`
         }
       }
 
@@ -656,4 +657,12 @@ function normalizeTransformResults(
   }
 
   return normalized
+}
+
+function removeRoot(filepath: string, root: string) {
+  if (filepath.startsWith(root)) {
+    return filepath.slice(root.length)
+  }
+
+  return filepath
 }
