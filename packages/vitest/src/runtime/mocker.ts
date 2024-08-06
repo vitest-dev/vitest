@@ -5,7 +5,7 @@ import { getType, highlight } from '@vitest/utils'
 import { isNodeBuiltin } from 'vite-node/utils'
 import { distDir } from '../paths'
 import { getAllMockableProperties } from '../utils/base'
-import type { MockFactory, PendingSuiteMock } from '../types/mocker'
+import type { MockBehaviour, MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 
 const { existsSync, readdirSync } = fs
@@ -64,6 +64,8 @@ export class VitestMocker {
   }
 
   private filterPublicKeys: (symbol | string)[]
+
+  public behaviourMap = new Map<string, Record<string, MockBehaviour>>()
 
   private mockContext: MockContext = {
     callstack: null,
@@ -207,7 +209,13 @@ export class VitestMocker {
           this.unmockPath(fsPath)
         }
         if (mock.type === 'mock') {
-          this.mockPath(mock.id, fsPath, external, mock.factory)
+          this.mockPath(
+            mock.id,
+            fsPath,
+            external,
+            mock.behaviour,
+            mock.factory,
+          )
         }
       }),
     )
@@ -348,6 +356,7 @@ export class VitestMocker {
   public mockObject(
     object: Record<Key, any>,
     mockExports: Record<Key, any> = {},
+    behavior: MockBehaviour = 'automock',
   ) {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
@@ -467,13 +476,14 @@ export class VitestMocker {
               }
             }
           }
-          const mock = spyModule
-            .spyOn(newContainer, property)
-            .mockImplementation(mockFunction)
-          mock.mockRestore = () => {
-            mock.mockReset()
+          const mock = spyModule.spyOn(newContainer, property)
+          if (behavior === 'automock') {
             mock.mockImplementation(mockFunction)
-            return mock
+            mock.mockRestore = () => {
+              mock.mockReset()
+              mock.mockImplementation(mockFunction)
+              return mock
+            }
           }
           // tinyspy retains length, but jest doesn't.
           Object.defineProperty(newContainer[property], 'length', { value: 0 })
@@ -512,29 +522,22 @@ export class VitestMocker {
     originalId: string,
     path: string,
     external: string | null,
+    behaviour: MockBehaviour | undefined,
     factory: MockFactory | undefined,
   ) {
     const id = this.normalizePath(path)
 
-    // const { config } = this.executor.state
-    // const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
-    // const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
-
-    // TODO: find a good way to throw this error even in non-isolated mode
-    // if (throwIfExists && (isIsolatedThreads || isIsolatedForks || config.pool === 'vmThreads')) {
-    //   const cached = this.moduleCache.has(id) && this.moduleCache.getByModuleId(id)
-    //   if (cached && cached.importers.size)
-    //     throw new Error(`[vitest] Cannot mock "${originalId}" because it is already loaded by "${[...cached.importers.values()].map(i => relative(this.root, i)).join('", "')}".\n\nPlease, remove the import if you want static imports to be mocked, or clear module cache by calling "vi.resetModules()" before mocking if you are going to import the file again. See: https://vitest.dev/guide/common-errors.html#cannot-mock-mocked-file-js-because-it-is-already-loaded`)
-    // }
-
     const suitefile = this.getSuiteFilepath()
     const mocks = this.mockMap.get(suitefile) || {}
     const resolves = this.resolveCache.get(suitefile) || {}
+    const behaviours = this.behaviourMap.get(suitefile) || {}
 
+    behaviours[id] = behaviour || 'automock'
     mocks[id] = factory || this.resolveMockPath(id, external)
     resolves[id] = originalId
 
     this.mockMap.set(suitefile, mocks)
+    this.behaviourMap.set(suitefile, behaviours)
     this.resolveCache.set(suitefile, resolves)
     this.deleteCachedItem(id)
   }
@@ -565,7 +568,8 @@ export class VitestMocker {
 
     if (mock === null) {
       const mod = await this.executor.cachedRequest(id, fsPath, [importee])
-      return this.mockObject(mod)
+      const behaviour = this.behaviourMap.get(this.getSuiteFilepath())?.[normalizedId]
+      return this.mockObject(mod, {}, behaviour)
     }
 
     if (typeof mock === 'function') {
@@ -579,8 +583,9 @@ export class VitestMocker {
     const mock = this.getDependencyMock(id)
 
     const mockPath = this.getMockPath(id)
+    const behaviour = this.behaviourMap.get(this.getSuiteFilepath())?.[id]
 
-    if (mock === null) {
+    if (mock === null || behaviour === 'autospy') {
       const cache = this.moduleCache.get(mockPath)
       if (cache.exports) {
         return cache.exports
@@ -590,7 +595,7 @@ export class VitestMocker {
       // Assign the empty exports object early to allow for cycles to work. The object will be filled by mockObject()
       this.moduleCache.set(mockPath, { exports })
       const mod = await this.executor.directRequest(url, url, callstack)
-      this.mockObject(mod, exports)
+      this.mockObject(mod, exports, behaviour)
       return exports
     }
     if (
@@ -620,14 +625,16 @@ export class VitestMocker {
   public queueMock(
     id: string,
     importer: string,
-    factory?: MockFactory,
+    factoryOrOptions?: MockFactory | MockOptions,
     throwIfCached = false,
   ) {
+    const behaviour = getMockBehaviour(factoryOrOptions)
     VitestMocker.pendingIds.push({
       type: 'mock',
       id,
       importer,
-      factory,
+      factory: typeof factoryOrOptions === 'function' ? factoryOrOptions : undefined,
+      behaviour,
       throwIfCached,
     })
   }
@@ -640,4 +647,14 @@ export class VitestMocker {
       throwIfCached,
     })
   }
+}
+
+function getMockBehaviour(factoryOrOptions?: MockFactory | MockOptions): MockBehaviour {
+  if (!factoryOrOptions) {
+    return 'automock'
+  }
+  if (typeof factoryOrOptions === 'function') {
+    return 'manual'
+  }
+  return factoryOrOptions.spy ? 'autospy' : 'automock'
 }
