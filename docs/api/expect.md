@@ -700,7 +700,7 @@ This ensures that a value matches the most recent snapshot.
 You can provide an optional `hint` string argument that is appended to the test name. Although Vitest always appends a number at the end of a snapshot name, short descriptive hints might be more useful than numbers to differentiate multiple snapshots in a single it or test block. Vitest sorts snapshots by name in the corresponding `.snap` file.
 
 :::tip
-  When snapshot mismatch and causing the test failing, if the mismatch is expected, you can press `u` key to update the snapshot for once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
+  When a snapshot mismatches and causes the test to fail, if the mismatch is expected, you can press `u` key to update the snapshot once. Or you can pass `-u` or `--update` CLI options to make Vitest always update the tests.
 :::
 
 ```ts
@@ -1287,7 +1287,7 @@ test('callback was called', async () => {
 
 - **Type:** `(message?: string) => never`
 
-This method is used to asserting that a line should never be reached.
+This method is used to assert that a line should never be reached.
 
 For example, if we want to test that `build()` throws due to receiving directories having no `src` folder, and also handle each error separately, we could do this:
 
