@@ -453,7 +453,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await onTransform(removeRoot(url, FILE_PROTOCOL)).catch(() => undefined)
+      transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
     }
 
     const map = transformResult?.map as EncodedSourceMap | undefined
@@ -516,7 +516,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     async function onTransform(filepath: string) {
       if (transformMode === 'browser' && project.browser) {
-        const result = await project.browser.vite.transformRequest(removeRoot(filepath, project.config.root))
+        const result = await project.browser.vite.transformRequest(removeStartsWith(filepath, project.config.root))
 
         if (result) {
           return { ...result, code: `${result.code}// <inline-source-map>` }
@@ -530,7 +530,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     for (const result of coverage.result) {
       if (transformMode === 'browser') {
         if (result.url.startsWith('/@fs')) {
-          result.url = `${FILE_PROTOCOL}${removeRoot(result.url, '/@fs')}`
+          result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
         }
         else {
           result.url = `${FILE_PROTOCOL}${project.config.root}${result.url}`
@@ -659,9 +659,9 @@ function normalizeTransformResults(
   return normalized
 }
 
-function removeRoot(filepath: string, root: string) {
-  if (filepath.startsWith(root)) {
-    return filepath.slice(root.length)
+function removeStartsWith(filepath: string, start: string) {
+  if (filepath.startsWith(start)) {
+    return filepath.slice(start.length)
   }
 
   return filepath
