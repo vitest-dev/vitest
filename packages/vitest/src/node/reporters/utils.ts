@@ -2,6 +2,7 @@ import type { ViteNodeRunner } from 'vite-node/client'
 import type { Reporter } from '../types/reporter'
 import type { ResolvedConfig } from '../types/config'
 import type { Vitest } from '../core'
+import type { HTMLOptions } from './html'
 import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 
@@ -43,11 +44,8 @@ function createReporters(
 
         if (reporterName === 'html') {
           await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.root)
-          const CustomReporter = await loadCustomReporterModule(
-            '@vitest/ui/reporter',
-            runner,
-          )
-          return new CustomReporter(reporterOptions)
+          const HTMLReporter = await import('@vitest/ui/reporter').then(r => r.default)
+          return new HTMLReporter(reporterOptions as HTMLOptions)
         }
         else if (reporterName in ReportersMap) {
           const BuiltinReporter
