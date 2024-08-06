@@ -2,11 +2,9 @@ import { cdp } from '@vitest/browser/context'
 import type { V8CoverageProvider } from './provider'
 import { loadProvider } from './load-provider'
 
-interface ScriptCoverage {
-  result: Array<{ url: string }>
-}
+const session = cdp()
 
-const session = cdp() as { send: (...options: any[]) => any }
+type ScriptCoverage = Awaited<ReturnType<typeof session.send<'Profiler.takePreciseCoverage'>>>
 
 export default {
   async startCoverage() {
@@ -17,8 +15,8 @@ export default {
     })
   },
 
-  async takeCoverage() {
-    const coverage: ScriptCoverage = await session.send('Profiler.takePreciseCoverage')
+  async takeCoverage(): Promise<{ result: any[] }> {
+    const coverage = await session.send('Profiler.takePreciseCoverage')
     const result: typeof coverage.result = []
 
     // Reduce amount of data sent over rpc by doing some early result filtering
