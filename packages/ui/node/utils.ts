@@ -33,8 +33,8 @@ export async function prepareReportCoverageFolder(ctx: Vitest) {
   const [folder] = resolveCoverageFolder(ctx)!
   const root = resolve(fileURLToPath(import.meta.url), '../')
   await Promise.all([
-    fs.copyFile(resolve(root, '../istambul-base.css'), resolve(folder, 'base.css')),
-    fs.copyFile(resolve(root, '../istambul-prettify.css'), resolve(folder, 'prettify.css')),
+    fs.copyFile(resolve(root, '../istanbul-base.css'), resolve(folder, 'base.css')),
+    fs.copyFile(resolve(root, '../istanbul-prettify.css'), resolve(folder, 'prettify.css')),
   ])
   await Promise.all(fg.sync('**/*.html', { cwd: folder, absolute: true }).map(async (file) => {
     const content = await fs.readFile(file, 'utf-8')

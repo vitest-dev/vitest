@@ -23,8 +23,8 @@ export default (ctx: Vitest): Plugin => {
 
       if (coverageFolder) {
         const root = resolve(fileURLToPath(import.meta.url), '../')
-        const base = readFile(resolve(root, '../istambul-base.css'))
-        const prettify = readFile(resolve(root, '../istambul-prettify.css'))
+        const base = readFile(resolve(root, '../istanbul-base.css'))
+        const prettify = readFile(resolve(root, '../istanbul-prettify.css'))
         server.middlewares.use(coveragePath!, async (req, res, next) => {
           if (!req.url) {
             return next()
