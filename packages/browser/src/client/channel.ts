@@ -26,6 +26,7 @@ export interface IframeMockEvent {
   type: 'mock'
   paths: string[]
   mock: string | undefined | null
+  behaviour: 'autospy' | 'automock' | 'manual'
 }
 
 export interface IframeUnmockEvent {

@@ -12,7 +12,7 @@ import type {
 import MagicString from 'magic-string'
 
 // TODO: better source map replacement
-export function automockModule(code: string, parse: (code: string) => Program) {
+export function automockModule(code: string, behavior: 'automock' | 'autospy', parse: (code: string) => Program) {
   const ast = parse(code)
 
   const m = new MagicString(code)
@@ -145,7 +145,7 @@ const __vitest_es_current_module__ = {
   __esModule: true,
   ${allSpecifiers.map(({ name }) => `["${name}"]: ${name},`).join('\n  ')}
 }
-const __vitest_mocked_module__ = __vitest_mocker__.mockObject(__vitest_es_current_module__)
+const __vitest_mocked_module__ = __vitest_mocker__.mockObject(__vitest_es_current_module__, {}, "${behavior}")
 `
   const assigning = allSpecifiers
     .map(({ name }, index) => {

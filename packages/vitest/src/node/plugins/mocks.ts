@@ -20,8 +20,9 @@ export function MocksPlugins(): Plugin[] {
       name: 'vitest:automock',
       enforce: 'post',
       transform(code, id) {
-        if (id.includes('mock=auto')) {
-          const ms = automockModule(code, this.parse)
+        if (id.includes('mock=automock') || id.includes('mock=autospy')) {
+          const behavior = id.includes('mock=automock') ? 'automock' : 'autospy'
+          const ms = automockModule(code, behavior, this.parse)
           return {
             code: ms.toString(),
             map: ms.generateMap({ hires: true, source: cleanUrl(id) }),
