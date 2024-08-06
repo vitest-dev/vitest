@@ -7,7 +7,10 @@ import type {
 } from '@vitest/browser/client'
 
 export function createModuleMocker() {
-  const mocks: Map<string, string | null | undefined> = new Map()
+  const mocks: Map<string, {
+    mock: string | null | undefined
+    behaviour: 'automock' | 'autospy' | 'manual'
+  }> = new Map()
 
   let started = false
   let startPromise: undefined | Promise<unknown>
@@ -34,7 +37,7 @@ export function createModuleMocker() {
             return passthrough()
           }
 
-          const mock = mocks.get(path)
+          const { mock, behaviour } = mocks.get(path)!
 
           // using a factory
           if (mock === undefined) {
@@ -56,11 +59,11 @@ export function createModuleMocker() {
             })
           }
 
-          if (typeof mock === 'string') {
-            return Response.redirect(mock)
+          if (behaviour === 'autospy' || mock === null) {
+            return Response.redirect(injectQuery(path, `mock=${behaviour}`))
           }
 
-          return Response.redirect(injectQuery(path, 'mock=auto'))
+          return Response.redirect(mock)
         }),
       )
       return worker.start({
@@ -80,7 +83,7 @@ export function createModuleMocker() {
   return {
     async mock(event: IframeMockEvent) {
       await init()
-      event.paths.forEach(path => mocks.set(path, event.mock))
+      event.paths.forEach(path => mocks.set(path, { mock: event.mock, behaviour: event.behaviour }))
       channel.postMessage(<IframeMockingDoneEvent>{ type: 'mock:done' })
     },
     async unmock(event: IframeUnmockEvent) {
