@@ -1,117 +1,31 @@
-import type { Task, WorkerGlobalState } from 'vitest'
+import type { RunnerTask } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventDragAndDropOptions, UserEventHoverOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
-import type { BrowserRunnerState } from '../utils'
+import type {
+  BrowserPage,
+  Locator,
+  UserEvent,
+  UserEventClickOptions,
+  UserEventDragAndDropOptions,
+  UserEventHoverOptions,
+  UserEventTabOptions,
+  UserEventTypeOptions,
+} from '../../../context'
+import { convertElementToCssSelector, getBrowserState, getWorkerState } from '../utils'
 
-// this file should not import anything directly, only types
+// this file should not import anything directly, only types and utils
 
+const state = () => getWorkerState()
 // @ts-expect-error not typed global
-const state = (): WorkerGlobalState => __vitest_worker__
-// @ts-expect-error not typed global
-const runner = (): BrowserRunnerState => __vitest_browser_runner__
+const provider = __vitest_browser_runner__.provider
 function filepath() {
-  return state().filepath || state().current?.file?.filepath || undefined
+  return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
 }
-const rpc = () => state().rpc as any as BrowserRPC
-const contextId = runner().contextId
+const rpc = () => getWorkerState().rpc as any as BrowserRPC
+const contextId = getBrowserState().contextId
 const channel = new BroadcastChannel(`vitest:${contextId}`)
 
 function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(contextId, command, filepath(), args)
-}
-
-const provider = runner().provider
-
-function convertElementToCssSelector(element: Element) {
-  if (!element || !(element instanceof Element)) {
-    throw new Error(
-      `Expected DOM element to be an instance of Element, received ${typeof element}`,
-    )
-  }
-
-  return getUniqueCssSelector(element)
-}
-
-function escapeIdForCSSSelector(id: string) {
-  return id
-    .split('')
-    .map((char) => {
-      const code = char.charCodeAt(0)
-
-      if (char === ' ' || char === '#' || char === '.' || char === ':' || char === '[' || char === ']' || char === '>' || char === '+' || char === '~' || char === '\\') {
-        // Escape common special characters with backslashes
-        return `\\${char}`
-      }
-      else if (code >= 0x10000) {
-        // Unicode escape for characters outside the BMP
-        return `\\${code.toString(16).toUpperCase().padStart(6, '0')} `
-      }
-      else if (code < 0x20 || code === 0x7F) {
-        // Non-printable ASCII characters (0x00-0x1F and 0x7F) are escaped
-        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else if (code >= 0x80) {
-        // Non-ASCII characters (0x80 and above) are escaped
-        return `\\${code.toString(16).toUpperCase().padStart(2, '0')} `
-      }
-      else {
-        // Allowable characters are used directly
-        return char
-      }
-    })
-    .join('')
-}
-
-function getUniqueCssSelector(el: Element) {
-  const path = []
-  let parent: null | ParentNode
-  let hasShadowRoot = false
-  // eslint-disable-next-line no-cond-assign
-  while (parent = getParent(el)) {
-    if ((parent as Element).shadowRoot) {
-      hasShadowRoot = true
-    }
-
-    const tag = el.tagName
-    if (el.id) {
-      path.push(`#${escapeIdForCSSSelector(el.id)}`)
-    }
-    else if (!el.nextElementSibling && !el.previousElementSibling) {
-      path.push(tag.toLowerCase())
-    }
-    else {
-      let index = 0
-      let sameTagSiblings = 0
-      let elementIndex = 0
-
-      for (const sibling of parent.children) {
-        index++
-        if (sibling.tagName === tag) {
-          sameTagSiblings++
-        }
-        if (sibling === el) {
-          elementIndex = index
-        }
-      }
-
-      if (sameTagSiblings > 1) {
-        path.push(`${tag.toLowerCase()}:nth-child(${elementIndex})`)
-      }
-      else {
-        path.push(tag.toLowerCase())
-      }
-    }
-    el = parent as Element
-  };
-  return `${provider === 'webdriverio' && hasShadowRoot ? '>>>' : ''}${path.reverse().join(' > ')}`
-}
-
-function getParent(el: Element) {
-  const parent = el.parentNode
-  if (parent instanceof ShadowRoot) {
-    return parent.host
-  }
-  return parent
 }
 
 function createUserEvent(): UserEvent {
@@ -123,38 +37,30 @@ function createUserEvent(): UserEvent {
     setup() {
       return createUserEvent()
     },
-    click(element: Element, options: UserEventClickOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_click', css, processClickOptions(options))
+    click(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).click(processClickOptions(options))
     },
-    dblClick(element: Element, options: UserEventClickOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_dblClick', css, processClickOptions(options))
+    dblClick(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).dblClick(processClickOptions(options))
     },
-    tripleClick(element: Element, options: UserEventClickOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_tripleClick', css, processClickOptions(options))
+    tripleClick(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).tripleClick(processClickOptions(options))
     },
     selectOptions(element, value) {
-      const values = provider === 'webdriverio'
-        ? getWebdriverioSelectOptions(element, value)
-        : getSimpleSelectOptions(element, value)
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_selectOptions', css, values)
+      return convertToLocator(element).selectOptions(value)
     },
-    async type(element: Element, text: string, options: UserEventTypeOptions = {}) {
-      const css = convertElementToCssSelector(element)
+    async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
+      const selector = convertToSelector(element)
       const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
         '__vitest_type',
-        css,
+        selector,
         text,
         { ...options, unreleased: keyboard.unreleased },
       )
       keyboard.unreleased = unreleased
     },
-    clear(element: Element) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_clear', css)
+    clear(element: Element | Locator) {
+      return convertToLocator(element).clear()
     },
     tab(options: UserEventTabOptions = {}) {
       return triggerCommand('__vitest_tab', options)
@@ -167,92 +73,35 @@ function createUserEvent(): UserEvent {
       )
       keyboard.unreleased = unreleased
     },
-    hover(element: Element, options: UserEventHoverOptions = {}) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_hover', css, processHoverOptions(options))
+    hover(element: Element | Locator, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).hover(processHoverOptions(options))
     },
-    unhover(element: Element, options: UserEventHoverOptions = {}) {
-      const css = convertElementToCssSelector(element.ownerDocument.body)
-      return triggerCommand('__vitest_hover', css, options)
+    unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).unhover(options)
     },
 
     // non userEvent events, but still useful
-    fill(element: Element, text: string, options) {
-      const css = convertElementToCssSelector(element)
-      return triggerCommand('__vitest_fill', css, text, options)
+    fill(element: Element | Locator, text: string, options) {
+      return convertToLocator(element).fill(text, options)
     },
-    dragAndDrop(source: Element, target: Element, options = {}) {
-      const sourceCss = convertElementToCssSelector(source)
-      const targetCss = convertElementToCssSelector(target)
-      return triggerCommand(
-        '__vitest_dragAndDrop',
-        sourceCss,
-        targetCss,
-        processDragAndDropOptions(options),
-      )
+    dragAndDrop(source: Element | Locator, target: Element | Locator, options = {}) {
+      const sourceLocator = convertToLocator(source)
+      const targetLocator = convertToLocator(target)
+      return sourceLocator.dropTo(targetLocator, processDragAndDropOptions(options))
     },
   }
 }
 
-export const userEvent: UserEvent = createUserEvent()
-
-function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
-  const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
-
-  const arrayValues = Array.isArray(value) ? value : [value]
-
-  if (!arrayValues.length) {
-    return []
-  }
-
-  if (arrayValues.length > 1) {
-    throw new Error('Provider "webdriverio" doesn\'t support selecting multiple values at once')
-  }
-
-  const optionValue = arrayValues[0]
-
-  if (typeof optionValue !== 'string') {
-    const index = options.indexOf(optionValue as HTMLOptionElement)
-    if (index === -1) {
-      throw new Error(`The element ${convertElementToCssSelector(optionValue)} was not found in the "select" options.`)
-    }
-
-    return [{ index }]
-  }
-
-  const valueIndex = options.findIndex(option => option.value === optionValue)
-  if (valueIndex !== -1) {
-    return [{ index: valueIndex }]
-  }
-
-  const labelIndex = options.findIndex(option =>
-    option.textContent?.trim() === optionValue || option.ariaLabel === optionValue,
-  )
-
-  if (labelIndex === -1) {
-    throw new Error(`The option "${optionValue}" was not found in the "select" options.`)
-  }
-
-  return [{ index: labelIndex }]
-}
-
-function getSimpleSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
-  return (Array.isArray(value) ? value : [value]).map((v) => {
-    if (typeof v !== 'string') {
-      return { element: convertElementToCssSelector(v) }
-    }
-    return v
-  })
-}
+export const userEvent = createUserEvent()
 
 export function cdp() {
-  return runner().cdp!
+  return getBrowserState().cdp!
 }
 
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
   viewport(width, height) {
-    const id = runner().iframeId
+    const id = getBrowserState().iframeId
     channel.postMessage({ type: 'viewport', width, height, id })
     return new Promise((resolve, reject) => {
       channel.addEventListener('message', function handler(e) {
@@ -268,7 +117,7 @@ export const page: BrowserPage = {
     })
   },
   async screenshot(options = {}) {
-    const currentTest = state().current
+    const currentTest = getWorkerState().current
     if (!currentTest) {
       throw new Error('Cannot take a screenshot outside of a test.')
     }
@@ -294,13 +143,63 @@ export const page: BrowserPage = {
     return triggerCommand('__vitest_screenshot', name, {
       ...options,
       element: options.element
-        ? convertElementToCssSelector(options.element)
+        ? convertToSelector(options.element)
         : undefined,
     })
   },
+  getByRole() {
+    throw new Error('Method "getByRole" is not implemented in the current provider.')
+  },
+  getByLabelText() {
+    throw new Error('Method "getByLabelText" is not implemented in the current provider.')
+  },
+  getByTestId() {
+    throw new Error('Method "getByTestId" is not implemented in the current provider.')
+  },
+  getByAltText() {
+    throw new Error('Method "getByAltText" is not implemented in the current provider.')
+  },
+  getByPlaceholder() {
+    throw new Error('Method "getByPlaceholder" is not implemented in the current provider.')
+  },
+  getByText() {
+    throw new Error('Method "getByText" is not implemented in the current provider.')
+  },
+  getByTitle() {
+    throw new Error('Method "getByTitle" is not implemented in the current provider.')
+  },
+  elementLocator() {
+    throw new Error('Method "elementLocator" is not implemented in the current provider.')
+  },
+  extend(methods) {
+    for (const key in methods) {
+      (page as any)[key] = (methods as any)[key]
+    }
+    return page
+  },
 }
 
-function getTaskFullName(task: Task): string {
+function convertToLocator(element: Element | Locator): Locator {
+  if (element instanceof Element) {
+    return page.elementLocator(element)
+  }
+  return element
+}
+
+function convertToSelector(elementOrLocator: Element | Locator): string {
+  if (!elementOrLocator) {
+    throw new Error('Expected element or locator to be defined.')
+  }
+  if (elementOrLocator instanceof Element) {
+    return convertElementToCssSelector(elementOrLocator)
+  }
+  if ('selector' in elementOrLocator) {
+    return (elementOrLocator as any).selector
+  }
+  throw new Error('Expected element or locator to be an instance of Element or Locator.')
+}
+
+function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
 }
 

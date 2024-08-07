@@ -64,7 +64,7 @@ This behaviour is more useful because we do not emulate the keyboard, we actuall
 
 ## userEvent.click
 
-- **Type:** `(element: Element, options?: UserEventClickOptions) => Promise<void>`
+- **Type:** `(element: Element | Locator, options?: UserEventClickOptions) => Promise<void>`
 
 Click on an element. Inherits provider's options. Please refer to your provider's documentation for detailed explanation about how this method works.
 
@@ -87,7 +87,7 @@ References:
 
 ## userEvent.dblClick
 
-- **Type:** `(element: Element, options?: UserEventDoubleClickOptions) => Promise<void>`
+- **Type:** `(element: Element | Locator, options?: UserEventDoubleClickOptions) => Promise<void>`
 
 Triggers a double click event on an element.
 
@@ -112,7 +112,7 @@ References:
 
 ## userEvent.tripleClick
 
-- **Type:** `(element: Element, options?: UserEventTripleClickOptions) => Promise<void>`
+- **Type:** `(element: Element | Locator, options?: UserEventTripleClickOptions) => Promise<void>`
 
 Triggers a triple click event on an element. Since there is no `tripleclick` in browser api, this method will fire three click events in a row, and so you must check [click event detail](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes) to filter the event: `evt.detail === 3`.
 
@@ -144,7 +144,7 @@ References:
 
 ## userEvent.fill
 
-- **Type:** `(element: Element, text: string) => Promise<void>`
+- **Type:** `(element: Element | Locator, text: string) => Promise<void>`
 
 Set a value to the `input/textarea/conteneditable` field. This will remove any existing text in the input before setting the new value.
 
@@ -234,7 +234,7 @@ References:
 
 ## userEvent.type
 
-- **Type:** `(element: Element, text: string, options?: UserEventTypeOptions) => Promise<void>`
+- **Type:** `(element: Element | Locator, text: string, options?: UserEventTypeOptions) => Promise<void>`
 
 ::: warning
 If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead.
@@ -267,7 +267,7 @@ References:
 
 ## userEvent.clear
 
-- **Type:** `(element: Element) => Promise<void>`
+- **Type:** `(element: Element | Locator) => Promise<void>`
 
 This method clears the input element content.
 
@@ -294,7 +294,7 @@ References:
 
 ## userEvent.selectOptions
 
-- **Type:** `(element: Element, values: HTMLElement | HTMLElement[] | string | string[], options?: UserEventSelectOptions) => Promise<void>`
+- **Type:** `(element: Element | Locator, values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[], options?: UserEventSelectOptions) => Promise<void>`
 
 The `userEvent.selectOptions` allows selecting a value in a `<select>` element.
 
@@ -337,7 +337,7 @@ References:
 
 ## userEvent.hover
 
-- **Type:** `(element: Element, options?: UserEventHoverOptions) => Promise<void>`
+- **Type:** `(element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>`
 
 This method moves the cursor position to the selected element. Please refer to your provider's documentation for detailed explanation about how this method works.
 
@@ -366,7 +366,7 @@ References:
 
 ## userEvent.unhover
 
-- **Type:** `(element: Element, options?: UserEventHoverOptions) => Promise<void>`
+- **Type:** `(element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>`
 
 This works the same as [`userEvent.hover`](#userevent-hover), but moves the cursor to the `document.body` element instead.
 
@@ -393,7 +393,7 @@ References:
 
 ## userEvent.dragAndDrop
 
-- **Type:** `(source: Element, target: Element, options?: UserEventDragAndDropOptions) => Promise<void>`
+- **Type:** `(source: Element | Locator, target: Element | Locator, options?: UserEventDragAndDropOptions) => Promise<void>`
 
 Drags the source element on top of the target element. Don't forget that the `source` element has to have the `draggable` attribute set to `true`.
 

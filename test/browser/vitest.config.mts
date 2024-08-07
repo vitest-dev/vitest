@@ -24,10 +24,10 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@vitest/cjs-lib'],
+    include: ['@vitest/cjs-lib', 'react/jsx-dev-runtime'],
   },
   test: {
-    include: ['test/**.test.{ts,js}'],
+    include: ['test/**.test.{ts,js,tsx}'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {

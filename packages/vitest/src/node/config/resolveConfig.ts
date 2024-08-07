@@ -748,6 +748,9 @@ export function resolveConfig(
   resolved.browser.viewport.width ??= 414
   resolved.browser.viewport.height ??= 896
 
+  resolved.browser.locators ??= {} as any
+  resolved.browser.locators.testIdAttribute ??= 'data-testid'
+
   if (resolved.browser.enabled && stdProvider === 'stackblitz') {
     resolved.browser.provider = 'preview'
   }

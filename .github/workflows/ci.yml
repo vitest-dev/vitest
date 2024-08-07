@@ -41,6 +41,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         # Reset back to 20 after https://github.com/nodejs/node/issues/53648
+        # (The issues is closed, but the error persist even after 20.14)
         node_version: [18, 20.14]
         # node_version: [18, 20, 22] 22 when LTS is close enough
         include:

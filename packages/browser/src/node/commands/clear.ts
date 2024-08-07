@@ -9,7 +9,7 @@ export const clear: UserEventCommand<UserEvent['clear']> = async (
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
-    const element = iframe.locator(`css=${selector}`)
+    const element = iframe.locator(selector)
     await element.clear({
       timeout: 1000,
     })

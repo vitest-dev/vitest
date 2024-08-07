@@ -41,10 +41,14 @@ const PLUGINS = [
   AsymmetricMatcher,
 ]
 
+export interface StringifyOptions extends PrettyFormatOptions {
+  maxLength?: number
+}
+
 export function stringify(
   object: unknown,
   maxDepth = 10,
-  { maxLength, ...options }: PrettyFormatOptions & { maxLength?: number } = {},
+  { maxLength, ...options }: StringifyOptions = {},
 ): string {
   const MAX_LENGTH = maxLength ?? 10000
   let result
