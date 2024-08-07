@@ -1293,7 +1293,7 @@ importers:
         version: 3.4.36(typescript@5.5.4)
       webdriverio:
         specifier: latest
-        version: 8.40.0
+        version: 8.40.2
 
   test/global-setup:
     devDependencies:
@@ -1391,6 +1391,9 @@ importers:
       inquirer:
         specifier: ^9.2.7
         version: 9.2.7
+      tinyexec:
+        specifier: ^0.1.3
+        version: 0.1.3
       vite-node:
         specifier: workspace:*
         version: link:../../packages/vite-node
@@ -1411,7 +1414,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 8.40.0
+        version: 8.40.2
 
   test/workspaces:
     devDependencies:
@@ -4021,9 +4024,6 @@ packages:
   '@vue/compiler-core@3.4.26':
     resolution: {integrity: sha512-N9Vil6Hvw7NaiyFUFBPXrAyETIGlQ8KcFMkyk6hW1Cl6NvoqvP+Y8p1Eqvx+UdqsnrnI9+HMUEJegzia3mhXmQ==}
 
-  '@vue/compiler-core@3.4.33':
-    resolution: {integrity: sha512-MoIREbkdPQlnGfSKDMgzTqzqx5nmEjIc0ydLVYlTACGBsfvOJ4tHSbZXKVF536n6fB+0eZaGEOqsGThPpdvF5A==}
-
   '@vue/compiler-core@3.4.35':
     resolution: {integrity: sha512-gKp0zGoLnMYtw4uS/SJRRO7rsVggLjvot3mcctlMXunYNsX+aRJDqqw/lV5/gHK91nvaAAlWFgdVl020AW1Prg==}
 
@@ -4032,9 +4032,6 @@ packages:
 
   '@vue/compiler-dom@3.4.26':
     resolution: {integrity: sha512-4CWbR5vR9fMg23YqFOhr6t6WB1Fjt62d6xdFPyj8pxrYub7d+OgZaObMsoxaF9yBUHPMiPFK303v61PwAuGvZA==}
-
-  '@vue/compiler-dom@3.4.33':
-    resolution: {integrity: sha512-GzB8fxEHKw0gGet5BKlpfXEqoBnzSVWwMnT+dc25wE7pFEfrU/QsvjZMP9rD4iVXHBBoemTct8mN0GJEI6ZX5A==}
 
   '@vue/compiler-dom@3.4.35':
     resolution: {integrity: sha512-pWIZRL76/oE/VMhdv/ovZfmuooEni6JPG1BFe7oLk5DZRo/ImydXijoZl/4kh2406boRQ7lxTYzbZEEXEhj9NQ==}
@@ -4135,9 +4132,6 @@ packages:
 
   '@vue/shared@3.4.31':
     resolution: {integrity: sha512-Yp3wtJk//8cO4NItOPpi3QkLExAr/aLBGZMmTtW9WpdwBCJpRM6zj9WgWktXAl8IDIozwNMByT45JP3tO3ACWA==}
-
-  '@vue/shared@3.4.33':
-    resolution: {integrity: sha512-aoRY0jQk3A/cuvdkodTrM4NMfxco8n55eG4H7ML/CRy7OryHfiqvug4xrCBBMbbN+dvXAetDDwZW9DXWWjBntA==}
 
   '@vue/shared@3.4.35':
     resolution: {integrity: sha512-hvuhBYYDe+b1G8KHxsQ0diDqDMA8D9laxWZhNAjE83VZb5UDaXl9Xnz7cGdDSyiHM90qqI/CyGMcpBpiDy6VVQ==}
@@ -4259,8 +4253,8 @@ packages:
     resolution: {integrity: sha512-yNuGPMPibY91s936gnJCHWlStvIyDrwLwGfLC/NCdTin4F7HL4Gp5iJnHWkJFty1/DfFi8jjoIUBNLM8HEez+A==}
     engines: {node: ^16.13 || >=18}
 
-  '@wdio/config@8.40.0':
-    resolution: {integrity: sha512-sE+sBXUz4ZggS253hLNVu64ZCpm5ZidQ/IJNeM9Exh5OcsuZEnSeuqCZnd4ytK68A2heyZk8r2OjYZriA4l/Sg==}
+  '@wdio/config@8.40.2':
+    resolution: {integrity: sha512-RED2vcdX5Zdd6r+K+aWcjK4douxjJY4LP/8YvvavgqM0TURd5PDI0Y7IEz7+BIJOT4Uh+3atZawIN9/3yWFeag==}
     engines: {node: ^16.13 || >=18}
 
   '@wdio/logger@8.28.0':
@@ -4297,8 +4291,8 @@ packages:
     resolution: {integrity: sha512-jY+n6jlGeK+9Tx8T659PKLwMQTGpLW5H78CSEWgZLbjbVSr2LfGR8Lx0CRktNXxAtqEVZPj16Pi74OtAhvhE6Q==}
     engines: {node: ^16.13 || >=18}
 
-  '@wdio/utils@8.40.0':
-    resolution: {integrity: sha512-P9b6XbRDRfCsZvdA70VYQrnsbkDVwEXlAGe4v4hcdgFxz81w+k4IX5bFUb7IB33E+3EZ/GhJWVU3QHgI9Y0u6w==}
+  '@wdio/utils@8.40.2':
+    resolution: {integrity: sha512-leYcCUSaAdLUCVKqRKNgMCASPOUo/VvOTKETiZ/qpdY2azCBt/KnLugtiycCzakeYg6Kp+VIjx5fkm0M7y4qhA==}
     engines: {node: ^16.13 || >=18}
 
   '@yeger/debounce@2.0.9':
@@ -4600,7 +4594,7 @@ packages:
     engines: {node: '>=8.0.0'}
 
   buffer-equal-constant-time@1.0.1:
-    resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
+    resolution: {integrity: sha1-+OcRMvf/5uAaXJaXpMbz5I1cyBk=}
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -4892,7 +4886,7 @@ packages:
     resolution: {integrity: sha512-7CEBgcMjVmitjYo5q8JTJVra6X5mQ20uTThdK+0kR7UEaDrAWEQcRiBtWJzga4eRpP6afNwwLsX2SET2JhVB1Q==}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   confbox@0.1.7:
     resolution: {integrity: sha512-uJcB/FKZtBMCJpK8MQji6bJHgu1tixKPxRLeGkNzBoOZzpnZUJm0jm2/sBDWcuBx1dYgxV4JU+g5hmNxCyAmdA==}
@@ -4916,7 +4910,7 @@ packages:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
   cookie-signature@1.0.6:
-    resolution: {integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==}
+    resolution: {integrity: sha1-4wOogrNCzD7oylE6eZmXNNqzriw=}
 
   cookie@0.5.0:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
@@ -5294,7 +5288,7 @@ packages:
     hasBin: true
 
   ee-first@1.1.1:
-    resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+    resolution: {integrity: sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=}
 
   ejs@3.1.9:
     resolution: {integrity: sha512-rC+QVNMJWv+MtPgkt0y+0rVEIdbtxVADApW9JXrUVlzHetgcyczP/E7DJmWJ4fJCZF2cPcBk0laWO9ZHMG3DmQ==}
@@ -5984,7 +5978,7 @@ packages:
     hasBin: true
 
   github-from-package@0.0.0:
-    resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
+    resolution: {integrity: sha1-l/tdlr/eiXMxPyDoKI75oWf6ZM4=}
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -6884,7 +6878,7 @@ packages:
     resolution: {integrity: sha512-GaqWWShW4kv/G9IEucWScBx9G1/vsFZZJUO+tD26M8J8z3Kw5RDQjaoZe03YAClgeS/SWPOcb4nkFBTEi5DUEA==}
 
   media-typer@0.3.0:
-    resolution: {integrity: sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==}
+    resolution: {integrity: sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g=}
     engines: {node: '>= 0.6'}
 
   memfs@4.8.2:
@@ -6896,7 +6890,7 @@ packages:
     engines: {node: '>=12.13'}
 
   merge-descriptors@1.0.1:
-    resolution: {integrity: sha512-cCi6g3/Zr1iqQi6ySbseM1Xvooa98N0w31jzUYrXPX2xqObmFGHJ0tQ5u74H3mVh7wLouTseZyYIq39g8cNp1w==}
+    resolution: {integrity: sha1-sAqqVW3YtEVoFQ7J0blT8/kMu2E=}
 
   merge-stream@2.0.0:
     resolution: {integrity: sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==}
@@ -8447,6 +8441,9 @@ packages:
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
+  tinyexec@0.1.3:
+    resolution: {integrity: sha512-4fWrRHlTfAhQi3ORSSLVA7OUAA7KwV9eJnRekNZsswe0JXv4kHe9ma91CW6MikrycIXkbmtFOwc6GzcajyPq5g==}
+
   tinyglobby@0.2.0:
     resolution: {integrity: sha512-+clyYQfAnNlt5a1x7CCQ6RLuTIztDfDAl6mAANvqRUlz6sVy5znCzJOhais8G6oyUyoeeaorLopO3HptVP8niA==}
     engines: {node: '>=12.0.0'}
@@ -8834,7 +8831,7 @@ packages:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
   utils-merge@1.0.1:
-    resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
+    resolution: {integrity: sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM=}
     engines: {node: '>= 0.4.0'}
 
   uuid@9.0.1:
@@ -9082,8 +9079,8 @@ packages:
     resolution: {integrity: sha512-Kc3+SfiH4ufyrIht683VT2vnJocx0pfH8rYdyPvEh1b2OYewtFTHK36k9rBDHZiBmk6jcSXs4M2xeFgOuon9Lg==}
     engines: {node: ^16.13 || >=18}
 
-  webdriver@8.40.0:
-    resolution: {integrity: sha512-pAuU8FbFXox837UgxjC2yT4s+goLBcqohdCSZJ1f1wG/XMsgjDHmouU6+f1SHHG7/I0IDGEZIsRD01RM57F3OA==}
+  webdriver@8.40.2:
+    resolution: {integrity: sha512-GoRR94m3yL8tWC9Myf+xIBSdVK8fi1ilZgEZZaYT8+XIWewR02dvrC6rml+/2ZjXUQzeee0RFGDwk9IC7cyYrg==}
     engines: {node: ^16.13 || >=18}
 
   webdriverio@8.32.2:
@@ -9104,8 +9101,8 @@ packages:
       devtools:
         optional: true
 
-  webdriverio@8.40.0:
-    resolution: {integrity: sha512-AYFLdfVt3wcDdnyxRDBlysOgB3XryLZrZdmtjUU842IyMcoV4Cq3SdVgz9aj9tskSeIJ3G37KgDEf5znnd5f3Q==}
+  webdriverio@8.40.2:
+    resolution: {integrity: sha512-6yuzUlE064qNuMy98Du1+8QHbXk0st8qTWF7MDZRgYK19FGoy+KhQbaUv1wlFJuFHM0PiAYuduTURL4ub6HvzQ==}
     engines: {node: ^16.13 || >=18}
     peerDependencies:
       devtools: ^8.14.0
@@ -9617,7 +9614,7 @@ snapshots:
       '@babel/helper-compilation-targets': 7.23.6
       '@babel/helper-module-transforms': 7.24.5(@babel/core@7.24.5)
       '@babel/helpers': 7.24.5
-      '@babel/parser': 7.24.8
+      '@babel/parser': 7.25.3
       '@babel/template': 7.24.0
       '@babel/traverse': 7.24.5
       '@babel/types': 7.24.7
@@ -12467,14 +12464,6 @@ snapshots:
       estree-walker: 2.0.2
       source-map-js: 1.2.0
 
-  '@vue/compiler-core@3.4.33':
-    dependencies:
-      '@babel/parser': 7.25.3
-      '@vue/shared': 3.4.33
-      entities: 4.5.0
-      estree-walker: 2.0.2
-      source-map-js: 1.2.0
-
   '@vue/compiler-core@3.4.35':
     dependencies:
       '@babel/parser': 7.24.8
@@ -12495,11 +12484,6 @@ snapshots:
     dependencies:
       '@vue/compiler-core': 3.4.26
       '@vue/shared': 3.4.26
-
-  '@vue/compiler-dom@3.4.33':
-    dependencies:
-      '@vue/compiler-core': 3.4.33
-      '@vue/shared': 3.4.33
 
   '@vue/compiler-dom@3.4.35':
     dependencies:
@@ -12586,8 +12570,8 @@ snapshots:
     dependencies:
       '@volar/language-core': 1.10.4
       '@volar/source-map': 1.10.4
-      '@vue/compiler-dom': 3.4.33
-      '@vue/shared': 3.4.33
+      '@vue/compiler-dom': 3.4.35
+      '@vue/shared': 3.4.35
       computeds: 0.0.1
       minimatch: 9.0.5
       muggle-string: 0.3.1
@@ -12676,8 +12660,6 @@ snapshots:
   '@vue/shared@3.4.26': {}
 
   '@vue/shared@3.4.31': {}
-
-  '@vue/shared@3.4.33': {}
 
   '@vue/shared@3.4.35': {}
 
@@ -12780,11 +12762,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/config@8.40.0':
+  '@wdio/config@8.40.2':
     dependencies:
       '@wdio/logger': 8.38.0
       '@wdio/types': 8.39.0
-      '@wdio/utils': 8.40.0
+      '@wdio/utils': 8.40.2
       decamelize: 6.0.0
       deepmerge-ts: 5.1.0
       glob: 10.4.1
@@ -12858,7 +12840,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/utils@8.40.0':
+  '@wdio/utils@8.40.2':
     dependencies:
       '@puppeteer/browsers': 1.7.0
       '@wdio/logger': 8.38.0
@@ -17685,6 +17667,8 @@ snapshots:
 
   tinybench@2.9.0: {}
 
+  tinyexec@0.1.3: {}
+
   tinyglobby@0.2.0:
     dependencies:
       fdir: 6.2.0(picomatch@4.0.2)
@@ -18427,15 +18411,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriver@8.40.0:
+  webdriver@8.40.2:
     dependencies:
       '@types/node': 20.14.14
       '@types/ws': 8.5.12
-      '@wdio/config': 8.40.0
+      '@wdio/config': 8.40.2
       '@wdio/logger': 8.38.0
       '@wdio/protocols': 8.38.0
       '@wdio/types': 8.39.0
-      '@wdio/utils': 8.40.0
+      '@wdio/utils': 8.40.2
       deepmerge-ts: 5.1.0
       got: 12.6.1
       ky: 0.33.3
@@ -18512,15 +18496,15 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  webdriverio@8.40.0:
+  webdriverio@8.40.2:
     dependencies:
       '@types/node': 20.14.13
-      '@wdio/config': 8.40.0
+      '@wdio/config': 8.40.2
       '@wdio/logger': 8.38.0
       '@wdio/protocols': 8.38.0
       '@wdio/repl': 8.24.12
       '@wdio/types': 8.39.0
-      '@wdio/utils': 8.40.0
+      '@wdio/utils': 8.40.2
       archiver: 7.0.1
       aria-query: 5.3.0
       css-shorthand-properties: 1.1.1
@@ -18538,7 +18522,7 @@ snapshots:
       resq: 1.11.0
       rgb2hex: 0.2.5
       serialize-error: 11.0.2
-      webdriver: 8.40.0
+      webdriver: 8.40.2
     transitivePeerDependencies:
       - bufferutil
       - encoding
