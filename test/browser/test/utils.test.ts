@@ -13,7 +13,7 @@ it('utils package correctly uses loupe', async () => {
 })
 
 test('prints default document', () => {
-  expect(prettyDOM()).toMatchSnapshot()
+  expect(stripAnsi(prettyDOM())).toMatchSnapshot()
 
   const div = document.createElement('div')
   div.innerHTML = '<span>hello</span>'
