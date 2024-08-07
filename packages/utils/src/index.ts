@@ -29,6 +29,7 @@ export {
   inspect,
   objDisplay,
 } from './display'
+export type { StringifyOptions } from './display'
 export {
   positionToOffset,
   offsetToLineNumber,

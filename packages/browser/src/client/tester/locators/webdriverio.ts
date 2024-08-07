@@ -9,6 +9,7 @@ import {
   getByTitleSelector,
 } from 'ivya'
 import { convertElementToCssSelector } from '../../utils'
+import { getElementError } from '../public-utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -40,14 +41,14 @@ page.extend({
 })
 
 class WebdriverIOLocator extends Locator {
-  constructor(protected _pwSelector: string) {
+  constructor(protected _pwSelector: string, protected _container?: Element) {
     super()
   }
 
   override get selector() {
     const selectors = this.elements().map(element => convertElementToCssSelector(element))
     if (!selectors.length) {
-      throw new Error(`element not found: ${this._pwSelector}`)
+      throw getElementError(this._pwSelector, this._container || document.documentElement)
     }
     return selectors.join(', ')
   }
@@ -58,11 +59,11 @@ class WebdriverIOLocator extends Locator {
   }
 
   protected locator(selector: string) {
-    return new WebdriverIOLocator(`${this._pwSelector} >> ${selector}`)
+    return new WebdriverIOLocator(`${this._pwSelector} >> ${selector}`, this._container)
   }
 
   protected elementLocator(element: Element) {
-    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
+    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
   }
 }
 
