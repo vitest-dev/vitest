@@ -9,5 +9,6 @@ test('locators work correctly', async () => {
 
   expect(stderr).toBe('')
   expect(stdout).toContain('✓ blog.test.tsx')
-  expect(stdout).toContain('1 passed (1)')
+  expect(stdout).toContain('✓ query.test.ts')
+  expect(stdout).toContain('Test Files  2 passed (2)')
 })
