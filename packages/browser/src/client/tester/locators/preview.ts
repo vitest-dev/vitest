@@ -10,6 +10,7 @@ import {
   getByTitleSelector,
 } from 'ivya'
 import { convertElementToCssSelector } from '../../utils'
+import { getElementError } from '../public-utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -36,19 +37,22 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new PreviewLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
   },
 })
 
 class PreviewLocator extends Locator {
-  constructor(protected _pwSelector: string, protected _forceElement?: Element) {
+  constructor(protected _pwSelector: string, protected _container?: Element) {
     super()
   }
 
   override get selector() {
     const selectors = this.elements().map(element => convertElementToCssSelector(element))
     if (!selectors.length) {
-      throw new Error(`element not found: ${this._pwSelector}`)
+      throw getElementError(this._pwSelector, this._container || document.documentElement)
     }
     return selectors.join(', ')
   }
@@ -100,10 +104,13 @@ class PreviewLocator extends Locator {
   }
 
   protected locator(selector: string) {
-    return new PreviewLocator(`${this._pwSelector} >> ${selector}`)
+    return new PreviewLocator(`${this._pwSelector} >> ${selector}`, this._container)
   }
 
   protected elementLocator(element: Element) {
-    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new PreviewLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
   }
 }

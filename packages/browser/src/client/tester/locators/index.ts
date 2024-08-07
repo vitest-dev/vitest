@@ -12,7 +12,6 @@ import type { BrowserRPC } from '@vitest/browser/client'
 import {
   Ivya,
   type ParsedSelector,
-  asLocator,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -24,6 +23,7 @@ import {
 import type { WorkerGlobalState } from 'vitest'
 import type { BrowserRunnerState } from '../../utils'
 import { getBrowserState, getWorkerState } from '../../utils'
+import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine = Ivya.create({
@@ -45,8 +45,8 @@ export abstract class Locator {
   public abstract selector: string
 
   private _parsedSelector: ParsedSelector | undefined
+  protected _container?: Element | undefined
   protected _pwSelector?: string | undefined
-  protected _forceElement?: Element | undefined
 
   public click(options: UserEventClickOptions = {}): Promise<void> {
     return this.triggerCommand<void>('__vitest_click', this.selector, options)
@@ -143,9 +143,6 @@ export abstract class Locator {
   }
 
   public query(): Element | null {
-    if (this._forceElement) {
-      return this._forceElement
-    }
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
     return selectorEngine.querySelector(parsedSelector, document.documentElement, true)
   }
@@ -153,15 +150,12 @@ export abstract class Locator {
   public element(): Element {
     const element = this.query()
     if (!element) {
-      throw new Error(`element not found: ${asLocator('javascript', this._pwSelector || this.selector)}`)
+      throw getElementError(this._pwSelector || this.selector, this._container || document.documentElement)
     }
     return element
   }
 
   public elements(): Element[] {
-    if (this._forceElement) {
-      return [this._forceElement]
-    }
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
     return selectorEngine.querySelectorAll(parsedSelector, document.documentElement)
   }

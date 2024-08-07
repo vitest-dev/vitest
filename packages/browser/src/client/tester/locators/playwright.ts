@@ -34,20 +34,26 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new PlaywrightLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
   },
 })
 
 class PlaywrightLocator extends Locator {
-  constructor(public selector: string, protected _forceElement?: Element) {
+  constructor(public selector: string, protected _container?: Element) {
     super()
   }
 
   protected locator(selector: string) {
-    return new PlaywrightLocator(`${this.selector} >> ${selector}`)
+    return new PlaywrightLocator(`${this.selector} >> ${selector}`, this._container)
   }
 
   protected elementLocator(element: Element) {
-    return new PlaywrightLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new PlaywrightLocator(
+      selectorEngine.generateSelectorSimple(element),
+      element,
+    )
   }
 }

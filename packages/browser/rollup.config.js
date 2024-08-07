@@ -66,6 +66,7 @@ export default () =>
         'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
         'locators/preview': './src/client/tester/locators/preview.ts',
         'locators/index': './src/client/tester/locators/index.ts',
+        'utils': './src/client/tester/public-utils.ts',
       },
       output: {
         dir: 'dist',
@@ -129,9 +130,11 @@ export default () =>
       ],
     },
     {
-      input: './src/client/tester/locators/index.ts',
+      input: {
+        'locators/index': './src/client/tester/locators/index.ts',
+      },
       output: {
-        file: 'dist/locators/index.d.ts',
+        dir: 'dist',
         format: 'esm',
       },
       external,
