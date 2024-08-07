@@ -3,31 +3,35 @@
 exports[`prints default document 1`] = `"[36m<body />[39m"`;
 
 exports[`prints default document 2`] = `
-"[36m<body>[39m
-  [36m<div>[39m
-    [36m<span>[39m
-      [0mhello[0m
-    [36m</span>[39m
-  [36m</div>[39m
-[36m</body>[39m"
+"<body>
+  <div>
+    <span>
+      hello
+    </span>
+  </div>
+</body>"
 `;
 
 exports[`prints the element 1`] = `
-"[36m<div>[39m
-  [36m<span>[39m
-    [0mhello[0m
-  [36m</span>[39m
-[36m</div>[39m"
+"<body>
+  <div>
+    <span>
+      hello
+    </span>
+  </div>
+</body>"
 `;
 
 exports[`prints the element with attributes 1`] = `
-"[36m<div>[39m
-  [36m<span[39m
-    [33mclass[39m=[32m"some-name"[39m
-    [33mdata-test-id[39m=[32m"33"[39m
-    [33mid[39m=[32m"5"[39m
-  [36m>[39m
-    [0mhello[0m
-  [36m</span>[39m
-[36m</div>[39m"
+"<body>
+  <div>
+    <span
+      class="some-name"
+      data-test-id="33"
+      id="5"
+    >
+      hello
+    </span>
+  </div>
+</body>"
 `;

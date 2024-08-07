@@ -1,5 +1,6 @@
 import { inspect } from 'vitest/utils'
 import { afterEach, expect, it, test } from 'vitest'
+import stripAnsi from 'strip-ansi'
 
 import { prettyDOM } from '@vitest/browser/utils'
 
@@ -18,7 +19,7 @@ test('prints default document', () => {
   div.innerHTML = '<span>hello</span>'
   document.body.append(div)
 
-  expect(prettyDOM()).toMatchSnapshot()
+  expect(stripAnsi(prettyDOM())).toMatchSnapshot()
 })
 
 test('prints the element', () => {
@@ -26,7 +27,7 @@ test('prints the element', () => {
   div.innerHTML = '<span>hello</span>'
   document.body.append(div)
 
-  expect(prettyDOM(div)).toMatchSnapshot()
+  expect(stripAnsi(prettyDOM())).toMatchSnapshot()
 })
 
 test('prints the element with attributes', () => {
@@ -34,5 +35,5 @@ test('prints the element with attributes', () => {
   div.innerHTML = '<span class="some-name" data-test-id="33" id="5">hello</span>'
   document.body.append(div)
 
-  expect(prettyDOM(div)).toMatchSnapshot()
+  expect(stripAnsi(prettyDOM())).toMatchSnapshot()
 })
