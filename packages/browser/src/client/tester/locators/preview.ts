@@ -36,12 +36,12 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new PreviewLocator(selectorEngine.generateSelectorSimple(element))
   },
 })
 
 class PreviewLocator extends Locator {
-  constructor(protected _pwSelector: string, protected _forceElement?: Element) {
+  constructor(protected _pwSelector: string) {
     super()
   }
 
@@ -104,6 +104,6 @@ class PreviewLocator extends Locator {
   }
 
   protected elementLocator(element: Element) {
-    return new PreviewLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new PreviewLocator(selectorEngine.generateSelectorSimple(element))
   }
 }

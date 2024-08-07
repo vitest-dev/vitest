@@ -35,12 +35,12 @@ page.extend({
   },
 
   elementLocator(element: Element) {
-    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
   },
 })
 
 class WebdriverIOLocator extends Locator {
-  constructor(protected _pwSelector: string, protected _forceElement?: Element) {
+  constructor(protected _pwSelector: string) {
     super()
   }
 
@@ -62,7 +62,7 @@ class WebdriverIOLocator extends Locator {
   }
 
   protected elementLocator(element: Element) {
-    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element), element)
+    return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
   }
 }
 
