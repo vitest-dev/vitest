@@ -1,4 +1,5 @@
 import { SpyModule, collectTests, setupCommonEnv, startTests } from 'vitest/browser'
+import { page } from '@vitest/browser/context'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
@@ -7,6 +8,8 @@ import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { VitestBrowserClientMocker } from './mocker'
 import { setupExpectDom } from './expect-element'
+
+const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 
 const url = new URL(location.href)
 const reloadStart = url.searchParams.get('__reloadStart')
@@ -123,6 +126,18 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
     }
   }
   finally {
+    try {
+      if (cleanupSymbol in page) {
+        (page[cleanupSymbol] as any)()
+      }
+    }
+    catch (error: any) {
+      await client.rpc.onUnhandledError({
+        name: error.name,
+        message: error.message,
+        stack: String(error.stack),
+      }, 'Cleanup Error')
+    }
     state.environmentTeardownRun = true
     debug('finished running tests')
     done(files)
