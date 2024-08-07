@@ -45,7 +45,7 @@
       "default": "./dist/locators/index.js"
     },
     "./utils": {
-      "types": "./dist/utils.d.ts",
+      "types": "./utils.d.ts",
       "default": "./dist/utils.js"
     },
     "./*": "./*"

@@ -132,7 +132,6 @@ export default () =>
     {
       input: {
         'locators/index': './src/client/tester/locators/index.ts',
-        'utils': './src/client/tester/public-utils.ts',
       },
       output: {
         dir: 'dist',
