@@ -1,5 +1,9 @@
 import { page } from '@vitest/browser/context';
-import { expect, test } from 'vitest';
+import { afterEach, expect, test } from 'vitest';
+
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 
 test('can find a body element', () => {
   expect(page.elementLocator(document.body).element()).toBe(document.body);

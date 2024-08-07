@@ -34,7 +34,7 @@ export function debug(
 
 export function prettyDOM(
   dom?: Element | Locator | undefined | null,
-  maxLength: number = import.meta.env.DEBUG_PRINT_LIMIT ?? 7000,
+  maxLength: number = Number(import.meta.env.DEBUG_PRINT_LIMIT ?? 7000),
   prettyFormatOptions: PrettyDOMOptions = {},
 ): string {
   if (maxLength === 0) {
