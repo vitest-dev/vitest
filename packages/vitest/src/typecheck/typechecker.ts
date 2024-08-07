@@ -1,6 +1,6 @@
 import { rm } from 'node:fs/promises'
 import { performance } from 'node:perf_hooks'
-import type { ExecaChildProcess } from 'execa'
+import type { Subprocess } from 'execa'
 import { execa } from 'execa'
 import { basename, extname, resolve } from 'pathe'
 import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
@@ -50,7 +50,7 @@ export class Typechecker {
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
   private allowJs?: boolean
-  private process?: ExecaChildProcess
+  private process?: Subprocess
 
   protected files: string[] = []
 

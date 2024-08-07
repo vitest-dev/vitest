@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
 import { execa } from 'execa'
-import type { ExecaReturnValue } from 'execa'
+import type { Result } from 'execa'
 
 export interface GitOptions {
   changedSince?: string | boolean
@@ -12,7 +12,7 @@ export class VitestGit {
   constructor(private cwd: string) {}
 
   private async resolveFilesWithGitCommand(args: string[]): Promise<string[]> {
-    let result: ExecaReturnValue
+    let result: Result
 
     try {
       result = await execa('git', args, { cwd: this.root })
@@ -23,7 +23,7 @@ export class VitestGit {
       throw e
     }
 
-    return result.stdout
+    return (result.stdout as string)
       .split('\n')
       .filter(s => s !== '')
       .map(changedPath => resolve(this.root, changedPath))
