@@ -6,6 +6,7 @@ import type {
 
 interface Loader {
   executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
+  isBrowser?: boolean
 }
 
 export const CoverageProviderMap: Record<string, string> = {
@@ -24,9 +25,13 @@ async function resolveCoverageProviderModule(
   const provider = options.provider
 
   if (provider === 'v8' || provider === 'istanbul') {
-    const { default: coverageModule } = await loader.executeId(
-      CoverageProviderMap[provider],
-    )
+    let builtInModule = CoverageProviderMap[provider]
+
+    if (provider === 'v8' && loader.isBrowser) {
+      builtInModule += '/browser'
+    }
+
+    const { default: coverageModule } = await loader.executeId(builtInModule)
 
     if (!coverageModule) {
       throw new Error(

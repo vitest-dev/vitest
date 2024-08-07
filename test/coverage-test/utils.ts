@@ -96,6 +96,10 @@ export function isV8Provider() {
   return process.env.COVERAGE_PROVIDER === 'v8'
 }
 
+export function isBrowser() {
+  return process.env.COVERAGE_BROWSER === 'true'
+}
+
 export function normalizeURL(importMetaURL: string) {
   return normalize(fileURLToPath(importMetaURL))
 }
