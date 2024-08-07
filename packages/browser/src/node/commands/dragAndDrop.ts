@@ -12,8 +12,8 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const frame = await context.frame()
     await frame.dragAndDrop(
-      `css=${source}`,
-      `css=${target}`,
+      source,
+      target,
       {
         timeout: 1000,
         ...options_,

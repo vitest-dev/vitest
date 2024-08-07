@@ -121,6 +121,9 @@ export interface SerializedConfig {
       width: number
       height: number
     }
+    locators: {
+      testIdAttribute: string
+    }
     screenshotFailures: boolean
   }
   standalone: boolean

@@ -72,7 +72,10 @@ export async function resolveTester(
     __VITEST_TITLE__: 'Vitest Browser Tester',
     __VITEST_SCRIPTS__: server.testerScripts,
     __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
-    __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherPath}"></script>`,
+    __VITEST_INTERNAL_SCRIPTS__: [
+      `<script type="module" src="${server.errorCatcherUrl}"></script>`,
+      server.locatorsUrl ? `<script type="module" src="${server.locatorsUrl}"></script>` : '',
+    ].join('\n'),
     __VITEST_APPEND__:
       `<script type="module">
 __vitest_browser_runner__.runningFiles = ${tests}

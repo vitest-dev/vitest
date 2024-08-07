@@ -13,13 +13,13 @@ export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const value = userValues as any as (string | { element: string })[]
     const { iframe } = context
-    const selectElement = iframe.locator(`css=${selector}`)
+    const selectElement = iframe.locator(selector)
 
     const values = await Promise.all(value.map(async (v) => {
       if (typeof v === 'string') {
         return v
       }
-      const elementHandler = await iframe.locator(`css=${v.element}`).elementHandle()
+      const elementHandler = await iframe.locator(v.element).elementHandle()
       if (!elementHandler) {
         throw new Error(`Element not found: ${v.element}`)
       }

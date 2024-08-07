@@ -130,6 +130,17 @@ export interface BrowserConfigOptions {
   }
 
   /**
+   * Locator options
+   */
+  locators?: {
+    /**
+     * Attribute used to locate elements by test id
+     * @default 'data-testid'
+     */
+    testIdAttribute?: string
+  }
+
+  /**
    * Directory where screenshots will be saved when page.screenshot() is called
    * If not set, all screenshots are saved to __screenshots__ directory in the same folder as the test file.
    * If this is set, it will be resolved relative to the project root.
@@ -241,4 +252,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     height: number
   }
   screenshotFailures: boolean
+  locators: {
+    testIdAttribute: string
+  }
 }

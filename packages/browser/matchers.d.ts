@@ -1,3 +1,4 @@
+import type { Locator } from '@vitest/browser/context'
 import type jsdomMatchers from './jest-dom.js'
 import type { Assertion } from 'vitest'
 
@@ -15,7 +16,7 @@ declare module 'vitest' {
   type PromisifyDomAssertion<T> = Promisify<Assertion<T>>
 
   interface ExpectStatic {
-    element: <T extends Element>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<T>>
+    element: <T extends Element | Locator>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element>>
   }
 }
 
