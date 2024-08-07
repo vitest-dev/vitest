@@ -147,7 +147,7 @@ export abstract class Locator {
       return this._forceElement
     }
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelector(parsedSelector, document.body, true)
+    return selectorEngine.querySelector(parsedSelector, document.documentElement, true)
   }
 
   public element(): Element {
@@ -163,7 +163,7 @@ export abstract class Locator {
       return [this._forceElement]
     }
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
-    return selectorEngine.querySelectorAll(parsedSelector, document.body)
+    return selectorEngine.querySelectorAll(parsedSelector, document.documentElement)
   }
 
   public all(): Locator[] {
