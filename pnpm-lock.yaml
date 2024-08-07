@@ -474,8 +474,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       ivya:
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.1.1
+        version: 1.1.1
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -6437,8 +6437,8 @@ packages:
     resolution: {integrity: sha512-BewmUXImeuRk2YY0PVbxgKAysvhRPUQE0h5QRM++nVWyubKGV0l8qQ5op8+B2DOmwSe63Jivj0BjkPQVf8fP5g==}
     engines: {node: '>=8'}
 
-  ivya@1.1.0:
-    resolution: {integrity: sha512-M9JrukbVtwVOK+rbCka+H1TFO4ZMcdT40idmGOXGjFR+B+D16N6E2POIA1vmPLzyYBKA4nFUr8sq4ojGi5DWxQ==}
+  ivya@1.1.1:
+    resolution: {integrity: sha512-Rv2L87TidfbcSfunelwN9jrhTpqSmP0+DvdUocpwIpukkOG0Bks9U2RAedk5Ry4DWpSfrPqJYEPo9+L91OF+6g==}
 
   jackspeak@3.4.0:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
@@ -15204,7 +15204,7 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  ivya@1.1.0: {}
+  ivya@1.1.1: {}
 
   jackspeak@3.4.0:
     dependencies:
