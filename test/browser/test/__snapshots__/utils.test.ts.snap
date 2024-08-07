@@ -1,15 +1,9 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`prints default document 1`] = `
-"[36m<body[39m
-  [33mdata-vitest-body[39m=[32m""[39m
-[36m/>[39m"
-`;
+exports[`prints default document 1`] = `"[36m<body />[39m"`;
 
 exports[`prints default document 2`] = `
-"[36m<body[39m
-  [33mdata-vitest-body[39m=[32m""[39m
-[36m>[39m
+"[36m<body>[39m
   [36m<div>[39m
     [36m<span>[39m
       [0mhello[0m
