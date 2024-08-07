@@ -185,7 +185,6 @@
     "chai-subset": "^1.6.0",
     "cli-truncate": "^4.0.0",
     "expect-type": "^0.19.0",
-    "fast-glob": "^3.3.2",
     "find-up": "^6.3.0",
     "flatted": "^3.3.1",
     "get-tsconfig": "^4.7.6",
@@ -198,6 +197,7 @@
     "prompts": "^2.4.2",
     "strip-ansi": "^7.1.0",
     "strip-literal": "^2.1.0",
+    "tinyglobby": "^0.2.2",
     "ws": "^8.18.0"
   }
 }

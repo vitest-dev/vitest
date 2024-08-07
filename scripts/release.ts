@@ -1,11 +1,11 @@
 #!/usr/bin/env zx
 
 import { versionBump } from 'bumpp'
-import glob from 'fast-glob'
+import { glob } from 'tinyglobby'
 import { $ } from 'zx'
 
 try {
-  const packages = await glob(['package.json', './packages/*/package.json'])
+  const packages = await glob(['package.json', './packages/*/package.json'], { expandDirectories: false })
 
   console.log('Bumping versions in packages:', packages.join(', '), '\n')
 

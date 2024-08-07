@@ -4,7 +4,7 @@ import { isMainThread } from 'node:worker_threads'
 import type { ViteDevServer } from 'vite'
 import { mergeConfig } from 'vite'
 import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
-import fg from 'fast-glob'
+import { type GlobOptions, glob } from 'tinyglobby'
 import mm from 'micromatch'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
@@ -272,16 +272,16 @@ export class Vitest {
       }
     }
 
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       absolute: true,
       dot: true,
       onlyFiles: false,
-      markDirectories: true,
+      expandDirectories: false,
       cwd: this.config.root,
       ignore: ['**/node_modules/**', '**/*.timestamp-*'],
     }
 
-    const workspacesFs = await fg(workspaceGlobMatches, globOptions)
+    const workspacesFs = await glob(workspaceGlobMatches, globOptions)
     const resolvedWorkspacesPaths = await Promise.all(workspacesFs.filter((file) => {
       if (file.endsWith('/')) {
         // if it's a directory, check that we don't already have a workspace with a config inside

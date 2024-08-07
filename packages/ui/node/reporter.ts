@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { basename, dirname, relative, resolve } from 'pathe'
+import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
-import fg from 'fast-glob'
 import { stringify } from 'flatted'
 import type {
   File,
@@ -111,7 +111,7 @@ export default class HTMLReporter implements Reporter {
     await fs.writeFile(metaFile, data, 'base64')
     const ui = resolve(distDir, 'client')
     // copy ui
-    const files = fg.sync('**/*', { cwd: ui })
+    const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
     await Promise.all(
       files.map(async (f) => {
         if (f === 'index.html') {
