@@ -102,7 +102,7 @@ export async function readBlobs(
 
   if (!blobs.length) {
     throw new Error(
-      `vitest.mergeReports() requires at least one blob file paths in the config`,
+      `vitest.mergeReports() requires at least one blob file in "${blobsDirectory}" directory, but none were found`,
     )
   }
 
