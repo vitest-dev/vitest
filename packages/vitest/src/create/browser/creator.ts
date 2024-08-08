@@ -277,7 +277,7 @@ async function generateWorkspaceFile(options: {
     `  },`,
     `])`,
     '',
-  ].filter(c => c != null).join('\n')
+  ].filter(c => typeof c === 'string').join('\n')
   await writeFile(options.configPath, workspaceContent)
 }
 
@@ -308,7 +308,7 @@ async function generateFrameworkConfigFile(options: {
     `  },`,
     `})`,
     '',
-  ].join('\n')
+  ].filter(t => typeof t === 'string').join('\n')
   // this file is only generated if there is already NO root config which is an edge case
   await writeFile(options.configPath, configContent)
 }
