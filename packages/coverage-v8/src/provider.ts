@@ -260,6 +260,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       coverageMap.merge(await transformCoverage(converted))
     }
 
+    if (this.options.excludeAfterRemap) {
+      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+    }
+
     return coverageMap
   }
 
