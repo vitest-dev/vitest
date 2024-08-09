@@ -105,13 +105,13 @@ function getFramework(): prompt.Choice[] {
 function getFrameworkTestPackage(framework: string) {
   switch (framework) {
     case 'vanilla':
-      return '@testing-library/dom'
+      return null
     case 'vue':
-      return '@testing-library/vue'
+      return 'vitest-browser-vue'
     case 'svelte':
-      return '@testing-library/svelte'
+      return 'vitest-browser-svelte'
     case 'react':
-      return '@testing-library/react'
+      return 'vitest-browser-react'
     case 'preact':
       return '@testing-library/preact'
     case 'solid':
@@ -431,8 +431,12 @@ export async function create() {
 
   const dependenciesToInstall = [
     '@vitest/browser',
-    getFrameworkTestPackage(framework),
   ]
+
+  const frameworkPackage = getFrameworkTestPackage(framework)
+  if (frameworkPackage) {
+    dependenciesToInstall.push(frameworkPackage)
+  }
 
   const providerPkg = getProviderPackageNames(provider)
   if (providerPkg.pkg) {

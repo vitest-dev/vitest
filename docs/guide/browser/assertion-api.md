@@ -68,14 +68,14 @@ Tests in the browser might fail inconsistently due to their asynchronous nature.
 
 ```ts
 import { expect, test } from 'vitest'
-import { screen } from '@testing-library/dom'
+import { page } from '@vitest/browser/context'
 
 test('error banner is rendered', async () => {
   triggerError()
 
   // @testing-library provides queries with built-in retry-ability
   // It will try to find the banner until it's rendered
-  const banner = await screen.findByRole('alert', {
+  const banner = page.getByRole('alert', {
     name: /error/i,
   })
 
