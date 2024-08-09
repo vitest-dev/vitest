@@ -52,6 +52,10 @@ vi.mock(import('./path/to/module.js'), async (importOriginal) => {
 
 Under the hood, Vitest still operates on a string and not a module object.
 
+If you are using TypeScript with `paths` aliases configured in `tsconfig.json` however, the compiler won't be able to correctly resolve import types.
+In order to make it work, make sure to replace all aliased imports, with their corresponding relative paths.
+Eg. use `import('./path/to/module.js')` instead of `import('@/module')`.
+
 ::: warning
 `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you write it (be it inside `beforeEach` or `test`), it will actually be called before that.
 

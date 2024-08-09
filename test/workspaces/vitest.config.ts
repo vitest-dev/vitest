@@ -16,5 +16,8 @@ export default defineConfig({
       CONFIG_VAR: 'root',
       CONFIG_OVERRIDE: 'root',
     },
+    provide: {
+      globalConfigValue: true,
+    },
   },
 })

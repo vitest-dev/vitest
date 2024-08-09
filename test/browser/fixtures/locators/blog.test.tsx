@@ -1,12 +1,9 @@
 import { expect, test } from 'vitest'
-import { render } from '@testing-library/react'
 import { page } from '@vitest/browser/context'
 import Blog from '../../src/blog-app/blog'
 
 test('renders blog posts', async () => {
-  const { container } = render(<Blog />)
-
-  const screen = page.elementLocator(container)
+  const screen = page.render(<Blog />)
 
   await expect.element(screen.getByRole('heading', { name: 'Blog' })).toBeInTheDocument()
 

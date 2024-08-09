@@ -52,7 +52,7 @@ class PreviewLocator extends Locator {
   override get selector() {
     const selectors = this.elements().map(element => convertElementToCssSelector(element))
     if (!selectors.length) {
-      throw getElementError(this._pwSelector, this._container || document.documentElement)
+      throw getElementError(this._pwSelector, this._container || document.body)
     }
     return selectors.join(', ')
   }

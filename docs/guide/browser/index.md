@@ -341,110 +341,107 @@ Headless mode is not available by default. You need to use either [`playwright`]
 
 ## Examples
 
-Browser Mode is framework agnostic so it doesn't provide any method to render your components. However, you should be able to use your framework's test utils packages.
+Vitest provides packages to render components for several popular frameworks out of the box:
 
-We recommend using `testing-library` packages depending on your framework:
+- [`vitest-browser-vue`](https://github.com/vitest-dev/vitest-browser-vue) to render [vue](https://vuejs.org) components
+- [`vitest-browser-svelte`](https://github.com/vitest-dev/vitest-browser-svelte) to render [svelte](https://svelte.dev) components
+- [`vitest-browser-react`](https://github.com/vitest-dev/vitest-browser-react) to render [react](https://react.dev) components
 
-- [`@testing-library/dom`](https://testing-library.com/docs/dom-testing-library/intro) if you don't use a framework
-- [`@testing-library/vue`](https://testing-library.com/docs/vue-testing-library/intro) to render [vue](https://vuejs.org) components
-- [`@testing-library/svelte`](https://testing-library.com/docs/svelte-testing-library/intro) to render [svelte](https://svelte.dev) components
-- [`@testing-library/react`](https://testing-library.com/docs/react-testing-library/intro) to render [react](https://react.dev) components
-- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
-- [`solid-testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
-- [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
+If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
-Besides rendering components and querying elements using `@testing-library/your-framework`, you will also need to make assertions. Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
+Besides rendering components and locating elements, you will also need to make assertions. Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
 
 ```ts
 import { expect } from 'vitest'
+import { page } from '@vitest/browser/context'
 // element is rendered correctly
-await expect.element(screen.getByText('Hello World')).toBeInTheDocument()
+await expect.element(page.getByText('Hello World')).toBeInTheDocument()
 ```
 
 Vitest exposes a [Context API](/guide/browser/context) with a small set of utilities that might be useful to you in tests. For example, if you need to make an interaction, like clicking an element or typing text into an input, you can use `userEvent` from `@vitest/browser/context`. Read more at the [Interactivity API](/guide/browser/interactivity-api).
 
 ```ts
-import { userEvent } from '@vitest/browser/context'
-await userEvent.type(screen.getByLabelText(/username/i), 'Alice')
+import { page, userEvent } from '@vitest/browser/context'
+await userEvent.fill(page.getByLabelText(/username/i), 'Alice')
+// or just locator.fill
+await page.getByLabelText(/username/i).fill('Alice')
 ```
-
-::: warning
-`testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](#interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
-:::
 
 ::: code-group
 ```ts [vue]
-// based on @testing-library/vue example
-// https://testing-library.com/docs/vue-testing-library/examples
-
-import { userEvent } from '@vitest/browser/context'
-import { render, screen } from '@testing-library/vue'
+import { render } from 'vitest-browser-vue'
 import Component from './Component.vue'
 
 test('properly handles v-model', async () => {
-  render(Component)
+  const screen = render(Component)
 
   // Asserts initial state.
-  expect(screen.getByText('Hi, my name is Alice')).toBeInTheDocument()
+  await expect.element(screen.getByText('Hi, my name is Alice')).toBeInTheDocument()
 
   // Get the input DOM node by querying the associated label.
-  const usernameInput = await screen.findByLabelText(/username/i)
+  const usernameInput = screen.getByLabelText(/username/i)
 
   // Type the name into the input. This already validates that the input
   // is filled correctly, no need to check the value manually.
-  await userEvent.fill(usernameInput, 'Bob')
+  await usernameInput.fill('Bob')
 
-  expect(screen.getByText('Hi, my name is Bob')).toBeInTheDocument()
+  await expect.element(screen.getByText('Hi, my name is Bob')).toBeInTheDocument()
 })
 ```
 ```ts [svelte]
-// based on @testing-library/svelte
-// https://testing-library.com/docs/svelte-testing-library/example
-
-import { render, screen } from '@testing-library/svelte'
-import { userEvent } from '@vitest/browser/context'
+import { render } from 'vitest-browser-svelte'
 import { expect, test } from 'vitest'
 
 import Greeter from './greeter.svelte'
 
 test('greeting appears on click', async () => {
-  const user = userEvent.setup()
-  render(Greeter, { name: 'World' })
+  const screen = render(Greeter, { name: 'World' })
 
   const button = screen.getByRole('button')
-  await user.click(button)
-  const greeting = await screen.findByText(/hello world/iu)
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
 
-  expect(greeting).toBeInTheDocument()
+  await expect.element(greeting).toBeInTheDocument()
 })
 ```
 ```tsx [react]
-// based on @testing-library/react example
-// https://testing-library.com/docs/react-testing-library/example-intro
-
-import { userEvent } from '@vitest/browser/context'
-import { render, screen } from '@testing-library/react'
+import { render } from 'vitest-browser-react'
 import Fetch from './fetch'
 
 test('loads and displays greeting', async () => {
   // Render a React element into the DOM
-  render(<Fetch url="/greeting" />)
+  const screen = render(<Fetch url="/greeting" />)
 
-  await userEvent.click(screen.getByText('Load Greeting'))
+  await screen.getByText('Load Greeting').click()
   // wait before throwing an error if it cannot find an element
-  const heading = await screen.findByRole('heading')
+  const heading = screen.getByRole('heading')
 
   // assert that the alert message is correct
-  expect(heading).toHaveTextContent('hello there')
-  expect(screen.getByRole('button')).toBeDisabled()
+  await expect.element(heading).toHaveTextContent('hello there')
+  await expect.element(screen.getByRole('button')).toBeDisabled()
 })
 ```
+:::
+
+Vitest doesn't support all frameworks out of the box, but you can use external tools to run tests with these frameworks. We also encourage the community to create their own `vitest-browser` wrappers - if you have one, feel free to add it to the examples above.
+
+For unsupported frameworks, we recommend using `testing-library` packages:
+
+- [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
+- [`solid-testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
+- [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
+
+::: warning
+`testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](/guide/browser/interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
+:::
+
+::: code-block
 ```tsx [preact]
 // based on @testing-library/preact example
 // https://testing-library.com/docs/preact-testing-library/example
 
 import { h } from 'preact'
-import { userEvent } from '@vitest/browser/context'
+import { page } from '@vitest/browser/context'
 import { render } from '@testing-library/preact'
 
 import HiddenMessage from '../hidden-message'
@@ -452,19 +449,21 @@ import HiddenMessage from '../hidden-message'
 test('shows the children when the checkbox is checked', async () => {
   const testMessage = 'Test Message'
 
-  const { queryByText, getByLabelText, getByText } = render(
+  const { baseElement } = render(
     <HiddenMessage>{testMessage}</HiddenMessage>,
   )
 
-  // query* functions will return the element or null if it cannot be found.
-  // get* functions will return the element or throw an error if it cannot be found.
-  expect(queryByText(testMessage)).not.toBeInTheDocument()
+  const screen = page.elementLocator(baseElement)
+
+  // .query() will return the element or null if it cannot be found.
+  // .element() will return the element or throw an error if it cannot be found.
+  expect(screen.getByText(testMessage).query()).not.toBeInTheDocument()
 
   // The queries can accept a regex to make your selectors more
   // resilient to content tweaks and changes.
-  await userEvent.click(getByLabelText(/show/i))
+  await screen.getByLabelText(/show/i).click()
 
-  expect(getByText(testMessage)).toBeInTheDocument()
+  await expect.element(screen.getByText(testMessage)).toBeInTheDocument()
 })
 ```
 ```tsx [solid]
@@ -488,8 +487,10 @@ it('uses params', async () => {
       <Route path="/" component={() => <p>Start</p>} />
     </>
   )
-  const { findByText } = render(() => <App />, { location: 'ids/1234' })
-  expect(await findByText('Id: 1234')).toBeInTheDocument()
+  const { baseElement } = render(() => <App />, { location: 'ids/1234' })
+  const screen = page.elementLocator(baseElement)
+
+  await expect.screen(screen.getByText('Id: 1234')).toBeInTheDocument()
 })
 ```
 ```ts [marko]
@@ -500,9 +501,10 @@ import { render, screen } from '@marko/testing-library'
 import Greeting from './greeting.marko'
 
 test('renders a message', async () => {
-  const { container } = await render(Greeting, { name: 'Marko' })
-  expect(screen.getByText(/Marko/)).toBeInTheDocument()
-  expect(container.firstChild).toMatchInlineSnapshot(`
+  const { baseElement } = await render(Greeting, { name: 'Marko' })
+  const screen = page.elementLocator(baseElement)
+  await expect.element(screen.getByText(/Marko/)).toBeInTheDocument()
+  await expect.element(container.firstChild).toMatchInlineSnapshot(`
     <h1>Hello, Marko!</h1>
   `)
 })

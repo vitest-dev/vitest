@@ -76,11 +76,11 @@ export async function resolveTester(
       `<script type="module" src="${server.errorCatcherUrl}"></script>`,
       server.locatorsUrl ? `<script type="module" src="${server.locatorsUrl}"></script>` : '',
     ].join('\n'),
-    __VITEST_APPEND__:
-      `<script type="module">
+    __VITEST_APPEND__: `<script data-vitest-append type="module">
 __vitest_browser_runner__.runningFiles = ${tests}
 __vitest_browser_runner__.iframeId = ${iframeId}
 __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
+document.querySelector('script[data-vitest-append]').remove()
 </script>`,
   })
 }

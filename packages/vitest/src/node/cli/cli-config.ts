@@ -794,6 +794,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   compare: null,
   outputJson: null,
   json: null,
+  provide: null,
 }
 
 export const benchCliOptionsConfig: Pick<
