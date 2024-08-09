@@ -1313,6 +1313,18 @@ Generate coverage report even when tests fail.
 
 Collect coverage of files outside the [project `root`](#root).
 
+#### coverage.excludeAfterRemap <Version>2.1.0</Version> {#coverage-exclude-after-remap}
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.excludeAfterRemap`, `--coverage.excludeAfterRemap=false`
+
+Apply exclusions again after coverage has been remapped to original sources.
+This is useful when your source files are transpiled and may contain source maps of non-source files.
+
+Use this option when you are seeing files that show up in report even if they match your `coverage.exclude` patterns.
+
 #### coverage.skipFull
 
 - **Type:** `boolean`
