@@ -5,7 +5,7 @@
 import { LocatorSelectors } from '@vitest/browser/context'
 import { StringifyOptions } from 'vitest/utils'
 
-type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
+export type PrettyDOMOptions = Omit<StringifyOptions, 'maxLength'>
 
 export declare function getElementLocatorSelectors(element: Element): LocatorSelectors
 export declare function debug(
