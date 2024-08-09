@@ -241,7 +241,8 @@ export function hoistMocks(
     if (
       init
       && (init === node
-      || (init.type === 'AwaitExpression' && init.argument === node))
+      || (init.type === 'AwaitExpression' && init.argument === node)
+      || (init.type === 'SequenceExpression' && init.expressions.includes(node)))
     ) {
       return declarationNode
     }
@@ -432,6 +433,8 @@ export function hoistMocks(
   const hoistedCode = hoistedNodes
     .map((node) => {
       const end = getBetterEnd(code, node)
+      let replaceNodesCode = ''
+
       /**
        * In the following case, we need to change the `user` to user: __vi_import_x__.user
        * So we should get the latest code from `s`.
@@ -474,7 +477,36 @@ export function hoistMocks(
         }
       }
 
+      if (
+        node.type === 'VariableDeclaration'
+        && node.declarations[0]?.init?.type === 'SequenceExpression'
+      ) {
+        const sequence = node.declarations[0].init
+        const callExpression = sequence.expressions.find(exp =>
+          exp.type === 'CallExpression'
+          && exp.callee.type === 'MemberExpression'
+          && isIdentifier(exp.callee.object)
+          && (exp.callee.object.name === 'vi'),
+        )!
+
+        nodeCode
+          = s.slice(node.start, sequence.start)
+          + s.slice(callExpression.start, callExpression.end)
+          + s.slice(sequence.end, node.end)
+
+        for (const exp of sequence.expressions) {
+          if (exp !== callExpression) {
+            replaceNodesCode += `${s.slice(exp.start as number, exp.end as number)}\n`
+          }
+        }
+      }
+
       s.remove(node.start, end)
+
+      if (replaceNodesCode.length > 0) {
+        s.prependLeft(node.start, replaceNodesCode)
+      }
+
       return `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
     })
     .join('')
