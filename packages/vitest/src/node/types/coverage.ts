@@ -252,6 +252,18 @@ export interface BaseCoverageOptions {
   allowExternal?: boolean
 
   /**
+   * Apply exclusions again after coverage has been remapped to original sources.
+   * This is useful when your source files are transpiled and may contain source maps
+   * of non-source files.
+   *
+   * Use this option when you are seeing files that show up in report even if they
+   * match your `coverage.exclude` patterns.
+   *
+   * @default false
+   */
+  excludeAfterRemap?: boolean
+
+  /**
    * Concurrency limit used when processing the coverage results.
    * Defaults to `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
    */

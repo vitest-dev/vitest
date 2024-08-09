@@ -98,9 +98,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         lines: config.thresholds['100'] ? 100 : config.thresholds.lines,
         branches: config.thresholds['100'] ? 100 : config.thresholds.branches,
         functions: config.thresholds['100'] ? 100 : config.thresholds.functions,
-        statements: config.thresholds['100']
-          ? 100
-          : config.thresholds.statements,
+        statements: config.thresholds['100'] ? 100 : config.thresholds.statements,
       },
     }
 
@@ -278,6 +276,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       )
 
       coverageMap.merge(await transformCoverage(uncoveredCoverage))
+    }
+
+    if (this.options.excludeAfterRemap) {
+      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
     }
 
     return coverageMap
