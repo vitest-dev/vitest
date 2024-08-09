@@ -10,7 +10,7 @@ import type {
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
 import type { ChaiConfig } from '../../integrations/chai/config'
-import type { Arrayable, ErrorWithDiff, ParsedStack } from '../../types/general'
+import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { EnvironmentOptions } from '../../types/environment'
@@ -730,6 +730,27 @@ export interface InlineConfig {
      */
     waitForDebugger?: boolean
   }
+
+  /**
+   * Define variables that will be returned from `inject` in the test environment.
+   * @example
+   * ```ts
+   * // vitest.config.ts
+   * export default defineConfig({
+   *   test: {
+   *     provide: {
+   *       someKey: 'someValue'
+   *     }
+   *   }
+   * })
+   * ```
+   * ```ts
+   * // test file
+   * import { inject } from 'vitest'
+   * const value = inject('someKey') // 'someValue'
+   * ```
+   */
+  provide?: Partial<ProvidedContext>
 
   /**
    * Configuration options for expect() matches.
