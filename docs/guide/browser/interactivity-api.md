@@ -259,7 +259,7 @@ test('update input', async () => {
 })
 ```
 
-::: note
+::: info
 Vitest doesn't expose `.type` method on the locator like `input.type` because it exists only for compatiblity with the `userEvent` library. Consider using `.fill` instead as it is faster.
 :::
 
