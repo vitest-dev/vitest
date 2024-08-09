@@ -8,6 +8,7 @@
 
 import type { Formatter } from 'tinyrainbow'
 import type { Constructable } from '@vitest/utils'
+import type { MockInstance } from '@vitest/spy'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 export type ChaiPlugin = Chai.ChaiPlugin
@@ -196,6 +197,10 @@ export interface Assertion<T = any>
       | 'undefined'
   ) => void
   toHaveBeenCalledOnce: () => void
+
+  toHaveBeenCalledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+  toHaveBeenCalledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
 
   toHaveResolved: () => void
