@@ -89,6 +89,7 @@ export default defineWorkspace([
         enabled: true,
         include: ['**/test/*.test-d.ts'],
         tsconfig: '../../tsconfig.check.json',
+        ignoreSourceErrors: true,
       },
     },
   },

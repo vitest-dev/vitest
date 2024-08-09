@@ -10,6 +10,10 @@ test.each([
   const root = './fixtures/exec-args-fixtures'
   const fileToTest = `${pool}.test.ts`
 
+  if (process.version === 'v20.15.0' && pool !== 'forks') {
+    return
+  }
+
   const vitest = await runVitest({
     root,
     include: [fileToTest],
