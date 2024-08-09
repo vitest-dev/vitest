@@ -1956,7 +1956,7 @@ RegExp pattern for files that will return an empty CSS file.
 If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. You can choose one of the options:
 
 - `stable`: class names will be generated as `_${name}_${hashedFilename}`, which means that generated class will stay the same, if CSS content is changed, but will change, if the name of the file is modified, or file is moved to another folder. This setting is useful, if you use snapshot feature.
-- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one and CSS processing is enabled. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
+- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopedName` method, if you have one and CSS processing is enabled. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
 - `non-scoped`: class names will not be hashed.
 
 ::: warning
