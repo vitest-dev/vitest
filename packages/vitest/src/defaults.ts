@@ -85,15 +85,6 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
 export const fakeTimersDefaults = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
-  toFake: [
-    'setTimeout',
-    'clearTimeout',
-    'setInterval',
-    'clearInterval',
-    'setImmediate',
-    'clearImmediate',
-    'Date',
-  ],
 } satisfies NonNullable<UserConfig['fakeTimers']>
 
 const config = {
