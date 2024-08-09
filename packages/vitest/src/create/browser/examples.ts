@@ -29,8 +29,7 @@ import HelloWorld from './HelloWorld.jsx'
 
 test('renders name', () => {
   const { getByText } = render(<HelloWorld name="Vitest" />)
-  const element = getByText('Hello Vitest!')
-  expect(element).toBeInTheDocument()
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
 }
@@ -65,15 +64,14 @@ defineProps<{
 `,
   test: `
 import { expect, test } from 'vitest'
-import { render } from '@testing-library/vue'
+import { render } from 'vitest-browser-vue'
 import HelloWorld from './HelloWorld.vue'
 
 test('renders name', () => {
   const { getByText } = render(HelloWorld, {
     props: { name: 'Vitest' },
   })
-  const element = getByText('Hello Vitest!')
-  expect(element).toBeInTheDocument()
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
 }
@@ -96,15 +94,12 @@ const svelteExample = {
 `,
   test: `
 import { expect, test } from 'vitest'
-import { render } from '@testing-library/svelte'
+import { render } from 'vitest-browser-svelte'
 import HelloWorld from './HelloWorld.svelte'
 
 test('renders name', () => {
-  const { getByText } = render(HelloWorld, {
-    props: { name: 'Vitest' },
-  })
-  const element = getByText('Hello Vitest!')
-  expect(element).toBeInTheDocument()
+  const { getByText } = render(HelloWorld, { name: 'Vitest' })
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
 }
@@ -183,10 +178,14 @@ function getExampleTest(framework: string) {
   switch (framework) {
     case 'solid':
     case 'preact':
-    case 'react':
       return {
         ...jsxExample,
         test: jsxExample.test.replace('@testing-library/jsx', `@testing-library/${framework}`),
+      }
+    case 'react':
+      return {
+        ...jsxExample,
+        test: jsxExample.test.replace('@testing-library/jsx', 'vitest-browser-react'),
       }
     case 'vue':
       return vueExample

@@ -205,6 +205,52 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           }
         }
 
+        const include = [
+          'vitest > @vitest/snapshot > magic-string',
+          'vitest > chai',
+          'vitest > chai > loupe',
+          'vitest > @vitest/utils > loupe',
+          '@vitest/browser > @testing-library/user-event',
+          '@vitest/browser > @testing-library/dom',
+        ]
+
+        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
+        if (react) {
+          include.push(react)
+        }
+        const vue = tryResolve('vitest-browser-react', [project.ctx.config.root])
+        if (vue) {
+          include.push(vue)
+        }
+
+        const exclude = [
+          'vitest',
+          'vitest/utils',
+          'vitest/browser',
+          'vitest/runners',
+          '@vitest/browser',
+          '@vitest/browser/client',
+          '@vitest/utils',
+          '@vitest/utils/source-map',
+          '@vitest/runner',
+          '@vitest/spy',
+          '@vitest/utils/error',
+          '@vitest/snapshot',
+          '@vitest/expect',
+          'std-env',
+          'tinybench',
+          'tinyspy',
+          'tinyrainbow',
+          'pathe',
+          'msw',
+          'msw/browser',
+        ]
+
+        const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
+        if (svelte) {
+          exclude.push(svelte)
+        }
+
         return {
           define,
           resolve: {
@@ -212,36 +258,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           },
           optimizeDeps: {
             entries,
-            exclude: [
-              'vitest',
-              'vitest/utils',
-              'vitest/browser',
-              'vitest/runners',
-              '@vitest/browser',
-              '@vitest/browser/client',
-              '@vitest/utils',
-              '@vitest/utils/source-map',
-              '@vitest/runner',
-              '@vitest/spy',
-              '@vitest/utils/error',
-              '@vitest/snapshot',
-              '@vitest/expect',
-              'std-env',
-              'tinybench',
-              'tinyspy',
-              'tinyrainbow',
-              'pathe',
-              'msw',
-              'msw/browser',
-            ],
-            include: [
-              'vitest > @vitest/snapshot > magic-string',
-              'vitest > chai',
-              'vitest > chai > loupe',
-              'vitest > @vitest/utils > loupe',
-              '@vitest/browser > @testing-library/user-event',
-              '@vitest/browser > @testing-library/dom',
-            ],
+            exclude,
+            include,
           },
         }
       },

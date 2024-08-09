@@ -1108,6 +1108,9 @@ importers:
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
+      vitest-browser-react:
+        specifier: ^0.0.1
+        version: 0.0.1(@types/react-dom@18.2.14)(@types/react@18.2.79)(@vitest/browser@packages+browser)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@packages+vitest)
       webdriverio:
         specifier: ^8.32.2
         version: 8.32.2(typescript@5.5.4)
@@ -1287,7 +1290,7 @@ importers:
         version: 3.4.37(typescript@5.5.4)
       webdriverio:
         specifier: latest
-        version: 8.40.0
+        version: 8.40.2
 
   test/global-setup:
     devDependencies:
@@ -1402,7 +1405,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 8.40.0
+        version: 8.40.2
 
   test/workspaces:
     devDependencies:
@@ -4201,8 +4204,8 @@ packages:
     resolution: {integrity: sha512-yNuGPMPibY91s936gnJCHWlStvIyDrwLwGfLC/NCdTin4F7HL4Gp5iJnHWkJFty1/DfFi8jjoIUBNLM8HEez+A==}
     engines: {node: ^16.13 || >=18}
 
-  '@wdio/config@8.40.0':
-    resolution: {integrity: sha512-sE+sBXUz4ZggS253hLNVu64ZCpm5ZidQ/IJNeM9Exh5OcsuZEnSeuqCZnd4ytK68A2heyZk8r2OjYZriA4l/Sg==}
+  '@wdio/config@8.40.2':
+    resolution: {integrity: sha512-RED2vcdX5Zdd6r+K+aWcjK4douxjJY4LP/8YvvavgqM0TURd5PDI0Y7IEz7+BIJOT4Uh+3atZawIN9/3yWFeag==}
     engines: {node: ^16.13 || >=18}
 
   '@wdio/logger@8.28.0':
@@ -4239,8 +4242,8 @@ packages:
     resolution: {integrity: sha512-jY+n6jlGeK+9Tx8T659PKLwMQTGpLW5H78CSEWgZLbjbVSr2LfGR8Lx0CRktNXxAtqEVZPj16Pi74OtAhvhE6Q==}
     engines: {node: ^16.13 || >=18}
 
-  '@wdio/utils@8.40.0':
-    resolution: {integrity: sha512-P9b6XbRDRfCsZvdA70VYQrnsbkDVwEXlAGe4v4hcdgFxz81w+k4IX5bFUb7IB33E+3EZ/GhJWVU3QHgI9Y0u6w==}
+  '@wdio/utils@8.40.2':
+    resolution: {integrity: sha512-leYcCUSaAdLUCVKqRKNgMCASPOUo/VvOTKETiZ/qpdY2azCBt/KnLugtiycCzakeYg6Kp+VIjx5fkm0M7y4qhA==}
     engines: {node: ^16.13 || >=18}
 
   '@yeger/debounce@2.0.9':
@@ -8892,6 +8895,22 @@ packages:
       postcss:
         optional: true
 
+  vitest-browser-react@0.0.1:
+    resolution: {integrity: sha512-075hxhouuuMeCqHRyX4POzZWEDD3aPxFxDcwENN+T2ZlJ4lh5vUlgbkV4C4A0KZWinHb/Wsj3pYEJlDgIO23CQ==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      '@types/react': '>18.0.0'
+      '@types/react-dom': '>18.0.0'
+      '@vitest/browser': ^2.1.0-beta.4
+      react: '>18.0.0'
+      react-dom: '>18.0.0'
+      vitest: workspace:*
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
   vitest-environment-custom@file:test/core/vitest-environment-custom:
     resolution: {directory: test/core/vitest-environment-custom, type: directory}
 
@@ -8996,8 +9015,8 @@ packages:
     resolution: {integrity: sha512-Kc3+SfiH4ufyrIht683VT2vnJocx0pfH8rYdyPvEh1b2OYewtFTHK36k9rBDHZiBmk6jcSXs4M2xeFgOuon9Lg==}
     engines: {node: ^16.13 || >=18}
 
-  webdriver@8.40.0:
-    resolution: {integrity: sha512-pAuU8FbFXox837UgxjC2yT4s+goLBcqohdCSZJ1f1wG/XMsgjDHmouU6+f1SHHG7/I0IDGEZIsRD01RM57F3OA==}
+  webdriver@8.40.2:
+    resolution: {integrity: sha512-GoRR94m3yL8tWC9Myf+xIBSdVK8fi1ilZgEZZaYT8+XIWewR02dvrC6rml+/2ZjXUQzeee0RFGDwk9IC7cyYrg==}
     engines: {node: ^16.13 || >=18}
 
   webdriverio@8.32.2:
@@ -9018,8 +9037,8 @@ packages:
       devtools:
         optional: true
 
-  webdriverio@8.40.0:
-    resolution: {integrity: sha512-AYFLdfVt3wcDdnyxRDBlysOgB3XryLZrZdmtjUU842IyMcoV4Cq3SdVgz9aj9tskSeIJ3G37KgDEf5znnd5f3Q==}
+  webdriverio@8.40.2:
+    resolution: {integrity: sha512-6yuzUlE064qNuMy98Du1+8QHbXk0st8qTWF7MDZRgYK19FGoy+KhQbaUv1wlFJuFHM0PiAYuduTURL4ub6HvzQ==}
     engines: {node: ^16.13 || >=18}
     peerDependencies:
       devtools: ^8.14.0
@@ -12597,11 +12616,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/config@8.40.0':
+  '@wdio/config@8.40.2':
     dependencies:
       '@wdio/logger': 8.38.0
       '@wdio/types': 8.39.0
-      '@wdio/utils': 8.40.0
+      '@wdio/utils': 8.40.2
       decamelize: 6.0.0
       deepmerge-ts: 5.1.0
       glob: 10.4.1
@@ -12675,9 +12694,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/utils@8.40.0':
+  '@wdio/utils@8.40.2':
     dependencies:
-      '@puppeteer/browsers': 1.7.0
+      '@puppeteer/browsers': 1.9.1
       '@wdio/logger': 8.38.0
       '@wdio/types': 8.39.0
       decamelize: 6.0.0
@@ -18071,6 +18090,16 @@ snapshots:
       - typescript
       - universal-cookie
 
+  vitest-browser-react@0.0.1(@types/react-dom@18.2.14)(@types/react@18.2.79)(@vitest/browser@packages+browser)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@packages+vitest):
+    dependencies:
+      '@vitest/browser': link:packages/browser
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      vitest: link:packages/vitest
+    optionalDependencies:
+      '@types/react': 18.2.79
+      '@types/react-dom': 18.2.14
+
   vitest-environment-custom@file:test/core/vitest-environment-custom: {}
 
   vitest-sonar-reporter@0.4.1(vitest@packages+vitest):
@@ -18200,15 +18229,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriver@8.40.0:
+  webdriver@8.40.2:
     dependencies:
       '@types/node': 20.14.14
       '@types/ws': 8.5.12
-      '@wdio/config': 8.40.0
+      '@wdio/config': 8.40.2
       '@wdio/logger': 8.38.0
       '@wdio/protocols': 8.38.0
       '@wdio/types': 8.39.0
-      '@wdio/utils': 8.40.0
+      '@wdio/utils': 8.40.2
       deepmerge-ts: 5.1.0
       got: 12.6.1
       ky: 0.33.3
@@ -18285,15 +18314,15 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  webdriverio@8.40.0:
+  webdriverio@8.40.2:
     dependencies:
       '@types/node': 20.14.13
-      '@wdio/config': 8.40.0
+      '@wdio/config': 8.40.2
       '@wdio/logger': 8.38.0
       '@wdio/protocols': 8.38.0
       '@wdio/repl': 8.24.12
       '@wdio/types': 8.39.0
-      '@wdio/utils': 8.40.0
+      '@wdio/utils': 8.40.2
       archiver: 7.0.1
       aria-query: 5.3.0
       css-shorthand-properties: 1.1.1
@@ -18311,7 +18340,7 @@ snapshots:
       resq: 1.11.0
       rgb2hex: 0.2.5
       serialize-error: 11.0.2
-      webdriver: 8.40.0
+      webdriver: 8.40.2
     transitivePeerDependencies:
       - bufferutil
       - encoding
