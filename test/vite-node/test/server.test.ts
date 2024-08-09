@@ -229,3 +229,55 @@ describe('server correctly caches data', () => {
     expect(webFiles).toHaveLength(1)
   })
 })
+
+describe('externalize', () => {
+  describe('by default', () => {
+    test('should externalize vite\'s cached dependencies', async () => {
+      const vnServer = new ViteNodeServer({
+        config: {
+          root: '/',
+          cacheDir: '/node_modules/.vite',
+        },
+      } as any, {})
+
+      const externalize = await vnServer.shouldExternalize('/node_modules/.vite/cached.js')
+      expect(externalize).toBeTruthy()
+    })
+  })
+
+  describe('with server.deps.inline: true', () => {
+    test('should not externalize vite\'s cached dependencies', async () => {
+      const vnServer = new ViteNodeServer({
+        config: {
+          root: '/',
+          cacheDir: '/node_modules/.vite',
+        },
+      } as any, {
+        deps: {
+          inline: true,
+        },
+      })
+
+      const externalize = await vnServer.shouldExternalize('/node_modules/.vite/cached.js')
+      expect(externalize).toBeFalsy()
+    })
+  })
+
+  describe('with server.deps.inline including the cache dir', () => {
+    test('should not externalize vite\'s cached dependencies', async () => {
+      const vnServer = new ViteNodeServer({
+        config: {
+          root: '/',
+          cacheDir: '/node_modules/.vite',
+        },
+      } as any, {
+        deps: {
+          inline: [/node_modules\/\.vite/],
+        },
+      })
+
+      const externalize = await vnServer.shouldExternalize('/node_modules/.vite/cached.js')
+      expect(externalize).toBeFalsy()
+    })
+  })
+})
