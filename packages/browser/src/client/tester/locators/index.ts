@@ -150,7 +150,7 @@ export abstract class Locator {
   public element(): Element {
     const element = this.query()
     if (!element) {
-      throw getElementError(this._pwSelector || this.selector, this._container || document.documentElement)
+      throw getElementError(this._pwSelector || this.selector, this._container || document.body)
     }
     return element
   }

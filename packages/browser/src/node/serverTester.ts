@@ -75,11 +75,12 @@ export async function resolveTester(
     __VITEST_INTERNAL_SCRIPTS__: [
       `<script type="module" src="${server.errorCatcherUrl}"></script>`,
       server.locatorsUrl ? `<script type="module" src="${server.locatorsUrl}"></script>` : '',
-      `<script type="module">
+    ].join('\n'),
+    __VITEST_APPEND__: `<script data-script-start type="module">
 __vitest_browser_runner__.runningFiles = ${tests}
 __vitest_browser_runner__.iframeId = ${iframeId}
 __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
+document.querySelector('script[data-script-start]').remove()
 </script>`,
-    ].join('\n'),
   })
 }
