@@ -14,6 +14,7 @@ interface SpyModule {
 export class VitestBrowserClientMocker {
   private queue = new Set<Promise<void>>()
   private mocks: Record<string, undefined | null | string> = {}
+  private behaviours: Record<string, 'autospy' | 'automock' | 'manual'> = {}
   private mockObjects: Record<string, any> = {}
   private factories: Record<string, () => any> = {}
   private ids = new Set<string>()
@@ -91,14 +92,20 @@ export class VitestBrowserClientMocker {
       return await this.resolve(resolvedId)
     }
 
-    if (type === 'redirect') {
-      const url = new URL(`/@id/${mockPath}`, location.href)
-      return import(/* @vite-ignore */ url.toString())
+    const behavior = this.behaviours[resolvedId] || 'automock'
+
+    if (type === 'automock' || behavior === 'autospy') {
+      const url = new URL(`/@id/${resolvedId}`, location.href)
+      const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
+      const moduleObject = await import(/* @vite-ignore */ `${url.pathname}${query}&mock=${behavior}${url.hash}`)
+      return this.mockObject(moduleObject, {}, behavior)
     }
-    const url = new URL(`/@id/${resolvedId}`, location.href)
-    const query = url.search ? `${url.search}&t=${now()}` : `?t=${now()}`
-    const moduleObject = await import(/* @vite-ignore */ `${url.pathname}${query}${url.hash}`)
-    return this.mockObject(moduleObject)
+
+    if (typeof mockPath !== 'string') {
+      throw new TypeError(`Mock path is not a string: ${mockPath}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+    }
+    const url = new URL(`/@id/${mockPath}`, location.href)
+    return import(/* @vite-ignore */ url.toString())
   }
 
   public getMockContext() {
@@ -142,9 +149,9 @@ export class VitestBrowserClientMocker {
     }
   }
 
-  public queueMock(id: string, importer: string, factory?: () => any) {
+  public queueMock(id: string, importer: string, factoryOrOptions?: MockOptions | (() => any)) {
     const promise = rpc()
-      .resolveMock(id, importer, !!factory)
+      .resolveMock(id, importer, typeof factoryOrOptions === 'function')
       .then(async ({ mockPath, resolvedId, needsInterop }) => {
         this.ids.add(resolvedId)
         const urlPaths = resolveMockPaths(cleanVersion(resolvedId))
@@ -152,22 +159,25 @@ export class VitestBrowserClientMocker {
           = typeof mockPath === 'string'
             ? new URL(resolvedMockedPath(cleanVersion(mockPath)), location.href).toString()
             : mockPath
-        const _factory = factory && needsInterop
+        const factory = typeof factoryOrOptions === 'function'
           ? async () => {
-            const data = await factory()
-            return { default: data }
+            const data = await factoryOrOptions()
+            return needsInterop ? { default: data } : data
           }
-          : factory
+          : undefined
+        const behaviour = getMockBehaviour(factoryOrOptions)
         urlPaths.forEach((url) => {
           this.mocks[url] = resolvedMock
-          if (_factory) {
-            this.factories[url] = _factory
+          if (factory) {
+            this.factories[url] = factory
           }
+          this.behaviours[url] = behaviour
         })
         channel.postMessage({
           type: 'mock',
           paths: urlPaths,
           mock: resolvedMock,
+          behaviour,
         })
         await waitForChannel('mock:done')
       })
@@ -214,6 +224,7 @@ export class VitestBrowserClientMocker {
   public mockObject(
     object: Record<Key, any>,
     mockExports: Record<Key, any> = {},
+    behaviour: 'autospy' | 'automock' | 'manual' = 'automock',
   ) {
     const finalizers = new Array<() => void>()
     const refs = new RefTracker()
@@ -330,13 +341,14 @@ export class VitestBrowserClientMocker {
               }
             }
           }
-          const mock = spyModule
-            .spyOn(newContainer, property)
-            .mockImplementation(mockFunction)
-          mock.mockRestore = () => {
-            mock.mockReset()
+          const mock = spyModule.spyOn(newContainer, property)
+          if (behaviour === 'automock') {
             mock.mockImplementation(mockFunction)
-            return mock
+            mock.mockRestore = () => {
+              mock.mockReset()
+              mock.mockImplementation(mockFunction)
+              return mock
+            }
           }
           // tinyspy retains length, but jest doesn't.
           Object.defineProperty(newContainer[property], 'length', { value: 0 })
@@ -464,4 +476,20 @@ function resolveMockPaths(path: string) {
 const versionRegexp = /(\?|&)v=\w{8}/
 function cleanVersion(url: string) {
   return url.replace(versionRegexp, '')
+}
+
+export interface MockOptions {
+  spy?: boolean
+}
+
+export type MockBehaviour = 'autospy' | 'automock' | 'manual'
+
+function getMockBehaviour(factoryOrOptions?: (() => void) | MockOptions): MockBehaviour {
+  if (!factoryOrOptions) {
+    return 'automock'
+  }
+  if (typeof factoryOrOptions === 'function') {
+    return 'manual'
+  }
+  return factoryOrOptions.spy ? 'autospy' : 'automock'
 }
