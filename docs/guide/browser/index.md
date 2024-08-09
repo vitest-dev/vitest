@@ -435,7 +435,7 @@ For unsupported frameworks, we recommend using `testing-library` packages:
 `testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](/guide/browser/interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
 :::
 
-::: code-block
+::: code-group
 ```tsx [preact]
 // based on @testing-library/preact example
 // https://testing-library.com/docs/preact-testing-library/example
