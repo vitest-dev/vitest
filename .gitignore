@@ -25,3 +25,4 @@ docs/.vitepress/cache/
 test/**/__screenshots__/**/*
 test/browser/fixtures/update-snapshot/basic.test.ts
 .vitest-reports
+examples/basic/html/

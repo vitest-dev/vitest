@@ -15,6 +15,7 @@ import type {
 } from 'vitest'
 import type { HTMLOptions } from 'vitest/node'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
+import { prepareReportCoverageFolder } from './utils'
 
 interface PotentialConfig {
   outputFile?: string | Partial<Record<string, string>>
@@ -57,6 +58,10 @@ export default class HTMLReporter implements Reporter {
   async onInit(ctx: Vitest) {
     this.ctx = ctx
     this.start = Date.now()
+  }
+
+  async onFinishedReportCoverage() {
+    await prepareReportCoverageFolder(this.ctx)
   }
 
   async onFinished() {
