@@ -252,12 +252,39 @@ export class Vitest {
       throw new Error(`Workspace config file ${workspaceConfigPath} must export a default array of project paths.`)
     }
 
+    const workspaceConfigFiles: string[] = []
     const workspaceGlobMatches: string[] = []
     const projectsOptions: UserWorkspaceConfig[] = []
 
     for (const project of workspaceModule.default) {
       if (typeof project === 'string') {
-        workspaceGlobMatches.push(project.replace('<rootDir>', this.config.root))
+        const match = project.replace('<rootDir>', this.config.root)
+        if (!match.includes('*')) {
+          const file = resolve(workspaceConfigPath, match)
+
+          if (!existsSync(file)) {
+            throw new Error(`Workspace config file ${workspaceConfigPath} references a non-existing file or a directory: ${file}`)
+          }
+
+          const stats = await fs.stat(file)
+          if (stats.isFile()) {
+            workspaceConfigFiles.push(file)
+          }
+          else if (stats.isDirectory()) {
+            const filesInside = await fs.readdir(file)
+            const configFile = configFiles.find(config => filesInside.includes(config))
+            if (!configFile) {
+              throw new Error(`Workspace config file ${workspaceConfigPath} references a directory without a config file: ${file}`)
+            }
+            workspaceConfigFiles.push(file)
+          }
+          else {
+            throw new Error(`Unexpected file type: ${file}`)
+          }
+        }
+        else {
+          workspaceGlobMatches.push(project.replace('<rootDir>', this.config.root))
+        }
       }
       else if (typeof project === 'function') {
         projectsOptions.push(await project({
@@ -309,12 +336,12 @@ export class Vitest {
         return configByFolder
       }, {} as Record<string, string[]>)
 
-    const filteredWorkspaces = Object.values(workspacesByFolder).map((configFiles) => {
+    const filteredWorkspaces = Object.values(workspacesByFolder).flatMap((configFiles) => {
       if (configFiles.length === 1) {
         return configFiles[0]
       }
-      const vitestConfig = configFiles.find(configFile => basename(configFile).startsWith('vitest.config'))
-      return vitestConfig || configFiles[0]
+      const vitestConfig = configFiles.filter(configFile => basename(configFile).startsWith('vitest.config'))
+      return vitestConfig.length ? vitestConfig : configFiles[0]
     })
 
     const overridesOptions = [
