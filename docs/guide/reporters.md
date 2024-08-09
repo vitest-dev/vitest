@@ -505,4 +505,4 @@ Additionally, you can define your own [custom reporters](/advanced/reporters) an
 npx vitest --reporter=./path/to/reporter.ts
 ```
 
-Custom reporters should implement the [Reporter interface](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts).
+Custom reporters should implement the [Reporter interface](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/types/reporter.ts).
