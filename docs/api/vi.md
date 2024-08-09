@@ -4,6 +4,8 @@ outline: deep
 
 # Vi
 
+TEST
+
 Vitest provides utility functions to help you out through its `vi` helper. You can access it globally (when [globals configuration](/config/#globals) is enabled), or import it from `vitest` directly:
 
 ```js
