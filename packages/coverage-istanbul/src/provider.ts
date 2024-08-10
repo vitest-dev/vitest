@@ -26,11 +26,12 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import { type Instrumenter, createInstrumenter } from 'istanbul-lib-instrument'
-// @ts-expect-error @istanbuljs/schema has no type definitions
+// @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
-
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
+
+import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
@@ -75,6 +76,16 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
   initialize(ctx: Vitest): void {
     const config: CoverageIstanbulOptions = ctx.config.coverage
+
+    if (ctx.version !== version) {
+      ctx.logger.warn(
+        c.yellow(
+          `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/coverage-istanbul@${version} `))}.`
+          + '\nRunning mixed versions is not supported and may lead into bugs'
+          + '\nUpdate your dependencies and make sure the versions match.',
+        ),
+      )
+    }
 
     this.ctx = ctx
     this.options = {

@@ -34,9 +34,10 @@ import type {
   ResolvedCoverageOptions,
 } from 'vitest'
 import type { Vitest } from 'vitest/node'
-
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
+
+import { version } from '../package.json' with { type: 'json' }
 
 interface TestExclude {
   new (opts: {
@@ -90,6 +91,16 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   initialize(ctx: Vitest): void {
     const config: CoverageV8Options = ctx.config.coverage
+
+    if (ctx.version !== version) {
+      ctx.logger.warn(
+        c.yellow(
+          `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/coverage-v8@${version} `))}.`
+          + '\nRunning mixed versions is not supported and may lead into bugs'
+          + '\nUpdate your dependencies and make sure the versions match.',
+        ),
+      )
+    }
 
     this.ctx = ctx
     this.options = {
