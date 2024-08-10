@@ -98,6 +98,11 @@ export default ({ mode }: { mode: string }) => {
       }, */
       },
 
+      carbonAds: {
+        code: 'CW7DVKJE',
+        placement: 'vitestdev',
+      },
+
       socialLinks: [
         { icon: 'mastodon', link: mastodon },
         { icon: 'x', link: twitter },
