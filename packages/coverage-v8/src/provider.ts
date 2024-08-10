@@ -543,7 +543,13 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           )
           await converter.load()
 
-          converter.applyCoverage(functions)
+          try {
+            converter.applyCoverage(functions)
+          }
+          catch (error) {
+            this.ctx.logger.error(`Failed to convert coverage for ${url}.\n`, error)
+          }
+
           coverageMap.merge(converter.toIstanbul())
         }),
       )
