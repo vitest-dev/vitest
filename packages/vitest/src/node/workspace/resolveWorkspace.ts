@@ -210,8 +210,7 @@ async function resolveWorkspaceProjectConfigs(
 
       const workspacesFs = await fg(workspaceGlobMatches, globOptions)
 
-      await Promise.all(workspacesFs.map(async (filepath_) => {
-        const filepath = resolve(filepath_)
+      await Promise.all(workspacesFs.map(async (filepath) => {
         // directories are allowed with a glob like `packages/*`
         // in this case every directory is treated as a project
         if (filepath.endsWith('/')) {
