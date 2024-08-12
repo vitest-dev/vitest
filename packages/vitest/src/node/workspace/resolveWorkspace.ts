@@ -3,7 +3,6 @@ import { isMainThread } from 'node:worker_threads'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import fg from 'fast-glob'
-import c from 'tinyrainbow'
 import type { UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../../public/config'
 import type { Vitest } from '../core'
 import type { UserConfig } from '../types/config'
@@ -133,7 +132,7 @@ async function resolveWorkspaceProjectConfigs(
   const workspaceGlobMatches: string[] = []
 
   // directories that don't have a config file inside, but should be treated as projects
-  let nonConfigProjectDirectories: string[] = []
+  const nonConfigProjectDirectories: string[] = []
 
   const relativeWorkpaceConfigPath = relative(vitest.config.root, workspaceConfigPath)
 
@@ -144,7 +143,7 @@ async function resolveWorkspaceProjectConfigs(
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
-          throw new Error(`Workspace config file ${relativeWorkpaceConfigPath} references a non-existing file or a directory: ${file}`)
+          throw new Error(`Workspace config file "${relativeWorkpaceConfigPath}" references a non-existing file or a directory: ${file}`)
         }
 
         const stats = await fs.stat(file)
@@ -214,33 +213,6 @@ async function resolveWorkspaceProjectConfigs(
   }
 
   const projectConfigFiles = Array.from(new Set(workspaceConfigFiles))
-  const duplicateDirectories = new Set()
-
-  for (const config of projectConfigFiles) {
-    // ignore custom config names because it won't be picked up by the default resolver later
-    if (!defaultConfigFiles.includes(config)) {
-      continue
-    }
-
-    const configDirectory = `${dirname(config)}/`
-    // if for some reason there is already a config file in a directory that was found by a glob
-    // we remove it from the list to avoid duplicates when the project is initialized
-    for (const directory of nonConfigProjectDirectories) {
-      if (directory === configDirectory) {
-        vitest.logger.warn(
-          c.yellow(
-            `The specified config file "${resolve(vitest.config.root, config)}" is located in the directory already found by a glob match. `
-            + `The config file will override the directory match to avoid duplicates. You can silence this message by excluding the directory from the glob in "${relativeWorkpaceConfigPath}".`,
-          ),
-        )
-        duplicateDirectories.add(directory)
-      }
-    }
-  }
-
-  if (duplicateDirectories.size) {
-    nonConfigProjectDirectories = nonConfigProjectDirectories.filter(dir => !duplicateDirectories.has(dir))
-  }
 
   return {
     projectConfigs: projectsOptions,
