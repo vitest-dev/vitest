@@ -5,7 +5,8 @@ import type { Plugin } from 'vite'
 
 export default defineWorkspace([
   'space_2',
-  './space_*/*.config.ts',
+  './space_*/vitest.config.ts',
+  './space_1/*.config.ts',
   async () => ({
     test: {
       name: 'happy-dom',
