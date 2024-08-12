@@ -30,7 +30,7 @@
     "typecheck": "tsc -p tsconfig.check.json --noEmit",
     "typecheck:why": "tsc -p tsconfig.check.json --noEmit --explainFiles > explainTypes.txt",
     "ui:build": "vite build packages/ui",
-    "ui:dev": "vite packages/ui",
+    "ui:dev": "npm -C packages/ui run dev:client",
     "ui:test": "npm -C packages/ui run test:run",
     "test:browser:webdriverio": "pnpm -C test/browser run test:webdriverio",
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
