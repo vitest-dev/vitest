@@ -17,7 +17,7 @@ import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { SerializedSpec } from '../runtime/types/utils'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
-import { createPool } from './pool'
+import { createPool, getFilePoolName } from './pool'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
@@ -77,9 +77,13 @@ export class Vitest {
 
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
-  private projectsTestFiles = new Map<string, Set<WorkspaceProject>>()
 
   public distPath!: string
+
+  private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
+
+  /** @deprecated use `_cachedSpecs` */
+  projectTestFiles = this._cachedSpecs
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -103,7 +107,7 @@ export class Vitest {
     this.coverageProvider = undefined
     this.runningPromise = undefined
     this.distPath = undefined!
-    this.projectsTestFiles.clear()
+    this._cachedSpecs.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
 
@@ -202,6 +206,9 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
+  /**
+   * @deprecated use Reported Task API instead
+   */
   public getProjectByTaskId(taskId: string): WorkspaceProject {
     const task = this.state.idMap.get(taskId)
     const projectName = (task as File).projectName || task?.file?.projectName || ''
@@ -216,7 +223,7 @@ export class Vitest {
       || this.projects[0]
   }
 
-  private async getWorkspaceConfigPath() {
+  private async getWorkspaceConfigPath(): Promise<string | null> {
     if (this.config.workspace) {
       return this.config.workspace
     }
@@ -423,8 +430,8 @@ export class Vitest {
     }
   }
 
-  private async getTestDependencies(filepath: WorkspaceSpec, deps = new Set<string>()) {
-    const addImports = async ([project, filepath]: WorkspaceSpec) => {
+  private async getTestDependencies([project, filepath]: WorkspaceSpec, deps = new Set<string>()) {
+    const addImports = async (project: WorkspaceProject, filepath: string) => {
       if (deps.has(filepath)) {
         return
       }
@@ -440,13 +447,13 @@ export class Vitest {
         const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
-          await addImports([project, fsPath])
+          await addImports(project, fsPath)
         }
       }))
     }
 
-    await addImports(filepath)
-    deps.delete(filepath[1])
+    await addImports(project, filepath)
+    deps.delete(filepath)
 
     return deps
   }
@@ -500,12 +507,31 @@ export class Vitest {
     return runningTests
   }
 
+  /**
+   * @deprecated remove when vscode extension supports "getFileWorkspaceSpecs"
+   */
   getProjectsByTestFile(file: string) {
-    const projects = this.projectsTestFiles.get(file)
-    if (!projects) {
-      return []
+    return this.getFileWorkspaceSpecs(file)
+  }
+
+  getFileWorkspaceSpecs(file: string) {
+    const _cached = this._cachedSpecs.get(file)
+    if (_cached) {
+      return _cached
     }
-    return Array.from(projects).map(project => [project, file] as WorkspaceSpec)
+
+    const specs: WorkspaceSpec[] = []
+    for (const project of this.projects) {
+      if (project.isTestFile(file)) {
+        const pool = getFilePoolName(project, file)
+        specs.push([project, file, { pool }])
+      }
+      if (project.isTypecheckFile(file)) {
+        specs.push([project, file, { pool: 'typescript' }])
+      }
+    }
+    specs.forEach(spec => this.ensureSpecCached(spec))
+    return specs
   }
 
   async initializeGlobalSetup(paths: WorkspaceSpec[]) {
@@ -538,8 +564,11 @@ export class Vitest {
 
     await this.report('onPathsCollected', filepaths)
     await this.report('onSpecsCollected', specs.map(
-      ([project, file]) =>
-        [{ name: project.config.name, root: project.config.root }, file] as SerializedSpec,
+      ([project, file, options]) =>
+        [{
+          name: project.config.name,
+          root: project.config.root,
+        }, file, options] satisfies SerializedSpec,
     ))
 
     // previous run
@@ -856,7 +885,6 @@ export class Vitest {
       }))
 
       if (matchingProjects.length > 0) {
-        this.projectsTestFiles.set(id, new Set(matchingProjects))
         this.changedTests.add(id)
         this.scheduleRerun([id])
       }
@@ -1054,15 +1082,30 @@ export class Vitest {
   public async globTestFiles(filters: string[] = []) {
     const files: WorkspaceSpec[] = []
     await Promise.all(this.projects.map(async (project) => {
-      const specs = await project.globTestFiles(filters)
-      specs.forEach((file) => {
-        files.push([project, file])
-        const projects = this.projectsTestFiles.get(file) || new Set()
-        projects.add(project)
-        this.projectsTestFiles.set(file, projects)
+      const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
+      testFiles.forEach((file) => {
+        const pool = getFilePoolName(project, file)
+        const spec: WorkspaceSpec = [project, file, { pool }]
+        this.ensureSpecCached(spec)
+        files.push(spec)
+      })
+      typecheckTestFiles.forEach((file) => {
+        const spec: WorkspaceSpec = [project, file, { pool: 'typecheck' }]
+        this.ensureSpecCached(spec)
+        files.push(spec)
       })
     }))
     return files
+  }
+
+  private ensureSpecCached(spec: WorkspaceSpec) {
+    const file = spec[1]
+    const specs = this._cachedSpecs.get(file) || []
+    const included = specs.some(_s => _s[0] === spec[0] && _s[2].pool === spec[2].pool)
+    if (!included) {
+      specs.push(spec)
+      this._cachedSpecs.set(file, specs)
+    }
   }
 
   // The server needs to be running for communication

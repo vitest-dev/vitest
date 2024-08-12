@@ -97,6 +97,7 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
 
   testFilesList: string[] | null = null
+  typecheckFilesList: string[] | null = null
 
   public testProject!: TestProject
 
@@ -225,15 +226,24 @@ export class WorkspaceProject {
         ? []
         : this.globAllTestFiles(include, exclude, includeSource, dir),
       typecheck.enabled
-        ? this.globFiles(typecheck.include, typecheck.exclude, dir)
+        ? (this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir))
         : [],
     ])
 
-    return this.filterFiles(
-      [...testFiles, ...typecheckTestFiles],
-      filters,
-      dir,
-    )
+    this.typecheckFilesList = typecheckTestFiles
+
+    return {
+      testFiles: this.filterFiles(
+        testFiles,
+        filters,
+        dir,
+      ),
+      typecheckTestFiles: this.filterFiles(
+        typecheckTestFiles,
+        filters,
+        dir,
+      ),
+    }
   }
 
   async globAllTestFiles(
@@ -273,6 +283,10 @@ export class WorkspaceProject {
 
   isTestFile(id: string) {
     return this.testFilesList && this.testFilesList.includes(id)
+  }
+
+  isTypecheckFile(id: string) {
+    return this.typecheckFilesList && this.typecheckFilesList.includes(id)
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {

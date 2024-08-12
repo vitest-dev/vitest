@@ -22,7 +22,7 @@ export async function resolveTester(
   const { contextId, testFile } = server.resolveTesterUrl(url.pathname)
   const project = server.project
   const state = server.state
-  const testFiles = await project.globTestFiles()
+  const { testFiles } = await project.globTestFiles()
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
     = testFile === '__vitest_all__'

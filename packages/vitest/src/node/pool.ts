@@ -10,7 +10,7 @@ import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
 
-export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
+export type WorkspaceSpec = [project: WorkspaceProject, testFile: string, options: { pool: Pool }]
 export type RunWithFiles = (
   files: WorkspaceSpec[],
   invalidates?: string[]
@@ -39,16 +39,11 @@ export const builtinPools: BuiltinPool[] = [
   'typescript',
 ]
 
-function getDefaultPoolName(project: WorkspaceProject, file: string): Pool | null {
-  for (const glob of project.config.include) {
-    if (mm.isMatch(file, glob, { cwd: project.config.root, ignore: project.config.exclude })) {
-      if (project.config.browser.enabled) {
-        return 'browser'
-      }
-      return project.config.pool
-    }
+function getDefaultPoolName(project: WorkspaceProject): Pool {
+  if (project.config.browser.enabled) {
+    return 'browser'
   }
-  return null
+  return project.config.pool
 }
 
 export function getFilePoolName(project: WorkspaceProject, file: string) {
@@ -62,7 +57,7 @@ export function getFilePoolName(project: WorkspaceProject, file: string) {
       return pool as Pool
     }
   }
-  return getDefaultPoolName(project, file)
+  return getDefaultPoolName(project)
 }
 
 export function createPool(ctx: Vitest): ProcessPool {
@@ -170,21 +165,9 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     for (const spec of files) {
-      const [project, file] = spec
-      const pool = getFilePoolName(project, file)
-      if (pool != null) {
-        filesByPool[pool] ??= []
-        filesByPool[pool].push(spec)
-      }
-
-      if (project.config.typecheck.enabled) {
-        for (const glob of project.config.typecheck.include) {
-          if (mm.isMatch(file, glob, { cwd: project.config.root, ignore: project.config.typecheck.exclude })) {
-            filesByPool.typescript ??= []
-            filesByPool.typescript.push(spec)
-          }
-        }
-      }
+      const { pool } = spec[2]
+      filesByPool[pool] ??= []
+      filesByPool[pool].push(spec)
     }
 
     const Sequencer = ctx.config.sequence.sequencer

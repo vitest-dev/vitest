@@ -157,7 +157,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
-        const allTestFiles = await project.globTestFiles()
+        const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
         )

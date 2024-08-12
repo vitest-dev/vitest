@@ -1,8 +1,8 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
-import type { WorkspaceProject } from '../node/workspace'
 import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
+import type { WorkspaceSpec } from '../node/pool'
 import { groupBy } from './base'
 
 export const envsOrder = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
@@ -27,7 +27,7 @@ function getTransformMode(
 }
 
 export async function groupFilesByEnv(
-  files: (readonly [WorkspaceProject, string])[],
+  files: Array<WorkspaceSpec>,
 ) {
   const filesWithEnv = await Promise.all(
     files.map(async ([project, file]) => {
