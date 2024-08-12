@@ -1,6 +1,8 @@
+type Promisable<T> = T | Promise<T>
+
 export type MockFactoryWithHelper<M = unknown> = (
-  importOriginal: <T extends M>() => Promise<T>
-) => any
+  importOriginal: <T extends M = M>() => Promise<T>
+) => Promisable<Partial<M>>
 export type MockFactory = () => any
 
 export type MockMap = Map<string, Record<string, string | null | MockFactory>>
