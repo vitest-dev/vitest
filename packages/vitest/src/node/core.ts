@@ -1090,7 +1090,7 @@ export class Vitest {
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec: WorkspaceSpec = [project, file, { pool: 'typecheck' }]
+        const spec: WorkspaceSpec = [project, file, { pool: 'typescript' }]
         this.ensureSpecCached(spec)
         files.push(spec)
       })
