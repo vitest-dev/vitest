@@ -193,7 +193,7 @@ export class Vitest {
   /**
    * @internal
    */
-  async createCoreProject() {
+  async _createCoreProject() {
     this.coreWorkspaceProject = await WorkspaceProject.createCoreProject(this)
     return this.coreWorkspaceProject
   }
@@ -242,7 +242,7 @@ export class Vitest {
     const workspaceConfigPath = await this.getWorkspaceConfigPath()
 
     if (!workspaceConfigPath) {
-      return [await this.createCoreProject()]
+      return [await this._createCoreProject()]
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {

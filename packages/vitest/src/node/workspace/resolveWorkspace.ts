@@ -22,6 +22,8 @@ export async function resolveWorkspace(
     workspaceDefinition,
   )
 
+  // cli options that affect the project config,
+  // not all options are allowed to be overridden
   const overridesOptions = [
     'logHeapUsage',
     'allowOnly',
@@ -54,14 +56,19 @@ export async function resolveWorkspace(
   try {
     // we have to resolve them one by one because CWD should depend on the project
     for (const filepath of [...configFiles, ...nonConfigDirectories]) {
+      // if file leads to the root config, then we can just reuse it because we already initialized it
       if (vitest.server.config.configFile === filepath) {
-        const project = await vitest.createCoreProject()
+        const project = await vitest._createCoreProject()
         projects.push(project)
         continue
       }
-      const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
+
+      const directory = filepath.endsWith('/')
+        ? filepath.slice(0, -1)
+        : dirname(filepath)
+
       if (isMainThread) {
-        process.chdir(dir)
+        process.chdir(directory)
       }
       projects.push(
         await initializeProject(
@@ -89,8 +96,9 @@ export async function resolveWorkspace(
     ))
   })
 
+  // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projects.length && !projectPromises.length) {
-    return [await vitest.createCoreProject()]
+    return [await vitest._createCoreProject()]
   }
 
   const resolvedProjects = await Promise.all([
@@ -99,6 +107,7 @@ export async function resolveWorkspace(
   ])
   const names = new Set<string>()
 
+  // project names are guaranteed to be unique
   for (const project of resolvedProjects) {
     const name = project.getName()
     if (names.has(name)) {
@@ -139,6 +148,8 @@ async function resolveWorkspaceProjectConfigs(
   for (const definition of workspaceDefinition) {
     if (typeof definition === 'string') {
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
+      // if the string doesn't contain a glob, we can resolve it directly
+      // ['./vitest.config.js']
       if (!stringOption.includes('*')) {
         const file = resolve(vitest.config.root, stringOption)
 
@@ -163,13 +174,17 @@ async function resolveWorkspaceProjectConfigs(
           }
         }
         else {
+          // should never happen
           throw new TypeError(`Unexpected file type: ${file}`)
         }
       }
+      // if the string is a glob pattern, resolve it later
+      // ['./packages/*']
       else {
         workspaceGlobMatches.push(stringOption)
       }
     }
+    // if the config is inlined, we can resolve it immediately
     else if (typeof definition === 'function') {
       projectsOptions.push(await definition({
         command: vitest.server.config.command,
@@ -178,6 +193,7 @@ async function resolveWorkspaceProjectConfigs(
         isSsrBuild: false,
       }))
     }
+    // the config is an object or a Promise that returns an object
     else {
       projectsOptions.push(await definition)
     }
@@ -194,8 +210,10 @@ async function resolveWorkspaceProjectConfigs(
 
       const workspacesFs = await fg(workspaceGlobMatches, globOptions)
 
-      await Promise.all(workspacesFs.map(async (filepath) => {
+      await Promise.all(workspacesFs.map(async (filepath_) => {
+        const filepath = resolve(filepath_)
         // directories are allowed with a glob like `packages/*`
+        // in this case every directory is treated as a project
         if (filepath.endsWith('/')) {
           const configFile = await resolveDirectoryConfig(filepath)
           if (configFile) {
@@ -223,6 +241,8 @@ async function resolveWorkspaceProjectConfigs(
 
 async function resolveDirectoryConfig(directory: string) {
   const files = new Set(await fs.readdir(directory))
+  // default resolution looks for vitest.config.* or vite.config.* files
+  // this simulates how `findUp` works in packages/vitest/src/node/create.ts:29
   const configFile = defaultConfigFiles.find(file => files.has(file))
   if (configFile) {
     return resolve(directory, configFile)
