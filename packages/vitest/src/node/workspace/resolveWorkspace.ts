@@ -99,8 +99,8 @@ export async function resolveWorkspace(
       throw new Error([
         `Project name "${name}"`,
         project.server.config.configFile ? ` from "${relative(vitest.config.root, project.server.config.configFile)}"` : '',
-        ' is not unique. ',
-        duplicate?.server.config.configFile ? `The project is already defined by "${relative(vitest.config.root, duplicate.server.config.configFile)}".` : '',
+        ' is not unique.',
+        duplicate?.server.config.configFile ? ` The project is already defined by "${relative(vitest.config.root, duplicate.server.config.configFile)}".` : '',
         ' All projects in a workspace should have unique names. Make sure your configuration is correct.',
       ].join(''))
     }
