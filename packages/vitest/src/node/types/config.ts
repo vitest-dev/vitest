@@ -863,6 +863,10 @@ export interface TypecheckConfig {
    */
   ignoreSourceErrors?: boolean
   /**
+   * Do not show warnings from the collector during typechecking.
+   */
+  ignoreCollectWarnings?: boolean
+  /**
    * Path to tsconfig, relative to the project root.
    */
   tsconfig?: string

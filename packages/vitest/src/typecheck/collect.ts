@@ -1,8 +1,8 @@
+import { readFileSync } from 'node:fs'
 import { relative } from 'pathe'
 import { parseAstAsync } from 'vite'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
-
 import {
   calculateSuiteHash,
   generateHash,
@@ -10,7 +10,9 @@ import {
   someTasksAreOnly,
 } from '@vitest/runner/utils'
 import type { File, Suite, Test } from '@vitest/runner'
+import type { Node, TemplateLiteral } from 'estree'
 import type { WorkspaceProject } from '../node/workspace'
+import { generateCodeFrame } from '../node/error'
 
 interface ParsedFile extends File {
   start: number
@@ -52,6 +54,7 @@ export async function collectTests(
   if (!request) {
     return null
   }
+  const vitest = ctx.ctx
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.getName()
@@ -78,6 +81,12 @@ export async function collectTests(
     if (callee.type === 'Identifier') {
       return callee.name
     }
+    if (callee.type === 'CallExpression') {
+      return getName(callee.callee)
+    }
+    if (callee.type === 'TaggedTemplateExpression') {
+      return getName(callee.tag)
+    }
     if (callee.type === 'MemberExpression') {
       // direct call as `__vite_ssr_exports_0__.test()`
       if (callee.object?.name?.startsWith('__vite_ssr_')) {
@@ -88,6 +97,39 @@ export async function collectTests(
     }
     return null
   }
+
+  const nodeFrames = new WeakSet<Node>()
+
+  function getCodeFrame(node: any, start?: number) {
+    if (nodeFrames.has(node)) {
+      return '' // don't duplicate the node
+    }
+    const higlight = vitest.logger.highlight(filepath, readFileSync(filepath, 'utf8'))
+    const codeframe = generateCodeFrame(
+      higlight,
+      4,
+      start ?? (node.start + 1),
+    )
+    nodeFrames.add(node)
+    return codeframe
+  }
+
+  function warn(message: string, node: any, start?: number) {
+    if (ctx.config.typecheck.ignoreCollectWarnings) {
+      return
+    }
+    const codeframe = getCodeFrame(
+      node,
+      start ?? (node.start + 1),
+    )
+    if (codeframe) {
+      message += `:\n${codeframe}`
+    }
+    vitest.logger.warn(
+      `${message}\nIf you want so suppress these messages, set \`typecheck.ignoreCollectWarnings: true\` in your config.`,
+    )
+  }
+
   walkAst(ast as any, {
     CallExpression(node) {
       const { callee } = node as any
@@ -98,27 +140,58 @@ export async function collectTests(
       if (!['it', 'test', 'describe', 'suite'].includes(name)) {
         return
       }
-      const {
-        arguments: [{ value: message }],
-      } = node as any
       const property = callee?.property?.name
       let mode = !property || property === name ? 'run' : property
-      if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf'].includes(mode)) {
-        throw new Error(
-          `${name}.${mode} syntax is not supported when testing types`,
-        )
+      if (mode === 'each') {
+        warn(`Type checker doesn't support ${name}.each`, node)
+        return
       }
+
+      let start: number
+      const end = node.end
+
+      if (callee.type === 'CallExpression') {
+        start = callee.end
+      }
+      else if (callee.type === 'TaggedTemplateExpression') {
+        start = callee.end + 1
+      }
+      else {
+        start = node.start
+      }
+
+      const {
+        arguments: [messageNode],
+      } = node
+      let message: string | null = null
+
+      if (messageNode.type === 'Literal') {
+        message = String(messageNode.value)
+      }
+      else if (messageNode.type === 'Identifier') {
+        message = messageNode.name
+      }
+      else if (messageNode.type === 'TemplateLiteral') {
+        message = mergeTemplateLiteral(messageNode as any)
+      }
+      else {
+        message = 'unknown'
+        warn(`Type checker cannot statically analyze the message of ${name}, fallback to "unknown"`, node, start)
+      }
+
       // cannot statically analyze, so we always skip it
       if (mode === 'skipIf' || mode === 'runIf') {
         mode = 'skip'
+        warn(`Type checker cannot statically analyze the mode of ${name}.${mode}, fallback to "skip"`, node, start)
       }
       definitions.push({
-        start: node.start,
-        end: node.end,
+        start,
+        end,
         name: message,
         type: name === 'it' || name === 'test' ? 'test' : 'suite',
         mode,
-      } as LocalCallDefinition)
+        task: null as any,
+      } satisfies LocalCallDefinition)
     },
   })
   let lastSuite: ParsedSuite = file
@@ -190,4 +263,18 @@ export async function collectTests(
     map: request.map as RawSourceMap | null,
     definitions,
   }
+}
+
+function mergeTemplateLiteral(node: TemplateLiteral): string {
+  let result = ''
+  let expressionsIndex = 0
+
+  for (let quasisIndex = 0; quasisIndex < node.quasis.length; quasisIndex++) {
+    result += node.quasis[quasisIndex].value.raw
+    if (expressionsIndex in node.expressions) {
+      result += `{${node.expressions[expressionsIndex]}}`
+      expressionsIndex++
+    }
+  }
+  return result
 }
