@@ -88,7 +88,7 @@ export async function resolveWorkspace(
 
   const resolvedProjects = await Promise.all([
     ...projects,
-    ...await Promise.all(projectPromises),
+    ...projectPromises,
   ])
   const names = new Set<string>()
 
