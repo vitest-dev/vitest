@@ -1,4 +1,4 @@
-import type { AliasOptions, DepOptimizationConfig, ServerOptions } from 'vite'
+import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
@@ -1098,4 +1098,22 @@ export type ResolvedProjectConfig = Omit<
   NonProjectOptions
 >
 
-export type { UserWorkspaceConfig } from '../../public/config'
+export interface UserWorkspaceConfig extends ViteUserConfig {
+  test?: ProjectConfig
+}
+
+export type UserProjectConfigFn = (
+  env: ConfigEnv
+) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
+export type UserProjectConfigExport =
+  | UserWorkspaceConfig
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn
+
+export type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
+  /**
+   * Relative path to the extendable config. All other options will be merged with this config.
+   * @example '../vite.config.ts'
+   */
+  extends?: string
+})
