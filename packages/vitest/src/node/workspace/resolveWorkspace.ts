@@ -126,9 +126,12 @@ async function resolveWorkspaceProjectConfigs(
         }
 
         const stats = await fs.stat(file)
+        // user can specify a config file directly
         if (stats.isFile()) {
           workspaceConfigFiles.push(file)
         }
+        // user can specify a directory that should be used as a project
+        // the config file inside will be resolved by the default resolver later
         else if (stats.isDirectory()) {
           const directory = file[file.length - 1] === '/' ? file : `${file}/`
           nonConfigProjectDirectories.push(directory)
@@ -165,7 +168,7 @@ async function resolveWorkspaceProjectConfigs(
 
       const workspacesFs = await fg(workspaceGlobMatches, globOptions)
 
-      await Promise.all(workspacesFs.map(async (filepath) => {
+      workspacesFs.forEach((filepath) => {
         // the directories are allowed with a glob like `packages/*`
         if (filepath.endsWith('/')) {
           nonConfigProjectDirectories.push(filepath)
@@ -173,7 +176,7 @@ async function resolveWorkspaceProjectConfigs(
         else {
           workspaceConfigFiles.push(filepath)
         }
-      }))
+      })
     }
   }
 
