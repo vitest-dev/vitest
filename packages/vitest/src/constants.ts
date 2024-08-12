@@ -16,7 +16,7 @@ export const CONFIG_NAMES = ['vitest.config', 'vite.config']
 
 const WORKSPACES_NAMES = ['vitest.workspace', 'vitest.projects']
 
-const CONFIG_EXTENSIONS = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
+export const CONFIG_EXTENSIONS = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
 
 export const configFiles = CONFIG_NAMES.flatMap(name =>
   CONFIG_EXTENSIONS.map(ext => name + ext),
