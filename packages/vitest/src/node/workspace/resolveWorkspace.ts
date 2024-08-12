@@ -1,6 +1,6 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { isMainThread } from 'node:worker_threads'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import fg from 'fast-glob'
 import c from 'tinyrainbow'
@@ -17,7 +17,7 @@ export async function resolveWorkspace(
   workspaceConfigPath: string,
   workspaceDefinition: WorkspaceProjectConfiguration[],
 ): Promise<WorkspaceProject[]> {
-  const { configFiles, projectConfigs, nonConfigProjects } = await resolveWorkspaceProjectConfigs(
+  const { configFiles, projectConfigs, nonConfigDirectories } = await resolveWorkspaceProjectConfigs(
     vitest,
     workspaceConfigPath,
     workspaceDefinition,
@@ -54,7 +54,7 @@ export async function resolveWorkspace(
 
   try {
     // we have to resolve them one by one because CWD should depend on the project
-    for (const filepath of [...configFiles, ...nonConfigProjects]) {
+    for (const filepath of [...configFiles, ...nonConfigDirectories]) {
       if (vitest.server.config.configFile === filepath) {
         const project = await vitest.createCoreProject()
         projects.push(project)
@@ -113,14 +113,16 @@ async function resolveWorkspaceProjectConfigs(
   const workspaceGlobMatches: string[] = []
   let nonConfigProjectDirectories: string[] = []
 
+  const relativeWorkpaceConfigPath = relative(vitest.config.root, workspaceConfigPath)
+
   for (const definition of workspaceDefinition) {
     if (typeof definition === 'string') {
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
       if (!stringOption.includes('*')) {
-        const file = resolve(workspaceConfigPath, stringOption)
+        const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
-          throw new Error(`Workspace config file "${workspaceConfigPath}" references a non-existing file or a directory: ${file}`)
+          throw new Error(`Workspace config file ${relativeWorkpaceConfigPath} references a non-existing file or a directory: ${file}`)
         }
 
         const stats = await fs.stat(file)
@@ -128,7 +130,8 @@ async function resolveWorkspaceProjectConfigs(
           workspaceConfigFiles.push(file)
         }
         else if (stats.isDirectory()) {
-          nonConfigProjectDirectories.push(file)
+          const directory = file[file.length - 1] === '/' ? file : `${file}/`
+          nonConfigProjectDirectories.push(directory)
         }
         else {
           throw new TypeError(`Unexpected file type: ${file}`)
@@ -190,8 +193,8 @@ async function resolveWorkspaceProjectConfigs(
       if (directory === configDirectory) {
         vitest.logger.warn(
           c.yellow(
-            `The specified config file "${config}" is located in the directory already found by a glob match. `
-            + `The config file will override the directory match to avoid duplicates. You can silence this message by excluding the directory from the glob in "${workspaceConfigPath}".`,
+            `The specified config file "${resolve(vitest.config.root, config)}" is located in the directory already found by a glob match. `
+            + `The config file will override the directory match to avoid duplicates. You can silence this message by excluding the directory from the glob in "${relativeWorkpaceConfigPath}".`,
           ),
         )
         duplicateDirectories.add(directory)
@@ -205,7 +208,7 @@ async function resolveWorkspaceProjectConfigs(
 
   return {
     projectConfigs: projectsOptions,
-    nonConfigProjects: nonConfigProjectDirectories,
+    nonConfigDirectories: nonConfigProjectDirectories,
     configFiles: projectConfigFiles,
   }
 }
