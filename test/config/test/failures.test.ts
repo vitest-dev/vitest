@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { beforeEach, expect, test } from 'vitest'
 import type { UserConfig } from 'vitest'
 import { version } from 'vitest/package.json'
 
@@ -12,6 +12,20 @@ function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
 function runVitestCli(...cliArgs: string[]) {
   return testUtils.runVitestCli('run', 'fixtures/test/', ...cliArgs)
 }
+
+beforeEach((ctx) => {
+  const errors: Parameters<typeof console.error>[] = []
+  const original = console.error
+  console.error = (...args) => errors.push(args)
+
+  ctx.onTestFailed(() => {
+    errors.forEach(args => original(...args))
+  })
+
+  return () => {
+    console.error = original
+  }
+})
 
 test('shard cannot be used with watch mode', async () => {
   const { stderr } = await runVitest({ watch: true, shard: '1/2' })
@@ -49,16 +63,67 @@ test('inspect-brk cannot be used with multi processing', async () => {
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('v8 coverage provider cannot be used with browser', async () => {
-  const { stderr } = await runVitest({ coverage: { enabled: true }, browser: { enabled: true, name: 'chrome' } })
+test('v8 coverage provider throws when not playwright + chromium', async () => {
+  const providers = ['playwright', 'webdriverio', 'preview']
+  const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari']
 
-  expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+  for (const provider of providers) {
+    for (const name of names) {
+      if (provider === 'playwright' && name === 'chromium') {
+        continue
+      }
+
+      const { stderr } = await runVitest({
+        coverage: {
+          enabled: true,
+        },
+        browser: {
+          enabled: true,
+          provider,
+          name,
+        },
+      })
+
+      expect(stderr).toMatch(
+`Error: @vitest/coverage-v8 does not work with
+{
+  "browser": {
+    "provider": "${provider}",
+    "name": "${name}"
+  }
+}
+
+Use either:
+{
+  "browser": {
+    "provider": "playwright",
+    "name": "chromium"
+  }
+}
+
+...or change your coverage provider to:
+{
+  "coverage": {
+    "provider": "istanbul"
+  }
+}
+`,
+      )
+    }
+  }
 })
 
-test('v8 coverage provider cannot be used with browser in workspace', async () => {
+test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
-
-  expect(stderr).toMatch('Error: @vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead')
+  expect(stderr).toMatch(
+`Error: @vitest/coverage-v8 does not work with
+{
+  "browser": {
+    "provider": "webdriverio",
+    "name": "chrome"
+  }
+}`,
+  )
 })
 
 test('coverage reportsDirectory cannot be current working directory', async () => {

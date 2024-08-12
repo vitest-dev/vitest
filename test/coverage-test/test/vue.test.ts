@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import { readdirSync } from 'node:fs'
 import { beforeAll, expect } from 'vitest'
-import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { isBrowser, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
 beforeAll(async () => {
   await runVitest({
@@ -25,7 +25,9 @@ test('coverage results matches snapshot', async () => {
   const summary = coverageMap.getCoverageSummary()
 
   if (isV8Provider()) {
-    expect(summary).toMatchInlineSnapshot(`
+    const { branches, functions, lines, statements } = summary
+
+    expect({ branches, functions }).toMatchInlineSnapshot(`
       {
         "branches": {
           "covered": 5,
@@ -33,32 +35,52 @@ test('coverage results matches snapshot', async () => {
           "skipped": 0,
           "total": 6,
         },
-        "branchesTrue": {
-          "covered": 0,
-          "pct": "Unknown",
-          "skipped": 0,
-          "total": 0,
-        },
         "functions": {
           "covered": 3,
           "pct": 60,
           "skipped": 0,
           "total": 5,
         },
-        "lines": {
-          "covered": 36,
-          "pct": 81.81,
-          "skipped": 0,
-          "total": 44,
-        },
-        "statements": {
-          "covered": 36,
-          "pct": 81.81,
-          "skipped": 0,
-          "total": 44,
-        },
       }
     `)
+
+    // Lines and statements are not 100% identical between node and browser - not sure if it's Vue, Vite or Vitest issue
+    if (isBrowser()) {
+      expect({ lines, statements }).toMatchInlineSnapshot(`
+        {
+          "lines": {
+            "covered": 40,
+            "pct": 83.33,
+            "skipped": 0,
+            "total": 48,
+          },
+          "statements": {
+            "covered": 40,
+            "pct": 83.33,
+            "skipped": 0,
+            "total": 48,
+          },
+        }
+      `)
+    }
+    else {
+      expect({ lines, statements }).toMatchInlineSnapshot(`
+        {
+          "lines": {
+            "covered": 36,
+            "pct": 81.81,
+            "skipped": 0,
+            "total": 44,
+          },
+          "statements": {
+            "covered": 36,
+            "pct": 81.81,
+            "skipped": 0,
+            "total": 44,
+          },
+        }
+      `)
+    }
   }
   else {
     expect(summary).toMatchInlineSnapshot(`

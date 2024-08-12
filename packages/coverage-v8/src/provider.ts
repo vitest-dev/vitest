@@ -22,10 +22,9 @@ import { provider } from 'std-env'
 import createDebug from 'debug'
 import { cleanUrl } from 'vite-node/utils'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
-import {
-  coverageConfigDefaults,
-} from 'vitest/config'
+import { coverageConfigDefaults } from 'vitest/config'
 import { BaseCoverageProvider } from 'vitest/coverage'
+import type { Vitest, WorkspaceProject } from 'vitest/node'
 import type {
   AfterSuiteRunMeta,
   CoverageProvider,
@@ -33,7 +32,6 @@ import type {
   ReportContext,
   ResolvedCoverageOptions,
 } from 'vitest'
-import type { Vitest } from 'vitest/node'
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
 
@@ -65,6 +63,8 @@ type ProjectName =
   | NonNullable<AfterSuiteRunMeta['projectName']>
   | typeof DEFAULT_PROJECT
 
+type Entries<T> = [keyof T, T[keyof T]][]
+
 // TODO: vite-node should export this
 const WRAPPER_LENGTH = 185
 
@@ -74,6 +74,7 @@ const VITE_EXPORTS_LINE_PATTERN
 const DECORATOR_METADATA_PATTERN
   = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
 const DEFAULT_PROJECT: unique symbol = Symbol.for('default-project')
+const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
 let uniqueId = 0
@@ -124,9 +125,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         lines: config.thresholds['100'] ? 100 : config.thresholds.lines,
         branches: config.thresholds['100'] ? 100 : config.thresholds.branches,
         functions: config.thresholds['100'] ? 100 : config.thresholds.functions,
-        statements: config.thresholds['100']
-          ? 100
-          : config.thresholds.statements,
+        statements: config.thresholds['100'] ? 100 : config.thresholds.statements,
       },
     }
 
@@ -183,14 +182,14 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
    * backwards compatibility is a breaking change.
    */
   onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta): void {
-    if (transformMode !== 'web' && transformMode !== 'ssr') {
+    if (transformMode !== 'web' && transformMode !== 'ssr' && transformMode !== 'browser') {
       throw new Error(`Invalid transform mode: ${transformMode}`)
     }
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: [], ssr: [] }
+      entry = { web: [], ssr: [], browser: [] }
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
@@ -212,36 +211,30 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     await Promise.all(this.pendingPromises)
     this.pendingPromises = []
 
-    for (const [
-      projectName,
-      coveragePerProject,
-    ] of this.coverageFiles.entries()) {
-      for (const [transformMode, filenames] of Object.entries(
-        coveragePerProject,
-      ) as [AfterSuiteRunMeta['transformMode'], Filename[]][]) {
+    for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
+      for (const [transformMode, filenames] of Object.entries(coveragePerProject) as Entries<CoverageFilesByTransformMode>) {
         let merged: RawCoverage = { result: [] }
 
-        for (const chunk of this.toSlices(
-          filenames,
-          this.options.processingConcurrency,
-        )) {
+        const project = this.ctx.projects.find(p => p.getName() === projectName) || this.ctx.getCoreWorkspaceProject()
+
+        for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (debug.enabled) {
             index += chunk.length
             debug('Covered files %d/%d', index, total)
           }
 
-          await Promise.all(
-            chunk.map(async (filename) => {
-              const contents = await fs.readFile(filename, 'utf-8')
-              const coverage = JSON.parse(contents) as RawCoverage
-              merged = mergeProcessCovs([merged, coverage])
-            }),
+          await Promise.all(chunk.map(async (filename) => {
+            const contents = await fs.readFile(filename, 'utf-8')
+            const coverage = JSON.parse(contents) as RawCoverage
+
+            merged = mergeProcessCovs([merged, coverage])
+          }),
           )
         }
 
         const converted = await this.convertCoverage(
           merged,
-          projectName,
+          project,
           transformMode,
         )
 
@@ -404,6 +397,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           const { originalSource } = await this.getSources(
             filename.href,
             transformResults,
+            file => this.ctx.vitenode.transformRequest(file),
           )
 
           const coverage = {
@@ -441,9 +435,10 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     return merged
   }
 
-  private async getSources(
+  private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
     url: string,
     transformResults: TransformResults,
+    onTransform: (filepath: string) => Promise<TransformResult>,
     functions: Profiler.FunctionCoverage[] = [],
   ): Promise<{
       source: string
@@ -454,16 +449,11 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const filePath = normalize(fileURLToPath(url))
 
     let isExecuted = true
-    let transformResult:
-      | FetchResult
-      | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>
-      = transformResults.get(filePath)
+    let transformResult: FetchResult | TransformResult | undefined = transformResults.get(filePath)
 
     if (!transformResult) {
       isExecuted = false
-      transformResult = await this.ctx.vitenode
-        .transformRequest(filePath)
-        .catch(() => null)
+      transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
     }
 
     const map = transformResult?.map as EncodedSourceMap | undefined
@@ -513,27 +503,49 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
   private async convertCoverage(
     coverage: RawCoverage,
-    projectName?: ProjectName,
-    transformMode?: 'web' | 'ssr',
+    project: WorkspaceProject = this.ctx.getCoreWorkspaceProject(),
+    transformMode?: keyof CoverageFilesByTransformMode,
   ): Promise<CoverageMap> {
-    const viteNode
-      = this.ctx.projects.find(project => project.getName() === projectName)
-        ?.vitenode || this.ctx.vitenode
-    const fetchCache = transformMode
-      ? viteNode.fetchCaches[transformMode]
-      : viteNode.fetchCache
+    let fetchCache = project.vitenode.fetchCache
+
+    if (transformMode) {
+      fetchCache = transformMode === 'browser' ? new Map() : project.vitenode.fetchCaches[transformMode]
+    }
+
     const transformResults = normalizeTransformResults(fetchCache)
 
-    const scriptCoverages = coverage.result.filter(result =>
-      this.testExclude.shouldInstrument(fileURLToPath(result.url)),
-    )
+    async function onTransform(filepath: string) {
+      if (transformMode === 'browser' && project.browser) {
+        const result = await project.browser.vite.transformRequest(removeStartsWith(filepath, project.config.root))
+
+        if (result) {
+          return { ...result, code: `${result.code}// <inline-source-map>` }
+        }
+      }
+      return project.vitenode.transformRequest(filepath)
+    }
+
+    const scriptCoverages = []
+
+    for (const result of coverage.result) {
+      if (transformMode === 'browser') {
+        if (result.url.startsWith('/@fs')) {
+          result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
+        }
+        else {
+          result.url = `${FILE_PROTOCOL}${project.config.root}${result.url}`
+        }
+      }
+
+      if (this.testExclude.shouldInstrument(fileURLToPath(result.url))) {
+        scriptCoverages.push(result)
+      }
+    }
+
     const coverageMap = libCoverage.createCoverageMap({})
     let index = 0
 
-    for (const chunk of this.toSlices(
-      scriptCoverages,
-      this.options.processingConcurrency,
-    )) {
+    for (const chunk of this.toSlices(scriptCoverages, this.options.processingConcurrency)) {
       if (debug.enabled) {
         index += chunk.length
         debug('Converting %d/%d', index, scriptCoverages.length)
@@ -544,6 +556,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           const sources = await this.getSources(
             url,
             transformResults,
+            onTransform,
             functions,
           )
 
@@ -644,4 +657,12 @@ function normalizeTransformResults(
   }
 
   return normalized
+}
+
+function removeStartsWith(filepath: string, start: string) {
+  if (filepath.startsWith(start)) {
+    return filepath.slice(start.length)
+  }
+
+  return filepath
 }

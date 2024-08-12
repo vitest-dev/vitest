@@ -10,6 +10,17 @@ export async function importFs(id: string) {
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
+export const executor = {
+  isBrowser: true,
+
+  executeId: (id: string) => {
+    if (id[0] === '/' || id[1] === ':') {
+      return importFs(id)
+    }
+    return importId(id)
+  },
+}
+
 export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }

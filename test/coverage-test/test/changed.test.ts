@@ -3,6 +3,10 @@ import { resolve } from 'node:path'
 import { afterAll, beforeAll, expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
+// Note that this test may fail if you have new files in "vitest/test/coverage/src"
+// and have not yet committed those
+const SKIP = !!process.env.ECOSYSTEM_CI || !process.env.GITHUB_ACTIONS
+
 const FILE_TO_CHANGE = resolve('./fixtures/src/file-to-change.ts')
 const NEW_UNCOVERED_FILE = resolve('./fixtures/src/new-uncovered-file.ts')
 
@@ -39,8 +43,6 @@ test('{ changed: "HEAD" }', async () => {
 
   const coverageMap = await readCoverageMap()
 
-  // Note that this test may fail if you have new files in "vitest/test/coverage/src"
-  // and have not yet committed those
   expect(coverageMap.files()).toMatchInlineSnapshot(`
     [
       "<process-cwd>/fixtures/src/file-to-change.ts",
@@ -53,4 +55,4 @@ test('{ changed: "HEAD" }', async () => {
 
   const changedFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/file-to-change.ts').toSummary()
   expect(changedFile.lines.pct).toBeGreaterThanOrEqual(50)
-}, !!process.env.ECOSYSTEM_CI)
+}, SKIP)

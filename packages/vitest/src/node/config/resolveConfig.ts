@@ -222,14 +222,17 @@ export function resolveConfig(
     }
   }
 
-  if (
-    resolved.coverage.provider === 'v8'
-    && resolved.coverage.enabled
-    && isBrowserEnabled(resolved)
-  ) {
-    throw new Error(
-      '@vitest/coverage-v8 does not work with --browser. Use @vitest/coverage-istanbul instead',
-    )
+  // In browser-mode v8-coverage works only with playwright + chromium
+  if (resolved.browser.enabled && resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
+    if (!(resolved.browser.provider === 'playwright' && resolved.browser.name === 'chromium')) {
+      const browserConfig = { browser: { provider: resolved.browser.provider, name: resolved.browser.name } }
+
+      throw new Error(
+        `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
+        + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
+      )
+    }
   }
 
   resolved.coverage.reporter = resolveCoverageReporters(resolved.coverage.reporter)
