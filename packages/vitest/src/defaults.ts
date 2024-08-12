@@ -75,6 +75,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     '.marko',
   ],
   allowExternal: false,
+  excludeAfterRemap: false,
   ignoreEmptyLines: true,
   processingConcurrency: Math.min(
     20,
