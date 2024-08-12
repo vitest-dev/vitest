@@ -1443,7 +1443,7 @@ This is different from Jest behavior.
 }
 ```
 
-##### coverage.thresholds[glob-pattern].100
+##### coverage.thresholds[glob-pattern].100 <Version>2.1.0</Version> {#coverage-thresholds-glob-pattern-100}
 
 - **Type:** `boolean`
 - **Default:** `false`
