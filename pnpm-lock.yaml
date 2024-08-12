@@ -1276,6 +1276,9 @@ importers:
       magicast:
         specifier: ^0.3.3
         version: 0.3.3
+      strip-ansi:
+        specifier: ^7.1.0
+        version: 7.1.0
       unplugin-swc:
         specifier: ^1.4.4
         version: 1.4.4(@swc/core@1.4.1)(rollup@4.20.0)
