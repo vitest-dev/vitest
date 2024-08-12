@@ -181,6 +181,11 @@ export default ({ mode }: { mode: string }) => {
             docFooterText: 'Why Browser Mode? | Browser Mode',
           },
           {
+            text: 'Getting Started',
+            link: '/guide/browser/',
+            docFooterText: 'Getting Started | Browser Mode',
+          },
+          {
             text: 'Context API',
             link: '/guide/browser/context',
             docFooterText: 'Context API | Browser Mode',
