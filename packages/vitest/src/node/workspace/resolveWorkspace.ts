@@ -95,7 +95,14 @@ export async function resolveWorkspace(
   for (const project of resolvedProjects) {
     const name = project.getName()
     if (names.has(name)) {
-      throw new Error(`Project name "${name}" is not unique. All projects in a workspace should have unique names.`)
+      const duplicate = resolvedProjects.find(p => p.getName() === name && p !== project)!
+      throw new Error([
+        `Project name "${name}"`,
+        project.server.config.configFile ? ` from "${relative(vitest.config.root, project.server.config.configFile)}"` : '',
+        ' is not unique. ',
+        duplicate?.server.config.configFile ? `The project is already defined by "${relative(vitest.config.root, duplicate.server.config.configFile)}".` : '',
+        ' All projects in a workspace should have unique names. Make sure your configuration is correct.',
+      ].join(''))
     }
     names.add(name)
   }
