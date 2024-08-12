@@ -639,6 +639,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       ignoreSourceErrors: {
         description: 'Ignore type errors from source files',
       },
+      ignoreCollectWarnings: {
+        description: 'Do not show warnings from the collector during typechecking',
+      },
       tsconfig: {
         description: 'Path to a custom tsconfig file',
         argument: '<path>',

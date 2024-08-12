@@ -163,7 +163,7 @@ export async function collectTests(
       const {
         arguments: [messageNode],
       } = node
-      let message: string | null = null
+      let message: string = 'unknown'
 
       if (messageNode.type === 'Literal') {
         message = String(messageNode.value)

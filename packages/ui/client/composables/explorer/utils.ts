@@ -46,6 +46,7 @@ export function createOrUpdateFileNode(
   let fileNode = explorerTree.nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
+    fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
     fileNode.duration = file.result?.duration
@@ -66,6 +67,7 @@ export function createOrUpdateFileNode(
       type: 'file',
       children: new Set(),
       tasks: [],
+      typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
       duration: file.result?.duration,
       filepath: file.filepath,
@@ -141,9 +143,6 @@ export function createOrUpdateNode(
       taskNode.mode = task.mode
       taskNode.duration = task.result?.duration
       taskNode.state = task.result?.state
-      if (isSuiteNode(taskNode)) {
-        taskNode.typecheck = !!task.meta && 'typecheck' in task.meta
-      }
     }
     else {
       if (isAtomTest(task)) {
@@ -168,7 +167,6 @@ export function createOrUpdateNode(
           parentId,
           name: task.name,
           mode: task.mode,
-          typecheck: !!task.meta && 'typecheck' in task.meta,
           type: 'suite',
           expandable: true,
           // When the current run finish, we will expand all nodes when required, here we expand only the opened nodes

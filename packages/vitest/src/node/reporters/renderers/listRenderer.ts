@@ -124,6 +124,11 @@ function renderTree(
       prefix += formatProjectName(task.projectName)
     }
 
+    if (level === 0 && task.type === 'suite' && task.meta.typecheck) {
+      prefix += c.bgBlue(c.bold(' TS '))
+      prefix += ' '
+    }
+
     if (
       task.type === 'test'
       && task.result?.retryCount
