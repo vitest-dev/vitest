@@ -65,7 +65,11 @@ export async function resolveWorkspace(
         process.chdir(dir)
       }
       projects.push(
-        await initializeProject(filepath, vitest, { workspaceConfigPath, test: cliOverrides }),
+        await initializeProject(
+          filepath,
+          vitest,
+          { workspaceConfigPath, test: cliOverrides },
+        ),
       )
     }
   }
@@ -79,7 +83,11 @@ export async function resolveWorkspace(
 
   projectConfigs.forEach((options, index) => {
     // we can resolve these in parallel because process.cwd() is not changed
-    projectPromises.push(initializeProject(index, vitest, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
+    projectPromises.push(initializeProject(
+      index,
+      vitest,
+      mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any,
+    ))
   })
 
   if (!projects.length && !projectPromises.length) {
