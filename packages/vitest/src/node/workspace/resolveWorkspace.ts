@@ -115,9 +115,16 @@ async function resolveWorkspaceProjectConfigs(
   workspaceConfigPath: string,
   workspaceDefinition: WorkspaceProjectConfiguration[],
 ) {
+  // project configurations that were specified directly
   const projectsOptions: UserWorkspaceConfig[] = []
+
+  // custom config files that were specified directly
   const workspaceConfigFiles: string[] = []
+
+  // custom glob matches that should be resolved as directories or config files
   const workspaceGlobMatches: string[] = []
+
+  // directories that don't have a config file inside, but should be treated as projects
   let nonConfigProjectDirectories: string[] = []
 
   const relativeWorkpaceConfigPath = relative(vitest.config.root, workspaceConfigPath)
@@ -140,8 +147,14 @@ async function resolveWorkspaceProjectConfigs(
         // user can specify a directory that should be used as a project
         // the config file inside will be resolved by the default resolver later
         else if (stats.isDirectory()) {
-          const directory = file[file.length - 1] === '/' ? file : `${file}/`
-          nonConfigProjectDirectories.push(directory)
+          const configFile = await resolveDirectoryConfig(file)
+          if (configFile) {
+            workspaceConfigFiles.push(configFile)
+          }
+          else {
+            const directory = file[file.length - 1] === '/' ? file : `${file}/`
+            nonConfigProjectDirectories.push(directory)
+          }
         }
         else {
           throw new TypeError(`Unexpected file type: ${file}`)
@@ -175,19 +188,25 @@ async function resolveWorkspaceProjectConfigs(
 
       const workspacesFs = await fg(workspaceGlobMatches, globOptions)
 
-      workspacesFs.forEach((filepath) => {
+      await Promise.all(workspacesFs.map(async (filepath) => {
         // the directories are allowed with a glob like `packages/*`
         if (filepath.endsWith('/')) {
-          nonConfigProjectDirectories.push(filepath)
+          const configFile = await resolveDirectoryConfig(filepath)
+          if (configFile) {
+            workspaceConfigFiles.push(configFile)
+          }
+          else {
+            nonConfigProjectDirectories.push(filepath)
+          }
         }
         else {
           workspaceConfigFiles.push(filepath)
         }
-      })
+      }))
     }
   }
 
-  const projectConfigFiles = [...new Set(workspaceConfigFiles)]
+  const projectConfigFiles = Array.from(new Set(workspaceConfigFiles))
   const duplicateDirectories = new Set()
 
   for (const config of projectConfigFiles) {
@@ -221,4 +240,13 @@ async function resolveWorkspaceProjectConfigs(
     nonConfigDirectories: nonConfigProjectDirectories,
     configFiles: projectConfigFiles,
   }
+}
+
+async function resolveDirectoryConfig(directory: string) {
+  const files = new Set(await fs.readdir(directory))
+  const configFile = defaultConfigFiles.find(file => files.has(file))
+  if (configFile) {
+    return resolve(directory, configFile)
+  }
+  return null
 }
