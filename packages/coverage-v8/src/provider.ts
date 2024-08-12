@@ -468,39 +468,44 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     const map = transformResult?.map as EncodedSourceMap | undefined
     const code = transformResult?.code
-    const sourcesContent
-      = map?.sourcesContent?.[0]
-      || (await fs.readFile(filePath, 'utf-8').catch(() => {
+    const sourcesContent = map?.sourcesContent || []
+
+    if (!sourcesContent[0]) {
+      sourcesContent[0] = await fs.readFile(filePath, 'utf-8').catch(() => {
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
         const length = findLongestFunctionLength(functions)
         return '.'.repeat(length)
-      }))
+      })
+    }
 
     // These can be uncovered files included by "all: true" or files that are loaded outside vite-node
     if (!map) {
       return {
         isExecuted,
-        source: code || sourcesContent,
-        originalSource: sourcesContent,
+        source: code || sourcesContent[0],
+        originalSource: sourcesContent[0],
       }
     }
 
-    const sources = [url]
-    if (map.sources && map.sources[0] && !url.endsWith(map.sources[0])) {
-      sources[0] = new URL(map.sources[0], url).href
+    const sources = (map.sources || [])
+      .filter(source => source != null)
+      .map(source => new URL(source, url).href)
+
+    if (sources.length === 0) {
+      sources.push(url)
     }
 
     return {
       isExecuted,
-      originalSource: sourcesContent,
-      source: code || sourcesContent,
+      originalSource: sourcesContent[0],
+      source: code || sourcesContent[0],
       sourceMap: {
         sourcemap: excludeGeneratedCode(code, {
           ...map,
           version: 3,
           sources,
-          sourcesContent: [sourcesContent],
+          sourcesContent,
         }),
       },
     }
