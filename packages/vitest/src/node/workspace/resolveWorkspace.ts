@@ -118,7 +118,7 @@ async function resolveWorkspaceProjectConfigs(
   // project configurations that were specified directly
   const projectsOptions: UserWorkspaceConfig[] = []
 
-  // custom config files that were specified directly
+  // custom config files that were specified directly or resolved from a directory
   const workspaceConfigFiles: string[] = []
 
   // custom glob matches that should be resolved as directories or config files
