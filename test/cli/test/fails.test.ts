@@ -8,7 +8,10 @@ const root = resolve(__dirname, '../fixtures/fails')
 const files = await fg('**/*.test.ts', { cwd: root, dot: true })
 
 it.each(files)('should fail %s', async (file) => {
-  const { stderr } = await runVitest({ root }, [file])
+  const { stderr } = await runVitest({
+    root,
+    update: file === 'inline-snapshop-inside-loop-update-all.test.ts' ? true : undefined,
+  }, [file])
 
   expect(stderr).toBeTruthy()
   const msg = String(stderr)

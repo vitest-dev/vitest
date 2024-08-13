@@ -158,6 +158,13 @@ export default class SnapshotState {
       // location for js files, but `column-1` points to the same in both js/ts
       // https://github.com/vitejs/vite/issues/8657
       stack.column--
+      // reject multiple inline snapshots at the same location
+      const duplicateIndex = this._inlineSnapshots.findIndex(s => s.file === stack.file && s.line === stack.line && s.column === stack.column)
+      if (duplicateIndex >= 0) {
+        // remove the first one to avoid updating an inline snapshot
+        this._inlineSnapshots.splice(duplicateIndex, 1)
+        throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location.')
+      }
       this._inlineSnapshots.push({
         snapshot: receivedSerialized,
         ...stack,
