@@ -8,20 +8,7 @@ test('import a generated file', async () => {
   const root = path.resolve('fixtures/fs-cached-check')
   await fs.promises.rm(path.join(root, 'dist'), { recursive: true, force: true })
 
-  const { stderr, exitCode } = await runVitest(
-    {
-      root,
-    },
-    undefined,
-    undefined,
-    {
-      server: {
-        fs: {
-          cachedChecks: false,
-        },
-      },
-    },
-  )
+  const { stderr, exitCode } = await runVitest({ root })
   expect(stderr).toBe('')
   expect(exitCode).toBe(0)
 })
