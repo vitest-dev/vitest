@@ -21,8 +21,8 @@ export function MocksPlugins(): Plugin[] {
       enforce: 'post',
       transform(code, id) {
         if (id.includes('mock=automock') || id.includes('mock=autospy')) {
-          const behavior = id.includes('mock=automock') ? 'automock' : 'autospy'
-          const ms = automockModule(code, behavior, this.parse)
+          const mockType = id.includes('mock=automock') ? 'automock' : 'autospy'
+          const ms = automockModule(code, mockType, this.parse)
           return {
             code: ms.toString(),
             map: ms.generateMap({ hires: true, source: cleanUrl(id) }),
