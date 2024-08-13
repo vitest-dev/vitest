@@ -80,15 +80,16 @@ export class VitestBrowserClientMocker {
       false,
     )
 
-    let mock = this.registry.get(resolvedId)
+    const mockUrl = resolveMockPath(cleanVersion(resolvedId))
+    let mock = this.registry.get(resolveMockPath(mockUrl))
 
     if (!mock) {
       if (redirectUrl) {
         const resolvedRedirect = new URL(resolvedMockedPath(cleanVersion(redirectUrl)), location.href).toString()
-        mock = new RedirectedModule(rawId, resolvedId, resolvedRedirect)
+        mock = new RedirectedModule(rawId, mockUrl, resolvedRedirect)
       }
       else {
-        mock = new AutomockedModule(rawId, resolvedId)
+        mock = new AutomockedModule(rawId, mockUrl)
       }
     }
 
@@ -103,8 +104,7 @@ export class VitestBrowserClientMocker {
       return this.mockObject(moduleObject, mock.type)
     }
 
-    const url = new URL(`/@id/${mock.redirect}`, location.href)
-    return import(/* @vite-ignore */ url.toString())
+    return import(/* @vite-ignore */ mock.redirect)
   }
 
   public getMockContext() {
@@ -151,26 +151,26 @@ export class VitestBrowserClientMocker {
             return needsInterop ? { default: data } : data
           }
           : undefined
-        const mockType = getMockBehaviour(factoryOrOptions)
 
         const mockRedirect = typeof redirectUrl === 'string'
           ? new URL(resolvedMockedPath(cleanVersion(redirectUrl)), location.href).toString()
           : null
+        const mockType = getMockBehaviour(factoryOrOptions, mockRedirect)
 
         if (mockType === 'manual') {
           this.registry.register('manual', rawId, mockUrl, factory!)
         }
+        // autospy takes higher priority over redirect, so it needs to be checked first
         else if (mockType === 'autospy') {
           this.registry.register('autospy', rawId, mockUrl)
         }
-        else {
-          if (mockRedirect) {
-            this.registry.register('redirect', rawId, mockUrl, mockRedirect)
-          }
-          else {
-            this.registry.register('automock', rawId, mockUrl)
-          }
+        else if (mockType === 'redirect') {
+          this.registry.register('redirect', rawId, mockUrl, mockRedirect!)
         }
+        else {
+          this.registry.register('automock', rawId, mockUrl)
+        }
+
         await this.notifyMock(mockType, mockUrl, mockRedirect)
       })
       .finally(() => {
@@ -285,14 +285,15 @@ export interface MockOptions {
   spy?: boolean
 }
 
-export type MockBehaviour = 'autospy' | 'automock' | 'manual'
-
-function getMockBehaviour(factoryOrOptions?: (() => void) | MockOptions): MockBehaviour {
+function getMockBehaviour(factoryOrOptions: undefined | (() => void) | MockOptions, mockRedirect: string | null): MockedModuleType {
   if (!factoryOrOptions) {
-    return 'automock'
+    return mockRedirect ? 'redirect' : 'automock'
   }
   if (typeof factoryOrOptions === 'function') {
     return 'manual'
   }
-  return factoryOrOptions.spy ? 'autospy' : 'automock'
+  if (factoryOrOptions.spy) {
+    return 'autospy'
+  }
+  return mockRedirect ? 'redirect' : 'automock'
 }
