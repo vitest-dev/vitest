@@ -127,6 +127,12 @@ export async function collectTests(
       const {
         arguments: [messageNode],
       } = node
+
+      if (!messageNode) {
+        // called as "test()"
+        return
+      }
+
       const message = getNodeAsString(messageNode, request.code)
 
       definitions.push({

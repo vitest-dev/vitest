@@ -10,7 +10,7 @@ import type { WorkspaceProject } from '../workspace'
 
 export function createTypecheckPool(ctx: Vitest): ProcessPool {
   const promisesMap = new WeakMap<WorkspaceProject, DeferPromise<void>>()
-  const rerunTriggered = new WeakMap<WorkspaceProject, boolean>()
+  const rerunTriggered = new WeakSet<WorkspaceProject>()
 
   async function onParseEnd(
     project: WorkspaceProject,
@@ -36,7 +36,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
 
     promisesMap.get(project)?.resolve()
 
-    rerunTriggered.set(project, false)
+    rerunTriggered.delete(project)
 
     // triggered by TSC watcher, not Vitest watcher, so we need to emulate what Vitest does in this case
     if (ctx.config.watch && !ctx.runningPromise) {
@@ -68,7 +68,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.onParseEnd(result => onParseEnd(project, result))
 
     checker.onWatcherRerun(async () => {
-      rerunTriggered.set(project, true)
+      rerunTriggered.add(project)
 
       if (!ctx.runningPromise) {
         ctx.state.clearErrors()
@@ -123,7 +123,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       // check that watcher actually triggered rerun
       const _p = new Promise<boolean>((resolve) => {
         const _i = setInterval(() => {
-          if (!project.typechecker || rerunTriggered.get(project)) {
+          if (!project.typechecker || rerunTriggered.has(project)) {
             resolve(true)
             clearInterval(_i)
           }

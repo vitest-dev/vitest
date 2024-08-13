@@ -109,8 +109,8 @@ export class StateManager {
   collectFiles(project: WorkspaceProject, files: File[] = []) {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
-      const otherProject = existing.filter(
-        i => i.projectName !== file.projectName,
+      const otherFiles = existing.filter(
+        i => i.projectName !== file.projectName || i.meta.typecheck !== file.meta.typecheck,
       )
       const currentFile = existing.find(
         i => i.projectName === file.projectName,
@@ -120,8 +120,8 @@ export class StateManager {
       if (currentFile) {
         file.logs = currentFile.logs
       }
-      otherProject.push(file)
-      this.filesMap.set(file.filepath, otherProject)
+      otherFiles.push(file)
+      this.filesMap.set(file.filepath, otherFiles)
       this.updateId(file, project)
     })
   }
