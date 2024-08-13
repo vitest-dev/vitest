@@ -1,7 +1,7 @@
 import * as nodeos from 'node:os'
 import crypto from 'node:crypto'
 import { relative } from 'pathe'
-import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject } from 'vitest/node'
+import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject, WorkspaceSpec } from 'vitest/node'
 import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:pool')
@@ -92,7 +92,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     await Promise.all(promises)
   }
 
-  const runWorkspaceTests = async (method: 'run' | 'collect', specs: [WorkspaceProject, string][]) => {
+  const runWorkspaceTests = async (method: 'run' | 'collect', specs: WorkspaceSpec[]) => {
     const groupedFiles = new Map<WorkspaceProject, string[]>()
     for (const [project, file] of specs) {
       const files = groupedFiles.get(project) || []

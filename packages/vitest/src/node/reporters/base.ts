@@ -154,6 +154,9 @@ export abstract class BaseReporter implements Reporter {
     }
 
     let title = ` ${getStateSymbol(task)} `
+    if (task.meta.typecheck) {
+      title += `${c.bgBlue(c.bold(' TS '))} `
+    }
     if (task.projectName) {
       title += formatProjectName(task.projectName)
     }

@@ -1,11 +1,7 @@
 import '../node/types/vite'
 
 import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
-import type { ProjectConfig } from '../node/types/config'
-
-export interface UserWorkspaceConfig extends ViteUserConfig {
-  test?: ProjectConfig
-}
+import type { UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../node/types/config'
 
 // will import vitest declare test in module 'vite'
 export {
@@ -20,6 +16,7 @@ export { extraInlineDeps } from '../constants'
 export type { Plugin } from 'vite'
 
 export type { ConfigEnv, ViteUserConfig as UserConfig }
+export type { UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration }
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
 export type UserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
 export type UserConfigFn = (
@@ -31,14 +28,6 @@ export type UserConfigExport =
   | UserConfigFnObject
   | UserConfigFnPromise
   | UserConfigFn
-
-export type UserProjectConfigFn = (
-  env: ConfigEnv
-) => UserWorkspaceConfig | Promise<UserWorkspaceConfig>
-export type UserProjectConfigExport =
-  | UserWorkspaceConfig
-  | Promise<UserWorkspaceConfig>
-  | UserProjectConfigFn
 
 export function defineConfig(config: ViteUserConfig): ViteUserConfig
 export function defineConfig(
@@ -57,14 +46,6 @@ export function defineProject(config: UserProjectConfigExport): UserProjectConfi
 export function defineProject(config: UserProjectConfigExport): UserProjectConfigExport {
   return config
 }
-
-export type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
-  /**
-   * Relative path to the extendable config. All other options will be merged with this config.
-   * @example '../vite.config.ts'
-   */
-  extends?: string
-})
 
 export function defineWorkspace(config: WorkspaceProjectConfiguration[]): WorkspaceProjectConfiguration[] {
   return config

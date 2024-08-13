@@ -112,3 +112,24 @@ describe('ignoreSourceErrors', () => {
     expect(vitest.stderr).not.toContain('TypeCheckError: Cannot find name \'thisIsSourceError\'')
   })
 })
+
+describe('when the title is dynamic', () => {
+  it('works correctly', async () => {
+    const vitest = await runVitest({
+      root: resolve(__dirname, '../fixtures/dynamic-title'),
+      reporters: [['default', { isTTY: true }]],
+    })
+
+    expect(vitest.stdout).toContain('✓ for: %s')
+    expect(vitest.stdout).toContain('✓ each: %s')
+    expect(vitest.stdout).toContain('✓ dynamic skip')
+    expect(vitest.stdout).not.toContain('✓ false') // .skipIf is not reported as a separate test
+    expect(vitest.stdout).toContain('✓ template string')
+    // eslint-disable-next-line no-template-curly-in-string
+    expect(vitest.stdout).toContain('✓ template ${"some value"} string')
+    // eslint-disable-next-line no-template-curly-in-string
+    expect(vitest.stdout).toContain('✓ template ${`literal`} string')
+    expect(vitest.stdout).toContain('✓ name')
+    expect(vitest.stdout).toContain('✓ (() => "some name")()')
+  })
+})

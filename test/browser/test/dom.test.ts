@@ -87,5 +87,7 @@ function createWrapper() {
   const wrapper = document.createElement('div')
   wrapper.className = 'wrapper'
   document.body.appendChild(wrapper)
+  wrapper.style.height = '200px'
+  wrapper.style.width = '200px'
   return wrapper
 }

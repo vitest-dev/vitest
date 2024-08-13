@@ -2,7 +2,6 @@ import { relative } from 'pathe'
 import { parseAstAsync } from 'vite'
 import { ancestor as walkAst } from 'acorn-walk'
 import type { RawSourceMap } from 'vite-node'
-
 import {
   calculateSuiteHash,
   generateHash,
@@ -54,16 +53,18 @@ export async function collectTests(
   }
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
+  const projectName = ctx.getName()
+  const typecheckSubprojectName = projectName ? `${projectName}:__typecheck__` : '__typecheck__'
   const file: ParsedFile = {
     filepath,
     type: 'suite',
-    id: generateHash(`${testFilepath}${ctx.config.name || ''}`),
+    id: generateHash(`${testFilepath}${typecheckSubprojectName}`),
     name: testFilepath,
     mode: 'run',
     tasks: [],
     start: ast.start,
     end: ast.end,
-    projectName: ctx.getName(),
+    projectName,
     meta: { typecheck: true },
     file: null!,
   }
@@ -76,6 +77,12 @@ export async function collectTests(
     if (callee.type === 'Identifier') {
       return callee.name
     }
+    if (callee.type === 'CallExpression') {
+      return getName(callee.callee)
+    }
+    if (callee.type === 'TaggedTemplateExpression') {
+      return getName(callee.tag)
+    }
     if (callee.type === 'MemberExpression') {
       // direct call as `__vite_ssr_exports_0__.test()`
       if (callee.object?.name?.startsWith('__vite_ssr_')) {
@@ -86,6 +93,7 @@ export async function collectTests(
     }
     return null
   }
+
   walkAst(ast as any, {
     CallExpression(node) {
       const { callee } = node as any
@@ -96,27 +104,45 @@ export async function collectTests(
       if (!['it', 'test', 'describe', 'suite'].includes(name)) {
         return
       }
-      const {
-        arguments: [{ value: message }],
-      } = node as any
       const property = callee?.property?.name
-      let mode = !property || property === name ? 'run' : property
-      if (!['run', 'skip', 'todo', 'only', 'skipIf', 'runIf'].includes(mode)) {
-        throw new Error(
-          `${name}.${mode} syntax is not supported when testing types`,
-        )
+      const mode = !property || property === name ? 'run' : property
+      // the test node for skipIf and runIf will be the next CallExpression
+      if (mode === 'each' || mode === 'skipIf' || mode === 'runIf' || mode === 'for') {
+        return
       }
-      // cannot statically analyze, so we always skip it
-      if (mode === 'skipIf' || mode === 'runIf') {
-        mode = 'skip'
+
+      let start: number
+      const end = node.end
+
+      if (callee.type === 'CallExpression') {
+        start = callee.end
       }
+      else if (callee.type === 'TaggedTemplateExpression') {
+        start = callee.end + 1
+      }
+      else {
+        start = node.start
+      }
+
+      const {
+        arguments: [messageNode],
+      } = node
+
+      if (!messageNode) {
+        // called as "test()"
+        return
+      }
+
+      const message = getNodeAsString(messageNode, request.code)
+
       definitions.push({
-        start: node.start,
-        end: node.end,
+        start,
+        end,
         name: message,
         type: name === 'it' || name === 'test' ? 'test' : 'suite',
         mode,
-      } as LocalCallDefinition)
+        task: null as any,
+      } satisfies LocalCallDefinition)
     },
   })
   let lastSuite: ParsedSuite = file
@@ -188,4 +214,40 @@ export async function collectTests(
     map: request.map as RawSourceMap | null,
     definitions,
   }
+}
+
+function getNodeAsString(node: any, code: string): string {
+  if (node.type === 'Literal') {
+    return String(node.value)
+  }
+  else if (node.type === 'Identifier') {
+    return node.name
+  }
+  else if (node.type === 'TemplateLiteral') {
+    return mergeTemplateLiteral(node, code)
+  }
+  else {
+    return code.slice(node.start, node.end)
+  }
+}
+
+function mergeTemplateLiteral(node: any, code: string): string {
+  let result = ''
+  let expressionsIndex = 0
+
+  for (let quasisIndex = 0; quasisIndex < node.quasis.length; quasisIndex++) {
+    result += node.quasis[quasisIndex].value.raw
+    if (expressionsIndex in node.expressions) {
+      const expression = node.expressions[expressionsIndex]
+      const string = expression.type === 'Literal' ? expression.raw : getNodeAsString(expression, code)
+      if (expression.type === 'TemplateLiteral') {
+        result += `\${\`${string}\`}`
+      }
+      else {
+        result += `\${${string}}`
+      }
+      expressionsIndex++
+    }
+  }
+  return result
 }

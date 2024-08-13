@@ -26,7 +26,7 @@ function buildWorkspace() {
 const workspace = buildWorkspace()
 
 function workspaced(files: string[]) {
-  return files.map(file => [workspace, file] as WorkspaceSpec)
+  return files.map(file => [workspace, file, { pool: 'forks' }] satisfies WorkspaceSpec)
 }
 
 describe('base sequencer', () => {

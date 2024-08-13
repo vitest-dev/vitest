@@ -10,7 +10,7 @@ import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
 
-export type WorkspaceSpec = [project: WorkspaceProject, testFile: string]
+export type WorkspaceSpec = [project: WorkspaceProject, testFile: string, options: { pool: Pool }]
 export type RunWithFiles = (
   files: WorkspaceSpec[],
   invalidates?: string[]
@@ -39,14 +39,7 @@ export const builtinPools: BuiltinPool[] = [
   'typescript',
 ]
 
-function getDefaultPoolName(project: WorkspaceProject, file: string): Pool {
-  if (project.config.typecheck.enabled) {
-    for (const glob of project.config.typecheck.include) {
-      if (mm.isMatch(file, glob, { cwd: project.config.root })) {
-        return 'typescript'
-      }
-    }
-  }
+function getDefaultPoolName(project: WorkspaceProject): Pool {
   if (project.config.browser.enabled) {
     return 'browser'
   }
@@ -64,7 +57,7 @@ export function getFilePoolName(project: WorkspaceProject, file: string) {
       return pool as Pool
     }
   }
-  return getDefaultPoolName(project, file)
+  return getDefaultPoolName(project)
 }
 
 export function createPool(ctx: Vitest): ProcessPool {
@@ -172,7 +165,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     for (const spec of files) {
-      const pool = getFilePoolName(spec[0], spec[1])
+      const { pool } = spec[2]
       filesByPool[pool] ??= []
       filesByPool[pool].push(spec)
     }
