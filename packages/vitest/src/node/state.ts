@@ -78,7 +78,16 @@ export class StateManager {
         .flat()
         .filter(file => file && !file.local)
     }
-    return Array.from(this.filesMap.values()).flat().filter(file => !file.local)
+    return Array.from(this.filesMap.values()).flat().filter(file => !file.local).sort((f1, f2) => {
+      // print typecheck files first
+      if (f1.meta?.typecheck && f2.meta?.typecheck) {
+        return 0
+      }
+      if (f1.meta?.typecheck) {
+        return -1
+      }
+      return 1
+    })
   }
 
   getFilepaths(): string[] {
