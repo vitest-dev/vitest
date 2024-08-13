@@ -1,6 +1,10 @@
 import { expectTypeOf, test } from 'vitest'
 
-test.each(['some-value'])('%s', () => {
+test.each(['some-value'])('each: %s', () => {
+  expectTypeOf(1).toEqualTypeOf(2)
+})
+
+test.for(['some-value'])('for: %s', () => {
   expectTypeOf(1).toEqualTypeOf(2)
 })
 

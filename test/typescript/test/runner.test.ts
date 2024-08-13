@@ -114,12 +114,13 @@ describe('ignoreSourceErrors', () => {
 })
 
 describe('when the title is dynamic', () => {
-  it('correctly works', async () => {
+  it('works correctly', async () => {
     const vitest = await runVitest({
       root: resolve(__dirname, '../fixtures/dynamic-title'),
     })
 
-    expect(vitest.stdout).toContain('✓ %s')
+    expect(vitest.stdout).toContain('✓ for: %s')
+    expect(vitest.stdout).toContain('✓ each: %s')
     expect(vitest.stdout).toContain('✓ dynamic skip')
     expect(vitest.stdout).not.toContain('✓ false') // .skipIf is not reported as a separate test
     expect(vitest.stdout).toContain('✓ template string')

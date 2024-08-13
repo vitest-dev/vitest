@@ -107,7 +107,7 @@ export async function collectTests(
       const property = callee?.property?.name
       const mode = !property || property === name ? 'run' : property
       // the test node for skipIf and runIf will be the next CallExpression
-      if (mode === 'each' || mode === 'skipIf' || mode === 'runIf') {
+      if (mode === 'each' || mode === 'skipIf' || mode === 'runIf' || mode === 'for') {
         return
       }
 
