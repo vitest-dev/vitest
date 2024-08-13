@@ -33,7 +33,6 @@ Error: InlineSnapshot cannot be used inside of test.each or describe.each"
 
 exports[`should fail inline-snapshop-inside-loop.test.ts > inline-snapshop-inside-loop.test.ts 1`] = `
 "Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
-Error: Snapshot \`fail 2 1\` mismatched
 Error: toMatchInlineSnapshot cannot be called multiple times at the same location."
 `;
 
