@@ -37,7 +37,7 @@ export interface WebSocketBrowserHandlers {
     resolvedId: string
     needsInterop?: boolean
   }>
-  invalidate: (ids: string[]) => void
+  invalidate: (urls: string[]) => void
   getBrowserFileSourceMap: (
     id: string
   ) => SourceMap | null | { mappings: '' } | undefined

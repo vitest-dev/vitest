@@ -209,9 +209,10 @@ export function setupBrowserRpc(
         resolveMock(rawId, importer, hasFactory) {
           return resolveMock(project, rawId, importer, hasFactory)
         },
-        invalidate(ids) {
-          ids.forEach((id) => {
+        invalidate(urls) {
+          urls.forEach((url) => {
             const moduleGraph = server.vite.moduleGraph
+            const id = join(server.vite.config.root, url.slice(1))
             const module = moduleGraph.getModuleById(id)
             if (module) {
               moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
