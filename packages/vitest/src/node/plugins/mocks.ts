@@ -1,8 +1,7 @@
 import type { Plugin } from 'vite'
-import { cleanUrl } from 'vite-node/utils'
+import { automockPlugin } from '@vitest/mocker/node'
 import { hoistMocks } from '../hoistMocks'
 import { distDir } from '../../paths'
-import { automockModule } from '../automock'
 
 export function MocksPlugins(): Plugin[] {
   return [
@@ -16,19 +15,6 @@ export function MocksPlugins(): Plugin[] {
         return hoistMocks(code, id, this.parse)
       },
     },
-    {
-      name: 'vitest:automock',
-      enforce: 'post',
-      transform(code, id) {
-        if (id.includes('mock=automock') || id.includes('mock=autospy')) {
-          const mockType = id.includes('mock=automock') ? 'automock' : 'autospy'
-          const ms = automockModule(code, mockType, this.parse)
-          return {
-            code: ms.toString(),
-            map: ms.generateMap({ hires: true, source: cleanUrl(id) }),
-          }
-        }
-      },
-    },
+    automockPlugin(),
   ]
 }

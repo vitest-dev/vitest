@@ -11,9 +11,35 @@ import type {
 } from '@vitest/utils/ast'
 import MagicString from 'magic-string'
 
+interface PartialPlugin {
+  name: string
+  enforce: 'post'
+  transform: (this: { parse: (code: string) => any }, code: string, id: string) => void | ({
+    code: string
+    map: any
+  })
+}
+
+export function automockPlugin(): PartialPlugin {
+  return {
+    name: 'vitest:automock',
+    enforce: 'post',
+    transform(code, id) {
+      if (id.includes('mock=automock') || id.includes('mock=autospy')) {
+        const mockType = id.includes('mock=automock') ? 'automock' : 'autospy'
+        const ms = automockModule(code, mockType, this.parse)
+        return {
+          code: ms.toString(),
+          map: ms.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
+        }
+      }
+    },
+  }
+}
+
 // TODO: better source map replacement
-export function automockModule(code: string, mockType: 'automock' | 'autospy', parse: (code: string) => Program) {
-  const ast = parse(code)
+export function automockModule(code: string, mockType: 'automock' | 'autospy', parse: (code: string) => any): MagicString {
+  const ast = parse(code) as Program
 
   const m = new MagicString(code)
 
@@ -165,4 +191,9 @@ ${redeclarations}
 `
   m.append(moduleObject + assigning + specifiersExports)
   return m
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }

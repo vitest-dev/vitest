@@ -658,7 +658,14 @@ importers:
         version: 3.5.0
 
   packages/mocker:
+    dependencies:
+      magic-string:
+        specifier: ^0.30.11
+        version: 0.30.11
     devDependencies:
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -1192,6 +1199,9 @@ importers:
       '@vitest/expect':
         specifier: workspace:*
         version: link:../../packages/expect
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../../packages/mocker
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
@@ -11777,7 +11787,7 @@ snapshots:
       devalue: 4.3.2
       esm-env: 1.0.0
       kleur: 4.1.5
-      magic-string: 0.30.10
+      magic-string: 0.30.11
       mime: 3.0.0
       sade: 1.8.1
       set-cookie-parser: 2.6.0
@@ -12606,7 +12616,7 @@ snapshots:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
       '@vitest/utils': 2.0.5
-      magic-string: 0.30.10
+      magic-string: 0.30.11
       msw: 2.3.4(typescript@5.5.4)
       sirv: 2.0.4
       vitest: link:packages/vitest

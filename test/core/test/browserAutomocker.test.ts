@@ -1,6 +1,6 @@
 import { parseAst } from 'vite'
 import { expect, it } from 'vitest'
-import { automockModule } from 'vitest/src/node/automock.js'
+import { automockModule } from '@vitest/mocker/node'
 
 function automock(code: string) {
   return automockModule(code, 'automock', parseAst).toString()
