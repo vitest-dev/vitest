@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { automockModule } from 'vitest/src/node/automock.js'
 
 function automock(code: string) {
-  return automockModule(code, parseAst).toString()
+  return automockModule(code, 'automock', parseAst).toString()
 }
 
 it('correctly parses function declaration', () => {
