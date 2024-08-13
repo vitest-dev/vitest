@@ -555,7 +555,7 @@ function createVitest(): VitestUtils {
       return factory()
     },
 
-    mock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+    mock(path: string | Promise<unknown>, factory?: MockOptions | MockFactoryWithHelper) {
       if (typeof path !== 'string') {
         throw new TypeError(
           `vi.mock() expects a string path, but received a ${typeof path}`,
@@ -587,7 +587,7 @@ function createVitest(): VitestUtils {
       _mocker().queueUnmock(path, getImporter('unmock'))
     },
 
-    doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+    doMock(path: string | Promise<unknown>, factory?: MockOptions | MockFactoryWithHelper) {
       if (typeof path !== 'string') {
         throw new TypeError(
           `vi.doMock() expects a string path, but received a ${typeof path}`,
