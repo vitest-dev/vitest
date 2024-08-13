@@ -32,7 +32,7 @@ export class VitestMocker {
 
   private filterPublicKeys: (symbol | string)[]
 
-  private mockersRegistry = new Map<string, MockerRegistry>()
+  private registries = new Map<string, MockerRegistry>()
 
   private mockContext: MockContext = {
     callstack: null,
@@ -96,14 +96,14 @@ export class VitestMocker {
 
   private getMockerRegistry() {
     const suite = this.getSuiteFilepath()
-    if (!this.mockersRegistry.has(suite)) {
-      this.mockersRegistry.set(suite, new MockerRegistry())
+    if (!this.registries.has(suite)) {
+      this.registries.set(suite, new MockerRegistry())
     }
-    return this.mockersRegistry.get(suite)!
+    return this.registries.get(suite)!
   }
 
   public reset() {
-    this.mockersRegistry.clear()
+    this.registries.clear()
   }
 
   private deleteCachedItem(id: string) {
