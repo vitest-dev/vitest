@@ -195,6 +195,13 @@ export class Vitest {
   }
 
   /**
+   * @deprecated internal, use `_createCoreProject` instead
+   */
+  createCoreProject() {
+    return this._createCoreProject()
+  }
+
+  /**
    * @internal
    */
   async _createCoreProject() {

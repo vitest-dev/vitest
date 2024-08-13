@@ -10,7 +10,6 @@ import {
   someTasksAreOnly,
 } from '@vitest/runner/utils'
 import type { File, Suite, Test } from '@vitest/runner'
-import type { Node, TemplateLiteral } from 'estree'
 import type { WorkspaceProject } from '../node/workspace'
 import { generateCodeFrame } from '../node/error'
 
@@ -265,7 +264,7 @@ export async function collectTests(
   }
 }
 
-function mergeTemplateLiteral(node: TemplateLiteral): string {
+function mergeTemplateLiteral(node: any): string {
   let result = ''
   let expressionsIndex = 0
 
