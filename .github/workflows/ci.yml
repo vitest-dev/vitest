@@ -33,7 +33,7 @@ jobs:
         run: pnpm run lint
 
   changed:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     outputs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
@@ -49,6 +49,25 @@ jobs:
             .github/**
             !.github/workflows/ci.yml
             **.md
+
+  typecheck:
+    needs: changed
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-and-cache
+
+      - name: Install
+        run: pnpm i
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Typecheck
+        run: pnpm run typecheck
 
   test:
     needs: changed
