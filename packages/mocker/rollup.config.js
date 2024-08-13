@@ -11,7 +11,8 @@ const pkg = require('./package.json')
 
 const entries = {
   index: 'src/index.ts',
-  node: 'src/node.ts',
+  node: 'src/node/index.ts',
+  browser: 'src/browser/index.ts',
 }
 
 const external = [

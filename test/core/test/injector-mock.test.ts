@@ -1,19 +1,31 @@
 import { parseAst } from 'rollup/parseAst'
 import { describe, expect, it, test } from 'vitest'
 import stripAnsi from 'strip-ansi'
-import { getDefaultColors } from 'tinyrainbow'
-import { hoistMocks } from '../../../packages/vitest/src/node/hoistMocks'
+import { generateCodeFrame } from 'vitest/src/node/error.js'
+import { highlightCode } from 'vitest/src/utils/colors.js'
+import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/pluginHoistMocks'
+import { hoistMocks } from '../../../packages/mocker/src/node/pluginHoistMocks'
 
 function parse(code: string, options: any) {
   return parseAst(code, options)
 }
 
+const hoistMocksOptions: HoistMocksPluginOptions = {
+  codeFrameGenerator(node: any, id: string, code: string) {
+    return generateCodeFrame(
+      highlightCode(id, code),
+      4,
+      node.start + 1,
+    )
+  },
+}
+
 async function hoistSimple(code: string, url = '') {
-  return hoistMocks(code, url, parse)
+  return hoistMocks(code, url, parse, hoistMocksOptions)
 }
 
 function hoistSimpleCode(code: string) {
-  return hoistMocks(code, '/test.js', parse)?.code.trim()
+  return hoistMocks(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
 }
 
 test('hoists mock, unmock, hoisted', () => {
@@ -96,7 +108,7 @@ test('correctly access import', () => {
 
 describe('transform', () => {
   const hoistSimpleCodeWithoutMocks = (code: string) => {
-    return hoistMocks(`import {vi} from "vitest";\n${code}\nvi.mock('faker');`, '/test.js', parse)?.code.trim()
+    return hoistMocks(`import {vi} from "vitest";\n${code}\nvi.mock('faker');`, '/test.js', parse, hoistMocksOptions)?.code.trim()
   }
   test('default import', async () => {
     expect(
@@ -122,7 +134,7 @@ vi.mock('./mock.js', () => ({
     admin: admin,
   }))
 }))
-`, './test.js', parse)?.code.trim(),
+`, './test.js', parse, hoistMocksOptions)?.code.trim(),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
       vi.mock('./mock.js', () => ({
@@ -151,7 +163,7 @@ vi.mock('./mock.js', () => {
     admin: admin,
   }))
 })
-`, './test.js', parse)?.code.trim(),
+`, './test.js', parse, hoistMocksOptions)?.code.trim(),
     ).toMatchInlineSnapshot(`
       "const { vi } = await import('vitest')
       const { user, admin } = await vi.hoisted(async () => {
@@ -1304,7 +1316,7 @@ test('test', async () => {
 describe('throws an error when nodes are incompatible', () => {
   const getErrorWhileHoisting = (code: string) => {
     try {
-      hoistMocks(code, '/test.js', parse, getDefaultColors())?.code.trim()
+      hoistMocks(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
     }
     catch (err: any) {
       return err

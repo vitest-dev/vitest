@@ -1,4 +1,4 @@
-import type { MockedModuleType } from './registry'
+import type { MockedModuleType } from '../registry'
 
 type Key = string | symbol
 

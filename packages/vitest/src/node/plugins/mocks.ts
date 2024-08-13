@@ -1,20 +1,26 @@
 import type { Plugin } from 'vite'
-import { automockPlugin } from '@vitest/mocker/node'
-import { hoistMocks } from '../hoistMocks'
+import { automockPlugin, hoistMocksPlugin } from '@vitest/mocker/node'
 import { distDir } from '../../paths'
+import { generateCodeFrame } from '../error'
+import { highlightCode } from '../../utils/colors'
 
 export function MocksPlugins(): Plugin[] {
   return [
-    {
-      name: 'vitest:mocks',
-      enforce: 'post',
-      transform(code, id) {
+    hoistMocksPlugin({
+      filter(id) {
         if (id.includes(distDir)) {
-          return
+          return false
         }
-        return hoistMocks(code, id, this.parse)
+        return true
       },
-    },
+      codeFrameGenerator(node, id, code) {
+        return generateCodeFrame(
+          highlightCode(id, code),
+          4,
+          node.start + 1,
+        )
+      },
+    }),
     automockPlugin(),
   ]
 }

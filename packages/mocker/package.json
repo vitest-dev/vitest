@@ -37,11 +37,27 @@
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c --watch"
   },
+  "peerDependencies": {
+    "msw": "^2.3.5",
+    "vite": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "msw": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "magic-string": "^0.30.11"
   },
   "devDependencies": {
+    "@types/estree": "^1.0.5",
     "@vitest/utils": "workspace:*",
-    "pathe": "^1.1.2"
+    "acorn-walk": "^8.3.3",
+    "msw": "^2.3.5",
+    "pathe": "^1.1.2",
+    "vite": "^5.4.0"
   }
 }

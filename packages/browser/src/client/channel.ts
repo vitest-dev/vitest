@@ -1,4 +1,5 @@
 import type { CancelReason } from '@vitest/runner'
+import type { MockedModuleSerialized } from '@vitest/mocker'
 import { getBrowserState } from './utils'
 
 export interface IframeDoneEvent {
@@ -22,31 +23,9 @@ export interface IframeViewportEvent {
   id: string
 }
 
-export type IframeMockEvent = IframeAutomockEvent | IframeAutospyEvent | IframeManualMockEvent | IframeRedirectMockEvent
-
-export interface IframeAutomockEvent {
+export interface IframeMockEvent {
   type: 'mock'
-  mockType: 'automock'
-  url: string
-}
-
-export interface IframeAutospyEvent {
-  type: 'mock'
-  mockType: 'autospy'
-  url: string
-}
-
-export interface IframeManualMockEvent {
-  type: 'mock'
-  mockType: 'manual'
-  url: string
-}
-
-export interface IframeRedirectMockEvent {
-  type: 'mock'
-  mockType: 'redirect'
-  url: string
-  redirect: string
+  module: MockedModuleSerialized
 }
 
 export interface IframeUnmockEvent {

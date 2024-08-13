@@ -1,6 +1,7 @@
 import { SpyModule, collectTests, setupCommonEnv, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { page } from '@vitest/browser/context'
-import { channel, client, onCancel } from '@vitest/browser/client'
+import type { IframeMockEvent, IframeMockInvalidateEvent, IframeUnmockEvent } from '@vitest/browser/client'
+import { channel, client, onCancel, waitForChannel } from '@vitest/browser/client'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
@@ -33,7 +34,33 @@ async function prepareTestEnvironment(files: string[]) {
   state.onCancel = onCancel
   state.rpc = rpc as any
 
-  const mocker = new VitestBrowserClientMocker()
+  const mocker = new VitestBrowserClientMocker(
+    {
+      async delete(url: string) {
+        channel.postMessage({
+          type: 'unmock',
+          url,
+        } satisfies IframeUnmockEvent)
+        await waitForChannel('unmock:done')
+      },
+      async register(module) {
+        channel.postMessage({
+          type: 'mock',
+          module: module.toJSON(),
+        } satisfies IframeMockEvent)
+      },
+      invalidate() {
+        channel.postMessage({
+          type: 'mock:invalidate',
+        } satisfies IframeMockInvalidateEvent)
+      },
+    },
+    rpc,
+    SpyModule.spyOn,
+    {
+      root: config.root,
+    },
+  )
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
@@ -51,7 +78,6 @@ async function prepareTestEnvironment(files: string[]) {
     }
   })
 
-  mocker.setSpyModule(SpyModule)
   mocker.setupWorker()
 
   onCancel.then((reason) => {

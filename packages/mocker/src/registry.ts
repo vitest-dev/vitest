@@ -9,41 +9,52 @@ export class MockerRegistry {
     return this.registry.keys()
   }
 
+  set(id: string, mock: MockedModule): void {
+    this.registry.set(id, mock)
+  }
+
   public register(
     type: 'redirect',
     raw: string,
     url: string,
     redirect: string,
-  ): void
+  ): RedirectedModule
   public register(
     type: 'manual',
     raw: string,
     url: string,
     factory: () => any,
-  ): void
+  ): ManualMockedModule
   public register(
-    type: 'automock' | 'autospy',
+    type: 'automock',
     raw: string,
     url: string,
-  ): void
+  ): AutomockedModule
+  public register(
+    type: 'autospy',
+    raw: string,
+    url: string,
+  ): AutospiedModule
   public register(
     type: MockedModuleType,
     raw: string,
     url: string,
     factoryOrRedirect?: string | (() => any),
-  ): void {
+  ): MockedModule {
     if (type === 'manual') {
       if (typeof factoryOrRedirect !== 'function') {
         throw new TypeError('[vitest] Manual mocks require a factory function.')
       }
       const mock = new ManualMockedModule(raw, url, factoryOrRedirect)
       this.registry.set(url, mock)
+      return mock
     }
     else if (type === 'automock' || type === 'autospy') {
       const mock = type === 'automock'
         ? new AutomockedModule(raw, url)
         : new AutospiedModule(raw, url)
       this.registry.set(url, mock)
+      return mock
     }
     else if (type === 'redirect') {
       if (typeof factoryOrRedirect !== 'string') {
@@ -51,9 +62,10 @@ export class MockerRegistry {
       }
       const mock = new RedirectedModule(raw, url, factoryOrRedirect)
       this.registry.set(url, mock)
+      return mock
     }
     else {
-      throw new Error(`Unknown mock type: ${type}`)
+      throw new Error(`[vitest] Unknown mock type: ${type}`)
     }
   }
 
@@ -70,8 +82,18 @@ export class MockerRegistry {
   }
 }
 
-export type MockedModule = AutomockedModule | AutospiedModule | ManualMockedModule | RedirectedModule
+export type MockedModule =
+  | AutomockedModule
+  | AutospiedModule
+  | ManualMockedModule
+  | RedirectedModule
 export type MockedModuleType = 'automock' | 'autospy' | 'manual' | 'redirect'
+
+export type MockedModuleSerialized =
+  | AutomockedModuleSerialized
+  | AutospiedModuleSerialized
+  | ManualMockedModuleSerialized
+  | RedirectedModuleSerialized
 
 export class AutomockedModule {
   public readonly type = 'automock'
@@ -80,6 +102,24 @@ export class AutomockedModule {
     public raw: string,
     public url: string,
   ) {}
+
+  static fromJSON(data: AutomockedModuleSerialized): AutospiedModule {
+    return new AutospiedModule(data.raw, data.url)
+  }
+
+  toJSON(): AutomockedModuleSerialized {
+    return {
+      type: this.type,
+      url: this.url,
+      raw: this.raw,
+    }
+  }
+}
+
+export interface AutomockedModuleSerialized {
+  type: 'automock'
+  url: string
+  raw: string
 }
 
 export class AutospiedModule {
@@ -89,6 +129,24 @@ export class AutospiedModule {
     public raw: string,
     public url: string,
   ) {}
+
+  static fromJSON(data: AutospiedModuleSerialized): AutospiedModule {
+    return new AutospiedModule(data.raw, data.url)
+  }
+
+  toJSON(): AutospiedModuleSerialized {
+    return {
+      type: this.type,
+      url: this.url,
+      raw: this.raw,
+    }
+  }
+}
+
+export interface AutospiedModuleSerialized {
+  type: 'autospy'
+  url: string
+  raw: string
 }
 
 export class RedirectedModule {
@@ -99,6 +157,26 @@ export class RedirectedModule {
     public url: string,
     public redirect: string,
   ) {}
+
+  static fromJSON(data: RedirectedModuleSerialized): RedirectedModule {
+    return new RedirectedModule(data.raw, data.url, data.redirect)
+  }
+
+  toJSON(): RedirectedModuleSerialized {
+    return {
+      type: this.type,
+      url: this.url,
+      raw: this.raw,
+      redirect: this.redirect,
+    }
+  }
+}
+
+export interface RedirectedModuleSerialized {
+  type: 'redirect'
+  url: string
+  raw: string
+  redirect: string
 }
 
 export class ManualMockedModule {
@@ -137,4 +215,22 @@ export class ManualMockedModule {
 
     return (this.cache = exports)
   }
+
+  static fromJSON(data: ManualMockedModuleSerialized, factory: () => any): ManualMockedModule {
+    return new ManualMockedModule(data.raw, data.url, factory)
+  }
+
+  toJSON(): ManualMockedModuleSerialized {
+    return {
+      type: this.type,
+      url: this.url,
+      raw: this.raw,
+    }
+  }
+}
+
+export interface ManualMockedModuleSerialized {
+  type: 'manual'
+  url: string
+  raw: string
 }
