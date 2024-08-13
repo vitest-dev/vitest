@@ -219,13 +219,8 @@ export function setupBrowserRpc(
         resolveMock(rawId, importer, hasFactory) {
           return resolveMock(project, rawId, importer, hasFactory)
         },
-        invalidate(urls) {
-          urls.forEach((id) => {
-            const invalidated = invalidateModuleById(id)
-            if (!invalidated) {
-              ctx.logger.warn(`[vitest] Cannot invalidate ${id}. This is an error in Vitest. Please, open a new issue with reproduction.`)
-            }
-          })
+        invalidate(ids) {
+          ids.forEach(id => invalidateModuleById(id))
         },
 
         // CDP
