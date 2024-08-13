@@ -575,7 +575,6 @@ function createVitest(): VitestUtils {
                 ),
               )
           : factory,
-        true,
       )
     },
 
@@ -608,7 +607,6 @@ function createVitest(): VitestUtils {
                 ),
               )
           : factory,
-        false,
       )
     },
 
