@@ -51,7 +51,7 @@ test.describe('ui', () => {
     // report
     const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
     await sample.hover()
-    await sample.getByTestId('btn-open-details').click()
+    await sample.getByTestId('btn-open-details').click({ force: true })
     await page.getByText('All tests passed in this file').click()
 
     // graph tab
@@ -75,7 +75,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
     const item = page.getByLabel('fixtures/console.test.ts')
     await item.hover()
-    await item.getByTestId('btn-open-details').click()
+    await item.getByTestId('btn-open-details').click({ force: true })
     await page.getByTestId('btn-console').click()
     await page.getByText('/(?<char>\\w)/').click()
 
@@ -87,7 +87,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
     const item = page.getByLabel('fixtures/error.test.ts')
     await item.hover()
-    await item.getByTestId('btn-open-details').click()
+    await item.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
   })
 

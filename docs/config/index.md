@@ -1003,6 +1003,54 @@ afterEach(() => {
 globalThis.resetBeforeEachTest = true
 ```
 
+### provide <Version>2.1.0</Version> {#provide}
+
+- **Type:** `Partial<ProvidedContext>`
+
+Define values that can be accessed inside your tests using `inject` method.
+
+:::code-group
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    provide: {
+      API_KEY: '123',
+    },
+  },
+})
+```
+```ts [my.test.js]
+import { expect, inject, test } from 'vitest'
+
+test('api key is defined', () => {
+  expect(inject('API_KEY')).toBe('123')
+})
+```
+:::
+
+::: warning
+Properties have to be strings and values need to be [serializable](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#supported_types) because this object will be transferred between different processes.
+:::
+
+::: tip
+If you are using TypeScript, you will need to augment `ProvidedContext` type for type safe access:
+
+```ts
+// vitest.shims.d.ts
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    API_KEY: string
+  }
+}
+
+// mark this file as a module so augmentation works correctly
+export {}
+```
+:::
+
 ### globalSetup
 
 - **Type:** `string | string[]`
@@ -1018,7 +1066,7 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 ::: warning
 Global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
 
-Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, you can pass down serializable data to tests via `provide` method:
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, you can pass down serializable data to tests via [`provide`](#provide) method:
 
 :::code-group
 ```js [globalSetup.js]
@@ -1033,8 +1081,6 @@ export default function setup({ provide }: GlobalSetupContext) {
   provide('wsPort', 3000)
 }
 
-// You can also extend `ProvidedContext` type
-// to have type safe access to `provide/inject` methods:
 declare module 'vitest' {
   export interface ProvidedContext {
     wsPort: number
@@ -1267,6 +1313,18 @@ Generate coverage report even when tests fail.
 
 Collect coverage of files outside the [project `root`](#root).
 
+#### coverage.excludeAfterRemap <Version>2.1.0</Version> {#coverage-exclude-after-remap}
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.excludeAfterRemap`, `--coverage.excludeAfterRemap=false`
+
+Apply exclusions again after coverage has been remapped to original sources.
+This is useful when your source files are transpiled and may contain source maps of non-source files.
+
+Use this option when you are seeing files that show up in report even if they match your `coverage.exclude` patterns.
+
 #### coverage.skipFull
 
 - **Type:** `boolean`
@@ -1385,7 +1443,7 @@ This is different from Jest behavior.
 }
 ```
 
-##### coverage.thresholds[glob-pattern].100
+##### coverage.thresholds[glob-pattern].100 <Version>2.1.0</Version> {#coverage-thresholds-glob-pattern-100}
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -1910,7 +1968,7 @@ RegExp pattern for files that will return an empty CSS file.
 If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. You can choose one of the options:
 
 - `stable`: class names will be generated as `_${name}_${hashedFilename}`, which means that generated class will stay the same, if CSS content is changed, but will change, if the name of the file is modified, or file is moved to another folder. This setting is useful, if you use snapshot feature.
-- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one and CSS processing is enabled. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
+- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopedName` method, if you have one and CSS processing is enabled. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
 - `non-scoped`: class names will not be hashed.
 
 ::: warning

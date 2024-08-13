@@ -1,10 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { Writable } from 'node:stream'
-import { isMainThread } from 'node:worker_threads'
 import type { ViteDevServer } from 'vite'
-import { mergeConfig } from 'vite'
-import { basename, dirname, join, normalize, relative, resolve } from 'pathe'
-import fg from 'fast-glob'
+import { dirname, join, normalize, relative, resolve } from 'pathe'
 import mm from 'micromatch'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
@@ -14,7 +11,7 @@ import type { defineWorkspace } from 'vitest/config'
 import { version } from '../../package.json' with { type: 'json' }
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
-import { CONFIG_NAMES, configFiles, workspacesFiles as workspaceFiles } from '../constants'
+import { workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
@@ -27,13 +24,14 @@ import { StateManager } from './state'
 import { resolveConfig } from './config/resolveConfig'
 import { Logger } from './logger'
 import { VitestCache } from './cache'
-import { WorkspaceProject, initializeProject } from './workspace'
+import { WorkspaceProject } from './workspace'
 import { VitestPackageInstaller } from './packageInstaller'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { FilesNotFoundError, GitNotFoundError } from './errors'
-import type { ResolvedConfig, UserConfig, UserWorkspaceConfig, VitestRunMode } from './types/config'
+import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { Reporter } from './types/reporter'
 import type { CoverageProvider } from './types/coverage'
+import { resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -192,7 +190,10 @@ export class Vitest {
     this.getCoreWorkspaceProject().provide(key, value)
   }
 
-  private async createCoreProject() {
+  /**
+   * @internal
+   */
+  async _createCoreProject() {
     this.coreWorkspaceProject = await WorkspaceProject.createCoreProject(this)
     return this.coreWorkspaceProject
   }
@@ -241,7 +242,7 @@ export class Vitest {
     const workspaceConfigPath = await this.getWorkspaceConfigPath()
 
     if (!workspaceConfigPath) {
-      return [await this.createCoreProject()]
+      return [await this._createCoreProject()]
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
@@ -249,152 +250,15 @@ export class Vitest {
     }
 
     if (!workspaceModule.default || !Array.isArray(workspaceModule.default)) {
-      throw new Error(`Workspace config file ${workspaceConfigPath} must export a default array of project paths.`)
+      throw new TypeError(`Workspace config file "${workspaceConfigPath}" must export a default array of project paths.`)
     }
 
-    const workspaceGlobMatches: string[] = []
-    const projectsOptions: UserWorkspaceConfig[] = []
-
-    for (const project of workspaceModule.default) {
-      if (typeof project === 'string') {
-        workspaceGlobMatches.push(project.replace('<rootDir>', this.config.root))
-      }
-      else if (typeof project === 'function') {
-        projectsOptions.push(await project({
-          command: this.server.config.command,
-          mode: this.server.config.mode,
-          isPreview: false,
-          isSsrBuild: false,
-        }))
-      }
-      else {
-        projectsOptions.push(await project)
-      }
-    }
-
-    const globOptions: fg.Options = {
-      absolute: true,
-      dot: true,
-      onlyFiles: false,
-      markDirectories: true,
-      cwd: this.config.root,
-      ignore: ['**/node_modules/**', '**/*.timestamp-*'],
-    }
-
-    const workspacesFs = await fg(workspaceGlobMatches, globOptions)
-    const resolvedWorkspacesPaths = await Promise.all(workspacesFs.filter((file) => {
-      if (file.endsWith('/')) {
-        // if it's a directory, check that we don't already have a workspace with a config inside
-        const hasWorkspaceWithConfig = workspacesFs.some((file2) => {
-          return file2 !== file && `${dirname(file2)}/` === file
-        })
-        return !hasWorkspaceWithConfig
-      }
-      const filename = basename(file)
-      return CONFIG_NAMES.some(configName => filename.startsWith(configName))
-    }).map(async (filepath) => {
-      if (filepath.endsWith('/')) {
-        const filesInside = await fs.readdir(filepath)
-        const configFile = configFiles.find(config => filesInside.includes(config))
-        return configFile ? join(filepath, configFile) : filepath
-      }
-      return filepath
-    }))
-
-    const workspacesByFolder = resolvedWorkspacesPaths
-      .reduce((configByFolder, filepath) => {
-        const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
-        configByFolder[dir] ??= []
-        configByFolder[dir].push(filepath)
-        return configByFolder
-      }, {} as Record<string, string[]>)
-
-    const filteredWorkspaces = Object.values(workspacesByFolder).map((configFiles) => {
-      if (configFiles.length === 1) {
-        return configFiles[0]
-      }
-      const vitestConfig = configFiles.find(configFile => basename(configFile).startsWith('vitest.config'))
-      return vitestConfig || configFiles[0]
-    })
-
-    const overridesOptions = [
-      'logHeapUsage',
-      'allowOnly',
-      'sequence',
-      'testTimeout',
-      'pool',
-      'update',
-      'globals',
-      'expandSnapshotDiff',
-      'disableConsoleIntercept',
-      'retry',
-      'testNamePattern',
-      'passWithNoTests',
-      'bail',
-      'isolate',
-      'printConsoleTrace',
-    ] as const
-
-    const cliOverrides = overridesOptions.reduce((acc, name) => {
-      if (name in cliOptions) {
-        acc[name] = cliOptions[name] as any
-      }
-      return acc
-    }, {} as UserConfig)
-
-    const cwd = process.cwd()
-
-    const projects: WorkspaceProject[] = []
-
-    try {
-      // we have to resolve them one by one because CWD should depend on the project
-      for (const filepath of filteredWorkspaces) {
-        if (this.server.config.configFile === filepath) {
-          const project = await this.createCoreProject()
-          projects.push(project)
-          continue
-        }
-        const dir = filepath.endsWith('/') ? filepath.slice(0, -1) : dirname(filepath)
-        if (isMainThread) {
-          process.chdir(dir)
-        }
-        projects.push(
-          await initializeProject(filepath, this, { workspaceConfigPath, test: cliOverrides }),
-        )
-      }
-    }
-    finally {
-      if (isMainThread) {
-        process.chdir(cwd)
-      }
-    }
-
-    const projectPromises: Promise<WorkspaceProject>[] = []
-
-    projectsOptions.forEach((options, index) => {
-      // we can resolve these in parallel because process.cwd() is not changed
-      projectPromises.push(initializeProject(index, this, mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any))
-    })
-
-    if (!projects.length && !projectPromises.length) {
-      return [await this.createCoreProject()]
-    }
-
-    const resolvedProjects = await Promise.all([
-      ...projects,
-      ...await Promise.all(projectPromises),
-    ])
-    const names = new Set<string>()
-
-    for (const project of resolvedProjects) {
-      const name = project.getName()
-      if (names.has(name)) {
-        throw new Error(`Project name "${name}" is not unique. All projects in a workspace should have unique names.`)
-      }
-      names.add(name)
-    }
-
-    return resolvedProjects
+    return resolveWorkspace(
+      this,
+      cliOptions,
+      workspaceConfigPath,
+      workspaceModule.default,
+    )
   }
 
   private async initCoverageProvider() {

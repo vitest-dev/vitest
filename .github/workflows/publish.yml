@@ -46,6 +46,5 @@ jobs:
 
       - name: Generate Changelog
         run: npx changelogithub
-        if: ${{ !contains(github.ref_name, 'beta') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

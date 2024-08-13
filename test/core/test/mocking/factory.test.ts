@@ -54,7 +54,7 @@ vi.mock('../../src/mocks/log.ts', async () => {
     },
   }
 })
-
+// @ts-expect-error null is not allowed to mocked implementation
 vi.mock('../../src/mocks/default.ts', () => null)
 
 describe('mocking with factory', () => {

@@ -98,6 +98,11 @@ export default ({ mode }: { mode: string }) => {
       }, */
       },
 
+      carbonAds: {
+        code: 'CW7DVKJE',
+        placement: 'vitestdev',
+      },
+
       socialLinks: [
         { icon: 'mastodon', link: mastodon },
         { icon: 'x', link: twitter },
@@ -174,6 +179,11 @@ export default ({ mode }: { mode: string }) => {
             text: 'Why Browser Mode?',
             link: '/guide/browser/why',
             docFooterText: 'Why Browser Mode? | Browser Mode',
+          },
+          {
+            text: 'Getting Started',
+            link: '/guide/browser/',
+            docFooterText: 'Getting Started | Browser Mode',
           },
           {
             text: 'Context API',

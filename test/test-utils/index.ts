@@ -12,6 +12,7 @@ import { Cli } from './cli'
 
 interface VitestRunnerCLIOptions {
   std?: 'inherit'
+  fails?: boolean
 }
 
 export async function runVitest(
@@ -83,7 +84,9 @@ export async function runVitest(
     })
   }
   catch (e: any) {
-    console.error(e)
+    if (runnerOptions.fails !== true) {
+      console.error(e)
+    }
     cli.stderr += e.stack
   }
   finally {

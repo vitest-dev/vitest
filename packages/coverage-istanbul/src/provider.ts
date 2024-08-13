@@ -26,11 +26,12 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import libCoverage from 'istanbul-lib-coverage'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import { type Instrumenter, createInstrumenter } from 'istanbul-lib-instrument'
-// @ts-expect-error @istanbuljs/schema has no type definitions
+// @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
-
 // @ts-expect-error missing types
 import _TestExclude from 'test-exclude'
+
+import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
@@ -76,6 +77,16 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   initialize(ctx: Vitest): void {
     const config: CoverageIstanbulOptions = ctx.config.coverage
 
+    if (ctx.version !== version) {
+      ctx.logger.warn(
+        c.yellow(
+          `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/coverage-istanbul@${version} `))}.`
+          + '\nRunning mixed versions is not supported and may lead into bugs'
+          + '\nUpdate your dependencies and make sure the versions match.',
+        ),
+      )
+    }
+
     this.ctx = ctx
     this.options = {
       ...coverageConfigDefaults,
@@ -98,9 +109,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         lines: config.thresholds['100'] ? 100 : config.thresholds.lines,
         branches: config.thresholds['100'] ? 100 : config.thresholds.branches,
         functions: config.thresholds['100'] ? 100 : config.thresholds.functions,
-        statements: config.thresholds['100']
-          ? 100
-          : config.thresholds.statements,
+        statements: config.thresholds['100'] ? 100 : config.thresholds.statements,
       },
     }
 
@@ -184,14 +193,14 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       return
     }
 
-    if (transformMode !== 'web' && transformMode !== 'ssr') {
+    if (transformMode !== 'web' && transformMode !== 'ssr' && transformMode !== 'browser') {
       throw new Error(`Invalid transform mode: ${transformMode}`)
     }
 
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: [], ssr: [] }
+      entry = { web: [], ssr: [], browser: [] }
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
@@ -240,6 +249,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       for (const filenames of [
         coveragePerProject.ssr,
         coveragePerProject.web,
+        coveragePerProject.browser,
       ]) {
         const coverageMapByTransformMode = libCoverage.createCoverageMap({})
 
@@ -278,6 +288,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       )
 
       coverageMap.merge(await transformCoverage(uncoveredCoverage))
+    }
+
+    if (this.options.excludeAfterRemap) {
+      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
     }
 
     return coverageMap

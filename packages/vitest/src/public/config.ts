@@ -58,7 +58,7 @@ export function defineProject(config: UserProjectConfigExport): UserProjectConfi
   return config
 }
 
-type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
+export type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * @example '../vite.config.ts'

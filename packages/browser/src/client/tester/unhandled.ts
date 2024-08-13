@@ -33,7 +33,7 @@ function catchWindowErrors(cb: (e: ErrorEvent) => void) {
   const removeEventListener = window.removeEventListener.bind(window)
   window.addEventListener('error', throwUnhandlerError)
   window.addEventListener = function (
-    ...args: Parameters<typeof addEventListener>
+    ...args: [any, any, any]
   ) {
     if (args[0] === 'error') {
       userErrorListenerCount++
@@ -41,7 +41,7 @@ function catchWindowErrors(cb: (e: ErrorEvent) => void) {
     return addEventListener.apply(this, args)
   }
   window.removeEventListener = function (
-    ...args: Parameters<typeof removeEventListener>
+    ...args: [any, any, any]
   ) {
     if (args[0] === 'error' && userErrorListenerCount) {
       userErrorListenerCount--

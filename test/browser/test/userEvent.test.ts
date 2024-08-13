@@ -12,6 +12,8 @@ const userEvent = _uE.setup()
 describe('userEvent.click', () => {
   test('correctly clicks a button', async () => {
     const button = document.createElement('button')
+    button.style.height = '100px'
+    button.style.width = '200px'
     button.textContent = 'Click me'
     document.body.appendChild(button)
     const onClick = vi.fn()

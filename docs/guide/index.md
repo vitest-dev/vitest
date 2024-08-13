@@ -133,6 +133,19 @@ export default defineConfig({
 })
 ```
 
+The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
+
+```ts
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  test: {
+    // ... Specify options here.
+  },
+})
+```
+
 See the list of config options in the [Config Reference](../config/)
 
 ::: warning

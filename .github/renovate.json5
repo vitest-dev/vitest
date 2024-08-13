@@ -33,9 +33,6 @@
     // Pinned because it requires "node" condition in the new version
     // But we intentionally build Vitest ambiguously
     "find-up",
-    // Pinned because we use execa, and the newer version replaces it with another pkg
-    // We should remove execa entirely
-    "@antfu/install-pkg",
     // Transitive dependency that we patch
     "acorn"
   ]

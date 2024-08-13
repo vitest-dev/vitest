@@ -52,12 +52,6 @@ export async function initializeProject(
 ) {
   const project = new WorkspaceProject(workspacePath, ctx, options)
 
-  const configFile = options.extends
-    ? resolve(dirname(options.workspaceConfigPath), options.extends)
-    : typeof workspacePath === 'number' || workspacePath.endsWith('/')
-      ? false
-      : workspacePath
-
   const root
     = options.root
     || (typeof workspacePath === 'number'
@@ -65,6 +59,12 @@ export async function initializeProject(
       : workspacePath.endsWith('/')
         ? workspacePath
         : dirname(workspacePath))
+
+  const configFile = options.extends
+    ? resolve(dirname(options.workspaceConfigPath), options.extends)
+    : typeof workspacePath === 'number' || workspacePath.endsWith('/')
+      ? false
+      : workspacePath
 
   const config: ViteInlineConfig = {
     ...options,
@@ -364,6 +364,14 @@ export class WorkspaceProject {
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
+    for (const _providedKey in ctx.config.provide) {
+      const providedKey = _providedKey as keyof ProvidedContext
+      // type is very strict here, so we cast it to any
+      (project.provide as (key: string, value: unknown) => void)(
+        providedKey,
+        ctx.config.provide[providedKey],
+      )
+    }
     project.testProject = new TestProject(project)
     return project
   }
@@ -384,6 +392,15 @@ export class WorkspaceProject {
       server.config,
       this.ctx.logger,
     )
+    for (const _providedKey in this.config.provide) {
+      const providedKey = _providedKey as keyof ProvidedContext
+      // type is very strict here, so we cast it to any
+      (this.provide as (key: string, value: unknown) => void)(
+        providedKey,
+        this.config.provide[providedKey],
+      )
+    }
+
     this.testProject = new TestProject(this)
 
     this.server = server

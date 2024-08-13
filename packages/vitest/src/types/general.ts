@@ -24,7 +24,7 @@ export interface ModuleCache {
 
 export interface AfterSuiteRunMeta {
   coverage?: unknown
-  transformMode: TransformMode
+  transformMode: TransformMode | 'browser'
   projectName?: string
 }
 

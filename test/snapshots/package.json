@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/snapshots",
+  "name": "@vitest/test-snapshots",
   "type": "module",
   "private": true,
   "scripts": {
