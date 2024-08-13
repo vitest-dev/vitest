@@ -64,6 +64,16 @@ export function setupBrowserRpc(
     }
   }
 
+  function invalidateModuleById(id: string) {
+    const moduleGraph = server.vite.moduleGraph
+    const module = moduleGraph.getModuleById(id)
+    if (module) {
+      moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
+      return true
+    }
+    return false
+  }
+
   function setupClient(sessionId: string, ws: WebSocket) {
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
@@ -210,12 +220,10 @@ export function setupBrowserRpc(
           return resolveMock(project, rawId, importer, hasFactory)
         },
         invalidate(urls) {
-          urls.forEach((url) => {
-            const moduleGraph = server.vite.moduleGraph
-            const id = join(server.vite.config.root, url.slice(1))
-            const module = moduleGraph.getModuleById(id)
-            if (module) {
-              moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
+          urls.forEach((id) => {
+            const invalidated = invalidateModuleById(id)
+            if (!invalidated) {
+              ctx.logger.warn(`[vitest] Cannot invalidate ${id}. This is an error in Vitest. Please, open a new issue with reproduction.`)
             }
           })
         },

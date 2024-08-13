@@ -15,6 +15,7 @@ interface SpyModule {
 export class VitestBrowserClientMocker {
   private queue = new Set<Promise<void>>()
   private registry = new MockerRegistry()
+  private mockedIds = new Set<string>()
 
   private spyModule!: SpyModule
 
@@ -123,7 +124,7 @@ export class VitestBrowserClientMocker {
   }
 
   public async invalidate() {
-    const ids = Array.from(this.registry.keys())
+    const ids = Array.from(this.mockedIds)
     if (!ids.length) {
       return
     }
@@ -145,6 +146,7 @@ export class VitestBrowserClientMocker {
       .resolveMock(rawId, importer, typeof factoryOrOptions === 'function')
       .then(async ({ redirectUrl, resolvedId, needsInterop }) => {
         const mockUrl = resolveMockPath(cleanVersion(resolvedId))
+        this.mockedIds.add(resolvedId)
         const factory = typeof factoryOrOptions === 'function'
           ? async () => {
             const data = await factoryOrOptions()
@@ -208,6 +210,7 @@ export class VitestBrowserClientMocker {
           return
         }
         const mockUrl = resolveMockPath(cleanVersion(resolved.id))
+        this.mockedIds.add(resolved.id)
         this.registry.delete(mockUrl)
         await this.notifyMsw({
           type: 'unmock',

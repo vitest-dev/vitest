@@ -14,8 +14,8 @@ export async function resolveMock(
   const { id, fsPath, external } = await resolveId(project, rawId, importer)
 
   if (hasFactory) {
-    const needsInteropMap = viteDepsInteropMap(project.browser!.vite.config)
-    const needsInterop = needsInteropMap?.get(fsPath) ?? false
+    const manifest = getViteDepsManifest(project.browser!.vite.config)
+    const needsInterop = manifest?.[fsPath]?.needsInterop ?? false
     return { type: 'factory' as const, resolvedId: id, needsInterop }
   }
 
@@ -62,9 +62,16 @@ export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
 }
 
-const metadata = new WeakMap<ViteConfig, Map<string, boolean>>()
+interface PartialManifest {
+  [name: string]: {
+    hash: string
+    needsInterop: boolean
+  }
+}
 
-function viteDepsInteropMap(config: ViteConfig) {
+const metadata = new WeakMap<ViteConfig, PartialManifest>()
+
+export function getViteDepsManifest(config: ViteConfig) {
   if (metadata.has(config)) {
     return metadata.get(config)!
   }
@@ -74,14 +81,17 @@ function viteDepsInteropMap(config: ViteConfig) {
     return null
   }
   const { optimized } = JSON.parse(readFileSync(metadataPath, 'utf-8'))
-  const needsInteropMap = new Map()
+  const newManifest: PartialManifest = {}
   for (const name in optimized) {
     const dep = optimized[name]
     const file = resolve(cacheDirPath, dep.file)
-    needsInteropMap.set(file, dep.needsInterop)
+    newManifest[file] = {
+      hash: dep.fileHash,
+      needsInterop: dep.needsInterop,
+    }
   }
-  metadata.set(config, needsInteropMap)
-  return needsInteropMap
+  metadata.set(config, newManifest)
+  return newManifest
 }
 
 function getDepsCacheDir(config: ViteConfig): string {
