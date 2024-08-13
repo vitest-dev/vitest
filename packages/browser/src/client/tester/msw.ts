@@ -5,12 +5,10 @@ import type {
   IframeMockingDoneEvent,
   IframeUnmockEvent,
 } from '@vitest/browser/client'
+import { MockerRegistry } from 'vitest/mocker'
 
 export function createModuleMocker() {
-  const mocks: Map<string, {
-    mock: string | null | undefined
-    behaviour: 'automock' | 'autospy' | 'manual'
-  }> = new Map()
+  const mocks = new MockerRegistry()
 
   let started = false
   let startPromise: undefined | Promise<unknown>
@@ -37,13 +35,13 @@ export function createModuleMocker() {
             return passthrough()
           }
 
-          const { mock, behaviour } = mocks.get(path)!
+          const mock = mocks.get(path)!
 
           // using a factory
-          if (mock === undefined) {
-            const exports = await getFactoryExports(path)
-            const module = `const module = __vitest_mocker__.get('${path}');`
-            const keys = exports
+          if (mock.type === 'manual') {
+            const exports = await mock.resolve() as { keys: string[] }
+            const module = `const module = __vitest_mocker__.get('${mock.url}');`
+            const keys = exports.keys
               .map((name) => {
                 if (name === 'default') {
                   return `export default module['default'];`
@@ -59,11 +57,15 @@ export function createModuleMocker() {
             })
           }
 
-          if (behaviour === 'autospy' || mock === null) {
-            return Response.redirect(injectQuery(path, `mock=${behaviour}`))
+          if (mock.type === 'automock' || mock.type === 'autospy') {
+            return Response.redirect(injectQuery(path, `mock=${mock.type}`))
           }
 
-          return Response.redirect(mock)
+          if (mock.type === 'redirect') {
+            return Response.redirect(mock.redirect)
+          }
+
+          throw new Error(`Unknown mock type: ${(mock as any).type}`)
         }),
       )
       return worker.start({
@@ -83,12 +85,23 @@ export function createModuleMocker() {
   return {
     async mock(event: IframeMockEvent) {
       await init()
-      event.paths.forEach(path => mocks.set(path, { mock: event.mock, behaviour: event.behaviour }))
+      if (event.mockType === 'manual') {
+        mocks.register('manual', event.url, event.url, async () => {
+          const keys = await getFactoryExports(event.url)
+          return { keys }
+        })
+      }
+      else if (event.mockType === 'automock' || event.mockType === 'autospy') {
+        mocks.register(event.mockType, event.url, event.url)
+      }
+      else {
+        mocks.register('redirect', event.url, event.url, event.redirect)
+      }
       channel.postMessage(<IframeMockingDoneEvent>{ type: 'mock:done' })
     },
     async unmock(event: IframeUnmockEvent) {
       await init()
-      event.paths.forEach(path => mocks.delete(path))
+      mocks.delete(event.url)
       channel.postMessage(<IframeMockingDoneEvent>{ type: 'unmock:done' })
     },
     invalidate() {

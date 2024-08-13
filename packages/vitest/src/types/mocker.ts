@@ -1,3 +1,5 @@
+import type { MockedModuleType } from '@vitest/mocker'
+
 type Promisable<T> = T | Promise<T>
 
 export type MockFactoryWithHelper<M = unknown> = (
@@ -8,15 +10,11 @@ export interface MockOptions {
   spy?: boolean
 }
 
-export type MockMap = Map<string, Record<string, string | null | MockFactory>>
-
-export type MockBehaviour = 'autospy' | 'automock' | 'manual'
-
 export interface PendingSuiteMock {
   id: string
   importer: string
-  type: 'mock' | 'unmock'
+  action: 'mock' | 'unmock'
   throwIfCached: boolean
-  behaviour?: MockBehaviour
+  type?: MockedModuleType
   factory?: MockFactory
 }

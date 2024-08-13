@@ -33,7 +33,7 @@ export interface WebSocketBrowserHandlers {
     hasFactory: boolean
   ) => Promise<{
     type: 'factory' | 'redirect' | 'automock'
-    mockPath?: string | null
+    redirectUrl?: string | null
     resolvedId: string
     needsInterop?: boolean
   }>

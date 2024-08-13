@@ -22,16 +22,36 @@ export interface IframeViewportEvent {
   id: string
 }
 
-export interface IframeMockEvent {
+export type IframeMockEvent = IframeAutomockEvent | IframeAutospyEvent | IframeManualMockEvent | IframeRedirectMockEvent
+
+export interface IframeAutomockEvent {
   type: 'mock'
-  paths: string[]
-  mock: string | undefined | null
-  behaviour: 'autospy' | 'automock' | 'manual'
+  mockType: 'automock'
+  url: string
+}
+
+export interface IframeAutospyEvent {
+  type: 'mock'
+  mockType: 'autospy'
+  url: string
+}
+
+export interface IframeManualMockEvent {
+  type: 'mock'
+  mockType: 'manual'
+  url: string
+}
+
+export interface IframeRedirectMockEvent {
+  type: 'mock'
+  mockType: 'redirect'
+  url: string
+  redirect: string
 }
 
 export interface IframeUnmockEvent {
   type: 'unmock'
-  paths: string[]
+  url: string
 }
 
 export interface IframeMockingDoneEvent {

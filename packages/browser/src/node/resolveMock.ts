@@ -1,8 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { builtinModules } from 'node:module'
-import { basename, dirname, extname, isAbsolute, join, resolve } from 'pathe'
+import { existsSync, readFileSync } from 'node:fs'
+import { isAbsolute, resolve } from 'pathe'
 import type { PartialResolvedId } from 'rollup'
 import type { ResolvedConfig, WorkspaceProject } from 'vitest/node'
+import { findMockRedirect } from '@vitest/mocker/node'
 import type { ResolvedConfig as ViteConfig } from 'vite'
 
 export async function resolveMock(
@@ -19,11 +19,11 @@ export async function resolveMock(
     return { type: 'factory' as const, resolvedId: id, needsInterop }
   }
 
-  const mockPath = resolveMockPath(project.config.root, fsPath, external)
+  const redirectUrl = findMockRedirect(project.config.root, fsPath, external)
 
   return {
-    type: mockPath === null ? ('automock' as const) : ('redirect' as const),
-    mockPath,
+    type: redirectUrl === null ? ('automock' as const) : ('redirect' as const),
+    redirectUrl,
     resolvedId: id,
   }
 }
@@ -55,73 +55,6 @@ function isModuleDirectory(config: ResolvedConfig, path: string) {
     '/node_modules/',
   ]
   return moduleDirectories.some((dir: string) => path.includes(dir))
-}
-
-function resolveMockPath(root: string, mockPath: string, external: string | null) {
-  const path = external || mockPath
-
-  // it's a node_module alias
-  // all mocks should be inside <root>/__mocks__
-  if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
-    const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
-    const mockFolder = join(
-      root,
-      '__mocks__',
-      mockDirname,
-    )
-
-    if (!existsSync(mockFolder)) {
-      return null
-    }
-
-    const files = readdirSync(mockFolder)
-    const baseOriginal = basename(path)
-
-    for (const file of files) {
-      const baseFile = basename(file, extname(file))
-      if (baseFile === baseOriginal) {
-        return resolve(mockFolder, file)
-      }
-    }
-
-    return null
-  }
-
-  const dir = dirname(path)
-  const baseId = basename(path)
-  const fullPath = resolve(dir, '__mocks__', baseId)
-  return existsSync(fullPath) ? fullPath : null
-}
-
-const prefixedBuiltins = new Set(['node:test'])
-
-const builtins = new Set([
-  ...builtinModules,
-  'assert/strict',
-  'diagnostics_channel',
-  'dns/promises',
-  'fs/promises',
-  'path/posix',
-  'path/win32',
-  'readline/promises',
-  'stream/consumers',
-  'stream/promises',
-  'stream/web',
-  'timers/promises',
-  'util/types',
-  'wasi',
-])
-
-const NODE_BUILTIN_NAMESPACE = 'node:'
-export function isNodeBuiltin(id: string): boolean {
-  if (prefixedBuiltins.has(id)) {
-    return true
-  }
-  return builtins.has(
-    id.startsWith(NODE_BUILTIN_NAMESPACE)
-      ? id.slice(NODE_BUILTIN_NAMESPACE.length)
-      : id,
-  )
 }
 
 const postfixRE = /[?#].*$/

@@ -3,7 +3,7 @@ import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import { loadEnvironment } from '../integrations/env/loader'
 import { isChildProcess, setProcessTitle } from '../utils/base'
-import type { ContextRPC } from '../types/worker'
+import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
 import type { VitestWorker } from './workers/types'
@@ -63,7 +63,6 @@ async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
       moduleCache: new ModuleCacheMap(),
-      mockMap: new Map(),
       config: ctx.config,
       onCancel,
       environment,
@@ -73,7 +72,7 @@ async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
       },
       rpc,
       providedContext: ctx.providedContext,
-    }
+    } satisfies WorkerGlobalState
 
     const methodName = mehtod === 'collect' ? 'collectTests' : 'runTests'
 
