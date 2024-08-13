@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { relative } from 'pathe'
 import { parseAstAsync } from 'vite'
 import { ancestor as walkAst } from 'acorn-walk'
@@ -11,7 +10,6 @@ import {
 } from '@vitest/runner/utils'
 import type { File, Suite, Test } from '@vitest/runner'
 import type { WorkspaceProject } from '../node/workspace'
-import { generateCodeFrame } from '../node/error'
 
 interface ParsedFile extends File {
   start: number
@@ -53,7 +51,6 @@ export async function collectTests(
   if (!request) {
     return null
   }
-  const vitest = ctx.ctx
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.getName()
@@ -97,38 +94,6 @@ export async function collectTests(
     return null
   }
 
-  const nodeFrames = new WeakSet<Node>()
-
-  function getCodeFrame(node: any, start?: number) {
-    if (nodeFrames.has(node)) {
-      return '' // don't duplicate the node
-    }
-    const higlight = vitest.logger.highlight(filepath, readFileSync(filepath, 'utf8'))
-    const codeframe = generateCodeFrame(
-      higlight,
-      4,
-      start ?? (node.start + 1),
-    )
-    nodeFrames.add(node)
-    return codeframe
-  }
-
-  function warn(message: string, node: any, start?: number) {
-    if (ctx.config.typecheck.ignoreCollectWarnings) {
-      return
-    }
-    const codeframe = getCodeFrame(
-      node,
-      start ?? (node.start + 1),
-    )
-    if (codeframe) {
-      message += `:\n${codeframe}`
-    }
-    vitest.logger.warn(
-      `${message}\nIf you want so suppress these messages, set \`typecheck.ignoreCollectWarnings: true\` in your config.`,
-    )
-  }
-
   walkAst(ast as any, {
     CallExpression(node) {
       const { callee } = node as any
@@ -140,9 +105,9 @@ export async function collectTests(
         return
       }
       const property = callee?.property?.name
-      let mode = !property || property === name ? 'run' : property
-      if (mode === 'each') {
-        warn(`Type checker doesn't support ${name}.each`, node)
+      const mode = !property || property === name ? 'run' : property
+      // the test node for skipIf and runIf will be the next CallExpression
+      if (mode === 'each' || mode === 'skipIf' || mode === 'runIf') {
         return
       }
 
@@ -162,27 +127,8 @@ export async function collectTests(
       const {
         arguments: [messageNode],
       } = node
-      let message: string = 'unknown'
+      const message = getNodeAsString(messageNode, request.code)
 
-      if (messageNode.type === 'Literal') {
-        message = String(messageNode.value)
-      }
-      else if (messageNode.type === 'Identifier') {
-        message = messageNode.name
-      }
-      else if (messageNode.type === 'TemplateLiteral') {
-        message = mergeTemplateLiteral(messageNode as any)
-      }
-      else {
-        message = 'unknown'
-        warn(`Type checker cannot statically analyze the message of ${name}, fallback to "unknown"`, node, start)
-      }
-
-      // cannot statically analyze, so we always skip it
-      if (mode === 'skipIf' || mode === 'runIf') {
-        mode = 'skip'
-        warn(`Type checker cannot statically analyze the mode of ${name}.${mode}, fallback to "skip"`, node, start)
-      }
       definitions.push({
         start,
         end,
@@ -264,14 +210,36 @@ export async function collectTests(
   }
 }
 
-function mergeTemplateLiteral(node: any): string {
+function getNodeAsString(node: any, code: string): string {
+  if (node.type === 'Literal') {
+    return String(node.value)
+  }
+  else if (node.type === 'Identifier') {
+    return node.name
+  }
+  else if (node.type === 'TemplateLiteral') {
+    return mergeTemplateLiteral(node, code)
+  }
+  else {
+    return code.slice(node.start, node.end)
+  }
+}
+
+function mergeTemplateLiteral(node: any, code: string): string {
   let result = ''
   let expressionsIndex = 0
 
   for (let quasisIndex = 0; quasisIndex < node.quasis.length; quasisIndex++) {
     result += node.quasis[quasisIndex].value.raw
     if (expressionsIndex in node.expressions) {
-      result += `{${node.expressions[expressionsIndex]}}`
+      const expression = node.expressions[expressionsIndex]
+      const string = expression.type === 'Literal' ? expression.raw : getNodeAsString(expression, code)
+      if (expression.type === 'TemplateLiteral') {
+        result += `\${\`${string}\`}`
+      }
+      else {
+        result += `\${${string}}`
+      }
       expressionsIndex++
     }
   }
