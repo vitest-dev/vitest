@@ -401,25 +401,22 @@ export class VitestMocker {
     id: string,
     importer: string,
     factoryOrOptions?: MockFactory | MockOptions,
-    throwIfCached = false,
   ) {
-    const behaviour = getMockType(factoryOrOptions)
+    const mockType = getMockType(factoryOrOptions)
     VitestMocker.pendingIds.push({
       action: 'mock',
       id,
       importer,
       factory: typeof factoryOrOptions === 'function' ? factoryOrOptions : undefined,
-      type: behaviour,
-      throwIfCached,
+      type: mockType,
     })
   }
 
-  public queueUnmock(id: string, importer: string, throwIfCached = false) {
+  public queueUnmock(id: string, importer: string) {
     VitestMocker.pendingIds.push({
       action: 'unmock',
       id,
       importer,
-      throwIfCached,
     })
   }
 }

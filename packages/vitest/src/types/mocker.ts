@@ -14,7 +14,6 @@ export interface PendingSuiteMock {
   id: string
   importer: string
   action: 'mock' | 'unmock'
-  throwIfCached: boolean
   type?: MockedModuleType
   factory?: MockFactory
 }
