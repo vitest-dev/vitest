@@ -117,6 +117,7 @@ describe('when the title is dynamic', () => {
   it('works correctly', async () => {
     const vitest = await runVitest({
       root: resolve(__dirname, '../fixtures/dynamic-title'),
+      reporters: [['default', { isTTY: true }]],
     })
 
     expect(vitest.stdout).toContain('✓ for: %s')
