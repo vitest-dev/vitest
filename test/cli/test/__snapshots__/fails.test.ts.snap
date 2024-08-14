@@ -33,10 +33,19 @@ Error: InlineSnapshot cannot be used inside of test.each or describe.each"
 
 exports[`should fail inline-snapshop-inside-loop-update-all.test.ts > inline-snapshop-inside-loop-update-all.test.ts 1`] = `
 "Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
 Error: toMatchInlineSnapshot cannot be called multiple times at the same location."
 `;
 
-exports[`should fail inline-snapshop-inside-loop-update-none.test.ts > inline-snapshop-inside-loop-update-none.test.ts 1`] = `"Error: Snapshot \`fail 2 1\` mismatched"`;
+exports[`should fail inline-snapshop-inside-loop-update-none.test.ts > inline-snapshop-inside-loop-update-none.test.ts 1`] = `
+"Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: Snapshot \`fail 2.2 1\` mismatched
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location."
+`;
 
 exports[`should fail mock-import-proxy-module.test.ts > mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
 
