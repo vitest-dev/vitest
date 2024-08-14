@@ -907,6 +907,9 @@ importers:
       execa:
         specifier: ^8.0.1
         version: 8.0.1
+      expect-type:
+        specifier: 0.20.0-0
+        version: 0.20.0-0
       magic-string:
         specifier: ^0.30.11
         version: 0.30.11
@@ -986,9 +989,6 @@ importers:
       cli-truncate:
         specifier: ^4.0.0
         version: 4.0.0
-      expect-type:
-        specifier: ^0.19.0
-        version: 0.19.0
       fast-glob:
         specifier: ^3.3.2
         version: 3.3.2
@@ -5617,8 +5617,8 @@ packages:
     resolution: {integrity: sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==}
     engines: {node: '>=6'}
 
-  expect-type@0.19.0:
-    resolution: {integrity: sha512-piv9wz3IrAG4Wnk2A+n2VRCHieAyOSxrRLU872Xo6nyn39kYXKDALk4OcqnvLRnFvkz659CnWC8MWZLuuQnoqg==}
+  expect-type@0.20.0-0:
+    resolution: {integrity: sha512-kKaIqJJIKTRwkU6F/ikQaFuYFTiIO46iPsPoMPvcGCOuaIvYE8rvjMSaO7vo77BDjHtGJJCD5hrWVATasiqbHQ==}
     engines: {node: '>=12.0.0'}
 
   expect@29.0.1:
@@ -14275,7 +14275,7 @@ snapshots:
 
   expand-template@2.0.3: {}
 
-  expect-type@0.19.0: {}
+  expect-type@0.20.0-0: {}
 
   expect@29.0.1:
     dependencies:
