@@ -10,11 +10,11 @@ import type {
   ImportDeclaration,
   ImportExpression,
   VariableDeclaration,
-  Node as _Node,
 } from 'estree'
 import { findNodeAround } from 'acorn-walk'
 import type { Plugin, Rollup } from 'vite'
 import { createFilter } from 'vite'
+import type { Node, Positioned } from './esmWalker'
 import { esmWalker } from './esmWalker'
 
 export interface HoistMocksPluginOptions {
@@ -63,13 +63,6 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
     },
   }
 }
-
-type Positioned<T> = T & {
-  start: number
-  end: number
-}
-
-type Node = Positioned<_Node>
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
 You may encounter this issue when importing the mocks API from another module other than 'vitest'.

@@ -116,7 +116,7 @@ export function esmWalker(
     }
   }
 
-  eswalk(root, {
+  eswalk(root as Node, {
     enter(node, parent) {
       if (node.type === 'ImportDeclaration') {
         return this.skip()

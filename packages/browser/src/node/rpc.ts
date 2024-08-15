@@ -61,16 +61,6 @@ export function setupBrowserRpc(server: BrowserServer) {
     }
   }
 
-  function invalidateModuleById(id: string) {
-    const moduleGraph = server.vite.moduleGraph
-    const module = moduleGraph.getModuleById(id)
-    if (module) {
-      moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
-      return true
-    }
-    return false
-  }
-
   function setupClient(sessionId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(server.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
