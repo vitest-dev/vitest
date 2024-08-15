@@ -74,6 +74,10 @@ export interface VitestUtils {
    */
   advanceTimersToNextTimerAsync: () => Promise<VitestUtils>
   /**
+   * Similar to [`vi.advanceTimersByTime`](https://vitest.dev/api/vi#vi-advancetimersbytime), but will advance timers by the milliseconds needed to execute callbacks currently scheduled with `requestAnimationFrame`.
+   */
+  advanceTimersToNextFrame: () => VitestUtils
+  /**
    * Get the number of waiting timers.
    */
   getTimerCount: () => number
@@ -508,6 +512,11 @@ function createVitest(): VitestUtils {
 
     async advanceTimersToNextTimerAsync() {
       await timers().advanceTimersToNextTimerAsync()
+      return utils
+    },
+
+    advanceTimersToNextFrame() {
+      timers().advanceTimersToNextFrame()
       return utils
     },
 

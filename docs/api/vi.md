@@ -603,6 +603,24 @@ await vi.advanceTimersToNextTimerAsync() // log: 2
 await vi.advanceTimersToNextTimerAsync() // log: 3
 ```
 
+### vi.advanceTimersToNextFrame <Version>2.1.0</Version> {#vi-advancetimerstonextframe}
+
+- **Type:** `() => Vitest`
+
+Similar to [`vi.advanceTimersByTime`](https://vitest.dev/api/vi#vi-advancetimersbytime), but will advance timers by the milliseconds needed to execute callbacks currently scheduled with `requestAnimationFrame`.
+
+```ts
+let frameRendered = false
+
+requestAnimationFrame(() => {
+  frameRendered = true
+})
+
+vi.advanceTimersToNextFrame()
+
+expect(frameRendered).toBe(true)
+```
+
 ### vi.getTimerCount
 
 - **Type:** `() => number`
