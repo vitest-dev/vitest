@@ -1,15 +1,15 @@
-import type { MockedModuleType } from '../registry'
+import type { MockedModuleType } from './registry'
 
 type Key = string | symbol
 
-export interface MockOptions {
+export interface MockObjectOptions {
   type: MockedModuleType
   globalConstructors: GlobalConstructors
   spyOn: (obj: any, prop: Key) => any
 }
 
 export function mockObject(
-  options: MockOptions,
+  options: MockObjectOptions,
   object: Record<Key, any>,
   mockExports: Record<Key, any> = {},
 ): Record<Key, any> {

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'pathe'
 import type { PartialResolvedId } from 'rollup'
 import type { ResolvedConfig as ViteConfig, ViteDevServer } from 'vite'
+import { cleanUrl } from '../utils'
 import { findMockRedirect } from './redirect'
 
 export interface ServerResolverOptions {
@@ -29,23 +30,30 @@ export class ServerMockResolver {
     if (options.mock === 'factory') {
       const manifest = getViteDepsManifest(this.server.config)
       const needsInterop = manifest?.[fsPath]?.needsInterop ?? false
-      return { mockType: 'manual' as const, resolvedId: id, needsInterop }
+      return { mockType: 'manual', resolvedId: id, needsInterop }
     }
 
     if (options.mock === 'spy') {
-      return {
-        mockType: 'autospy' as const,
-        resolvedId: id,
-      }
+      return { mockType: 'autospy', resolvedId: id }
     }
 
     const redirectUrl = findMockRedirect(this.server.config.root, fsPath, external)
 
     return {
-      mockType: redirectUrl === null ? ('automock' as const) : ('redirect' as const),
+      mockType: redirectUrl === null ? 'automock' : 'redirect',
       redirectUrl,
       resolvedId: id,
     }
+  }
+
+  public invalidate(ids: string[]): void {
+    ids.forEach((id) => {
+      const moduleGraph = this.server.moduleGraph
+      const module = moduleGraph.getModuleById(id)
+      if (module) {
+        moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
+      }
+    })
   }
 
   public async resolveId(id: string, importer?: string): Promise<ServerIdResolution | null> {
@@ -117,11 +125,6 @@ function isModuleDirectory(config: ServerResolverOptions, path: string) {
     '/node_modules/',
   ]
   return moduleDirectories.some((dir: string) => path.includes(dir))
-}
-
-const postfixRE = /[?#].*$/
-export function cleanUrl(url: string): string {
-  return url.replace(postfixRE, '')
 }
 
 interface PartialManifest {

@@ -13,13 +13,14 @@ import type {
   Node as _Node,
 } from 'estree'
 import { findNodeAround } from 'acorn-walk'
-import { esmWalker } from '@vitest/utils/ast'
 import type { Plugin, Rollup } from 'vite'
 import { createFilter } from 'vite'
+import { esmWalker } from './esmWalker'
 
 export interface HoistMocksPluginOptions {
   include?: string | RegExp | (string | RegExp)[]
   exclude?: string | RegExp | (string | RegExp)[]
+  regexpHoistable?: RegExp
   /**
    * @default ["vi", "vitest"]
    */
@@ -55,12 +56,12 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
   }
 }
 
-export type Positioned<T> = T & {
+type Positioned<T> = T & {
   start: number
   end: number
 }
 
-export type Node = Positioned<_Node>
+type Node = Positioned<_Node>
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
 You may encounter this issue when importing the mocks API from another module other than 'vitest'.
@@ -129,13 +130,14 @@ interface CodeFrameGenerator {
   (node: Positioned<Node>, id: string, code: string): string
 }
 
+// this is a fork of Vite SSR trandform
 export function hoistMocks(
   code: string,
   id: string,
   parse: Rollup.PluginContext['parse'],
   options: HoistMocksPluginOptions = {},
 ): HoistMocksResult | undefined {
-  const needHoisting = regexpHoistable.test(code)
+  const needHoisting = (options.regexpHoistable || regexpHoistable).test(code)
 
   if (!needHoisting) {
     return
@@ -148,7 +150,7 @@ export function hoistMocks(
     ast = parse(code)
   }
   catch (err) {
-    console.error(`Cannot parse ${id}:\n${(err as any).message}`)
+    console.error(`Cannot parse ${id}:\n${(err as any).message}.`)
     return
   }
 

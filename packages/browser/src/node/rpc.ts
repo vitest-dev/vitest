@@ -184,7 +184,7 @@ export function setupBrowserRpc(server: BrowserServer) {
           return mockResolver.resolveMock(rawId, importer, options)
         },
         invalidate(ids) {
-          ids.forEach(id => invalidateModuleById(id))
+          return mockResolver.invalidate(ids)
         },
 
         // CDP

@@ -5,9 +5,9 @@ export {
   AutomockedModule,
   AutospiedModule,
 } from './registry'
-export { mockObject } from './browser/automocker'
+export { mockObject } from './automocker'
 
-export type { GlobalConstructors } from './browser/automocker'
+export type { GlobalConstructors, MockObjectOptions } from './automocker'
 export type {
   MockedModule,
   MockedModuleType,
@@ -17,3 +17,9 @@ export type {
   RedirectedModuleSerialized,
   ManualMockedModuleSerialized,
 } from './registry'
+
+export type {
+  ModuleMockFactory,
+  ModuleMockFactoryWithHelper,
+  ModuleMockOptions,
+} from './types'

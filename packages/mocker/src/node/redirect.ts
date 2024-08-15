@@ -73,7 +73,7 @@ const builtins = new Set([
 
 const prefixedBuiltins = new Set(['node:test', 'node:sqlite'])
 const NODE_BUILTIN_NAMESPACE = 'node:'
-export function isNodeBuiltin(id: string): boolean {
+function isNodeBuiltin(id: string): boolean {
   if (prefixedBuiltins.has(id)) {
     return true
   }

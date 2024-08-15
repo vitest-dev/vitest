@@ -1,5 +1,7 @@
 import type { StartOptions } from 'msw/browser'
-import { type MockedModule, MockerRegistry } from '../registry'
+import type { ManualMockedModule, MockedModule } from '../registry'
+import { MockerRegistry } from '../registry'
+import { cleanUrl } from '../utils'
 
 export interface ModuleMockerInterceptor {
   register: (module: MockedModule) => Promise<void>
@@ -9,10 +11,22 @@ export interface ModuleMockerInterceptor {
 
 export interface ModuleMockerMSWInterceptorOptions {
   /**
+   * The identifier to access the globalThis object in the worker.
+   * This will be injected into the script as is, so make sure it's a valid JS expression.
+   * @example
+   * ```js
+   * // globalThisAccessor: '__my_variable__' produces:
+   * globalThis[__my_variable__]
+   * // globalThisAccessor: 'Symbol.for('secret:mocks')' produces:
+   * globalThis[Symbol.for('secret:mocks')]
+   * // globalThisAccessor: '"__vitest_mocker__"' (notice quotes) produces:
+   * globalThis["__vitest_mocker__"]
+   * ```
    * @default `"__vitest_mocker__"`
    */
   globalThisAccessor?: string
   /**
+   * Options passed down to `msw.setupWorker().start(options)`
    * @default { serviceWorker: { url: "/__vitest_msw__" }, quiet: true }
    */
   mswOptions?: StartOptions
@@ -40,6 +54,39 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
     options.mswOptions.quiet ??= true
   }
 
+  async register(module: MockedModule): Promise<void> {
+    await this.init()
+    this.mocks.set(module.url, module)
+  }
+
+  async delete(url: string): Promise<void> {
+    await this.init()
+    this.mocks.delete(url)
+  }
+
+  invalidate(): void {
+    this.mocks.clear()
+  }
+
+  private async resolveManualMock(mock: ManualMockedModule) {
+    const exports = Object.keys(await mock.resolve())
+    const module = `const module = globalThis[${this.options.globalThisAccessor!}].getFactoryModule("${mock.url}");`
+    const keys = exports
+      .map((name) => {
+        if (name === 'default') {
+          return `export default module["default"];`
+        }
+        return `export const ${name} = module["${name}"];`
+      })
+      .join('\n')
+    const text = `${module}\n${keys}`
+    return new Response(text, {
+      headers: {
+        'Content-Type': 'application/javascript',
+      },
+    })
+  }
+
   private async init(): Promise<unknown> {
     if (this.started) {
       return
@@ -55,6 +102,9 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
         http.get(/.+/, async ({ request }) => {
           const path = cleanQuery(request.url.slice(location.origin.length))
           if (!this.mocks.has(path)) {
+            // do not cache deps like Vite does for performance
+            // because we want to be able to update mocks without restarting the server
+            // TODO: check if it's still neded - we invalidate modules after each test
             if (path.includes('/deps/')) {
               return fetch(bypass(request))
             }
@@ -64,35 +114,17 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
 
           const mock = this.mocks.get(path)!
 
-          // using a factory
-          if (mock.type === 'manual') {
-            const exports = Object.keys(await mock.resolve())
-            const module = `const module = globalThis[${this.options.globalThisAccessor!}].getFactoryModule('${mock.url}');`
-            const keys = exports
-              .map((name) => {
-                if (name === 'default') {
-                  return `export default module['default'];`
-                }
-                return `export const ${name} = module['${name}'];`
-              })
-              .join('\n')
-            const text = `${module}\n${keys}`
-            return new Response(text, {
-              headers: {
-                'Content-Type': 'application/javascript',
-              },
-            })
+          switch (mock.type) {
+            case 'manual':
+              return this.resolveManualMock(mock)
+            case 'automock':
+            case 'autospy':
+              return Response.redirect(injectQuery(path, `mock=${mock.type}`))
+            case 'redirect':
+              return Response.redirect(mock.redirect)
+            default:
+              throw new Error(`Unknown mock type: ${(mock as any).type}`)
           }
-
-          if (mock.type === 'automock' || mock.type === 'autospy') {
-            return Response.redirect(injectQuery(path, `mock=${mock.type}`))
-          }
-
-          if (mock.type === 'redirect') {
-            return Response.redirect(mock.redirect)
-          }
-
-          throw new Error(`Unknown mock type: ${(mock as any).type}`)
         }),
       )
       return worker.start(this.options.mswOptions)
@@ -103,42 +135,6 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
       })
     await this.startPromise
   }
-
-  async register(module: MockedModule): Promise<void> {
-    await this.init()
-    this.mocks.set(module.url, module)
-  }
-
-  async delete(url: string): Promise<void> {
-    await this.init()
-    this.mocks.delete(url)
-  }
-
-  invalidate(): void {
-    this.mocks.clear()
-  }
-}
-
-export type MockEvent = ManualMockEvent | AutomockEvent | RedirectMockEvent
-
-export interface ManualMockEvent {
-  type: 'manual'
-  rawId: string
-  url: string
-  factory: () => any
-}
-
-export interface AutomockEvent {
-  type: 'automock' | 'autospy'
-  rawId: string
-  url: string
-}
-
-export interface RedirectMockEvent {
-  type: 'redirect'
-  rawId: string
-  url: string
-  redirect: string
 }
 
 const timestampRegexp = /(\?|&)t=\d{13}/
@@ -169,11 +165,6 @@ function bypass(request: Request) {
     )
   }
   return clonedRequest
-}
-
-const postfixRE = /[?#].*$/
-function cleanUrl(url: string): string {
-  return url.replace(postfixRE, '')
 }
 
 const replacePercentageRE = /%/g

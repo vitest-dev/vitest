@@ -2,6 +2,21 @@
 
 Module mocker parts that can be used independently from Vitest.
 
+## Using as a Vite plugin
+
+```ts
+import { mockerPlugin } from '@vitest/mocker/node'
+
+export default defineConfig({
+  plugins: [mockerPlugin()],
+})
+```
+
+```ts
+// at the top of your entry point
+import '@vitest/mocker/register'
+```
+
 ## MockerRegistry
 
 Just a cache that holds mocked modules to be used by the actual mocker.

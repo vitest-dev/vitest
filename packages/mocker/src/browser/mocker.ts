@@ -1,29 +1,11 @@
 import { extname, join } from 'pathe'
 import type { MockedModule, MockedModuleType } from '../registry'
 import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
-import { mockObject } from './automocker'
+import type { ModuleMockOptions } from '../types'
+import { mockObject } from '../automocker'
 import type { ModuleMockerInterceptor } from './interceptor'
 
 const { now } = Date
-
-export interface ModuleMockerRPC {
-  invalidate: (ids: string[]) => Promise<void>
-  resolveId: (id: string, importer: string) => Promise<{ id: string; url: string; optimized: boolean } | null>
-  resolveMock: (
-    id: string,
-    importer: string,
-    options: { mock: 'spy' | 'factory' | 'auto' }
-  ) => Promise<{
-    mockType: MockedModuleType
-    resolvedId: string
-    redirectUrl?: string | null
-    needsInterop?: boolean
-  }>
-}
-
-export interface ModuleMockerConfig {
-  root: string
-}
 
 // TODO: define an interface thath both node.js and browser mocker can implement
 export class ModuleMocker {
@@ -38,10 +20,6 @@ export class ModuleMocker {
     private spyOn: (obj: any, method: string | symbol) => any,
     private config: ModuleMockerConfig,
   ) {}
-
-  public getMockContext() {
-    return { callstack: null }
-  }
 
   public async prepare(): Promise<void> {
     if (!this.queue.size) {
@@ -154,7 +132,7 @@ export class ModuleMocker {
     }, object)
   }
 
-  public queueMock(rawId: string, importer: string, factoryOrOptions?: MockOptions | (() => any)): void {
+  public queueMock(rawId: string, importer: string, factoryOrOptions?: ModuleMockOptions | (() => any)): void {
     const promise = this.rpc
       .resolveMock(rawId, importer, {
         mock: typeof factoryOrOptions === 'function'
@@ -167,6 +145,8 @@ export class ModuleMocker {
         const factory = typeof factoryOrOptions === 'function'
           ? async () => {
             const data = await factoryOrOptions()
+            // vite wraps all external modules that have "needsInterop" in a function that
+            // merges all exports from default into the module object
             return needsInterop ? { default: data } : data
           }
           : undefined
@@ -216,6 +196,8 @@ export class ModuleMocker {
     this.queue.add(promise)
   }
 
+  // We need to await mock registration before importing the actual module
+  // In case there is a mocked module in the import chain
   public wrapDynamicImport<T>(moduleFactory: () => Promise<T>): Promise<T> {
     if (typeof moduleFactory === 'function') {
       const promise = new Promise<T>((resolve, reject) => {
@@ -250,6 +232,29 @@ function cleanVersion(url: string) {
   return url.replace(versionRegexp, '')
 }
 
-interface MockOptions {
-  spy?: boolean
+export interface ResolveIdResult {
+  id: string
+  url: string
+  optimized: boolean
+}
+
+export interface ResolveMockResul {
+  mockType: MockedModuleType
+  resolvedId: string
+  redirectUrl?: string | null
+  needsInterop?: boolean
+}
+
+export interface ModuleMockerRPC {
+  invalidate: (ids: string[]) => Promise<void>
+  resolveId: (id: string, importer: string) => Promise<ResolveIdResult | null>
+  resolveMock: (
+    id: string,
+    importer: string,
+    options: { mock: 'spy' | 'factory' | 'auto' }
+  ) => Promise<ResolveMockResul>
+}
+
+export interface ModuleMockerConfig {
+  root: string
 }

@@ -13,12 +13,14 @@ const entries = {
   index: 'src/index.ts',
   node: 'src/node/index.ts',
   browser: 'src/browser/index.ts',
+  register: 'src/browser/register.ts',
 }
 
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
   ...Object.keys(pkg.peerDependencies || {}),
+  /^msw/,
 ]
 
 const plugins = [

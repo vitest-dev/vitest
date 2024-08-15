@@ -1,3 +1,6 @@
+import MagicString from 'magic-string'
+import type { Plugin } from 'vite'
+import { cleanUrl } from '../utils'
 import type {
   Declaration,
   ExportDefaultDeclaration,
@@ -8,9 +11,7 @@ import type {
   Pattern,
   Positioned,
   Program,
-} from '@vitest/utils/ast'
-import MagicString from 'magic-string'
-import type { Plugin } from 'vite'
+} from './esmWalker'
 
 export interface AutomockPluginOptions {
   /**
@@ -196,9 +197,4 @@ ${redeclarations}
 `
   m.append(moduleObject + assigning + specifiersExports)
   return m
-}
-
-const postfixRE = /[?#].*$/
-function cleanUrl(url: string): string {
-  return url.replace(postfixRE, '')
 }

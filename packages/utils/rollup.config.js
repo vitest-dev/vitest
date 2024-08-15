@@ -13,7 +13,6 @@ const entries = {
   'index': 'src/index.ts',
   'helpers': 'src/helpers.ts',
   'diff': 'src/diff/index.ts',
-  'ast': 'src/ast/index.ts',
   'error': 'src/error.ts',
   'source-map': 'src/source-map.ts',
   'types': 'src/types.ts',
