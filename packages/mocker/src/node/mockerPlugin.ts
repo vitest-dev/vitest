@@ -2,19 +2,17 @@ import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import type { Plugin, ViteDevServer } from 'vite'
 
-import { type AutomockPluginOptions, automockPlugin } from './pluginAutomock'
-import { type HoistMocksPluginOptions, hoistMocksPlugin } from './pluginHoistMocks'
+import { type AutomockPluginOptions, automockPlugin } from './automockPlugin'
+import { type HoistMocksPluginOptions, hoistMocksPlugin } from './hoistMocksPlugin'
 import { dynamicImportPlugin } from './dynamicImportPlugin'
 import { ServerMockResolver } from './resolver'
 
 interface MockerPluginOptions extends AutomockPluginOptions {
   hoistMocks?: HoistMocksPluginOptions
-  // TODO: more options
-  mswOptions?: {
-    serviceWorker: { url: string }
-    quiet: true
-  }
 }
+
+// this is an implementation for public usage
+// vitest doesn't use this plugin directly
 
 export function mockerPlugin(options: MockerPluginOptions = {}): Plugin[] {
   let server: ViteDevServer
@@ -64,10 +62,6 @@ export function mockerPlugin(options: MockerPluginOptions = {}): Plugin[] {
           .replace(
             '__VITEST_GLOBAL_THIS_ACCESSOR__',
             JSON.stringify(options.globalThisAccessor ?? '"__vitest_mocker__"'),
-          )
-          .replace(
-            '__VITEST_MSW_OPTIONS__',
-            JSON.stringify(options.mswOptions ?? {}),
           )
           .replace(
             '__VITEST_MOCKER_ROOT__',

@@ -57,7 +57,7 @@ export function injectDynamicImport(
       // s.update(node.start, node.end, viImportMetaKey)
     },
     onDynamicImport(node) {
-      const globalThisAccessor = options.globalThisAccessor || '__vitest_mocker__'
+      const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
       const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(() => import(`
       const importSubstring = code.substring(node.start, node.end)
       const hasIgnore = importSubstring.includes('/* @vite-ignore */')

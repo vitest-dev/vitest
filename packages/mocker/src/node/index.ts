@@ -1,6 +1,6 @@
-export { automockModule, automockPlugin } from './pluginAutomock'
+export { automockModule, automockPlugin } from './automockPlugin'
 export { findMockRedirect } from './redirect'
-export { hoistMocksPlugin, hoistMocks } from './pluginHoistMocks'
+export { hoistMocksPlugin, hoistMocks } from './hoistMocksPlugin'
 export { ServerMockResolver } from './resolver'
 export { dynamicImportPlugin } from './dynamicImportPlugin'
 export { mockerPlugin } from './mockerPlugin'
@@ -10,5 +10,5 @@ export type {
   ServerIdResolution,
   ServerResolverOptions,
 } from './resolver'
-export type { AutomockPluginOptions } from './pluginAutomock'
-export type { HoistMocksPluginOptions, HoistMocksResult } from './pluginHoistMocks'
+export type { AutomockPluginOptions } from './automockPlugin'
+export type { HoistMocksPluginOptions, HoistMocksResult } from './hoistMocksPlugin'

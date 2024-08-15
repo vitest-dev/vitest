@@ -43,6 +43,12 @@ export class VitestBrowserModuleMockerInterceptor extends ModuleMockerMSWInterce
 export function createModuleMockerInterceptor() {
   return new VitestBrowserModuleMockerInterceptor({
     globalThisAccessor: '"__vitest_mocker__"',
+    mswOptions: {
+      serviceWorker: {
+        url: '/__vitest_msw__',
+      },
+      quiet: true,
+    },
   })
 }
 

@@ -20,6 +20,15 @@ import { esmWalker } from './esmWalker'
 export interface HoistMocksPluginOptions {
   include?: string | RegExp | (string | RegExp)[]
   exclude?: string | RegExp | (string | RegExp)[]
+  /**
+   * List of modules that should always be imported before compiler hints.
+   * @default ['vitest']
+   */
+  hoistedModules?: string[]
+  /**
+   * Regexp to avoid ast parsing if the code doesn't contain any hoistable methods
+   * @default /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\(/
+   */
   regexpHoistable?: RegExp
   /**
    * @default ["vi", "vitest"]
@@ -41,7 +50,6 @@ export interface HoistMocksPluginOptions {
   codeFrameGenerator?: CodeFrameGenerator
 }
 
-// TODO: regexp for vi.mock/unmock(?)
 export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin {
   const filter = options.filter || createFilter(options.include, options.exclude)
   return {
@@ -159,6 +167,7 @@ export function hoistMocks(
     dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
     hoistedMethodNames = ['hoisted'],
     utilsObjectName = ['vi', 'vitest'],
+    hoistedModules = ['vitest'],
   } = options
 
   const hoistIndex = code.match(hashbangRE)?.[0].length ?? 0
@@ -189,10 +198,10 @@ export function hoistMocks(
   function defineImport(node: Positioned<ImportDeclaration>) {
     // always hoist vitest import to top of the file, so
     // "vi" helpers can access it
-    if (node.source.value === 'vitest') {
+    if (hoistedModules.includes(node.source.value as string)) {
       const code = `const ${transformImportSpecifiers(
         node,
-      )} = await import('vitest')\n`
+      )} = await import('${node.source.value}')\n`
       hoistedVitestImports += code
       s.remove(node.start, getBetterEnd(code, node))
       return

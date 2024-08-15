@@ -1,4 +1,5 @@
-import type { StartOptions } from 'msw/browser'
+import type { SetupWorker, StartOptions } from 'msw/browser'
+import type { HttpHandler } from 'msw'
 import type { ManualMockedModule, MockedModule } from '../registry'
 import { MockerRegistry } from '../registry'
 import { cleanUrl } from '../utils'
@@ -27,9 +28,12 @@ export interface ModuleMockerMSWInterceptorOptions {
   globalThisAccessor?: string
   /**
    * Options passed down to `msw.setupWorker().start(options)`
-   * @default { serviceWorker: { url: "/__vitest_msw__" }, quiet: true }
    */
   mswOptions?: StartOptions
+  /**
+   * A pre-configured `msw.setupWorker` instance.
+   */
+  mswWorker?: SetupWorker
 }
 
 export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
@@ -44,14 +48,6 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
     if (!options.globalThisAccessor) {
       options.globalThisAccessor = '"__vitest_mocker__"'
     }
-    if (!options.mswOptions) {
-      options.mswOptions = {}
-    }
-    if (!options.mswOptions.serviceWorker?.url) {
-      options.mswOptions.serviceWorker ??= {}
-      options.mswOptions.serviceWorker.url = '/__vitest_msw__'
-    }
-    options.mswOptions.quiet ??= true
   }
 
   async register(module: MockedModule): Promise<void> {
@@ -94,8 +90,16 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
     if (this.startPromise) {
       return this.startPromise
     }
+    const worker = this.options.mswWorker
     this.startPromise = Promise.all([
-      import('msw/browser'),
+      worker
+        ? {
+            setupWorker(handler: HttpHandler) {
+              worker.use(handler)
+              return worker
+            },
+          }
+        : import('msw/browser'),
       import('msw/core/http'),
     ]).then(([{ setupWorker }, { http }]) => {
       const worker = setupWorker(

@@ -1,10 +1,9 @@
 import { spyOn } from '@vitest/spy'
-import type { ModuleMockerMSWInterceptorOptions } from './interceptor'
+import type { SetupWorker, StartOptions } from 'msw/browser'
 import { ModuleMocker, ModuleMockerMSWInterceptor } from './index'
 
 declare const __VITEST_GLOBAL_THIS_ACCESSOR__: string
 declare const __VITEST_MOCKER_ROOT__: string
-declare const __VITEST_MSW_OPTIONS__: ModuleMockerMSWInterceptorOptions
 
 const hot = import.meta.hot!
 
@@ -12,24 +11,39 @@ if (!hot) {
   console.warn('Vitest mocker cannot work if Vite didn\'t establish WS connection.')
 }
 
-;(globalThis as any)[__VITEST_GLOBAL_THIS_ACCESSOR__] = new ModuleMocker(
-  new ModuleMockerMSWInterceptor(__VITEST_MSW_OPTIONS__),
-  {
-    resolveId(id, importer) {
-      return send('vitest:mocks:resolveId', { id, importer })
+export function registerModuleMocker({ mswOptions, mswWorker }: {
+  /**
+   * Options passed down to `msw.setupWorker().start(options)`
+   */
+  mswOptions?: StartOptions
+  /**
+   * A pre-configured `msw.setupWorker` instance.
+   */
+  mswWorker?: SetupWorker
+}): void {
+  ;(globalThis as any)[__VITEST_GLOBAL_THIS_ACCESSOR__] = new ModuleMocker(
+    new ModuleMockerMSWInterceptor({
+      globalThisAccessor: __VITEST_GLOBAL_THIS_ACCESSOR__,
+      mswOptions,
+      mswWorker,
+    }),
+    {
+      resolveId(id, importer) {
+        return send('vitest:mocks:resolveId', { id, importer })
+      },
+      resolveMock(id, importer, options) {
+        return send('vitest:mocks:resolveMock', { id, importer, options })
+      },
+      async invalidate(ids) {
+        return send('vitest:mocks:invalidate', { ids })
+      },
     },
-    resolveMock(id, importer, options) {
-      return send('vitest:mocks:resolveMock', { id, importer, options })
+    spyOn,
+    {
+      root: __VITEST_MOCKER_ROOT__,
     },
-    async invalidate(ids) {
-      return send('vitest:mocks:invalidate', { ids })
-    },
-  },
-  spyOn,
-  {
-    root: __VITEST_MOCKER_ROOT__,
-  },
-)
+  )
+}
 
 function send<T>(event: string, data: any) {
   hot.send(event, data)
