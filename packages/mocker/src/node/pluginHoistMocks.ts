@@ -13,9 +13,8 @@ import type {
   Node as _Node,
 } from 'estree'
 import { findNodeAround } from 'acorn-walk'
-import type { PluginContext, ProgramNode } from 'rollup'
 import { esmWalker } from '@vitest/utils/ast'
-import type { Plugin } from 'vite'
+import type { Plugin, Rollup } from 'vite'
 import { createFilter } from 'vite'
 
 export interface HoistMocksPluginOptions {
@@ -121,7 +120,7 @@ const regexpHoistable
 const hashbangRE = /^#!.*\n/
 
 export interface HoistMocksResult {
-  ast: ReturnType<PluginContext['parse']>
+  ast: Rollup.ProgramNode
   code: string
   map: SourceMap
 }
@@ -133,7 +132,7 @@ interface CodeFrameGenerator {
 export function hoistMocks(
   code: string,
   id: string,
-  parse: PluginContext['parse'],
+  parse: Rollup.PluginContext['parse'],
   options: HoistMocksPluginOptions = {},
 ): HoistMocksResult | undefined {
   const needHoisting = regexpHoistable.test(code)
@@ -144,7 +143,7 @@ export function hoistMocks(
 
   const s = new MagicString(code)
 
-  let ast: ProgramNode
+  let ast: Rollup.ProgramNode
   try {
     ast = parse(code)
   }

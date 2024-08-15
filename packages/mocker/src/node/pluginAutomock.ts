@@ -12,7 +12,7 @@ import type {
 import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
 
-interface AutomockPluginOptions {
+export interface AutomockPluginOptions {
   /**
    * @default "__vitest_mocker__"
    */
