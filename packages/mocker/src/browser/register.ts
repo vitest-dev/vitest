@@ -1,5 +1,7 @@
 import { spyOn } from '@vitest/spy'
 import type { SetupWorker, StartOptions } from 'msw/browser'
+import type { ModuleMockerCompilerHints } from './hints'
+import { createCompilerHints } from './hints'
 import { ModuleMocker, ModuleMockerMSWInterceptor } from './index'
 
 declare const __VITEST_GLOBAL_THIS_ACCESSOR__: string
@@ -20,7 +22,7 @@ export function registerModuleMocker({ mswOptions, mswWorker }: {
    * A pre-configured `msw.setupWorker` instance.
    */
   mswWorker?: SetupWorker
-}): void {
+}): ModuleMockerCompilerHints {
   ;(globalThis as any)[__VITEST_GLOBAL_THIS_ACCESSOR__] = new ModuleMocker(
     new ModuleMockerMSWInterceptor({
       globalThisAccessor: __VITEST_GLOBAL_THIS_ACCESSOR__,
@@ -43,6 +45,9 @@ export function registerModuleMocker({ mswOptions, mswWorker }: {
       root: __VITEST_MOCKER_ROOT__,
     },
   )
+  return createCompilerHints({
+    globalThisKey: __VITEST_GLOBAL_THIS_ACCESSOR__,
+  })
 }
 
 function send<T>(event: string, data: any) {

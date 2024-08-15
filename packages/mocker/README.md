@@ -18,7 +18,7 @@ export default defineConfig({
 import { registerModuleMocker } from '@vitest/mocker/register'
 import { mswWorker } from './msw-worker.js'
 // you can pass down msw worker if you have a custom one
-registerModuleMocker({ mswWorker })
+const vi = registerModuleMocker({ mswWorker })
 ```
 
 ```ts
@@ -26,12 +26,7 @@ registerModuleMocker({ mswWorker })
 import '@vitest/mocker/auto-register'
 ```
 
-To use the mocker now you will need compiler hints. You can create them with `createCompilerHints` function:
-
-```ts
-import { createCompilerHints } from '@vitest/mocker/browser'
-const vi = createCompilerHints()
-```
+`registerModuleMocker` returns compiler hints that Vite plugin will look for.
 
 By default, Vitest looks for `vi.mock`/`vi.doMock`/`vi.unmock`/`vi.doUnmock`/`vi.hoisted`. You can configure this with the `hoistMocks` option when initiating a plugin:
 

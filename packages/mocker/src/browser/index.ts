@@ -8,4 +8,4 @@ export type {
   ResolveMockResul,
 } from './mocker'
 export { createCompilerHints } from './hints'
-export type { CompilerHintsOptions } from './hints'
+export type { CompilerHintsOptions, ModuleMockerCompilerHints } from './hints'

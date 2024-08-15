@@ -19,7 +19,17 @@ export interface CompilerHintsOptions {
   globalThisKey?: string
 }
 
-export function createCompilerHints(options?: CompilerHintsOptions) {
+export interface ModuleMockerCompilerHints {
+  hoisted: <T>(factory: () => T) => T
+  mock: (path: string | Promise<unknown>, factory?: ModuleMockOptions | ModuleMockFactoryWithHelper) => void
+  unmock: (path: string | Promise<unknown>) => void
+  doMock: (path: string | Promise<unknown>, factory?: ModuleMockOptions | ModuleMockFactoryWithHelper) => void
+  doUnmock: (path: string | Promise<unknown>) => void
+  importActual: <T>(path: string) => Promise<T>
+  importMock: <T>(path: string) => Promise<MaybeMockedDeep<T>>
+}
+
+export function createCompilerHints(options?: CompilerHintsOptions): ModuleMockerCompilerHints {
   const globalThisAccessor = options?.globalThisKey || '__vitest_mocker__'
   function _mocker(): ModuleMocker {
     // @ts-expect-error injected by the plugin
