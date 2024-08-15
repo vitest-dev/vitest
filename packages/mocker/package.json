@@ -32,6 +32,10 @@
       "types": "./dist/register.d.ts",
       "default": "./dist/register.js"
     },
+    "./auto-register": {
+      "types": "./dist/register.d.ts",
+      "default": "./dist/register.js"
+    },
     "./*": "./*"
   },
   "main": "./dist/index.js",

@@ -22,7 +22,7 @@ export function registerModuleMocker({ mswOptions, mswWorker }: {
    * A pre-configured `msw.setupWorker` instance.
    */
   mswWorker?: SetupWorker
-}): ModuleMockerCompilerHints {
+} = {}): ModuleMockerCompilerHints {
   ;(globalThis as any)[__VITEST_GLOBAL_THIS_ACCESSOR__] = new ModuleMocker(
     new ModuleMockerMSWInterceptor({
       globalThisAccessor: __VITEST_GLOBAL_THIS_ACCESSOR__,

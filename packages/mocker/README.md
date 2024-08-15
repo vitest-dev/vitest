@@ -24,6 +24,10 @@ const vi = registerModuleMocker({ mswWorker })
 ```ts
 // you can also just import "auto-register" at the top of your entry point
 import '@vitest/mocker/auto-register'
+// if you do this, you can create compiler hints with "createCompilerHints"
+// utility to use in your own code
+import { createCompilerHints } from '@vitest/mocker/browser'
+const vi = createCompilerHints()
 ```
 
 `registerModuleMocker` returns compiler hints that Vite plugin will look for.
