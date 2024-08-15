@@ -603,7 +603,7 @@ await vi.advanceTimersToNextTimerAsync() // log: 2
 await vi.advanceTimersToNextTimerAsync() // log: 3
 ```
 
-### vi.advanceTimersToNextFrame
+### vi.advanceTimersToNextFrame <Version>2.1.0</Version> {#vi-advancetimerstonextframe}
 
 - **Type:** `() => Vitest`
 
