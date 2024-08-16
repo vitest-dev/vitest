@@ -306,7 +306,9 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       },
     },
     BrowserContext(browserServer),
-    dynamicImportPlugin(),
+    dynamicImportPlugin({
+      globalThisAccessor: '"__vitest_browser_runner__"',
+    }),
     {
       name: 'vitest:browser:config',
       enforce: 'post',
