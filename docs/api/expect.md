@@ -55,10 +55,6 @@ test('expect.soft test', () => {
 })
 ```
 
-::: warning
-`expect.soft` can only be used inside the [`test`](/api/#test) function.
-:::
-
 ## poll
 
 - **Type:** `ExpectStatic & (actual: () => any, options: { interval, timeout, message }) => Assertions`
