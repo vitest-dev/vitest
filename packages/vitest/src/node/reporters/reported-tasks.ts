@@ -380,7 +380,9 @@ export interface TaskOptions {
   mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
-function buildOptions(task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite): TaskOptions {
+function buildOptions(
+  task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite,
+): TaskOptions {
   return {
     each: task.each,
     concurrent: task.concurrent,
@@ -487,14 +489,23 @@ function getTestState(test: TestCase): TestResult['state'] | 'running' {
   return result ? result.state : 'running'
 }
 
-function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTask: TestCase | TestSuite | TestModule): void {
+function storeTask(
+  project: WorkspaceProject,
+  runnerTask: RunnerTask,
+  reportedTask: TestCase | TestSuite | TestModule,
+): void {
   project.ctx.state.reportedTasksMap.set(runnerTask, reportedTask)
 }
 
-function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): TestCase | TestSuite | TestModule {
+function getReportedTask(
+  project: WorkspaceProject,
+  runnerTask: RunnerTask,
+): TestCase | TestSuite | TestModule {
   const reportedTask = project.ctx.state.getReportedEntity(runnerTask)
   if (!reportedTask) {
-    throw new Error(`Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`)
+    throw new Error(
+      `Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`,
+    )
   }
   return reportedTask
 }
