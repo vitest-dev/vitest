@@ -9,8 +9,10 @@ import { createVmThreadsPool } from './pools/vmThreads'
 import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
+import { WorkspaceSpec } from './spec'
 
-export type WorkspaceSpec = [project: WorkspaceProject, testFile: string, options: { pool: Pool }]
+export { WorkspaceSpec }
+
 export type RunWithFiles = (
   files: WorkspaceSpec[],
   invalidates?: string[]
