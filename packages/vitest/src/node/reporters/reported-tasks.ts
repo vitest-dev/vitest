@@ -468,16 +468,16 @@ export interface ModuleDiagnostic {
    */
   prepareDuration: number
   /**
-   * The time it takes to import the test file.
-   * This includes importing everything in the file and executing suite callbacks.
+   * The time it takes to import the test module.
+   * This includes importing everything in the module and executing suite callbacks.
    */
   collectDuration: number
   /**
-   * The time it takes to import the setup file.
+   * The time it takes to import the setup module.
    */
   setupDuration: number
   /**
-   * Accumulated duration of all tests and hooks in the file.
+   * Accumulated duration of all tests and hooks in the module.
    */
   duration: number
 }
