@@ -2,7 +2,6 @@ import { parseAst } from 'rollup/parseAst'
 import { describe, expect, it, test } from 'vitest'
 import stripAnsi from 'strip-ansi'
 import { generateCodeFrame } from 'vitest/src/node/error.js'
-import { highlightCode } from 'vitest/src/utils/colors.js'
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 
@@ -13,7 +12,7 @@ function parse(code: string, options: any) {
 const hoistMocksOptions: HoistMocksPluginOptions = {
   codeFrameGenerator(node: any, id: string, code: string) {
     return generateCodeFrame(
-      highlightCode(id, code),
+      code,
       4,
       node.start + 1,
     )

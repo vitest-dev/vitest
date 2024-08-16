@@ -2,7 +2,6 @@ import type { Plugin } from 'vite'
 import { automockPlugin, hoistMocksPlugin } from '@vitest/mocker/node'
 import { distDir } from '../../paths'
 import { generateCodeFrame } from '../error'
-import { highlightCode } from '../../utils/colors'
 
 export function MocksPlugins(): Plugin[] {
   return [
@@ -15,7 +14,7 @@ export function MocksPlugins(): Plugin[] {
       },
       codeFrameGenerator(node, id, code) {
         return generateCodeFrame(
-          highlightCode(id, code),
+          code,
           4,
           node.start + 1,
         )

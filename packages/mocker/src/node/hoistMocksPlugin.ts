@@ -46,6 +46,9 @@ export interface HoistMocksPluginOptions {
    * @default ["hoisted"]
    */
   hoistedMethodNames?: string[]
+  /**
+   * overrides include/exclude options
+   */
   filter?: (id: string) => boolean
   codeFrameGenerator?: CodeFrameGenerator
 }
