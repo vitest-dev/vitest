@@ -420,7 +420,7 @@ console.log(cart.getApples()) // still 42!
 
 ### vi.stubEnv {#vi-stubenv}
 
-- **Type:** `(name: string, value: string) => Vitest`
+- **Type:** `<T extends string>(name: T, value: T extends "PROD" | "DEV" | "SSR" ? boolean : string | undefined) => Vitest`
 
 Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
 
@@ -434,6 +434,12 @@ vi.stubEnv('NODE_ENV', 'production')
 
 process.env.NODE_ENV === 'production'
 import.meta.env.NODE_ENV === 'production'
+
+vi.stubEnv('NODE_ENV', undefined)
+
+process.env.NODE_ENV === undefined
+import.meta.env.NODE_ENV === undefined
+
 // doesn't change other envs
 import.meta.env.MODE === 'development'
 ```

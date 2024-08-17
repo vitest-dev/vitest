@@ -346,7 +346,7 @@ export interface VitestUtils {
    */
   stubEnv: <T extends string>(
     name: T,
-    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string
+    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string | undefined
   ) => VitestUtils
 
   /**
@@ -673,12 +673,15 @@ function createVitest(): VitestUtils {
       return utils
     },
 
-    stubEnv(name: string, value: string | boolean) {
+    stubEnv(name: string, value: string | boolean | undefined) {
       if (!_stubsEnv.has(name)) {
         _stubsEnv.set(name, process.env[name])
       }
       if (_envBooleans.includes(name)) {
         process.env[name] = value ? '1' : ''
+      }
+      else if (value === undefined) {
+        delete process.env[name]
       }
       else {
         process.env[name] = String(value)
