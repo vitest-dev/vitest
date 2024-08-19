@@ -17,3 +17,8 @@
 
 ### Changesets
 - [ ] Changes in changelog are generated from PR name. Please, make sure that it explains your changes in an understandable manner. Please, prefix changeset messages with `feat:`, `fix:`, `perf:`, `docs:`, or `chore:`.
+
+---
+
+> [!TIP]
+> The author of this PR can publish a _preview release_ by commenting `/publish` below.
