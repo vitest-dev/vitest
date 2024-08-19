@@ -1,8 +1,10 @@
 import { join } from 'node:path/posix'
+import { readFile } from 'node:fs/promises'
 import type { Plugin } from 'vite'
 import type { MockedModuleSerialized } from '../registry'
 import { ManualMockedModule, MockerRegistry } from '../registry'
 import { cleanUrl } from '../utils'
+import { automockModule } from './automockPlugin'
 
 export interface InterceptorPluginOptions {
   /**
@@ -36,27 +38,34 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
           .join('\n')
         return `${module}\n${keys}`
       }
-    },
-    async resolveId(id, importer) {
-      const resolved = await this.resolve(id, importer)
-      if (!resolved) {
-        return
-      }
-      const mock = registry.get(resolved.id)
-      if (!mock) {
-        return
-      }
       if (mock.type === 'redirect') {
-        return mock.redirect
+        return readFile(mock.redirect, 'utf-8')
       }
-      if (mock.type === 'automock' || mock.type === 'autospy') {
-        // handled by automockPlugin
-        return injectQuery(resolved.id, `mock=${mock.type}`)
-      }
+    },
+    transform: {
+      order: 'post',
+      handler(code, id) {
+        const mock = registry.get(id)
+        if (!mock) {
+          return
+        }
+        if (mock.type === 'automock' || mock.type === 'autospy') {
+          const m = automockModule(code, mock.type, this.parse, {
+            globalThisAccessor: options.globalThisAccessor,
+          })
+
+          return {
+            code: m.toString(),
+            map: m.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
+          }
+        }
+      },
     },
     configureServer(server) {
       server.ws.on('vitest:interceptor:register', (event: MockedModuleSerialized) => {
         const serverUrl = event.url
+        // the browsers stores the url relative to the root
+        // but on the server "id" operates on the file paths
         event.url = join(server.config.root, event.url)
         if (event.type === 'manual') {
           const module = ManualMockedModule.fromJSON(event, async () => {
@@ -64,13 +73,15 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
             return Object.fromEntries(keys.map(key => [key, null]))
           })
           Object.assign(module, {
-            // the browsers stores the url relative to the root
-            // but on the server "id" operates on the file paths
             serverUrl,
           })
           registry.add(module)
         }
         else {
+          if (event.type === 'redirect') {
+            const redirectUrl = new URL(event.redirect)
+            event.redirect = join(server.config.root, redirectUrl.pathname)
+          }
           registry.register(event)
         }
         server.ws.send('vitest:interceptor:register:result')
@@ -101,19 +112,4 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
       }
     },
   }
-}
-
-const replacePercentageRE = /%/g
-function injectQuery(url: string, queryToInject: string): string {
-  // encode percents for consistent behavior with pathToFileURL
-  // see #2614 for details
-  const resolvedUrl = new URL(
-    url.replace(replacePercentageRE, '%25'),
-    location.href,
-  )
-  const { search, hash } = resolvedUrl
-  const pathname = cleanUrl(url)
-  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${
-    hash ?? ''
-  }`
 }

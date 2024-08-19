@@ -1,11 +1,54 @@
 import { mockerPlugin } from '@vitest/mocker/node'
+import type { UserConfig } from 'vite'
 import { createServer } from 'vite'
-import { expect, it, onTestFinished } from 'vitest'
+import { beforeAll, expect, it, onTestFinished } from 'vitest'
+import type { Browser } from 'playwright'
 import { chromium } from 'playwright'
 
-it('default server mocker works correctly', async () => {
+let browser: Browser
+beforeAll(async () => {
+  browser = await chromium.launch()
+  return async () => {
+    await browser.close()
+    browser = null as any
+  }
+})
+
+it('default server manual mocker works correctly', async () => {
+  const { page } = await createTestServer({
+    root: 'fixtures/manual-mock',
+  })
+
+  await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('true')
+})
+
+it('automock works correctly', async () => {
+  const { page } = await createTestServer({
+    root: 'fixtures/automock',
+  })
+
+  await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('42')
+})
+
+it('autospy works correctly', async () => {
+  const { page } = await createTestServer({
+    root: 'fixtures/autospy',
+  })
+
+  await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('3, 42')
+})
+
+it('redirect works correctly', async () => {
+  const { page } = await createTestServer({
+    root: 'fixtures/redirect',
+  })
+
+  await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('42')
+})
+
+async function createTestServer(config: UserConfig) {
   const server = await createServer({
-    root: 'fixtures/custom-mocker',
+    ...config,
     plugins: [
       mockerPlugin({
         globalThisAccessor: 'Symbol.for("vitest.mocker")',
@@ -50,14 +93,14 @@ export const mocker = {
   onTestFinished(async () => {
     await server.close()
   })
-  const browser = await chromium.launch()
   const page = await browser.newPage()
-  await page.goto(server.resolvedUrls!.local[0])
   onTestFinished(async () => {
-    await server.close()
     await page.close()
-    await browser.close()
   })
+  await page.goto(server.resolvedUrls!.local[0])
 
-  await expect.poll(() => page.locator('css=#mocked').textContent()).toBe('true')
-})
+  return {
+    server,
+    page,
+  }
+}

@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import { mockerPlugin } from '@vitest/mocker/node'
 
 export default defineConfig({
-  root: 'fixtures/custom-mocker',
+  root: 'fixtures/redirect',
   plugins: [
     mockerPlugin({
       globalThisAccessor: 'Symbol.for("vitest.mocker")',
