@@ -10,7 +10,7 @@ export class VitestBrowserClientMocker extends ModuleMocker {
       async (e: MessageEvent<IframeChannelOutgoingEvent>) => {
         if (e.data.type === 'mock-factory:request') {
           try {
-            const module = this.resolveFactoryModule(e.data.id)
+            const module = await this.resolveFactoryModule(e.data.id)
             const exports = Object.keys(module)
             channel.postMessage({
               type: 'mock-factory:response',

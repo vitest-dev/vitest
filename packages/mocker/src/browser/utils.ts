@@ -1,8 +1,12 @@
 import type { ViteHotContext } from 'vite/types/hot.js'
 
-const hot: ViteHotContext = import.meta.hot!
+const hot: ViteHotContext = import.meta.hot! || {
+  on: warn,
+  off: warn,
+  send: warn,
+}
 
-if (!hot) {
+function warn() {
   console.warn('Vitest mocker cannot work if Vite didn\'t establish WS connection.')
 }
 

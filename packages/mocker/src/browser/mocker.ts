@@ -28,12 +28,13 @@ export class ModuleMocker {
     await Promise.all([...this.queue.values()])
   }
 
-  public resolveFactoryModule(id: string): Promise<Record<string | symbol, any>> {
+  public async resolveFactoryModule(id: string): Promise<Record<string | symbol, any>> {
     const mock = this.registry.get(id)
     if (!mock || mock.type !== 'manual') {
       throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)
     }
-    return mock.resolve()
+    const result = await mock.resolve()
+    return result
   }
 
   public getFactoryModule(id: string): any {

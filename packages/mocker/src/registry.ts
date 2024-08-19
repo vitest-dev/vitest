@@ -46,8 +46,8 @@ export class MockerRegistry {
   ): MockedModule {
     const type = typeof typeOrEvent === 'object' ? typeOrEvent.type : typeOrEvent
 
-    if (typeof type === 'object') {
-      const event = typeOrEvent as MockedModuleSerialized
+    if (typeof typeOrEvent === 'object') {
+      const event = typeOrEvent
       if (
         event instanceof AutomockedModule
         || event instanceof AutospiedModule

@@ -48,6 +48,7 @@ async function prepareTestEnvironment(files: string[]) {
           type: 'mock',
           module: module.toJSON(),
         } satisfies IframeMockEvent)
+        await waitForChannel('mock:done')
       },
       invalidate() {
         channel.postMessage({
@@ -58,7 +59,7 @@ async function prepareTestEnvironment(files: string[]) {
     rpc,
     SpyModule.spyOn,
     {
-      root: config.root,
+      root: getBrowserState().viteConfig.root,
     },
   )
   // @ts-expect-error mocking vitest apis
