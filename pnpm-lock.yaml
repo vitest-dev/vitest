@@ -231,7 +231,7 @@ importers:
     devDependencies:
       '@vitest/browser':
         specifier: latest
-        version: 2.0.5(playwright@1.46.0)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))
+        version: 2.0.5(playwright@1.46.1)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))
       '@vitest/ui':
         specifier: latest
         version: 2.0.5(vitest@packages+vitest)
@@ -659,6 +659,9 @@ importers:
 
   packages/mocker:
     dependencies:
+      '@vitest/spy':
+        specifier: workspace:^2.1.0-beta.1
+        version: link:../spy
       estree-walker:
         specifier: ^3.0.3
         version: 3.0.3
@@ -669,9 +672,6 @@ importers:
       '@types/estree':
         specifier: ^1.0.5
         version: 1.0.5
-      '@vitest/spy':
-        specifier: workspace:*
-        version: link:../spy
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
@@ -1349,6 +1349,21 @@ importers:
       '@vitest/test-dep-url':
         specifier: file:./dep-url
         version: '@vitest/test-deps-url@file:test/optimize-deps/dep-url'
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/public-mocker:
+    devDependencies:
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../../packages/browser
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../../packages/mocker
+      playwright:
+        specifier: ^1.46.1
+        version: 1.46.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -7639,6 +7654,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  playwright-core@1.46.1:
+    resolution: {integrity: sha512-h9LqIQaAv+CYvWzsZ+h3RsrqCStkBHlgo6/TJlFst3cOTlLghBQlJwPOZKQJTKNaD3QIB7aAVQ+gfWbN3NXB7A==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   playwright@1.41.0:
     resolution: {integrity: sha512-XOsfl5ZtAik/T9oek4V0jAypNlaCNzuKOwVhqhgYT3os6kH34PzbRb74F0VWcLYa5WFdnmxl7qyAHBXvPv7lqQ==}
     engines: {node: '>=16'}
@@ -7646,6 +7666,11 @@ packages:
 
   playwright@1.46.0:
     resolution: {integrity: sha512-XYJ5WvfefWONh1uPAUAi0H2xXV5S3vrtcnXe6uAOgdGi3aSpqOSXX08IAjXW34xitfuOJsvXU5anXZxPSEQiJw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.46.1:
+    resolution: {integrity: sha512-oPcr1yqoXLCkgKtD5eNUPLiN40rYEM39odNpIb6VE6S7/15gJmA1NzVv6zJYusV0e7tzvkU/utBFNa/Kpxmwng==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -11351,7 +11376,7 @@ snapshots:
   '@jridgewell/gen-mapping@0.3.5':
     dependencies:
       '@jridgewell/set-array': 1.2.1
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
       '@jridgewell/trace-mapping': 0.3.25
 
   '@jridgewell/resolve-uri@3.1.0': {}
@@ -11379,7 +11404,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.25':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
 
   '@jsdevtools/ez-spawn@3.0.4':
     dependencies:
@@ -12616,7 +12641,7 @@ snapshots:
       vite: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
       vue: 3.4.37(typescript@5.5.4)
 
-  '@vitest/browser@2.0.5(playwright@1.46.0)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
+  '@vitest/browser@2.0.5(playwright@1.46.1)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
@@ -12627,7 +12652,7 @@ snapshots:
       vitest: link:packages/vitest
       ws: 8.18.0
     optionalDependencies:
-      playwright: 1.46.0
+      playwright: 1.46.1
       webdriverio: 8.32.2(typescript@5.5.4)
     transitivePeerDependencies:
       - bufferutil
@@ -16906,6 +16931,8 @@ snapshots:
 
   playwright-core@1.46.0: {}
 
+  playwright-core@1.46.1: {}
+
   playwright@1.41.0:
     dependencies:
       playwright-core: 1.41.0
@@ -16915,6 +16942,12 @@ snapshots:
   playwright@1.46.0:
     dependencies:
       playwright-core: 1.46.0
+    optionalDependencies:
+      fsevents: 2.3.2
+
+  playwright@1.46.1:
+    dependencies:
+      playwright-core: 1.46.1
     optionalDependencies:
       fsevents: 2.3.2
 

@@ -30,17 +30,20 @@ export function mockerPlugin(options: MockerPluginOptions = {}): Plugin[] {
             // don't pre-transform request because they might be mocked at runtime
             preTransformRequests: false,
           },
+          optimizeDeps: {
+            exclude: ['@vitest/mocker/register', '@vitest/mocker/browser'],
+          },
         }
       },
       configureServer(server_) {
         server = server_
         const mockResolver = new ServerMockResolver(server)
-        server.ws.on('vitest:mocks:resolveId', async ({ rawId, importer }: { rawId: string; importer: string }) => {
-          const resolved = await mockResolver.resolveId(rawId, importer)
+        server.ws.on('vitest:mocks:resolveId', async ({ id, importer }: { id: string; importer: string }) => {
+          const resolved = await mockResolver.resolveId(id, importer)
           server.ws.send('vitest:mocks:resolvedId:result', resolved)
         })
-        server.ws.on('vitest:mocks:resolveMock', async ({ rawId, importer, options }: { rawId: string; importer: string; options: any }) => {
-          const resolved = await mockResolver.resolveMock(rawId, importer, options)
+        server.ws.on('vitest:mocks:resolveMock', async ({ id, importer, options }: { id: string; importer: string; options: any }) => {
+          const resolved = await mockResolver.resolveMock(id, importer, options)
           server.ws.send('vitest:mocks:resolveMock:result', resolved)
         })
         server.ws.on('vitest:mocks:invalidate', async ({ ids }: { ids: string[] }) => {
@@ -59,20 +62,21 @@ export function mockerPlugin(options: MockerPluginOptions = {}): Plugin[] {
         }
 
         const content = await readFile(registerPath, 'utf-8')
-        return content
+        const result = content
           .replace(
-            '__VITEST_GLOBAL_THIS_ACCESSOR__',
-            JSON.stringify(options.globalThisAccessor ?? '"__vitest_mocker__"'),
+            /__VITEST_GLOBAL_THIS_ACCESSOR__/g,
+            options.globalThisAccessor ?? '"__vitest_mocker__"',
           )
           .replace(
             '__VITEST_MOCKER_ROOT__',
             JSON.stringify(server.config.root),
           )
+        return result
       },
     },
-    interceptorPlugin(options),
-    dynamicImportPlugin(options),
-    automockPlugin(options),
     hoistMocksPlugin(options.hoistMocks),
+    interceptorPlugin(options),
+    automockPlugin(options),
+    dynamicImportPlugin(options),
   ]
 }

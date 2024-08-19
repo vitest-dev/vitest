@@ -33,7 +33,7 @@ export interface HoistMocksPluginOptions {
   /**
    * @default ["vi", "vitest"]
    */
-  utilsObjectName?: string[]
+  utilsObjectNames?: string[]
   /**
    * @default ["mock", "unmock"]
    */
@@ -73,40 +73,13 @@ To fix this issue you can either:
 - import the mocks API directly from 'vitest'
 - enable the 'globals' options`
 
-const API_NOT_FOUND_CHECK
-  = '\nif (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
-  + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+function API_NOT_FOUND_CHECK(names: string[]) {
+  return `\nif (${names.map(name => `typeof ${name} === 'undefined'`).join(' & ')}) `
+    + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+}
 
 function isIdentifier(node: any): node is Positioned<Identifier> {
   return node.type === 'Identifier'
-}
-
-function transformImportSpecifiers(node: ImportDeclaration) {
-  const dynamicImports = node.specifiers
-    .map((specifier) => {
-      if (specifier.type === 'ImportDefaultSpecifier') {
-        return `default: ${specifier.local.name}`
-      }
-
-      if (specifier.type === 'ImportSpecifier') {
-        const local = specifier.local.name
-        const imported = specifier.imported.name
-        if (local === imported) {
-          return local
-        }
-        return `${imported}: ${local}`
-      }
-
-      return null
-    })
-    .filter(Boolean)
-    .join(', ')
-
-  if (!dynamicImports.length) {
-    return ''
-  }
-
-  return `{ ${dynamicImports} }`
 }
 
 function getBetterEnd(code: string, node: Node) {
@@ -162,13 +135,13 @@ export function hoistMocks(
     hoistableMockMethodNames = ['mock', 'unmock'],
     dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
     hoistedMethodNames = ['hoisted'],
-    utilsObjectName = ['vi', 'vitest'],
+    utilsObjectNames = ['vi', 'vitest'],
     hoistedModules = ['vitest'],
   } = options
 
   const hoistIndex = code.match(hashbangRE)?.[0].length ?? 0
 
-  let hoistedVitestImports = ''
+  let hoistedModuleImported = false
 
   let uid = 0
   const idToImportMap = new Map<string, string>()
@@ -195,11 +168,7 @@ export function hoistMocks(
     // always hoist vitest import to top of the file, so
     // "vi" helpers can access it
     if (hoistedModules.includes(node.source.value as string)) {
-      const code = `const ${transformImportSpecifiers(
-        node,
-      )} = await import('${node.source.value}')\n`
-      hoistedVitestImports += code
-      s.remove(node.start, getBetterEnd(code, node))
+      hoistedModuleImported = true
       return
     }
 
@@ -336,7 +305,7 @@ export function hoistMocks(
       if (
         node.callee.type === 'MemberExpression'
         && isIdentifier(node.callee.object)
-        && utilsObjectName.includes(node.callee.object.name)
+        && utilsObjectNames.includes(node.callee.object.name)
         && isIdentifier(node.callee.property)
       ) {
         const methodName = node.callee.property.name
@@ -536,10 +505,9 @@ export function hoistMocks(
     })
     .join('')
 
-  if (hoistedCode || hoistedVitestImports) {
+  if (hoistedCode || hoistedModuleImported) {
     s.prepend(
-      hoistedVitestImports
-      + (!hoistedVitestImports && hoistedCode ? API_NOT_FOUND_CHECK : '')
+      (!hoistedModuleImported && hoistedCode ? API_NOT_FOUND_CHECK(utilsObjectNames) : '')
       + hoistedCode,
     )
   }

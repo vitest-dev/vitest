@@ -1,3 +1,4 @@
+import { join } from 'node:path/posix'
 import type { Plugin } from 'vite'
 import type { MockedModuleSerialized } from '../registry'
 import { ManualMockedModule, MockerRegistry } from '../registry'
@@ -23,7 +24,8 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
       if (mock.type === 'manual') {
         const exports = Object.keys(await mock.resolve())
         const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
-        const module = `const module = globalThis[${accessor}].getFactoryModule("${mock.url}");`
+        const serverUrl = (mock as any).serverUrl as string
+        const module = `const module = globalThis[${accessor}].getFactoryModule("${serverUrl}");`
         const keys = exports
           .map((name) => {
             if (name === 'default') {
@@ -54,22 +56,32 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
     },
     configureServer(server) {
       server.ws.on('vitest:interceptor:register', (event: MockedModuleSerialized) => {
+        const serverUrl = event.url
+        event.url = join(server.config.root, event.url)
         if (event.type === 'manual') {
           const module = ManualMockedModule.fromJSON(event, async () => {
-            const keys = await getFactoryExports(event.url)
+            const keys = await getFactoryExports(serverUrl)
             return Object.fromEntries(keys.map(key => [key, null]))
+          })
+          Object.assign(module, {
+            // the browsers stores the url relative to the root
+            // but on the server "id" operates on the file paths
+            serverUrl,
           })
           registry.add(module)
         }
         else {
           registry.register(event)
         }
+        server.ws.send('vitest:interceptor:register:result')
       })
       server.ws.on('vitest:interceptor:delete', (id: string) => {
         registry.delete(id)
+        server.ws.send('vitest:interceptor:register:delete')
       })
       server.ws.on('vitest:interceptor:invalidate', () => {
         registry.clear()
+        server.ws.send('vitest:interceptor:register:invalidate')
       })
 
       function getFactoryExports(url: string) {
