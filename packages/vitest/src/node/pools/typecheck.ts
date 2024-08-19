@@ -100,20 +100,20 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   }
 
   async function collectTests(specs: WorkspaceSpec[]) {
-    const specsByProject = groupBy(specs, ([project]) => project.getName())
+    const specsByProject = groupBy(specs, spec => spec.project.name)
     for (const name in specsByProject) {
-      const project = specsByProject[name][0][0]
-      const files = specsByProject[name].map(([_, file]) => file)
-      const checker = await createWorkspaceTypechecker(project, files)
+      const project = specsByProject[name][0].project
+      const files = specsByProject[name].map(spec => spec.moduleId)
+      const checker = await createWorkspaceTypechecker(project.workspaceProject, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
+      ctx.state.collectFiles(project.workspaceProject, checker.getTestFiles())
       await ctx.report('onCollected')
     }
   }
 
   async function runTests(specs: WorkspaceSpec[]) {
-    const specsByProject = groupBy(specs, ([project]) => project.getName())
+    const specsByProject = groupBy(specs, spec => spec.project.name)
     const promises: Promise<void>[] = []
 
     for (const name in specsByProject) {
