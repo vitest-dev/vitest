@@ -74,7 +74,7 @@ To fix this issue you can either:
 - enable the 'globals' options`
 
 function API_NOT_FOUND_CHECK(names: string[]) {
-  return `\nif (${names.map(name => `typeof ${name} === 'undefined'`).join(' & ')}) `
+  return `\nif (${names.map(name => `typeof globalThis["${name}"] === "undefined"`).join(' && ')}) `
     + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
 }
 
