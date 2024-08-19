@@ -26,12 +26,12 @@ class ReportedTaskImplementation {
   /**
    * Unique identifier.
    * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the project name, file path and test position.
+   * The ID is based on the project name, module url and test position.
    */
   public readonly id: string
 
   /**
-   * Location in the file where the test or suite is defined.
+   * Location in the module where the test or suite is defined.
    */
   public readonly location: { line: number; column: number } | undefined
 
@@ -49,7 +49,7 @@ class ReportedTaskImplementation {
    * Creates a new reported task instance and stores it in the project's state for future use.
    */
   static register(task: RunnerTask, project: WorkspaceProject) {
-    const state = new this(task, project) as TestCase | TestSuite | TestFile
+    const state = new this(task, project) as TestCase | TestSuite | TestModule
     storeTask(project, task, state)
     return state
   }
@@ -62,9 +62,9 @@ export class TestCase extends ReportedTaskImplementation {
   public readonly type = 'test'
 
   /**
-   * Direct reference to the test file where the test or suite is defined.
+   * Direct reference to the test module where the test or suite is defined.
    */
-  public readonly file: TestFile
+  public readonly module: TestModule
 
   /**
    * Name of the test.
@@ -77,21 +77,21 @@ export class TestCase extends ReportedTaskImplementation {
   public readonly options: TaskOptions
 
   /**
-   * Parent suite. If the test was called directly inside the file, the parent will be the file.
+   * Parent suite. If the test was called directly inside the module, the parent will be the module itself.
    */
-  public readonly parent: TestSuite | TestFile
+  public readonly parent: TestSuite | TestModule
 
   protected constructor(task: RunnerTestCase | RunnerCustomCase, project: WorkspaceProject) {
     super(task, project)
 
     this.name = task.name
-    this.file = getReportedTask(project, task.file) as TestFile
+    this.module = getReportedTask(project, task.file) as TestModule
     const suite = this.task.suite
     if (suite) {
       this.parent = getReportedTask(project, suite) as TestSuite
     }
     else {
-      this.parent = this.file
+      this.parent = this.module
     }
     this.options = buildOptions(task)
   }
@@ -294,14 +294,14 @@ export class TestSuite extends SuiteImplementation {
   public readonly name: string
 
   /**
-   * Direct reference to the test file where the test or suite is defined.
+   * Direct reference to the test module where the test or suite is defined.
    */
-  public readonly file: TestFile
+  public readonly module: TestModule
 
   /**
-   * Parent suite. If suite was called directly inside the file, the parent will be the file.
+   * Parent suite. If suite was called directly inside the module, the parent will be the module itself.
    */
-  public readonly parent: TestSuite | TestFile
+  public readonly parent: TestSuite | TestModule
 
   /**
    * Options that suite was initiated with.
@@ -312,13 +312,13 @@ export class TestSuite extends SuiteImplementation {
     super(task, project)
 
     this.name = task.name
-    this.file = getReportedTask(project, task.file) as TestFile
+    this.module = getReportedTask(project, task.file) as TestModule
     const suite = this.task.suite
     if (suite) {
       this.parent = getReportedTask(project, suite) as TestSuite
     }
     else {
-      this.parent = this.file
+      this.parent = this.module
     }
     this.options = buildOptions(task)
   }
@@ -334,10 +334,10 @@ export class TestSuite extends SuiteImplementation {
   }
 }
 
-export class TestFile extends SuiteImplementation {
+export class TestModule extends SuiteImplementation {
   declare public readonly task: RunnerTestFile
   declare public readonly location: undefined
-  public readonly type = 'file'
+  public readonly type = 'module'
 
   /**
    * This is usually an absolute UNIX file path.
@@ -352,10 +352,10 @@ export class TestFile extends SuiteImplementation {
   }
 
   /**
-   * Useful information about the file like duration, memory usage, etc.
-   * If the file was not executed yet, all diagnostic values will return `0`.
+   * Useful information about the module like duration, memory usage, etc.
+   * If the module was not executed yet, all diagnostic values will return `0`.
    */
-  public diagnostic(): FileDiagnostic {
+  public diagnostic(): ModuleDiagnostic {
     const setupDuration = this.task.setupDuration || 0
     const collectDuration = this.task.collectDuration || 0
     const prepareDuration = this.task.prepareDuration || 0
@@ -380,7 +380,9 @@ export interface TaskOptions {
   mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
-function buildOptions(task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite): TaskOptions {
+function buildOptions(
+  task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite,
+): TaskOptions {
   return {
     each: task.each,
     concurrent: task.concurrent,
@@ -458,7 +460,7 @@ export interface TestDiagnostic {
   flaky: boolean
 }
 
-export interface FileDiagnostic {
+export interface ModuleDiagnostic {
   /**
    * The time it takes to import and initiate an environment.
    */
@@ -468,16 +470,16 @@ export interface FileDiagnostic {
    */
   prepareDuration: number
   /**
-   * The time it takes to import the test file.
-   * This includes importing everything in the file and executing suite callbacks.
+   * The time it takes to import the test module.
+   * This includes importing everything in the module and executing suite callbacks.
    */
   collectDuration: number
   /**
-   * The time it takes to import the setup file.
+   * The time it takes to import the setup module.
    */
   setupDuration: number
   /**
-   * Accumulated duration of all tests and hooks in the file.
+   * Accumulated duration of all tests and hooks in the module.
    */
   duration: number
 }
@@ -487,14 +489,23 @@ function getTestState(test: TestCase): TestResult['state'] | 'running' {
   return result ? result.state : 'running'
 }
 
-function storeTask(project: WorkspaceProject, runnerTask: RunnerTask, reportedTask: TestCase | TestSuite | TestFile): void {
+function storeTask(
+  project: WorkspaceProject,
+  runnerTask: RunnerTask,
+  reportedTask: TestCase | TestSuite | TestModule,
+): void {
   project.ctx.state.reportedTasksMap.set(runnerTask, reportedTask)
 }
 
-function getReportedTask(project: WorkspaceProject, runnerTask: RunnerTask): TestCase | TestSuite | TestFile {
+function getReportedTask(
+  project: WorkspaceProject,
+  runnerTask: RunnerTask,
+): TestCase | TestSuite | TestModule {
   const reportedTask = project.ctx.state.getReportedEntity(runnerTask)
   if (!reportedTask) {
-    throw new Error(`Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`)
+    throw new Error(
+      `Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`,
+    )
   }
   return reportedTask
 }

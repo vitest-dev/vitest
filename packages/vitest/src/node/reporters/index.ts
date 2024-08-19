@@ -13,6 +13,8 @@ import type { BaseOptions, BaseReporter } from './base'
 import type { HTMLOptions } from './html'
 import type { BlobOptions } from './blob'
 import { BlobReporter } from './blob'
+import { TestModule as _TestFile } from './reported-tasks'
+import type { ModuleDiagnostic as _FileDiagnostic } from './reported-tasks'
 
 export {
   DefaultReporter,
@@ -28,20 +30,27 @@ export {
 }
 export type { BaseReporter, Reporter }
 
-export { TestCase, TestFile, TestSuite } from './reported-tasks'
+export { TestCase, TestModule, TestSuite } from './reported-tasks'
+/**
+ * @deprecated Use `TestModule` instead
+ */
+export const TestFile = _TestFile
 export type { TestProject } from '../reported-workspace-project'
 export type {
   TestCollection,
 
   TaskOptions,
   TestDiagnostic,
-  FileDiagnostic,
 
   TestResult,
   TestResultFailed,
   TestResultPassed,
   TestResultSkipped,
 } from './reported-tasks'
+/**
+ * @deprecated Use `ModuleDiagnostic` instead
+ */
+export type FileDiagnostic = _FileDiagnostic
 
 export type {
   JsonAssertionResult,
