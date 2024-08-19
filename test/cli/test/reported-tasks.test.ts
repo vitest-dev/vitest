@@ -44,11 +44,11 @@ it('correctly reports a file', () => {
   // suite properties not available on file
   expect(testModule).not.toHaveProperty('parent')
   expect(testModule).not.toHaveProperty('options')
-  expect(testModule).not.toHaveProperty('file')
+  expect(testModule).not.toHaveProperty('module')
   expect(testModule).not.toHaveProperty('fullName')
   expect(testModule).not.toHaveProperty('name')
 
-  expect(testModule.type).toBe('file')
+  expect(testModule.type).toBe('module')
   expect(testModule.task).toBe(files[0])
   expect(testModule.id).toBe(files[0].id)
   expect(testModule.location).toBeUndefined()
