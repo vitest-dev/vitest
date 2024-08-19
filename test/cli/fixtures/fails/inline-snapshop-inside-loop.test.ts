@@ -1,12 +1,20 @@
 import {test, expect} from "vitest";
 
-test("ok", () => {
-  expect("ok").toMatchInlineSnapshot(`"ok"`);
-});
-
 test("fail 1", () => {
   for (const str of ["foo", "bar"]) {
     expect(str).toMatchInlineSnapshot();
+  }
+});
+
+test("fail 2.1", () => {
+  for (const str of ["foo", "bar"]) {
+    expect(str).toMatchInlineSnapshot(`"foo"`);
+  }
+});
+
+test("fail 2.2", () => {
+  for (const str of ["foo", "bar"]) {
+    expect(str).toMatchInlineSnapshot(`"bar"`);
   }
 });
 
@@ -16,7 +24,7 @@ test("fail 3", () => {
   }
 });
 
-test("somehow ok", () => {
+test("fail 4", () => {
   for (const str of ["ok", "ok"]) {
     expect(str).toMatchInlineSnapshot(`"ok"`);
   }

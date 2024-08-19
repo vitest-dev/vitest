@@ -53,6 +53,7 @@ export default class SnapshotState {
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
+  private _inlineSnapshotStacks: Array<ParsedStack>
   private _rawSnapshots: Array<RawSnapshot>
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
@@ -77,6 +78,7 @@ export default class SnapshotState {
     this._snapshotData = data
     this._dirty = dirty
     this._inlineSnapshots = []
+    this._inlineSnapshotStacks = []
     this._rawSnapshots = []
     this._uncheckedKeys = new Set(Object.keys(this._snapshotData))
     this._counters = new Map()
@@ -136,38 +138,13 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { isInline: boolean; rawSnapshot?: RawSnapshotInfo; error?: Error },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack },
   ): void {
     this._dirty = true
-    if (options.isInline) {
-      const error = options.error || new Error('snapshot')
-      const stacks = parseErrorStacktrace(
-        error,
-        { ignoreStackEntries: [] },
-      )
-      const _stack = this._inferInlineSnapshotStack(stacks)
-      if (!_stack) {
-        throw new Error(
-          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
-            stacks,
-          )}`,
-        )
-      }
-      const stack = this.environment.processStackTrace?.(_stack) || _stack
-      // removing 1 column, because source map points to the wrong
-      // location for js files, but `column-1` points to the same in both js/ts
-      // https://github.com/vitejs/vite/issues/8657
-      stack.column--
-      // reject multiple inline snapshots at the same location
-      const duplicateIndex = this._inlineSnapshots.findIndex(s => s.file === stack.file && s.line === stack.line && s.column === stack.column)
-      if (duplicateIndex >= 0) {
-        // remove the first one to avoid updating an inline snapshot
-        this._inlineSnapshots.splice(duplicateIndex, 1)
-        throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location.')
-      }
+    if (options.stack) {
       this._inlineSnapshots.push({
         snapshot: receivedSerialized,
-        ...stack,
+        ...options.stack,
       })
     }
     else if (options.rawSnapshot) {
@@ -316,6 +293,36 @@ export default class SnapshotState {
       this._snapshotData[key] = receivedSerialized
     }
 
+    // find call site of toMatchInlineSnapshot
+    let stack: ParsedStack | undefined
+    if (isInline) {
+      const stacks = parseErrorStacktrace(
+        error || new Error('snapshot'),
+        { ignoreStackEntries: [] },
+      )
+      const _stack = this._inferInlineSnapshotStack(stacks)
+      if (!_stack) {
+        throw new Error(
+          `@vitest/snapshot: Couldn't infer stack frame for inline snapshot.\n${JSON.stringify(
+            stacks,
+          )}`,
+        )
+      }
+      stack = this.environment.processStackTrace?.(_stack) || _stack
+      // removing 1 column, because source map points to the wrong
+      // location for js files, but `column-1` points to the same in both js/ts
+      // https://github.com/vitejs/vite/issues/8657
+      stack.column--
+
+      // reject multiple inline snapshots at the same location
+      if (this._inlineSnapshotStacks.some(s => s.file === stack!.file && s.line === stack!.line && s.column === stack!.column)) {
+        // remove already succeeded snapshot
+        this._inlineSnapshots = this._inlineSnapshots.filter(s => !(s.file === stack!.file && s.line === stack!.line && s.column === stack!.column))
+        throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location.')
+      }
+      this._inlineSnapshotStacks.push(stack)
+    }
+
     // These are the conditions on when to write snapshots:
     //  * There's no snapshot file in a non-CI environment.
     //  * There is a snapshot file and we decided to update the snapshot.
@@ -338,8 +345,7 @@ export default class SnapshotState {
           }
 
           this._addSnapshot(key, receivedSerialized, {
-            error,
-            isInline,
+            stack,
             rawSnapshot,
           })
         }
@@ -349,8 +355,7 @@ export default class SnapshotState {
       }
       else {
         this._addSnapshot(key, receivedSerialized, {
-          error,
-          isInline,
+          stack,
           rawSnapshot,
         })
         this.added++
