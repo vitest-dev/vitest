@@ -75,7 +75,6 @@ function JestExtendPlugin(
         ) {
           const { state, isNot, obj } = getMatcherState(this, expect)
 
-          // @ts-expect-error args wanting tuple
           const result = expectAssertion.call(state, obj, ...args)
 
           if (
