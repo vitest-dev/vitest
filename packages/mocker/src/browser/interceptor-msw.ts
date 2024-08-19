@@ -47,7 +47,7 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
 
   async register(module: MockedModule): Promise<void> {
     await this.init()
-    this.mocks.set(module.url, module)
+    this.mocks.add(module)
   }
 
   async delete(url: string): Promise<void> {

@@ -1,8 +1,6 @@
-import { ModuleMockerMSWInterceptor } from './msw'
+import { ModuleMockerServerInterceptor } from './interceptor-native'
 import { registerModuleMocker } from './register'
 
 registerModuleMocker(
-  globalThisAccessor => new ModuleMockerMSWInterceptor({
-    globalThisAccessor,
-  }),
+  () => new ModuleMockerServerInterceptor(),
 )

@@ -22,7 +22,8 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
       }
       if (mock.type === 'manual') {
         const exports = Object.keys(await mock.resolve())
-        const module = `const module = globalThis[${options.globalThisAccessor || '"__vitest_mocker__"'}].getFactoryModule("${mock.url}");`
+        const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
+        const module = `const module = globalThis[${accessor}].getFactoryModule("${mock.url}");`
         const keys = exports
           .map((name) => {
             if (name === 'default') {
@@ -58,7 +59,7 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
             const keys = await getFactoryExports(event.url)
             return Object.fromEntries(keys.map(key => [key, null]))
           })
-          registry.set(module.url, module)
+          registry.add(module)
         }
         else {
           registry.register(event)

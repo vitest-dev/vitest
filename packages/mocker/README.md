@@ -15,14 +15,21 @@ export default defineConfig({
 ```
 
 ```ts
-import { registerModuleMocker } from '@vitest/mocker/register'
-import { mswWorker } from './msw-worker.js'
-// you can pass down msw worker if you have a custom one
-const vi = registerModuleMocker({ mswWorker })
+import {
+  ModuleMockerMSWInterceptor,
+  ModuleMockerServerInterceptor,
+  registerModuleMocker
+} from '@vitest/mocker/register'
+
+// you can use either a server interceptor (relies on Vite's websocket connection)
+const vi = registerModuleMocker(new ModuleMockerServerInterceptor())
+// or you can use MSW to intercept requests directly in the browser
+const vi = registerModuleMocker(new ModuleMockerMSWInterceptor())
 ```
 
 ```ts
-// you can also just import "auto-register" at the top of your entry point
+// you can also just import "auto-register" at the top of your entry point,
+// this will use the server interceptor by default
 import '@vitest/mocker/auto-register'
 // if you do this, you can create compiler hints with "createCompilerHints"
 // utility to use in your own code

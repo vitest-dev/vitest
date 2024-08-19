@@ -9,8 +9,8 @@ export class MockerRegistry {
     return this.registry.keys()
   }
 
-  set(id: string, mock: MockedModule): void {
-    this.registry.set(id, mock)
+  add(mock: MockedModule): void {
+    this.registry.set(mock.url, mock)
   }
 
   public register(
@@ -48,23 +48,35 @@ export class MockerRegistry {
 
     if (typeof type === 'object') {
       const event = typeOrEvent as MockedModuleSerialized
+      if (
+        event instanceof AutomockedModule
+        || event instanceof AutospiedModule
+        || event instanceof ManualMockedModule
+        || event instanceof RedirectedModule
+      ) {
+        throw new TypeError(
+          `[vitest] Cannot register a mock that is already defined. `
+          + `Expected a JSON representation from \`MockedModule.toJSON\`, instead got "${event.type}". `
+          + `Use "registry.add()" to update a mock instead.`,
+        )
+      }
       if (event.type === 'automock') {
         const module = AutomockedModule.fromJSON(event)
-        this.set(module.url, module)
+        this.add(module)
         return module
       }
       else if (event.type === 'autospy') {
         const module = AutospiedModule.fromJSON(event)
-        this.set(module.url, module)
+        this.add(module)
         return module
       }
       else if (event.type === 'redirect') {
         const module = RedirectedModule.fromJSON(event)
-        this.set(module.url, module)
+        this.add(module)
         return module
       }
       else if (event.type === 'manual') {
-        throw new Error(`Cannot set serialized manual mock. Define a factory function manually.`)
+        throw new Error(`Cannot set serialized manual mock. Define a factory function manually with \`ManualMockedModule.fromJSON()\`.`)
       }
       else {
         throw new Error(`Unknown mock type: ${(event as any).type}`)
@@ -84,14 +96,14 @@ export class MockerRegistry {
         throw new TypeError('[vitest] Manual mocks require a factory function.')
       }
       const mock = new ManualMockedModule(raw, url, factoryOrRedirect)
-      this.registry.set(url, mock)
+      this.add(mock)
       return mock
     }
     else if (type === 'automock' || type === 'autospy') {
       const mock = type === 'automock'
         ? new AutomockedModule(raw, url)
         : new AutospiedModule(raw, url)
-      this.registry.set(url, mock)
+      this.add(mock)
       return mock
     }
     else if (type === 'redirect') {
@@ -99,7 +111,7 @@ export class MockerRegistry {
         throw new TypeError('[vitest] Redirect mocks require a redirect string.')
       }
       const mock = new RedirectedModule(raw, url, factoryOrRedirect)
-      this.registry.set(url, mock)
+      this.add(mock)
       return mock
     }
     else {
@@ -245,7 +257,7 @@ export class ManualMockedModule {
       throw vitestError
     }
 
-    if (exports === null || typeof exports !== 'object') {
+    if (exports === null || typeof exports !== 'object' || Array.isArray(exports)) {
       throw new TypeError(
         `[vitest] vi.mock("${this.raw}", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?`,
       )

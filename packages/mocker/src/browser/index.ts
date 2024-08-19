@@ -1,6 +1,7 @@
 export type { ModuleMockerInterceptor } from './interceptor'
 export { ModuleMocker } from './mocker'
-export { ModuleMockerMSWInterceptor, type ModuleMockerMSWInterceptorOptions } from './msw'
+export { ModuleMockerMSWInterceptor, type ModuleMockerMSWInterceptorOptions } from './interceptor-msw'
+export { ModuleMockerServerInterceptor } from './interceptor-native'
 
 export type {
   ModuleMockerRPC,
