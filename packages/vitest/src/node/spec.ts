@@ -20,13 +20,13 @@ export class WorkspaceSpec {
   public readonly project: TestProject
   public readonly moduleId: string
   public readonly pool: Pool
-  public readonly location: WorkspaceSpecLocation | undefined
+  // public readonly location: WorkspaceSpecLocation | undefined
 
   constructor(
     workspaceProject: WorkspaceProject,
     moduleId: string,
     pool: Pool,
-    location?: WorkspaceSpecLocation | undefined,
+    // location?: WorkspaceSpecLocation | undefined,
   ) {
     this[0] = workspaceProject
     this[1] = moduleId
@@ -34,7 +34,7 @@ export class WorkspaceSpec {
     this.project = workspaceProject.testProject
     this.moduleId = moduleId
     this.pool = pool
-    this.location = location
+    // this.location = location
   }
 
   /**
@@ -48,7 +48,7 @@ export class WorkspaceSpec {
   }
 }
 
-interface WorkspaceSpecLocation {
-  start: number
-  end: number
-}
+// interface WorkspaceSpecLocation {
+//   start: number
+//   end: number
+// }

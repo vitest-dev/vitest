@@ -102,14 +102,14 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           return ctx.state.getUnhandledErrors()
         },
         async getTestFiles() {
-          const spec = await ctx.globTestFiles()
-          return spec.map(([project, file, options]) => [
+          const spec = await ctx.globTestSpecs()
+          return spec.map(spec => [
             {
-              name: project.config.name,
-              root: project.config.root,
+              name: spec.project.config.name,
+              root: spec.project.config.root,
             },
-            file,
-            options,
+            spec.moduleId,
+            { pool: spec.pool },
           ])
         },
       },

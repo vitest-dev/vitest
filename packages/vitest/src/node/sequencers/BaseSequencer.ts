@@ -21,7 +21,7 @@ export class BaseSequencer implements TestSequencer {
     const shardEnd = shardSize * index
     return [...files]
       .map((spec) => {
-        const fullPath = resolve(slash(config.root), slash(spec[1]))
+        const fullPath = resolve(slash(config.root), slash(spec.moduleId))
         const specPath = fullPath?.slice(config.root.length)
         return {
           spec,
@@ -37,8 +37,8 @@ export class BaseSequencer implements TestSequencer {
   public async sort(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
     const cache = this.ctx.cache
     return [...files].sort((a, b) => {
-      const keyA = `${a[0].getName()}:${relative(this.ctx.config.root, a[1])}`
-      const keyB = `${b[0].getName()}:${relative(this.ctx.config.root, b[1])}`
+      const keyA = `${a.project.name}:${relative(this.ctx.config.root, a.moduleId)}`
+      const keyB = `${b.project.name}:${relative(this.ctx.config.root, b.moduleId)}`
 
       const aState = cache.getFileTestResults(keyA)
       const bState = cache.getFileTestResults(keyB)

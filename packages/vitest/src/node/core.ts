@@ -17,8 +17,8 @@ import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { SerializedSpec } from '../runtime/types/utils'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
-import type { ProcessPool } from './pool'
-import { WorkspaceSpec, createPool, getFilePoolName } from './pool'
+import type { ProcessPool, WorkspaceSpec } from './pool'
+import { createPool, getFilePoolName } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config/resolveConfig'
@@ -531,10 +531,10 @@ export class Vitest {
     for (const project of this.projects) {
       if (project.isTestFile(file)) {
         const pool = getFilePoolName(project, file)
-        specs.push(new WorkspaceSpec(project, file, pool))
+        specs.push(project.createSpec(file, pool))
       }
       if (project.isTypecheckFile(file)) {
-        specs.push(new WorkspaceSpec(project, file, 'typescript'))
+        specs.push(project.createSpec(file, 'typescript'))
       }
     }
     specs.forEach(spec => this.ensureSpecCached(spec))
@@ -1092,12 +1092,12 @@ export class Vitest {
       const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
       testFiles.forEach((file) => {
         const pool = getFilePoolName(project, file)
-        const spec = new WorkspaceSpec(project, file, pool)
+        const spec = project.createSpec(file, pool)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec = new WorkspaceSpec(project, file, 'typescript')
+        const spec = project.createSpec(file, 'typescript')
         this.ensureSpecCached(spec)
         files.push(spec)
       })
