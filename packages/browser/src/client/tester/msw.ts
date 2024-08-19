@@ -4,7 +4,7 @@ import type {
   IframeMockingDoneEvent,
 } from '@vitest/browser/client'
 import type { MockedModuleSerialized } from '@vitest/mocker'
-import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
+import { ManualMockedModule } from '@vitest/mocker'
 import { ModuleMockerMSWInterceptor } from '@vitest/mocker/browser'
 
 export class VitestBrowserModuleMockerInterceptor extends ModuleMockerMSWInterceptor {
@@ -16,20 +16,9 @@ export class VitestBrowserModuleMockerInterceptor extends ModuleMockerMSWInterce
       })
       await super.register(module)
     }
-    else if (event.type === 'automock') {
-      const module = AutomockedModule.fromJSON(event)
-      await super.register(module)
-    }
-    else if (event.type === 'autospy') {
-      const module = AutospiedModule.fromJSON(event)
-      await super.register(module)
-    }
-    else if (event.type === 'redirect') {
-      const module = RedirectedModule.fromJSON(event)
-      await super.register(module)
-    }
     else {
-      throw new Error(`Unknown mock type: ${(event as any).type}`)
+      await this.init()
+      this.mocks.register(event)
     }
     channel.postMessage(<IframeMockingDoneEvent>{ type: 'mock:done' })
   }

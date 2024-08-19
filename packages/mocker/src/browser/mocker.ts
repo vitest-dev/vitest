@@ -28,7 +28,7 @@ export class ModuleMocker {
     await Promise.all([...this.queue.values()])
   }
 
-  protected resolveFactoryModule(id: string): Promise<Record<string | symbol, any>> {
+  public resolveFactoryModule(id: string): Promise<Record<string | symbol, any>> {
     const mock = this.registry.get(id)
     if (!mock || mock.type !== 'manual') {
       throw new Error(`Mock ${id} wasn't registered. This is probably a Vitest error. Please, open a new issue with reproduction.`)

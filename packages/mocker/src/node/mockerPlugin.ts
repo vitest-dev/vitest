@@ -6,6 +6,7 @@ import { type AutomockPluginOptions, automockPlugin } from './automockPlugin'
 import { type HoistMocksPluginOptions, hoistMocksPlugin } from './hoistMocksPlugin'
 import { dynamicImportPlugin } from './dynamicImportPlugin'
 import { ServerMockResolver } from './resolver'
+import { interceptorPlugin } from './interceptorPlugin'
 
 interface MockerPluginOptions extends AutomockPluginOptions {
   hoistMocks?: HoistMocksPluginOptions
@@ -69,6 +70,7 @@ export function mockerPlugin(options: MockerPluginOptions = {}): Plugin[] {
           )
       },
     },
+    interceptorPlugin(options),
     dynamicImportPlugin(options),
     automockPlugin(options),
     hoistMocksPlugin(options.hoistMocks),

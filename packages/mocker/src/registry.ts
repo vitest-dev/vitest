@@ -14,6 +14,9 @@ export class MockerRegistry {
   }
 
   public register(
+    json: MockedModuleSerialized,
+  ): MockedModule
+  public register(
     type: 'redirect',
     raw: string,
     url: string,
@@ -36,11 +39,46 @@ export class MockerRegistry {
     url: string,
   ): AutospiedModule
   public register(
-    type: MockedModuleType,
-    raw: string,
-    url: string,
+    typeOrEvent: MockedModuleType | MockedModuleSerialized,
+    raw?: string,
+    url?: string,
     factoryOrRedirect?: string | (() => any),
   ): MockedModule {
+    const type = typeof typeOrEvent === 'object' ? typeOrEvent.type : typeOrEvent
+
+    if (typeof type === 'object') {
+      const event = typeOrEvent as MockedModuleSerialized
+      if (event.type === 'automock') {
+        const module = AutomockedModule.fromJSON(event)
+        this.set(module.url, module)
+        return module
+      }
+      else if (event.type === 'autospy') {
+        const module = AutospiedModule.fromJSON(event)
+        this.set(module.url, module)
+        return module
+      }
+      else if (event.type === 'redirect') {
+        const module = RedirectedModule.fromJSON(event)
+        this.set(module.url, module)
+        return module
+      }
+      else if (event.type === 'manual') {
+        throw new Error(`Cannot set serialized manual mock. Define a factory function manually.`)
+      }
+      else {
+        throw new Error(`Unknown mock type: ${(event as any).type}`)
+      }
+    }
+
+    if (typeof raw !== 'string') {
+      throw new TypeError('[vitest] Mocks require a raw string.')
+    }
+
+    if (typeof url !== 'string') {
+      throw new TypeError('[vitest] Mocks require a url string.')
+    }
+
     if (type === 'manual') {
       if (typeof factoryOrRedirect !== 'function') {
         throw new TypeError('[vitest] Manual mocks require a factory function.')
