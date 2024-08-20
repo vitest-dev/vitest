@@ -32,6 +32,6 @@
     "url": "^0.11.3",
     "vitest": "workspace:*",
     "vitest-browser-react": "^0.0.1",
-    "webdriverio": "^8.32.2"
+    "webdriverio": "^9.0.5"
   }
 }
