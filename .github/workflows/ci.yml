@@ -27,11 +27,12 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     name: 'Lint: node-20.14, ubuntu-latest'
-    node_version: 20.14
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
+        with:
+          node_version: 20.14
 
       - name: Install
         run: pnpm i
