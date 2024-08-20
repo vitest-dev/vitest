@@ -155,7 +155,7 @@
     "@vitest/utils": "workspace:*",
     "chai": "^5.1.1",
     "debug": "^4.3.6",
-    "execa": "^8.0.1",
+    "execa": "^9.3.1",
     "magic-string": "^0.30.11",
     "pathe": "^1.1.2",
     "std-env": "^3.7.0",
