@@ -17,19 +17,12 @@ import { createFilter } from 'vite'
 import type { Node, Positioned } from './esmWalker'
 import { esmWalker } from './esmWalker'
 
-export interface HoistMocksPluginOptions {
-  include?: string | RegExp | (string | RegExp)[]
-  exclude?: string | RegExp | (string | RegExp)[]
+interface HoistMocksOptions {
   /**
    * List of modules that should always be imported before compiler hints.
    * @default ['vitest']
    */
   hoistedModules?: string[]
-  /**
-   * Regexp to avoid ast parsing if the code doesn't contain any hoistable methods
-   * @default /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\(/
-   */
-  regexpHoistable?: RegExp
   /**
    * @default ["vi", "vitest"]
    */
@@ -46,15 +39,32 @@ export interface HoistMocksPluginOptions {
    * @default ["hoisted"]
    */
   hoistedMethodNames?: string[]
+  regexpHoistable?: RegExp
+  codeFrameGenerator?: CodeFrameGenerator
+}
+
+export interface HoistMocksPluginOptions extends Omit<HoistMocksOptions, 'regexpHoistable'> {
+  include?: string | RegExp | (string | RegExp)[]
+  exclude?: string | RegExp | (string | RegExp)[]
   /**
    * overrides include/exclude options
    */
   filter?: (id: string) => boolean
-  codeFrameGenerator?: CodeFrameGenerator
 }
 
 export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin {
   const filter = options.filter || createFilter(options.include, options.exclude)
+
+  const {
+    hoistableMockMethodNames = ['mock', 'unmock'],
+    hoistedMethodNames = ['hoisted'],
+    utilsObjectNames = ['vi', 'vitest'],
+  } = options
+
+  const regexpHoistable = new RegExp(
+    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${[...hoistableMockMethodNames, ...hoistedMethodNames].join('|')})\\(`,
+  )
+
   return {
     name: 'vitest:mocks',
     enforce: 'post',
@@ -62,7 +72,12 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
       if (!filter(id)) {
         return
       }
-      return hoistMocks(code, id, this.parse, options)
+      return hoistMocks(code, id, this.parse, {
+        regexpHoistable,
+        hoistableMockMethodNames,
+        hoistedMethodNames,
+        utilsObjectNames,
+      })
     },
   }
 }
@@ -112,7 +127,7 @@ export function hoistMocks(
   code: string,
   id: string,
   parse: Rollup.PluginContext['parse'],
-  options: HoistMocksPluginOptions = {},
+  options: HoistMocksOptions = {},
 ): HoistMocksResult | undefined {
   const needHoisting = (options.regexpHoistable || regexpHoistable).test(code)
 
