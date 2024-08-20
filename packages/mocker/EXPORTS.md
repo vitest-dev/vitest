@@ -20,9 +20,9 @@ import {
 } from '@vitest/mocker/register'
 
 // you can use either a server interceptor (relies on Vite's websocket connection)
-const vi = registerModuleMocker(new ModuleMockerServerInterceptor())
+const vi = registerModuleMocker(() => new ModuleMockerServerInterceptor())
 // or you can use MSW to intercept requests directly in the browser
-const vi = registerModuleMocker(new ModuleMockerMSWInterceptor())
+const vi = registerModuleMocker(globalThisAccessor => new ModuleMockerMSWInterceptor({ globalThisAccessor }))
 ```
 
 ```ts
