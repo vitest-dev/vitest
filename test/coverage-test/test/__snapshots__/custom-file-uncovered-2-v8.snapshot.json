@@ -1,0 +1,103 @@
+{
+  "path": "<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2",
+  "all": true,
+  "statementMap": {
+    "0": {
+      "start": {
+        "line": 1,
+        "column": 0
+      },
+      "end": {
+        "line": 1,
+        "column": 20
+      }
+    },
+    "1": {
+      "start": {
+        "line": 2,
+        "column": 0
+      },
+      "end": {
+        "line": 2,
+        "column": 0
+      }
+    },
+    "2": {
+      "start": {
+        "line": 3,
+        "column": 0
+      },
+      "end": {
+        "line": 3,
+        "column": 26
+      }
+    }
+  },
+  "s": {
+    "0": 0,
+    "1": 0,
+    "2": 0
+  },
+  "branchMap": {
+    "0": {
+      "type": "branch",
+      "line": 1,
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 26
+        }
+      },
+      "locations": [
+        {
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 3,
+            "column": 26
+          }
+        }
+      ]
+    }
+  },
+  "b": {
+    "0": [
+      0
+    ]
+  },
+  "fnMap": {
+    "0": {
+      "name": "(empty-report)",
+      "decl": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 26
+        }
+      },
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 26
+        }
+      },
+      "line": 1
+    }
+  },
+  "f": {
+    "0": 0
+  }
+}
