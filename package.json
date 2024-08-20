@@ -49,6 +49,7 @@
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
     "bumpp": "^9.5.1",
+    "changelogithub": "^0.13.9",
     "esbuild": "^0.23.0",
     "eslint": "^9.9.0",
     "fast-glob": "^3.3.2",

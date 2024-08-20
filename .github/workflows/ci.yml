@@ -1,5 +1,9 @@
 name: CI
 
+# Remove default permissions of GITHUB_TOKEN for security
+# https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+permissions: {}
+
 on:
   push:
     branches:
@@ -20,20 +24,37 @@ env:
 
 jobs:
   lint:
-    runs-on: macos-14
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    name: 'Lint: node-20.14, ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: 20.14
 
       - name: Install
         run: pnpm i
 
+      - name: Build
+        run: pnpm run build
+
       - name: Lint
         run: pnpm run lint
 
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
+      - name: Check workflow files
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color -shellcheck=""
+
   changed:
     runs-on: ubuntu-latest
+    name: 'Diff: node-latest, ubuntu-latest'
     outputs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
@@ -50,27 +71,9 @@ jobs:
             !.github/workflows/ci.yml
             **.md
 
-  typecheck:
-    needs: changed
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Build
-        run: pnpm run build
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
   test:
     needs: changed
+    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: ${{ matrix.os }}
 
@@ -119,6 +122,7 @@ jobs:
 
   test-browser:
     needs: changed
+    name: 'Browser: ${{ matrix.browser[0] }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
@@ -151,7 +155,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: steps.changed-files.outputs.only_changed != 'true'
+        if: needs.changed.outputs.should_skip != 'true'
         run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
 
       - name: Build
