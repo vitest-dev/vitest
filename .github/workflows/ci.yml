@@ -54,7 +54,7 @@ jobs:
 
   changed:
     runs-on: ubuntu-latest
-    name: 'Diff: node-20, ubuntu-latest'
+    name: 'Diff: node-latest, ubuntu-latest'
     outputs:
       should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
@@ -122,7 +122,7 @@ jobs:
 
   test-browser:
     needs: changed
-    name: 'Test Browser: ${{ matrix.browser }}, ${{ matrix.os }}'
+    name: 'Browser: ${{ matrix.browser[0] }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
