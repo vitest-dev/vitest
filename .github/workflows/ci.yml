@@ -32,7 +32,7 @@ jobs:
 
       - uses: ./.github/actions/setup-and-cache
         with:
-          node_version: 20.14
+          node-version: 20.14
 
       - name: Install
         run: pnpm i
@@ -152,7 +152,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: steps.changed-files.outputs.only_changed != 'true'
+        if: needs.changed.outputs.should_skip != 'true'
         run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
 
       - name: Build
