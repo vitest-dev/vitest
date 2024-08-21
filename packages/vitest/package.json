@@ -167,7 +167,7 @@
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@antfu/install-pkg": "^0.3.4",
+    "@antfu/install-pkg": "^0.4.0",
     "@edge-runtime/vm": "^4.0.1",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/debug": "^4.1.12",
