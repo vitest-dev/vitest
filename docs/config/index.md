@@ -1828,7 +1828,7 @@ This will clear mock history and reset each implementation to an empty function 
 - **Default:** `false`
 
 Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test.
-This will clear mock history, restore each implementation to their original, and restore original descriptors of spied-on objects.
+This will clear mock history, restore each implementation to its original, and restore original descriptors of spied-on objects.
 
 ## revertMocks
 
@@ -1836,7 +1836,7 @@ This will clear mock history, restore each implementation to their original, and
 - **Default:** `false`
 
 Will call [`.mockRevert()`](/api/mock#mockrevert) on all spies before each test.
-This will clear mock history and revert each implementation to their original without restoring original descriptors of spied-on objects.
+This will clear mock history and revert each implementation to its original without restoring original descriptors of spied-on objects.
 
 ### unstubEnvs {#unstubenvs}
 

@@ -396,12 +396,12 @@ This will clear mock history and reset each implementation to an empty function 
 ### vi.restoreAllMocks
 
 Calls [`.mockRestore()`](/api/mock#mockrestore) on all spies.
-This will clear mock history, restore each implementation to their original, and restore original descriptors of spied-on objects.
+This will clear mock history, restore each implementation to its original, and restore original descriptors of spied-on objects.
 
 ### vi.revertAllMocks
 
 Calls [`.mockRevert()`](/api/mock#mockrevert) on all spies before each test.
-This will clear mock history and revert each implementation to their original without restoring original descriptors of spied-on objects.
+This will clear mock history and revert each implementation to its original without restoring original descriptors of spied-on objects.
 
 ### vi.spyOn
 
@@ -425,7 +425,7 @@ expect(spy).toHaveReturnedWith(1)
 ```
 
 ::: tip
-You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to their original implementations. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation:
+You can call [`vi.restoreAllMocks`](#vi-restoreallmocks) inside [`afterEach`](/api/#aftereach) (or enable [`test.restoreMocks`](/config/#restoreMocks)) to restore all methods to its original implementations. This will restore the original [object descriptor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), so you won't be able to change method's implementation:
 
 ```ts
 const cart = {
