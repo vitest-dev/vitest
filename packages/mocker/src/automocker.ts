@@ -120,7 +120,7 @@ export function mockObject(
                 const original = this[key]
                 const mock = spyOn(this, key as string)
                   .mockImplementation(original)
-                mock.mockRestore = () => {
+                mock.mockRevert = mock.mockRestore = () => {
                   mock.mockReset()
                   mock.mockImplementation(original)
                   return mock
@@ -132,7 +132,7 @@ export function mockObject(
         const mock = spyOn(newContainer, property)
         if (options.type === 'automock') {
           mock.mockImplementation(mockFunction)
-          mock.mockRestore = () => {
+          mock.mockRevert = mock.mockRestore = () => {
             mock.mockReset()
             mock.mockImplementation(mockFunction)
             return mock
