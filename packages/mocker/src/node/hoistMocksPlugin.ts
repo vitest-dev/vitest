@@ -57,12 +57,19 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
 
   const {
     hoistableMockMethodNames = ['mock', 'unmock'],
+    dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
     hoistedMethodNames = ['hoisted'],
     utilsObjectNames = ['vi', 'vitest'],
   } = options
 
+  const methods = new Set([
+    ...hoistableMockMethodNames,
+    ...hoistedMethodNames,
+    ...dynamicImportMockMethodNames,
+  ])
+
   const regexpHoistable = new RegExp(
-    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${[...hoistableMockMethodNames, ...hoistedMethodNames].join('|')})\\(`,
+    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\(`,
   )
 
   return {
@@ -77,6 +84,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
         hoistableMockMethodNames,
         hoistedMethodNames,
         utilsObjectNames,
+        dynamicImportMockMethodNames,
       })
     },
   }
