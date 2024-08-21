@@ -271,7 +271,7 @@ Reverting a mock from `vi.spyOn(object, property)` will **not** restore the orig
 Note that reverting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
 Reverting a mock from `vi.fn(impl)` will set implementation to `impl`.
 
-If you want this method to be called before each test automatically, you can enable [`revertMocks`](/config/#revertMocks) setting in config.
+If you want this method to be called before each test automatically, you can enable [`revertMocks`](/config/#revertmocks) setting in config.
 
 ## mock.calls
 
