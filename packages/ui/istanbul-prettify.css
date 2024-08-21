@@ -1,0 +1,230 @@
+/* https://github.com/istanbuljs/istanbuljs/blob/main/packages/istanbul-reports/lib/html/assets/base.css */
+
+.pln {
+  color: #000
+}
+
+@media screen {
+  .str {
+    color: #080
+  }
+
+  .kwd {
+    color: #008
+  }
+
+  .com {
+    color: #800
+  }
+
+  .typ {
+    color: #606
+  }
+
+  .lit {
+    color: #066
+  }
+
+  .pun, .opn, .clo {
+    color: #660
+  }
+
+  .tag {
+    color: #008
+  }
+
+  .atn {
+    color: #606
+  }
+
+  .atv {
+    color: #080
+  }
+
+  .dec, .var {
+    color: #606
+  }
+
+  .fun {
+    color: red
+  }
+}
+
+@media print, projection {
+  .str {
+    color: #060
+  }
+
+  .kwd {
+    color: #006;
+    font-weight: bold
+  }
+
+  .com {
+    color: #600;
+    font-style: italic
+  }
+
+  .typ {
+    color: #404;
+    font-weight: bold
+  }
+
+  .lit {
+    color: #044
+  }
+
+  .pun, .opn, .clo {
+    color: #440
+  }
+
+  .tag {
+    color: #006;
+    font-weight: bold
+  }
+
+  .atn {
+    color: #404
+  }
+
+  .atv {
+    color: #060
+  }
+}
+
+pre.prettyprint {
+  padding: 2px;
+  border: 1px solid #888
+}
+
+ol.linenums {
+  margin-top: 0;
+  margin-bottom: 0
+}
+
+li.L0, li.L1, li.L2, li.L3, li.L5, li.L6, li.L7, li.L8 {
+  list-style-type: none
+}
+
+li.L1, li.L3, li.L5, li.L7, li.L9 {
+  background: #eee
+}
+
+/*
+ * dark theme: extracted from the source code and removed any css selector not changing color and bgcolor
+ * from this comment: https://github.com/istanbuljs/istanbuljs/pull/553#issuecomment-1934930904
+ * source code: https://userstyles.world/style/14631/istanbul-lcov-material-theme-darker
+ */
+html.dark .pln {
+  color: #c792ea; /* Purple */
+}
+
+html.dark .str {
+  color: #c3e88d; /* Green */
+}
+
+html.dark .kwd {
+  color: #ff5370; /* Red */
+}
+
+html.dark .com {
+  color: #546e7a; /* Blue Grey */
+  font-style: italic;
+}
+
+html.dark .typ {
+  color: #82aaff; /* Blue */
+  font-weight: bold;
+}
+
+html.dark .lit {
+  color: #f78c6c; /* Orange */
+}
+
+html.dark .pun,
+html.dark .opn,
+html.dark .clo {
+  color: #82aaff; /* Blue */
+}
+
+html.dark .tag {
+  color: #89ddff; /* Light Blue */
+  font-weight: bold;
+}
+
+html.dark .atn {
+  color: #546e7a; /* Blue Grey */
+}
+
+html.dark .atv {
+  color: #c3e88d; /* Green */
+}
+
+html.dark .dec,
+html.dark .var {
+  color: #82aaff; /* Blue */
+}
+
+html.dark .fun {
+  color: #c792ea; /* Purple */
+}
+
+/* Additional styles for print and projection media queries */
+@media print, projection {
+  html.dark .str {
+    color: #c3e88d; /* Green */
+  }
+
+  html.dark .kwd {
+    color: #ff5370; /* Red */
+    font-weight: bold;
+  }
+
+  html.dark .com {
+    color: #546e7a; /* Blue Grey */
+    font-style: italic;
+  }
+
+  html.dark .typ {
+    color: #82aaff; /* Blue */
+    font-weight: bold;
+  }
+
+  html.dark .lit {
+    color: #f78c6c; /* Orange */
+  }
+
+  html.dark .pun,
+  html.dark .opn,
+  html.dark .clo {
+    color: #82aaff; /* Blue */
+  }
+
+  html.dark .tag {
+    color: #89ddff; /* Light Blue */
+    font-weight: bold;
+  }
+
+  html.dark .atn {
+    color: #546e7a; /* Blue Grey */
+  }
+
+  html.dark .atv {
+    color: #c3e88d; /* Green */
+  }
+}
+
+html.dark pre.prettyprint {
+  padding: 2px;
+  border: 1px solid #263238; /* Blue Grey */
+  background-color: #263238; /* Blue Grey */
+  color: #c792ea; /* Purple */
+}
+
+html.dark li.L1,
+html.dark li.L3,
+html.dark li.L5,
+html.dark li.L7,
+html.dark li.L9 {
+  background: #37474f; /* Blue Grey Darken-2 */
+}

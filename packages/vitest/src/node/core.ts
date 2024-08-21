@@ -996,6 +996,9 @@ export class Vitest {
         if (reporter instanceof WebSocketReporter) {
           reporter.onFinishedReportCoverage()
         }
+        else if ('onFinishedReportCoverage' in reporter && typeof reporter.onFinishedReportCoverage === 'function') {
+          await reporter.onFinishedReportCoverage()
+        }
       }
     }
   }
