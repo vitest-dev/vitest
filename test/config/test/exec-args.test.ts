@@ -2,6 +2,8 @@ import { expect, test } from 'vitest'
 import { execa } from 'execa'
 import { runVitest } from '../../test-utils'
 
+const [nodeMajor, nodeMinor] = process.version.slice(1).split('.').map(Number)
+
 test.each([
   { pool: 'forks', execArgv: ['--hash-seed=1', '--random-seed=1', '--no-opt'] },
   { pool: 'threads', execArgv: ['--inspect-brk'] },
@@ -10,7 +12,8 @@ test.each([
   const root = './fixtures/exec-args-fixtures'
   const fileToTest = `${pool}.test.ts`
 
-  if (process.version === 'v20.15.0' && pool !== 'forks') {
+  // TODO: node.js has a bug that makes --inspect-brk not work on worker threads
+  if (nodeMajor > 20 && nodeMinor > 14 && pool !== 'forks') {
     return
   }
 
