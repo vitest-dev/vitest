@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { readFile } from 'node:fs/promises'
 import type { Plugin, ViteDevServer } from 'vite'
 
+import { resolve } from 'pathe'
 import { type AutomockPluginOptions, automockPlugin } from './automockPlugin'
 import { type HoistMocksPluginOptions, hoistMocksPlugin } from './hoistMocksPlugin'
 import { dynamicImportPlugin } from './dynamicImportPlugin'
@@ -17,7 +18,7 @@ interface MockerPluginOptions extends AutomockPluginOptions {
 
 export function mockerPlugin(options: MockerPluginOptions = {}): Plugin[] {
   let server: ViteDevServer
-  const registerPath = fileURLToPath(new URL('./register.js', import.meta.url))
+  const registerPath = resolve(fileURLToPath(new URL('./register.js', import.meta.url)))
   return [
     {
       name: 'vitest:mocker:ws-rpc',

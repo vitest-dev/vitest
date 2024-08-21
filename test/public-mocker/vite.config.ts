@@ -8,7 +8,6 @@ export default defineConfig({
       globalThisAccessor: 'Symbol.for("vitest.mocker")',
       hoistMocks: {
         utilsObjectNames: ['mocker'],
-        regexpHoistable: /mocker.(customMock|customHoisted)/,
         hoistedModules: ['virtual:mocker'],
         hoistableMockMethodNames: ['customMock'],
         dynamicImportMockMethodNames: ['customMock'],
