@@ -185,20 +185,51 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * Clears all information about every call. After calling it, all properties on `.mock` will return an empty state. This method does not reset implementations.
    *
    * It is useful if you need to clean up mock between different assertions.
+   *
+   * @see mockReset
+   * @see mockRestore
+   * @see mockRevert
    */
   mockClear(): this
   /**
-   * Does what `mockClear` does and makes inner implementation an empty function (returning `undefined` when invoked). This also resets all "once" implementations.
+   * Does what `mockClear` does and makes inner implementation an empty function (returning `undefined` when invoked).
+   * This also resets all "once" implementations.
    *
    * This is useful when you want to completely reset a mock to the default state.
+   *
+   * @see mockClear
+   * @see mockRestore
+   * @see mockRevert
    */
   mockReset(): this
   /**
    * Does what `mockReset` does and restores inner implementation to the original function.
    *
-   * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
+   * Restoring a mock from `vi.spyOn(object, property)` will also restore the original
+   * descriptor of the spied-on object.
+   *
+   * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+   * Restoring a mock from `vi.fn(impl)` will set implementation to `impl`.
+   *
+   * @see mockClear
+   * @see mockReset
+   * @see mockRevert
    */
   mockRestore(): void
+  /**
+   * Does what `mockReset` does and reverts inner implementation to the original function.
+   *
+   * Reverting a mock from `vi.spyOn(object, property)` will **not** restore the original
+   * descriptor of the spied-on object.
+   *
+   * Note that reverting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+   * Reverting a mock from `vi.fn(impl)` will set implementation to `impl`.
+   *
+   * @see mockClear
+   * @see mockReset
+   * @see mockRestore
+   */
+  mockRevert(): void
   /**
    * Returns current mock implementation if there is one.
    *
@@ -516,6 +547,12 @@ function enhanceSpy<T extends Procedure>(
   stub.mockRestore = () => {
     stub.mockReset()
     state.restore()
+    implementation = undefined
+    return stub
+  }
+
+  stub.mockRevert = () => {
+    stub.mockReset()
     implementation = undefined
     return stub
   }
