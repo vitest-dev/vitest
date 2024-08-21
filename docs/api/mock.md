@@ -177,7 +177,10 @@ If you want this method to be called before each test automatically, you can ena
 
 Does what `mockReset` does and restores inner implementation to the original function.
 
-Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
+Restoring a mock from `vi.spyOn(object, property)` will also restore the original descriptor of the spied-on object.
+
+Note that restoring a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+Restoring a mock from `vi.fn(impl)` will set implementation to `impl`.
 
 If you want this method to be called before each test automatically, you can enable [`restoreMocks`](/config/#restoremocks) setting in config.
 
@@ -256,6 +259,19 @@ const myMockFn = vi
 // 'first call', 'second call', 'default', 'default'
 console.log(myMockFn(), myMockFn(), myMockFn(), myMockFn())
 ```
+
+## mockRevert
+
+- **Type:** `() => MockInstance`
+
+Does what `mockReset` does and reverts inner implementation to the original function.
+
+Reverting a mock from `vi.spyOn(object, property)` will **not** restore the original descriptor of the spied-on object.
+
+Note that reverting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+Reverting a mock from `vi.fn(impl)` will set implementation to `impl`.
+
+If you want this method to be called before each test automatically, you can enable [`revertMocks`](/config/#revertMocks) setting in config.
 
 ## mock.calls
 
