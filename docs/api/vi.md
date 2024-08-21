@@ -16,8 +16,8 @@ This section describes the API that you can use when [mocking a module](/guide/m
 
 ### vi.mock
 
-- **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
-- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => T | Promise<T>) => void`
+- **Type**: `(path: string, factory?: MockOptions | ((importOriginal: () => unknown) => unknown)) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: MockOptions | ((importOriginal: () => T) => T | Promise<T>)) => void`
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
@@ -29,11 +29,27 @@ In order to hoist `vi.mock`, Vitest statically analyzes your files. It indicates
 Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
 :::
 
-If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
+If the `factory` function is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
 
 Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside.
 
-Vitest also supports a module promise instead of a string in the `vi.mock` and `vi.doMock` methods for better IDE support. When the file is moved, the path will be updated, and `importOriginal` also inherits the type automatically. Using this signature will also enforce factory return type to be compatible with the original module (but every export is optional).
+Since Vitest 2.1, you can also provide an object with a `spy` property instead of a factory function. If `spy` is `true`, then Vitest will automock the module as usual, but it won't override the implementation of exports. This is useful if you just want to assert that the exported method was called correctly by another method.
+
+```ts
+import { calculator } from './src/calculator.ts'
+
+vi.mock('./src/calculator.ts', { spy: true })
+
+// calls the original implementation,
+// but allows asserting the behaviour later
+const result = calculator(1, 2)
+
+expect(result).toBe(3)
+expect(calculator).toHaveBeenCalledWith(1, 2)
+expect(calculator).toHaveReturned(3)
+```
+
+Vitest also supports a module promise instead of a string in the `vi.mock` and `vi.doMock` methods for better IDE support. When the file is moved, the path will be updated, and `importOriginal` inherits the type automatically. Using this signature will also enforce factory return type to be compatible with the original module (keeping exports optional).
 
 ```ts twoslash
 // @filename: ./path/to/module.js
@@ -103,7 +119,7 @@ vi.mock('./path/to/module.js', () => {
 ```
 :::
 
-If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [deps.moduleDirectories](/config/#deps-moduledirectories) config option.
+If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [`deps.moduleDirectories`](/config/#deps-moduledirectories) config option.
 
 For example, you have this file structure:
 
@@ -118,7 +134,7 @@ For example, you have this file structure:
   - increment.test.js
 ```
 
-If you call `vi.mock` in a test file without a factory provided, it will find a file in the `__mocks__` folder to use as a module:
+If you call `vi.mock` in a test file without a factory or options provided, it will find a file in the `__mocks__` folder to use as a module:
 
 ```ts
 // increment.test.js
@@ -144,8 +160,8 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 
 ### vi.doMock
 
-- **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
-- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => T | Promise<T>) => void`
+- **Type**: `(path: string, factory?: MockOptions | ((importOriginal: () => unknown) => unknown)) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: MockOptions | ((importOriginal: () => T) => T | Promise<T>)) => void`
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
 
@@ -416,6 +432,23 @@ console.log(cart.getApples()) // 42
 spy.mockReturnValue(10)
 console.log(cart.getApples()) // still 42!
 ```
+:::
+
+::: tip
+It is not possible to spy on a specific exported method in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
+
+```ts
+import { calculator } from './src/calculator.ts'
+
+vi.mock('./src/calculator.ts', { spy: true })
+
+calculator(1, 2)
+
+expect(calculator).toHaveBeenCalledWith(1, 2)
+expect(calculator).toHaveReturned(3)
+```
+
+And while it is possible to spy on exports in `jsdom` or other Node.js environments, this might change in the future.
 :::
 
 ### vi.stubEnv {#vi-stubenv}

@@ -3,7 +3,7 @@ import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
-import type { MockFactoryWithHelper } from '../types/mocker'
+import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
 import { getWorkerState } from '../runtime/utils'
 import { resetModules, waitForImportsToResolve } from '../utils/modules'
 import { isChildProcess } from '../utils/base'
@@ -199,9 +199,9 @@ export interface VitestUtils {
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
   // eslint-disable-next-line ts/method-signature-style
-  mock(path: string, factory?: MockFactoryWithHelper): void
+  mock(path: string, factory?: MockFactoryWithHelper | MockOptions): void
   // eslint-disable-next-line ts/method-signature-style
-  mock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
+  mock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): void
 
   /**
    * Removes module from mocked registry. All calls to import will return the original module even if it was mocked before.
@@ -224,9 +224,9 @@ export interface VitestUtils {
    * @param factory Mocked module factory. The result of this function will be an exports object
    */
   // eslint-disable-next-line ts/method-signature-style
-  doMock(path: string, factory?: MockFactoryWithHelper): void
+  doMock(path: string, factory?: MockFactoryWithHelper | MockOptions): void
   // eslint-disable-next-line ts/method-signature-style
-  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T>): void
+  doMock<T>(module: Promise<T>, factory?: MockFactoryWithHelper<T> | MockOptions): void
   /**
    * Removes module from mocked registry. All subsequent calls to import will return original module.
    *
@@ -555,7 +555,7 @@ function createVitest(): VitestUtils {
       return factory()
     },
 
-    mock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+    mock(path: string | Promise<unknown>, factory?: MockOptions | MockFactoryWithHelper) {
       if (typeof path !== 'string') {
         throw new TypeError(
           `vi.mock() expects a string path, but received a ${typeof path}`,
@@ -565,7 +565,7 @@ function createVitest(): VitestUtils {
       _mocker().queueMock(
         path,
         importer,
-        factory
+        typeof factory === 'function'
           ? () =>
               factory(() =>
                 _mocker().importActual(
@@ -574,8 +574,7 @@ function createVitest(): VitestUtils {
                   _mocker().getMockContext().callstack,
                 ),
               )
-          : undefined,
-        true,
+          : factory,
       )
     },
 
@@ -588,7 +587,7 @@ function createVitest(): VitestUtils {
       _mocker().queueUnmock(path, getImporter('unmock'))
     },
 
-    doMock(path: string | Promise<unknown>, factory?: MockFactoryWithHelper) {
+    doMock(path: string | Promise<unknown>, factory?: MockOptions | MockFactoryWithHelper) {
       if (typeof path !== 'string') {
         throw new TypeError(
           `vi.doMock() expects a string path, but received a ${typeof path}`,
@@ -598,7 +597,7 @@ function createVitest(): VitestUtils {
       _mocker().queueMock(
         path,
         importer,
-        factory
+        typeof factory === 'function'
           ? () =>
               factory(() =>
                 _mocker().importActual(
@@ -607,8 +606,7 @@ function createVitest(): VitestUtils {
                   _mocker().getMockContext().callstack,
                 ),
               )
-          : undefined,
-        false,
+          : factory,
       )
     },
 

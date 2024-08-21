@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "Bundler",
+    "types": ["vite/client"],
+    "isolatedDeclarations": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["**/dist/**"]
+}

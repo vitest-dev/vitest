@@ -5,7 +5,7 @@ import { relative } from 'pathe'
 import type { SerializedConfig } from 'vitest'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
-import { createModuleMocker } from './tester/msw'
+import { createModuleMockerInterceptor } from './tester/msw'
 
 const url = new URL(location.href)
 const ID_ALL = '__vitest_all__'
@@ -13,7 +13,7 @@ const ID_ALL = '__vitest_all__'
 class IframeOrchestrator {
   private cancelled = false
   private runningFiles = new Set<string>()
-  private mocker = createModuleMocker()
+  private interceptor = createModuleMockerInterceptor()
   private iframes = new Map<string, HTMLIFrameElement>()
 
   public async init() {
@@ -187,13 +187,13 @@ class IframeOrchestrator {
         break
       }
       case 'mock:invalidate':
-        this.mocker.invalidate()
+        this.interceptor.invalidate()
         break
       case 'unmock':
-        await this.mocker.unmock(e.data)
+        await this.interceptor.delete(e.data.url)
         break
       case 'mock':
-        await this.mocker.mock(e.data)
+        await this.interceptor.register(e.data.module)
         break
       case 'mock-factory:error':
       case 'mock-factory:response':

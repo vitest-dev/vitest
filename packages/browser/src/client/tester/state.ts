@@ -24,7 +24,6 @@ const state: WorkerGlobalState = {
     invalidates: [],
   },
   onCancel: null as any,
-  mockMap: new Map(),
   config,
   environment: {
     name: 'browser',

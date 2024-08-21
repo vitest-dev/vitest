@@ -17,6 +17,7 @@ function wrapModule(module) {
 
 window.__vitest_browser_runner__ = {
   wrapModule,
+  wrapDynamicImport: wrapModule,
   moduleCache,
   config: { __VITEST_CONFIG__ },
   viteConfig: { __VITEST_VITE_CONFIG__ },

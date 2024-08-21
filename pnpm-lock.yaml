@@ -231,7 +231,7 @@ importers:
     devDependencies:
       '@vitest/browser':
         specifier: latest
-        version: 2.0.5(playwright@1.46.0)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))
+        version: 2.0.5(playwright@1.46.1)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))
       '@vitest/ui':
         specifier: latest
         version: 2.0.5(vitest@packages+vitest)
@@ -458,6 +458,9 @@ importers:
       '@types/ws':
         specifier: ^8.5.12
         version: 8.5.12
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../mocker
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -654,6 +657,37 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
 
+  packages/mocker:
+    dependencies:
+      '@vitest/spy':
+        specifier: workspace:^2.1.0-beta.1
+        version: link:../spy
+      estree-walker:
+        specifier: ^3.0.3
+        version: 3.0.3
+      magic-string:
+        specifier: ^0.30.11
+        version: 0.30.11
+    devDependencies:
+      '@types/estree':
+        specifier: ^1.0.5
+        version: 1.0.5
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
+      acorn-walk:
+        specifier: ^8.3.3
+        version: 8.3.3
+      msw:
+        specifier: ^2.3.5
+        version: 2.3.5(typescript@5.5.4)
+      pathe:
+        specifier: ^1.1.2
+        version: 1.1.2
+      vite:
+        specifier: ^5.4.0
+        version: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
+
   packages/pretty-format:
     dependencies:
       tinyrainbow:
@@ -824,9 +858,6 @@ importers:
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
-      estree-walker:
-        specifier: ^3.0.3
-        version: 3.0.3
       loupe:
         specifier: ^3.1.1
         version: 3.1.1
@@ -883,6 +914,9 @@ importers:
       '@vitest/expect':
         specifier: workspace:*
         version: link:../expect
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../mocker
       '@vitest/pretty-format':
         specifier: workspace:^
         version: link:../pretty-format
@@ -1180,6 +1214,9 @@ importers:
       '@vitest/expect':
         specifier: workspace:*
         version: link:../../packages/expect
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../../packages/mocker
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
@@ -1312,6 +1349,21 @@ importers:
       '@vitest/test-dep-url':
         specifier: file:./dep-url
         version: '@vitest/test-deps-url@file:test/optimize-deps/dep-url'
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
+  test/public-mocker:
+    devDependencies:
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../../packages/browser
+      '@vitest/mocker':
+        specifier: workspace:*
+        version: link:../../packages/mocker
+      playwright:
+        specifier: ^1.46.1
+        version: 1.46.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -7224,16 +7276,6 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  msw@2.3.4:
-    resolution: {integrity: sha512-sHMlwrajgmZSA2l1o7qRSe+azm/I+x9lvVVcOxAzi4vCtH8uVPJk1K5BQYDkzGl+tt0RvM9huEXXdeGrgcc79g==}
-    engines: {node: '>=18'}
-    hasBin: true
-    peerDependencies:
-      typescript: '>= 4.7.x'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
   msw@2.3.5:
     resolution: {integrity: sha512-+GUI4gX5YC5Bv33epBrD+BGdmDvBg2XGruiWnI3GbIbRmMMBeZ5gs3mJ51OWSGHgJKztZ8AtZeYMMNMVrje2/Q==}
     engines: {node: '>=18'}
@@ -7612,6 +7654,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  playwright-core@1.46.1:
+    resolution: {integrity: sha512-h9LqIQaAv+CYvWzsZ+h3RsrqCStkBHlgo6/TJlFst3cOTlLghBQlJwPOZKQJTKNaD3QIB7aAVQ+gfWbN3NXB7A==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   playwright@1.41.0:
     resolution: {integrity: sha512-XOsfl5ZtAik/T9oek4V0jAypNlaCNzuKOwVhqhgYT3os6kH34PzbRb74F0VWcLYa5WFdnmxl7qyAHBXvPv7lqQ==}
     engines: {node: '>=16'}
@@ -7619,6 +7666,11 @@ packages:
 
   playwright@1.46.0:
     resolution: {integrity: sha512-XYJ5WvfefWONh1uPAUAi0H2xXV5S3vrtcnXe6uAOgdGi3aSpqOSXX08IAjXW34xitfuOJsvXU5anXZxPSEQiJw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.46.1:
+    resolution: {integrity: sha512-oPcr1yqoXLCkgKtD5eNUPLiN40rYEM39odNpIb6VE6S7/15gJmA1NzVv6zJYusV0e7tzvkU/utBFNa/Kpxmwng==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -11324,7 +11376,7 @@ snapshots:
   '@jridgewell/gen-mapping@0.3.5':
     dependencies:
       '@jridgewell/set-array': 1.2.1
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
       '@jridgewell/trace-mapping': 0.3.25
 
   '@jridgewell/resolve-uri@3.1.0': {}
@@ -11352,7 +11404,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.25':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
 
   '@jsdevtools/ez-spawn@3.0.4':
     dependencies:
@@ -11765,7 +11817,7 @@ snapshots:
       devalue: 4.3.2
       esm-env: 1.0.0
       kleur: 4.1.5
-      magic-string: 0.30.10
+      magic-string: 0.30.11
       mime: 3.0.0
       sade: 1.8.1
       set-cookie-parser: 2.6.0
@@ -12589,18 +12641,18 @@ snapshots:
       vite: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
       vue: 3.4.37(typescript@5.5.4)
 
-  '@vitest/browser@2.0.5(playwright@1.46.0)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
+  '@vitest/browser@2.0.5(playwright@1.46.1)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
       '@vitest/utils': 2.0.5
-      magic-string: 0.30.10
-      msw: 2.3.4(typescript@5.5.4)
+      magic-string: 0.30.11
+      msw: 2.3.5(typescript@5.5.4)
       sirv: 2.0.4
       vitest: link:packages/vitest
       ws: 8.18.0
     optionalDependencies:
-      playwright: 1.46.0
+      playwright: 1.46.1
       webdriverio: 8.32.2(typescript@5.5.4)
     transitivePeerDependencies:
       - bufferutil
@@ -16499,28 +16551,6 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.3.4(typescript@5.5.4):
-    dependencies:
-      '@bundled-es-modules/cookie': 2.0.0
-      '@bundled-es-modules/statuses': 1.0.1
-      '@bundled-es-modules/tough-cookie': 0.1.6
-      '@inquirer/confirm': 3.1.9
-      '@mswjs/interceptors': 0.29.1
-      '@open-draft/until': 2.1.0
-      '@types/cookie': 0.6.0
-      '@types/statuses': 2.0.5
-      chalk: 4.1.2
-      graphql: 16.8.1
-      headers-polyfill: 4.0.3
-      is-node-process: 1.2.0
-      outvariant: 1.4.2
-      path-to-regexp: 6.2.2
-      strict-event-emitter: 0.5.1
-      type-fest: 4.20.0
-      yargs: 17.7.2
-    optionalDependencies:
-      typescript: 5.5.4
-
   msw@2.3.5(typescript@5.5.4):
     dependencies:
       '@bundled-es-modules/cookie': 2.0.0
@@ -16901,6 +16931,8 @@ snapshots:
 
   playwright-core@1.46.0: {}
 
+  playwright-core@1.46.1: {}
+
   playwright@1.41.0:
     dependencies:
       playwright-core: 1.41.0
@@ -16910,6 +16942,12 @@ snapshots:
   playwright@1.46.0:
     dependencies:
       playwright-core: 1.46.0
+    optionalDependencies:
+      fsevents: 2.3.2
+
+  playwright@1.46.1:
+    dependencies:
+      playwright-core: 1.46.1
     optionalDependencies:
       fsevents: 2.3.2
 

@@ -97,6 +97,7 @@ export default antfu(
   {
     files: [
       `docs/${GLOB_SRC}`,
+      `**/*.md`,
     ],
     rules: {
       'style/max-statements-per-line': 'off',

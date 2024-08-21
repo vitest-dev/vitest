@@ -94,6 +94,10 @@
     "./snapshot": {
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
+    },
+    "./mocker": {
+      "types": "./dist/mocker.d.ts",
+      "default": "./dist/mocker.js"
     }
   },
   "main": "./dist/index.js",
@@ -148,6 +152,7 @@
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
+    "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:^",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
