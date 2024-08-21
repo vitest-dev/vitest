@@ -26,13 +26,11 @@ jobs:
   lint:
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    name: 'Lint: node-20.14, ubuntu-latest'
+    name: 'Lint: node-latest, ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: 20.14
 
       - name: Install
         run: pnpm i
@@ -84,13 +82,13 @@ jobs:
         os: [ubuntu-latest]
         # Reset back to 20 after https://github.com/nodejs/node/issues/53648
         # (The issues is closed, but the error persist even after 20.14)
-        node_version: [18, 20.14]
+        node_version: [18, 20]
         # node_version: [18, 20, 22] 22 when LTS is close enough
         include:
           - os: macos-14
-            node_version: 20.14
+            node_version: 20
           - os: windows-latest
-            node_version: 20.14
+            node_version: 20
       fail-fast: false
 
     steps:
