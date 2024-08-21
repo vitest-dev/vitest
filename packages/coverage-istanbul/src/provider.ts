@@ -414,13 +414,15 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     const cacheKey = new Date().getTime()
     const coverageMap = libCoverage.createCoverageMap({})
 
+    const transform = this.createUncoveredFileTransformer(this.ctx)
+
     // Note that these cannot be run parallel as synchronous instrumenter.lastFileCoverage
     // returns the coverage of the last transformed file
     for (const [index, filename] of uncoveredFiles.entries()) {
       debug('Uncovered file %s %d/%d', filename, index, uncoveredFiles.length)
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await this.ctx.vitenode.transformRequest(`${filename}?v=${cacheKey}`)
+      await transform(`${filename}?v=${cacheKey}`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
     }

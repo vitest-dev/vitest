@@ -1,3 +1,6 @@
+import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
+import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
+
 export type { Vitest } from '../node/core'
 export type { WorkspaceProject } from '../node/workspace'
 export { createVitest } from '../node/create'
@@ -48,19 +51,28 @@ export type { HTMLOptions } from '../node/reporters/html'
 export { isFileServingAllowed, createServer, parseAst, parseAstAsync } from 'vite'
 export type * as Vite from 'vite'
 
-export { TestCase, TestFile, TestSuite } from '../node/reporters/reported-tasks'
+export { TestCase, TestModule, TestSuite } from '../node/reporters/reported-tasks'
+/**
+ * @deprecated Use `TestModule` instead
+ */
+export const TestFile = _TestFile
 export { TestProject } from '../node/reported-workspace-project'
 export type {
   TestCollection,
 
   TaskOptions,
   TestDiagnostic,
-  FileDiagnostic,
+  ModuleDiagnostic,
   TestResult,
   TestResultPassed,
   TestResultFailed,
   TestResultSkipped,
 } from '../node/reporters/reported-tasks'
+
+/**
+ * @deprecated Use `ModuleDiagnostic` instead
+ */
+export type FileDiagnostic = _FileDiagnostic
 
 export type {
   SequenceHooks,

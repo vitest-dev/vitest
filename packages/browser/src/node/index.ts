@@ -16,10 +16,6 @@ export async function createBrowserServer(
 ) {
   const server = new BrowserServer(project, '/')
 
-  const root = project.config.root
-
-  await project.ctx.packageInstaller.ensureInstalled('@vitest/browser', root)
-
   const configPath = typeof configFile === 'string' ? configFile : false
 
   const vite = await createServer({

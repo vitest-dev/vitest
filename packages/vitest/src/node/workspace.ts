@@ -39,6 +39,8 @@ import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
 import type { Vitest } from './core'
 import { TestProject } from './reported-workspace-project'
+import { WorkspaceSpec } from './spec'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -149,6 +151,10 @@ export class WorkspaceProject {
       ...this.ctx.getCoreWorkspaceProject().getProvidedContext(),
       ...this._provided,
     }
+  }
+
+  public createSpec(moduleId: string, pool: string): DeprecatedWorkspaceSpec {
+    return new WorkspaceSpec(this, moduleId, pool) as DeprecatedWorkspaceSpec
   }
 
   async initializeGlobalSetup() {

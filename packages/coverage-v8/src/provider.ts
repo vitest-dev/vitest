@@ -368,6 +368,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
+    const transform = this.createUncoveredFileTransformer(this.ctx)
 
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
     let includedFiles = allFiles.map(file =>
@@ -401,7 +402,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           const { originalSource } = await this.getSources(
             filename.href,
             transformResults,
-            file => this.ctx.vitenode.transformRequest(file),
+            transform,
           )
 
           const coverage = {
