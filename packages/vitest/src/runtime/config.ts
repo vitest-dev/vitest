@@ -28,6 +28,7 @@ export interface SerializedConfig {
   clearMocks: boolean
   mockReset: boolean
   restoreMocks: boolean
+  revertMocks: boolean
   unstubGlobals: boolean
   unstubEnvs: boolean
   // TODO: make optional
@@ -149,6 +150,7 @@ export type RuntimeConfig = Pick<
   | 'clearMocks'
   | 'mockReset'
   | 'restoreMocks'
+  | 'revertMocks'
   | 'fakeTimers'
   | 'maxConcurrency'
   | 'expect'
