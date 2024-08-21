@@ -55,8 +55,6 @@ export interface HoistMocksPluginOptions extends Omit<HoistMocksOptions, 'regexp
 export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin {
   const filter = options.filter || createFilter(options.include, options.exclude)
 
-  // [ci] trigger
-
   const {
     hoistableMockMethodNames = ['mock', 'unmock'],
     dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
@@ -87,6 +85,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
         hoistedMethodNames,
         utilsObjectNames,
         dynamicImportMockMethodNames,
+        ...options,
       })
     },
   }
