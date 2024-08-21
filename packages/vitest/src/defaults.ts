@@ -106,6 +106,7 @@ const config = {
   pool: 'forks' as const,
   clearMocks: false,
   restoreMocks: false,
+  revertMocks: false,
   mockReset: false,
   unstubGlobals: false,
   unstubEnvs: false,

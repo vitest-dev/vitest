@@ -501,6 +501,12 @@ export interface InlineConfig {
   restoreMocks?: boolean
 
   /**
+   * Will call `.mockRevert()` on all spies before each test
+   * @default false
+   */
+  revertMocks?: boolean
+
+  /**
    * Will restore all global stubs to their original values before each test
    * @default false
    */
