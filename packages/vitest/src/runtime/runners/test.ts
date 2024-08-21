@@ -192,12 +192,15 @@ export class VitestTestRunner implements VitestRunner {
 }
 
 function clearModuleMocks(config: SerializedConfig) {
-  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals }
+  const { clearMocks, mockReset, restoreMocks, revertMocks, unstubEnvs, unstubGlobals }
     = config
 
   // since each function calls another, we can just call one
   if (restoreMocks) {
     vi.restoreAllMocks()
+  }
+  else if (revertMocks) {
+    vi.revertAllMocks()
   }
   else if (mockReset) {
     vi.resetAllMocks()
