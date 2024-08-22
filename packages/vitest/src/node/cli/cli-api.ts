@@ -26,6 +26,10 @@ export interface CliOptions extends UserConfig {
    * Output collected tests as JSON or to a file
    */
   json?: string | boolean
+  /**
+   * Output collected test files only
+   */
+  filesOnly?: boolean
 }
 
 /**
