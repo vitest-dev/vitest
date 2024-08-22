@@ -1830,7 +1830,7 @@ This will clear mock history and reset each implementation to an empty function 
 Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test.
 This will clear mock history, restore each implementation to its original, and restore original descriptors of spied-on objects.
 
-## revertMocks
+### revertMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
