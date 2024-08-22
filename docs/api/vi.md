@@ -400,7 +400,7 @@ This will clear mock history, restore each implementation to its original, and r
 
 ### vi.revertAllMocks
 
-Calls [`.mockRevert()`](/api/mock#mockrevert) on all spies before each test.
+Calls [`.mockRevert()`](/api/mock#mockrevert) on all spies.
 This will clear mock history and revert each implementation to its original without restoring original descriptors of spied-on objects.
 
 ### vi.spyOn
