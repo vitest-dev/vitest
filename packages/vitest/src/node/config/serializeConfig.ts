@@ -31,6 +31,7 @@ export function serializeConfig(
     clearMocks: config.clearMocks,
     mockReset: config.mockReset,
     restoreMocks: config.restoreMocks,
+    revertMocks: config.revertMocks,
     unstubEnvs: config.unstubEnvs,
     unstubGlobals: config.unstubGlobals,
     maxConcurrency: config.maxConcurrency,
