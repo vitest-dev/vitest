@@ -774,6 +774,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   unstubEnvs: null,
   related: null,
   restoreMocks: null,
+  revertMocks: null,
   runner: null,
   mockReset: null,
   forceRerunTriggers: null,
