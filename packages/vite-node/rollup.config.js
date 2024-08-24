@@ -32,6 +32,9 @@ const external = [
   'node:events',
   'node:vm',
 ]
+const esmOnly = [
+  'tinyrainbow',
+]
 
 const plugins = [
   resolve({
@@ -68,7 +71,7 @@ export default defineConfig([
       entryFileNames: '[name].cjs',
       chunkFileNames: 'chunk-[name].cjs',
     },
-    external,
+    external: external.filter(v => !esmOnly.includes(v)),
     plugins,
     onwarn,
   },
