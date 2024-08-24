@@ -83,9 +83,6 @@ importers:
       eslint:
         specifier: ^9.9.0
         version: 9.9.0(jiti@1.21.6)
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.2
       magic-string:
         specifier: ^0.30.11
         version: 0.30.11
@@ -107,6 +104,9 @@ importers:
       rollup-plugin-license:
         specifier: ^3.5.2
         version: 3.5.2(rollup@4.20.0)
+      tinyglobby:
+        specifier: ^0.2.5
+        version: 0.2.5
       tsx:
         specifier: ^4.17.0
         version: 4.17.0
@@ -153,12 +153,12 @@ importers:
       '@vitejs/plugin-vue':
         specifier: ^5.1.2
         version: 5.1.2(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))(vue@3.4.37(typescript@5.5.4))
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.2
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
+      tinyglobby:
+        specifier: ^0.2.5
+        version: 0.2.5
       unocss:
         specifier: ^0.62.0
         version: 0.62.0(postcss@8.4.40)(rollup@4.20.0)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))
@@ -749,9 +749,6 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.2
       fflate:
         specifier: ^0.8.2
         version: 0.8.2
@@ -764,6 +761,9 @@ importers:
       sirv:
         specifier: ^2.0.4
         version: 2.0.4
+      tinyglobby:
+        specifier: ^0.2.5
+        version: 0.2.5
       tinyrainbow:
         specifier: ^1.2.0
         version: 1.2.0
@@ -1032,9 +1032,6 @@ importers:
       expect-type:
         specifier: ^0.19.0
         version: 0.19.0
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.2
       find-up:
         specifier: ^6.3.0
         version: 6.3.0
@@ -1071,6 +1068,9 @@ importers:
       strip-literal:
         specifier: ^2.1.0
         version: 2.1.0
+      tinyglobby:
+        specifier: ^0.2.5
+        version: 0.2.5
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -8583,12 +8583,8 @@ packages:
   tinyexec@0.3.0:
     resolution: {integrity: sha512-tVGE0mVJPGb0chKhqmsoosjsS+qUnJVGJpZgsHYQcGoPlG3B51R3PouqTgEGH2Dc9jjFyOqOpix6ZHNMXp1FZg==}
 
-  tinyglobby@0.2.0:
-    resolution: {integrity: sha512-+clyYQfAnNlt5a1x7CCQ6RLuTIztDfDAl6mAANvqRUlz6sVy5znCzJOhais8G6oyUyoeeaorLopO3HptVP8niA==}
-    engines: {node: '>=12.0.0'}
-
-  tinyglobby@0.2.2:
-    resolution: {integrity: sha512-mZ2sDMaySvi1PkTp4lTo1In2zjU+cY8OvZsfwrDrx3YGRbXPX1/cbPwCR9zkm3O/Fz9Jo0F1HNgIQ1b8BepqyQ==}
+  tinyglobby@0.2.5:
+    resolution: {integrity: sha512-Dlqgt6h0QkoHttG53/WGADNh9QhcjCAIZMTERAVhdpmIBEejSuLI9ZmGKWzB7tweBjlk30+s/ofi4SLmBeTYhw==}
     engines: {node: '>=12.0.0'}
 
   tinyhighlight@0.3.2:
@@ -12333,7 +12329,7 @@ snapshots:
       magic-string: 0.30.11
       pathe: 1.1.2
       perfect-debounce: 1.0.0
-      tinyglobby: 0.2.2
+      tinyglobby: 0.2.5
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -12366,7 +12362,7 @@ snapshots:
       css-tree: 2.3.1
       magic-string: 0.30.11
       postcss: 8.4.40
-      tinyglobby: 0.2.2
+      tinyglobby: 0.2.5
     transitivePeerDependencies:
       - supports-color
 
@@ -12462,7 +12458,7 @@ snapshots:
       '@unocss/transformer-directives': 0.62.0
       chokidar: 3.6.0
       magic-string: 0.30.11
-      tinyglobby: 0.2.2
+      tinyglobby: 0.2.5
       vite: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
     transitivePeerDependencies:
       - rollup
@@ -17933,12 +17929,7 @@ snapshots:
 
   tinyexec@0.3.0: {}
 
-  tinyglobby@0.2.0:
-    dependencies:
-      fdir: 6.2.0(picomatch@4.0.2)
-      picomatch: 4.0.2
-
-  tinyglobby@0.2.2:
+  tinyglobby@0.2.5:
     dependencies:
       fdir: 6.2.0(picomatch@4.0.2)
       picomatch: 4.0.2
@@ -18441,7 +18432,7 @@ snapshots:
     dependencies:
       debug: 4.3.6
       pretty-bytes: 6.1.1
-      tinyglobby: 0.2.0
+      tinyglobby: 0.2.5
       vite: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
       workbox-build: 7.1.0(@types/babel__core@7.20.5)
       workbox-window: 7.1.0

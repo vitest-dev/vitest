@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
 import { defineConfig } from 'vite'
 import { resolve } from 'pathe'
-import fg from 'fast-glob'
+import { globSync } from 'tinyglobby'
 
 export default defineConfig({
   server: {
@@ -51,7 +51,7 @@ export default defineConfig({
         await waitFor(() => fs.existsSync(ui))
         clearTimeout(timeout)
 
-        const files = fg.sync('**/*', { cwd: ui })
+        const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
 
         if (fs.existsSync(browser)) {
           fs.rmSync(browser, { recursive: true })

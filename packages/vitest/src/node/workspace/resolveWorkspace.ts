@@ -1,8 +1,8 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { isMainThread } from 'node:worker_threads'
 import { dirname, relative, resolve } from 'pathe'
+import { type GlobOptions, glob } from 'tinyglobby'
 import { mergeConfig } from 'vite'
-import fg from 'fast-glob'
 import type { Vitest } from '../core'
 import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
 import type { WorkspaceProject } from '../workspace'
@@ -198,16 +198,16 @@ async function resolveWorkspaceProjectConfigs(
     }
 
     if (workspaceGlobMatches.length) {
-      const globOptions: fg.Options = {
+      const globOptions: GlobOptions = {
         absolute: true,
         dot: true,
         onlyFiles: false,
-        markDirectories: true,
         cwd: vitest.config.root,
+        expandDirectories: false,
         ignore: ['**/node_modules/**', '**/*.timestamp-*'],
       }
 
-      const workspacesFs = await fg(workspaceGlobMatches, globOptions)
+      const workspacesFs = await glob(workspaceGlobMatches, globOptions)
 
       await Promise.all(workspacesFs.map(async (filepath) => {
         // directories are allowed with a glob like `packages/*`
