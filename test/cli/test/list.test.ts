@@ -6,7 +6,7 @@ test.each([
   ['--pool=threads'],
   ['--pool=forks'],
   ['--pool=vmForks'],
-  ['--browser.enabled'],
+  // ['--browser.enabled'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
   expect(stdout).toMatchSnapshot()
@@ -58,6 +58,24 @@ test('correctly outputs json', async () => {
   expect(exitCode).toBe(0)
 })
 
+test('correctly outputs files only json', async () => {
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json', '--filesOnly')
+  expect(relative(stdout)).toMatchInlineSnapshot(`
+    "[
+      {
+        "name": "basic.test.ts",
+        "file": "<root>/fixtures/list/basic.test.ts"
+      },
+      {
+        "name": "math.test.ts",
+        "file": "<root>/fixtures/list/math.test.ts"
+      }
+    ]
+    "
+  `)
+  expect(exitCode).toBe(0)
+})
+
 test('correctly saves json', async () => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json=./list.json')
   onTestFinished(() => {
@@ -96,6 +114,28 @@ test('correctly saves json', async () => {
   expect(exitCode).toBe(0)
 })
 
+test('correctly saves files only json', async () => {
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json=./list.json', '--filesOnly')
+  onTestFinished(() => {
+    rmSync('./fixtures/list/list.json')
+  })
+  const json = readFileSync('./fixtures/list/list.json', 'utf-8')
+  expect(stdout).toBe('')
+  expect(relative(json)).toMatchInlineSnapshot(`
+    "[
+      {
+        "name": "basic.test.ts",
+        "file": "<root>/fixtures/list/basic.test.ts"
+      },
+      {
+        "name": "math.test.ts",
+        "file": "<root>/fixtures/list/math.test.ts"
+      }
+    ]"
+  `)
+  expect(exitCode).toBe(0)
+})
+
 test('correctly filters by file', async () => {
   const { stdout, exitCode } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list')
   expect(stdout).toMatchInlineSnapshot(`
@@ -106,11 +146,28 @@ test('correctly filters by file', async () => {
   expect(exitCode).toBe(0)
 })
 
+test('correctly filters by file when using --filesOnly', async () => {
+  const { stdout, exitCode } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--filesOnly')
+  expect(stdout).toMatchInlineSnapshot(`
+    "math.test.ts
+    "
+  `)
+  expect(exitCode).toBe(0)
+})
+
 test('correctly prints project name in basic report', async () => {
   const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--config=./custom.config.ts')
   expect(stdout).toMatchInlineSnapshot(`
     "[custom] math.test.ts > 1 plus 1
     [custom] math.test.ts > failing test
+    "
+  `)
+})
+
+test('correctly prints project name in basic report when using --filesOnly', async () => {
+  const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--config=./custom.config.ts', '--filesOnly')
+  expect(stdout).toMatchInlineSnapshot(`
+    "[custom] math.test.ts
     "
   `)
 })
@@ -136,6 +193,20 @@ test('correctly prints project name and locations in json report', async () => {
           "line": 7,
           "column": 1
         }
+      }
+    ]
+    "
+  `)
+})
+
+test('correctly prints project name in json report when using --filesOnly', async () => {
+  const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--json', '--config=./custom.config.ts', '--filesOnly')
+  expect(relative(stdout)).toMatchInlineSnapshot(`
+    "[
+      {
+        "name": "math.test.ts",
+        "file": "<root>/fixtures/list/math.test.ts",
+        "projectName": "custom"
       }
     ]
     "

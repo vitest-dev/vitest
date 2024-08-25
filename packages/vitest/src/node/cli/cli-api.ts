@@ -211,7 +211,7 @@ function forEachSuite(tasks: Task[], callback: (suite: Suite) => void) {
 
 export function formatCollectedAsJSON(files: File[], options: CliOptions) {
 
-  if(options.filesOnly){
+  if(typeof options.filesOnly !== undefined && options.filesOnly){
     return files.filter(test => test.mode === 'run' || test.mode === 'only').map((file) => {
       const result: any = {
         name: file.name,
@@ -219,9 +219,6 @@ export function formatCollectedAsJSON(files: File[], options: CliOptions) {
       }
       if (file.projectName) {
         result.projectName = file.projectName
-      }
-      if (file.location) {
-        result.location = file.location
       }
       return result
   })
@@ -248,7 +245,7 @@ export function formatCollectedAsJSON(files: File[], options: CliOptions) {
 
 export function formatCollectedAsString(files: File[], options: CliOptions) {
 
-  if(options.filesOnly){
+  if(typeof options.filesOnly !== undefined && options.filesOnly){
     return files.filter(test => test.mode === 'run' || test.mode === 'only').map((file) => {
         const name = file.name;
         if (file.projectName) {
