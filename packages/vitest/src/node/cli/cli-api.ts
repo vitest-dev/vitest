@@ -1,16 +1,16 @@
 /* eslint-disable no-console */
 
+import type { File, Suite, Task } from '@vitest/runner'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { File, Suite, Task } from '@vitest/runner'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import type { environments } from '../../integrations/env'
-import { createVitest } from '../create'
-import { registerConsoleShortcuts } from '../stdin'
-import type { Vitest, VitestOptions } from '../core'
-import { FilesNotFoundError, GitNotFoundError } from '../errors'
 import { getNames, getTests } from '../../utils'
+import type { Vitest, VitestOptions } from '../core'
+import { createVitest } from '../create'
+import { FilesNotFoundError, GitNotFoundError } from '../errors'
+import { registerConsoleShortcuts } from '../stdin'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 
 export interface CliOptions extends UserConfig {
@@ -185,18 +185,18 @@ export function processCollected(ctx: Vitest, files: File[], options: CliOptions
     return processJsonOutput(files, options)
   }
 
-  return formatCollectedAsString(files).forEach(test => console.log(test))
+  return formatCollectedAsString(files, options).forEach(test => console.log(test))
 }
 
 function processJsonOutput(files: File[], options: CliOptions) {
   if (typeof options.json === 'boolean') {
-    return console.log(JSON.stringify(formatCollectedAsJSON(files), null, 2))
+    return console.log(JSON.stringify(formatCollectedAsJSON(files, options), null, 2))
   }
 
   if (typeof options.json === 'string') {
     const jsonPath = resolve(options.root || process.cwd(), options.json)
     mkdirSync(dirname(jsonPath), { recursive: true })
-    writeFileSync(jsonPath, JSON.stringify(formatCollectedAsJSON(files), null, 2))
+    writeFileSync(jsonPath, JSON.stringify(formatCollectedAsJSON(files, options), null, 2))
   }
 }
 
@@ -209,7 +209,25 @@ function forEachSuite(tasks: Task[], callback: (suite: Suite) => void) {
   })
 }
 
-export function formatCollectedAsJSON(files: File[]) {
+export function formatCollectedAsJSON(files: File[], options: CliOptions) {
+
+  if(options.filesOnly){
+    return files.filter(test => test.mode === 'run' || test.mode === 'only').map((file) => {
+      const result: any = {
+        name: file.name,
+        file: file.filepath,
+      }
+      if (file.projectName) {
+        result.projectName = file.projectName
+      }
+      if (file.location) {
+        result.location = file.location
+      }
+      return result
+  })
+    .flat()
+  }
+
   return files.map((file) => {
     const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
     return tests.map((test) => {
@@ -228,7 +246,19 @@ export function formatCollectedAsJSON(files: File[]) {
   }).flat()
 }
 
-export function formatCollectedAsString(files: File[]) {
+export function formatCollectedAsString(files: File[], options: CliOptions) {
+
+  if(options.filesOnly){
+    return files.filter(test => test.mode === 'run' || test.mode === 'only').map((file) => {
+        const name = file.name;
+        if (file.projectName) {
+          return `[${file.projectName}] ${name}`
+        }
+        return name
+  })
+    .flat()
+  }
+
   return files.map((file) => {
     const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
     return tests.map((test) => {
