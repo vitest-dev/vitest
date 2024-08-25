@@ -484,10 +484,10 @@ function createSuiteCollector(
 
 function withAwaitAsyncAssetions<T extends (...args: any[]) => any>(fn: T, task: TaskPopulated): T {
   return (async (...args: any[]) => {
-    await fn(...args);
+    await fn(...args)
     // some async expect will be added to this array, in case user forget to await them
     if (task.promises) {
-      await Promise.all(task.promises);
+      await Promise.all(task.promises)
     }
   }) as T
 }
