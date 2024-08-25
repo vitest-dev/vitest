@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import type { File, Suite, Task } from '@vitest/runner'
 import { mkdirSync, writeFileSync } from 'node:fs'
+import type { File, Suite, Task } from '@vitest/runner'
 import { dirname, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { CoverageProviderMap } from '../../integrations/coverage'
@@ -210,8 +210,7 @@ function forEachSuite(tasks: Task[], callback: (suite: Suite) => void) {
 }
 
 export function formatCollectedAsJSON(files: File[], options: CliOptions) {
-
-  if(typeof options.filesOnly !== undefined && options.filesOnly){
+  if (typeof options.filesOnly !== 'undefined' && options.filesOnly) {
     return files.filter(test => test.mode === 'run' || test.mode === 'only').map((file) => {
       const result: any = {
         name: file.name,
@@ -221,8 +220,8 @@ export function formatCollectedAsJSON(files: File[], options: CliOptions) {
         result.projectName = file.projectName
       }
       return result
-  })
-    .flat()
+    })
+      .flat()
   }
 
   return files.map((file) => {
@@ -244,16 +243,15 @@ export function formatCollectedAsJSON(files: File[], options: CliOptions) {
 }
 
 export function formatCollectedAsString(files: File[], options: CliOptions) {
-
-  if(typeof options.filesOnly !== undefined && options.filesOnly){
+  if (typeof options.filesOnly !== 'undefined' && options.filesOnly) {
     return files.filter(test => test.mode === 'run' || test.mode === 'only').map((file) => {
-        const name = file.name;
-        if (file.projectName) {
-          return `[${file.projectName}] ${name}`
-        }
-        return name
-  })
-    .flat()
+      const name = file.name
+      if (file.projectName) {
+        return `[${file.projectName}] ${name}`
+      }
+      return name
+    })
+      .flat()
   }
 
   return files.map((file) => {

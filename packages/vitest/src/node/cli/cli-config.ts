@@ -822,5 +822,5 @@ export const collectCliOptionsConfig: Pick<
   },
   filesOnly: {
     description: 'Print only test files with out the test cases',
-  }
+  },
 }
