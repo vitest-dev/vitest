@@ -63,11 +63,9 @@ test('correctly outputs files only json', async () => {
   expect(relative(stdout)).toMatchInlineSnapshot(`
     "[
       {
-        "name": "basic.test.ts",
         "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
-        "name": "math.test.ts",
         "file": "<root>/fixtures/list/math.test.ts"
       }
     ]
@@ -124,11 +122,9 @@ test('correctly saves files only json', async () => {
   expect(relative(json)).toMatchInlineSnapshot(`
     "[
       {
-        "name": "basic.test.ts",
         "file": "<root>/fixtures/list/basic.test.ts"
       },
       {
-        "name": "math.test.ts",
         "file": "<root>/fixtures/list/math.test.ts"
       }
     ]"
@@ -204,7 +200,6 @@ test('correctly prints project name in json report when using --filesOnly', asyn
   expect(relative(stdout)).toMatchInlineSnapshot(`
     "[
       {
-        "name": "math.test.ts",
         "file": "<root>/fixtures/list/math.test.ts",
         "projectName": "custom"
       }

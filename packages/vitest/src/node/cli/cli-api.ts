@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
-import type { File, Suite, Task } from '@vitest/runner'
 import { dirname, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { File, Suite, Task } from '@vitest/runner'
@@ -13,6 +12,7 @@ import type { Vitest, VitestOptions } from '../core'
 import { FilesNotFoundError, GitNotFoundError } from '../errors'
 import { getNames, getTests } from '../../utils'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
+import { WorkspaceSpec } from '../pool'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -187,6 +187,52 @@ export function processCollected(ctx: Vitest, files: File[], options: CliOptions
   }
 
   return formatCollectedAsString(files).forEach(test => console.log(test))
+}
+
+export function outputFileList(files: WorkspaceSpec[], options: CliOptions){
+
+  // const paths = files.map((file) => file.moduleId)
+
+  if (typeof options.json !== 'undefined') {
+    return outputJsonFileList(files, options)
+  }
+
+  return formatFilesAsString(files)
+}
+
+function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions){
+  if (typeof options.json === 'boolean') {
+    return console.log(JSON.stringify(formatFilesAsJSON(files), null, 2))
+  }
+  if (typeof options.json === 'string') {
+    const jsonPath = resolve(options.root || process.cwd(), options.json)
+    mkdirSync(dirname(jsonPath), { recursive: true })
+    writeFileSync(jsonPath, JSON.stringify(formatFilesAsJSON(files), null, 2))
+  }
+}
+
+function formatFilesAsJSON(files: WorkspaceSpec[]){
+  return files.map((file) => {
+      const result: any =  {
+        file: file.moduleId,
+      }
+
+      if (file.project.name) {
+        result.projectName = file.project.name
+      }
+      return result
+  })
+}
+
+function formatFilesAsString(files: WorkspaceSpec[]) {
+  return files.map((file) => {
+    let name = file.moduleId.substring(String(file[0].runner.root).length+1)
+    if(file.project.name){
+      name = `[${file.project.name}] ${name}`
+    }
+    console.log(name)
+    return name
+  })
 }
 
 function processJsonOutput(files: File[], options: CliOptions) {

@@ -374,6 +374,15 @@ export class Vitest {
     }
   }
 
+  async listFiles(filters?: string[]){
+
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
+    
+    return files
+  }
+
   async start(filters?: string[]) {
     this._onClose = []
 
