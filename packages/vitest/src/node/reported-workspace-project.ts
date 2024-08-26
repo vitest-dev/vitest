@@ -2,6 +2,9 @@ import type { ProvidedContext } from '../types/general'
 import type { ResolvedConfig, ResolvedProjectConfig, SerializedConfig } from './types/config'
 import type { WorkspaceProject } from './workspace'
 import type { Vitest } from './core'
+import type { BrowserServer } from './types/browser'
+import { type WorkspaceSpec, getFilePoolName } from './pool'
+import { VitestContext } from './context'
 
 export class TestProject {
   /**
@@ -29,43 +32,51 @@ export class TestProject {
    */
   public readonly name: string
 
+  /**
+   * Context manager.
+   */
+  public readonly context: VitestContext
+
   constructor(workspaceProject: WorkspaceProject) {
     this.workspaceProject = workspaceProject
     this.vitest = workspaceProject.ctx
     this.globalConfig = workspaceProject.ctx.config
     this.config = workspaceProject.config
     this.name = workspaceProject.getName()
+    this.context = new VitestContext(workspaceProject)
   }
 
   /**
    * Serialized project configuration. This is the config that tests receive.
    */
-  public get serializedConfig() {
+  public get serializedConfig(): SerializedConfig {
     return this.workspaceProject.getSerializableConfig()
   }
 
   /**
-   * Custom context provided to the project.
+   * Browser server if the project has browser enabled.
    */
-  public context(): ProvidedContext {
-    return this.workspaceProject.getProvidedContext()
+  public get browser(): BrowserServer | null {
+    return this.workspaceProject.browser || null
   }
 
   /**
-   * Provide a custom serializable context to the project. This context will be available for tests once they run.
+   * Create test specification describing a test module.
+   * @param moduleId File path to the module or an ID that Vite understands (like a virtual module).
+   * @param pool The pool to run the test in. If not provided, a pool will be selected based on the project configuration.
    */
-  public provide<T extends keyof ProvidedContext & string>(
-    key: T,
-    value: ProvidedContext[T],
-  ): void {
-    this.workspaceProject.provide(key, value)
+  public createSpecification(moduleId: string, pool?: string): WorkspaceSpec {
+    return this.workspaceProject.createSpec(
+      moduleId,
+      pool || getFilePoolName(this.workspaceProject, moduleId),
+    )
   }
 
   public toJSON(): SerializedTestProject {
     return {
       name: this.name,
       serializedConfig: this.serializedConfig,
-      context: this.context(),
+      context: this.workspaceProject.getProvidedContext(),
     }
   }
 }

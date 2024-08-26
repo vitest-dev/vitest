@@ -660,7 +660,7 @@ export class Vitest {
         process.exitCode = 1
       }
     })()
-      .finally(async () => {
+      .finally(() => {
         this.runningPromise = undefined
 
         // all subsequent runs will treat this as a fresh run
@@ -1053,7 +1053,9 @@ export class Vitest {
           else if (runningServers > 1) {
             console.warn(`Tests closed successfully but something prevents ${runningServers} Vite servers from exiting`)
           }
-          else { console.warn('Tests closed successfully but something prevents the main process from exiting') }
+          else {
+            console.warn('Tests closed successfully but something prevents the main process from exiting')
+          }
 
           console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
         }
