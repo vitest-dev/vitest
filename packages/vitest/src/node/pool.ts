@@ -9,9 +9,12 @@ import { createVmThreadsPool } from './pools/vmThreads'
 import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
-import type { WorkspaceSpec as _WorkspaceSpec } from './spec'
+import type { TestSpecification } from './spec'
 
-export type WorkspaceSpec = _WorkspaceSpec & [
+/**
+ * @deprecated use TestSpecification instead
+ */
+export type WorkspaceSpec = TestSpecification & [
   /**
    * @deprecated use spec.project instead
    */

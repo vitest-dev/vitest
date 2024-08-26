@@ -2,7 +2,7 @@ import type { TestProject } from './reported-workspace-project'
 import type { Pool } from './types/pool-options'
 import type { WorkspaceProject } from './workspace'
 
-export class WorkspaceSpec {
+export class TestSpecification {
   // backwards compatibility
   /**
    * @deprecated
