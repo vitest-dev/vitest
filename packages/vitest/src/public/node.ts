@@ -16,6 +16,7 @@ export { VitestPackageInstaller } from '../node/packageInstaller'
 export { createDebugger } from '../utils/debugger'
 export { resolveFsAllow } from '../node/plugins/utils'
 export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
+export { TestSpecification } from '../node/spec'
 
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 
