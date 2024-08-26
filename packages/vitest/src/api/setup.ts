@@ -12,7 +12,7 @@ import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/genera
 import type { Reporter } from '../node/types/reporter'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
-import type { SerializedSpec } from '../runtime/types/utils'
+import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -157,7 +157,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onSpecsCollected(specs?: SerializedSpec[] | undefined): Awaitable<void> {
+  onSpecsCollected(specs?: SerializedTestSpecification[] | undefined): Awaitable<void> {
     if (this.clients.size === 0) {
       return
     }

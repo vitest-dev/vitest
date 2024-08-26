@@ -2,7 +2,7 @@ import type { BirpcReturn } from 'birpc'
 import type { File, TaskResultPack } from '@vitest/runner'
 import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type { SerializedConfig } from '../runtime/config'
-import type { SerializedSpec } from '../runtime/types/utils'
+import type { SerializedTestSpecification } from '../runtime/types/utils'
 
 interface SourceMap {
   file: string
@@ -29,7 +29,7 @@ export interface TransformResultWithSource {
 export interface WebSocketHandlers {
   onTaskUpdate: (packs: TaskResultPack[]) => void
   getFiles: () => File[]
-  getTestFiles: () => Promise<SerializedSpec[]>
+  getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]
   getConfig: () => SerializedConfig
   getModuleGraph: (
@@ -59,7 +59,7 @@ export interface WebSocketEvents {
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
-  onSpecsCollected?: (specs?: SerializedSpec[]) => Awaitable<void>
+  onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
   onFinishedReportCoverage: () => void
 }
 
