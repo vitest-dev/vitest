@@ -12,7 +12,7 @@ import type { Vitest, VitestOptions } from '../core'
 import { FilesNotFoundError, GitNotFoundError } from '../errors'
 import { getNames, getTests } from '../../utils'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
-import { WorkspaceSpec } from '../pool'
+import type { WorkspaceSpec } from '../pool'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -189,8 +189,7 @@ export function processCollected(ctx: Vitest, files: File[], options: CliOptions
   return formatCollectedAsString(files).forEach(test => console.log(test))
 }
 
-export function outputFileList(files: WorkspaceSpec[], options: CliOptions){
-
+export function outputFileList(files: WorkspaceSpec[], options: CliOptions) {
   // const paths = files.map((file) => file.moduleId)
 
   if (typeof options.json !== 'undefined') {
@@ -200,7 +199,7 @@ export function outputFileList(files: WorkspaceSpec[], options: CliOptions){
   return formatFilesAsString(files)
 }
 
-function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions){
+function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions) {
   if (typeof options.json === 'boolean') {
     return console.log(JSON.stringify(formatFilesAsJSON(files), null, 2))
   }
@@ -211,23 +210,23 @@ function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions){
   }
 }
 
-function formatFilesAsJSON(files: WorkspaceSpec[]){
+function formatFilesAsJSON(files: WorkspaceSpec[]) {
   return files.map((file) => {
-      const result: any =  {
-        file: file.moduleId,
-      }
+    const result: any = {
+      file: file.moduleId,
+    }
 
-      if (file.project.name) {
-        result.projectName = file.project.name
-      }
-      return result
+    if (file.project.name) {
+      result.projectName = file.project.name
+    }
+    return result
   })
 }
 
 function formatFilesAsString(files: WorkspaceSpec[]) {
   return files.map((file) => {
-    let name = file.moduleId.substring(String(file[0].runner.root).length+1)
-    if(file.project.name){
+    let name = file.moduleId.substring(String(file[0].runner.root).length + 1)
+    if (file.project.name) {
       name = `[${file.project.name}] ${name}`
     }
     console.log(name)

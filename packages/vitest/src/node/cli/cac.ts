@@ -306,8 +306,8 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       watch: false,
       run: true,
     })
-    if(!options.filesOnly){
-      const { tests, errors } = await ctx.collect(cliFilters.map(normalize));
+    if (!options.filesOnly) {
+      const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
 
       if (errors.length) {
         console.error('\nThere were unhandled errors during test collection')
@@ -318,11 +318,10 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       }
 
       processCollected(ctx, tests, options)
-    }else{
-
-      const files = await ctx.listFiles(cliFilters.map(normalize));
+    }
+    else {
+      const files = await ctx.listFiles(cliFilters.map(normalize))
       outputFileList(files, options)
-      
     }
 
     await ctx.close()
