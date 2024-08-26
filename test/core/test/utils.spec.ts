@@ -275,9 +275,9 @@ describe('objectAttr', () => {
 describe('objDisplay', () => {
   test.each`
   value | expected
-  ${'a'.repeat(100)} | ${`'${'a'.repeat(37)}…'`}
-  ${'🐱'.repeat(100)} | ${`'${'🐱'.repeat(18)}…'`}
-  ${`a${'🐱'.repeat(100)}…`} | ${`'a${'🐱'.repeat(18)}…'`}
+  ${'a'.repeat(100)} | ${`${'a'.repeat(37)}…`}
+  ${'🐱'.repeat(100)} | ${`${'🐱'.repeat(18)}…`}
+  ${`a${'🐱'.repeat(100)}…`} | ${`a${'🐱'.repeat(18)}…`}
   `('Do not truncate strings anywhere but produce valid unicode strings for $value', ({ value, expected }) => {
     // encodeURI can be used to detect invalid strings including invalid code-points
     // note: our code should not split surrogate pairs, but may split graphemes

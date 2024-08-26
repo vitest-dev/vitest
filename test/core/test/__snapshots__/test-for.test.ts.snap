@@ -114,6 +114,24 @@ exports[`object 'case2' 1`] = `
 }
 `;
 
+exports[`object case1 1`] = `
+{
+  "args": {
+    "k": "case1",
+  },
+  "myFixture": 1234,
+}
+`;
+
+exports[`object case2 1`] = `
+{
+  "args": {
+    "k": "case2",
+  },
+  "myFixture": 1234,
+}
+`;
+
 exports[`object destructure 'case1' 1`] = `
 {
   "myFixture": 1234,
@@ -122,6 +140,20 @@ exports[`object destructure 'case1' 1`] = `
 `;
 
 exports[`object destructure 'case2' 1`] = `
+{
+  "myFixture": 1234,
+  "v": "case2",
+}
+`;
+
+exports[`object destructure case1 1`] = `
+{
+  "myFixture": 1234,
+  "v": "case1",
+}
+`;
+
+exports[`object destructure case2 1`] = `
 {
   "myFixture": 1234,
   "v": "case2",
@@ -139,6 +171,26 @@ exports[`template 'x' true 1`] = `
 `;
 
 exports[`template 'y' false 1`] = `
+{
+  "args": {
+    "a": "y",
+    "b": false,
+  },
+  "myFixture": 1234,
+}
+`;
+
+exports[`template x true 1`] = `
+{
+  "args": {
+    "a": "x",
+    "b": true,
+  },
+  "myFixture": 1234,
+}
+`;
+
+exports[`template y false 1`] = `
 {
   "args": {
     "a": "y",

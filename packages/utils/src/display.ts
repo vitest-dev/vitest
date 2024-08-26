@@ -185,6 +185,10 @@ export function objDisplay(obj: unknown, options: LoupeOptions = {}): string {
   const str = inspect(obj, options)
   const type = Object.prototype.toString.call(obj)
 
+  if (type === '[object String]') {
+    return str.slice(1, -1)
+  }
+
   if (options.truncate && str.length >= options.truncate) {
     if (type === '[object Function]') {
       const fn = obj as () => void
