@@ -6,6 +6,8 @@ import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig } from './types/config'
 import type { VitestContext } from './context'
+import type { Logger } from './logger'
+import type { VitestPackageInstaller } from './packageInstaller'
 
 export interface Vitest {
   readonly config: ResolvedConfig
@@ -15,6 +17,8 @@ export interface Vitest {
   readonly runner: VitestRunner
   readonly context: VitestContext
   readonly snapshot: VitestSnapshot
+  readonly logger: Logger
+  readonly packageInstaller: VitestPackageInstaller
 
   onClose(cb: () => void): void
 
