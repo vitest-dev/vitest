@@ -46,9 +46,12 @@ export class BlobReporter implements Reporter {
       (project) => {
         return [
           project.getName(),
-          [...project.server.moduleGraph.idToModuleMap.entries()].map((mod) => {
-            return [mod[0], mod[1].file, mod[1].url] as const
-          }),
+          [...project.server.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
+            if (!mod[1].file) {
+              return null
+            }
+            return [mod[0], mod[1].file, mod[1].url]
+          }).filter(x => x != null),
         ]
       },
     )
@@ -133,9 +136,6 @@ export async function readBlobs(
         return
       }
       moduleIds.forEach(([moduleId, file, url]) => {
-        if (!file) {
-          return
-        }
         const moduleNode = project.server.moduleGraph.createFileOnlyEntry(file)
         moduleNode.url = url
         moduleNode.id = moduleId
@@ -169,11 +169,13 @@ type MergeReport = [
   coverage: unknown,
 ]
 
+type SerializedModuleNode = [
+  id: string,
+  file: string,
+  url: string,
+]
+
 type MergeReportModuleKeys = [
   projectName: string,
-  modules: [
-    id: string,
-    file: string | null,
-    url: string,
-  ][],
+  modules: SerializedModuleNode[],
 ]
