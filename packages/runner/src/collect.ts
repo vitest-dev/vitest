@@ -17,7 +17,7 @@ import { getHooks, setHooks } from './map'
 import { collectorContext } from './context'
 import { runSetupFiles } from './setup'
 
-const now = Date.now
+const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
 export async function collectTests(
   paths: string[],
