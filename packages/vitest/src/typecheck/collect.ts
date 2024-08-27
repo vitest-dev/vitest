@@ -212,6 +212,8 @@ export async function collectTests(
   interpretTaskModes(
     file,
     ctx.config.testNamePattern,
+    // TODO: make sure you're not screwing stuff up
+    undefined,
     hasOnly,
     false,
     ctx.config.allowOnly,

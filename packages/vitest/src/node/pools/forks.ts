@@ -101,11 +101,13 @@ export function createForksPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpec[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { channel, cleanup } = createChildProcessChannel(project)
       const workerId = ++id
       const data: ContextRPC = {
@@ -129,7 +131,7 @@ export function createForksPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(', ')}.`,
+            `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
@@ -138,7 +140,7 @@ export function createForksPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error
@@ -263,11 +265,10 @@ export function createForksPool(
             // Always run environments isolated between each other
             await pool.recycleWorkers()
 
-            const filenames = files.map(f => f.file)
             await runFiles(
               files[0].project,
               getConfig(files[0].project),
-              filenames,
+              files.map(f => f.file),
               files[0].environment,
               invalidates,
             )

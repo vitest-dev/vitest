@@ -8,8 +8,9 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { getNames, getTests } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../integrations/coverage'
+import { groupBy } from '../../utils/base'
 import { createVitest } from '../create'
-import { FilesNotFoundError, GitNotFoundError } from '../errors'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
 
 export interface CliOptions extends UserConfig {
@@ -100,6 +101,11 @@ export async function startVitest(
 
     if (e instanceof GitNotFoundError) {
       ctx.logger.error(e.message)
+      return ctx
+    }
+
+    if (e instanceof IncludeTaskLocationDisabledError) {
+      ctx.logger.printError(e, { verbose: false })
       return ctx
     }
 
@@ -276,6 +282,53 @@ export function formatCollectedAsString(files: File[]) {
       return name
     })
   }).flat()
+}
+
+export function parseFilter(f: string) {
+  const colonIndex = f.indexOf(':')
+  if (colonIndex === -1) {
+    return { filename: f }
+  }
+
+  const [parsedFilename, lineNumber] = [
+    f.substring(0, colonIndex),
+    f.substring(colonIndex + 1),
+  ]
+
+  if (lineNumber.match(/^\d+$/)) {
+    return {
+      filename: parsedFilename,
+      lineNumber: Number.parseInt(lineNumber),
+    }
+  }
+  else if (lineNumber.includes('-')) {
+    throw new Error('Range line numbers are not allowed')
+  }
+  else {
+    return { filename: f }
+  }
+}
+
+interface Filter {
+  filename: string
+  lineNumber?: undefined | number
+}
+
+export function groupFilters(filters: Filter[]) {
+  const groupedFilters_ = groupBy(filters, f => f.filename)
+  const groupedFilters = Object.fromEntries(Object.entries(groupedFilters_)
+    .map((entry) => {
+      const [filename, filters] = entry
+      const testLocations = filters.map(f => f.lineNumber)
+
+      return [
+        filename,
+        testLocations.filter(l => l !== undefined) as number[],
+      ]
+    }),
+  )
+
+  return groupedFilters
 }
 
 const envPackageNames: Record<
