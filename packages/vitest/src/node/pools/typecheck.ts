@@ -7,6 +7,7 @@ import { hasFailed } from '../../utils/tasks'
 import type { Vitest } from '../core'
 import type { ProcessPool, WorkspaceSpec } from '../pool'
 import type { WorkspaceProject } from '../workspace'
+import { getWorkspaceProjectFromTestProject } from '../reported-test-project'
 
 export function createTypecheckPool(ctx: Vitest): ProcessPool {
   const promisesMap = new WeakMap<WorkspaceProject, DeferPromise<void>>()
@@ -104,10 +105,14 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     for (const name in specsByProject) {
       const project = specsByProject[name][0].project
       const files = specsByProject[name].map(spec => spec.moduleId)
-      const checker = await createWorkspaceTypechecker(project.workspaceProject, files)
+      const workspaceProject = getWorkspaceProjectFromTestProject(project)
+      const checker = await createWorkspaceTypechecker(
+        workspaceProject,
+        files,
+      )
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project.workspaceProject, checker.getTestFiles())
+      ctx.state.collectFiles(workspaceProject, checker.getTestFiles())
       await ctx.report('onCollected')
     }
   }

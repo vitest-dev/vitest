@@ -32,6 +32,7 @@ import type { Reporter } from './types/reporter'
 import type { CoverageProvider } from './types/coverage'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
 import type { TestSpecification } from './spec'
+import { getWorkspaceProjectFromTestProject } from './reported-test-project'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -466,7 +467,10 @@ export class Vitest {
       }))
     }
 
-    await addImports(spec.project.workspaceProject, spec.moduleId)
+    await addImports(
+      getWorkspaceProjectFromTestProject(spec.project),
+      spec.moduleId,
+    )
     deps.delete(spec.moduleId)
 
     return deps
@@ -549,7 +553,7 @@ export class Vitest {
   }
 
   async initializeGlobalSetup(paths: TestSpecification[]) {
-    const projects = new Set(paths.map(spec => spec.project.workspaceProject))
+    const projects = new Set(paths.map(spec => getWorkspaceProjectFromTestProject(spec.project)))
     const coreProject = this.getCoreWorkspaceProject()
     if (!projects.has(coreProject)) {
       projects.add(coreProject)

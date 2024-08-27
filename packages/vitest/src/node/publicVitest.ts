@@ -1,7 +1,7 @@
 /* eslint-disable ts/method-signature-style */
 import type { ModuleNode, ViteDevServer } from 'vite'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import type { TestProject } from './reported-workspace-project'
+import type { TestProject } from './reported-test-project'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig } from './types/config'
@@ -39,7 +39,6 @@ interface VitestRunner {
   // Vitest starts a standalone runner, will react on watch changes, it doesn't run tests
   start(): Promise<void>
 
-  // Vitest will still start in a standalone mode if `watch` is `true`
   run(): Promise<TestModule[]>
   runModules(moduleNames: string[]): Promise<TestModule[]>
   runTests(filters: TestSpecification[]): Promise<TestModule[]>

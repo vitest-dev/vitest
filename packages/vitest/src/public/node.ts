@@ -66,7 +66,7 @@ export { TestCase, TestModule, TestSuite } from '../node/reporters/reported-task
  * @deprecated Use `TestModule` instead
  */
 export const TestFile = _TestFile
-export { TestProject } from '../node/reported-workspace-project'
+export { TestProject } from '../node/reported-test-project'
 export type {
   TestCollection,
 

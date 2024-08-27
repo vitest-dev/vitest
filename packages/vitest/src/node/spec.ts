@@ -1,5 +1,5 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { TestProject } from './reported-workspace-project'
+import type { TestProject } from './reported-test-project'
 import type { Pool } from './types/pool-options'
 import type { WorkspaceProject } from './workspace'
 
@@ -53,9 +53,9 @@ export class TestSpecification {
    * @deprecated
    */
   *[Symbol.iterator]() {
-    yield this.project.workspaceProject
-    yield this.moduleId
-    yield this.pool
+    yield this[0]
+    yield this[1]
+    yield this[2]
   }
 }
 

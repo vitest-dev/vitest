@@ -38,7 +38,7 @@ import { MocksPlugins } from './plugins/mocks'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
 import type { Vitest } from './core'
-import { TestProject } from './reported-workspace-project'
+import { TestProject } from './reported-test-project'
 import { TestSpecification } from './spec'
 import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 
