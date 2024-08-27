@@ -10,6 +10,7 @@ import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import { existsSync, promises as fs } from 'node:fs'
+import { resolve } from 'node:path'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, slash, toArray } from '@vitest/utils'
@@ -24,8 +25,9 @@ import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { VitestCache } from './cache'
+import { groupFilters, parseFilter } from './cli/cli-api'
 import { resolveConfig } from './config/resolveConfig'
-import { FilesNotFoundError, GitNotFoundError } from './errors'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool, getFilePoolName } from './pool'
@@ -402,6 +404,13 @@ export class Vitest {
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
     )
+
+    if (
+      !this.config.includeTaskLocation
+      && files.some(spec => spec.testLocations && spec.testLocations.length !== 0)
+    ) {
+      throw new IncludeTaskLocationDisabledError()
+    }
 
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
@@ -1086,21 +1095,49 @@ export class Vitest {
   }
 
   public async globTestSpecs(filters: string[] = []) {
+    const parsedFilters = filters.map(f => parseFilter(f))
+    const testLocations = groupFilters(parsedFilters.map(
+      f => ({ ...f, filename: resolve(f.filename) }),
+    ))
+
+    // Key is file and val sepcifies whether we have matched this file with testLocation
+    const testLocHasMatch: { [f: string]: boolean } = {}
+
     const files: WorkspaceSpec[] = []
     await Promise.all(this.projects.map(async (project) => {
-      const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
+      const { testFiles, typecheckTestFiles } = await project.globTestFiles(
+        parsedFilters.map(f => f.filename),
+      )
+
       testFiles.forEach((file) => {
         const pool = getFilePoolName(project, file)
-        const spec = project.createSpec(file, pool)
+        const loc = testLocations[file]
+        testLocHasMatch[file] = true
+
+        const spec = project.createSpec(file, pool, loc)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec = project.createSpec(file, 'typescript')
+        const loc = testLocations[file]
+        testLocHasMatch[file] = true
+
+        const spec = project.createSpec(file, 'typescript', loc)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
     }))
+
+    Object.entries(testLocations).forEach(([filepath, loc]) => {
+      if (loc.length !== 0 && !testLocHasMatch[filepath]) {
+        const rel = relative(this.config.dir || this.config.root, filepath)
+
+        this.logger.printError(new Error(`Couldn\'t find file "${rel}".\n`
+          + 'Note when specifying the test location you have to specify the full test filename.',
+        ))
+      }
+    })
+
     return files
   }
 

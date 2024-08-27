@@ -40,6 +40,11 @@ export interface VitestRunnerConfig {
   diffOptions?: DiffOptions
 }
 
+export interface FileSpec {
+  filepath: string
+  testLocations: number[] | undefined
+}
+
 export type VitestRunnerImportSource = 'collect' | 'setup'
 
 export interface VitestRunnerConstructor {
