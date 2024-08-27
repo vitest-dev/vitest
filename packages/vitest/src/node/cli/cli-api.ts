@@ -194,7 +194,7 @@ export function outputFileList(files: WorkspaceSpec[], options: CliOptions) {
     return outputJsonFileList(files, options)
   }
 
-  return formatFilesAsString(files).map(file => console.log(file))
+  return formatFilesAsString(files, options).map(file => console.log(file))
 }
 
 function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions) {
