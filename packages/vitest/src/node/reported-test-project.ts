@@ -72,8 +72,6 @@ export class TestProject {
     )
   }
 
-  public workspaceProject = null
-
   /**
    * Serialize the project to JSON so it can be transferred between workers.
    */
