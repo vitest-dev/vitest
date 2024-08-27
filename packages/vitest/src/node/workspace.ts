@@ -305,7 +305,9 @@ export class WorkspaceProject {
     })
   }
 
-  async isTargetFile(id: string, source?: string): Promise<boolean> {
+  isTargetFile(id: string, source: string): boolean
+  isTargetFile(id: string): Promise<boolean>
+  isTargetFile(id: string, source?: string): Promise<boolean> | boolean {
     const relativeId = relative(this.config.dir || this.config.root, id)
     if (mm.isMatch(relativeId, this.config.exclude)) {
       return false
@@ -317,8 +319,14 @@ export class WorkspaceProject {
       this.config.includeSource?.length
       && mm.isMatch(relativeId, this.config.includeSource)
     ) {
-      source = source || (await fs.readFile(id, 'utf-8'))
-      return this.isInSourceTestFile(source)
+      if (source) {
+        return this.isInSourceTestFile(source)
+      }
+
+      return (async () => {
+        const source = await fs.readFile(id, 'utf-8')
+        return this.isInSourceTestFile(source)
+      })()
     }
     return false
   }

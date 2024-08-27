@@ -33,6 +33,7 @@ import type { CoverageProvider } from './types/coverage'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
 import type { TestSpecification } from './spec'
 import { getWorkspaceProjectFromTestProject } from './reported-test-project'
+import { _Vitest } from './publicVitest'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -71,6 +72,8 @@ export class Vitest {
   isFirstRun = true
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
+
+  public publicVitest!: _Vitest
 
   public packageInstaller: VitestPackageInstaller
 
@@ -117,10 +120,6 @@ export class Vitest {
     this.cache = new VitestCache(this.version)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch) {
-      this.registerWatcher()
-    }
-
     this.vitenode = new ViteNodeServer(server, this.config.server)
 
     const node = this.vitenode
@@ -142,8 +141,8 @@ export class Vitest {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
         await serverRestart(...args)
         // watcher is recreated on restart
-        this.unregisterWatcher()
-        this.registerWatcher()
+        this.publicVitest.runner.stop()
+        this.publicVitest.runner.start()
       }
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
@@ -154,8 +153,8 @@ export class Vitest {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
           await serverRestart()
           // watcher is recreated on restart
-          this.unregisterWatcher()
-          this.registerWatcher()
+          this.publicVitest.runner.stop()
+          this.publicVitest.runner.start()
         }
       })
     }
@@ -187,6 +186,21 @@ export class Vitest {
 
     if (this.config.testNamePattern) {
       this.configOverride.testNamePattern = this.config.testNamePattern
+    }
+
+    this.publicVitest = new _Vitest(
+      this,
+      this.config,
+      this.projects.map(project => project.testProject),
+      server,
+      this.vitenode.moduleGraph,
+      this.logger,
+    )
+
+    // TODO: if created only for the public API, do not call this
+    // or move this call outside?
+    if (this.config.watch) {
+      this.publicVitest.runner.start()
     }
   }
 
