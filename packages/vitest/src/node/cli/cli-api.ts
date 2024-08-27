@@ -190,7 +190,6 @@ export function processCollected(ctx: Vitest, files: File[], options: CliOptions
 }
 
 export function outputFileList(files: WorkspaceSpec[], options: CliOptions) {
-
   if (typeof options.json !== 'undefined') {
     return outputJsonFileList(files, options)
   }
