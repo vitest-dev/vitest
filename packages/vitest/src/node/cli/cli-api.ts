@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { File, Suite, Task } from '@vitest/runner'
 import { CoverageProviderMap } from '../../integrations/coverage'
@@ -223,7 +223,7 @@ function formatFilesAsJSON(files: WorkspaceSpec[]) {
 
 function formatFilesAsString(files: WorkspaceSpec[], options: CliOptions) {
   return files.map((file) => {
-    let name = resolve(options.root || process.cwd(), file.moduleId)
+    let name = relative(options.root || process.cwd(), file.moduleId)
     if (file.project.name) {
       name = `[${file.project.name}] ${name}`
     }
