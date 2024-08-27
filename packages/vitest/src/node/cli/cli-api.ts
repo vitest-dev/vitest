@@ -223,7 +223,7 @@ function formatFilesAsJSON(files: WorkspaceSpec[]) {
 
 function formatFilesAsString(files: WorkspaceSpec[]) {
   return files.map((file) => {
-    let name = file.moduleId.substring(String(file[0].runner.root).length + 1)
+    let name = resolve(options.root || process.cwd(), file.moduleId)
     if (file.project.name) {
       name = `[${file.project.name}] ${name}`
     }
