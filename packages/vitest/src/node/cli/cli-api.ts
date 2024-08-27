@@ -221,7 +221,7 @@ function formatFilesAsJSON(files: WorkspaceSpec[]) {
   })
 }
 
-function formatFilesAsString(files: WorkspaceSpec[]) {
+function formatFilesAsString(files: WorkspaceSpec[], options: CliOptions) {
   return files.map((file) => {
     let name = resolve(options.root || process.cwd(), file.moduleId)
     if (file.project.name) {
