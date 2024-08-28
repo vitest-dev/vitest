@@ -362,7 +362,7 @@ Vitest doesn't provide any file system mocking API out of the box. You can use `
 
 ### Example
 
-To automatially redirect every `fs` call to `memfs`, you can create `__mocks__/fs.cjs` and `__mocks__/fs/promises.cjs` files at the root of your project:
+To automatically redirect every `fs` call to `memfs`, you can create `__mocks__/fs.cjs` and `__mocks__/fs/promises.cjs` files at the root of your project:
 
 ::: code-group
 ```ts [__mocks__/fs.cjs]

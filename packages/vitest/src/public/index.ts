@@ -85,7 +85,7 @@ import type {
   BenchmarkUserOptions as BenchmarkUserOptions_,
 } from '../node/types/benchmark'
 
-import type { SerializedSpec } from '../runtime/types/utils'
+import type { SerializedTestSpecification } from '../runtime/types/utils'
 
 export {
   suite,
@@ -339,9 +339,9 @@ export type {
   BenchTask,
 } from '../runtime/types/benchmark'
 
-/** @deprecated use `SerializedSpec` instead */
-export type SerializableSpec = SerializedSpec
-export type { SerializedSpec }
+/** @deprecated use `SerializedTestSpecification` instead */
+export type SerializableSpec = SerializedTestSpecification
+export type { SerializedTestSpecification }
 
 /** @deprecated import from `vitest/node` instead */
 export type BenchmarkUserOptions = BenchmarkUserOptions_

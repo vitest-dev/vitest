@@ -27,7 +27,8 @@ import { hasFailed, hasTests } from './utils/tasks'
 import { PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
 
-const now = Date.now
+const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
+const unixNow = Date.now
 
 function updateSuiteHookState(
   suite: Task,
@@ -181,7 +182,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
 
   test.result = {
     state: 'run',
-    startTime: start,
+    startTime: unixNow(),
     retryCount: 0,
   }
   updateTask(test, runner)
@@ -366,7 +367,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
   suite.result = {
     state: 'run',
-    startTime: start,
+    startTime: unixNow(),
   }
 
   updateTask(suite, runner)

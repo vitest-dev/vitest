@@ -237,7 +237,7 @@ importers:
         version: 2.0.5(vitest@packages+vitest)
       jsdom:
         specifier: latest
-        version: 24.1.1
+        version: 25.0.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
@@ -330,7 +330,7 @@ importers:
         version: 5.16.5
       jsdom:
         specifier: latest
-        version: 24.1.1
+        version: 25.0.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
@@ -973,8 +973,8 @@ importers:
         version: 2.3.0
     devDependencies:
       '@antfu/install-pkg':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.4.1
+        version: 0.4.1
       '@edge-runtime/vm':
         specifier: ^4.0.1
         version: 4.0.1
@@ -1042,8 +1042,8 @@ importers:
         specifier: ^14.12.3
         version: 14.12.3
       jsdom:
-        specifier: ^24.1.1
-        version: 24.1.1
+        specifier: ^25.0.0
+        version: 25.0.0
       local-pkg:
         specifier: ^0.5.0
         version: 0.5.0
@@ -1306,7 +1306,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 14.12.3
+        version: 15.0.0
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1336,7 +1336,7 @@ importers:
         version: 3.4.37(typescript@5.5.4)
       webdriverio:
         specifier: latest
-        version: 9.0.5
+        version: 9.0.7
 
   test/global-setup:
     devDependencies:
@@ -1433,7 +1433,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 14.12.3
+        version: 15.0.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1466,7 +1466,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 9.0.5
+        version: 9.0.7
 
   test/workspaces:
     devDependencies:
@@ -1481,7 +1481,7 @@ importers:
         version: 3.2.0
       jsdom:
         specifier: latest
-        version: 24.1.1
+        version: 25.0.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1632,8 +1632,8 @@ packages:
   '@antfu/install-pkg@0.3.4':
     resolution: {integrity: sha512-xmYFuDsaS5hlqVSJYVIzBGnUBhZR6NpwelQx/qr9wHTenqMF14YhsexWADcFyMCKwf/vApnvLTfEEnaOBvo5SA==}
 
-  '@antfu/install-pkg@0.4.0':
-    resolution: {integrity: sha512-vI73C0pFA9L+5v+djh0WSLXb8qYQGH5fX8nczaFe1OTI/8Fh03JS1Mov1V7urb6P3A2cBlBqZNjJIKv54+zVRw==}
+  '@antfu/install-pkg@0.4.1':
+    resolution: {integrity: sha512-T7yB5QNG29afhWVkVq7XeIMBa5U/vs9mX69YqayXypPRmYzUmzwnYltplHmPtZ4HPCn+sQKeXW8I47wCbuBOjw==}
 
   '@antfu/ni@0.22.1':
     resolution: {integrity: sha512-5STu7QHsLYWpt+K/+zRcMOIUnG51lOhnqPInImXGyC6PMHtkrZQjbqZ/R3GW8XdTYOnKiT77+R09Tl4fzuFK5w==}
@@ -4318,8 +4318,8 @@ packages:
     resolution: {integrity: sha512-RED2vcdX5Zdd6r+K+aWcjK4douxjJY4LP/8YvvavgqM0TURd5PDI0Y7IEz7+BIJOT4Uh+3atZawIN9/3yWFeag==}
     engines: {node: ^16.13 || >=18}
 
-  '@wdio/config@9.0.5':
-    resolution: {integrity: sha512-+dxUU2SLXLkqQhVU/wauU1VgqEKIFubOyUb6B0ueAMpM1aolc62zhE9D9rrQYbjkPOM7nFsjuuGR5+9+zaoZ6g==}
+  '@wdio/config@9.0.6':
+    resolution: {integrity: sha512-WsACM5QjT3ZsoPVqHroYt8pOkZx4/6PTdNKm45VL8NHhQe5w9IFbl1fKxFHQ7ZkPI3F+EFvFvubO8puJ0OcSmQ==}
     engines: {node: '>=18'}
 
   '@wdio/logger@8.28.0':
@@ -4371,8 +4371,8 @@ packages:
     resolution: {integrity: sha512-leYcCUSaAdLUCVKqRKNgMCASPOUo/VvOTKETiZ/qpdY2azCBt/KnLugtiycCzakeYg6Kp+VIjx5fkm0M7y4qhA==}
     engines: {node: ^16.13 || >=18}
 
-  '@wdio/utils@9.0.5':
-    resolution: {integrity: sha512-FOA+t2ixLZ9a7eEH4IZXDsR/ABPTFOTslVzRvIDIkXcxGys3Cn3LQP2tpcIV1NxI+7OOAD0fIZ9Ig3gPBoVZRQ==}
+  '@wdio/utils@9.0.6':
+    resolution: {integrity: sha512-cnPXeW/sfqyKFuRRmADRZDNvFwEBMr7j7wwWLO6q5opoW++dwOdJW4WV0wDZbPcXTtGFCSrGCDLLdGcTAWMb3A==}
     engines: {node: '>=18'}
 
   '@yeger/debounce@2.0.9':
@@ -6217,6 +6217,10 @@ packages:
     resolution: {integrity: sha512-vsYlEs3E9gLwA1Hp+w3qzu+RUDFf4VTT8cyKqVICoZ2k7WM++Qyd2LwzyTi5bqMJFiIC/vNpTDYuxdreENRK/g==}
     engines: {node: '>=16.0.0'}
 
+  happy-dom@15.0.0:
+    resolution: {integrity: sha512-DsvANUcxxY20iCo3Yllm7dqwzPVPduGfVFxa7mONwMBLczFeQgkN0LpDir1kIY322JMh+hrcPV3aGLyHCESDlA==}
+    engines: {node: '>=18.0.0'}
+
   has-bigints@1.0.2:
     resolution: {integrity: sha512-tSvCKtBr9lkF0Ex0aQiP9N+OpV4zi2r/Nee5VkRDbaqv35RLYMzbwQfFSZZH0kR+Rd6302UJZ2p/bJCEoR3VoQ==}
 
@@ -6724,8 +6728,8 @@ packages:
       canvas:
         optional: true
 
-  jsdom@24.1.1:
-    resolution: {integrity: sha512-5O1wWV99Jhq4DV7rCLIoZ/UIhyQeDR7wHVyZAHAshbrvZsLs+Xzz7gtwnlJTJDjleiTKh54F4dXrX70vJQTyJQ==}
+  jsdom@25.0.0:
+    resolution: {integrity: sha512-OhoFVT59T7aEq75TVw9xxEfkXgacpqAhQaYgP9y/fDqWQCMB/b1H66RfmPm/MaeaAIU9nDwMOVTlPN51+ao6CQ==}
     engines: {node: '>=18'}
     peerDependencies:
       canvas: ^2.11.2
@@ -7508,8 +7512,8 @@ packages:
   package-json-from-dist@1.0.0:
     resolution: {integrity: sha512-dATvCeZN/8wQsGywez1mzHtTlP22H8OEfPrVMLNr4/eGa+ijtLn/6M5f0dY8UKNrC2O9UCU6SSoG3qRKnt7STw==}
 
-  package-manager-detector@0.1.2:
-    resolution: {integrity: sha512-iePyefLTOm2gEzbaZKSW+eBMjg+UYsQvUKxmvGXAQ987K16efBg10MxIjZs08iyX+DY2/owKY9DIdu193kX33w==}
+  package-manager-detector@0.2.0:
+    resolution: {integrity: sha512-E385OSk9qDcXhcM9LNSe4sdhx8a9mAPrZ4sMLW+tmxl5ZuGtPUcdFu+MPP2jbgiWAZ6Pfe5soGFMd+0Db5Vrog==}
 
   package-name-regex@2.0.6:
     resolution: {integrity: sha512-gFL35q7kbE/zBaPA3UKhp2vSzcPYx2ecbYuwv1ucE9Il6IIgBDweBlH8D68UFGZic2MkllKa2KHCfC1IQBQUYA==}
@@ -8629,8 +8633,8 @@ packages:
   tinyexec@0.1.4:
     resolution: {integrity: sha512-Ba2ELcNnnWkgqnAJBouhcsDsYitbD9LIAVNSz3746u50f+tlF3wO0uB3uqyz8NHFSTpv23qtT47XGDw8pXW5DA==}
 
-  tinyexec@0.2.0:
-    resolution: {integrity: sha512-au8dwv4xKSDR+Fw52csDo3wcDztPdne2oM1o/7LFro4h6bdFmvyUAeAfX40pwDtzHgRFqz1XWaUqgKS2G83/ig==}
+  tinyexec@0.3.0:
+    resolution: {integrity: sha512-tVGE0mVJPGb0chKhqmsoosjsS+qUnJVGJpZgsHYQcGoPlG3B51R3PouqTgEGH2Dc9jjFyOqOpix6ZHNMXp1FZg==}
 
   tinyglobby@0.2.0:
     resolution: {integrity: sha512-+clyYQfAnNlt5a1x7CCQ6RLuTIztDfDAl6mAANvqRUlz6sVy5znCzJOhais8G6oyUyoeeaorLopO3HptVP8niA==}
@@ -9306,8 +9310,8 @@ packages:
     resolution: {integrity: sha512-GoRR94m3yL8tWC9Myf+xIBSdVK8fi1ilZgEZZaYT8+XIWewR02dvrC6rml+/2ZjXUQzeee0RFGDwk9IC7cyYrg==}
     engines: {node: ^16.13 || >=18}
 
-  webdriver@9.0.5:
-    resolution: {integrity: sha512-+xkdfbmG1IZrXxiPwab450Xuh9QClOcxTJ6tnde0rzxlPxdUqZqzwuMtM+VXZybxF4yCLrJWbeT0BpwJFAz1nA==}
+  webdriver@9.0.7:
+    resolution: {integrity: sha512-0PN4omqCGlgi3RG0LyrQXr0RUmlDCenNtpN+dfzikfYoV+CHiCw2GMnZp2XCuYUnU01MaCKgRQxLuGobyZov+A==}
     engines: {node: '>=18'}
 
   webdriverio@8.32.2:
@@ -9328,8 +9332,8 @@ packages:
       devtools:
         optional: true
 
-  webdriverio@9.0.5:
-    resolution: {integrity: sha512-80zhuLBT5W5wiLNZ0maT1cVUrxmwpMuBgCprwZjI8lFe+KUhGLClrJXud/RrVT9x9rDCYa6pGCtQ4UqA+2U+sw==}
+  webdriverio@9.0.7:
+    resolution: {integrity: sha512-/6CvJkKpUWYbX/59PNJCHXGLPwulQ/bXZwlIUrsF6MWKdf8Eb6yTaXkMJBaBy5x496b50PQcXkbe+qpfsnqXsg==}
     engines: {node: '>=18'}
     peerDependencies:
       puppeteer-core: ^22.3.0
@@ -9765,10 +9769,10 @@ snapshots:
     dependencies:
       tinyexec: 0.1.4
 
-  '@antfu/install-pkg@0.4.0':
+  '@antfu/install-pkg@0.4.1':
     dependencies:
-      package-manager-detector: 0.1.2
-      tinyexec: 0.2.0
+      package-manager-detector: 0.2.0
+      tinyexec: 0.3.0
 
   '@antfu/ni@0.22.1': {}
 
@@ -12980,11 +12984,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/config@9.0.5':
+  '@wdio/config@9.0.6':
     dependencies:
       '@wdio/logger': 9.0.4
       '@wdio/types': 9.0.4
-      '@wdio/utils': 9.0.5
+      '@wdio/utils': 9.0.6
       decamelize: 6.0.0
       deepmerge-ts: 7.1.0
       glob: 10.4.1
@@ -13075,7 +13079,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@wdio/utils@9.0.5':
+  '@wdio/utils@9.0.6':
     dependencies:
       '@puppeteer/browsers': 2.3.1
       '@wdio/logger': 9.0.4
@@ -15348,6 +15352,12 @@ snapshots:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
 
+  happy-dom@15.0.0:
+    dependencies:
+      entities: 4.5.0
+      webidl-conversions: 7.0.0
+      whatwg-mimetype: 3.0.0
+
   has-bigints@1.0.2: {}
 
   has-flag@3.0.0: {}
@@ -15870,7 +15880,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  jsdom@24.1.1:
+  jsdom@25.0.0:
     dependencies:
       cssstyle: 4.0.1
       data-urls: 5.0.0
@@ -16792,7 +16802,7 @@ snapshots:
 
   package-json-from-dist@1.0.0: {}
 
-  package-manager-detector@0.1.2: {}
+  package-manager-detector@0.2.0: {}
 
   package-name-regex@2.0.6: {}
 
@@ -18075,7 +18085,7 @@ snapshots:
 
   tinyexec@0.1.4: {}
 
-  tinyexec@0.2.0: {}
+  tinyexec@0.3.0: {}
 
   tinyglobby@0.2.0:
     dependencies:
@@ -18836,15 +18846,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriver@9.0.5:
+  webdriver@9.0.7:
     dependencies:
       '@types/node': 20.14.15
       '@types/ws': 8.5.12
-      '@wdio/config': 9.0.5
+      '@wdio/config': 9.0.6
       '@wdio/logger': 9.0.4
       '@wdio/protocols': 9.0.4
       '@wdio/types': 9.0.4
-      '@wdio/utils': 9.0.5
+      '@wdio/utils': 9.0.6
       deepmerge-ts: 7.1.0
       ws: 8.18.0
     transitivePeerDependencies:
@@ -18918,16 +18928,16 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriverio@9.0.5:
+  webdriverio@9.0.7:
     dependencies:
       '@types/node': 20.14.15
       '@types/sinonjs__fake-timers': 8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)
-      '@wdio/config': 9.0.5
+      '@wdio/config': 9.0.6
       '@wdio/logger': 9.0.4
       '@wdio/protocols': 9.0.4
       '@wdio/repl': 9.0.4
       '@wdio/types': 9.0.4
-      '@wdio/utils': 9.0.5
+      '@wdio/utils': 9.0.6
       archiver: 7.0.1
       aria-query: 5.3.0
       cheerio: 1.0.0
@@ -18946,7 +18956,7 @@ snapshots:
       rgb2hex: 0.2.5
       serialize-error: 11.0.3
       urlpattern-polyfill: 10.0.0
-      webdriver: 9.0.5
+      webdriver: 9.0.7
     transitivePeerDependencies:
       - bufferutil
       - supports-color
