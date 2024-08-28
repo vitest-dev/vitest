@@ -2,6 +2,13 @@
 
 exports[`should fail .dot-folder/dot-test.test.ts > .dot-folder/dot-test.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
+exports[`should fail async-assertion.test.ts > async-assertion.test.ts 1`] = `
+"AssertionError: expected 'xx' to be 'zz' // Object.is equality
+AssertionError: expected 'xx' to be 'yy' // Object.is equality
+AssertionError: expected 'xx' to be 'zz' // Object.is equality
+AssertionError: expected 'xx' to be 'yy' // Object.is equality"
+`;
+
 exports[`should fail concurrent-suite-deadlock.test.ts > concurrent-suite-deadlock.test.ts 1`] = `"Error: Test timed out in 500ms."`;
 
 exports[`should fail concurrent-test-deadlock.test.ts > concurrent-test-deadlock.test.ts 1`] = `"Error: Test timed out in 500ms."`;
