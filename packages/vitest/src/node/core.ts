@@ -15,7 +15,6 @@ import { workspacesFiles as workspaceFiles } from '../constants'
 import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
-import type { SerializedSpec } from '../runtime/types/utils'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createPool, getFilePoolName } from './pool'
@@ -32,6 +31,7 @@ import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { Reporter } from './types/reporter'
 import type { CoverageProvider } from './types/coverage'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
+import type { TestSpecification } from './spec'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -299,7 +299,7 @@ export class Vitest {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
     }
 
-    const { files, errors, coverages } = await readBlobs(this.config.mergeReports, this.projects)
+    const { files, errors, coverages } = await readBlobs(this.version, this.config.mergeReports, this.projects)
 
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
@@ -541,7 +541,7 @@ export class Vitest {
     return specs
   }
 
-  async initializeGlobalSetup(paths: WorkspaceSpec[]) {
+  async initializeGlobalSetup(paths: TestSpecification[]) {
     const projects = new Set(paths.map(spec => spec.project.workspaceProject))
     const coreProject = this.getCoreWorkspaceProject()
     if (!projects.has(coreProject)) {
@@ -563,20 +563,14 @@ export class Vitest {
     this.distPath = join(vitestDir, 'dist')
   }
 
-  async runFiles(specs: WorkspaceSpec[], allTestsRun: boolean) {
+  async runFiles(specs: TestSpecification[], allTestsRun: boolean) {
     await this.initializeDistPath()
 
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
     await this.report('onPathsCollected', filepaths)
-    await this.report('onSpecsCollected', specs.map(
-      spec =>
-        [{
-          name: spec.project.config.name,
-          root: spec.project.config.root,
-        }, spec.moduleId, { pool: spec.pool }] satisfies SerializedSpec,
-    ))
+    await this.report('onSpecsCollected', specs.map(spec => spec.toJSON()))
 
     // previous run
     await this.runningPromise
@@ -601,7 +595,7 @@ export class Vitest {
       await this.initializeGlobalSetup(specs)
 
       try {
-        await this.pool.runTests(specs, invalidates)
+        await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
       }
       catch (err) {
         this.state.catchError(err, 'Unhandled Error')

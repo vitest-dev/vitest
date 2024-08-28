@@ -1,19 +1,19 @@
+import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './reported-workspace-project'
 import type { Pool } from './types/pool-options'
 import type { WorkspaceProject } from './workspace'
 
-export class WorkspaceSpec {
-  // backwards compatibility
+export class TestSpecification {
   /**
-   * @deprecated
+   * @deprecated use `project` instead
    */
   public readonly 0: WorkspaceProject
   /**
-   * @deprecated
+   * @deprecated use `moduleId` instead
    */
   public readonly 1: string
   /**
-   * @deprecated
+   * @deprecated use `pool` instead
    */
   public readonly 2: { pool: Pool }
 
@@ -35,6 +35,17 @@ export class WorkspaceSpec {
     this.moduleId = moduleId
     this.pool = pool
     // this.location = location
+  }
+
+  toJSON(): SerializedTestSpecification {
+    return [
+      {
+        name: this.project.config.name,
+        root: this.project.config.root,
+      },
+      this.moduleId,
+      { pool: this.pool },
+    ]
   }
 
   /**

@@ -172,7 +172,7 @@
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@antfu/install-pkg": "^0.4.0",
+    "@antfu/install-pkg": "^0.4.1",
     "@edge-runtime/vm": "^4.0.1",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/debug": "^4.1.12",
@@ -195,7 +195,7 @@
     "flatted": "^3.3.1",
     "get-tsconfig": "^4.7.6",
     "happy-dom": "^14.12.3",
-    "jsdom": "^24.1.1",
+    "jsdom": "^25.0.0",
     "local-pkg": "^0.5.0",
     "log-update": "^5.0.1",
     "micromatch": "^4.0.7",
