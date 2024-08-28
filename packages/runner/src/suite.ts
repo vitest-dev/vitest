@@ -487,7 +487,13 @@ function withAwaitAsyncAssetions<T extends (...args: any[]) => any>(fn: T, task:
     await fn(...args)
     // some async expect will be added to this array, in case user forget to await them
     if (task.promises) {
-      await Promise.all(task.promises)
+      const result = await Promise.allSettled(task.promises)
+      const errors = result
+        .map(r => (r.status === 'rejected' ? r.reason : undefined))
+        .filter(Boolean)
+      if (errors.length) {
+        throw errors
+      }
     }
   }) as T
 }
