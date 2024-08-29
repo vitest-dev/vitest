@@ -86,6 +86,17 @@ vitest list filename.spec.ts -t="some-test" --json=./file.json
 
 If `--json` flag doesn't receive a value, it will output the JSON into stdout.
 
+You also can pass down `--filesOnly` flag to print the test files only:
+
+```bash
+vitest list --filesOnly
+```
+
+```txt
+tests/test1.test.ts
+tests/test2.test.ts
+```
+
 ## Options
 
 ::: tip
