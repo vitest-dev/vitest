@@ -35,6 +35,12 @@ export default defineConfig({
       name: browser,
       headless: false,
       provider,
+      importmap: JSON.stringify({
+        imports: {
+          "lib-root/": "./demo/lib-dir/",
+          "embed-lib": "./demo/lib-dir/embed-lib.html",
+        },
+      }),
       isolate: false,
       testerScripts: [
         {
