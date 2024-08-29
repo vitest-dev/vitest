@@ -63,6 +63,14 @@ export function viteNodeHmrPlugin(): Plugin {
         _send(payload)
         emitter.emit('message', payload)
       }
+      // @ts-ignore Vite 6 compat
+      const environments = server.environments;
+      if (environments) {
+        environments.ssr.hot.send = function (payload: any) {
+          _send(payload)
+          emitter.emit('message', payload)
+        }
+      }
     },
   }
 }
