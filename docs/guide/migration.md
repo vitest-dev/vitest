@@ -297,6 +297,14 @@ Jest has their [globals API](https://jestjs.io/docs/api) enabled by default. Vit
 
 If you decide to keep globals disabled, be aware that common libraries like [`testing-library`](https://testing-library.com/) will not run auto DOM [cleanup](https://testing-library.com/docs/svelte-testing-library/api/#cleanup).
 
+### `spy.mockReset`
+
+Jest's [`mockReset`](https://jestjs.io/docs/mock-function-api#mockfnmockreset) replaces the mock implementation with an
+empty function that returns `undefined`.
+
+Vitest's [`mockReset`](/api/mock#mockreset) resets the mock implementation to its original.
+That is, resetting a mock created by `vi.fn(impl)` will reset the mock implementation to `impl`.
+
 ### Module Mocks
 
 When mocking a module in Jest, the factory argument's return value is the default export. In Vitest, the factory argument has to return an object with each export explicitly defined. For example, the following `jest.mock` would have to be updated as follows:
