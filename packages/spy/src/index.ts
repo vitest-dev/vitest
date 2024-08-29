@@ -185,18 +185,32 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * Clears all information about every call. After calling it, all properties on `.mock` will return an empty state. This method does not reset implementations.
    *
    * It is useful if you need to clean up mock between different assertions.
+   *
+   * @see mockReset
+   * @see mockRestore
    */
   mockClear(): this
   /**
-   * Does what `mockClear` does and makes inner implementation an empty function (returning `undefined` when invoked). This also resets all "once" implementations.
+   * Does what `mockClear` does and resets inner implementation to the original function.
+   * This also resets all "once" implementations.
    *
-   * This is useful when you want to completely reset a mock to the default state.
+   * Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+   * Resetting a mock from `vi.fn(impl)` will set implementation to `impl`.
+   *
+   * This is useful when you want to reset a mock to its original state.
+   *
+   * @see mockClear
+   * @see mockRestore
    */
   mockReset(): this
   /**
-   * Does what `mockReset` does and restores inner implementation to the original function.
+   * Does what `mockReset` does and restores original descriptors of spied-on objects.
    *
-   * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
+   * Note that restoring a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+   * Restoring a mock from `vi.fn(impl)` will restore implementation to `impl`.
+   *
+   * @see mockClear
+   * @see mockReset
    */
   mockRestore(): void
   /**
@@ -508,7 +522,7 @@ function enhanceSpy<T extends Procedure>(
 
   stub.mockReset = () => {
     stub.mockClear()
-    implementation = (() => undefined) as T
+    implementation = undefined
     onceImplementations = []
     return stub
   }
@@ -516,7 +530,6 @@ function enhanceSpy<T extends Procedure>(
   stub.mockRestore = () => {
     stub.mockReset()
     state.restore()
-    implementation = undefined
     return stub
   }
 
