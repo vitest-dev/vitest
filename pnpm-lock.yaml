@@ -889,9 +889,6 @@ importers:
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
-      tinyrainbow:
-        specifier: ^1.2.0
-        version: 1.2.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
@@ -902,6 +899,9 @@ importers:
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
+      tinyrainbow:
+        specifier: ^1.2.0
+        version: 1.2.0
 
   packages/vitest:
     dependencies:
