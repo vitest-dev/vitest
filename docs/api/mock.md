@@ -200,8 +200,8 @@ function mockReset(): MockInstance<T>
 Does what `mockClear` does and resets inner implementation to the original function.
 This also resets all "once" implementations.
 
-Note that restoring a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
-Restoring a mock from `vi.fn(impl)` will restore implementation to `impl`.
+Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+resetting a mock from `vi.fn(impl)` will restore implementation to `impl`.
 
 This is useful when you want to reset a mock to its original state.
 
