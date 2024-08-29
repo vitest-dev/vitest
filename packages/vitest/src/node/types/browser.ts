@@ -170,6 +170,11 @@ export interface BrowserConfigOptions {
    * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
+
+  /**
+   * importmap as JSON string to be injected at head level
+   */
+  importmap?: string
 }
 
 export interface BrowserCommandContext {

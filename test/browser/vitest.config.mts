@@ -70,6 +70,14 @@ export default defineConfig({
       commands: {
         myCustomCommand,
       },
+      importmap:`
+{
+    "imports": {
+        "lib-root/": "./demo/lib-dir/",
+        "embed-lib": "./demo/lib-dir/embed-lib.html"
+    }
+}
+`
     },
     alias: {
       '#src': resolve(dir, './src'),
