@@ -37,8 +37,8 @@ export default defineConfig({
       provider,
       importmap: JSON.stringify({
         imports: {
-          "lib-root/": "./demo/lib-dir/",
-          "embed-lib": "./demo/lib-dir/embed-lib.html",
+          'lib-root/': './demo/lib-dir/',
+          'embed-lib': './demo/lib-dir/embed-lib.html',
         },
       }),
       isolate: false,
