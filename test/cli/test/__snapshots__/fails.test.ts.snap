@@ -4,8 +4,6 @@ exports[`should fail .dot-folder/dot-test.test.ts > .dot-folder/dot-test.test.ts
 
 exports[`should fail async-assertion.test.ts > async-assertion.test.ts 1`] = `
 "AssertionError: expected 'xx' to be 'zz' // Object.is equality
-AssertionError: expected 'xx' to be 'yy' // Object.is equality
-AssertionError: expected 'xx' to be 'zz' // Object.is equality
 AssertionError: expected 'xx' to be 'yy' // Object.is equality"
 `;
 
