@@ -57,7 +57,7 @@ export async function run(
           && (config.poolOptions?.forks?.isolate ?? true)
 
         if (isIsolatedThreads || isIsolatedForks) {
-          workerState.mockMap.clear()
+          executor.mocker.reset()
           resetModules(workerState.moduleCache, true)
         }
 

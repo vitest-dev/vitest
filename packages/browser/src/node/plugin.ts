@@ -9,8 +9,8 @@ import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vit
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { toArray } from '@vitest/utils'
 import { defaultBrowserPort } from 'vitest/config'
+import { dynamicImportPlugin } from '@vitest/mocker/node'
 import BrowserContext from './plugins/pluginContext'
-import DynamicImport from './plugins/pluginDynamicImport'
 import type { BrowserServer } from './server'
 import { resolveOrchestrator } from './serverOrchestrator'
 import { resolveTester } from './serverTester'
@@ -306,7 +306,9 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       },
     },
     BrowserContext(browserServer),
-    DynamicImport(),
+    dynamicImportPlugin({
+      globalThisAccessor: '"__vitest_browser_runner__"',
+    }),
     {
       name: 'vitest:browser:config',
       enforce: 'post',

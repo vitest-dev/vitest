@@ -9,6 +9,7 @@ import type {
   Node as _Node,
 } from 'estree'
 import { walk as eswalk } from 'estree-walker'
+import type { Rollup } from 'vite'
 
 export type * from 'estree'
 
@@ -59,7 +60,7 @@ export function isNodeInPattern(node: _Node): node is Property {
  * Except this is using acorn AST
  */
 export function esmWalker(
-  root: Node,
+  root: Rollup.ProgramNode,
   { onIdentifier, onImportMeta, onDynamicImport, onCallExpression }: Visitors,
 ): void {
   const parentStack: Node[] = []
@@ -115,7 +116,7 @@ export function esmWalker(
     }
   }
 
-  eswalk(root, {
+  eswalk(root as Node, {
     enter(node, parent) {
       if (node.type === 'ImportDeclaration') {
         return this.skip()

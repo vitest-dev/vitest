@@ -13,7 +13,6 @@ import type { ViteNodeRunnerOptions } from 'vite-node'
 import { normalize, relative } from 'pathe'
 import { processError } from '@vitest/utils/error'
 import { distDir } from '../paths'
-import type { MockMap } from '../types/mocker'
 import type { WorkerGlobalState } from '../types/worker'
 import { VitestMocker } from './mocker'
 import type { ExternalModulesExecutor } from './external-executor'
@@ -21,7 +20,6 @@ import type { ExternalModulesExecutor } from './external-executor'
 const { readFileSync } = fs
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
-  mockMap: MockMap
   moduleDirectories?: string[]
   state: WorkerGlobalState
   context?: vm.Context
@@ -40,7 +38,6 @@ export async function createVitestExecutor(options: ExecuteOptions) {
 const externalizeMap = new Map<string, string>()
 
 export interface ContextExecutorOptions {
-  mockMap?: MockMap
   moduleCache?: ModuleCacheMap
   context?: vm.Context
   externalModulesExecutor?: ExternalModulesExecutor
@@ -138,9 +135,6 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     },
     get moduleCache() {
       return state().moduleCache
-    },
-    get mockMap() {
-      return state().mockMap
     },
     get interopDefault() {
       return state().config.deps.interopDefault

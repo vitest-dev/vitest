@@ -95,6 +95,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.8",
     "@types/ws": "^8.5.12",
+    "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
