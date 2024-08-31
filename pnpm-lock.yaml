@@ -905,9 +905,6 @@ importers:
 
   packages/vitest:
     dependencies:
-      '@ampproject/remapping':
-        specifier: ^2.3.0
-        version: 2.3.0
       '@vitest/browser':
         specifier: workspace:*
         version: link:../browser
@@ -972,6 +969,9 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
     devDependencies:
+      '@ampproject/remapping':
+        specifier: ^2.3.0
+        version: 2.3.0
       '@antfu/install-pkg':
         specifier: ^0.4.1
         version: 0.4.1
