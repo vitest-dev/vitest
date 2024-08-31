@@ -796,6 +796,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   outputJson: null,
   json: null,
   provide: null,
+  filesOnly: null,
 }
 
 export const benchCliOptionsConfig: Pick<
@@ -814,10 +815,13 @@ export const benchCliOptionsConfig: Pick<
 
 export const collectCliOptionsConfig: Pick<
   VitestCLIOptions,
-  'json'
+  'json' | 'filesOnly'
 > = {
   json: {
     description: 'Print collected tests as JSON or write to a file (Default: false)',
     argument: '[true/path]',
+  },
+  filesOnly: {
+    description: 'Print only test files with out the test cases',
   },
 }
