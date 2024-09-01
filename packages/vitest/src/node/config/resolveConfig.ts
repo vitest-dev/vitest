@@ -213,9 +213,8 @@ export function resolveConfig(
       && resolved.poolOptions?.threads?.singleThread
     const isSingleFork
       = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
-    const isBrowser = resolved.browser.enabled
 
-    if (resolved.fileParallelism && !isSingleThread && !isSingleFork && !isBrowser) {
+    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(
         `You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`,

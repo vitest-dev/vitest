@@ -184,8 +184,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return page
   }
 
-  async openPage(contextId: string, url: string) {
+  async openPage(contextId: string, url: string, beforeNavigate?: () => Promise<void>) {
     const browserPage = await this.openBrowserPage(contextId)
+    await beforeNavigate?.()
     await browserPage.goto(url)
   }
 

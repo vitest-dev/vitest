@@ -37,6 +37,23 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       )
     }
 
+    async function setBreakpoint(contextId: string, file: string) {
+      if (!project.config.inspector.waitForDebugger) {
+        return
+      }
+
+      if (!provider.getCDPSession) {
+        throw new Error('Unable to set breakpoint, CDP not supported')
+      }
+
+      const session = await provider.getCDPSession(contextId)
+      await session.send('Debugger.enable', {})
+      await session.send('Debugger.setBreakpointByUrl', {
+        lineNumber: 0,
+        urlRegex: escapePathToRegexp(file),
+      })
+    }
+
     const filesPerThread = Math.ceil(files.length / threadsCount)
 
     // TODO: make it smarter,
@@ -83,7 +100,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         const url = new URL('/', origin)
         url.searchParams.set('contextId', contextId)
         const page = provider
-          .openPage(contextId, url.toString())
+          .openPage(contextId, url.toString(), () => setBreakpoint(contextId, files[0]))
           .then(() => waitPromise)
         promises.push(page)
       }
@@ -144,4 +161,8 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     runTests: files => runWorkspaceTests('run', files),
     collectTests: files => runWorkspaceTests('collect', files),
   }
+}
+
+function escapePathToRegexp(path: string): string {
+  return path.replace(/[/\\.?*()^${}|[\]+]/g, '\\$&')
 }
