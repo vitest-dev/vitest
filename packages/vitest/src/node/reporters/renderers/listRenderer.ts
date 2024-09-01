@@ -7,12 +7,7 @@ import { F_RIGHT } from '../../../utils/figures'
 import type { Logger } from '../../logger'
 import type { VitestRunMode } from '../../types/config'
 import type { Benchmark, BenchmarkResult } from '../../../runtime/types/benchmark'
-import {
-  formatProjectName,
-  getCols,
-  getHookStateSymbol,
-  getStateSymbol,
-} from './utils'
+import { formatProjectName, getCols, getHookStateSymbol, getStateSymbol } from './utils'
 
 export interface ListRendererOptions {
   renderSucceed?: boolean
@@ -159,10 +154,11 @@ function renderTree(
         suffix += c.yellow(
           ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
         )
-      } else {
+      }
+      else {
         suffix += c.green(
-          ` ${Math.round(task.result.duration)}${c.dim("ms")}`
-        );
+          ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
+        )
       }
     }
 
