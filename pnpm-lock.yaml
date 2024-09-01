@@ -1039,8 +1039,8 @@ importers:
         specifier: ^4.7.6
         version: 4.7.6
       happy-dom:
-        specifier: ^14.12.3
-        version: 14.12.3
+        specifier: ^15.7.3
+        version: 15.7.3
       jsdom:
         specifier: ^25.0.0
         version: 25.0.0
@@ -1291,7 +1291,7 @@ importers:
         version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
-        version: 5.1.2(vite@5.4.0(@types/node@20.14.15)(terser@5.22.0))(vue@3.4.37(typescript@5.5.4))
+        version: 5.1.3(vite@5.4.0(@types/node@20.14.15)(terser@5.22.0))(vue@3.4.37(typescript@5.5.4))
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -1306,7 +1306,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 15.0.0
+        version: 15.7.3
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1433,7 +1433,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 15.0.0
+        version: 15.7.3
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -4046,6 +4046,13 @@ packages:
       vite: ^5.4.0
       vue: ^3.2.25
 
+  '@vitejs/plugin-vue@5.1.3':
+    resolution: {integrity: sha512-3xbWsKEKXYlmX82aOHufFQVnkbMC/v8fLpWwh6hWOUrK5fbbtBh9Q/WWse27BFgSy2/e2c0fz5Scgya9h2GLhw==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      vite: ^5.4.0
+      vue: ^3.2.25
+
   '@vitest/browser@2.0.5':
     resolution: {integrity: sha512-VbOYtu/6R3d7ASZREcrJmRY/sQuRFO9wMVsEDqfYbWiJRh2fDNi8CL1Csn7Ux31pOcPmmM5QvzFCMpiojvVh8g==}
     peerDependencies:
@@ -6213,12 +6220,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@14.12.3:
-    resolution: {integrity: sha512-vsYlEs3E9gLwA1Hp+w3qzu+RUDFf4VTT8cyKqVICoZ2k7WM++Qyd2LwzyTi5bqMJFiIC/vNpTDYuxdreENRK/g==}
-    engines: {node: '>=16.0.0'}
-
-  happy-dom@15.0.0:
-    resolution: {integrity: sha512-DsvANUcxxY20iCo3Yllm7dqwzPVPduGfVFxa7mONwMBLczFeQgkN0LpDir1kIY322JMh+hrcPV3aGLyHCESDlA==}
+  happy-dom@15.7.3:
+    resolution: {integrity: sha512-w3RUaYNXFJX5LiNVhOJLK4GqCB1bFj1FvELtpon3HrN8gUpS09V0Vvm4/BBRRj7mLUE1+ch8PKv1JxEp/0IHjA==}
     engines: {node: '>=18.0.0'}
 
   has-bigints@1.0.2:
@@ -12645,6 +12648,11 @@ snapshots:
       vite: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
       vue: 3.4.37(typescript@5.5.4)
 
+  '@vitejs/plugin-vue@5.1.3(vite@5.4.0(@types/node@20.14.15)(terser@5.22.0))(vue@3.4.37(typescript@5.5.4))':
+    dependencies:
+      vite: 5.4.0(@types/node@20.14.15)(terser@5.22.0)
+      vue: 3.4.37(typescript@5.5.4)
+
   '@vitest/browser@2.0.5(playwright@1.46.1)(typescript@5.5.4)(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
     dependencies:
       '@testing-library/dom': 10.4.0
@@ -15346,13 +15354,7 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@14.12.3:
-    dependencies:
-      entities: 4.5.0
-      webidl-conversions: 7.0.0
-      whatwg-mimetype: 3.0.0
-
-  happy-dom@15.0.0:
+  happy-dom@15.7.3:
     dependencies:
       entities: 4.5.0
       webidl-conversions: 7.0.0
