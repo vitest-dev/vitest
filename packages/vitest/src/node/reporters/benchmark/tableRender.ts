@@ -137,8 +137,10 @@ export function renderTable(
       suffix += c.dim(c.gray(' [skipped]'))
     }
 
-    if (duration != null && duration > options.slowTestThreshold) {
-      suffix += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
+    if (duration != null) {
+      const color = duration > options.slowTestThreshold ? c.yellow : c.green
+
+      suffix += color(` ${Math.round(duration)}${c.dim('ms')}`)
     }
 
     if (options.showHeap && task.result?.heap != null) {
