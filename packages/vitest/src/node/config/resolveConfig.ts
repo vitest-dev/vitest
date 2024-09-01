@@ -213,8 +213,9 @@ export function resolveConfig(
       && resolved.poolOptions?.threads?.singleThread
     const isSingleFork
       = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
+    const isBrowser = resolved.browser.enabled
 
-    if (resolved.fileParallelism && !isSingleThread && !isSingleFork) {
+    if (resolved.fileParallelism && !isSingleThread && !isSingleFork && !isBrowser) {
       const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
       throw new Error(
         `You cannot use ${inspectOption} without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"`,
@@ -222,15 +223,25 @@ export function resolveConfig(
     }
   }
 
-  // In browser-mode v8-coverage works only with playwright + chromium
-  if (resolved.browser.enabled && resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
-    if (!(resolved.browser.provider === 'playwright' && resolved.browser.name === 'chromium')) {
-      const browserConfig = { browser: { provider: resolved.browser.provider, name: resolved.browser.name } }
+  // Browser-mode "Playwright + Chromium" only features:
+  if (resolved.browser.enabled && !(resolved.browser.provider === 'playwright' && resolved.browser.name === 'chromium')) {
+    const browserConfig = { browser: { provider: resolved.browser.provider, name: resolved.browser.name } }
 
+    if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
       throw new Error(
         `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
         + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
         + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
+      )
+    }
+
+    if (resolved.inspect || resolved.inspectBrk) {
+      const inspectOption = `--inspect${resolved.inspectBrk ? '-brk' : ''}`
+
+      throw new Error(
+        `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
+        + `\n\n...or disable ${inspectOption}\n`,
       )
     }
   }
