@@ -159,6 +159,10 @@ function renderTree(
         suffix += c.yellow(
           ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
         )
+      } else {
+        suffix += c.green(
+          ` ${Math.round(task.result.duration)}${c.dim("ms")}`
+        );
       }
     }
 
