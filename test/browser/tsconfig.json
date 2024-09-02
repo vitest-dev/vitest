@@ -9,7 +9,8 @@
     "types": [
       "vite/client",
       "@vitest/browser/providers/playwright",
-      "vitest-browser-react"
+      "vitest-browser-react",
+      "vitest/import-meta"
     ],
     "esModuleInterop": true
   }

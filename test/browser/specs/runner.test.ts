@@ -23,12 +23,19 @@ describe('running browser tests', async () => {
       console.error(stderr)
     })
 
-    expect(browserResultJson.testResults).toHaveLength(18)
-    expect(passedTests).toHaveLength(16)
+    expect(browserResultJson.testResults).toHaveLength(19)
+    expect(passedTests).toHaveLength(17)
     expect(failedTests).toHaveLength(2)
 
     expect(stderr).not.toContain('has been externalized for browser compatibility')
     expect(stderr).not.toContain('Unhandled Error')
+  })
+
+  test('runs in-source tests', () => {
+    expect(stdout).toContain('src/actions.ts')
+    const actionsTest = passedTests.find(t => t.name.includes('/actions.ts'))
+    expect(actionsTest).toBeDefined()
+    expect(actionsTest.assertionResults).toHaveLength(1)
   })
 
   test('correctly prints error', () => {
