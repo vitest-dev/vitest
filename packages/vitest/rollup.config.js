@@ -152,21 +152,6 @@ function licensePlugin() {
       // https://github.com/rollup/rollup/blob/master/build-plugins/generate-license-file.js
       // MIT Licensed https://github.com/rollup/rollup/blob/master/LICENSE-CORE.md
       const coreLicense = fs.readFileSync(resolve(dir, '../../LICENSE'))
-      function sortLicenses(licenses) {
-        let withParenthesis = []
-        let noParenthesis = []
-        licenses.forEach((license) => {
-          if (/^\(/.test(license)) {
-            withParenthesis.push(license)
-          }
-          else {
-            noParenthesis.push(license)
-          }
-        })
-        withParenthesis = withParenthesis.sort()
-        noParenthesis = noParenthesis.sort()
-        return [...noParenthesis, ...withParenthesis]
-      }
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
         .filter(({ name }) => !name?.startsWith('@vitest/'))
@@ -259,4 +244,20 @@ function onwarn(message) {
     return
   }
   console.error(message)
+}
+
+function sortLicenses(licenses) {
+  let withParenthesis = []
+  let noParenthesis = []
+  licenses.forEach((license) => {
+    if (/^\(/.test(license)) {
+      withParenthesis.push(license)
+    }
+    else {
+      noParenthesis.push(license)
+    }
+  })
+  withParenthesis = withParenthesis.sort()
+  noParenthesis = noParenthesis.sort()
+  return [...noParenthesis, ...withParenthesis]
 }

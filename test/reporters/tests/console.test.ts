@@ -25,7 +25,7 @@ test('should print logs correctly', async () => {
   expect(stderr).toBeTruthy()
 
   expect(stdout).toContain(
-`stdout | console.test.ts
+    `stdout | console.test.ts
 global stdin beforeAll
 
 stdout | console.test.ts > suite
@@ -36,7 +36,7 @@ nested suite stdin beforeAll`,
   )
 
   expect(stdout).toContain(
-`stdout | console.test.ts > suite > nested suite
+    `stdout | console.test.ts > suite > nested suite
 nested suite stdin afterAll
 
 stdout | console.test.ts > suite
@@ -47,7 +47,7 @@ global stdin afterAll`,
   )
 
   expect(stderr).toContain(
-`stderr | console.test.ts
+    `stderr | console.test.ts
 global stderr beforeAll
 
 stderr | console.test.ts > suite

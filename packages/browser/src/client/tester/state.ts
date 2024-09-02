@@ -63,10 +63,6 @@ function createCdp() {
 
   const listeners: Record<string, Function[]> = {}
 
-  const error = (err: unknown) => {
-    window.dispatchEvent(new ErrorEvent('error', { error: err }))
-  }
-
   const cdp = {
     send(method: string, params?: Record<string, any>) {
       return rpc().sendCdpEvent(contextId, method, params)
@@ -112,4 +108,8 @@ function createCdp() {
   }
 
   return cdp
+}
+
+function error(err: unknown) {
+  window.dispatchEvent(new ErrorEvent('error', { error: err }))
 }

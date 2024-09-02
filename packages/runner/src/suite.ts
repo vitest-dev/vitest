@@ -482,6 +482,7 @@ function createSuiteCollector(
 }
 
 function createSuite() {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,
