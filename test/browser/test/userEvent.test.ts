@@ -865,6 +865,69 @@ describe.each([
   })
 })
 
+describe.runIf(server.provider !== 'webdriverio')('uploading files', async () => {
+  test('can upload an instance of File', async () => {
+    const file = new File(['hello'], 'hello.png', { type: 'image/png' })
+    const input = document.createElement('input')
+    input.type = 'file'
+    document.body.appendChild(input)
+    await userEvent.upload(input, file)
+    await expect.poll(() => input.files.length).toBe(1)
+
+    const uploadedFile = input.files[0]
+    expect(uploadedFile.name).toBe('hello.png')
+    expect(uploadedFile.type).toBe('image/png')
+  })
+
+  test('can upload several instances of File', async () => {
+    const file1 = new File(['hello1'], 'hello1.png', { type: 'image/png' })
+    const file2 = new File(['hello2'], 'hello2.png', { type: 'image/png' })
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    document.body.appendChild(input)
+    await userEvent.upload(input, [file1, file2])
+    await expect.poll(() => input.files.length).toBe(2)
+
+    const uploadedFile1 = input.files[0]
+    expect(uploadedFile1.name).toBe('hello1.png')
+    expect(uploadedFile1.type).toBe('image/png')
+
+    const uploadedFile2 = input.files[1]
+    expect(uploadedFile2.name).toBe('hello2.png')
+    expect(uploadedFile2.type).toBe('image/png')
+  })
+
+  test('can upload a file by filepath relative to test file', async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    document.body.appendChild(input)
+    await userEvent.upload(input, '../src/button.css')
+    await expect.poll(() => input.files.length).toBe(1)
+
+    const uploadedFile = input.files[0]
+    expect(uploadedFile.name).toBe('button.css')
+    expect(uploadedFile.type).toBe('text/css')
+  })
+
+  test('can upload several files by filepath relative to test file', async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    document.body.appendChild(input)
+    await userEvent.upload(input, ['../src/button.css', '../package.json'])
+    await expect.poll(() => input.files.length).toBe(2)
+
+    const uploadedFile1 = input.files[0]
+    expect(uploadedFile1.name).toBe('button.css')
+    expect(uploadedFile1.type).toBe('text/css')
+
+    const uploadedFile2 = input.files[1]
+    expect(uploadedFile2.name).toBe('package.json')
+    expect(uploadedFile2.type).toBe('application/json')
+  })
+})
+
 function createShadowRoot() {
   const div = document.createElement('div')
   const shadowRoot = div.attachShadow({ mode: 'open' })

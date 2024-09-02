@@ -76,6 +76,27 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
   }
 
+  public async upload(files: string | string[] | File | File[]): Promise<void> {
+    const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
+      if (typeof file === 'string') {
+        return file
+      }
+      const bas64String = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
+        reader.readAsDataURL(file)
+      })
+
+      return {
+        name: file.name,
+        mimeType: file.type,
+        base64: bas64String,
+      }
+    })
+    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise))
+  }
+
   public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {
     return this.triggerCommand<void>(
       '__vitest_dragAndDrop',
