@@ -58,10 +58,6 @@ class WebdriverIOLocator extends Locator {
     return this.triggerCommand('__vitest_selectOptions', this.selector, values)
   }
 
-  public async upload() {
-    throw new Error('Method not implemented.')
-  }
-
   protected locator(selector: string) {
     return new WebdriverIOLocator(`${this._pwSelector} >> ${selector}`, this._container)
   }

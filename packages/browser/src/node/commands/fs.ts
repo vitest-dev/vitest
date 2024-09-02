@@ -1,7 +1,8 @@
 import fs, { promises as fsp } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { isFileServingAllowed } from 'vitest/node'
 import type { BrowserCommand, WorkspaceProject } from 'vitest/node'
+import mime from 'mime/lite'
 import type { BrowserCommands } from '../../../context'
 
 function assertFileAccess(path: string, project: WorkspaceProject) {
@@ -45,4 +46,15 @@ export const removeFile: BrowserCommand<
   const filepath = resolve(dirname(testPath), path)
   assertFileAccess(filepath, project)
   await fsp.rm(filepath)
+}
+
+export const _fileInfo: BrowserCommand<[path: string, encoding: BufferEncoding]> = async ({ project, testPath = process.cwd() }, path, encoding) => {
+  const filepath = resolve(dirname(testPath), path)
+  assertFileAccess(filepath, project)
+  const content = await fsp.readFile(filepath, encoding || 'base64')
+  return {
+    content,
+    basename: basename(filepath),
+    mime: mime.getType(filepath),
+  }
 }

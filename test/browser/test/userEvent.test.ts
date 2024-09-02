@@ -865,8 +865,8 @@ describe.each([
   })
 })
 
-describe.runIf(server.provider !== 'webdriverio')('uploading files', async () => {
-  test('can upload an instance of File', async () => {
+describe('uploading files', async () => {
+  test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
     input.type = 'file'
@@ -879,7 +879,7 @@ describe.runIf(server.provider !== 'webdriverio')('uploading files', async () =>
     expect(uploadedFile.type).toBe('image/png')
   })
 
-  test('can upload several instances of File', async () => {
+  test.skipIf(server.provider === 'webdriverio')('can upload several instances of File', async () => {
     const file1 = new File(['hello1'], 'hello1.png', { type: 'image/png' })
     const file2 = new File(['hello2'], 'hello2.png', { type: 'image/png' })
     const input = document.createElement('input')

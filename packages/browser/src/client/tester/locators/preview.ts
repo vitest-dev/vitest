@@ -81,11 +81,9 @@ class PreviewLocator extends Locator {
     return userEvent.type(this.element(), text)
   }
 
-  upload(file: string | string[] | File | File[]): Promise<void> {
-    if (typeof file === 'string' || (Array.isArray(file) && file.some(f => typeof f === 'string'))) {
-      throw new TypeError('The "preview" provider doesn\'t support uploading a file by path. Provide a File object instead.')
-    }
-    return userEvent.upload(this.element() as HTMLElement, file as File | File[])
+  async upload(file: string | string[] | File | File[]): Promise<void> {
+    // we override userEvent.upload to support this in pluginContext.ts
+    return userEvent.upload(this.element() as HTMLElement, file as File[])
   }
 
   selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {

@@ -238,7 +238,7 @@ References:
 - **Type:** `(element: Element | Locator, text: string, options?: UserEventTypeOptions) => Promise<void>`
 
 ::: warning
-If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead.
+If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead for better performance.
 :::
 
 The `type` method implements `@testing-library/user-event`'s [`type`](https://testing-library.com/docs/user-event/utility/#type) utility built on top of [`keyboard`](https://testing-library.com/docs/user-event/keyboard) API.
@@ -363,7 +363,7 @@ test('hovers logo element', async () => {
 
   await userEvent.hover(logo)
   // or you can access it directly on the locator
-  await page.hover()
+  await logo.hover()
 })
 ```
 
@@ -391,7 +391,7 @@ test('unhover logo element', async () => {
 
   await userEvent.unhover(logo)
   // or you can access it directly on the locator
-  await page.unhover()
+  await logo.unhover()
 })
 ```
 
@@ -400,6 +400,44 @@ References:
 - [Playwright `locator.hover` API](https://playwright.dev/docs/api/class-locator#locator-hover)
 - [WebdriverIO `element.moveTo` API](https://webdriver.io/docs/api/element/moveTo/)
 - [testing-library `hover` API](https://testing-library.com/docs/user-event/convenience/#hover)
+
+## userEvent.upload
+
+```ts
+function upload(
+  element: Element | Locator,
+  files: string[] | string | File[] | File,
+): Promise<void>
+```
+
+Change a file input element to have the specified files.
+
+```ts
+import { page, userEvent } from '@vitest/browser/context'
+
+test('can upload a file', async () => {
+  const input = page.getByRole('button', { name: /Upload files/ })
+
+  const file = new File(['file'], 'file.png', { type: 'image/png' })
+
+  await userEvent.upload(input, file)
+  // or you can access it directly on the locator
+  await input.upload(file)
+
+  // you can also use file paths relative to the test file
+  await userEvent.upload(input, '../fixtures/file.png')
+})
+```
+
+::: warning
+`webdriverio` provider supports this command only in `chrome` and `edge` browsers. It also only supports string types at the moment.
+:::
+
+References:
+
+- [Playwright `locator.setInputFiles` API](https://playwright.dev/docs/api/class-locator#locator-set-input-files)
+- [WebdriverIO `browser.uploadFile` API](https://webdriver.io/docs/api/browser/uploadFile)
+- [testing-library `upload` API](https://testing-library.com/docs/user-event/utility/#upload)
 
 ## userEvent.dragAndDrop
 

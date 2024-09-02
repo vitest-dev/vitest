@@ -103,6 +103,7 @@
     "birpc": "0.2.17",
     "flatted": "^3.3.1",
     "ivya": "^1.1.1",
+    "mime": "^4.0.4",
     "pathe": "^1.1.2",
     "periscopic": "^4.0.2",
     "playwright": "^1.46.0",
