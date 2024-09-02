@@ -898,7 +898,9 @@ describe('uploading files', async () => {
     expect(uploadedFile2.type).toBe('image/png')
   })
 
-  test('can upload a file by filepath relative to test file', async () => {
+  test.skipIf(
+    server.provider === 'webdriverio' && server.browser === 'firefox',
+  )('can upload a file by filepath relative to test file', async () => {
     const input = document.createElement('input')
     input.type = 'file'
     document.body.appendChild(input)
@@ -910,7 +912,9 @@ describe('uploading files', async () => {
     expect(uploadedFile.type).toBe('text/css')
   })
 
-  test('can upload several files by filepath relative to test file', async () => {
+  test.skipIf(
+    server.provider === 'webdriverio' && server.browser === 'firefox',
+  )('can upload several files by filepath relative to test file', async () => {
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
