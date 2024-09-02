@@ -150,7 +150,6 @@
     }
   },
   "dependencies": {
-    "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:^",
@@ -172,6 +171,7 @@
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
+    "@ampproject/remapping": "^2.3.0",
     "@antfu/install-pkg": "^0.4.1",
     "@edge-runtime/vm": "^4.0.1",
     "@sinonjs/fake-timers": "11.1.0",
