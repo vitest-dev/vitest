@@ -35,6 +35,9 @@ export function removeUndefinedValues<T extends Record<string, any>>(
   return obj
 }
 
+/**
+ * @deprecated import from `@vitest/utils` instead
+ */
 export function objectAttr(
   source: any,
   path: string,
