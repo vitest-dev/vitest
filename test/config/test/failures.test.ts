@@ -85,7 +85,7 @@ test('v8 coverage provider throws when not playwright + chromium', async () => {
       })
 
       expect(stderr).toMatch(
-`Error: @vitest/coverage-v8 does not work with
+        `Error: @vitest/coverage-v8 does not work with
 {
   "browser": {
     "provider": "${provider}",
@@ -116,7 +116,7 @@ Use either:
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
   expect(stderr).toMatch(
-`Error: @vitest/coverage-v8 does not work with
+    `Error: @vitest/coverage-v8 does not work with
 {
   "browser": {
     "provider": "webdriverio",

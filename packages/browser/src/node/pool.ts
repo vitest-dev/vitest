@@ -6,18 +6,18 @@ import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:pool')
 
+async function waitForTests(
+  method: 'run' | 'collect',
+  contextId: string,
+  project: WorkspaceProject,
+  files: string[],
+) {
+  const context = project.browser!.state.createAsyncContext(method, contextId, files)
+  return await context
+}
+
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
-
-  const waitForTests = async (
-    method: 'run' | 'collect',
-    contextId: string,
-    project: WorkspaceProject,
-    files: string[],
-  ) => {
-    const context = project.browser!.state.createAsyncContext(method, contextId, files)
-    return await context
-  }
 
   const executeTests = async (method: 'run' | 'collect', project: WorkspaceProject, files: string[]) => {
     ctx.state.clearFiles(project, files)

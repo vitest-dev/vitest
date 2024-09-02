@@ -70,7 +70,7 @@ export function parseRegexp(input: string): RegExp {
   // Invalid flags
   // eslint-disable-next-line regexp/optimal-quantifier-concatenation
   if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3])) {
-    return RegExp(input)
+    return new RegExp(input)
   }
 
   // Create the regular expression
@@ -146,7 +146,7 @@ export function clone<T>(
     return seen.get(val)
   }
   if (Array.isArray(val)) {
-    out = Array((k = val.length))
+    out = Array.from({ length: (k = val.length) })
     seen.set(val, out)
     while (k--) {
       out[k] = clone(val[k], seen, options)
@@ -205,7 +205,7 @@ export function objectAttr(
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
   for (const p of paths) {
-    result = Object(result)[p]
+    result = new Object(result)[p]
     if (result === undefined) {
       return defaultValue
     }

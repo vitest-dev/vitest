@@ -20,49 +20,6 @@ export function setupConsoleLogSpy() {
     count,
     countReset,
   } = console
-  const formatInput = (input: unknown) => {
-    if (typeof input === 'object') {
-      return stringify(input, undefined, {
-        printBasicPrototype: false,
-        escapeString: false,
-      })
-    }
-    return format(input)
-  }
-  const processLog = (args: unknown[]) => args.map(formatInput).join(' ')
-  const sendLog = (
-    type: 'stdout' | 'stderr',
-    content: string,
-    disableStack?: boolean,
-  ) => {
-    if (content.startsWith('[vite]')) {
-      return
-    }
-    const unknownTestId = '__vitest__unknown_test__'
-    // @ts-expect-error untyped global
-    const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
-    const origin
-      = getConfig().printConsoleTrace && !disableStack
-        ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
-        : undefined
-    rpc().sendLog({
-      origin,
-      content,
-      browser: true,
-      time: Date.now(),
-      taskId,
-      type,
-      size: content.length,
-    })
-  }
-  const stdout = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
-    base(...args)
-    sendLog('stdout', processLog(args))
-  }
-  const stderr = (base: (...args: unknown[]) => void) => (...args: unknown[]) => {
-    base(...args)
-    sendLog('stderr', processLog(args))
-  }
   console.log = stdout(log)
   console.debug = stdout(debug)
   console.info = stdout(info)
@@ -135,4 +92,57 @@ export function setupConsoleLogSpy() {
     countReset(label)
     countLabels[label] = 0
   }
+}
+
+function stdout(base: (...args: unknown[]) => void) {
+  return (...args: unknown[]) => {
+    base(...args)
+    sendLog('stdout', processLog(args))
+  }
+}
+function stderr(base: (...args: unknown[]) => void) {
+  return (...args: unknown[]) => {
+    base(...args)
+    sendLog('stderr', processLog(args))
+  }
+}
+
+function formatInput(input: unknown) {
+  if (typeof input === 'object') {
+    return stringify(input, undefined, {
+      printBasicPrototype: false,
+      escapeString: false,
+    })
+  }
+  return format(input)
+}
+
+function processLog(args: unknown[]) {
+  return args.map(formatInput).join(' ')
+}
+
+function sendLog(
+  type: 'stdout' | 'stderr',
+  content: string,
+  disableStack?: boolean,
+) {
+  if (content.startsWith('[vite]')) {
+    return
+  }
+  const unknownTestId = '__vitest__unknown_test__'
+  // @ts-expect-error untyped global
+  const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
+  const origin
+    = getConfig().printConsoleTrace && !disableStack
+      ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
+      : undefined
+  rpc().sendLog({
+    origin,
+    content,
+    browser: true,
+    time: Date.now(),
+    taskId,
+    type,
+    size: content.length,
+  })
 }

@@ -9,8 +9,8 @@ If needed, mock the \`${name}\` call manually like:
 import { expect, vi } from "vitest"
 
 vi.spyOn(window, "${name}")${
-      defaultValue ? `.mockReturnValue(${JSON.stringify(defaultValue)})` : ''
-    }
+  defaultValue ? `.mockReturnValue(${JSON.stringify(defaultValue)})` : ''
+}
 ${name}(${formatedParams})
 expect(${name}).toHaveBeenCalledWith(${formatedParams})
 \`\`\``)

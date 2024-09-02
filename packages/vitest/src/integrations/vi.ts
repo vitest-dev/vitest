@@ -389,24 +389,6 @@ function createVitest(): VitestUtils {
   let _mockedDate: Date | null = null
   let _config: null | SerializedConfig = null
 
-  function _mocker(): VitestMocker {
-    // @ts-expect-error injected by vite-nide
-    return typeof __vitest_mocker__ !== 'undefined'
-    // @ts-expect-error injected by vite-nide
-      ? __vitest_mocker__
-      : new Proxy(
-        {},
-        {
-          get(_, name) {
-            throw new Error(
-              'Vitest mocker was not initialized in this environment. '
-              + `vi.${String(name)}() is forbidden.`,
-            )
-          },
-        },
-      )
-  }
-
   const workerState = getWorkerState()
 
   let _timers: FakeTimers
@@ -424,17 +406,6 @@ function createVitest(): VitestUtils {
   const _stubsEnv = new Map()
 
   const _envBooleans = ['PROD', 'DEV', 'SSR']
-
-  const getImporter = (name: string) => {
-    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 5 })
-    const stackArray = stackTrace.split('\n')
-    // if there is no message in a stack trace, use the item - 1
-    const importerStackIndex = stackArray.findIndex((stack) => {
-      return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
-    })
-    const stack = parseSingleStack(stackArray[importerStackIndex + 1])
-    return stack?.file || ''
-  }
 
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
@@ -738,3 +709,32 @@ function createVitest(): VitestUtils {
 
 export const vitest = createVitest()
 export const vi = vitest
+
+function _mocker(): VitestMocker {
+  // @ts-expect-error injected by vite-nide
+  return typeof __vitest_mocker__ !== 'undefined'
+  // @ts-expect-error injected by vite-nide
+    ? __vitest_mocker__
+    : new Proxy(
+      {},
+      {
+        get(_, name) {
+          throw new Error(
+            'Vitest mocker was not initialized in this environment. '
+            + `vi.${String(name)}() is forbidden.`,
+          )
+        },
+      },
+    )
+}
+
+function getImporter(name: string) {
+  const stackTrace = createSimpleStackTrace({ stackTraceLimit: 5 })
+  const stackArray = stackTrace.split('\n')
+  // if there is no message in a stack trace, use the item - 1
+  const importerStackIndex = stackArray.findIndex((stack) => {
+    return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
+  })
+  const stack = parseSingleStack(stackArray[importerStackIndex + 1])
+  return stack?.file || ''
+}

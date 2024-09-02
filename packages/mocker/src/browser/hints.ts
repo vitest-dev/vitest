@@ -49,17 +49,6 @@ export function createCompilerHints(options?: CompilerHintsOptions): ModuleMocke
       )
   }
 
-  const getImporter = (name: string) => {
-    const stackTrace = /* @__PURE__ */ createSimpleStackTrace({ stackTraceLimit: 5 })
-    const stackArray = stackTrace.split('\n')
-    // if there is no message in a stack trace, use the item - 1
-    const importerStackIndex = stackArray.findIndex((stack) => {
-      return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
-    })
-    const stack = /* @__PURE__ */ parseSingleStack(stackArray[importerStackIndex + 1])
-    return stack?.file || ''
-  }
-
   return {
     hoisted<T>(factory: () => T): T {
       if (typeof factory !== 'function') {
@@ -143,4 +132,15 @@ export function createCompilerHints(options?: CompilerHintsOptions): ModuleMocke
       return _mocker().importMock(path, getImporter('importMock'))
     },
   }
+}
+
+function getImporter(name: string) {
+  const stackTrace = /* @__PURE__ */ createSimpleStackTrace({ stackTraceLimit: 5 })
+  const stackArray = stackTrace.split('\n')
+  // if there is no message in a stack trace, use the item - 1
+  const importerStackIndex = stackArray.findIndex((stack) => {
+    return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
+  })
+  const stack = /* @__PURE__ */ parseSingleStack(stackArray[importerStackIndex + 1])
+  return stack?.file || ''
 }
