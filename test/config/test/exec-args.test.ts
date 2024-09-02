@@ -13,8 +13,10 @@ test.each([
   const fileToTest = `${pool}.test.ts`
 
   // TODO: node.js has a bug that makes --inspect-brk not work on worker threads
-  if (nodeMajor === 20 && nodeMinor > 14 && pool !== 'forks') {
-    return
+  if (pool !== 'forks') {
+    if ((nodeMajor === 20 && nodeMinor > 14) || (nodeMajor > 20)) {
+      return
+    }
   }
 
   const vitest = await runVitest({
