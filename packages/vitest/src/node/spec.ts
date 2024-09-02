@@ -26,6 +26,7 @@ export class TestSpecification {
     workspaceProject: WorkspaceProject,
     moduleId: string,
     pool: Pool,
+    // inSource?: boolean,
     // location?: WorkspaceSpecLocation | undefined,
   ) {
     this[0] = workspaceProject
