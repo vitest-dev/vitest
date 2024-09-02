@@ -1,3 +1,4 @@
+import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import { preview } from 'vite'
@@ -10,8 +11,28 @@ test.describe('html report', () => {
   let previewServer: PreviewServer
 
   test.beforeAll(async () => {
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
     // generate vitest html report
-    await startVitest('test', [], { run: true, reporters: 'html', coverage: { enabled: true, reportsDirectory: 'html/coverage' } })
+    await startVitest(
+      'test',
+      [],
+      {
+        run: true,
+        reporters: 'html',
+        coverage: {
+          enabled: true,
+          reportsDirectory: 'html/coverage',
+          reporter: ['html'],
+        },
+      },
+      {},
+      {
+        stdout,
+        stderr,
+      },
+    )
 
     // run vite preview server
     previewServer = await preview({ build: { outDir: 'html' }, preview: { port, strictPort: true } })
