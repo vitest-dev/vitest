@@ -140,8 +140,17 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   debug('prepare time', state.durations.prepare, 'ms')
 
   try {
-    await setupCommonEnv(config)
-    await startCoverageInsideWorker(config.coverage, executor)
+    await Promise.all([
+      setupCommonEnv(config),
+      startCoverageInsideWorker(config.coverage, executor),
+      (async () => {
+        const VitestIndex = await import('vitest')
+        Object.defineProperty(window, '__vitest_index__', {
+          value: VitestIndex,
+          enumerable: false,
+        })
+      })(),
+    ])
 
     for (const file of files) {
       state.filepath = file
@@ -168,7 +177,13 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       }, 'Cleanup Error')
     }
     state.environmentTeardownRun = true
-    await stopCoverageInsideWorker(config.coverage, executor)
+    await stopCoverageInsideWorker(config.coverage, executor).catch((error) => {
+      client.rpc.onUnhandledError({
+        name: error.name,
+        message: error.message,
+        stack: String(error.stack),
+      }, 'Coverage Error').catch(() => {})
+    })
 
     debug('finished running tests')
     done(files)

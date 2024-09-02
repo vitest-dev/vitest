@@ -10,6 +10,7 @@ import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { toArray } from '@vitest/utils'
 import { defaultBrowserPort } from 'vitest/config'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
+import MagicString from 'magic-string'
 import BrowserContext from './plugins/pluginContext'
 import type { BrowserServer } from './server'
 import { resolveOrchestrator } from './serverOrchestrator'
@@ -349,6 +350,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
       },
     },
+    {
+      name: 'vitest:browser:in-source-tests',
+      transform(code, id) {
+        if (!project.isTestFile(id) || !code.includes('import.meta.vitest')) {
+          return
+        }
+        const s = new MagicString(code, { filename: cleanUrl(id) })
+        s.prepend(
+          `import.meta.vitest = __vitest_index__;\n`,
+        )
+        return {
+          code: s.toString(),
+          map: s.generateMap({ hires: true }),
+        }
+      },
+    },
     // TODO: remove this when @testing-library/vue supports ESM
     {
       name: 'vitest:browser:support-testing-library',
@@ -444,4 +461,9 @@ function resolveCoverageFolder(project: WorkspaceProject) {
   }
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }
