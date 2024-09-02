@@ -43,6 +43,7 @@ export default () =>
         format: 'esm',
       },
       external,
+      context: 'null',
       plugins: [
         {
           name: 'no-side-effects',

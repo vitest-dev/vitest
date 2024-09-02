@@ -81,6 +81,11 @@ class PreviewLocator extends Locator {
     return userEvent.type(this.element(), text)
   }
 
+  async upload(file: string | string[] | File | File[]): Promise<void> {
+    // we override userEvent.upload to support this in pluginContext.ts
+    return userEvent.upload(this.element() as HTMLElement, file as File[])
+  }
+
   selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
     const options = (Array.isArray(options_) ? options_ : [options_]).map((option) => {
       if (typeof option !== 'string' && 'element' in option) {

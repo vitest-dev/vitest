@@ -79,6 +79,9 @@ function createUserEvent(): UserEvent {
     unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
       return convertToLocator(element).unhover(options)
     },
+    upload(element: Element | Locator, files: string | string[] | File | File[]) {
+      return convertToLocator(element).upload(files)
+    },
 
     // non userEvent events, but still useful
     fill(element: Element | Locator, text: string, options) {

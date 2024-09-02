@@ -482,6 +482,9 @@ importers:
       ivya:
         specifier: ^1.1.1
         version: 1.1.1
+      mime:
+        specifier: ^4.0.4
+        version: 4.0.4
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -7097,6 +7100,11 @@ packages:
   mime@3.0.0:
     resolution: {integrity: sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A==}
     engines: {node: '>=10.0.0'}
+    hasBin: true
+
+  mime@4.0.4:
+    resolution: {integrity: sha512-v8yqInVjhXyqP6+Kw4fV3ZzeMRqEW6FotRsKXjRS5VMTNIuXsdRoAvklpoRgSqXm6o9VNH4/C0mgedko9DdLsQ==}
+    engines: {node: '>=16'}
     hasBin: true
 
   mimic-fn@2.1.0:
@@ -16303,6 +16311,8 @@ snapshots:
   mime@2.6.0: {}
 
   mime@3.0.0: {}
+
+  mime@4.0.4: {}
 
   mimic-fn@2.1.0: {}
 

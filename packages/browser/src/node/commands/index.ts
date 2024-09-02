@@ -7,7 +7,9 @@ import { tab } from './tab'
 import { keyboard } from './keyboard'
 import { dragAndDrop } from './dragAndDrop'
 import { hover } from './hover'
+import { upload } from './upload'
 import {
+  _fileInfo,
   readFile,
   removeFile,
   writeFile,
@@ -18,6 +20,8 @@ export default {
   readFile,
   removeFile,
   writeFile,
+  __vitest_fileInfo: _fileInfo,
+  __vitest_upload: upload,
   __vitest_click: click,
   __vitest_dblClick: dblClick,
   __vitest_tripleClick: tripleClick,
