@@ -12,6 +12,10 @@ export interface VitestRunner {
   start: () => void
   stop: () => void
 
+  // file -> spec[]
+  // unique by project+pool, creating a new spec overrides the old one
+  readonly specifications: Map<string, Array<TestSpecification>>
+
   run: () => Promise<TestRunResult>
   collect: () => Promise<TestRunResult>
   runModules: (moduleNames: string[]) => Promise<TestRunResult>
