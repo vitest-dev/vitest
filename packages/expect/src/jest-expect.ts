@@ -960,7 +960,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             return result instanceof chai.Assertion ? proxy : result
           }
 
-          return async (...args: any[]) => {
+          return (...args: any[]) => {
             const promise = obj.then(
               (value: any) => {
                 utils.flag(this, 'object', value)
@@ -1022,7 +1022,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             return result instanceof chai.Assertion ? proxy : result
           }
 
-          return async (...args: any[]) => {
+          return (...args: any[]) => {
             const promise = wrapper.then(
               (value: any) => {
                 const _error = new AssertionError(
