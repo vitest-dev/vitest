@@ -5,7 +5,7 @@ import type { TransformResult } from 'vite'
 import c from 'tinyrainbow'
 import type { DebuggerOptions } from './types'
 
-// Reason for 5382:
+// Reason for 5381:
 // https://stackoverflow.com/questions/10696223/reason-for-the-number-5381-in-the-djb-hash-function
 const ALTERNATIVE_HASH_CODE_STARTING_VALUE = 5381
 
