@@ -7,6 +7,7 @@ import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
 import type { VitestWorker } from './workers/types'
+import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {
   setProcessTitle(`vitest ${poolId}`)
@@ -14,6 +15,8 @@ if (isChildProcess()) {
 
 // this is what every pool executes when running tests
 async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
+  disposeInternalListeners()
+
   const prepareStart = performance.now()
 
   const inspectorCleanup = setupInspect(ctx)
