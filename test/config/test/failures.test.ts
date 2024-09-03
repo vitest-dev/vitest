@@ -5,6 +5,10 @@ import { version } from 'vitest/package.json'
 import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
+const providers = ['playwright', 'webdriverio', 'preview'] as const
+const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
+const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
+
 function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
   return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
 }
@@ -63,20 +67,17 @@ test('inspect-brk cannot be used with multi processing', async () => {
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('v8 coverage provider throws when not playwright + chromium', async () => {
-  const providers = ['playwright', 'webdriverio', 'preview']
-  const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari']
+test('inspect and --inspect-brk cannot be used when not playwright + chromium', async () => {
+  for (const option of ['inspect', 'inspectBrk']) {
+    const cli = `--inspect${option === 'inspectBrk' ? '-brk' : ''}`
 
-  for (const provider of providers) {
-    for (const name of names) {
+    for (const { provider, name } of browsers) {
       if (provider === 'playwright' && name === 'chromium') {
         continue
       }
 
       const { stderr } = await runVitest({
-        coverage: {
-          enabled: true,
-        },
+        [option]: true,
         browser: {
           enabled: true,
           provider,
@@ -85,7 +86,48 @@ test('v8 coverage provider throws when not playwright + chromium', async () => {
       })
 
       expect(stderr).toMatch(
-        `Error: @vitest/coverage-v8 does not work with
+        `Error: ${cli} does not work with
+{
+  "browser": {
+    "provider": "${provider}",
+    "name": "${name}"
+  }
+}
+
+Use either:
+{
+  "browser": {
+    "provider": "playwright",
+    "name": "chromium"
+  }
+}
+
+...or disable ${cli}
+`,
+      )
+    }
+  }
+})
+
+test('v8 coverage provider throws when not playwright + chromium', async () => {
+  for (const { provider, name } of browsers) {
+    if (provider === 'playwright' && name === 'chromium') {
+      continue
+    }
+
+    const { stderr } = await runVitest({
+      coverage: {
+        enabled: true,
+      },
+      browser: {
+        enabled: true,
+        provider,
+        name,
+      },
+    })
+
+    expect(stderr).toMatch(
+      `Error: @vitest/coverage-v8 does not work with
 {
   "browser": {
     "provider": "${provider}",
@@ -108,8 +150,7 @@ Use either:
   }
 }
 `,
-      )
-    }
+    )
   }
 })
 

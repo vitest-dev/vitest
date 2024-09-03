@@ -71,6 +71,18 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         headless: options.headless,
       } satisfies LaunchOptions
 
+      if (this.ctx.config.inspector.enabled) {
+        // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
+        const port = this.ctx.config.inspector.port || 9229
+        const host = this.ctx.config.inspector.host || '127.0.0.1'
+
+        launchOptions.args ||= []
+        launchOptions.args.push(`--remote-debugging-port=${port}`)
+        launchOptions.args.push(`--remote-debugging-address=${host}`)
+
+        this.ctx.logger.log(`Debugger listening on ws://${host}:${port}`)
+      }
+
       // start Vitest UI maximized only on supported browsers
       if (this.ctx.config.browser.ui && this.browserName === 'chromium') {
         if (!launchOptions.args) {
