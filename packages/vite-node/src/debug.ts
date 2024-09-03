@@ -5,10 +5,6 @@ import type { TransformResult } from 'vite'
 import c from 'tinyrainbow'
 import type { DebuggerOptions } from './types'
 
-
-const HASH_CODE_MAX_LENGTH = Number.MAX_SAFE_INTEGER.toString().length;
-
-
 // Reason for 5382:
 // https://stackoverflow.com/questions/10696223/reason-for-the-number-5381-in-the-djb-hash-function
 const ALTERNATIVE_HASH_CODE_STARTING_VALUE = 5381
