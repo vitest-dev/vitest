@@ -43,7 +43,7 @@ export async function createBrowserServer(
         if (msg.includes('optimized dependencies changed. reloading')) {
           logger.warn(
             [
-              c.yellow(`\n${c.bold('[vitest]')} ⚠️ Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`),
+              c.yellow(`\n${c.bold('[vitest]')} Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`),
               c.yellow(`For a stable experience, please add mentioned dependencies to your config\'s ${c.bold('\`optimizeDeps.include\`')} field manually.\n\n`),
             ].join(''),
           )
