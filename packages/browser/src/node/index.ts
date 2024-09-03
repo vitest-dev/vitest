@@ -30,12 +30,14 @@ export async function createBrowserServer(
 
   const configPath = typeof configFile === 'string' ? configFile : false
 
-  const logger = createViteLogger((process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info')
+  const logLevel = (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info'
+
+  const logger = createViteLogger(logLevel)
 
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
     base: '/',
-    logLevel: (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info',
+    logLevel,
     customLogger: {
       ...logger,
       info(msg, options) {
