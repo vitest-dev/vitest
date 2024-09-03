@@ -1,6 +1,6 @@
 import type { WorkspaceProject } from 'vitest/node'
 import type { Plugin } from 'vitest/config'
-import { createServer } from 'vitest/node'
+import { createViteLogger, createViteServer } from 'vitest/node'
 import c from 'tinyrainbow'
 import { version } from '../../package.json'
 import { setupBrowserRpc } from './rpc'
