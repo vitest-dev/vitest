@@ -30,10 +30,26 @@ export async function createBrowserServer(
 
   const configPath = typeof configFile === 'string' ? configFile : false
 
-  const vite = await createServer({
+  const logger = createViteLogger((process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info')
+
+  const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
     base: '/',
     logLevel: (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info',
+    customLogger: {
+      ...logger,
+      info(msg, options) {
+        logger.info(msg, options)
+        if (msg.includes('optimized dependencies changed. reloading')) {
+          logger.warn(
+            [
+              c.yellow(`\n${c.bold('[vitest]')} ⚠️ Vite unexpectedly reloaded a test. This may cause tests to fail, lead to flaky behaviour or duplicated test runs.\n`),
+              c.yellow(`For a stable experience, please add mentioned dependencies to your config\'s ${c.bold('\`optimizeDeps.include\`')} field manually.\n\n`),
+            ].join(''),
+          )
+        }
+      },
+    },
     mode: project.config.mode,
     configFile: configPath,
     // watch is handled by Vitest
