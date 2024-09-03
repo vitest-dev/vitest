@@ -5,11 +5,20 @@ import type { TransformResult } from 'vite'
 import c from 'tinyrainbow'
 import type { DebuggerOptions } from './types'
 
-function hashCode(s: string) {
+
+const HASH_CODE_MAX_LENGTH = Number.MAX_SAFE_INTEGER.toString().length;
+
+
+// Reason for 5382:
+// https://stackoverflow.com/questions/10696223/reason-for-the-number-5381-in-the-djb-hash-function
+const HASH_CODE_ALTERNATIVE_STARTING_VALUE = 5381
+
+// This is djb hash function
+function hashCode(s: string, startingValue = 0) {
   return s.split('').reduce((a, b) => {
     a = (a << 5) - a + b.charCodeAt(0)
     return a & a
-  }, 0)
+  }, startingValue)
 }
 
 export class Debugger {
@@ -50,9 +59,16 @@ export class Debugger {
   }
 
   encodeId(id: string) {
-    return `${id.replace(/[^\w@\-]/g, '_').replace(/_+/g, '_')}-${hashCode(
-      id,
-    )}.js`
+    const firstHash = hashCode(id);
+    const hashPrefix = id.replace(/[^\w@\-]/g, '_').replace(/_+/g, '_');
+
+    // The file name limit in most file systems is 255
+    // 251 because we need to add a `-` and `.js` to the end
+    if (hashPrefix.length + HASH_CODE_MAX_LENGTH > 251) {
+      return `${hashCode(id, HASH_CODE_ALTERNATIVE_STARTING_VALUE)}-${firstHash}.js`
+    }
+    
+    return `${hashPrefix}-${firstHash}.js`
   }
 
   async recordExternalize(id: string, path: string) {
