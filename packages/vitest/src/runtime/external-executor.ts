@@ -48,8 +48,7 @@ export class ExternalModulesExecutor {
   private vite: ViteExecutor
   private context: vm.Context
   private fs: FileMap
-  private resolvers: ((id: string, parent: string) => string | undefined)[]
-    = []
+  private resolvers: ((id: string, parent: string) => string | undefined)[] = []
 
   #networkSupported: boolean | null = null
 

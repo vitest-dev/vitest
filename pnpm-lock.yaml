@@ -29,6 +29,9 @@ patchedDependencies:
   cac@6.7.14:
     hash: slh3cigivjjjktoa42g2agwaem
     path: patches/cac@6.7.14.patch
+  tinypool:
+    hash: qcljnducohu5c2aqy4yl6hkp4i
+    path: patches/tinypool.patch
   v8-to-istanbul@9.3.0:
     hash: 5pdyrbs4i7bdmssok6uzfxxdia
     path: patches/v8-to-istanbul@9.3.0.patch

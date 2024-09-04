@@ -61,6 +61,7 @@ export class ViteExecutor {
     if (cached) {
       return cached
     }
+    console.log('import vite', fileUrl)
     return this.esm.createEsModule(fileUrl, async () => {
       const result = await this.options.transform(fileUrl, 'web')
       if (!result.code) {
@@ -78,6 +79,7 @@ export class ViteExecutor {
     if (cached) {
       return cached
     }
+    console.log('import vite client module')
     const stub = this.options.viteClientModule
     const moduleKeys = Object.keys(stub)
     const module = new SyntheticModule(
