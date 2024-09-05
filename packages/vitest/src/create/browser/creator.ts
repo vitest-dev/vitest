@@ -6,7 +6,7 @@ import c from 'tinyrainbow'
 import type { Agent } from '@antfu/install-pkg'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
 import { findUp } from 'find-up'
-import { execa } from 'execa'
+import { x } from 'tinyexec'
 import type { BrowserBuiltinProvider } from '../../node/types/browser'
 import { configFiles } from '../../constants'
 import { generateExampleFiles } from './examples'
@@ -499,9 +499,10 @@ export async function create() {
     const allArgs = [...args, 'playwright', 'install', '--with-deps']
     log(c.cyan('◼'), `Installing Playwright dependencies with \`${c.bold(command)} ${c.bold(allArgs.join(' '))}\`...`)
     log()
-    await execa(command, allArgs, {
-      stdout: 'inherit',
-      stderr: 'inherit',
+    await x(command, allArgs, {
+      nodeOptions: {
+        stdio: ['pipe', 'inherit', 'inherit'],
+      },
     })
   }
 
