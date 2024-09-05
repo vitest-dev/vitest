@@ -1406,6 +1406,9 @@ importers:
       strip-ansi:
         specifier: ^7.0.1
         version: 7.0.1
+      tinyexec:
+        specifier: ^0.3.0
+        version: 0.3.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
