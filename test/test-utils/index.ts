@@ -5,7 +5,8 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach, onTestFinished } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
-import { type Options, execa } from 'execa'
+import type { Options } from 'tinyexec'
+import { x } from 'tinyexec'
 import { dirname, resolve } from 'pathe'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
@@ -122,7 +123,7 @@ export async function runVitest(
   }
 }
 
-export async function runCli(command: string, _options?: Options | string, ...args: string[]) {
+export async function runCli(command: string, _options?: Options, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -130,7 +131,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     options = undefined
   }
 
-  const subprocess = execa(command, args, options as Options)
+  const subprocess = x(command, args, options).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
@@ -180,12 +181,12 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   return output()
 }
 
-export async function runVitestCli(_options?: Options | string, ...args: string[]) {
+export async function runVitestCli(_options?: Options, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
 }
 
-export async function runViteNodeCli(_options?: Options | string, ...args: string[]) {
+export async function runViteNodeCli(_options?: Options, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
 
