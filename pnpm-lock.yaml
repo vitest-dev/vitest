@@ -1400,9 +1400,6 @@ importers:
 
   test/test-utils:
     devDependencies:
-      execa:
-        specifier: ^7.1.1
-        version: 7.1.1
       strip-ansi:
         specifier: ^7.0.1
         version: 7.0.1
