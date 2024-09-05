@@ -1,6 +1,8 @@
 import type { WorkspaceProject } from 'vitest/node'
 import type { Plugin } from 'vitest/config'
 import { createServer } from 'vitest/node'
+import c from 'tinyrainbow'
+import { version } from '../../package.json'
 import { setupBrowserRpc } from './rpc'
 import { BrowserServer } from './server'
 import BrowserPlugin from './plugin'
@@ -14,6 +16,16 @@ export async function createBrowserServer(
   prePlugins: Plugin[] = [],
   postPlugins: Plugin[] = [],
 ) {
+  if (project.ctx.version !== version) {
+    project.ctx.logger.warn(
+      c.yellow(
+        `Loaded ${c.inverse(c.yellow(` vitest@${project.ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/browser@${version} `))}.`
+        + '\nRunning mixed versions is not supported and may lead into bugs'
+        + '\nUpdate your dependencies and make sure the versions match.',
+      ),
+    )
+  }
+
   const server = new BrowserServer(project, '/')
 
   const configPath = typeof configFile === 'string' ? configFile : false
