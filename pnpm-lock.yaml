@@ -1196,9 +1196,9 @@ importers:
 
   test/config:
     devDependencies:
-      execa:
-        specifier: ^8.0.1
-        version: 8.0.1
+      tinyexec:
+        specifier: ^0.3.0
+        version: 0.3.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
@@ -1342,7 +1342,7 @@ importers:
         version: 3.4.37(typescript@5.5.4)
       webdriverio:
         specifier: latest
-        version: 9.0.8
+        version: 9.0.9
 
   test/global-setup:
     devDependencies:
@@ -1475,7 +1475,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 9.0.8
+        version: 9.0.9
 
   test/workspaces:
     devDependencies:
@@ -9288,8 +9288,8 @@ packages:
       devtools:
         optional: true
 
-  webdriverio@9.0.8:
-    resolution: {integrity: sha512-tule4UqQYIw+MfgO3k5KRTYNMFjEhg5o8ycAwK3Aygyq+tuyPSN2QGilC/XMIT6ZaS8cJNGZIRNBMOLkWc4SRg==}
+  webdriverio@9.0.9:
+    resolution: {integrity: sha512-IwvKzhcJ9NjOL55xwj27uTTKkfxsg77dmAfqoKFSP5dQ70JzU+NgxiALEjjWQDybtt1yGIkHk7wjjxjboMU1uw==}
     engines: {node: '>=18.20.0'}
     peerDependencies:
       puppeteer-core: ^22.3.0
@@ -18781,7 +18781,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriverio@9.0.8:
+  webdriverio@9.0.9:
     dependencies:
       '@types/node': 20.14.15
       '@types/sinonjs__fake-timers': 8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)
