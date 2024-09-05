@@ -22,7 +22,7 @@ Since Vitest 2.0.4 the `require` of CSS and assets inside the external dependenc
 
 ::: info 
 
-The `jsdom` environment includes window methods such as `fetch()` that are not implemented in jsdom, but do exist in node. 
+The `jsdom` environment includes window methods such as `fetch()` that are not implemented in jsdom, if they exist in your node runtime.
 
 :::
 
