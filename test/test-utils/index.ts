@@ -123,7 +123,7 @@ export async function runVitest(
   }
 }
 
-export async function runCli(command: string, _options?: Options, ...args: string[]) {
+export async function runCli(command: string, _options?: Partial<Options> | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -131,7 +131,7 @@ export async function runCli(command: string, _options?: Options, ...args: strin
     options = undefined
   }
 
-  const subprocess = x(command, args, options).process!
+  const subprocess = x(command, args, options as Options).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
@@ -181,12 +181,12 @@ export async function runCli(command: string, _options?: Options, ...args: strin
   return output()
 }
 
-export async function runVitestCli(_options?: Options, ...args: string[]) {
+export async function runVitestCli(_options?: Partial<Options> | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
 }
 
-export async function runViteNodeCli(_options?: Options, ...args: string[]) {
+export async function runViteNodeCli(_options?: Partial<Options> | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
 
