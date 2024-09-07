@@ -182,6 +182,29 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           ...(project.config.snapshotSerializers || []),
         ]
 
+        const exclude = [
+          'vitest',
+          'vitest/utils',
+          'vitest/browser',
+          'vitest/runners',
+          '@vitest/browser',
+          '@vitest/browser/client',
+          '@vitest/utils',
+          '@vitest/utils/source-map',
+          '@vitest/runner',
+          '@vitest/spy',
+          '@vitest/utils/error',
+          '@vitest/snapshot',
+          '@vitest/expect',
+          'std-env',
+          'tinybench',
+          'tinyspy',
+          'tinyrainbow',
+          'pathe',
+          'msw',
+          'msw/browser',
+        ]
+
         if (project.config.diff) {
           entries.push(project.config.diff)
         }
@@ -193,12 +216,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
             if (path) {
               entries.push(path)
+              exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
             const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
             if (path) {
               entries.push(path)
+              exclude.push('@vitest/coverage-istanbul')
             }
           }
           else if (provider === 'custom' && coverage.customProviderModule) {
@@ -223,29 +248,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         if (vue) {
           include.push(vue)
         }
-
-        const exclude = [
-          'vitest',
-          'vitest/utils',
-          'vitest/browser',
-          'vitest/runners',
-          '@vitest/browser',
-          '@vitest/browser/client',
-          '@vitest/utils',
-          '@vitest/utils/source-map',
-          '@vitest/runner',
-          '@vitest/spy',
-          '@vitest/utils/error',
-          '@vitest/snapshot',
-          '@vitest/expect',
-          'std-env',
-          'tinybench',
-          'tinyspy',
-          'tinyrainbow',
-          'pathe',
-          'msw',
-          'msw/browser',
-        ]
 
         const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
         if (svelte) {
