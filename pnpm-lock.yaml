@@ -1160,6 +1160,9 @@ importers:
       webdriverio:
         specifier: ^8.32.2
         version: 8.32.2(typescript@5.5.4)
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.0
 
   test/cli:
     devDependencies:

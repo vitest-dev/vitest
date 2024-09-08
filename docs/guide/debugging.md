@@ -40,18 +40,19 @@ Then in the debug tab, ensure 'Debug Current Test File' is selected. You can the
 
 ### Browser mode
 
-To debug [Vitest Browser Mode](/guide/browser/index.md), pass `--inspect` in CLI or define it in your Vitest configuration:
+To debug [Vitest Browser Mode](/guide/browser/index.md), pass `--inspect` or `--inspect-brk` in CLI or define it in your Vitest configuration:
 
 ::: code-group
 ```bash [CLI]
-vitest --inspect --browser
+vitest --inspect-brk --browser --no-file-parallelism
 ```
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    inspect: true,
+    inspectBrk: true,
+    fileParallelism: false,
     browser: {
       name: 'chromium',
       provider: 'playwright',
@@ -61,10 +62,10 @@ export default defineConfig({
 ```
 :::
 
-By default Vitest will use port `9229` as debugging port. You can overwrite it with by passing value in `inspect`:
+By default Vitest will use port `9229` as debugging port. You can overwrite it with by passing value in `--inspect-brk`:
 
 ```bash
-vitest --inspect=127.0.0.1:3000 --browser
+vitest --inspect-brk=127.0.0.1:3000 --browser --no-file-parallelism
 ```
 
 Use following [VSCode Compound configuration](https://code.visualstudio.com/docs/editor/debugging#_compound-launch-configurations) for launching Vitest and attaching debugger in the browser:
@@ -79,7 +80,7 @@ Use following [VSCode Compound configuration](https://code.visualstudio.com/docs
       "name": "Run Vitest Browser",
       "program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
       "console": "integratedTerminal",
-      "args": ["--inspect", "--browser"]
+      "args": ["--inspect-brk", "--browser", "--no-file-parallelism"]
     },
     {
       "type": "chrome",
@@ -120,6 +121,9 @@ vitest --inspect-brk --pool threads --poolOptions.threads.singleThread
 
 # To run in a single child process
 vitest --inspect-brk --pool forks --poolOptions.forks.singleFork
+
+# To run in browser mode
+vitest --inspect-brk --browser --no-file-parallelism
 ```
 
 If you are using Vitest 1.1 or higher, you can also just provide `--no-file-parallelism` flag:
