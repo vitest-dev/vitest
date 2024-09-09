@@ -15,7 +15,7 @@ import { workspacesFiles as workspaceFiles } from '../constants'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
-import { distDir } from '../paths'
+import { rootDir } from '../paths'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createPool, getFilePoolName } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -78,7 +78,7 @@ export class Vitest {
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
 
-  public distPath = distDir
+  public distPath = rootDir
 
   private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
 
