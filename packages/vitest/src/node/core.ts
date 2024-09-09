@@ -15,7 +15,7 @@ import { workspacesFiles as workspaceFiles } from '../constants'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
-import { rootDir } from '../paths'
+import { distDir } from '../paths'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createPool, getFilePoolName } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -78,7 +78,7 @@ export class Vitest {
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
 
-  public distPath = rootDir
+  public distPath = distDir
 
   private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
 
@@ -106,7 +106,6 @@ export class Vitest {
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
-    this.distPath = undefined!
     this._cachedSpecs.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
