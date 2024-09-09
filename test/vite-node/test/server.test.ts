@@ -143,12 +143,12 @@ describe('server correctly caches data', () => {
 
     await viteNode.fetchModule('/src/foo.js', 'ssr')
 
-    expect(ssrFiles).toHaveLength(3)
+    await expect.poll(() => ssrFiles).toHaveLength(3)
 
     // another fetch after invalidation returns cached result
     await viteNode.fetchModule('/src/foo.js', 'ssr')
 
-    expect(ssrFiles).toHaveLength(3)
+    await expect.poll(() => ssrFiles).toHaveLength(3)
     expect(webFiles).toHaveLength(0)
   })
 
@@ -200,13 +200,13 @@ describe('server correctly caches data', () => {
 
     await viteNode.fetchModule('/src/foo.js', 'web')
 
-    expect(webFiles).toHaveLength(3)
+    await expect.poll(() => webFiles).toHaveLength(3)
 
     // another fetch after invalidation returns cached result
     await viteNode.fetchModule('/src/foo.js', 'web')
 
-    expect(webFiles).toHaveLength(3)
-    expect(ssrFiles).toHaveLength(0)
+    await expect.poll(() => webFiles).toHaveLength(3)
+    await expect.poll(() => ssrFiles).toHaveLength(0)
   })
 
   it('correctly processes the same file with both transform modes', async ({ viteNode, ssrFiles, webFiles, root }) => {
