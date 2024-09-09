@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
-import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { dirname, join, normalize, relative } from 'pathe'
 import mm from 'micromatch'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
@@ -12,10 +12,10 @@ import { version } from '../../package.json' with { type: 'json' }
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { workspacesFiles as workspaceFiles } from '../constants'
-import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
+import { distDir } from '../paths'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createPool, getFilePoolName } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -78,7 +78,7 @@ export class Vitest {
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
 
-  public distPath!: string
+  public distPath = distDir
 
   private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
 
@@ -560,20 +560,7 @@ export class Vitest {
     }
   }
 
-  private async initializeDistPath() {
-    if (this.distPath) {
-      return
-    }
-
-    // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.vitenode.resolveId('vitest')
-    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.distPath = join(vitestDir, 'dist')
-  }
-
   async runFiles(specs: TestSpecification[], allTestsRun: boolean) {
-    await this.initializeDistPath()
-
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
@@ -638,8 +625,6 @@ export class Vitest {
   }
 
   async collectFiles(specs: WorkspaceSpec[]) {
-    await this.initializeDistPath()
-
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
