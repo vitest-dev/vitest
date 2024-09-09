@@ -15,7 +15,7 @@ import {
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
-import { VitestResolver } from './vitestResolver'
+import { VitestProjectResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
 import { NormalizeURLPlugin } from './normalizeURL'
 
@@ -140,7 +140,7 @@ export function WorkspaceVitestPlugin(
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
     ...MocksPlugins(),
-    VitestResolver(project.ctx),
+    VitestProjectResolver(project.ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ]
