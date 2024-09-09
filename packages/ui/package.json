@@ -56,7 +56,7 @@
     "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.4.1",
+    "@faker-js/faker": "^9.0.0",
     "@iconify-json/carbon": "^1.1.37",
     "@iconify-json/logos": "^1.1.44",
     "@testing-library/vue": "^8.1.0",
