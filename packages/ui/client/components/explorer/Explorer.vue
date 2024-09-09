@@ -11,6 +11,8 @@ import { useSearch } from '~/composables/explorer/search'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { config } from '~/composables/client'
 
+import { panels } from '~/composables/navigation'
+
 defineOptions({ inheritAttrs: false })
 
 const { onItemClick } = defineProps<{
@@ -46,8 +48,9 @@ const filterClass = ref<string>('grid-cols-2')
 const filterHeaderClass = ref<string>('grid-col-span-2')
 const testExplorerRef = ref<HTMLInputElement | undefined>()
 
-useResizeObserver(testExplorerRef, (entries) => {
-  const { width } = entries[0].contentRect
+const { width: windowWidth } = useWindowSize()
+
+watch(() => windowWidth.value * (panels.navigation / 100), (width) => {
   if (width < 420) {
     filterClass.value = 'grid-cols-2'
     filterHeaderClass.value = 'grid-col-span-2'
