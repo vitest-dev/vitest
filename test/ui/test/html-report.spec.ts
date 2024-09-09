@@ -35,11 +35,19 @@ test.describe('html report', () => {
     )
 
     // run vite preview server
-    previewServer = await preview({ build: { outDir: 'html' }, preview: { port, strictPort: true } })
+    previewServer = await preview({
+      build: { outDir: 'html' },
+      preview: { port, strictPort: true },
+    })
   })
 
   test.afterAll(async () => {
     await new Promise<void>((resolve, reject) => {
+      // if there is no preview server, `startVitest` failed already
+      if (!previewServer) {
+        resolve()
+        return
+      }
       previewServer.httpServer.close((err) => {
         if (err) {
           reject(err)
@@ -72,7 +80,7 @@ test.describe('html report', () => {
     // report
     const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
     await sample.hover()
-    await sample.getByTestId('btn-open-details').click()
+    await sample.getByTestId('btn-open-details').click({ force: true })
     await page.getByText('All tests passed in this file').click()
 
     // graph tab
@@ -96,7 +104,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
     const sample = page.getByTestId('details-panel').getByLabel('fixtures/error.test.ts')
     await sample.hover()
-    await sample.getByTestId('btn-open-details').click()
+    await sample.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
   })
 })
