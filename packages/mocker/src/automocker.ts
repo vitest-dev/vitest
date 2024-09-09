@@ -75,7 +75,7 @@ export function mockObject(
       const isFunction
         = type.includes('Function') && typeof value === 'function'
       if (
-        (!isFunction || value.__isMockFunction)
+        (!isFunction || value._isMockFunction)
         && type !== 'Object'
         && type !== 'Module'
       ) {
