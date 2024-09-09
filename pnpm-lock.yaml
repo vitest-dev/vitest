@@ -741,8 +741,8 @@ importers:
   packages/spy:
     dependencies:
       tinyspy:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^3.0.1
+        version: 3.0.1
 
   packages/ui:
     dependencies:
@@ -8611,8 +8611,8 @@ packages:
     resolution: {integrity: sha512-bSGlgwLBYf7PnUsQ6WOc6SJ3pGOcd+d8AA6EUnLDDM0kWEstC1JIlSZA3UNliDXhd9ABoS7hiRBDCu+XP/sf1Q==}
     engines: {node: '>=14.0.0'}
 
-  tinyspy@3.0.0:
-    resolution: {integrity: sha512-q5nmENpTHgiPVd1cJDDc9cVoYN5x4vCvwT3FMilvKPKneCBZAxn2YWQjDF0UMcE9k0Cay1gBiDfTMU0g+mPMQA==}
+  tinyspy@3.0.1:
+    resolution: {integrity: sha512-Zl/ko7fioZvaflejqwgnWwnTjr3K562tmyNFZADyRWYLXxkr2g+cuZ+lP+s2GRUV0PVCqqoDu0Rmx4fzdJnrZw==}
     engines: {node: '>=14.0.0'}
 
   titleize@3.0.0:
@@ -17949,7 +17949,7 @@ snapshots:
 
   tinyspy@1.0.2: {}
 
-  tinyspy@3.0.0: {}
+  tinyspy@3.0.1: {}
 
   titleize@3.0.0: {}
 
