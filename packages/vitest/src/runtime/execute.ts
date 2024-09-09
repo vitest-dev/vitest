@@ -95,9 +95,9 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     globalThis.__vitest_worker__ || options.state
   const rpc = () => state().rpc
 
-  process.exit = (code = process.exitCode || 0): never => {
-    throw new Error(`process.exit unexpectedly called with "${code}"`)
-  }
+  // process.exit = (code = process.exitCode || 0): never => {
+  //   throw new Error(`process.exit unexpectedly called with "${code}"`)
+  // }
 
   listenForErrors(state)
 

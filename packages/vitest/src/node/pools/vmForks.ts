@@ -34,7 +34,9 @@ function createChildProcessChannel(project: WorkspaceProject) {
     createMethodsRPC(project, { cacheFs: true }),
     {
       eventNames: ['onCancel'],
-      serialize: v8.serialize,
+      serialize: (data) => {
+        return v8.serialize(data)
+      },
       deserialize: v => v8.deserialize(Buffer.from(v)),
       post(v) {
         emitter.emit(events.message, v)
@@ -84,6 +86,7 @@ export function createVmForksPool(
 
     env,
     execArgv: [
+      '--trace-exit',
       '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
       '--require',

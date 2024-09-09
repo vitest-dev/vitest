@@ -178,12 +178,7 @@ export class CommonjsExecutor {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
-      const ext = extname(resolved)
-      if (ext === '.node' || isNodeBuiltin(resolved)) {
-        return this.requireCoreModule(resolved)
-      }
-      const module = new this.Module(resolved)
-      return this.loadCommonJSModule(module, resolved)
+      return this.require(resolved)
     }) as NodeRequire
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {
@@ -218,6 +213,7 @@ export class CommonjsExecutor {
     module: NodeModule,
     filename: string,
   ): Record<string, unknown> {
+    console.log('require', filename)
     const cached = this.requireCache.get(filename)
     if (cached) {
       return cached.exports
@@ -259,6 +255,7 @@ export class CommonjsExecutor {
   }
 
   private requireCoreModule(identifier: string) {
+    console.log('require core', identifier)
     const normalized = identifier.replace(/^node:/, '')
     if (this.builtinCache[normalized]) {
       return this.builtinCache[normalized].exports

@@ -9,6 +9,7 @@
     "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
+    "node-error-repro": "pnpm -r --filter test-core run node-error-repro",
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
     "ci:docs": "pnpm run build && pnpm run docs:build",
     "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
@@ -85,7 +86,8 @@
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
-      "acorn@8.11.3": "patches/acorn@8.11.3.patch"
+      "acorn@8.11.3": "patches/acorn@8.11.3.patch",
+      "tinypool": "patches/tinypool.patch"
     }
   }
 }

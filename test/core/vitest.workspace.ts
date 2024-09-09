@@ -15,4 +15,5 @@ export default defineWorkspace([
   project('threads'),
   project('forks'),
   project('vmThreads'),
+  project('vmForks'),
 ])
