@@ -198,7 +198,10 @@ function licensePlugin() {
                     preserveSymlinks: false,
                   }),
                 )
-                const [licenseFile] = globSync([`${pkgDir}/(LICENSE)|(license)*`], { expandDirectories: false })
+                const [licenseFile] = globSync([`${pkgDir}/LICENSE*`], {
+                  expandDirectories: false,
+                  caseSensitiveMatch: false,
+                })
                 if (licenseFile) {
                   licenseText = fs.readFileSync(licenseFile, 'utf-8')
                 }
