@@ -39,7 +39,7 @@ export function createExpect(test?: TaskPopulated) {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
-  const testPath = getTestFile(test)
+  const testPath = getTestFile()
   setState<MatcherState>(
     {
       // this should also add "snapshotState" that is added conditionally
@@ -111,10 +111,7 @@ export function createExpect(test?: TaskPopulated) {
   return expect
 }
 
-function getTestFile(test?: TaskPopulated) {
-  if (test) {
-    return test.file.filepath
-  }
+function getTestFile() {
   const state = getWorkerState()
   return state.filepath
 }
