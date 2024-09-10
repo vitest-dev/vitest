@@ -85,7 +85,7 @@ export type AsyncExpectationResult = Promise<SyncExpectationResult>
 export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 
 export interface RawMatcherFn<T extends MatcherState = MatcherState> {
-  (this: T, received: any, expected: any, options?: any): ExpectationResult
+  (this: T, received: any, ...expected: Array<any>): ExpectationResult
 }
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<

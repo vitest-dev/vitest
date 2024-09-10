@@ -1,5 +1,9 @@
 name: CI
 
+# Remove default permissions of GITHUB_TOKEN for security
+# https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+permissions: {}
+
 on:
   push:
     branches:
@@ -20,41 +24,9 @@ env:
 
 jobs:
   lint:
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-and-cache
-
-      - name: Install
-        run: pnpm i
-
-      - name: Lint
-        run: pnpm run lint
-
-  changed:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
-    outputs:
-      should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@c65cd883420fd2eb864698a825fc4162dd94482c # v44.5.7
-        with:
-          files: |
-            docs/**
-            .github/**
-            !.github/workflows/ci.yml
-            **.md
-
-  typecheck:
-    needs: changed
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ubuntu-latest
-
+    name: 'Lint: node-latest, ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
 
@@ -66,11 +38,40 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Lint
+        run: pnpm run lint
+
       - name: Typecheck
         run: pnpm run typecheck
 
+      # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
+      - name: Check workflow files
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color -shellcheck=""
+
+  changed:
+    runs-on: ubuntu-latest
+    name: 'Diff: node-latest, ubuntu-latest'
+    outputs:
+      should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275 # v45.0.1
+        with:
+          files: |
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
+
   test:
     needs: changed
+    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: ${{ matrix.os }}
 
@@ -79,15 +80,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        # Reset back to 20 after https://github.com/nodejs/node/issues/53648
-        # (The issues is closed, but the error persist even after 20.14)
-        node_version: [18, 20.14]
-        # node_version: [18, 20, 22] 22 when LTS is close enough
+        node_version: [18, 20, 22]
         include:
-          - os: macos-14
-            node_version: 20.14
+          - os: macos-latest
+            node_version: 20
           - os: windows-latest
-            node_version: 20.14
+            node_version: 20
       fail-fast: false
 
     steps:
@@ -119,13 +117,14 @@ jobs:
 
   test-browser:
     needs: changed
+    name: 'Browser: ${{ matrix.browser[0] }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
-          - macos-14
+          - macos-latest
           - windows-latest
         browser:
           - [chromium, chrome]
@@ -151,7 +150,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: steps.changed-files.outputs.only_changed != 'true'
+        if: needs.changed.outputs.should_skip != 'true'
         run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
 
       - name: Build

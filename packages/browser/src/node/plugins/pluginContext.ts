@@ -94,14 +94,31 @@ function getUserEvent(provider: BrowserProvider) {
     return '__userEvent_CDP__'
   }
   // TODO: have this in a separate file
-  return `{
+  return String.raw`{
   ..._userEventSetup,
   setup() {
     const userEvent = __vitest_user_event__.setup()
     userEvent.setup = this.setup
     userEvent.fill = this.fill.bind(userEvent)
+    userEvent._upload = userEvent.upload.bind(userEvent)
+    userEvent.upload = this.upload.bind(userEvent)
     userEvent.dragAndDrop = this.dragAndDrop
     return userEvent
+  },
+  async upload(element, file) {
+    const uploadPromise = (Array.isArray(file) ? file : [file]).map(async (file) => {
+      if (typeof file !== 'string') {
+        return file
+      }
+
+      const { content: base64, basename, mime } = await rpc().triggerCommand(contextId, "__vitest_fileInfo", filepath(), [file, 'base64'])
+      const fileInstance = fetch(base64)
+        .then(r => r.blob())
+        .then(blob => new File([blob], basename, { type: mime }))
+      return fileInstance
+    })
+    const uploadFiles = await Promise.all(uploadPromise)
+    return this._upload(element, uploadFiles)
   },
   async fill(element, text) {
     await this.clear(element)

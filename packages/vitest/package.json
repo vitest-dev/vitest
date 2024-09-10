@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "2.1.0-beta.5",
+  "version": "2.1.0-beta.7",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -94,6 +94,10 @@
     "./snapshot": {
       "types": "./dist/snapshot.d.ts",
       "default": "./dist/snapshot.js"
+    },
+    "./mocker": {
+      "types": "./dist/mocker.d.ts",
+      "default": "./dist/mocker.js"
     }
   },
   "main": "./dist/index.js",
@@ -146,8 +150,8 @@
     }
   },
   "dependencies": {
-    "@ampproject/remapping": "^2.3.0",
     "@vitest/expect": "workspace:*",
+    "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:^",
     "@vitest/runner": "workspace:*",
     "@vitest/snapshot": "workspace:*",
@@ -155,12 +159,12 @@
     "@vitest/utils": "workspace:*",
     "chai": "^5.1.1",
     "debug": "^4.3.6",
-    "execa": "^8.0.1",
     "expect-type": "^1.0.0-rc.0",
     "magic-string": "^0.30.11",
     "pathe": "^1.1.2",
     "std-env": "^3.7.0",
     "tinybench": "^2.9.0",
+    "tinyexec": "^0.3.0",
     "tinypool": "^1.0.0",
     "tinyrainbow": "^1.2.0",
     "vite": "^5.0.0",
@@ -168,7 +172,8 @@
     "why-is-node-running": "^2.3.0"
   },
   "devDependencies": {
-    "@antfu/install-pkg": "^0.3.4",
+    "@ampproject/remapping": "^2.3.0",
+    "@antfu/install-pkg": "^0.4.1",
     "@edge-runtime/vm": "^4.0.1",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/debug": "^4.1.12",
@@ -177,7 +182,7 @@
     "@types/istanbul-reports": "^3.0.4",
     "@types/jsdom": "^21.1.7",
     "@types/micromatch": "^4.0.9",
-    "@types/node": "^20.14.15",
+    "@types/node": "^22.5.2",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
     "acorn-walk": "^8.3.3",
@@ -185,12 +190,11 @@
     "cac": "^6.7.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^4.0.0",
-    "fast-glob": "^3.3.2",
     "find-up": "^6.3.0",
     "flatted": "^3.3.1",
     "get-tsconfig": "^4.7.6",
-    "happy-dom": "^14.12.3",
-    "jsdom": "^24.1.1",
+    "happy-dom": "^15.7.3",
+    "jsdom": "^25.0.0",
     "local-pkg": "^0.5.0",
     "log-update": "^5.0.1",
     "micromatch": "^4.0.7",
@@ -198,6 +202,7 @@
     "prompts": "^2.4.2",
     "strip-ansi": "^7.1.0",
     "strip-literal": "^2.1.0",
+    "tinyglobby": "^0.2.6",
     "ws": "^8.18.0"
   }
 }

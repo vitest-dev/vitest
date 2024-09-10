@@ -1,4 +1,10 @@
 {
   "name": "@vitest/space_3",
-  "private": true
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "vitest": "link:./fake-vitest"
+  }
 }

@@ -1,3 +1,6 @@
+import MagicString from 'magic-string'
+import type { Plugin } from 'vite'
+import { cleanUrl } from '../utils'
 import type {
   Declaration,
   ExportDefaultDeclaration,
@@ -8,12 +11,41 @@ import type {
   Pattern,
   Positioned,
   Program,
-} from '@vitest/utils/ast'
-import MagicString from 'magic-string'
+} from './esmWalker'
+
+export interface AutomockPluginOptions {
+  /**
+   * @default "__vitest_mocker__"
+   */
+  globalThisAccessor?: string
+}
+
+export function automockPlugin(options: AutomockPluginOptions = {}): Plugin {
+  return {
+    name: 'vitest:automock',
+    enforce: 'post',
+    transform(code, id) {
+      if (id.includes('mock=automock') || id.includes('mock=autospy')) {
+        const mockType = id.includes('mock=automock') ? 'automock' : 'autospy'
+        const ms = automockModule(code, mockType, this.parse, options)
+        return {
+          code: ms.toString(),
+          map: ms.generateMap({ hires: 'boundary', source: cleanUrl(id) }),
+        }
+      }
+    },
+  }
+}
 
 // TODO: better source map replacement
-export function automockModule(code: string, parse: (code: string) => Program) {
-  const ast = parse(code)
+export function automockModule(
+  code: string,
+  mockType: 'automock' | 'autospy',
+  parse: (code: string) => any,
+  options: AutomockPluginOptions = {},
+): MagicString {
+  const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
+  const ast = parse(code) as Program
 
   const m = new MagicString(code)
 
@@ -141,11 +173,11 @@ export function automockModule(code: string, parse: (code: string) => Program) {
     }
   }
   const moduleObject = `
-const __vitest_es_current_module__ = {
+const __vitest_current_es_module__ = {
   __esModule: true,
   ${allSpecifiers.map(({ name }) => `["${name}"]: ${name},`).join('\n  ')}
 }
-const __vitest_mocked_module__ = __vitest_mocker__.mockObject(__vitest_es_current_module__)
+const __vitest_mocked_module__ = globalThis[${globalThisAccessor}].mockObject(__vitest_current_es_module__, "${mockType}")
 `
   const assigning = allSpecifiers
     .map(({ name }, index) => {

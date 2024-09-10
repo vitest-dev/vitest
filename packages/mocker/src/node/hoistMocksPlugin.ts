@@ -1,3 +1,4 @@
+import type { SourceMap } from 'magic-string'
 import MagicString from 'magic-string'
 import type {
   AwaitExpression,
@@ -9,21 +10,86 @@ import type {
   ImportDeclaration,
   ImportExpression,
   VariableDeclaration,
-  Node as _Node,
 } from 'estree'
 import { findNodeAround } from 'acorn-walk'
-import type { PluginContext, ProgramNode } from 'rollup'
-import { esmWalker } from '@vitest/utils/ast'
-import type { Colors } from 'tinyrainbow'
-import { highlightCode } from '../utils/colors'
-import { generateCodeFrame } from './error'
+import type { Plugin, Rollup } from 'vite'
+import { createFilter } from 'vite'
+import type { Node, Positioned } from './esmWalker'
+import { esmWalker } from './esmWalker'
 
-export type Positioned<T> = T & {
-  start: number
-  end: number
+interface HoistMocksOptions {
+  /**
+   * List of modules that should always be imported before compiler hints.
+   * @default ['vitest']
+   */
+  hoistedModules?: string[]
+  /**
+   * @default ["vi", "vitest"]
+   */
+  utilsObjectNames?: string[]
+  /**
+   * @default ["mock", "unmock"]
+   */
+  hoistableMockMethodNames?: string[]
+  /**
+   * @default ["mock", "unmock", "doMock", "doUnmock"]
+   */
+  dynamicImportMockMethodNames?: string[]
+  /**
+   * @default ["hoisted"]
+   */
+  hoistedMethodNames?: string[]
+  regexpHoistable?: RegExp
+  codeFrameGenerator?: CodeFrameGenerator
 }
 
-export type Node = Positioned<_Node>
+export interface HoistMocksPluginOptions extends Omit<HoistMocksOptions, 'regexpHoistable'> {
+  include?: string | RegExp | (string | RegExp)[]
+  exclude?: string | RegExp | (string | RegExp)[]
+  /**
+   * overrides include/exclude options
+   */
+  filter?: (id: string) => boolean
+}
+
+export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin {
+  const filter = options.filter || createFilter(options.include, options.exclude)
+
+  const {
+    hoistableMockMethodNames = ['mock', 'unmock'],
+    dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
+    hoistedMethodNames = ['hoisted'],
+    utilsObjectNames = ['vi', 'vitest'],
+  } = options
+
+  const methods = new Set([
+    ...hoistableMockMethodNames,
+    ...hoistedMethodNames,
+    ...dynamicImportMockMethodNames,
+  ])
+
+  const regexpHoistable = new RegExp(
+    `\\b(?:${utilsObjectNames.join('|')})\\s*\.\\s*(?:${Array.from(methods).join('|')})\\(`,
+  )
+
+  return {
+    name: 'vitest:mocks',
+    enforce: 'post',
+    transform(code, id) {
+      if (!filter(id)) {
+        return
+      }
+      return hoistMocks(code, id, this.parse, {
+        regexpHoistable,
+        hoistableMockMethodNames,
+        hoistedMethodNames,
+        utilsObjectNames,
+        dynamicImportMockMethodNames,
+        ...options,
+      })
+    },
+  }
+}
 
 const API_NOT_FOUND_ERROR = `There are some problems in resolving the mocks API.
 You may encounter this issue when importing the mocks API from another module other than 'vitest'.
@@ -31,43 +97,16 @@ To fix this issue you can either:
 - import the mocks API directly from 'vitest'
 - enable the 'globals' options`
 
-const API_NOT_FOUND_CHECK
-  = '\nif (typeof globalThis.vi === "undefined" && typeof globalThis.vitest === "undefined") '
-  + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+function API_NOT_FOUND_CHECK(names: string[]) {
+  return `\nif (${names.map(name => `typeof globalThis["${name}"] === "undefined"`).join(' && ')}) `
+    + `{ throw new Error(${JSON.stringify(API_NOT_FOUND_ERROR)}) }\n`
+}
 
 function isIdentifier(node: any): node is Positioned<Identifier> {
   return node.type === 'Identifier'
 }
 
-function transformImportSpecifiers(node: ImportDeclaration) {
-  const dynamicImports = node.specifiers
-    .map((specifier) => {
-      if (specifier.type === 'ImportDefaultSpecifier') {
-        return `default: ${specifier.local.name}`
-      }
-
-      if (specifier.type === 'ImportSpecifier') {
-        const local = specifier.local.name
-        const imported = specifier.imported.name
-        if (local === imported) {
-          return local
-        }
-        return `${imported}: ${local}`
-      }
-
-      return null
-    })
-    .filter(Boolean)
-    .join(', ')
-
-  if (!dynamicImports.length) {
-    return ''
-  }
-
-  return `{ ${dynamicImports} }`
-}
-
-export function getBetterEnd(code: string, node: Node) {
+function getBetterEnd(code: string, node: Node) {
   let end = node.end
   if (code[node.end] === ';') {
     end += 1
@@ -82,13 +121,24 @@ const regexpHoistable
   = /\b(?:vi|vitest)\s*\.\s*(?:mock|unmock|hoisted|doMock|doUnmock)\(/
 const hashbangRE = /^#!.*\n/
 
+export interface HoistMocksResult {
+  ast: Rollup.ProgramNode
+  code: string
+  map: SourceMap
+}
+
+interface CodeFrameGenerator {
+  (node: Positioned<Node>, id: string, code: string): string
+}
+
+// this is a fork of Vite SSR trandform
 export function hoistMocks(
   code: string,
   id: string,
-  parse: PluginContext['parse'],
-  colors?: Colors,
-) {
-  const needHoisting = regexpHoistable.test(code)
+  parse: Rollup.PluginContext['parse'],
+  options: HoistMocksOptions = {},
+): HoistMocksResult | undefined {
+  const needHoisting = (options.regexpHoistable || regexpHoistable).test(code)
 
   if (!needHoisting) {
     return
@@ -96,18 +146,26 @@ export function hoistMocks(
 
   const s = new MagicString(code)
 
-  let ast: ProgramNode
+  let ast: Rollup.ProgramNode
   try {
     ast = parse(code)
   }
   catch (err) {
-    console.error(`Cannot parse ${id}:\n${(err as any).message}`)
+    console.error(`Cannot parse ${id}:\n${(err as any).message}.`)
     return
   }
 
+  const {
+    hoistableMockMethodNames = ['mock', 'unmock'],
+    dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
+    hoistedMethodNames = ['hoisted'],
+    utilsObjectNames = ['vi', 'vitest'],
+    hoistedModules = ['vitest'],
+  } = options
+
   const hoistIndex = code.match(hashbangRE)?.[0].length ?? 0
 
-  let hoistedVitestImports = ''
+  let hoistedModuleImported = false
 
   let uid = 0
   const idToImportMap = new Map<string, string>()
@@ -133,12 +191,8 @@ export function hoistMocks(
   function defineImport(node: Positioned<ImportDeclaration>) {
     // always hoist vitest import to top of the file, so
     // "vi" helpers can access it
-    if (node.source.value === 'vitest') {
-      const code = `const ${transformImportSpecifiers(
-        node,
-      )} = await import('vitest')\n`
-      hoistedVitestImports += code
-      s.remove(node.start, getBetterEnd(code, node))
+    if (hoistedModules.includes(node.source.value as string)) {
+      hoistedModuleImported = true
       return
     }
 
@@ -187,16 +241,15 @@ export function hoistMocks(
   function createSyntaxError(node: Positioned<Node>, message: string) {
     const _error = new SyntaxError(message)
     Error.captureStackTrace(_error, createSyntaxError)
-    return {
+    const serializedError: any = {
       name: 'SyntaxError',
       message: _error.message,
       stack: _error.stack,
-      frame: generateCodeFrame(
-        highlightCode(id, code, colors),
-        4,
-        node.start + 1,
-      ),
     }
+    if (options.codeFrameGenerator) {
+      serializedError.frame = options.codeFrameGenerator(node, id, code)
+    }
+    return serializedError
   }
 
   function assertNotDefaultExport(
@@ -276,13 +329,12 @@ export function hoistMocks(
       if (
         node.callee.type === 'MemberExpression'
         && isIdentifier(node.callee.object)
-        && (node.callee.object.name === 'vi'
-        || node.callee.object.name === 'vitest')
+        && utilsObjectNames.includes(node.callee.object.name)
         && isIdentifier(node.callee.property)
       ) {
         const methodName = node.callee.property.name
 
-        if (methodName === 'mock' || methodName === 'unmock') {
+        if (hoistableMockMethodNames.includes(methodName)) {
           const method = `${node.callee.object.name}.${methodName}`
           assertNotDefaultExport(
             node,
@@ -297,10 +349,9 @@ export function hoistMocks(
           }
           hoistedNodes.push(node)
         }
-
         // vi.doMock(import('./path')) -> vi.doMock('./path')
         // vi.doMock(await import('./path')) -> vi.doMock('./path')
-        if (methodName === 'doMock' || methodName === 'doUnmock') {
+        else if (dynamicImportMockMethodNames.includes(methodName)) {
           const moduleInfo = node.arguments[0] as Positioned<Expression>
           let source: Positioned<Expression> | null = null
           if (moduleInfo.type === 'ImportExpression') {
@@ -321,7 +372,7 @@ export function hoistMocks(
           }
         }
 
-        if (methodName === 'hoisted') {
+        if (hoistedMethodNames.includes(methodName)) {
           assertNotDefaultExport(
             node,
             'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.',
@@ -445,8 +496,7 @@ export function hoistMocks(
       if (
         node.type === 'CallExpression'
         && node.callee.type === 'MemberExpression'
-        && ((node.callee.property as Identifier).name === 'mock'
-        || (node.callee.property as Identifier).name === 'unmock')
+        && dynamicImportMockMethodNames.includes((node.callee.property as Identifier).name)
       ) {
         const moduleInfo = node.arguments[0] as Positioned<Expression>
         // vi.mock(import('./path')) -> vi.mock('./path')
@@ -479,10 +529,9 @@ export function hoistMocks(
     })
     .join('')
 
-  if (hoistedCode || hoistedVitestImports) {
+  if (hoistedCode || hoistedModuleImported) {
     s.prepend(
-      hoistedVitestImports
-      + (!hoistedVitestImports && hoistedCode ? API_NOT_FOUND_CHECK : '')
+      (!hoistedModuleImported && hoistedCode ? API_NOT_FOUND_CHECK(utilsObjectNames) : '')
       + hoistedCode,
     )
   }

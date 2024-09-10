@@ -3,7 +3,6 @@ import type { BirpcReturn } from 'birpc'
 import type { CancelReason, Task } from '@vitest/runner'
 import type { SerializedConfig } from '../runtime/config'
 import type { RunnerRPC, RuntimeRPC } from './rpc'
-import type { MockMap } from './mocker'
 import type { TransformMode } from './general'
 import type { Environment } from './environment'
 
@@ -43,7 +42,6 @@ export interface WorkerGlobalState {
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
-  mockMap: MockMap
   providedContext: Record<string, any>
   durations: {
     environment: number

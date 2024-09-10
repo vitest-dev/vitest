@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
-import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { dirname, join, normalize, relative } from 'pathe'
 import mm from 'micromatch'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
@@ -12,13 +12,12 @@ import { version } from '../../package.json' with { type: 'json' }
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { workspacesFiles as workspaceFiles } from '../constants'
-import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
-import type { SerializedSpec } from '../runtime/types/utils'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
-import { createPool, getFilePoolName } from './pool'
+import { distDir } from '../paths'
 import type { ProcessPool, WorkspaceSpec } from './pool'
+import { createPool, getFilePoolName } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
 import { resolveConfig } from './config/resolveConfig'
@@ -32,6 +31,7 @@ import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { Reporter } from './types/reporter'
 import type { CoverageProvider } from './types/coverage'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
+import type { TestSpecification } from './spec'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -78,7 +78,7 @@ export class Vitest {
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
 
-  public distPath!: string
+  public distPath = distDir
 
   private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
 
@@ -106,7 +106,6 @@ export class Vitest {
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
-    this.distPath = undefined!
     this._cachedSpecs.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
@@ -299,7 +298,7 @@ export class Vitest {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
     }
 
-    const { files, errors, coverages } = await readBlobs(this.config.mergeReports, this.projects)
+    const { files, errors, coverages } = await readBlobs(this.version, this.config.mergeReports, this.projects)
 
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
@@ -374,6 +373,14 @@ export class Vitest {
     }
   }
 
+  async listFiles(filters?: string[]) {
+    const files = await this.filterTestsBySource(
+      await this.globTestFiles(filters),
+    )
+
+    return files
+  }
+
   async start(filters?: string[]) {
     this._onClose = []
 
@@ -437,7 +444,7 @@ export class Vitest {
     }
   }
 
-  private async getTestDependencies([project, filepath]: WorkspaceSpec, deps = new Set<string>()) {
+  private async getTestDependencies(spec: WorkspaceSpec, deps = new Set<string>()) {
     const addImports = async (project: WorkspaceProject, filepath: string) => {
       if (deps.has(filepath)) {
         return
@@ -459,8 +466,8 @@ export class Vitest {
       }))
     }
 
-    await addImports(project, filepath)
-    deps.delete(filepath)
+    await addImports(spec.project.workspaceProject, spec.moduleId)
+    deps.delete(spec.moduleId)
 
     return deps
   }
@@ -531,18 +538,18 @@ export class Vitest {
     for (const project of this.projects) {
       if (project.isTestFile(file)) {
         const pool = getFilePoolName(project, file)
-        specs.push([project, file, { pool }])
+        specs.push(project.createSpec(file, pool))
       }
       if (project.isTypecheckFile(file)) {
-        specs.push([project, file, { pool: 'typescript' }])
+        specs.push(project.createSpec(file, 'typescript'))
       }
     }
     specs.forEach(spec => this.ensureSpecCached(spec))
     return specs
   }
 
-  async initializeGlobalSetup(paths: WorkspaceSpec[]) {
-    const projects = new Set(paths.map(([project]) => project))
+  async initializeGlobalSetup(paths: TestSpecification[]) {
+    const projects = new Set(paths.map(spec => spec.project.workspaceProject))
     const coreProject = this.getCoreWorkspaceProject()
     if (!projects.has(coreProject)) {
       projects.add(coreProject)
@@ -552,31 +559,12 @@ export class Vitest {
     }
   }
 
-  private async initializeDistPath() {
-    if (this.distPath) {
-      return
-    }
-
-    // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.vitenode.resolveId('vitest')
-    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.distPath = join(vitestDir, 'dist')
-  }
-
-  async runFiles(specs: WorkspaceSpec[], allTestsRun: boolean) {
-    await this.initializeDistPath()
-
-    const filepaths = specs.map(([, file]) => file)
+  async runFiles(specs: TestSpecification[], allTestsRun: boolean) {
+    const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
     await this.report('onPathsCollected', filepaths)
-    await this.report('onSpecsCollected', specs.map(
-      ([project, file, options]) =>
-        [{
-          name: project.config.name,
-          root: project.config.root,
-        }, file, options] satisfies SerializedSpec,
-    ))
+    await this.report('onSpecsCollected', specs.map(spec => spec.toJSON()))
 
     // previous run
     await this.runningPromise
@@ -601,7 +589,7 @@ export class Vitest {
       await this.initializeGlobalSetup(specs)
 
       try {
-        await this.pool.runTests(specs, invalidates)
+        await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
       }
       catch (err) {
         this.state.catchError(err, 'Unhandled Error')
@@ -618,7 +606,7 @@ export class Vitest {
     })()
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
-        const files = Array.from(new Set(specs.map(([, p]) => p)))
+        const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
         await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors(), coverage)
@@ -636,9 +624,7 @@ export class Vitest {
   }
 
   async collectFiles(specs: WorkspaceSpec[]) {
-    await this.initializeDistPath()
-
-    const filepaths = specs.map(([, file]) => file)
+    const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
     // previous run
@@ -709,7 +695,7 @@ export class Vitest {
     else { this.configOverride.project = pattern }
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
-    const files = (await this.globTestFiles()).map(([, file]) => file)
+    const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
     await this.rerunFiles(files, 'change project filter')
   }
 
@@ -842,81 +828,84 @@ export class Vitest {
     )
   }
 
-  private unregisterWatcher = noop
-  private registerWatcher() {
-    const updateLastChanged = (filepath: string) => {
-      const projects = this.getModuleProjects(filepath)
-      projects.forEach(({ server, browser }) => {
-        const serverMods = server.moduleGraph.getModulesByFile(filepath)
-        serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
+  private updateLastChanged(filepath: string) {
+    const projects = this.getModuleProjects(filepath)
+    projects.forEach(({ server, browser }) => {
+      const serverMods = server.moduleGraph.getModulesByFile(filepath)
+      serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
 
-        if (browser) {
-          const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
-          browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
-        }
-      })
+      if (browser) {
+        const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
+        browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
+      }
+    })
+  }
+
+  onChange = (id: string) => {
+    id = slash(id)
+    this.logger.clearHighlightCache(id)
+    this.updateLastChanged(id)
+    const needsRerun = this.handleFileChanged(id)
+    if (needsRerun.length) {
+      this.scheduleRerun(needsRerun)
     }
+  }
 
-    const onChange = (id: string) => {
-      id = slash(id)
-      this.logger.clearHighlightCache(id)
-      updateLastChanged(id)
+  onUnlink = (id: string) => {
+    id = slash(id)
+    this.logger.clearHighlightCache(id)
+    this.invalidates.add(id)
+
+    if (this.state.filesMap.has(id)) {
+      this.state.filesMap.delete(id)
+      this.cache.results.removeFromCache(id)
+      this.cache.stats.removeStats(id)
+      this.changedTests.delete(id)
+      this.report('onTestRemoved', id)
+    }
+  }
+
+  onAdd = async (id: string) => {
+    id = slash(id)
+    this.updateLastChanged(id)
+
+    const matchingProjects: WorkspaceProject[] = []
+    await Promise.all(this.projects.map(async (project) => {
+      if (await project.isTargetFile(id)) {
+        matchingProjects.push(project)
+        project.testFilesList?.push(id)
+      }
+    }))
+
+    if (matchingProjects.length > 0) {
+      this.changedTests.add(id)
+      this.scheduleRerun([id])
+    }
+    else {
+      // it's possible that file was already there but watcher triggered "add" event instead
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun.length) {
         this.scheduleRerun(needsRerun)
       }
     }
-    const onUnlink = (id: string) => {
-      id = slash(id)
-      this.logger.clearHighlightCache(id)
-      this.invalidates.add(id)
+  }
 
-      if (this.state.filesMap.has(id)) {
-        this.state.filesMap.delete(id)
-        this.cache.results.removeFromCache(id)
-        this.cache.stats.removeStats(id)
-        this.changedTests.delete(id)
-        this.report('onTestRemoved', id)
-      }
-    }
-    const onAdd = async (id: string) => {
-      id = slash(id)
-      updateLastChanged(id)
-
-      const matchingProjects: WorkspaceProject[] = []
-      await Promise.all(this.projects.map(async (project) => {
-        if (await project.isTargetFile(id)) {
-          matchingProjects.push(project)
-          project.testFilesList?.push(id)
-        }
-      }))
-
-      if (matchingProjects.length > 0) {
-        this.changedTests.add(id)
-        this.scheduleRerun([id])
-      }
-      else {
-        // it's possible that file was already there but watcher triggered "add" event instead
-        const needsRerun = this.handleFileChanged(id)
-        if (needsRerun.length) {
-          this.scheduleRerun(needsRerun)
-        }
-      }
-    }
+  private unregisterWatcher = noop
+  private registerWatcher() {
     const watcher = this.server.watcher
 
     if (this.config.forceRerunTriggers.length) {
       watcher.add(this.config.forceRerunTriggers)
     }
 
-    watcher.on('change', onChange)
-    watcher.on('unlink', onUnlink)
-    watcher.on('add', onAdd)
+    watcher.on('change', this.onChange)
+    watcher.on('unlink', this.onUnlink)
+    watcher.on('add', this.onAdd)
 
     this.unregisterWatcher = () => {
-      watcher.off('change', onChange)
-      watcher.off('unlink', onUnlink)
-      watcher.off('add', onAdd)
+      watcher.off('change', this.onChange)
+      watcher.off('unlink', this.onUnlink)
+      watcher.off('add', this.onAdd)
       this.unregisterWatcher = noop
     }
   }
@@ -1083,26 +1072,33 @@ export class Vitest {
   }
 
   public async getTestFilepaths() {
-    return this.globTestFiles().then(files => files.map(([, file]) => file))
+    return this.globTestSpecs().then(specs => specs.map(spec => spec.moduleId))
   }
 
-  public async globTestFiles(filters: string[] = []) {
+  public async globTestSpecs(filters: string[] = []) {
     const files: WorkspaceSpec[] = []
     await Promise.all(this.projects.map(async (project) => {
       const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
       testFiles.forEach((file) => {
         const pool = getFilePoolName(project, file)
-        const spec: WorkspaceSpec = [project, file, { pool }]
+        const spec = project.createSpec(file, pool)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec: WorkspaceSpec = [project, file, { pool: 'typescript' }]
+        const spec = project.createSpec(file, 'typescript')
         this.ensureSpecCached(spec)
         files.push(spec)
       })
     }))
     return files
+  }
+
+  /**
+   * @deprecated use globTestSpecs instead
+   */
+  public async globTestFiles(filters: string[] = []) {
+    return this.globTestSpecs(filters)
   }
 
   private ensureSpecCached(spec: WorkspaceSpec) {

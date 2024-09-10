@@ -1,7 +1,6 @@
 import { promises as fs } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { rm } from 'node:fs/promises'
-import fg from 'fast-glob'
 import mm from 'micromatch'
 import {
   dirname,
@@ -18,6 +17,7 @@ import type {
 } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
+import { glob } from 'tinyglobby'
 import type { Typechecker } from '../typecheck/typechecker'
 import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
@@ -39,6 +39,8 @@ import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
 import type { Vitest } from './core'
 import { TestProject } from './reported-workspace-project'
+import { TestSpecification } from './spec'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -149,6 +151,10 @@ export class WorkspaceProject {
       ...this.ctx.getCoreWorkspaceProject().getProvidedContext(),
       ...this._provided,
     }
+  }
+
+  public createSpec(moduleId: string, pool: string): DeprecatedWorkspaceSpec {
+    return new TestSpecification(this, moduleId, pool) as DeprecatedWorkspaceSpec
   }
 
   async initializeGlobalSetup() {
@@ -290,14 +296,13 @@ export class WorkspaceProject {
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: fg.Options = {
+    return glob(include, {
+      absolute: true,
       dot: true,
       cwd,
       ignore: exclude,
-    }
-
-    const files = await fg(include, globOptions)
-    return files.map(file => resolve(cwd, file))
+      expandDirectories: false,
+    })
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {

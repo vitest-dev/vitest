@@ -9,8 +9,9 @@ import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vit
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { toArray } from '@vitest/utils'
 import { defaultBrowserPort } from 'vitest/config'
+import { dynamicImportPlugin } from '@vitest/mocker/node'
+import MagicString from 'magic-string'
 import BrowserContext from './plugins/pluginContext'
-import DynamicImport from './plugins/pluginDynamicImport'
 import type { BrowserServer } from './server'
 import { resolveOrchestrator } from './serverOrchestrator'
 import { resolveTester } from './serverTester'
@@ -181,6 +182,29 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           ...(project.config.snapshotSerializers || []),
         ]
 
+        const exclude = [
+          'vitest',
+          'vitest/utils',
+          'vitest/browser',
+          'vitest/runners',
+          '@vitest/browser',
+          '@vitest/browser/client',
+          '@vitest/utils',
+          '@vitest/utils/source-map',
+          '@vitest/runner',
+          '@vitest/spy',
+          '@vitest/utils/error',
+          '@vitest/snapshot',
+          '@vitest/expect',
+          'std-env',
+          'tinybench',
+          'tinyspy',
+          'tinyrainbow',
+          'pathe',
+          'msw',
+          'msw/browser',
+        ]
+
         if (project.config.diff) {
           entries.push(project.config.diff)
         }
@@ -192,12 +216,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
             if (path) {
               entries.push(path)
+              exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
             const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
             if (path) {
               entries.push(path)
+              exclude.push('@vitest/coverage-istanbul')
             }
           }
           else if (provider === 'custom' && coverage.customProviderModule) {
@@ -222,29 +248,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         if (vue) {
           include.push(vue)
         }
-
-        const exclude = [
-          'vitest',
-          'vitest/utils',
-          'vitest/browser',
-          'vitest/runners',
-          '@vitest/browser',
-          '@vitest/browser/client',
-          '@vitest/utils',
-          '@vitest/utils/source-map',
-          '@vitest/runner',
-          '@vitest/spy',
-          '@vitest/utils/error',
-          '@vitest/snapshot',
-          '@vitest/expect',
-          'std-env',
-          'tinybench',
-          'tinyspy',
-          'tinyrainbow',
-          'pathe',
-          'msw',
-          'msw/browser',
-        ]
 
         const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
         if (svelte) {
@@ -306,7 +309,9 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       },
     },
     BrowserContext(browserServer),
-    DynamicImport(),
+    dynamicImportPlugin({
+      globalThisAccessor: '"__vitest_browser_runner__"',
+    }),
     {
       name: 'vitest:browser:config',
       enforce: 'post',
@@ -344,6 +349,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           resolve: {
             alias: viteConfig.test?.alias,
           },
+        }
+      },
+    },
+    {
+      name: 'vitest:browser:in-source-tests',
+      transform(code, id) {
+        if (!project.isTestFile(id) || !code.includes('import.meta.vitest')) {
+          return
+        }
+        const s = new MagicString(code, { filename: cleanUrl(id) })
+        s.prepend(
+          `import.meta.vitest = __vitest_index__;\n`,
+        )
+        return {
+          code: s.toString(),
+          map: s.generateMap({ hires: true }),
         }
       },
     },
@@ -442,4 +463,9 @@ function resolveCoverageFolder(project: WorkspaceProject) {
   }
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }

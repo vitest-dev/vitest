@@ -16,7 +16,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   }
 
   const path = options.path
-    ? resolve(context.testPath, options.path)
+    ? resolve(dirname(context.testPath), options.path)
     : resolveScreenshotPath(
       context.testPath,
       name,

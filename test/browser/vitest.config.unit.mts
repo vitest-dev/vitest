@@ -8,7 +8,7 @@ export default defineConfig({
         singleFork: true,
       },
     },
-    hookTimeout: process.env.CI ? 120_000 : 10_000,
-    testTimeout: process.env.CI ? 120_000 : 10_000,
+    hookTimeout: process.env.CI ? 120_000 : 20_000,
+    testTimeout: process.env.CI ? 120_000 : 20_000,
   },
 })

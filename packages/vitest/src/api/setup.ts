@@ -12,7 +12,7 @@ import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/genera
 import type { Reporter } from '../node/types/reporter'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
-import type { SerializedSpec } from '../runtime/types/utils'
+import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -102,14 +102,14 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           return ctx.state.getUnhandledErrors()
         },
         async getTestFiles() {
-          const spec = await ctx.globTestFiles()
-          return spec.map(([project, file, options]) => [
+          const spec = await ctx.globTestSpecs()
+          return spec.map(spec => [
             {
-              name: project.config.name,
-              root: project.config.root,
+              name: spec.project.config.name,
+              root: spec.project.config.root,
             },
-            file,
-            options,
+            spec.moduleId,
+            { pool: spec.pool },
           ])
         },
       },
@@ -157,7 +157,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onSpecsCollected(specs?: SerializedSpec[] | undefined): Awaitable<void> {
+  onSpecsCollected(specs?: SerializedTestSpecification[] | undefined): Awaitable<void> {
     if (this.clients.size === 0) {
       return
     }

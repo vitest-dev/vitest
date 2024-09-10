@@ -166,17 +166,19 @@ export function createForksPool(
       }
 
       const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
+      for (const spec of specs) {
+        const file = spec.moduleId
+        const project = spec.project.workspaceProject
         const workspaceFiles = workspaceMap.get(file) ?? []
         workspaceFiles.push(project)
         workspaceMap.set(file, workspaceFiles)
       }
 
       const singleFork = specs.filter(
-        ([project]) => project.config.poolOptions?.forks?.singleFork,
+        spec => spec.project.config.poolOptions?.forks?.singleFork,
       )
       const multipleForks = specs.filter(
-        ([project]) => !project.config.poolOptions?.forks?.singleFork,
+        spec => !spec.project.config.poolOptions?.forks?.singleFork,
       )
 
       if (multipleForks.length) {

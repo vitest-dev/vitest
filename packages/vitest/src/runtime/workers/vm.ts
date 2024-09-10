@@ -77,7 +77,6 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const executor = await startVitestExecutor({
     context,
     moduleCache: state.moduleCache,
-    mockMap: state.mockMap,
     state,
     externalModulesExecutor,
     requestStubs: stubs,

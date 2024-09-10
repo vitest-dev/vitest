@@ -231,6 +231,4 @@ All configuration options that are not supported inside a project config have <N
 
 ## Coverage
 
-Coverage for workspace projects works out of the box. But if you have [`all`](/config/#coverage-all) option enabled and use non-conventional extensions in some of your projects, you will need to have a plugin that handles this extension in your root configuration file.
-
-For example, if you have a package that uses Vue files and it has its own config file, but some of the files are not imported in your tests, coverage will fail trying to analyze the usage of unused files, because it relies on the root configuration rather than project configuration.
+Coverage for workspace projects works out of the box.

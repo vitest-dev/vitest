@@ -21,9 +21,9 @@ import {
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
-import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
 import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
   options: UserConfig = {},
@@ -254,9 +254,9 @@ export async function VitestPlugin(
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
+    VitestCoreResolver(ctx),
     options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
-    VitestResolver(ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ].filter(notNullish)
