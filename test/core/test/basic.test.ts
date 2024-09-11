@@ -63,3 +63,8 @@ test('escaping', () => {
   expect(['\\123']).toEqual(['\\123'])
   expect('\\123').toEqual('\\123')
 })
+
+const testPath = expect.getState().testPath
+if (!testPath || !testPath.includes('basic.test.ts')) {
+  throw new Error(`testPath not correct: ${testPath}`)
+}
