@@ -39,7 +39,6 @@ export function createExpect(test?: TaskPopulated) {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
-  const testPath = getTestFile()
   setState<MatcherState>(
     {
       // this should also add "snapshotState" that is added conditionally
@@ -50,7 +49,9 @@ export function createExpect(test?: TaskPopulated) {
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
       environment: getCurrentEnvironment(),
-      testPath,
+      get testPath() {
+        return getWorkerState().filepath
+      },
       currentTestName: test
         ? getTestName(test as Test)
         : globalState.currentTestName,
@@ -109,11 +110,6 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   return expect
-}
-
-function getTestFile() {
-  const state = getWorkerState()
-  return state.filepath
 }
 
 const globalExpect = createExpect()
