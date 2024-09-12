@@ -6,19 +6,19 @@ afterEach(() => {
 })
 
 test('server-url http', async () => {
-  const { stdout, stderr } = await runBrowserTests({
+  const { stdout, stderr, provider } = await runBrowserTests({
     root: './fixtures/server-url',
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('Browser runner started at http://localhost:5173/')
+  expect(stdout).toContain(`Browser runner started by ${provider} at http://localhost:5173/`)
 })
 
 test('server-url https', async () => {
   process.env.TEST_HTTPS = '1'
-  const { stdout, stderr } = await runBrowserTests({
+  const { stdout, stderr, provider } = await runBrowserTests({
     root: './fixtures/server-url',
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('Browser runner started at https://localhost:5173/')
+  expect(stdout).toContain(`Browser runner started by ${provider} at https://localhost:5173/`)
   expect(stdout).toContain('Test Files  1 passed')
 })
