@@ -61,7 +61,11 @@ test('expect.soft test', () => {
 
 ## poll
 
-- **Type:** `ExpectStatic & (actual: () => any, options: { interval, timeout, message }) => Assertions`
+```ts
+interface ExpectPoll extends ExpectStatic {
+  (actual: () => T, options: { interval; timeout; message }): Promise<Assertions<T>>
+}
+```
 
 `expect.poll` reruns the _assertion_ until it is succeeded. You can configure how many times Vitest should rerun the `expect.poll` callback by setting `interval` and `timeout` options.
 
