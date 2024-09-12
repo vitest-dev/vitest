@@ -77,13 +77,30 @@ class PreviewLocator extends Locator {
     return userEvent.unhover(this.element())
   }
 
-  fill(text: string): Promise<void> {
+  async fill(text: string): Promise<void> {
+    await this.clear()
     return userEvent.type(this.element(), text)
   }
 
   async upload(file: string | string[] | File | File[]): Promise<void> {
-    // we override userEvent.upload to support this in pluginContext.ts
-    return userEvent.upload(this.element() as HTMLElement, file as File[])
+    const uploadPromise = (Array.isArray(file) ? file : [file]).map(async (file) => {
+      if (typeof file !== 'string') {
+        return file
+      }
+
+      const { content: base64, basename, mime } = await this.triggerCommand<{
+        content: string
+        basename: string
+        mime: string
+      }>('__vitest_fileInfo', file, 'base64')
+
+      const fileInstance = fetch(base64)
+        .then(r => r.blob())
+        .then(blob => new File([blob], basename, { type: mime }))
+      return fileInstance
+    })
+    const uploadFiles = await Promise.all(uploadPromise)
+    return userEvent.upload(this.element() as HTMLElement, uploadFiles)
   }
 
   selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
