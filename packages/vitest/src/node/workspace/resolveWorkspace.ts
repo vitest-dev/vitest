@@ -158,7 +158,7 @@ async function resolveWorkspaceProjectConfigs(
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
       // if the string doesn't contain a glob, we can resolve it directly
       // ['./vitest.config.js']
-      if (!stringOption.includes('*')) {
+      if (!stringOption.includes('*') && !stringOption.startsWith('!')) {
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
