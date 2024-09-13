@@ -244,7 +244,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         if (react) {
           include.push(react)
         }
-        const vue = tryResolve('vitest-browser-react', [project.ctx.config.root])
+        const vue = tryResolve('vitest-browser-vue', [project.ctx.config.root])
         if (vue) {
           include.push(vue)
         }
