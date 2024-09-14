@@ -5,6 +5,10 @@ import { version } from 'vitest/package.json'
 import { normalize, resolve } from 'pathe'
 import * as testUtils from '../../test-utils'
 
+const providers = ['playwright', 'webdriverio', 'preview'] as const
+const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
+const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
+
 function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
   return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
 }
@@ -57,26 +61,36 @@ test('inspect cannot be used with multi-threading', async () => {
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
+test('inspect in browser mode requires no-file-parallelism', async () => {
+  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
+
+  expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+})
+
 test('inspect-brk cannot be used with multi processing', async () => {
   const { stderr } = await runVitest({ inspect: true, pool: 'forks', poolOptions: { forks: { singleFork: false } } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
 
-test('v8 coverage provider throws when not playwright + chromium', async () => {
-  const providers = ['playwright', 'webdriverio', 'preview']
-  const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari']
+test('inspect-brk in browser mode requires no-file-parallelism', async () => {
+  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
 
-  for (const provider of providers) {
-    for (const name of names) {
+  expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
+})
+
+test('inspect and --inspect-brk cannot be used when not playwright + chromium', async () => {
+  for (const option of ['inspect', 'inspectBrk']) {
+    const cli = `--inspect${option === 'inspectBrk' ? '-brk' : ''}`
+
+    for (const { provider, name } of browsers) {
       if (provider === 'playwright' && name === 'chromium') {
         continue
       }
 
       const { stderr } = await runVitest({
-        coverage: {
-          enabled: true,
-        },
+        [option]: true,
+        fileParallelism: false,
         browser: {
           enabled: true,
           provider,
@@ -85,7 +99,48 @@ test('v8 coverage provider throws when not playwright + chromium', async () => {
       })
 
       expect(stderr).toMatch(
-`Error: @vitest/coverage-v8 does not work with
+        `Error: ${cli} does not work with
+{
+  "browser": {
+    "provider": "${provider}",
+    "name": "${name}"
+  }
+}
+
+Use either:
+{
+  "browser": {
+    "provider": "playwright",
+    "name": "chromium"
+  }
+}
+
+...or disable ${cli}
+`,
+      )
+    }
+  }
+})
+
+test('v8 coverage provider throws when not playwright + chromium', async () => {
+  for (const { provider, name } of browsers) {
+    if (provider === 'playwright' && name === 'chromium') {
+      continue
+    }
+
+    const { stderr } = await runVitest({
+      coverage: {
+        enabled: true,
+      },
+      browser: {
+        enabled: true,
+        provider,
+        name,
+      },
+    })
+
+    expect(stderr).toMatch(
+      `Error: @vitest/coverage-v8 does not work with
 {
   "browser": {
     "provider": "${provider}",
@@ -108,15 +163,14 @@ Use either:
   }
 }
 `,
-      )
-    }
+    )
   }
 })
 
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
   expect(stderr).toMatch(
-`Error: @vitest/coverage-v8 does not work with
+    `Error: @vitest/coverage-v8 does not work with
 {
   "browser": {
     "provider": "webdriverio",

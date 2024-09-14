@@ -161,6 +161,12 @@ export interface UserEvent {
    */
   unhover: (element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>
   /**
+   * Change a file input element to have the specified files. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-set-input-files} Playwright API
+   * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
+   */
+  upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
+  /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
    * This API is faster than using `userEvent.type` or `userEvent.keyboard`, but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`).
@@ -337,6 +343,11 @@ export interface Locator extends LocatorSelectors {
     values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void>
+  /**
+   * Change a file input element to have the specified files. Uses provider's API under the hood.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
+   */
+  upload: (files: File | File[] | string | string[]) => Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.

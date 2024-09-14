@@ -25,13 +25,29 @@ it('runs the workspace if there are several vitest config files', async () => {
   expect(stdout).toContain('2 + 2 = 4')
 })
 
+it('correctly resolves workspace projects with a several folder globs', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/several-folders',
+    workspace: './fixtures/workspace/several-folders/vitest.workspace.ts',
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('test - a')
+  expect(stdout).toContain('test - b')
+})
+
 it('fails if project names are identical with a nice error message', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-duplicate-configs',
     workspace: './fixtures/workspace/invalid-duplicate-configs/vitest.workspace.ts',
   }, [], 'test', {}, { fails: true })
   expect(stderr).toContain(
-    'Project name "test" from "vitest2.config.js" is not unique. The project is already defined by "vitest1.config.js". All projects in a workspace should have unique names. Make sure your configuration is correct.',
+    `Project name "test" from "vitest2.config.js" is not unique. The project is already defined by "vitest1.config.js".
+
+Your config matched these files:
+ - vitest1.config.js
+ - vitest2.config.js
+
+All projects in a workspace should have unique names. Make sure your configuration is correct.`,
   )
 })
 

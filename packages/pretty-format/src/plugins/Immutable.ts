@@ -36,13 +36,13 @@ function printImmutableEntries(
   return ++depth > config.maxDepth
     ? printAsLeaf(getImmutableName(type))
     : `${getImmutableName(type) + SPACE}{${printIteratorEntries(
-        val.entries(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
+      val.entries(),
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}}`
 }
 
 // Record has an entries method because it is a collection in immutable v3.
@@ -67,13 +67,13 @@ function printImmutableRecord(val: any, config: Config, indentation: string, dep
   return ++depth > config.maxDepth
     ? printAsLeaf(name)
     : `${name + SPACE}{${printIteratorEntries(
-        getRecordEntries(val),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
+      getRecordEntries(val),
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}}`
 }
 
 function printImmutableSeq(val: any, config: Config, indentation: string, depth: number, refs: Refs, printer: Printer): string {
@@ -88,13 +88,13 @@ function printImmutableSeq(val: any, config: Config, indentation: string, depth:
       // from Immutable collection of entries or from ECMAScript object
       val._iter || val._object
         ? printIteratorEntries(
-            val.entries(),
-            config,
-            indentation,
-            depth,
-            refs,
-            printer,
-          )
+          val.entries(),
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+        )
         : LAZY
     }}`
   }
@@ -105,13 +105,13 @@ function printImmutableSeq(val: any, config: Config, indentation: string, depth:
     || val._collection // from ECMAScript collection in immutable v4
     || val._iterable // from ECMAScript collection in immutable v3
       ? printIteratorValues(
-          val.values(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )
+        val.values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )
       : LAZY
   }]`
 }
@@ -120,13 +120,13 @@ function printImmutableValues(val: any, config: Config, indentation: string, dep
   return ++depth > config.maxDepth
     ? printAsLeaf(getImmutableName(type))
     : `${getImmutableName(type) + SPACE}[${printIteratorValues(
-        val.values(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}]`
+      val.values(),
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}]`
 }
 
 export const serialize: NewPlugin['serialize'] = (

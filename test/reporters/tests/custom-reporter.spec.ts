@@ -13,7 +13,7 @@ async function runWithRetry(...runOptions: string[]) {
 
   for (let i = count; i >= 0; i--) {
     try {
-      const vitest = await runVitestCli({ cwd: root, windowsHide: false }, 'run', ...runOptions)
+      const vitest = await runVitestCli({ nodeOptions: { cwd: root, windowsHide: false } }, 'run', ...runOptions)
       return vitest.stdout
     }
     catch (e) {

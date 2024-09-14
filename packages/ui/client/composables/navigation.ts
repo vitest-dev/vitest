@@ -50,8 +50,8 @@ export const coverageUrl = computed(() => {
     const htmlReporterSubdir = coverage.value!.htmlReporter?.subdir
     return htmlReporterSubdir
       ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${
-          htmlReporterSubdir
-        }/index.html`
+        htmlReporterSubdir
+      }/index.html`
       : `/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }
 

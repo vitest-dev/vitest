@@ -3,10 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import '../src/my-button.js'
 
 describe('Button with increment', async () => {
-  function getInsideButton(): HTMLElement | null | undefined {
-    return document.body.querySelector('my-button')?.shadowRoot?.querySelector('button')
-  }
-
   beforeEach(() => {
     document.body.innerHTML = '<my-button name="World"></my-button>'
   })
@@ -31,3 +27,7 @@ describe('Button with increment', async () => {
     expect(spyClick).toHaveBeenCalled()
   })
 })
+
+function getInsideButton(): HTMLElement | null | undefined {
+  return document.body.querySelector('my-button')?.shadowRoot?.querySelector('button')
+}

@@ -26,7 +26,7 @@ function printDiffLine(
 ): string {
   return line.length !== 0
     ? color(
-        `${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`,
+      `${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`,
     )
     : indicator !== ' '
       ? color(indicator)

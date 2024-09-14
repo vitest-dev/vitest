@@ -118,6 +118,14 @@ export default antfu(
     },
   },
   {
+    files: [
+      `test/${GLOB_SRC}`,
+    ],
+    rules: {
+      'unicorn/consistent-function-scoping': 'off',
+    },
+  },
+  {
     files: [`packages/vite-node/${GLOB_SRC}`],
     rules: {
       // false positive on "exports" variable

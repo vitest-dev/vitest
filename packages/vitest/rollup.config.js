@@ -8,8 +8,8 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import license from 'rollup-plugin-license'
+import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
-import fg from 'fast-glob'
 import { defineConfig } from 'rollup'
 
 const require = createRequire(import.meta.url)
@@ -152,21 +152,6 @@ function licensePlugin() {
       // https://github.com/rollup/rollup/blob/master/build-plugins/generate-license-file.js
       // MIT Licensed https://github.com/rollup/rollup/blob/master/LICENSE-CORE.md
       const coreLicense = fs.readFileSync(resolve(dir, '../../LICENSE'))
-      function sortLicenses(licenses) {
-        let withParenthesis = []
-        let noParenthesis = []
-        licenses.forEach((license) => {
-          if (/^\(/.test(license)) {
-            withParenthesis.push(license)
-          }
-          else {
-            noParenthesis.push(license)
-          }
-        })
-        withParenthesis = withParenthesis.sort()
-        noParenthesis = noParenthesis.sort()
-        return [...noParenthesis, ...withParenthesis]
-      }
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
         .filter(({ name }) => !name?.startsWith('@vitest/'))
@@ -213,9 +198,10 @@ function licensePlugin() {
                     preserveSymlinks: false,
                   }),
                 )
-                const licenseFile = fg.sync(`${pkgDir}/LICENSE*`, {
+                const [licenseFile] = globSync([`${pkgDir}/LICENSE*`], {
+                  expandDirectories: false,
                   caseSensitiveMatch: false,
-                })[0]
+                })
                 if (licenseFile) {
                   licenseText = fs.readFileSync(licenseFile, 'utf-8')
                 }
@@ -259,4 +245,20 @@ function onwarn(message) {
     return
   }
   console.error(message)
+}
+
+function sortLicenses(licenses) {
+  let withParenthesis = []
+  let noParenthesis = []
+  licenses.forEach((license) => {
+    if (/^\(/.test(license)) {
+      withParenthesis.push(license)
+    }
+    else {
+      noParenthesis.push(license)
+    }
+  })
+  withParenthesis = withParenthesis.sort()
+  noParenthesis = noParenthesis.sort()
+  return [...noParenthesis, ...withParenthesis]
 }

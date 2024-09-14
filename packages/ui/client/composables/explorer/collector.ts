@@ -304,7 +304,7 @@ function collectData(summary: CollectorInfo) {
       file.prepareDuration = f.prepareDuration
       file.environmentLoad = f.environmentLoad
       file.collectDuration = f.collectDuration
-      file.duration = f.result?.duration
+      file.duration = f.result?.duration != null ? Math.round(f.result?.duration) : undefined
       file.state = f.result?.state
     }
     time += Math.max(0, f.collectDuration || 0)
