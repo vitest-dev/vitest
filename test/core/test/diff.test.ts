@@ -128,8 +128,8 @@ test('display truncated multiline string diff', () => {
 })
 
 test('display truncated multiple items array diff', () => {
-  const array1 = Array(45000).fill('foo')
-  const array2 = Array(45000).fill('bar')
+  const array1 = Array.from({ length: 45000 }).fill('foo')
+  const array2 = Array.from({ length: 45000 }).fill('bar')
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(array1, array2, { truncateThreshold: 3 }), console as any)
   expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`

@@ -1,3 +1,4 @@
+import { createServer as _createServer } from 'vite'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 
@@ -49,7 +50,15 @@ export type { JsonOptions } from '../node/reporters/json'
 export type { JUnitOptions } from '../node/reporters/junit'
 export type { HTMLOptions } from '../node/reporters/html'
 
-export { isFileServingAllowed, createServer, parseAst, parseAstAsync } from 'vite'
+export {
+  isFileServingAllowed,
+  parseAst,
+  parseAstAsync,
+  createLogger as createViteLogger,
+} from 'vite'
+/** @deprecated use `createViteServer` instead */
+export const createServer = _createServer
+export const createViteServer = _createServer
 export type * as Vite from 'vite'
 
 export { TestCase, TestModule, TestSuite } from '../node/reporters/reported-tasks'

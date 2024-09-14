@@ -44,29 +44,29 @@ export const serialize: NewPlugin['serialize'] = (
     (config.min ? '' : name + SPACE)
     + (OBJECT_NAMES.has(name)
       ? `{${printObjectProperties(
-          isNamedNodeMap(collection)
-            ? [...collection].reduce<Record<string, string>>(
-                (props, attribute) => {
-                  props[attribute.name] = attribute.value
-                  return props
-                },
-                {},
-              )
-            : { ...collection },
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}}`
+        isNamedNodeMap(collection)
+          ? [...collection].reduce<Record<string, string>>(
+              (props, attribute) => {
+                props[attribute.name] = attribute.value
+                return props
+              },
+              {},
+            )
+          : { ...collection },
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
       : `[${printListItems(
-          [...collection],
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}]`)
+        [...collection],
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}]`)
   )
 }
 

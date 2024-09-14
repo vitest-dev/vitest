@@ -41,7 +41,8 @@ export function withTimeout<T extends (...args: any[]) => any>(
 
   const { setTimeout, clearTimeout } = getSafeTimers()
 
-  return ((...args: T extends (...args: infer A) => any ? A : never) => {
+  // this function name is used to filter error in test/cli/test/fails.test.ts
+  return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     return Promise.race([
       fn(...args),
       new Promise((resolve, reject) => {

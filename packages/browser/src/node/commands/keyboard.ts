@@ -14,16 +14,6 @@ export const keyboard: UserEventCommand<(text: string, state: KeyboardState) => 
   text,
   state,
 ) => {
-  function focusIframe() {
-    if (
-      !document.activeElement
-      || document.activeElement.ownerDocument !== document
-      || document.activeElement === document.body
-    ) {
-      window.focus()
-    }
-  }
-
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const frame = await context.frame()
     await frame.evaluate(focusIframe)
@@ -40,12 +30,6 @@ export const keyboard: UserEventCommand<(text: string, state: KeyboardState) => 
     context.contextId,
     text,
     async () => {
-      function selectAll() {
-        const element = document.activeElement as HTMLInputElement
-        if (element && element.select) {
-          element.select()
-        }
-      }
       if (context.provider instanceof PlaywrightBrowserProvider) {
         const frame = await context.frame()
         await frame.evaluate(selectAll)
@@ -163,5 +147,22 @@ export async function keyboardImplementation(
 
   return {
     pressed,
+  }
+}
+
+function focusIframe() {
+  if (
+    !document.activeElement
+    || document.activeElement.ownerDocument !== document
+    || document.activeElement === document.body
+  ) {
+    window.focus()
+  }
+}
+
+function selectAll() {
+  const element = document.activeElement as HTMLInputElement
+  if (element && element.select) {
+    element.select()
   }
 }

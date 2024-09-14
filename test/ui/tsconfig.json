@@ -3,7 +3,10 @@
   "compilerOptions": {
     "baseUrl": "../..",
     "paths": {
-      "vitest/node": ["./packages/vitest/dist/node.js"]
+      "vitest/node": [
+        "./packages/vitest/node.d.ts",
+        "./packages/vitest/dist/node.js"
+      ]
     }
   }
 }

@@ -37,7 +37,9 @@ Almost every `userEvent` method inherits its provider options. To see all availa
 
 ## userEvent.setup
 
-- **Type:** `() => UserEvent`
+```ts
+function setup(): UserEvent
+```
 
 Creates a new user event instance. This is useful if you need to keep the state of keyboard to press and release buttons correctly.
 
@@ -60,7 +62,12 @@ This behaviour is more useful because we do not emulate the keyboard, we actuall
 
 ## userEvent.click
 
-- **Type:** `(element: Element | Locator, options?: UserEventClickOptions) => Promise<void>`
+```ts
+function click(
+  element: Element | Locator,
+  options?: UserEventClickOptions,
+): Promise<void>
+```
 
 Click on an element. Inherits provider's options. Please refer to your provider's documentation for detailed explanation about how this method works.
 
@@ -84,7 +91,12 @@ References:
 
 ## userEvent.dblClick
 
-- **Type:** `(element: Element | Locator, options?: UserEventDoubleClickOptions) => Promise<void>`
+```ts
+function dblClick(
+  element: Element | Locator,
+  options?: UserEventDoubleClickOptions,
+): Promise<void>
+```
 
 Triggers a double click event on an element.
 
@@ -110,7 +122,12 @@ References:
 
 ## userEvent.tripleClick
 
-- **Type:** `(element: Element | Locator, options?: UserEventTripleClickOptions) => Promise<void>`
+```ts
+function tripleClick(
+  element: Element | Locator,
+  options?: UserEventTripleClickOptions,
+): Promise<void>
+```
 
 Triggers a triple click event on an element. Since there is no `tripleclick` in browser api, this method will fire three click events in a row, and so you must check [click event detail](https://developer.mozilla.org/en-US/docs/Web/API/Element/click_event#usage_notes) to filter the event: `evt.detail === 3`.
 
@@ -144,7 +161,12 @@ References:
 
 ## userEvent.fill
 
-- **Type:** `(element: Element | Locator, text: string) => Promise<void>`
+```ts
+function fill(
+  element: Element | Locator,
+  text: string,
+): Promise<void>
+```
 
 Set a value to the `input/textarea/conteneditable` field. This will remove any existing text in the input before setting the new value.
 
@@ -179,7 +201,9 @@ References:
 
 ## userEvent.keyboard
 
-- **Type:** `(text: string) => Promise<void>`
+```ts
+function keyboard(text: string): Promise<void>
+```
 
 The `userEvent.keyboard` allows you to trigger keyboard strokes. If any input has a focus, it will type characters into that input. Otherwise, it will trigger keyboard events on the currently focused element (`document.body` if there are no focused elements).
 
@@ -205,7 +229,9 @@ References:
 
 ## userEvent.tab
 
-- **Type:** `(options?: UserEventTabOptions) => Promise<void>`
+```ts
+function tab(options?: UserEventTabOptions): Promise<void>
+```
 
 Sends a `Tab` key event. This is a shorthand for `userEvent.keyboard('{tab}')`.
 
@@ -235,10 +261,16 @@ References:
 
 ## userEvent.type
 
-- **Type:** `(element: Element | Locator, text: string, options?: UserEventTypeOptions) => Promise<void>`
+```ts
+function type(
+  element: Element | Locator,
+  text: string,
+  options?: UserEventTypeOptions,
+): Promise<void>
+```
 
 ::: warning
-If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead.
+If you don't rely on [special characters](https://testing-library.com/docs/user-event/keyboard) (e.g., `{shift}` or `{selectall}`), it is recommended to use [`userEvent.fill`](#userevent-fill) instead for better performance.
 :::
 
 The `type` method implements `@testing-library/user-event`'s [`type`](https://testing-library.com/docs/user-event/utility/#type) utility built on top of [`keyboard`](https://testing-library.com/docs/user-event/keyboard) API.
@@ -271,7 +303,9 @@ References:
 
 ## userEvent.clear
 
-- **Type:** `(element: Element | Locator) => Promise<void>`
+```ts
+function clear(element: Element | Locator): Promise<void>
+```
 
 This method clears the input element content.
 
@@ -300,7 +334,19 @@ References:
 
 ## userEvent.selectOptions
 
-- **Type:** `(element: Element | Locator, values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[], options?: UserEventSelectOptions) => Promise<void>`
+```ts
+function selectOptions(
+  element: Element | Locator,
+  values:
+    | HTMLElement
+    | HTMLElement[]
+    | Locator
+    | Locator[]
+    | string
+    | string[],
+  options?: UserEventSelectOptions,
+): Promise<void>
+```
 
 The `userEvent.selectOptions` allows selecting a value in a `<select>` element.
 
@@ -345,7 +391,12 @@ References:
 
 ## userEvent.hover
 
-- **Type:** `(element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>`
+```ts
+function hover(
+  element: Element | Locator,
+  options?: UserEventHoverOptions,
+): Promise<void>
+```
 
 This method moves the cursor position to the selected element. Please refer to your provider's documentation for detailed explanation about how this method works.
 
@@ -363,7 +414,7 @@ test('hovers logo element', async () => {
 
   await userEvent.hover(logo)
   // or you can access it directly on the locator
-  await page.hover()
+  await logo.hover()
 })
 ```
 
@@ -375,7 +426,12 @@ References:
 
 ## userEvent.unhover
 
-- **Type:** `(element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>`
+```ts
+function unhover(
+  element: Element | Locator,
+  options?: UserEventHoverOptions,
+): Promise<void>
+```
 
 This works the same as [`userEvent.hover`](#userevent-hover), but moves the cursor to the `document.body` element instead.
 
@@ -391,7 +447,7 @@ test('unhover logo element', async () => {
 
   await userEvent.unhover(logo)
   // or you can access it directly on the locator
-  await page.unhover()
+  await logo.unhover()
 })
 ```
 
@@ -401,9 +457,53 @@ References:
 - [WebdriverIO `element.moveTo` API](https://webdriver.io/docs/api/element/moveTo/)
 - [testing-library `hover` API](https://testing-library.com/docs/user-event/convenience/#hover)
 
+## userEvent.upload
+
+```ts
+function upload(
+  element: Element | Locator,
+  files: string[] | string | File[] | File,
+): Promise<void>
+```
+
+Change a file input element to have the specified files.
+
+```ts
+import { page, userEvent } from '@vitest/browser/context'
+
+test('can upload a file', async () => {
+  const input = page.getByRole('button', { name: /Upload files/ })
+
+  const file = new File(['file'], 'file.png', { type: 'image/png' })
+
+  await userEvent.upload(input, file)
+  // or you can access it directly on the locator
+  await input.upload(file)
+
+  // you can also use file paths relative to the test file
+  await userEvent.upload(input, '../fixtures/file.png')
+})
+```
+
+::: warning
+`webdriverio` provider supports this command only in `chrome` and `edge` browsers. It also only supports string types at the moment.
+:::
+
+References:
+
+- [Playwright `locator.setInputFiles` API](https://playwright.dev/docs/api/class-locator#locator-set-input-files)
+- [WebdriverIO `browser.uploadFile` API](https://webdriver.io/docs/api/browser/uploadFile)
+- [testing-library `upload` API](https://testing-library.com/docs/user-event/utility/#upload)
+
 ## userEvent.dragAndDrop
 
-- **Type:** `(source: Element | Locator, target: Element | Locator, options?: UserEventDragAndDropOptions) => Promise<void>`
+```ts
+function dragAndDrop(
+  source: Element | Locator,
+  target: Element | Locator,
+  options?: UserEventDragAndDropOptions,
+): Promise<void>
+```
 
 Drags the source element on top of the target element. Don't forget that the `source` element has to have the `draggable` attribute set to `true`.
 

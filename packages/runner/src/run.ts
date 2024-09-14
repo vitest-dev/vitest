@@ -224,16 +224,6 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
           }
           await fn()
         }
-        // some async expect will be added to this array, in case user forget to await theme
-        if (test.promises) {
-          const result = await Promise.allSettled(test.promises)
-          const errors = result
-            .map(r => (r.status === 'rejected' ? r.reason : undefined))
-            .filter(Boolean)
-          if (errors.length) {
-            throw errors
-          }
-        }
 
         await runner.onAfterTryTask?.(test, {
           retry: retryCount,

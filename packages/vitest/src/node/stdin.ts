@@ -25,13 +25,13 @@ export function printShortcutsHelp() {
     `
 ${c.bold('  Watch Usage')}
 ${keys
-  .map(
-    i =>
-      c.dim('  press ')
-      + c.reset([i[0]].flat().map(c.bold).join(', '))
-      + c.dim(` to ${i[1]}`),
-  )
-  .join('\n')}
+    .map(
+      i =>
+        c.dim('  press ')
+        + c.reset([i[0]].flat().map(c.bold).join(', '))
+        + c.dim(` to ${i[1]}`),
+    )
+    .join('\n')}
 `,
   )
 }

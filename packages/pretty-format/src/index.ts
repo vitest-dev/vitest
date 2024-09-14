@@ -231,49 +231,49 @@ function printComplexValue(
     return hitMaxDepth
       ? '[Arguments]'
       : `${min ? '' : 'Arguments '}[${printListItems(
-          val,
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}]`
+        val,
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}]`
   }
   if (isToStringedArrayType(toStringed)) {
     return hitMaxDepth
       ? `[${val.constructor.name}]`
       : `${
-          min
-            ? ''
-            : !config.printBasicPrototype && val.constructor.name === 'Array'
+        min
+          ? ''
+          : !config.printBasicPrototype && val.constructor.name === 'Array'
               ? ''
               : `${val.constructor.name} `
-        }[${printListItems(val, config, indentation, depth, refs, printer)}]`
+      }[${printListItems(val, config, indentation, depth, refs, printer)}]`
   }
   if (toStringed === '[object Map]') {
     return hitMaxDepth
       ? '[Map]'
       : `Map {${printIteratorEntries(
-          val.entries(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-          ' => ',
-        )}}`
+        val.entries(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+        ' => ',
+      )}}`
   }
   if (toStringed === '[object Set]') {
     return hitMaxDepth
       ? '[Set]'
       : `Set {${printIteratorValues(
-          val.values(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )}}`
+        val.values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
   }
 
   // Avoid failure to serialize global window object in jsdom test environment.
@@ -281,19 +281,19 @@ function printComplexValue(
   return hitMaxDepth || isWindow(val)
     ? `[${getConstructorName(val)}]`
     : `${
-        min
-          ? ''
-          : !config.printBasicPrototype && getConstructorName(val) === 'Object'
+      min
+        ? ''
+        : !config.printBasicPrototype && getConstructorName(val) === 'Object'
             ? ''
             : `${getConstructorName(val)} `
-      }{${printObjectProperties(
-        val,
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
+    }{${printObjectProperties(
+      val,
+      config,
+      indentation,
+      depth,
+      refs,
+      printer,
+    )}}`
 }
 
 function isNewPlugin(plugin: Plugin): plugin is NewPlugin {

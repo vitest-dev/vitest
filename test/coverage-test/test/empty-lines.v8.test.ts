@@ -180,5 +180,5 @@ async function readCoverage() {
 }
 
 function range(count: number, options: { base: number } = { base: 1 }) {
-  return Array(count).fill(0).map((_, i) => options.base + i)
+  return Array.from({ length: count }).fill(0).map((_, i) => options.base + i)
 }

@@ -248,18 +248,18 @@ export abstract class BaseReporter implements Reporter {
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     const FILENAME_PATTERN = this.ctx.filenamePattern
       ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(
-          this.ctx.filenamePattern,
-        )}\n`
+        this.ctx.filenamePattern,
+      )}\n`
       : ''
     const TESTNAME_PATTERN = this.ctx.configOverride.testNamePattern
       ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(
-          String(this.ctx.configOverride.testNamePattern),
-        )}\n`
+        String(this.ctx.configOverride.testNamePattern),
+      )}\n`
       : ''
     const PROJECT_FILTER = this.ctx.configOverride.project
       ? `${BADGE_PADDING} ${c.dim('Project name: ')}${c.blue(
-          toArray(this.ctx.configOverride.project).join(', '),
-        )}\n`
+        toArray(this.ctx.configOverride.project).join(', '),
+      )}\n`
       : ''
 
     if (files.length > 1 || !files.length) {
@@ -297,13 +297,13 @@ export abstract class BaseReporter implements Reporter {
     const header = c.gray(
       log.type
       + c.dim(
-          ` | ${
-            task
-              ? getFullName(task, c.dim(' > '))
-              : log.taskId !== '__vitest__unknown_test__'
+        ` | ${
+          task
+            ? getFullName(task, c.dim(' > '))
+            : log.taskId !== '__vitest__unknown_test__'
               ? log.taskId
               : 'unknown test'
-          }`,
+        }`,
       ),
     )
 
@@ -418,14 +418,6 @@ export abstract class BaseReporter implements Reporter {
       0,
     )
     const threadTime = collectTime + testsTime + setupTime
-
-    const padTitle = (str: string) => c.dim(`${str.padStart(11)} `)
-    const time = (time: number) => {
-      if (time > 1000) {
-        return `${(time / 1000).toFixed(2)}s`
-      }
-      return `${Math.round(time)}ms`
-    }
 
     // show top 10 costly transform module
     // console.log(Array.from(this.ctx.vitenode.fetchCache.entries()).filter(i => i[1].duration)
@@ -647,4 +639,15 @@ export abstract class BaseReporter implements Reporter {
       process.off('unhandledRejection', onUnhandledRejection)
     }
   }
+}
+
+function padTitle(str: string) {
+  return c.dim(`${str.padStart(11)} `)
+}
+
+function time(time: number) {
+  if (time > 1000) {
+    return `${(time / 1000).toFixed(2)}s`
+  }
+  return `${Math.round(time)}ms`
 }

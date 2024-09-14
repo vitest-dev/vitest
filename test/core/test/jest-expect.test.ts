@@ -789,7 +789,7 @@ describe('async expect', () => {
 
   describe('promise auto queuing', () => {
     it.fails('fails', () => {
-      expect(() => new Promise((resolve, reject) => setTimeout(reject, 500)))
+      expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
         .resolves
         .toBe('true')
     })

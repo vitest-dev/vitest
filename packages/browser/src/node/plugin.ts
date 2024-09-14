@@ -10,6 +10,7 @@ import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { toArray } from '@vitest/utils'
 import { defaultBrowserPort } from 'vitest/config'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
+import MagicString from 'magic-string'
 import BrowserContext from './plugins/pluginContext'
 import type { BrowserServer } from './server'
 import { resolveOrchestrator } from './serverOrchestrator'
@@ -181,48 +182,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           ...(project.config.snapshotSerializers || []),
         ]
 
-        if (project.config.diff) {
-          entries.push(project.config.diff)
-        }
-
-        if (project.ctx.coverageProvider) {
-          const coverage = project.ctx.config.coverage
-          const provider = coverage.provider
-          if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
-            if (path) {
-              entries.push(path)
-            }
-          }
-          else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
-            if (path) {
-              entries.push(path)
-            }
-          }
-          else if (provider === 'custom' && coverage.customProviderModule) {
-            entries.push(coverage.customProviderModule)
-          }
-        }
-
-        const include = [
-          'vitest > @vitest/snapshot > magic-string',
-          'vitest > chai',
-          'vitest > chai > loupe',
-          'vitest > @vitest/utils > loupe',
-          '@vitest/browser > @testing-library/user-event',
-          '@vitest/browser > @testing-library/dom',
-        ]
-
-        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (react) {
-          include.push(react)
-        }
-        const vue = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (vue) {
-          include.push(vue)
-        }
-
         const exclude = [
           'vitest',
           'vitest/utils',
@@ -245,6 +204,50 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           'msw',
           'msw/browser',
         ]
+
+        if (project.config.diff) {
+          entries.push(project.config.diff)
+        }
+
+        if (project.ctx.coverageProvider) {
+          const coverage = project.ctx.config.coverage
+          const provider = coverage.provider
+          if (provider === 'v8') {
+            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
+            if (path) {
+              entries.push(path)
+              exclude.push('@vitest/coverage-v8/browser')
+            }
+          }
+          else if (provider === 'istanbul') {
+            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
+            if (path) {
+              entries.push(path)
+              exclude.push('@vitest/coverage-istanbul')
+            }
+          }
+          else if (provider === 'custom' && coverage.customProviderModule) {
+            entries.push(coverage.customProviderModule)
+          }
+        }
+
+        const include = [
+          'vitest > @vitest/snapshot > magic-string',
+          'vitest > chai',
+          'vitest > chai > loupe',
+          'vitest > @vitest/utils > loupe',
+          '@vitest/browser > @testing-library/user-event',
+          '@vitest/browser > @testing-library/dom',
+        ]
+
+        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
+        if (react) {
+          include.push(react)
+        }
+        const vue = tryResolve('vitest-browser-vue', [project.ctx.config.root])
+        if (vue) {
+          include.push(vue)
+        }
 
         const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
         if (svelte) {
@@ -349,6 +352,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
       },
     },
+    {
+      name: 'vitest:browser:in-source-tests',
+      transform(code, id) {
+        if (!project.isTestFile(id) || !code.includes('import.meta.vitest')) {
+          return
+        }
+        const s = new MagicString(code, { filename: cleanUrl(id) })
+        s.prepend(
+          `import.meta.vitest = __vitest_index__;\n`,
+        )
+        return {
+          code: s.toString(),
+          map: s.generateMap({ hires: true }),
+        }
+      },
+    },
     // TODO: remove this when @testing-library/vue supports ESM
     {
       name: 'vitest:browser:support-testing-library',
@@ -444,4 +463,9 @@ function resolveCoverageFolder(project: WorkspaceProject) {
   }
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }

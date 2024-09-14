@@ -1,7 +1,7 @@
 import { existsSync, promises as fs } from 'node:fs'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
-import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { dirname, join, normalize, relative } from 'pathe'
 import mm from 'micromatch'
 import { ViteNodeRunner } from 'vite-node/client'
 import { SnapshotManager } from '@vitest/snapshot/manager'
@@ -12,10 +12,10 @@ import { version } from '../../package.json' with { type: 'json' }
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
 import { workspacesFiles as workspaceFiles } from '../constants'
-import { rootDir } from '../paths'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
+import { distDir } from '../paths'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createPool, getFilePoolName } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -78,7 +78,7 @@ export class Vitest {
   private resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
 
-  public distPath!: string
+  public distPath = distDir
 
   private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
 
@@ -106,7 +106,6 @@ export class Vitest {
     this.pool = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
-    this.distPath = undefined!
     this._cachedSpecs.clear()
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
@@ -560,20 +559,7 @@ export class Vitest {
     }
   }
 
-  private async initializeDistPath() {
-    if (this.distPath) {
-      return
-    }
-
-    // if Vitest is running globally, then we should still import local vitest if possible
-    const projectVitestPath = await this.vitenode.resolveId('vitest')
-    const vitestDir = projectVitestPath ? resolve(projectVitestPath.id, '../..') : rootDir
-    this.distPath = join(vitestDir, 'dist')
-  }
-
   async runFiles(specs: TestSpecification[], allTestsRun: boolean) {
-    await this.initializeDistPath()
-
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
@@ -638,8 +624,6 @@ export class Vitest {
   }
 
   async collectFiles(specs: WorkspaceSpec[]) {
-    await this.initializeDistPath()
-
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
@@ -844,81 +828,84 @@ export class Vitest {
     )
   }
 
-  private unregisterWatcher = noop
-  private registerWatcher() {
-    const updateLastChanged = (filepath: string) => {
-      const projects = this.getModuleProjects(filepath)
-      projects.forEach(({ server, browser }) => {
-        const serverMods = server.moduleGraph.getModulesByFile(filepath)
-        serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
+  private updateLastChanged(filepath: string) {
+    const projects = this.getModuleProjects(filepath)
+    projects.forEach(({ server, browser }) => {
+      const serverMods = server.moduleGraph.getModulesByFile(filepath)
+      serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
 
-        if (browser) {
-          const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
-          browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
-        }
-      })
+      if (browser) {
+        const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
+        browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
+      }
+    })
+  }
+
+  onChange = (id: string) => {
+    id = slash(id)
+    this.logger.clearHighlightCache(id)
+    this.updateLastChanged(id)
+    const needsRerun = this.handleFileChanged(id)
+    if (needsRerun.length) {
+      this.scheduleRerun(needsRerun)
     }
+  }
 
-    const onChange = (id: string) => {
-      id = slash(id)
-      this.logger.clearHighlightCache(id)
-      updateLastChanged(id)
+  onUnlink = (id: string) => {
+    id = slash(id)
+    this.logger.clearHighlightCache(id)
+    this.invalidates.add(id)
+
+    if (this.state.filesMap.has(id)) {
+      this.state.filesMap.delete(id)
+      this.cache.results.removeFromCache(id)
+      this.cache.stats.removeStats(id)
+      this.changedTests.delete(id)
+      this.report('onTestRemoved', id)
+    }
+  }
+
+  onAdd = async (id: string) => {
+    id = slash(id)
+    this.updateLastChanged(id)
+
+    const matchingProjects: WorkspaceProject[] = []
+    await Promise.all(this.projects.map(async (project) => {
+      if (await project.isTargetFile(id)) {
+        matchingProjects.push(project)
+        project.testFilesList?.push(id)
+      }
+    }))
+
+    if (matchingProjects.length > 0) {
+      this.changedTests.add(id)
+      this.scheduleRerun([id])
+    }
+    else {
+      // it's possible that file was already there but watcher triggered "add" event instead
       const needsRerun = this.handleFileChanged(id)
       if (needsRerun.length) {
         this.scheduleRerun(needsRerun)
       }
     }
-    const onUnlink = (id: string) => {
-      id = slash(id)
-      this.logger.clearHighlightCache(id)
-      this.invalidates.add(id)
+  }
 
-      if (this.state.filesMap.has(id)) {
-        this.state.filesMap.delete(id)
-        this.cache.results.removeFromCache(id)
-        this.cache.stats.removeStats(id)
-        this.changedTests.delete(id)
-        this.report('onTestRemoved', id)
-      }
-    }
-    const onAdd = async (id: string) => {
-      id = slash(id)
-      updateLastChanged(id)
-
-      const matchingProjects: WorkspaceProject[] = []
-      await Promise.all(this.projects.map(async (project) => {
-        if (await project.isTargetFile(id)) {
-          matchingProjects.push(project)
-          project.testFilesList?.push(id)
-        }
-      }))
-
-      if (matchingProjects.length > 0) {
-        this.changedTests.add(id)
-        this.scheduleRerun([id])
-      }
-      else {
-        // it's possible that file was already there but watcher triggered "add" event instead
-        const needsRerun = this.handleFileChanged(id)
-        if (needsRerun.length) {
-          this.scheduleRerun(needsRerun)
-        }
-      }
-    }
+  private unregisterWatcher = noop
+  private registerWatcher() {
     const watcher = this.server.watcher
 
     if (this.config.forceRerunTriggers.length) {
       watcher.add(this.config.forceRerunTriggers)
     }
 
-    watcher.on('change', onChange)
-    watcher.on('unlink', onUnlink)
-    watcher.on('add', onAdd)
+    watcher.on('change', this.onChange)
+    watcher.on('unlink', this.onUnlink)
+    watcher.on('add', this.onAdd)
 
     this.unregisterWatcher = () => {
-      watcher.off('change', onChange)
-      watcher.off('unlink', onUnlink)
-      watcher.off('add', onAdd)
+      watcher.off('change', this.onChange)
+      watcher.off('unlink', this.onUnlink)
+      watcher.off('add', this.onAdd)
       this.unregisterWatcher = noop
     }
   }

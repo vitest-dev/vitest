@@ -1,11 +1,11 @@
 import { resolve } from 'pathe'
-import fg from 'fast-glob'
+import { glob } from 'tinyglobby'
 import { expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures/fails')
-const files = await fg('**/*.test.ts', { cwd: root, dot: true })
+const files = await glob(['**/*.test.ts'], { cwd: root, dot: true, expandDirectories: false })
 
 it.each(files)('should fail %s', async (file) => {
   const { stderr } = await runVitest({
@@ -17,7 +17,7 @@ it.each(files)('should fail %s', async (file) => {
   const msg = String(stderr)
     .split(/\n/g)
     .reverse()
-    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest'))
+    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest') && !i.includes('at runWithTimeout'))
     .map(i => i.trim().replace(root, '<rootDir>'),
     ).join('\n')
   expect(msg).toMatchSnapshot(file)

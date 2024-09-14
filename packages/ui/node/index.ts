@@ -3,10 +3,22 @@ import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { Plugin } from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
-import type { Vitest } from 'vitest'
+import type { Vitest } from 'vitest/node'
 import { toArray } from '@vitest/utils'
+import c from 'tinyrainbow'
+import { version } from '../package.json'
 
 export default (ctx: Vitest): Plugin => {
+  if (ctx.version !== version) {
+    ctx.logger.warn(
+      c.yellow(
+        `Loaded ${c.inverse(c.yellow(` vitest@${ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/ui@${version} `))}.`
+        + '\nRunning mixed versions is not supported and may lead into bugs'
+        + '\nUpdate your dependencies and make sure the versions match.',
+      ),
+    )
+  }
+
   return <Plugin>{
     name: 'vitest:ui',
     apply: 'serve',

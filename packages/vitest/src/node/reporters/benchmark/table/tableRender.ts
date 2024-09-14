@@ -126,7 +126,7 @@ export function renderTree(
       if (baseline) {
         benchMap[t.id].baseline = {
           ...baseline,
-          samples: Array(baseline.sampleCount),
+          samples: Array.from({ length: baseline.sampleCount }),
         }
       }
     }

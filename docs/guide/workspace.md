@@ -26,7 +26,7 @@ export default [
 ```
 :::
 
-Vitest will consider every folder in `packages` as a separate project even if it doesn't have a config file inside.
+Vitest will consider every folder in `packages` as a separate project even if it doesn't have a config file inside. Since Vitest 2.1, if this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
 
 ::: warning
 Vitest will not consider the root config as a workspace project (so it will not run tests specified in `include`) unless it is specified in this config.
@@ -44,10 +44,6 @@ export default [
 
 This pattern will only include projects with `vitest.config` file that includes `e2e` and `unit` before the extension.
 
-::: warning
-If you are referencing filenames with glob pattern, make sure your config file starts with `vite.config` or `vitest.config`. Otherwise Vitest will skip it.
-:::
-
 You can also define projects with inline config. Workspace file supports using both syntaxes at the same time.
 
 :::code-group
@@ -56,6 +52,7 @@ import { defineWorkspace } from 'vitest/config'
 
 // defineWorkspace provides a nice type hinting DX
 export default defineWorkspace([
+  // matches every folder and file inside the `packages` folder
   'packages/*',
   {
     // add "extends" to merge two configs together

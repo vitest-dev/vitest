@@ -61,7 +61,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@c65cd883420fd2eb864698a825fc4162dd94482c # v44.5.7
+        uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275 # v45.0.1
         with:
           files: |
             docs/**
@@ -80,12 +80,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        # Reset back to 20 after https://github.com/nodejs/node/issues/53648
-        # (The issues is closed, but the error persist even after 20.14)
-        node_version: [18, 20]
-        # node_version: [18, 20, 22] 22 when LTS is close enough
+        node_version: [18, 20, 22]
         include:
-          - os: macos-14
+          - os: macos-latest
             node_version: 20
           - os: windows-latest
             node_version: 20
@@ -127,7 +124,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-14
+          - macos-latest
           - windows-latest
         browser:
           - [chromium, chrome]

@@ -2,6 +2,11 @@ import { assert, expect, it, suite, test } from 'vitest'
 import { two } from '../src/submodule'
 import { timeout } from '../src/timeout'
 
+const testPath = expect.getState().testPath
+if (!testPath || !testPath.includes('basic.test.ts')) {
+  throw new Error(`testPath is not correct: ${testPath}`)
+}
+
 test('Math.sqrt()', async () => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
