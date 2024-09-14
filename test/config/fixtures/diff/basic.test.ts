@@ -8,3 +8,13 @@ test('large diff', () => {
   y[29] = 3000;
   expect(x).toEqual(y)
 })
+
+test("printBasicPrototype", () => {
+  expect({
+    obj: { k: "foo" },
+    arr: [1, 2]
+  }).toEqual({
+    obj: { k: "bar" },
+    arr: [1, 3]
+  });
+})

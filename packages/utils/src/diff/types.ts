@@ -26,6 +26,7 @@ export interface DiffOptions {
   includeChangeCounts?: boolean
   omitAnnotationLines?: boolean
   patchColor?: DiffOptionsColor
+  printBasicPrototype?: boolean
   compareKeys?: CompareKeys
   truncateThreshold?: number
   truncateAnnotation?: string
@@ -43,6 +44,7 @@ export interface SerializedDiffOptions {
   expand?: boolean
   includeChangeCounts?: boolean
   omitAnnotationLines?: boolean
+  printBasicPrototype?: boolean
   truncateThreshold?: number
   truncateAnnotation?: string
 }
@@ -66,6 +68,7 @@ export interface DiffOptionsNormalized {
   includeChangeCounts: boolean
   omitAnnotationLines: boolean
   patchColor: DiffOptionsColor
+  printBasicPrototype: boolean
   truncateThreshold: number
   truncateAnnotation: string
   truncateAnnotationColor: DiffOptionsColor

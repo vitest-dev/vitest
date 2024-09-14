@@ -1,12 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`inline diff options: { expand: false } 1`] = `
+exports[`inline diff options: { expand: false, printBasicPrototype: false } 1`] = `
 [
   "- Expected
 + Received
 
 @@ -1,7 +1,7 @@
-  Array [
+  [
 -   1000,
 +   0,
     1,
@@ -36,6 +36,20 @@ exports[`inline diff options: { expand: false } 1`] = `
 -   3000,
 +   29,
   ]",
+  "- Expected
++ Received
+
+  {
+    "arr": [
+      1,
+-     3,
++     2,
+    ],
+    "obj": {
+-     "k": "bar",
++     "k": "foo",
+    },
+  }",
 ]
 `;
 
@@ -79,5 +93,19 @@ exports[`inline diff options: undefined 1`] = `
 -   3000,
 +   29,
   ]",
+  "- Expected
++ Received
+
+  Object {
+    "arr": Array [
+      1,
+-     3,
++     2,
+    ],
+    "obj": Object {
+-     "k": "bar",
++     "k": "foo",
+    },
+  }",
 ]
 `;
