@@ -2294,6 +2294,7 @@ export default {
   aIndicator: c.bold('--'),
   bIndicator: c.bold('++'),
   omitAnnotationLines: true,
+  printBasicPrototype: false,
 } satisfies DiffOptions
 ```
 
@@ -2329,6 +2330,13 @@ Annotation that is output at the end of diff result if it's truncated.
 - **Default**: `noColor = (string: string): string => string`
 
 Color of truncate annotation, default is output with no color.
+
+#### diff.printBasicPrototype
+
+- **Type**: `boolean`
+- **Default**: `true`
+
+Allows to set pretty-format option printBasicPrototype for diff output
 
 ### fakeTimers
 
