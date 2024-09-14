@@ -82,7 +82,7 @@ async function isValidNodeImport(id: string) {
 
   const code = await fsp.readFile(id, 'utf8').catch(() => '')
 
-  return !ESM_SYNTAX_RE.test(code.replace(COMMENT_RE, ""))
+  return !ESM_SYNTAX_RE.test(code.replace(COMMENT_RE, ''))
 }
 
 const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
