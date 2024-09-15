@@ -26,7 +26,7 @@
     },
     "./context": {
       "types": "./context.d.ts",
-      "default": "./context.js"
+      "default": "./dist/context.js"
     },
     "./client": {
       "default": "./dist/client.js"
