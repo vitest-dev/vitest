@@ -1,8 +1,7 @@
 import { expect, test } from 'vitest'
-import { runBrowserTests } from './utils'
+import { provider, runBrowserTests } from './utils'
 
-// this works only on playwright + chrome?
-test('viewport', async () => {
+test.runIf(provider === 'playwright')('viewport', async () => {
   const { stderr, stdout } = await runBrowserTests({
     root: './fixtures/viewport',
     reporters: [['verbose', { isTTY: false }]],
