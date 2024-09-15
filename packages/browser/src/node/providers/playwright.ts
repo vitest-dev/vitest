@@ -116,6 +116,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (this.ctx.config.browser.ui) {
       options.viewport = null
     }
+    else {
+      options.viewport = this.ctx.config.browser.viewport
+    }
     const context = await browser.newContext(options)
     this.contexts.set(contextId, context)
     return context
