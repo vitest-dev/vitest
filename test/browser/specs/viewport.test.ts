@@ -9,5 +9,5 @@ test('viewport', async () => {
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('✓ basic.test.ts (1)')
+  expect(stdout).toContain('✓ basic.test.ts')
 })
