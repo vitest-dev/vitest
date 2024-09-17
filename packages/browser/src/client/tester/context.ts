@@ -1,5 +1,6 @@
 import type { RunnerTask } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
+import type { UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
 import type {
   BrowserPage,
   Locator,
@@ -28,14 +29,14 @@ function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(contextId, command, filepath(), args)
 }
 
-function createUserEvent(): UserEvent {
+export function createUserEvent(__tl_user_event__?: TestingLibraryUserEvent): UserEvent {
   const keyboard = {
     unreleased: [] as string[],
   }
 
   return {
-    setup() {
-      return createUserEvent()
+    setup(options?: any) {
+      return createUserEvent(__tl_user_event__?.setup(options))
     },
     click(element: Element | Locator, options: UserEventClickOptions = {}) {
       return convertToLocator(element).click(processClickOptions(options))
@@ -49,29 +50,8 @@ function createUserEvent(): UserEvent {
     selectOptions(element, value) {
       return convertToLocator(element).selectOptions(value)
     },
-    async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
-      const selector = convertToSelector(element)
-      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
-        '__vitest_type',
-        selector,
-        text,
-        { ...options, unreleased: keyboard.unreleased },
-      )
-      keyboard.unreleased = unreleased
-    },
     clear(element: Element | Locator) {
       return convertToLocator(element).clear()
-    },
-    tab(options: UserEventTabOptions = {}) {
-      return triggerCommand('__vitest_tab', options)
-    },
-    async keyboard(text: string) {
-      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
-        '__vitest_keyboard',
-        text,
-        keyboard,
-      )
-      keyboard.unreleased = unreleased
     },
     hover(element: Element | Locator, options: UserEventHoverOptions = {}) {
       return convertToLocator(element).hover(processHoverOptions(options))
@@ -92,10 +72,45 @@ function createUserEvent(): UserEvent {
       const targetLocator = convertToLocator(target)
       return sourceLocator.dropTo(targetLocator, processDragAndDropOptions(options))
     },
+
+    // testing-library user-event
+    async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return __tl_user_event__.type(
+          element instanceof Element ? element : element.element(),
+          text,
+          options,
+        )
+      }
+
+      const selector = convertToSelector(element)
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_type',
+        selector,
+        text,
+        { ...options, unreleased: keyboard.unreleased },
+      )
+      keyboard.unreleased = unreleased
+    },
+    tab(options: UserEventTabOptions = {}) {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return __tl_user_event__.tab(options)
+      }
+      return triggerCommand('__vitest_tab', options)
+    },
+    async keyboard(text: string) {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return __tl_user_event__.keyboard(text)
+      }
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_keyboard',
+        text,
+        keyboard,
+      )
+      keyboard.unreleased = unreleased
+    },
   }
 }
-
-export const userEvent = createUserEvent()
 
 export function cdp() {
   return getBrowserState().cdp!

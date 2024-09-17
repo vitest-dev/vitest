@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "2.1.0-beta.6",
+  "version": "2.1.1",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -48,15 +48,15 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "fast-glob": "^3.3.2",
     "fflate": "^0.8.2",
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
     "sirv": "^2.0.4",
+    "tinyglobby": "^0.2.6",
     "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.4.1",
+    "@faker-js/faker": "^9.0.0",
     "@iconify-json/carbon": "^1.1.37",
     "@iconify-json/logos": "^1.1.44",
     "@testing-library/vue": "^8.1.0",

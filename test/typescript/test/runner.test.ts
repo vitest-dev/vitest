@@ -1,12 +1,12 @@
 import { resolve } from 'pathe'
-import fg from 'fast-glob'
+import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
 describe('should fail', async () => {
   const root = resolve(__dirname, '../failing')
-  const files = await fg('*.test-d.*', { cwd: root })
+  const files = await glob(['*.test-d.*'], { cwd: root, expandDirectories: false })
 
   it('typecheck files', async () => {
     const { stderr } = await runVitest({
