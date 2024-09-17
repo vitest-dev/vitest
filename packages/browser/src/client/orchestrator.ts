@@ -274,8 +274,18 @@ async function setIframeViewport(
     await ui.setIframeViewport(width, height)
   }
   else {
-    iframe.style.width = `${width}px`
-    iframe.style.height = `${height}px`
+    const scale = Math.min(
+      1,
+      iframe.parentElement!.parentElement!.clientWidth / width,
+      iframe.parentElement!.parentElement!.clientHeight / height,
+    )
+    iframe.parentElement!.style.cssText = `
+      width: ${width}px;
+      height: ${height}px;
+      transform: scale(${scale});
+      transform-origin: left top;
+    `
+    await new Promise(r => requestAnimationFrame(r))
   }
 }
 
