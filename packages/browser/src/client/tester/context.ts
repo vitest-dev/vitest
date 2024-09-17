@@ -277,8 +277,7 @@ function processHoverOptions(options_?: UserEventHoverOptions) {
 }
 
 function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
+  if (!options_) {
     return options_
   }
   if (provider === 'playwright') {
@@ -336,7 +335,7 @@ function processPlaywrightPosition(position: { x: number; y: number }) {
 }
 
 function getIframeScale() {
-  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  const testerUi = window.parent.document.querySelector('#vitest-iframe')?.parentElement as HTMLElement | null
   if (!testerUi) {
     throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
