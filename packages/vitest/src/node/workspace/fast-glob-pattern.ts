@@ -1,7 +1,5 @@
-import type { GlobOptions } from 'tinyglobby'
-
 type Pattern = string
-type PatternTypeOptions = GlobOptions & { extglob?: boolean; braceExpansion?: boolean }
+type PatternTypeOptions = any
 
 // copy of fast-glob's isDynamicPattern until it's implemented on tinyglobby
 // https://github.com/SuperchupuDev/tinyglobby/issues/28
