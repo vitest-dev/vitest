@@ -16,6 +16,7 @@
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
+    "@vitest/test-dep-esm-comment": "file:./deps/dep-esm-comment",
     "@vitest/test-dep1": "file:./deps/dep1",
     "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
