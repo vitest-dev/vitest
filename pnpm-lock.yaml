@@ -1229,6 +1229,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
+      '@vitest/test-dep-esm-comment':
+        specifier: file:./deps/dep-esm-comment
+        version: file:test/core/deps/dep-esm-comment
       '@vitest/test-dep1':
         specifier: file:./deps/dep1
         version: file:test/core/deps/dep1
@@ -4034,6 +4037,9 @@ packages:
 
   '@vitest/pretty-format@2.0.5':
     resolution: {integrity: sha512-h8k+1oWHfwTkyTkb9egzwNMfJAEx4veaPSnMeKbVSjp4euqGSbQlm5+6VHwTr7u4FJslVVsUG5nopCaAYdOmSQ==}
+
+  '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment':
+    resolution: {directory: test/core/deps/dep-esm-comment, type: directory}
 
   '@vitest/test-dep1@file:test/core/deps/dep1':
     resolution: {directory: test/core/deps/dep1, type: directory}
@@ -12536,6 +12542,8 @@ snapshots:
   '@vitest/pretty-format@2.0.5':
     dependencies:
       tinyrainbow: 1.2.0
+
+  '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 
