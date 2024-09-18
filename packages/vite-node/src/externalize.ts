@@ -11,6 +11,9 @@ const ESM_SYNTAX_RE
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
 
+// https://stackoverflow.com/a/15123777
+const COMMENT_RE = /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm
+
 const defaultInline = [
   /virtual:/,
   /\.[mc]?ts$/,
@@ -79,7 +82,7 @@ async function isValidNodeImport(id: string) {
 
   const code = await fsp.readFile(id, 'utf8').catch(() => '')
 
-  return !ESM_SYNTAX_RE.test(code)
+  return !ESM_SYNTAX_RE.test(code.replace(COMMENT_RE, ''))
 }
 
 const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
