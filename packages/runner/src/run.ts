@@ -390,7 +390,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
           runner,
           [suite],
         )
-      } catch (e) {
+      }
+      catch (e) {
         markTasksAsSkipped(suite, runner)
         throw e
       }
