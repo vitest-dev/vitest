@@ -273,7 +273,7 @@ async function setIframeViewport(
   if (ui) {
     await ui.setIframeViewport(width, height)
   }
-  else {
+  else if (getBrowserState().provider === 'playwright') {
     const scale = Math.min(
       1,
       iframe.parentElement!.parentElement!.clientWidth / width,
@@ -287,6 +287,10 @@ async function setIframeViewport(
     `
     iframe.parentElement?.setAttribute('data-scale', String(scale))
     await new Promise(r => requestAnimationFrame(r))
+  }
+  else {
+    iframe.style.width = `${width}px`
+    iframe.style.height = `${height}px`
   }
 }
 
