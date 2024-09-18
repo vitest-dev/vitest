@@ -15,7 +15,6 @@ import { convertElementToCssSelector, getBrowserState, getWorkerState } from '..
 
 // this file should not import anything directly, only types and utils
 
-const state = () => getWorkerState()
 // @ts-expect-error not typed global
 const provider = __vitest_browser_runner__.provider
 function filepath() {
@@ -222,8 +221,7 @@ function getTaskFullName(task: RunnerTask): string {
 }
 
 function processClickOptions(options_?: UserEventClickOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
+  if (!options_) {
     return options_
   }
   if (provider === 'playwright') {
@@ -250,8 +248,7 @@ function processClickOptions(options_?: UserEventClickOptions) {
 }
 
 function processHoverOptions(options_?: UserEventHoverOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
+  if (!options_) {
     return options_
   }
 
@@ -335,7 +332,7 @@ function processPlaywrightPosition(position: { x: number; y: number }) {
 }
 
 function getIframeScale() {
-  const testerUi = window.parent.document.querySelector('#vitest-iframe')?.parentElement as HTMLElement | null
+  const testerUi = window.parent.document.querySelector(`iframe[data-vitest]`)?.parentElement
   if (!testerUi) {
     throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
