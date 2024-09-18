@@ -126,6 +126,7 @@ jobs:
         os:
           - macos-latest
           - windows-latest
+          - ubuntu-latest
         browser:
           - [chromium, chrome]
           - [firefox, firefox]
