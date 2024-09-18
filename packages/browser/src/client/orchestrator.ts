@@ -283,7 +283,6 @@ async function setIframeViewport(
       width: ${width}px;
       height: ${height}px;
       transform: scale(${scale});
-      transform-origin: left top;
     `
     iframe.parentElement?.setAttribute('data-scale', String(scale))
     await new Promise(r => requestAnimationFrame(r))
