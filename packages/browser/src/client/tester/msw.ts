@@ -1,6 +1,7 @@
 import { channel } from '@vitest/browser/client'
 import type {
   IframeChannelEvent,
+  IframeMockFactoryRequestEvent,
   IframeMockingDoneEvent,
 } from '@vitest/browser/client'
 import type { MockedModuleSerialized } from '@vitest/mocker'
@@ -48,7 +49,7 @@ function getFactoryExports(id: string) {
     type: 'mock-factory:request',
     eventId,
     id,
-  })
+  } satisfies IframeMockFactoryRequestEvent)
   return new Promise<string[]>((resolve, reject) => {
     channel.addEventListener(
       'message',
