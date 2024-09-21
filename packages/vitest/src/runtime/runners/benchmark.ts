@@ -139,8 +139,8 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           result.median = samples.length % 2
             ? samples[Math.floor(samples.length / 2)]
             : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2
-          // TODO: config to clear samples before sending results
-          // result.samples = []
+          // clear samples array before sending a result to reduce memory usage
+          result.samples = []
           updateTask(benchmark)
         }
       })
