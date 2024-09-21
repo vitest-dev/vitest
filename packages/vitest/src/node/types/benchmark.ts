@@ -53,7 +53,7 @@ export interface BenchmarkUserOptions {
 
   /**
    * Include `samples` array of benchmark results for API or custom reporter usages.
-   * This is diabled by default to reduce memory usage.
+   * This is disabled by default to reduce memory usage.
    * @default false
    */
   includeSamples?: boolean
