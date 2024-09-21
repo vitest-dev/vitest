@@ -133,6 +133,14 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
         if (benchmark) {
           const result = benchmark.result!.benchmark!
           result.rank = Number(idx) + 1
+
+          const samples = result.samples
+          result.sampleCount = samples.length
+          result.median = samples.length % 2
+            ? samples[Math.floor(samples.length / 2)]
+            : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2
+          // TODO: config to clear samples before sending results
+          // result.samples = []
           updateTask(benchmark)
         }
       })
