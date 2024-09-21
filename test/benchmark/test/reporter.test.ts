@@ -35,12 +35,15 @@ it('no samples in results', async () => {
   const allSamples = [...result.ctx.state.idMap.values()]
     .filter(t => t.meta.benchmark)
     .map(t => t.result?.benchmark?.samples)
-  expect(allSamples).toMatchInlineSnapshot(`
-    [
-      [],
-      [],
-      [],
-      [],
-    ]
-  `)
+  expect(allSamples[0]).toEqual([])
+})
+
+it('includeSamples', async () => {
+  const root = pathe.join(import.meta.dirname, '../fixtures/reporter')
+  const result = await runVitest({ root, benchmark: { includeSamples: true } }, ['summary.bench.ts'], 'benchmark')
+  assert(result.ctx)
+  const allSamples = [...result.ctx.state.idMap.values()]
+    .filter(t => t.meta.benchmark)
+    .map(t => t.result?.benchmark?.samples)
+  expect(allSamples[0]).not.toEqual([])
 })
