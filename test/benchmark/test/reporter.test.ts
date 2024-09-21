@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { assert, expect, it } from 'vitest'
 import * as pathe from 'pathe'
 import { runVitest } from '../../test-utils'
 
@@ -26,4 +26,21 @@ it('non-tty', async () => {
    · timeout25
 `
   expect(lines).toMatchObject(expected.trim().split('\n').map(s => expect.stringContaining(s)))
+})
+
+it('no samples in results', async () => {
+  const root = pathe.join(import.meta.dirname, '../fixtures/reporter')
+  const result = await runVitest({ root }, ['summary.bench.ts'], 'benchmark')
+  assert(result.ctx)
+  const allSamples = [...result.ctx.state.idMap.values()]
+    .filter(t => t.meta.benchmark)
+    .map(t => t.result?.benchmark?.samples)
+  expect(allSamples).toMatchInlineSnapshot(`
+    [
+      [],
+      [],
+      [],
+      [],
+    ]
+  `)
 })
