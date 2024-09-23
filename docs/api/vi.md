@@ -435,7 +435,7 @@ console.log(cart.getApples()) // still 42!
 :::
 
 ::: tip
-It is not possible to spy on a specific exported method in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
+It is not possible to spy on exported methonds in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
 
 ```ts
 import { calculator } from './src/calculator.ts'
