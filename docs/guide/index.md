@@ -254,6 +254,7 @@ Learn more about [IDE Integrations](/guide/ide)
 
 ## Projects using Vitest
 
+- [JSON For You](https://github.com/loggerhead/json4u)
 - [unocss](https://github.com/unocss/unocss)
 - [unplugin-auto-import](https://github.com/antfu/unplugin-auto-import)
 - [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
