@@ -6,7 +6,9 @@ title: Getting Started | Guide
 
 ## Overview
 
-Vitest is a next generation testing framework powered by Vite.
+Vitest (pronounced as _"veetest"_) is a next generation testing framework
+powered by
+Vite.
 
 You can learn more about the rationale behind the project in the [Why Vitest](/guide/why) section.
 
