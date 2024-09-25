@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
+const [major] = process.version.slice(1).split('.').map(num => Number(num))
+
 // To prevent the warnining coming up in snapshots
 process.setMaxListeners(20)
 
@@ -67,7 +69,7 @@ describe('stacktrace filtering', async () => {
   })
 })
 
-it('stacktrace in vmThreads', async () => {
+it.runIf(major < 22)('stacktrace in vmThreads', async () => {
   const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
   const { stderr } = await runVitest({
