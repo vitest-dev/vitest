@@ -215,7 +215,13 @@ async function resolveWorkspaceProjectConfigs(
       onlyFiles: false,
       cwd: vitest.config.root,
       expandDirectories: false,
-      ignore: ['**/node_modules/**', '**/*.timestamp-*'],
+      ignore: [
+        '**/node_modules/**',
+        // temporary vite config file
+        '**/*.timestamp-*',
+        // macOS directory metadata
+        '**/.DS_Store',
+      ],
     }
 
     const workspacesFs = await glob(workspaceGlobMatches, globOptions)
