@@ -295,8 +295,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     },
     {
       name: 'vitest:browser:assets',
+      configureServer(server) {
+        server.middlewares.use(
+          '/__vitest__',
+          sirv(resolve(distRoot, 'client/__vitest__')),
+        )
+      },
       resolveId(id) {
-        if (id.startsWith('/__vitest_browser__/') || id.startsWith('/__vitest__/')) {
+        if (id.startsWith('/__vitest_browser__/')) {
           return resolve(distRoot, 'client', id.slice(1))
         }
       },
