@@ -167,10 +167,8 @@ interface FormattedBenchmarkGroup {
   benchmarks: FormattedBenchmarkResult[]
 }
 
-export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
+export type FormattedBenchmarkResult = BenchmarkResult & {
   id: string
-  sampleCount: number
-  median: number
 }
 
 function createFormattedBenchmarkReport(files: File[]) {
@@ -183,18 +181,7 @@ function createFormattedBenchmarkReport(files: File[]) {
         for (const t of task.tasks) {
           const benchmark = t.meta.benchmark && t.result?.benchmark
           if (benchmark) {
-            const { samples, ...rest } = benchmark
-            benchmarks.push({
-              id: t.id,
-              sampleCount: samples.length,
-              median:
-                samples.length % 2
-                  ? samples[Math.floor(samples.length / 2)]
-                  : (samples[samples.length / 2]
-                  + samples[samples.length / 2 - 1])
-                  / 2,
-              ...rest,
-            })
+            benchmarks.push({ id: t.id, ...benchmark, samples: [] })
           }
         }
         if (benchmarks.length) {
