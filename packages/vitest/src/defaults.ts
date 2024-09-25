@@ -73,6 +73,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     '.vue',
     '.svelte',
     '.marko',
+    '.astro',
   ],
   allowExternal: false,
   excludeAfterRemap: false,
