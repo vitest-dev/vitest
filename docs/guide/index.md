@@ -6,7 +6,7 @@ title: Getting Started | Guide
 
 ## Overview
 
-Vitest (pronounced as _"veetest"_ ) is a next generation testing framework
+Vitest (pronounced as _"veetest"_) is a next generation testing framework
 powered by
 Vite.
 
