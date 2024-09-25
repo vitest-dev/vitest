@@ -89,7 +89,7 @@ test('toBeDefined', async () => {
   await expect.poll(() => undefined).not.toBeDefined()
 
   await expect(() =>
-    expect.poll(() => 1, { timeout: 100, interval: 10 }).not.toBeDefined()
+    expect.poll(() => 1, { timeout: 100, interval: 10 }).not.toBeDefined(),
   ).rejects.toThrowError(expect.objectContaining({
     message: 'Matcher did not succeed in 100ms',
     cause: expect.objectContaining({
@@ -98,7 +98,7 @@ test('toBeDefined', async () => {
   }))
 
   await expect(() =>
-    expect.poll(() => undefined, { timeout: 100, interval: 10 }).toBeDefined()
+    expect.poll(() => undefined, { timeout: 100, interval: 10 }).toBeDefined(),
   ).rejects.toThrowError(expect.objectContaining({
     message: 'Matcher did not succeed in 100ms',
     cause: expect.objectContaining({

@@ -386,7 +386,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toBeDefined', function () {
     const obj = utils.flag(this, 'object')
     this.assert(
-      typeof obj !== "undefined",
+      typeof obj !== 'undefined',
       'expected #{this} to be defined',
       'expected #{this} to be undefined',
       obj,
