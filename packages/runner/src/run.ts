@@ -382,13 +382,19 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
   }
   else {
     try {
-      beforeAllCleanups = await callSuiteHook(
-        suite,
-        suite,
-        'beforeAll',
-        runner,
-        [suite],
-      )
+      try {
+        beforeAllCleanups = await callSuiteHook(
+          suite,
+          suite,
+          'beforeAll',
+          runner,
+          [suite],
+        )
+      }
+      catch (e) {
+        markTasksAsSkipped(suite, runner)
+        throw e
+      }
 
       if (runner.runSuite) {
         await runner.runSuite(suite)
