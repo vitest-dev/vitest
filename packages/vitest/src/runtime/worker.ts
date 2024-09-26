@@ -3,10 +3,11 @@ import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import { loadEnvironment } from '../integrations/env/loader'
 import { isChildProcess, setProcessTitle } from '../utils/base'
-import type { ContextRPC } from '../types/worker'
+import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
 import type { VitestWorker } from './workers/types'
+import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {
   setProcessTitle(`vitest ${poolId}`)
@@ -14,6 +15,8 @@ if (isChildProcess()) {
 
 // this is what every pool executes when running tests
 async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
+  disposeInternalListeners()
+
   const prepareStart = performance.now()
 
   const inspectorCleanup = setupInspect(ctx)
@@ -63,7 +66,6 @@ async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
       moduleCache: new ModuleCacheMap(),
-      mockMap: new Map(),
       config: ctx.config,
       onCancel,
       environment,
@@ -73,7 +75,7 @@ async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
       },
       rpc,
       providedContext: ctx.providedContext,
-    }
+    } satisfies WorkerGlobalState
 
     const methodName = mehtod === 'collect' ? 'collectTests' : 'runTests'
 

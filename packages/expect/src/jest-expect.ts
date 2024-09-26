@@ -209,8 +209,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         = stripped === 0
           ? msg
           : `${msg}\n(${stripped} matching ${
-              stripped === 1 ? 'property' : 'properties'
-            } omitted from actual)`
+            stripped === 1 ? 'property' : 'properties'
+          } omitted from actual)`
       throw new AssertionError(message, {
         showDiff: true,
         expected,
@@ -384,14 +384,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.be.null
   })
   def('toBeDefined', function () {
-    const negate = utils.flag(this, 'negate')
-    utils.flag(this, 'negate', false)
-
-    if (negate) {
-      return this.be.undefined
-    }
-
-    return this.not.be.undefined
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      typeof obj !== 'undefined',
+      'expected #{this} to be defined',
+      'expected #{this} to be undefined',
+      obj,
+    )
   })
   def(
     'toBeTypeOf',
@@ -495,104 +494,19 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
 
-  const assertIsMock = (assertion: any) => {
+  function assertIsMock(assertion: any) {
     if (!isMockFunction(assertion._obj)) {
       throw new TypeError(
         `${utils.inspect(assertion._obj)} is not a spy or a call to a spy!`,
       )
     }
   }
-  const getSpy = (assertion: any) => {
+
+  function getSpy(assertion: any) {
     assertIsMock(assertion)
     return assertion._obj as MockInstance
   }
-  const ordinalOf = (i: number) => {
-    const j = i % 10
-    const k = i % 100
 
-    if (j === 1 && k !== 11) {
-      return `${i}st`
-    }
-
-    if (j === 2 && k !== 12) {
-      return `${i}nd`
-    }
-
-    if (j === 3 && k !== 13) {
-      return `${i}rd`
-    }
-
-    return `${i}th`
-  }
-  const formatCalls = (
-    spy: MockInstance,
-    msg: string,
-    showActualCall?: any,
-  ) => {
-    if (spy.mock.calls) {
-      msg += c.gray(
-        `\n\nReceived: \n\n${spy.mock.calls
-          .map((callArg, i) => {
-            let methodCall = c.bold(
-              `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
-            )
-            if (showActualCall) {
-              methodCall += diff(showActualCall, callArg, {
-                omitAnnotationLines: true,
-              })
-            }
- else {
-              methodCall += stringify(callArg)
-                .split('\n')
-                .map(line => `    ${line}`)
-                .join('\n')
-            }
-
-            methodCall += '\n'
-            return methodCall
-          })
-          .join('\n')}`,
-      )
-    }
-    msg += c.gray(
-      `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
-    )
-    return msg
-  }
-  const formatReturns = (
-    spy: MockInstance,
-    results: MockResult<any>[] | MockSettledResult<any>[],
-    msg: string,
-    showActualReturn?: any,
-  ) => {
-    msg += c.gray(
-      `\n\nReceived: \n\n${results
-        .map((callReturn, i) => {
-          let methodCall = c.bold(
-            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
-          )
-          if (showActualReturn) {
-            methodCall += diff(showActualReturn, callReturn.value, {
-              omitAnnotationLines: true,
-            })
-          }
- else {
-            methodCall += stringify(callReturn)
-              .split('\n')
-              .map(line => `    ${line}`)
-              .join('\n')
-          }
-
-          methodCall += '\n'
-          return methodCall
-        })
-        .join('\n')}`,
-    )
-    msg += c.gray(
-      `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
-    )
-    return msg
-  }
   def(['toHaveBeenCalledTimes', 'toBeCalledTimes'], function (number: number) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
@@ -1045,7 +959,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             return result instanceof chai.Assertion ? proxy : result
           }
 
-          return async (...args: any[]) => {
+          return (...args: any[]) => {
             const promise = obj.then(
               (value: any) => {
                 utils.flag(this, 'object', value)
@@ -1107,7 +1021,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
             return result instanceof chai.Assertion ? proxy : result
           }
 
-          return async (...args: any[]) => {
+          return (...args: any[]) => {
             const promise = wrapper.then(
               (value: any) => {
                 const _error = new AssertionError(
@@ -1140,4 +1054,90 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       return proxy
     },
   )
+}
+
+function ordinalOf(i: number) {
+  const j = i % 10
+  const k = i % 100
+
+  if (j === 1 && k !== 11) {
+    return `${i}st`
+  }
+
+  if (j === 2 && k !== 12) {
+    return `${i}nd`
+  }
+
+  if (j === 3 && k !== 13) {
+    return `${i}rd`
+  }
+
+  return `${i}th`
+}
+
+function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
+  if (spy.mock.calls) {
+    msg += c.gray(
+      `\n\nReceived: \n\n${spy.mock.calls
+        .map((callArg, i) => {
+          let methodCall = c.bold(
+            `  ${ordinalOf(i + 1)} ${spy.getMockName()} call:\n\n`,
+          )
+          if (showActualCall) {
+            methodCall += diff(showActualCall, callArg, {
+              omitAnnotationLines: true,
+            })
+          }
+          else {
+            methodCall += stringify(callArg)
+              .split('\n')
+              .map(line => `    ${line}`)
+              .join('\n')
+          }
+
+          methodCall += '\n'
+          return methodCall
+        })
+        .join('\n')}`,
+    )
+  }
+  msg += c.gray(
+    `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
+  )
+  return msg
+}
+
+function formatReturns(
+  spy: MockInstance,
+  results: MockResult<any>[] | MockSettledResult<any>[],
+  msg: string,
+  showActualReturn?: any,
+) {
+  msg += c.gray(
+    `\n\nReceived: \n\n${results
+      .map((callReturn, i) => {
+        let methodCall = c.bold(
+          `  ${ordinalOf(i + 1)} ${spy.getMockName()} call return:\n\n`,
+        )
+        if (showActualReturn) {
+          methodCall += diff(showActualReturn, callReturn.value, {
+            omitAnnotationLines: true,
+          })
+        }
+        else {
+          methodCall += stringify(callReturn)
+            .split('\n')
+            .map(line => `    ${line}`)
+            .join('\n')
+        }
+
+        methodCall += '\n'
+        return methodCall
+      })
+      .join('\n')}`,
+  )
+  msg += c.gray(
+    `\n\nNumber of calls: ${c.bold(spy.mock.calls.length)}\n`,
+  )
+  return msg
 }

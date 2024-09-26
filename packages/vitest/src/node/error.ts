@@ -274,15 +274,15 @@ function printModuleWarningForPackage(
     c.yellow(
       `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
       + `You might want to create an issue to the package ${c.bold(
-          `"${name}"`,
-        )} asking `
-        + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
-        + '\n\n'
-        + 'As a temporary workaround you can try to inline the package by updating your config:'
-        + '\n\n'
-        + c.gray(c.dim('// vitest.config.js'))
-        + '\n'
-        + c.green(`export default {
+        `"${name}"`,
+      )} asking `
+      + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
+      + '\n\n'
+      + 'As a temporary workaround you can try to inline the package by updating your config:'
+      + '\n\n'
+      + c.gray(c.dim('// vitest.config.js'))
+      + '\n'
+      + c.green(`export default {
   test: {
     server: {
       deps: {
@@ -387,10 +387,6 @@ export function generateCodeFrame(
 
   const columns = process.stdout?.columns || 80
 
-  function lineNo(no: number | string = '') {
-    return c.gray(`${String(no).padStart(3, ' ')}| `)
-  }
-
   for (let i = 0; i < lines.length; i++) {
     count += lines[i].length + nl
     if (count >= start) {
@@ -437,4 +433,8 @@ export function generateCodeFrame(
   }
 
   return res.join('\n')
+}
+
+function lineNo(no: number | string = '') {
+  return c.gray(`${String(no).padStart(3, ' ')}| `)
 }

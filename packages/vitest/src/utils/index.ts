@@ -35,6 +35,9 @@ export function removeUndefinedValues<T extends Record<string, any>>(
   return obj
 }
 
+/**
+ * @deprecated import from `@vitest/utils` instead
+ */
 export function objectAttr(
   source: any,
   path: string,
@@ -44,7 +47,7 @@ export function objectAttr(
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
   for (const p of paths) {
-    result = Object(result)[p]
+    result = (new Object(result) as any)[p]
     if (result === undefined) {
       return defaultValue
     }

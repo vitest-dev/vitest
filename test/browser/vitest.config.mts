@@ -28,6 +28,7 @@ export default defineConfig({
   },
   test: {
     include: ['test/**.test.{ts,js,tsx}'],
+    includeSource: ['src/*.ts'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {
@@ -93,4 +94,14 @@ export default defineConfig({
       BROWSER: browser,
     },
   },
+  plugins: [
+    {
+      name: 'test-no-transform-ui',
+      transform(_code, id, _options) {
+        if (id.includes('/__vitest__/')) {
+          throw new Error(`Unexpected transform: ${id}`)
+        }
+      },
+    },
+  ],
 })

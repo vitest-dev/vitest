@@ -498,28 +498,31 @@ export type HookListener<T extends any[], Return = void> = (
   ...args: T
 ) => Awaitable<Return>
 
-export type HookCleanupCallback = (() => Awaitable<unknown>) | void
+/**
+ * @deprecated
+ */
+export type HookCleanupCallback = unknown
 
 export interface BeforeAllListener {
-  (suite: Readonly<Suite | File>): Awaitable<HookCleanupCallback>
+  (suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
 export interface AfterAllListener {
-  (suite: Readonly<Suite | File>): Awaitable<void>
+  (suite: Readonly<Suite | File>): Awaitable<unknown>
 }
 
 export interface BeforeEachListener<ExtraContext = object> {
   (
     context: ExtendedContext<Test | Custom> & ExtraContext,
     suite: Readonly<Suite>
-  ): Awaitable<HookCleanupCallback>
+  ): Awaitable<unknown>
 }
 
 export interface AfterEachListener<ExtraContext = object> {
   (
     context: ExtendedContext<Test | Custom> & ExtraContext,
     suite: Readonly<Suite>
-  ): Awaitable<void>
+  ): Awaitable<unknown>
 }
 
 export interface SuiteHooks<ExtraContext = object> {

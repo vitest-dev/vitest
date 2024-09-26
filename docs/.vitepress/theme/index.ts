@@ -9,6 +9,7 @@ import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
+import AsideViteConf from '../components/AsideViteConf.vue'
 import '@shikijs/vitepress-twoslash/style.css'
 
 if (inBrowser) {
@@ -20,6 +21,7 @@ export default {
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'home-features-after': () => h(HomePage),
+      'aside-ads-before': () => h(AsideViteConf),
     })
   },
   enhanceApp({ app }) {

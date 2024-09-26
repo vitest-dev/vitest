@@ -66,7 +66,7 @@ You can get access to this API by calling `vitest.state.getReportedEntity(runner
 ```ts twoslash
 import type { Vitest } from 'vitest/node'
 import type { RunnerTestFile } from 'vitest'
-import type { Reporter, TestFile } from 'vitest/reporters'
+import type { Reporter, TestModule } from 'vitest/reporters'
 
 class MyReporter implements Reporter {
   ctx!: Vitest
@@ -77,9 +77,10 @@ class MyReporter implements Reporter {
 
   onFinished(files: RunnerTestFile[]) {
     for (const fileTask of files) {
-      const testFile = this.ctx.state.getReportedEntity(fileTask) as TestFile
-      for (const task of testFile.children) {
-        //                         ^?
+      // note that the old task implementation uses "file" instead of "module"
+      const testModule = this.ctx.state.getReportedEntity(fileTask) as TestModule
+      for (const task of testModule.children) {
+        //                          ^?
         console.log('finished', task.type, task.fullName)
       }
     }
@@ -107,9 +108,9 @@ declare class TestCase {
    */
   readonly project: TestProject
   /**
-   * Direct reference to the test file where the test is defined.
+   * Direct reference to the test module where the test is defined.
    */
-  readonly file: TestFile
+  readonly module: TestModule
   /**
    * Name of the test.
    */
@@ -121,18 +122,18 @@ declare class TestCase {
   /**
    * Unique identifier.
    * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the project name, file path and test position.
+   * The ID is based on the project name, module id and test position.
    */
   readonly id: string
   /**
-   * Location in the file where the test was defined.
+   * Location in the module where the test was defined.
    * Locations are collected only if `includeTaskLocation` is enabled in the config.
    */
   readonly location: { line: number; column: number } | undefined
   /**
-   * Parent suite. If the test was called directly inside the file, the parent will be the file.
+   * Parent suite. If the test was called directly inside the module, the parent will be the module itself.
    */
-  readonly parent: TestSuite | TestFile
+  readonly parent: TestSuite | TestModule
   /**
    * Options that test was initiated with.
    */
@@ -241,9 +242,9 @@ declare class TestSuite {
    */
   readonly project: TestProject
   /**
-   * Direct reference to the test file where the suite is defined.
+   * Direct reference to the test module where the suite is defined.
    */
-  readonly file: TestFile
+  readonly module: TestModule
   /**
    * Name of the suite.
    */
@@ -255,11 +256,11 @@ declare class TestSuite {
   /**
    * Unique identifier.
    * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the project name, file path and test position.
+   * The ID is based on the project name, module id and test position.
    */
   readonly id: string
   /**
-   * Location in the file where the suite was defined.
+   * Location in the module where the suite was defined.
    * Locations are collected only if `includeTaskLocation` is enabled in the config.
    */
   readonly location: { line: number; column: number } | undefined
@@ -274,20 +275,20 @@ declare class TestSuite {
 }
 ```
 
-### TestFile
+### TestModule
 
-`TestFile` represents a single file that contains suites and tests.
+`TestModule` represents a single file that contains suites and tests.
 
 ```ts
-declare class TestFile extends SuiteImplementation {
-  readonly type = 'file'
+declare class TestModule extends SuiteImplementation {
+  readonly type = 'module'
   /**
    * Task instance.
    * @experimental Public task API is experimental and does not follow semver.
    */
   readonly task: RunnerTestFile
   /**
-   * Collection of suites and tests that are part of this file.
+   * Collection of suites and tests that are part of this module.
    */
   readonly children: TestCollection
   /**
@@ -297,13 +298,13 @@ declare class TestFile extends SuiteImplementation {
    */
   readonly moduleId: string
   /**
-   * Useful information about the file like duration, memory usage, etc.
-   * If the file was not executed yet, all diagnostic values will return `0`.
+   * Useful information about the module like duration, memory usage, etc.
+   * If the module was not executed yet, all diagnostic values will return `0`.
    */
-  diagnostic(): FileDiagnostic
+  diagnostic(): ModuleDiagnostic
 }
 
-export interface FileDiagnostic {
+export interface ModuleDiagnostic {
   /**
    * The time it takes to import and initiate an environment.
    */
@@ -313,16 +314,16 @@ export interface FileDiagnostic {
    */
   prepareDuration: number
   /**
-   * The time it takes to import the test file.
-   * This includes importing everything in the file and executing suite callbacks.
+   * The time it takes to import the test module.
+   * This includes importing everything in the module and executing suite callbacks.
    */
   collectDuration: number
   /**
-   * The time it takes to import the setup file.
+   * The time it takes to import the setup module.
    */
   setupDuration: number
   /**
-   * Accumulated duration of all tests and hooks in the file.
+   * Accumulated duration of all tests and hooks in the module.
    */
   duration: number
 }
@@ -366,14 +367,14 @@ declare class TestCollection {
 }
 ```
 
-For example, you can iterate over all tests inside a file by calling `testFile.children.allTests()`:
+For example, you can iterate over all tests inside a module by calling `testModule.children.allTests()`:
 
 ```ts
-function onFileCollected(testFile: TestFile): void {
-  console.log('collecting tests in', testFile.moduleId)
+function onFileCollected(testModule: TestModule): void {
+  console.log('collecting tests in', testModule.moduleId)
 
-  // iterate over all tests and suites in the file
-  for (const task of testFile.children.allTests()) {
+  // iterate over all tests and suites in the module
+  for (const task of testModule.children.allTests()) {
     console.log('collected', task.type, task.fullName)
   }
 }
@@ -381,7 +382,7 @@ function onFileCollected(testFile: TestFile): void {
 
 ### TestProject
 
-`TestProject` is a project assosiated with the file. Every test and suite inside that file will reference the same project.
+`TestProject` is a project assosiated with the module. Every test and suite inside that module will reference the same project.
 
 Project is useful to get the configuration or provided context.
 

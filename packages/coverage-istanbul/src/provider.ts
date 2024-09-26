@@ -307,13 +307,23 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
 
     if (!keepResults) {
-      this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+      await this.cleanAfterRun()
+    }
+  }
 
-      // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0) {
-        await fs.rm(this.options.reportsDirectory, { recursive: true })
-      }
+  private async cleanAfterRun() {
+    this.coverageFiles = new Map()
+    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+    // Remove empty reports directory, e.g. when only text-reporter is used
+    if (readdirSync(this.options.reportsDirectory).length === 0) {
+      await fs.rm(this.options.reportsDirectory, { recursive: true })
+    }
+  }
+
+  async onTestFailure() {
+    if (!this.options.reportOnFailure) {
+      await this.cleanAfterRun()
     }
   }
 
@@ -414,13 +424,15 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     const cacheKey = new Date().getTime()
     const coverageMap = libCoverage.createCoverageMap({})
 
+    const transform = this.createUncoveredFileTransformer(this.ctx)
+
     // Note that these cannot be run parallel as synchronous instrumenter.lastFileCoverage
     // returns the coverage of the last transformed file
     for (const [index, filename] of uncoveredFiles.entries()) {
       debug('Uncovered file %s %d/%d', filename, index, uncoveredFiles.length)
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await this.ctx.vitenode.transformRequest(`${filename}?v=${cacheKey}`)
+      await transform(`${filename}?v=${cacheKey}`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
     }

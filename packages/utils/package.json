@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "2.1.0-beta.5",
+  "version": "2.1.1",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -65,7 +65,6 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "estree-walker": "^3.0.3",
     "loupe": "^3.1.1",
     "tinyrainbow": "^1.2.0"
   },

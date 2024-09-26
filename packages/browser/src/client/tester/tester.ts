@@ -1,6 +1,7 @@
 import { SpyModule, collectTests, setupCommonEnv, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { page } from '@vitest/browser/context'
-import { channel, client, onCancel } from '@vitest/browser/client'
+import type { IframeMockEvent, IframeMockInvalidateEvent, IframeUnmockEvent } from '@vitest/browser/client'
+import { channel, client, onCancel, waitForChannel } from '@vitest/browser/client'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
@@ -33,7 +34,34 @@ async function prepareTestEnvironment(files: string[]) {
   state.onCancel = onCancel
   state.rpc = rpc as any
 
-  const mocker = new VitestBrowserClientMocker()
+  const mocker = new VitestBrowserClientMocker(
+    {
+      async delete(url: string) {
+        channel.postMessage({
+          type: 'unmock',
+          url,
+        } satisfies IframeUnmockEvent)
+        await waitForChannel('unmock:done')
+      },
+      async register(module) {
+        channel.postMessage({
+          type: 'mock',
+          module: module.toJSON(),
+        } satisfies IframeMockEvent)
+        await waitForChannel('mock:done')
+      },
+      invalidate() {
+        channel.postMessage({
+          type: 'mock:invalidate',
+        } satisfies IframeMockInvalidateEvent)
+      },
+    },
+    rpc,
+    SpyModule.spyOn,
+    {
+      root: getBrowserState().viteConfig.root,
+    },
+  )
   // @ts-expect-error mocking vitest apis
   globalThis.__vitest_mocker__ = mocker
 
@@ -51,7 +79,6 @@ async function prepareTestEnvironment(files: string[]) {
     }
   })
 
-  mocker.setSpyModule(SpyModule)
   mocker.setupWorker()
 
   onCancel.then((reason) => {
@@ -113,8 +140,17 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   debug('prepare time', state.durations.prepare, 'ms')
 
   try {
-    await setupCommonEnv(config)
-    await startCoverageInsideWorker(config.coverage, executor)
+    await Promise.all([
+      setupCommonEnv(config),
+      startCoverageInsideWorker(config.coverage, executor),
+      (async () => {
+        const VitestIndex = await import('vitest')
+        Object.defineProperty(window, '__vitest_index__', {
+          value: VitestIndex,
+          enumerable: false,
+        })
+      })(),
+    ])
 
     for (const file of files) {
       state.filepath = file
@@ -141,7 +177,13 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       }, 'Cleanup Error')
     }
     state.environmentTeardownRun = true
-    await stopCoverageInsideWorker(config.coverage, executor)
+    await stopCoverageInsideWorker(config.coverage, executor).catch((error) => {
+      client.rpc.onUnhandledError({
+        name: error.name,
+        message: error.message,
+        stack: String(error.stack),
+      }, 'Coverage Error').catch(() => {})
+    })
 
     debug('finished running tests')
     done(files)

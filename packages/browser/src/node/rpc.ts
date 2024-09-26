@@ -1,5 +1,5 @@
 import { existsSync, promises as fs } from 'node:fs'
-import { dirname, isAbsolute, join } from 'pathe'
+import { dirname } from 'pathe'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
@@ -7,18 +7,15 @@ import { WebSocketServer } from 'ws'
 import type { BrowserCommandContext } from 'vitest/node'
 import { createDebugger, isFileServingAllowed } from 'vitest/node'
 import type { ErrorWithDiff } from 'vitest'
+import { ServerMockResolver } from '@vitest/mocker/node'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import type { BrowserServer } from './server'
-import { cleanUrl, resolveMock } from './resolveMock'
 
 const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
-const VALID_ID_PREFIX = '/@id/'
 
-export function setupBrowserRpc(
-  server: BrowserServer,
-) {
+export function setupBrowserRpc(server: BrowserServer) {
   const project = server.project
   const vite = server.vite
   const ctx = project.ctx
@@ -65,6 +62,10 @@ export function setupBrowserRpc(
   }
 
   function setupClient(sessionId: string, ws: WebSocket) {
+    const mockResolver = new ServerMockResolver(server.vite, {
+      moduleDirectories: project.config.server?.deps?.moduleDirectories,
+    })
+
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
         async onUnhandledError(error, type) {
@@ -124,44 +125,7 @@ export function setupBrowserRpc(
           ctx.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {
-          const resolved = await vite.pluginContainer.resolveId(
-            id,
-            importer,
-            {
-              ssr: false,
-            },
-          )
-          if (!resolved) {
-            return null
-          }
-          const isOptimized = resolved.id.startsWith(withTrailingSlash(vite.config.cacheDir))
-          let url: string
-          // normalise the URL to be acceptible by the browser
-          // https://github.com/vitejs/vite/blob/e833edf026d495609558fd4fb471cf46809dc369/packages/vite/src/node/plugins/importAnalysis.ts#L335
-          const root = vite.config.root
-          if (resolved.id.startsWith(withTrailingSlash(root))) {
-            url = resolved.id.slice(root.length)
-          }
-          else if (
-            resolved.id !== '/@react-refresh'
-            && isAbsolute(resolved.id)
-            && existsSync(cleanUrl(resolved.id))
-          ) {
-            url = join('/@fs/', resolved.id)
-          }
-          else {
-            url = resolved.id
-          }
-          if (url[0] !== '.' && url[0] !== '/') {
-            url = id.startsWith(VALID_ID_PREFIX)
-              ? id
-              : VALID_ID_PREFIX + id.replace('\0', '__x00__')
-          }
-          return {
-            id: resolved.id,
-            url,
-            optimized: isOptimized,
-          }
+          return mockResolver.resolveId(id, importer)
         },
         debug(...args) {
           ctx.logger.console.debug(...args)
@@ -206,17 +170,11 @@ export function setupBrowserRpc(
           debug?.('[%s] Finishing browser tests for context', contextId)
           return server.state.getContext(contextId)?.resolve()
         },
-        resolveMock(rawId, importer, hasFactory) {
-          return resolveMock(project, rawId, importer, hasFactory)
+        resolveMock(rawId, importer, options) {
+          return mockResolver.resolveMock(rawId, importer, options)
         },
         invalidate(ids) {
-          ids.forEach((id) => {
-            const moduleGraph = server.vite.moduleGraph
-            const module = moduleGraph.getModuleById(id)
-            if (module) {
-              moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
-            }
-          })
+          return mockResolver.invalidate(ids)
         },
 
         // CDP
@@ -277,12 +235,4 @@ export function stringifyReplace(key: string, value: any) {
   else {
     return value
   }
-}
-
-function withTrailingSlash(path: string): string {
-  if (path[path.length - 1] !== '/') {
-    return `${path}/`
-  }
-
-  return path
 }

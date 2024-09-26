@@ -9,6 +9,8 @@ const REGEXP_WRAP_PREFIX = '$$vitest:'
 // Store global APIs in case process is overwritten by tests
 const processSend = process.send?.bind(process)
 const processOn = process.on?.bind(process)
+const processOff = process.off?.bind(process)
+const dispose: (() => void)[] = []
 
 export function createThreadsRpcOptions({
   port,
@@ -23,6 +25,16 @@ export function createThreadsRpcOptions({
   }
 }
 
+export function disposeInternalListeners() {
+  for (const fn of dispose) {
+    try {
+      fn()
+    }
+    catch {}
+  }
+  dispose.length = 0
+}
+
 export function createForksRpcOptions(
   nodeV8: typeof import('v8'),
 ): WorkerRpcOptions {
@@ -33,14 +45,16 @@ export function createForksRpcOptions(
       processSend!(v)
     },
     on(fn) {
-      processOn('message', (message: any, ...extras: any) => {
+      const handler = (message: any, ...extras: any) => {
         // Do not react on Tinypool's internal messaging
         if ((message as TinypoolWorkerMessage)?.__tinypool_worker_message__) {
           return
         }
 
         return fn(message, ...extras)
-      })
+      }
+      processOn('message', handler)
+      dispose.push(() => processOff('message', handler))
     },
   }
 }

@@ -176,7 +176,7 @@ const projectNameTextColor = computed(() => {
     <div flex items-end gap-2 overflow-hidden>
       <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
       <span text-sm truncate font-light>
-        <span v-if="type === 'file' && projectName" class="rounded-full p-1 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
+        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-1 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
           {{ projectName }}
         </span>
         <span :text="state === 'fail' ? 'red-500' : ''" v-html="highlighted" />

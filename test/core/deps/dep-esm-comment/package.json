@@ -1,0 +1,5 @@
+{
+  "name": "@vitest/test-dep-esm-comment",
+  "type": "commonjs",
+  "exports": "./index.js"
+}

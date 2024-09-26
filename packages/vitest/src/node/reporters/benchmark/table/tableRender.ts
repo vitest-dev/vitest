@@ -68,7 +68,7 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     formatNumber(result.p995 || 0),
     formatNumber(result.p999 || 0),
     `±${(result.rme || 0).toFixed(2)}%`,
-    result.samples.length.toString(),
+    (result.sampleCount || 0).toString(),
   ]
 }
 
@@ -124,10 +124,7 @@ export function renderTree(
       }
       const baseline = options.compare?.[t.id]
       if (baseline) {
-        benchMap[t.id].baseline = {
-          ...baseline,
-          samples: Array(baseline.sampleCount),
-        }
+        benchMap[t.id].baseline = baseline
       }
     }
   }

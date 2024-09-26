@@ -3,7 +3,8 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-export const browser = process.env.BROWSER || (process.env.PROVIDER !== 'playwright' ? 'chromium' : 'chrome')
+const provider = process.env.PROVIDER || 'playwright'
+export const browser = process.env.BROWSER || (provider !== 'playwright' ? 'chromium' : 'chrome')
 
 export async function runBrowserTests(
   config?: Omit<UserConfig, 'browser'> & { browser?: Partial<UserConfig['browser']> },
@@ -29,5 +30,5 @@ export async function runBrowserTests(
   const passedTests = getPassed(browserResultJson.testResults)
   const failedTests = getFailed(browserResultJson.testResults)
 
-  return { ...result, browserResultJson, passedTests, failedTests, browser }
+  return { ...result, browserResultJson, passedTests, failedTests, browser, provider }
 }

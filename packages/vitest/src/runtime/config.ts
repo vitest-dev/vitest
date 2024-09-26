@@ -129,6 +129,9 @@ export interface SerializedConfig {
   standalone: boolean
   logHeapUsage: boolean | undefined
   coverage: SerializedCoverageConfig
+  benchmark?: {
+    includeSamples: boolean
+  }
 }
 
 export interface SerializedCoverageConfig {

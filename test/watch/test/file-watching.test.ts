@@ -157,6 +157,7 @@ describe('browser', () => {
       ...options,
       browser: {
         name: 'chrome',
+        provider: 'webdriverio',
         enabled: true,
         headless: true,
       },

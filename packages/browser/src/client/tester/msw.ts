@@ -1,167 +1,68 @@
 import { channel } from '@vitest/browser/client'
 import type {
   IframeChannelEvent,
-  IframeMockEvent,
+  IframeMockFactoryRequestEvent,
   IframeMockingDoneEvent,
-  IframeUnmockEvent,
 } from '@vitest/browser/client'
+import type { MockedModuleSerialized } from '@vitest/mocker'
+import { ManualMockedModule } from '@vitest/mocker'
+import { ModuleMockerMSWInterceptor } from '@vitest/mocker/browser'
+import { nanoid } from '@vitest/utils'
 
-export function createModuleMocker() {
-  const mocks: Map<string, string | null | undefined> = new Map()
-
-  let started = false
-  let startPromise: undefined | Promise<unknown>
-
-  async function init() {
-    if (started) {
-      return
-    }
-    if (startPromise) {
-      return startPromise
-    }
-    startPromise = Promise.all([
-      import('msw/browser'),
-      import('msw/core/http'),
-    ]).then(([{ setupWorker }, { http }]) => {
-      const worker = setupWorker(
-        http.get(/.+/, async ({ request }) => {
-          const path = cleanQuery(request.url.slice(location.origin.length))
-          if (!mocks.has(path)) {
-            if (path.includes('/deps/')) {
-              return fetch(bypass(request))
-            }
-
-            return passthrough()
-          }
-
-          const mock = mocks.get(path)
-
-          // using a factory
-          if (mock === undefined) {
-            const exports = await getFactoryExports(path)
-            const module = `const module = __vitest_mocker__.get('${path}');`
-            const keys = exports
-              .map((name) => {
-                if (name === 'default') {
-                  return `export default module['default'];`
-                }
-                return `export const ${name} = module['${name}'];`
-              })
-              .join('\n')
-            const text = `${module}\n${keys}`
-            return new Response(text, {
-              headers: {
-                'Content-Type': 'application/javascript',
-              },
-            })
-          }
-
-          if (typeof mock === 'string') {
-            return Response.redirect(mock)
-          }
-
-          return Response.redirect(injectQuery(path, 'mock=auto'))
-        }),
-      )
-      return worker.start({
-        serviceWorker: {
-          url: '/__vitest_msw__',
-        },
-        quiet: true,
+export class VitestBrowserModuleMockerInterceptor extends ModuleMockerMSWInterceptor {
+  override async register(event: MockedModuleSerialized): Promise<void> {
+    if (event.type === 'manual') {
+      const module = ManualMockedModule.fromJSON(event, async () => {
+        const keys = await getFactoryExports(event.url)
+        return Object.fromEntries(keys.map(key => [key, null]))
       })
-    })
-      .finally(() => {
-        started = true
-        startPromise = undefined
-      })
-    await startPromise
+      await super.register(module)
+    }
+    else {
+      await this.init()
+      this.mocks.register(event)
+    }
+    channel.postMessage(<IframeMockingDoneEvent>{ type: 'mock:done' })
   }
 
-  return {
-    async mock(event: IframeMockEvent) {
-      await init()
-      event.paths.forEach(path => mocks.set(path, event.mock))
-      channel.postMessage(<IframeMockingDoneEvent>{ type: 'mock:done' })
-    },
-    async unmock(event: IframeUnmockEvent) {
-      await init()
-      event.paths.forEach(path => mocks.delete(path))
-      channel.postMessage(<IframeMockingDoneEvent>{ type: 'unmock:done' })
-    },
-    invalidate() {
-      mocks.clear()
-    },
+  override async delete(url: string): Promise<void> {
+    await super.delete(url)
+    channel.postMessage(<IframeMockingDoneEvent>{ type: 'unmock:done' })
   }
 }
 
+export function createModuleMockerInterceptor() {
+  return new VitestBrowserModuleMockerInterceptor({
+    globalThisAccessor: '"__vitest_mocker__"',
+    mswOptions: {
+      serviceWorker: {
+        url: '/__vitest_msw__',
+      },
+      quiet: true,
+    },
+  })
+}
+
 function getFactoryExports(id: string) {
+  const eventId = nanoid()
   channel.postMessage({
     type: 'mock-factory:request',
+    eventId,
     id,
-  })
+  } satisfies IframeMockFactoryRequestEvent)
   return new Promise<string[]>((resolve, reject) => {
     channel.addEventListener(
       'message',
       function onMessage(e: MessageEvent<IframeChannelEvent>) {
-        if (e.data.type === 'mock-factory:response') {
+        if (e.data.type === 'mock-factory:response' && e.data.eventId === eventId) {
           resolve(e.data.exports)
           channel.removeEventListener('message', onMessage)
         }
-        if (e.data.type === 'mock-factory:error') {
+        if (e.data.type === 'mock-factory:error' && e.data.eventId === eventId) {
           reject(e.data.error)
           channel.removeEventListener('message', onMessage)
         }
       },
     )
   })
-}
-
-const timestampRegexp = /(\?|&)t=\d{13}/
-const versionRegexp = /(\?|&)v=\w{8}/
-function cleanQuery(url: string) {
-  return url.replace(timestampRegexp, '').replace(versionRegexp, '')
-}
-
-function passthrough() {
-  return new Response(null, {
-    status: 302,
-    statusText: 'Passthrough',
-    headers: {
-      'x-msw-intention': 'passthrough',
-    },
-  })
-}
-
-function bypass(request: Request) {
-  const clonedRequest = request.clone()
-  clonedRequest.headers.set('x-msw-intention', 'bypass')
-  const cacheControl = clonedRequest.headers.get('cache-control')
-  if (cacheControl) {
-    clonedRequest.headers.set(
-      'cache-control',
-      // allow reinvalidation of the cache so mocks can be updated
-      cacheControl.replace(', immutable', ''),
-    )
-  }
-  return clonedRequest
-}
-
-const postfixRE = /[?#].*$/
-function cleanUrl(url: string): string {
-  return url.replace(postfixRE, '')
-}
-
-const replacePercentageRE = /%/g
-function injectQuery(url: string, queryToInject: string): string {
-  // encode percents for consistent behavior with pathToFileURL
-  // see #2614 for details
-  const resolvedUrl = new URL(
-    url.replace(replacePercentageRE, '%25'),
-    location.href,
-  )
-  const { search, hash } = resolvedUrl
-  const pathname = cleanUrl(url)
-  return `${pathname}?${queryToInject}${search ? `&${search.slice(1)}` : ''}${
-    hash ?? ''
-  }`
 }

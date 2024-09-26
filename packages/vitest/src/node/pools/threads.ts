@@ -170,10 +170,10 @@ export function createThreadsPool(
       }
 
       const singleThreads = specs.filter(
-        ([project]) => project.config.poolOptions?.threads?.singleThread,
+        spec => spec.project.config.poolOptions?.threads?.singleThread,
       )
       const multipleThreads = specs.filter(
-        ([project]) => !project.config.poolOptions?.threads?.singleThread,
+        spec => !spec.project.config.poolOptions?.threads?.singleThread,
       )
 
       if (multipleThreads.length) {

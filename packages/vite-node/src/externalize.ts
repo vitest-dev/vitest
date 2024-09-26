@@ -11,6 +11,9 @@ const ESM_SYNTAX_RE
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
 
+// https://stackoverflow.com/a/15123777
+const COMMENT_RE = /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm
+
 const defaultInline = [
   /virtual:/,
   /\.[mc]?ts$/,
@@ -79,7 +82,7 @@ async function isValidNodeImport(id: string) {
 
   const code = await fsp.readFile(id, 'utf8').catch(() => '')
 
-  return !ESM_SYNTAX_RE.test(code)
+  return !ESM_SYNTAX_RE.test(code.replace(COMMENT_RE, ''))
 }
 
 const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
@@ -111,17 +114,18 @@ async function _shouldExternalize(
 
   id = patchWindowsImportPath(id)
 
-  // always externalize Vite deps, they are too big to inline
-  if (options?.cacheDir && id.includes(options.cacheDir)) {
-    return id
-  }
-
   const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
 
   if (matchExternalizePattern(id, moduleDirectories, options?.inline)) {
     return false
   }
   if (matchExternalizePattern(id, moduleDirectories, options?.external)) {
+    return id
+  }
+
+  // Unless the user explicitly opted to inline them, externalize Vite deps.
+  // They are too big to inline by default.
+  if (options?.cacheDir && id.includes(options.cacheDir)) {
     return id
   }
 

@@ -20,6 +20,7 @@ import type {
   SuiteHooks,
   Task,
   TaskCustomOptions,
+  TaskPopulated,
   Test,
   TestAPI,
   TestFunction,
@@ -346,7 +347,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withFixtures(handler, context),
+          withAwaitAsyncAssetions(withFixtures(handler, context), task),
           options?.timeout ?? runner.config.testTimeout,
         ),
       )
@@ -481,7 +482,24 @@ function createSuiteCollector(
   return collector
 }
 
+function withAwaitAsyncAssetions<T extends (...args: any[]) => any>(fn: T, task: TaskPopulated): T {
+  return (async (...args: any[]) => {
+    await fn(...args)
+    // some async expect will be added to this array, in case user forget to await them
+    if (task.promises) {
+      const result = await Promise.allSettled(task.promises)
+      const errors = result
+        .map(r => (r.status === 'rejected' ? r.reason : undefined))
+        .filter(Boolean)
+      if (errors.length) {
+        throw errors
+      }
+    }
+  }) as T
+}
+
 function createSuite() {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,

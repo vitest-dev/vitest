@@ -1,12 +1,12 @@
 import { rm } from 'node:fs/promises'
 import { performance } from 'node:perf_hooks'
-import type { ExecaChildProcess } from 'execa'
-import { execa } from 'execa'
+import type { ChildProcess } from 'node:child_process'
 import { basename, extname, resolve } from 'pathe'
 import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
 import type { RawSourceMap } from '@ampproject/remapping'
 import type { ParsedStack } from '@vitest/utils'
 import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
+import { x } from 'tinyexec'
 import { getTasks } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import type { Awaitable } from '../types/general'
@@ -50,7 +50,7 @@ export class Typechecker {
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
   private allowJs?: boolean
-  private process?: ExecaChildProcess
+  private process?: ChildProcess
 
   protected files: string[] = []
 
@@ -310,15 +310,17 @@ export class Typechecker {
     }
     this._output = ''
     this._startTime = performance.now()
-    const child = execa(typecheck.checker, args, {
-      cwd: root,
-      stdout: 'pipe',
-      reject: false,
+    const child = x(typecheck.checker, args, {
+      nodeOptions: {
+        cwd: root,
+        stdio: 'pipe',
+      },
+      throwOnError: false,
     })
-    this.process = child
+    this.process = child.process
     await this._onParseStart?.()
     let rerunTriggered = false
-    child.stdout?.on('data', (chunk) => {
+    child.process?.stdout?.on('data', (chunk) => {
       this._output += chunk
       if (!watch) {
         return

@@ -69,7 +69,7 @@ export function createOrUpdateFileNode(
       tasks: [],
       typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
-      duration: file.result?.duration,
+      duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
       filepath: file.filepath,
       projectName: file.projectName || '',
       projectNameColor: getProjectNameColor(file.projectName),
@@ -132,6 +132,9 @@ export function createOrUpdateNode(
 ) {
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
+  const duration = task.result?.duration != null
+    ? Math.round(task.result?.duration)
+    : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
     if (taskNode) {
@@ -141,7 +144,7 @@ export function createOrUpdateNode(
       }
 
       taskNode.mode = task.mode
-      taskNode.duration = task.result?.duration
+      taskNode.duration = duration
       taskNode.state = task.result?.state
     }
     else {
@@ -156,7 +159,7 @@ export function createOrUpdateNode(
           expandable: false,
           expanded: false,
           indent: node.indent + 1,
-          duration: task.result?.duration,
+          duration,
           state: task.result?.state,
         } as TestTreeNode | CustomTestTreeNode
       }
@@ -174,7 +177,7 @@ export function createOrUpdateNode(
           children: new Set(),
           tasks: [],
           indent: node.indent + 1,
-          duration: task.result?.duration,
+          duration,
           state: task.result?.state,
         } as SuiteTreeNode
       }

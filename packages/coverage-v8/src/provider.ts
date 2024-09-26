@@ -279,13 +279,23 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
 
     if (!keepResults) {
-      this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+      await this.cleanAfterRun()
+    }
+  }
 
-      // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0) {
-        await fs.rm(this.options.reportsDirectory, { recursive: true })
-      }
+  private async cleanAfterRun() {
+    this.coverageFiles = new Map()
+    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+    // Remove empty reports directory, e.g. when only text-reporter is used
+    if (readdirSync(this.options.reportsDirectory).length === 0) {
+      await fs.rm(this.options.reportsDirectory, { recursive: true })
+    }
+  }
+
+  async onTestFailure() {
+    if (!this.options.reportOnFailure) {
+      await this.cleanAfterRun()
     }
   }
 
@@ -368,6 +378,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
+    const transform = this.createUncoveredFileTransformer(this.ctx)
 
     const allFiles = await this.testExclude.glob(this.ctx.config.root)
     let includedFiles = allFiles.map(file =>
@@ -401,7 +412,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           const { originalSource } = await this.getSources(
             filename.href,
             transformResults,
-            file => this.ctx.vitenode.transformRequest(file),
+            transform,
           )
 
           const coverage = {

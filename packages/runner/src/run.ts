@@ -27,7 +27,8 @@ import { hasFailed, hasTests } from './utils/tasks'
 import { PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
 
-const now = Date.now
+const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
+const unixNow = Date.now
 
 function updateSuiteHookState(
   suite: Task,
@@ -181,7 +182,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
 
   test.result = {
     state: 'run',
-    startTime: start,
+    startTime: unixNow(),
     retryCount: 0,
   }
   updateTask(test, runner)
@@ -222,16 +223,6 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
             )
           }
           await fn()
-        }
-        // some async expect will be added to this array, in case user forget to await theme
-        if (test.promises) {
-          const result = await Promise.allSettled(test.promises)
-          const errors = result
-            .map(r => (r.status === 'rejected' ? r.reason : undefined))
-            .filter(Boolean)
-          if (errors.length) {
-            throw errors
-          }
         }
 
         await runner.onAfterTryTask?.(test, {
@@ -376,7 +367,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
   suite.result = {
     state: 'run',
-    startTime: start,
+    startTime: unixNow(),
   }
 
   updateTask(suite, runner)
@@ -391,13 +382,19 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
   }
   else {
     try {
-      beforeAllCleanups = await callSuiteHook(
-        suite,
-        suite,
-        'beforeAll',
-        runner,
-        [suite],
-      )
+      try {
+        beforeAllCleanups = await callSuiteHook(
+          suite,
+          suite,
+          'beforeAll',
+          runner,
+          [suite],
+        )
+      }
+      catch (e) {
+        markTasksAsSkipped(suite, runner)
+        throw e
+      }
 
       if (runner.runSuite) {
         await runner.runSuite(suite)

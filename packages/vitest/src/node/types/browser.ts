@@ -27,7 +27,7 @@ export interface BrowserProvider {
   beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
   afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (contextId: string) => Record<string, unknown>
-  openPage: (contextId: string, url: string) => Promise<void>
+  openPage: (contextId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
   getCDPSession?: (contextId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options

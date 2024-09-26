@@ -51,3 +51,5 @@ export type {
   SerializedError,
   TestError,
 } from './types'
+
+export { nanoid } from './nanoid'

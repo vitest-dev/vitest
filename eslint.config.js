@@ -97,6 +97,7 @@ export default antfu(
   {
     files: [
       `docs/${GLOB_SRC}`,
+      `**/*.md`,
     ],
     rules: {
       'style/max-statements-per-line': 'off',
@@ -114,6 +115,14 @@ export default antfu(
     ],
     rules: {
       'no-restricted-globals': 'off',
+    },
+  },
+  {
+    files: [
+      `test/${GLOB_SRC}`,
+    ],
+    rules: {
+      'unicorn/consistent-function-scoping': 'off',
     },
   },
   {

@@ -1,13 +1,14 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { isMainThread } from 'node:worker_threads'
 import { dirname, relative, resolve } from 'pathe'
+import { type GlobOptions, glob } from 'tinyglobby'
 import { mergeConfig } from 'vite'
-import fg from 'fast-glob'
 import type { Vitest } from '../core'
 import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
 import type { WorkspaceProject } from '../workspace'
 import { initializeProject } from '../workspace'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
   vitest: Vitest,
@@ -51,10 +52,11 @@ export async function resolveWorkspace(
   const cwd = process.cwd()
 
   const projects: WorkspaceProject[] = []
+  const fileProjects = [...configFiles, ...nonConfigDirectories]
 
   try {
     // we have to resolve them one by one because CWD should depend on the project
-    for (const filepath of [...configFiles, ...nonConfigDirectories]) {
+    for (const filepath of fileProjects) {
       // if file leads to the root config, then we can just reuse it because we already initialized it
       if (vitest.server.config.configFile === filepath) {
         const project = await vitest._createCoreProject()
@@ -111,12 +113,20 @@ export async function resolveWorkspace(
     const name = project.getName()
     if (names.has(name)) {
       const duplicate = resolvedProjects.find(p => p.getName() === name && p !== project)!
+      const filesError = fileProjects.length
+        ? [
+            '\n\nYour config matched these files:\n',
+            fileProjects.map(p => ` - ${relative(vitest.config.root, p)}`).join('\n'),
+            '\n\n',
+          ].join('')
+        : [' ']
       throw new Error([
         `Project name "${name}"`,
         project.server.config.configFile ? ` from "${relative(vitest.config.root, project.server.config.configFile)}"` : '',
         ' is not unique.',
         duplicate?.server.config.configFile ? ` The project is already defined by "${relative(vitest.config.root, duplicate.server.config.configFile)}".` : '',
-        ' All projects in a workspace should have unique names. Make sure your configuration is correct.',
+        filesError,
+        'All projects in a workspace should have unique names. Make sure your configuration is correct.',
       ].join(''))
     }
     names.add(name)
@@ -149,7 +159,7 @@ async function resolveWorkspaceProjectConfigs(
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
       // if the string doesn't contain a glob, we can resolve it directly
       // ['./vitest.config.js']
-      if (!stringOption.includes('*')) {
+      if (!isDynamicPattern(stringOption)) {
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
@@ -196,36 +206,36 @@ async function resolveWorkspaceProjectConfigs(
     else {
       projectsOptions.push(await definition)
     }
+  }
 
-    if (workspaceGlobMatches.length) {
-      const globOptions: fg.Options = {
-        absolute: true,
-        dot: true,
-        onlyFiles: false,
-        markDirectories: true,
-        cwd: vitest.config.root,
-        ignore: ['**/node_modules/**', '**/*.timestamp-*'],
-      }
+  if (workspaceGlobMatches.length) {
+    const globOptions: GlobOptions = {
+      absolute: true,
+      dot: true,
+      onlyFiles: false,
+      cwd: vitest.config.root,
+      expandDirectories: false,
+      ignore: ['**/node_modules/**', '**/*.timestamp-*'],
+    }
 
-      const workspacesFs = await fg(workspaceGlobMatches, globOptions)
+    const workspacesFs = await glob(workspaceGlobMatches, globOptions)
 
-      await Promise.all(workspacesFs.map(async (filepath) => {
-        // directories are allowed with a glob like `packages/*`
-        // in this case every directory is treated as a project
-        if (filepath.endsWith('/')) {
-          const configFile = await resolveDirectoryConfig(filepath)
-          if (configFile) {
-            workspaceConfigFiles.push(configFile)
-          }
-          else {
-            nonConfigProjectDirectories.push(filepath)
-          }
+    await Promise.all(workspacesFs.map(async (filepath) => {
+      // directories are allowed with a glob like `packages/*`
+      // in this case every directory is treated as a project
+      if (filepath.endsWith('/')) {
+        const configFile = await resolveDirectoryConfig(filepath)
+        if (configFile) {
+          workspaceConfigFiles.push(configFile)
         }
         else {
-          workspaceConfigFiles.push(filepath)
+          nonConfigProjectDirectories.push(filepath)
         }
-      }))
-    }
+      }
+      else {
+        workspaceConfigFiles.push(filepath)
+      }
+    }))
   }
 
   const projectConfigFiles = Array.from(new Set(workspaceConfigFiles))

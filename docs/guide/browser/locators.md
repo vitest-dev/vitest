@@ -11,7 +11,12 @@ The locator API uses a fork of [Playwright's locators](https://playwright.dev/do
 
 ## getByRole
 
-- **Type:** `(role: ARIARole | string, options?: LocatorByRoleOptions) => Locator`
+```ts
+function getByRole(
+  role: ARIARole | string,
+  options?: LocatorByRoleOptions,
+): Locator
+```
 
 Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
 
@@ -188,7 +193,12 @@ Providing roles via `role` or `aria-*` attributes to built-in elements that alre
 
 ## getByAltText
 
-- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+```ts
+function getByAltText(
+  text: string | RegExp,
+  options?: LocatorOptions,
+): Locator
+```
 
 Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has a matching `alt` attribute.
 
@@ -211,7 +221,12 @@ page.getByAltText('non existing alt text') // ❌
 
 ## getByLabelText
 
-- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+```ts
+function getByLabelText(
+  text: string | RegExp,
+  options?: LocatorOptions,
+): Locator
+```
 
 Creates a locator capable of finding an element that has an assosiated label.
 
@@ -253,7 +268,12 @@ The `page.getByLabelText('Username')` locator will find every input in the examp
 
 ## getByPlaceholder
 
-- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+```ts
+function getByPlaceholder(
+  text: string | RegExp,
+  options?: LocatorOptions,
+): Locator
+```
 
 Creates a locator capable of finding an element that has the specified `placeholder` attribute. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
 
@@ -280,7 +300,12 @@ It is generally better to rely on a label using [`getByLabelText`](#getbylabelte
 
 ## getByText
 
-- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+```ts
+function getByText(
+  text: string | RegExp,
+  options?: LocatorOptions,
+): Locator
+```
 
 Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`. Matching by text always normalizes whitespace, even with exact match. For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
 
@@ -307,7 +332,12 @@ This locator is useful for locating non-interactive elements. If you need to loc
 
 ## getByTitle
 
-- **Type:** `(text: string | RegExp, options?: LocatorOptions) => Locator`
+```ts
+function getByTitle(
+  text: string | RegExp,
+  options?: LocatorOptions,
+): Locator
+```
 
 Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
 
@@ -330,7 +360,9 @@ page.getByTitle('Create') // ❌
 
 ## getByTestId
 
-- **Type:** `(text: string | RegExp) => Locator`
+```ts
+function getByTestId(text: string | RegExp): Locator
+```
 
 Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
 
@@ -359,7 +391,9 @@ It is recommended to use this only after the other locators don't work for your 
 
 ### click
 
-- **Type:** `(options?: UserEventClickOptions) => Promise<void>`
+```ts
+function click(options?: UserEventClickOptions): Promise<void>
+```
 
 Click on an element. You can use the options to set the cursor position.
 
@@ -373,7 +407,9 @@ await page.getByRole('img', { name: 'Rose' }).click()
 
 ### dblClick
 
-- **Type:** `(options?: UserEventClickOptions) => Promise<void>`
+```ts
+function dblClick(options?: UserEventDoubleClickOptions): Promise<void>
+```
 
 Triggers a double click event on an element. You can use the options to set the cursor position.
 
@@ -387,7 +423,9 @@ await page.getByRole('img', { name: 'Rose' }).dblClick()
 
 ### tripleClick
 
-- **Type:** `(options?: UserEventClickOptions) => Promise<void>`
+```ts
+function tripleClick(options?: UserEventTripleClickOptions): Promise<void>
+```
 
 Triggers a triple click event on an element. Since there is no `tripleclick` in browser api, this method will fire three click events in a row.
 
@@ -401,7 +439,9 @@ await page.getByRole('img', { name: 'Rose' }).tripleClick()
 
 ### clear
 
-- **Type:** `() => Promise<void>`
+```ts
+function clear(): Promise<void>
+```
 
 Clears the input element content.
 
@@ -415,7 +455,9 @@ await page.getByRole('textbox', { name: 'Full Name' }).clear()
 
 ### hover
 
-- **Type:** `(options?: UserEventHoverOptions) => Promise<void>`
+```ts
+function hover(options?: UserEventHoverOptions): Promise<void>
+```
 
 Moves the cursor position to the selected element.
 
@@ -429,7 +471,9 @@ await page.getByRole('img', { name: 'Rose' }).hover()
 
 ### unhover
 
-- **Type:** `(options?: UserEventHoverOptions) => Promise<void>`
+```ts
+function unhover(options?: UserEventHoverOptions): Promise<void>
+```
 
 This works the same as [`locator.hover`](#hover), but moves the cursor to the `document.body` element instead.
 
@@ -443,7 +487,9 @@ await page.getByRole('img', { name: 'Rose' }).unhover()
 
 ### fill
 
-- **Type:** `(text: string, options?: UserEventFillOptions) => Promise<void>`
+```ts
+function fill(text: string, options?: UserEventFillOptions): Promise<void>
+```
 
 Sets the value of the current `input`, `textarea` or `conteneditable` element.
 
@@ -457,7 +503,12 @@ await page.getByRole('input', { name: 'Full Name' }).fill('Mr. Bean')
 
 ### dropTo
 
-- **Type:** `(target: Locator, options?: UserEventDragAndDropOptions) => Promise<void>`
+```ts
+function dropTo(
+  target: Locator,
+  options?: UserEventDragAndDropOptions,
+): Promise<void>
+```
 
 Drags the current element to the target location.
 
@@ -474,7 +525,18 @@ await paris.dropTo(france)
 
 ### selectOptions
 
-- **Type:** `(values: HTMLElement | HTMLElement[] | string | string[], options?: UserEventSelectOptions) => Promise<void>`
+```ts
+function selectOptions(
+  values:
+    | HTMLElement
+    | HTMLElement[]
+    | Locator
+    | Locator[]
+    | string
+    | string[],
+  options?: UserEventSelectOptions,
+): Promise<void>
+```
 
 Choose one or more values from a `<select>` element.
 
@@ -495,7 +557,13 @@ await languages.selectOptions([
 
 ### screenshot
 
-- **Type:** `(options?: LocatorScreenshotOptions) => Promise<string | { path: string; base64: string }>`
+```ts
+function screenshot(options: LocatorScreenshotOptions & { base64: true }): Promise<{
+  path: string
+  base64: string
+}>
+function screenshot(options?: LocatorScreenshotOptions & { base64?: false }): Promise<string>
+```
 
 Creates a screenshot of the element matching the locator's selector.
 
@@ -520,7 +588,9 @@ const { path, base64 } = await button.screenshot({
 
 ### query
 
-- **Type:** `() => Element | null`
+```ts
+function query(): Element | null
+```
 
 This method returns a single element matching the locator's selector or `null` if no element is found.
 
@@ -552,7 +622,9 @@ page.getByText(/^Hello/).query() // ❌
 
 ### element
 
-- **Type:** `() => Element`
+```ts
+function element(): Element
+```
 
 This method returns a single element matching the locator's selector.
 
@@ -598,7 +670,9 @@ page.getByText('Hello USA').element() // ❌
 
 ### elements
 
-- **Type:** `() => Element[]`
+```ts
+function elements(): Element[]
+```
 
 This method returns an array of elements matching the locator's selector.
 
@@ -623,7 +697,9 @@ page.getByText('Hello USA').elements() // ✅ []
 
 ### all
 
-- **Type:** `() => Locator[]`
+```ts
+function all(): Locator[]
+```
 
 This method returns an array of new locators that match the selector.
 
