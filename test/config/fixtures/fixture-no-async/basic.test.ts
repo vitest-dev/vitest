@@ -36,12 +36,6 @@ test("test async", async ({ simple, nested }) => {
   expect(nested).toBe("nested:simple")
 });
 
-test("test notArrow", async function ({ notArrow1, notArrow2, notArrow3 }) {
-  expect(notArrow1).toMatchInlineSnapshot(`"notArrow1"`)
-  expect(notArrow2).toMatchInlineSnapshot(`"notArrow2"`)
-  expect(notArrow3).toMatchInlineSnapshot(`"notArrow3"`)
-});
-
 test.for([1, 2])("test.for sync %i", (i, { expect, simple, nested }) => {
   expect(i).toBeTypeOf("number")
   expect(simple).toBe("simple");
@@ -53,3 +47,9 @@ test.for([1, 2])("test.for async %i", async (i, { expect, simple, nested }) => {
   expect(simple).toBe("simple");
   expect(nested).toBe("nested:simple")
 })
+
+test("test notArrow", async function ({ notArrow1, notArrow2, notArrow3 }) {
+  expect(notArrow1).toMatchInlineSnapshot(`"notArrow1"`)
+  expect(notArrow2).toMatchInlineSnapshot(`"notArrow2"`)
+  expect(notArrow3).toMatchInlineSnapshot(`"notArrow3"`)
+});
