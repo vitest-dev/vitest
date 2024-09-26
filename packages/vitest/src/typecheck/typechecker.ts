@@ -319,17 +319,22 @@ export class Typechecker {
     })
     this.process = child.process
 
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error(`${typecheck.checker} spawn timed out`)), 10_000)
+    const startupResult = await new Promise<null | Error>((resolve) => {
+      const timeout = setTimeout(() => resolve(new Error(`${typecheck.checker} spawn timed out`)), 10_000)
       child.process?.once('spawn', () => {
         clearTimeout(timeout)
-        resolve()
+        resolve(null)
       })
       child.process?.once('error', (cause) => {
         clearTimeout(timeout)
-        reject(new Error(`Spawning typechecker failed - is typescript installed?`, { cause }))
+        resolve(new Error(`Spawning typechecker failed - is typescript installed?`, { cause }))
       })
     })
+
+    if (startupResult) {
+      await this.clear()
+      throw new Error('damn', { cause: startupResult })
+    }
 
     await this._onParseStart?.()
     let rerunTriggered = false
