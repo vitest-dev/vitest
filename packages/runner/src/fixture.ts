@@ -212,7 +212,14 @@ function resolveDeps(
 }
 
 function getUsedProps(fn: Function) {
-  const match = fn.toString().match(/[^(]*\(([^)]*)/)
+  let fnString = fn.toString()
+  // match lowered async function and strip it off
+  //   (_0) => __async(this, [_0], function* (x) { ... })
+  //   (_0, _1) => __async(this, [_0, _1], function* (x, y) { ... })
+  if (/^\([_0-9, ]*\)\s*=>\s*__async\(this,/.test(fnString)) {
+    fnString = fnString.split('__async(this,')[1]
+  }
+  const match = fnString.match(/[^(]*\(([^)]*)/)
   if (!match) {
     return []
   }

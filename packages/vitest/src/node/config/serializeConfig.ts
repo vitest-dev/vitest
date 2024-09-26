@@ -160,5 +160,8 @@ export function serializeConfig(
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? coreConfig.printConsoleTrace,
+    benchmark: config.benchmark && {
+      includeSamples: config.benchmark.includeSamples,
+    },
   }
 }

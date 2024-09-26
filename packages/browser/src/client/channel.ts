@@ -39,16 +39,19 @@ export interface IframeMockingDoneEvent {
 
 export interface IframeMockFactoryRequestEvent {
   type: 'mock-factory:request'
+  eventId: string
   id: string
 }
 
 export interface IframeMockFactoryResponseEvent {
   type: 'mock-factory:response'
+  eventId: string
   exports: string[]
 }
 
 export interface IframeMockFactoryErrorEvent {
   type: 'mock-factory:error'
+  eventId: string
   error: any
 }
 

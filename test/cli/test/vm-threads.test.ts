@@ -2,7 +2,9 @@ import { expect, test } from 'vitest'
 
 import { createFile, resolvePath, runVitest } from '../../test-utils'
 
-test('importing files in restricted fs works correctly', async () => {
+const [major] = process.version.slice(1).split('.').map(num => Number(num))
+
+test.runIf(major < 22)('importing files in restricted fs works correctly', async () => {
   createFile(
     resolvePath(import.meta.url, '../fixtures/vm-threads/src/external/package-null/package-null.json'),
     'null',

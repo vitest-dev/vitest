@@ -1,4 +1,4 @@
-import type { IframeChannelOutgoingEvent } from '@vitest/browser/client'
+import type { IframeChannelOutgoingEvent, IframeMockFactoryErrorEvent, IframeMockFactoryResponseEvent } from '@vitest/browser/client'
 import { channel } from '@vitest/browser/client'
 import { ModuleMocker } from '@vitest/mocker/browser'
 import { getBrowserState } from '../utils'
@@ -14,18 +14,20 @@ export class VitestBrowserClientMocker extends ModuleMocker {
             const exports = Object.keys(module)
             channel.postMessage({
               type: 'mock-factory:response',
+              eventId: e.data.eventId,
               exports,
-            })
+            } satisfies IframeMockFactoryResponseEvent)
           }
           catch (err: any) {
             channel.postMessage({
               type: 'mock-factory:error',
+              eventId: e.data.eventId,
               error: {
                 name: err.name,
                 message: err.message,
                 stack: err.stack,
               },
-            })
+            } satisfies IframeMockFactoryErrorEvent)
           }
         }
       },

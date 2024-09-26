@@ -1,6 +1,6 @@
 import type { Arrayable, Nullable } from '../types/general'
 
-export { notNullish, getCallLastIndex } from '@vitest/utils'
+export { notNullish, getCallLastIndex, nanoid } from '@vitest/utils'
 
 export interface GlobalConstructors {
   Object: ObjectConstructor
@@ -202,17 +202,4 @@ export function wildcardPatternToRegExp(pattern: string): RegExp {
     `^${pattern.split('*').map(escapeRegExp).join('.*')}$`,
     'i',
   )
-}
-
-// port from nanoid
-// https://github.com/ai/nanoid
-const urlAlphabet
-  = 'useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict'
-export function nanoid(size = 21) {
-  let id = ''
-  let i = size
-  while (i--) {
-    id += urlAlphabet[(Math.random() * 64) | 0]
-  }
-  return id
 }
