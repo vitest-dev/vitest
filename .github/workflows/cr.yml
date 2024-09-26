@@ -1,6 +1,8 @@
 name: CR
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, synchronize, labeled, ready_for_review]
@@ -13,7 +15,9 @@ concurrency:
 
 jobs:
   release:
-    if: ${{ !github.event.pull_request.draft && contains(github.event.pull_request.labels.*.name, 'cr-tracked') }}
+    # - run always on main push
+    # - for PRs, require non draft and 'cr-tracked' label
+    if: github.ref === 'refs/heads/main' || (!github.event.pull_request.draft && contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
     runs-on: ubuntu-latest
 
     steps:
