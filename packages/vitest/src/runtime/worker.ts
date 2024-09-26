@@ -11,6 +11,21 @@ import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {
   setProcessTitle(`vitest ${poolId}`)
+
+  const isProfiling = process.execArgv.some(
+    execArg =>
+      execArg.startsWith('--prof')
+      || execArg.startsWith('--cpu-prof')
+      || execArg.startsWith('--heap-prof')
+      || execArg.startsWith('--diagnostic-dir'),
+  )
+
+  if (isProfiling) {
+    // Work-around for nodejs/node#55094
+    process.on('SIGTERM', () => {
+      process.exit()
+    })
+  }
 }
 
 // this is what every pool executes when running tests
