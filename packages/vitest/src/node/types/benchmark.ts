@@ -50,4 +50,11 @@ export interface BenchmarkUserOptions {
    * benchmark output file
    */
   outputJson?: string
+
+  /**
+   * Include `samples` array of benchmark results for API or custom reporter usages.
+   * This is disabled by default to reduce memory usage.
+   * @default false
+   */
+  includeSamples?: boolean
 }

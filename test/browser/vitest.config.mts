@@ -94,4 +94,14 @@ export default defineConfig({
       BROWSER: browser,
     },
   },
+  plugins: [
+    {
+      name: 'test-no-transform-ui',
+      transform(_code, id, _options) {
+        if (id.includes('/__vitest__/')) {
+          throw new Error(`Unexpected transform: ${id}`)
+        }
+      },
+    },
+  ],
 })
