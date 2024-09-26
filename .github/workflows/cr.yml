@@ -15,9 +15,7 @@ concurrency:
 
 jobs:
   release:
-    # - run always on main push
-    # - for PRs, require non draft and 'cr-tracked' label
-    if: github.ref === 'refs/heads/main' || (!github.event.pull_request.draft && contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
+    if: github.ref == 'refs/heads/main' || (!github.event.pull_request.draft && contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
     runs-on: ubuntu-latest
 
     steps:
