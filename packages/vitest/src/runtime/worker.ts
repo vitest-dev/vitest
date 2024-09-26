@@ -29,7 +29,7 @@ if (isChildProcess()) {
 }
 
 // this is what every pool executes when running tests
-async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
+async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   disposeInternalListeners()
 
   const prepareStart = performance.now()
@@ -92,7 +92,7 @@ async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
       providedContext: ctx.providedContext,
     } satisfies WorkerGlobalState
 
-    const methodName = mehtod === 'collect' ? 'collectTests' : 'runTests'
+    const methodName = method === 'collect' ? 'collectTests' : 'runTests'
 
     if (!worker[methodName] || typeof worker[methodName] !== 'function') {
       throw new TypeError(
