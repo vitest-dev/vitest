@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    types: [opened, synchronize, labeled, ready_for_review]
+    types: [opened, synchronize, labeled]
 
 permissions: {}
 
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.ref == 'refs/heads/main' || (!github.event.pull_request.draft && contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
+    if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'cr-tracked')
     runs-on: ubuntu-latest
 
     steps:
