@@ -1,6 +1,6 @@
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { afterAll, beforeAll, expect } from 'vitest'
+import { beforeAll, expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
 // Note that this test may fail if you have new files in "vitest/test/coverage/src"
@@ -11,9 +11,9 @@ const FILE_TO_CHANGE = resolve('./fixtures/src/file-to-change.ts')
 const NEW_UNCOVERED_FILE = resolve('./fixtures/src/new-uncovered-file.ts')
 
 beforeAll(() => {
-  let content = readFileSync(FILE_TO_CHANGE, 'utf8')
-  content = content.replace('This file will be modified by test cases', 'Changed!')
-  writeFileSync(FILE_TO_CHANGE, content, 'utf8')
+  const original = readFileSync(FILE_TO_CHANGE, 'utf8')
+  const changed = original.replace('This file will be modified by test cases', 'Changed!')
+  writeFileSync(FILE_TO_CHANGE, changed, 'utf8')
 
   writeFileSync(NEW_UNCOVERED_FILE, `
   // This file is not covered by any tests but should be picked by --changed
@@ -21,13 +21,11 @@ beforeAll(() => {
     return 'Hello world'
   }
   `.trim(), 'utf8')
-})
 
-afterAll(() => {
-  let content = readFileSync(FILE_TO_CHANGE, 'utf8')
-  content = content.replace('Changed!', 'This file will be modified by test cases')
-  writeFileSync(FILE_TO_CHANGE, content, 'utf8')
-  rmSync(NEW_UNCOVERED_FILE)
+  return function restore() {
+    writeFileSync(FILE_TO_CHANGE, original, 'utf8')
+    rmSync(NEW_UNCOVERED_FILE)
+  }
 })
 
 test('{ changed: "HEAD" }', async () => {
