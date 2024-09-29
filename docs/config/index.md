@@ -303,6 +303,10 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 Custom reporter for output. Can contain one or more built-in report names, reporter instances, and/or paths to custom reporters.
 
+#### benchmark.outputFile
+
+Deprecated in favor of `benchmark.outputJson`.
+
 #### benchmark.outputJson {#benchmark-outputJson}
 
 - **Type:** `string | undefined`
