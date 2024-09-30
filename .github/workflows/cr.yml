@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
     types: [opened, synchronize, labeled]
 
 permissions: {}
@@ -15,7 +14,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'cr-tracked')
+    if: github.repository == 'vitest-dev/vitest' && (github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
     runs-on: ubuntu-latest
 
     steps:
