@@ -305,12 +305,7 @@ Custom reporter for output. Can contain one or more built-in report names, repor
 
 #### benchmark.outputFile
 
-- **Type:** `string | Record<string, string>`
-
-Write benchmark results to a file when the `--reporter=json` option is also specified.
-By providing an object instead of a string you can define individual outputs when using multiple reporters.
-
-To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
+Deprecated in favor of `benchmark.outputJson`.
 
 #### benchmark.outputJson {#benchmark-outputJson}
 

@@ -33,8 +33,7 @@ export interface BenchmarkUserOptions {
   reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
 
   /**
-   * Write test results to a file when the `--reporter=json` option is also specified.
-   * Also definable individually per reporter by using an object instead.
+   * @deprecated Use `benchmark.outputJson` instead
    */
   outputFile?:
     | string
