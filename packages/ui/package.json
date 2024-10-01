@@ -52,7 +52,7 @@
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
     "sirv": "^2.0.4",
-    "tinyglobby": "^0.2.8",
+    "tinyglobby": "https://pkg.pr.new/tinyglobby@1f1fa12",
     "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {

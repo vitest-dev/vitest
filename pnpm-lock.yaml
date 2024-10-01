@@ -105,8 +105,8 @@ importers:
         specifier: ^3.5.2
         version: 3.5.2(rollup@4.20.0)
       tinyglobby:
-        specifier: ^0.2.8
-        version: 0.2.8
+        specifier: https://pkg.pr.new/tinyglobby@1f1fa12
+        version: https://pkg.pr.new/tinyglobby@1f1fa12
       tsx:
         specifier: ^4.17.0
         version: 4.17.0
@@ -157,8 +157,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1
       tinyglobby:
-        specifier: ^0.2.8
-        version: 0.2.8
+        specifier: https://pkg.pr.new/tinyglobby@1f1fa12
+        version: https://pkg.pr.new/tinyglobby@1f1fa12
       unocss:
         specifier: ^0.62.0
         version: 0.62.0(postcss@8.4.40)(rollup@4.20.0)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))
@@ -771,8 +771,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       tinyglobby:
-        specifier: ^0.2.8
-        version: 0.2.8
+        specifier: https://pkg.pr.new/tinyglobby@1f1fa12
+        version: https://pkg.pr.new/tinyglobby@1f1fa12
       tinyrainbow:
         specifier: ^1.2.0
         version: 1.2.0
@@ -1078,8 +1078,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       tinyglobby:
-        specifier: ^0.2.8
-        version: 0.2.8
+        specifier: https://pkg.pr.new/tinyglobby@1f1fa12
+        version: https://pkg.pr.new/tinyglobby@1f1fa12
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -8603,6 +8603,11 @@ packages:
 
   tinyglobby@0.2.8:
     resolution: {integrity: sha512-AMLZywN0vbhiZi2neFEaj9VIIxC+PjDMsp0nAK6tpR86LJavZgHqGz0S/FOONwBygC+mu7R0/TyAQw0gx0Mu9Q==}
+    engines: {node: '>=12.0.0'}
+
+  tinyglobby@https://pkg.pr.new/tinyglobby@1f1fa12:
+    resolution: {tarball: https://pkg.pr.new/tinyglobby@1f1fa12}
+    version: 0.2.8
     engines: {node: '>=12.0.0'}
 
   tinyhighlight@0.3.2:
@@ -17950,6 +17955,11 @@ snapshots:
   tinyexec@0.3.0: {}
 
   tinyglobby@0.2.8:
+    dependencies:
+      fdir: 6.4.0(picomatch@4.0.2)
+      picomatch: 4.0.2
+
+  tinyglobby@https://pkg.pr.new/tinyglobby@1f1fa12:
     dependencies:
       fdir: 6.4.0(picomatch@4.0.2)
       picomatch: 4.0.2
