@@ -28,6 +28,14 @@ exports[`should fail hooks-called.test.ts > hooks-called.test.ts 1`] = `
 Error: before all"
 `;
 
+exports[`should fail hooks-fail-afterAll.test.ts > hooks-fail-afterAll.test.ts 1`] = `"TypeError: "afterAll" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-afterEach.test.ts > hooks-fail-afterEach.test.ts 1`] = `"TypeError: "afterEach" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-beforeAll.test.ts > hooks-fail-beforeAll.test.ts 1`] = `"TypeError: "beforeAll" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-beforeEach.test.ts > hooks-fail-beforeEach.test.ts 1`] = `"TypeError: "beforeEach" callback value must be function, received "string""`;
+
 exports[`should fail inline-snapshop-inside-each.test.ts > inline-snapshop-inside-each.test.ts 1`] = `
 "Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
