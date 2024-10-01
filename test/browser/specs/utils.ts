@@ -3,7 +3,7 @@ import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-export const provider = process.env.PROVIDER || 'playwright'
+const provider = process.env.PROVIDER || 'playwright'
 export const browser = process.env.BROWSER || (provider !== 'playwright' ? 'chromium' : 'chrome')
 
 export async function runBrowserTests(

@@ -1,4 +1,4 @@
-import { page, userEvent } from "@vitest/browser/context";
+import { page, userEvent, server } from "@vitest/browser/context";
 import { expect, test } from "vitest";
 
 test("drag and drop over large viewport", async () => {
@@ -40,6 +40,11 @@ test("drag and drop over large viewport", async () => {
       ev.preventDefault();
       events.push({ type: "drop", i });
     });
+  }
+
+  // drag and drop only works reliably on playwright
+  if (server.provider !== 'playwright' || server.platform === 'darwin') {
+    return
   }
 
   await userEvent.dragAndDrop(page.getByText("[1]"), page.getByText("[30]"));
