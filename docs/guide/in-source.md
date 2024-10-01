@@ -9,7 +9,7 @@ Vitest provides a way to run tests within your source code along side the implem
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings a closer feedback loop for development.
 
 ::: warning
-This guide explains how to write your tests inside your source code. If you need to write tests in separate test files, follow the ["Writing Tests" guide](https://vitest.dev/guide/#writing-tests).
+This guide explains how to write tests inside your source code. If you need to write tests in separate test files, follow the ["Writing Tests" guide](https://vitest.dev/guide/#writing-tests).
 :::
 
 ## Setup
