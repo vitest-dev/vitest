@@ -287,7 +287,9 @@ Thanks for choosing Vitest!
 
 ## Using Unreleased Commits
 
-If you can't wait for a new release to test the latest features, you will need to clone the [vitest repo](https://github.com/vitest-dev/vitest) to your local machine and then build and link it yourself ([pnpm](https://pnpm.io/) is required):
+Each commit on main branch and a PR with a `cr-tracked` label are published to [pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new). You can install it by `npm i https://pkg.pr.new/vitest@{commit}`.
+
+If you want to test your own modification locally, you can build and link it yourself ([pnpm](https://pnpm.io/) is required):
 
 ```bash
 git clone https://github.com/vitest-dev/vitest.git
