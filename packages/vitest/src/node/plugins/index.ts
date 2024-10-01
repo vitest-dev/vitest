@@ -233,22 +233,26 @@ export async function VitestPlugin(
 
         hijackVitePluginInject(viteConfig)
       },
-      async configureServer(server) {
-        if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
-          server.watcher.on('ready', () => {
-            // eslint-disable-next-line no-console
-            console.log('[debug] watcher is ready')
-          })
-        }
-        await ctx.setServer(options, server, userConfig)
-        if (options.api && options.watch) {
-          (await import('../../api/setup')).setup(ctx)
-        }
+      configureServer: {
+        // runs after vite:import-analysis as it relies on `server` instance on Vite 5
+        order: 'post',
+        async handler(server) {
+          if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
+            server.watcher.on('ready', () => {
+              // eslint-disable-next-line no-console
+              console.log('[debug] watcher is ready')
+            })
+          }
+          await ctx.setServer(options, server, userConfig)
+          if (options.api && options.watch) {
+            (await import('../../api/setup')).setup(ctx)
+          }
 
-        // #415, in run mode we don't need the watcher, close it would improve the performance
-        if (!options.watch) {
-          await server.watcher.close()
-        }
+          // #415, in run mode we don't need the watcher, close it would improve the performance
+          if (!options.watch) {
+            await server.watcher.close()
+          }
+        },
       },
     },
     SsrReplacerPlugin(),
