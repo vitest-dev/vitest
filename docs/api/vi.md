@@ -778,6 +778,8 @@ If fake timers are enabled, this method simulates a user changing the system clo
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
+Accepts the same string and number arguments as the `Date`.
+
 ```ts
 const date = new Date(1998, 11, 19)
 
