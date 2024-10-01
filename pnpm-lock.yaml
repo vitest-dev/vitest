@@ -105,8 +105,8 @@ importers:
         specifier: ^3.5.2
         version: 3.5.2(rollup@4.20.0)
       tinyglobby:
-        specifier: ^0.2.7
-        version: 0.2.7
+        specifier: ^0.2.8
+        version: 0.2.8
       tsx:
         specifier: ^4.17.0
         version: 4.17.0
@@ -157,8 +157,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1
       tinyglobby:
-        specifier: ^0.2.7
-        version: 0.2.7
+        specifier: ^0.2.8
+        version: 0.2.8
       unocss:
         specifier: ^0.62.0
         version: 0.62.0(postcss@8.4.40)(rollup@4.20.0)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))
@@ -771,8 +771,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       tinyglobby:
-        specifier: ^0.2.7
-        version: 0.2.7
+        specifier: ^0.2.8
+        version: 0.2.8
       tinyrainbow:
         specifier: ^1.2.0
         version: 1.2.0
@@ -1078,8 +1078,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       tinyglobby:
-        specifier: ^0.2.7
-        version: 0.2.7
+        specifier: ^0.2.8
+        version: 0.2.8
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -8601,8 +8601,8 @@ packages:
   tinyexec@0.3.0:
     resolution: {integrity: sha512-tVGE0mVJPGb0chKhqmsoosjsS+qUnJVGJpZgsHYQcGoPlG3B51R3PouqTgEGH2Dc9jjFyOqOpix6ZHNMXp1FZg==}
 
-  tinyglobby@0.2.7:
-    resolution: {integrity: sha512-qFWYeNxBQxrOTRHvGjlRdBamy8JFqu6c0bwRru9leE+q8J72tLtlT0L3v+2T7fbLXN7FGzDNBhXkWiJqHUHD9g==}
+  tinyglobby@0.2.8:
+    resolution: {integrity: sha512-AMLZywN0vbhiZi2neFEaj9VIIxC+PjDMsp0nAK6tpR86LJavZgHqGz0S/FOONwBygC+mu7R0/TyAQw0gx0Mu9Q==}
     engines: {node: '>=12.0.0'}
 
   tinyhighlight@0.3.2:
@@ -12347,7 +12347,7 @@ snapshots:
       magic-string: 0.30.11
       pathe: 1.1.2
       perfect-debounce: 1.0.0
-      tinyglobby: 0.2.7
+      tinyglobby: 0.2.8
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -12380,7 +12380,7 @@ snapshots:
       css-tree: 2.3.1
       magic-string: 0.30.11
       postcss: 8.4.40
-      tinyglobby: 0.2.7
+      tinyglobby: 0.2.8
     transitivePeerDependencies:
       - supports-color
 
@@ -12476,7 +12476,7 @@ snapshots:
       '@unocss/transformer-directives': 0.62.0
       chokidar: 3.6.0
       magic-string: 0.30.11
-      tinyglobby: 0.2.7
+      tinyglobby: 0.2.8
       vite: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
     transitivePeerDependencies:
       - rollup
@@ -17949,7 +17949,7 @@ snapshots:
 
   tinyexec@0.3.0: {}
 
-  tinyglobby@0.2.7:
+  tinyglobby@0.2.8:
     dependencies:
       fdir: 6.4.0(picomatch@4.0.2)
       picomatch: 4.0.2
@@ -18452,7 +18452,7 @@ snapshots:
     dependencies:
       debug: 4.3.6
       pretty-bytes: 6.1.1
-      tinyglobby: 0.2.7
+      tinyglobby: 0.2.8
       vite: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
       workbox-build: 7.1.0(@types/babel__core@7.20.5)
       workbox-window: 7.1.0
