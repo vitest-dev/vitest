@@ -35,6 +35,17 @@ it('correctly resolves workspace projects with a several folder globs', async ()
   expect(stdout).toContain('test - b')
 })
 
+it('supports glob negation pattern', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/negated',
+    workspace: './fixtures/workspace/negated/vitest.workspace.ts',
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('test - a')
+  expect(stdout).toContain('test - c')
+  expect(stdout).not.toContain('test - b')
+})
+
 it('fails if project names are identical with a nice error message', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-duplicate-configs',

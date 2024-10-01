@@ -285,6 +285,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  examples/profiling:
+    devDependencies:
+      vite:
+        specifier: ^5.4.0
+        version: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   examples/react:
     dependencies:
       react:

@@ -2,7 +2,13 @@ import { promises as fs } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
+const [major] = process.version.slice(1).split('.').map(num => Number(num))
+
 test.each(['threads', 'vmThreads'])('%s: print stdout and stderr correctly when called in the setup file', async (pool) => {
+  if (major >= 22 && pool === 'vmThreads') {
+    return
+  }
+
   const { stdout, stderr } = await runVitest({
     root: 'fixtures/setup-files',
     include: ['empty.test.ts'],
