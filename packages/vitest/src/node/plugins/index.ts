@@ -34,7 +34,7 @@ export async function VitestPlugin(
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot(), ctx.version)
     return (await import('@vitest/ui')).default(ctx)
   }
 

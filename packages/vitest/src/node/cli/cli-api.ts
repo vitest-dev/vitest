@@ -60,7 +60,7 @@ export async function startVitest(
 
     if (requiredPackages) {
       if (
-        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root))
+        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))
       ) {
         process.exitCode = 1
         return ctx
