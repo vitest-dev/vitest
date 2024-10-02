@@ -1,9 +1,9 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
+import { stripVTControlCharacters } from 'node:util'
 import { describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import stripAnsi from 'strip-ansi'
 
 class TestError extends Error {}
 
@@ -877,7 +877,7 @@ it('correctly prints diff', () => {
   }
   catch (err) {
     const error = processError(err)
-    const diff = stripAnsi(error.diff)
+    const diff = stripVTControlCharacters(error.diff)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -890,7 +890,7 @@ it('correctly prints diff for the cause', () => {
   }
   catch (err) {
     const error = processError(new Error('wrapper', { cause: err }))
-    const diff = stripAnsi(error.cause.diff)
+    const diff = stripVTControlCharacters(error.cause.diff)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -906,7 +906,7 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
   catch (err) {
     const error = processError(err)
-    expect(stripAnsi(error.diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
@@ -931,7 +931,7 @@ function getError(f: () => unknown) {
   }
   catch (error) {
     const processed = processError(error)
-    return [stripAnsi(processed.message), stripAnsi(trim(processed.diff))]
+    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
   }
 }
 
@@ -1136,8 +1136,8 @@ function snapshotError(f: () => unknown) {
   catch (error) {
     const e = processError(error)
     expect({
-      message: stripAnsi(e.message),
-      diff: e.diff ? stripAnsi(e.diff) : e.diff,
+      message: stripVTControlCharacters(e.message),
+      diff: e.diff ? stripVTControlCharacters(e.diff) : e.diff,
       expected: e.expected,
       actual: e.actual,
     }).toMatchSnapshot()

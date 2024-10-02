@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import * as util from 'node:util'
 import { defineConfig } from 'vitest/config'
 import type { BrowserCommand } from 'vitest/node'
 
@@ -12,6 +13,10 @@ const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' :
 
 const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
   return { testPath, arg1, arg2 }
+}
+
+const stripVTControlCharacters: BrowserCommand<[text: string]> = (_, text) => {
+  return util.stripVTControlCharacters(text)
 }
 
 export default defineConfig({
@@ -70,6 +75,7 @@ export default defineConfig({
       ],
       commands: {
         myCustomCommand,
+        stripVTControlCharacters,
       },
     },
     alias: {

@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { stripVTControlCharacters } from 'node:util'
 import { normalize } from 'pathe'
 import libCoverage from 'istanbul-lib-coverage'
 import type { FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction, UserConfig } from 'vitest'
 import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
-import stripAnsi from 'strip-ansi'
 import * as testUtils from '../test-utils'
 
 export function test(name: string, fn: TestFunction, skip = false) {
@@ -112,6 +112,6 @@ export function captureStdout() {
 
   return function collect() {
     process.stdout.write = original
-    return stripAnsi(spy.mock.calls.map(call => call[0]).join(''))
+    return stripVTControlCharacters(spy.mock.calls.map(call => call[0]).join(''))
   }
 }

@@ -1071,9 +1071,6 @@ importers:
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
-      strip-ansi:
-        specifier: ^7.1.0
-        version: 7.1.0
       strip-literal:
         specifier: ^2.1.0
         version: 2.1.0
@@ -1154,9 +1151,6 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
-      strip-ansi:
-        specifier: ^7.1.0
-        version: 7.1.0
       url:
         specifier: ^0.11.3
         version: 0.11.3
@@ -1268,9 +1262,6 @@ importers:
       memfs:
         specifier: ^4.8.2
         version: 4.8.2
-      strip-ansi:
-        specifier: ^7.1.0
-        version: 7.1.0
       sweetalert2:
         specifier: ^11.6.16
         version: 11.6.16
@@ -1340,9 +1331,6 @@ importers:
       magicast:
         specifier: ^0.3.3
         version: 0.3.3
-      strip-ansi:
-        specifier: ^7.1.0
-        version: 7.1.0
       unplugin-swc:
         specifier: ^1.4.4
         version: 1.4.4(@swc/core@1.4.1)(rollup@4.20.0)
@@ -1397,9 +1385,6 @@ importers:
       pkg-reporter:
         specifier: ./reportPkg/
         version: link:reportPkg
-      strip-ansi:
-        specifier: ^7.0.1
-        version: 7.0.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1415,9 +1400,6 @@ importers:
 
   test/test-utils:
     devDependencies:
-      strip-ansi:
-        specifier: ^7.0.1
-        version: 7.0.1
       tinyexec:
         specifier: ^0.3.0
         version: 0.3.0
@@ -8402,10 +8384,6 @@ packages:
   strip-ansi@6.0.1:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
-
-  strip-ansi@7.0.1:
-    resolution: {integrity: sha512-cXNxvT8dFNRVfhVME3JAe98mkXDYN2O1l7jmcwMnOslDeESg1rF/OZMtK0nRAhiari1unG5cD4jG3rapUAkLbw==}
-    engines: {node: '>=12'}
 
   strip-ansi@7.1.0:
     resolution: {integrity: sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==}
@@ -17736,10 +17714,6 @@ snapshots:
   strip-ansi@6.0.1:
     dependencies:
       ansi-regex: 5.0.1
-
-  strip-ansi@7.0.1:
-    dependencies:
-      ansi-regex: 6.0.1
 
   strip-ansi@7.1.0:
     dependencies:

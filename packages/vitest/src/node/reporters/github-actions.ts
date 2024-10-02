@@ -1,5 +1,5 @@
+import { stripVTControlCharacters } from 'node:util'
 import { getTasks } from '@vitest/runner/utils'
-import stripAnsi from 'strip-ansi'
 import type { File } from '@vitest/runner'
 import { getFullName } from '../../utils'
 import { capturePrintError } from '../error'
@@ -64,7 +64,7 @@ export class GithubActionsReporter implements Reporter {
           line: String(stack.line),
           column: String(stack.column),
         },
-        message: stripAnsi(result.output),
+        message: stripVTControlCharacters(result.output),
       })
       this.ctx.logger.log(`\n${formatted}`)
     }
