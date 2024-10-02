@@ -230,6 +230,10 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 
 Learn more about the [Command Line Interface](/guide/cli)
 
+## Automatic Dependency Installation
+
+Vitest will prompt you to install certain dependencies if they are not already installed. You can disable this behavior by setting the `VITEST_SKIP_INSTALL_CHECKS=1` environment variable.
+
 ## IDE Integrations
 
 We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.

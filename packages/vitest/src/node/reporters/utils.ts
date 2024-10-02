@@ -42,7 +42,7 @@ function createReporters(
         const [reporterName, reporterOptions] = referenceOrInstance
 
         if (reporterName === 'html') {
-          await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.root)
+          await ctx.packageInstaller.ensureInstalled('@vitest/ui', runner.root, ctx.version)
           const CustomReporter = await loadCustomReporterModule(
             '@vitest/ui/reporter',
             runner,
