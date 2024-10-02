@@ -1,4 +1,4 @@
-import { expect, it, onTestFinished } from 'vitest'
+import { describe, expect, it, onTestFailed, onTestFinished } from 'vitest'
 
 const collected: any[] = []
 const multiple: any[] = []
@@ -58,4 +58,161 @@ it('multiple on-finished', () => {
 it('after', () => {
   expect(collected).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
   expect(multiple).toEqual([4, 3, 2, 1])
+})
+
+describe('repeats pass', () => {
+  const state = new Array<number>()
+
+  it('run', { repeats: 2 }, () => {
+    state.push(0)
+
+    onTestFinished(() => {
+      state.push(1)
+    })
+
+    onTestFailed(() => {
+      state.push(2)
+    })
+  })
+
+  it('assert', () => {
+    // TODO: 010101
+    expect(state).toMatchInlineSnapshot(`
+      [
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+      ]
+    `)
+  })
+})
+
+describe('repeats fail', () => {
+  const state = new Array<number>()
+
+  it.fails('run', { repeats: 2 }, (t) => {
+    state.push(0)
+
+    onTestFinished(() => {
+      state.push(1)
+    })
+
+    onTestFailed(() => {
+      state.push(2)
+    })
+
+    if (t.task.result?.repeatCount === 1) {
+      throw new Error('fail')
+    }
+  })
+
+  it('assert', () => {
+    // TODO: 012012012
+    expect(state).toMatchInlineSnapshot(`
+      [
+        0,
+        1,
+        0,
+        1,
+        1,
+        2,
+        2,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+      ]
+    `)
+  })
+})
+
+describe('retry pass', () => {
+  const state = new Array<number>()
+
+  it('run', { retry: 2 }, (t) => {
+    state.push(0)
+
+    onTestFinished(() => {
+      state.push(1)
+    })
+
+    onTestFailed(() => {
+      state.push(2)
+    })
+
+    if (t.task.result?.retryCount && t.task.result?.retryCount > 1) {
+      return
+    }
+    throw new Error('fail')
+  })
+
+  it('assert', () => {
+    // TODO: 01201201
+    expect(state).toMatchInlineSnapshot(`
+      [
+        0,
+        1,
+        2,
+        0,
+        1,
+        1,
+        2,
+        2,
+        0,
+        1,
+        1,
+        1,
+      ]
+    `)
+  })
+})
+
+describe('retry fail', () => {
+  const state = new Array<number>()
+
+  it.fails('run', { retry: 2 }, () => {
+    state.push(0)
+
+    onTestFinished(() => {
+      state.push(1)
+    })
+
+    onTestFailed(() => {
+      state.push(2)
+    })
+
+    throw new Error('fail')
+  })
+
+  it('assert', () => {
+    // TODO: 012012012
+    expect(state).toMatchInlineSnapshot(`
+      [
+        0,
+        1,
+        2,
+        0,
+        1,
+        1,
+        2,
+        2,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+      ]
+    `)
+  })
 })
