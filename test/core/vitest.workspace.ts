@@ -1,4 +1,4 @@
-import type { Pool } from 'vitest'
+import type { Pool } from 'vitest/node'
 import { defineWorkspace } from 'vitest/config'
 
 function project(pool: Pool) {

@@ -101,3 +101,7 @@ test('jsdom global is exposed', () => {
   dom.reconfigure({ url: 'https://examples.new.com' })
   expect(location.href).toBe('https://examples.new.com/')
 })
+
+test('ssr is disabled', () => {
+  expect(import.meta.env.SSR).toBe(false)
+})
