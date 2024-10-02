@@ -58,6 +58,8 @@ exports[`should fail nested-suite.test.ts > nested-suite.test.ts 1`] = `"Asserti
 
 exports[`should fail no-assertions.test.ts > no-assertions.test.ts 1`] = `"Error: expected any number of assertion, but got none"`;
 
+exports[`should fail node-browser-context.test.ts > node-browser-context.test.ts 1`] = `"Error: @vitest/browser/context can be imported only inside the Browser Mode. Your test is running in forks pool. Make sure your regular tests are excluded from the "test.include" glob pattern."`;
+
 exports[`should fail primitive-error.test.ts > primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
 
 exports[`should fail snapshot-with-not.test.ts > snapshot-with-not.test.ts 1`] = `
