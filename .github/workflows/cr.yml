@@ -16,6 +16,7 @@ jobs:
   release:
     if: github.repository == 'vitest-dev/vitest' && (github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'cr-tracked'))
     runs-on: ubuntu-latest
+    name: 'Release: pkg.pr.new'
 
     steps:
       - uses: actions/checkout@v4
