@@ -65,14 +65,14 @@ describe('repeats pass', () => {
 
   it('run', { repeats: 2 }, (t) => {
     const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
-    state.push(tag + "run")
+    state.push(`${tag}run`)
 
     onTestFinished(() => {
-      state.push(tag + 'finish')
+      state.push(`${tag}finish`)
     })
 
     onTestFailed(() => {
-      state.push(tag + 'fail')
+      state.push(`${tag}fail`)
     })
   })
 
@@ -95,14 +95,14 @@ describe('repeats fail', () => {
 
   it.fails('run', { repeats: 2 }, (t) => {
     const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
-    state.push(tag + "run")
+    state.push(`${tag}run`)
 
     onTestFinished(() => {
-      state.push(tag + 'finish')
+      state.push(`${tag}finish`)
     })
 
     onTestFailed(() => {
-      state.push(tag + 'fail')
+      state.push(`${tag}fail`)
     })
 
     if (t.task.result?.repeatCount === 1) {
@@ -131,14 +131,14 @@ describe('retry pass', () => {
 
   it('run', { retry: 2 }, (t) => {
     const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
-    state.push(tag + "run")
+    state.push(`${tag}run`)
 
     onTestFinished(() => {
-      state.push(tag + 'finish')
+      state.push(`${tag}finish`)
     })
 
     onTestFailed(() => {
-      state.push(tag + 'fail')
+      state.push(`${tag}fail`)
     })
 
     if (t.task.result?.retryCount && t.task.result?.retryCount > 1) {
@@ -168,14 +168,14 @@ describe('retry fail', () => {
 
   it.fails('run', { retry: 2 }, (t) => {
     const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
-    state.push(tag + "run")
+    state.push(`${tag}run`)
 
     onTestFinished(() => {
-      state.push(tag + 'finish')
+      state.push(`${tag}finish`)
     })
 
     onTestFailed(() => {
-      state.push(tag + 'fail')
+      state.push(`${tag}fail`)
     })
 
     throw new Error('fail')
