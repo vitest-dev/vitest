@@ -10,6 +10,7 @@ import {
 
 import {
   equals,
+  getObjectKeys,
   isA,
   iterableEquality,
   pluralize,
@@ -103,35 +104,23 @@ export class Anything extends AsymmetricMatcher<void> {
   }
 }
 
+function hasProperty(obj: object | null, property: string | symbol): boolean {
+  if (!obj) {
+    return false
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, property)) {
+    return true
+  }
+
+  return hasProperty(Object.getPrototypeOf(obj), property)
+}
+
 export class ObjectContaining extends AsymmetricMatcher<
-  Record<string, unknown>
+  Record<string | symbol, unknown>
 > {
-  constructor(sample: Record<string, unknown>, inverse = false) {
+  constructor(sample: Record<string | symbol, unknown>, inverse = false) {
     super(sample, inverse)
-  }
-
-  getPrototype(obj: object) {
-    if (Object.getPrototypeOf) {
-      return Object.getPrototypeOf(obj)
-    }
-
-    if (obj.constructor.prototype === obj) {
-      return null
-    }
-
-    return obj.constructor.prototype
-  }
-
-  hasProperty(obj: object | null, property: string): boolean {
-    if (!obj) {
-      return false
-    }
-
-    if (Object.prototype.hasOwnProperty.call(obj, property)) {
-      return true
-    }
-
-    return this.hasProperty(this.getPrototype(obj), property)
   }
 
   asymmetricMatch(other: any) {
@@ -145,15 +134,21 @@ export class ObjectContaining extends AsymmetricMatcher<
     let result = true
 
     const matcherContext = this.getMatcherContext()
-    for (const property in this.sample) {
+    const objectKeys = getObjectKeys(this.sample)
+
+    const otherKeys = other ? getObjectKeys(other) : []
+
+    for (const key of objectKeys) {
       if (
-        !this.hasProperty(other, property)
-        || !equals(
-          this.sample[property],
-          other[property],
-          matcherContext.customTesters,
-        )
+        !hasProperty(other, key)
+        || !equals(this.sample[key], other[key], matcherContext.customTesters)
       ) {
+        // Result has already been determined, mutation only affects diff output
+        for (const key of otherKeys) {
+          if (!hasProperty(this.sample, key)) {
+            this.sample[key] = other[key]
+          }
+        }
         result = false
         break
       }
