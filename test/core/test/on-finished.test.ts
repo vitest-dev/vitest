@@ -61,17 +61,17 @@ it('after', () => {
 })
 
 describe('repeats pass', () => {
-  const state = new Array<number>()
+  const state: string[] = []
 
   it('run', { repeats: 2 }, () => {
-    state.push(0)
+    state.push('run')
 
     onTestFinished(() => {
-      state.push(1)
+      state.push('finish')
     })
 
     onTestFailed(() => {
-      state.push(2)
+      state.push('fail')
     })
   })
 
@@ -79,32 +79,32 @@ describe('repeats pass', () => {
     // TODO: 010101
     expect(state).toMatchInlineSnapshot(`
       [
-        0,
-        1,
-        0,
-        1,
-        1,
-        0,
-        1,
-        1,
-        1,
+        "run",
+        "finish",
+        "run",
+        "finish",
+        "finish",
+        "run",
+        "finish",
+        "finish",
+        "finish",
       ]
     `)
   })
 })
 
 describe('repeats fail', () => {
-  const state = new Array<number>()
+  const state: string[] = []
 
   it.fails('run', { repeats: 2 }, (t) => {
-    state.push(0)
+    state.push('run')
 
     onTestFinished(() => {
-      state.push(1)
+      state.push('finish')
     })
 
     onTestFailed(() => {
-      state.push(2)
+      state.push('fail')
     })
 
     if (t.task.result?.repeatCount === 1) {
@@ -116,37 +116,37 @@ describe('repeats fail', () => {
     // TODO: 012012012
     expect(state).toMatchInlineSnapshot(`
       [
-        0,
-        1,
-        0,
-        1,
-        1,
-        2,
-        2,
-        0,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
+        "run",
+        "finish",
+        "run",
+        "finish",
+        "finish",
+        "fail",
+        "fail",
+        "run",
+        "finish",
+        "finish",
+        "finish",
+        "fail",
+        "fail",
+        "fail",
       ]
     `)
   })
 })
 
 describe('retry pass', () => {
-  const state = new Array<number>()
+  const state: string[] = []
 
   it('run', { retry: 2 }, (t) => {
-    state.push(0)
+    state.push('run')
 
     onTestFinished(() => {
-      state.push(1)
+      state.push('finish')
     })
 
     onTestFailed(() => {
-      state.push(2)
+      state.push('fail')
     })
 
     if (t.task.result?.retryCount && t.task.result?.retryCount > 1) {
@@ -159,35 +159,35 @@ describe('retry pass', () => {
     // TODO: 01201201
     expect(state).toMatchInlineSnapshot(`
       [
-        0,
-        1,
-        2,
-        0,
-        1,
-        1,
-        2,
-        2,
-        0,
-        1,
-        1,
-        1,
+        "run",
+        "finish",
+        "fail",
+        "run",
+        "finish",
+        "finish",
+        "fail",
+        "fail",
+        "run",
+        "finish",
+        "finish",
+        "finish",
       ]
     `)
   })
 })
 
 describe('retry fail', () => {
-  const state = new Array<number>()
+  const state: string[] = []
 
   it.fails('run', { retry: 2 }, () => {
-    state.push(0)
+    state.push('run')
 
     onTestFinished(() => {
-      state.push(1)
+      state.push('finish')
     })
 
     onTestFailed(() => {
-      state.push(2)
+      state.push('fail')
     })
 
     throw new Error('fail')
@@ -197,21 +197,21 @@ describe('retry fail', () => {
     // TODO: 012012012
     expect(state).toMatchInlineSnapshot(`
       [
-        0,
-        1,
-        2,
-        0,
-        1,
-        1,
-        2,
-        2,
-        0,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
+        "run",
+        "finish",
+        "fail",
+        "run",
+        "finish",
+        "finish",
+        "fail",
+        "fail",
+        "run",
+        "finish",
+        "finish",
+        "finish",
+        "fail",
+        "fail",
+        "fail",
       ]
     `)
   })
