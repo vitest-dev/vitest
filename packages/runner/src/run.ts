@@ -291,6 +291,9 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
         }
       }
 
+      delete test.onFailed
+      delete test.onFinished
+
       if (test.result.state === 'pass') {
         break
       }

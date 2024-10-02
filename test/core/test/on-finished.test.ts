@@ -63,31 +63,28 @@ it('after', () => {
 describe('repeats pass', () => {
   const state: string[] = []
 
-  it('run', { repeats: 2 }, () => {
-    state.push('run')
+  it('run', { repeats: 2 }, (t) => {
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(tag + "run")
 
     onTestFinished(() => {
-      state.push('finish')
+      state.push(tag + 'finish')
     })
 
     onTestFailed(() => {
-      state.push('fail')
+      state.push(tag + 'fail')
     })
   })
 
   it('assert', () => {
-    // TODO: 010101
     expect(state).toMatchInlineSnapshot(`
       [
-        "run",
-        "finish",
-        "run",
-        "finish",
-        "finish",
-        "run",
-        "finish",
-        "finish",
-        "finish",
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 1) run",
+        "(0, 1) finish",
+        "(0, 2) run",
+        "(0, 2) finish",
       ]
     `)
   })
@@ -97,14 +94,15 @@ describe('repeats fail', () => {
   const state: string[] = []
 
   it.fails('run', { repeats: 2 }, (t) => {
-    state.push('run')
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(tag + "run")
 
     onTestFinished(() => {
-      state.push('finish')
+      state.push(tag + 'finish')
     })
 
     onTestFailed(() => {
-      state.push('fail')
+      state.push(tag + 'fail')
     })
 
     if (t.task.result?.repeatCount === 1) {
@@ -113,23 +111,16 @@ describe('repeats fail', () => {
   })
 
   it('assert', () => {
-    // TODO: 012012012
     expect(state).toMatchInlineSnapshot(`
       [
-        "run",
-        "finish",
-        "run",
-        "finish",
-        "finish",
-        "fail",
-        "fail",
-        "run",
-        "finish",
-        "finish",
-        "finish",
-        "fail",
-        "fail",
-        "fail",
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 1) run",
+        "(0, 1) finish",
+        "(0, 1) fail",
+        "(0, 2) run",
+        "(0, 2) finish",
+        "(0, 2) fail",
       ]
     `)
   })
@@ -139,14 +130,15 @@ describe('retry pass', () => {
   const state: string[] = []
 
   it('run', { retry: 2 }, (t) => {
-    state.push('run')
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(tag + "run")
 
     onTestFinished(() => {
-      state.push('finish')
+      state.push(tag + 'finish')
     })
 
     onTestFailed(() => {
-      state.push('fail')
+      state.push(tag + 'fail')
     })
 
     if (t.task.result?.retryCount && t.task.result?.retryCount > 1) {
@@ -156,21 +148,16 @@ describe('retry pass', () => {
   })
 
   it('assert', () => {
-    // TODO: 01201201
     expect(state).toMatchInlineSnapshot(`
       [
-        "run",
-        "finish",
-        "fail",
-        "run",
-        "finish",
-        "finish",
-        "fail",
-        "fail",
-        "run",
-        "finish",
-        "finish",
-        "finish",
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 0) fail",
+        "(1, 0) run",
+        "(1, 0) finish",
+        "(1, 0) fail",
+        "(2, 0) run",
+        "(2, 0) finish",
       ]
     `)
   })
@@ -179,39 +166,33 @@ describe('retry pass', () => {
 describe('retry fail', () => {
   const state: string[] = []
 
-  it.fails('run', { retry: 2 }, () => {
-    state.push('run')
+  it.fails('run', { retry: 2 }, (t) => {
+    const tag = `(${t.task.result?.retryCount}, ${t.task.result?.repeatCount}) `
+    state.push(tag + "run")
 
     onTestFinished(() => {
-      state.push('finish')
+      state.push(tag + 'finish')
     })
 
     onTestFailed(() => {
-      state.push('fail')
+      state.push(tag + 'fail')
     })
 
     throw new Error('fail')
   })
 
   it('assert', () => {
-    // TODO: 012012012
     expect(state).toMatchInlineSnapshot(`
       [
-        "run",
-        "finish",
-        "fail",
-        "run",
-        "finish",
-        "finish",
-        "fail",
-        "fail",
-        "run",
-        "finish",
-        "finish",
-        "finish",
-        "fail",
-        "fail",
-        "fail",
+        "(0, 0) run",
+        "(0, 0) finish",
+        "(0, 0) fail",
+        "(1, 0) run",
+        "(1, 0) finish",
+        "(1, 0) fail",
+        "(2, 0) run",
+        "(2, 0) finish",
+        "(2, 0) fail",
       ]
     `)
   })
