@@ -1,7 +1,7 @@
 import readline from 'node:readline'
 import type { Writable } from 'node:stream'
+import { stripVTControlCharacters } from 'node:util'
 import c from 'tinyrainbow'
-import stripAnsi from 'strip-ansi'
 import { createDefer } from '@vitest/utils'
 import { stdout as getStdout } from '../utils'
 
@@ -198,7 +198,7 @@ export class WatchFilter {
       const columns = 'columns' in this.stdout ? this.stdout.columns : 80
 
       // We have to take care of screen width in case of long lines
-      rows += 1 + Math.floor(Math.max(stripAnsi(line).length - 1, 0) / columns)
+      rows += 1 + Math.floor(Math.max(stripVTControlCharacters(line).length - 1, 0) / columns)
     }
 
     this.write(`${ESC}1G`) // move to the beginning of the line

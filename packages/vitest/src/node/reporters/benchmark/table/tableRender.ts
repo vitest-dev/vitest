@@ -1,6 +1,6 @@
+import { stripVTControlCharacters } from 'node:util'
 import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
-import stripAnsi from 'strip-ansi'
 import type { Task } from '@vitest/runner'
 import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
@@ -75,7 +75,7 @@ function renderBenchmarkItems(result: BenchmarkResult) {
 function computeColumnWidths(results: BenchmarkResult[]): number[] {
   const rows = [tableHead, ...results.map(v => renderBenchmarkItems(v))]
   return Array.from(tableHead, (_, i) =>
-    Math.max(...rows.map(row => stripAnsi(row[i]).length)))
+    Math.max(...rows.map(row => stripVTControlCharacters(row[i]).length)))
 }
 
 function padRow(row: string[], widths: number[]) {
@@ -215,7 +215,7 @@ export function renderTree(
     if (task.result?.state !== 'pass' && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
       if (typeof data === 'string') {
-        data = stripAnsi(data.trim().split('\n').filter(Boolean).pop()!)
+        data = stripVTControlCharacters(data.trim().split('\n').filter(Boolean).pop()!)
         if (data === '') {
           data = undefined
         }
