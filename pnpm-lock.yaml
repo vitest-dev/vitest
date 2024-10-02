@@ -1151,9 +1151,6 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
-      strip-ansi:
-        specifier: ^7.1.0
-        version: 7.1.0
       url:
         specifier: ^0.11.3
         version: 0.11.3
