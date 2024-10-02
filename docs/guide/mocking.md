@@ -537,6 +537,129 @@ describe('delayed execution', () => {
 })
 ```
 
+## Classes
+
+You can mock an entire class with a single `vi.fn` call - since all classes are also functions, this works out of the box. Beware that currently Vitest doesn't respect the `new` keyword so the `new.target` is always undefined in the body of a function.
+
+```ts
+class Dog {
+  name: string
+
+  constructor(name: string) {
+    this.name = name
+  }
+
+  static getType(): string {
+    return 'animal'
+  }
+
+  speak(): string {
+    return 'bark!'
+  }
+
+  isHungry() {
+    // ...
+  }
+
+  feed() {
+    // ...
+  }
+}
+```
+
+We can re-create this class with ES5 functions:
+
+```ts
+const Dog = vi.fn(function (name) {
+  this.name = name
+})
+
+// notice that static methods are mocked directly on the function,
+// not on the instance of the class
+Dog.getType = vi.fn(() => 'mocked animal')
+
+// mock the "speak" and "feed" methods on every instance of a class
+// all `new Dog()` instances will inherit these spies
+Dog.prototype.speak = vi.fn(() => 'loud bark!')
+Dog.prototype.feed = vi.fn()
+```
+
+::: tip
+Generally speaking, you would re-create a class like this inside the module factory if the class is re-exported from another module:
+
+```ts
+import { Dog } from './dog.js'
+
+vi.mock(import('./dog.js'), () => {
+  const Dog = vi.fn()
+  Dog.prototype.feed = vi.fn()
+  // ... other mocks
+  return { Dog }
+})
+```
+
+This method can also be used to provide an instance of a class to a function that can accept the same interface:
+
+```ts
+// ./src/feed.ts
+function feed(dog: Dog) {
+  // ...
+}
+
+// ./tests/dog.test.ts
+import { expect, test, vi } from 'vitest'
+import { feed } from '../src/feed.js'
+
+const Dog = vi.fn()
+Dog.prototype.feed = vi.fn()
+
+test('can feed dogs', () => {
+  const dogMax = new Dog('Max')
+
+  feed(dogMax)
+
+  expect(dogMax.feed).toHaveBeenCalled()
+  expect(dogMax.isHungry()).toBe(false)
+})
+```
+:::
+
+Now, when we create a new instance of the `Dog` class its `speak` method is already mocked:
+
+```ts
+const dog = new Dog('Cooper')
+dog.speak() // loud bark!
+
+// you can use built-in assertions to check the validity of the call
+expect(dog.speak).toHaveBeenCalled()
+```
+
+We can reassign the return value for a specific instance:
+
+```ts
+const dog = new Dog('Cooper')
+
+// "vi.mocked" is a type helper - TypeScript doesn't know that Dog is a mocked class,
+// it wraps any function in a MockInstance<T> type without validating if the function is a mock
+vi.mocked(dog.speak).mockReturnValue('woof woof')
+dog.speak() // woof woof
+```
+
+To mock the property, we can use the `spyOn(dog, 'name', 'get')` method. This makes it possible to use spy assertions on the mocked property:
+
+```ts
+const dog = new Dog('Cooper')
+
+const nameSpy = vi.spyOn(dog, 'name', 'get').mockReturnValue('Max')
+
+expect(dog.name).toBe('Max')
+expect(nameSpy).toHaveBeenCalledTimes(1)
+```
+
+::: tip
+You can also spy on getters and setters using the same method.
+:::
+
 ## Cheat Sheet
 
 :::info
