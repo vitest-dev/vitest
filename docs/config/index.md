@@ -1229,7 +1229,7 @@ Clean coverage results before running tests
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.cleanOnRerun`, `--coverage.cleanOnRerun=false`
 
-Clean coverage report on watch rerun
+Clean coverage report on watch rerun. Set to `false` to preserve coverage results from previous run in watch mode.
 
 #### coverage.reportsDirectory
 

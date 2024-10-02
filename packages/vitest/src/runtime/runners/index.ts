@@ -90,6 +90,7 @@ export async function resolveTestRunner(
     if (coverage) {
       rpc().onAfterSuiteRun({
         coverage,
+        testFiles: files.map(file => file.name).sort(),
         transformMode: state.environment.transformMode,
         projectName: state.ctx.projectName,
       })

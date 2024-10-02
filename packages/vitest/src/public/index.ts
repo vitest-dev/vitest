@@ -264,7 +264,7 @@ export type {
 } from '../integrations/spy'
 export type { BrowserUI } from '../types/ui'
 
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import from `vitest/reporter` instead */
 export type Reporter = Reporter_
 /** @deprecated import from `vitest/node` instead */
 export type Vitest = Vitest_
