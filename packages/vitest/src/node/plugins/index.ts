@@ -98,6 +98,7 @@ export async function VitestPlugin(
             ...testConfig.api,
             open,
             hmr: false,
+            ws: testConfig.api?.middlewareMode ? false : undefined,
             preTransformRequests: false,
             fs: {
               allow: resolveFsAllow(getRoot(), testConfig.config),
