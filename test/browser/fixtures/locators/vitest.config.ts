@@ -16,7 +16,6 @@ export default defineConfig({
       enabled: true,
       provider,
       name,
-      headless: true,
     },
     onConsoleLog(log) {
       if (log.includes('ReactDOMTestUtils.act')) {
