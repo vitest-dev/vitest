@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { browser, runBrowserTests } from './utils'
 
@@ -12,10 +13,14 @@ describe('running browser tests', async () => {
     ({
       stderr,
       stdout,
-      browserResultJson,
-      passedTests,
-      failedTests,
     } = await runBrowserTests())
+
+    const browserResult = await readFile('./browser.json', 'utf-8')
+    browserResultJson = JSON.parse(browserResult)
+    const getPassed = results => results.filter(result => result.status === 'passed' && !result.mesage)
+    const getFailed = results => results.filter(result => result.status === 'failed')
+    passedTests = getPassed(browserResultJson.testResults)
+    failedTests = getFailed(browserResultJson.testResults)
   })
 
   test('tests are actually running', () => {
