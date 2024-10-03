@@ -39,7 +39,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
         return result
       }
       if ('id' in result && typeof result.id === 'string') {
-        return { id: result.id as string }
+        return { id: result.id }
       }
 
       if (code == null) {
