@@ -15,9 +15,9 @@ test('Link changes the state when hovered', async () => {
 
   await userEvent.hover(link)
 
-  expect(link).toHaveAccessibleName('Link is hovered')
+  await expect.poll(() => link).toHaveAccessibleName('Link is hovered')
 
   await userEvent.unhover(link)
 
-  expect(link).toHaveAccessibleName('Link is normal')
+  await expect.poll(() => link).toHaveAccessibleName('Link is normal')
 })
