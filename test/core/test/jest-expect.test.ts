@@ -1160,6 +1160,25 @@ it('toMatchObject error diff', () => {
       }",
     ]
   `)
+
+  expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(1)))
+  expect(getError(() =>
+    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(2))),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Foo{ value: 2 } }",
+      "- Expected
+    + Received
+
+    - Bar {
+    + Foo {
+        "value": Foo {
+    -     "value": 2,
+    +     "value": 1,
+        },
+      }",
+    ]
+  `)
 })
 
 it('toHaveProperty error diff', () => {
