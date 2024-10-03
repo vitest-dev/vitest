@@ -5,7 +5,7 @@
     "experimentalDecorators": true,
     "module": "node16",
     "moduleResolution": "Node16",
-    "types": ["@vitest/browser/providers/webdriverio"],
+    "types": ["@vitest/browser/providers/playwright"],
     "verbatimModuleSyntax": true
   }
 }
