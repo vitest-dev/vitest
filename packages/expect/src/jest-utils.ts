@@ -709,6 +709,14 @@ export function getObjectSubset(
           const trimmed: any = {}
           seenReferences.set(object, trimmed)
 
+          // preserve constructor for toMatchObject diff
+          if (typeof object.constructor === 'function' && typeof object.constructor.name === 'string') {
+            Object.defineProperty(trimmed, 'constructor', {
+              enumerable: false,
+              value: object.constructor,
+            })
+          }
+
           for (const key of getObjectKeys(object)) {
             if (hasPropertyInObject(subset, key)) {
               trimmed[key] = seenReferences.has(object[key])

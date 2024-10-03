@@ -1062,11 +1062,11 @@ it('toMatchObject error diff', () => {
 
   // https://github.com/vitest-dev/vitest/issues/6543
   class Foo {
-    constructor(public value: number) {}
+    constructor(public value: any) {}
   }
 
   class Bar {
-    constructor(public value: number) {}
+    constructor(public value: any) {}
   }
 
   expect(new Foo(0)).toMatchObject(new Bar(0))
@@ -1081,7 +1081,7 @@ it('toMatchObject error diff', () => {
 
     - Bar {
     -   "value": 1,
-    + Object {
+    + Foo {
     +   "value": 0,
       }",
     ]
@@ -1093,8 +1093,9 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+    - Object {
     -   "value": 1,
+    + Foo {
     +   "value": 0,
       }",
     ]
@@ -1116,26 +1117,45 @@ it('toMatchObject error diff', () => {
 
   expect(getError(() =>
     expect({
-      bad: new Bar(1),
-      good: new Bar(0),
-    }).toMatchObject({
-      bad: new Foo(2),
+      bad: new Foo(1),
       good: new Foo(0),
+    }).toMatchObject({
+      bad: new Bar(2),
+      good: new Bar(0),
     }),
   )).toMatchInlineSnapshot(`
     [
-      "expected { bad: Bar{ value: 1 }, …(1) } to match object { bad: Foo{ value: 2 }, …(1) }",
+      "expected { bad: Foo{ value: 1 }, …(1) } to match object { bad: Bar{ value: 2 }, …(1) }",
       "- Expected
     + Received
 
       Object {
-    -   "bad": Foo {
+    -   "bad": Bar {
     -     "value": 2,
-    +   "bad": Object {
+    +   "bad": Foo {
     +     "value": 1,
         },
-        "good": Foo {
+        "good": Bar {
           "value": 0,
+        },
+      }",
+    ]
+  `)
+
+  expect(getError(() =>
+    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Bar(0))),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Bar{ value: +0 } }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": Bar {
+    -     "value": 0,
+    + Foo {
+    +   "value": Foo {
+    +     "value": 1,
         },
       }",
     ]
