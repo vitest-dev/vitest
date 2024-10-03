@@ -233,21 +233,18 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
-      '@vitest/ui':
-        specifier: latest
-        version: 2.1.1(vitest@packages+vitest)
       jsdom:
         specifier: latest
         version: 25.0.1
+      playwright:
+        specifier: ^1.47.2
+        version: 1.47.2
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
-      webdriverio:
-        specifier: ^8.32.2
-        version: 8.32.2(typescript@5.5.4)
 
   examples/profiling:
     devDependencies:
@@ -7380,6 +7377,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  playwright-core@1.47.2:
+    resolution: {integrity: sha512-3JvMfF+9LJfe16l7AbSmU555PaTl2tPyQsVInqm3id16pdDfvZ8TTZ/pyzmkbDrZTQefyzU7AIHlZqQnxpqHVQ==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   playwright@1.41.0:
     resolution: {integrity: sha512-XOsfl5ZtAik/T9oek4V0jAypNlaCNzuKOwVhqhgYT3os6kH34PzbRb74F0VWcLYa5WFdnmxl7qyAHBXvPv7lqQ==}
     engines: {node: '>=16'}
@@ -7392,6 +7394,11 @@ packages:
 
   playwright@1.46.1:
     resolution: {integrity: sha512-oPcr1yqoXLCkgKtD5eNUPLiN40rYEM39odNpIb6VE6S7/15gJmA1NzVv6zJYusV0e7tzvkU/utBFNa/Kpxmwng==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.47.2:
+    resolution: {integrity: sha512-nx1cLMmQWqmA3UsnjaaokyoUpdVaaDhJhMoxX2qj3McpjnsqFHs516QAKYhqHAgOP+oCFTEOCOAaD1RgD/RQfA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -16264,6 +16271,8 @@ snapshots:
 
   playwright-core@1.46.1: {}
 
+  playwright-core@1.47.2: {}
+
   playwright@1.41.0:
     dependencies:
       playwright-core: 1.41.0
@@ -16279,6 +16288,12 @@ snapshots:
   playwright@1.46.1:
     dependencies:
       playwright-core: 1.46.1
+    optionalDependencies:
+      fsevents: 2.3.2
+
+  playwright@1.47.2:
+    dependencies:
+      playwright-core: 1.47.2
     optionalDependencies:
       fsevents: 2.3.2
 
