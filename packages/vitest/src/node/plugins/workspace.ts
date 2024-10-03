@@ -85,6 +85,7 @@ export function WorkspaceVitestPlugin(
             watch: null,
             open: false,
             hmr: false,
+            ws: false,
             preTransformRequests: false,
             middlewareMode: true,
             fs: {

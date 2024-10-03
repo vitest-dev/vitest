@@ -785,7 +785,7 @@ it('render basic', async () => {
 })
 ```
 
-Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`.
+Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`. If `await` is not used, Vitest treats it like `expect.soft`, meaning the code after the statement will continue to run even if the snapshot mismatches. After the test finishes, Vitest will check the snapshot and fail if there is a mismatch.
 
 ## toThrowErrorMatchingSnapshot
 

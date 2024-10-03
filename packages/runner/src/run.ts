@@ -271,6 +271,29 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
         failTask(test.result, e, runner.config.diffOptions)
       }
 
+      try {
+        await callTaskHooks(test, test.onFinished || [], 'stack')
+      }
+      catch (e) {
+        failTask(test.result, e, runner.config.diffOptions)
+      }
+
+      if (test.result.state === 'fail') {
+        try {
+          await callTaskHooks(
+            test,
+            test.onFailed || [],
+            runner.config.sequence.hooks,
+          )
+        }
+        catch (e) {
+          failTask(test.result, e, runner.config.diffOptions)
+        }
+      }
+
+      delete test.onFailed
+      delete test.onFinished
+
       if (test.result.state === 'pass') {
         break
       }
@@ -283,26 +306,6 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
 
       // update retry info
       updateTask(test, runner)
-    }
-  }
-
-  try {
-    await callTaskHooks(test, test.onFinished || [], 'stack')
-  }
-  catch (e) {
-    failTask(test.result, e, runner.config.diffOptions)
-  }
-
-  if (test.result.state === 'fail') {
-    try {
-      await callTaskHooks(
-        test,
-        test.onFailed || [],
-        runner.config.sequence.hooks,
-      )
-    }
-    catch (e) {
-      failTask(test.result, e, runner.config.diffOptions)
     }
   }
 

@@ -230,6 +230,10 @@ You can specify additional CLI options like `--port` or `--https`. For a full li
 
 Learn more about the [Command Line Interface](/guide/cli)
 
+## Automatic Dependency Installation
+
+Vitest will prompt you to install certain dependencies if they are not already installed. You can disable this behavior by setting the `VITEST_SKIP_INSTALL_CHECKS=1` environment variable.
+
 ## IDE Integrations
 
 We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
@@ -287,7 +291,9 @@ Thanks for choosing Vitest!
 
 ## Using Unreleased Commits
 
-If you can't wait for a new release to test the latest features, you will need to clone the [vitest repo](https://github.com/vitest-dev/vitest) to your local machine and then build and link it yourself ([pnpm](https://pnpm.io/) is required):
+Each commit on main branch and a PR with a `cr-tracked` label are published to [pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new). You can install it by `npm i https://pkg.pr.new/vitest@{commit}`.
+
+If you want to test your own modification locally, you can build and link it yourself ([pnpm](https://pnpm.io/) is required):
 
 ```bash
 git clone https://github.com/vitest-dev/vitest.git

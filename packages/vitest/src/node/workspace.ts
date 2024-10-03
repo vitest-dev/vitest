@@ -359,7 +359,7 @@ export class WorkspaceProject {
     if (!this.isBrowserEnabled()) {
       return
     }
-    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root)
+    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
     const { createBrowserServer } = await import('@vitest/browser')
     await this.browser?.close()
     const browser = await createBrowserServer(

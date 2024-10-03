@@ -81,3 +81,12 @@ it('fails if referenced file doesnt exist', async () => {
     `Workspace config file "vitest.workspace.ts" references a non-existing file or a directory: ${resolve('fixtures/workspace/invalid-non-existing-config/vitest.config.js')}`,
   )
 })
+
+it('vite import analysis is applied when loading workspace config', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/config-import-analysis',
+    workspace: './fixtures/workspace/config-import-analysis/vitest.workspace.ts',
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('test - a')
+})
