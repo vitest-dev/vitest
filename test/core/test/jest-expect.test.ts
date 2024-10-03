@@ -927,12 +927,12 @@ function trim(s: string): string {
 function getError(f: () => unknown) {
   try {
     f()
-    return expect.unreachable()
   }
   catch (error) {
     const processed = processError(error)
     return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
   }
+  return expect.unreachable()
 }
 
 it('toMatchObject error diff', () => {
@@ -1056,6 +1056,57 @@ it('toMatchObject error diff', () => {
         ],
     -   "family": "House Atreides",
     +   "family": "House Harkonnen",
+      }",
+    ]
+  `)
+
+  class Foo {
+    constructor(public value: number) {}
+  }
+
+  class Bar {
+    constructor(public value: number) {}
+  }
+
+  expect(new Foo(0)).toMatchObject(new Bar(0))
+  expect(new Foo(0)).toMatchObject({ value: 0 })
+  expect({ value: 0 }).toMatchObject(new Bar(0))
+
+  expect(getError(() => expect(new Foo(0)).toMatchObject(new Bar(1)))).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: +0 } to match object Bar{ value: 1 }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": 1,
+    + Object {
+    +   "value": 0,
+      }",
+    ]
+  `)
+  expect(getError(() => expect(new Foo(0)).toMatchObject({ value: 1 }))).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: +0 } to match object { value: 1 }",
+      "- Expected
+    + Received
+
+      Object {
+    -   "value": 1,
+    +   "value": 0,
+      }",
+    ]
+  `)
+  expect(getError(() => expect({ value: 0 }).toMatchObject(new Bar(1)))).toMatchInlineSnapshot(`
+    [
+      "expected { value: +0 } to match object Bar{ value: 1 }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": 1,
+    + Object {
+    +   "value": 0,
       }",
     ]
   `)
