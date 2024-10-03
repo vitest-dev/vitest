@@ -2,11 +2,18 @@ import { expect, test } from 'vitest'
 import { runBrowserTests } from './utils'
 
 test('viewport', async () => {
-  const { stderr, stdout } = await runBrowserTests({
+  const { stderr, ctx } = await runBrowserTests({
     root: './fixtures/viewport',
-    reporters: [['verbose', { isTTY: false }]],
   })
 
   expect(stderr).toBe('')
-  expect(stdout).toContain('✓ basic.test.ts')
+  expect(
+    Object.fromEntries(
+      ctx.state.getFiles().map(f => [f.name, f.result.state]),
+    ),
+  ).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": "pass",
+    }
+  `)
 })
