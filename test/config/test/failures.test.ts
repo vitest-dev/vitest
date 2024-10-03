@@ -280,10 +280,9 @@ test('mergeReports doesn\'t work with watch mode enabled', async () => {
   expect(stderr).toMatch('Cannot merge reports with --watch enabled')
 })
 
-test.only('maxConcurrency 0 prints a warning', async () => {
-  const { stderr, stdout, ctx } = await runVitest({ maxConcurrency: 0 })
+test('maxConcurrency 0 prints a warning', async () => {
+  const { stderr, ctx } = await runVitest({ maxConcurrency: 0 })
 
-  // console.log(stdout, stderr)
   expect(ctx?.config.maxConcurrency).toBe(5)
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })
