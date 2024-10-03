@@ -115,7 +115,7 @@ function getFrameworkTestPackage(framework: string) {
     case 'preact':
       return '@testing-library/preact'
     case 'solid':
-      return 'solid-testing-library'
+      return '@solidjs/testing-library'
     case 'marko':
       return '@marko/testing-library'
   }
@@ -258,11 +258,8 @@ async function generateWorkspaceFile(options: {
     `import { defineWorkspace } from 'vitest/config'`,
     '',
     'export default defineWorkspace([',
-    '  // This will keep running your existing tests.',
-    '  // If you don\'t need to run those in Node.js anymore,',
-    '  // You can safely remove it from the workspace file',
-    '  // Or move the browser test configuration to the config file.',
-    `  '${relativeRoot}',`,
+    '  // If you want to keep running your existing tests in Node.js, uncomment the next line.',
+    `  // '${relativeRoot}',`,
     `  {`,
     `    extends: '${relativeRoot}',`,
     `    test: {`,

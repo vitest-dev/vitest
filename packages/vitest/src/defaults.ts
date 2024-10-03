@@ -24,6 +24,7 @@ export const benchmarkConfigDefaults: Required<
   exclude: defaultExclude,
   includeSource: [],
   reporters: ['default'],
+  includeSamples: false,
 }
 
 const defaultCoverageExcludes = [
@@ -73,6 +74,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     '.vue',
     '.svelte',
     '.marko',
+    '.astro',
   ],
   allowExternal: false,
   excludeAfterRemap: false,

@@ -19,6 +19,7 @@ export default defineConfig({
       truncateThreshold: 999,
     },
     coverage: {
+      // test that empty reporter does not throw
       reporter: [],
     },
   },

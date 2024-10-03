@@ -228,10 +228,12 @@ export class Logger {
 
       const resolvedUrls = project.browser.vite.resolvedUrls
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+      const provider = project.browser.provider.name
+      const providerString = provider === 'preview' ? '' : ` by ${provider}`
       this.log(
         c.dim(
           c.green(
-            `     ${output} Browser runner started at ${new URL('/', origin)}`,
+            `     ${output} Browser runner started${providerString} at ${new URL('/', origin)}`,
           ),
         ),
       )

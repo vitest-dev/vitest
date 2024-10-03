@@ -26,7 +26,7 @@ You can also use the `-t, --testNamePattern <pattern>` option to filter tests by
 
 ## Specifying a Timeout
 
-You can optionally pass a timeout in milliseconds as third argument to tests. The default is 5 seconds.
+You can optionally pass a timeout in milliseconds as a third argument to tests. The default is [5 seconds](/config/#testtimeout).
 
 ```ts
 import { test } from 'vitest'

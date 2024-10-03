@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { stripVTControlCharacters } from 'node:util'
 import { normalize } from 'pathe'
 import libCoverage from 'istanbul-lib-coverage'
 import type { FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction, UserConfig } from 'vitest'
-import { describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
 import * as testUtils from '../test-utils'
 
 export function test(name: string, fn: TestFunction, skip = false) {
@@ -102,4 +103,15 @@ export function isBrowser() {
 
 export function normalizeURL(importMetaURL: string) {
   return normalize(fileURLToPath(importMetaURL))
+}
+
+export function captureStdout() {
+  const spy = vi.fn()
+  const original = process.stdout.write
+  process.stdout.write = spy
+
+  return function collect() {
+    process.stdout.write = original
+    return stripVTControlCharacters(spy.mock.calls.map(call => call[0]).join(''))
+  }
 }

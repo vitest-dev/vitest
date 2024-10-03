@@ -151,7 +151,7 @@ export function createThreadsPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, SerializedConfig>()
+      const configs = new WeakMap<WorkspaceProject, SerializedConfig>()
       const getConfig = (project: WorkspaceProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
@@ -160,13 +160,6 @@ export function createThreadsPool(
         const config = project.getSerializableConfig()
         configs.set(project, config)
         return config
-      }
-
-      const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
-        const workspaceFiles = workspaceMap.get(file) ?? []
-        workspaceFiles.push(project)
-        workspaceMap.set(file, workspaceFiles)
       }
 
       const singleThreads = specs.filter(

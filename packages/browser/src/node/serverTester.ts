@@ -55,7 +55,7 @@ export async function resolveTester(
     const testerScripts = await server.formatScripts(
       project.config.browser.testerScripts,
     )
-    const clientScript = `<script type="module" src="${server.project.config.base || '/'}@vite/client"></script>`
+    const clientScript = `<script type="module" src="${server.base}@vite/client"></script>`
     const stateJs = typeof server.stateJs === 'string'
       ? server.stateJs
       : await server.stateJs

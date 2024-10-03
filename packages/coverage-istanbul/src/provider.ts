@@ -35,14 +35,30 @@ import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
 type Options = ResolvedCoverageOptions<'istanbul'>
-type Filename = string
-type CoverageFilesByTransformMode = Record<
-  AfterSuiteRunMeta['transformMode'],
-  Filename[]
+
+/**
+ * Holds info about raw coverage results that are stored on file system:
+ *
+ * ```json
+ * "project-a": {
+ *   "web": {
+ *     "tests/math.test.ts": "coverage-1.json",
+ *     "tests/utils.test.ts": "coverage-2.json",
+ * //                          ^^^^^^^^^^^^^^^ Raw coverage on file system
+ *   },
+ *   "ssr": { ... },
+ *   "browser": { ... },
+ * },
+ * "project-b": ...
+ * ```
+ */
+type CoverageFiles = Map<
+  NonNullable<AfterSuiteRunMeta['projectName']> | typeof DEFAULT_PROJECT,
+  Record<
+    AfterSuiteRunMeta['transformMode'],
+    { [TestFilenames: string]: string }
+  >
 >
-type ProjectName =
-  | NonNullable<AfterSuiteRunMeta['projectName']>
-  | typeof DEFAULT_PROJECT
 
 interface TestExclude {
   new (opts: {
@@ -70,7 +86,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   instrumenter!: Instrumenter
   testExclude!: InstanceType<TestExclude>
 
-  coverageFiles: Map<ProjectName, CoverageFilesByTransformMode> = new Map()
+  coverageFiles: CoverageFiles = new Map()
   coverageFilesDirectory!: string
   pendingPromises: Promise<void>[] = []
 
@@ -188,7 +204,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
    * Note that adding new entries here and requiring on those without
    * backwards compatibility is a breaking change.
    */
-  onAfterSuiteRun({ coverage, transformMode, projectName }: AfterSuiteRunMeta): void {
+  onAfterSuiteRun({ coverage, transformMode, projectName, testFiles }: AfterSuiteRunMeta): void {
     if (!coverage) {
       return
     }
@@ -200,15 +216,18 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     let entry = this.coverageFiles.get(projectName || DEFAULT_PROJECT)
 
     if (!entry) {
-      entry = { web: [], ssr: [], browser: [] }
+      entry = { web: {}, ssr: {}, browser: {} }
       this.coverageFiles.set(projectName || DEFAULT_PROJECT, entry)
     }
 
+    const testFilenames = testFiles.join()
     const filename = resolve(
       this.coverageFilesDirectory,
       `coverage-${uniqueId++}.json`,
     )
-    entry[transformMode].push(filename)
+
+    // If there's a result from previous run, overwrite it
+    entry[transformMode][testFilenames] = filename
 
     const promise = fs.writeFile(filename, JSON.stringify(coverage), 'utf-8')
     this.pendingPromises.push(promise)
@@ -246,12 +265,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     this.pendingPromises = []
 
     for (const coveragePerProject of this.coverageFiles.values()) {
-      for (const filenames of [
+      for (const coverageByTestfiles of [
         coveragePerProject.ssr,
         coveragePerProject.web,
         coveragePerProject.browser,
       ]) {
         const coverageMapByTransformMode = libCoverage.createCoverageMap({})
+        const filenames = Object.values(coverageByTestfiles)
 
         for (const chunk of this.toSlices(
           filenames,
@@ -281,7 +301,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       }
     }
 
-    if (this.options.all && allTestsRun) {
+    // Include untested files when all tests were run (not a single file re-run)
+    // or if previous results are preserved by "cleanOnRerun: false"
+    if (this.options.all && (allTestsRun || !this.options.cleanOnRerun)) {
       const coveredFiles = coverageMap.files()
       const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(
         coveredFiles,
@@ -307,13 +329,23 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     const keepResults = !this.options.cleanOnRerun && this.ctx.config.watch
 
     if (!keepResults) {
-      this.coverageFiles = new Map()
-      await fs.rm(this.coverageFilesDirectory, { recursive: true })
+      await this.cleanAfterRun()
+    }
+  }
 
-      // Remove empty reports directory, e.g. when only text-reporter is used
-      if (readdirSync(this.options.reportsDirectory).length === 0) {
-        await fs.rm(this.options.reportsDirectory, { recursive: true })
-      }
+  private async cleanAfterRun() {
+    this.coverageFiles = new Map()
+    await fs.rm(this.coverageFilesDirectory, { recursive: true })
+
+    // Remove empty reports directory, e.g. when only text-reporter is used
+    if (readdirSync(this.options.reportsDirectory).length === 0) {
+      await fs.rm(this.options.reportsDirectory, { recursive: true })
+    }
+  }
+
+  async onTestFailure() {
+    if (!this.options.reportOnFailure) {
+      await this.cleanAfterRun()
     }
   }
 

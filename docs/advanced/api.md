@@ -34,6 +34,23 @@ Additionally, you can use the third argument to pass in CLI arguments, which wil
 
 Alternatively, you can pass in the complete Vite config as the fourth argument, which will take precedence over any other user-defined options.
 
+After running the tests, you can get the results from the `state.getFiles` API:
+
+```ts
+const vitest = await startVitest('test')
+
+console.log(vitest.state.getFiles()) // [{ type: 'file', ... }]
+```
+
+Since Vitest 2.1, it is recommended to use the ["Reported Tasks" API](/advanced/reporters#reported-tasks) together with the `state.getFiles`. In the future, Vitest will return those objects directly:
+
+```ts
+const vitest = await startVitest('test')
+
+const [fileTask] = vitest.state.getFiles()
+const testFile = vitest.state.getReportedEntity(fileTask)
+```
+
 ## createVitest
 
 You can create Vitest instance yourself using `createVitest` function. It returns the same `Vitest` instance as `startVitest`, but it doesn't start tests and doesn't validate installed packages.

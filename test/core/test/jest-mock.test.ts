@@ -408,4 +408,35 @@ describe('jest mock compat layer', () => {
     testFn.mockRestore()
     expect(testFn()).toBe(true)
   })
+
+  abstract class Dog_ {
+    public name: string
+
+    constructor(name: string) {
+      this.name = name
+    }
+
+    abstract speak(): string
+    abstract feed(): void
+  }
+
+  it('mocks classes', () => {
+    const Dog = vi.fn<(name: string) => Dog_>(function Dog_(name: string) {
+      this.name = name
+    } as (this: any, name: string) => Dog_)
+
+    ;(Dog as any).getType = vi.fn(() => 'mocked animal')
+
+    Dog.prototype.speak = vi.fn(() => 'loud bark!')
+    Dog.prototype.feed = vi.fn()
+
+    const dogMax = new Dog('Max')
+    expect(dogMax.name).toBe('Max')
+
+    expect(dogMax.speak()).toBe('loud bark!')
+    expect(dogMax.speak).toHaveBeenCalled()
+
+    vi.mocked(dogMax.speak).mockReturnValue('woof woof')
+    expect(dogMax.speak()).toBe('woof woof')
+  })
 })

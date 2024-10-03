@@ -195,6 +195,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const { subset: actualSubset, stripped } = getObjectSubset(
       actual,
       expected,
+      customTesters,
     )
     if ((pass && isNot) || (!pass && !isNot)) {
       const msg = utils.getMessage(this, [
@@ -384,14 +385,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     return this.be.null
   })
   def('toBeDefined', function () {
-    const negate = utils.flag(this, 'negate')
-    utils.flag(this, 'negate', false)
-
-    if (negate) {
-      return this.be.undefined
-    }
-
-    return this.not.be.undefined
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      typeof obj !== 'undefined',
+      'expected #{this} to be defined',
+      'expected #{this} to be undefined',
+      obj,
+    )
   })
   def(
     'toBeTypeOf',

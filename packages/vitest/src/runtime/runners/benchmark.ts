@@ -72,6 +72,15 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           const taskRes = task.result!
           const result = benchmark.result!.benchmark!
           Object.assign(result, taskRes)
+          // compute extra stats and free raw samples as early as possible
+          const samples = result.samples
+          result.sampleCount = samples.length
+          result.median = samples.length % 2
+            ? samples[Math.floor(samples.length / 2)]
+            : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2
+          if (!runner.config.benchmark?.includeSamples) {
+            result.samples.length = 0
+          }
           updateTask(benchmark)
         },
         {

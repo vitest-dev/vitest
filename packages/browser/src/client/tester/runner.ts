@@ -91,6 +91,7 @@ export function createBrowserRunner(
       if (coverage) {
         await rpc().onAfterSuiteRun({
           coverage,
+          testFiles: files.map(file => file.name),
           transformMode: 'browser',
           projectName: this.config.name,
         })

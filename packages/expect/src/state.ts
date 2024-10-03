@@ -39,6 +39,10 @@ export function setState<State extends MatcherState = MatcherState>(
 ): void {
   const map = (globalThis as any)[MATCHERS_OBJECT]
   const current = map.get(expect) || {}
-  Object.assign(current, state)
-  map.set(expect, current)
+  // so it keeps getters from `testPath`
+  const results = Object.defineProperties(current, {
+    ...Object.getOwnPropertyDescriptors(current),
+    ...Object.getOwnPropertyDescriptors(state),
+  })
+  map.set(expect, results)
 }

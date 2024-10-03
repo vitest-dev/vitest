@@ -4,8 +4,14 @@ import '../types/global'
 
 import type {
   Custom as Custom_,
+  DoneCallback as DoneCallback_,
   File as File_,
+  RuntimeContext as RuntimeContext_,
+  SuiteHooks as SuiteHooks_,
   Suite as Suite_,
+  TaskBase as TaskBase_,
+  TaskResultPack as TaskResultPack_,
+  TaskResult as TaskResult_,
   Task as Task_,
   Test as Test_,
 } from '@vitest/runner'
@@ -17,6 +23,10 @@ import type {
   RootAndTarget as RootAndTarget_,
   TscErrorInfo as TscErrorInfo_,
 } from '../typecheck/types'
+
+import type {
+  WorkerRPC as WorkerRPC_,
+} from '../types/worker'
 
 import type {
   ArgumentsType as ArgumentsType_,
@@ -86,6 +96,9 @@ import type {
 } from '../node/types/benchmark'
 
 import type { SerializedTestSpecification } from '../runtime/types/utils'
+import type {
+  WorkerContext as WorkerContext_,
+} from '../node/types/worker'
 
 export {
   suite,
@@ -137,34 +150,46 @@ export type Test = Test_
 export type Custom = Custom_
 /** @deprecated use `RunnerTask` instead */
 export type Task = Task_
+/** @deprecated use `RunnerTaskBase` instead */
+export type TaskBase = TaskBase_
+/** @deprecated use `RunnerTaskResult` instead */
+export type TaskResult = TaskResult_
+/** @deprecated use `RunnerTaskResultPack` instead */
+export type TaskResultPack = TaskResultPack_
+
+/** @deprecated don't use `DoneCallback` since it's not supported */
+export type DoneCallback = DoneCallback_
+
+/** @deprecated internal type, don't use it */
+export type RuntimeContext = RuntimeContext_
+/** @deprecated internal type, don't use it */
+export type SuiteHooks = SuiteHooks_
 
 export type {
   RunMode,
   TaskState,
-  TaskBase,
-  TaskResult,
-  TaskResultPack,
+  TaskBase as RunnerTaskBase,
+  TaskResult as RunnerTaskResult,
+  TaskResultPack as RunnerTaskResultPack,
   Suite as RunnerTestSuite,
   File as RunnerTestFile,
   Test as RunnerTestCase,
   Task as RunnerTask,
   Custom as RunnerCustomCase,
-  DoneCallback,
   TestFunction,
   TestOptions,
   TestAPI,
   SuiteAPI,
   HookListener,
   HookCleanupCallback,
-  SuiteHooks,
   SuiteCollector,
   SuiteFactory,
-  RuntimeContext,
   TestContext,
   TaskContext,
   ExtendedContext,
   TaskCustomOptions,
   OnTestFailedHandler,
+  OnTestFinishedHandler,
   TaskMeta,
 } from '@vitest/runner'
 export type {
@@ -182,17 +207,17 @@ export type {
   SnapshotSerializer,
 } from '@vitest/snapshot'
 
+/** @deprecated import from `vitest/node` instead */
+export type WorkerContext = WorkerContext_
+/** @deprecated import from `vitest/node` instead */
+export type WorkerRPC = WorkerRPC_
+
 export type {
   ResolveIdFunction,
-  WorkerRPC,
   WorkerGlobalState,
   ContextTestEnvironment,
   ContextRPC,
 } from '../types/worker'
-export type {
-  /** @deprecated import from `vitest/node` instead */
-  WorkerContext,
-} from '../node/types/worker'
 
 /** @deprecated do not use, internal helper */
 export type Awaitable<T> = Awaitable_<T>
@@ -264,7 +289,7 @@ export type {
 } from '../integrations/spy'
 export type { BrowserUI } from '../types/ui'
 
-/** @deprecated import from `vitest/node` instead */
+/** @deprecated import from `vitest/reporter` instead */
 export type Reporter = Reporter_
 /** @deprecated import from `vitest/node` instead */
 export type Vitest = Vitest_
