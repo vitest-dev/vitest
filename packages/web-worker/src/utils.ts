@@ -2,6 +2,7 @@ import { readFileSync as _readFileSync } from 'node:fs'
 import type { WorkerGlobalState } from 'vitest'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import createDebug from 'debug'
+import type { ExecuteOptions } from 'vitest/execute'
 import type { CloneOption } from './types'
 
 // keep the reference in case it was mocked
@@ -79,7 +80,7 @@ export function createMessageEvent(
   }
 }
 
-export function getRunnerOptions(): any {
+export function getRunnerOptions(): ExecuteOptions {
   const state = getWorkerState()
   const { config, rpc, moduleCache } = state
 

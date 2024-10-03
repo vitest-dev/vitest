@@ -1,7 +1,8 @@
+import type { ExecuteOptions } from 'vitest/execute'
 import { VitestExecutor } from 'vitest/execute'
 
 export class InlineWorkerRunner extends VitestExecutor {
-  constructor(options: any, private context: any) {
+  constructor(options: ExecuteOptions, private context: any) {
     super(options)
   }
 

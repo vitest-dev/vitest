@@ -132,7 +132,7 @@ export function createWorkerConstructor(
 
           return runner.executeFile(fsPath).then(() => {
             // worker should be new every time, invalidate its sub dependency
-            runnerOptions.moduleCache.invalidateSubDepTree([
+            runnerOptions.moduleCache!.invalidateSubDepTree([
               fsPath,
               runner.mocker.getMockPath(fsPath),
             ])

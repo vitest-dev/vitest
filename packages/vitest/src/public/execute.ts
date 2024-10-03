@@ -1,1 +1,1 @@
-export { VitestExecutor } from '../runtime/execute'
+export { VitestExecutor, ExecuteOptions } from '../runtime/execute'
