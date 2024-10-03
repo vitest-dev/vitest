@@ -1060,6 +1060,7 @@ it('toMatchObject error diff', () => {
     ]
   `)
 
+  // https://github.com/vitest-dev/vitest/issues/6543
   class Foo {
     constructor(public value: number) {}
   }
@@ -1085,6 +1086,7 @@ it('toMatchObject error diff', () => {
       }",
     ]
   `)
+
   expect(getError(() => expect(new Foo(0)).toMatchObject({ value: 1 }))).toMatchInlineSnapshot(`
     [
       "expected Foo{ value: +0 } to match object { value: 1 }",
@@ -1097,6 +1099,7 @@ it('toMatchObject error diff', () => {
       }",
     ]
   `)
+
   expect(getError(() => expect({ value: 0 }).toMatchObject(new Bar(1)))).toMatchInlineSnapshot(`
     [
       "expected { value: +0 } to match object Bar{ value: 1 }",
@@ -1107,6 +1110,33 @@ it('toMatchObject error diff', () => {
     -   "value": 1,
     + Object {
     +   "value": 0,
+      }",
+    ]
+  `)
+
+  expect(getError(() =>
+    expect({
+      bad: new Bar(1),
+      good: new Bar(0),
+    }).toMatchObject({
+      bad: new Foo(2),
+      good: new Foo(0),
+    }),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected { bad: Bar{ value: 1 }, …(1) } to match object { bad: Foo{ value: 2 }, …(1) }",
+      "- Expected
+    + Received
+
+      Object {
+    -   "bad": Foo {
+    -     "value": 2,
+    +   "bad": Object {
+    +     "value": 1,
+        },
+        "good": Foo {
+          "value": 0,
+        },
       }",
     ]
   `)

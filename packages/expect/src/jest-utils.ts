@@ -676,7 +676,7 @@ export function getObjectKeys(object: object): Array<string | symbol> {
 export function getObjectSubset(
   object: any,
   subset: any,
-  customTesters: Array<Tester> = [],
+  customTesters: Array<Tester>,
 ): { subset: any; stripped: number } {
   let stripped = 0
 
@@ -702,7 +702,7 @@ export function getObjectSubset(
               subsetEquality,
             ])
           ) {
-          // Avoid unnecessary copy which might return Object instead of subclass.
+            // return "expected" subset to avoid showing irrelavant toMatchObject diff
             return subset
           }
 
