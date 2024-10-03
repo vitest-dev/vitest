@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@vitest/browser': workspace:*
   acorn: 8.11.3
   mlly: ^1.7.1
   rollup: ^4.20.0
@@ -230,8 +231,8 @@ importers:
         version: 3.0.1
     devDependencies:
       '@vitest/browser':
-        specifier: latest
-        version: 2.1.1(@vitest/spy@2.1.2)(playwright@1.46.1)(typescript@5.5.4)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))
+        specifier: workspace:*
+        version: link:../../packages/browser
       '@vitest/ui':
         specifier: latest
         version: 2.1.1(vitest@packages+vitest)
@@ -1492,7 +1493,7 @@ importers:
   test/workspaces-browser:
     devDependencies:
       '@vitest/browser':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/browser
       vitest:
         specifier: workspace:*
@@ -3996,21 +3997,6 @@ packages:
       vite: ^5.4.0
       vue: ^3.2.25
 
-  '@vitest/browser@2.1.1':
-    resolution: {integrity: sha512-wLKqohwlZI24xMIEZAPwv9SVliv1avaIBeE0ou471D++BRPhiw2mubKBczFFIDHXuSL7UXb8/JQK9Ui6ttW9bQ==}
-    peerDependencies:
-      playwright: '*'
-      safaridriver: '*'
-      vitest: workspace:*
-      webdriverio: '*'
-    peerDependenciesMeta:
-      playwright:
-        optional: true
-      safaridriver:
-        optional: true
-      webdriverio:
-        optional: true
-
   '@vitest/eslint-plugin@1.1.0':
     resolution: {integrity: sha512-Ur80Y27Wbw8gFHJ3cv6vypcjXmrx6QHfw+q435h6Q2L+tf+h4Xf5pJTCL4YU/Jps9EVeggQxS85OcUZU7sdXRw==}
     peerDependencies:
@@ -4026,23 +4012,8 @@ packages:
       vitest:
         optional: true
 
-  '@vitest/mocker@2.1.1':
-    resolution: {integrity: sha512-LNN5VwOEdJqCmJ/2XJBywB11DLlkbY0ooDJW3uRX5cZyYCrc4PI/ePX0iQhE3BiEGiQmK4GE7Q/PqCkkaiPnrA==}
-    peerDependencies:
-      '@vitest/spy': 2.1.1
-      msw: ^2.3.5
-      vite: ^5.4.0
-    peerDependenciesMeta:
-      msw:
-        optional: true
-      vite:
-        optional: true
-
   '@vitest/pretty-format@2.1.1':
     resolution: {integrity: sha512-SjxPFOtuINDUW8/UkElJYQSFtnWX7tMksSGW0vfjxMneFqxVr8YJ979QpMbDW7g+BIiq88RAGDjf7en6rvLPPQ==}
-
-  '@vitest/spy@2.1.2':
-    resolution: {integrity: sha512-GSUi5zoy+abNRJwmFhBDC0yRuVUn8WMlQscvnbbXdKLXX9dE59YbfwXxuJ/mth6eeqIzofU8BB5XDo/Ns/qK2A==}
 
   '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment':
     resolution: {directory: test/core/deps/dep-esm-comment, type: directory}
@@ -9168,7 +9139,7 @@ packages:
     peerDependencies:
       '@types/react': '>18.0.0'
       '@types/react-dom': '>18.0.0'
-      '@vitest/browser': ^2.1.0-beta.4
+      '@vitest/browser': workspace:*
       react: '>18.0.0'
       react-dom: '>18.0.0'
       vitest: workspace:*
@@ -12544,28 +12515,6 @@ snapshots:
       vite: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
       vue: 3.4.37(typescript@5.5.4)
 
-  '@vitest/browser@2.1.1(@vitest/spy@2.1.2)(playwright@1.46.1)(typescript@5.5.4)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
-    dependencies:
-      '@testing-library/dom': 10.4.0
-      '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
-      '@vitest/mocker': 2.1.1(@vitest/spy@2.1.2)(msw@2.3.5(typescript@5.5.4))(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))
-      '@vitest/utils': 2.1.1
-      magic-string: 0.30.11
-      msw: 2.3.5(typescript@5.5.4)
-      sirv: 2.0.4
-      tinyrainbow: 1.2.0
-      vitest: link:packages/vitest
-      ws: 8.18.0
-    optionalDependencies:
-      playwright: 1.46.1
-      webdriverio: 8.32.2(typescript@5.5.4)
-    transitivePeerDependencies:
-      - '@vitest/spy'
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - vite
-
   '@vitest/eslint-plugin@1.1.0(@typescript-eslint/utils@8.3.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4))(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)(vitest@packages+vitest)':
     dependencies:
       eslint: 9.9.0(jiti@1.21.6)
@@ -12574,22 +12523,9 @@ snapshots:
       typescript: 5.5.4
       vitest: link:packages/vitest
 
-  '@vitest/mocker@2.1.1(@vitest/spy@2.1.2)(msw@2.3.5(typescript@5.5.4))(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))':
-    dependencies:
-      '@vitest/spy': 2.1.2
-      estree-walker: 3.0.3
-      magic-string: 0.30.11
-    optionalDependencies:
-      msw: 2.3.5(typescript@5.5.4)
-      vite: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
-
   '@vitest/pretty-format@2.1.1':
     dependencies:
       tinyrainbow: 1.2.0
-
-  '@vitest/spy@2.1.2':
-    dependencies:
-      tinyspy: 3.0.0
 
   '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment': {}
 
