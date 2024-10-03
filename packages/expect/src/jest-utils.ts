@@ -676,7 +676,7 @@ export function getObjectKeys(object: object): Array<string | symbol> {
 export function getObjectSubset(
   object: any,
   subset: any,
-  customTesters: Array<Tester> = [],
+  customTesters: Array<Tester>,
 ): { subset: any; stripped: number } {
   let stripped = 0
 
@@ -702,12 +702,20 @@ export function getObjectSubset(
               subsetEquality,
             ])
           ) {
-          // Avoid unnecessary copy which might return Object instead of subclass.
+            // return "expected" subset to avoid showing irrelavant toMatchObject diff
             return subset
           }
 
           const trimmed: any = {}
           seenReferences.set(object, trimmed)
+
+          // preserve constructor for toMatchObject diff
+          if (typeof object.constructor === 'function' && typeof object.constructor.name === 'string') {
+            Object.defineProperty(trimmed, 'constructor', {
+              enumerable: false,
+              value: object.constructor,
+            })
+          }
 
           for (const key of getObjectKeys(object)) {
             if (hasPropertyInObject(subset, key)) {

@@ -195,6 +195,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const { subset: actualSubset, stripped } = getObjectSubset(
       actual,
       expected,
+      customTesters,
     )
     if ((pass && isNot) || (!pass && !isNot)) {
       const msg = utils.getMessage(this, [

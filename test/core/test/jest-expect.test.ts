@@ -927,12 +927,12 @@ function trim(s: string): string {
 function getError(f: () => unknown) {
   try {
     f()
-    return expect.unreachable()
   }
   catch (error) {
     const processed = processError(error)
     return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
   }
+  return expect.unreachable()
 }
 
 it('toMatchObject error diff', () => {
@@ -1056,6 +1056,126 @@ it('toMatchObject error diff', () => {
         ],
     -   "family": "House Atreides",
     +   "family": "House Harkonnen",
+      }",
+    ]
+  `)
+
+  // https://github.com/vitest-dev/vitest/issues/6543
+  class Foo {
+    constructor(public value: any) {}
+  }
+
+  class Bar {
+    constructor(public value: any) {}
+  }
+
+  expect(new Foo(0)).toMatchObject(new Bar(0))
+  expect(new Foo(0)).toMatchObject({ value: 0 })
+  expect({ value: 0 }).toMatchObject(new Bar(0))
+
+  expect(getError(() => expect(new Foo(0)).toMatchObject(new Bar(1)))).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: +0 } to match object Bar{ value: 1 }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": 1,
+    + Foo {
+    +   "value": 0,
+      }",
+    ]
+  `)
+
+  expect(getError(() => expect(new Foo(0)).toMatchObject({ value: 1 }))).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: +0 } to match object { value: 1 }",
+      "- Expected
+    + Received
+
+    - Object {
+    -   "value": 1,
+    + Foo {
+    +   "value": 0,
+      }",
+    ]
+  `)
+
+  expect(getError(() => expect({ value: 0 }).toMatchObject(new Bar(1)))).toMatchInlineSnapshot(`
+    [
+      "expected { value: +0 } to match object Bar{ value: 1 }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": 1,
+    + Object {
+    +   "value": 0,
+      }",
+    ]
+  `)
+
+  expect(getError(() =>
+    expect({
+      bad: new Foo(1),
+      good: new Foo(0),
+    }).toMatchObject({
+      bad: new Bar(2),
+      good: new Bar(0),
+    }),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected { bad: Foo{ value: 1 }, …(1) } to match object { bad: Bar{ value: 2 }, …(1) }",
+      "- Expected
+    + Received
+
+      Object {
+    -   "bad": Bar {
+    -     "value": 2,
+    +   "bad": Foo {
+    +     "value": 1,
+        },
+        "good": Bar {
+          "value": 0,
+        },
+      }",
+    ]
+  `)
+
+  expect(getError(() =>
+    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Bar(0))),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Bar{ value: +0 } }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": Bar {
+    -     "value": 0,
+    + Foo {
+    +   "value": Foo {
+    +     "value": 1,
+        },
+      }",
+    ]
+  `)
+
+  expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(1)))
+  expect(getError(() =>
+    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(2))),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Foo{ value: 2 } }",
+      "- Expected
+    + Received
+
+    - Bar {
+    + Foo {
+        "value": Foo {
+    -     "value": 2,
+    +     "value": 1,
+        },
       }",
     ]
   `)
