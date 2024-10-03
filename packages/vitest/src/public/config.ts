@@ -15,7 +15,11 @@ export { mergeConfig } from 'vite'
 export { extraInlineDeps } from '../constants'
 export type { Plugin } from 'vite'
 
-export type { ConfigEnv, ViteUserConfig as UserConfig }
+export type { ConfigEnv, ViteUserConfig }
+/**
+ * @deprecated Use `ViteUserConfig` instead
+ */
+export type UserConfig = ViteUserConfig
 export type { UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration }
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
 export type UserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
