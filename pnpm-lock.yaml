@@ -231,7 +231,7 @@ importers:
     devDependencies:
       '@vitest/browser':
         specifier: latest
-        version: 2.1.1(@vitest/spy@2.1.1)(playwright@1.46.1)(typescript@5.5.4)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))
+        version: 2.1.1(@vitest/spy@2.1.2)(playwright@1.46.1)(typescript@5.5.4)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))
       '@vitest/ui':
         specifier: latest
         version: 2.1.1(vitest@packages+vitest)
@@ -675,7 +675,7 @@ importers:
   packages/mocker:
     dependencies:
       '@vitest/spy':
-        specifier: workspace:^2.1.0-beta.1
+        specifier: workspace:*
         version: link:../spy
       estree-walker:
         specifier: ^3.0.3
@@ -4041,8 +4041,8 @@ packages:
   '@vitest/pretty-format@2.1.1':
     resolution: {integrity: sha512-SjxPFOtuINDUW8/UkElJYQSFtnWX7tMksSGW0vfjxMneFqxVr8YJ979QpMbDW7g+BIiq88RAGDjf7en6rvLPPQ==}
 
-  '@vitest/spy@2.1.1':
-    resolution: {integrity: sha512-ZM39BnZ9t/xZ/nF4UwRH5il0Sw93QnZXd9NAZGRpIgj0yvVwPpLd702s/Cx955rGaMlyBQkZJ2Ir7qyY48VZ+g==}
+  '@vitest/spy@2.1.2':
+    resolution: {integrity: sha512-GSUi5zoy+abNRJwmFhBDC0yRuVUn8WMlQscvnbbXdKLXX9dE59YbfwXxuJ/mth6eeqIzofU8BB5XDo/Ns/qK2A==}
 
   '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment':
     resolution: {directory: test/core/deps/dep-esm-comment, type: directory}
@@ -12544,11 +12544,11 @@ snapshots:
       vite: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
       vue: 3.4.37(typescript@5.5.4)
 
-  '@vitest/browser@2.1.1(@vitest/spy@2.1.1)(playwright@1.46.1)(typescript@5.5.4)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
+  '@vitest/browser@2.1.1(@vitest/spy@2.1.2)(playwright@1.46.1)(typescript@5.5.4)(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))(vitest@packages+vitest)(webdriverio@8.32.2(typescript@5.5.4))':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
-      '@vitest/mocker': 2.1.1(@vitest/spy@2.1.1)(msw@2.3.5(typescript@5.5.4))(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))
+      '@vitest/mocker': 2.1.1(@vitest/spy@2.1.2)(msw@2.3.5(typescript@5.5.4))(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))
       '@vitest/utils': 2.1.1
       magic-string: 0.30.11
       msw: 2.3.5(typescript@5.5.4)
@@ -12574,9 +12574,9 @@ snapshots:
       typescript: 5.5.4
       vitest: link:packages/vitest
 
-  '@vitest/mocker@2.1.1(@vitest/spy@2.1.1)(msw@2.3.5(typescript@5.5.4))(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))':
+  '@vitest/mocker@2.1.1(@vitest/spy@2.1.2)(msw@2.3.5(typescript@5.5.4))(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))':
     dependencies:
-      '@vitest/spy': 2.1.1
+      '@vitest/spy': 2.1.2
       estree-walker: 3.0.3
       magic-string: 0.30.11
     optionalDependencies:
@@ -12587,7 +12587,7 @@ snapshots:
     dependencies:
       tinyrainbow: 1.2.0
 
-  '@vitest/spy@2.1.1':
+  '@vitest/spy@2.1.2':
     dependencies:
       tinyspy: 3.0.0
 
