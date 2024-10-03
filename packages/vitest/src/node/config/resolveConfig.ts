@@ -207,6 +207,13 @@ export function resolveConfig(
     resolved.minWorkers = 1
   }
 
+  if (resolved.maxConcurrency === 0) {
+    logger.console.warn(
+      c.yellow(`The option "maxConcurrency" cannot be set to 0. Using default value ${configDefaults.maxConcurrency} instead.`),
+    )
+    resolved.maxConcurrency = configDefaults.maxConcurrency
+  }
+
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread
       = resolved.pool === 'threads'
