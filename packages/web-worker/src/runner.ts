@@ -1,8 +1,7 @@
-import type { ExecuteOptions } from 'vitest/execute'
 import { VitestExecutor } from 'vitest/execute'
 
 export class InlineWorkerRunner extends VitestExecutor {
-  constructor(options: ExecuteOptions, private context: any) {
+  constructor(options: any, private context: any) {
     // share the same mocker as main executor
     const mocker = (globalThis as any).__vitest_mocker__
     super(options)
