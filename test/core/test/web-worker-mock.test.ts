@@ -7,10 +7,10 @@ vi.mock(import('../src/web-worker/mock/worker-dep'), () => ({ workerDep: () => '
 test('mock', async () => {
   expect(workerDep()).toMatchInlineSnapshot(`"mocked"`)
   const worker = new Worker(new URL('../src/web-worker/mock/worker', import.meta.url))
-  await new Promise<void>((resolve) => {
+  const data = await new Promise((resolve) => {
     worker.addEventListener('message', (e) => {
-      expect(e.data).toMatchInlineSnapshot(`"mocked"`)
-      resolve()
+      resolve(e.data)
     })
   })
+  expect(data).toMatchInlineSnapshot(`"mocked"`)
 })
