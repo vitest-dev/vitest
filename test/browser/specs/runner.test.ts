@@ -1,26 +1,21 @@
-import { readFile } from 'node:fs/promises'
+import type { RunnerTestFile } from 'vitest'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { browser, runBrowserTests } from './utils'
 
 describe('running browser tests', async () => {
   let stderr: string
   let stdout: string
-  let browserResultJson: any
-  let passedTests: any[]
-  let failedTests: any[]
+  let testFiles: RunnerTestFile[]
+  let passedTests: RunnerTestFile[]
+  let failedTests: RunnerTestFile[]
 
   beforeAll(async () => {
-    ({
-      stderr,
-      stdout,
-    } = await runBrowserTests())
-
-    const browserResult = await readFile('./browser.json', 'utf-8')
-    browserResultJson = JSON.parse(browserResult)
-    const getPassed = results => results.filter(result => result.status === 'passed' && !result.mesage)
-    const getFailed = results => results.filter(result => result.status === 'failed')
-    passedTests = getPassed(browserResultJson.testResults)
-    failedTests = getFailed(browserResultJson.testResults)
+    const result = await runBrowserTests()
+    stdout = result.stdout
+    stderr = result.stderr
+    testFiles = result.ctx.state.getFiles()
+    passedTests = testFiles.filter(file => file.result.state === 'pass')
+    failedTests = testFiles.filter(file => file.result.state === 'fail')
   })
 
   test('tests are actually running', () => {
@@ -28,7 +23,7 @@ describe('running browser tests', async () => {
       console.error(stderr)
     })
 
-    expect(browserResultJson.testResults).toHaveLength(19)
+    expect(testFiles).toHaveLength(19)
     expect(passedTests).toHaveLength(17)
     expect(failedTests).toHaveLength(2)
 
@@ -38,9 +33,9 @@ describe('running browser tests', async () => {
 
   test('runs in-source tests', () => {
     expect(stdout).toContain('src/actions.ts')
-    const actionsTest = passedTests.find(t => t.name.includes('/actions.ts'))
+    const actionsTest = passedTests.find(t => t.name === 'src/actions.ts')
     expect(actionsTest).toBeDefined()
-    expect(actionsTest.assertionResults).toHaveLength(1)
+    expect(actionsTest.tasks[0].name).toBe('in-source plus works correctly')
   })
 
   test('correctly prints error', () => {
