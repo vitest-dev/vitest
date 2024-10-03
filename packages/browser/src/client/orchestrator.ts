@@ -273,6 +273,10 @@ async function setIframeViewport(
   if (ui) {
     await ui.setIframeViewport(width, height)
   }
+  else if (getBrowserState().provider === 'webdriverio') {
+    iframe.style.width = `${width}px`
+    iframe.style.height = `${height}px`
+  }
   else {
     const scale = Math.min(
       1,
