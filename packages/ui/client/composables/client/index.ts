@@ -1,19 +1,20 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, SerializedConfig, TaskResultPack } from 'vitest'
+import type { File, SerializedConfig, Task, TaskResultPack } from 'vitest'
 import { reactive as reactiveVue } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
 import type { BrowserRunnerState } from '../../../types'
-import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
-import { ui } from '../../composables/api'
 import { createStaticClient } from './static'
 import { testRunState, unhandledErrors } from './state'
+import { ui } from '~/composables/api'
+import { ENTRY_URL, isReport } from '~/constants'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
+import { isSuite as isTaskSuite } from '~/utils/task'
 
-export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
+export { ENTRY_URL, PORT, HOST, isReport } from '~/constants'
 
 export const client = (function createVitestClient() {
   if (isReport) {
@@ -68,6 +69,19 @@ export function runAll() {
   return runFiles(client.state.getFiles()/* , true */)
 }
 
+function clearTaskResult(patterns: string[], task: Task) {
+  patterns.push(task.name)
+  delete task.result
+  const node = explorerTree.nodes.get(task.id)
+  if (node) {
+    node.state = undefined
+    node.duration = undefined
+    if (isTaskSuite(task)) {
+      getTasks(task.tasks).forEach(t => clearTaskResult(patterns, t))
+    }
+  }
+}
+
 function clearResults(useFiles: File[]) {
   const map = explorerTree.nodes
   useFiles.forEach((f) => {
@@ -99,6 +113,15 @@ export function runFiles(useFiles: File[]) {
   explorerTree.startRun()
 
   return client.rpc.rerun(useFiles.map(i => i.filepath))
+}
+
+export function runTestOrSuite(task: Task) {
+  const patterns: string[] = []
+  clearTaskResult(patterns, task)
+
+  explorerTree.startRun()
+
+  return client.rpc.rerunTestOrSuite(task.file.filepath, patterns, task.file.projectName)
 }
 
 export function runCurrent() {

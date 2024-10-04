@@ -3,7 +3,7 @@ import type { Task, TaskState } from '@vitest/runner'
 import { nextTick } from 'vue'
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { Tooltip as VueTooltip } from 'floating-vue'
-import { client, isReport, runFiles } from '~/composables/client'
+import { client, isReport, runFiles, runTestOrSuite } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer'
@@ -24,6 +24,7 @@ const {
   disableTaskLocation,
   onItemClick,
   projectNameColor,
+  state,
 } = defineProps<{
   taskId: string
   name: string
@@ -68,12 +69,22 @@ function toggleOpen() {
 }
 
 async function onRun(task: Task) {
+  if (!state || state === 'skip' || state === 'todo') {
+    return
+  }
+
   onItemClick?.(task)
   if (coverageEnabled.value) {
     disableCoverage.value = true
     await nextTick()
   }
-  await runFiles([task.file])
+
+  if (type === 'file') {
+    await runFiles([task.file])
+  }
+  else {
+    await runTestOrSuite(task)
+  }
 }
 
 function updateSnapshot(task: Task) {
@@ -224,7 +235,7 @@ const projectNameTextColor = computed(() => {
         title="Run current test"
         icon="i-carbon:play-filled-alt"
         text-green5
-        :disabled="type !== 'file'"
+        :disabled="!state || state === 'skip' || state === 'todo'"
         @click.prevent.stop="onRun(task)"
       />
     </div>

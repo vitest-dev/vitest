@@ -688,6 +688,30 @@ export class Vitest {
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
+  async rerunTestOrSuite(filename: string, names: string[], projectName?: string, trigger?: string) {
+    console.log('rerunTestOrSuite', { filename, names, projectName })
+    const useProjects = projectName ? this.projects.filter(p => p.getName() === projectName) : this.projects
+    const files: WorkspaceSpec[] = []
+    await Promise.all(useProjects.map(async (project) => {
+      const { testFiles, typecheckTestFiles } = await project.globTestFiles(names)
+      testFiles.forEach((file) => {
+        const pool = getFilePoolName(project, file)
+        const spec = project.createSpec(file, pool)
+        this.ensureSpecCached(spec)
+        files.push(spec)
+      })
+      typecheckTestFiles.forEach((file) => {
+        const spec = project.createSpec(file, 'typescript')
+        this.ensureSpecCached(spec)
+        files.push(spec)
+      })
+    }))
+
+    await this.report('onWatcherRerun', [filename], trigger)
+    await this.runFiles(files, !trigger)
+    await this.report('onWatcherStart', this.state.getFiles([filename]))
+  }
+
   async changeProjectName(pattern: string) {
     if (pattern === '') {
       delete this.configOverride.project
