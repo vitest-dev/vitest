@@ -45,7 +45,7 @@ export interface WebSocketHandlers {
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
   rerun: (files: string[]) => Promise<void>
-  rerunTestOrSuite: (filename: string, names: string[], projectName?: string) => Promise<void>
+  rerunTestOrSuite: (filename: string, ids: string[]) => Promise<void>
   updateSnapshot: (file?: File) => Promise<void>
   getUnhandledErrors: () => unknown[]
 }
