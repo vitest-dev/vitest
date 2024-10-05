@@ -69,7 +69,7 @@ function toggleOpen() {
 }
 
 async function onRun(task: Task) {
-  if (!state || state === 'todo') {
+  if (!state || state === 'skip' || state === 'todo') {
     return
   }
 
@@ -235,7 +235,7 @@ const projectNameTextColor = computed(() => {
         title="Run current test"
         icon="i-carbon:play-filled-alt"
         text-green5
-        :disabled="!state || state === 'todo'"
+        :disabled="!state || state === 'skip' || state === 'todo'"
         @click.prevent.stop="onRun(task)"
       />
     </div>

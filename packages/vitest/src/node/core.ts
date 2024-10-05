@@ -8,6 +8,7 @@ import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
+import type { RunnerTask, RunnerTestSuite } from '../public'
 import { version } from '../../package.json' with { type: 'json' }
 import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
@@ -676,8 +677,11 @@ export class Vitest {
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
-    this.configOverride.testNamePattern = undefined
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, resetTestNamePattern = false) {
+    if (resetTestNamePattern) {
+      this.configOverride.testNamePattern = undefined
+    }
+
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
@@ -689,18 +693,34 @@ export class Vitest {
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
-  async rerunTestOrSuite(filename: string, ids: string[]) {
-    const patterns: string[] = []
-    for (const id of ids) {
-      const task = this.state.idMap.get(id)
-      if (task) {
-        patterns.push(task.name)
+  private isSuite(task: RunnerTask): task is RunnerTestSuite {
+    return Object.hasOwnProperty.call(task, 'tasks')
+  }
+
+  private collectTasks(task: RunnerTask, patterns: string[]) {
+    if (this.isSuite(task)) {
+      for (const child of task.tasks) {
+        this.collectTasks(child, patterns)
       }
+    }
+    else {
+      patterns.push(task.name)
+    }
+  }
+
+  async rerunTestOrSuite(id: string, filename: string) {
+    const patterns: string[] = []
+    const task = this.state.idMap.get(id)
+    let trigger = 'rerun test file'
+    if (task) {
+      trigger = this.isSuite(task) ? 'rerun suite' : 'rerun test'
+      // this.collectTasks(task, patterns)
+      patterns.push(task.name)
     }
     await this.changeNamePattern(
       patterns.length ? patterns.join('|') : '',
       [filename],
-      patterns.length ? 'rerun test or suite' : 'rerun test file',
+      trigger,
     )
   }
 
@@ -708,7 +728,9 @@ export class Vitest {
     if (pattern === '') {
       delete this.configOverride.project
     }
-    else { this.configOverride.project = pattern }
+    else {
+      this.configOverride.project = pattern
+    }
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)

@@ -69,8 +69,7 @@ export function runAll() {
   return runFiles(client.state.getFiles()/* , true */)
 }
 
-function clearTaskResult(patterns: string[], task: Task) {
-  patterns.push(task.id)
+function clearTaskResult(task: Task) {
   delete task.result
   const node = explorerTree.nodes.get(task.id)
   if (node) {
@@ -78,7 +77,7 @@ function clearTaskResult(patterns: string[], task: Task) {
     node.duration = undefined
     if (isTaskSuite(task)) {
       for (const t of task.tasks) {
-        clearTaskResult(patterns, t)
+        clearTaskResult(t)
       }
     }
   }
@@ -114,38 +113,15 @@ export function runFiles(useFiles: File[]) {
 
   explorerTree.startRun()
 
-  return client.rpc.rerun(useFiles.map(i => i.filepath))
+  return client.rpc.rerun(useFiles.map(i => i.filepath), true)
 }
 
 export function runTestOrSuite(task: Task) {
-  const ids: string[] = []
-  clearTaskResult(ids, task)
-
-  // we also need to send the parent ids: the state doesn't have the parent ids
-  let parent = explorerTree.nodes.get(task.id)?.parentId
-  while (parent) {
-    const node = explorerTree.nodes.get(parent)
-    if (node) {
-      const parentTask = client.state.idMap.get(node.id)
-      if (parentTask) {
-        ids.unshift(parentTask.id)
-        delete parentTask.result
-        node.state = undefined
-        node.duration = undefined
-      }
-      else {
-        break
-      }
-      parent = explorerTree.nodes.get(node.id)?.parentId
-    }
-    else {
-      break
-    }
-  }
+  clearTaskResult(task)
 
   explorerTree.startRun()
 
-  return client.rpc.rerunTestOrSuite(task.file.filepath, ids)
+  return client.rpc.rerunTestOrSuite(task.id, task.file.filepath)
 }
 
 export function runCurrent() {
