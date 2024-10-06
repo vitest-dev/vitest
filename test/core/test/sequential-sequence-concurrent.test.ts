@@ -10,26 +10,28 @@ const delay = (timeout: number) => new Promise(resolve => setTimeout(resolve, ti
 
 let count = 0
 
-describe.sequential('running sequential suite when sequence.concurrent is true', () => {
-  test('first test completes first', async ({ task }) => {
+describe.concurrent('concurrent parent suite', () => {
+  describe.sequential('running sequential suite when sequence.concurrent is true', () => {
+    test('first test completes first', async ({ task }) => {
+      await delay(50)
+      expect(task.concurrent).toBeFalsy()
+      expect(++count).toBe(1)
+    })
+
+    test('second test completes second', ({ task }) => {
+      expect(task.concurrent).toBeFalsy()
+      expect(++count).toBe(2)
+    })
+  })
+
+  test.sequential('third test completes third', async ({ task }) => {
     await delay(50)
     expect(task.concurrent).toBeFalsy()
-    expect(++count).toBe(1)
+    expect(++count).toBe(3)
   })
 
-  test('second test completes second', ({ task }) => {
+  test.sequential('fourth test completes fourth', ({ task }) => {
     expect(task.concurrent).toBeFalsy()
-    expect(++count).toBe(2)
+    expect(++count).toBe(4)
   })
-})
-
-test.sequential('third test completes third', async ({ task }) => {
-  await delay(50)
-  expect(task.concurrent).toBeFalsy()
-  expect(++count).toBe(3)
-})
-
-test.sequential('fourth test completes fourth', ({ task }) => {
-  expect(task.concurrent).toBeFalsy()
-  expect(++count).toBe(4)
 })
