@@ -68,10 +68,11 @@ global stderr afterAll`,
   )
 })
 
-test('interleave', async () => {
+test.for(['forks', 'threads'])('interleave (pool = %s)', async (pool) => {
   const logs: UserConsoleLog[] = []
   const { stderr } = await runVitest({
     root: './fixtures',
+    pool,
     reporters: [
       {
         onUserConsoleLog(log) {
