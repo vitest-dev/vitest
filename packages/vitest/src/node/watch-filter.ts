@@ -15,7 +15,6 @@ export interface FilterType {
 }
 type FilterItemType<T extends 'string' | 'object' = 'string'> = T extends 'string' ? string : FilterType
 type FilterFuncType<T extends 'string' | 'object' = 'string'> = (keyword: string) => Promise<FilterItemType<T>[]> | FilterItemType<T>[]
-// type FilterPatternFunc = (keyword: string) => Promise<{ name: string; toString: () => string }[]>
 
 export class WatchFilter<T extends 'string' | 'object' = 'string'> {
   private filterRL: readline.Interface
