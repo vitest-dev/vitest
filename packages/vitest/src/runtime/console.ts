@@ -84,7 +84,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       sendLog(type, taskId, content, buffer.length)
     }
     const timer = timers.get(taskId)!
-    buffers.set(taskId, [])
+    buffers.delete(taskId)
     if (type === 'stderr') {
       timer.stderrTime = 0
     }
