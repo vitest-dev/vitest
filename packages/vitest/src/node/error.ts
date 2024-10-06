@@ -1,12 +1,12 @@
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
+import { stripVTControlCharacters } from 'node:util'
 import { normalize, relative } from 'pathe'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
+import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import { inspect } from '@vitest/utils'
-import stripAnsi from 'strip-ansi'
-import type { ErrorWithDiff, ParsedStack } from '../types'
 import {
   lineSplitRE,
   positionToOffset,
@@ -274,15 +274,15 @@ function printModuleWarningForPackage(
     c.yellow(
       `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
       + `You might want to create an issue to the package ${c.bold(
-          `"${name}"`,
-        )} asking `
-        + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
-        + '\n\n'
-        + 'As a temporary workaround you can try to inline the package by updating your config:'
-        + '\n\n'
-        + c.gray(c.dim('// vitest.config.js'))
-        + '\n'
-        + c.green(`export default {
+        `"${name}"`,
+      )} asking `
+      + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
+      + '\n\n'
+      + 'As a temporary workaround you can try to inline the package by updating your config:'
+      + '\n\n'
+      + c.gray(c.dim('// vitest.config.js'))
+      + '\n'
+      + c.green(`export default {
   test: {
     server: {
       deps: {
@@ -306,7 +306,7 @@ function printModuleWarningForSourceCode(logger: Logger, path: string) {
   )
 }
 
-export function displayDiff(diff: string | null, console: Console) {
+export function displayDiff(diff: string | undefined, console: Console) {
   if (diff) {
     console.error(`\n${diff}\n`)
   }
@@ -319,7 +319,7 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
     return
   }
   if (error.message.length > 5000) {
-    // Protect against infinite stack trace in picocolors
+    // Protect against infinite stack trace in tinyrainbow
     logger.error(`${c.red(c.bold(errorName))}: ${error.message}`)
   }
   else {
@@ -387,10 +387,6 @@ export function generateCodeFrame(
 
   const columns = process.stdout?.columns || 80
 
-  function lineNo(no: number | string = '') {
-    return c.gray(`${String(no).padStart(3, ' ')}| `)
-  }
-
   for (let i = 0; i < lines.length; i++) {
     count += lines[i].length + nl
     if (count >= start) {
@@ -402,7 +398,7 @@ export function generateCodeFrame(
         const lineLength = lines[j].length
 
         // too long, maybe it's a minified file, skip for codeframe
-        if (stripAnsi(lines[j]).length > 200) {
+        if (stripVTControlCharacters(lines[j]).length > 200) {
           return ''
         }
 
@@ -437,4 +433,8 @@ export function generateCodeFrame(
   }
 
   return res.join('\n')
+}
+
+function lineNo(no: number | string = '') {
+  return c.gray(`${String(no).padStart(3, ' ')}| `)
 }

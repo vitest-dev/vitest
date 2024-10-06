@@ -1,10 +1,11 @@
 import { Writable } from 'node:stream'
 import { Console } from 'node:console'
 import { relative } from 'node:path'
-import { getColors, getSafeTimers } from '@vitest/utils'
+import { getSafeTimers } from '@vitest/utils'
+import c from 'tinyrainbow'
 import { RealDate } from '../integrations/mock/date'
 import { getWorkerState } from '../utils'
-import type { WorkerGlobalState } from '../types'
+import type { WorkerGlobalState } from '../types/worker'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
@@ -83,7 +84,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       sendLog(type, taskId, content, buffer.length)
     }
     const timer = timers.get(taskId)!
-    buffers.set(taskId, [])
+    buffers.delete(taskId)
     if (type === 'stderr') {
       timer.stderrTime = 0
     }
@@ -203,7 +204,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   return new Console({
     stdout,
     stderr,
-    colorMode: getColors().isColorSupported,
+    colorMode: c.isColorSupported,
     groupIndentation: 2,
   })
 }

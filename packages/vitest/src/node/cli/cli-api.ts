@@ -1,12 +1,18 @@
-import { resolve } from 'pathe'
+/* eslint-disable no-console */
+
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { File, Suite, Task } from '@vitest/runner'
 import { CoverageProviderMap } from '../../integrations/coverage'
-import { getEnvPackageName } from '../../integrations/env'
-import type { UserConfig, Vitest, VitestRunMode } from '../../types'
+import type { environments } from '../../integrations/env'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
-import type { VitestOptions } from '../core'
+import type { Vitest, VitestOptions } from '../core'
 import { FilesNotFoundError, GitNotFoundError } from '../errors'
+import { getNames, getTests } from '../../utils'
+import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
+import type { WorkspaceSpec } from '../pool'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -17,6 +23,14 @@ export interface CliOptions extends UserConfig {
    * Removes colors from the console output
    */
   color?: boolean
+  /**
+   * Output collected tests as JSON or to a file
+   */
+  json?: string | boolean
+  /**
+   * Output collected test files only
+   */
+  filesOnly?: boolean
 }
 
 /**
@@ -31,27 +45,14 @@ export async function startVitest(
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
 ): Promise<Vitest | undefined> {
-  process.env.TEST = 'true'
-  process.env.VITEST = 'true'
-  process.env.NODE_ENV ??= 'test'
-
-  if (options.run) {
-    options.watch = false
-  }
-
-  // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  // running "vitest --browser.headless"
-  if (typeof options.browser === 'object' && !('enabled' in options.browser)) {
-    options.browser.enabled = true
-  }
-
-  if (typeof options.typecheck?.only === 'boolean') {
-    options.typecheck.enabled ??= true
-  }
-
-  const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
+  const ctx = await prepareVitest(
+    mode,
+    options,
+    viteOverrides,
+    vitestOptions,
+  )
 
   if (mode === 'test' && ctx.config.coverage.enabled) {
     const provider = ctx.config.coverage.provider || 'v8'
@@ -59,22 +60,12 @@ export async function startVitest(
 
     if (requiredPackages) {
       if (
-        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root))
+        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))
       ) {
         process.exitCode = 1
         return ctx
       }
     }
-  }
-
-  const environmentPackage = getEnvPackageName(ctx.config.environment)
-
-  if (
-    environmentPackage
-    && !(await ctx.packageInstaller.ensureInstalled(environmentPackage, root))
-  ) {
-    process.exitCode = 1
-    return ctx
   }
 
   const stdin = vitestOptions?.stdin || process.stdin
@@ -131,4 +122,186 @@ export async function startVitest(
   stdinCleanup?.()
   await ctx.close()
   return ctx
+}
+
+export async function prepareVitest(
+  mode: VitestRunMode,
+  options: CliOptions = {},
+  viteOverrides?: ViteUserConfig,
+  vitestOptions?: VitestOptions,
+): Promise<Vitest> {
+  process.env.TEST = 'true'
+  process.env.VITEST = 'true'
+  process.env.NODE_ENV ??= 'test'
+
+  if (options.run) {
+    options.watch = false
+  }
+
+  // this shouldn't affect _application root_ that can be changed inside config
+  const root = resolve(options.root || process.cwd())
+
+  // running "vitest --browser.headless"
+  if (typeof options.browser === 'object' && !('enabled' in options.browser)) {
+    options.browser.enabled = true
+  }
+
+  if (typeof options.typecheck?.only === 'boolean') {
+    options.typecheck.enabled ??= true
+  }
+
+  const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
+
+  const environmentPackage = getEnvPackageName(ctx.config.environment)
+
+  if (
+    environmentPackage
+    && !(await ctx.packageInstaller.ensureInstalled(environmentPackage, root))
+  ) {
+    process.exitCode = 1
+    return ctx
+  }
+
+  return ctx
+}
+
+export function processCollected(ctx: Vitest, files: File[], options: CliOptions) {
+  let errorsPrinted = false
+
+  forEachSuite(files, (suite) => {
+    const errors = suite.result?.errors || []
+    errors.forEach((error) => {
+      errorsPrinted = true
+      ctx.logger.printError(error, {
+        project: ctx.getProjectByName(suite.file.projectName),
+      })
+    })
+  })
+
+  if (errorsPrinted) {
+    return
+  }
+
+  if (typeof options.json !== 'undefined') {
+    return processJsonOutput(files, options)
+  }
+
+  return formatCollectedAsString(files).forEach(test => console.log(test))
+}
+
+export function outputFileList(files: WorkspaceSpec[], options: CliOptions) {
+  if (typeof options.json !== 'undefined') {
+    return outputJsonFileList(files, options)
+  }
+
+  return formatFilesAsString(files, options).map(file => console.log(file))
+}
+
+function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions) {
+  if (typeof options.json === 'boolean') {
+    return console.log(JSON.stringify(formatFilesAsJSON(files), null, 2))
+  }
+  if (typeof options.json === 'string') {
+    const jsonPath = resolve(options.root || process.cwd(), options.json)
+    mkdirSync(dirname(jsonPath), { recursive: true })
+    writeFileSync(jsonPath, JSON.stringify(formatFilesAsJSON(files), null, 2))
+  }
+}
+
+function formatFilesAsJSON(files: WorkspaceSpec[]) {
+  return files.map((file) => {
+    const result: any = {
+      file: file.moduleId,
+    }
+
+    if (file.project.name) {
+      result.projectName = file.project.name
+    }
+    return result
+  })
+}
+
+function formatFilesAsString(files: WorkspaceSpec[], options: CliOptions) {
+  return files.map((file) => {
+    let name = relative(options.root || process.cwd(), file.moduleId)
+    if (file.project.name) {
+      name = `[${file.project.name}] ${name}`
+    }
+    return name
+  })
+}
+
+function processJsonOutput(files: File[], options: CliOptions) {
+  if (typeof options.json === 'boolean') {
+    return console.log(JSON.stringify(formatCollectedAsJSON(files), null, 2))
+  }
+
+  if (typeof options.json === 'string') {
+    const jsonPath = resolve(options.root || process.cwd(), options.json)
+    mkdirSync(dirname(jsonPath), { recursive: true })
+    writeFileSync(jsonPath, JSON.stringify(formatCollectedAsJSON(files), null, 2))
+  }
+}
+
+function forEachSuite(tasks: Task[], callback: (suite: Suite) => void) {
+  tasks.forEach((task) => {
+    if (task.type === 'suite') {
+      callback(task)
+      forEachSuite(task.tasks, callback)
+    }
+  })
+}
+
+export function formatCollectedAsJSON(files: File[]) {
+  return files.map((file) => {
+    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
+    return tests.map((test) => {
+      const result: any = {
+        name: getNames(test).slice(1).join(' > '),
+        file: file.filepath,
+      }
+      if (test.file.projectName) {
+        result.projectName = test.file.projectName
+      }
+      if (test.location) {
+        result.location = test.location
+      }
+      return result
+    })
+  }).flat()
+}
+
+export function formatCollectedAsString(files: File[]) {
+  return files.map((file) => {
+    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
+    return tests.map((test) => {
+      const name = getNames(test).join(' > ')
+      if (test.file.projectName) {
+        return `[${test.file.projectName}] ${name}`
+      }
+      return name
+    })
+  }).flat()
+}
+
+const envPackageNames: Record<
+  Exclude<keyof typeof environments, 'node'>,
+  string
+> = {
+  'jsdom': 'jsdom',
+  'happy-dom': 'happy-dom',
+  'edge-runtime': '@edge-runtime/vm',
+}
+
+function getEnvPackageName(env: VitestEnvironment) {
+  if (env === 'node') {
+    return null
+  }
+  if (env in envPackageNames) {
+    return (envPackageNames as any)[env]
+  }
+  if (env[0] === '.' || env[0] === '/') {
+    return null
+  }
+  return `vitest-environment-${env}`
 }

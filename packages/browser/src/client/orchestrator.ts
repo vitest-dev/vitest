@@ -1,11 +1,11 @@
-import type { ResolvedConfig } from 'vitest'
+import { channel, client } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
+import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from '@vitest/browser/client'
 import { relative } from 'pathe'
-import { channel, client } from './client'
+import type { SerializedConfig } from 'vitest'
 import { getBrowserState, getConfig } from './utils'
 import { getUiAPI } from './ui'
-import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from './channel'
-import { createModuleMocker } from './tester/msw'
+import { createModuleMockerInterceptor } from './tester/msw'
 
 const url = new URL(location.href)
 const ID_ALL = '__vitest_all__'
@@ -13,7 +13,7 @@ const ID_ALL = '__vitest_all__'
 class IframeOrchestrator {
   private cancelled = false
   private runningFiles = new Set<string>()
-  private mocker = createModuleMocker()
+  private interceptor = createModuleMockerInterceptor()
   private iframes = new Map<string, HTMLIFrameElement>()
 
   public async init() {
@@ -43,7 +43,8 @@ class IframeOrchestrator {
     const container = await getContainer(config)
 
     if (config.browser.ui) {
-      container.className = 'scrolls'
+      container.className = 'absolute origin-top mt-[8px]'
+      container.parentElement!.setAttribute('data-ready', 'true')
       container.textContent = ''
     }
     const { width, height } = config.browser.viewport
@@ -99,10 +100,9 @@ class IframeOrchestrator {
     )
     iframe.setAttribute('data-vitest', 'true')
 
-    iframe.style.display = 'block'
     iframe.style.border = 'none'
-    iframe.style.zIndex = '1'
-    iframe.style.position = 'relative'
+    iframe.style.width = '100%'
+    iframe.style.height = '100%'
     iframe.setAttribute('allowfullscreen', 'true')
     iframe.setAttribute('allow', 'clipboard-write;')
     iframe.setAttribute('name', 'vitest-iframe')
@@ -187,13 +187,13 @@ class IframeOrchestrator {
         break
       }
       case 'mock:invalidate':
-        this.mocker.invalidate()
+        this.interceptor.invalidate()
         break
       case 'unmock':
-        await this.mocker.unmock(e.data)
+        await this.interceptor.delete(e.data.url)
         break
       case 'mock':
-        await this.mocker.mock(e.data)
+        await this.interceptor.register(e.data.module)
         break
       case 'mock-factory:error':
       case 'mock-factory:response':
@@ -230,7 +230,7 @@ async function done() {
   await client.rpc.finishBrowserTests(getBrowserState().contextId)
 }
 
-async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
+async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
   if (config.browser.ui) {
     const element = document.querySelector('#tester-ui')
     if (!element) {
@@ -245,7 +245,7 @@ async function getContainer(config: ResolvedConfig): Promise<HTMLDivElement> {
   return document.querySelector('#vitest-tester') as HTMLDivElement
 }
 
-client.ws.addEventListener('open', async () => {
+client.waitForConnection().then(async () => {
   const testFiles = getBrowserState().files
 
   await orchestrator.init()

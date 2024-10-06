@@ -16,19 +16,12 @@
         min-height: 100vh;
       }
     </style>
-    <script>{__VITEST_INJECTOR__}</script>
+    {__VITEST_INJECTOR__}
     <script>{__VITEST_STATE__}</script>
+    {__VITEST_INTERNAL_SCRIPTS__}
     {__VITEST_SCRIPTS__}
   </head>
-  <body
-    data-vitest-body
-    style="
-      width: 100%;
-      height: 100%;
-      transform: scale(1);
-      transform-origin: left top;
-    "
-  >
+  <body>
     <script type="module" src="./tester.ts"></script>
     {__VITEST_APPEND__}
   </body>

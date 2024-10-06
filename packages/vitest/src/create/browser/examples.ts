@@ -27,10 +27,9 @@ import { expect, test } from 'vitest'
 import { render } from '@testing-library/jsx'
 import HelloWorld from './HelloWorld.jsx'
 
-test('renders name', () => {
+test('renders name', async () => {
   const { getByText } = render(<HelloWorld name="Vitest" />)
-  const element = getByText('Hello Vitest!')
-  expect(element).toBeInTheDocument()
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
 }
@@ -65,15 +64,14 @@ defineProps<{
 `,
   test: `
 import { expect, test } from 'vitest'
-import { render } from '@testing-library/vue'
+import { render } from 'vitest-browser-vue'
 import HelloWorld from './HelloWorld.vue'
 
-test('renders name', () => {
+test('renders name', async () => {
   const { getByText } = render(HelloWorld, {
     props: { name: 'Vitest' },
   })
-  const element = getByText('Hello Vitest!')
-  expect(element).toBeInTheDocument()
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
 }
@@ -96,15 +94,12 @@ const svelteExample = {
 `,
   test: `
 import { expect, test } from 'vitest'
-import { render } from '@testing-library/svelte'
+import { render } from 'vitest-browser-svelte'
 import HelloWorld from './HelloWorld.svelte'
 
-test('renders name', () => {
-  const { getByText } = render(HelloWorld, {
-    props: { name: 'Vitest' },
-  })
-  const element = getByText('Hello Vitest!')
-  expect(element).toBeInTheDocument()
+test('renders name', async () => {
+  const { getByText } = render(HelloWorld, { name: 'Vitest' })
+  await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
 `,
 }
@@ -145,7 +140,6 @@ const vanillaExample = {
   js: `
 export default function HelloWorld({ name }) {
   const parent = document.createElement('div')
-  document.body.appendChild(parent)
 
   const h1 = document.createElement('h1')
   h1.textContent = 'Hello ' + name + '!'
@@ -157,7 +151,6 @@ export default function HelloWorld({ name }) {
   ts: `
 export default function HelloWorld({ name }: { name: string }): HTMLDivElement {
   const parent = document.createElement('div')
-  document.body.appendChild(parent)
 
   const h1 = document.createElement('h1')
   h1.textContent = 'Hello ' + name + '!'
@@ -169,10 +162,11 @@ export default function HelloWorld({ name }: { name: string }): HTMLDivElement {
   test: `
 import { expect, test } from 'vitest'
 import { getByText } from '@testing-library/dom'
-import HelloWorld from './HelloWorld'
+import HelloWorld from './HelloWorld.js'
 
 test('renders name', () => {
   const parent = HelloWorld({ name: 'Vitest' })
+  document.body.appendChild(parent)
 
   const element = getByText(parent, 'Hello Vitest!')
   expect(element).toBeInTheDocument()
@@ -184,10 +178,14 @@ function getExampleTest(framework: string) {
   switch (framework) {
     case 'solid':
     case 'preact':
-    case 'react':
       return {
         ...jsxExample,
         test: jsxExample.test.replace('@testing-library/jsx', `@testing-library/${framework}`),
+      }
+    case 'react':
+      return {
+        ...jsxExample,
+        test: jsxExample.test.replace('@testing-library/jsx', 'vitest-browser-react'),
       }
     case 'vue':
       return vueExample

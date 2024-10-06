@@ -1,7 +1,9 @@
 import { relative } from 'pathe'
 import mm from 'micromatch'
 import type { CoverageMap } from 'istanbul-lib-coverage'
-import type { BaseCoverageOptions, ResolvedCoverageOptions } from '../types'
+import type { Vitest } from '../node/core'
+import type { BaseCoverageOptions, ResolvedCoverageOptions } from '../node/types/coverage'
+import { resolveCoverageReporters } from '../node/config/resolveConfig'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
 
@@ -182,7 +184,6 @@ export class BaseCoverageProvider {
   }): ResolvedThreshold[] {
     const resolvedThresholds: ResolvedThreshold[] = []
     const files = coverageMap.files()
-    const filesMatchedByGlobs: string[] = []
     const globalCoverageMap = createCoverageMap()
 
     for (const key of Object.keys(
@@ -204,7 +205,6 @@ export class BaseCoverageProvider {
       const matchingFiles = files.filter(file =>
         mm.isMatch(relative(root, file), glob),
       )
-      filesMatchedByGlobs.push(...matchingFiles)
 
       for (const file of matchingFiles) {
         const fileCoverage = coverageMap.fileCoverageFor(file)
@@ -218,10 +218,8 @@ export class BaseCoverageProvider {
       })
     }
 
-    // Global threshold is for all files that were not included by glob patterns
-    for (const file of files.filter(
-      file => !filesMatchedByGlobs.includes(file),
-    )) {
+    // Global threshold is for all files, even if they are included by glob patterns
+    for (const file of files) {
       const fileCoverage = coverageMap.fileCoverageFor(file)
       globalCoverageMap.addFileCoverage(fileCoverage)
     }
@@ -246,25 +244,7 @@ export class BaseCoverageProvider {
   resolveReporters(
     configReporters: NonNullable<BaseCoverageOptions['reporter']>,
   ): ResolvedCoverageOptions['reporter'] {
-    // E.g. { reporter: "html" }
-    if (!Array.isArray(configReporters)) {
-      return [[configReporters, {}]]
-    }
-
-    const resolvedReporters: ResolvedCoverageOptions['reporter'] = []
-
-    for (const reporter of configReporters) {
-      if (Array.isArray(reporter)) {
-        // E.g. { reporter: [ ["html", { skipEmpty: true }], ["lcov"], ["json", { file: "map.json" }] ]}
-        resolvedReporters.push([reporter[0], reporter[1] || {}])
-      }
-      else {
-        // E.g. { reporter: ["html", "json"]}
-        resolvedReporters.push([reporter, {}])
-      }
-    }
-
-    return resolvedReporters
+    return resolveCoverageReporters(configReporters) as any
   }
 
   hasTerminalReporter(reporters: ResolvedCoverageOptions['reporter']) {
@@ -293,6 +273,37 @@ export class BaseCoverageProvider {
       return chunks
     }, [])
   }
+
+  createUncoveredFileTransformer(ctx: Vitest) {
+    const servers = [
+      ...ctx.projects.map(project => ({
+        root: project.config.root,
+        vitenode: project.vitenode,
+      })),
+      // Check core last as it will match all files anyway
+      { root: ctx.config.root, vitenode: ctx.vitenode },
+    ]
+
+    return async function transformFile(filename: string) {
+      let lastError
+
+      for (const { root, vitenode } of servers) {
+        if (!filename.startsWith(root)) {
+          continue
+        }
+
+        try {
+          return await vitenode.transformRequest(filename)
+        }
+        catch (error) {
+          lastError = error
+        }
+      }
+
+      // All vite-node servers failed to transform the file
+      throw lastError
+    }
+  }
 }
 
 /**
@@ -303,6 +314,15 @@ function resolveGlobThresholds(
 ): ResolvedThreshold['thresholds'] {
   if (!thresholds || typeof thresholds !== 'object') {
     return {}
+  }
+
+  if (100 in thresholds && thresholds[100] === true) {
+    return {
+      lines: 100,
+      branches: 100,
+      functions: 100,
+      statements: 100,
+    }
   }
 
   return {

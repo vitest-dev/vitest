@@ -3,7 +3,7 @@
 exports[`asymmetric matcher error 1`] = `
 {
   "actual": "hello",
-  "diff": null,
+  "diff": undefined,
   "expected": "StringContaining "xx"",
   "message": "expected 'hello' to deeply equal StringContaining "xx"",
 }
@@ -12,7 +12,7 @@ exports[`asymmetric matcher error 1`] = `
 exports[`asymmetric matcher error 2`] = `
 {
   "actual": "hello",
-  "diff": null,
+  "diff": undefined,
   "expected": "StringNotContaining "ll"",
   "message": "expected 'hello' to deeply equal StringNotContaining "ll"",
 }
@@ -200,7 +200,7 @@ exports[`asymmetric matcher error 13`] = `
 exports[`asymmetric matcher error 14`] = `
 {
   "actual": "hello",
-  "diff": null,
+  "diff": undefined,
   "expected": "StringMatching /xx/",
   "message": "expected 'hello' to deeply equal StringMatching /xx/",
 }
@@ -222,7 +222,7 @@ exports[`asymmetric matcher error 15`] = `
 exports[`asymmetric matcher error 16`] = `
 {
   "actual": "hello",
-  "diff": null,
+  "diff": undefined,
   "expected": "StringContaining "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"",
   "message": "expected 'hello' to deeply equal StringContaining{…}",
 }
@@ -231,7 +231,7 @@ exports[`asymmetric matcher error 16`] = `
 exports[`asymmetric matcher error 17`] = `
 {
   "actual": "hello",
-  "diff": null,
+  "diff": undefined,
   "expected": "StringContaining "xx"",
   "message": "expected error to match asymmetric matcher",
 }
@@ -253,7 +253,7 @@ stringContainingCustom<xx>
 exports[`asymmetric matcher error 19`] = `
 {
   "actual": "hello",
-  "diff": null,
+  "diff": undefined,
   "expected": "StringContaining "ll"",
   "message": "expected error not to match asymmetric matcher",
 }
@@ -344,11 +344,8 @@ exports[`toHaveBeenNthCalledWith error 2`] = `
 exports[`toMatch/toContain diff 1`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected
-+ Received
-
-- world
-+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "Expected: "world"
+Received: "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
   "expected": "world",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to contain 'world'",
 }
@@ -357,11 +354,8 @@ exports[`toMatch/toContain diff 1`] = `
 exports[`toMatch/toContain diff 2`] = `
 {
   "actual": "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
-  "diff": "- Expected
-+ Received
-
-- world
-+ hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello",
+  "diff": "Expected: "world"
+Received: "hellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohellohello"",
   "expected": "world",
   "message": "expected 'hellohellohellohellohellohellohellohe…' to match 'world'",
 }

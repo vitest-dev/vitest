@@ -1,18 +1,10 @@
 import { performance } from 'node:perf_hooks'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
-import type {
-  ErrorWithDiff,
-  File,
-  Reporter,
-  Task,
-  TaskResultPack,
-  UserConsoleLog,
-} from '../../types'
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 import {
   getFullName,
-  getSafeTimers,
   getSuites,
   getTestName,
   getTests,
@@ -24,9 +16,10 @@ import {
   relativePath,
   toArray,
 } from '../../utils'
-import type { Vitest } from '../../node'
+import type { Vitest } from '../core'
 import { F_POINTER, F_RIGHT } from '../../utils/figures'
-import { UNKNOWN_TEST_ID } from '../../runtime/console'
+import type { Reporter } from '../types/reporter'
+import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
 import {
   countTestErrors,
   divider,
@@ -72,7 +65,7 @@ export abstract class BaseReporter implements Reporter {
 
   private _filesInWatchMode = new Map<string, number>()
   private _lastRunTimeout = 0
-  private _lastRunTimer: NodeJS.Timer | undefined
+  private _lastRunTimer: NodeJS.Timeout | undefined
   private _lastRunCount = 0
   private _timeStart = new Date()
   private _offUnhandledRejection?: () => void
@@ -161,6 +154,9 @@ export abstract class BaseReporter implements Reporter {
     }
 
     let title = ` ${getStateSymbol(task)} `
+    if (task.meta.typecheck) {
+      title += `${c.bgBlue(c.bold(' TS '))} `
+    }
     if (task.projectName) {
       title += formatProjectName(task.projectName)
     }
@@ -216,7 +212,6 @@ export abstract class BaseReporter implements Reporter {
       ]
       this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
       this._lastRunTimeout = 0
-      const { setInterval } = getSafeTimers()
       this._lastRunTimer = setInterval(() => {
         this._lastRunTimeout += 1
         if (this._lastRunTimeout >= LAST_RUN_TEXTS.length) {
@@ -232,7 +227,6 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private resetLastRunLog() {
-    const { clearInterval } = getSafeTimers()
     clearInterval(this._lastRunTimer)
     this._lastRunTimer = undefined
     this.ctx.logger.logUpdate.clear()
@@ -254,18 +248,18 @@ export abstract class BaseReporter implements Reporter {
     const TRIGGER = trigger ? c.dim(` ${this.relative(trigger)}`) : ''
     const FILENAME_PATTERN = this.ctx.filenamePattern
       ? `${BADGE_PADDING} ${c.dim('Filename pattern: ')}${c.blue(
-          this.ctx.filenamePattern,
-        )}\n`
+        this.ctx.filenamePattern,
+      )}\n`
       : ''
     const TESTNAME_PATTERN = this.ctx.configOverride.testNamePattern
       ? `${BADGE_PADDING} ${c.dim('Test name pattern: ')}${c.blue(
-          String(this.ctx.configOverride.testNamePattern),
-        )}\n`
+        String(this.ctx.configOverride.testNamePattern),
+      )}\n`
       : ''
     const PROJECT_FILTER = this.ctx.configOverride.project
       ? `${BADGE_PADDING} ${c.dim('Project name: ')}${c.blue(
-          toArray(this.ctx.configOverride.project).join(', '),
-        )}\n`
+        toArray(this.ctx.configOverride.project).join(', '),
+      )}\n`
       : ''
 
     if (files.length > 1 || !files.length) {
@@ -303,13 +297,13 @@ export abstract class BaseReporter implements Reporter {
     const header = c.gray(
       log.type
       + c.dim(
-          ` | ${
-            task
-              ? getFullName(task, c.dim(' > '))
-              : log.taskId !== UNKNOWN_TEST_ID
+        ` | ${
+          task
+            ? getFullName(task, c.dim(' > '))
+            : log.taskId !== '__vitest__unknown_test__'
               ? log.taskId
               : 'unknown test'
-          }`,
+        }`,
       ),
     )
 
@@ -424,14 +418,6 @@ export abstract class BaseReporter implements Reporter {
       0,
     )
     const threadTime = collectTime + testsTime + setupTime
-
-    const padTitle = (str: string) => c.dim(`${str.padStart(11)} `)
-    const time = (time: number) => {
-      if (time > 1000) {
-        return `${(time / 1000).toFixed(2)}s`
-      }
-      return `${Math.round(time)}ms`
-    }
 
     // show top 10 costly transform module
     // console.log(Array.from(this.ctx.vitenode.fetchCache.entries()).filter(i => i[1].duration)
@@ -653,4 +639,15 @@ export abstract class BaseReporter implements Reporter {
       process.off('unhandledRejection', onUnhandledRejection)
     }
   }
+}
+
+function padTitle(str: string) {
+  return c.dim(`${str.padStart(11)} `)
+}
+
+function time(time: number) {
+  if (time > 1000) {
+    return `${(time / 1000).toFixed(2)}s`
+  }
+  return `${Math.round(time)}ms`
 }

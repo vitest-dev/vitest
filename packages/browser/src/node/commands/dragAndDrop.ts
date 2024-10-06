@@ -7,34 +7,33 @@ export const dragAndDrop: UserEventCommand<UserEvent['dragAndDrop']> = async (
   context,
   source,
   target,
-  options,
+  options_,
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const frame = await context.frame()
     await frame.dragAndDrop(
-      `xpath=${source}`,
-      `xpath=${target}`,
+      source,
+      target,
       {
         timeout: 1000,
-        ...options,
+        ...options_,
       },
     )
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
-    const sourceXpath = `//${source}`
-    const targetXpath = `//${target}`
-    const $source = context.browser.$(sourceXpath)
-    const $target = context.browser.$(targetXpath)
-    const duration = (options as any)?.duration ?? 10
+    const $source = context.browser.$(source)
+    const $target = context.browser.$(target)
+    const options = (options_ || {}) as any
+    const duration = options.duration ?? 10
 
     // https://github.com/webdriverio/webdriverio/issues/8022#issuecomment-1700919670
     await context.browser
       .action('pointer')
-      .move({ duration: 0, origin: $source, x: 0, y: 0 })
+      .move({ duration: 0, origin: $source, x: options.sourceX ?? 0, y: options.sourceY ?? 0 })
       .down({ button: 0 })
       .move({ duration: 0, origin: 'pointer', x: 0, y: 0 })
       .pause(duration)
-      .move({ duration: 0, origin: $target, x: 0, y: 0 })
+      .move({ duration: 0, origin: $target, x: options.targetX ?? 0, y: options.targetY ?? 0 })
       .move({ duration: 0, origin: 'pointer', x: 1, y: 0 })
       .move({ duration: 0, origin: 'pointer', x: -1, y: 0 })
       .up({ button: 0 })

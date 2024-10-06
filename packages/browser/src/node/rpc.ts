@@ -4,20 +4,18 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
-import { isFileServingAllowed } from 'vite'
 import type { BrowserCommandContext } from 'vitest/node'
-import { createDebugger } from 'vitest/node'
+import { createDebugger, isFileServingAllowed } from 'vitest/node'
+import type { ErrorWithDiff } from 'vitest'
+import { ServerMockResolver } from '@vitest/mocker/node'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import type { BrowserServer } from './server'
-import { resolveMock } from './resolveMock'
 
 const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(
-  server: BrowserServer,
-) {
+export function setupBrowserRpc(server: BrowserServer) {
   const project = server.project
   const vite = server.vite
   const ctx = project.ctx
@@ -64,13 +62,21 @@ export function setupBrowserRpc(
   }
 
   function setupClient(sessionId: string, ws: WebSocket) {
+    const mockResolver = new ServerMockResolver(server.vite, {
+      moduleDirectories: project.config.server?.deps?.moduleDirectories,
+    })
+
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
         async onUnhandledError(error, type) {
+          if (error && typeof error === 'object') {
+            const _error = error as ErrorWithDiff
+            _error.stacks = server.parseErrorStacktrace(_error)
+          }
           ctx.state.catchError(error, type)
         },
         async onCollected(files) {
-          ctx.state.collectFiles(files)
+          ctx.state.collectFiles(project, files)
           await ctx.report('onCollected', files)
         },
         async onTaskUpdate(packs) {
@@ -119,14 +125,7 @@ export function setupBrowserRpc(
           ctx.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {
-          const result = await project.server.pluginContainer.resolveId(
-            id,
-            importer,
-            {
-              ssr: false,
-            },
-          )
-          return result
+          return mockResolver.resolveId(id, importer)
         },
         debug(...args) {
           ctx.logger.console.debug(...args)
@@ -171,17 +170,11 @@ export function setupBrowserRpc(
           debug?.('[%s] Finishing browser tests for context', contextId)
           return server.state.getContext(contextId)?.resolve()
         },
-        resolveMock(rawId, importer, hasFactory) {
-          return resolveMock(project, rawId, importer, hasFactory)
+        resolveMock(rawId, importer, options) {
+          return mockResolver.resolveMock(rawId, importer, options)
         },
         invalidate(ids) {
-          ids.forEach((id) => {
-            const moduleGraph = server.vite.moduleGraph
-            const module = moduleGraph.getModuleById(id)
-            if (module) {
-              moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
-            }
-          })
+          return mockResolver.invalidate(ids)
         },
 
         // CDP

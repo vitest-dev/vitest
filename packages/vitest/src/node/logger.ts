@@ -1,9 +1,10 @@
 import { Console } from 'node:console'
 import type { Writable } from 'node:stream'
 import { createLogUpdate } from 'log-update'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
-import type { ErrorWithDiff, Task } from '../types'
+import type { Task } from '@vitest/runner'
+import type { ErrorWithDiff } from '@vitest/utils'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import { toArray } from '../utils'
 import { highlightCode } from '../utils/colors'
@@ -227,10 +228,12 @@ export class Logger {
 
       const resolvedUrls = project.browser.vite.resolvedUrls
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+      const provider = project.browser.provider.name
+      const providerString = provider === 'preview' ? '' : ` by ${provider}`
       this.log(
         c.dim(
           c.green(
-            `     ${output} Browser runner started at ${new URL('/', origin)}`,
+            `     ${output} Browser runner started${providerString} at ${new URL('/', origin)}`,
           ),
         ),
       )

@@ -1,14 +1,14 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import { configDefaults, coverageConfigDefaults } from '../../defaults'
-import type { ResolvedConfig, UserConfig } from '../../types'
+import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
   deepMerge,
   notNullish,
   removeUndefinedValues,
   toArray,
 } from '../../utils'
-import { resolveApiServerConfig } from '../config'
+import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { defaultPort } from '../../constants'
@@ -21,9 +21,9 @@ import {
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
-import { VitestResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
 import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
   options: UserConfig = {},
@@ -34,7 +34,7 @@ export async function VitestPlugin(
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot(), ctx.version)
     return (await import('@vitest/ui')).default(ctx)
   }
 
@@ -81,8 +81,9 @@ export async function VitestPlugin(
             viteConfig.esbuild === false
               ? false
               : {
+                  // Lowest target Vitest supports is Node18
+                  target: viteConfig.esbuild?.target || 'node18',
                   sourcemap: 'external',
-
                   // Enables using ignore hint for coverage providers with @preserve keyword
                   legalComments: 'inline',
                 },
@@ -97,6 +98,7 @@ export async function VitestPlugin(
             ...testConfig.api,
             open,
             hmr: false,
+            ws: testConfig.api?.middlewareMode ? false : undefined,
             preTransformRequests: false,
             fs: {
               allow: resolveFsAllow(getRoot(), testConfig.config),
@@ -232,30 +234,34 @@ export async function VitestPlugin(
 
         hijackVitePluginInject(viteConfig)
       },
-      async configureServer(server) {
-        if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
-          server.watcher.on('ready', () => {
-            // eslint-disable-next-line no-console
-            console.log('[debug] watcher is ready')
-          })
-        }
-        await ctx.setServer(options, server, userConfig)
-        if (options.api && options.watch) {
-          (await import('../../api/setup')).setup(ctx)
-        }
+      configureServer: {
+        // runs after vite:import-analysis as it relies on `server` instance on Vite 5
+        order: 'post',
+        async handler(server) {
+          if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
+            server.watcher.on('ready', () => {
+              // eslint-disable-next-line no-console
+              console.log('[debug] watcher is ready')
+            })
+          }
+          await ctx.setServer(options, server, userConfig)
+          if (options.api && options.watch) {
+            (await import('../../api/setup')).setup(ctx)
+          }
 
-        // #415, in run mode we don't need the watcher, close it would improve the performance
-        if (!options.watch) {
-          await server.watcher.close()
-        }
+          // #415, in run mode we don't need the watcher, close it would improve the performance
+          if (!options.watch) {
+            await server.watcher.close()
+          }
+        },
       },
     },
     SsrReplacerPlugin(),
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
+    VitestCoreResolver(ctx),
     options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
-    VitestResolver(ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ].filter(notNullish)

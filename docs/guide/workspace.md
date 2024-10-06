@@ -26,7 +26,7 @@ export default [
 ```
 :::
 
-Vitest will consider every folder in `packages` as a separate project even if it doesn't have a config file inside.
+Vitest will consider every folder in `packages` as a separate project even if it doesn't have a config file inside. Since Vitest 2.1, if this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
 
 ::: warning
 Vitest will not consider the root config as a workspace project (so it will not run tests specified in `include`) unless it is specified in this config.
@@ -44,18 +44,15 @@ export default [
 
 This pattern will only include projects with `vitest.config` file that includes `e2e` and `unit` before the extension.
 
-::: warning
-If you are referencing filenames with glob pattern, make sure your config file starts with `vite.config` or `vitest.config`. Otherwise Vitest will skip it.
-:::
-
 You can also define projects with inline config. Workspace file supports using both syntaxes at the same time.
 
 :::code-group
-```ts [vitest.workspace.ts] twoslash
+```ts [vitest.workspace.ts]
 import { defineWorkspace } from 'vitest/config'
 
 // defineWorkspace provides a nice type hinting DX
 export default defineWorkspace([
+  // matches every folder and file inside the `packages` folder
   'packages/*',
   {
     // add "extends" to merge two configs together
@@ -96,6 +93,7 @@ Workspace projects don't support all configuration properties. For better type s
 
 :::code-group
 ```ts [packages/a/vitest.config.ts] twoslash
+// @errors: 2769
 import { defineProject } from 'vitest/config'
 
 export default defineProject({
@@ -140,15 +138,36 @@ bun test
 
 If you need to run tests only inside a single project, use the `--project` CLI option:
 
-```bash
+::: code-group
+```bash [npm]
 npm run test --project e2e
 ```
+```bash [yarn]
+yarn test --project e2e
+```
+```bash [pnpm]
+pnpm run test --project e2e
+```
+```bash [bun]
+bun test --project e2e
+```
+:::
 
 ::: tip
 CLI option `--project` can be used multiple times to filter out several projects:
 
-```bash
+::: code-group
+```bash [npm]
 npm run test --project e2e --project unit
+```
+```bash [yarn]
+yarn test --project e2e --project unit
+```
+```bash [pnpm]
+pnpm run test --project e2e --project unit
+```
+```bash [bun]
+bun test --project e2e --project unit
 ```
 :::
 
@@ -156,7 +175,7 @@ npm run test --project e2e --project unit
 
 None of the configuration options are inherited from the root-level config file. You can create a shared config file and merge it with the project config yourself:
 
-:::code-group
+::: code-group
 ```ts [packages/a/vitest.config.ts]
 import { defineProject, mergeConfig } from 'vitest/config'
 import configShared from '../vitest.shared.js'
@@ -169,6 +188,30 @@ export default mergeConfig(
     }
   })
 )
+```
+:::
+
+At the `defineWorkspace` level you can also use the `extends` option instead to inherit from your root-level config.
+::: code-group
+```ts [packages/a/vitest.config.ts]
+import { defineWorkspace } from 'vitest/config'
+
+export default defineWorkspace([
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'unit',
+      include: ['**/*.unit.test.ts'],
+    },
+  },
+  {
+    extends: './vitest.config.ts',
+    test: {
+      name: 'integration',
+      include: ['**/*.integration.test.ts'],
+    },
+  },
+])
 ```
 :::
 
@@ -185,6 +228,4 @@ All configuration options that are not supported inside a project config have <N
 
 ## Coverage
 
-Coverage for workspace projects works out of the box. But if you have [`all`](/config/#coverage-all) option enabled and use non-conventional extensions in some of your projects, you will need to have a plugin that handles this extension in your root configuration file.
-
-For example, if you have a package that uses Vue files and it has its own config file, but some of the files are not imported in your tests, coverage will fail trying to analyze the usage of unused files, because it relies on the root configuration rather than project configuration.
+Coverage for workspace projects works out of the box.

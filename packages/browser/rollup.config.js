@@ -43,6 +43,37 @@ export default () =>
         format: 'esm',
       },
       external,
+      context: 'null',
+      plugins: [
+        {
+          name: 'no-side-effects',
+          async resolveId(id, importer) {
+            // Clipboard injects "afterEach" callbacks
+            // We mark it as having no side effects to prevent it from being included in the bundle
+            if (id.includes('dataTransfer/Clipboard')) {
+              return {
+                ...await this.resolve(id, importer),
+                moduleSideEffects: false,
+              }
+            }
+          },
+        },
+        ...plugins,
+      ],
+    },
+    {
+      input: {
+        'locators/playwright': './src/client/tester/locators/playwright.ts',
+        'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
+        'locators/preview': './src/client/tester/locators/preview.ts',
+        'locators/index': './src/client/tester/locators/index.ts',
+        'utils': './src/client/tester/public-utils.ts',
+      },
+      output: {
+        dir: 'dist',
+        format: 'esm',
+      },
+      external,
       plugins,
     },
     {
@@ -52,6 +83,21 @@ export default () =>
         format: 'esm',
       },
       plugins: [
+        esbuild({
+          target: 'node18',
+        }),
+      ],
+    },
+    {
+      input: './src/client/client.ts',
+      output: {
+        file: 'dist/client.js',
+        format: 'esm',
+      },
+      plugins: [
+        resolve({
+          preferBuiltins: true,
+        }),
         esbuild({
           target: 'node18',
         }),
@@ -85,16 +131,31 @@ export default () =>
       ],
     },
     {
-      input: './src/client/tester/jest-dom.ts',
+      input: {
+        'locators/index': './src/client/tester/locators/index.ts',
+      },
       output: {
-        file: './jest-dom.d.ts',
+        dir: 'dist',
         format: 'esm',
       },
-      external: [],
+      external,
       plugins: [
         dts({
           respectExternal: true,
         }),
       ],
     },
+    // {
+    //   input: './src/client/tester/jest-dom.ts',
+    //   output: {
+    //     file: './jest-dom.d.ts',
+    //     format: 'esm',
+    //   },
+    //   external: [],
+    //   plugins: [
+    //     dts({
+    //       respectExternal: true,
+    //     }),
+    //   ],
+    // },
   ])

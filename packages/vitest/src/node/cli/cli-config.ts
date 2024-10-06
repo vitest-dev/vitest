@@ -1,11 +1,11 @@
 import { defaultBrowserPort, defaultPort } from '../../constants'
-import type { ApiConfig } from '../../types/config'
+import type { ApiConfig } from '../types/config'
 import type {
   ForksOptions,
   ThreadsOptions,
   VmOptions,
   WorkerContextOptions,
-} from '../../types/pool-options'
+} from '../types/pool-options'
 import type { CliOptions } from './cli-api'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
@@ -24,12 +24,12 @@ export type CLIOption<Value> = {
   array?: boolean
   normalize?: boolean
 } & (NestedOption<Value> extends never // require subcommands for nested options
-  ? {}
+  ? object
   : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
   // require argument for non-boolean options
-  (NonNullable<Value> extends boolean ? {} : { argument: string })
+  (NonNullable<Value> extends boolean ? object : { argument: string })
 
-export type CLIOptions<Config extends {}> = {
+export type CLIOptions<Config extends object> = {
   [Key in keyof Config as NonNullable<Config[Key]> extends Function
     ? never
     : Key]-?: CLIOption<Config[Key]> | null;
@@ -167,7 +167,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   outputFile: {
     argument: '<filename/-s>',
     description:
-      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: --outputFile.tap=./tap.txt)',
+      'Write test results to a file when supporter reporter is also specified, use cac\'s dot notation for individual outputs of multiple reporters (example: `--outputFile.tap=./tap.txt`)',
     subcommands: null,
   },
   coverage: {
@@ -203,7 +203,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       extension: {
         description:
-          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".cts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
+          'Extension to be included in coverage. May be specified more than once when using multiple extensions (default: `[".js", ".cjs", ".mjs", ".ts", ".mts", ".tsx", ".jsx", ".vue", ".svelte"]`)',
         argument: '<extension>',
         array: true,
       },
@@ -414,6 +414,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       viewport: null,
       screenshotDirectory: null,
       screenshotFailures: null,
+      locators: null,
     },
   },
   pool: {
@@ -469,11 +470,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'Should all test files run in parallel. Use `--no-file-parallelism` to disable (default: `true`)',
   },
   maxWorkers: {
-    description: 'Maximum number of workers to run tests in',
+    description: 'Maximum number or percentage of workers to run tests in',
     argument: '<workers>',
   },
   minWorkers: {
-    description: 'Minimum number of workers to run tests in',
+    description: 'Minimum number or percentage of workers to run tests in',
     argument: '<workers>',
   },
   environment: {
@@ -527,7 +528,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       seed: {
         description:
-          'Set the randomization seed. This option will have no effect if --sequence.shuffle is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
+          'Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
         argument: '<seed>',
       },
       hooks: {
@@ -792,6 +793,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   snapshotEnvironment: null,
   compare: null,
   outputJson: null,
+  json: null,
+  provide: null,
+  filesOnly: null,
 }
 
 export const benchCliOptionsConfig: Pick<
@@ -799,11 +803,24 @@ export const benchCliOptionsConfig: Pick<
   'compare' | 'outputJson'
 > = {
   compare: {
-    description: 'benchmark output file to compare against',
+    description: 'Benchmark output file to compare against',
     argument: '<filename>',
   },
   outputJson: {
-    description: 'benchmark output file',
+    description: 'Benchmark output file',
     argument: '<filename>',
+  },
+}
+
+export const collectCliOptionsConfig: Pick<
+  VitestCLIOptions,
+  'json' | 'filesOnly'
+> = {
+  json: {
+    description: 'Print collected tests as JSON or write to a file (Default: false)',
+    argument: '[true/path]',
+  },
+  filesOnly: {
+    description: 'Print only test files with out the test cases',
   },
 }

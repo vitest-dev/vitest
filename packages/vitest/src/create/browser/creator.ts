@@ -2,12 +2,12 @@ import { dirname, relative, resolve } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
 import prompt from 'prompts'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import type { Agent } from '@antfu/install-pkg'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
 import { findUp } from 'find-up'
-import { execa } from 'execa'
-import type { BrowserBuiltinProvider } from '../../types/browser'
+import { x } from 'tinyexec'
+import type { BrowserBuiltinProvider } from '../../node/types/browser'
 import { configFiles } from '../../constants'
 import { generateExampleFiles } from './examples'
 
@@ -105,17 +105,17 @@ function getFramework(): prompt.Choice[] {
 function getFrameworkTestPackage(framework: string) {
   switch (framework) {
     case 'vanilla':
-      return '@testing-library/dom'
+      return null
     case 'vue':
-      return '@testing-library/vue'
+      return 'vitest-browser-vue'
     case 'svelte':
-      return '@testing-library/svelte'
+      return 'vitest-browser-svelte'
     case 'react':
-      return '@testing-library/react'
+      return 'vitest-browser-react'
     case 'preact':
       return '@testing-library/preact'
     case 'solid':
-      return 'solid-testing-library'
+      return '@solidjs/testing-library'
     case 'marko':
       return '@marko/testing-library'
   }
@@ -258,11 +258,8 @@ async function generateWorkspaceFile(options: {
     `import { defineWorkspace } from 'vitest/config'`,
     '',
     'export default defineWorkspace([',
-    '  // This will keep running your existing tests.',
-    '  // If you don\'t need to run those in Node.js anymore,',
-    '  // You can safely remove it from the workspace file',
-    '  // Or move the browser test configuration to the config file.',
-    `  '${relativeRoot}',`,
+    '  // If you want to keep running your existing tests in Node.js, uncomment the next line.',
+    `  // '${relativeRoot}',`,
     `  {`,
     `    extends: '${relativeRoot}',`,
     `    test: {`,
@@ -277,7 +274,7 @@ async function generateWorkspaceFile(options: {
     `  },`,
     `])`,
     '',
-  ].filter(c => c != null).join('\n')
+  ].filter(c => typeof c === 'string').join('\n')
   await writeFile(options.configPath, workspaceContent)
 }
 
@@ -308,7 +305,7 @@ async function generateFrameworkConfigFile(options: {
     `  },`,
     `})`,
     '',
-  ].join('\n')
+  ].filter(t => typeof t === 'string').join('\n')
   // this file is only generated if there is already NO root config which is an edge case
   await writeFile(options.configPath, configContent)
 }
@@ -431,8 +428,12 @@ export async function create() {
 
   const dependenciesToInstall = [
     '@vitest/browser',
-    getFrameworkTestPackage(framework),
   ]
+
+  const frameworkPackage = getFrameworkTestPackage(framework)
+  if (frameworkPackage) {
+    dependenciesToInstall.push(frameworkPackage)
+  }
 
   const providerPkg = getProviderPackageNames(provider)
   if (providerPkg.pkg) {
@@ -495,9 +496,10 @@ export async function create() {
     const allArgs = [...args, 'playwright', 'install', '--with-deps']
     log(c.cyan('◼'), `Installing Playwright dependencies with \`${c.bold(command)} ${c.bold(allArgs.join(' '))}\`...`)
     log()
-    await execa(command, allArgs, {
-      stdout: 'inherit',
-      stderr: 'inherit',
+    await x(command, allArgs, {
+      nodeOptions: {
+        stdio: ['pipe', 'inherit', 'inherit'],
+      },
     })
   }
 

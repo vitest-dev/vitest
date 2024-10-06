@@ -15,7 +15,7 @@ const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
-export async function runVmTests(state: WorkerGlobalState) {
+export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState) {
   const { environment, ctx, rpc } = state
 
   if (!environment.setupVM) {
@@ -77,7 +77,6 @@ export async function runVmTests(state: WorkerGlobalState) {
   const executor = await startVitestExecutor({
     context,
     moduleCache: state.moduleCache,
-    mockMap: state.mockMap,
     state,
     externalModulesExecutor,
     requestStubs: stubs,
@@ -90,7 +89,7 @@ export async function runVmTests(state: WorkerGlobalState) {
   )) as typeof import('../runVmTests')
 
   try {
-    await run(ctx.files, ctx.config, executor)
+    await run(method, ctx.files, ctx.config, executor)
   }
   finally {
     await vm.teardown?.()

@@ -11,10 +11,9 @@ import {
   getState,
   setState,
 } from '@vitest/expect'
-import type { Assertion, ExpectStatic } from '@vitest/expect'
-import type { MatcherState } from '../../types/chai'
+import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
 import { getTestName } from '../../utils/tasks'
-import { getCurrentEnvironment, getWorkerState } from '../../utils/global'
+import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 
 export function createExpect(test?: TaskPopulated) {
@@ -40,7 +39,6 @@ export function createExpect(test?: TaskPopulated) {
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
 
-  const testPath = getTestFile(test)
   setState<MatcherState>(
     {
       // this should also add "snapshotState" that is added conditionally
@@ -51,7 +49,9 @@ export function createExpect(test?: TaskPopulated) {
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
       environment: getCurrentEnvironment(),
-      testPath,
+      get testPath() {
+        return getWorkerState().filepath
+      },
       currentTestName: test
         ? getTestName(test as Test)
         : globalState.currentTestName,
@@ -110,14 +110,6 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
   return expect
-}
-
-function getTestFile(test?: TaskPopulated) {
-  if (test) {
-    return test.file.filepath
-  }
-  const state = getWorkerState()
-  return state.filepath
 }
 
 const globalExpect = createExpect()

@@ -1,12 +1,12 @@
 import { resolve } from 'pathe'
-import fg from 'fast-glob'
+import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 
 describe('should fail', async () => {
   const root = resolve(__dirname, '../failing')
-  const files = await fg('*.test-d.*', { cwd: root })
+  const files = await glob(['*.test-d.*'], { cwd: root, expandDirectories: false })
 
   it('typecheck files', async () => {
     const { stderr } = await runVitest({
@@ -110,5 +110,26 @@ describe('ignoreSourceErrors', () => {
     expect(vitest.stdout).not.toContain('Unhandled Errors')
     expect(vitest.stderr).not.toContain('Unhandled Source Error')
     expect(vitest.stderr).not.toContain('TypeCheckError: Cannot find name \'thisIsSourceError\'')
+  })
+})
+
+describe('when the title is dynamic', () => {
+  it('works correctly', async () => {
+    const vitest = await runVitest({
+      root: resolve(__dirname, '../fixtures/dynamic-title'),
+      reporters: [['default', { isTTY: true }]],
+    })
+
+    expect(vitest.stdout).toContain('✓ for: %s')
+    expect(vitest.stdout).toContain('✓ each: %s')
+    expect(vitest.stdout).toContain('✓ dynamic skip')
+    expect(vitest.stdout).not.toContain('✓ false') // .skipIf is not reported as a separate test
+    expect(vitest.stdout).toContain('✓ template string')
+    // eslint-disable-next-line no-template-curly-in-string
+    expect(vitest.stdout).toContain('✓ template ${"some value"} string')
+    // eslint-disable-next-line no-template-curly-in-string
+    expect(vitest.stdout).toContain('✓ template ${`literal`} string')
+    expect(vitest.stdout).toContain('✓ name')
+    expect(vitest.stdout).toContain('✓ (() => "some name")()')
   })
 })

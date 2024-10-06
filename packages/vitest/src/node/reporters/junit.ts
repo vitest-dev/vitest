@@ -1,12 +1,12 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { hostname } from 'node:os'
+import { stripVTControlCharacters } from 'node:util'
 import { dirname, relative, resolve } from 'pathe'
 
 import type { Task } from '@vitest/runner'
 import { getSuites } from '@vitest/runner/utils'
-import stripAnsi from 'strip-ansi'
-import type { Vitest } from '../../node'
-import type { Reporter } from '../../types/reporter'
+import type { Vitest } from '../core'
+import type { Reporter } from '../types/reporter'
 import { getOutputFile } from '../../utils/config-helpers'
 import { capturePrintError } from '../error'
 import { IndentedLogger } from './renderers/indented-logger'
@@ -233,7 +233,7 @@ export class JUnitReporter implements Reporter {
                     { project: this.ctx.getProjectByTaskId(task.id), task },
                   )
                   await this.baseLog(
-                    escapeXML(stripAnsi(result.output.trim())),
+                    escapeXML(stripVTControlCharacters(result.output.trim())),
                   )
                 },
               )

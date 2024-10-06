@@ -33,6 +33,12 @@ export function isParentNode(node: UITaskTreeNode): node is FileTreeNode | Suite
   return node.type === 'file' || node.type === 'suite'
 }
 
+export function sortedRootTasks(tasks = explorerTree.root.tasks) {
+  return tasks.sort((a, b) => {
+    return `${a.filepath}:${a.projectName}`.localeCompare(`${b.filepath}:${b.projectName}`)
+  })
+}
+
 export function createOrUpdateFileNode(
   file: File,
   collect = false,
@@ -40,6 +46,7 @@ export function createOrUpdateFileNode(
   let fileNode = explorerTree.nodes.get(file.id) as FileTreeNode | undefined
 
   if (fileNode) {
+    fileNode.typecheck = !!file.meta && 'typecheck' in file.meta
     fileNode.state = file.result?.state
     fileNode.mode = file.mode
     fileNode.duration = file.result?.duration
@@ -60,8 +67,9 @@ export function createOrUpdateFileNode(
       type: 'file',
       children: new Set(),
       tasks: [],
+      typecheck: !!file.meta && 'typecheck' in file.meta,
       indent: 0,
-      duration: file.result?.duration,
+      duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
       filepath: file.filepath,
       projectName: file.projectName || '',
       projectNameColor: getProjectNameColor(file.projectName),
@@ -109,7 +117,7 @@ export function createOrUpdateNodeTask(id: string) {
   }
 
   const task = client.state.idMap.get(id)
-  // if no children just return
+  // if it is not a test just return
   if (!task || !isAtomTest(task)) {
     return
   }
@@ -124,6 +132,9 @@ export function createOrUpdateNode(
 ) {
   const node = explorerTree.nodes.get(parentId) as ParentTreeNode | undefined
   let taskNode: UITaskTreeNode | undefined
+  const duration = task.result?.duration != null
+    ? Math.round(task.result?.duration)
+    : undefined
   if (node) {
     taskNode = explorerTree.nodes.get(task.id)
     if (taskNode) {
@@ -133,16 +144,14 @@ export function createOrUpdateNode(
       }
 
       taskNode.mode = task.mode
-      taskNode.duration = task.result?.duration
+      taskNode.duration = duration
       taskNode.state = task.result?.state
-      if (isSuiteNode(taskNode)) {
-        taskNode.typecheck = !!task.meta && 'typecheck' in task.meta
-      }
     }
     else {
       if (isAtomTest(task)) {
         taskNode = {
           id: task.id,
+          fileId: task.file.id,
           parentId,
           name: task.name,
           mode: task.mode,
@@ -150,17 +159,17 @@ export function createOrUpdateNode(
           expandable: false,
           expanded: false,
           indent: node.indent + 1,
-          duration: task.result?.duration,
+          duration,
           state: task.result?.state,
-        }
+        } as TestTreeNode | CustomTestTreeNode
       }
       else {
         taskNode = {
           id: task.id,
+          fileId: task.file.id,
           parentId,
           name: task.name,
           mode: task.mode,
-          typecheck: !!task.meta && 'typecheck' in task.meta,
           type: 'suite',
           expandable: true,
           // When the current run finish, we will expand all nodes when required, here we expand only the opened nodes
@@ -168,7 +177,7 @@ export function createOrUpdateNode(
           children: new Set(),
           tasks: [],
           indent: node.indent + 1,
-          duration: task.result?.duration,
+          duration,
           state: task.result?.state,
         } as SuiteTreeNode
       }

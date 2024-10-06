@@ -32,8 +32,29 @@ export interface ParsedStack {
   column: number
 }
 
-export interface ErrorWithDiff extends Error {
-  name: string
+export interface SerializedError {
+  message: string
+  stack?: string
+  name?: string
+  stacks?: ParsedStack[]
+  cause?: SerializedError
+  [key: string]: unknown
+}
+
+export interface TestError extends SerializedError {
+  cause?: TestError
+  diff?: string
+  actual?: string
+  expected?: string
+}
+
+/**
+ * @deprecated Use `TestError` instead
+ */
+export interface ErrorWithDiff {
+  message: string
+  name?: string
+  cause?: unknown
   nameStr?: string
   stack?: string
   stackStr?: string

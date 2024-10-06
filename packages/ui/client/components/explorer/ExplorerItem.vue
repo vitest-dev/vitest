@@ -7,7 +7,7 @@ import { client, isReport, runFiles } from '~/composables/client'
 import { coverageEnabled } from '~/composables/navigation'
 import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { explorerTree } from '~/composables/explorer'
-import { search } from '~/composables/explorer/state'
+import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
 import { showSource } from '~/composables/codemirror'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
@@ -23,6 +23,7 @@ const {
   type,
   disableTaskLocation,
   onItemClick,
+  projectNameColor,
 } = defineProps<{
   taskId: string
   name: string
@@ -107,16 +108,13 @@ const gridStyles = computed(() => {
   } ${gridColumns.join(' ')};`
 })
 
-const highlightRegex = computed(() => {
-  const searchString = search.value.toLowerCase()
-  return searchString.length ? new RegExp(`(${searchString})`, 'gi') : null
-})
-
+const escapedName = computed(() => escapeHtml(name))
 const highlighted = computed(() => {
   const regex = highlightRegex.value
+  const useName = escapedName.value
   return regex
-    ? name.replace(regex, match => `<span class="highlight">${match}</span>`)
-    : name
+    ? useName.replace(regex, match => `<span class="highlight">${match}</span>`)
+    : useName
 })
 
 const disableShowDetails = computed(() => type !== 'file' && disableTaskLocation)
@@ -138,6 +136,17 @@ function showDetails() {
     showSource(t)
   }
 }
+
+const projectNameTextColor = computed(() => {
+  switch (projectNameColor) {
+    case 'blue':
+    case 'green':
+    case 'magenta':
+      return 'white'
+    default:
+      return 'black'
+  }
+})
 </script>
 
 <template>
@@ -164,13 +173,13 @@ function showDetails() {
       <div :class="opened ? 'i-carbon:chevron-down' : 'i-carbon:chevron-right op20'" op20 />
     </div>
     <StatusIcon :state="state" :mode="task.mode" :failed-snapshot="failedSnapshot" w-4 />
-    <div v-if="type === 'suite' && typecheck" class="i-logos:typescript-icon" flex-shrink-0 mr-2 />
-    <div flex items-end gap-2 :text="state === 'fail' ? 'red-500' : ''" overflow-hidden>
+    <div flex items-end gap-2 overflow-hidden>
+      <div v-if="type === 'file' && typecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
       <span text-sm truncate font-light>
-        <span v-if="type === 'file' && projectName" :style="{ color: projectNameColor }">
-          [{{ projectName }}]
+        <span v-if="type === 'file' && projectName" class="rounded-full py-0.5 px-1 mr-1 text-xs" :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }">
+          {{ projectName }}
         </span>
-        <span v-html="highlighted" />
+        <span :text="state === 'fail' ? 'red-500' : ''" v-html="highlighted" />
       </span>
       <span v-if="typeof duration === 'number'" text="xs" op20 style="white-space: nowrap">
         {{ duration > 0 ? duration : '< 1' }}ms

@@ -2,15 +2,18 @@ import { Readable, Writable } from 'node:stream'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { UserConfig as ViteUserConfig } from 'vite'
-import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach } from 'vitest'
+import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach, onTestFinished } from 'vitest'
 import type { Vitest } from 'vitest/node'
 import { startVitest } from 'vitest/node'
-import { type Options, execa } from 'execa'
+import type { Options } from 'tinyexec'
+import { x } from 'tinyexec'
 import { dirname, resolve } from 'pathe'
+import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
 interface VitestRunnerCLIOptions {
   std?: 'inherit'
+  fails?: boolean
 }
 
 export async function runVitest(
@@ -60,25 +63,51 @@ export async function runVitest(
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...rest,
-    }, viteOverrides, {
+    }, {
+      ...viteOverrides,
+      server: {
+        // we never need a websocket connection for the root config because it doesn't connect to the browser
+        // browser mode uses a separate config that doesn't inherit CLI overrides
+        ws: false,
+        watch: {
+          // During tests we edit the files too fast and sometimes chokidar
+          // misses change events, so enforce polling for consistency
+          // https://github.com/vitejs/vite/blob/b723a753ced0667470e72b4853ecda27b17f546a/playground/vitestSetup.ts#L211
+          usePolling: true,
+          interval: 100,
+        },
+        ...viteOverrides?.server,
+      },
+    }, {
       stdin,
       stdout,
       stderr,
     })
   }
   catch (e: any) {
-    console.error(e)
+    if (runnerOptions.fails !== true) {
+      console.error(e)
+    }
     cli.stderr += e.stack
   }
   finally {
     exitCode = process.exitCode
     process.exitCode = 0
 
-    afterEach(async () => {
-      await ctx?.close()
-      await ctx?.closingPromise
-      process.exit = exit
-    })
+    if (getCurrentTest()) {
+      onTestFinished(async () => {
+        await ctx?.close()
+        await ctx?.closingPromise
+        process.exit = exit
+      })
+    }
+    else {
+      afterEach(async () => {
+        await ctx?.close()
+        await ctx?.closingPromise
+        process.exit = exit
+      })
+    }
   }
 
   return {
@@ -94,7 +123,7 @@ export async function runVitest(
   }
 }
 
-export async function runCli(command: string, _options?: Options | string, ...args: string[]) {
+export async function runCli(command: string, _options?: Partial<Options> | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -102,7 +131,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     options = undefined
   }
 
-  const subprocess = execa(command, args, options as Options)
+  const subprocess = x(command, args, options as Options).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
@@ -136,7 +165,7 @@ export async function runCli(command: string, _options?: Options | string, ...ar
     return output()
   }
 
-  if (args.includes('--watch')) {
+  if (args[0] !== 'list' && args.includes('--watch')) {
     if (command === 'vitest') {
       // Wait for initial test run to complete
       await cli.waitForStdout('Waiting for file changes')
@@ -152,12 +181,12 @@ export async function runCli(command: string, _options?: Options | string, ...ar
   return output()
 }
 
-export async function runVitestCli(_options?: Options | string, ...args: string[]) {
+export async function runVitestCli(_options?: Partial<Options> | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
 }
 
-export async function runViteNodeCli(_options?: Options | string, ...args: string[]) {
+export async function runViteNodeCli(_options?: Partial<Options> | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
 

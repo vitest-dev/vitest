@@ -13,7 +13,7 @@ export class NodeSnapshotEnvironment implements SnapshotEnvironment {
     return `// Snapshot v${this.getVersion()}`
   }
 
-  async resolveRawPath(testPath: string, rawPath: string) {
+  async resolveRawPath(testPath: string, rawPath: string): Promise<string> {
     return isAbsolute(rawPath) ? rawPath : resolve(dirname(testPath), rawPath)
   }
 

@@ -1,4 +1,5 @@
-import { readdirSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import { expect } from 'vitest'
 import { runVitest, test } from '../utils'
 
@@ -15,6 +16,23 @@ test('reporter as string', async () => {
 
   const files = readdirSync('./coverage')
   expect(files).toContain('coverage-final.json')
+})
+
+test('reporter as string when coverage is disabled', async () => {
+  if (existsSync('./coverage')) {
+    await rm('./coverage', { recursive: true, force: true })
+  }
+
+  await runVitest({
+    include,
+    coverage: {
+      enabled: false,
+      reporter: 'json',
+      all: false,
+    },
+  })
+
+  expect(existsSync('./coverage')).toBe(false)
 })
 
 test('reporter as list of strings', async () => {

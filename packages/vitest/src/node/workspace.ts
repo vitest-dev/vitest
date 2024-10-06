@@ -1,7 +1,6 @@
 import { promises as fs } from 'node:fs'
-import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import fg from 'fast-glob'
+import { rm } from 'node:fs/promises'
 import mm from 'micromatch'
 import {
   dirname,
@@ -18,24 +17,30 @@ import type {
 } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import type {
-  ProvidedContext,
-  ResolvedConfig,
-  UserConfig,
-  UserWorkspaceConfig,
-  Vitest,
-} from '../types'
+import { glob } from 'tinyglobby'
 import type { Typechecker } from '../typecheck/typechecker'
 import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
-import type { BrowserServer } from '../types/browser'
-import { isBrowserEnabled, resolveConfig } from './config'
+import type { ProvidedContext } from '../types/general'
+import type {
+  ResolvedConfig,
+  SerializedConfig,
+  UserConfig,
+  UserWorkspaceConfig,
+} from './types/config'
+import type { BrowserServer } from './types/browser'
+import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { createViteServer } from './vite'
 import type { GlobalSetupFile } from './globalSetup'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { MocksPlugins } from './plugins/mocks'
 import { CoverageTransform } from './plugins/coverageTransform'
+import { serializeConfig } from './config/serializeConfig'
+import type { Vitest } from './core'
+import { TestProject } from './reported-workspace-project'
+import { TestSpecification } from './spec'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -49,12 +54,6 @@ export async function initializeProject(
 ) {
   const project = new WorkspaceProject(workspacePath, ctx, options)
 
-  const configFile = options.extends
-    ? resolve(dirname(options.workspaceConfigPath), options.extends)
-    : typeof workspacePath === 'number' || workspacePath.endsWith('/')
-      ? false
-      : workspacePath
-
   const root
     = options.root
     || (typeof workspacePath === 'number'
@@ -62,6 +61,12 @@ export async function initializeProject(
       : workspacePath.endsWith('/')
         ? workspacePath
         : dirname(workspacePath))
+
+  const configFile = options.extends
+    ? resolve(dirname(options.workspaceConfigPath), options.extends)
+    : typeof workspacePath === 'number' || workspacePath.endsWith('/')
+      ? false
+      : workspacePath
 
   const config: ViteInlineConfig = {
     ...options,
@@ -94,6 +99,9 @@ export class WorkspaceProject {
   closingPromise: Promise<unknown> | undefined
 
   testFilesList: string[] | null = null
+  typecheckFilesList: string[] | null = null
+
+  public testProject!: TestProject
 
   public readonly id = nanoid()
   public readonly tmpDir = join(tmpdir(), this.id)
@@ -143,6 +151,10 @@ export class WorkspaceProject {
       ...this.ctx.getCoreWorkspaceProject().getProvidedContext(),
       ...this._provided,
     }
+  }
+
+  public createSpec(moduleId: string, pool: string): DeprecatedWorkspaceSpec {
+    return new TestSpecification(this, moduleId, pool) as DeprecatedWorkspaceSpec
   }
 
   async initializeGlobalSetup() {
@@ -205,12 +217,6 @@ export class WorkspaceProject {
     return mod?.ssrTransformResult?.map || mod?.transformResult?.map
   }
 
-  getBrowserSourceMapModuleById(
-    id: string,
-  ): TransformResult['map'] | undefined {
-    return this.browser?.vite.moduleGraph.getModuleById(id)?.transformResult?.map
-  }
-
   get reporters() {
     return this.ctx.reporters
   }
@@ -226,15 +232,24 @@ export class WorkspaceProject {
         ? []
         : this.globAllTestFiles(include, exclude, includeSource, dir),
       typecheck.enabled
-        ? this.globFiles(typecheck.include, typecheck.exclude, dir)
+        ? (this.typecheckFilesList || this.globFiles(typecheck.include, typecheck.exclude, dir))
         : [],
     ])
 
-    return this.filterFiles(
-      [...testFiles, ...typecheckTestFiles],
-      filters,
-      dir,
-    )
+    this.typecheckFilesList = typecheckTestFiles
+
+    return {
+      testFiles: this.filterFiles(
+        testFiles,
+        filters,
+        dir,
+      ),
+      typecheckTestFiles: this.filterFiles(
+        typecheckTestFiles,
+        filters,
+        dir,
+      ),
+    }
   }
 
   async globAllTestFiles(
@@ -276,15 +291,18 @@ export class WorkspaceProject {
     return this.testFilesList && this.testFilesList.includes(id)
   }
 
+  isTypecheckFile(id: string) {
+    return this.typecheckFilesList && this.typecheckFilesList.includes(id)
+  }
+
   async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: fg.Options = {
+    return glob(include, {
+      absolute: true,
       dot: true,
       cwd,
       ignore: exclude,
-    }
-
-    const files = await fg(include, globOptions)
-    return files.map(file => resolve(cwd, file))
+      expandDirectories: false,
+    })
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
@@ -341,7 +359,7 @@ export class WorkspaceProject {
     if (!this.isBrowserEnabled()) {
       return
     }
-    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root)
+    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
     const { createBrowserServer } = await import('@vitest/browser')
     await this.browser?.close()
     const browser = await createBrowserServer(
@@ -365,6 +383,15 @@ export class WorkspaceProject {
     project.server = ctx.server
     project.runner = ctx.runner
     project.config = ctx.config
+    for (const _providedKey in ctx.config.provide) {
+      const providedKey = _providedKey as keyof ProvidedContext
+      // type is very strict here, so we cast it to any
+      (project.provide as (key: string, value: unknown) => void)(
+        providedKey,
+        ctx.config.provide[providedKey],
+      )
+    }
+    project.testProject = new TestProject(project)
     return project
   }
 
@@ -384,6 +411,16 @@ export class WorkspaceProject {
       server.config,
       this.ctx.logger,
     )
+    for (const _providedKey in this.config.provide) {
+      const providedKey = _providedKey as keyof ProvidedContext
+      // type is very strict here, so we cast it to any
+      (this.provide as (key: string, value: unknown) => void)(
+        providedKey,
+        this.config.provide[providedKey],
+      )
+    }
+
+    this.testProject = new TestProject(this)
 
     this.server = server
 
@@ -403,103 +440,24 @@ export class WorkspaceProject {
     await this.initBrowserServer(this.server.config.configFile)
   }
 
-  isBrowserEnabled() {
+  isBrowserEnabled(): boolean {
     return isBrowserEnabled(this.config)
   }
 
-  getSerializableConfig() {
-    const optimizer = this.config.deps?.optimizer
-    const poolOptions = this.config.poolOptions
-
-    // Resolve from server.config to avoid comparing against default value
-    const isolate = this.server?.config?.test?.isolate
-
+  getSerializableConfig(): SerializedConfig {
+    // TODO: serialize the config _once_ or when needed
+    const config = serializeConfig(
+      this.config,
+      this.ctx.config,
+      this.server.config,
+    )
+    if (!this.ctx.configOverride) {
+      return config
+    }
     return deepMerge(
-      {
-        ...this.config,
-
-        poolOptions: {
-          forks: {
-            singleFork:
-              poolOptions?.forks?.singleFork
-              ?? this.ctx.config.poolOptions?.forks?.singleFork
-              ?? false,
-            isolate:
-              poolOptions?.forks?.isolate
-              ?? isolate
-              ?? this.ctx.config.poolOptions?.forks?.isolate
-              ?? true,
-          },
-          threads: {
-            singleThread:
-              poolOptions?.threads?.singleThread
-              ?? this.ctx.config.poolOptions?.threads?.singleThread
-              ?? false,
-            isolate:
-              poolOptions?.threads?.isolate
-              ?? isolate
-              ?? this.ctx.config.poolOptions?.threads?.isolate
-              ?? true,
-          },
-          vmThreads: {
-            singleThread:
-              poolOptions?.vmThreads?.singleThread
-              ?? this.ctx.config.poolOptions?.vmThreads?.singleThread
-              ?? false,
-          },
-        },
-
-        reporters: [],
-        deps: {
-          ...this.config.deps,
-          optimizer: {
-            web: {
-              enabled: optimizer?.web?.enabled ?? true,
-            },
-            ssr: {
-              enabled: optimizer?.ssr?.enabled ?? true,
-            },
-          },
-        },
-        snapshotOptions: {
-          ...this.ctx.config.snapshotOptions,
-          expand:
-            this.config.snapshotOptions.expand
-            ?? this.ctx.config.snapshotOptions.expand,
-          resolveSnapshotPath: undefined,
-        },
-        onConsoleLog: undefined!,
-        onStackTrace: undefined!,
-        sequence: {
-          ...this.ctx.config.sequence,
-          sequencer: undefined!,
-        },
-        benchmark: {
-          ...this.config.benchmark,
-          reporters: [],
-        },
-        inspect: this.ctx.config.inspect,
-        inspectBrk: this.ctx.config.inspectBrk,
-        inspector: this.ctx.config.inspector,
-        alias: [],
-        includeTaskLocation:
-          this.config.includeTaskLocation
-          ?? this.ctx.config.includeTaskLocation,
-        env: {
-          ...this.server?.config.env,
-          ...this.config.env,
-        },
-        browser: {
-          ...this.ctx.config.browser,
-          orchestratorScripts: [],
-          testerScripts: [],
-          commands: {},
-        },
-        printConsoleTrace:
-          this.config.printConsoleTrace ?? this.ctx.config.printConsoleTrace,
-      },
-      this.ctx.configOverride || ({} as any),
-    ) as ResolvedConfig
+      config,
+      this.ctx.configOverride,
+    )
   }
 
   close() {
@@ -518,7 +476,7 @@ export class WorkspaceProject {
 
   private async clearTmpDir() {
     try {
-      await rm(this.tmpDir, { force: true, recursive: true })
+      await rm(this.tmpDir, { recursive: true })
     }
     catch {}
   }

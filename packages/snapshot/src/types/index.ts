@@ -1,7 +1,7 @@
 import type {
   OptionsReceived as PrettyFormatOptions,
   Plugin as PrettyFormatPlugin,
-} from 'pretty-format'
+} from '@vitest/pretty-format'
 import type { RawSnapshotInfo } from '../port/rawSnapshot'
 import type {
   SnapshotEnvironment,

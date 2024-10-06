@@ -4,7 +4,7 @@ import type {
   CoverageV8Options,
   ResolvedCoverageOptions,
   UserConfig,
-} from './types'
+} from './node/types/config'
 import { isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
@@ -24,6 +24,7 @@ export const benchmarkConfigDefaults: Required<
   exclude: defaultExclude,
   includeSource: [],
   reporters: ['default'],
+  includeSamples: false,
 }
 
 const defaultCoverageExcludes = [
@@ -68,14 +69,15 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     '.mjs',
     '.ts',
     '.mts',
-    '.cts',
     '.tsx',
     '.jsx',
     '.vue',
     '.svelte',
     '.marko',
+    '.astro',
   ],
   allowExternal: false,
+  excludeAfterRemap: false,
   ignoreEmptyLines: true,
   processingConcurrency: Math.min(
     20,
@@ -107,6 +109,8 @@ const config = {
   clearMocks: false,
   restoreMocks: false,
   mockReset: false,
+  unstubGlobals: false,
+  unstubEnvs: false,
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,

@@ -5,19 +5,18 @@ import type { UserEventCommand } from './utils'
 
 export const hover: UserEventCommand<UserEvent['hover']> = async (
   context,
-  xpath,
+  selector,
   options = {},
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
-    await context.iframe.locator(`xpath=${xpath}`).hover({
+    await context.iframe.locator(selector).hover({
       timeout: 1000,
       ...options,
     })
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
-    const markedXpath = `//${xpath}`
-    await browser.$(markedXpath).moveTo(options)
+    await browser.$(selector).moveTo(options)
   }
   else {
     throw new TypeError(`Provider "${context.provider.name}" does not support hover`)

@@ -4,9 +4,13 @@ title: In-Source Testing | Guide
 
 # In-Source Testing
 
-Vitest also provides a way to run tests within your source code along side the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
+Vitest provides a way to run tests within your source code along side the implementation, similar to [Rust's module tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#the-tests-module-and-cfgtest).
 
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings a closer feedback loop for development.
+
+::: warning
+This guide explains how to write tests inside your source code. If you need to write tests in separate test files, follow the ["Writing Tests" guide](/guide/#writing-tests).
+:::
 
 ## Setup
 
@@ -34,9 +38,8 @@ if (import.meta.vitest) {
 Update the `includeSource` config for Vitest to grab the files under `src/`:
 
 ```ts
-// vite.config.ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -56,9 +59,8 @@ $ npx vitest
 For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
 ```ts
-// vite.config.ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -127,7 +129,7 @@ To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to y
 }
 ```
 
-Reference to [`test/import-meta`](https://github.com/vitest-dev/vitest/tree/main/test/import-meta) for the full example.
+Reference to [`examples/in-source-test`](https://github.com/vitest-dev/vitest/tree/main/examples/in-source-test) for the full example.
 
 ## Notes
 

@@ -67,7 +67,7 @@ async function generateContextFile(
   const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
 
   return `
-import { page, userEvent as __userEvent_CDP__, cdp } from '${distContextPath}'
+import { page, createUserEvent, cdp } from '${distContextPath}'
 ${userEventNonProviderImport}
 const filepath = () => ${filepathCode}
 const rpc = () => __vitest_worker__.rpc
@@ -80,34 +80,18 @@ export const server = {
   browser: ${JSON.stringify(server.project.config.browser.name)},
   commands: {
     ${commandsCode}
-  }
+  },
+  config: __vitest_browser_runner__.config,
 }
 export const commands = server.commands
-export const userEvent = ${getUserEvent(provider)}
+export const userEvent = createUserEvent(_userEventSetup)
 export { page, cdp }
 `
 }
 
-function getUserEvent(provider: BrowserProvider) {
-  if (provider.name !== 'preview') {
-    return '__userEvent_CDP__'
-  }
-  // TODO: have this in a separate file
-  return `{
-  ...__vitest_user_event__,
-  fill: async (element, text) => {
-    await __vitest_user_event__.clear(element)
-    await __vitest_user_event__.type(element, text)
-  },
-  dragAndDrop: async () => {
-    throw new Error('Provider "preview" does not support dragging elements')
-  }
-}`
-}
-
 async function getUserEventImport(provider: BrowserProvider, resolve: (id: string, importer: string) => Promise<null | { id: string }>) {
   if (provider.name !== 'preview') {
-    return ''
+    return 'const _userEventSetup = undefined'
   }
   const resolved = await resolve('@testing-library/user-event', __dirname)
   if (!resolved) {
@@ -115,5 +99,5 @@ async function getUserEventImport(provider: BrowserProvider, resolve: (id: strin
   }
   return `import { userEvent as __vitest_user_event__ } from '${slash(
     `/@fs/${resolved.id}`,
-  )}'`
+  )}'\nconst _userEventSetup = __vitest_user_event__.setup()\n`
 }

@@ -114,7 +114,7 @@ describe('waitFor', () => {
         timeout: 50,
       })
     }
-    catch (error) {
+    catch {
       timedOut = true
     }
     expect(timedOut).toBe(true)
@@ -214,7 +214,7 @@ describe('waitUntil', () => {
         timeout: 50,
       })
     }
-    catch (error) {
+    catch {
       timedOut = true
     }
     expect(timedOut).toBe(true)

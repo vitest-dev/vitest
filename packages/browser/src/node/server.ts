@@ -11,8 +11,8 @@ import type {
 import { join, resolve } from 'pathe'
 import type { ErrorWithDiff } from '@vitest/utils'
 import { slash } from '@vitest/utils'
-import type { ResolvedConfig } from 'vitest'
 import { type StackTraceParserOptions, parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
+import type { SerializedConfig } from 'vitest'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 import { BrowserServerCDPHandler } from './cdp'
@@ -28,6 +28,8 @@ export class BrowserServer implements IBrowserServer {
   public testerHtml: Promise<string> | string
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
+  public errorCatcherUrl: string
+  public locatorsUrl: string | undefined
   public stateJs: Promise<string> | string
 
   public state: BrowserServerState
@@ -86,6 +88,13 @@ export class BrowserServer implements IBrowserServer {
       resolve(distRoot, 'client/esm-client-injector.js'),
       'utf8',
     ).then(js => (this.injectorJs = js))
+    this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
+
+    const builtinProviders = ['playwright', 'webdriverio', 'preview']
+    const providerName = project.config.browser.provider || 'preview'
+    if (builtinProviders.includes(providerName)) {
+      this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
+    }
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',
@@ -182,7 +191,7 @@ export class BrowserServer implements IBrowserServer {
     })
   }
 
-  private cdpSessions = new Map<string, Promise<CDPSession>>()
+  private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
   async ensureCDPHandler(contextId: string, sessionId: string) {
     const cachedHandler = this.state.cdps.get(sessionId)
@@ -195,11 +204,11 @@ export class BrowserServer implements IBrowserServer {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessions.get(sessionId) ?? await (async () => {
+    const promise = this.cdpSessionsPromises.get(sessionId) ?? await (async () => {
       const promise = provider.getCDPSession!(contextId).finally(() => {
-        this.cdpSessions.delete(sessionId)
+        this.cdpSessionsPromises.delete(sessionId)
       })
-      this.cdpSessions.set(sessionId, promise)
+      this.cdpSessionsPromises.set(sessionId, promise)
       return promise
     })()
 
@@ -222,7 +231,7 @@ export class BrowserServer implements IBrowserServer {
   }
 }
 
-function wrapConfig(config: ResolvedConfig): ResolvedConfig {
+function wrapConfig(config: SerializedConfig): SerializedConfig {
   return {
     ...config,
     // workaround RegExp serialization

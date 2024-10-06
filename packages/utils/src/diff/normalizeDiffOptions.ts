@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { CompareKeys } from 'pretty-format'
-import { getColors } from '../colors'
+import type { CompareKeys } from '@vitest/pretty-format'
+import c from 'tinyrainbow'
 import type { DiffOptions, DiffOptionsNormalized } from './types'
 
 export const noColor = (string: string): string => string
@@ -15,8 +15,6 @@ const DIFF_CONTEXT_DEFAULT = 5
 const DIFF_TRUNCATE_THRESHOLD_DEFAULT = 0 // not truncate
 
 function getDefaultOptions(): DiffOptionsNormalized {
-  const c = getColors()
-
   return {
     aAnnotation: 'Expected',
     aColor: c.green,

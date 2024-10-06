@@ -17,7 +17,7 @@ const external = [
 const entries = {
   index: 'src/index.ts',
   utils: 'src/utils/index.ts',
-  types: 'src/types/index.ts',
+  types: 'src/types.ts',
 }
 
 const plugins = [

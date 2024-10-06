@@ -8,12 +8,15 @@
     "test:forks": "vitest --project forks",
     "test:vmThreads": "vitest --project vmThreads",
     "dev": "vite",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "collect": "vitest list"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
     "@vitest/expect": "workspace:*",
+    "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
+    "@vitest/test-dep-esm-comment": "file:./deps/dep-esm-comment",
     "@vitest/test-dep1": "file:./deps/dep1",
     "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
@@ -22,13 +25,15 @@
     "axios": "^0.26.1",
     "debug": "^4.3.4",
     "immutable": "5.0.0-beta.5",
-    "strip-ansi": "^7.1.0",
+    "memfs": "^4.8.2",
     "sweetalert2": "^11.6.16",
+    "tinyrainbow": "^1.2.0",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
+    "vite-node": "workspace:*",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
-    "vue": "^3.4.26",
+    "vue": "^3.4.37",
     "zustand": "^4.1.1"
   }
 }

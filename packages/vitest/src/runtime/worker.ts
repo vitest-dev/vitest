@@ -1,19 +1,37 @@
 import { pathToFileURL } from 'node:url'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
-import type { ContextRPC } from '../types/rpc'
 import { loadEnvironment } from '../integrations/env/loader'
 import { isChildProcess, setProcessTitle } from '../utils/base'
+import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
 import type { VitestWorker } from './workers/types'
+import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {
   setProcessTitle(`vitest ${poolId}`)
+
+  const isProfiling = process.execArgv.some(
+    execArg =>
+      execArg.startsWith('--prof')
+      || execArg.startsWith('--cpu-prof')
+      || execArg.startsWith('--heap-prof')
+      || execArg.startsWith('--diagnostic-dir'),
+  )
+
+  if (isProfiling) {
+    // Work-around for nodejs/node#55094
+    process.on('SIGTERM', () => {
+      process.exit()
+    })
+  }
 }
 
 // this is what every pool executes when running tests
-export async function run(ctx: ContextRPC) {
+async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
+  disposeInternalListeners()
+
   const prepareStart = performance.now()
 
   const inspectorCleanup = setupInspect(ctx)
@@ -63,7 +81,6 @@ export async function run(ctx: ContextRPC) {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
       moduleCache: new ModuleCacheMap(),
-      mockMap: new Map(),
       config: ctx.config,
       onCancel,
       environment,
@@ -73,18 +90,28 @@ export async function run(ctx: ContextRPC) {
       },
       rpc,
       providedContext: ctx.providedContext,
-    }
+    } satisfies WorkerGlobalState
 
-    if (!worker.runTests || typeof worker.runTests !== 'function') {
+    const methodName = method === 'collect' ? 'collectTests' : 'runTests'
+
+    if (!worker[methodName] || typeof worker[methodName] !== 'function') {
       throw new TypeError(
         `Test worker should expose "runTests" method. Received "${typeof worker.runTests}".`,
       )
     }
 
-    await worker.runTests(state)
+    await worker[methodName](state)
   }
   finally {
     await rpcDone().catch(() => {})
     inspectorCleanup()
   }
+}
+
+export function run(ctx: ContextRPC) {
+  return execute('run', ctx)
+}
+
+export function collect(ctx: ContextRPC) {
+  return execute('collect', ctx)
 }

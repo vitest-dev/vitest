@@ -7,6 +7,8 @@ declare module 'vitest' {
     globalSetup: boolean
     globalSetupOverriden: boolean
     invalidValue: unknown
+    projectConfigValue: boolean
+    globalConfigValue: boolean
   }
 }
 

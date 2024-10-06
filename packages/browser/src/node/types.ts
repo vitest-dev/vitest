@@ -1,11 +1,12 @@
+import type { ServerIdResolution, ServerMockResolution } from '@vitest/mocker/node'
 import type { BirpcReturn } from 'birpc'
-import type { AfterSuiteRunMeta, CancelReason, File, Reporter, SnapshotResult, TaskResultPack, UserConsoleLog } from 'vitest'
+import type { AfterSuiteRunMeta, CancelReason, Reporter, RunnerTestFile, SnapshotResult, TaskResultPack, UserConsoleLog } from 'vitest'
 
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
   onUnhandledError: (error: unknown, type: string) => Promise<void>
-  onCollected: (files?: File[]) => Promise<void>
+  onCollected: (files?: RunnerTestFile[]) => Promise<void>
   onTaskUpdate: (packs: TaskResultPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onCancel: (reason: CancelReason) => void
@@ -20,7 +21,7 @@ export interface WebSocketBrowserHandlers {
   resolveId: (
     id: string,
     importer?: string
-  ) => Promise<{ id: string } | null>
+  ) => Promise<ServerIdResolution | null>
   triggerCommand: <T>(
     contextId: string,
     command: string,
@@ -30,12 +31,8 @@ export interface WebSocketBrowserHandlers {
   resolveMock: (
     id: string,
     importer: string,
-    hasFactory: boolean
-  ) => Promise<{
-    type: 'factory' | 'redirect' | 'automock'
-    mockPath?: string | null
-    resolvedId: string
-  }>
+    options: { mock: 'spy' | 'factory' | 'auto' },
+  ) => Promise<ServerMockResolution>
   invalidate: (ids: string[]) => void
   getBrowserFileSourceMap: (
     id: string

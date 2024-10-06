@@ -19,7 +19,7 @@ it('correctly inherit from the cli', async () => {
     bail: 100,
   })
   const project = ctx!.projects[0]
-  const config = project.getSerializableConfig()
+  const config = project.config
   expect(config).toMatchObject({
     logHeapUsage: true,
     allowOnly: true,

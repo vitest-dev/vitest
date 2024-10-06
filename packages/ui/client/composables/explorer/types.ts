@@ -38,10 +38,12 @@ export interface UITaskTreeNode extends TaskTreeNode {
 }
 
 export interface TestTreeNode extends UITaskTreeNode {
+  fileId: string
   type: 'test'
 }
 
 export interface CustomTestTreeNode extends UITaskTreeNode {
+  fileId: string
   type: 'custom'
 }
 
@@ -51,13 +53,14 @@ export interface ParentTreeNode extends UITaskTreeNode {
 }
 
 export interface SuiteTreeNode extends ParentTreeNode {
+  fileId: string
   type: 'suite'
-  typecheck?: boolean
 }
 
 export interface FileTreeNode extends ParentTreeNode {
   type: 'file'
   filepath: string
+  typecheck: boolean | undefined
   projectName?: string
   projectNameColor: string
   collectDuration?: number

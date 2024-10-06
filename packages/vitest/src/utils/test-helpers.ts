@@ -1,12 +1,8 @@
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
-import type {
-  ContextTestEnvironment,
-  EnvironmentOptions,
-  TransformModePatterns,
-  VitestEnvironment,
-} from '../types'
-import type { WorkspaceProject } from '../node/workspace'
+import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
+import type { ContextTestEnvironment } from '../types/worker'
+import type { WorkspaceSpec } from '../node/pool'
 import { groupBy } from './base'
 
 export const envsOrder = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
@@ -31,10 +27,12 @@ function getTransformMode(
 }
 
 export async function groupFilesByEnv(
-  files: (readonly [WorkspaceProject, string])[],
+  files: Array<WorkspaceSpec>,
 ) {
   const filesWithEnv = await Promise.all(
-    files.map(async ([project, file]) => {
+    files.map(async (spec) => {
+      const file = spec.moduleId
+      const project = spec.project.workspaceProject
       const code = await fs.readFile(file, 'utf-8')
 
       // 1. Check for control comments in the file
@@ -57,10 +55,13 @@ export async function groupFilesByEnv(
         file,
       )
 
-      const envOptions = JSON.parse(
-        code.match(/@(?:vitest|jest)-environment-options\s+?(.+)/)?.[1]
-        || 'null',
-      )
+      let envOptionsJson = code.match(/@(?:vitest|jest)-environment-options\s+(.+)/)?.[1]
+      if (envOptionsJson?.endsWith('*/')) {
+        // Trim closing Docblock characters the above regex might have captured
+        envOptionsJson = envOptionsJson.slice(0, -2)
+      }
+
+      const envOptions = JSON.parse(envOptionsJson || 'null')
       const envKey = env === 'happy-dom' ? 'happyDOM' : env
       const environment: ContextTestEnvironment = {
         name: env as VitestEnvironment,

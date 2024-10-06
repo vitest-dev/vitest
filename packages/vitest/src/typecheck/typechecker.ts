@@ -1,26 +1,21 @@
 import { rm } from 'node:fs/promises'
 import { performance } from 'node:perf_hooks'
-import type { ExecaChildProcess } from 'execa'
-import { execa } from 'execa'
+import type { ChildProcess } from 'node:child_process'
 import { basename, extname, resolve } from 'pathe'
 import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
 import type { RawSourceMap } from '@ampproject/remapping'
+import type { ParsedStack } from '@vitest/utils'
+import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
+import { x } from 'tinyexec'
 import { getTasks } from '../utils'
-import type {
-  Awaitable,
-  File,
-  ParsedStack,
-  Task,
-  TaskResultPack,
-  TaskState,
-  TscErrorInfo,
-  Vitest,
-} from '../types'
 import type { WorkspaceProject } from '../node/workspace'
+import type { Awaitable } from '../types/general'
+import type { Vitest } from '../node/core'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
 import type { FileInformation } from './collect'
 import { collectTests } from './collect'
+import type { TscErrorInfo } from './types'
 
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
@@ -55,7 +50,7 @@ export class Typechecker {
   private _tests: Record<string, FileInformation> | null = {}
   private tempConfigPath?: string
   private allowJs?: boolean
-  private process?: ExecaChildProcess
+  private process?: ChildProcess
 
   protected files: string[] = []
 
@@ -150,7 +145,7 @@ export class Typechecker {
         ...definitions.sort((a, b) => b.start - a.start),
       ]
       // has no map for ".js" files that use // @ts-check
-      const traceMap = map && new TraceMap(map as unknown as RawSourceMap)
+      const traceMap = (map && new TraceMap(map as unknown as RawSourceMap))
       const indexMap = createIndexMap(parsed)
       const markState = (task: Task, state: TaskState) => {
         task.result = {
@@ -266,6 +261,7 @@ export class Typechecker {
   public async stop() {
     await this.clear()
     this.process?.kill()
+    this.process = undefined
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string) {
@@ -294,6 +290,10 @@ export class Typechecker {
   }
 
   public async start() {
+    if (this.process) {
+      return
+    }
+
     if (!this.tempConfigPath) {
       throw new Error('tsconfig was not initialized')
     }
@@ -310,15 +310,17 @@ export class Typechecker {
     }
     this._output = ''
     this._startTime = performance.now()
-    const child = execa(typecheck.checker, args, {
-      cwd: root,
-      stdout: 'pipe',
-      reject: false,
+    const child = x(typecheck.checker, args, {
+      nodeOptions: {
+        cwd: root,
+        stdio: 'pipe',
+      },
+      throwOnError: false,
     })
-    this.process = child
+    this.process = child.process
     await this._onParseStart?.()
     let rerunTriggered = false
-    child.stdout?.on('data', (chunk) => {
+    child.process?.stdout?.on('data', (chunk) => {
       this._output += chunk
       if (!watch) {
         return

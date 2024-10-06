@@ -5,7 +5,7 @@ import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { deepMerge } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
-import type { ResolvedConfig, UserWorkspaceConfig } from '../../types'
+import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
@@ -15,7 +15,7 @@ import {
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
-import { VitestResolver } from './vitestResolver'
+import { VitestProjectResolver } from './vitestResolver'
 import { VitestOptimizer } from './optimizer'
 import { NormalizeURLPlugin } from './normalizeURL'
 
@@ -70,18 +70,22 @@ export function WorkspaceVitestPlugin(
             alias: testConfig.alias,
             conditions: ['node'],
           },
-          esbuild: {
-            sourcemap: 'external',
-
-            // Enables using ignore hint for coverage providers with @preserve keyword
-            legalComments: 'inline',
-          },
+          esbuild: viteConfig.esbuild === false
+            ? false
+            : {
+                // Lowest target Vitest supports is Node18
+                target: viteConfig.esbuild?.target || 'node18',
+                sourcemap: 'external',
+                // Enables using ignore hint for coverage providers with @preserve keyword
+                legalComments: 'inline',
+              },
           server: {
             // disable watch mode in workspaces,
             // because it is handled by the top-level watcher
             watch: null,
             open: false,
             hmr: false,
+            ws: false,
             preTransformRequests: false,
             middlewareMode: true,
             fs: {
@@ -137,7 +141,7 @@ export function WorkspaceVitestPlugin(
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
     ...MocksPlugins(),
-    VitestResolver(project.ctx),
+    VitestProjectResolver(project.ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ]

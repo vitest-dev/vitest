@@ -6,20 +6,20 @@ import type { UserEventCommand } from './utils'
 
 export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async (
   context,
-  xpath,
+  selector,
   userValues,
   options = {},
 ) => {
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const value = userValues as any as (string | { element: string })[]
     const { iframe } = context
-    const selectElement = iframe.locator(`xpath=${xpath}`)
+    const selectElement = iframe.locator(selector)
 
     const values = await Promise.all(value.map(async (v) => {
       if (typeof v === 'string') {
         return v
       }
-      const elementHandler = await iframe.locator(`xpath=${v.element}`).elementHandle()
+      const elementHandler = await iframe.locator(v.element).elementHandle()
       if (!elementHandler) {
         throw new Error(`Element not found: ${v.element}`)
       }
@@ -38,11 +38,10 @@ export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async
       return
     }
 
-    const markedXpath = `//${xpath}`
     const browser = context.browser
 
     if (values.length === 1 && 'index' in values[0]) {
-      const selectElement = browser.$(markedXpath)
+      const selectElement = browser.$(selector)
       await selectElement.selectByIndex(values[0].index)
     }
     else {

@@ -1,7 +1,7 @@
 import type { WorkerGlobalState } from 'vitest'
 import { parse } from 'flatted'
+import type { BrowserRPC } from '@vitest/browser/client'
 import { getBrowserState } from '../utils'
-import type { BrowserRPC } from '../client'
 
 const config = getBrowserState().config
 const contextId = getBrowserState().contextId
@@ -24,7 +24,6 @@ const state: WorkerGlobalState = {
     invalidates: [],
   },
   onCancel: null as any,
-  mockMap: new Map(),
   config,
   environment: {
     name: 'browser',
@@ -63,10 +62,6 @@ function createCdp() {
   }
 
   const listeners: Record<string, Function[]> = {}
-
-  const error = (err: unknown) => {
-    window.dispatchEvent(new ErrorEvent('error', { error: err }))
-  }
 
   const cdp = {
     send(method: string, params?: Record<string, any>) {
@@ -113,4 +108,8 @@ function createCdp() {
   }
 
   return cdp
+}
+
+function error(err: unknown) {
+  window.dispatchEvent(new ErrorEvent('error', { error: err }))
 }

@@ -12,7 +12,6 @@ type LineCoverage = Record<number, CoveredLine | UncoveredLine | IgnoredLine>
 describe('include empty lines', () => {
   let coveredFileLines: LineCoverage
   let uncoveredFileLines: LineCoverage
-  let files: string[]
 
   beforeAll(async () => {
     await runVitest({
@@ -28,16 +27,7 @@ describe('include empty lines', () => {
       },
     })
 
-    ;({ coveredFileLines, uncoveredFileLines, files } = await readCoverage())
-  })
-
-  test('file containing only types is ignored', () => {
-    expect(files).toMatchInlineSnapshot(`
-      [
-        "<process-cwd>/fixtures/src/empty-lines.ts",
-        "<process-cwd>/fixtures/src/untested-file.ts",
-      ]
-    `)
+    ;({ coveredFileLines, uncoveredFileLines } = await readCoverage())
   })
 
   test('lines are included', async () => {
@@ -64,7 +54,7 @@ describe('include empty lines', () => {
 describe('ignore empty lines', () => {
   let coveredFileLines: LineCoverage
   let uncoveredFileLines: LineCoverage
-  let files: string[]
+  let typesOnlyFileLines: LineCoverage
 
   beforeAll(async () => {
     await runVitest({
@@ -79,16 +69,13 @@ describe('ignore empty lines', () => {
       },
     })
 
-    ;({ coveredFileLines, uncoveredFileLines, files } = await readCoverage())
+    ;({ coveredFileLines, uncoveredFileLines, typesOnlyFileLines } = await readCoverage())
   })
 
-  test('file containing only types is ignored', () => {
-    expect(files).toMatchInlineSnapshot(`
-      [
-        "<process-cwd>/fixtures/src/empty-lines.ts",
-        "<process-cwd>/fixtures/src/untested-file.ts",
-      ]
-    `)
+  test('file containing only types has no uncovered lines', () => {
+    expect(typesOnlyFileLines[1]).toBe(undefined)
+    expect(typesOnlyFileLines[2]).toBe(undefined)
+    expect(typesOnlyFileLines[3]).toBe(undefined)
   })
 
   test('empty lines are ignored', async () => {
@@ -184,14 +171,14 @@ coverageTest('cover some lines', () => {
 
 async function readCoverage() {
   const coverageMap = await readCoverageMap()
-  const files = coverageMap.files()
 
   const coveredFileLines = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/empty-lines.ts').getLineCoverage() as LineCoverage
   const uncoveredFileLines = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/untested-file.ts').getLineCoverage() as LineCoverage
+  const typesOnlyFileLines = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/types-only.ts').getLineCoverage() as LineCoverage
 
-  return { coveredFileLines, uncoveredFileLines, files }
+  return { coveredFileLines, uncoveredFileLines, typesOnlyFileLines }
 }
 
 function range(count: number, options: { base: number } = { base: 1 }) {
-  return Array(count).fill(0).map((_, i) => options.base + i)
+  return Array.from({ length: count }).fill(0).map((_, i) => options.base + i)
 }

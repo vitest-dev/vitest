@@ -11,7 +11,7 @@ runs:
 
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@v2
+      uses: pnpm/action-setup@v4
 
     - name: Set node version to ${{ inputs.node-version }}
       uses: actions/setup-node@v4

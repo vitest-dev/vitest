@@ -26,6 +26,8 @@ export default antfu(
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',
+      // contains technically invalid code to display pretty diff
+      'docs/guide/snapshot.md',
     ],
   },
   {
@@ -51,6 +53,7 @@ export default antfu(
 
       // TODO: migrate and turn it back on
       'ts/ban-types': 'off',
+      'ts/no-unsafe-function-type': 'off',
 
       'no-restricted-imports': [
         'error',
@@ -94,6 +97,7 @@ export default antfu(
   {
     files: [
       `docs/${GLOB_SRC}`,
+      `**/*.md`,
     ],
     rules: {
       'style/max-statements-per-line': 'off',
@@ -111,6 +115,14 @@ export default antfu(
     ],
     rules: {
       'no-restricted-globals': 'off',
+    },
+  },
+  {
+    files: [
+      `test/${GLOB_SRC}`,
+    ],
+    rules: {
+      'unicorn/consistent-function-scoping': 'off',
     },
   },
   {

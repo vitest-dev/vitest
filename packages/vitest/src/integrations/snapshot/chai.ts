@@ -44,17 +44,17 @@ function getError(expected: () => void | Error, promise: string | undefined) {
   throw new Error('snapshot function didn\'t throw')
 }
 
-export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
-  const getTestNames = (test?: Test) => {
-    if (!test) {
-      return {}
-    }
-    return {
-      filepath: test.file.filepath,
-      name: getNames(test).slice(1).join(' > '),
-    }
+function getTestNames(test?: Test) {
+  if (!test) {
+    return {}
   }
+  return {
+    filepath: test.file.filepath,
+    name: getNames(test).slice(1).join(' > '),
+  }
+}
 
+export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
     utils.addMethod(
       chai.Assertion.prototype,

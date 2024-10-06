@@ -1,18 +1,18 @@
 import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
-import type { ResolvedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { TraceMap, originalPositionFor } from 'vitest/utils'
 import { page } from '@vitest/browser/context'
-import { importFs, importId } from '../utils'
-import { globalChannel } from '../channel'
+import { globalChannel } from '@vitest/browser/client'
+import { executor } from '../utils'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { rpc } from './rpc'
 import type { VitestBrowserClientMocker } from './mocker'
 
 interface BrowserRunnerOptions {
-  config: ResolvedConfig
+  config: SerializedConfig
 }
 
 export const browserHashMap = new Map<
@@ -25,13 +25,13 @@ interface CoverageHandler {
 }
 
 export function createBrowserRunner(
-  runnerClass: { new (config: ResolvedConfig): VitestRunner },
+  runnerClass: { new (config: SerializedConfig): VitestRunner },
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
 ): { new (options: BrowserRunnerOptions): VitestRunner } {
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
-    public config: ResolvedConfig
+    public config: SerializedConfig
     hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
 
@@ -91,7 +91,8 @@ export function createBrowserRunner(
       if (coverage) {
         await rpc().onAfterSuiteRun({
           coverage,
-          transformMode: 'web',
+          testFiles: files.map(file => file.name),
+          transformMode: 'browser',
           projectName: this.config.name,
         })
       }
@@ -110,7 +111,7 @@ export function createBrowserRunner(
         try {
           await updateFilesLocations(files, this.sourceMapCache)
         }
-        catch (_) {}
+        catch {}
       }
       return rpc().onCollected(files)
     }
@@ -140,7 +141,7 @@ let cachedRunner: VitestRunner | null = null
 export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
-  config: ResolvedConfig,
+  config: SerializedConfig,
 ) {
   if (cachedRunner) {
     return cachedRunner
@@ -148,16 +149,9 @@ export async function initiateRunner(
   const runnerClass
     = config.mode === 'test' ? VitestTestRunner : NodeBenchmarkRunner
 
-  const executeId = (id: string) => {
-    if (id[0] === '/' || id[1] === ':') {
-      return importFs(id)
-    }
-    return importId(id)
-  }
-
   const BrowserRunner = createBrowserRunner(runnerClass, mocker, state, {
     takeCoverage: () =>
-      takeCoverageInsideWorker(config.coverage, { executeId }),
+      takeCoverageInsideWorker(config.coverage, executor),
   })
   if (!config.snapshotOptions.snapshotEnvironment) {
     config.snapshotOptions.snapshotEnvironment = new VitestBrowserSnapshotEnvironment()
@@ -165,10 +159,10 @@ export async function initiateRunner(
   const runner = new BrowserRunner({
     config,
   })
-  const executor = { executeId } as VitestExecutor
+
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, executor),
-    loadSnapshotSerializers(config, executor),
+    loadDiffConfig(config, executor as unknown as VitestExecutor),
+    loadSnapshotSerializers(config, executor as unknown as VitestExecutor),
   ])
   runner.config.diffOptions = diffOptions
   cachedRunner = runner

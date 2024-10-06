@@ -38,6 +38,7 @@ test('provider options, generic', () => {
       'statements': 100,
 
       '**/some-file.ts': {
+        100: true,
         lines: 12,
         branches: 12,
         functions: 12,
@@ -54,9 +55,14 @@ test('provider options, generic', () => {
       statements: [80, 95],
     },
     thresholds: {
-      '100': true,
+      '100': false,
+      'lines': 1,
+      'autoUpdate': true,
+      'perFile': true,
+      'statements': 100,
 
       '**/some-file.ts': {
+        100: false,
         lines: 12,
         branches: 12,
         functions: 12,

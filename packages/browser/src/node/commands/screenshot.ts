@@ -1,13 +1,11 @@
 import { mkdir } from 'node:fs/promises'
 import { normalize } from 'node:path'
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
 import { basename, dirname, relative, resolve } from 'pathe'
-import type { ResolvedConfig } from 'vitest'
 import type { ScreenshotOptions } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
-// TODO: expose provider specific options in types
 export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   context,
   name: string,
@@ -17,19 +15,25 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
     throw new Error(`Cannot take a screenshot without a test path`)
   }
 
-  const path = resolveScreenshotPath(
-    context.testPath,
-    name,
-    context.project.config,
-  )
+  const path = options.path
+    ? resolve(dirname(context.testPath), options.path)
+    : resolveScreenshotPath(
+      context.testPath,
+      name,
+      context.project.config,
+    )
   const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 
   if (context.provider instanceof PlaywrightBrowserProvider) {
     if (options.element) {
-      const { element: elementXpath, ...config } = options
-      const element = context.iframe.locator(`xpath=${elementXpath}`)
-      const buffer = await element.screenshot({ ...config, path: savePath })
+      const { element: selector, ...config } = options
+      const element = context.iframe.locator(`${selector}`)
+      const buffer = await element.screenshot({
+        timeout: 1000,
+        ...config,
+        path: savePath,
+      })
       return returnResult(options, path, buffer)
     }
 
@@ -48,8 +52,7 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
       return returnResult(options, path, buffer)
     }
 
-    const xpath = `//${options.element}`
-    const element = await page.$(xpath)
+    const element = await page.$(`${options.element}`)
     const buffer = await element.saveScreenshot(savePath)
     return returnResult(options, path, buffer)
   }

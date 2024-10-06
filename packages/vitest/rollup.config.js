@@ -1,15 +1,15 @@
 import fs from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { dirname, join, normalize, resolve } from 'pathe'
 import esbuild from 'rollup-plugin-esbuild'
 import dts from 'rollup-plugin-dts'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import license from 'rollup-plugin-license'
-import c from 'picocolors'
-import fg from 'fast-glob'
+import { globSync } from 'tinyglobby'
+import c from 'tinyrainbow'
 import { defineConfig } from 'rollup'
 
 const require = createRequire(import.meta.url)
@@ -17,20 +17,21 @@ const pkg = require('./package.json')
 
 const entries = {
   'path': 'src/paths.ts',
-  'index': 'src/index.ts',
+  'index': 'src/public/index.ts',
   'cli': 'src/node/cli.ts',
-  'node': 'src/node.ts',
-  'suite': 'src/suite.ts',
-  'browser': 'src/browser.ts',
-  'runners': 'src/runners.ts',
-  'environments': 'src/environments.ts',
+  'node': 'src/public/node.ts',
+  'suite': 'src/public/suite.ts',
+  'browser': 'src/public/browser.ts',
+  'runners': 'src/public/runners.ts',
+  'environments': 'src/public/environments.ts',
+  'mocker': 'src/public/mocker.ts',
   'spy': 'src/integrations/spy.ts',
-  'coverage': 'src/coverage.ts',
+  'coverage': 'src/public/coverage.ts',
   'utils': 'src/public/utils.ts',
   'execute': 'src/public/execute.ts',
   'reporters': 'src/public/reporters.ts',
   // TODO: advanced docs
-  'workers': 'src/workers.ts',
+  'workers': 'src/public/workers.ts',
 
   // for performance reasons we bundle them separately so we don't import everything at once
   'worker': 'src/runtime/worker.ts',
@@ -41,23 +42,24 @@ const entries = {
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
 
-  'snapshot': 'src/snapshot.ts',
+  'snapshot': 'src/public/snapshot.ts',
 }
 
 const dtsEntries = {
-  index: 'src/index.ts',
-  node: 'src/node.ts',
-  environments: 'src/environments.ts',
-  browser: 'src/browser.ts',
-  runners: 'src/runners.ts',
-  suite: 'src/suite.ts',
-  config: 'src/config.ts',
-  coverage: 'src/coverage.ts',
+  index: 'src/public/index.ts',
+  node: 'src/public/node.ts',
+  environments: 'src/public/environments.ts',
+  browser: 'src/public/browser.ts',
+  runners: 'src/public/runners.ts',
+  suite: 'src/public/suite.ts',
+  config: 'src/public/config.ts',
+  coverage: 'src/public/coverage.ts',
   utils: 'src/public/utils.ts',
   execute: 'src/public/execute.ts',
   reporters: 'src/public/reporters.ts',
-  workers: 'src/workers.ts',
-  snapshot: 'src/snapshot.ts',
+  mocker: 'src/public/mocker.ts',
+  workers: 'src/public/workers.ts',
+  snapshot: 'src/public/snapshot.ts',
 }
 
 const external = [
@@ -76,6 +78,8 @@ const external = [
   'vite-node/server',
   'vite-node/constants',
   'vite-node/utils',
+  '@vitest/mocker',
+  '@vitest/mocker/node',
   '@vitest/utils/diff',
   '@vitest/utils/ast',
   '@vitest/utils/error',
@@ -95,7 +99,7 @@ const plugins = [
   json(),
   commonjs(),
   esbuild({
-    target: 'node14',
+    target: 'node18',
   }),
 ]
 
@@ -107,42 +111,14 @@ export default ({ watch }) =>
       output: {
         dir: 'dist',
         format: 'esm',
-        chunkFileNames: (chunkInfo) => {
-          let id
-            = chunkInfo.facadeModuleId
-            || Object.keys(chunkInfo.moduleIds).find(
-              i =>
-                !i.includes('node_modules')
-                && (i.includes('src/') || i.includes('src\\')),
-            )
-          if (id) {
-            id = normalize(id)
-            const parts = Array.from(
-              new Set(
-                relative(process.cwd(), id)
-                  .split(/\//g)
-                  .map(i => i.replace(/\..*$/, ''))
-                  .filter(
-                    i =>
-                      !['src', 'index', 'dist', 'node_modules'].some(j =>
-                        i.includes(j),
-                      ) && i.match(/^[\w-]+$/),
-                  ),
-              ),
-            )
-            if (parts.length) {
-              return `chunks/${parts.slice(-2).join('-')}.[hash].js`
-            }
-          }
-          return 'vendor/[name].[hash].js'
-        },
+        chunkFileNames: 'chunks/[name].[hash].js',
       },
       external,
       plugins: [...plugins, !watch && licensePlugin()],
       onwarn,
     },
     {
-      input: 'src/config.ts',
+      input: 'src/public/config.ts',
       output: [
         {
           file: 'dist/config.cjs',
@@ -163,6 +139,7 @@ export default ({ watch }) =>
         entryFileNames: chunk =>
           `${normalize(chunk.name).replace('src/', '')}.d.ts`,
         format: 'esm',
+        chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
       external,
       plugins: [dts({ respectExternal: true })],
@@ -175,21 +152,6 @@ function licensePlugin() {
       // https://github.com/rollup/rollup/blob/master/build-plugins/generate-license-file.js
       // MIT Licensed https://github.com/rollup/rollup/blob/master/LICENSE-CORE.md
       const coreLicense = fs.readFileSync(resolve(dir, '../../LICENSE'))
-      function sortLicenses(licenses) {
-        let withParenthesis = []
-        let noParenthesis = []
-        licenses.forEach((license) => {
-          if (/^\(/.test(license)) {
-            withParenthesis.push(license)
-          }
-          else {
-            noParenthesis.push(license)
-          }
-        })
-        withParenthesis = withParenthesis.sort()
-        noParenthesis = noParenthesis.sort()
-        return [...noParenthesis, ...withParenthesis]
-      }
       const licenses = new Set()
       const dependencyLicenseTexts = dependencies
         .filter(({ name }) => !name?.startsWith('@vitest/'))
@@ -236,9 +198,10 @@ function licensePlugin() {
                     preserveSymlinks: false,
                   }),
                 )
-                const licenseFile = fg.sync(`${pkgDir}/LICENSE*`, {
+                const [licenseFile] = globSync([`${pkgDir}/LICENSE*`], {
+                  expandDirectories: false,
                   caseSensitiveMatch: false,
-                })[0]
+                })
                 if (licenseFile) {
                   licenseText = fs.readFileSync(licenseFile, 'utf-8')
                 }
@@ -282,4 +245,20 @@ function onwarn(message) {
     return
   }
   console.error(message)
+}
+
+function sortLicenses(licenses) {
+  let withParenthesis = []
+  let noParenthesis = []
+  licenses.forEach((license) => {
+    if (/^\(/.test(license)) {
+      withParenthesis.push(license)
+    }
+    else {
+      noParenthesis.push(license)
+    }
+  })
+  withParenthesis = withParenthesis.sort()
+  noParenthesis = noParenthesis.sort()
+  return [...noParenthesis, ...withParenthesis]
 }

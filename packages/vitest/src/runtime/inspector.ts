@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module'
-
-import type { ContextRPC, ResolvedConfig } from '../types'
+import { pathToFileURL } from 'node:url'
+import type { ContextRPC } from '../types/worker'
+import type { SerializedConfig } from './config'
 
 const __require = createRequire(import.meta.url)
 let inspector: typeof import('node:inspector')
@@ -37,7 +38,7 @@ export function setupInspect(ctx: ContextRPC) {
           session.post('Debugger.enable')
           session.post('Debugger.setBreakpointByUrl', {
             lineNumber: 0,
-            url: new URL(firstTestFile, import.meta.url).href,
+            url: pathToFileURL(firstTestFile),
           })
         }
       }
@@ -54,7 +55,7 @@ export function setupInspect(ctx: ContextRPC) {
   }
 }
 
-export function closeInspector(config: ResolvedConfig) {
+export function closeInspector(config: SerializedConfig) {
   const keepOpen = shouldKeepOpen(config)
 
   if (inspector && !keepOpen) {
@@ -63,7 +64,7 @@ export function closeInspector(config: ResolvedConfig) {
   }
 }
 
-function shouldKeepOpen(config: ResolvedConfig) {
+function shouldKeepOpen(config: SerializedConfig) {
   // In watch mode the inspector can persist re-runs if isolation is disabled and a single worker is used
   const isIsolatedSingleThread
     = config.pool === 'threads'

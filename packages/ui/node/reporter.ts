@@ -3,14 +3,14 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { basename, dirname, relative, resolve } from 'pathe'
-import c from 'picocolors'
-import fg from 'fast-glob'
+import { globSync } from 'tinyglobby'
+import c from 'tinyrainbow'
 import { stringify } from 'flatted'
 import type {
   File,
   ModuleGraphData,
   Reporter,
-  ResolvedConfig,
+  SerializedConfig,
   Vitest,
 } from 'vitest'
 import type { HTMLOptions } from 'vitest/node'
@@ -35,7 +35,7 @@ function getOutputFile(config: PotentialConfig | undefined) {
 interface HTMLReportData {
   paths: string[]
   files: File[]
-  config: ResolvedConfig
+  config: SerializedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -63,7 +63,7 @@ export default class HTMLReporter implements Reporter {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
-      config: this.ctx.config,
+      config: this.ctx.getCoreWorkspaceProject().getSerializableConfig(),
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       moduleGraph: {},
       sources: {},
@@ -83,7 +83,7 @@ export default class HTMLReporter implements Reporter {
               encoding: 'utf-8',
             })
           }
-          catch (_) {
+          catch {
             // just ignore
           }
         }
@@ -111,7 +111,7 @@ export default class HTMLReporter implements Reporter {
     await fs.writeFile(metaFile, data, 'base64')
     const ui = resolve(distDir, 'client')
     // copy ui
-    const files = fg.sync('**/*', { cwd: ui })
+    const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
     await Promise.all(
       files.map(async (f) => {
         if (f === 'index.html') {

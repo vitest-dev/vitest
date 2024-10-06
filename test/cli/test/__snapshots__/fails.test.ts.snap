@@ -2,6 +2,11 @@
 
 exports[`should fail .dot-folder/dot-test.test.ts > .dot-folder/dot-test.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
+exports[`should fail async-assertion.test.ts > async-assertion.test.ts 1`] = `
+"AssertionError: expected 'xx' to be 'zz' // Object.is equality
+AssertionError: expected 'xx' to be 'yy' // Object.is equality"
+`;
+
 exports[`should fail concurrent-suite-deadlock.test.ts > concurrent-suite-deadlock.test.ts 1`] = `"Error: Test timed out in 500ms."`;
 
 exports[`should fail concurrent-test-deadlock.test.ts > concurrent-test-deadlock.test.ts 1`] = `"Error: Test timed out in 500ms."`;
@@ -23,6 +28,14 @@ exports[`should fail hooks-called.test.ts > hooks-called.test.ts 1`] = `
 Error: before all"
 `;
 
+exports[`should fail hooks-fail-afterAll.test.ts > hooks-fail-afterAll.test.ts 1`] = `"TypeError: "afterAll" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-afterEach.test.ts > hooks-fail-afterEach.test.ts 1`] = `"TypeError: "afterEach" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-beforeAll.test.ts > hooks-fail-beforeAll.test.ts 1`] = `"TypeError: "beforeAll" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-beforeEach.test.ts > hooks-fail-beforeEach.test.ts 1`] = `"TypeError: "beforeEach" callback value must be function, received "string""`;
+
 exports[`should fail inline-snapshop-inside-each.test.ts > inline-snapshop-inside-each.test.ts 1`] = `
 "Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
@@ -31,11 +44,21 @@ Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each"
 `;
 
+exports[`should fail inline-snapshop-inside-loop.test.ts > inline-snapshop-inside-loop.test.ts 1`] = `
+"Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
+Error: toMatchInlineSnapshot cannot be called multiple times at the same location."
+`;
+
 exports[`should fail mock-import-proxy-module.test.ts > mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
 
 exports[`should fail nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
 exports[`should fail no-assertions.test.ts > no-assertions.test.ts 1`] = `"Error: expected any number of assertion, but got none"`;
+
+exports[`should fail node-browser-context.test.ts > node-browser-context.test.ts 1`] = `"Error: @vitest/browser/context can be imported only inside the Browser Mode. Your test is running in forks pool. Make sure your regular tests are excluded from the "test.include" glob pattern."`;
 
 exports[`should fail primitive-error.test.ts > primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
 
@@ -77,7 +100,8 @@ exports[`should fail test-extend/test-rest-props.test.ts > test-extend/test-rest
 exports[`should fail test-extend/test-without-destructuring.test.ts > test-extend/test-without-destructuring.test.ts 1`] = `"Error: The first argument inside a fixture must use object destructuring pattern, e.g. ({ test } => {}). Instead, received "context"."`;
 
 exports[`should fail test-timeout.test.ts > test-timeout.test.ts 1`] = `
-"Error: Test timed out in 200ms.
+"Error: Test timed out in 20ms.
+Error: Test timed out in 200ms.
 Error: Test timed out in 100ms.
 Error: Test timed out in 10ms."
 `;

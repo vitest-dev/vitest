@@ -3,18 +3,18 @@ import type { VitestClient } from '@vitest/ws-client'
 import type {
   File,
   ModuleGraphData,
-  ResolvedConfig,
+  SerializedConfig,
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
 import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
-import { StateManager } from '../../../../vitest/src/node/state'
+import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {
   paths: string[]
   files: File[]
-  config: ResolvedConfig
+  config: SerializedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -55,7 +55,6 @@ export function createStaticClient(): VitestClient {
     },
     getTransformResult: asyncNoop,
     onDone: noop,
-    onCollected: asyncNoop,
     onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,

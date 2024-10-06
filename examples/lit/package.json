@@ -17,11 +17,10 @@
   },
   "devDependencies": {
     "@vitest/browser": "latest",
-    "@vitest/ui": "latest",
     "jsdom": "latest",
+    "playwright": "^1.47.2",
     "vite": "latest",
-    "vitest": "latest",
-    "webdriverio": "^8.32.2"
+    "vitest": "latest"
   },
   "stackblitz": {
     "startCommand": "npm run test:ui"

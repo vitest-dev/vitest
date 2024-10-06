@@ -1,4 +1,4 @@
-export { startTests, updateTask } from './run'
+export { startTests, updateTask, collectTests } from './run'
 export {
   test,
   it,
@@ -18,4 +18,5 @@ export {
 export { setFn, getFn, getHooks, setHooks } from './map'
 export { getCurrentTest } from './test-state'
 export { processError } from '@vitest/utils/error'
-export * from './types'
+
+export type * from './types'

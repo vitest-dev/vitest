@@ -17,20 +17,20 @@ export async function resolveOrchestrator(
 
   const files = server.state.getContext(contextId!)?.files ?? []
 
-  const config = server.getSerializableConfig()
   const injectorJs = typeof server.injectorJs === 'string'
     ? server.injectorJs
     : await server.injectorJs
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
-    __VITEST_CONFIG__: JSON.stringify(config),
+    __VITEST_CONFIG__: JSON.stringify(server.getSerializableConfig()),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: server.vite.config.root,
     }),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_TESTER_ID__: '"none"',
     __VITEST_PROVIDED_CONTEXT__: '{}',
   })
 
@@ -59,7 +59,8 @@ export async function resolveOrchestrator(
       .replace(
         '<!-- !LOAD_METADATA! -->',
         [
-          '<script>{__VITEST_INJECTOR__}</script>',
+          '{__VITEST_INJECTOR__}',
+          '{__VITEST_ERROR_CATCHER__}',
           '{__VITEST_SCRIPTS__}',
           `<script type="module" crossorigin src="${base}${jsEntry}"></script>`,
         ].join('\n'),
@@ -70,7 +71,8 @@ export async function resolveOrchestrator(
     __VITEST_FAVICON__: server.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Runner',
     __VITEST_SCRIPTS__: server.orchestratorScripts,
-    __VITEST_INJECTOR__: injector,
+    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
+    __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherUrl}"></script>`,
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
   })
 }

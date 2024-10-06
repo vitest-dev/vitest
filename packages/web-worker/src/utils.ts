@@ -43,13 +43,14 @@ function createClonedMessageEvent(
   }
   if (clone !== 'none') {
     debug('create message event, using polyfilled structured clone')
-    transfer?.length
-    && console.warn(
-      '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
-      + 'Falling back to polyfill, your transferable options will be lost. '
-      + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,'
-      + 'or update to Node 17+.',
-    )
+    if (transfer?.length) {
+      console.warn(
+        '[@vitest/web-worker] `structuredClone` is not supported in this environment. '
+        + 'Falling back to polyfill, your transferable options will be lost. '
+        + 'Set `VITEST_WEB_WORKER_CLONE` environmental variable to "none", if you don\'t want to loose it,'
+        + 'or update to Node 17+.',
+      )
+    }
     return new MessageEvent('message', {
       data: ponyfillStructuredClone(data, { lossy: true } as any),
       origin,
@@ -80,7 +81,7 @@ export function createMessageEvent(
 
 export function getRunnerOptions(): any {
   const state = getWorkerState()
-  const { config, rpc, mockMap, moduleCache } = state
+  const { config, rpc, moduleCache } = state
 
   return {
     async fetchModule(id: string) {
@@ -95,7 +96,6 @@ export function getRunnerOptions(): any {
       return rpc.resolveId(id, importer, 'web')
     },
     moduleCache,
-    mockMap,
     interopDefault: config.deps.interopDefault ?? true,
     moduleDirectories: config.deps.moduleDirectories,
     root: config.root,

@@ -79,7 +79,7 @@ retrieveFileHandlers.push((path) => {
       contents = fs.readFileSync(path, 'utf8')
     }
   }
-  catch (er) {
+  catch {
     /* ignore any errors */
   }
 

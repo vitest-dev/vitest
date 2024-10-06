@@ -1,13 +1,15 @@
 import { h } from 'vue'
-import Theme, { VPBadge } from 'vitepress/theme'
-import type { EnhanceAppContext } from 'vitepress'
+import type { Theme } from 'vitepress'
+import DefaultTheme from 'vitepress/theme'
 import { inBrowser } from 'vitepress'
 import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
 import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
+import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
+import AsideViteConf from '../components/AsideViteConf.vue'
 import '@shikijs/vitepress-twoslash/style.css'
 
 if (inBrowser) {
@@ -15,16 +17,16 @@ if (inBrowser) {
 }
 
 export default {
-  ...Theme,
+  extends: DefaultTheme,
   Layout() {
-    return h(Theme.Layout, null, {
+    return h(DefaultTheme.Layout, null, {
       'home-features-after': () => h(HomePage),
+      'aside-ads-before': () => h(AsideViteConf),
     })
   },
-  enhanceApp({ app }: EnhanceAppContext) {
-    // Vitepress v1+ doesn't seem to expose it as a global "Badge"
-    app.component('Badge', VPBadge)
+  enhanceApp({ app }) {
     app.component('Version', Version)
-    app.use(TwoslashFloatingVue as any)
+    app.use(TwoslashFloatingVue)
+    enhanceAppWithTabs(app)
   },
-}
+} satisfies Theme

@@ -1,6 +1,6 @@
 import readline from 'node:readline'
 import type { Writable } from 'node:stream'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 import prompt from 'prompts'
 import { relative, resolve } from 'pathe'
 import { getTests, isWindows, stdout } from '../utils'
@@ -25,13 +25,13 @@ export function printShortcutsHelp() {
     `
 ${c.bold('  Watch Usage')}
 ${keys
-  .map(
-    i =>
-      c.dim('  press ')
-      + c.reset([i[0]].flat().map(c.bold).join(', '))
-      + c.dim(` to ${i[1]}`),
-  )
-  .join('\n')}
+    .map(
+      i =>
+        c.dim('  press ')
+        + c.reset([i[0]].flat().map(c.bold).join(', '))
+        + c.dim(` to ${i[1]}`),
+    )
+    .join('\n')}
 `,
   )
 }

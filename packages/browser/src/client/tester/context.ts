@@ -1,184 +1,125 @@
-import type { Task, WorkerGlobalState } from 'vitest'
-import type { BrowserPage, UserEvent, UserEventClickOptions, UserEventTabOptions, UserEventTypeOptions } from '../../../context'
-import type { BrowserRunnerState } from '../utils'
-import type { BrowserRPC } from '../client'
+import type { RunnerTask } from 'vitest'
+import type { BrowserRPC } from '@vitest/browser/client'
+import type { UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
+import type {
+  BrowserPage,
+  Locator,
+  UserEvent,
+  UserEventClickOptions,
+  UserEventDragAndDropOptions,
+  UserEventHoverOptions,
+  UserEventTabOptions,
+  UserEventTypeOptions,
+} from '../../../context'
+import { convertElementToCssSelector, getBrowserState, getWorkerState } from '../utils'
 
-// this file should not import anything directly, only types
+// this file should not import anything directly, only types and utils
 
-function convertElementToXPath(element: Element) {
-  if (!element || !(element instanceof Element)) {
-    throw new Error(
-      `Expected DOM element to be an instance of Element, received ${typeof element}`,
-    )
-  }
-
-  return getPathTo(element)
-}
-
-function getPathTo(element: Element): string {
-  if (element.id !== '') {
-    return `id("${element.id}")`
-  }
-
-  if (!element.parentNode || element === document.documentElement) {
-    return element.tagName
-  }
-
-  let ix = 0
-  const siblings = element.parentNode.childNodes
-  for (let i = 0; i < siblings.length; i++) {
-    const sibling = siblings[i]
-    if (sibling === element) {
-      return `${getPathTo(element.parentNode as Element)}/${element.tagName}[${
-        ix + 1
-      }]`
-    }
-    if (
-      sibling.nodeType === 1
-      && (sibling as Element).tagName === element.tagName
-    ) {
-      ix++
-    }
-  }
-  return 'invalid xpath'
-}
-
+const state = () => getWorkerState()
 // @ts-expect-error not typed global
-const state = (): WorkerGlobalState => __vitest_worker__
-// @ts-expect-error not typed global
-const runner = (): BrowserRunnerState => __vitest_browser_runner__
+const provider = __vitest_browser_runner__.provider
 function filepath() {
-  return state().filepath || state().current?.file?.filepath || undefined
+  return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
 }
-const rpc = () => state().rpc as any as BrowserRPC
-const contextId = runner().contextId
+const rpc = () => getWorkerState().rpc as any as BrowserRPC
+const contextId = getBrowserState().contextId
 const channel = new BroadcastChannel(`vitest:${contextId}`)
 
 function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(contextId, command, filepath(), args)
 }
 
-const provider = runner().provider
-
-export const userEvent: UserEvent = {
-  // TODO: actually setup userEvent with config options
-  setup() {
-    return userEvent
-  },
-  click(element: Element, options: UserEventClickOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_click', xpath, options)
-  },
-  dblClick(element: Element, options: UserEventClickOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_dblClick', xpath, options)
-  },
-  tripleClick(element: Element, options: UserEventClickOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_tripleClick', xpath, options)
-  },
-  selectOptions(element, value) {
-    const values = provider === 'webdriverio'
-      ? getWebdriverioSelectOptions(element, value)
-      : getSimpleSelectOptions(element, value)
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_selectOptions', xpath, values)
-  },
-  type(element: Element, text: string, options: UserEventTypeOptions = {}) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_type', xpath, text, options)
-  },
-  clear(element: Element) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_clear', xpath)
-  },
-  tab(options: UserEventTabOptions = {}) {
-    return triggerCommand('__vitest_tab', options)
-  },
-  keyboard(text: string) {
-    return triggerCommand('__vitest_keyboard', text)
-  },
-  hover(element: Element) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_hover', xpath)
-  },
-  unhover(element: Element) {
-    const xpath = convertElementToXPath(element.ownerDocument.body)
-    return triggerCommand('__vitest_hover', xpath)
-  },
-
-  // non userEvent events, but still useful
-  fill(element: Element, text: string, options) {
-    const xpath = convertElementToXPath(element)
-    return triggerCommand('__vitest_fill', xpath, text, options)
-  },
-  dragAndDrop(source: Element, target: Element, options = {}) {
-    const sourceXpath = convertElementToXPath(source)
-    const targetXpath = convertElementToXPath(target)
-    return triggerCommand('__vitest_dragAndDrop', sourceXpath, targetXpath, options)
-  },
-}
-
-function getWebdriverioSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
-  const options = [...element.querySelectorAll('option')] as HTMLOptionElement[]
-
-  const arrayValues = Array.isArray(value) ? value : [value]
-
-  if (!arrayValues.length) {
-    return []
+export function createUserEvent(__tl_user_event__?: TestingLibraryUserEvent): UserEvent {
+  const keyboard = {
+    unreleased: [] as string[],
   }
 
-  if (arrayValues.length > 1) {
-    throw new Error('Provider "webdriverio" doesn\'t support selecting multiple values at once')
+  return {
+    setup(options?: any) {
+      return createUserEvent(__tl_user_event__?.setup(options))
+    },
+    click(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).click(processClickOptions(options))
+    },
+    dblClick(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).dblClick(processClickOptions(options))
+    },
+    tripleClick(element: Element | Locator, options: UserEventClickOptions = {}) {
+      return convertToLocator(element).tripleClick(processClickOptions(options))
+    },
+    selectOptions(element, value) {
+      return convertToLocator(element).selectOptions(value)
+    },
+    clear(element: Element | Locator) {
+      return convertToLocator(element).clear()
+    },
+    hover(element: Element | Locator, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).hover(processHoverOptions(options))
+    },
+    unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).unhover(options)
+    },
+    upload(element: Element | Locator, files: string | string[] | File | File[]) {
+      return convertToLocator(element).upload(files)
+    },
+
+    // non userEvent events, but still useful
+    fill(element: Element | Locator, text: string, options) {
+      return convertToLocator(element).fill(text, options)
+    },
+    dragAndDrop(source: Element | Locator, target: Element | Locator, options = {}) {
+      const sourceLocator = convertToLocator(source)
+      const targetLocator = convertToLocator(target)
+      return sourceLocator.dropTo(targetLocator, processDragAndDropOptions(options))
+    },
+
+    // testing-library user-event
+    async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return __tl_user_event__.type(
+          element instanceof Element ? element : element.element(),
+          text,
+          options,
+        )
+      }
+
+      const selector = convertToSelector(element)
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_type',
+        selector,
+        text,
+        { ...options, unreleased: keyboard.unreleased },
+      )
+      keyboard.unreleased = unreleased
+    },
+    tab(options: UserEventTabOptions = {}) {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return __tl_user_event__.tab(options)
+      }
+      return triggerCommand('__vitest_tab', options)
+    },
+    async keyboard(text: string) {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return __tl_user_event__.keyboard(text)
+      }
+      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+        '__vitest_keyboard',
+        text,
+        keyboard,
+      )
+      keyboard.unreleased = unreleased
+    },
   }
-
-  const optionValue = arrayValues[0]
-
-  if (typeof optionValue !== 'string') {
-    const index = options.indexOf(optionValue as HTMLOptionElement)
-    if (index === -1) {
-      throw new Error(`The element ${convertElementToXPath(optionValue)} was not found in the "select" options.`)
-    }
-
-    return [{ index }]
-  }
-
-  const valueIndex = options.findIndex(option => option.value === optionValue)
-  if (valueIndex !== -1) {
-    return [{ index: valueIndex }]
-  }
-
-  const labelIndex = options.findIndex(option =>
-    option.textContent?.trim() === optionValue || option.ariaLabel === optionValue,
-  )
-
-  if (labelIndex === -1) {
-    throw new Error(`The option "${optionValue}" was not found in the "select" options.`)
-  }
-
-  return [{ index: labelIndex }]
-}
-
-function getSimpleSelectOptions(element: Element, value: string | string[] | HTMLElement[] | HTMLElement) {
-  return (Array.isArray(value) ? value : [value]).map((v) => {
-    if (typeof v !== 'string') {
-      return { element: convertElementToXPath(v) }
-    }
-    return v
-  })
 }
 
 export function cdp() {
-  return runner().cdp!
+  return getBrowserState().cdp!
 }
 
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
-  get config() {
-    return runner().config
-  },
   viewport(width, height) {
-    const id = runner().iframeId
+    const id = getBrowserState().iframeId
     channel.postMessage({ type: 'viewport', width, height, id })
     return new Promise((resolve, reject) => {
       channel.addEventListener('message', function handler(e) {
@@ -194,7 +135,7 @@ export const page: BrowserPage = {
     })
   },
   async screenshot(options = {}) {
-    const currentTest = state().current
+    const currentTest = getWorkerState().current
     if (!currentTest) {
       throw new Error('Cannot take a screenshot outside of a test.')
     }
@@ -220,12 +161,189 @@ export const page: BrowserPage = {
     return triggerCommand('__vitest_screenshot', name, {
       ...options,
       element: options.element
-        ? convertElementToXPath(options.element)
+        ? convertToSelector(options.element)
         : undefined,
     })
   },
+  getByRole() {
+    throw new Error('Method "getByRole" is not implemented in the current provider.')
+  },
+  getByLabelText() {
+    throw new Error('Method "getByLabelText" is not implemented in the current provider.')
+  },
+  getByTestId() {
+    throw new Error('Method "getByTestId" is not implemented in the current provider.')
+  },
+  getByAltText() {
+    throw new Error('Method "getByAltText" is not implemented in the current provider.')
+  },
+  getByPlaceholder() {
+    throw new Error('Method "getByPlaceholder" is not implemented in the current provider.')
+  },
+  getByText() {
+    throw new Error('Method "getByText" is not implemented in the current provider.')
+  },
+  getByTitle() {
+    throw new Error('Method "getByTitle" is not implemented in the current provider.')
+  },
+  elementLocator() {
+    throw new Error('Method "elementLocator" is not implemented in the current provider.')
+  },
+  extend(methods) {
+    for (const key in methods) {
+      (page as any)[key] = (methods as any)[key]
+    }
+    return page
+  },
 }
 
-function getTaskFullName(task: Task): string {
+function convertToLocator(element: Element | Locator): Locator {
+  if (element instanceof Element) {
+    return page.elementLocator(element)
+  }
+  return element
+}
+
+function convertToSelector(elementOrLocator: Element | Locator): string {
+  if (!elementOrLocator) {
+    throw new Error('Expected element or locator to be defined.')
+  }
+  if (elementOrLocator instanceof Element) {
+    return convertElementToCssSelector(elementOrLocator)
+  }
+  if ('selector' in elementOrLocator) {
+    return (elementOrLocator as any).selector
+  }
+  throw new Error('Expected element or locator to be an instance of Element or Locator.')
+}
+
+function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
+}
+
+function processClickOptions(options_?: UserEventClickOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['click']>[1]
+    >
+    if (options.position) {
+      options.position = processPlaywrightPosition(options.position)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const options = options_ as import('webdriverio').ClickOptions
+    if (options.x != null || options.y != null) {
+      const cache = {}
+      if (options.x != null) {
+        options.x = scaleCoordinate(options.x, cache)
+      }
+      if (options.y != null) {
+        options.y = scaleCoordinate(options.y, cache)
+      }
+    }
+  }
+  return options_
+}
+
+function processHoverOptions(options_?: UserEventHoverOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['hover']>[1]
+    >
+    if (options.position) {
+      options.position = processPlaywrightPosition(options.position)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const options = options_ as import('webdriverio').MoveToOptions
+    const cache = {}
+    if (options.xOffset != null) {
+      options.xOffset = scaleCoordinate(options.xOffset, cache)
+    }
+    if (options.yOffset != null) {
+      options.yOffset = scaleCoordinate(options.yOffset, cache)
+    }
+  }
+  return options_
+}
+
+function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !state().config.browser.ui) {
+    return options_
+  }
+  if (provider === 'playwright') {
+    const options = options_ as NonNullable<
+      Parameters<import('playwright').Page['dragAndDrop']>[2]
+    >
+    if (options.sourcePosition) {
+      options.sourcePosition = processPlaywrightPosition(options.sourcePosition)
+    }
+    if (options.targetPosition) {
+      options.targetPosition = processPlaywrightPosition(options.targetPosition)
+    }
+  }
+  if (provider === 'webdriverio') {
+    const cache = {}
+    const options = options_ as import('webdriverio').DragAndDropOptions & {
+      targetX?: number
+      targetY?: number
+      sourceX?: number
+      sourceY?: number
+    }
+    if (options.sourceX != null) {
+      options.sourceX = scaleCoordinate(options.sourceX, cache)
+    }
+    if (options.sourceY != null) {
+      options.sourceY = scaleCoordinate(options.sourceY, cache)
+    }
+    if (options.targetX != null) {
+      options.targetX = scaleCoordinate(options.targetX, cache)
+    }
+    if (options.targetY != null) {
+      options.targetY = scaleCoordinate(options.targetY, cache)
+    }
+  }
+  return options_
+}
+
+function scaleCoordinate(coordinate: number, cache: any) {
+  return Math.round(coordinate * getCachedScale(cache))
+}
+
+function getCachedScale(cache: { scale: number | undefined }) {
+  return cache.scale ??= getIframeScale()
+}
+
+function processPlaywrightPosition(position: { x: number; y: number }) {
+  const scale = getIframeScale()
+  if (position.x != null) {
+    position.x *= scale
+  }
+  if (position.y != null) {
+    position.y *= scale
+  }
+  return position
+}
+
+function getIframeScale() {
+  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  if (!testerUi) {
+    throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  const scaleAttribute = testerUi.getAttribute('data-scale')
+  const scale = Number(scaleAttribute)
+  if (Number.isNaN(scale)) {
+    throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  return scale
 }

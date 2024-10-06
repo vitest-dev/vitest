@@ -5,19 +5,14 @@ import { parse, stringify } from 'flatted'
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import type { ViteDevServer } from 'vite'
+import type { File, TaskResultPack } from '@vitest/runner'
 import { API_PATH } from '../constants'
-import type { Vitest } from '../node'
-import type {
-  Awaitable,
-  File,
-  ModuleGraphData,
-  Reporter,
-  SerializableSpec,
-  TaskResultPack,
-  UserConsoleLog,
-} from '../types'
+import type { Vitest } from '../node/core'
+import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { Reporter } from '../node/types/reporter'
 import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import { parseErrorStacktrace } from '../utils/source-map'
+import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -51,10 +46,6 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onCollected(files) {
-          ctx.state.collectFiles(files)
-          await ctx.report('onCollected', files)
-        },
         async onTaskUpdate(packs) {
           ctx.state.updateTasks(packs)
           await ctx.report('onTaskUpdate', packs)
@@ -83,7 +74,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           await ctx.rerunFiles(files)
         },
         getConfig() {
-          return ctx.config
+          return ctx.getCoreWorkspaceProject().getSerializableConfig()
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
@@ -111,13 +102,14 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           return ctx.state.getUnhandledErrors()
         },
         async getTestFiles() {
-          const spec = await ctx.globTestFiles()
-          return spec.map(([project, file]) => [
+          const spec = await ctx.globTestSpecs()
+          return spec.map(spec => [
             {
-              name: project.config.name,
-              root: project.config.root,
+              name: spec.project.config.name,
+              root: spec.project.config.root,
             },
-            file,
+            spec.moduleId,
+            { pool: spec.pool },
           ])
         },
       },
@@ -165,7 +157,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onSpecsCollected(specs?: SerializableSpec[] | undefined): Awaitable<void> {
+  onSpecsCollected(specs?: SerializedTestSpecification[] | undefined): Awaitable<void> {
     if (this.clients.size === 0) {
       return
     }

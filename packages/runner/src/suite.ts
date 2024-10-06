@@ -20,11 +20,12 @@ import type {
   SuiteHooks,
   Task,
   TaskCustomOptions,
+  TaskPopulated,
   Test,
   TestAPI,
   TestFunction,
   TestOptions,
-} from './types'
+} from './types/tasks'
 import type { VitestRunner } from './types/runner'
 import { createChainable } from './utils/chain'
 import {
@@ -39,9 +40,67 @@ import type { FixtureItem } from './fixture'
 import { mergeContextFixtures, withFixtures } from './fixture'
 import { getCurrentTest } from './test-state'
 
-// apis
-export const suite = createSuite()
-export const test = createTest(function (
+/**
+ * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
+ * Suites can contain both tests and other suites, enabling complex test structures.
+ *
+ * @param {string} name - The name of the suite, used for identification and reporting.
+ * @param {Function} fn - A function that defines the tests and suites within this suite.
+ * @example
+ * ```ts
+ * // Define a suite with two tests
+ * suite('Math operations', () => {
+ *   test('should add two numbers', () => {
+ *     expect(add(1, 2)).toBe(3);
+ *   });
+ *
+ *   test('should subtract two numbers', () => {
+ *     expect(subtract(5, 2)).toBe(3);
+ *   });
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Define nested suites
+ * suite('String operations', () => {
+ *   suite('Trimming', () => {
+ *     test('should trim whitespace from start and end', () => {
+ *       expect('  hello  '.trim()).toBe('hello');
+ *     });
+ *   });
+ *
+ *   suite('Concatenation', () => {
+ *     test('should concatenate two strings', () => {
+ *       expect('hello' + ' ' + 'world').toBe('hello world');
+ *     });
+ *   });
+ * });
+ * ```
+ */
+export const suite: SuiteAPI = createSuite()
+/**
+ * Defines a test case with a given name and test function. The test function can optionally be configured with test options.
+ *
+ * @param {string | Function} name - The name of the test or a function that will be used as a test name.
+ * @param {TestOptions | TestFunction} [optionsOrFn] - Optional. The test options or the test function if no explicit name is provided.
+ * @param {number | TestOptions | TestFunction} [optionsOrTest] - Optional. The test function or options, depending on the previous parameters.
+ * @throws {Error} If called inside another test function.
+ * @example
+ * ```ts
+ * // Define a simple test
+ * test('should add two numbers', () => {
+ *   expect(add(1, 2)).toBe(3);
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Define a test with options
+ * test('should subtract two numbers', { retry: 3 }, () => {
+ *   expect(subtract(5, 2)).toBe(3);
+ * });
+ * ```
+ */
+export const test: TestAPI = createTest(function (
   name: string | Function,
   optionsOrFn?: TestOptions | TestFunction,
   optionsOrTest?: number | TestOptions | TestFunction,
@@ -60,23 +119,89 @@ export const test = createTest(function (
   )
 })
 
-// alias
-export const describe = suite
-export const it = test
+/**
+ * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
+ * Suites can contain both tests and other suites, enabling complex test structures.
+ *
+ * @param {string} name - The name of the suite, used for identification and reporting.
+ * @param {Function} fn - A function that defines the tests and suites within this suite.
+ * @example
+ * ```ts
+ * // Define a suite with two tests
+ * describe('Math operations', () => {
+ *   test('should add two numbers', () => {
+ *     expect(add(1, 2)).toBe(3);
+ *   });
+ *
+ *   test('should subtract two numbers', () => {
+ *     expect(subtract(5, 2)).toBe(3);
+ *   });
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Define nested suites
+ * describe('String operations', () => {
+ *   describe('Trimming', () => {
+ *     test('should trim whitespace from start and end', () => {
+ *       expect('  hello  '.trim()).toBe('hello');
+ *     });
+ *   });
+ *
+ *   describe('Concatenation', () => {
+ *     test('should concatenate two strings', () => {
+ *       expect('hello' + ' ' + 'world').toBe('hello world');
+ *     });
+ *   });
+ * });
+ * ```
+ */
+export const describe: SuiteAPI = suite
+/**
+ * Defines a test case with a given name and test function. The test function can optionally be configured with test options.
+ *
+ * @param {string | Function} name - The name of the test or a function that will be used as a test name.
+ * @param {TestOptions | TestFunction} [optionsOrFn] - Optional. The test options or the test function if no explicit name is provided.
+ * @param {number | TestOptions | TestFunction} [optionsOrTest] - Optional. The test function or options, depending on the previous parameters.
+ * @throws {Error} If called inside another test function.
+ * @example
+ * ```ts
+ * // Define a simple test
+ * it('adds two numbers', () => {
+ *   expect(add(1, 2)).toBe(3);
+ * });
+ * ```
+ * @example
+ * ```ts
+ * // Define a test with options
+ * it('subtracts two numbers', { retry: 3 }, () => {
+ *   expect(subtract(5, 2)).toBe(3);
+ * });
+ * ```
+ */
+export const it: TestAPI = test
 
 let runner: VitestRunner
 let defaultSuite: SuiteCollector
 let currentTestFilepath: string
 
-export function getDefaultSuite() {
+function assert(condition: any, message: string) {
+  if (!condition) {
+    throw new Error(`Vitest failed to find ${message}. This is a bug in Vitest. Please, open an issue with reproduction.`)
+  }
+}
+
+export function getDefaultSuite(): SuiteCollector<object> {
+  assert(defaultSuite, 'the default suite')
   return defaultSuite
 }
 
-export function getTestFilepath() {
+export function getTestFilepath(): string {
   return currentTestFilepath
 }
 
-export function getRunner() {
+export function getRunner(): VitestRunner {
+  assert(runner, 'the runner')
   return runner
 }
 
@@ -89,7 +214,7 @@ function createDefaultSuite(runner: VitestRunner) {
 export function clearCollectorContext(
   filepath: string,
   currentRunner: VitestRunner,
-) {
+): void {
   if (!defaultSuite) {
     defaultSuite = createDefaultSuite(currentRunner)
   }
@@ -100,12 +225,14 @@ export function clearCollectorContext(
   collectorContext.currentSuite = defaultSuite
 }
 
-export function getCurrentSuite<ExtraContext = {}>() {
-  return (collectorContext.currentSuite
+export function getCurrentSuite<ExtraContext = object>(): SuiteCollector<ExtraContext> {
+  const currentSuite = (collectorContext.currentSuite
     || defaultSuite) as SuiteCollector<ExtraContext>
+  assert(currentSuite, 'the current suite')
+  return currentSuite
 }
 
-export function createSuiteHooks() {
+export function createSuiteHooks(): SuiteHooks {
   return {
     beforeAll: [],
     afterAll: [],
@@ -220,7 +347,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withFixtures(handler, context),
+          withAwaitAsyncAssetions(withFixtures(handler, context), task),
           options?.timeout ?? runner.config.testTimeout,
         ),
       )
@@ -355,7 +482,24 @@ function createSuiteCollector(
   return collector
 }
 
+function withAwaitAsyncAssetions<T extends (...args: any[]) => any>(fn: T, task: TaskPopulated): T {
+  return (async (...args: any[]) => {
+    await fn(...args)
+    // some async expect will be added to this array, in case user forget to await them
+    if (task.promises) {
+      const result = await Promise.allSettled(task.promises)
+      const errors = result
+        .map(r => (r.status === 'rejected' ? r.reason : undefined))
+        .filter(Boolean)
+      if (errors.length) {
+        throw errors
+      }
+    }
+  }) as T
+}
+
 function createSuite() {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,
@@ -369,7 +513,7 @@ function createSuite() {
         : this.todo
           ? 'todo'
           : 'run'
-    const currentSuite = getCurrentSuite()
+    const currentSuite: SuiteCollector | undefined = collectorContext.currentSuite || defaultSuite
 
     let { options, handler: factory } = parseArguments(
       factoryOrOptions,
@@ -429,19 +573,24 @@ function createSuite() {
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
         if (fnFirst) {
-          arrayOnlyCases
-            ? suite(
+          if (arrayOnlyCases) {
+            suite(
               formatTitle(_name, items, idx),
               () => handler(...items),
               options,
             )
-            : suite(formatTitle(_name, items, idx), () => handler(i), options)
+          }
+          else {
+            suite(formatTitle(_name, items, idx), () => handler(i), options)
+          }
         }
         else {
-          arrayOnlyCases
-            ? suite(formatTitle(_name, items, idx), options, () =>
-              handler(...items))
-            : suite(formatTitle(_name, items, idx), options, () => handler(i))
+          if (arrayOnlyCases) {
+            suite(formatTitle(_name, items, idx), options, () => handler(...items))
+          }
+          else {
+            suite(formatTitle(_name, items, idx), options, () => handler(i))
+          }
         }
       })
 
@@ -463,7 +612,7 @@ function createSuite() {
 export function createTaskCollector(
   fn: (...args: any[]) => any,
   context?: Record<string, unknown>,
-) {
+): CustomAPI {
   const taskFn = fn as any
 
   taskFn.each = function <T>(
@@ -497,19 +646,24 @@ export function createTaskCollector(
         const items = Array.isArray(i) ? i : [i]
 
         if (fnFirst) {
-          arrayOnlyCases
-            ? test(
+          if (arrayOnlyCases) {
+            test(
               formatTitle(_name, items, idx),
               () => handler(...items),
               options,
             )
-            : test(formatTitle(_name, items, idx), () => handler(i), options)
+          }
+          else {
+            test(formatTitle(_name, items, idx), () => handler(i), options)
+          }
         }
         else {
-          arrayOnlyCases
-            ? test(formatTitle(_name, items, idx), options, () =>
-              handler(...items))
-            : test(formatTitle(_name, items, idx), options, () => handler(i))
+          if (arrayOnlyCases) {
+            test(formatTitle(_name, items, idx), options, () => handler(...items))
+          }
+          else {
+            test(formatTitle(_name, items, idx), options, () => handler(i))
+          }
         }
       })
 

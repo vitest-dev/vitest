@@ -152,7 +152,9 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
       const subIds = Array.from(super.entries())
         .filter(([, mod]) => mod.importers?.has(id))
         .map(([key]) => key)
-      subIds.length && this.invalidateSubDepTree(subIds, invalidated)
+      if (subIds.length) {
+        this.invalidateSubDepTree(subIds, invalidated)
+      }
       super.delete(id)
     }
     return invalidated
@@ -621,7 +623,7 @@ function exportAll(exports: any, sourceModule: any) {
       try {
         defineExport(exports, key, () => sourceModule[key])
       }
-      catch (_err) {}
+      catch {}
     }
   }
 }

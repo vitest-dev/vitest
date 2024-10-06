@@ -1,15 +1,15 @@
 import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, ResolvedConfig, TaskResultPack } from 'vitest'
+import type { File, SerializedConfig, TaskResultPack } from 'vitest'
 import { reactive as reactiveVue } from 'vue'
 import { createFileTask } from '@vitest/runner/utils'
 import type { BrowserRunnerState } from '../../../types'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
+import { ui } from '../../composables/api'
 import { createStaticClient } from './static'
 import { testRunState, unhandledErrors } from './state'
-import { uiFiles } from '~/composables/explorer/state'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
 
@@ -46,13 +46,12 @@ export const client = (function createVitestClient() {
   }
 })()
 
-export const config = shallowRef<ResolvedConfig>({} as any)
+export const config = shallowRef<SerializedConfig>({} as any)
 export const status = ref<WebSocketStatus>('CONNECTING')
 
 export const current = computed(() => {
   const currentFileId = activeFileId.value
-  const entry = uiFiles.value.find(file => file.id === currentFileId)!
-  return entry ? findById(entry.id) : undefined
+  return currentFileId ? findById(currentFileId) : undefined
 })
 export const currentLogs = computed(() => getTasks(current.value).map(i => i?.logs || []).flat() || [])
 
@@ -108,10 +107,20 @@ export function runCurrent() {
   }
 }
 
+// for testing during dev
+// export const browserState: BrowserRunnerState = {
+//   files: [],
+//   config: {},
+//   type: 'orchestrator',
+//   wrapModule: () => {},
+// }
 // @ts-expect-error not typed global
 export const browserState = window.__vitest_browser_runner__ as
   | BrowserRunnerState
   | undefined
+
+// @ts-expect-error not typed global
+window.__vitest_ui_api__ = ui
 
 watch(
   () => client.ws,
@@ -121,23 +130,22 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      const [remoteFiles, _config, errors] = await Promise.all([
+      let [files, _config, errors] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
       ])
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
-        const files = filenames.map<File>(([{ name, root }, filepath]) => {
-          return /* #__PURE__ */ createFileTask(filepath, root, name)
+        files = filenames.map(([{ name, root }, filepath]) => {
+          const file = createFileTask(filepath, root, name)
+          file.mode = 'skip'
+          return file
         })
-        client.state.collectFiles(files)
       }
-      else {
-        explorerTree.loadFiles(remoteFiles)
-        client.state.collectFiles(remoteFiles)
-        explorerTree.startRun()
-      }
+      explorerTree.loadFiles(files)
+      client.state.collectFiles(files)
+      explorerTree.startRun()
       unhandledErrors.value = (errors || []).map(parseError)
       config.value = _config
     })

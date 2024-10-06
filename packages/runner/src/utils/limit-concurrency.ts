@@ -4,7 +4,7 @@ type QueueNode<T> = [value: T, next?: QueueNode<T>]
 /**
  * Return a function for running multiple async operations with limited concurrency.
  */
-export function limitConcurrency(concurrency = Infinity): <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T> {
+export function limitConcurrency(concurrency: number = Infinity): <Args extends unknown[], T>(func: (...args: Args) => PromiseLike<T> | T, ...args: Args) => Promise<T> {
   // The number of currently active + pending tasks.
   let count = 0
 

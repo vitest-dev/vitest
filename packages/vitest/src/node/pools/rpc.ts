@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import type { RawSourceMap } from 'vite-node'
 import { join } from 'pathe'
-import type { RuntimeRPC } from '../../types'
 import type { WorkspaceProject } from '../workspace'
+import type { RuntimeRPC } from '../../types/rpc'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()
@@ -39,7 +39,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
         return result
       }
       if ('id' in result && typeof result.id === 'string') {
-        return { id: result.id as string }
+        return { id: result.id }
       }
 
       if (code == null) {
@@ -76,7 +76,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       return ctx.report('onPathsCollected', paths)
     },
     onCollected(files) {
-      ctx.state.collectFiles(files)
+      ctx.state.collectFiles(project, files)
       return ctx.report('onCollected', files)
     },
     onAfterSuiteRun(meta) {

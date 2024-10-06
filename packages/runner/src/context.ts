@@ -7,7 +7,7 @@ import type {
   SuiteCollector,
   TaskContext,
   Test,
-} from './types'
+} from './types/tasks'
 import type { VitestRunner } from './types/runner'
 import { PendingError } from './errors'
 
@@ -16,14 +16,14 @@ export const collectorContext: RuntimeContext = {
   currentSuite: null,
 }
 
-export function collectTask(task: SuiteCollector) {
+export function collectTask(task: SuiteCollector): void {
   collectorContext.currentSuite?.tasks.push(task)
 }
 
 export async function runWithSuite(
   suite: SuiteCollector,
   fn: () => Awaitable<void>,
-) {
+): Promise<void> {
   const prev = collectorContext.currentSuite
   collectorContext.currentSuite = suite
   await fn()
@@ -41,7 +41,8 @@ export function withTimeout<T extends (...args: any[]) => any>(
 
   const { setTimeout, clearTimeout } = getSafeTimers()
 
-  return ((...args: T extends (...args: infer A) => any ? A : never) => {
+  // this function name is used to filter error in test/cli/test/fails.test.ts
+  return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     return Promise.race([
       fn(...args),
       new Promise((resolve, reject) => {

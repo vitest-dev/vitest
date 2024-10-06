@@ -15,9 +15,8 @@ npx vitest --reporter=verbose
 
 Using reporters via [`vitest.config.ts`](/config/):
 
-```ts twoslash
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
+```ts
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -81,10 +80,12 @@ When using multiple reporters, it's also possible to designate multiple output f
 
 ```ts
 export default defineConfig({
-  reporters: ['junit', 'json', 'verbose'],
-  outputFile: {
-    junit: './junit-report.xml',
-    json: './json-report.json',
+  test: {
+    reporters: ['junit', 'json', 'verbose'],
+    outputFile: {
+      junit: './junit-report.xml',
+      json: './json-report.json',
+    },
   },
 })
 ```
@@ -282,15 +283,15 @@ Example of a JSON report:
 
 ```json
 {
-  "numTotalTestSuites": 1,
-  "numPassedTestSuites": 0,
+  "numTotalTestSuites": 4,
+  "numPassedTestSuites": 2,
   "numFailedTestSuites": 1,
-  "numPendingTestSuites": 0,
-  "numTotalTests": 1,
-  "numPassedTests": 0,
+  "numPendingTestSuites": 1,
+  "numTotalTests": 4,
+  "numPassedTests": 1,
   "numFailedTests": 1,
-  "numPendingTests": 0,
-  "numTodoTests": 0,
+  "numPendingTests": 1,
+  "numTodoTests": 1,
   "startTime": 1697737019307,
   "success": false,
   "testResults": [
@@ -311,7 +312,8 @@ Example of a JSON report:
           "location": {
             "line": 20,
             "column": 28
-          }
+          },
+          "meta": {}
         }
       ],
       "startTime": 1697737019787,
@@ -502,4 +504,4 @@ Additionally, you can define your own [custom reporters](/advanced/reporters) an
 npx vitest --reporter=./path/to/reporter.ts
 ```
 
-Custom reporters should implement the [Reporter interface](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts).
+Custom reporters should implement the [Reporter interface](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/types/reporter.ts).

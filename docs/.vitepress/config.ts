@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 import { withPwa } from '@vite-pwa/vitepress'
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
+import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import { version } from '../../package.json'
 import {
   contributing,
@@ -37,8 +38,8 @@ export default ({ mode }: { mode: string }) => {
     },
     head: [
       ['meta', { name: 'theme-color', content: '#729b1a' }],
-      ['link', { rel: 'icon', href: '/favicon.ico', sizes: 'any' }],
-      ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
+      ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+      ['link', { rel: 'icon', href: '/logo.svg', sizes: 'any', type: 'image/svg+xml' }],
       ['meta', { name: 'author', content: `${teamMembers.map(c => c.name).join(', ')} and ${vitestName} contributors` }],
       ['meta', { name: 'keywords', content: 'vitest, vite, test, coverage, snapshot, react, vue, preact, svelte, solid, lit, marko, ruby, cypress, puppeteer, jsdom, happy-dom, test-runner, jest, typescript, esm, tinypool, tinyspy, node' }],
       ['meta', { property: 'og:title', content: vitestName }],
@@ -56,11 +57,25 @@ export default ({ mode }: { mode: string }) => {
     ],
     lastUpdated: true,
     markdown: {
+      config(md) {
+        md.use(tabsMarkdownPlugin)
+      },
       theme: {
         light: 'github-light',
         dark: 'github-dark',
       },
-      codeTransformers: mode === 'development' ? [] : [transformerTwoslash()],
+      codeTransformers: mode === 'development'
+        ? []
+        : [
+            transformerTwoslash({
+              processHoverInfo: (info) => {
+                if (info.includes(process.cwd())) {
+                  return info.replace(new RegExp(process.cwd(), 'g'), '')
+                }
+                return info
+              },
+            }),
+          ],
     },
     themeConfig: {
       logo: '/logo.svg',
@@ -83,6 +98,11 @@ export default ({ mode }: { mode: string }) => {
       }, */
       },
 
+      carbonAds: {
+        code: 'CW7DVKJE',
+        placement: 'vitestdev',
+      },
+
       socialLinks: [
         { icon: 'mastodon', link: mastodon },
         { icon: 'x', link: twitter },
@@ -96,32 +116,21 @@ export default ({ mode }: { mode: string }) => {
       },
 
       nav: [
-        { text: 'Guide', link: '/guide/', activeMatch: '^/guide/' },
+        { text: 'Guide', link: '/guide/', activeMatch: '^/guide/(?!browser)' },
         { text: 'API', link: '/api/', activeMatch: '^/api/' },
         { text: 'Config', link: '/config/', activeMatch: '^/config/' },
-        { text: 'Advanced', link: '/advanced/api', activeMatch: '^/advanced/' },
+        { text: 'Browser Mode', link: '/guide/browser', activeMatch: '^/guide/browser/' },
         {
           text: 'Resources',
           items: [
             {
-              text: 'Team',
-              link: '/team',
+              text: 'Advanced',
+              link: '/advanced/api',
+              activeMatch: '^/advanced/',
             },
             {
-              items: [
-                {
-                  text: 'Mastodon',
-                  link: mastodon,
-                },
-                {
-                  text: 'X (formerly Twitter)',
-                  link: twitter,
-                },
-                {
-                  text: 'Discord Chat',
-                  link: discord,
-                },
-              ],
+              text: 'Team',
+              link: '/team',
             },
           ],
         },
@@ -139,7 +148,7 @@ export default ({ mode }: { mode: string }) => {
                   link: releases,
                 },
                 {
-                  text: 'Contributing ',
+                  text: 'Contributing',
                   link: contributing,
                 },
               ],
@@ -154,6 +163,10 @@ export default ({ mode }: { mode: string }) => {
                   text: 'v0.x',
                   link: 'https://v0.vitest.dev/',
                 },
+                {
+                  text: 'v1.x',
+                  link: 'https://v1.vitest.dev/',
+                },
               ],
             },
           ],
@@ -161,7 +174,44 @@ export default ({ mode }: { mode: string }) => {
       ],
 
       sidebar: {
-      // TODO: bring sidebar of apis and config back
+        '/guide/browser': [
+          {
+            text: 'Why Browser Mode?',
+            link: '/guide/browser/why',
+            docFooterText: 'Why Browser Mode? | Browser Mode',
+          },
+          {
+            text: 'Getting Started',
+            link: '/guide/browser/',
+            docFooterText: 'Getting Started | Browser Mode',
+          },
+          {
+            text: 'Context API',
+            link: '/guide/browser/context',
+            docFooterText: 'Context API | Browser Mode',
+          },
+          {
+            text: 'Interactivity API',
+            link: '/guide/browser/interactivity-api',
+            docFooterText: 'Interactivity API | Browser Mode',
+          },
+          {
+            text: 'Locators',
+            link: '/guide/browser/locators',
+            docFooterText: 'Locators | Browser Mode',
+          },
+          {
+            text: 'Assertion API',
+            link: '/guide/browser/assertion-api',
+            docFooterText: 'Assertion API | Browser Mode',
+          },
+          {
+            text: 'Commands API',
+            link: '/guide/browser/commands',
+            docFooterText: 'Commands | Browser Mode',
+          },
+        ],
+        // TODO: bring sidebar of apis and config back
         '/advanced': [
           {
             items: [
@@ -240,36 +290,6 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/ui',
               },
               {
-                text: 'Browser Mode',
-                link: '/guide/browser/',
-                collapsed: true,
-                items: [{
-                  text: 'Assertion API',
-                  link: '/guide/browser/assertion-api',
-                  docFooterText: 'Assertion API | Browser Mode',
-                }, {
-                  text: 'Retry-ability',
-                  link: '/guide/browser/retry-ability',
-                  docFooterText: 'Retry-ability | Browser Mode',
-                }, {
-                  text: 'Context',
-                  link: '/guide/browser/context',
-                  docFooterText: 'Context | Browser Mode',
-                }, {
-                  text: 'Interactivity API',
-                  link: '/guide/browser/interactivity-api',
-                  docFooterText: 'Interactivity API | Browser Mode',
-                }, {
-                  text: 'Commands',
-                  link: '/guide/browser/commands',
-                  docFooterText: 'Commands | Browser Mode',
-                }, {
-                  text: 'Examples',
-                  link: '/guide/browser/examples',
-                  docFooterText: 'Examples | Browser Mode',
-                }],
-              },
-              {
                 text: 'In-Source Testing',
                 link: '/guide/in-source',
               },
@@ -304,6 +324,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Common Errors',
                 link: '/guide/common-errors',
+              },
+              {
+                text: 'Profiling Test Performance',
+                link: '/guide/profiling-test-performance',
               },
               {
                 text: 'Improving Performance',

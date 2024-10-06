@@ -1,14 +1,19 @@
-export type MockFactoryWithHelper<M = unknown> = (
-  importOriginal: <T extends M>() => Promise<T>
-) => any
-export type MockFactory = () => any
+import type { MockedModuleType } from '@vitest/mocker'
 
-export type MockMap = Map<string, Record<string, string | null | MockFactory>>
+type Promisable<T> = T | Promise<T>
+
+export type MockFactoryWithHelper<M = unknown> = (
+  importOriginal: <T extends M = M>() => Promise<T>
+) => Promisable<Partial<M>>
+export type MockFactory = () => any
+export interface MockOptions {
+  spy?: boolean
+}
 
 export interface PendingSuiteMock {
   id: string
   importer: string
-  type: 'mock' | 'unmock'
-  throwIfCached: boolean
+  action: 'mock' | 'unmock'
+  type?: MockedModuleType
   factory?: MockFactory
 }

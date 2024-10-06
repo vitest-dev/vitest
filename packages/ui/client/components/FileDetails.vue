@@ -35,6 +35,10 @@ const failedSnapshot = computed(() => {
   return current.value && hasFailedSnapshot(current.value)
 })
 
+const isTypecheck = computed(() => {
+  return !!current.value?.meta?.typecheck
+})
+
 function open() {
   const filePath = current.value?.filepath
   if (filePath) {
@@ -107,6 +111,21 @@ debouncedWatch(
   },
   { debounce: 100, immediate: true },
 )
+
+const projectNameColor = computed(() => {
+  return getProjectNameColor(current.value?.file.projectName)
+})
+
+const projectNameTextColor = computed(() => {
+  switch (projectNameColor.value) {
+    case 'blue':
+    case 'green':
+    case 'magenta':
+      return 'white'
+    default:
+      return 'black'
+  }
+})
 </script>
 
 <template>
@@ -122,15 +141,14 @@ debouncedWatch(
     <div>
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
-        <div
+        <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
+        <span
           v-if="current?.file.projectName"
-          font-light
-          op-50
-          text-sm
-          :style="{ color: getProjectNameColor(current?.file.projectName) }"
+          class="rounded-full py-0.5 px-1 text-xs font-light"
+          :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
         >
-          [{{ current?.file.projectName || "" }}]
-        </div>
+          {{ current.file.projectName }}
+        </span>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
           {{ current?.name }}
         </div>

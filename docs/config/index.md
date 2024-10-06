@@ -305,12 +305,7 @@ Custom reporter for output. Can contain one or more built-in report names, repor
 
 #### benchmark.outputFile
 
-- **Type:** `string | Record<string, string>`
-
-Write benchmark results to a file when the `--reporter=json` option is also specified.
-By providing an object instead of a string you can define individual outputs when using multiple reporters.
-
-To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
+Deprecated in favor of `benchmark.outputJson`.
 
 #### benchmark.outputJson {#benchmark-outputJson}
 
@@ -570,6 +565,14 @@ Enable watch mode
 - **CLI:** `-r <path>`, `--root=<path>`
 
 Project root
+
+### dir
+
+- **Type:** `string`
+- **CLI:** `--dir=<path>`
+- **Default:** same as `root`
+
+Base directory to scan for the test files. You can specify this option to speed up test discovery if your root covers the whole project
 
 ### reporters<NonProjectOption />
 
@@ -995,6 +998,54 @@ afterEach(() => {
 globalThis.resetBeforeEachTest = true
 ```
 
+### provide <Version>2.1.0</Version> {#provide}
+
+- **Type:** `Partial<ProvidedContext>`
+
+Define values that can be accessed inside your tests using `inject` method.
+
+:::code-group
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    provide: {
+      API_KEY: '123',
+    },
+  },
+})
+```
+```ts [my.test.js]
+import { expect, inject, test } from 'vitest'
+
+test('api key is defined', () => {
+  expect(inject('API_KEY')).toBe('123')
+})
+```
+:::
+
+::: warning
+Properties have to be strings and values need to be [serializable](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm#supported_types) because this object will be transferred between different processes.
+:::
+
+::: tip
+If you are using TypeScript, you will need to augment `ProvidedContext` type for type safe access:
+
+```ts
+// vitest.shims.d.ts
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    API_KEY: string
+  }
+}
+
+// mark this file as a module so augmentation works correctly
+export {}
+```
+:::
+
 ### globalSetup
 
 - **Type:** `string | string[]`
@@ -1010,7 +1061,7 @@ Multiple globalSetup files are possible. setup and teardown are executed sequent
 ::: warning
 Global setup runs only if there is at least one running test. This means that global setup might start running during watch mode after test file is changed (the test file will wait for global setup to finish before running).
 
-Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, you can pass down serializable data to tests via `provide` method:
+Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, you can pass down serializable data to tests via [`provide`](#provide) method:
 
 :::code-group
 ```js [globalSetup.js]
@@ -1025,8 +1076,6 @@ export default function setup({ provide }: GlobalSetupContext) {
   provide('wsPort', 3000)
 }
 
-// You can also extend `ProvidedContext` type
-// to have type safe access to `provide/inject` methods:
 declare module 'vitest' {
   export interface ProvidedContext {
     wsPort: number
@@ -1103,7 +1152,7 @@ List of files included in coverage as glob patterns
 #### coverage.extension
 
 - **Type:** `string | string[]`
-- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte', '.marko']`
+- **Default:** `['.js', '.cjs', '.mjs', '.ts', '.mts', '.tsx', '.jsx', '.vue', '.svelte', '.marko', '.astro']`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.extension=<extension>`, `--coverage.extension=<extension1> --coverage.extension=<extension2>`
 
@@ -1180,7 +1229,7 @@ Clean coverage results before running tests
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.cleanOnRerun`, `--coverage.cleanOnRerun=false`
 
-Clean coverage report on watch rerun
+Clean coverage report on watch rerun. Set to `false` to preserve coverage results from previous run in watch mode.
 
 #### coverage.reportsDirectory
 
@@ -1258,6 +1307,18 @@ Generate coverage report even when tests fail.
 - **CLI:** `--coverage.allowExternal`, `--coverage.allowExternal=false`
 
 Collect coverage of files outside the [project `root`](#root).
+
+#### coverage.excludeAfterRemap <Version>2.1.0</Version> {#coverage-exclude-after-remap}
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+- **CLI:** `--coverage.excludeAfterRemap`, `--coverage.excludeAfterRemap=false`
+
+Apply exclusions again after coverage has been remapped to original sources.
+This is useful when your source files are transpiled and may contain source maps of non-source files.
+
+Use this option when you are seeing files that show up in report even if they match your `coverage.exclude` patterns.
 
 #### coverage.skipFull
 
@@ -1345,6 +1406,11 @@ Shortcut for `--coverage.thresholds.lines 100 --coverage.thresholds.functions 10
 
 Sets thresholds for files matching the glob pattern.
 
+::: tip NOTE
+Vitest counts all files, including those covered by glob-patterns, into the global coverage thresholds.
+This is different from Jest behavior.
+:::
+
 <!-- eslint-skip -->
 ```ts
 {
@@ -1367,6 +1433,31 @@ Sets thresholds for files matching the glob pattern.
       '**/math.ts': {
         lines: 100,
       }
+    }
+  }
+}
+```
+
+##### coverage.thresholds[glob-pattern].100 <Version>2.1.0</Version> {#coverage-thresholds-glob-pattern-100}
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8' | 'istanbul'`
+
+Sets thresholds to 100 for files matching the glob pattern.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Thresholds for all files
+      functions: 95,
+      branches: 70,
+
+      // Thresholds for matching glob pattern
+      'src/utils/**.ts': { 100: true },
+      '**/math.ts': { 100: true }
     }
   }
 }
@@ -1629,6 +1720,17 @@ Should Vitest UI be injected into the page. By default, injects UI iframe during
 
 Default iframe's viewport.
 
+#### browser.locators {#browser-locators}
+
+Options for built-in [browser locators](/guide/browser/locators).
+
+##### browser.locators.testIdAttribute
+
+- **Type:** `string`
+- **Default:** `data-testid`
+
+Attribute used to find elements with `getByTestId` locator.
+
 #### browser.screenshotDirectory {#browser-screenshotdirectory}
 
 - **Type:** `string`
@@ -1697,7 +1799,7 @@ The script `src` and `content` will be processed by Vite plugins.
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
-Custom [commands](/guide/browser/commands) that can be import during browser tests from `@vitest/browser/commands`.
+Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
 
 ### clearMocks
 
@@ -1861,7 +1963,7 @@ RegExp pattern for files that will return an empty CSS file.
 If you decide to process CSS files, you can configure if class names inside CSS modules should be scoped. You can choose one of the options:
 
 - `stable`: class names will be generated as `_${name}_${hashedFilename}`, which means that generated class will stay the same, if CSS content is changed, but will change, if the name of the file is modified, or file is moved to another folder. This setting is useful, if you use snapshot feature.
-- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopeName` method, if you have one and CSS processing is enabled. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
+- `scoped`: class names will be generated as usual, respecting `css.modules.generateScopedName` method, if you have one and CSS processing is enabled. By default, filename will be generated as `_${name}_${hash}`, where hash includes filename and content of the file.
 - `non-scoped`: class names will not be hashed.
 
 ::: warning
@@ -2181,7 +2283,7 @@ Path to a diff config that will be used to generate diff interface. Useful if yo
 :::code-group
 ```ts [vitest.diff.ts]
 import type { DiffOptions } from 'vitest'
-import c from 'picocolors'
+import c from 'tinyrainbow'
 
 export default {
   aIndicator: c.bold('--'),
@@ -2361,7 +2463,7 @@ Environment variables available on `process.env` and `import.meta.env` during te
 The same as calling [`expect.hasAssertions()`](/api/expect#expect-hasassertions) at the start of every test. This makes sure that no test will pass accidentally.
 
 ::: tip
-This only works with Vitest's `expect`. If you use `assert` ot `.should` assertions, they will not count, and your test will fail due to the lack of expect assertions.
+This only works with Vitest's `expect`. If you use `assert` or `.should` assertions, they will not count, and your test will fail due to the lack of expect assertions.
 
 You can change the value of this by calling `vi.setConfig({ expect: { requireAssertions: false } })`. The config will be applied to every subsequent `expect` call until the `vi.resetConfig` is called manually.
 :::

@@ -4,18 +4,15 @@ import { createBirpc } from 'birpc'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { resolve } from 'pathe'
-import type {
-  ContextTestEnvironment,
-  ResolvedConfig,
-  RunnerRPC,
-  RuntimeRPC,
-  Vitest,
-  WorkerContext,
-} from '../../types'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
+import type { SerializedConfig } from '../types/config'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
+import type { WorkerContext } from '../types/worker'
 import { createMethodsRPC } from './rpc'
 
 function createWorkerChannel(project: WorkspaceProject) {
@@ -97,7 +94,7 @@ export function createThreadsPool(
 
     async function runFiles(
       project: WorkspaceProject,
-      config: ResolvedConfig,
+      config: SerializedConfig,
       files: string[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
@@ -138,7 +135,7 @@ export function createThreadsPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, ctx.config.root, project.config.name)
+          ctx.state.cancelFiles(files, project)
         }
         else {
           throw error
@@ -154,8 +151,8 @@ export function createThreadsPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, ResolvedConfig>()
-      const getConfig = (project: WorkspaceProject): ResolvedConfig => {
+      const configs = new WeakMap<WorkspaceProject, SerializedConfig>()
+      const getConfig = (project: WorkspaceProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }
@@ -165,18 +162,11 @@ export function createThreadsPool(
         return config
       }
 
-      const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const [project, file] of specs) {
-        const workspaceFiles = workspaceMap.get(file) ?? []
-        workspaceFiles.push(project)
-        workspaceMap.set(file, workspaceFiles)
-      }
-
       const singleThreads = specs.filter(
-        ([project]) => project.config.poolOptions?.threads?.singleThread,
+        spec => spec.project.config.poolOptions?.threads?.singleThread,
       )
       const multipleThreads = specs.filter(
-        ([project]) => !project.config.poolOptions?.threads?.singleThread,
+        spec => !spec.project.config.poolOptions?.threads?.singleThread,
       )
 
       if (multipleThreads.length) {
@@ -286,6 +276,7 @@ export function createThreadsPool(
   return {
     name: 'threads',
     runTests: runWithFiles('run'),
+    collectTests: runWithFiles('collect'),
     close: () => pool.destroy(),
   }
 }

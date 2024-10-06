@@ -1,15 +1,17 @@
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
-import { readFileSync } from 'node:fs'
-import { basename, resolve } from 'pathe'
+import { lstatSync, readFileSync } from 'node:fs'
+import type { Stats } from 'node:fs'
+import { basename, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { toArray } from '@vitest/utils'
 import { defaultBrowserPort } from 'vitest/config'
+import { dynamicImportPlugin } from '@vitest/mocker/node'
+import MagicString from 'magic-string'
 import BrowserContext from './plugins/pluginContext'
-import DynamicImport from './plugins/pluginDynamicImport'
 import type { BrowserServer } from './server'
 import { resolveOrchestrator } from './serverOrchestrator'
 import { resolveTester } from './serverTester'
@@ -21,8 +23,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
-
-  let loupePath: string
 
   return [
     {
@@ -43,7 +43,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         })
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(async function vitestBrowserMode(req, res, next) {
-          if (!req.url) {
+          if (!req.url || !browserServer.provider) {
             return next()
           }
           const url = new URL(req.url, 'http://localhost')
@@ -89,26 +89,76 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           )
         }
 
-        coverageFolder && server.middlewares.use(
-          coveragePath!,
-          sirv(coverageFolder[0], {
-            single: true,
-            dev: true,
-            setHeaders: (res) => {
-              res.setHeader(
-                'Cache-Control',
-                'public,max-age=0,must-revalidate',
-              )
-            },
-          }),
-        )
+        if (coverageFolder) {
+          server.middlewares.use(
+            coveragePath!,
+            sirv(coverageFolder[0], {
+              single: true,
+              dev: true,
+              setHeaders: (res) => {
+                res.setHeader(
+                  'Cache-Control',
+                  'public,max-age=0,must-revalidate',
+                )
+              },
+            }),
+          )
+        }
+
+        const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
+
+        if (screenshotFailures) {
+        // eslint-disable-next-line prefer-arrow-callback
+          server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
+            if (!req.url || !browserServer.provider) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            const url = new URL(req.url, 'http://localhost')
+            const file = url.searchParams.get('file')
+            if (!file) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            let stat: Stats | undefined
+            try {
+              stat = lstatSync(file)
+            }
+            catch {
+            }
+
+            if (!stat?.isFile()) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            const ext = extname(file)
+            const buffer = readFileSync(file)
+            res.setHeader(
+              'Cache-Control',
+              'public,max-age=0,must-revalidate',
+            )
+            res.setHeader('Content-Length', buffer.length)
+            res.setHeader('Content-Type', ext === 'jpeg' || ext === 'jpg'
+              ? 'image/jpeg'
+              : ext === 'webp'
+                ? 'image/webp'
+                : 'image/png')
+            res.end(buffer)
+          })
+        }
       },
     },
     {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
-        const allTestFiles = await project.globTestFiles()
+        const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
         )
@@ -132,6 +182,29 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           ...(project.config.snapshotSerializers || []),
         ]
 
+        const exclude = [
+          'vitest',
+          'vitest/utils',
+          'vitest/browser',
+          'vitest/runners',
+          '@vitest/browser',
+          '@vitest/browser/client',
+          '@vitest/utils',
+          '@vitest/utils/source-map',
+          '@vitest/runner',
+          '@vitest/spy',
+          '@vitest/utils/error',
+          '@vitest/snapshot',
+          '@vitest/expect',
+          'std-env',
+          'tinybench',
+          'tinyspy',
+          'tinyrainbow',
+          'pathe',
+          'msw',
+          'msw/browser',
+        ]
+
         if (project.config.diff) {
           entries.push(project.config.diff)
         }
@@ -143,12 +216,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
             if (path) {
               entries.push(path)
+              exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
             const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
             if (path) {
               entries.push(path)
+              exclude.push('@vitest/coverage-istanbul')
             }
           }
           else if (provider === 'custom' && coverage.customProviderModule) {
@@ -156,43 +231,38 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           }
         }
 
+        const include = [
+          'vitest > @vitest/snapshot > magic-string',
+          'vitest > chai',
+          'vitest > chai > loupe',
+          'vitest > @vitest/utils > loupe',
+          '@vitest/browser > @testing-library/user-event',
+          '@vitest/browser > @testing-library/dom',
+        ]
+
+        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
+        if (react) {
+          include.push(react)
+        }
+        const vue = tryResolve('vitest-browser-vue', [project.ctx.config.root])
+        if (vue) {
+          include.push(vue)
+        }
+
+        const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
+        if (svelte) {
+          exclude.push(svelte)
+        }
+
         return {
           define,
+          resolve: {
+            dedupe: ['vitest'],
+          },
           optimizeDeps: {
             entries,
-            exclude: [
-              'vitest',
-              'vitest/utils',
-              'vitest/browser',
-              'vitest/runners',
-              '@vitest/utils',
-              '@vitest/utils/source-map',
-              '@vitest/runner',
-              '@vitest/spy',
-              '@vitest/utils/error',
-              '@vitest/snapshot',
-              '@vitest/expect',
-              'std-env',
-              'tinybench',
-              'tinyspy',
-              'pathe',
-              'msw',
-              'msw/browser',
-            ],
-            include: [
-              'vitest > @vitest/utils > pretty-format',
-              'vitest > @vitest/snapshot > pretty-format',
-              'vitest > @vitest/snapshot > magic-string',
-              'vitest > pretty-format',
-              'vitest > pretty-format > ansi-styles',
-              'vitest > pretty-format > ansi-regex',
-              'vitest > chai',
-              'vitest > chai > loupe',
-              'vitest > @vitest/utils > diff-sequences',
-              'vitest > @vitest/utils > loupe',
-              '@vitest/browser > @testing-library/user-event',
-              '@vitest/browser > @testing-library/dom',
-            ],
+            exclude,
+            include,
           },
         }
       },
@@ -216,20 +286,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId.startsWith('/__virtual_vitest__')) {
-          const url = new URL(rawId, 'http://localhost')
-          if (!url.searchParams.has('id')) {
-            return
-          }
-
-          const id = decodeURIComponent(url.searchParams.get('id')!)
-
-          const resolved = await this.resolve(id, distRoot, {
-            skipSelf: true,
-          })
-          return resolved
-        }
-
         if (rawId === '/__vitest_msw__') {
           return this.resolve('msw/mockServiceWorker.js', distRoot, {
             skipSelf: true,
@@ -239,16 +295,19 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     },
     {
       name: 'vitest:browser:assets',
+      configureServer(server) {
+        server.middlewares.use(
+          '/__vitest__',
+          sirv(resolve(distRoot, 'client/__vitest__')),
+        )
+      },
       resolveId(id) {
-        if (id.startsWith('/__vitest_browser__/') || id.startsWith('/__vitest__/')) {
+        if (id.startsWith('/__vitest_browser__/')) {
           return resolve(distRoot, 'client', id.slice(1))
         }
       },
-      configResolved(config) {
-        loupePath = resolve(config.cacheDir, 'deps/loupe.js')
-      },
       transform(code, id) {
-        if (id.startsWith(loupePath)) {
+        if (id.includes(browserServer.vite.config.cacheDir) && id.includes('loupe.js')) {
           // loupe bundle has a nastry require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
@@ -256,7 +315,9 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       },
     },
     BrowserContext(browserServer),
-    DynamicImport(),
+    dynamicImportPlugin({
+      globalThisAccessor: '"__vitest_browser_runner__"',
+    }),
     {
       name: 'vitest:browser:config',
       enforce: 'post',
@@ -287,12 +348,43 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             project.ctx.config.root,
             project.ctx.server.config.configFile,
           ),
+          distRoot,
         )
 
         return {
           resolve: {
             alias: viteConfig.test?.alias,
           },
+        }
+      },
+    },
+    {
+      name: 'vitest:browser:in-source-tests',
+      transform(code, id) {
+        if (!project.isTestFile(id) || !code.includes('import.meta.vitest')) {
+          return
+        }
+        const s = new MagicString(code, { filename: cleanUrl(id) })
+        s.prepend(
+          `import.meta.vitest = __vitest_index__;\n`,
+        )
+        return {
+          code: s.toString(),
+          map: s.generateMap({ hires: true }),
+        }
+      },
+    },
+    {
+      name: 'vitest:browser:worker',
+      transform(code, id, _options) {
+        // https://github.com/vitejs/vite/blob/ba56cf43b5480f8519349f7d7fe60718e9af5f1a/packages/vite/src/node/plugins/worker.ts#L46
+        if (/(?:\?|&)worker_file&type=\w+(?:&|$)/.test(id)) {
+          const s = new MagicString(code)
+          s.prepend('globalThis.__vitest_browser_runner__ = { wrapDynamicImport: f => f() };\n')
+          return {
+            code: s.toString(),
+            map: s.generateMap({ hires: 'boundary' }),
+          }
         }
       },
     },
@@ -391,4 +483,9 @@ function resolveCoverageFolder(project: WorkspaceProject) {
   }
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }

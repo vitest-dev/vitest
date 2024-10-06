@@ -1,10 +1,9 @@
 import type { File, Task, TaskResultPack } from '@vitest/runner'
-
-// can't import actual functions from utils, because it's incompatible with @vitest/browsers
 import { createFileTask } from '@vitest/runner/utils'
 import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
+import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {
@@ -14,7 +13,6 @@ export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
   return err instanceof Error && 'errors' in err
 }
 
-// Note this file is shared for both node and browser, be aware to avoid node specific logic
 export class StateManager {
   filesMap = new Map<string, File[]>()
   pathsSet: Set<string> = new Set()
@@ -22,6 +20,7 @@ export class StateManager {
   taskFileMap = new WeakMap<Task, File>()
   errorsSet = new Set<unknown>()
   processTimeoutCauses = new Set<string>()
+  reportedTasksMap = new WeakMap<Task, TestCase | TestSuite | TestModule>()
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err)) {
@@ -69,14 +68,26 @@ export class StateManager {
     return Array.from(this.pathsSet)
   }
 
+  /**
+   * Return files that were running or collected.
+   */
   getFiles(keys?: string[]): File[] {
     if (keys) {
       return keys
         .map(key => this.filesMap.get(key)!)
-        .filter(Boolean)
         .flat()
+        .filter(file => file && !file.local)
     }
-    return Array.from(this.filesMap.values()).flat()
+    return Array.from(this.filesMap.values()).flat().filter(file => !file.local).sort((f1, f2) => {
+      // print typecheck files first
+      if (f1.meta?.typecheck && f2.meta?.typecheck) {
+        return 0
+      }
+      if (f1.meta?.typecheck) {
+        return -1
+      }
+      return 1
+    })
   }
 
   getFilepaths(): string[] {
@@ -95,11 +106,11 @@ export class StateManager {
     })
   }
 
-  collectFiles(files: File[] = []) {
+  collectFiles(project: WorkspaceProject, files: File[] = []) {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
-      const otherProject = existing.filter(
-        i => i.projectName !== file.projectName,
+      const otherFiles = existing.filter(
+        i => i.projectName !== file.projectName || i.meta.typecheck !== file.meta.typecheck,
       )
       const currentFile = existing.find(
         i => i.projectName === file.projectName,
@@ -109,18 +120,16 @@ export class StateManager {
       if (currentFile) {
         file.logs = currentFile.logs
       }
-      otherProject.push(file)
-      this.filesMap.set(file.filepath, otherProject)
-      this.updateId(file)
+      otherFiles.push(file)
+      this.filesMap.set(file.filepath, otherFiles)
+      this.updateId(file, project)
     })
   }
 
-  // this file is reused by ws-client, and should not rely on heavy dependencies like workspace
   clearFiles(
-    _project: { config: { name: string | undefined; root: string } },
+    project: WorkspaceProject,
     paths: string[] = [],
   ) {
-    const project = _project as WorkspaceProject
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       const fileTask = createFileTask(
@@ -128,6 +137,8 @@ export class StateManager {
         project.config.root,
         project.config.name,
       )
+      fileTask.local = true
+      TestModule.register(fileTask, project)
       this.idMap.set(fileTask.id, fileTask)
       if (!files) {
         this.filesMap.set(path, [fileTask])
@@ -146,16 +157,31 @@ export class StateManager {
     })
   }
 
-  updateId(task: Task) {
+  updateId(task: Task, project: WorkspaceProject) {
     if (this.idMap.get(task.id) === task) {
       return
     }
+
+    if (task.type === 'suite' && 'filepath' in task) {
+      TestModule.register(task, project)
+    }
+    else if (task.type === 'suite') {
+      TestSuite.register(task, project)
+    }
+    else {
+      TestCase.register(task, project)
+    }
+
     this.idMap.set(task.id, task)
     if (task.type === 'suite') {
       task.tasks.forEach((task) => {
-        this.updateId(task)
+        this.updateId(task, project)
       })
     }
+  }
+
+  getReportedEntity(task: Task) {
+    return this.reportedTasksMap.get(task)
   }
 
   updateTasks(packs: TaskResultPack[]) {
@@ -188,9 +214,12 @@ export class StateManager {
     ).length
   }
 
-  cancelFiles(files: string[], root: string, projectName: string) {
+  cancelFiles(files: string[], project: WorkspaceProject) {
     this.collectFiles(
-      files.map(filepath => createFileTask(filepath, root, projectName)),
+      project,
+      files.map(filepath =>
+        createFileTask(filepath, project.config.root, project.config.name),
+      ),
     )
   }
 }

@@ -142,6 +142,7 @@ Some deprecated options were removed:
 - `VITEST_JUNIT_CLASSNAME` and `VITEST_JUNIT_SUITE_NAME` env variables (use reporter options instead)
 - check for `c8` coverage (use coverage-v8 instead)
 - export of `SnapshotEnvironment` from `vitest` - import it from `vitest/snapshot` instead
+- `SpyInstance` is removed in favor of `MockInstance`
 
 ## Migrating to Vitest 1.0
 
@@ -330,6 +331,15 @@ Where Jest does it by default, when mocking a module and wanting this mocking to
 server.deps.inline: ["lib-name"]
 ```
 
+### expect.getState().currentTestName
+
+Vitest's `test` names are joined with a `>` symbol to make it easier to distinguish tests from suites, while Jest uses an empty space (` `).
+
+```diff
+- `${describeTitle} ${testTitle}`
++ `${describeTitle} > ${testTitle}`
+```
+
 ### Envs
 
 Just like Jest, Vitest sets `NODE_ENV` to `test`, if it wasn't set before. Vitest also has a counterpart for `JEST_WORKER_ID` called `VITEST_POOL_ID` (always less than or equal to `maxThreads`), so if you rely on it, don't forget to rename it. Vitest also exposes `VITEST_WORKER_ID` which is a unique ID of a running worker - this number is not affected by `maxThreads`, and will increase with each created worker.
@@ -399,9 +409,8 @@ vi.setConfig({ testTimeout: 5_000 }) // [!code ++]
 
 This is not a Jest-specific feature, but if you previously were using Jest with vue-cli preset, you will need to install [`jest-serializer-vue`](https://github.com/eddyerburgh/jest-serializer-vue) package, and use it inside [setupFiles](/config/#setupfiles):
 
-`vite.config.js`
-
-```js twoslash
+:::code-group
+```js [vite.config.js]
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -410,13 +419,11 @@ export default defineConfig({
   }
 })
 ```
-
-`tests/unit/setup.js`
-
-```js
+```js [tests/unit/setup.js]
 import vueSnapshotSerializer from 'jest-serializer-vue'
 
 expect.addSnapshotSerializer(vueSnapshotSerializer)
 ```
+:::
 
 Otherwise your snapshots will have a lot of escaped `"` characters.

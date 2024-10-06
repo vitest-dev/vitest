@@ -1,14 +1,12 @@
 import { ModuleCacheMap } from 'vite-node/client'
 import type { WorkerGlobalState } from '../../types/worker'
-import { provideWorkerState } from '../../utils/global'
+import { provideWorkerState } from '../utils'
 import type { ContextExecutorOptions, VitestExecutor } from '../execute'
 import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
-import type { MockMap } from '../../types/mocker'
 
 let _viteNode: VitestExecutor
 
 const moduleCache = new ModuleCacheMap()
-const mockMap: MockMap = new Map()
 
 async function startViteNode(options: ContextExecutorOptions) {
   if (_viteNode) {
@@ -19,11 +17,10 @@ async function startViteNode(options: ContextExecutorOptions) {
   return _viteNode
 }
 
-export async function runBaseTests(state: WorkerGlobalState) {
+export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState) {
   const { ctx } = state
   // state has new context, but we want to reuse existing ones
   state.moduleCache = moduleCache
-  state.mockMap = mockMap
 
   provideWorkerState(globalThis, state)
 
@@ -40,6 +37,7 @@ export async function runBaseTests(state: WorkerGlobalState) {
     import('../runBaseTests'),
   ])
   await run(
+    method,
     ctx.files,
     ctx.config,
     { environment: state.environment, options: ctx.environment.options },

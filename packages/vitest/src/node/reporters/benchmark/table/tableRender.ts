@@ -1,11 +1,12 @@
-import c from 'picocolors'
+import { stripVTControlCharacters } from 'node:util'
+import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
-import stripAnsi from 'strip-ansi'
-import type { BenchmarkResult, Task } from '../../../../types'
+import type { Task } from '@vitest/runner'
 import { getTests, notNullish } from '../../../../utils'
 import { F_RIGHT } from '../../../../utils/figures'
 import type { Logger } from '../../../logger'
 import { getCols, getStateSymbol } from '../../renderers/utils'
+import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
 import type { FlatBenchmarkReport } from '.'
 
 export interface TableRendererOptions {
@@ -67,14 +68,14 @@ function renderBenchmarkItems(result: BenchmarkResult) {
     formatNumber(result.p995 || 0),
     formatNumber(result.p999 || 0),
     `±${(result.rme || 0).toFixed(2)}%`,
-    result.samples.length.toString(),
+    (result.sampleCount || 0).toString(),
   ]
 }
 
 function computeColumnWidths(results: BenchmarkResult[]): number[] {
   const rows = [tableHead, ...results.map(v => renderBenchmarkItems(v))]
   return Array.from(tableHead, (_, i) =>
-    Math.max(...rows.map(row => stripAnsi(row[i]).length)))
+    Math.max(...rows.map(row => stripVTControlCharacters(row[i]).length)))
 }
 
 function padRow(row: string[], widths: number[]) {
@@ -123,10 +124,7 @@ export function renderTree(
       }
       const baseline = options.compare?.[t.id]
       if (baseline) {
-        benchMap[t.id].baseline = {
-          ...baseline,
-          samples: Array(baseline.sampleCount),
-        }
+        benchMap[t.id].baseline = baseline
       }
     }
   }
@@ -217,7 +215,7 @@ export function renderTree(
     if (task.result?.state !== 'pass' && outputMap.get(task) != null) {
       let data: string | undefined = outputMap.get(task)
       if (typeof data === 'string') {
-        data = stripAnsi(data.trim().split('\n').filter(Boolean).pop()!)
+        data = stripVTControlCharacters(data.trim().split('\n').filter(Boolean).pop()!)
         if (data === '') {
           data = undefined
         }

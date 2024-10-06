@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import * as util from 'node:util'
 import { defineConfig } from 'vitest/config'
 import type { BrowserCommand } from 'vitest/node'
 
@@ -14,6 +15,10 @@ const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPat
   return { testPath, arg1, arg2 }
 }
 
+const stripVTControlCharacters: BrowserCommand<[text: string]> = (_, text) => {
+  return util.stripVTControlCharacters(text)
+}
+
 export default defineConfig({
   server: {
     headers: {
@@ -24,10 +29,11 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@vitest/cjs-lib'],
+    include: ['@vitest/cjs-lib', 'react/jsx-dev-runtime'],
   },
   test: {
-    include: ['test/**.test.{ts,js}'],
+    include: ['test/**.test.{ts,js,tsx}'],
+    includeSource: ['src/*.ts'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {
@@ -69,6 +75,7 @@ export default defineConfig({
       ],
       commands: {
         myCustomCommand,
+        stripVTControlCharacters,
       },
     },
     alias: {
@@ -93,4 +100,14 @@ export default defineConfig({
       BROWSER: browser,
     },
   },
+  plugins: [
+    {
+      name: 'test-no-transform-ui',
+      transform(_code, id, _options) {
+        if (id.includes('/__vitest__/')) {
+          throw new Error(`Unexpected transform: ${id}`)
+        }
+      },
+    },
+  ],
 })

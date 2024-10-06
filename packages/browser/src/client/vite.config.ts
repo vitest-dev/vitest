@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
 import { defineConfig } from 'vite'
 import { resolve } from 'pathe'
-import fg from 'fast-glob'
+import { globSync } from 'tinyglobby'
 
 export default defineConfig({
   server: {
@@ -22,19 +22,16 @@ export default defineConfig({
         orchestrator: resolve(__dirname, './orchestrator.html'),
         tester: resolve(__dirname, './tester/tester.html'),
       },
-      external: [/__virtual_vitest__/, '@vitest/browser/context'],
+      external: [
+        /^vitest\//,
+        'vitest',
+        /^msw/,
+        '@vitest/browser/context',
+        '@vitest/browser/client',
+      ],
     },
   },
   plugins: [
-    {
-      name: 'virtual:msw',
-      enforce: 'pre',
-      resolveId(id) {
-        if (id.startsWith('msw') || id.startsWith('vitest') || id.startsWith('@vitest/browser')) {
-          return `/__virtual_vitest__?id=${encodeURIComponent(id)}`
-        }
-      },
-    },
     {
       name: 'copy-ui-plugin',
       /* eslint-disable no-console */
@@ -54,7 +51,7 @@ export default defineConfig({
         await waitFor(() => fs.existsSync(ui))
         clearTimeout(timeout)
 
-        const files = fg.sync('**/*', { cwd: ui })
+        const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })
 
         if (fs.existsSync(browser)) {
           fs.rmSync(browser, { recursive: true })

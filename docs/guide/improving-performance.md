@@ -131,6 +131,7 @@ jobs:
         with:
           name: blob-report-${{ matrix.shardIndex }}
           path: .vitest-reports/*
+          include-hidden-files: true
           retention-days: 1
 
   merge-reports:

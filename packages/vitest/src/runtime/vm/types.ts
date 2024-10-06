@@ -11,7 +11,7 @@ interface ModuleEvaluateOptions {
 type ModuleLinker = (
   specifier: string,
   referencingModule: VMModule,
-  extra: { assert: Object }
+  extra: { assert: object }
 ) => VMModule | Promise<VMModule>
 type ModuleStatus =
   | 'unlinked'
@@ -25,7 +25,7 @@ export declare class VMModule {
   error: any
   identifier: string
   context: vm.Context
-  namespace: Object
+  namespace: object
   status: ModuleStatus
   evaluate(options?: ModuleEvaluateOptions): Promise<void>
   link(linker: ModuleLinker): Promise<void>
@@ -62,7 +62,7 @@ export declare class VMSyntheticModule extends VMModule {
 }
 
 export declare interface ImportModuleDynamically {
-  (specifier: string, script: VMModule, importAssertions: Object):
+  (specifier: string, script: VMModule, importAssertions: object):
     | VMModule
     | Promise<VMModule>
 }

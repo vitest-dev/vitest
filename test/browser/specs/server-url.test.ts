@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'vitest'
-import { runBrowserTests } from './utils'
+import { provider, runBrowserTests } from './utils'
 
 afterEach(() => {
   delete process.env.TEST_HTTPS
@@ -10,7 +10,7 @@ test('server-url http', async () => {
     root: './fixtures/server-url',
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('Browser runner started at http://localhost:5173/')
+  expect(stdout).toContain(`Browser runner started by ${provider} at http://localhost:5173/`)
 })
 
 test('server-url https', async () => {
@@ -19,6 +19,6 @@ test('server-url https', async () => {
     root: './fixtures/server-url',
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('Browser runner started at https://localhost:5173/')
+  expect(stdout).toContain(`Browser runner started by ${provider} at https://localhost:5173/`)
   expect(stdout).toContain('Test Files  1 passed')
 })

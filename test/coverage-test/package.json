@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest --workspace=vitest.workspace.custom.ts"
+    "test": "vitest --workspace=vitest.workspace.custom.ts",
+    "vitest": "vitest"
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
@@ -22,7 +23,7 @@
     "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
-    "vue": "latest",
+    "vue": "^3.4.37",
     "webdriverio": "latest"
   }
 }

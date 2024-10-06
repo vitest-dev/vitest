@@ -1,9 +1,11 @@
+import { stripVTControlCharacters } from 'node:util'
 import { getTasks } from '@vitest/runner/utils'
-import stripAnsi from 'strip-ansi'
-import type { File, Reporter, Vitest } from '../../types'
+import type { File } from '@vitest/runner'
 import { getFullName } from '../../utils'
 import { capturePrintError } from '../error'
 import type { WorkspaceProject } from '../workspace'
+import type { Reporter } from '../types/reporter'
+import type { Vitest } from '../core'
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
@@ -62,7 +64,7 @@ export class GithubActionsReporter implements Reporter {
           line: String(stack.line),
           column: String(stack.column),
         },
-        message: stripAnsi(result.output),
+        message: stripVTControlCharacters(result.output),
       })
       this.ctx.logger.log(`\n${formatted}`)
     }

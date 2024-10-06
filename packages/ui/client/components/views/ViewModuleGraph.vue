@@ -106,6 +106,8 @@ function resetGraphController() {
   )
 }
 
+const isValidClick = (event: PointerEvent) => event.button === 0
+
 function bindOnClick(
   selection: Selection<SVGCircleElement, ModuleNode, SVGGElement, undefined>,
 ) {
@@ -113,8 +115,6 @@ function bindOnClick(
     return
   }
   // Only trigger on left-click and primary touch
-  const isValidClick = (event: PointerEvent) => event.button === 0
-
   let px = 0
   let py = 0
   let pt = 0

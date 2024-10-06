@@ -16,8 +16,8 @@ This section describes the API that you can use when [mocking a module](/guide/m
 
 ### vi.mock
 
-- **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
-- **Type**: `<T>(path: Promise<T>, factory?: (importOriginal: () => T) => unknown) => void`
+- **Type**: `(path: string, factory?: MockOptions | ((importOriginal: () => unknown) => unknown)) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: MockOptions | ((importOriginal: () => T) => T | Promise<T>)) => void`
 
 Substitutes all imported modules from provided `path` with another module. You can use configured Vite aliases inside a path. The call to `vi.mock` is hoisted, so it doesn't matter where you call it. It will always be executed before all imports. If you need to reference some variables outside of its scope, you can define them inside [`vi.hoisted`](#vi-hoisted) and reference them inside `vi.mock`.
 
@@ -29,52 +29,50 @@ In order to hoist `vi.mock`, Vitest statically analyzes your files. It indicates
 Vitest will not mock modules that were imported inside a [setup file](/config/#setupfiles) because they are cached by the time a test file is running. You can call [`vi.resetModules()`](#vi-resetmodules) inside [`vi.hoisted`](#vi-hoisted) to clear all module caches before running a test file.
 :::
 
-If `factory` is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
+If the `factory` function is defined, all imports will return its result. Vitest calls factory only once and caches results for all subsequent imports until [`vi.unmock`](#vi-unmock) or [`vi.doUnmock`](#vi-dounmock) is called.
 
 Unlike in `jest`, the factory can be asynchronous. You can use [`vi.importActual`](#vi-importactual) or a helper with the factory passed in as the first argument, and get the original module inside.
 
-```js twoslash
+Since Vitest 2.1, you can also provide an object with a `spy` property instead of a factory function. If `spy` is `true`, then Vitest will automock the module as usual, but it won't override the implementation of exports. This is useful if you just want to assert that the exported method was called correctly by another method.
+
+```ts
+import { calculator } from './src/calculator.ts'
+
+vi.mock('./src/calculator.ts', { spy: true })
+
+// calls the original implementation,
+// but allows asserting the behaviour later
+const result = calculator(1, 2)
+
+expect(result).toBe(3)
+expect(calculator).toHaveBeenCalledWith(1, 2)
+expect(calculator).toHaveReturned(3)
+```
+
+Vitest also supports a module promise instead of a string in the `vi.mock` and `vi.doMock` methods for better IDE support. When the file is moved, the path will be updated, and `importOriginal` inherits the type automatically. Using this signature will also enforce factory return type to be compatible with the original module (keeping exports optional).
+
+```ts twoslash
+// @filename: ./path/to/module.js
+export declare function total(...numbers: number[]): number
+// @filename: test.js
 import { vi } from 'vitest'
 // ---cut---
-// when using JavaScript
-
-vi.mock('./path/to/module.js', async (importOriginal) => {
-  const mod = await importOriginal()
-  return {
-    ...mod,
-    // replace some exports
-    namedExport: vi.fn(),
-  }
-})
-```
-
-```ts
-// when using TypeScript
-
-vi.mock('./path/to/module.js', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('./path/to/module.js')>()
-  return {
-    ...mod,
-    // replace some exports
-    namedExport: vi.fn(),
-  }
-})
-```
-
-Vitest supports a module promise instead of a string in `vi.mock` method for better IDE support (when file is moved, path will be updated, `importOriginal` also inherits the type automatically).
-
-```ts
 vi.mock(import('./path/to/module.js'), async (importOriginal) => {
   const mod = await importOriginal() // type is inferred
+  //    ^?
   return {
     ...mod,
     // replace some exports
-    namedExport: vi.fn(),
+    total: vi.fn(),
   }
 })
 ```
 
 Under the hood, Vitest still operates on a string and not a module object.
+
+If you are using TypeScript with `paths` aliases configured in `tsconfig.json` however, the compiler won't be able to correctly resolve import types.
+In order to make it work, make sure to replace all aliased imports, with their corresponding relative paths.
+Eg. use `import('./path/to/module.js')` instead of `import('@/module')`.
 
 ::: warning
 `vi.mock` is hoisted (in other words, _moved_) to **top of the file**. It means that whenever you write it (be it inside `beforeEach` or `test`), it will actually be called before that.
@@ -121,7 +119,7 @@ vi.mock('./path/to/module.js', () => {
 ```
 :::
 
-If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [deps.moduleDirectories](/config/#deps-moduledirectories) config option.
+If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/#root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [`deps.moduleDirectories`](/config/#deps-moduledirectories) config option.
 
 For example, you have this file structure:
 
@@ -136,7 +134,7 @@ For example, you have this file structure:
   - increment.test.js
 ```
 
-If you call `vi.mock` in a test file without a factory provided, it will find a file in the `__mocks__` folder to use as a module:
+If you call `vi.mock` in a test file without a factory or options provided, it will find a file in the `__mocks__` folder to use as a module:
 
 ```ts
 // increment.test.js
@@ -162,7 +160,8 @@ If there is no `__mocks__` folder or a factory provided, Vitest will import the 
 
 ### vi.doMock
 
-- **Type**: `(path: string, factory?: (importOriginal: () => unknown) => unknown) => void`
+- **Type**: `(path: string, factory?: MockOptions | ((importOriginal: () => unknown) => unknown)) => void`
+- **Type**: `<T>(path: Promise<T>, factory?: MockOptions | ((importOriginal: () => T) => T | Promise<T>)) => void`
 
 The same as [`vi.mock`](#vi-mock), but it's not hoisted to the top of the file, so you can reference variables in the global file scope. The next [dynamic import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import) of the module will be mocked.
 
@@ -250,13 +249,13 @@ Imports a module with all of its properties (including nested properties) mocked
 
 ### vi.unmock
 
-- **Type**: `(path: string) => void`
+- **Type**: `(path: string | Promise<Module>) => void`
 
 Removes module from the mocked registry. All calls to import will return the original module even if it was mocked before. This call is hoisted to the top of the file, so it will only unmock modules that were defined in `setupFiles`, for example.
 
 ### vi.doUnmock
 
-- **Type**: `(path: string) => void`
+- **Type**: `(path: string | Promise<Module>) => void`
 
 The same as [`vi.unmock`](#vi-unmock), but is not hoisted to the top of the file. The next import of the module will import the original module instead of the mock. This will not unmock previously imported modules.
 
@@ -363,9 +362,7 @@ This section describes how to work with [method mocks](/api/mock) and replace en
 Creates a spy on a function, though can be initiated without one. Every time a function is invoked, it stores its call arguments, returns, and instances. Also, you can manipulate its behavior with [methods](/api/mock).
 If no function is given, mock will return `undefined`, when invoked.
 
-```ts twoslash
-import { expect, vi } from 'vitest'
-// ---cut---
+```ts
 const getApples = vi.fn(() => 0)
 
 getApples()
@@ -404,9 +401,7 @@ Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clea
 
 Creates a spy on a method or getter/setter of an object similar to [`vi.fn()`](#vi-fn). It returns a [mock function](/api/mock).
 
-```ts twoslash
-import { expect, vi } from 'vitest'
-// ---cut---
+```ts
 let apples = 0
 const cart = {
   getApples: () => 42,
@@ -439,9 +434,26 @@ console.log(cart.getApples()) // still 42!
 ```
 :::
 
+::: tip
+It is not possible to spy on exported methonds in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
+
+```ts
+import { calculator } from './src/calculator.ts'
+
+vi.mock('./src/calculator.ts', { spy: true })
+
+calculator(1, 2)
+
+expect(calculator).toHaveBeenCalledWith(1, 2)
+expect(calculator).toHaveReturned(3)
+```
+
+And while it is possible to spy on exports in `jsdom` or other Node.js environments, this might change in the future.
+:::
+
 ### vi.stubEnv {#vi-stubenv}
 
-- **Type:** `(name: string, value: string) => Vitest`
+- **Type:** `<T extends string>(name: T, value: T extends "PROD" | "DEV" | "SSR" ? boolean : string | undefined) => Vitest`
 
 Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
 
@@ -455,6 +467,12 @@ vi.stubEnv('NODE_ENV', 'production')
 
 process.env.NODE_ENV === 'production'
 import.meta.env.NODE_ENV === 'production'
+
+vi.stubEnv('NODE_ENV', undefined)
+
+process.env.NODE_ENV === undefined
+import.meta.env.NODE_ENV === undefined
+
 // doesn't change other envs
 import.meta.env.MODE === 'development'
 ```
@@ -502,7 +520,7 @@ import.meta.env.NODE_ENV === 'development'
 
 Changes the value of global variable. You can restore its original value by calling `vi.unstubAllGlobals`.
 
-```ts twoslash
+```ts
 import { vi } from 'vitest'
 
 // `innerWidth` is "0" before calling stubGlobal
@@ -564,9 +582,7 @@ This sections descibes how to work with [fake timers](/guide/mocking#timers).
 
 This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -583,9 +599,7 @@ vi.advanceTimersByTime(150)
 
 This method will invoke every initiated timer until the specified number of milliseconds is passed or the queue is empty - whatever comes first. This will include asynchronously set timers.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 let i = 0
 setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
 
@@ -602,9 +616,7 @@ await vi.advanceTimersByTimeAsync(150)
 
 Will call next available timer. Useful to make assertions between each timer call. You can chain call it to manage timers by yourself.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -619,9 +631,7 @@ vi.advanceTimersToNextTimer() // log: 1
 
 Will call next available timer and wait until it's resolved if it was set asynchronously. Useful to make assertions between each timer call.
 
-```ts twoslash
-import { expect, vi } from 'vitest'
-// ---cut---
+```ts
 let i = 0
 setInterval(() => Promise.resolve().then(() => console.log(++i)), 50)
 
@@ -630,6 +640,24 @@ expect(console.log).toHaveBeenCalledWith(1)
 
 await vi.advanceTimersToNextTimerAsync() // log: 2
 await vi.advanceTimersToNextTimerAsync() // log: 3
+```
+
+### vi.advanceTimersToNextFrame <Version>2.1.0</Version> {#vi-advancetimerstonextframe}
+
+- **Type:** `() => Vitest`
+
+Similar to [`vi.advanceTimersByTime`](https://vitest.dev/api/vi#vi-advancetimersbytime), but will advance timers by the milliseconds needed to execute callbacks currently scheduled with `requestAnimationFrame`.
+
+```ts
+let frameRendered = false
+
+requestAnimationFrame(() => {
+  frameRendered = true
+})
+
+vi.advanceTimersToNextFrame()
+
+expect(frameRendered).toBe(true)
 ```
 
 ### vi.getTimerCount
@@ -666,9 +694,7 @@ Calls every microtask that was queued by `process.nextTick`. This will also run 
 
 This method will invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimers` will be fired. If you have an infinite interval, it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](/config/#faketimers-looplimit)).
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 let i = 0
 setTimeout(() => console.log(++i))
 const interval = setInterval(() => {
@@ -692,9 +718,7 @@ vi.runAllTimers()
 This method will asynchronously invoke every initiated timer until the timer queue is empty. It means that every timer called during `runAllTimersAsync` will be fired even asynchronous timers. If you have an infinite interval,
 it will throw after 10 000 tries (can be configured with [`fakeTimers.loopLimit`](/config/#faketimers-looplimit)).
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 setTimeout(async () => {
   console.log(await Promise.resolve('result'))
 }, 100)
@@ -710,9 +734,7 @@ await vi.runAllTimersAsync()
 
 This method will call every timer that was initiated after [`vi.useFakeTimers`](#vi-usefaketimers) call. It will not fire any timer that was initiated during its call.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 let i = 0
 setInterval(() => console.log(++i), 50)
 
@@ -727,9 +749,7 @@ vi.runOnlyPendingTimers()
 
 This method will asynchronously call every timer that was initiated after [`vi.useFakeTimers`](#vi-usefaketimers) call, even asynchronous ones. It will not fire any timer that was initiated during its call.
 
-```ts twoslash
-import { vi } from 'vitest'
-// ---cut---
+```ts
 setTimeout(() => {
   console.log(1)
 }, 100)
@@ -758,9 +778,9 @@ If fake timers are enabled, this method simulates a user changing the system clo
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
-```ts twoslash
-import { expect, vi } from 'vitest'
-// ---cut---
+Accepts the same string and number arguments as the `Date`.
+
+```ts
 const date = new Date(1998, 11, 19)
 
 vi.useFakeTimers()
@@ -870,7 +890,7 @@ This is similar to `vi.waitFor`, but if the callback throws any errors, executio
 
 Look at the example below. We can use `vi.waitUntil` to wait for the element to appear on the page, and then we can do something with the element.
 
-```ts twoslash
+```ts
 import { expect, test, vi } from 'vitest'
 
 test('Element render correctly', async () => {

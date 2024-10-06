@@ -1,4 +1,4 @@
-import { test,vi, expect } from 'vitest'
+import { test, vi, expect } from 'vitest'
 
 vi.mock(import('./src/mocks_factory'), () => {
   return {

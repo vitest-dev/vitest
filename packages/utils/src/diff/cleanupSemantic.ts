@@ -189,7 +189,7 @@ const diff_commonOverlap_ = function (text1: string, text2: string): number {
  * Reduce the number of edits by eliminating semantically trivial equalities.
  * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
  */
-const diff_cleanupSemantic = function (diffs: Array<Diff>) {
+const diff_cleanupSemantic = function (diffs: Array<Diff>): void {
   let changes = false
   const equalities = [] // Stack of indices where equalities are found.
   let equalitiesLength = 0 // Keeping our own length var is faster in JS.
@@ -338,61 +338,6 @@ const blanklineStartRegex_ = /^\r?\n\r?\n/
  * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
  */
 function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
-  /**
-   * Given two strings, compute a score representing whether the internal
-   * boundary falls on logical boundaries.
-   * Scores range from 6 (best) to 0 (worst).
-   * Closure, but does not reference any external variables.
-   * @param {string} one First string.
-   * @param {string} two Second string.
-   * @return {number} The score.
-   * @private
-   */
-  function diff_cleanupSemanticScore_(one: string, two: string): number {
-    if (!one || !two) {
-      // Edges are the best.
-      return 6
-    }
-
-    // Each port of this function behaves slightly differently due to
-    // subtle differences in each language's definition of things like
-    // 'whitespace'.  Since this function's purpose is largely cosmetic,
-    // the choice has been made to use each language's native features
-    // rather than force total conformity.
-    const char1 = one.charAt(one.length - 1)
-    const char2 = two.charAt(0)
-    const nonAlphaNumeric1 = char1.match(nonAlphaNumericRegex_)
-    const nonAlphaNumeric2 = char2.match(nonAlphaNumericRegex_)
-    const whitespace1 = nonAlphaNumeric1 && char1.match(whitespaceRegex_)
-    const whitespace2 = nonAlphaNumeric2 && char2.match(whitespaceRegex_)
-    const lineBreak1 = whitespace1 && char1.match(linebreakRegex_)
-    const lineBreak2 = whitespace2 && char2.match(linebreakRegex_)
-    const blankLine1 = lineBreak1 && one.match(blanklineEndRegex_)
-    const blankLine2 = lineBreak2 && two.match(blanklineStartRegex_)
-
-    if (blankLine1 || blankLine2) {
-      // Five points for blank lines.
-      return 5
-    }
-    else if (lineBreak1 || lineBreak2) {
-      // Four points for line breaks.
-      return 4
-    }
-    else if (nonAlphaNumeric1 && !whitespace1 && whitespace2) {
-      // Three points for end of sentences.
-      return 3
-    }
-    else if (whitespace1 || whitespace2) {
-      // Two points for whitespace.
-      return 2
-    }
-    else if (nonAlphaNumeric1 || nonAlphaNumeric2) {
-      // One point for non-alphanumeric.
-      return 1
-    }
-    return 0
-  }
-
   let pointer = 1
   // Intentionally ignore the first and last element (don't need checking).
   while (pointer < diffs.length - 1) {
@@ -607,6 +552,61 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
   if (changes) {
     diff_cleanupMerge(diffs)
   }
+}
+
+/**
+ * Given two strings, compute a score representing whether the internal
+ * boundary falls on logical boundaries.
+ * Scores range from 6 (best) to 0 (worst).
+ * Closure, but does not reference any external variables.
+ * @param {string} one First string.
+ * @param {string} two Second string.
+ * @return {number} The score.
+ * @private
+ */
+function diff_cleanupSemanticScore_(one: string, two: string): number {
+  if (!one || !two) {
+    // Edges are the best.
+    return 6
+  }
+
+  // Each port of this function behaves slightly differently due to
+  // subtle differences in each language's definition of things like
+  // 'whitespace'.  Since this function's purpose is largely cosmetic,
+  // the choice has been made to use each language's native features
+  // rather than force total conformity.
+  const char1 = one.charAt(one.length - 1)
+  const char2 = two.charAt(0)
+  const nonAlphaNumeric1 = char1.match(nonAlphaNumericRegex_)
+  const nonAlphaNumeric2 = char2.match(nonAlphaNumericRegex_)
+  const whitespace1 = nonAlphaNumeric1 && char1.match(whitespaceRegex_)
+  const whitespace2 = nonAlphaNumeric2 && char2.match(whitespaceRegex_)
+  const lineBreak1 = whitespace1 && char1.match(linebreakRegex_)
+  const lineBreak2 = whitespace2 && char2.match(linebreakRegex_)
+  const blankLine1 = lineBreak1 && one.match(blanklineEndRegex_)
+  const blankLine2 = lineBreak2 && two.match(blanklineStartRegex_)
+
+  if (blankLine1 || blankLine2) {
+    // Five points for blank lines.
+    return 5
+  }
+  else if (lineBreak1 || lineBreak2) {
+    // Four points for line breaks.
+    return 4
+  }
+  else if (nonAlphaNumeric1 && !whitespace1 && whitespace2) {
+    // Three points for end of sentences.
+    return 3
+  }
+  else if (whitespace1 || whitespace2) {
+    // Two points for whitespace.
+    return 2
+  }
+  else if (nonAlphaNumeric1 || nonAlphaNumeric2) {
+    // One point for non-alphanumeric.
+    return 1
+  }
+  return 0
 }
 
 export {

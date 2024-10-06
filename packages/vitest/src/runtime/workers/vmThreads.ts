@@ -1,5 +1,5 @@
-import type { ContextRPC } from '../../types/rpc'
-import type { WorkerContext, WorkerGlobalState } from '../../types/worker'
+import type { WorkerContext } from '../../node/types/worker'
+import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
 import type { VitestWorker, WorkerRpcOptions } from './types'
 import { createThreadsRpcOptions } from './utils'
 import { runVmTests } from './vm'
@@ -10,7 +10,11 @@ class ThreadsVmWorker implements VitestWorker {
   }
 
   runTests(state: WorkerGlobalState): unknown {
-    return runVmTests(state)
+    return runVmTests('run', state)
+  }
+
+  collectTests(state: WorkerGlobalState): unknown {
+    return runVmTests('collect', state)
   }
 }
 
