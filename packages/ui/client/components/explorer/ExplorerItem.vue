@@ -69,7 +69,7 @@ function toggleOpen() {
 }
 
 async function onRun(task: Task) {
-  if (!state || state === 'skip' || state === 'todo') {
+  if (state === 'todo') {
     return
   }
 
@@ -117,6 +117,14 @@ const gridStyles = computed(() => {
   return `grid-template-columns: ${
     entries.map(() => '1rem').join(' ')
   } ${gridColumns.join(' ')};`
+})
+
+const runButtonTitle = computed(() => {
+  return type === 'file'
+    ? 'Run current file'
+    : type === 'suite'
+      ? 'Run all tests in this suite'
+      : 'Run current test'
 })
 
 const escapedName = computed(() => escapeHtml(name))
@@ -230,12 +238,12 @@ const projectNameTextColor = computed(() => {
       </VueTooltip>
       <IconButton
         v-if="!isReport"
-        v-tooltip.bottom="'Run current test'"
+        v-tooltip.bottom="runButtonTitle"
         data-testid="btn-run-test"
-        title="Run current test"
+        :title="runButtonTitle"
         icon="i-carbon:play-filled-alt"
         text-green5
-        :disabled="!state || state === 'skip' || state === 'todo'"
+        :disabled="state === 'todo'"
         @click.prevent.stop="onRun(task)"
       />
     </div>
