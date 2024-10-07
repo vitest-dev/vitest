@@ -16,7 +16,7 @@ declare module 'vitest' {
   type PromisifyDomAssertion<T> = Promisify<Assertion<T>>
 
   interface ExpectStatic {
-    element: <T extends Element | Locator>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element>>
+    element: <T extends Element | Locator>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element | null>>
   }
 }
 
