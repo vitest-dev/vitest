@@ -279,7 +279,9 @@ exports[`asymmetric matcher error 21`] = `
 StringContaining "ll"
 
 + Received: 
-[Error: hello]",
+Error {
+  "message": "hello",
+}",
   "expected": "StringContaining "ll"",
   "message": "expected error to match asymmetric matcher",
 }
@@ -292,7 +294,9 @@ exports[`asymmetric matcher error 22`] = `
 stringContainingCustom<ll>
 
 + Received: 
-[Error: hello]",
+Error {
+  "message": "hello",
+}",
   "expected": "stringContainingCustom<ll>",
   "message": "expected error to match asymmetric matcher",
 }
@@ -305,7 +309,9 @@ exports[`asymmetric matcher error 23`] = `
 [Function MyError1]
 
 + Received: 
-[Error: hello]",
+Error {
+  "message": "hello",
+}",
   "expected": "[Function MyError1]",
   "message": "expected error to be instance of MyError1",
 }
