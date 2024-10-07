@@ -5,7 +5,6 @@ import { slash } from '../utils'
 import type { TestModule } from './reporters/reported-tasks'
 import type { Vitest as VitestCore } from './core'
 import type { TestSpecification } from './spec'
-import type { VitestModuleGraph } from './publicVitest'
 
 export interface VitestRunner {
   // Vitest starts a standalone runner, will react on watch changes, it doesn't run tests
@@ -19,7 +18,7 @@ export interface VitestRunner {
   run: () => Promise<TestRunResult>
   collect: () => Promise<TestRunResult>
   runModules: (moduleNames: string[]) => Promise<TestRunResult>
-  runTests: (filters: TestSpecification[]) => Promise<TestRunResult>
+  runTests: (filters: Array<TestSpecification>) => Promise<TestRunResult>
   mergeReports: () => Promise<TestRunResult>
 }
 
@@ -34,7 +33,6 @@ export class VitestRunner_ implements VitestRunner {
 
   constructor(
     vitest: VitestCore,
-    private readonly moduleGraph: VitestModuleGraph,
   ) {
     this[kVitest] = vitest
   }
