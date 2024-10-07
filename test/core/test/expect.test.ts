@@ -369,6 +369,29 @@ describe('Error equality', () => {
       expect(e1).not.toEqual(e2)
     }
 
+    {
+      // different cause (asymmetric fail)
+      const e1 = new Error('hello')
+      const e2 = new Error('hello', { cause: 'y' })
+      snapshotError(() => expect(e1).toEqual(e2))
+      expect(e1).not.toEqual(e2)
+    }
+
+    {
+      // different cause (asymmetric pass)
+      const e1 = new Error('hello', { cause: 'x' })
+      const e2 = new Error('hello')
+      expect(e1).toEqual(e2)
+    }
+
+    {
+      // different cause (fail by other props)
+      // TODO: strip `cause` on actual side from diff
+      const e1 = new Error('hello', { cause: 'x' })
+      const e2 = new Error('world')
+      snapshotError(() => expect(e1).toEqual(e2))
+    }
+
     //
     // stricter behavior with custom equality tester
     //

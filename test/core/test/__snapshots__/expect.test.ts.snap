@@ -80,3 +80,44 @@ exports[`Error equality > basic 4`] = `
   "message": "expected Error: hello { cause: 'x' } to deeply equal Error: hello { cause: 'y' }",
 }
 `;
+
+exports[`Error equality > basic 5`] = `
+{
+  "actual": "Error {
+  "message": "hello",
+}",
+  "diff": "- Expected
++ Received
+
+  Error {
+    "message": "hello",
+-   "cause": "y",
+  }",
+  "expected": "Error {
+  "message": "hello",
+  "cause": "y",
+}",
+  "message": "expected Error: hello to deeply equal Error: hello { cause: 'y' }",
+}
+`;
+
+exports[`Error equality > basic 6`] = `
+{
+  "actual": "Error {
+  "message": "hello",
+  "cause": "x",
+}",
+  "diff": "- Expected
++ Received
+
+  Error {
+-   "message": "world",
++   "message": "hello",
++   "cause": "x",
+  }",
+  "expected": "Error {
+  "message": "world",
+}",
+  "message": "expected Error: hello { cause: 'x' } to deeply equal Error: world",
+}
+`;
