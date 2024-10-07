@@ -405,6 +405,28 @@ exports[`error equality 6`] = `
 }
 `;
 
+exports[`error equality 7`] = `
+{
+  "actual": "[AggregateError: outer]",
+  "diff": "- Expected
++ Received
+
+  AggregateError {
+    "message": "outer",
+    "cause": "x",
+    "errors": Array [
+      Error {
+        "message": "inner",
+-       "cause": "y",
++       "cause": "x",
+      },
+    ],
+  }",
+  "expected": "[AggregateError: outer]",
+  "message": "expected AggregateError: outer { …(2) } to deeply equal AggregateError: outer { …(2) }",
+}
+`;
+
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
   "actual": "Array [

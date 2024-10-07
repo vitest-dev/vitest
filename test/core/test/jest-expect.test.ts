@@ -1436,7 +1436,20 @@ it('error equality', () => {
     snapshotError(() => expect(e1).toEqual(e2))
   }
 
-  // TODO: AggregateError
+  {
+    // AggregateError (pass)
+    const e1 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })
+    const e2 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // AggregateError (fail)
+    const e1 = new AggregateError([new Error('inner', { cause: 'x' })], 'outer', { cause: 'x' })
+    const e2 = new AggregateError([new Error('inner', { cause: 'y' })], 'outer', { cause: 'x' })
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
   // TODO: cyclic
 })
 
