@@ -178,7 +178,7 @@ function printBasicValue(
     return Number.isNaN(+val) ? 'Date { NaN }' : toISOString.call(val)
   }
   if (toStringed === '[object Error]') {
-    // return printError(val)
+    return printError(val)
   }
   if (toStringed === '[object RegExp]') {
     if (escapeRegex) {
@@ -189,7 +189,7 @@ function printBasicValue(
   }
 
   if (val instanceof Error) {
-    // return printError(val)
+    return printError(val)
   }
 
   return null
@@ -275,26 +275,6 @@ function printComplexValue(
         printer,
       )}}`
   }
-  // TODO: enable only for diff format
-  if (val instanceof Error) {
-    const { message, cause, ...rest } = val
-    const entries = {
-      message,
-      ...typeof cause !== 'undefined' ? { cause } : {},
-      ...val instanceof AggregateError ? { errors: val.errors } : {},
-      ...rest,
-    }
-    return hitMaxDepth
-      ? `[${val.name}]`
-      : `${val.name} {${printIteratorEntries(
-        Object.entries(entries).values(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )}}`
-  }
 
   // Avoid failure to serialize global window object in jsdom test environment.
   // For example, not even relevant if window is prop of React element.
@@ -314,6 +294,30 @@ function printComplexValue(
       refs,
       printer,
     )}}`
+}
+
+const ErrorPlugin: NewPlugin = {
+  test: val => val && val instanceof Error,
+  serialize(val, config, indentation, depth, refs, printer) {
+    const hitMaxDepth = ++depth > config.maxDepth
+    const { message, cause, ...rest } = val
+    const entries = {
+      message,
+      ...typeof cause !== 'undefined' ? { cause } : {},
+      ...val instanceof AggregateError ? { errors: val.errors } : {},
+      ...rest,
+    }
+    return hitMaxDepth
+      ? `[${val.name}]`
+      : `${val.name} {${printIteratorEntries(
+        Object.entries(entries).values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
+  },
 }
 
 function isNewPlugin(plugin: Plugin): plugin is NewPlugin {
@@ -555,6 +559,7 @@ export const plugins: {
   Immutable: NewPlugin
   ReactElement: NewPlugin
   ReactTestComponent: NewPlugin
+  Error: NewPlugin
 } = {
   AsymmetricMatcher,
   DOMCollection,
@@ -562,4 +567,5 @@ export const plugins: {
   Immutable,
   ReactElement,
   ReactTestComponent,
+  Error: ErrorPlugin,
 }

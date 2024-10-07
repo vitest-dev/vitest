@@ -50,6 +50,7 @@ const PLUGINS = [
   DOMCollection,
   Immutable,
   AsymmetricMatcher,
+  prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
   plugins: PLUGINS,
@@ -271,6 +272,7 @@ export function printDiffOrStringify(
   // if (isLineDiffable(expected, received)) {
   const clonedExpected = deepClone(expected, { forceWritable: true })
   const clonedReceived = deepClone(received, { forceWritable: true })
+  // TODO: strip `Error.cause` like asymmetric matcher
   const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedExpected, clonedReceived)
   const difference = diff(replacedExpected, replacedActual, options)
 
