@@ -345,7 +345,7 @@ exports[`error equality 2`] = `
 +   "custom": "a",
   }",
   "expected": "[Error: hi]",
-  "message": "expected error to be Error: hi { custom: 'b' }",
+  "message": "expected a thrown error to be Error: hi { custom: 'b' }",
 }
 `;
 
