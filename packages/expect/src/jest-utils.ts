@@ -115,7 +115,7 @@ function eq(
   }
 
   if (a instanceof Error && b instanceof Error) {
-    return isErrorEqual(a, b, customTesters)
+    return isErrorEqual(a, b, aStack, bStack, customTesters, hasKey)
   }
 
   if (typeof URL === 'function' && a instanceof URL && b instanceof URL) {
@@ -225,81 +225,51 @@ function eq(
   return result
 }
 
-// TODO: how to setup it as a default tester?
-export function createErrorEqualityTester(): Tester {
-  const aStack: Error[] = []
-  const bStack: Error[] = []
-
-  const tester: Tester = function (a_: unknown, b_: unknown, customTesters) {
-    const aOk = a_ instanceof Error
-    const bOk = b_ instanceof Error
-    if (!aOk && !bOk) {
-      return undefined
+function isErrorEqual(
+  a: Error,
+  b: Error,
+  aStack: Array<unknown>,
+  bStack: Array<unknown>,
+  customTesters: Array<Tester>,
+  hasKey: any,
+) {
+  // check circular
+  let length = aStack.length
+  while (length--) {
+    if (aStack[length] === a) {
+      return bStack[length] === b
     }
-    if (aOk !== bOk) {
+    else if (bStack[length] === b) {
       return false
     }
-    const a = a_ as Error
-    const b = b_ as Error
-
-    // check circular
-    let length = aStack.length
-    while (length--) {
-      if (aStack[length] === a) {
-        return bStack[length] === b
-      }
-      else if (bStack[length] === b) {
-        return false
-      }
-    }
-    aStack.push(a)
-    aStack.push(b)
-
-    const result = (
-      Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
-      && a.name === b.name
-      && a.message === b.message
-      // check Error.cause asymmetrically
-      && (typeof b.cause !== 'undefined'
-        ? equals(a.cause, b.cause, customTesters)
-        : true)
-      // AggregateError.errors
-        && (a instanceof AggregateError && b instanceof AggregateError
-          ? equals(a.errors, b.errors, customTesters)
-          : true)
-        // spread to compare enumerable properties
-          && equals({ ...a }, { ...b }, customTesters)
-    )
-
-    aStack.pop()
-    aStack.pop()
-    return result
   }
+  aStack.push(a)
+  bStack.push(b)
 
-  return tester
-}
-
-function isErrorEqual(a: Error, b: Error, customTesters: Tester[]) {
   // https://nodejs.org/docs/latest-v22.x/api/assert.html#comparison-details
   // - [[Prototype]] of objects are compared using the === operator.
   // - Only enumerable "own" properties are considered.
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
   //   (NOTE: causes and errors are added in v22)
-
-  return (
+  const result = (
     Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
     && a.name === b.name
     && a.message === b.message
     // check Error.cause asymmetrically
     && (typeof b.cause !== 'undefined'
-      ? equals(a.cause, b.cause, customTesters)
+      ? eq(a.cause, b.cause, aStack, bStack, customTesters, hasKey)
       : true)
     // AggregateError.errors
       && (a instanceof AggregateError && b instanceof AggregateError
-        ? equals(a.errors, b.errors, customTesters)
+        ? eq(a.errors, b.errors, aStack, bStack, customTesters, hasKey)
         : true)
-        && equals({ ...a }, { ...b }, customTesters)
+    // spread to compare enumerable properties
+        && eq({ ...a }, { ...b }, aStack, bStack, customTesters, hasKey)
   )
+
+  aStack.pop()
+  bStack.pop()
+  return result
 }
 
 function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {

@@ -433,6 +433,15 @@ exports[`error equality 7`] = `
 }
 `;
 
+exports[`error equality 8`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "Maximum call stack size exceeded",
+}
+`;
+
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
   "actual": "Array [

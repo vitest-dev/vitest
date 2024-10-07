@@ -1449,31 +1449,26 @@ it('error equality', () => {
     snapshotError(() => expect(e1).toEqual(e2))
   }
 
-  // {
-  //   // cyclic (pass)
-  //   const e1 = new Error("hi");
-  //   e1.cause = e1;
-  //   const e2 = new Error("hi");
-  //   e2.cause = e2;
-  //   expect(e1).toEqual(e2)
-  // }
+  {
+    // cyclic (pass)
+    const e1 = new Error('hi')
+    e1.cause = e1
+    const e2 = new Error('hi')
+    e2.cause = e2
+    expect(e1).toEqual(e2)
+  }
 
-  // {
-  //   // cyclic (fail)
-  //   const e1 = new Error("hello");
-  //   e1.cause = e1;
-  //   const e2 = new Error("world");
-  //   e2.cause = e2;
-  //   snapshotError(() => expect(e1).toEqual(e2))
-  // }
-})
-
-it.only('repro', () => {
-  const e1 = new Error('hi')
-  e1.cause = e1
-  const e2 = new Error('hi')
-  e2.cause = e2
-  expect(e1).toEqual(e2)
+  {
+    // cyclic (fail)
+    // currently it fails by 'Maximum call stack size exceeded'
+    // due to chai's error formatting
+    // https://github.com/chaijs/chai/issues/1645
+    const e1 = new Error('hello')
+    e1.cause = e1
+    const e2 = new Error('world')
+    e2.cause = e2
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
 })
 
 it('toHaveBeenNthCalledWith error', () => {
