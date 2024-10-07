@@ -1,7 +1,7 @@
 /* eslint-disable no-sparse-arrays */
-import { AssertionError } from 'node:assert'
+import nodeAssert, { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
-import { describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 
@@ -1337,6 +1337,107 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(() => {
     throw new MyError2('hello')
   }).toThrow(MyError1))
+})
+
+it('error equality', () => {
+  class MyError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  class YourError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  {
+    // different custom property
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'b')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+  }
+
+  {
+    // different message
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2)
+    assert.notDeepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+  }
+
+  {
+    // different class
+    const e1 = new MyError('hello', 'a')
+    const e2 = new YourError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
+    assert.deepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+  }
+
+  {
+    // same
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'a')
+    expect(e1).toEqual(e2)
+    expect(e1).toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.deepStrictEqual(e1, e2)
+  }
+
+  {
+    // same
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'a')
+    expect(e1).toEqual(e2)
+    expect(e1).toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.deepStrictEqual(e1, e2)
+  }
+
+  {
+    // different cause
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('hello', { cause: 'y' })
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+  }
+
+  {
+    // different cause (asymmetric fail)
+    const e1 = new Error('hello')
+    const e2 = new Error('hello', { cause: 'y' })
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+  }
+
+  {
+    // different cause (asymmetric pass)
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('hello')
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // different cause (fail by other props)
+    // TODO: strip `cause` on actual side from diff
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('world')
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  // TODO: AggregateError
+  // TODO: cyclic
 })
 
 it('toHaveBeenNthCalledWith error', () => {
