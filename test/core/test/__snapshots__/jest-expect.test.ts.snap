@@ -323,7 +323,7 @@ exports[`error equality 1`] = `
   "diff": "- Expected
 + Received
 
-  Error {
+  MyError {
     "message": "hi",
 -   "custom": "b",
 +   "custom": "a",
@@ -339,7 +339,7 @@ exports[`error equality 2`] = `
   "diff": "- Expected
 + Received
 
-  Error {
+  MyError {
 -   "message": "hello",
 +   "message": "hi",
     "custom": "a",
@@ -352,7 +352,14 @@ exports[`error equality 2`] = `
 exports[`error equality 3`] = `
 {
   "actual": "[Error: hello]",
-  "diff": "Compared values have no visual difference.",
+  "diff": "- Expected
++ Received
+
+- YourError {
++ MyError {
+    "message": "hello",
+    "custom": "a",
+  }",
   "expected": "[Error: hello]",
   "message": "expected Error: hello { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
 }

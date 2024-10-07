@@ -298,7 +298,7 @@ function printComplexValue(
 
 const ErrorPlugin: NewPlugin = {
   test: val => val && val instanceof Error,
-  serialize(val, config, indentation, depth, refs, printer) {
+  serialize(val: Error, config, indentation, depth, refs, printer) {
     const hitMaxDepth = ++depth > config.maxDepth
     const { message, cause, ...rest } = val
     const entries = {
@@ -307,9 +307,10 @@ const ErrorPlugin: NewPlugin = {
       ...val instanceof AggregateError ? { errors: val.errors } : {},
       ...rest,
     }
+    const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
     return hitMaxDepth
-      ? `[${val.name}]`
-      : `${val.name} {${printIteratorEntries(
+      ? `[${name}]`
+      : `${name} {${printIteratorEntries(
         Object.entries(entries).values(),
         config,
         indentation,
