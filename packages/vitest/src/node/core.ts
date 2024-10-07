@@ -193,7 +193,6 @@ export class Vitest {
       this.config,
       this.projects.map(project => project.testProject),
       server,
-      this.vitenode.moduleGraph,
       this.logger,
     )
 
