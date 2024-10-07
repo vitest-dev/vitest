@@ -276,8 +276,8 @@ function printComplexValue(
       )}}`
   }
   // TODO: enable only for diff format
-  if (val instanceof Error) {
-    const { message, cause, ...rest } = val;
+  if (toStringed === '[object Error]' || val instanceof Error) {
+    const { message, cause, ...rest } = val
     const entries = {
       message,
       ...typeof cause !== 'undefined' ? { cause } : {},

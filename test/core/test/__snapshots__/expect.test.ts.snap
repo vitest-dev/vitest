@@ -2,40 +2,81 @@
 
 exports[`Error equality > basic 1`] = `
 {
-  "actual": "[Error: hi]",
-  "diff": "Compared values have no visual difference.",
-  "expected": "[Error: hi]",
+  "actual": "Error {
+  "message": "hi",
+  "custom": "a",
+}",
+  "diff": "- Expected
++ Received
+
+  Error {
+    "message": "hi",
+-   "custom": "b",
++   "custom": "a",
+  }",
+  "expected": "Error {
+  "message": "hi",
+  "custom": "b",
+}",
   "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hi { custom: 'b' }",
 }
 `;
 
 exports[`Error equality > basic 2`] = `
 {
-  "actual": "[Error: hi]",
+  "actual": "Error {
+  "message": "hi",
+  "custom": "a",
+}",
   "diff": "- Expected
 + Received
 
-- [Error: hello]
-+ [Error: hi]",
-  "expected": "[Error: hello]",
+  Error {
+-   "message": "hello",
++   "message": "hi",
+    "custom": "a",
+  }",
+  "expected": "Error {
+  "message": "hello",
+  "custom": "a",
+}",
   "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
 }
 `;
 
 exports[`Error equality > basic 3`] = `
 {
-  "actual": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "custom": "a",
+}",
   "diff": "Compared values have no visual difference.",
-  "expected": "[Error: hello]",
+  "expected": "Error {
+  "message": "hello",
+  "custom": "a",
+}",
   "message": "expected Error: hello { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
 }
 `;
 
 exports[`Error equality > basic 4`] = `
 {
-  "actual": "[Error: hello]",
-  "diff": "Compared values have no visual difference.",
-  "expected": "[Error: hello]",
+  "actual": "Error {
+  "message": "hello",
+  "cause": "x",
+}",
+  "diff": "- Expected
++ Received
+
+  Error {
+    "message": "hello",
+-   "cause": "y",
++   "cause": "x",
+  }",
+  "expected": "Error {
+  "message": "hello",
+  "cause": "y",
+}",
   "message": "expected Error: hello { cause: 'x' } to deeply equal Error: hello { cause: 'y' }",
 }
 `;

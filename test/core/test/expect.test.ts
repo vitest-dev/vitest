@@ -1,10 +1,9 @@
 import nodeAssert from 'node:assert'
+import { stripVTControlCharacters } from 'node:util'
 import type { Tester } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
 import { assert, describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { processError } from '@vitest/utils/error'
-import { setupColors } from '@vitest/expect'
-import { getDefaultColors } from '@vitest/utils'
 
 describe('expect.soft', () => {
   test('types', () => {
@@ -291,10 +290,10 @@ function snapshotError(f: () => unknown) {
   catch (error) {
     const e = processError(error)
     expect({
-      message: e.message,
-      diff: e.diff,
-      expected: e.expected,
-      actual: e.actual,
+      message: stripVTControlCharacters(e.message),
+      diff: stripVTControlCharacters(e.diff),
+      expected: stripVTControlCharacters(e.expected),
+      actual: stripVTControlCharacters(e.actual),
     }).toMatchSnapshot()
     return
   }
@@ -315,8 +314,6 @@ describe('Error equality', () => {
   }
 
   test('basic', () => {
-    setupColors(getDefaultColors())
-
     //
     // default behavior
     //
@@ -376,6 +373,7 @@ describe('Error equality', () => {
     // stricter behavior with custom equality tester
     //
 
+    // TODO: remove
     expect.addEqualityTesters(
       [
         function tester(a, b, customTesters) {
@@ -432,17 +430,6 @@ describe('Error equality', () => {
     }
   })
 })
-
-// test.only('repro', () => {
-//   const e1 = new Error('hello', { cause: 'x' })
-//   const e2 = new Error('hello', { cause: 'y' })
-//   expect(e1).toEqual(e2)
-//   // try {
-//   // } catch (e) {
-//   //   // console.error(e);
-//   //   // console.log(processError(e));
-//   // }
-// })
 
 describe('iterator', () => {
   test('returns true when given iterator within equal objects', () => {
