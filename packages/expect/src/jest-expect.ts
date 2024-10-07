@@ -682,6 +682,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
+      // TODO: update this too?
       if (expected instanceof Error) {
         return this.assert(
           thrown && expected.message === thrown.message,

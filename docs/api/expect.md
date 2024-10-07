@@ -431,7 +431,17 @@ test('stocks are not the same', () => {
 ```
 
 :::warning
-A _deep equality_ will not be performed for `Error` objects. Only the `message` property of an Error is considered for equality. To customize equality to check properties other than `message`, use [`expect.addEqualityTesters`](#expect-addequalitytesters). To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+For `Error` objects, non-enumerable properties such as `name`, `message`, `cause` and `AggregateError.errors` are also compared. For `Error.cause`, the comparison is done asymmetrically:
+
+```ts
+// success
+expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi'))
+
+// fail
+expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' }))
+```
+
+To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
 :::
 
 ## toStrictEqual
