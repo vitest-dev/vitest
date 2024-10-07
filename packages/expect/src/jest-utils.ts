@@ -114,10 +114,6 @@ function eq(
     }
   }
 
-  if (a instanceof Error && b instanceof Error) {
-    return isErrorEqual(a, b, aStack, bStack, customTesters, hasKey)
-  }
-
   if (typeof URL === 'function' && a instanceof URL && b instanceof URL) {
     return a.href === b.href
   }
@@ -196,6 +192,16 @@ function eq(
     return false
   }
 
+  if (a instanceof Error && b instanceof Error) {
+    try {
+      return isErrorEqual(a, b, aStack, bStack, customTesters, hasKey)
+    }
+    finally {
+      aStack.pop()
+      bStack.pop()
+    }
+  }
+
   // Deep compare objects.
   const aKeys = keys(a, hasKey)
   let key
@@ -233,25 +239,12 @@ function isErrorEqual(
   customTesters: Array<Tester>,
   hasKey: any,
 ) {
-  // check circular
-  let length = aStack.length
-  while (length--) {
-    if (aStack[length] === a) {
-      return bStack[length] === b
-    }
-    else if (bStack[length] === b) {
-      return false
-    }
-  }
-  aStack.push(a)
-  bStack.push(b)
-
   // https://nodejs.org/docs/latest-v22.x/api/assert.html#comparison-details
   // - [[Prototype]] of objects are compared using the === operator.
   // - Only enumerable "own" properties are considered.
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
   //   (NOTE: causes and errors are added in v22)
-  const result = (
+  return (
     Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
     && a.name === b.name
     && a.message === b.message
@@ -266,10 +259,6 @@ function isErrorEqual(
     // spread to compare enumerable properties
         && eq({ ...a }, { ...b }, aStack, bStack, customTesters, hasKey)
   )
-
-  aStack.pop()
-  bStack.pop()
-  return result
 }
 
 function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
