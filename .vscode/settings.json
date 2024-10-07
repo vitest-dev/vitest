@@ -30,6 +30,8 @@
   //   { "rule": "*semi", "severity": "off" }
   // ],
 
+  "vitest.workspaceConfig": "./vitest.workspace.vscode.ts",
+
   // Enable eslint for all supported languages
   "eslint.validate": [
     "javascript",
