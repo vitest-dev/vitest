@@ -243,22 +243,23 @@ function isErrorEqual(
   // - [[Prototype]] of objects are compared using the === operator.
   // - Only enumerable "own" properties are considered.
   // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
-  //   (NOTE: causes and errors are added in v22)
-  return (
+
+  let result = (
     Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
     && a.name === b.name
     && a.message === b.message
-    // check Error.cause asymmetrically
-    && (typeof b.cause !== 'undefined'
-      ? eq(a.cause, b.cause, aStack, bStack, customTesters, hasKey)
-      : true)
-    // AggregateError.errors
-      && (a instanceof AggregateError && b instanceof AggregateError
-        ? eq(a.errors, b.errors, aStack, bStack, customTesters, hasKey)
-        : true)
-    // spread to compare enumerable properties
-        && eq({ ...a }, { ...b }, aStack, bStack, customTesters, hasKey)
   )
+  // check Error.cause asymmetrically
+  if (typeof b.cause !== 'undefined') {
+    result &&= eq(a.cause, b.cause, aStack, bStack, customTesters, hasKey)
+  }
+  // AggregateError.errors
+  if (a instanceof AggregateError && b instanceof AggregateError) {
+    result &&= eq(a.errors, b.errors, aStack, bStack, customTesters, hasKey)
+  }
+  // spread to compare enumerable properties
+  result &&= eq({ ...a }, { ...b }, aStack, bStack, customTesters, hasKey)
+  return result
 }
 
 function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
