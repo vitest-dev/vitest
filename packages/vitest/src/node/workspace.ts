@@ -299,6 +299,9 @@ export class WorkspaceProject {
     return this.typecheckFilesList && this.typecheckFilesList.includes(id)
   }
 
+  /**
+   * @deprecated
+   */
   async globFiles(include: string[], exclude: string[], cwd: string) {
     return glob(include, {
       absolute: true,

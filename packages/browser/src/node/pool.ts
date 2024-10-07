@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import { relative } from 'pathe'
 import type { BrowserProvider, ProcessPool, TestProject, TestSpecification, Vitest } from 'vitest/node'
 import { createDebugger } from 'vitest/node'
+import { getWorkspaceProjectFromTestProject } from 'vitest/src/node/reported-test-project.js'
 
 const debug = createDebugger('vitest:browser:pool')
 
@@ -20,7 +21,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
   const executeTests = async (method: 'run' | 'collect', project: TestProject, files: string[]) => {
-    ctx.state.clearFiles(project.workspaceProject, files)
+    ctx.state.clearFiles(getWorkspaceProjectFromTestProject(project), files)
     const browser = project.browser!
 
     const threadsCount = getThreadsCount(project)

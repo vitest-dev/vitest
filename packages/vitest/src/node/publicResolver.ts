@@ -1,5 +1,8 @@
 import { readFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { glob } from 'tinyglobby'
+import mm from 'micromatch'
+import { relative } from 'pathe'
 import type { ResolvedConfig } from './types/config'
 
 interface GlobOptions {
@@ -10,7 +13,7 @@ interface GlobOptions {
 
 export class TestModulesResolver {
   public testModules: FilesResolver
-  public inSourceTestModules: FilesResolver
+  public inSourceTestModules: InSourceFilesResolver
   public typecheckTestModules: FilesResolver
 
   constructor(config: ResolvedConfig) {
@@ -29,6 +32,17 @@ export class TestModulesResolver {
       exclude: config.typecheck.exclude,
       cwd: config.dir || config.root,
     })
+  }
+
+  match(file: string, code?: () => string) {
+    const isTestFile = this.testModules.isTargetFile(file)
+    const isInSourceTestFile = this.inSourceTestModules.isTargetFile(file, code)
+    const isTypecheckTestFile = this.typecheckTestModules.isTargetFile(file)
+    return {
+      testFile: isTestFile,
+      inSourceTestFile: isInSourceTestFile,
+      typecheckTestFile: isTypecheckTestFile,
+    }
   }
 
   getFiles() {
@@ -84,11 +98,28 @@ export class FilesResolver {
     this.files.delete(file)
   }
 
-  public isTestFile(file: string): boolean {
+  /**
+   * Is the file already resolved as a test file
+   */
+  public isResolvedTestFile(file: string): boolean {
     if (!this._isResolved) {
       throw new Error('Test files were not resolved yet. Don\'t forget to call resolve() before using this API.')
     }
     return this.files.has(file)
+  }
+
+  /**
+   * Does the file satisfy the glob pattern
+   */
+  public isTargetFile(file: string): boolean {
+    const relativeId = relative(this.options.cwd, file)
+    if (mm.isMatch(relativeId, this.options.exclude)) {
+      return false
+    }
+    if (mm.isMatch(relativeId, this.options.include)) {
+      return true
+    }
+    return false
   }
 
   public async resolve(): Promise<string[]> {
@@ -124,7 +155,7 @@ class InSourceFilesResolver extends FilesResolver {
       files.map(async (file) => {
         try {
           const code = await readFile(file, 'utf-8')
-          if (code.includes('import.meta.vitest')) {
+          if (this.isTestCode(code)) {
             testFiles.push(file)
           }
         }
@@ -135,5 +166,21 @@ class InSourceFilesResolver extends FilesResolver {
     )
     this.files = new Set(testFiles)
     return testFiles
+  }
+
+  public override isTargetFile(file: string, getCode?: () => string): boolean {
+    const relativeId = relative(this.options.cwd, file)
+    if (mm.isMatch(relativeId, this.options.exclude)) {
+      return false
+    }
+    if (mm.isMatch(relativeId, this.options.include)) {
+      const code = getCode?.() || readFileSync(file, 'utf-8')
+      return this.isTestCode(code)
+    }
+    return false
+  }
+
+  private isTestCode(code: string) {
+    return code.includes('import.meta.vitest')
   }
 }
