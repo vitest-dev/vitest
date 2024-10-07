@@ -201,7 +201,7 @@
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
     "strip-literal": "^2.1.0",
-    "tinyglobby": "^0.2.6",
+    "tinyglobby": "https://pkg.pr.new/tinyglobby@1f1fa12",
     "ws": "^8.18.0"
   }
 }
