@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@vitest/browser': workspace:*
+  '@vitest/ui': workspace:*
   acorn: 8.11.3
   mlly: ^1.7.1
   rollup: ^4.20.0
@@ -185,8 +186,8 @@ importers:
   examples/basic:
     devDependencies:
       '@vitest/ui':
-        specifier: latest
-        version: 2.1.1(vitest@packages+vitest)
+        specifier: workspace:*
+        version: link:../../packages/ui
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.5.2)(terser@5.22.0)
@@ -197,8 +198,8 @@ importers:
   examples/fastify:
     devDependencies:
       '@vitest/ui':
-        specifier: latest
-        version: 2.1.1(vitest@packages+vitest)
+        specifier: workspace:*
+        version: link:../../packages/ui
       fastify:
         specifier: ^4.26.2
         version: 4.26.2
@@ -288,8 +289,8 @@ importers:
         specifier: ^20.11.5
         version: 20.11.5
       '@vitest/ui':
-        specifier: latest
-        version: 2.1.1(vitest@packages+vitest)
+        specifier: workspace:*
+        version: link:../../packages/ui
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
@@ -318,8 +319,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.4.0(@types/node@22.5.2)(terser@5.22.0))
       '@vitest/ui':
-        specifier: latest
-        version: 2.1.1(vitest@packages+vitest)
+        specifier: workspace:*
+        version: link:../../packages/ui
       fastify:
         specifier: ^4.26.2
         version: 4.26.2
@@ -3805,9 +3806,6 @@ packages:
       vitest:
         optional: true
 
-  '@vitest/pretty-format@2.1.1':
-    resolution: {integrity: sha512-SjxPFOtuINDUW8/UkElJYQSFtnWX7tMksSGW0vfjxMneFqxVr8YJ979QpMbDW7g+BIiq88RAGDjf7en6rvLPPQ==}
-
   '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment':
     resolution: {directory: test/core/deps/dep-esm-comment, type: directory}
 
@@ -3819,14 +3817,6 @@ packages:
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url':
     resolution: {directory: test/optimize-deps/dep-url, type: directory}
-
-  '@vitest/ui@2.1.1':
-    resolution: {integrity: sha512-IIxo2LkQDA+1TZdPLYPclzsXukBWd5dX2CKpGqH8CCt8Wh0ZuDn4+vuQ9qlppEju6/igDGzjWF/zyorfsf+nHg==}
-    peerDependencies:
-      vitest: workspace:*
-
-  '@vitest/utils@2.1.1':
-    resolution: {integrity: sha512-Y6Q9TsI+qJ2CC0ZKj6VBb+T8UPz593N113nnUykqwANqhgf3QkZeHFlusgKLTqrnVHbj/XDKZcDHol+dxVT+rQ==}
 
   '@volar/language-core@1.10.4':
     resolution: {integrity: sha512-Na69qA6uwVIdA0rHuOc2W3pHtVQQO8hCNim7FOaKNpRJh0oAFnu5r9i7Oopo5C4cnELZkPNjTrbmpcCTiW+CMQ==}
@@ -11996,10 +11986,6 @@ snapshots:
       typescript: 5.5.4
       vitest: link:packages/vitest
 
-  '@vitest/pretty-format@2.1.1':
-    dependencies:
-      tinyrainbow: 1.2.0
-
   '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
@@ -12009,23 +11995,6 @@ snapshots:
       '@vitest/test-dep1': file:test/core/deps/dep1
 
   '@vitest/test-deps-url@file:test/optimize-deps/dep-url': {}
-
-  '@vitest/ui@2.1.1(vitest@packages+vitest)':
-    dependencies:
-      '@vitest/utils': 2.1.1
-      fflate: 0.8.2
-      flatted: 3.3.1
-      pathe: 1.1.2
-      sirv: 2.0.4
-      tinyglobby: 0.2.6
-      tinyrainbow: 1.2.0
-      vitest: link:packages/vitest
-
-  '@vitest/utils@2.1.1':
-    dependencies:
-      '@vitest/pretty-format': 2.1.1
-      loupe: 3.1.1
-      tinyrainbow: 1.2.0
 
   '@volar/language-core@1.10.4':
     dependencies:
