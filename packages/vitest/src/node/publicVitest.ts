@@ -15,7 +15,7 @@ interface _Reporter {
 
 export interface Vitest {
   readonly config: ResolvedConfig
-  readonly projects: TestProject[]
+  readonly projects: Array<TestProject>
   readonly vite: ViteDevServer
   readonly runner: VitestRunner
   readonly context: VitestContext
@@ -44,7 +44,7 @@ export class _Vitest implements Vitest {
     public readonly logger: Logger,
   ) {
     this[kVitest] = vitest
-    this.runner = new VitestRunner_(vitest)
+    this.runner = new VitestRunner_(this, vitest)
     this.context = new VitestContext(vitest.getCoreWorkspaceProject())
     this.snapshot = new VitestSnapshot(vitest)
   }

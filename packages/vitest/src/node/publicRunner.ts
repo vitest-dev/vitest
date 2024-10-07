@@ -1,10 +1,13 @@
+/* eslint-disable unicorn/consistent-function-scoping */
 import { readFileSync } from 'node:fs'
 import type { TestError } from '@vitest/utils'
 import mm from 'micromatch'
+import type { ViteDevServer } from 'vite'
 import { slash } from '../utils'
 import type { TestModule } from './reporters/reported-tasks'
 import type { Vitest as VitestCore } from './core'
 import type { TestSpecification } from './spec'
+import type { _Vitest } from './publicVitest'
 
 export interface VitestRunner {
   // Vitest starts a standalone runner, will react on watch changes, it doesn't run tests
@@ -31,10 +34,15 @@ export class VitestRunner_ implements VitestRunner {
   private _invalidates = new Set<string>()
   private _changedTests = new Set<string>()
 
+  private vitest: _Vitest
+  public specifications: Map<string, Array<TestSpecification>> = new Map()
+
   constructor(
+    _vitest: _Vitest,
     vitest: VitestCore,
   ) {
     this[kVitest] = vitest
+    this.vitest = _vitest
   }
 
   start(): void {
@@ -91,10 +99,31 @@ export class VitestRunner_ implements VitestRunner {
     this._stop()
   }
 
+  private invalidateModulesByFile(file: string) {
+    const projects = new Set([
+      ...this.vitest.projects,
+      this[kVitest].getCoreWorkspaceProject().testProject,
+    ])
+    for (const project of projects) {
+      this.invalidateViteModulesByFile(project.vite, file)
+      if (project.browser) {
+        this.invalidateViteModulesByFile(project.browser.vite, file)
+      }
+    }
+  }
+
+  private invalidateViteModulesByFile(vite: ViteDevServer, file: string) {
+    // TODO: support environments
+    const modules = vite.moduleGraph.getModulesByFile(file) || []
+    for (const mod of modules) {
+      vite.moduleGraph.invalidateModule(mod)
+    }
+  }
+
   private onFileChanged = safe((file: string) => {
     file = slash(file)
     this[kVitest].logger.clearHighlightCache(file)
-    this.moduleGraph.invalidateViteModulesByFile(file)
+    this.invalidateModulesByFile(file)
 
     if (this.shouldRerun(file)) {
       this.scheduleRerun(file)
@@ -105,7 +134,7 @@ export class VitestRunner_ implements VitestRunner {
     file = slash(file)
     this[kVitest].logger.clearHighlightCache(file)
     this._invalidates.add(file)
-    this.moduleGraph.invalidateViteModulesByFile(file)
+    this.invalidateModulesByFile(file)
 
     const state = this[kVitest].state
     const cache = this[kVitest].cache
@@ -124,7 +153,7 @@ export class VitestRunner_ implements VitestRunner {
 
   private onFileCreated = safe((file: string) => {
     file = slash(file)
-    this.moduleGraph.invalidateViteModulesByFile(file)
+    this.invalidateModulesByFile(file)
 
     const source = readFileSync(file, 'utf-8')
 
