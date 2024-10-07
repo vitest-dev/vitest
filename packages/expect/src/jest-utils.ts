@@ -225,6 +225,60 @@ function eq(
   return result
 }
 
+// TODO: how to setup it as a default tester?
+export function createErrorEqualityTester(): Tester {
+  const aStack: Error[] = []
+  const bStack: Error[] = []
+
+  const tester: Tester = function (a_: unknown, b_: unknown, customTesters) {
+    const aOk = a_ instanceof Error
+    const bOk = b_ instanceof Error
+    if (!aOk && !bOk) {
+      return undefined
+    }
+    if (aOk !== bOk) {
+      return false
+    }
+    const a = a_ as Error
+    const b = b_ as Error
+
+    // check circular
+    let length = aStack.length
+    while (length--) {
+      if (aStack[length] === a) {
+        return bStack[length] === b
+      }
+      else if (bStack[length] === b) {
+        return false
+      }
+    }
+    aStack.push(a)
+    aStack.push(b)
+
+    const result = (
+      Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+      && a.name === b.name
+      && a.message === b.message
+      // check Error.cause asymmetrically
+      && (typeof b.cause !== 'undefined'
+        ? equals(a.cause, b.cause, customTesters)
+        : true)
+      // AggregateError.errors
+        && (a instanceof AggregateError && b instanceof AggregateError
+          ? equals(a.errors, b.errors, customTesters)
+          : true)
+        // spread to compare enumerable properties
+          && equals({ ...a }, { ...b }, customTesters)
+    )
+
+    aStack.pop()
+    aStack.pop()
+    return result
+  }
+
+  return tester
+}
+
 function isErrorEqual(a: Error, b: Error, customTesters: Tester[]) {
   // https://nodejs.org/docs/latest-v22.x/api/assert.html#comparison-details
   // - [[Prototype]] of objects are compared using the === operator.
