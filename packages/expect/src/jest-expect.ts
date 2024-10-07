@@ -22,7 +22,7 @@ import {
   stringify,
 } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
-import { recordAsyncExpect, wrapSoft } from './utils'
+import { recordAsyncExpect, wrapAssertion } from './utils'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -43,7 +43,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => any,
   ) {
     const addMethod = (n: keyof Assertion) => {
-      const softWrapper = wrapSoft(utils, fn)
+      const softWrapper = wrapAssertion(utils, n, fn)
       utils.addMethod(chai.Assertion.prototype, n, softWrapper)
       utils.addMethod(
         (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
