@@ -178,7 +178,7 @@ function printBasicValue(
     return Number.isNaN(+val) ? 'Date { NaN }' : toISOString.call(val)
   }
   if (toStringed === '[object Error]') {
-    return printError(val)
+    // return printError(val)
   }
   if (toStringed === '[object RegExp]') {
     if (escapeRegex) {
@@ -189,7 +189,7 @@ function printBasicValue(
   }
 
   if (val instanceof Error) {
-    return printError(val)
+    // return printError(val)
   }
 
   return null
@@ -268,6 +268,26 @@ function printComplexValue(
       ? '[Set]'
       : `Set {${printIteratorValues(
         val.values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
+  }
+  // TODO: enable only for diff format
+  if (val instanceof Error) {
+    const { message, cause, ...rest } = val;
+    const entries = {
+      message,
+      ...typeof cause !== 'undefined' ? { cause } : {},
+      ...val instanceof AggregateError ? { errors: val.errors } : {},
+      ...rest,
+    }
+    return hitMaxDepth
+      ? `[${val.name}]`
+      : `${val.name} {${printIteratorEntries(
+        Object.entries(entries).values(),
         config,
         indentation,
         depth,

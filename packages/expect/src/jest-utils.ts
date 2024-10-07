@@ -240,6 +240,7 @@ function isErrorEqual(a: Error, b: Error, customTesters: Tester[]) {
     && a.name === b.name
     && a.message === b.message
     // check Error.cause asymmetrically
+    // TODO: update replaceAsymmetricMatcher?
     && (typeof b.cause !== 'undefined'
       ? equals(a.cause, b.cause, customTesters)
       : true)

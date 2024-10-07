@@ -433,6 +433,17 @@ describe('Error equality', () => {
   })
 })
 
+// test.only('repro', () => {
+//   const e1 = new Error('hello', { cause: 'x' })
+//   const e2 = new Error('hello', { cause: 'y' })
+//   expect(e1).toEqual(e2)
+//   // try {
+//   // } catch (e) {
+//   //   // console.error(e);
+//   //   // console.log(processError(e));
+//   // }
+// })
+
 describe('iterator', () => {
   test('returns true when given iterator within equal objects', () => {
     const a = {
