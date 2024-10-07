@@ -1430,7 +1430,6 @@ it('error equality', () => {
 
   {
     // different cause (fail by other props)
-    // TODO: strip `cause` on actual side from diff
     const e1 = new Error('hello', { cause: 'x' })
     const e2 = new Error('world')
     snapshotError(() => expect(e1).toEqual(e2))
@@ -1451,6 +1450,12 @@ it('error equality', () => {
   }
 
   // TODO: cyclic
+})
+
+it.skip('repro', () => {
+  const e1 = new Error('hello', { cause: 'x' })
+  const e2 = new Error('world')
+  expect(e1).toEqual(e2)
 })
 
 it('toHaveBeenNthCalledWith error', () => {

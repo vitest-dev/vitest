@@ -398,7 +398,6 @@ exports[`error equality 6`] = `
   Error {
 -   "message": "world",
 +   "message": "hello",
-+   "cause": "x",
   }",
   "expected": "[Error: world]",
   "message": "expected Error: hello { cause: 'x' } to deeply equal Error: world",
