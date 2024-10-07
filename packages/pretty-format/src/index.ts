@@ -299,6 +299,10 @@ function printComplexValue(
 const ErrorPlugin: NewPlugin = {
   test: val => val && val instanceof Error,
   serialize(val: Error, config, indentation, depth, refs, printer) {
+    if (refs.includes(val)) {
+      return '[Circular]'
+    }
+    refs = [...refs, val]
     const hitMaxDepth = ++depth > config.maxDepth
     const { message, cause, ...rest } = val
     const entries = {
