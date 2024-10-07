@@ -309,7 +309,7 @@ exports[`asymmetric matcher error 23`] = `
 [Function MyError1]
 
 + Received: 
-Error {
+MyError2 {
   "message": "hello",
 }",
   "expected": "[Function MyError1]",
