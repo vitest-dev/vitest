@@ -46,6 +46,10 @@ export class TestProject {
     this.context = new VitestContext(workspaceProject)
   }
 
+  public get testModules() {
+    return this[kWorkspaceProject]._testModules
+  }
+
   /**
    * Serialized project configuration. This is the config that tests receive.
    */

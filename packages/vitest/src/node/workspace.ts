@@ -41,6 +41,7 @@ import type { Vitest } from './core'
 import { TestProject } from './reported-test-project'
 import { TestSpecification } from './spec'
 import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
+import { TestModulesResolver } from './publicResolver'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -100,6 +101,9 @@ export class WorkspaceProject {
 
   testFilesList: string[] | null = null
   typecheckFilesList: string[] | null = null
+
+  /** @private */
+  _testModules!: TestModulesResolver
 
   public testProject!: TestProject
 
@@ -428,6 +432,7 @@ export class WorkspaceProject {
       )
     }
 
+    this._testModules = new TestModulesResolver(this.config)
     this.testProject = new TestProject(this)
 
     this.server = server
