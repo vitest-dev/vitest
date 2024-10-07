@@ -1361,6 +1361,13 @@ it('error equality', () => {
     expect(e1).not.toStrictEqual(e2)
     assert.deepEqual(e1, e2)
     nodeAssert.notDeepStrictEqual(e1, e2)
+
+    // toThrowError also compare errors similar to toEqual
+    snapshotError(() =>
+      expect(() => {
+        throw e1
+      }).toThrowError(e2),
+    )
   }
 
   {
@@ -1393,6 +1400,10 @@ it('error equality', () => {
     expect(e1).toStrictEqual(e2)
     assert.deepEqual(e1, e2)
     nodeAssert.deepStrictEqual(e1, e2)
+
+    expect(() => {
+      throw e1
+    }).toThrowError(e2)
   }
 
   {

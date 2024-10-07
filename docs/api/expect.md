@@ -659,8 +659,9 @@ test('the number of elements must match exactly', () => {
 
 You can provide an optional argument to test that a specific error is thrown:
 
-- regular expression: error message matches the pattern
-- string: error message includes the substring
+- `RegExp`: error message matches the pattern
+- `string`: error message includes the substring
+- `Error`, `AsymmetricMatcher`: compare with a received object similar to `toEqual(received)`
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
@@ -688,6 +689,13 @@ test('throws on pineapples', () => {
   expect(() => getFruitStock('pineapples')).toThrowError(
     /^Pineapples are not in stock$/,
   )
+
+  expect(() => getFruitStock('pineapples')).toThrowError(
+    new Error('Pineapples are not in stock'),
+  )
+  expect(() => getFruitStock('pineapples')).toThrowError(expect.objectContaining({
+    message: 'Pineapples are not in stock',
+  }))
 })
 ```
 

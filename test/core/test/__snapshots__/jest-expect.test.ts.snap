@@ -340,6 +340,22 @@ exports[`error equality 2`] = `
 + Received
 
   MyError {
+    "message": "hi",
+-   "custom": "b",
++   "custom": "a",
+  }",
+  "expected": "[Error: hi]",
+  "message": "expected error to be Error: hi { custom: 'b' }",
+}
+`;
+
+exports[`error equality 3`] = `
+{
+  "actual": "[Error: hi]",
+  "diff": "- Expected
++ Received
+
+  MyError {
 -   "message": "hello",
 +   "message": "hi",
     "custom": "a",
@@ -349,7 +365,7 @@ exports[`error equality 2`] = `
 }
 `;
 
-exports[`error equality 3`] = `
+exports[`error equality 4`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected
@@ -365,7 +381,7 @@ exports[`error equality 3`] = `
 }
 `;
 
-exports[`error equality 4`] = `
+exports[`error equality 5`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected
@@ -381,7 +397,7 @@ exports[`error equality 4`] = `
 }
 `;
 
-exports[`error equality 5`] = `
+exports[`error equality 6`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected
@@ -396,7 +412,7 @@ exports[`error equality 5`] = `
 }
 `;
 
-exports[`error equality 6`] = `
+exports[`error equality 7`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected
@@ -411,7 +427,7 @@ exports[`error equality 6`] = `
 }
 `;
 
-exports[`error equality 7`] = `
+exports[`error equality 8`] = `
 {
   "actual": "[AggregateError: outer]",
   "diff": "- Expected
@@ -433,7 +449,7 @@ exports[`error equality 7`] = `
 }
 `;
 
-exports[`error equality 8`] = `
+exports[`error equality 9`] = `
 {
   "actual": "undefined",
   "diff": undefined,

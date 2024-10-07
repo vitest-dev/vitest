@@ -682,14 +682,17 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         )
       }
 
-      // TODO: update this too?
       if (expected instanceof Error) {
+        const equal = jestEquals(thrown, expected, [
+          ...customTesters,
+          iterableEquality,
+        ])
         return this.assert(
-          thrown && expected.message === thrown.message,
-          `expected error to have message: ${expected.message}`,
-          `expected error not to have message: ${expected.message}`,
-          expected.message,
-          thrown && thrown.message,
+          equal,
+          'expected error to be #{exp}',
+          'expected error not to be #{exp}',
+          expected,
+          thrown,
         )
       }
 
