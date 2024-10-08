@@ -699,13 +699,14 @@ export class Vitest {
 
   async rerunTask(id: string) {
     const task = this.state.idMap.get(id)
-    if (task) {
-      await this.changeNamePattern(
-        task.name,
-        [task.file.filepath],
-        this.isSuite(task) ? 'rerun suite' : 'rerun test',
-      )
+    if (!task) {
+      throw new Error(`Task ${id} was not found`)
     }
+    await this.changeNamePattern(
+      task.name,
+      [task.file.filepath],
+      this.isSuite(task) ? 'rerun suite' : 'rerun test',
+    )
   }
 
   async changeProjectName(pattern: string) {
