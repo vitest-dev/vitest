@@ -217,6 +217,13 @@ it('correctly passed down metadata', () => {
   expect(meta).toHaveProperty('key', 'value')
 })
 
+it('correctly builds the full name', () => {
+  const suiteTopLevel = testModule.children.suites().next().value!
+  const suiteSecondLevel = suiteTopLevel.children.suites().next().value!
+  const test = suiteSecondLevel.children.at(0) as TestCase
+  expect(test.fullName).toBe('a group > a nested group > runs a test in a nested group')
+})
+
 function date(time: Date) {
   return `${time.getDate()}/${time.getMonth() + 1}/${time.getFullYear()}`
 }
