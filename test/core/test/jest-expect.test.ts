@@ -1447,6 +1447,14 @@ it('error equality', () => {
   }
 
   {
+    // different cause
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = { something: 'else' }
+    expect(e1).toEqual(e2)
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
     // AggregateError (pass)
     const e1 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })
     const e2 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })

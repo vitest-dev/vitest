@@ -429,6 +429,24 @@ exports[`error equality 7`] = `
 
 exports[`error equality 8`] = `
 {
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- Object {
+-   "something": "else",
++ Error {
++   "message": "hello",
+  }",
+  "expected": "Object {
+  "something": "else",
+}",
+  "message": "expected Error: hello { cause: 'x' } to deeply equal { something: 'else' }",
+}
+`;
+
+exports[`error equality 9`] = `
+{
   "actual": "[AggregateError: outer]",
   "diff": "- Expected
 + Received
@@ -449,7 +467,7 @@ exports[`error equality 8`] = `
 }
 `;
 
-exports[`error equality 9`] = `
+exports[`error equality 10`] = `
 {
   "actual": "undefined",
   "diff": undefined,

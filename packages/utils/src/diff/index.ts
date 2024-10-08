@@ -300,10 +300,8 @@ export function replaceAsymmetricMatcher(
   } {
   // handle asymmetric Error.cause diff
   if (
-    actual instanceof Error
-    && expected instanceof Error
-    && typeof actual.cause !== 'undefined'
-    && typeof expected.cause === 'undefined'
+    (actual instanceof Error && typeof actual.cause !== 'undefined')
+    && !(expected instanceof Error && typeof expected.cause !== 'undefined')
   ) {
     delete actual.cause
     return {
