@@ -66,7 +66,7 @@ export const isConnecting = computed(() => status.value === 'CONNECTING')
 export const isDisconnected = computed(() => status.value === 'CLOSED')
 
 export function runAll() {
-  return runFiles(client.state.getFiles()/* , true */)
+  return runFiles(client.state.getFiles())
 }
 
 function clearTaskResult(task: Task) {
@@ -116,12 +116,12 @@ export function runFiles(useFiles: File[]) {
   return client.rpc.rerun(useFiles.map(i => i.filepath), true)
 }
 
-export function runTestOrSuite(task: Task) {
+export function runTask(task: Task) {
   clearTaskResult(task)
 
   explorerTree.startRun()
 
-  return client.rpc.rerunTestOrSuite(task.id, task.file.filepath)
+  return client.rpc.rerunTask(task.id)
 }
 
 export function runCurrent() {

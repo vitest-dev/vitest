@@ -73,8 +73,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         async rerun(files, resetTestNamePattern) {
           await ctx.rerunFiles(files, undefined, resetTestNamePattern)
         },
-        async rerunTestOrSuite(id, filename) {
-          await ctx.rerunTestOrSuite(id, filename)
+        async rerunTask(id) {
+          await ctx.rerunTask(id)
         },
         getConfig() {
           return ctx.getCoreWorkspaceProject().getSerializableConfig()

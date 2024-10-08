@@ -697,19 +697,15 @@ export class Vitest {
     return Object.hasOwnProperty.call(task, 'tasks')
   }
 
-  async rerunTestOrSuite(id: string, filename: string) {
-    const patterns: string[] = []
+  async rerunTask(id: string) {
     const task = this.state.idMap.get(id)
-    let trigger = 'rerun test file'
     if (task) {
-      trigger = this.isSuite(task) ? 'rerun suite' : 'rerun test'
-      patterns.push(task.name)
+      await this.changeNamePattern(
+        task.name,
+        [task.file.filepath],
+        this.isSuite(task) ? 'rerun suite' : 'rerun test',
+      )
     }
-    await this.changeNamePattern(
-      patterns.length ? patterns.join('|') : '',
-      [filename],
-      trigger,
-    )
   }
 
   async changeProjectName(pattern: string) {
