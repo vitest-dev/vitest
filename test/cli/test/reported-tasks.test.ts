@@ -222,6 +222,8 @@ it('correctly builds the full name', () => {
   const suiteSecondLevel = suiteTopLevel.children.suites().next().value!
   const test = suiteSecondLevel.children.at(0) as TestCase
   expect(test.fullName).toBe('a group > a nested group > runs a test in a nested group')
+  expect(suiteTopLevel.fullName).toBe('a group')
+  expect(suiteSecondLevel.fullName).toBe('a group > a nested group')
 })
 
 function date(time: Date) {
