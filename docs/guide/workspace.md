@@ -14,7 +14,7 @@ Vitest provides built-in support for monorepos through a workspace configuration
 
 ## Defining a Workspace
 
-A workspace must have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder as your root config file if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
+A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file, if applicable). Vitest supports `ts`, `js`, and `json` extensions for this file.
 
 ::: tip NAMING
 Please note that this feature is named `workspace`, not `workspaces` (without an "s" at the end).
