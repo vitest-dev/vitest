@@ -14,9 +14,11 @@ let project: WorkspaceProject
 let files: RunnerTestFile[]
 let testModule: TestModule
 
+const root = resolve(__dirname, '..', 'fixtures', 'reported-tasks')
+
 beforeAll(async () => {
   const { ctx } = await runVitest({
-    root: resolve(__dirname, '..', 'fixtures', 'reported-tasks'),
+    root,
     include: ['**/*.test.ts'],
     reporters: [
       'verbose',
@@ -52,7 +54,7 @@ it('correctly reports a file', () => {
   expect(testModule.task).toBe(files[0])
   expect(testModule.id).toBe(files[0].id)
   expect(testModule.location).toBeUndefined()
-  expect(testModule.moduleId).toBe(resolve('./fixtures/reported-tasks/1_first.test.ts'))
+  expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
   expect(testModule.project.workspaceProject).toBe(project)
   expect(testModule.children.size).toBe(14)
 
@@ -139,7 +141,7 @@ it('correctly reports failed test', () => {
     stacks: [
       {
         column: 13,
-        file: resolve('./fixtures/reported-tasks/1_first.test.ts'),
+        file: resolve(root, './1_first.test.ts'),
         line: 10,
         method: '',
       },
