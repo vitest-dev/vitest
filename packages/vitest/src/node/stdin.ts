@@ -39,16 +39,17 @@ ${keys
   )
 }
 
-function* traverseFilteredTestNames(stack: string[], filter: RegExp, t: Task): Generator<FilterType> {
+function* traverseFilteredTestNames(parentName: string, filter: RegExp, t: Task): Generator<FilterType> {
   if (isAtomTest(t)) {
     if (t.name.match(filter)) {
-      const displayName = `${stack.join(' > ')} > ${t.name}`
+      const displayName = `${parentName} > ${t.name}`
       yield { name: t.name, toString: () => displayName }
     }
   }
   else {
+    parentName = parentName.length ? `${parentName} > ${t.name}` : t.name
     for (const task of t.tasks) {
-      yield * traverseFilteredTestNames([...stack, task.name], filter, task)
+      yield * traverseFilteredTestNames(parentName, filter, task)
     }
   }
 }
@@ -61,7 +62,7 @@ function* getFilteredTestNames(pattern: string, suite: File[]): Generator<Filter
     for (const file of suite) {
       if (!files.has(file.name)) {
         files.add(file.name)
-        yield * traverseFilteredTestNames([file.name], reg, file)
+        yield * traverseFilteredTestNames('', reg, file)
       }
     }
   }
