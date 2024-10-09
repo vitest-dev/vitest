@@ -206,6 +206,7 @@ export function getRunner(): VitestRunner {
 }
 
 function createDefaultSuite(runner: VitestRunner) {
+  // TODO?
   const { concurrent, shuffle } = runner.config.sequence
   return suite('', { concurrent, shuffle }, () => {})
 }
