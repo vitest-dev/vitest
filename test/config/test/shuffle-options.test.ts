@@ -60,5 +60,5 @@ test('shuffle', async () => {
         "pass",
       ],
     ]
-  `);
+  `)
 })
