@@ -18,7 +18,7 @@ import {
 } from './jest-matcher-utils'
 
 import { equals, iterableEquality, subsetEquality } from './jest-utils'
-import { wrapSoft } from './utils'
+import { wrapAssertion } from './utils'
 
 function getMatcherState(
   assertion: Chai.AssertionStatic & Chai.Assertion,
@@ -96,7 +96,7 @@ function JestExtendPlugin(
           }
         }
 
-        const softWrapper = wrapSoft(utils, expectWrapper)
+        const softWrapper = wrapAssertion(utils, expectAssertionName, expectWrapper)
         utils.addMethod(
           (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
           expectAssertionName,
