@@ -501,7 +501,7 @@ export function iterableEquality(
   ) {
     const aEntries = Object.entries(a)
     const bEntries = Object.entries(b)
-    if (!equals(aEntries, bEntries)) {
+    if (!equals(aEntries, bEntries, filteredCustomTesters)) {
       return false
     }
   }
