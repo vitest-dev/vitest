@@ -238,8 +238,8 @@ importers:
         specifier: latest
         version: 25.0.1
       playwright:
-        specifier: ^1.47.2
-        version: 1.47.2
+        specifier: ^1.48.0
+        version: 1.48.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.7.5)(terser@5.34.1)
@@ -1055,8 +1055,8 @@ importers:
         specifier: link:./injected-lib
         version: link:injected-lib
       playwright:
-        specifier: ^1.41.0
-        version: 1.41.0
+        specifier: ^1.48.0
+        version: 1.48.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1283,8 +1283,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mocker
       playwright:
-        specifier: ^1.46.1
-        version: 1.46.1
+        specifier: ^1.48.0
+        version: 1.48.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -7695,38 +7695,8 @@ packages:
   pkg-types@1.2.1:
     resolution: {integrity: sha512-sQoqa8alT3nHjGuTjuKgOnvjo4cljkufdtLMnO2LBP/wRwuDlo1tkaEdMxCRhyGRPacv/ztlZgDPm2b7FAmEvw==}
 
-  playwright-core@1.41.0:
-    resolution: {integrity: sha512-UGKASUhXmvqm2Lxa1fNr8sFwAtqjpgBRr9jQ7XBI8Rn5uFiEowGUGwrruUQsVPIom4bk7Lt+oLGpXobnXzrBIw==}
-    engines: {node: '>=16'}
-    hasBin: true
-
-  playwright-core@1.46.1:
-    resolution: {integrity: sha512-h9LqIQaAv+CYvWzsZ+h3RsrqCStkBHlgo6/TJlFst3cOTlLghBQlJwPOZKQJTKNaD3QIB7aAVQ+gfWbN3NXB7A==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright-core@1.47.2:
-    resolution: {integrity: sha512-3JvMfF+9LJfe16l7AbSmU555PaTl2tPyQsVInqm3id16pdDfvZ8TTZ/pyzmkbDrZTQefyzU7AIHlZqQnxpqHVQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.48.0:
     resolution: {integrity: sha512-RBvzjM9rdpP7UUFrQzRwR8L/xR4HyC1QXMzGYTbf1vjw25/ya9NRAVnXi/0fvFopjebvyPzsmoK58xxeEOaVvA==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.41.0:
-    resolution: {integrity: sha512-XOsfl5ZtAik/T9oek4V0jAypNlaCNzuKOwVhqhgYT3os6kH34PzbRb74F0VWcLYa5WFdnmxl7qyAHBXvPv7lqQ==}
-    engines: {node: '>=16'}
-    hasBin: true
-
-  playwright@1.46.1:
-    resolution: {integrity: sha512-oPcr1yqoXLCkgKtD5eNUPLiN40rYEM39odNpIb6VE6S7/15gJmA1NzVv6zJYusV0e7tzvkU/utBFNa/Kpxmwng==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.47.2:
-    resolution: {integrity: sha512-nx1cLMmQWqmA3UsnjaaokyoUpdVaaDhJhMoxX2qj3McpjnsqFHs516QAKYhqHAgOP+oCFTEOCOAaD1RgD/RQfA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -17002,31 +16972,7 @@ snapshots:
       mlly: 1.7.2
       pathe: 1.1.2
 
-  playwright-core@1.41.0: {}
-
-  playwright-core@1.46.1: {}
-
-  playwright-core@1.47.2: {}
-
   playwright-core@1.48.0: {}
-
-  playwright@1.41.0:
-    dependencies:
-      playwright-core: 1.41.0
-    optionalDependencies:
-      fsevents: 2.3.2
-
-  playwright@1.46.1:
-    dependencies:
-      playwright-core: 1.46.1
-    optionalDependencies:
-      fsevents: 2.3.2
-
-  playwright@1.47.2:
-    dependencies:
-      playwright-core: 1.47.2
-    optionalDependencies:
-      fsevents: 2.3.2
 
   playwright@1.48.0:
     dependencies:
