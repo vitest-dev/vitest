@@ -33,6 +33,6 @@
     "dev": "rollup -c --watch"
   },
   "dependencies": {
-    "tinyspy": "^3.0.0"
+    "tinyspy": "^3.0.2"
   }
 }

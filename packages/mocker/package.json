@@ -72,11 +72,11 @@
     "magic-string": "^0.30.11"
   },
   "devDependencies": {
-    "@types/estree": "^1.0.5",
+    "@types/estree": "^1.0.6",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "acorn-walk": "^8.3.3",
-    "msw": "^2.3.5",
+    "acorn-walk": "^8.3.4",
+    "msw": "^2.4.9",
     "pathe": "^1.1.2",
     "vite": "^5.4.0"
   }
