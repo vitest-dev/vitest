@@ -437,6 +437,7 @@ exports[`error equality 8`] = `
 -   "something": "else",
 + Error {
 +   "message": "hello",
++   "cause": "x",
   }",
   "expected": "Object {
   "something": "else",
@@ -473,6 +474,67 @@ exports[`error equality 10`] = `
   "diff": undefined,
   "expected": "undefined",
   "message": "Maximum call stack size exceeded",
+}
+`;
+
+exports[`error equality 11`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
+-   "cause": "y",
++ Error {
+    "message": "hello",
++   "cause": "x",
+  }",
+  "expected": "ObjectContaining {
+  "cause": "y",
+  "message": "hello",
+}",
+  "message": "expected Error: hello { cause: 'x' } to deeply equal ObjectContaining{…}",
+}
+`;
+
+exports[`error equality 12`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
++ Error {
++   "message": "hello",
+    "cause": "x",
+-   "message": "world",
+  }",
+  "expected": "ObjectContaining {
+  "cause": "x",
+  "message": "world",
+}",
+  "message": "expected Error: hello { cause: 'x' } to deeply equal ObjectContaining{…}",
+}
+`;
+
+exports[`error equality 13`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
+-   "cause": "y",
+-   "message": "world",
++ Error {
++   "message": "hello",
++   "cause": "x",
+  }",
+  "expected": "ObjectContaining {
+  "cause": "y",
+  "message": "world",
+}",
+  "message": "expected Error: hello { cause: 'x' } to deeply equal ObjectContaining{…}",
 }
 `;
 

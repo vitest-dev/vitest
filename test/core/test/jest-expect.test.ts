@@ -1487,6 +1487,27 @@ it('error equality', () => {
     e2.cause = e2
     snapshotError(() => expect(e1).toEqual(e2))
   }
+
+  {
+    // asymmetric matcher
+    const e1 = new Error('hello', { cause: 'x' })
+    expect(e1).toEqual(expect.objectContaining({
+      message: 'hello',
+      cause: 'x',
+    }))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'hello',
+      cause: 'y',
+    })))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'world',
+      cause: 'x',
+    })))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'world',
+      cause: 'y',
+    })))
+  }
 })
 
 it('toHaveBeenNthCalledWith error', () => {
