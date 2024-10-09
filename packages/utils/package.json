@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
-    "@types/estree": "^1.0.6",
+    "@types/estree": "1.0.5",
     "diff-sequences": "^29.6.3",
     "tinyhighlight": "^0.3.2"
   }

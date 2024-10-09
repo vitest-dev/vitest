@@ -176,7 +176,7 @@
     "@edge-runtime/vm": "^4.0.3",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/debug": "^4.1.12",
-    "@types/estree": "^1.0.6",
+    "@types/estree": "1.0.5",
     "@types/istanbul-lib-coverage": "^2.0.6",
     "@types/istanbul-reports": "^3.0.4",
     "@types/jsdom": "^21.1.7",
