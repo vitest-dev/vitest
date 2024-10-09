@@ -15,7 +15,7 @@ import { findNodeAround } from 'acorn-walk'
 import type { Plugin, Rollup } from 'vite'
 import { createFilter } from 'vite'
 import type { Node, Positioned } from './esmWalker'
-import { esmWalker, getArbitraryModuleIdentifier } from './esmWalker'
+import { esmWalker } from './esmWalker'
 
 interface HoistMocksOptions {
   /**
@@ -219,7 +219,7 @@ export function hoistMocks(
         if (spec.type === 'ImportSpecifier') {
           idToImportMap.set(
             spec.local.name,
-            `${importId}.${getArbitraryModuleIdentifier(spec.imported)}`,
+            `${importId}.${spec.imported.name}`,
           )
         }
         else if (spec.type === 'ImportDefaultSpecifier') {

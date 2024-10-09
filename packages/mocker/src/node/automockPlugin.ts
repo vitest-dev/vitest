@@ -1,17 +1,16 @@
 import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
 import { cleanUrl } from '../utils'
-import {
-  getArbitraryModuleIdentifier,
-  type Declaration,
-  type ExportDefaultDeclaration,
-  type ExportNamedDeclaration,
-  type Expression,
-  type Identifier,
-  type Literal,
-  type Pattern,
-  type Positioned,
-  type Program,
+import type {
+  Declaration,
+  ExportDefaultDeclaration,
+  ExportNamedDeclaration,
+  Expression,
+  Identifier,
+  Literal,
+  Pattern,
+  Positioned,
+  Program,
 } from './esmWalker'
 
 export interface AutomockPluginOptions {
@@ -137,9 +136,11 @@ export function automockModule(
 
       if (!source && specifiers.length) {
         specifiers.forEach((specifier) => {
+          const exported = specifier.exported as Literal | Identifier
+
           allSpecifiers.push({
-            alias: getArbitraryModuleIdentifier(specifier.exported),
-            name: getArbitraryModuleIdentifier(specifier.local),
+            alias: exported.type === 'Literal' ? exported.raw! : exported.name,
+            name: specifier.local.name,
           })
         })
         m.remove(node.start, node.end)
@@ -149,10 +150,11 @@ export function automockModule(
 
         specifiers.forEach((specifier) => {
           const importedName = `__vitest_imported_${importIndex++}__`
-          importNames.push([getArbitraryModuleIdentifier(specifier.local), importedName])
+          const exported = specifier.exported as Literal | Identifier
+          importNames.push([specifier.local.name, importedName])
           allSpecifiers.push({
             name: importedName,
-            alias: getArbitraryModuleIdentifier(specifier.exported),
+            alias: exported.type === 'Literal' ? exported.raw! : exported.name,
           })
         })
 
