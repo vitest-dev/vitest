@@ -4,9 +4,7 @@ import { afterAll, describe, expect, test } from 'vitest'
 const numbers: number[] = []
 
 describe.shuffle('random tests', () => {
-  describe('inside', () => {
-    // shuffle is not inherited from parent
-
+  describe('inside', { shuffle: false }, () => {
     test('inside 1', () => {
       numbers.push(1)
     })

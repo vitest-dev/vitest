@@ -389,6 +389,10 @@ export interface TestOptions {
    */
   sequential?: boolean
   /**
+   * Whether the tasks of the suite run in a random order.
+   */
+  shuffle?: boolean
+  /**
    * Whether the test should be skipped.
    */
   skip?: boolean

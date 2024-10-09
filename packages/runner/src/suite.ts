@@ -206,9 +206,8 @@ export function getRunner(): VitestRunner {
 }
 
 function createDefaultSuite(runner: VitestRunner) {
-  const config = runner.config.sequence
-  const api = config.shuffle ? suite.shuffle : suite
-  return api('', { concurrent: config.concurrent }, () => {})
+  const { concurrent, shuffle } = runner.config.sequence
+  return suite('', { concurrent, shuffle }, () => {})
 }
 
 export function clearCollectorContext(
@@ -331,9 +330,7 @@ function createSuiteCollector(
     ) {
       task.concurrent = true
     }
-    if (shuffle) {
-      task.shuffle = true
-    }
+    task.shuffle = suiteOptions?.shuffle
 
     const context = createTestContext(task, runner)
     // create test context
@@ -533,11 +530,13 @@ function createSuite() {
     options.concurrent = isConcurrent && !isSequential
     options.sequential = isSequential && !isConcurrent
 
+    options.shuffle = this.shuffle ?? options.shuffle
+
     return createSuiteCollector(
       formatName(name),
       factory,
       mode,
-      this.shuffle,
+      options.shuffle,
       this.each,
       options,
     )
