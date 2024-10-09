@@ -1196,7 +1196,7 @@ importers:
         specifier: file:./vitest-environment-custom
         version: file:test/core/vitest-environment-custom
       vue:
-        specifier: ^3.4.37
+        specifier: 3.4.37
         version: 3.4.37(typescript@5.6.3)
       zustand:
         specifier: ^4.1.1
@@ -1253,7 +1253,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
       vue:
-        specifier: ^3.4.37
+        specifier: 3.4.37
         version: 3.4.37(typescript@5.6.3)
       webdriverio:
         specifier: latest
@@ -12608,7 +12608,7 @@ snapshots:
       '@vue/shared': 3.4.37
       entities: 5.0.0
       estree-walker: 2.0.2
-      source-map-js: 1.2.0
+      source-map-js: 1.2.1
 
   '@vue/compiler-core@3.5.12':
     dependencies:
@@ -12616,7 +12616,7 @@ snapshots:
       '@vue/shared': 3.5.12
       entities: 4.5.0
       estree-walker: 2.0.2
-      source-map-js: 1.2.0
+      source-map-js: 1.2.1
 
   '@vue/compiler-dom@3.4.33':
     dependencies:
@@ -12642,8 +12642,8 @@ snapshots:
       '@vue/shared': 3.4.37
       estree-walker: 2.0.2
       magic-string: 0.30.11
-      postcss: 8.4.40
-      source-map-js: 1.2.0
+      postcss: 8.4.47
+      source-map-js: 1.2.1
 
   '@vue/compiler-sfc@3.5.12':
     dependencies:
@@ -12655,7 +12655,7 @@ snapshots:
       estree-walker: 2.0.2
       magic-string: 0.30.11
       postcss: 8.4.47
-      source-map-js: 1.2.0
+      source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.4.37':
     dependencies:
@@ -12708,9 +12708,9 @@ snapshots:
   '@vue/language-core@2.1.6(typescript@5.6.3)':
     dependencies:
       '@volar/language-core': 2.4.6
-      '@vue/compiler-dom': 3.4.37
+      '@vue/compiler-dom': 3.5.11
       '@vue/compiler-vue2': 2.7.16
-      '@vue/shared': 3.4.37
+      '@vue/shared': 3.5.11
       computeds: 0.0.1
       minimatch: 9.0.5
       muggle-string: 0.4.1
