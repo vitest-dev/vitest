@@ -162,6 +162,11 @@ export function renderTree(
           ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
         )
       }
+      else {
+        suffix += c.green(
+          ` ${Math.round(task.result.duration)}${c.dim('ms')}`,
+        )
+      }
     }
 
     if (options.showHeap && task.result?.heap != null) {
