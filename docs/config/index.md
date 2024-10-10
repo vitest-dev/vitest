@@ -353,7 +353,7 @@ Vitest uses Vite SSR primitives to run tests which has [certain pitfalls](https:
 - **Default:** `false`
 - **CLI:** `--globals`, `--globals=false`
 
-By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--globals` option to CLI or add `globals: true` in the config.
+By default, `vitest` does not provide global APIs for testing to encourage explicitness and reduce potential conflicts. If you prefer using global APIs like Jest, you can enable them by passing the `--globals` option in the CLI or setting `globals: true` in your config file.
 
 ```ts
 // vitest.config.ts
@@ -366,9 +366,26 @@ export default defineConfig({
 })
 ```
 
-To get TypeScript working with the global APIs, add `vitest/globals` to the `types` field in your `tsconfig.json`
+#### TypeScript integration
 
-```json
+To ensure TypeScript recognizes the global APIs, you have two options:
+
+1. Import the global types
+
+Add `import 'vitest/globals'` to any `.ts` file (e.g., your [setup file](#setupfiles) or a `.d.ts` file). This registers the global APIs types automatically. Ensure the file is included in your `tsconfig.json` so TypeScript knows it's apart of the same context.
+
+```ts
+// test-setup.ts or vitest.d.ts
+import 'vitest/globals'
+```
+
+2. Configure it in [`tsconfig.json#compilerOptions.types`](https://www.typescriptlang.org/tsconfig/#types)
+
+Alternatively, add `vitest/globals` to the `types` field in `tsconfig.json`.
+
+Warning: this will disable TypeScript's automatic type discovery, meaning you'll need to manually include other types as needed.
+
+```ts
 // tsconfig.json
 {
   "compilerOptions": {
@@ -377,7 +394,9 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 }
 ```
 
-If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
+#### Auto-import
+
+If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can simplify this process by automatically importing the Vitest APIs without having to manually manage global type imports. This also generates TypeScript declarations for you.
 
 ```ts
 // vitest.config.ts
