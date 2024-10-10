@@ -353,7 +353,7 @@ Vitest uses Vite SSR primitives to run tests which has [certain pitfalls](https:
 - **Default:** `false`
 - **CLI:** `--globals`, `--globals=false`
 
-By default, `vitest` does not provide global APIs for testing to encourage explicitness and reduce potential conflicts. If you prefer using global APIs like Jest, you can enable them by passing the `--globals` option in the CLI or setting `globals: true` in your config file.
+By default, Vitest does not provide global APIs for testing to encourage explicitness and reduce potential conflicts. If you prefer using global APIs like Jest, you can enable them by passing the `--globals` option in the CLI or setting `globals: true` in your config file.
 
 ```ts
 // vitest.config.ts
@@ -368,18 +368,26 @@ export default defineConfig({
 
 #### TypeScript integration
 
-To ensure TypeScript recognizes the global APIs, you have two options:
+To register global API types, follow one of the following methods:
 
-1. Import the global types
+1. Use a `@types/vitest.d.ts` file
 
-    Import `vitest/globals` from any `.ts` file (e.g., your [setup file](#setupfiles) or a `.d.ts` file). This registers the global APIs types automatically. Ensure the file is included in your `tsconfig.json` so TypeScript knows it's apart of the same project.
+    Create a `@types/vitest.d.ts` file in your project root that imports `vitest/globals`:
 
     ```ts
-    // test-setup.ts or vitest.d.ts
     import 'vitest/globals'
     ```
 
-2. Configure it in [`tsconfig.json#compilerOptions.types`](https://www.typescriptlang.org/tsconfig/#types)
+2. Type-import the global types from a source file
+
+    Add a type-import from `vitest/globals` in any `.ts` file (e.g., your [setup file](#setupfiles)). This registers the global APIs types automatically. Ensure the file is included in your `tsconfig.json` so TypeScript knows it's apart of the same project.
+
+    ```ts
+    // test-setup.ts
+    import type {} from 'vitest/globals'
+    ```
+
+3. Configure it in [`tsconfig.json#compilerOptions.types`](https://www.typescriptlang.org/tsconfig/#types)
 
     Alternatively, add `vitest/globals` to the `types` field in `tsconfig.json`.
 
