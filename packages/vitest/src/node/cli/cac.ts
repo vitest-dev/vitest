@@ -262,6 +262,7 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
   }
   catch {}
 
+
   try {
     const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))

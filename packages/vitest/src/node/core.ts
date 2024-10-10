@@ -32,6 +32,7 @@ import type { Reporter } from './types/reporter'
 import type { CoverageProvider } from './types/coverage'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
 import type { TestSpecification } from './spec'
+import { parseFilter } from './cli/cli-api'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -538,10 +539,10 @@ export class Vitest {
     for (const project of this.projects) {
       if (project.isTestFile(file)) {
         const pool = getFilePoolName(project, file)
-        specs.push(project.createSpec(file, pool))
+        specs.push(project.createSpec(file, pool, undefined))
       }
       if (project.isTypecheckFile(file)) {
-        specs.push(project.createSpec(file, 'typescript'))
+        specs.push(project.createSpec(file, 'typescript', undefined))
       }
     }
     specs.forEach(spec => this.ensureSpecCached(spec))
@@ -1080,17 +1081,27 @@ export class Vitest {
   }
 
   public async globTestSpecs(filters: string[] = []) {
+    const parsedFilters = filters.map(parseFilter)
+
+    // TODO include only relevant filters in a spec
+    const tmpFilters = parsedFilters
+      .map(f => f.lineNumber)
+      .filter(n => n !== undefined) as number[]
+
     const files: WorkspaceSpec[] = []
     await Promise.all(this.projects.map(async (project) => {
-      const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
+      const { testFiles, typecheckTestFiles } = await project.globTestFiles(
+        parsedFilters.map(f => f.filename),
+      )
+
       testFiles.forEach((file) => {
         const pool = getFilePoolName(project, file)
-        const spec = project.createSpec(file, pool)
+        const spec = project.createSpec(file, pool, tmpFilters)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec = project.createSpec(file, 'typescript')
+        const spec = project.createSpec(file, 'typescript', tmpFilters)
         this.ensureSpecCached(spec)
         files.push(spec)
       })

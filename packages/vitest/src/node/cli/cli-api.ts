@@ -284,6 +284,33 @@ export function formatCollectedAsString(files: File[]) {
   }).flat()
 }
 
+export function parseFilter(f: string) {
+  const colonIndex = f.indexOf(':')
+  if (colonIndex === -1) {
+    return { filename: f }
+  }
+
+  const [parsedFilename, lineNumber] = [
+    f.substring(0, colonIndex),
+    f.substring(colonIndex + 1),
+  ]
+
+  if (lineNumber.match(/^\d+$/)) {
+    return {
+      filename: parsedFilename,
+      lineNumber: Number.parseInt(lineNumber),
+    }
+  }
+  else if (lineNumber.includes('-')) {
+    throw new Error('Range line numbers are not allowed')
+  }
+  else {
+    return {
+      filename: f,
+    }
+  }
+}
+
 const envPackageNames: Record<
   Exclude<keyof typeof environments, 'node'>,
   string

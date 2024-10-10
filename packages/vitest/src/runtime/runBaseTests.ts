@@ -1,5 +1,6 @@
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
+import type { FileSpec } from '@vitest/runner/types/runner'
 import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import {
@@ -17,7 +18,7 @@ import { closeInspector } from './inspector'
 // browser shouldn't call this!
 export async function run(
   method: 'run' | 'collect',
-  files: string[],
+  files: FileSpec[],
   config: SerializedConfig,
   environment: ResolvedTestEnvironment,
   executor: VitestExecutor,
@@ -61,7 +62,7 @@ export async function run(
           resetModules(workerState.moduleCache, true)
         }
 
-        workerState.filepath = file
+        workerState.filepath = file.file
 
         if (method === 'run') {
           await startTests([file], runner)
