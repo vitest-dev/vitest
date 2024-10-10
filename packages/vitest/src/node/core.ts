@@ -32,6 +32,8 @@ import type { Reporter } from './types/reporter'
 import type { CoverageProvider } from './types/coverage'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
 import type { TestSpecification } from './spec'
+import { getWorkspaceProjectFromTestProject } from './reported-test-project'
+import { _Vitest } from './publicVitest'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -70,6 +72,8 @@ export class Vitest {
   isFirstRun = true
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
+
+  public publicVitest!: _Vitest
 
   public packageInstaller: VitestPackageInstaller
 
@@ -116,10 +120,6 @@ export class Vitest {
     this.cache = new VitestCache(this.version)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
-    if (this.config.watch) {
-      this.registerWatcher()
-    }
-
     this.vitenode = new ViteNodeServer(server, this.config.server)
 
     const node = this.vitenode
@@ -141,8 +141,8 @@ export class Vitest {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
         await serverRestart(...args)
         // watcher is recreated on restart
-        this.unregisterWatcher()
-        this.registerWatcher()
+        this.publicVitest.runner.stop()
+        this.publicVitest.runner.start()
       }
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
@@ -153,8 +153,8 @@ export class Vitest {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
           await serverRestart()
           // watcher is recreated on restart
-          this.unregisterWatcher()
-          this.registerWatcher()
+          this.publicVitest.runner.stop()
+          this.publicVitest.runner.start()
         }
       })
     }
@@ -186,6 +186,20 @@ export class Vitest {
 
     if (this.config.testNamePattern) {
       this.configOverride.testNamePattern = this.config.testNamePattern
+    }
+
+    this.publicVitest = new _Vitest(
+      this,
+      this.config,
+      this.projects.map(project => project.testProject),
+      server,
+      this.logger,
+    )
+
+    // TODO: if created only for the public API, do not call this
+    // or move this call outside?
+    if (this.config.watch) {
+      this.publicVitest.runner.start()
     }
   }
 
@@ -466,7 +480,10 @@ export class Vitest {
       }))
     }
 
-    await addImports(spec.project.workspaceProject, spec.moduleId)
+    await addImports(
+      getWorkspaceProjectFromTestProject(spec.project),
+      spec.moduleId,
+    )
     deps.delete(spec.moduleId)
 
     return deps
@@ -549,7 +566,7 @@ export class Vitest {
   }
 
   async initializeGlobalSetup(paths: TestSpecification[]) {
-    const projects = new Set(paths.map(spec => spec.project.workspaceProject))
+    const projects = new Set(paths.map(spec => getWorkspaceProjectFromTestProject(spec.project)))
     const coreProject = this.getCoreWorkspaceProject()
     if (!projects.has(coreProject)) {
       projects.add(coreProject)
@@ -660,7 +677,7 @@ export class Vitest {
         process.exitCode = 1
       }
     })()
-      .finally(async () => {
+      .finally(() => {
         this.runningPromise = undefined
 
         // all subsequent runs will treat this as a fresh run
@@ -1053,7 +1070,9 @@ export class Vitest {
           else if (runningServers > 1) {
             console.warn(`Tests closed successfully but something prevents ${runningServers} Vite servers from exiting`)
           }
-          else { console.warn('Tests closed successfully but something prevents the main process from exiting') }
+          else {
+            console.warn('Tests closed successfully but something prevents the main process from exiting')
+          }
 
           console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
         }

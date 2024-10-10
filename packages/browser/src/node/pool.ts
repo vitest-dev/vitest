@@ -1,15 +1,16 @@
 import * as nodeos from 'node:os'
 import crypto from 'node:crypto'
 import { relative } from 'pathe'
-import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject, WorkspaceSpec } from 'vitest/node'
+import type { BrowserProvider, ProcessPool, TestProject, TestSpecification, Vitest } from 'vitest/node'
 import { createDebugger } from 'vitest/node'
+import { getWorkspaceProjectFromTestProject } from 'vitest/src/node/reported-test-project.js'
 
 const debug = createDebugger('vitest:browser:pool')
 
 async function waitForTests(
   method: 'run' | 'collect',
   contextId: string,
-  project: WorkspaceProject,
+  project: TestProject,
   files: string[],
 ) {
   const context = project.browser!.state.createAsyncContext(method, contextId, files)
@@ -19,8 +20,8 @@ async function waitForTests(
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const executeTests = async (method: 'run' | 'collect', project: WorkspaceProject, files: string[]) => {
-    ctx.state.clearFiles(project, files)
+  const executeTests = async (method: 'run' | 'collect', project: TestProject, files: string[]) => {
+    ctx.state.clearFiles(getWorkspaceProjectFromTestProject(project), files)
     const browser = project.browser!
 
     const threadsCount = getThreadsCount(project)
@@ -33,7 +34,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     if (!origin) {
       throw new Error(
-        `Can't find browser origin URL for project "${project.getName()}" when running tests for files "${files.join('", "')}"`,
+        `Can't find browser origin URL for project "${project.name}" when running tests for files "${files.join('", "')}"`,
       )
     }
 
@@ -67,7 +68,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     debug?.(
       `[%s] Running %s tests in %s chunks (%s threads)`,
-      project.getName() || 'core',
+      project.name || 'core',
       files.length,
       chunks.length,
       threadsCount,
@@ -109,12 +110,12 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     await Promise.all(promises)
   }
 
-  const runWorkspaceTests = async (method: 'run' | 'collect', specs: WorkspaceSpec[]) => {
-    const groupedFiles = new Map<WorkspaceProject, string[]>()
-    for (const [project, file] of specs) {
-      const files = groupedFiles.get(project) || []
-      files.push(file)
-      groupedFiles.set(project, files)
+  const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
+    const groupedFiles = new Map<TestProject, string[]>()
+    for (const spec of specs) {
+      const files = groupedFiles.get(spec.project) || []
+      files.push(spec.moduleId)
+      groupedFiles.set(spec.project, files)
     }
 
     let isCancelled = false
@@ -137,7 +138,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  function getThreadsCount(project: WorkspaceProject) {
+  function getThreadsCount(project: TestProject) {
     const config = project.config.browser
     if (!config.headless || !project.browser!.provider.supportsParallelism) {
       return 1
