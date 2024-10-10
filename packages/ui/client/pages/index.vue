@@ -42,12 +42,14 @@ const resizingMain = useDebounceFn((event: { size: number }[]) => {
 function resizeMain() {
   const width = window.innerWidth
   const panelWidth = Math.min(width / 3, 300)
-  mainSizes.value[0] = (100 * panelWidth) / width
-  mainSizes.value[1] = 100 - mainSizes.value[0]
-  recordMainResize([
-    { size: mainSizes.value[0] },
-    { size: mainSizes.value[1] },
-  ])
+  if (browserState) {
+    mainSizes.value[0] = (100 * panelWidth) / width
+    mainSizes.value[1] = 100 - mainSizes.value[0]
+  }
+  else {
+    detailSizes.value[0] = (100 * panelWidth) / width
+    detailSizes.value[1] = 100 - detailSizes.value[0]
+  }
 }
 
 function recordMainResize(event: { size: number }[]) {
