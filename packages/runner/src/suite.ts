@@ -291,7 +291,6 @@ function createSuiteCollector(
   name: string,
   factory: SuiteFactory = () => {},
   mode: RunMode,
-  shuffle?: boolean,
   each?: boolean,
   suiteOptions?: TestOptions,
 ) {
@@ -422,7 +421,7 @@ function createSuiteCollector(
       mode,
       each,
       file: undefined!,
-      shuffle,
+      shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: Object.create(null),
       concurrent: suiteOptions?.concurrent,
@@ -536,7 +535,6 @@ function createSuite() {
       formatName(name),
       factory,
       mode,
-      options.shuffle,
       this.each,
       options,
     )
