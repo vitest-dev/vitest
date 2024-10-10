@@ -4,7 +4,7 @@ const numbers: number[] = []
 
 test.for([1, 2, 3, 4, 5])('test %s', (v) => {
   numbers.push(10 + v)
-}),
+})
 
 describe("inherit shuffle", () => {
   test.for([1, 2, 3, 4, 5])('test %s', (v) => {
