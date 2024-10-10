@@ -275,16 +275,16 @@ interface EachFunctionReturn<T extends any[]> {
   (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
-    options: TestOptions
+    options: TestCollectorOptions
   ): void
   (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
-    options?: number | TestOptions
+    options?: number | TestCollectorOptions
   ): void
   (
     name: string | Function,
-    options: TestOptions,
+    options: TestCollectorOptions,
     fn: (...args: T) => Awaitable<void>
   ): void
 }
@@ -305,7 +305,7 @@ interface TestForFunctionReturn<Arg, Context> {
   ): void
   (
     name: string | Function,
-    options: TestOptions,
+    options: TestCollectorOptions,
     fn: (args: Arg, context: Context) => Awaitable<void>
   ): void
 }
@@ -336,16 +336,16 @@ interface TestCollectorCallable<C = object> {
   <ExtraContext extends C>(
     name: string | Function,
     fn: TestFunction<ExtraContext>,
-    options: TestOptions
+    options: TestCollectorOptions
   ): void
   <ExtraContext extends C>(
     name: string | Function,
     fn?: TestFunction<ExtraContext>,
-    options?: number | TestOptions
+    options?: number | TestCollectorOptions
   ): void
   <ExtraContext extends C>(
     name: string | Function,
-    options?: TestOptions,
+    options?: TestCollectorOptions,
     fn?: TestFunction<ExtraContext>
   ): void
 }
@@ -358,6 +358,8 @@ type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
     for: TestForFunction<ExtraContext>
   }
 >
+
+type TestCollectorOptions = Omit<TestOptions, 'shuffle'>
 
 export interface TestOptions {
   /**
@@ -388,6 +390,10 @@ export interface TestOptions {
    * Tests inherit `sequential` from `describe()` and nested `describe()` will inherit from parent's `sequential`.
    */
   sequential?: boolean
+  /**
+   * Whether the tasks of the suite run in a random order.
+   */
+  shuffle?: boolean
   /**
    * Whether the test should be skipped.
    */
