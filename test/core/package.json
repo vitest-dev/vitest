@@ -33,7 +33,7 @@
     "vite-node": "workspace:*",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
-    "vue": "^3.4.37",
+    "vue": "3.4.37",
     "zustand": "^4.1.1"
   }
 }

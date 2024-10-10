@@ -23,7 +23,7 @@
     "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
-    "vue": "^3.4.37",
+    "vue": "3.4.37",
     "webdriverio": "latest"
   }
 }
