@@ -1650,11 +1650,11 @@ Configure options for Vite server that serves code in the browser. Does not affe
 
 #### browser.provider
 
-- **Type:** `'webdriverio' | 'playwright' | string`
-- **Default:** `'webdriverio'`
+- **Type:** `'webdriverio' | 'playwright' | 'preview' | string`
+- **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-Path to a provider that will be used when running browser tests. Vitest provides two providers which are `webdriverio` (default) and `playwright`. Custom providers should be exported using `default` export and have this shape:
+Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
 
 ```ts
 export interface BrowserProvider {
