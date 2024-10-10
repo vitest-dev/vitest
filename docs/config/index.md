@@ -383,7 +383,7 @@ To ensure TypeScript recognizes the global APIs, you have two options:
 
     Alternatively, add `vitest/globals` to the `types` field in `tsconfig.json`.
 
-    Warning: This disables TypeScript's automatic type detection, which could break your setup if your project relies on it. If you encounter types missing from other packages, you'll now need to manually register them here.
+    Warning: This disables TypeScript's automatic type detection, which could break your setup if your project relies on it. If you encounter types missing from other packages, you'll now need to manually register them here as well.
 
     ```json5
     // tsconfig.json
