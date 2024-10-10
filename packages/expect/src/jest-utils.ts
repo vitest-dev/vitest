@@ -565,8 +565,7 @@ export function subsetEquality(
             seenReferences.set(subset[key], true)
           }
           const result
-          = object != null
-          && hasPropertyInObject(object, key)
+          = isObject(object)
           && equals(object[key], subset[key], [
             ...filteredCustomTesters,
             subsetEqualityWithContext(seenReferences),

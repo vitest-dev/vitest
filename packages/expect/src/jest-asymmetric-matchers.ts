@@ -1,3 +1,4 @@
+import { isObject } from '@vitest/utils'
 import type { ChaiPlugin, MatcherState } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import { getState } from './state'
@@ -147,7 +148,7 @@ export class ObjectContaining extends AsymmetricMatcher<
     const matcherContext = this.getMatcherContext()
     for (const property in this.sample) {
       if (
-        !this.hasProperty(other, property)
+        !isObject(other)
         || !equals(
           this.sample[property],
           other[property],
