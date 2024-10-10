@@ -1,12 +1,12 @@
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
+import { stripVTControlCharacters } from 'node:util'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import { inspect } from '@vitest/utils'
-import stripAnsi from 'strip-ansi'
 import {
   lineSplitRE,
   positionToOffset,
@@ -398,7 +398,7 @@ export function generateCodeFrame(
         const lineLength = lines[j].length
 
         // too long, maybe it's a minified file, skip for codeframe
-        if (stripAnsi(lines[j]).length > 200) {
+        if (stripVTControlCharacters(lines[j]).length > 200) {
           return ''
         }
 

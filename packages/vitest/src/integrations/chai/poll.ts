@@ -38,6 +38,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     const assertion = expect(null, message).withContext({
       poll: true,
     }) as Assertion
+    fn = fn.bind(assertion)
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
@@ -75,6 +76,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }, timeout)
             const check = async () => {
               try {
+                chai.util.flag(assertion, '_name', key)
                 const obj = await fn()
                 chai.util.flag(assertion, 'object', obj)
                 resolve(await assertionFunction.call(assertion, ...args))

@@ -305,12 +305,7 @@ Custom reporter for output. Can contain one or more built-in report names, repor
 
 #### benchmark.outputFile
 
-- **Type:** `string | Record<string, string>`
-
-Write benchmark results to a file when the `--reporter=json` option is also specified.
-By providing an object instead of a string you can define individual outputs when using multiple reporters.
-
-To provide object via CLI command, use the following syntax: `--outputFile.json=./path --outputFile.junit=./other-path`.
+Deprecated in favor of `benchmark.outputJson`.
 
 #### benchmark.outputJson {#benchmark-outputJson}
 
@@ -1234,7 +1229,7 @@ Clean coverage results before running tests
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.cleanOnRerun`, `--coverage.cleanOnRerun=false`
 
-Clean coverage report on watch rerun
+Clean coverage report on watch rerun. Set to `false` to preserve coverage results from previous run in watch mode.
 
 #### coverage.reportsDirectory
 
@@ -1655,11 +1650,11 @@ Configure options for Vite server that serves code in the browser. Does not affe
 
 #### browser.provider
 
-- **Type:** `'webdriverio' | 'playwright' | string`
-- **Default:** `'webdriverio'`
+- **Type:** `'webdriverio' | 'playwright' | 'preview' | string`
+- **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-Path to a provider that will be used when running browser tests. Vitest provides two providers which are `webdriverio` (default) and `playwright`. Custom providers should be exported using `default` export and have this shape:
+Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
 
 ```ts
 export interface BrowserProvider {

@@ -20,7 +20,6 @@
     "istanbul-lib-report": "^3.0.1",
     "magic-string": "^0.30.10",
     "magicast": "^0.3.3",
-    "strip-ansi": "^7.1.0",
     "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",

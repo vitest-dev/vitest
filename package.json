@@ -1,7 +1,7 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "private": true,
   "packageManager": "pnpm@9.7.0",
   "description": "Next generation testing framework powered by Vite",
@@ -39,7 +39,7 @@
     "@antfu/eslint-config": "^3.0.0",
     "@antfu/ni": "^0.22.1",
     "@playwright/test": "^1.46.0",
-    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@types/node": "^22.5.2",
@@ -68,6 +68,8 @@
   },
   "pnpm": {
     "overrides": {
+      "@vitest/browser": "workspace:*",
+      "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
       "mlly": "^1.7.1",
       "rollup": "$rollup",

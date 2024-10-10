@@ -1,5 +1,5 @@
 import type { Readable, Writable } from 'node:stream'
-import stripAnsi from 'strip-ansi'
+import { stripVTControlCharacters } from 'node:util'
 
 type Listener = (() => void)
 type ReadableOrWritable = Readable | Writable
@@ -37,7 +37,7 @@ export class Cli {
   }
 
   private capture(source: Source, data: any) {
-    const msg = stripAnsi(data.toString())
+    const msg = stripVTControlCharacters(data.toString())
     this[source] += msg
     this[`${source}Listeners`].forEach(fn => fn())
   }

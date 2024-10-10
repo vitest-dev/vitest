@@ -583,8 +583,14 @@ export interface RuntimeContext {
   currentSuite: SuiteCollector | null
 }
 
+/**
+ * User's custom test context.
+ */
 export interface TestContext {}
 
+/**
+ * Context that's always available in the test function.
+ */
 export interface TaskContext<Task extends Custom | Test = Custom | Test> {
   /**
    * Metadata of the current test

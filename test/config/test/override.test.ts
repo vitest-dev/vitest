@@ -1,4 +1,4 @@
-import type { UserConfig } from 'vitest'
+import type { UserConfig } from 'vitest/node'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import { describe, expect, it } from 'vitest'
 import { createVitest, parseCLI } from 'vitest/node'

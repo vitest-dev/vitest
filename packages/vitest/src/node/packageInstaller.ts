@@ -7,7 +7,7 @@ import { isCI } from '../utils/env'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 export class VitestPackageInstaller {
-  async ensureInstalled(dependency: string, root: string) {
+  async ensureInstalled(dependency: string, root: string, version?: string) {
     if (process.env.VITEST_SKIP_INSTALL_CHECKS) {
       return true
     }
@@ -49,13 +49,14 @@ export class VitestPackageInstaller {
     })
 
     if (install) {
+      const packageName = version ? `${dependency}@${version}` : dependency
       await (
         await import('@antfu/install-pkg')
-      ).installPackage(dependency, { dev: true })
+      ).installPackage(packageName, { dev: true })
       // TODO: somehow it fails to load the package after installation, remove this when it's fixed
       process.stderr.write(
         c.yellow(
-          `\nPackage ${dependency} installed, re-run the command to start.\n`,
+          `\nPackage ${packageName} installed, re-run the command to start.\n`,
         ),
       )
       process.exit()

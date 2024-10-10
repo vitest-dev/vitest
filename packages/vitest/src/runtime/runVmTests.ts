@@ -45,6 +45,10 @@ export async function run(
     KNOWN_ASSET_TYPES.forEach((type) => {
       _require.extensions[`.${type}`] = resolveAsset
     })
+    process.env.SSR = ''
+  }
+  else {
+    process.env.SSR = '1'
   }
 
   // @ts-expect-error not typed global for patched timers

@@ -7,9 +7,9 @@ interface Sponsor {
 const vitestSponsors = {
   special: [
     {
-      name: 'Vite',
-      url: 'https://vitejs.dev',
-      img: '/vite.svg',
+      name: 'VoidZero',
+      url: 'https://voidzero.dev',
+      img: '/voidzero.svg',
     },
     {
       name: 'NuxtLabs',

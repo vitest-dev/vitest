@@ -26,11 +26,14 @@ export function recordAsyncExpect(
   return promise
 }
 
-export function wrapSoft(
+export function wrapAssertion(
   utils: Chai.ChaiUtils,
+  name: string,
   fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => void,
 ) {
   return function (this: Chai.AssertionStatic & Assertion, ...args: any[]) {
+    utils.flag(this, '_name', name)
+
     if (!utils.flag(this, 'soft')) {
       return fn.apply(this, args)
     }
