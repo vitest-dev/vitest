@@ -373,7 +373,7 @@ To ensure TypeScript recognizes the global APIs, you have two options:
 1. Import the global types
 
     Import `vitest/globals` from any `.ts` file (e.g., your [setup file](#setupfiles) or a `.d.ts` file). This registers the global APIs types automatically. Ensure the file is included in your `tsconfig.json` so TypeScript knows it's apart of the same project.
-    
+
     ```ts
     // test-setup.ts or vitest.d.ts
     import 'vitest/globals'
@@ -382,10 +382,10 @@ To ensure TypeScript recognizes the global APIs, you have two options:
 2. Configure it in [`tsconfig.json#compilerOptions.types`](https://www.typescriptlang.org/tsconfig/#types)
 
     Alternatively, add `vitest/globals` to the `types` field in `tsconfig.json`.
-    
+
     Warning: This disables TypeScript's automatic type detection, which could break your setup if your project relies on it. If you encounter types missing from other packages, you'll now need to manually register them here.
-    
-    ```ts
+
+    ```json5
     // tsconfig.json
     {
       "compilerOptions": {
