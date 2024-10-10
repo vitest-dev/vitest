@@ -311,6 +311,78 @@ exports[`asymmetric matcher error 23`] = `
 }
 `;
 
+exports[`proxy 1`] = `
+{
+  "actual": "Object {}",
+  "diff": "- Expected
++ Received
+
+- Object {
+-   "key": "no",
+- }
++ Object {}",
+  "expected": "Object {
+  "key": "no",
+}",
+  "message": "expected {} to match object { key: 'no' }",
+}
+`;
+
+exports[`proxy 2`] = `
+{
+  "actual": "Object {
+  "key": "value",
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "key": "no",
++   "key": "value",
+  }",
+  "expected": "Object {
+  "key": "no",
+}",
+  "message": "expected { key: 'value' } to match object { key: 'no' }",
+}
+`;
+
+exports[`proxy equality 1`] = `
+{
+  "actual": "Object {}",
+  "diff": "- Expected
++ Received
+
+- Object {
+-   "key": "no",
+- }
++ Object {}",
+  "expected": "Object {
+  "key": "no",
+}",
+  "message": "expected {} to match object { key: 'no' }",
+}
+`;
+
+exports[`proxy equality 2`] = `
+{
+  "actual": "Object {
+  "key": "value",
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "key": "no",
++   "key": "value",
+  }",
+  "expected": "Object {
+  "key": "no",
+}",
+  "message": "expected { key: 'value' } to match object { key: 'no' }",
+}
+`;
+
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
   "actual": "Array [

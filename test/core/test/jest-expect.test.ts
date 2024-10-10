@@ -1354,3 +1354,53 @@ it('toMatch/toContain diff', () => {
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
+
+it('proxy equality', () => {
+  const proxy = new Proxy(
+    {},
+    {
+      get(target, prop, receiver) {
+        if (prop === 'key') {
+          return 'value'
+        }
+        return Reflect.get(target, prop, receiver)
+      },
+    },
+  )
+
+  expect(proxy).toMatchObject({ key: 'value' })
+  snapshotError(() => expect(proxy).toMatchObject({ key: 'no' }))
+
+  const proxyWithKeys = new Proxy(
+    {},
+    {
+      get(target, prop, receiver) {
+        if (prop === 'key') {
+          return 'value'
+        }
+        return Reflect.get(target, prop, receiver)
+      },
+      // need more handlers to enumerate keys for diff
+      ownKeys(target) {
+        return [...Reflect.ownKeys(target), 'key']
+      },
+      getOwnPropertyDescriptor(target, prop) {
+        if (prop === 'key') {
+          return { configurable: true, enumerable: true }
+        }
+        return Reflect.getOwnPropertyDescriptor(target, prop)
+      },
+    },
+  )
+
+  expect(proxyWithKeys).toMatchObject({ key: 'value' })
+  snapshotError(() => expect(proxyWithKeys).toMatchObject({ key: 'no' }))
+
+  // objectContaining
+  expect(proxy).toEqual(expect.objectContaining({ key: 'value' }))
+  expect(proxyWithKeys).toEqual(expect.objectContaining({ key: 'value' }))
+
+  // toEqual
+  expect(proxy).not.toEqual({ key: 'value' })
+  expect(proxyWithKeys).toEqual({ key: 'value' }) // shouldn't succeed?
+})
