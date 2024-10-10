@@ -3,6 +3,7 @@ import type {
   Function as FunctionNode,
   Identifier,
   ImportExpression,
+  Literal,
   Pattern,
   Property,
   VariableDeclaration,
@@ -374,4 +375,8 @@ export function isInDestructuringAssignment(
   }
 
   return false
+}
+
+export function getArbitraryModuleIdentifier(node: Identifier | Literal): string {
+  return node.type === 'Identifier' ? node.name : node.raw!
 }
