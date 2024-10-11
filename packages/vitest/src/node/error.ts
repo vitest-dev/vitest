@@ -119,6 +119,16 @@ export function printError(
     logger.error(`${e.codeFrame}\n`)
   }
 
+  if ('__vitest_rollup_error__' in e) {
+    // https://github.com/vitejs/vite/blob/95020ab49e12d143262859e095025cf02423c1d9/packages/vite/src/node/server/middlewares/error.ts#L25-L36
+    const err = e.__vitest_rollup_error__ as any
+    logger.error([
+      err.plugin && `  Plugin: ${c.magenta(err.plugin)}`,
+      err.id && `  File: ${c.cyan(err.id)}${err.loc ? `:${err.loc.line}:${err.loc.column}` : ''}`,
+      err.frame && c.yellow((err.frame as string).split(/\r?\n/g).map(l => ` `.repeat(2) + l).join(`\n`)),
+    ].filter(Boolean).join('\n'))
+  }
+
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.diff) {
     displayDiff(e.diff, logger.console)
