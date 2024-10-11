@@ -92,7 +92,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
 
   async function startTypechecker(project: WorkspaceProject, files: string[]) {
     if (project.typechecker) {
-      return project.typechecker.prepare()
+      return
     }
     const checker = await createWorkspaceTypechecker(project, files)
     await checker.collectTests()
