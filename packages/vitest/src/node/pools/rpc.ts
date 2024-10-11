@@ -107,7 +107,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
 
 // serialize rollup error on server to preserve details as a test error
 function handleRollupError(e: unknown): never {
-  if (e instanceof Error && 'loc' in e && e.loc && typeof e.loc === 'object') {
+  if (e instanceof Error && 'plugin' in e) {
     // eslint-disable-next-line no-throw-literal
     throw {
       name: e.name,
@@ -115,11 +115,10 @@ function handleRollupError(e: unknown): never {
       stack: e.stack,
       cause: e.cause,
       __vitest_rollup_error__: {
+        plugin: (e as any).plugin,
         id: (e as any).id,
         loc: (e as any).loc,
         frame: (e as any).frame,
-        plugin: (e as any).plugin,
-        pluginCode: (e as any).pluginCode,
       },
     }
   }
