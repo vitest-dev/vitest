@@ -119,6 +119,12 @@ export function printError(
     logger.error(`${e.codeFrame}\n`)
   }
 
+  if ('__vitest_rollup_error__' in e) {
+    // TODO: format like vite?
+    const r = e.__vitest_rollup_error__ as any
+    logger.error(r)
+  }
+
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.diff) {
     displayDiff(e.diff, logger.console)
