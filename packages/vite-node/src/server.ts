@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks'
 import { existsSync } from 'node:fs'
 import assert from 'node:assert'
+import { pathToFileURL } from 'node:url'
 import { join, normalize, relative, resolve } from 'pathe'
 import type { TransformResult, ViteDevServer } from 'vite'
 import createDebug from 'debug'
@@ -103,6 +104,16 @@ export class ViteNodeServer {
     }
     if (options.debug) {
       this.debugger = new Debugger(server.config.root, options.debug!)
+    }
+
+    if (options.deps.inlineFiles) {
+      options.deps.inlineFiles = options.deps.inlineFiles.flatMap((file) => {
+        if (file.startsWith('file://')) {
+          return file
+        }
+        const resolvedId = resolve(file)
+        return [resolvedId, pathToFileURL(resolvedId).href]
+      })
     }
 
     options.deps.moduleDirectories ??= []
