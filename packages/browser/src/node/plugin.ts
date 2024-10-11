@@ -326,19 +326,17 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         viteConfig.esbuild ||= {}
         viteConfig.esbuild.legalComments = 'inline'
 
-        const server = resolveApiServerConfig(
+        const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
           defaultBrowserPort,
         ) || {
           port: defaultBrowserPort,
         }
 
-        // browser never runs in middleware mode
-        server.middlewareMode = false
-
         viteConfig.server = {
           ...viteConfig.server,
-          ...server,
+          ...api,
+          middlewareMode: false,
           open: false,
         }
         viteConfig.server.fs ??= {}
