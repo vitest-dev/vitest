@@ -148,15 +148,15 @@ async function updateThresholds(configurationFile: ReturnType<typeof parseModule
   return new Promise((resolve, reject) => {
     const provider = new BaseCoverageProvider()
 
-    try {
-      provider.updateThresholds({
-        thresholds,
-        configurationFile,
-        onUpdate: () => resolve(configurationFile.generate().code),
-      })
-    }
-    catch (error) {
-      reject(error)
-    }
+    provider._initialize({
+      config: { coverage: { } },
+      logger: { log: () => {} },
+    } as any)
+
+    provider.updateThresholds({
+      thresholds,
+      configurationFile,
+      onUpdate: () => resolve(configurationFile.generate().code),
+    }).catch(error => reject(error))
   })
 }
