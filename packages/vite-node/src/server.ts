@@ -105,6 +105,10 @@ export class ViteNodeServer {
       this.debugger = new Debugger(server.config.root, options.debug!)
     }
 
+    if (options.deps.inlineFiles) {
+      options.deps.inlineFiles = options.deps.inlineFiles.map(file => resolve(file))
+    }
+
     options.deps.moduleDirectories ??= []
 
     const envValue

@@ -119,6 +119,9 @@ async function _shouldExternalize(
   if (matchExternalizePattern(id, moduleDirectories, options?.inline)) {
     return false
   }
+  if (options?.inlineFiles && options?.inlineFiles.includes(id)) {
+    return false
+  }
   if (matchExternalizePattern(id, moduleDirectories, options?.external)) {
     return id
   }

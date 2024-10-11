@@ -9,6 +9,7 @@ export type Awaitable<T> = T | PromiseLike<T>
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[] | true
+  inlineFiles?: string[]
   /**
    * A list of directories that are considered to hold Node.js modules
    * Have to include "/" at the start and end of the path
