@@ -286,7 +286,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId === '/__vitest_msw__') {
+        if (rawId === '/mockServiceWorker.js') {
           return this.resolve('msw/mockServiceWorker.js', distRoot, {
             skipSelf: true,
           })
