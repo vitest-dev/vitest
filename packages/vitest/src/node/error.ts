@@ -120,7 +120,13 @@ export function printError(
   }
 
   if ('__vitest_rollup_error__' in e) {
-    logger.error(buildRollupErrorMessage(e.__vitest_rollup_error__))
+    // https://github.com/vitejs/vite/blob/95020ab49e12d143262859e095025cf02423c1d9/packages/vite/src/node/server/middlewares/error.ts#L25-L36
+    const err = e.__vitest_rollup_error__ as any
+    logger.error([
+      err.plugin && `  Plugin: ${c.magenta(err.plugin)}`,
+      err.id && `  File: ${c.cyan(err.id)}${err.loc ? `:${err.loc.line}:${err.loc.column}` : ''}`,
+      err.frame && c.yellow((err.frame as string).split(/\r?\n/g).map(l => ` `.repeat(2) + l).join(`\n`)),
+    ].filter(Boolean).join('\n'))
   }
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
@@ -199,22 +205,6 @@ export function printError(
   handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
 
   return { nearest }
-}
-
-// https://github.com/vitejs/vite/blob/95020ab49e12d143262859e095025cf02423c1d9/packages/vite/src/node/server/middlewares/error.ts#L25-L36
-function buildRollupErrorMessage(
-  err: any,
-): string {
-  return [
-    err.plugin && `  Plugin: ${c.magenta(err.plugin)}`,
-    err.id && `  File: ${c.cyan(err.id)}${err.loc ? `:${err.loc.line}:${err.loc.column}` : ''}`,
-    err.frame && c.yellow(pad(err.frame)),
-  ].filter(Boolean).join('\n')
-}
-
-function pad(source: string, n = 2): string {
-  const lines = source.split(/\r?\n/g)
-  return lines.map(l => ` `.repeat(n) + l).join(`\n`)
 }
 
 function printErrorType(type: string, ctx: Vitest) {
