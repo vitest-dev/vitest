@@ -323,8 +323,10 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        viteConfig.esbuild ||= {}
-        viteConfig.esbuild.legalComments = 'inline'
+        if (viteConfig.esbuild !== false) {
+          viteConfig.esbuild ||= {}
+          viteConfig.esbuild.legalComments = 'inline'
+        }
 
         const server = resolveApiServerConfig(
           viteConfig.test?.browser || {},
