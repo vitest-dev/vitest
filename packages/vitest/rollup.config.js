@@ -8,7 +8,7 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import license from 'rollup-plugin-license'
-import { globSync } from 'tinyglobby'
+import fg from 'fast-glob'
 import c from 'tinyrainbow'
 import { defineConfig } from 'rollup'
 
@@ -198,8 +198,7 @@ function licensePlugin() {
                     preserveSymlinks: false,
                   }),
                 )
-                const [licenseFile] = globSync([`${pkgDir}/LICENSE*`], {
-                  expandDirectories: false,
+                const [licenseFile] = fg.sync(`${pkgDir}/LICENSE*`, {
                   caseSensitiveMatch: false,
                 })
                 if (licenseFile) {

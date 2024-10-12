@@ -73,6 +73,7 @@
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/istanbul-lib-source-maps": "^4.0.4",
     "@types/istanbul-reports": "^3.0.4",
+    "@types/test-exclude": "^6.0.2",
     "@vitest/browser": "workspace:*",
     "pathe": "^1.1.2",
     "v8-to-istanbul": "^9.3.0",

@@ -307,6 +307,27 @@ export function resolveConfig(
   resolved.deps.web.transformCss ??= true
   resolved.deps.web.transformGlobPattern ??= []
 
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
+    resolvePath(file, resolved.root),
+  )
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+    resolvePath(file, resolved.root),
+  )
+  resolved.coverage.exclude.push(
+    ...resolved.setupFiles.map(
+      file =>
+        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
+          resolved.root,
+          file,
+        )}`,
+    ),
+  )
+
+  resolved.forceRerunTriggers = [
+    ...resolved.forceRerunTriggers,
+    ...resolved.setupFiles,
+  ]
+
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
@@ -366,6 +387,8 @@ export function resolveConfig(
     }
   }
 
+  resolved.server.deps.inlineFiles ??= []
+  resolved.server.deps.inlineFiles.push(...resolved.setupFiles)
   resolved.server.deps.moduleDirectories ??= []
   resolved.server.deps.moduleDirectories.push(
     ...resolved.deps.moduleDirectories,
@@ -553,27 +576,6 @@ export function resolveConfig(
       resolved.benchmark.outputJson = options.outputJson
     }
   }
-
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
-    resolvePath(file, resolved.root),
-  )
-  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
-    resolvePath(file, resolved.root),
-  )
-  resolved.coverage.exclude.push(
-    ...resolved.setupFiles.map(
-      file =>
-        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
-          resolved.root,
-          file,
-        )}`,
-    ),
-  )
-
-  resolved.forceRerunTriggers = [
-    ...resolved.forceRerunTriggers,
-    ...resolved.setupFiles,
-  ]
 
   if (resolved.diff) {
     resolved.diff = resolvePath(resolved.diff, resolved.root)
