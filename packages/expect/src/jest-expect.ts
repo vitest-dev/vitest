@@ -376,13 +376,34 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     )
   })
   def('toBeNaN', function () {
-    return this.be.NaN
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      Number.isNaN(obj),
+      'expected #{this} to be NaN',
+      'expected #{this} not to be NaN',
+      NaN,
+      obj,
+    )
   })
   def('toBeUndefined', function () {
-    return this.be.undefined
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      undefined === obj,
+      'expected #{this} to be undefined',
+      'expected #{this} not to be undefined',
+      undefined,
+      obj,
+    )
   })
   def('toBeNull', function () {
-    return this.be.null
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      null === obj,
+      'expected #{this} to be null',
+      'expected #{this} not to be null',
+      null,
+      obj,
+    )
   })
   def('toBeDefined', function () {
     const obj = utils.flag(this, 'object')
