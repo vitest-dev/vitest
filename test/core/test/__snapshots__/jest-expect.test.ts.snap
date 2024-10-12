@@ -311,6 +311,36 @@ exports[`asymmetric matcher error 23`] = `
 }
 `;
 
+exports[`diff 1`] = `
+{
+  "actual": "undefined",
+  "diff": "- Expected: 
+true
+
++ Received: 
+undefined",
+  "expected": "true",
+  "message": "expected undefined to be truthy",
+}
+`;
+
+exports[`diff 2`] = `
+{
+  "actual": "Object {
+  "k": "v",
+}",
+  "diff": "- Expected: 
+false
+
++ Received: 
+Object {
+  "k": "v",
+}",
+  "expected": "false",
+  "message": "expected { k: 'v' } to be falsy",
+}
+`;
+
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
   "actual": "Array [

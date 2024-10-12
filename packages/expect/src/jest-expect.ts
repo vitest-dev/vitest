@@ -309,8 +309,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       Boolean(obj),
       'expected #{this} to be truthy',
       'expected #{this} to not be truthy',
+      true,
       obj,
-      false,
     )
   })
   def('toBeFalsy', function () {
@@ -319,8 +319,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       !obj,
       'expected #{this} to be falsy',
       'expected #{this} to not be falsy',
-      obj,
       false,
+      obj,
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
@@ -331,8 +331,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual > expected,
       `expected ${actual} to be greater than ${expected}`,
       `expected ${actual} to be not greater than ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -344,8 +344,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual >= expected,
       `expected ${actual} to be greater than or equal to ${expected}`,
       `expected ${actual} to be not greater than or equal to ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -357,8 +357,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual < expected,
       `expected ${actual} to be less than ${expected}`,
       `expected ${actual} to be not less than ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -370,8 +370,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual <= expected,
       `expected ${actual} to be less than or equal to ${expected}`,
       `expected ${actual} to be not less than or equal to ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })

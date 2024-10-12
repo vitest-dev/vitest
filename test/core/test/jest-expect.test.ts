@@ -1354,3 +1354,8 @@ it('toMatch/toContain diff', () => {
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
+
+it('diff', () => {
+  snapshotError(() => expect(undefined).toBeTruthy())
+  snapshotError(() => expect({ k: 'v' }).toBeFalsy())
+})
