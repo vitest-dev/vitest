@@ -381,7 +381,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       Number.isNaN(obj),
       'expected #{this} to be NaN',
       'expected #{this} not to be NaN',
-      NaN,
+      Number.NaN,
       obj,
     )
   })
@@ -398,7 +398,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def('toBeNull', function () {
     const obj = utils.flag(this, 'object')
     this.assert(
-      null === obj,
+      obj === null,
       'expected #{this} to be null',
       'expected #{this} not to be null',
       null,
