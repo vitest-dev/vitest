@@ -10,6 +10,10 @@ describe('running browser tests', async () => {
   let failedTests: any[]
 
   beforeAll(async () => {
+    setInterval(() => {
+      console.log('[debug]', new Date().toISOString())
+    }, 1000);
+
     ({
       stderr,
       stdout,
