@@ -17,7 +17,7 @@ describe('running browser tests', async () => {
     ({
       stderr,
       stdout,
-    } = await runBrowserTests())
+    } = await runBrowserTests(undefined, undefined, undefined, { std: 'inherit' }))
 
     const browserResult = await readFile('./browser.json', 'utf-8')
     browserResultJson = JSON.parse(browserResult)

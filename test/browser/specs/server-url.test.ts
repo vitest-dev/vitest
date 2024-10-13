@@ -10,7 +10,7 @@ test('server-url http', async () => {
     root: './fixtures/server-url',
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain(`Browser runner started by ${provider} at http://localhost:`)
+  expect(stdout).toContain(`Browser runner started by ${provider} at http://localhost:51133/`)
 })
 
 test('server-url https', async () => {
@@ -19,6 +19,6 @@ test('server-url https', async () => {
     root: './fixtures/server-url',
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain(`Browser runner started by ${provider} at https://localhost:`)
+  expect(stdout).toContain(`Browser runner started by ${provider} at https://localhost:51122/`)
   expect(stdout).toContain('Test Files  1 passed')
 })

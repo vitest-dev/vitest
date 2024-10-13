@@ -25,6 +25,7 @@ export default defineConfig({
   ],
   test: {
     browser: {
+      api: process.env.TEST_HTTPS ? 51122 : 51133,
       enabled: true,
       provider,
       name: browser,
