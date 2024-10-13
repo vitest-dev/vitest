@@ -43,7 +43,7 @@ test("drag and drop over large viewport", async () => {
   }
 
   // drag and drop only works reliably on playwright
-  if (server.provider !== 'playwright' || server.platform === 'darwin') {
+  if (server.provider !== 'playwright') {
     return
   }
 
