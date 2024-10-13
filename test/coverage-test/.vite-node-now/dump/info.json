@@ -1,0 +1,8 @@
+{
+  "time": "10/12/2024, 3:33:15 PM",
+  "externalize": {
+    "/home/hiroshi/code/others/vitest/packages/coverage-v8/dist/index.js": "/home/hiroshi/code/others/vitest/packages/coverage-v8/dist/index.js",
+    "/home/hiroshi/code/others/vitest/node_modules/.pnpm/@vue+test-utils@2.4.6/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js": "/home/hiroshi/code/others/vitest/node_modules/.pnpm/@vue+test-utils@2.4.6/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js",
+    "/home/hiroshi/code/others/vitest/node_modules/.pnpm/vue@3.4.37_typescript@5.5.4/node_modules/vue/index.mjs": "/home/hiroshi/code/others/vitest/node_modules/.pnpm/vue@3.4.37_typescript@5.5.4/node_modules/vue/index.mjs"
+  }
+}
