@@ -64,7 +64,7 @@ export function withInlineSourcemap(
   // If the first line is not present on source maps, add simple 1:1 mapping ([0,0,0,0], [1,0,0,0])
   // so that debuggers can be set to break on first line
   if (map.mappings.startsWith(';')) {
-    map.mappings = `AAAA,CAAA${map.mappings}`
+    // map.mappings = `AAAA,CAAA${map.mappings}`
   }
 
   const sourceMap = Buffer.from(JSON.stringify(map), 'utf-8').toString(
