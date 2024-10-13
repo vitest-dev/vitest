@@ -331,12 +331,11 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
           defaultBrowserPort,
-        ) || {
-          port: defaultBrowserPort,
-        }
+        )
 
         viteConfig.server = {
           ...viteConfig.server,
+          port: defaultBrowserPort,
           ...api,
           middlewareMode: false,
           open: false,
