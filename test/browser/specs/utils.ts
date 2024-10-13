@@ -18,5 +18,5 @@ export async function runBrowserTests(
       headless: browser !== 'safari',
       ...config?.browser,
     } as UserConfig['browser'],
-  }, include, 'test', viteOverrides)
+  }, include, 'test', viteOverrides, { std: 'inherit' })
 }
