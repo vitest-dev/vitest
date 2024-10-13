@@ -1,4 +1,4 @@
-import type { InlineConfig } from 'vitest'
+import type { InlineConfig } from 'vitest/node'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 

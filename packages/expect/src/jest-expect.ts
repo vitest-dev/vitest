@@ -22,7 +22,7 @@ import {
   stringify,
 } from './jest-matcher-utils'
 import { JEST_MATCHERS_OBJECT } from './constants'
-import { recordAsyncExpect, wrapSoft } from './utils'
+import { recordAsyncExpect, wrapAssertion } from './utils'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -43,7 +43,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => any,
   ) {
     const addMethod = (n: keyof Assertion) => {
-      const softWrapper = wrapSoft(utils, fn)
+      const softWrapper = wrapAssertion(utils, n, fn)
       utils.addMethod(chai.Assertion.prototype, n, softWrapper)
       utils.addMethod(
         (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
@@ -309,8 +309,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       Boolean(obj),
       'expected #{this} to be truthy',
       'expected #{this} to not be truthy',
+      true,
       obj,
-      false,
     )
   })
   def('toBeFalsy', function () {
@@ -319,8 +319,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       !obj,
       'expected #{this} to be falsy',
       'expected #{this} to not be falsy',
-      obj,
       false,
+      obj,
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
@@ -331,8 +331,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual > expected,
       `expected ${actual} to be greater than ${expected}`,
       `expected ${actual} to be not greater than ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -344,8 +344,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual >= expected,
       `expected ${actual} to be greater than or equal to ${expected}`,
       `expected ${actual} to be not greater than or equal to ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -357,8 +357,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual < expected,
       `expected ${actual} to be less than ${expected}`,
       `expected ${actual} to be not less than ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -370,19 +370,40 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual <= expected,
       `expected ${actual} to be less than or equal to ${expected}`,
       `expected ${actual} to be not less than or equal to ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
   def('toBeNaN', function () {
-    return this.be.NaN
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      Number.isNaN(obj),
+      'expected #{this} to be NaN',
+      'expected #{this} not to be NaN',
+      Number.NaN,
+      obj,
+    )
   })
   def('toBeUndefined', function () {
-    return this.be.undefined
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      undefined === obj,
+      'expected #{this} to be undefined',
+      'expected #{this} not to be undefined',
+      undefined,
+      obj,
+    )
   })
   def('toBeNull', function () {
-    return this.be.null
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      obj === null,
+      'expected #{this} to be null',
+      'expected #{this} not to be null',
+      null,
+      obj,
+    )
   })
   def('toBeDefined', function () {
     const obj = utils.flag(this, 'object')

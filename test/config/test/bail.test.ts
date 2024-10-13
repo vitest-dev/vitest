@@ -1,5 +1,6 @@
-import { type UserConfig, expect, test } from 'vitest'
+import { expect, test } from 'vitest'
 
+import type { UserConfig } from 'vitest/node'
 import { runVitest } from '../../test-utils'
 
 const configs: UserConfig[] = []

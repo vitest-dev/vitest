@@ -68,6 +68,8 @@
   },
   "pnpm": {
     "overrides": {
+      "@vitest/browser": "workspace:*",
+      "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
       "mlly": "^1.7.1",
       "rollup": "$rollup",

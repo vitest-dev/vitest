@@ -520,16 +520,17 @@ function createSuite() {
       optionsOrFactory,
     )
 
+    const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
+    const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
+
     // inherit options from current suite
     if (currentSuite?.options) {
       options = { ...currentSuite.options, ...options }
     }
 
     // inherit concurrent / sequential from suite
-    const isConcurrent
-      = options.concurrent || (this.concurrent && !this.sequential)
-    const isSequential
-      = options.sequential || (this.sequential && !this.concurrent)
+    const isConcurrent = isConcurrentSpecified || (options.concurrent && !isSequentialSpecified)
+    const isSequential = isSequentialSpecified || (options.sequential && !isConcurrentSpecified)
     options.concurrent = isConcurrent && !isSequential
     options.sequential = isSequential && !isConcurrent
 

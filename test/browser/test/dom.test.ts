@@ -15,6 +15,10 @@ describe('dom related activity', () => {
     expect(window.innerHeight).toBe(600)
   })
 
+  test('element doesn\'t exist', async () => {
+    await expect.element(page.getByText('empty')).not.toBeInTheDocument()
+  })
+
   test('renders div', async () => {
     const wrapper = createWrapper()
     const div = createNode()
