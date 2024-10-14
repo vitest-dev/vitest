@@ -39,6 +39,11 @@ describe('running browser tests', async () => {
   })
 
   test('tests are actually running', async () => {
+    onTestFailed(() => {
+      bail = true
+      console.error(stderr)
+    });
+
     ({
       stderr,
       stdout,
@@ -50,11 +55,6 @@ describe('running browser tests', async () => {
     const getFailed = results => results.filter(result => result.status === 'failed')
     passedTests = getPassed(browserResultJson.testResults)
     failedTests = getFailed(browserResultJson.testResults)
-
-    onTestFailed(() => {
-      bail = true
-      console.error(stderr)
-    })
 
     expect(browserResultJson.testResults).toHaveLength(19)
     expect(passedTests).toHaveLength(17)
