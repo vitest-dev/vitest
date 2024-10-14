@@ -9,12 +9,12 @@ describe('running browser tests', async () => {
   let passedTests: any[]
   let failedTests: any[]
 
-  beforeAll(() => {
-    const id = setInterval(() => {
-      console.log('[debug]', new Date().toISOString())
-    }, 1000)
-    return () => clearInterval(id)
-  })
+  // beforeAll(() => {
+  //   const id = setInterval(() => {
+  //     console.log('[debug]', new Date().toISOString())
+  //   }, 1000)
+  //   return () => clearInterval(id)
+  // })
 
   beforeAll(async () => {
     ({
