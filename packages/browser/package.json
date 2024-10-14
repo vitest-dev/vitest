@@ -90,7 +90,7 @@
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.11",
     "msw": "^2.3.5",
-    "sirv": "^2.0.4",
+    "sirv": "^3.0.0",
     "tinyrainbow": "^1.2.0",
     "ws": "^8.18.0"
   },
