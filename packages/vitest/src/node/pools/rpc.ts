@@ -1,9 +1,9 @@
-import { createHash } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import type { RawSourceMap } from 'vite-node'
 import { join } from 'pathe'
 import type { WorkspaceProject } from '../workspace'
 import type { RuntimeRPC } from '../../types/rpc'
+import { hash } from '../../utils'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()
@@ -47,7 +47,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       }
 
       const dir = join(project.tmpDir, transformMode)
-      const name = createHash('sha1').update(id).digest('hex')
+      const name = hash('sha1', id, 'hex')
       const tmp = join(dir, name)
       if (promises.has(tmp)) {
         await promises.get(tmp)
