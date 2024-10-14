@@ -9,6 +9,11 @@ describe('running browser tests', async () => {
   let passedTests: any[]
   let failedTests: any[]
 
+  beforeAll(() => {
+    const id = setInterval(() => console.log('[debug]', new Date().toISOString()), 2000)
+    return () => clearInterval(id)
+  })
+
   beforeAll(async () => {
     ({
       stderr,
