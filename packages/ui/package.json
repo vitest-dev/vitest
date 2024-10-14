@@ -51,7 +51,7 @@
     "fflate": "^0.8.2",
     "flatted": "^3.3.1",
     "pathe": "^1.1.2",
-    "sirv": "^2.0.4",
+    "sirv": "^3.0.0",
     "tinyglobby": "^0.2.6",
     "tinyrainbow": "^1.2.0"
   },
