@@ -66,12 +66,15 @@ export async function resolveTester(
   const testerHtml = typeof server.testerHtml === 'string'
     ? server.testerHtml
     : await server.testerHtml
+  const importmap = server.project.config.browser.importmap || ''
 
   return replacer(testerHtml, {
     __VITEST_FAVICON__: server.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Tester',
     __VITEST_SCRIPTS__: server.testerScripts,
-    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
+    __VITEST_INJECTOR__: `<script type="importmap">
+        ${importmap}
+    </script><script type="module">${injector}</script>`,
     __VITEST_INTERNAL_SCRIPTS__: [
       `<script type="module" src="${server.errorCatcherUrl}"></script>`,
       server.locatorsUrl ? `<script type="module" src="${server.locatorsUrl}"></script>` : '',
