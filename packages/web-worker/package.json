@@ -41,7 +41,7 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "debug": "^4.3.6"
+    "debug": "^4.3.7"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

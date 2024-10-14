@@ -264,7 +264,7 @@ export function hoistMocks(
     if (
       defaultExport?.declaration === node
       || (defaultExport?.declaration.type === 'AwaitExpression'
-      && defaultExport.declaration.argument === node)
+        && defaultExport.declaration.argument === node)
     ) {
       throw createSyntaxError(defaultExport, error)
     }
@@ -294,7 +294,7 @@ export function hoistMocks(
     if (
       init
       && (init === node
-      || (init.type === 'AwaitExpression' && init.argument === node))
+        || (init.type === 'AwaitExpression' && init.argument === node))
     ) {
       return declarationNode
     }

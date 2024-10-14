@@ -40,10 +40,10 @@ function testNode(val: any) {
 
   return (
     (nodeType === ELEMENT_NODE
-    && (ELEMENT_REGEXP.test(constructorName) || isCustomElement))
-    || (nodeType === TEXT_NODE && constructorName === 'Text')
-    || (nodeType === COMMENT_NODE && constructorName === 'Comment')
-    || (nodeType === FRAGMENT_NODE && constructorName === 'DocumentFragment')
+      && (ELEMENT_REGEXP.test(constructorName) || isCustomElement))
+      || (nodeType === TEXT_NODE && constructorName === 'Text')
+      || (nodeType === COMMENT_NODE && constructorName === 'Comment')
+      || (nodeType === FRAGMENT_NODE && constructorName === 'DocumentFragment')
   )
 }
 
