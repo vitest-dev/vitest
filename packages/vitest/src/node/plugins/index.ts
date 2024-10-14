@@ -177,8 +177,8 @@ export async function VitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+            && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}

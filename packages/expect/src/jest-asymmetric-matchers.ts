@@ -188,11 +188,11 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
     const result
       = this.sample.length === 0
       || (Array.isArray(other)
-      && this.sample.every(item =>
-        other.some(another =>
-          equals(item, another, matcherContext.customTesters),
-        ),
-      ))
+        && this.sample.every(item =>
+          other.some(another =>
+            equals(item, another, matcherContext.customTesters),
+          ),
+        ))
 
     return this.inverse ? !result : result
   }
