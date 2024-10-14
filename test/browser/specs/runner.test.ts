@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { beforeEach, describe, expect, onTestFailed, test } from 'vitest'
+import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { browser, runBrowserTests } from './utils'
 
 describe('running browser tests', async () => {
@@ -9,41 +9,7 @@ describe('running browser tests', async () => {
   let passedTests: any[]
   let failedTests: any[]
 
-  // beforeAll(() => {
-  //   const id = setInterval(() => {
-  //     console.log('[debug]', new Date().toISOString())
-  //   }, 2000)
-  //   return () => clearInterval(id)
-  // })
-
-  // beforeAll(async () => {
-  //   ({
-  //     stderr,
-  //     stdout,
-  //   } = await runBrowserTests(undefined, undefined, undefined, { std: 'inherit' }))
-
-  //   const browserResult = await readFile('./browser.json', 'utf-8')
-  //   browserResultJson = JSON.parse(browserResult)
-  //   const getPassed = results => results.filter(result => result.status === 'passed' && !result.mesage)
-  //   const getFailed = results => results.filter(result => result.status === 'failed')
-  //   passedTests = getPassed(browserResultJson.testResults)
-  //   failedTests = getFailed(browserResultJson.testResults)
-  // })
-
-  let bail = false
-
-  beforeEach((ctx) => {
-    if (bail) {
-      ctx.skip()
-    }
-  })
-
-  test('tests are actually running', async () => {
-    onTestFailed(() => {
-      bail = true
-      console.error(stderr)
-    });
-
+  beforeAll(async () => {
     ({
       stderr,
       stdout,
@@ -55,6 +21,12 @@ describe('running browser tests', async () => {
     const getFailed = results => results.filter(result => result.status === 'failed')
     passedTests = getPassed(browserResultJson.testResults)
     failedTests = getFailed(browserResultJson.testResults)
+  })
+
+  test('tests are actually running', () => {
+    onTestFailed(() => {
+      console.error(stderr)
+    })
 
     expect(browserResultJson.testResults).toHaveLength(19)
     expect(passedTests).toHaveLength(17)
