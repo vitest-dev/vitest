@@ -1,4 +1,3 @@
-import crypto from 'node:crypto'
 import { relative } from 'pathe'
 import { getWorkerState } from '../utils'
 
@@ -55,9 +54,3 @@ export function objectAttr(
   }
   return result
 }
-
-export const hash = crypto.hash ?? ((
-  algorithm: string,
-  data: crypto.BinaryLike,
-  outputEncoding: crypto.BinaryToTextEncoding,
-) => crypto.createHash(algorithm).update(data).digest(outputEncoding))

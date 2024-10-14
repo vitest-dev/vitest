@@ -1,5 +1,6 @@
 import { resolve } from 'pathe'
-import { hash, slash } from '../../utils'
+import { slash } from '../../utils'
+import { hash } from '../hash'
 import { FilesStatsCache } from './files'
 import { ResultsCache } from './results'
 

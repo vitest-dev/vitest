@@ -1,6 +1,6 @@
 import { relative, resolve } from 'pathe'
 import { slash } from 'vite-node/utils'
-import { hash } from '../../utils'
+import { hash } from '../hash'
 import type { Vitest } from '../core'
 import type { WorkspaceSpec } from '../pool'
 import type { TestSequencer } from './types'

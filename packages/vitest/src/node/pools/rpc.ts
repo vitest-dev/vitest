@@ -3,7 +3,7 @@ import type { RawSourceMap } from 'vite-node'
 import { join } from 'pathe'
 import type { WorkspaceProject } from '../workspace'
 import type { RuntimeRPC } from '../../types/rpc'
-import { hash } from '../../utils'
+import { hash } from '../hash'
 
 const created = new Set()
 const promises = new Map<string, Promise<void>>()

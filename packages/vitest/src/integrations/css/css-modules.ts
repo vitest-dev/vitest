@@ -1,4 +1,4 @@
-import { hash } from '../../utils'
+import { hash } from '../../node/hash'
 import type { CSSModuleScopeStrategy } from '../../node/types/config'
 
 export function generateCssFilenameHash(filepath: string) {
