@@ -656,7 +656,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   slowTestThreshold: {
     description:
-      'Threshold in milliseconds for a test to be considered slow (default: `300`)',
+      'Threshold in milliseconds for a test or suite to be considered slow (default: `300`)',
     argument: '<threshold>',
   },
   teardownTimeout: {
