@@ -1,4 +1,4 @@
-import { getNames, getTests } from '@vitest/runner/utils'
+import { getTests } from '@vitest/runner/utils'
 import type { Suite, Task } from '@vitest/runner'
 import { toArray } from '@vitest/utils'
 import type { Arrayable } from '../types/general'
@@ -17,12 +17,4 @@ export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
         && e.message.match(/Snapshot .* mismatched/),
     )
   })
-}
-
-export function getFullName(task: Task, separator = ' > ') {
-  return getNames(task).join(separator)
-}
-
-export function getTestName(task: Task, separator = ' > ') {
-  return getNames(task).slice(1).join(separator)
 }

@@ -2,12 +2,11 @@ import fs from 'node:fs'
 import c from 'tinyrainbow'
 import * as pathe from 'pathe'
 import type { File, TaskResultPack } from '@vitest/runner'
-import { getTasks } from '@vitest/runner/utils'
+import { getFullName, getTasks } from '@vitest/runner/utils'
 import type { UserConsoleLog } from '../../../../types/general'
 import { BaseReporter } from '../../base'
 import { getStateSymbol } from '../../renderers/utils'
 import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
-import { getFullName } from '../../../../utils/tasks'
 import {
   type TableRendererOptions,
   createTableRenderer,
