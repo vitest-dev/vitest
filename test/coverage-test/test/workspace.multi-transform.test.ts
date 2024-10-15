@@ -32,10 +32,10 @@ test('{ all: true } includes uncovered files that require custom transform', asy
   const uncovered2 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2')
 
   // Coverage maps indicate whether source maps are correct. Check html-report if these change
-  expect(JSON.stringify(covered1, null, 2)).toMatchFileSnapshot(snapshotName('covered-1'))
-  expect(JSON.stringify(uncovered1, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-1'))
-  expect(JSON.stringify(covered2, null, 2)).toMatchFileSnapshot(snapshotName('covered-2'))
-  expect(JSON.stringify(uncovered2, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-2'))
+  await expect(JSON.stringify(covered1, null, 2)).toMatchFileSnapshot(snapshotName('covered-1'))
+  await expect(JSON.stringify(uncovered1, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-1'))
+  await expect(JSON.stringify(covered2, null, 2)).toMatchFileSnapshot(snapshotName('covered-2'))
+  await expect(JSON.stringify(uncovered2, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-2'))
 })
 
 function snapshotName(label: string) {
