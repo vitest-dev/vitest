@@ -53,7 +53,7 @@ const PLUGINS = [
 ]
 const FORMAT_OPTIONS = {
   plugins: PLUGINS,
-  printBasicPrototype: true
+  printBasicPrototype: true,
 }
 const FALLBACK_FORMAT_OPTIONS = {
   callToJSON: false,
@@ -186,7 +186,7 @@ function getFormatOptions(
   return {
     ...formatOptions,
     compareKeys,
-    printBasicPrototype
+    printBasicPrototype,
   }
 }
 
