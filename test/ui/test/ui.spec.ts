@@ -172,7 +172,7 @@ test.describe('standalone', () => {
 
     // run single file
     await page.getByText('fixtures/sample.test.ts').hover()
-    await page.getByRole('button', { name: 'Run current test' }).click()
+    await page.getByRole('button', { name: 'Run current file' }).click()
 
     // check results
     await page.getByText('PASS (1)').click()
