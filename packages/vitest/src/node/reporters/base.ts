@@ -151,12 +151,12 @@ export abstract class BaseReporter implements Reporter {
     for (const test of tests) {
       const duration = test.result?.duration
       if (test.result?.state === 'fail') {
-        logger.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}`))
         const suffix = this.getDurationPrefix(test)
+        logger.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${suffix}`))
 
         test.result?.errors?.forEach((e) => {
           // print short errors, full errors will be at the end in summary
-          logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}${suffix}`))
+          logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
         })
       }
       // also print slow tests
