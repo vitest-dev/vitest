@@ -286,7 +286,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId === '/__vitest_msw__') {
+        if (rawId === '/mockServiceWorker.js') {
           return this.resolve('msw/mockServiceWorker.js', distRoot, {
             skipSelf: true,
           })
@@ -323,22 +323,21 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        viteConfig.esbuild ||= {}
-        viteConfig.esbuild.legalComments = 'inline'
-
-        const server = resolveApiServerConfig(
-          viteConfig.test?.browser || {},
-          defaultBrowserPort,
-        ) || {
-          port: defaultBrowserPort,
+        if (viteConfig.esbuild !== false) {
+          viteConfig.esbuild ||= {}
+          viteConfig.esbuild.legalComments = 'inline'
         }
 
-        // browser never runs in middleware mode
-        server.middlewareMode = false
+        const api = resolveApiServerConfig(
+          viteConfig.test?.browser || {},
+          defaultBrowserPort,
+        )
 
         viteConfig.server = {
           ...viteConfig.server,
-          ...server,
+          port: defaultBrowserPort,
+          ...api,
+          middlewareMode: false,
           open: false,
         }
         viteConfig.server.fs ??= {}

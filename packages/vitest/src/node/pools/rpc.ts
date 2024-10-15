@@ -33,7 +33,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       return r?.map as RawSourceMap | undefined
     },
     async fetch(id, transformMode) {
-      const result = await project.vitenode.fetchResult(id, transformMode)
+      const result = await project.vitenode.fetchResult(id, transformMode).catch(handleRollupError)
       const code = result.code
       if (!cacheFs || result.externalize) {
         return result
@@ -66,10 +66,10 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       return { id: tmp }
     },
     resolveId(id, importer, transformMode) {
-      return project.vitenode.resolveId(id, importer, transformMode)
+      return project.vitenode.resolveId(id, importer, transformMode).catch(handleRollupError)
     },
     transform(id, environment) {
-      return project.vitenode.transformModule(id, environment)
+      return project.vitenode.transformModule(id, environment).catch(handleRollupError)
     },
     onPathsCollected(paths) {
       ctx.state.collectPaths(paths)
@@ -103,4 +103,24 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       return ctx.state.getCountOfFailedTests()
     },
   }
+}
+
+// serialize rollup error on server to preserve details as a test error
+function handleRollupError(e: unknown): never {
+  if (e instanceof Error && 'plugin' in e) {
+    // eslint-disable-next-line no-throw-literal
+    throw {
+      name: e.name,
+      message: e.message,
+      stack: e.stack,
+      cause: e.cause,
+      __vitest_rollup_error__: {
+        plugin: (e as any).plugin,
+        id: (e as any).id,
+        loc: (e as any).loc,
+        frame: (e as any).frame,
+      },
+    }
+  }
+  throw e
 }

@@ -133,8 +133,8 @@ export function processError(
   if (
     err.showDiff
     || (err.showDiff === undefined
-    && err.expected !== undefined
-    && err.actual !== undefined)
+      && err.expected !== undefined
+      && err.actual !== undefined)
   ) {
     err.diff = printDiffOrStringify(err.actual, err.expected, {
       ...diffOptions,

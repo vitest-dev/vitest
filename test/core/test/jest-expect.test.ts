@@ -1354,3 +1354,11 @@ it('toMatch/toContain diff', () => {
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
+
+it('diff', () => {
+  snapshotError(() => expect(undefined).toBeTruthy())
+  snapshotError(() => expect({ hello: 'world' }).toBeFalsy())
+  snapshotError(() => expect({ hello: 'world' }).toBeNaN())
+  snapshotError(() => expect({ hello: 'world' }).toBeUndefined())
+  snapshotError(() => expect({ hello: 'world' }).toBeNull())
+})

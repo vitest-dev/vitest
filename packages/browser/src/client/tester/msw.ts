@@ -36,7 +36,10 @@ export function createModuleMockerInterceptor() {
     globalThisAccessor: '"__vitest_mocker__"',
     mswOptions: {
       serviceWorker: {
-        url: '/__vitest_msw__',
+        url: '/mockServiceWorker.js',
+        options: {
+          scope: '/',
+        },
       },
       quiet: true,
     },

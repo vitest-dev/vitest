@@ -80,8 +80,8 @@ export function CSSEnablerPlugin(ctx: {
           // we don't use code content to generate hash for "scoped", because it's empty
           const scopeStrategy
             = (typeof ctx.config.css !== 'boolean'
-            && ctx.config.css.modules?.classNameStrategy)
-            || 'stable'
+              && ctx.config.css.modules?.classNameStrategy)
+              || 'stable'
           const proxyReturn = getCSSModuleProxyReturn(
             scopeStrategy,
             relative(ctx.config.root, id),
