@@ -14,6 +14,8 @@ export {
   hasTests,
   hasFailed,
   getNames,
+  getFullName,
+  getTestName,
 } from './tasks'
 export { createChainable, type ChainableFunction } from './chain'
 export { limitConcurrency } from './limit-concurrency'

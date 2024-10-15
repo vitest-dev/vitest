@@ -1,7 +1,7 @@
 import * as chai from 'chai'
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import { getSafeTimers } from '@vitest/utils'
-import { getWorkerState } from '../../utils'
+import { getWorkerState } from '../../runtime/utils'
 
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [

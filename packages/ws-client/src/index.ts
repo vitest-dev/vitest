@@ -6,6 +6,7 @@ import { parse, stringify } from 'flatted'
 import type { WebSocketEvents, WebSocketHandlers } from 'vitest'
 import { StateManager } from './state'
 
+export * from '@vitest/runner/utils'
 export * from '../../vitest/src/utils/tasks'
 
 export interface VitestClientOptions {

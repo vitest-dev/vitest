@@ -16,6 +16,7 @@ export {
   isNegativeNaN,
   createSimpleStackTrace,
   toArray,
+  deepMerge,
 } from './helpers'
 export type { DeferPromise } from './helpers'
 
