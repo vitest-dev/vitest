@@ -149,7 +149,7 @@ export abstract class BaseReporter implements Reporter {
     logger.log(title)
 
     for (const test of tests) {
-      const duration = test.result?.duration || 0
+      const duration = test.result?.duration
       if (test.result?.state === 'fail') {
         logger.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}`))
         const suffix = this.getDurationPrefix(test)
@@ -160,7 +160,7 @@ export abstract class BaseReporter implements Reporter {
         })
       }
       // also print slow tests
-      else if (duration > this.ctx.config.slowTestThreshold) {
+      else if (duration && duration > this.ctx.config.slowTestThreshold) {
         logger.log(
           `   ${c.yellow(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}${c.yellow(
             ` ${Math.round(duration)}${c.dim('ms')}`,
@@ -174,10 +174,9 @@ export abstract class BaseReporter implements Reporter {
     if (!task.result?.duration) {
       return ''
     }
-    const color
-      = task.result.duration > this.ctx.config.slowTestThreshold
-        ? c.yellow
-        : c.gray
+    const color = task.result.duration > this.ctx.config.slowTestThreshold
+      ? c.yellow
+      : c.gray
     return color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
   }
 
