@@ -597,8 +597,8 @@ importers:
         version: 0.30.11
     devDependencies:
       '@types/estree':
-        specifier: 1.0.5
-        version: 1.0.5
+        specifier: ^1.0.6
+        version: 1.0.6
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
@@ -796,8 +796,8 @@ importers:
         specifier: ^0.3.25
         version: 0.3.25
       '@types/estree':
-        specifier: 1.0.5
-        version: 1.0.5
+        specifier: ^1.0.6
+        version: 1.0.6
       diff-sequences:
         specifier: ^29.6.3
         version: 29.6.3
@@ -915,8 +915,8 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
       '@types/estree':
-        specifier: 1.0.5
-        version: 1.0.5
+        specifier: ^1.0.6
+        version: 1.0.6
       '@types/istanbul-lib-coverage':
         specifier: ^2.0.6
         version: 2.0.6
@@ -11541,7 +11541,7 @@ snapshots:
 
   '@rollup/pluginutils@5.0.5(rollup@4.24.0)':
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
       estree-walker: 2.0.2
       picomatch: 2.3.1
     optionalDependencies:
@@ -11549,7 +11549,7 @@ snapshots:
 
   '@rollup/pluginutils@5.1.0(rollup@4.24.0)':
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
       estree-walker: 2.0.2
       picomatch: 2.3.1
     optionalDependencies:
@@ -11557,7 +11557,7 @@ snapshots:
 
   '@rollup/pluginutils@5.1.2(rollup@4.24.0)':
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
       estree-walker: 2.0.2
       picomatch: 2.3.1
     optionalDependencies:
@@ -11954,7 +11954,7 @@ snapshots:
 
   '@types/eslint@9.6.1':
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
       '@types/json-schema': 7.0.15
 
   '@types/estree@0.0.39': {}
@@ -12111,7 +12111,7 @@ snapshots:
 
   '@types/tern@0.23.4':
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
 
   '@types/test-exclude@6.0.2': {}
 
@@ -14580,7 +14580,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
 
   esutils@2.0.3: {}
 
@@ -15582,11 +15582,11 @@ snapshots:
 
   is-reference@1.2.1:
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
 
   is-reference@3.0.2:
     dependencies:
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
 
   is-regex@1.1.4:
     dependencies:
