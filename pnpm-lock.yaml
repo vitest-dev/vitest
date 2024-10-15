@@ -1259,6 +1259,12 @@ importers:
         specifier: latest
         version: 9.2.1
 
+  test/dts-fixture:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/global-setup:
     devDependencies:
       vitest:
