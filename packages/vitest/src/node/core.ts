@@ -12,7 +12,7 @@ import { noop, slash, toArray } from '@vitest/utils'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { version } from '../../package.json' with { type: 'json' }
 import { getCoverageProvider } from '../integrations/coverage'
-import { workspacesFiles as workspaceFiles } from '../constants'
+import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
@@ -86,6 +86,9 @@ export class Vitest {
 
   /** @deprecated use `_cachedSpecs` */
   projectTestFiles = this._cachedSpecs
+
+  /** @private */
+  public _browserLastPort = defaultBrowserPort
 
   constructor(
     public readonly mode: VitestRunMode,
