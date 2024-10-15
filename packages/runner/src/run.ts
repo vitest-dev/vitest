@@ -2,7 +2,7 @@ import type { Awaitable } from '@vitest/utils'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { VitestRunner } from './types/runner'
+import type { FileSpec, VitestRunner } from './types/runner'
 import type {
   Custom,
   File,
@@ -495,10 +495,11 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 }
 
-export async function startTests(paths: string[], runner: VitestRunner): Promise<File[]> {
+export async function startTests(specs: FileSpec[], runner: VitestRunner): Promise<File[]> {
+  const paths = specs.map(f => f.filepath)
   await runner.onBeforeCollect?.(paths)
 
-  const files = await collectTests(paths, runner)
+  const files = await collectTests(specs, runner)
 
   await runner.onCollected?.(files)
   await runner.onBeforeRunFiles?.(files)
@@ -512,10 +513,12 @@ export async function startTests(paths: string[], runner: VitestRunner): Promise
   return files
 }
 
-async function publicCollect(paths: string[], runner: VitestRunner): Promise<File[]> {
+async function publicCollect(specs: FileSpec[], runner: VitestRunner): Promise<File[]> {
+  const paths = specs.map(f => f.filepath)
+
   await runner.onBeforeCollect?.(paths)
 
-  const files = await collectTests(paths, runner)
+  const files = await collectTests(specs, runner)
 
   await runner.onCollected?.(files)
   return files

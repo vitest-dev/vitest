@@ -5,6 +5,7 @@ import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
+import type { FileSpec } from '@vitest/runner/types/runner'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,
@@ -21,7 +22,8 @@ import type { SerializedConfig } from './config'
 
 export async function run(
   method: 'run' | 'collect',
-  files: string[],
+  // TODO consider type
+  files: FileSpec[],
   config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<void> {
@@ -85,7 +87,7 @@ export async function run(
   const { vi } = VitestIndex
 
   for (const file of files) {
-    workerState.filepath = file
+    workerState.filepath = file.filepath
 
     if (method === 'run') {
       await startTests([file], runner)

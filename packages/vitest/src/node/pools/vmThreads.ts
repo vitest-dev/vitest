@@ -4,6 +4,7 @@ import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
+import type { FileSpec } from '@vitest/runner/types/runner'
 import { rootDir } from '../../paths'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
@@ -101,11 +102,13 @@ export function createVmThreadsPool(
     async function runFiles(
       project: WorkspaceProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpec[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
@@ -113,7 +116,7 @@ export function createVmThreadsPool(
         worker,
         port: workerPort,
         config,
-        files,
+        files: paths,
         invalidates,
         environment,
         workerId,
@@ -130,7 +133,7 @@ export function createVmThreadsPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(
+            `Failed to terminate worker while running ${paths.join(
               ', ',
             )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
           )
@@ -141,7 +144,7 @@ export function createVmThreadsPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error

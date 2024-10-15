@@ -197,6 +197,12 @@ export class Logger {
     }
   }
 
+  printIncludeTaskLocationDisabled(filters?: string[]) {
+    this.console.error(c.red(
+      `\nYou are using line number filters with includeTaskLocation option disabled`,
+    ))
+  }
+
   printBanner() {
     this.log()
 

@@ -4,6 +4,7 @@ import { createBirpc } from 'birpc'
 import type { Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
 import { resolve } from 'pathe'
+import type { FileSpec } from '@vitest/runner/types/runner'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { AggregateError, groupBy } from '../../utils/base'
@@ -95,11 +96,13 @@ export function createThreadsPool(
     async function runFiles(
       project: WorkspaceProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpec[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
@@ -124,7 +127,7 @@ export function createThreadsPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(
+            `Failed to terminate worker while running ${paths.join(
               ', ',
             )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
           )
@@ -135,7 +138,7 @@ export function createThreadsPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error
@@ -259,11 +262,10 @@ export function createThreadsPool(
             // Always run environments isolated between each other
             await pool.recycleWorkers()
 
-            const filenames = files.map(f => f.file)
             await runFiles(
               files[0].project,
               getConfig(files[0].project),
-              filenames,
+              files.map(f => f.file),
               files[0].environment,
               invalidates,
             )

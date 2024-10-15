@@ -10,7 +10,7 @@ import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
 import type { Vitest, VitestOptions } from '../core'
 import { FilesNotFoundError, GitNotFoundError } from '../errors'
-import { getNames, getTests } from '../../utils'
+import { getNames, getTests, groupBy } from '../../utils'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import type { WorkspaceSpec } from '../pool'
 
@@ -282,6 +282,62 @@ export function formatCollectedAsString(files: File[]) {
       return name
     })
   }).flat()
+}
+
+export function parseFilter(f: string) {
+  const colonIndex = f.indexOf(':')
+  if (colonIndex === -1) {
+    return { filename: f }
+  }
+
+  const [parsedFilename, lineNumber] = [
+    f.substring(0, colonIndex),
+    f.substring(colonIndex + 1),
+  ]
+
+  if (lineNumber.match(/^\d+$/)) {
+    return {
+      filename: parsedFilename,
+      lineNumber: Number.parseInt(lineNumber),
+    }
+  }
+  else if (lineNumber.includes('-')) {
+    throw new Error('Range line numbers are not allowed')
+  }
+  else {
+    return { filename: f }
+  }
+}
+
+interface Filter {
+  filename: string
+  lineNumber?: undefined | number
+}
+
+export function groupFilters(filters: Filter[]) {
+  const groupedFilters_ = groupBy(filters, f => f.filename)
+  const groupedFilters = Object.fromEntries(Object.entries(groupedFilters_)
+    .map((entry) => {
+      const [filename, filters] = entry
+      const testLocations = filters.map(f => f.lineNumber)
+
+      // `testLocations` should be all of same type, mixing means the file was
+      // specified with and without test locations
+      if (
+        testLocations.length !== 0
+        && testLocations.some(l => typeof l !== typeof testLocations[0])
+      ) {
+        console.error(`ERR: ${filename} was provided with and without test location`)
+      }
+
+      return [
+        filename,
+        testLocations.filter(l => l !== undefined) as number[],
+      ]
+    }),
+  )
+
+  return groupedFilters
 }
 
 const envPackageNames: Record<

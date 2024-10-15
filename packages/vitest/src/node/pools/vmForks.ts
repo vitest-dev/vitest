@@ -5,6 +5,7 @@ import { createBirpc } from 'birpc'
 import { resolve } from 'pathe'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import Tinypool from 'tinypool'
+import type { FileSpec } from '@vitest/runner/types/runner'
 import { rootDir } from '../../paths'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import { groupFilesByEnv } from '../../utils/test-helpers'
@@ -110,11 +111,13 @@ export function createVmForksPool(
     async function runFiles(
       project: WorkspaceProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpec[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { channel, cleanup } = createChildProcessChannel(project)
       const workerId = ++id
       const data: ContextRPC = {
@@ -138,7 +141,7 @@ export function createVmForksPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(', ')}.`,
+            `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
@@ -147,7 +150,7 @@ export function createVmForksPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error
