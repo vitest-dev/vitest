@@ -106,6 +106,13 @@ describe('jest-expect', () => {
       // eslint-disable-next-line no-throw-literal
       throw ''
     }).toThrow(/^$/)
+    expect(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw ''
+    }).toThrow('')
+    expect(() => {
+      throw new Error('error')
+    }).not.toThrowError('')
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
