@@ -1,5 +1,6 @@
 {
   "name": "@vitest/test-dts-fixture",
+  "type": "module",
   "private": true,
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
