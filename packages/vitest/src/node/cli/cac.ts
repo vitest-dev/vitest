@@ -1,8 +1,8 @@
 import { normalize } from 'pathe'
 import cac, { type CAC, type Command } from 'cac'
 import c from 'tinyrainbow'
+import { toArray } from '@vitest/utils'
 import { version } from '../../../package.json' with { type: 'json' }
-import { toArray } from '../../utils/base'
 import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'

@@ -6,19 +6,18 @@ import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import cliTruncate from 'cli-truncate'
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
-import { inspect } from '@vitest/utils'
+import { inspect, isPrimitive } from '@vitest/utils'
 import {
   lineSplitRE,
   positionToOffset,
 } from '../utils/source-map'
-import { F_POINTER } from '../utils/figures'
 import { TypeCheckError } from '../typecheck/typechecker'
-import { isPrimitive } from '../utils'
 import type { Vitest } from './core'
 import { divider } from './reporters/renderers/utils'
 import type { ErrorOptions } from './logger'
 import { Logger } from './logger'
 import type { WorkspaceProject } from './workspace'
+import { F_POINTER } from './reporters/renderers/figures'
 
 interface PrintErrorOptions {
   type?: string

@@ -18,8 +18,8 @@ import type {
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import fg from 'fast-glob'
+import { deepMerge, nanoid } from '@vitest/utils'
 import type { Typechecker } from '../typecheck/typechecker'
-import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
 import type { ProvidedContext } from '../types/general'
 import type {

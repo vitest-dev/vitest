@@ -1,7 +1,7 @@
 import c from 'tinyrainbow'
 import type { TaskResultPack } from '@vitest/runner'
-import { getFullName } from '../../utils'
-import { F_RIGHT } from '../../utils/figures'
+import { getFullName } from '../../utils/tasks'
+import { F_RIGHT } from './renderers/figures'
 import { DefaultReporter } from './default'
 import { formatProjectName, getStateSymbol } from './renderers/utils'
 

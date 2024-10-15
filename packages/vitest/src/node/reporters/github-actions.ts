@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util'
 import { getTasks } from '@vitest/runner/utils'
 import type { File } from '@vitest/runner'
-import { getFullName } from '../../utils'
+import { getFullName } from '../../utils/tasks'
 import { capturePrintError } from '../error'
 import type { WorkspaceProject } from '../workspace'
 import type { Reporter } from '../types/reporter'

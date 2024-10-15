@@ -2,6 +2,8 @@ import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
+import { toArray } from '@vitest/utils'
+import { isCI, stdProvider } from '../../utils/env'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -15,7 +17,6 @@ import {
   extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { isCI, stdProvider, toArray } from '../../utils'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { VitestCache } from '../cache'

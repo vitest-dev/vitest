@@ -3,23 +3,14 @@ import c from 'tinyrainbow'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import type { File, Task, TaskResultPack } from '@vitest/runner'
-import {
-  getFullName,
-  getSuites,
-  getTestName,
-  getTests,
-  hasFailed,
-  hasFailedSnapshot,
-  isCI,
-  isDeno,
-  isNode,
-  relativePath,
-  toArray,
-} from '../../utils'
+import { toArray } from '@vitest/utils'
+import { getSuites, getTests, hasFailed } from '@vitest/runner/utils'
+import { isCI, isDeno, isNode } from '../../utils/env'
 import type { Vitest } from '../core'
-import { F_POINTER, F_RIGHT } from '../../utils/figures'
 import type { Reporter } from '../types/reporter'
 import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
+import { getFullName, getTestName, hasFailedSnapshot } from '../../utils/tasks'
+import { F_POINTER, F_RIGHT } from './renderers/figures'
 import {
   countTestErrors,
   divider,
@@ -89,7 +80,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   relative(path: string) {
-    return relativePath(this.ctx.config.root, path)
+    return relative(this.ctx.config.root, path)
   }
 
   onFinished(

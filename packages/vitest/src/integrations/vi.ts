@@ -4,9 +4,7 @@ import { parseSingleStack } from '../utils/source-map'
 import type { VitestMocker } from '../runtime/mocker'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
-import { getWorkerState } from '../runtime/utils'
-import { resetModules, waitForImportsToResolve } from '../utils/modules'
-import { isChildProcess } from '../utils/base'
+import { getWorkerState, isChildProcess, resetModules, waitForImportsToResolve } from '../runtime/utils'
 import { FakeTimers } from './mock/timers'
 import type {
   MaybeMocked,

@@ -4,7 +4,7 @@
 
 import type { Mock, MockInstance, MockedFunction, MockedObject } from 'vitest'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
-import { getWorkerState } from '../../../packages/vitest/src/utils'
+import { getWorkerState } from '../../../packages/vitest/src/runtime/utils'
 
 function expectType<T>(obj: T) {
   return obj

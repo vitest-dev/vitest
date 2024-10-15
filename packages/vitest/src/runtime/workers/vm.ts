@@ -8,7 +8,7 @@ import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { distDir } from '../../paths'
 import { ExternalModulesExecutor } from '../external-executor'
 import { FileMap } from '../vm/file-map'
-import { provideWorkerState } from '../../utils'
+import { provideWorkerState } from '../utils'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
