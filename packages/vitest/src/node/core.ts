@@ -107,6 +107,7 @@ export class Vitest {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
+    this._browserLastPort = defaultBrowserPort
     this.pool?.close?.()
     this.pool = undefined
     this.coverageProvider = undefined
