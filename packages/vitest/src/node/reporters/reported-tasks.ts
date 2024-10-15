@@ -155,9 +155,12 @@ export class TestCase extends ReportedTaskImplementation {
     if (!result || result.state === 'run' || !result.startTime) {
       return undefined
     }
+    const duration = result.duration || 0
+    const slow = duration > this.project.globalConfig.slowTestThreshold
     return {
+      slow,
       heap: result.heap,
-      duration: result.duration!,
+      duration,
       startTime: result.startTime,
       retryCount: result.retryCount ?? 0,
       repeatCount: result.repeatCount ?? 0,
@@ -441,6 +444,10 @@ export interface TestResultSkipped {
 }
 
 export interface TestDiagnostic {
+  /**
+   * If the duration of the test is above `slowTestThreshold`.
+   */
+  slow: boolean
   /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
