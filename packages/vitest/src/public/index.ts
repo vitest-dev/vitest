@@ -179,7 +179,6 @@ export type {
   TestFunction,
   TestOptions,
   TestAPI,
-  CustomAPI,
   SuiteAPI,
   HookListener,
   HookCleanupCallback,
