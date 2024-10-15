@@ -232,6 +232,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
 
         const include = [
+          'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > chai',
           'vitest > chai > loupe',
