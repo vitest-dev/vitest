@@ -540,7 +540,7 @@ export abstract class BaseReporter implements Reporter {
     const benches = getTests(files)
 
     const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
-    logger.log('For detailed description of each column, please refer to https://github.com/tinylibs/tinybench#taskresult')
+
     logger.log(
       `\n${c.cyan(c.inverse(c.bold(' BENCH ')))} ${c.cyan('Summary')}\n`,
     )
