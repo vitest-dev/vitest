@@ -168,7 +168,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         const define: Record<string, string> = {}
         for (const env in (project.config.env || {})) {
           const stringValue = JSON.stringify(project.config.env[env])
-          define[`process.env.${env}`] = stringValue
           define[`import.meta.env.${env}`] = stringValue
         }
 
