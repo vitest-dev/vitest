@@ -8,7 +8,7 @@ import type {
 } from '@vitest/runner'
 import type { TestError } from '@vitest/utils'
 import type { WorkspaceProject } from '../workspace'
-import { TestProject } from '../reported-workspace-project'
+import { TestProject } from '../reported-test-project'
 
 class ReportedTaskImplementation {
   /**
