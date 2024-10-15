@@ -160,7 +160,7 @@
     "chai": "^5.1.1",
     "debug": "^4.3.7",
     "expect-type": "^1.1.0",
-    "magic-string": "^0.30.11",
+    "magic-string": "^0.30.12",
     "pathe": "^1.1.2",
     "std-env": "^3.7.0",
     "tinybench": "^2.9.0",
