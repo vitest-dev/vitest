@@ -8,7 +8,6 @@ import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { toArray } from '@vitest/utils'
-import { defaultBrowserPort } from 'vitest/config'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import MagicString from 'magic-string'
 import BrowserContext from './plugins/pluginContext'
@@ -328,14 +327,16 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
+        const defaultPort = project.ctx._browserLastPort++
+
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
-          defaultBrowserPort,
+          defaultPort,
         )
 
         viteConfig.server = {
           ...viteConfig.server,
-          port: defaultBrowserPort,
+          port: defaultPort,
           ...api,
           middlewareMode: false,
           open: false,
