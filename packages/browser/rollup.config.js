@@ -107,7 +107,7 @@ export default () =>
       input: './src/client/tester/state.ts',
       output: {
         file: 'dist/state.js',
-        format: 'esm',
+        format: 'iife',
       },
       plugins: [
         esbuild({

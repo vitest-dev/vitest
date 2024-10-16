@@ -456,9 +456,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           },
           {
             tag: 'script',
-            attrs: {
-              type: 'module',
-            },
             children: stateJs,
             injectTo: 'head-prepend',
           } as const,
