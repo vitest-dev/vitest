@@ -65,7 +65,7 @@ export async function resolveTester(
     __vitest_browser_runner__.runningFiles = ${tests}
     __vitest_browser_runner__.iframeId = ${iframeId}
     __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
-    // document.querySelector('script[data-vitest-append]').remove()
+    document.querySelector('script[data-vitest-append]').remove()
     `,
     })
   }
