@@ -11,6 +11,7 @@ import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { defaultPort } from '../../constants'
+import { createViteLogger } from '../viteLogger'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
@@ -131,6 +132,14 @@ export async function VitestPlugin(
             },
           },
         }
+
+        config.customLogger = createViteLogger(
+          ctx.logger,
+          config.logLevel || 'warn',
+          {
+            allowClearScreen: config.clearScreen ?? true,
+          },
+        )
 
         // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
         if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
