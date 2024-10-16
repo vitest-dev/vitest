@@ -1,4 +1,5 @@
 import type { Stats } from 'node:fs'
+import type { HtmlTagDescriptor } from 'vite'
 import type { WorkspaceProject } from 'vitest/node'
 import type { BrowserServer } from './server'
 import { lstatSync, readFileSync } from 'node:fs'
@@ -392,6 +393,105 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             map: s.generateMap({ hires: 'boundary' }),
           }
         }
+      },
+    },
+    {
+      name: 'vitest:browser:transform-tester-html',
+      enforce: 'pre',
+      async transformIndexHtml(html, ctx) {
+        if (!ctx.path.startsWith(browserServer.prefixTesterUrl)) {
+          return
+        }
+
+        if (!browserServer.testerScripts) {
+          const testerScripts = await browserServer.formatScripts(
+            project.config.browser.testerScripts,
+          )
+          browserServer.testerScripts = testerScripts
+        }
+        const stateJs = typeof browserServer.stateJs === 'string'
+          ? browserServer.stateJs
+          : await browserServer.stateJs
+
+        const testerScripts: HtmlTagDescriptor[] = []
+        if (resolve(distRoot, 'client/tester/tester.html') !== browserServer.testerFilepath) {
+          const manifestContent = browserServer.manifest instanceof Promise
+            ? await browserServer.manifest
+            : browserServer.manifest
+          const testerEntry = manifestContent['tester/tester.html']
+
+          testerScripts.push({
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              crossorigin: '',
+              src: `${browserServer.base}${testerEntry.file}`,
+            },
+            injectTo: 'head',
+          })
+
+          for (const importName of testerEntry.imports || []) {
+            const entryManifest = manifestContent[importName]
+            if (entryManifest) {
+              testerScripts.push(
+                {
+                  tag: 'link',
+                  attrs: {
+                    href: `${browserServer.base}${entryManifest.file}`,
+                    rel: 'modulepreload',
+                    crossorigin: '',
+                  },
+                  injectTo: 'head',
+                },
+              )
+            }
+          }
+        }
+
+        return [
+          {
+            tag: 'script',
+            children: '{__VITEST_INJECTOR__}',
+            injectTo: 'head-prepend' as const,
+          },
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+            },
+            children: stateJs,
+            injectTo: 'head-prepend',
+          } as const,
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: browserServer.errorCatcherUrl,
+            },
+            injectTo: 'head' as const,
+          },
+          browserServer.locatorsUrl
+            ? {
+                tag: 'script',
+                attrs: {
+                  type: 'module',
+                  src: browserServer.locatorsUrl,
+                },
+                injectTo: 'head',
+              } as const
+            : null,
+          ...browserServer.testerScripts,
+          ...testerScripts,
+          {
+            tag: 'script',
+            attrs: {
+              'type': 'module',
+              'data-vitest-append': '',
+            },
+            children: '{__VITEST_APPEND__}',
+            injectTo: 'body',
+          } as const,
+        ].filter(s => s != null)
       },
     },
     {

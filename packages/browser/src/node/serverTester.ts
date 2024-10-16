@@ -51,36 +51,18 @@ export async function resolveTester(
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 
-  if (!server.testerScripts) {
-    const testerScripts = await server.formatScripts(
-      project.config.browser.testerScripts,
-    )
-    const clientScript = `<script type="module" src="${server.base}@vite/client"></script>`
-    const stateJs = typeof server.stateJs === 'string'
-      ? server.stateJs
-      : await server.stateJs
-    const stateScript = `<script type="module">${stateJs}</script>`
-    server.testerScripts = `${stateScript}${clientScript}${testerScripts}`
-  }
-
   const testerHtml = typeof server.testerHtml === 'string'
     ? server.testerHtml
     : await server.testerHtml
 
-  return replacer(testerHtml, {
-    __VITEST_FAVICON__: server.faviconUrl,
-    __VITEST_TITLE__: 'Vitest Browser Tester',
-    __VITEST_SCRIPTS__: server.testerScripts,
-    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
-    __VITEST_INTERNAL_SCRIPTS__: [
-      `<script type="module" src="${server.errorCatcherUrl}"></script>`,
-      server.locatorsUrl ? `<script type="module" src="${server.locatorsUrl}"></script>` : '',
-    ].join('\n'),
-    __VITEST_APPEND__: `<script data-vitest-append type="module">
+  const indexhtml = await server.vite.transformIndexHtml(url.pathname, testerHtml)
+  return replacer(indexhtml, {
+    __VITEST_INJECTOR__: injector,
+    __VITEST_APPEND__: `
 __vitest_browser_runner__.runningFiles = ${tests}
 __vitest_browser_runner__.iframeId = ${iframeId}
 __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
-document.querySelector('script[data-vitest-append]').remove()
-</script>`,
+// document.querySelector('script[data-vitest-append]').remove()
+`,
   })
 }
