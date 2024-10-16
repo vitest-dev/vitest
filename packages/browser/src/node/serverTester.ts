@@ -2,13 +2,15 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { BrowserServer } from './server'
 import crypto from 'node:crypto'
 import { stringify } from 'flatted'
+import type { Connect } from 'vite'
 import { replacer } from './utils'
 
 export async function resolveTester(
   server: BrowserServer,
   url: URL,
   res: ServerResponse<IncomingMessage>,
-): Promise<string> {
+  next: Connect.NextFunction,
+): Promise<string | undefined> {
   const csp = res.getHeader('Content-Security-Policy')
   if (typeof csp === 'string') {
     // add frame-ancestors to allow the iframe to be loaded by Vitest,
@@ -55,14 +57,20 @@ export async function resolveTester(
     ? server.testerHtml
     : await server.testerHtml
 
-  const indexhtml = await server.vite.transformIndexHtml(url.pathname, testerHtml)
-  return replacer(indexhtml, {
-    __VITEST_INJECTOR__: injector,
-    __VITEST_APPEND__: `
-__vitest_browser_runner__.runningFiles = ${tests}
-__vitest_browser_runner__.iframeId = ${iframeId}
-__vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
-// document.querySelector('script[data-vitest-append]').remove()
-`,
-  })
+  try {
+    const indexhtml = await server.vite.transformIndexHtml(url.pathname, testerHtml)
+    return replacer(indexhtml, {
+      __VITEST_INJECTOR__: injector,
+      __VITEST_APPEND__: `
+    __vitest_browser_runner__.runningFiles = ${tests}
+    __vitest_browser_runner__.iframeId = ${iframeId}
+    __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
+    // document.querySelector('script[data-vitest-append]').remove()
+    `,
+    })
+  }
+  catch (err) {
+    context?.reject(err)
+    next(err)
+  }
 }

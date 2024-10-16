@@ -73,9 +73,11 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             return
           }
 
-          const html = await resolveTester(browserServer, url, res)
-          res.write(html, 'utf-8')
-          res.end()
+          const html = await resolveTester(browserServer, url, res, next)
+          if (html) {
+            res.write(html, 'utf-8')
+            res.end()
+          }
         })
 
         server.middlewares.use(
