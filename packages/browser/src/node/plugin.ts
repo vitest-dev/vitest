@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { lstatSync, readFileSync } from 'node:fs'
 import type { Stats } from 'node:fs'
-import { basename, extname, resolve } from 'pathe'
+import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
@@ -22,6 +22,12 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
+
+  function isPackageExists(pkg: string, root: string) {
+    return browserServer.project.ctx.packageInstaller.isPackageExists?.(pkg, {
+      paths: [root],
+    })
+  }
 
   return [
     {
@@ -211,14 +217,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           const coverage = project.ctx.config.coverage
           const provider = coverage.provider
           if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
+            const path = tryResolve('@vitest/coverage-v8', [project.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
+            const path = tryResolve('@vitest/coverage-istanbul', [project.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-istanbul')
@@ -239,18 +245,18 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           '@vitest/browser > @testing-library/dom',
         ]
 
-        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (react) {
-          include.push(react)
-        }
-        const vue = tryResolve('vitest-browser-vue', [project.ctx.config.root])
-        if (vue) {
-          include.push(vue)
+        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
+
+        const svelte = isPackageExists('vitest-browser-svelte', fileRoot)
+        if (svelte) {
+          exclude.push('vitest-browser-svelte')
         }
 
-        const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
-        if (svelte) {
-          exclude.push(svelte)
+        // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
+        // have ?. until Vitest 3.0 for backwards compatibility
+        const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
+        if (vueTestUtils) {
+          include.push('@vue/test-utils')
         }
 
         return {
@@ -398,7 +404,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    build.onResolve({ filter: /@vue\/test-utils/ }, (args) => {
+                    build.onResolve({ filter: /^@vue\/test-utils$/ }, (args) => {
                       const _require = getRequire()
                       // resolve to CJS instead of the browser because the browser version expects a global Vue object
                       const resolved = _require.resolve(args.path, {

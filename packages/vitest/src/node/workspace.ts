@@ -71,7 +71,6 @@ export async function initializeProject(
   const config: ViteInlineConfig = {
     ...options,
     root,
-    logLevel: 'error',
     configFile,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
