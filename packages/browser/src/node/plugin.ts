@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { lstatSync, readFileSync } from 'node:fs'
 import type { Stats } from 'node:fs'
-import { basename, extname, resolve } from 'pathe'
+import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
@@ -22,6 +22,12 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
   const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
   const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
+
+  function isPackageExists(pkg: string, root: string) {
+    return browserServer.project.ctx.packageInstaller.isPackageExists?.(pkg, {
+      paths: [root],
+    })
+  }
 
   return [
     {
@@ -239,13 +245,16 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           '@vitest/browser > @testing-library/dom',
         ]
 
-        const svelte = tryResolve('vitest-browser-svelte', [project.config.root])
+        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
+
+        const svelte = isPackageExists('vitest-browser-svelte', fileRoot)
         if (svelte) {
           exclude.push('vitest-browser-svelte')
         }
 
         // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
-        const vueTestUtils = tryResolve('@vue/test-utils', [project.config.root])
+        // have ?. until Vitest 3.0 for backwards compatibility
+        const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
         if (vueTestUtils) {
           include.push('@vue/test-utils')
         }
