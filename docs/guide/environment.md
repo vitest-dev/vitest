@@ -17,6 +17,13 @@ By default, you can use these environments:
 When using `jsdom` or `happy-dom` environments, Vitest follows the same rules that Vite does when importing [CSS](https://vitejs.dev/guide/features.html#css) and [assets](https://vitejs.dev/guide/features.html#static-assets). If importing external dependency fails with `unknown extension .css` error, you need to inline the whole import chain manually by adding all packages to [`server.deps.external`](/config/#server-deps-external). For example, if the error happens in `package-3` in this import chain: `source code -> package-1 -> package-2 -> package-3`, you need to add all three packages to `server.deps.external`.
 
 Since Vitest 2.0.4 the `require` of CSS and assets inside the external dependencies are resolved automatically.
+
+:::
+
+::: info 
+
+The `jsdom` environment includes window methods such as `fetch()` that are not implemented in jsdom, if they exist in your node runtime.
+
 :::
 
 ::: warning
