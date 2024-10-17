@@ -38,9 +38,16 @@ export async function resolveOrchestrator(
   res.removeHeader('Content-Security-Policy')
 
   if (!server.orchestratorScripts) {
-    server.orchestratorScripts = await server.formatScripts(
+    server.orchestratorScripts = (await server.formatScripts(
       project.config.browser.orchestratorScripts,
-    )
+    )).map((script) => {
+      let html = '<script '
+      for (const attr in script.attrs || {}) {
+        html += `${attr}="${script.attrs![attr]}" `
+      }
+      html += `>${script.children}</script>`
+      return html
+    }).join('\n')
   }
 
   let baseHtml = typeof server.orchestratorHtml === 'string'

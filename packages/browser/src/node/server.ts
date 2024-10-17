@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { existsSync } from 'node:fs'
 import type {
   BrowserProvider,
   BrowserScript,
@@ -13,6 +14,7 @@ import type { ErrorWithDiff } from '@vitest/utils'
 import { slash } from '@vitest/utils'
 import { type StackTraceParserOptions, parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import type { SerializedConfig } from 'vitest'
+import type { HtmlTagDescriptor } from 'vite'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 import { BrowserServerCDPHandler } from './cdp'
@@ -22,10 +24,11 @@ export class BrowserServer implements IBrowserServer {
   public prefixTesterUrl: string
 
   public orchestratorScripts: string | undefined
-  public testerScripts: string | undefined
+  public testerScripts: HtmlTagDescriptor[] | undefined
 
   public manifest: Promise<Vite.Manifest> | Vite.Manifest
   public testerHtml: Promise<string> | string
+  public testerFilepath: string
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
   public errorCatcherUrl: string
@@ -76,8 +79,16 @@ export class BrowserServer implements IBrowserServer {
       )
     })().then(manifest => (this.manifest = manifest))
 
+    const testerHtmlPath = project.config.browser.testerHtmlPath
+      ? resolve(project.config.root, project.config.browser.testerHtmlPath)
+      : resolve(distRoot, 'client/tester/tester.html')
+    if (!existsSync(testerHtmlPath)) {
+      throw new Error(`Tester HTML file not found at "${testerHtmlPath}".`)
+    }
+    this.testerFilepath = testerHtmlPath
+
     this.testerHtml = readFile(
-      resolve(distRoot, 'client/tester/tester.html'),
+      testerHtmlPath,
       'utf8',
     ).then(html => (this.testerHtml = html))
     this.orchestratorHtml = (project.config.browser.ui
@@ -124,11 +135,11 @@ export class BrowserServer implements IBrowserServer {
     scripts: BrowserScript[] | undefined,
   ) {
     if (!scripts?.length) {
-      return ''
+      return []
     }
     const server = this.vite
     const promises = scripts.map(
-      async ({ content, src, async, id, type = 'module' }, index) => {
+      async ({ content, src, async, id, type = 'module' }, index): Promise<HtmlTagDescriptor> => {
         const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
         const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
@@ -136,12 +147,19 @@ export class BrowserServer implements IBrowserServer {
           = content && type === 'module'
             ? (await server.pluginContainer.transform(content, transformId)).code
             : content
-        return `<script type="${type}"${async ? ' async' : ''}${
-          srcLink ? ` src="${slash(`/@fs/${srcLink}`)}"` : ''
-        }>${contentProcessed || ''}</script>`
+        return {
+          tag: 'script',
+          attrs: {
+            type,
+            ...(async ? { async: '' } : {}),
+            ...(srcLink ? { src: slash(`/@fs/${srcLink}`) } : {}),
+          },
+          injectTo: 'head',
+          children: contentProcessed || '',
+        }
       },
     )
-    return (await Promise.all(promises)).join('\n')
+    return (await Promise.all(promises))
   }
 
   async initBrowserProvider() {
