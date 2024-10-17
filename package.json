@@ -9,7 +9,7 @@
     "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
-    "ci": "ni && nr typecheck && nr lint && nr build && nr test:all",
+    "ci": "ni && nr typecheck && nr lint && nr build && nr test:ci",
     "ci:docs": "pnpm run build && pnpm run docs:build",
     "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
