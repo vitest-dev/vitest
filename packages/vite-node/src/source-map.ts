@@ -63,7 +63,8 @@ export function withInlineSourcemap(
 
   // If the first line is not present on source maps, add simple 1:1 mapping ([0,0,0,0], [1,0,0,0])
   // so that debuggers can be set to break on first line
-  if (map.mappings.startsWith(';')) {
+  // This seems to affect coverage, so this is injected only for Vitest cli `--inspect-brk` usage.
+  if (map.mappings.startsWith(';') && process.argv.includes("--inspect-brk")) {
     map.mappings = `AAAA,CAAA${map.mappings}`
   }
 
