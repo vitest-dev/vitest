@@ -94,6 +94,37 @@ test('2 - test that is cancelled', async () => {
   })
 })
 
+test('rerun failed tests', async () => {
+  const { vitest } = await runVitest({ ..._options })
+  const testPath = 'fixtures/error.test.ts'
+  const testCase = `
+  import { test, expect } from 'vitest'
+  test('fail test', () => {
+    expect(1).toBe(2)
+  })
+  `
+  const testTwoPath = 'fixtures/normal.test.ts'
+  const testTwoCase = `
+  import { test, expect } from 'vitest'
+  test('normal test', () => {
+    expect(1).toBe(1)
+  })
+  `
+  writeFileSync(testPath, testCase, 'utf8')
+  writeFileSync(testTwoPath, testTwoCase, 'utf8')
+
+  await vitest.waitForStdout('1 failed')
+
+  writeFileSync(testTwoPath, testCase.replace(/1/g, '2'), 'utf8')
+  await vitest.waitForStdout('1 pass')
+
+  vitest.write('f')
+  await vitest.waitForStdout('1 failed')
+
+  writeFileSync(testTwoPath, testCase.replace(/2/g, '3'), 'utf8')
+  await vitest.waitForStdout('1 failed')
+})
+
 test('rerun current pattern tests', async () => {
   const { vitest } = await runVitest({ ..._options, testNamePattern: 'sum' })
 
