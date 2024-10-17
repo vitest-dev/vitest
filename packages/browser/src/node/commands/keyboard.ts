@@ -53,7 +53,7 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
   context,
   state,
 ) => {
-  const { provider, contextId } = context;
+  const { provider, contextId } = context
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(contextId)
     for (const key of state.unreleased) {
