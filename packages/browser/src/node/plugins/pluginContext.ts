@@ -86,6 +86,7 @@ export const server = {
 export const commands = server.commands
 export const userEvent = createUserEvent(_userEventSetup)
 export { page, cdp }
+page[Symbol.for('vitest:user-event-cleanup')] = () => userEvent.cleanup()
 `
 }
 
