@@ -211,14 +211,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           const coverage = project.ctx.config.coverage
           const provider = coverage.provider
           if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
+            const path = tryResolve('@vitest/coverage-v8', [project.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
+            const path = tryResolve('@vitest/coverage-istanbul', [project.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-istanbul')
@@ -239,18 +239,15 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           '@vitest/browser > @testing-library/dom',
         ]
 
-        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (react) {
-          include.push(react)
-        }
-        const vue = tryResolve('vitest-browser-vue', [project.ctx.config.root])
-        if (vue) {
-          include.push(vue)
+        const svelte = tryResolve('vitest-browser-svelte', [project.config.root])
+        if (svelte) {
+          exclude.push('vitest-browser-svelte')
         }
 
-        const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
-        if (svelte) {
-          exclude.push(svelte)
+        // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
+        const vueTestUtils = tryResolve('@vue/test-utils', [project.config.root])
+        if (vueTestUtils) {
+          include.push('@vue/test-utils')
         }
 
         return {
