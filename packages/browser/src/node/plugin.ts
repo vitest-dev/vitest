@@ -395,7 +395,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    build.onResolve({ filter: /@vue\/test-utils/ }, (args) => {
+                    build.onResolve({ filter: /^@vue\/test-utils$/ }, (args) => {
                       const _require = getRequire()
                       // resolve to CJS instead of the browser because the browser version expects a global Vue object
                       const resolved = _require.resolve(args.path, {
