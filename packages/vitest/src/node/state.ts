@@ -1,11 +1,10 @@
 import type { File, Task, TaskResultPack } from '@vitest/runner'
 import { createFileTask } from '@vitest/runner/utils'
-import type { AggregateError as AggregateErrorPonyfill } from '../utils/base'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
-export function isAggregateError(err: unknown): err is AggregateErrorPonyfill {
+function isAggregateError(err: unknown): err is AggregateError {
   if (typeof AggregateError !== 'undefined' && err instanceof AggregateError) {
     return true
   }

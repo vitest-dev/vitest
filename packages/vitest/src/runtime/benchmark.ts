@@ -2,8 +2,8 @@ import type { Custom } from '@vitest/runner'
 import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
 import { noop } from '@vitest/utils'
-import { isRunningInBenchmark } from '../utils'
 import type { BenchFunction, BenchOptions, BenchmarkAPI } from './types/benchmark'
+import { getWorkerState } from './utils'
 
 const benchFns = new WeakMap<Custom, BenchFunction>()
 const benchOptsMap = new WeakMap()
@@ -21,7 +21,7 @@ export const bench = createBenchmark(function (
   fn: BenchFunction = noop,
   options: BenchOptions = {},
 ) {
-  if (!isRunningInBenchmark()) {
+  if (getWorkerState().config.mode !== 'benchmark') {
     throw new Error('`bench()` is only available in benchmark mode.')
   }
 

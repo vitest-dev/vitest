@@ -1,13 +1,12 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
-import { configDefaults, coverageConfigDefaults } from '../../defaults'
-import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
   deepMerge,
   notNullish,
-  removeUndefinedValues,
   toArray,
-} from '../../utils'
+} from '@vitest/utils'
+import { configDefaults, coverageConfigDefaults } from '../../defaults'
+import type { ResolvedConfig, UserConfig } from '../types/config'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
@@ -177,8 +176,8 @@ export async function VitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+            && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -265,4 +264,14 @@ export async function VitestPlugin(
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ].filter(notNullish)
+}
+function removeUndefinedValues<T extends Record<string, any>>(
+  obj: T,
+): T {
+  for (const key in Object.keys(obj)) {
+    if (obj[key] === undefined) {
+      delete obj[key]
+    }
+  }
+  return obj
 }

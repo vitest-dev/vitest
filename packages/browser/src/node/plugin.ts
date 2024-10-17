@@ -8,7 +8,6 @@ import type { WorkspaceProject } from 'vitest/node'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { type Plugin, coverageConfigDefaults } from 'vitest/config'
 import { toArray } from '@vitest/utils'
-import { defaultBrowserPort } from 'vitest/config'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import MagicString from 'magic-string'
 import BrowserContext from './plugins/pluginContext'
@@ -168,7 +167,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         const define: Record<string, string> = {}
         for (const env in (project.config.env || {})) {
           const stringValue = JSON.stringify(project.config.env[env])
-          define[`process.env.${env}`] = stringValue
           define[`import.meta.env.${env}`] = stringValue
         }
 
@@ -232,6 +230,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
 
         const include = [
+          'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > chai',
           'vitest > chai > loupe',
@@ -328,15 +327,16 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
+        const defaultPort = project.ctx._browserLastPort++
+
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
-          defaultBrowserPort,
-        ) || {
-          port: defaultBrowserPort,
-        }
+          defaultPort,
+        )
 
         viteConfig.server = {
           ...viteConfig.server,
+          port: defaultPort,
           ...api,
           middlewareMode: false,
           open: false,
@@ -388,24 +388,10 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
       },
     },
-    // TODO: remove this when @testing-library/vue supports ESM
     {
       name: 'vitest:browser:support-testing-library',
       config() {
         return {
-          define: {
-            // testing-library/preact
-            'process.env.PTL_SKIP_AUTO_CLEANUP': !!process.env.PTL_SKIP_AUTO_CLEANUP,
-            // testing-library/react
-            'process.env.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            'process.env?.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            // testing-library/svelte, testing-library/solid
-            'process.env.STL_SKIP_AUTO_CLEANUP': !!process.env.STL_SKIP_AUTO_CLEANUP,
-            // testing-library/vue
-            'process.env.VTL_SKIP_AUTO_CLEANUP': !!process.env.VTL_SKIP_AUTO_CLEANUP,
-            // dom.debug()
-            'process.env.DEBUG_PRINT_LIMIT': process.env.DEBUG_PRINT_LIMIT || 7000,
-          },
           optimizeDeps: {
             esbuildOptions: {
               plugins: [

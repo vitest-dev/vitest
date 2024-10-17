@@ -67,6 +67,7 @@ export { TestCase, TestModule, TestSuite } from '../node/reporters/reported-task
  */
 export const TestFile = _TestFile
 export { TestProject } from '../node/reported-workspace-project'
+export type { SerializedTestProject } from '../node/reported-workspace-project'
 export type {
   TestCollection,
 

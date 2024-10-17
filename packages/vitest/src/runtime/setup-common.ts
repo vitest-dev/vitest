@@ -86,7 +86,7 @@ export async function loadSnapshotSerializers(
       if (
         typeof config.test !== 'function'
         || (typeof config.serialize !== 'function'
-        && typeof config.print !== 'function')
+          && typeof config.print !== 'function')
       ) {
         throw new TypeError(
           `invalid snapshot serializer in ${file}. Must have a 'test' method along with either a 'serialize' or 'print' method.`,

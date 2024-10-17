@@ -4,8 +4,8 @@ import { relative } from 'node:path'
 import { getSafeTimers } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { RealDate } from '../integrations/mock/date'
-import { getWorkerState } from '../utils'
 import type { WorkerGlobalState } from '../types/worker'
+import { getWorkerState } from './utils'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 

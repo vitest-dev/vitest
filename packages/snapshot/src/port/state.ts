@@ -333,7 +333,7 @@ export default class SnapshotState {
     if (
       (hasSnapshot && this._updateSnapshot === 'all')
       || ((!hasSnapshot || !snapshotIsPersisted)
-      && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
+        && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
     ) {
       if (this._updateSnapshot === 'all') {
         if (!pass) {

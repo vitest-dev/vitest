@@ -7,7 +7,7 @@ import type {
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
-import { getWorkerState } from '../../utils'
+import { getWorkerState } from '../utils'
 import type {
   BenchTask,
   Benchmark,

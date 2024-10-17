@@ -101,13 +101,11 @@ Use following [VSCode Compound configuration](https://code.visualstudio.com/docs
 
 ## IntelliJ IDEA
 
-Create a 'Node.js' run configuration. Use the following settings to run all tests in debug mode:
+Create a [vitest](https://www.jetbrains.com/help/idea/vitest.html#createRunConfigVitest) run configuration. Use the following settings to run all tests in debug mode:
 
 Setting | Value
  --- | ---
 Working directory | `/path/to/your-project-root`
-JavaScript file | `./node_modules/vitest/vitest.mjs`
-Application parameters | `run --pool forks`
 
 Then run this configuration in debug mode. The IDE will stop at JS/TS breakpoints set in the editor.
 

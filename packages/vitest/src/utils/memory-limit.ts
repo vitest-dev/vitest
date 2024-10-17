@@ -29,7 +29,7 @@ export function getWorkerMemoryLimit(config: ResolvedConfig) {
   return (
     1
     / (config.poolOptions?.vmThreads?.maxThreads
-    ?? getDefaultThreadsCount(config))
+      ?? getDefaultThreadsCount(config))
   )
 }
 

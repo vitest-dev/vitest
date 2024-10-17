@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import { deepMerge } from '@vitest/utils'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { deepMerge } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
 import { CoverageTransform } from './coverageTransform'
@@ -104,8 +104,8 @@ export function WorkspaceVitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+            && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
