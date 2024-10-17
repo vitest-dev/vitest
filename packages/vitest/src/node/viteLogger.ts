@@ -32,6 +32,10 @@ function getTimeFormatter() {
   return timeFormatter
 }
 
+// This is copy-pasted and needs to be synced from time to time. Ideally, Vite's `createLogger` should accept a custom `console`
+// https://github.com/vitejs/vite/blob/main/packages/vite/src/node/logger.ts?rgh-link-date=2024-10-16T23%3A29%3A19Z
+// When Vitest supports only Vite 6 and above, we can use Vite's `createLogger({ console })`
+// https://github.com/vitejs/vite/pull/18379
 export function createViteLogger(
   console: VitestLogger,
   level: LogLevel = 'info',

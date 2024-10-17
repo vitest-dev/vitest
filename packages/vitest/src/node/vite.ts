@@ -15,10 +15,7 @@ export async function createViteServer(inlineConfig: InlineConfig) {
     error(...args)
   }
 
-  const server = await createServer({
-    logLevel: 'error',
-    ...inlineConfig,
-  })
+  const server = await createServer(inlineConfig)
 
   console.error = error
   return server

@@ -135,9 +135,9 @@ export async function VitestPlugin(
 
         config.customLogger = createViteLogger(
           ctx.logger,
-          config.logLevel || 'warn',
+          viteConfig.logLevel || 'warn',
           {
-            allowClearScreen: config.clearScreen ?? true,
+            allowClearScreen: false,
           },
         )
 

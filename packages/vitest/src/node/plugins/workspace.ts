@@ -6,6 +6,7 @@ import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import type { WorkspaceProject } from '../workspace'
 import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import { createViteLogger } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
@@ -124,6 +125,13 @@ export function WorkspaceVitestPlugin(
             }
           }
         }
+        config.customLogger = createViteLogger(
+          project.logger,
+          viteConfig.logLevel || 'warn',
+          {
+            allowClearScreen: false,
+          },
+        )
 
         return config
       },
