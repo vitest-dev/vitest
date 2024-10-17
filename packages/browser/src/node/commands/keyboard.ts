@@ -49,6 +49,19 @@ export const keyboard: UserEventCommand<(text: string, state: KeyboardState) => 
   }
 }
 
+export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise<void>> = async (
+  context,
+  state,
+) => {
+  const { provider, contextId } = context;
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const page = provider.getPage(contextId)
+    for (const key of state.unreleased) {
+      await page.keyboard.up(key)
+    }
+  }
+}
+
 export async function keyboardImplementation(
   pressed: Set<string>,
   provider: BrowserProvider,

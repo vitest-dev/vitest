@@ -168,6 +168,10 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       if (cleanupSymbol in page) {
         (page[cleanupSymbol] as any)()
       }
+      // TODO: symbol?
+      if ('__cleanup' in page) {
+        await (page.__cleanup as any)()
+      }
     }
     catch (error: any) {
       await client.rpc.onUnhandledError({

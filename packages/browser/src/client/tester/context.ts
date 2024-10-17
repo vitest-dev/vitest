@@ -38,6 +38,13 @@ export function createUserEvent(__tl_user_event__?: TestingLibraryUserEvent): Us
     setup(options?: any) {
       return createUserEvent(__tl_user_event__?.setup(options))
     },
+    async cleanup() {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return
+      }
+      await triggerCommand('__vitest_cleanup', keyboard)
+      keyboard.unreleased = []
+    },
     click(element: Element | Locator, options: UserEventClickOptions = {}) {
       return convertToLocator(element).click(processClickOptions(options))
     },
