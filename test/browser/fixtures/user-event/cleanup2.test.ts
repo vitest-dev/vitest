@@ -1,6 +1,8 @@
 import { expect, onTestFinished, test } from 'vitest'
 import { userEvent } from '@vitest/browser/context'
 
+// exact same test as cleanup1.test.ts
+
 test('cleanup2', async () => {
   let logs: any[] = [];
   function handler(e: KeyboardEvent) {
