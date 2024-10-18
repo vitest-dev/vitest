@@ -82,7 +82,7 @@ export class BrowserServer implements IBrowserServer {
       ? resolve(project.config.root, project.config.browser.testerHtmlPath)
       : resolve(distRoot, 'client/tester/tester.html')
     if (!existsSync(testerHtmlPath)) {
-      throw new Error(`Tester HTML file not found at "${testerHtmlPath}".`)
+      throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
     }
     this.testerFilepath = testerHtmlPath
 
