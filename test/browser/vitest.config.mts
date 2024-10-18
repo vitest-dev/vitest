@@ -41,7 +41,7 @@ export default defineConfig({
       name: browser,
       headless: false,
       provider,
-      isolate: false,
+      // isolate: false,
       testerScripts: [
         {
           content: 'globalThis.__injected = []',
