@@ -1,6 +1,6 @@
 import type { RunnerTask } from 'vitest'
 import type { BrowserRPC } from '@vitest/browser/client'
-import type { UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
+import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
 import type {
   BrowserPage,
   Locator,
@@ -29,19 +29,19 @@ function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(contextId, command, filepath(), args)
 }
 
-export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent): UserEvent {
-  let __tl_user_event__ = __tl_user_event_base__?.setup({})
+export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
+  let __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
   const keyboard = {
     unreleased: [] as string[],
   }
 
   return {
     setup(options?: any) {
-      return createUserEvent(__tl_user_event__?.setup(options))
+      return createUserEvent(__tl_user_event_base__, options)
     },
     async cleanup() {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        __tl_user_event__ = __tl_user_event_base__?.setup({})
+      if (typeof __tl_user_event_base__ !== 'undefined') {
+        __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
         return
       }
       await triggerCommand('__vitest_cleanup', keyboard)
