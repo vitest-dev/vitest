@@ -1,4 +1,4 @@
-import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { Plugin, UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
 import {
   deepMerge,
@@ -272,6 +272,16 @@ export async function VitestPlugin(
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
+    {
+      name: 'inject-inspect-brk-debugger',
+      transform(code, id) {
+        // TODO: this is not necessary if Vite SSR preserves source map for hoisted imports
+        // https://github.com/vitejs/vite/pull/16356
+        if (ctx.config.inspectBrk && ctx.state.filesMap.has(id)) {
+          return `debugger;${code}`
+        }
+      },
+    } satisfies Plugin,
   ].filter(notNullish)
 }
 function removeUndefinedValues<T extends Record<string, any>>(

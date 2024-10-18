@@ -1,5 +1,4 @@
 import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
 import type { ContextRPC } from '../types/worker'
 import type { SerializedConfig } from './config'
 
@@ -26,22 +25,6 @@ export function setupInspect(ctx: ContextRPC) {
         config.inspector.host,
         config.inspector.waitForDebugger,
       )
-
-      if (config.inspectBrk) {
-        const firstTestFile = ctx.files[0]
-
-        // Stop at first test file
-        if (firstTestFile) {
-          session = new inspector.Session()
-          session.connect()
-
-          session.post('Debugger.enable')
-          session.post('Debugger.setBreakpointByUrl', {
-            lineNumber: 0,
-            url: pathToFileURL(firstTestFile),
-          })
-        }
-      }
     }
   }
 
