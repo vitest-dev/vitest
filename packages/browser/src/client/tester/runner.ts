@@ -4,7 +4,7 @@ import type { VitestExecutor } from 'vitest/execute'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { TraceMap, originalPositionFor } from 'vitest/utils'
-import { page } from '@vitest/browser/context'
+import { page, userEvent } from '@vitest/browser/context'
 import { globalChannel } from '@vitest/browser/client'
 import { executor } from '../utils'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
@@ -41,6 +41,7 @@ export function createBrowserRunner(
     }
 
     onAfterRunTask = async (task: Task) => {
+      await userEvent.cleanup()
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
