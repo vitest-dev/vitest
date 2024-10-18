@@ -1640,6 +1640,14 @@ Run the browser in a `headless` mode. If you are running Vitest in CI, it will b
 
 Run every test in a separate iframe.
 
+#### browser.testerHtmlPath
+
+- **Type:** `string`
+- **Default:** `@vitest/browser/tester.html`
+- **Version:** Since Vitest 2.1.4
+
+A path to the HTML entry point. Can be relative to the root of the project. This file will be processed with [`transformIndexHtml`](https://vite.dev/guide/api-plugin#transformindexhtml) hook.
+
 #### browser.api
 
 - **Type:** `number | { port?, strictPort?, host? }`

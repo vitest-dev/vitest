@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="{__VITEST_FAVICON__}" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{__VITEST_TITLE__}</title>
+    <title>Vitest Browser Tester</title>
     <style>
       html {
         padding: 0;
@@ -16,13 +16,8 @@
         min-height: 100vh;
       }
     </style>
-    {__VITEST_INJECTOR__}
-    <script>{__VITEST_STATE__}</script>
-    {__VITEST_INTERNAL_SCRIPTS__}
-    {__VITEST_SCRIPTS__}
   </head>
   <body>
     <script type="module" src="./tester.ts"></script>
-    {__VITEST_APPEND__}
   </body>
 </html>
