@@ -10,7 +10,7 @@ index 5aa018cde4336aca4dadefb8338549c378792e14..2e0c38efc15e793dc37e401e25130162
 -     * For instance, `FakeTimers.install({ toFake: ['setTimeout', 'nextTick'] })` will fake only `setTimeout()` and `nextTick()`
 +     * An array with names of global methods and APIs to fake.
 +     * For instance, `vi.useFakeTimer({ toFake: ['setTimeout', 'performance'] })` will fake only `setTimeout()` and `performance.now()`
-+     * @default ['setTimeout', 'clearTimeout', 'setImmediate', 'clearImmediate', 'setInterval', 'clearInterval', 'Date']
++     * @default everything available globally except `nextTick`
       */
      toFake?: FakeMethod[] | undefined;
  
