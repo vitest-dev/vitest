@@ -7,6 +7,10 @@ import { isCI } from '../utils/env'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 export class VitestPackageInstaller {
+  isPackageExists(name: string, options?: { paths?: string[] }) {
+    return isPackageExists(name, options)
+  }
+
   async ensureInstalled(dependency: string, root: string, version?: string) {
     if (process.env.VITEST_SKIP_INSTALL_CHECKS) {
       return true

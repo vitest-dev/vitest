@@ -5,8 +5,9 @@ import { stripVTControlCharacters } from 'node:util'
 import { normalize } from 'pathe'
 import libCoverage from 'istanbul-lib-coverage'
 import type { FileCoverageData } from 'istanbul-lib-coverage'
-import type { TestFunction, UserConfig } from 'vitest'
+import type { TestFunction } from 'vitest'
 import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
+import type { UserConfig } from 'vitest/node'
 import * as testUtils from '../test-utils'
 
 export function test(name: string, fn: TestFunction, skip = false) {
@@ -55,7 +56,7 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
 
   if (options.throwOnError) {
     if (result.stderr !== '') {
-      throw new Error(result.stderr)
+      throw new Error(`stderr:\n${result.stderr}\n\nstdout:\n${result.stdout}`)
     }
   }
 

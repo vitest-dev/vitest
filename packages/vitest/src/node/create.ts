@@ -31,7 +31,6 @@ export async function createVitest(
   options.config = configPath
 
   const config: ViteInlineConfig = {
-    logLevel: 'error',
     configFile: configPath,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.mode || mode,
