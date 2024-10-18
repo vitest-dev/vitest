@@ -60,6 +60,13 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
       await page.keyboard.up(key)
     }
   }
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const keyboard = provider.browser!.action('key')
+    for (const key of state.unreleased) {
+      keyboard.up(key)
+    }
+    await keyboard.perform()
+  }
 }
 
 export async function keyboardImplementation(
