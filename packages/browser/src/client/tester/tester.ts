@@ -11,7 +11,6 @@ import { VitestBrowserClientMocker } from './mocker'
 import { setupExpectDom } from './expect-element'
 
 const cleanupSymbol = Symbol.for('vitest:component-cleanup')
-const userEventCleanupSymbol = Symbol.for('vitest:user-event-cleanup')
 
 const url = new URL(location.href)
 const reloadStart = url.searchParams.get('__reloadStart')
@@ -168,9 +167,6 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
     try {
       if (cleanupSymbol in page) {
         (page[cleanupSymbol] as any)()
-      }
-      if (userEventCleanupSymbol in page) {
-        await (page[userEventCleanupSymbol] as any)()
       }
     }
     catch (error: any) {
