@@ -578,7 +578,7 @@ export function resolveConfig(
     }
   }
 
-  if (resolved.diff) {
+  if (typeof resolved.diff === 'string') {
     resolved.diff = resolvePath(resolved.diff, resolved.root)
     resolved.forceRerunTriggers.push(resolved.diff)
   }

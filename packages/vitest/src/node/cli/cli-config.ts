@@ -598,9 +598,24 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   diff: {
     description:
-      'Path to a diff config that will be used to generate diff interface',
+      'DiffOptions object or a path to a module which exports DiffOptions object',
     argument: '<path>',
-    normalize: true,
+    subcommands: {
+      aAnnotation: null,
+      aIndicator: null,
+      bAnnotation: null,
+      bIndicator: null,
+      commonIndicator: null,
+      contextLines: null,
+      emptyFirstOrLastLinePlaceholder: null,
+      expand: {
+        description: '(default: true)',
+      },
+      includeChangeCounts: null,
+      omitAnnotationLines: null,
+      truncateThreshold: null,
+      truncateAnnotation: null,
+    },
   },
   exclude: {
     description: 'Additional file globs to be excluded from test',
