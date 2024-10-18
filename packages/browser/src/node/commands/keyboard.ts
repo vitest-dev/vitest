@@ -67,6 +67,9 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
     }
     await keyboard.perform()
   }
+  else {
+    throw new TypeError(`Provider "${context.provider.name}" does not support keyboard api`)
+  }
 }
 
 export async function keyboardImplementation(
