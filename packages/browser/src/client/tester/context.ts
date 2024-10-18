@@ -29,7 +29,8 @@ function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(contextId, command, filepath(), args)
 }
 
-export function createUserEvent(__tl_user_event__?: TestingLibraryUserEvent): UserEvent {
+export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent): UserEvent {
+  let __tl_user_event__ = __tl_user_event_base__?.setup({})
   const keyboard = {
     unreleased: [] as string[],
   }
@@ -40,6 +41,7 @@ export function createUserEvent(__tl_user_event__?: TestingLibraryUserEvent): Us
     },
     async cleanup() {
       if (typeof __tl_user_event__ !== 'undefined') {
+        __tl_user_event__ = __tl_user_event_base__?.setup({})
         return
       }
       await triggerCommand('__vitest_cleanup', keyboard)
