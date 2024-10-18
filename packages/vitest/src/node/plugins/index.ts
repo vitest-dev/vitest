@@ -266,6 +266,8 @@ export async function VitestPlugin(
     {
       name: 'inject-inspect-brk-debugger',
       transform(code, id) {
+        // TODO: this is not necessary if Vite SSR preserves source map for hoisted imports
+        // https://github.com/vitejs/vite/pull/16356
         if (ctx.config.inspectBrk && ctx.state.filesMap.has(id)) {
           return `debugger;${code}`
         }
