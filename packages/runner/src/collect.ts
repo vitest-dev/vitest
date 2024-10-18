@@ -29,6 +29,7 @@ export async function collectTests(
 
   for (const filepath of paths) {
     const file = createFileTask(filepath, config.root, config.name, runner.pool)
+    file.shuffle = config.sequence.shuffle
 
     runner.onCollectStart?.(file)
 
