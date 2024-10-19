@@ -2276,9 +2276,26 @@ export default defineConfig({
 ### diff
 
 - **Type:** `string`
-- **CLI:** `--diff=<value>`
+- **CLI:** `--diff=<path>`
 
-Path to a diff config that will be used to generate diff interface. Useful if you want to customize diff display.
+`DiffOptions` object or a path to a module which exports `DiffOptions`. Useful if you want to customize diff display.
+
+:::code-group
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+import c from 'tinyrainbow'
+
+export default defineConfig({
+  test: {
+    diff: {
+      aIndicator: c.bold('--'),
+      bIndicator: c.bold('++'),
+      omitAnnotationLines: true,
+    }
+  }
+})
+```
+:::
 
 :::code-group
 ```ts [vitest.diff.ts]
@@ -2303,10 +2320,19 @@ export default defineConfig({
 ```
 :::
 
+#### diff.expand
+
+- **Type**: `boolean`
+- **Default**: `true`
+- **CLI:** `--diff.expand=false`
+
+Expand all common lines.
+
 #### diff.truncateThreshold
 
 - **Type**: `number`
 - **Default**: `0`
+- **CLI:** `--diff.truncateThreshold=<path>`
 
 The maximum length of diff result to be displayed. Diffs above this threshold will be truncated.
 Truncation won't take effect with default value 0.
@@ -2315,6 +2341,7 @@ Truncation won't take effect with default value 0.
 
 - **Type**: `string`
 - **Default**: `'... Diff result is truncated'`
+- **CLI:** `--diff.truncateAnnotation=<annotation>`
 
 Annotation that is output at the end of diff result if it's truncated.
 
