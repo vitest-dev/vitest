@@ -601,20 +601,51 @@ export const cliOptionsConfig: VitestCLIOptions = {
       'DiffOptions object or a path to a module which exports DiffOptions object',
     argument: '<path>',
     subcommands: {
-      aAnnotation: null,
-      aIndicator: null,
-      bAnnotation: null,
-      bIndicator: null,
-      commonIndicator: null,
-      contextLines: null,
-      emptyFirstOrLastLinePlaceholder: null,
-      expand: {
-        description: '(default: true)',
+      aAnnotation: {
+        description: 'Annotation for expected lines (default: `Expected`)',
+        argument: '<annotation>',
       },
-      includeChangeCounts: null,
-      omitAnnotationLines: null,
-      truncateThreshold: null,
-      truncateAnnotation: null,
+      aIndicator: {
+        description: 'Indicator for expected lines (default: `>`)',
+        argument: '<indicator>',
+      },
+      bAnnotation: {
+        description: 'Annotation for received lines (default: `Received`)',
+        argument: '<annotation>',
+      },
+      bIndicator: {
+        description: 'Indicator for received lines (default: `<`)',
+        argument: '<indicator>',
+      },
+      commonIndicator: {
+        description: 'Indicator for common lines (default: ` `)',
+        argument: '<indicator>',
+      },
+      contextLines: {
+        description: 'Number of lines of context to show around each change (default: `5`)',
+        argument: '<lines>',
+      },
+      emptyFirstOrLastLinePlaceholder: {
+        description: 'Placeholder for an empty first or last line (default: `""`)',
+        argument: '<placeholder>',
+      },
+      expand: {
+        description: 'Expand all common lines (default: true)',
+      },
+      includeChangeCounts: {
+        description: 'Include comparison counts in diff output (default: `true`)',
+      },
+      omitAnnotationLines: {
+        description: 'Omit annotation lines from the output (default: `false`)',
+      },
+      truncateThreshold: {
+        description: 'Number of lines to show before and after each change (default: `100`)',
+        argument: '<threshold>',
+      },
+      truncateAnnotation: {
+        description: 'Annotation for truncated lines (default: `...`)',
+        argument: '<annotation>',
+      },
     },
   },
   exclude: {
