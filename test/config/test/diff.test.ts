@@ -4,9 +4,9 @@ import { runVitest } from '../../test-utils'
 
 describe('inline diff options', () => {
   test.for([
-    ['default', undefined],
-    ['expand-false', { expand: false }],
-  ])('options %s', async ([_, options]) => {
+    [undefined],
+    [{ expand: false }],
+  ])('options %o', async ([options]) => {
     const { stdout } = await runVitest({
       root: './fixtures/diff',
       diff: options,
