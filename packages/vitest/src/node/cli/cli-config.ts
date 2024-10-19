@@ -606,7 +606,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<annotation>',
       },
       aIndicator: {
-        description: 'Indicator for expected lines (default: `>`)',
+        description: 'Indicator for expected lines (default: `-`)',
         argument: '<indicator>',
       },
       bAnnotation: {
@@ -614,7 +614,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<annotation>',
       },
       bIndicator: {
-        description: 'Indicator for received lines (default: `<`)',
+        description: 'Indicator for received lines (default: `+`)',
         argument: '<indicator>',
       },
       commonIndicator: {
@@ -630,20 +630,20 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<placeholder>',
       },
       expand: {
-        description: 'Expand all common lines (default: true)',
+        description: 'Expand all common lines (default: `true`)',
       },
       includeChangeCounts: {
-        description: 'Include comparison counts in diff output (default: `true`)',
+        description: 'Include comparison counts in diff output (default: `false`)',
       },
       omitAnnotationLines: {
         description: 'Omit annotation lines from the output (default: `false`)',
       },
       truncateThreshold: {
-        description: 'Number of lines to show before and after each change (default: `100`)',
+        description: 'Number of lines to show before and after each change (default: `0`)',
         argument: '<threshold>',
       },
       truncateAnnotation: {
-        description: 'Annotation for truncated lines (default: `...`)',
+        description: 'Annotation for truncated lines (default: `... Diff result is truncated`)',
         argument: '<annotation>',
       },
     },
