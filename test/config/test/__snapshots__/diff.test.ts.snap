@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`options default 1`] = `
+[
+  "
+AssertionError: expected &apos;\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\n\\na…&apos; to deeply equal &apos;here\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\…&apos;
+
+- Expected
++ Received
+
+- here
++
+  a
+  b
+  c
+  d
+  e
+
+  a
+  b
+  c
+  d
+  e
+
+  a
+  b
+  c
+  d
+  e
+- and
++
+  a
+  b
+  c
+  d
+  e
+
+  a
+  b
+  c
+  d
+  e
+
+  a
+  b
+  c
+  d
+  e
+- there
++
+
+ ❯ basic.test.ts:11:26
+            ",
+]
+`;
+
+exports[`options expand-false 1`] = `
+[
+  "
+AssertionError: expected &apos;\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\n\\na…&apos; to deeply equal &apos;here\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\…&apos;
+
+- Expected
++ Received
+
+@@ -1,6 +1,6 @@
+- here
++
+  a
+  b
+  c
+  d
+  e
+@@ -14,11 +14,11 @@
+  a
+  b
+  c
+  d
+  e
+- and
++
+  a
+  b
+  c
+  d
+  e
+@@ -32,6 +32,6 @@
+  a
+  b
+  c
+  d
+  e
+- there
++
+
+ ❯ basic.test.ts:11:26
+            ",
+]
+`;
