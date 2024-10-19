@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`options { expand: false } 1`] = `
+exports[`inline diff options { expand: false } 1`] = `
 [
   "
 AssertionError: expected &apos;\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\n\\na…&apos; to deeply equal &apos;here\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\…&apos;
@@ -43,7 +43,7 @@ AssertionError: expected &apos;\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\n\\n
 ]
 `;
 
-exports[`options undefined 1`] = `
+exports[`inline diff options undefined 1`] = `
 [
   "
 AssertionError: expected &apos;\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\n\\na…&apos; to deeply equal &apos;here\\na\\nb\\nc\\nd\\ne\\n\\na\\nb\\nc\\nd\\ne\\…&apos;
