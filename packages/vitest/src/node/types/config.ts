@@ -4,7 +4,7 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { ViteNodeServerOptions } from 'vite-node'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
-import type { DiffOptions } from '@vitest/utils/diff'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type {
   BuiltinReporterOptions,
   BuiltinReporters,
@@ -564,7 +564,7 @@ export interface InlineConfig {
   /**
    * Path to a module which has a default export of diff config.
    */
-  diff?: string | DiffOptions
+  diff?: string | SerializedDiffOptions
 
   /**
    * Paths to snapshot serializer modules.
@@ -980,7 +980,7 @@ export interface ResolvedConfig
   mode: VitestRunMode
 
   base?: string
-  diff?: string | DiffOptions
+  diff?: string | SerializedDiffOptions
   bail?: number
 
   setupFiles: string[]

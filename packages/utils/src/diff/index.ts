@@ -23,7 +23,7 @@ import { normalizeDiffOptions } from './normalizeDiffOptions'
 import { diffStringsRaw, diffStringsUnified } from './printDiffs'
 import type { DiffOptions } from './types'
 
-export type { DiffOptions, DiffOptionsColor } from './types'
+export type { DiffOptions, SerializedDiffOptions, DiffOptionsColor } from './types'
 
 export { diffLinesRaw, diffLinesUnified, diffLinesUnified2 }
 export { diffStringsRaw, diffStringsUnified }

@@ -3,7 +3,7 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotUpdateState } from '@vitest/snapshot'
 import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
-import type { DiffOptions } from '@vitest/utils/diff'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
 /**
  * Config that tests have access to.
@@ -99,7 +99,7 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
-  diff: string | DiffOptions | undefined
+  diff: string | SerializedDiffOptions | undefined
   retry: number
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined

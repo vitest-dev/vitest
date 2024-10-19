@@ -32,6 +32,21 @@ export interface DiffOptions {
   truncateAnnotationColor?: DiffOptionsColor
 }
 
+export interface SerializedDiffOptions {
+  aAnnotation?: string
+  aIndicator?: string
+  bAnnotation?: string
+  bIndicator?: string
+  commonIndicator?: string
+  contextLines?: number
+  emptyFirstOrLastLinePlaceholder?: string
+  expand?: boolean
+  includeChangeCounts?: boolean
+  omitAnnotationLines?: boolean
+  truncateThreshold?: number
+  truncateAnnotation?: string
+}
+
 export interface DiffOptionsNormalized {
   aAnnotation: string
   aColor: DiffOptionsColor
