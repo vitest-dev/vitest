@@ -12,6 +12,6 @@ test('diff', async () => {
       f.tasks.flatMap(t => t.result?.errors ?? []),
     )
   expect(
-    errors.map(e => e.diff && stripVTControlCharacters(e.diff))
+    errors.map(e => e.diff && stripVTControlCharacters(e.diff)),
   ).matchSnapshot()
 })
