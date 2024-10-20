@@ -1,6 +1,5 @@
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
-import { getWorkerState, resetModules } from '../utils'
 import { vi } from '../integrations/vi'
 import {
   startCoverageInsideWorker,
@@ -13,6 +12,7 @@ import { setupGlobalEnv, withEnv } from './setup-node'
 import type { VitestExecutor } from './execute'
 import { resolveTestRunner } from './runners'
 import { closeInspector } from './inspector'
+import { getWorkerState, resetModules } from './utils'
 
 // browser shouldn't call this!
 export async function run(

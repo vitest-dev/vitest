@@ -1,9 +1,9 @@
+import { stripVTControlCharacters } from 'node:util'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
 import c from 'tinyrainbow'
-import stripAnsi from 'strip-ansi'
 import type { SuiteHooks, Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
-import { slash } from '../../../utils/base'
+import { slash } from '@vitest/utils'
 import {
   F_CHECK,
   F_CROSS,
@@ -12,7 +12,7 @@ import {
   F_DOWN_RIGHT,
   F_LONG_DASH,
   F_POINTER,
-} from '../../../utils/figures'
+} from './figures'
 
 export const spinnerMap = new WeakMap<Task, () => string>()
 export const hookSpinnerMap = new WeakMap<Task, Map<string, () => string>>()
@@ -37,7 +37,7 @@ export function divider(text?: string, left?: number, right?: number) {
   const cols = getCols()
 
   if (text) {
-    const textLength = stripAnsi(text).length
+    const textLength = stripVTControlCharacters(text).length
     if (left == null && right != null) {
       left = cols - textLength - right
     }

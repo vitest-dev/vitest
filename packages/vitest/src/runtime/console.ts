@@ -4,8 +4,8 @@ import { relative } from 'node:path'
 import { getSafeTimers } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { RealDate } from '../integrations/mock/date'
-import { getWorkerState } from '../utils'
 import type { WorkerGlobalState } from '../types/worker'
+import { getWorkerState } from './utils'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'
 
@@ -84,7 +84,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       sendLog(type, taskId, content, buffer.length)
     }
     const timer = timers.get(taskId)!
-    buffers.set(taskId, [])
+    buffers.delete(taskId)
     if (type === 'stderr') {
       timer.stderrTime = 0
     }

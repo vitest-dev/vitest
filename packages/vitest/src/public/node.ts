@@ -18,6 +18,7 @@ export { createDebugger } from '../utils/debugger'
 export { resolveFsAllow } from '../node/plugins/utils'
 export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
 export { TestSpecification } from '../node/spec'
+export { createViteLogger } from '../node/viteLogger'
 
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 
@@ -54,7 +55,6 @@ export {
   isFileServingAllowed,
   parseAst,
   parseAstAsync,
-  createLogger as createViteLogger,
 } from 'vite'
 /** @deprecated use `createViteServer` instead */
 export const createServer = _createServer
@@ -67,6 +67,7 @@ export { TestCase, TestModule, TestSuite } from '../node/reporters/reported-task
  */
 export const TestFile = _TestFile
 export { TestProject } from '../node/reported-workspace-project'
+export type { SerializedTestProject } from '../node/reported-workspace-project'
 export type {
   TestCollection,
 

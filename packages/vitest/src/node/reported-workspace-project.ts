@@ -70,7 +70,7 @@ export class TestProject {
   }
 }
 
-interface SerializedTestProject {
+export interface SerializedTestProject {
   name: string
   serializedConfig: SerializedConfig
   context: ProvidedContext

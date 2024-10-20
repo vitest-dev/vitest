@@ -16,6 +16,7 @@ export {
   isNegativeNaN,
   createSimpleStackTrace,
   toArray,
+  deepMerge,
 } from './helpers'
 export type { DeferPromise } from './helpers'
 
@@ -51,3 +52,5 @@ export type {
   SerializedError,
   TestError,
 } from './types'
+
+export { nanoid } from './nanoid'

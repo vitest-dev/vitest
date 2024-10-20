@@ -3,6 +3,7 @@ import type {
   Function as FunctionNode,
   Identifier,
   ImportExpression,
+  Literal,
   Pattern,
   Property,
   VariableDeclaration,
@@ -193,8 +194,8 @@ export function esmWalker(
               // assignment of a destructuring variable
               if (
                 (parent?.type === 'TemplateLiteral'
-                && parent?.expressions.includes(child))
-                || (parent?.type === 'CallExpression' && parent?.callee === child)
+                  && parent?.expressions.includes(child))
+                  || (parent?.type === 'CallExpression' && parent?.callee === child)
               ) {
                 return
               }
@@ -247,12 +248,12 @@ export function esmWalker(
         = isStaticProperty(parent)
         && parent.shorthand
         && (!isNodeInPattern(parent)
-        || isInDestructuringAssignment(parent, parentStack))
+          || isInDestructuringAssignment(parent, parentStack))
 
       const classDeclaration
         = (parent.type === 'PropertyDefinition'
-        && grandparent?.type === 'ClassBody')
-        || (parent.type === 'ClassDeclaration' && node === parent.superClass)
+          && grandparent?.type === 'ClassBody')
+          || (parent.type === 'ClassDeclaration' && node === parent.superClass)
 
       const classExpression
         = parent.type === 'ClassExpression' && node === parent.id
@@ -275,8 +276,8 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   if (
     parent.type === 'CatchClause'
     || ((parent.type === 'VariableDeclarator'
-    || parent.type === 'ClassDeclaration')
-    && parent.id === id)
+      || parent.type === 'ClassDeclaration')
+      && parent.id === id)
   ) {
     return false
   }
@@ -374,4 +375,8 @@ export function isInDestructuringAssignment(
   }
 
   return false
+}
+
+export function getArbitraryModuleIdentifier(node: Identifier | Literal): string {
+  return node.type === 'Identifier' ? node.name : node.raw!
 }

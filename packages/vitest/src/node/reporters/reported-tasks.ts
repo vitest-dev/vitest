@@ -7,7 +7,6 @@ import type {
   TaskMeta,
 } from '@vitest/runner'
 import type { TestError } from '@vitest/utils'
-import { getTestName } from '../../utils/tasks'
 import type { WorkspaceProject } from '../workspace'
 import { TestProject } from '../reported-workspace-project'
 
@@ -101,7 +100,12 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      this.#fullName = getTestName(this.task, ' > ')
+      if (this.parent.type !== 'module') {
+        this.#fullName = `${this.parent.fullName} > ${this.name}`
+      }
+      else {
+        this.#fullName = this.name
+      }
     }
     return this.#fullName
   }
@@ -151,9 +155,12 @@ export class TestCase extends ReportedTaskImplementation {
     if (!result || result.state === 'run' || !result.startTime) {
       return undefined
     }
+    const duration = result.duration || 0
+    const slow = duration > this.project.globalConfig.slowTestThreshold
     return {
+      slow,
       heap: result.heap,
-      duration: result.duration!,
+      duration,
       startTime: result.startTime,
       retryCount: result.retryCount ?? 0,
       repeatCount: result.repeatCount ?? 0,
@@ -198,7 +205,7 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  *allTests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+  *allTests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield * child.children.allTests(state)
@@ -218,7 +225,7 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  *tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+  *tests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
@@ -239,7 +246,7 @@ class TestCollection {
   /**
    * Filters only the suites that are part of this collection.
    */
-  *suites(): IterableIterator<TestSuite> {
+  *suites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -250,7 +257,7 @@ class TestCollection {
   /**
    * Filters all suites that are part of this collection and its children.
    */
-  *allSuites(): IterableIterator<TestSuite> {
+  *allSuites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -259,7 +266,7 @@ class TestCollection {
     }
   }
 
-  *[Symbol.iterator](): IterableIterator<TestSuite | TestCase> {
+  *[Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
     for (const task of this.#task.tasks) {
       yield getReportedTask(this.#project, task) as TestSuite | TestCase
     }
@@ -328,7 +335,12 @@ export class TestSuite extends SuiteImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      this.#fullName = getTestName(this.task, ' > ')
+      if (this.parent.type !== 'module') {
+        this.#fullName = `${this.parent.fullName} > ${this.name}`
+      }
+      else {
+        this.#fullName = this.name
+      }
     }
     return this.#fullName
   }
@@ -432,6 +444,10 @@ export interface TestResultSkipped {
 }
 
 export interface TestDiagnostic {
+  /**
+   * If the duration of the test is above `slowTestThreshold`.
+   */
+  slow: boolean
   /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.

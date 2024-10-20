@@ -326,6 +326,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/common-errors',
               },
               {
+                text: 'Profiling Test Performance',
+                link: '/guide/profiling-test-performance',
+              },
+              {
                 text: 'Improving Performance',
                 link: '/guide/improving-performance',
               },

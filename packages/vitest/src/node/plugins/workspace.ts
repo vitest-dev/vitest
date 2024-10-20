@@ -1,11 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import { deepMerge } from '@vitest/utils'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { deepMerge } from '../../utils/base'
 import type { WorkspaceProject } from '../workspace'
 import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import { createViteLogger } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { SsrReplacerPlugin } from './ssrReplacer'
@@ -85,6 +86,7 @@ export function WorkspaceVitestPlugin(
             watch: null,
             open: false,
             hmr: false,
+            ws: false,
             preTransformRequests: false,
             middlewareMode: true,
             fs: {
@@ -103,8 +105,8 @@ export function WorkspaceVitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+            && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -123,6 +125,13 @@ export function WorkspaceVitestPlugin(
             }
           }
         }
+        config.customLogger = createViteLogger(
+          project.logger,
+          viteConfig.logLevel || 'warn',
+          {
+            allowClearScreen: false,
+          },
+        )
 
         return config
       },

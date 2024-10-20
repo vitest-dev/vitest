@@ -4,11 +4,12 @@ import EventEmitter from 'node:events'
 import { Tinypool } from 'tinypool'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import { createBirpc } from 'birpc'
+import { resolve } from 'pathe'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
 import type { WorkspaceProject } from '../workspace'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
-import { groupBy, resolve } from '../../utils'
+import { groupBy } from '../../utils/base'
 import type { SerializedConfig } from '../types/config'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { Vitest } from '../core'
@@ -152,7 +153,7 @@ export function createForksPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, SerializedConfig>()
+      const configs = new WeakMap<WorkspaceProject, SerializedConfig>()
       const getConfig = (project: WorkspaceProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
@@ -163,15 +164,6 @@ export function createForksPool(
 
         configs.set(project, config)
         return config
-      }
-
-      const workspaceMap = new Map<string, WorkspaceProject[]>()
-      for (const spec of specs) {
-        const file = spec.moduleId
-        const project = spec.project.workspaceProject
-        const workspaceFiles = workspaceMap.get(file) ?? []
-        workspaceFiles.push(project)
-        workspaceMap.set(file, workspaceFiles)
       }
 
       const singleFork = specs.filter(

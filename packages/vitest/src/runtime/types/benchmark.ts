@@ -18,6 +18,8 @@ export interface Benchmark extends Custom {
 export interface BenchmarkResult extends TinybenchResult {
   name: string
   rank: number
+  sampleCount: number
+  median: number
 }
 
 export type BenchFunction = (this: BenchFactory) => Promise<void> | void

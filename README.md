@@ -38,7 +38,7 @@ Next generation testing framework powered by Vite.
 - [Tinyspy](https://github.com/tinylibs/tinyspy) built-in for mocking, stubbing, and spies.
 - [JSDOM](https://github.com/jsdom/jsdom) and [happy-dom](https://github.com/capricorn86/happy-dom) for DOM and browser API mocking
 - [Browser Mode](https://vitest.dev/guide/browser/) for running component tests in the browser
-- Components testing ([Vue](./examples/vue), [React](./examples/react), [Svelte](./examples/svelte), [Lit](./examples/lit), [Vitesse](./examples/vitesse), [Marko](https://github.com/marko-js/examples/tree/master/examples/library-ts))
+- Components testing ([Vue](https://github.com/vitest-tests/browser-examples/tree/main/examples/vue), [React](https://github.com/vitest-tests/browser-examples/tree/main/examples/react), [Svelte](https://github.com/vitest-tests/browser-examples/tree/main/examples/svelte), [Lit](./examples/lit), [Marko](https://github.com/marko-js/examples/tree/master/examples/library-ts))
 - Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - Benchmarking support with [Tinybench](https://github.com/tinylibs/tinybench)
 - [Workspace](https://vitest.dev/guide/workspace) support

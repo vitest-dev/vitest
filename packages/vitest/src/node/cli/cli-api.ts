@@ -4,13 +4,13 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { File, Suite, Task } from '@vitest/runner'
+import { getNames, getTests } from '@vitest/runner/utils'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import type { environments } from '../../integrations/env'
 import { createVitest } from '../create'
 import { registerConsoleShortcuts } from '../stdin'
 import type { Vitest, VitestOptions } from '../core'
 import { FilesNotFoundError, GitNotFoundError } from '../errors'
-import { getNames, getTests } from '../../utils'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import type { WorkspaceSpec } from '../pool'
 
@@ -60,7 +60,7 @@ export async function startVitest(
 
     if (requiredPackages) {
       if (
-        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root))
+        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))
       ) {
         process.exitCode = 1
         return ctx

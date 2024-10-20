@@ -33,13 +33,12 @@ export interface BenchmarkUserOptions {
   reporters?: Arrayable<BenchmarkBuiltinReporters | Reporter>
 
   /**
-   * Write test results to a file when the `--reporter=json` option is also specified.
-   * Also definable individually per reporter by using an object instead.
+   * @deprecated Use `benchmark.outputJson` instead
    */
   outputFile?:
     | string
     | (Partial<Record<BenchmarkBuiltinReporters, string>> &
-    Record<string, string>)
+      Record<string, string>)
 
   /**
    * benchmark output file to compare against
@@ -50,4 +49,11 @@ export interface BenchmarkUserOptions {
    * benchmark output file
    */
   outputJson?: string
+
+  /**
+   * Include `samples` array of benchmark results for API or custom reporter usages.
+   * This is disabled by default to reduce memory usage.
+   * @default false
+   */
+  includeSamples?: boolean
 }

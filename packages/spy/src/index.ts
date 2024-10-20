@@ -484,9 +484,9 @@ function enhanceSpy<T extends Procedure>(
     const impl = implementationChangedTemporarily
       ? implementation!
       : onceImplementations.shift()
-      || implementation
-      || state.getOriginal()
-      || (() => {})
+        || implementation
+        || state.getOriginal()
+        || (() => {})
     return impl.apply(this, args)
   }
 

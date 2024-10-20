@@ -12,7 +12,7 @@ import {
   setState,
 } from '@vitest/expect'
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import { getTestName } from '../../utils/tasks'
+import { getTestName } from '@vitest/runner/utils'
 import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 

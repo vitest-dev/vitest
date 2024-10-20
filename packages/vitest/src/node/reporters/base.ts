@@ -3,23 +3,14 @@ import c from 'tinyrainbow'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import type { File, Task, TaskResultPack } from '@vitest/runner'
-import {
-  getFullName,
-  getSuites,
-  getTestName,
-  getTests,
-  hasFailed,
-  hasFailedSnapshot,
-  isCI,
-  isDeno,
-  isNode,
-  relativePath,
-  toArray,
-} from '../../utils'
+import { toArray } from '@vitest/utils'
+import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
+import { isCI, isDeno, isNode } from '../../utils/env'
 import type { Vitest } from '../core'
-import { F_POINTER, F_RIGHT } from '../../utils/figures'
 import type { Reporter } from '../types/reporter'
 import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
+import { hasFailedSnapshot } from '../../utils/tasks'
+import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
 import {
   countTestErrors,
   divider,
@@ -89,7 +80,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   relative(path: string) {
-    return relativePath(this.ctx.config.root, path)
+    return relative(this.ctx.config.root, path)
   }
 
   onFinished(
@@ -140,13 +131,7 @@ export abstract class BaseReporter implements Reporter {
       state += ` ${c.dim('|')} ${c.yellow(`${skipped.length} skipped`)}`
     }
     let suffix = c.dim(' (') + state + c.dim(')')
-    if (task.result.duration) {
-      const color
-        = task.result.duration > this.ctx.config.slowTestThreshold
-          ? c.yellow
-          : c.gray
-      suffix += color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
-    }
+    suffix += this.getDurationPrefix(task)
     if (this.ctx.config.logHeapUsage && task.result.heap != null) {
       suffix += c.magenta(
         ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
@@ -163,13 +148,36 @@ export abstract class BaseReporter implements Reporter {
     title += `${task.name} ${suffix}`
     logger.log(title)
 
-    // print short errors, full errors will be at the end in summary
-    for (const test of failed) {
-      logger.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}`))
-      test.result?.errors?.forEach((e) => {
-        logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
-      })
+    for (const test of tests) {
+      const duration = test.result?.duration
+      if (test.result?.state === 'fail') {
+        const suffix = this.getDurationPrefix(test)
+        logger.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${suffix}`))
+
+        test.result?.errors?.forEach((e) => {
+          // print short errors, full errors will be at the end in summary
+          logger.log(c.red(`     ${F_RIGHT} ${(e as any)?.message}`))
+        })
+      }
+      // also print slow tests
+      else if (duration && duration > this.ctx.config.slowTestThreshold) {
+        logger.log(
+          `   ${c.yellow(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}${c.yellow(
+            ` ${Math.round(duration)}${c.dim('ms')}`,
+          )}`,
+        )
+      }
     }
+  }
+
+  private getDurationPrefix(task: Task) {
+    if (!task.result?.duration) {
+      return ''
+    }
+    const color = task.result.duration > this.ctx.config.slowTestThreshold
+      ? c.yellow
+      : c.gray
+    return color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
   }
 
   onWatcherStart(

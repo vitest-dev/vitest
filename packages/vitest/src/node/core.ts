@@ -8,14 +8,16 @@ import { SnapshotManager } from '@vitest/snapshot/manager'
 import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
+import { noop, slash, toArray } from '@vitest/utils'
+import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { version } from '../../package.json' with { type: 'json' }
-import { getTasks, hasFailed, noop, slash, toArray, wildcardPatternToRegExp } from '../utils'
 import { getCoverageProvider } from '../integrations/coverage'
-import { workspacesFiles as workspaceFiles } from '../constants'
+import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
 import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
 import { distDir } from '../paths'
+import { wildcardPatternToRegExp } from '../utils/base'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import { createPool, getFilePoolName } from './pool'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
@@ -85,6 +87,9 @@ export class Vitest {
   /** @deprecated use `_cachedSpecs` */
   projectTestFiles = this._cachedSpecs
 
+  /** @private */
+  public _browserLastPort = defaultBrowserPort
+
   constructor(
     public readonly mode: VitestRunMode,
     options: VitestOptions = {},
@@ -102,6 +107,7 @@ export class Vitest {
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
+    this._browserLastPort = defaultBrowserPort
     this.pool?.close?.()
     this.pool = undefined
     this.coverageProvider = undefined
@@ -974,8 +980,12 @@ export class Vitest {
   }
 
   private async reportCoverage(coverage: unknown, allTestsRun: boolean) {
-    if (!this.config.coverage.reportOnFailure && this.state.getCountOfFailedTests() > 0) {
-      return
+    if (this.state.getCountOfFailedTests() > 0) {
+      await this.coverageProvider?.onTestFailure?.()
+
+      if (!this.config.coverage.reportOnFailure) {
+        return
+      }
     }
 
     if (this.coverageProvider) {

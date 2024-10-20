@@ -1,5 +1,5 @@
+import { stripVTControlCharacters } from 'node:util'
 import { assert, describe, expect, test, vi, vitest } from 'vitest'
-import stripAnsi from 'strip-ansi'
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
 import { two } from '../src/submodule'
@@ -141,7 +141,7 @@ function getError(cb: () => void): string {
     cb()
   }
   catch (e: any) {
-    return stripAnsi(e.message)
+    return stripVTControlCharacters(e.message)
   }
   expect.unreachable()
   return 'unreachable'

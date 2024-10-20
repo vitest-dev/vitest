@@ -1,13 +1,14 @@
 import { existsSync, promises as fs } from 'node:fs'
 import { isMainThread } from 'node:worker_threads'
 import { dirname, relative, resolve } from 'pathe'
-import { type GlobOptions, glob } from 'tinyglobby'
+import fg from 'fast-glob'
 import { mergeConfig } from 'vite'
 import type { Vitest } from '../core'
 import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
 import type { WorkspaceProject } from '../workspace'
 import { initializeProject } from '../workspace'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
   vitest: Vitest,
@@ -158,7 +159,7 @@ async function resolveWorkspaceProjectConfigs(
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
       // if the string doesn't contain a glob, we can resolve it directly
       // ['./vitest.config.js']
-      if (!stringOption.includes('*')) {
+      if (!isDynamicPattern(stringOption)) {
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
@@ -208,16 +209,24 @@ async function resolveWorkspaceProjectConfigs(
   }
 
   if (workspaceGlobMatches.length) {
-    const globOptions: GlobOptions = {
+    const globOptions: fg.Options = {
       absolute: true,
       dot: true,
       onlyFiles: false,
       cwd: vitest.config.root,
-      expandDirectories: false,
-      ignore: ['**/node_modules/**', '**/*.timestamp-*'],
+      markDirectories: true,
+      // TODO: revert option when we go back to tinyglobby
+      // expandDirectories: false,
+      ignore: [
+        '**/node_modules/**',
+        // temporary vite config file
+        '**/*.timestamp-*',
+        // macOS directory metadata
+        '**/.DS_Store',
+      ],
     }
 
-    const workspacesFs = await glob(workspaceGlobMatches, globOptions)
+    const workspacesFs = await fg.glob(workspaceGlobMatches, globOptions)
 
     await Promise.all(workspacesFs.map(async (filepath) => {
       // directories are allowed with a glob like `packages/*`

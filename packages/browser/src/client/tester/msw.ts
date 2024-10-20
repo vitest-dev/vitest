@@ -1,11 +1,13 @@
 import { channel } from '@vitest/browser/client'
 import type {
   IframeChannelEvent,
+  IframeMockFactoryRequestEvent,
   IframeMockingDoneEvent,
 } from '@vitest/browser/client'
 import type { MockedModuleSerialized } from '@vitest/mocker'
 import { ManualMockedModule } from '@vitest/mocker'
 import { ModuleMockerMSWInterceptor } from '@vitest/mocker/browser'
+import { nanoid } from '@vitest/utils'
 
 export class VitestBrowserModuleMockerInterceptor extends ModuleMockerMSWInterceptor {
   override async register(event: MockedModuleSerialized): Promise<void> {
@@ -34,7 +36,10 @@ export function createModuleMockerInterceptor() {
     globalThisAccessor: '"__vitest_mocker__"',
     mswOptions: {
       serviceWorker: {
-        url: '/__vitest_msw__',
+        url: '/mockServiceWorker.js',
+        options: {
+          scope: '/',
+        },
       },
       quiet: true,
     },
@@ -42,19 +47,21 @@ export function createModuleMockerInterceptor() {
 }
 
 function getFactoryExports(id: string) {
+  const eventId = nanoid()
   channel.postMessage({
     type: 'mock-factory:request',
+    eventId,
     id,
-  })
+  } satisfies IframeMockFactoryRequestEvent)
   return new Promise<string[]>((resolve, reject) => {
     channel.addEventListener(
       'message',
       function onMessage(e: MessageEvent<IframeChannelEvent>) {
-        if (e.data.type === 'mock-factory:response') {
+        if (e.data.type === 'mock-factory:response' && e.data.eventId === eventId) {
           resolve(e.data.exports)
           channel.removeEventListener('message', onMessage)
         }
-        if (e.data.type === 'mock-factory:error') {
+        if (e.data.type === 'mock-factory:error' && e.data.eventId === eventId) {
           reject(e.data.error)
           channel.removeEventListener('message', onMessage)
         }

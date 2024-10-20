@@ -17,9 +17,9 @@ import type {
 } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import { glob } from 'tinyglobby'
+import fg from 'fast-glob'
+import { deepMerge, nanoid } from '@vitest/utils'
 import type { Typechecker } from '../typecheck/typechecker'
-import { deepMerge, nanoid } from '../utils/base'
 import { setup } from '../api/setup'
 import type { ProvidedContext } from '../types/general'
 import type {
@@ -71,7 +71,6 @@ export async function initializeProject(
   const config: ViteInlineConfig = {
     ...options,
     root,
-    logLevel: 'error',
     configFile,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
@@ -296,13 +295,14 @@ export class WorkspaceProject {
   }
 
   async globFiles(include: string[], exclude: string[], cwd: string) {
-    return glob(include, {
-      absolute: true,
+    const globOptions: fg.Options = {
       dot: true,
       cwd,
       ignore: exclude,
-      expandDirectories: false,
-    })
+    }
+
+    const files = await fg(include, globOptions)
+    return files.map(file => resolve(cwd, file))
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
@@ -359,7 +359,7 @@ export class WorkspaceProject {
     if (!this.isBrowserEnabled()) {
       return
     }
-    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root)
+    await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
     const { createBrowserServer } = await import('@vitest/browser')
     await this.browser?.close()
     const browser = await createBrowserServer(

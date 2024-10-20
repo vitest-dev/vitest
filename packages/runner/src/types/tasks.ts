@@ -411,11 +411,11 @@ interface ExtendedAPI<ExtraContext> {
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
-export type CustomAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
+export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
   ExtendedAPI<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
-    ) => CustomAPI<{
+    ) => TestAPI<{
       [K in keyof T | keyof ExtraContext]: K extends keyof T
         ? T[K]
         : K extends keyof ExtraContext
@@ -424,7 +424,7 @@ export type CustomAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
     }>
   }
 
-export type TestAPI<ExtraContext = object> = CustomAPI<ExtraContext>
+export type { TestAPI as CustomAPI }
 
 export interface FixtureOptions {
   /**
@@ -583,8 +583,14 @@ export interface RuntimeContext {
   currentSuite: SuiteCollector | null
 }
 
+/**
+ * User's custom test context.
+ */
 export interface TestContext {}
 
+/**
+ * Context that's always available in the test function.
+ */
 export interface TaskContext<Task extends Custom | Test = Custom | Test> {
   /**
    * Metadata of the current test

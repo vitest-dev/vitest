@@ -1,6 +1,6 @@
+import { stripVTControlCharacters } from 'node:util'
 import { parseAst } from 'rollup/parseAst'
 import { describe, expect, it, test } from 'vitest'
-import stripAnsi from 'strip-ansi'
 import { generateCodeFrame } from 'vitest/src/node/error.js'
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
@@ -1430,6 +1430,6 @@ export const mocked = vi.unmock('./mocked')
   ])('correctly throws an error if %s', (_, code) => {
     const error = getErrorWhileHoisting(code)
     expect(error.message).toMatchSnapshot()
-    expect(stripAnsi(error.frame)).toMatchSnapshot()
+    expect(stripVTControlCharacters(error.frame)).toMatchSnapshot()
   })
 })

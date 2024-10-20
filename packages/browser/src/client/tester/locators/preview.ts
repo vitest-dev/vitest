@@ -94,7 +94,7 @@ class PreviewLocator extends Locator {
         mime: string
       }>('__vitest_fileInfo', file, 'base64')
 
-      const fileInstance = fetch(base64)
+      const fileInstance = fetch(`data:${mime};base64,${base64}`)
         .then(r => r.blob())
         .then(blob => new File([blob], basename, { type: mime }))
       return fileInstance

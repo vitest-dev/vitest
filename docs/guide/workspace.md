@@ -14,9 +14,13 @@ Vitest provides built-in support for monorepos through a workspace configuration
 
 ## Defining a Workspace
 
-A workspace should have a `vitest.workspace` or `vitest.projects` file in its root (in the same folder as your config file if you have one). Vitest supports `ts`/`js`/`json` extensions for this file.
+A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file, if applicable). Vitest supports `ts`, `js`, and `json` extensions for this file.
 
-Workspace configuration file should have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder named `packages` that contains your projects, you can define a workspace with this config file:
+::: tip NAMING
+Please note that this feature is named `workspace`, not `workspaces` (without an "s" at the end).
+:::
+
+Workspace configuration file must have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder named `packages` that contains your projects, you can define a workspace with this config file:
 
 :::code-group
 ```ts [vitest.workspace.ts]
@@ -26,10 +30,10 @@ export default [
 ```
 :::
 
-Vitest will consider every folder in `packages` as a separate project even if it doesn't have a config file inside. Since Vitest 2.1, if this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
+Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. Since Vitest 2.1, if this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
 
 ::: warning
-Vitest will not consider the root config as a workspace project (so it will not run tests specified in `include`) unless it is specified in this config.
+Vitest does not treat the root `vitest.config` file as a workspace project unless it is explicitly specified in the workspace configuration. Consequently, the root configuration will only influence global options such as `reporters` and `coverage`.
 :::
 
 You can also reference projects with their config files:
@@ -42,9 +46,9 @@ export default [
 ```
 :::
 
-This pattern will only include projects with `vitest.config` file that includes `e2e` and `unit` before the extension.
+This pattern will only include projects with a `vitest.config` file that contains `e2e` or `unit` before the extension.
 
-You can also define projects with inline config. Workspace file supports using both syntaxes at the same time.
+You can also define projects using inline configuration. The workspace file supports both syntaxes simultaneously.
 
 :::code-group
 ```ts [vitest.workspace.ts]
@@ -76,10 +80,10 @@ export default defineWorkspace([
 :::
 
 ::: warning
-All projects should have unique names. Otherwise, Vitest will throw an error. If you do not provide a name inside the inline config, Vitest will assign a number. If you don't provide a name inside a project config defined with glob syntax, Vitest will use the directory name by default.
+All projects must have unique names; otherwise, Vitest will throw an error. If a name is not provided in the inline configuration, Vitest will assign a number. For project configurations defined with glob syntax, Vitest will default to using the "name" property in the nearest `package.json` file or the folder name if no such file exists.
 :::
 
-If you don't rely on inline configs, you can just create a small json file in your root directory:
+If you do not use inline configurations, you can create a small JSON file in your root directory:
 
 :::code-group
 ```json [vitest.workspace.json]
@@ -89,7 +93,7 @@ If you don't rely on inline configs, you can just create a small json file in yo
 ```
 :::
 
-Workspace projects don't support all configuration properties. For better type safety, use `defineProject` instead of `defineConfig` method inside project configuration files:
+Workspace projects do not support all configuration properties. For better type safety, use the `defineProject` method instead of `defineConfig` within project configuration files:
 
 :::code-group
 ```ts [packages/a/vitest.config.ts] twoslash
@@ -191,9 +195,10 @@ export default mergeConfig(
 ```
 :::
 
-At the `defineWorkspace` level you can also use the `extends` option instead to inherit from your root-level config.
+At the `defineWorkspace` level, you can use the `extends` option to inherit from your root-level configuration. All options will be merged.
+
 ::: code-group
-```ts [packages/a/vitest.config.ts]
+```ts [vitest.workspace.ts]
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
@@ -215,7 +220,7 @@ export default defineWorkspace([
 ```
 :::
 
-Also, some of the configuration options are not allowed in a project config. Most notably:
+Some of the configuration options are not allowed in a project config. Most notably:
 
 - `coverage`: coverage is done for the whole workspace
 - `reporters`: only root-level reporters can be supported
@@ -223,9 +228,5 @@ Also, some of the configuration options are not allowed in a project config. Mos
 - all other options that don't affect test runners
 
 ::: tip
-All configuration options that are not supported inside a project config have <NonProjectOption /> sign next them in ["Config"](/config/) page.
+All configuration options that are not supported inside a project configuration are marked with a <NonProjectOption /> sign in the ["Config"](/config/) guide.
 :::
-
-## Coverage
-
-Coverage for workspace projects works out of the box.

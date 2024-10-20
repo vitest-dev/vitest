@@ -2,6 +2,8 @@ import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
+import { toArray } from '@vitest/utils'
+import { isCI, stdProvider } from '../../utils/env'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -15,7 +17,6 @@ import {
   extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { isCI, stdProvider, toArray } from '../../utils'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { VitestCache } from '../cache'
@@ -207,6 +208,13 @@ export function resolveConfig(
     resolved.minWorkers = 1
   }
 
+  if (resolved.maxConcurrency === 0) {
+    logger.console.warn(
+      c.yellow(`The option "maxConcurrency" cannot be set to 0. Using default value ${configDefaults.maxConcurrency} instead.`),
+    )
+    resolved.maxConcurrency = configDefaults.maxConcurrency
+  }
+
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread
       = resolved.pool === 'threads'
@@ -300,6 +308,27 @@ export function resolveConfig(
   resolved.deps.web.transformCss ??= true
   resolved.deps.web.transformGlobPattern ??= []
 
+  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
+    resolvePath(file, resolved.root),
+  )
+  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
+    resolvePath(file, resolved.root),
+  )
+  resolved.coverage.exclude.push(
+    ...resolved.setupFiles.map(
+      file =>
+        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
+          resolved.root,
+          file,
+        )}`,
+    ),
+  )
+
+  resolved.forceRerunTriggers = [
+    ...resolved.forceRerunTriggers,
+    ...resolved.setupFiles,
+  ]
+
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
@@ -359,6 +388,8 @@ export function resolveConfig(
     }
   }
 
+  resolved.server.deps.inlineFiles ??= []
+  resolved.server.deps.inlineFiles.push(...resolved.setupFiles)
   resolved.server.deps.moduleDirectories ??= []
   resolved.server.deps.moduleDirectories.push(
     ...resolved.deps.moduleDirectories,
@@ -546,27 +577,6 @@ export function resolveConfig(
       resolved.benchmark.outputJson = options.outputJson
     }
   }
-
-  resolved.setupFiles = toArray(resolved.setupFiles || []).map(file =>
-    resolvePath(file, resolved.root),
-  )
-  resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
-    resolvePath(file, resolved.root),
-  )
-  resolved.coverage.exclude.push(
-    ...resolved.setupFiles.map(
-      file =>
-        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
-          resolved.root,
-          file,
-        )}`,
-    ),
-  )
-
-  resolved.forceRerunTriggers = [
-    ...resolved.forceRerunTriggers,
-    ...resolved.setupFiles,
-  ]
 
   if (resolved.diff) {
     resolved.diff = resolvePath(resolved.diff, resolved.root)

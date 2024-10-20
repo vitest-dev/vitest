@@ -3,8 +3,10 @@ import type { Writable } from 'node:stream'
 import c from 'tinyrainbow'
 import prompt from 'prompts'
 import { relative, resolve } from 'pathe'
-import { getTests, isWindows, stdout } from '../utils'
-import { toArray } from '../utils/base'
+import { toArray } from '@vitest/utils'
+import { getTests } from '@vitest/runner/utils'
+import { isWindows } from '../utils/env'
+import { stdout } from '../utils/base'
 import type { Vitest } from './core'
 import { WatchFilter } from './watch-filter'
 
@@ -25,13 +27,13 @@ export function printShortcutsHelp() {
     `
 ${c.bold('  Watch Usage')}
 ${keys
-    .map(
-      i =>
-        c.dim('  press ')
-        + c.reset([i[0]].flat().map(c.bold).join(', '))
-        + c.dim(` to ${i[1]}`),
-    )
-    .join('\n')}
+  .map(
+    i =>
+      c.dim('  press ')
+      + c.reset([i[0]].flat().map(c.bold).join(', '))
+      + c.dim(` to ${i[1]}`),
+  )
+  .join('\n')}
 `,
   )
 }

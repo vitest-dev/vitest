@@ -197,6 +197,10 @@ export interface TestResultSkipped {
 
 export interface TestDiagnostic {
   /**
+   * If the duration of the test is above `slowTestThreshold`.
+   */
+  slow: boolean
+  /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */

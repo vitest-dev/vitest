@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from 'vitest'
-import type { UserConfig } from 'vitest'
+import type { UserConfig } from 'vitest/node'
 import { version } from 'vitest/package.json'
 
 import { normalize, resolve } from 'pathe'
@@ -278,4 +278,11 @@ test('mergeReports doesn\'t work with watch mode enabled', async () => {
   const { stderr } = await runVitest({ watch: true, mergeReports: '.vitest-reports' })
 
   expect(stderr).toMatch('Cannot merge reports with --watch enabled')
+})
+
+test('maxConcurrency 0 prints a warning', async () => {
+  const { stderr, ctx } = await runVitest({ maxConcurrency: 0 })
+
+  expect(ctx?.config.maxConcurrency).toBe(5)
+  expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })

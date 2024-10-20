@@ -1,17 +1,17 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import { relative } from 'pathe'
-import { configDefaults, coverageConfigDefaults } from '../../defaults'
-import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
   deepMerge,
   notNullish,
-  removeUndefinedValues,
   toArray,
-} from '../../utils'
+} from '@vitest/utils'
+import { configDefaults, coverageConfigDefaults } from '../../defaults'
+import type { ResolvedConfig, UserConfig } from '../types/config'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { defaultPort } from '../../constants'
+import { createViteLogger } from '../viteLogger'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
@@ -34,7 +34,7 @@ export async function VitestPlugin(
   const getRoot = () => ctx.config?.root || options.root || process.cwd()
 
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot())
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot(), ctx.version)
     return (await import('@vitest/ui')).default(ctx)
   }
 
@@ -98,6 +98,7 @@ export async function VitestPlugin(
             ...testConfig.api,
             open,
             hmr: false,
+            ws: testConfig.api?.middlewareMode ? false : undefined,
             preTransformRequests: false,
             fs: {
               allow: resolveFsAllow(getRoot(), testConfig.config),
@@ -131,6 +132,14 @@ export async function VitestPlugin(
             },
           },
         }
+
+        config.customLogger = createViteLogger(
+          ctx.logger,
+          viteConfig.logLevel || 'warn',
+          {
+            allowClearScreen: false,
+          },
+        )
 
         // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
         if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
@@ -176,8 +185,8 @@ export async function VitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+            && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -233,22 +242,26 @@ export async function VitestPlugin(
 
         hijackVitePluginInject(viteConfig)
       },
-      async configureServer(server) {
-        if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
-          server.watcher.on('ready', () => {
-            // eslint-disable-next-line no-console
-            console.log('[debug] watcher is ready')
-          })
-        }
-        await ctx.setServer(options, server, userConfig)
-        if (options.api && options.watch) {
-          (await import('../../api/setup')).setup(ctx)
-        }
+      configureServer: {
+        // runs after vite:import-analysis as it relies on `server` instance on Vite 5
+        order: 'post',
+        async handler(server) {
+          if (options.watch && process.env.VITE_TEST_WATCHER_DEBUG) {
+            server.watcher.on('ready', () => {
+              // eslint-disable-next-line no-console
+              console.log('[debug] watcher is ready')
+            })
+          }
+          await ctx.setServer(options, server, userConfig)
+          if (options.api && options.watch) {
+            (await import('../../api/setup')).setup(ctx)
+          }
 
-        // #415, in run mode we don't need the watcher, close it would improve the performance
-        if (!options.watch) {
-          await server.watcher.close()
-        }
+          // #415, in run mode we don't need the watcher, close it would improve the performance
+          if (!options.watch) {
+            await server.watcher.close()
+          }
+        },
       },
     },
     SsrReplacerPlugin(),
@@ -260,4 +273,14 @@ export async function VitestPlugin(
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ].filter(notNullish)
+}
+function removeUndefinedValues<T extends Record<string, any>>(
+  obj: T,
+): T {
+  for (const key in Object.keys(obj)) {
+    if (obj[key] === undefined) {
+      delete obj[key]
+    }
+  }
+  return obj
 }

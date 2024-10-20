@@ -182,6 +182,7 @@ function parseServerOptions(
     ...serverOptions,
     deps: {
       ...serverOptions.deps,
+      inlineFiles: toArray(serverOptions.deps?.inlineFiles),
       inline:
         inlineOptions !== true
           ? inlineOptions.map((dep) => {
