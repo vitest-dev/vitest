@@ -2283,7 +2283,7 @@ export default defineConfig({
 :::code-group
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
-import c from 'tinyrainbow'
+import c from 'picocolors'
 
 export default defineConfig({
   test: {
