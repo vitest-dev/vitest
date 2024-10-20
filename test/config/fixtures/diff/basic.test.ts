@@ -1,12 +1,10 @@
 import { expect, test } from 'vitest'
 
 test('large diff', () => {
-  const data = `
-a
-b
-c
-d
-e
-`
-  expect(data.repeat(6)).toEqual(`here${data.repeat(3)}and${data.repeat(3)}there`)
+  const x = [...Array(30)].map((_, i) => i);
+  const y = [...x];
+  y[0] = 1000;
+  y[15] = 2000;
+  y[29] = 3000;
+  expect(x).toEqual(y)
 })
