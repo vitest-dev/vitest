@@ -247,7 +247,9 @@ test('coverage.autoUpdate cannot update thresholds when configuration file doesn
 })
 
 test('boolean flag 100 should not crash CLI', async () => {
-  const { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+  // non-zero coverage shows up, which is non-deterministic, so strip it.
+  stderr = stderr.replace(/\([0-9.]+%\) does/g, '(0%) does')
 
   expect(stderr).toMatch('ERROR: Coverage for lines (0%) does not meet global threshold (100%)')
   expect(stderr).toMatch('ERROR: Coverage for functions (0%) does not meet global threshold (100%)')
