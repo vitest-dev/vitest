@@ -2280,6 +2280,8 @@ export default defineConfig({
 
 `DiffOptions` object or a path to a module which exports `DiffOptions`. Useful if you want to customize diff display.
 
+For example, as a config object:
+
 :::code-group
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
@@ -2297,18 +2299,9 @@ export default defineConfig({
 ```
 :::
 
+Or as a module:
+
 :::code-group
-```ts [vitest.diff.ts]
-import type { DiffOptions } from 'vitest'
-import c from 'tinyrainbow'
-
-export default {
-  aIndicator: c.bold('--'),
-  bIndicator: c.bold('++'),
-  omitAnnotationLines: true,
-} satisfies DiffOptions
-```
-
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -2317,6 +2310,17 @@ export default defineConfig({
     diff: './vitest.diff.ts'
   }
 })
+```
+
+```ts [vitest.diff.ts]
+import type { DiffOptions } from 'vitest'
+import c from 'picocolors'
+
+export default {
+  aIndicator: c.bold('--'),
+  bIndicator: c.bold('++'),
+  omitAnnotationLines: true,
+} satisfies DiffOptions
 ```
 :::
 
