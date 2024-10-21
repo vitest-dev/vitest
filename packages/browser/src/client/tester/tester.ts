@@ -75,7 +75,7 @@ async function prepareTestEnvironment(files: string[]) {
   files.forEach((filename) => {
     const currentVersion = browserHashMap.get(filename)
     if (!currentVersion || currentVersion[1] !== version) {
-      browserHashMap.set(filename, [true, version])
+      browserHashMap.set(filename, version)
     }
   })
 
