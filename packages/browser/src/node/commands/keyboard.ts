@@ -1,9 +1,9 @@
-import { parseKeyDef } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
-import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
 import type { BrowserProvider } from 'vitest/node'
+import type { UserEventCommand } from './utils'
+import { defaultKeyMap } from '@testing-library/user-event/dist/esm/keyboard/keyMap.js'
+import { parseKeyDef } from '@testing-library/user-event/dist/esm/keyboard/parseKeyDef.js'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 
 export interface KeyboardState {
   unreleased: string[]

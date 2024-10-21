@@ -1,6 +1,6 @@
-import { expect, test } from 'vitest'
 import cjsDefault, { a as cjsNamed } from '@vitest/cjs-lib'
 import * as cjsNamespace from '@vitest/cjs-lib'
+import { expect, test } from 'vitest'
 
 test('cjs namespace import', () => {
   expect(cjsNamespace).toEqual({

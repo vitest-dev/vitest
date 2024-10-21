@@ -1,5 +1,5 @@
-import { resolve } from 'pathe'
 import { slash } from '@vitest/utils'
+import { resolve } from 'pathe'
 import { hash } from '../hash'
 import { FilesStatsCache } from './files'
 import { ResultsCache } from './results'

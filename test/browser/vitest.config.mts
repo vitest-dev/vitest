@@ -1,8 +1,8 @@
+import type { BrowserCommand } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
 import { defineConfig } from 'vitest/config'
-import type { BrowserCommand } from 'vitest/node'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 

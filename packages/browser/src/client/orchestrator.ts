@@ -1,11 +1,11 @@
-import { channel, client } from '@vitest/browser/client'
-import { generateHash } from '@vitest/runner/utils'
-import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from '@vitest/browser/client'
-import { relative } from 'pathe'
 import type { SerializedConfig } from 'vitest'
-import { getBrowserState, getConfig } from './utils'
-import { getUiAPI } from './ui'
+import { channel, client } from '@vitest/browser/client'
+import { globalChannel, type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent } from '@vitest/browser/client'
+import { generateHash } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 import { createModuleMockerInterceptor } from './tester/msw'
+import { getUiAPI } from './ui'
+import { getBrowserState, getConfig } from './utils'
 
 const url = new URL(location.href)
 const ID_ALL = '__vitest_all__'

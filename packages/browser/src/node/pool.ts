@@ -1,7 +1,7 @@
-import * as nodeos from 'node:os'
-import crypto from 'node:crypto'
-import { relative } from 'pathe'
 import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject, WorkspaceSpec } from 'vitest/node'
+import crypto from 'node:crypto'
+import * as nodeos from 'node:os'
+import { relative } from 'pathe'
 import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:pool')

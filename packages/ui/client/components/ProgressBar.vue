@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { explorerTree } from '~/composables/explorer'
 import { finished } from '~/composables/client/state'
+import { explorerTree } from '~/composables/explorer'
 
 const { width } = useWindowSize()
 const classes = computed(() => {

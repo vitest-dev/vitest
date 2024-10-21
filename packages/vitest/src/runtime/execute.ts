@@ -1,7 +1,12 @@
-import vm from 'node:vm'
-import { pathToFileURL } from 'node:url'
-import fs from 'node:fs'
+import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { ModuleCacheMap } from 'vite-node/client'
+import type { WorkerGlobalState } from '../types/worker'
+import type { ExternalModulesExecutor } from './external-executor'
+import fs from 'node:fs'
+import { pathToFileURL } from 'node:url'
+import vm from 'node:vm'
+import { processError } from '@vitest/utils/error'
+import { normalize, relative } from 'pathe'
 import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
 import {
   isInternalRequest,
@@ -9,13 +14,8 @@ import {
   isPrimitive,
   toFilePath,
 } from 'vite-node/utils'
-import type { ViteNodeRunnerOptions } from 'vite-node'
-import { normalize, relative } from 'pathe'
-import { processError } from '@vitest/utils/error'
 import { distDir } from '../paths'
-import type { WorkerGlobalState } from '../types/worker'
 import { VitestMocker } from './mocker'
-import type { ExternalModulesExecutor } from './external-executor'
 
 const { readFileSync } = fs
 

@@ -1,12 +1,12 @@
+import type { ContextRPC, WorkerGlobalState } from '../types/worker'
+import type { VitestWorker } from './workers/types'
 import { pathToFileURL } from 'node:url'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import { loadEnvironment } from '../integrations/env/loader'
-import type { ContextRPC, WorkerGlobalState } from '../types/worker'
-import { isChildProcess, setProcessTitle } from './utils'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
-import type { VitestWorker } from './workers/types'
+import { isChildProcess, setProcessTitle } from './utils'
 import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {

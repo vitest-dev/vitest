@@ -1,8 +1,8 @@
-import { ModuleCacheMap } from 'vite-node/client'
 import type { WorkerGlobalState } from '../../types/worker'
-import { provideWorkerState } from '../utils'
 import type { ContextExecutorOptions, VitestExecutor } from '../execute'
+import { ModuleCacheMap } from 'vite-node/client'
 import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
+import { provideWorkerState } from '../utils'
 
 let _viteNode: VitestExecutor
 

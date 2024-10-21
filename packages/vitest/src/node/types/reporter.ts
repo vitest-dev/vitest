@@ -1,7 +1,7 @@
 import type { File, TaskResultPack } from '@vitest/runner'
-import type { Vitest } from '../core'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
+import type { Vitest } from '../core'
 
 export interface Reporter {
   onInit?: (ctx: Vitest) => void

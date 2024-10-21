@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { BrowserServer } from './server'
 import crypto from 'node:crypto'
 import { stringify } from 'flatted'
 import { replacer } from './utils'
-import type { BrowserServer } from './server'
 
 export async function resolveTester(
   server: BrowserServer,

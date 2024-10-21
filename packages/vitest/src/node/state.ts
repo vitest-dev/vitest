@@ -1,7 +1,7 @@
 import type { File, Task, TaskResultPack } from '@vitest/runner'
-import { createFileTask } from '@vitest/runner/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { WorkspaceProject } from './workspace'
+import { createFileTask } from '@vitest/runner/utils'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 function isAggregateError(err: unknown): err is AggregateError {

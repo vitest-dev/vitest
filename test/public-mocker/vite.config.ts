@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
 import { mockerPlugin } from '@vitest/mocker/node'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   root: 'fixtures/redirect',

@@ -1,4 +1,5 @@
 import type {
+  Node as _Node,
   CallExpression,
   Function as FunctionNode,
   Identifier,
@@ -7,10 +8,9 @@ import type {
   Pattern,
   Property,
   VariableDeclaration,
-  Node as _Node,
 } from 'estree'
-import { walk as eswalk } from 'estree-walker'
 import type { Rollup } from 'vite'
+import { walk as eswalk } from 'estree-walker'
 
 export type * from 'estree'
 

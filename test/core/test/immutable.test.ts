@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import im from 'immutable'
+import { expect, test } from 'vitest'
 
 test('basic', () => {
   expect(im.List([{ x: 1 }])).toEqual(im.List([{ x: 1 }]))

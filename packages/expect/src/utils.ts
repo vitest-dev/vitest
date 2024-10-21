@@ -1,6 +1,6 @@
-import { processError } from '@vitest/utils/error'
 import type { Test } from '@vitest/runner/types'
 import type { Assertion } from './types'
+import { processError } from '@vitest/utils/error'
 
 export function recordAsyncExpect(
   test: any,

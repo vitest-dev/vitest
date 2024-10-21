@@ -265,8 +265,8 @@ This is the intended behaviour. It is usually a sign of bad code when mocking is
 ### Example
 
 ```js
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { failure, success } from './handlers.js'
 
 // get todos
@@ -392,9 +392,9 @@ export function readHelloWorld(path) {
 ```
 
 ```ts
+import { fs, vol } from 'memfs'
 // hello-world.test.js
 import { beforeEach, expect, it, vi } from 'vitest'
-import { fs, vol } from 'memfs'
 import { readHelloWorld } from './read-hello-world.js'
 
 // tell vitest to use fs mock from __mocks__ folder
@@ -441,9 +441,9 @@ Mock Service Worker (MSW) works by intercepting the requests your tests make, al
 
 You can use it like below in your [setup file](/config/#setupfiles)
 ```js
-import { afterAll, afterEach, beforeAll } from 'vitest'
+import { graphql, http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
-import { HttpResponse, graphql, http } from 'msw'
+import { afterAll, afterEach, beforeAll } from 'vitest'
 
 const posts = [
   {

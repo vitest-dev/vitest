@@ -1,8 +1,8 @@
-import { promises as fs } from 'node:fs'
-import mm from 'micromatch'
+import type { WorkspaceSpec } from '../node/pool'
 import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
-import type { WorkspaceSpec } from '../node/pool'
+import { promises as fs } from 'node:fs'
+import mm from 'micromatch'
 import { groupBy } from './base'
 
 export const envsOrder = ['node', 'jsdom', 'happy-dom', 'edge-runtime']

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { beforeEach, expect } from 'vitest'
-import { captureStdout, coverageTest, normalizeURL, runVitest, test } from '../utils'
 import { sum } from '../fixtures/src/math'
+import { captureStdout, coverageTest, normalizeURL, runVitest, test } from '../utils'
 
 beforeEach(() => {
   return captureStdout()

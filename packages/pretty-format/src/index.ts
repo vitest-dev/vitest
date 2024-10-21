@@ -5,6 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type {
+  Colors,
+  Config,
+  NewPlugin,
+  Options,
+  OptionsReceived,
+  Plugin,
+  Plugins,
+  Refs,
+  Theme,
+} from './types'
 import styles from 'tinyrainbow'
 import {
   printIteratorEntries,
@@ -18,26 +29,15 @@ import DOMElement from './plugins/DOMElement'
 import Immutable from './plugins/Immutable'
 import ReactElement from './plugins/ReactElement'
 import ReactTestComponent from './plugins/ReactTestComponent'
-import type {
-  Colors,
-  Config,
-  NewPlugin,
-  Options,
-  OptionsReceived,
-  Plugin,
-  Plugins,
-  Refs,
-  Theme,
-} from './types'
 
 export type {
   Colors,
   CompareKeys,
   Config,
+  NewPlugin,
+  OldPlugin,
   Options,
   OptionsReceived,
-  OldPlugin,
-  NewPlugin,
   Plugin,
   Plugins,
   PrettyFormatOptions,

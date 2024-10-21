@@ -1,8 +1,8 @@
-import type { UserConfig } from 'vitest/node'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { UserConfig } from 'vitest/node'
 import { describe, expect, it } from 'vitest'
-import { createVitest, parseCLI } from 'vitest/node'
 import { extraInlineDeps } from 'vitest/config'
+import { createVitest, parseCLI } from 'vitest/node'
 
 type VitestOptions = Parameters<typeof createVitest>[3]
 

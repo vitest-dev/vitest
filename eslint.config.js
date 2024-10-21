@@ -122,6 +122,7 @@ export default antfu(
       `test/${GLOB_SRC}`,
     ],
     rules: {
+      'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
     },
   },

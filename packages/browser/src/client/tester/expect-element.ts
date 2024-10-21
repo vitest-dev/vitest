@@ -1,6 +1,6 @@
-import * as matchers from '@testing-library/jest-dom/matchers'
 import type { Locator } from '@vitest/browser/context'
 import type { ExpectPollOptions } from 'vitest'
+import * as matchers from '@testing-library/jest-dom/matchers'
 import { chai, expect } from 'vitest'
 
 export async function setupExpectDom() {

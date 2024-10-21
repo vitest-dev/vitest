@@ -1,7 +1,7 @@
-import { defineWorkspace } from 'vitest/config'
-import MagicString from 'magic-string'
-import remapping from '@ampproject/remapping'
 import type { Plugin } from 'vite'
+import remapping from '@ampproject/remapping'
+import MagicString from 'magic-string'
+import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
   'space_2',

@@ -1,3 +1,4 @@
+import type { BrowserRPC } from '@vitest/browser/client'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -7,11 +8,10 @@ import type {
   UserEventFillOptions,
   UserEventHoverOptions,
 } from '@vitest/browser/context'
+import type { WorkerGlobalState } from 'vitest'
+import type { BrowserRunnerState } from '../../utils'
 import { page, server } from '@vitest/browser/context'
-import type { BrowserRPC } from '@vitest/browser/client'
 import {
-  Ivya,
-  type ParsedSelector,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -19,9 +19,9 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
+  Ivya,
+  type ParsedSelector,
 } from 'ivya'
-import type { WorkerGlobalState } from 'vitest'
-import type { BrowserRunnerState } from '../../utils'
 import { getBrowserState, getWorkerState } from '../../utils'
 import { getElementError } from '../public-utils'
 

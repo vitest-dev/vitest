@@ -1,5 +1,5 @@
-import { test } from 'vitest'
 import { resolve } from 'pathe'
+import { test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
 test('when nothing is changed, run nothing but keep watching', async () => {

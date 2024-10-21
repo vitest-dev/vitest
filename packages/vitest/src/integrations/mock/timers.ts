@@ -12,7 +12,7 @@ import type {
 } from '@sinonjs/fake-timers'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
-import { RealDate, mockDate, resetDate } from './date'
+import { mockDate, RealDate, resetDate } from './date'
 
 export class FakeTimers {
   private _global: typeof globalThis

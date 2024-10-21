@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
-import { coverageTest, isV8Provider, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 import { DecoratorsTester } from '../fixtures/src/decorators'
+import { coverageTest, isV8Provider, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 test('decorators generated metadata is ignored', async () => {
   await runVitest({

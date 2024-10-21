@@ -1,6 +1,6 @@
-import '../../src/mocks/external/external.mjs'
-import { expect, test, vi } from 'vitest'
 import axios from 'axios'
+import { expect, test, vi } from 'vitest'
+import '../../src/mocks/external/external.mjs'
 // @ts-expect-error mocked module
 import defaultFunc from '../../src/mocks/external/default-function.cjs'
 

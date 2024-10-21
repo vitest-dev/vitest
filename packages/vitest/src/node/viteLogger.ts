@@ -1,7 +1,7 @@
-import type { LogErrorOptions, LogLevel, LogType, Logger, LoggerOptions } from 'vite'
 import type { RollupError } from 'rollup'
-import colors from 'tinyrainbow'
+import type { LogErrorOptions, Logger, LoggerOptions, LogLevel, LogType } from 'vite'
 import type { Logger as VitestLogger } from './logger'
+import colors from 'tinyrainbow'
 
 const LogLevels: Record<LogLevel, number> = {
   silent: 0,

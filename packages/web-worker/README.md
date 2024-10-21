@@ -67,9 +67,9 @@ self.onmessage = (e) => {
 ```
 
 ```ts
+import MyWorker from '../worker?worker'
 // worker.test.ts
 import '@vitest/web-worker'
-import MyWorker from '../worker?worker'
 
 let worker = new MyWorker()
 // new Worker is also supported

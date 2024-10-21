@@ -1,12 +1,12 @@
 import type { DeferPromise } from '@vitest/utils'
-import { createDefer } from '@vitest/utils'
-import { hasFailed } from '@vitest/runner/utils'
 import type { TypecheckResults } from '../../typecheck/typechecker'
-import { Typechecker } from '../../typecheck/typechecker'
-import { groupBy } from '../../utils/base'
 import type { Vitest } from '../core'
 import type { ProcessPool, WorkspaceSpec } from '../pool'
 import type { WorkspaceProject } from '../workspace'
+import { hasFailed } from '@vitest/runner/utils'
+import { createDefer } from '@vitest/utils'
+import { Typechecker } from '../../typecheck/typechecker'
+import { groupBy } from '../../utils/base'
 
 export function createTypecheckPool(ctx: Vitest): ProcessPool {
   const promisesMap = new WeakMap<WorkspaceProject, DeferPromise<void>>()
