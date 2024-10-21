@@ -380,8 +380,8 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
 ```ts
-import AutoImport from 'unplugin-auto-import/vite'
 // vitest.config.ts
+import AutoImport from 'unplugin-auto-import/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
