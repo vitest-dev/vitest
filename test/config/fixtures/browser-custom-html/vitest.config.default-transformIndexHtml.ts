@@ -8,6 +8,18 @@ export default defineConfig({
         return [
           {
             tag: 'script',
+            injectTo: 'head-prepend',
+            attrs: {
+              type: 'importmap'
+            },
+            children: JSON.stringify({
+              "imports": {
+                "some-lib": "https://vitest.dev/some-lib",
+              },
+            })
+          },
+          {
+            tag: 'script',
             children: 'window.CUSTOM_INJECTED = true',
             injectTo: 'head',
           }
