@@ -1,6 +1,7 @@
-import axios from 'axios'
+/* eslint-disable perfectionist/sort-imports */
 import { expect, test, vi } from 'vitest'
 import '../../src/mocks/external/external.mjs'
+import axios from 'axios'
 // @ts-expect-error mocked module
 import defaultFunc from '../../src/mocks/external/default-function.cjs'
 
