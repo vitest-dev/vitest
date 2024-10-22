@@ -313,21 +313,29 @@ export interface VitestUtils {
   isMockFunction: (fn: any) => fn is MockInstance
 
   /**
-   * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function. This will only empty `.mock` state, it will not reset implementation.
+   * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function.
    *
-   * It is useful if you need to clean up mock between different assertions.
+   * This will only empty `.mock` state, it will not affect mock implementations.
+   *
+   * This is useful if you need to clean up mocks between different assertions within a test.
    */
   clearAllMocks: () => VitestUtils
 
   /**
-   * Calls [`.mockReset()`](https://vitest.dev/api/mock#mockreset) on every mocked function. This will empty `.mock` state, reset "once" implementations and force the base implementation to return `undefined` when invoked.
+   * Calls [`.mockReset()`](https://vitest.dev/api/mock#mockreset) on every mocked function.
    *
-   * This is useful when you want to completely reset a mock to the default state.
+   * This will empty `.mock` state, reset "once" implementations, and reset each mock's base implementation to its original.
+   *
+   * This is useful when you want to reset all mocks to their original states.
    */
   resetAllMocks: () => VitestUtils
 
   /**
-   * Calls [`.mockRestore()`](https://vitest.dev/api/mock#mockrestore) on every mocked function. This will restore all original implementations.
+   * Calls [`.mockRestore()`](https://vitest.dev/api/mock#mockrestore) on every mocked function.
+   *
+   * This will empty `.mock` state, restore all original mock implementations, and restore original descriptors of spied-on objects.
+   *
+   * This is useful for inter-test cleanup and/or removing mocks created by [`vi.spyOn(...)`](https://vitest.dev/api/vi#vi-spyon).
    */
   restoreAllMocks: () => VitestUtils
 
