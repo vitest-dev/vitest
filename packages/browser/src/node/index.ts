@@ -32,7 +32,9 @@ export async function createBrowserServer(
 
   const logLevel = (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info'
 
-  const logger = createViteLogger(logLevel)
+  const logger = createViteLogger(project.logger, logLevel, {
+    allowClearScreen: false,
+  })
 
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config

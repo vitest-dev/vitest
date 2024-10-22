@@ -15,11 +15,13 @@ To develop and test `vitest` package:
 
 1. Run `pnpm install` in `vitest`'s root folder
 
-2. Run `pnpm run dev` to build sources in watch mode
+2. Run `pnpm run build` to build all monorepo packages
+  - after this, you can use `pnpm run dev` to rebuild packages as you modify code
 
 3. Run
    - `pnpm run test` to run core tests
-   - `pnpm run test:all` to run all the suite
+   - `pnpm run test:ci` to run all the suite
+   - `cd test/(dir) && pnpm run test` to run a specific test suite
 
 > 💡 If you use VS Code, you can hit `⇧ ⌘ B` or `Ctrl + Shift + B` to launch all the necessary dev tasks.
 

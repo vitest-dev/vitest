@@ -137,3 +137,16 @@ error with a stack
     expect(stderr).toContain('Access denied to "/inaccesible/path".')
   })
 })
+
+test('user-event', async () => {
+  const { ctx } = await runBrowserTests({
+    root: './fixtures/user-event',
+  })
+  expect(Object.fromEntries(ctx.state.getFiles().map(f => [f.name, f.result.state]))).toMatchInlineSnapshot(`
+    {
+      "cleanup-retry.test.ts": "pass",
+      "cleanup1.test.ts": "pass",
+      "cleanup2.test.ts": "pass",
+    }
+  `)
+})

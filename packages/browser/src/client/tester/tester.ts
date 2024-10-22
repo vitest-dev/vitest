@@ -1,5 +1,5 @@
 import { SpyModule, collectTests, setupCommonEnv, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
-import { page } from '@vitest/browser/context'
+import { page, userEvent } from '@vitest/browser/context'
 import type { IframeMockEvent, IframeMockInvalidateEvent, IframeUnmockEvent } from '@vitest/browser/client'
 import { channel, client, onCancel, waitForChannel } from '@vitest/browser/client'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
@@ -75,7 +75,7 @@ async function prepareTestEnvironment(files: string[]) {
   files.forEach((filename) => {
     const currentVersion = browserHashMap.get(filename)
     if (!currentVersion || currentVersion[1] !== version) {
-      browserHashMap.set(filename, [true, version])
+      browserHashMap.set(filename, version)
     }
   })
 
@@ -168,6 +168,9 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       if (cleanupSymbol in page) {
         (page[cleanupSymbol] as any)()
       }
+      // need to cleanup for each tester
+      // since playwright keybaord API is stateful on page instance level
+      await userEvent.cleanup()
     }
     catch (error: any) {
       await client.rpc.onUnhandledError({

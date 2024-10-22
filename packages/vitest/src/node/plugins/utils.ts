@@ -75,7 +75,7 @@ export function resolveOptimizerConfig(
 
   // `optimizeDeps.disabled` is deprecated since v5.1.0-beta.1
   // https://github.com/vitejs/vite/pull/15184
-  if (major >= 5 && minor >= 1) {
+  if ((major >= 5 && minor >= 1) || major >= 6) {
     if (newConfig.optimizeDeps.disabled) {
       newConfig.optimizeDeps.noDiscovery = true
       newConfig.optimizeDeps.include = []

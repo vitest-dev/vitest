@@ -4,7 +4,7 @@ import { clear } from './clear'
 import { fill } from './fill'
 import { selectOptions } from './select'
 import { tab } from './tab'
-import { keyboard } from './keyboard'
+import { keyboard, keyboardCleanup } from './keyboard'
 import { dragAndDrop } from './dragAndDrop'
 import { hover } from './hover'
 import { upload } from './upload'
@@ -34,4 +34,5 @@ export default {
   __vitest_selectOptions: selectOptions,
   __vitest_dragAndDrop: dragAndDrop,
   __vitest_hover: hover,
+  __vitest_cleanup: keyboardCleanup,
 }
