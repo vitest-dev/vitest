@@ -8,9 +8,15 @@ test('clipboard', async () => {
     <input placeholder="third" />
   `;
 
+  // https://webdriver.io/docs/api/browser/keys/
+  // https://playwright.dev/docs/api/class-keyboard
   const modifier =
-    server.provider === 'playwright' && server.platform === 'darwin'
-      ? 'Meta'
+    server.provider === 'webdriverio'
+      ? server.platform === 'darwin'
+        ? 'Command'
+        : 'Control'
+      : server.provider === 'playwright'
+      ? 'ControlOrMeta'
       : 'Control';
   const copy = `{${modifier}>}{c}{/${modifier}}`;
   const cut = `{${modifier}>}{x}{/${modifier}}`;
