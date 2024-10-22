@@ -47,6 +47,9 @@ export async function loadDiffConfig(
   config: SerializedConfig,
   executor: VitestExecutor,
 ) {
+  if (typeof config.diff === 'object') {
+    return config.diff
+  }
   if (typeof config.diff !== 'string') {
     return
   }
