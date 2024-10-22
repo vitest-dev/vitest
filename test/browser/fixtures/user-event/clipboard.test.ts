@@ -8,10 +8,13 @@ test('clipboard', async () => {
     <input placeholder="third" />
   `;
 
-  const modifier = server.platform === 'darwin' ? 'Meta' : 'Control';
-  const copy = `{${modifier}>}{c}{/${modifier}}`
-  const cut = `{${modifier}>}{x}{/${modifier}}`
-  const paste = `{${modifier}>}{v}{/${modifier}}`
+  const modifier =
+    server.provider === 'playwright' && server.platform === 'darwin'
+      ? 'Meta'
+      : 'Control';
+  const copy = `{${modifier}>}{c}{/${modifier}}`;
+  const cut = `{${modifier}>}{x}{/${modifier}}`;
+  const paste = `{${modifier}>}{v}{/${modifier}}`;
 
   // write first "hello" and copy to clipboard
   await userEvent.click(page.getByPlaceholder('first'));
