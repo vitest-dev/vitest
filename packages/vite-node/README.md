@@ -83,8 +83,8 @@ In Vite Node, the server and runner (client) are separated, so you can integrate
 
 ```ts
 import { createServer } from 'vite'
-import { ViteNodeServer } from 'vite-node/server'
 import { ViteNodeRunner } from 'vite-node/client'
+import { ViteNodeServer } from 'vite-node/server'
 import { installSourcemapsSupport } from 'vite-node/source-map'
 
 // create vite server

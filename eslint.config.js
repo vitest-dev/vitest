@@ -100,6 +100,7 @@ export default antfu(
       `**/*.md`,
     ],
     rules: {
+      'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
       'import/first': 'off',
