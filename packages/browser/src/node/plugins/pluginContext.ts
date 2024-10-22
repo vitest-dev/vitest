@@ -97,7 +97,8 @@ async function getUserEventImport(provider: BrowserProvider, resolve: (id: strin
   if (!resolved) {
     throw new Error(`Failed to resolve user-event package from ${__dirname}`)
   }
-  return `import { userEvent as __vitest_user_event__ } from '${slash(
-    `/@fs/${resolved.id}`,
-  )}'\nconst _userEventSetup = __vitest_user_event__.setup()\n`
+  return `\
+import { userEvent as __vitest_user_event__ } from '${slash(`/@fs/${resolved.id}`)}'
+const _userEventSetup = __vitest_user_event__
+`
 }

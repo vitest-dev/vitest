@@ -49,6 +49,29 @@ export const keyboard: UserEventCommand<(text: string, state: KeyboardState) => 
   }
 }
 
+export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise<void>> = async (
+  context,
+  state,
+) => {
+  const { provider, contextId } = context
+  if (provider instanceof PlaywrightBrowserProvider) {
+    const page = provider.getPage(contextId)
+    for (const key of state.unreleased) {
+      await page.keyboard.up(key)
+    }
+  }
+  else if (provider instanceof WebdriverBrowserProvider) {
+    const keyboard = provider.browser!.action('key')
+    for (const key of state.unreleased) {
+      keyboard.up(key)
+    }
+    await keyboard.perform()
+  }
+  else {
+    throw new TypeError(`Provider "${context.provider.name}" does not support keyboard api`)
+  }
+}
+
 export async function keyboardImplementation(
   pressed: Set<string>,
   provider: BrowserProvider,

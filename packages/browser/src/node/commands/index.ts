@@ -9,7 +9,7 @@ import {
   writeFile,
 } from './fs'
 import { hover } from './hover'
-import { keyboard } from './keyboard'
+import { keyboard, keyboardCleanup } from './keyboard'
 import { screenshot } from './screenshot'
 import { selectOptions } from './select'
 import { tab } from './tab'
@@ -34,4 +34,5 @@ export default {
   __vitest_selectOptions: selectOptions,
   __vitest_dragAndDrop: dragAndDrop,
   __vitest_hover: hover,
+  __vitest_cleanup: keyboardCleanup,
 }

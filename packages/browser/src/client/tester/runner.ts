@@ -3,7 +3,7 @@ import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel } from '@vitest/browser/client'
-import { page } from '@vitest/browser/context'
+import { page, userEvent } from '@vitest/browser/context'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { originalPositionFor, TraceMap } from 'vitest/utils'
@@ -17,7 +17,7 @@ interface BrowserRunnerOptions {
 
 export const browserHashMap = new Map<
   string,
-  [test: boolean, timstamp: string]
+  string
 >()
 
 interface CoverageHandler {
@@ -41,6 +41,7 @@ export function createBrowserRunner(
     }
 
     onAfterRunTask = async (task: Task) => {
+      await userEvent.cleanup()
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
@@ -121,15 +122,15 @@ export function createBrowserRunner(
     }
 
     importFile = async (filepath: string) => {
-      let [test, hash] = this.hashMap.get(filepath) ?? [false, '']
-      if (hash === '') {
+      let hash = this.hashMap.get(filepath)
+      if (!hash) {
         hash = Date.now().toString()
-        this.hashMap.set(filepath, [false, hash])
+        this.hashMap.set(filepath, hash)
       }
 
       // on Windows we need the unit to resolve the test file
       const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
-      const query = `${test ? 'browserv' : 'v'}=${hash}`
+      const query = `browserv=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(/* @vite-ignore */ importpath)
     }
