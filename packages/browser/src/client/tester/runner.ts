@@ -40,8 +40,12 @@ export function createBrowserRunner(
       this.config = options.config
     }
 
-    onAfterRunTask = async (task: Task) => {
+    onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
       await userEvent.cleanup()
+      await super.onBeforeTryTask?.(...args)
+    }
+
+    onAfterRunTask = async (task: Task) => {
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
