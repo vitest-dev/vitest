@@ -4,7 +4,6 @@ import type { WorkspaceProject } from 'vitest/node'
 import type { BrowserServer } from './server'
 import { lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils'
 import MagicString from 'magic-string'
@@ -15,13 +14,12 @@ import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vit
 import BrowserContext from './plugins/pluginContext'
 import { resolveOrchestrator } from './serverOrchestrator'
 import { resolveTester } from './serverTester'
+import { distRoot } from './constants'
 
 export { defineBrowserCommand } from './commands/utils'
 export type { BrowserCommand } from 'vitest/node'
 
 export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
-  const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
-  const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
 
   function isPackageExists(pkg: string, root: string) {
@@ -325,6 +323,12 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     BrowserContext(browserServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
+      filter(id) {
+        if (id.includes(distRoot)) {
+          return false
+        }
+        return true
+      },
     }),
     {
       name: 'vitest:browser:config',

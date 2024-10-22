@@ -34,8 +34,8 @@ export interface ModuleMockerMSWInterceptorOptions {
 export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
   protected readonly mocks: MockerRegistry = new MockerRegistry()
 
-  private started = false
-  private startPromise: undefined | Promise<unknown>
+  private startPromise: undefined | Promise<SetupWorker>
+  private worker: undefined | SetupWorker
 
   constructor(
     private readonly options: ModuleMockerMSWInterceptorOptions = {},
@@ -78,9 +78,9 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
     })
   }
 
-  protected async init(): Promise<unknown> {
-    if (this.started) {
-      return
+  protected async init(): Promise<SetupWorker> {
+    if (this.worker) {
+      return this.worker
     }
     if (this.startPromise) {
       return this.startPromise
@@ -126,12 +126,12 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
           }
         }),
       )
-      return worker.start(this.options.mswOptions)
+      return worker.start(this.options.mswOptions).then(() => worker)
     }).finally(() => {
-      this.started = true
+      this.worker = worker
       this.startPromise = undefined
     })
-    await this.startPromise
+    return await this.startPromise
   }
 }
 

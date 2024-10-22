@@ -10,6 +10,8 @@ import { BrowserServer } from './server'
 export { createBrowserPool } from './pool'
 export type { BrowserServer } from './server'
 
+export { distRoot } from './constants'
+
 export async function createBrowserServer(
   project: WorkspaceProject,
   configFile: string | undefined,

@@ -3,7 +3,6 @@ import { channel, client } from '@vitest/browser/client'
 import { globalChannel, type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
-import { createModuleMockerInterceptor } from './tester/msw'
 import { getUiAPI } from './ui'
 import { getBrowserState, getConfig } from './utils'
 
@@ -13,7 +12,6 @@ const ID_ALL = '__vitest_all__'
 class IframeOrchestrator {
   private cancelled = false
   private runningFiles = new Set<string>()
-  private interceptor = createModuleMockerInterceptor()
   private iframes = new Map<string, HTMLIFrameElement>()
 
   public async init() {
@@ -186,19 +184,6 @@ class IframeOrchestrator {
         }
         break
       }
-      case 'mock:invalidate':
-        this.interceptor.invalidate()
-        break
-      case 'unmock':
-        await this.interceptor.delete(e.data.url)
-        break
-      case 'mock':
-        await this.interceptor.register(e.data.module)
-        break
-      case 'mock-factory:error':
-      case 'mock-factory:response':
-        // handled manually
-        break
       default: {
           e.data satisfies never
 

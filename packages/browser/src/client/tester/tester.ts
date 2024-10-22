@@ -1,7 +1,6 @@
-import type { IframeMockEvent, IframeMockInvalidateEvent, IframeUnmockEvent } from '@vitest/browser/client'
-import { channel, client, onCancel, waitForChannel } from '@vitest/browser/client'
+import { SpyModule, collectTests, setupCommonEnv, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { page, userEvent } from '@vitest/browser/context'
-import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
+import { channel, client, onCancel } from '@vitest/browser/client'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupExpectDom } from './expect-element'
@@ -9,6 +8,7 @@ import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
+import { createModuleMockerInterceptor } from './msw'
 
 const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 
@@ -34,28 +34,10 @@ async function prepareTestEnvironment(files: string[]) {
   state.onCancel = onCancel
   state.rpc = rpc as any
 
+  // TODO: expose `worker`
+  const interceptor = createModuleMockerInterceptor()
   const mocker = new VitestBrowserClientMocker(
-    {
-      async delete(url: string) {
-        channel.postMessage({
-          type: 'unmock',
-          url,
-        } satisfies IframeUnmockEvent)
-        await waitForChannel('unmock:done')
-      },
-      async register(module) {
-        channel.postMessage({
-          type: 'mock',
-          module: module.toJSON(),
-        } satisfies IframeMockEvent)
-        await waitForChannel('mock:done')
-      },
-      invalidate() {
-        channel.postMessage({
-          type: 'mock:invalidate',
-        } satisfies IframeMockInvalidateEvent)
-      },
-    },
+    interceptor,
     rpc,
     SpyModule.spyOn,
     {
@@ -78,8 +60,6 @@ async function prepareTestEnvironment(files: string[]) {
       browserHashMap.set(filename, version)
     }
   })
-
-  mocker.setupWorker()
 
   onCancel.then((reason) => {
     runner.onCancel?.(reason)
