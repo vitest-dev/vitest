@@ -113,8 +113,8 @@ If you have not used Vite before, make sure you have your framework's plugin ins
 
 ::: code-group
 ```ts [vue]
-import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
+import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue()],
@@ -128,8 +128,8 @@ export default defineConfig({
 })
 ```
 ```ts [svelte]
-import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { defineConfig } from 'vitest/config'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 
 export default defineConfig({
   plugins: [svelte()],
@@ -143,8 +143,8 @@ export default defineConfig({
 })
 ```
 ```ts [solid]
-import solidPlugin from 'vite-plugin-solid'
 import { defineConfig } from 'vitest/config'
+import solidPlugin from 'vite-plugin-solid'
 
 export default defineConfig({
   plugins: [solidPlugin()],
@@ -158,8 +158,8 @@ export default defineConfig({
 })
 ```
 ```ts [marko]
-import marko from '@marko/vite'
 import { defineConfig } from 'vitest/config'
+import marko from '@marko/vite'
 
 export default defineConfig({
   plugins: [marko()],
@@ -356,8 +356,8 @@ If your framework is not represented, feel free to create your own package - it 
 Besides rendering components and locating elements, you will also need to make assertions. Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
 
 ```ts
-import { page } from '@vitest/browser/context'
 import { expect } from 'vitest'
+import { page } from '@vitest/browser/context'
 // element is rendered correctly
 await expect.element(page.getByText('Hello World')).toBeInTheDocument()
 ```
@@ -393,8 +393,8 @@ test('properly handles v-model', async () => {
 })
 ```
 ```ts [svelte]
-import { expect, test } from 'vitest'
 import { render } from 'vitest-browser-svelte'
+import { expect, test } from 'vitest'
 
 import Greeter from './greeter.svelte'
 
@@ -444,9 +444,9 @@ For unsupported frameworks, we recommend using `testing-library` packages:
 // based on @testing-library/preact example
 // https://testing-library.com/docs/preact-testing-library/example
 
-import { render } from '@testing-library/preact'
-import { page } from '@vitest/browser/context'
 import { h } from 'preact'
+import { page } from '@vitest/browser/context'
+import { render } from '@testing-library/preact'
 
 import HiddenMessage from '../hidden-message'
 

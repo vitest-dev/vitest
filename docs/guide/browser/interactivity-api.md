@@ -47,8 +47,8 @@ Creates a new user event instance. This is useful if you need to keep the state 
 Unlike `@testing-library/user-event`, the default `userEvent` instance from `@vitest/browser/context` is created once, not every time its methods are called! You can see the difference in how it works in this snippet:
 
 ```ts
-import { userEvent as originalUserEvent } from '@testing-library/user-event'
 import { userEvent as vitestUserEvent } from '@vitest/browser/context'
+import { userEvent as originalUserEvent } from '@testing-library/user-event'
 
 await vitestUserEvent.keyboard('{Shift}') // press shift without releasing
 await vitestUserEvent.keyboard('{/Shift}') // releases shift

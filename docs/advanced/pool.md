@@ -65,7 +65,7 @@ To communicate between different processes, you can create methods object using 
 ```ts
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { createMethodsRPC, WorkspaceProject } from 'vitest/node'
+import { WorkspaceProject, createMethodsRPC } from 'vitest/node'
 
 function createRpc(project: WorkspaceProject, wss: WebSocketServer) {
   return createBirpc(

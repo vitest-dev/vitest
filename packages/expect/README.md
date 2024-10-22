@@ -5,12 +5,12 @@ Jest's expect matchers as a Chai plugin.
 ## Usage
 
 ```js
+import * as chai from 'chai'
 import {
   JestAsymmetricMatchers,
   JestChaiExpect,
   JestExtend,
 } from '@vitest/expect'
-import * as chai from 'chai'
 
 // allows using expect.extend instead of chai.use to extend plugins
 chai.use(JestExtend)

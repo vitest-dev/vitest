@@ -67,8 +67,8 @@ If you are using TypeScript or want to have correct type hints in `expect`, make
 Tests in the browser might fail inconsistently due to their asynchronous nature. Because of this, it is important to have a way to guarantee that assertions succeed even if the condition is delayed (by a timeout, network request, or animation, for example). For this purpose, Vitest provides retriable assertions out of the box via the [`expect.poll`](/api/expect#poll) and `expect.element` APIs:
 
 ```ts
-import { page } from '@vitest/browser/context'
 import { expect, test } from 'vitest'
+import { page } from '@vitest/browser/context'
 
 test('error banner is rendered', async () => {
   triggerError()

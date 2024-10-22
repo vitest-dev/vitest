@@ -381,8 +381,8 @@ If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplu
 
 ```ts
 // vitest.config.ts
-import AutoImport from 'unplugin-auto-import/vite'
 import { defineConfig } from 'vitest/config'
+import AutoImport from 'unplugin-auto-import/vite'
 
 export default defineConfig({
   plugins: [

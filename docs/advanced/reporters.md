@@ -64,8 +64,8 @@ This is an experimental API. Breaking changes might not follow SemVer. Please pi
 You can get access to this API by calling `vitest.state.getReportedEntity(runnerTask)`:
 
 ```ts twoslash
-import type { RunnerTestFile } from 'vitest'
 import type { Vitest } from 'vitest/node'
+import type { RunnerTestFile } from 'vitest'
 import type { Reporter, TestModule } from 'vitest/reporters'
 
 class MyReporter implements Reporter {
