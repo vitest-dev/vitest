@@ -6,17 +6,6 @@ import { dirname, join, resolve } from 'pathe'
 
 export const isWindows = process.platform === 'win32'
 
-const drive = isWindows ? process.cwd()[0] : null
-const driveOpposite = drive
-  ? drive === drive.toUpperCase()
-    ? drive.toLowerCase()
-    : drive.toUpperCase()
-  : null
-const driveRegexp = drive ? new RegExp(`(?:^|/@fs/)${drive}(\:[\\/])`) : null
-const driveOppositeRegext = driveOpposite
-  ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`)
-  : null
-
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
@@ -26,11 +15,6 @@ export const VALID_ID_PREFIX = '/@id/'
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(withTrailingSlash(base))) {
     id = `/${id.slice(base.length)}`
-  }
-
-  // keep drive the same as in process cwd
-  if (driveRegexp && !driveRegexp?.test(id) && driveOppositeRegext?.test(id)) {
-    id = id.replace(driveOppositeRegext, `${drive}$1`)
   }
 
   return id
