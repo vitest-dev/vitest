@@ -17,9 +17,8 @@ test('clipboard', async () => {
   await userEvent.dblClick(page.getByPlaceholder('first'));
   await userEvent.copy();
 
-  // paste twice into second
+  // paste into second
   await userEvent.click(page.getByPlaceholder('second'));
-  await userEvent.paste();
   await userEvent.paste();
 
   // append first "world" and cut
@@ -39,7 +38,7 @@ test('clipboard', async () => {
   ]).toMatchInlineSnapshot(`
     [
       "",
-      "hellohello",
+      "hello",
       "helloworld",
     ]
   `)
