@@ -19,6 +19,8 @@ import { resolveTester } from './serverTester'
 export { defineBrowserCommand } from './commands/utils'
 export type { BrowserCommand } from 'vitest/node'
 
+const versionRegexp = /(?:\?|&)v=\w{8}/
+
 export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
   const project = browserServer.project
 
@@ -164,7 +166,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           // them in _some_ tests, while keeping original modules in others
           // there is no way to configure that in Vite, so we patch it here
           // to always ignore the cache-control set by Vite in the next middleware
-          if (req.url && req.url.includes('/deps/') && !req.url.includes('chunk-')) {
+          if (req.url && versionRegexp.test(req.url) && !req.url.includes('chunk-')) {
             res.setHeader('Cache-Control', 'no-cache')
             const setHeader = res.setHeader.bind(res)
             res.setHeader = function (name, value) {
