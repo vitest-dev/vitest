@@ -172,6 +172,12 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
    */
   upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
+
+  // TODO: doc https://testing-library.com/docs/user-event/clipboard/
+  copy: () => Promise<void>
+  cut: () => Promise<void>
+  paste: () => Promise<void>
+
   /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
