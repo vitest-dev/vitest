@@ -54,8 +54,7 @@
     "dev": "rollup -c --watch"
   },
   "peerDependencies": {
-    "@vitest/spy": "workspace:*",
-    "msw": "^2.3.5",
+    "msw": "^2.4.9",
     "vite": "^5.0.0"
   },
   "peerDependenciesMeta": {
