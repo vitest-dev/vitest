@@ -101,13 +101,6 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
         http.get(/.+/, async ({ request }) => {
           const path = cleanQuery(request.url.slice(location.origin.length))
           if (!this.mocks.has(path)) {
-            // do not cache deps like Vite does for performance
-            // because we want to be able to update mocks without restarting the server
-            // TODO: check if it's still neded - we invalidate modules after each test
-            if (path.includes('/deps/')) {
-              return fetch(bypass(request))
-            }
-
             return passthrough()
           }
 
@@ -149,20 +142,6 @@ function passthrough() {
       'x-msw-intention': 'passthrough',
     },
   })
-}
-
-function bypass(request: Request) {
-  const clonedRequest = request.clone()
-  clonedRequest.headers.set('x-msw-intention', 'bypass')
-  const cacheControl = clonedRequest.headers.get('cache-control')
-  if (cacheControl) {
-    clonedRequest.headers.set(
-      'cache-control',
-      // allow reinvalidation of the cache so mocks can be updated
-      cacheControl.replace(', immutable', ''),
-    )
-  }
-  return clonedRequest
 }
 
 const replacePercentageRE = /%/g

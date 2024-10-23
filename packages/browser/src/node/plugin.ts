@@ -158,6 +158,24 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             res.end(buffer)
           })
         }
+        server.middlewares.use((req, res, next) => {
+          // 9000 mega head move
+          // Vite always caches optimized dependencies, but users might mock
+          // them in _some_ tests, while keeping original modules in others
+          // there is no way to configure that in Vite, so we patch it here
+          // to always ignore the cache-control set by Vite in the next middleware
+          if (req.url && req.url.includes('/deps/') && !req.url.includes('chunk-')) {
+            res.setHeader('Cache-Control', 'no-cache')
+            const setHeader = res.setHeader.bind(res)
+            res.setHeader = function (name, value) {
+              if (name === 'Cache-Control') {
+                return res
+              }
+              return setHeader(name, value)
+            }
+          }
+          next()
+        })
       },
     },
     {
