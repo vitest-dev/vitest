@@ -302,7 +302,7 @@ export function parseFilter(f: string) {
     }
   }
   else if (lineNumber.includes('-')) {
-    throw new Error('Range line numbers are not allowed')
+    throw new Error(`Range line numbers are not allowed: ${f}`)
   }
   else {
     return { filename: f }

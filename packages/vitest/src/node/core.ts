@@ -1153,9 +1153,10 @@ export class Vitest {
 
   public async globTestSpecs(filters: string[] = []) {
     const files: TestSpecification[] = []
+    const dir = this.config.dir || this.config.root
     const parsedFilters = filters.map(f => parseFilter(f))
     const testLocations = groupFilters(parsedFilters.map(
-      f => ({ ...f, filename: resolve(f.filename) }),
+      f => ({ ...f, filename: resolve(dir, f.filename) }),
     ))
 
     // Key is file and val sepcifies whether we have matched this file with testLocation
@@ -1186,7 +1187,7 @@ export class Vitest {
 
     Object.entries(testLocations).forEach(([filepath, loc]) => {
       if (loc.length !== 0 && !testLocHasMatch[filepath]) {
-        const rel = relative(this.config.dir || this.config.root, filepath)
+        const rel = relative(dir, filepath)
 
         this.logger.printError(new Error(`Couldn\'t find file "${rel}".\n`
           + 'Note when specifying the test location you have to specify the full test filename.',
