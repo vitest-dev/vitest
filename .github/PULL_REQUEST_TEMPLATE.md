@@ -16,4 +16,4 @@
 - [ ] If you introduce new functionality, document it. You can run documentation with `pnpm run docs` command.
 
 ### Changesets
-- [ ] Changes in changelog are generated from PR name. Please, make sure that it explains your changes in an understandable manner. Please, prefix changeset messages with `feat:`, `fix:`, `perf:`, `docs:`, or `chore:`.
+- [ ] Changes in changelog are generated from PR name. Please, make sure that it explains your changes in an understandable manner. Please, prefix changeset messages with `feat:`, `fix:`, `perf:`, `docs:`, `ci:` or `chore:`.
