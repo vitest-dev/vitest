@@ -1,14 +1,14 @@
-import { SpyModule, collectTests, setupCommonEnv, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
-import { page, userEvent } from '@vitest/browser/context'
 import { channel, client, onCancel } from '@vitest/browser/client'
+import { page, userEvent } from '@vitest/browser/context'
+import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
+import { createModuleMockerInterceptor } from './msw'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
-import { createModuleMockerInterceptor } from './msw'
 
 const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 
