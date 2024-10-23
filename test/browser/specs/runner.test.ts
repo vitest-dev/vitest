@@ -144,6 +144,7 @@ test('user-event', async () => {
   })
   expect(Object.fromEntries(ctx.state.getFiles().map(f => [f.name, f.result.state]))).toMatchInlineSnapshot(`
     {
+      "cleanup-retry.test.ts": "pass",
       "cleanup1.test.ts": "pass",
       "cleanup2.test.ts": "pass",
     }

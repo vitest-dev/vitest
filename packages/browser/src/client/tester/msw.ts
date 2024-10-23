@@ -41,6 +41,7 @@ export function createModuleMockerInterceptor() {
           scope: '/',
         },
       },
+      onUnhandledRequest: 'bypass',
       quiet: true,
     },
   })
