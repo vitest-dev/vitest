@@ -12,9 +12,7 @@ test('clipboard', async () => {
   // https://playwright.dev/docs/api/class-keyboard
   const modifier =
     server.provider === 'webdriverio'
-      ? server.platform === 'darwin'
-        ? 'Command'
-        : 'Control'
+      ? 'Ctrl'
       : server.provider === 'playwright'
       ? 'ControlOrMeta'
       : 'Control';
