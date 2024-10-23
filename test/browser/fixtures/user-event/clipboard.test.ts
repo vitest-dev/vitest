@@ -2,6 +2,9 @@ import { expect, test } from 'vitest';
 import { page, userEvent, server } from '@vitest/browser/context';
 
 test('clipboard', async () => {
+  // make it smaller since webdriverio fails when scaled
+  page.viewport(300, 300)
+
   document.body.innerHTML = `
     <input placeholder="first" />
     <input placeholder="second" />
@@ -31,8 +34,9 @@ test('clipboard', async () => {
   await userEvent.keyboard(paste);
   await userEvent.keyboard(paste);
 
-  // cut first "hello"
+  // append first "world" and cut
   await userEvent.click(page.getByPlaceholder('first'));
+  await userEvent.keyboard('world');
   await userEvent.keyboard(`{selectall}`);
   await userEvent.keyboard(cut);
 
@@ -40,7 +44,6 @@ test('clipboard', async () => {
   await userEvent.click(page.getByPlaceholder('third'));
   await userEvent.keyboard(paste);
 
-  // hellohello
   expect([
     (page.getByPlaceholder('first').element() as any).value,
     (page.getByPlaceholder('second').element() as any).value,
@@ -49,7 +52,7 @@ test('clipboard', async () => {
     [
       "",
       "hellohello",
-      "hello",
+      "helloworld",
     ]
   `)
 });
