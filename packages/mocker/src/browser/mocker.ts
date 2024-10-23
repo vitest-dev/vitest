@@ -7,7 +7,6 @@ import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
 
 const { now } = Date
 
-// TODO: define an interface thath both node.js and browser mocker can implement
 export class ModuleMocker {
   protected registry: MockerRegistry = new MockerRegistry()
 
@@ -62,7 +61,7 @@ export class ModuleMocker {
     const resolved = await this.rpc.resolveId(id, importer)
     if (resolved == null) {
       throw new Error(
-        `[vitest] Cannot resolve ${id} imported from ${importer}`,
+        `[vitest] Cannot resolve "${id}" imported from "${importer}"`,
       )
     }
     const ext = extname(resolved.id)

@@ -360,12 +360,21 @@ export class WorkspaceProject {
       return
     }
     await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
-    const { createBrowserServer } = await import('@vitest/browser')
+    const { createBrowserServer, distRoot } = await import('@vitest/browser')
     await this.browser?.close()
     const browser = await createBrowserServer(
       this,
       configFile,
-      [...MocksPlugins()],
+      [
+        ...MocksPlugins({
+          filter(id) {
+            if (id.includes(distRoot)) {
+              return false
+            }
+            return true
+          },
+        }),
+      ],
       [CoverageTransform(this.ctx)],
     )
     this.browser = browser

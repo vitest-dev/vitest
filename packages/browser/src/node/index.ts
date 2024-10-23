@@ -7,7 +7,9 @@ import BrowserPlugin from './plugin'
 import { setupBrowserRpc } from './rpc'
 import { BrowserServer } from './server'
 
+export { distRoot } from './constants'
 export { createBrowserPool } from './pool'
+
 export type { BrowserServer } from './server'
 
 export async function createBrowserServer(
