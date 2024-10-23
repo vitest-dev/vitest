@@ -129,8 +129,6 @@ export async function keyboardImplementation(
 
     for (const { releasePrevious, releaseSelf, repeat, keyDef } of actions) {
       let key = keyDef.key!
-      // const code = 'location' in keyDef ? keyDef.key! : keyDef.code!
-      // const special = Key[code as 'Shift']
       const special = Key[key as 'Shift']
 
       if (special) {
