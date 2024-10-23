@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
+import type { ErrorWithDiff } from '@vitest/utils'
+import type { SerializedConfig } from 'vitest'
 import type {
   BrowserProvider,
   BrowserScript,
@@ -8,14 +8,14 @@ import type {
   Vite,
   WorkspaceProject,
 } from 'vitest/node'
-import { join, resolve } from 'pathe'
-import type { ErrorWithDiff } from '@vitest/utils'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { slash } from '@vitest/utils'
-import { type StackTraceParserOptions, parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
-import type { SerializedConfig } from 'vitest'
+import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
+import { join, resolve } from 'pathe'
+import { BrowserServerCDPHandler } from './cdp'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
-import { BrowserServerCDPHandler } from './cdp'
 
 export class BrowserServer implements IBrowserServer {
   public faviconUrl: string

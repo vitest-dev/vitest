@@ -1,21 +1,21 @@
-import { processError } from '@vitest/utils/error'
-import { toArray } from '@vitest/utils'
-import type { File, SuiteHooks } from './types/tasks'
 import type { VitestRunner } from './types/runner'
+import type { File, SuiteHooks } from './types/tasks'
+import { toArray } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
+import { collectorContext } from './context'
+import { getHooks, setHooks } from './map'
+import { runSetupFiles } from './setup'
+import {
+  clearCollectorContext,
+  createSuiteHooks,
+  getDefaultSuite,
+} from './suite'
 import {
   calculateSuiteHash,
   createFileTask,
   interpretTaskModes,
   someTasksAreOnly,
 } from './utils/collect'
-import {
-  clearCollectorContext,
-  createSuiteHooks,
-  getDefaultSuite,
-} from './suite'
-import { getHooks, setHooks } from './map'
-import { collectorContext } from './context'
-import { runSetupFiles } from './setup'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 

@@ -1,7 +1,7 @@
-import node from './node'
-import jsdom from './jsdom'
-import happy from './happy-dom'
 import edge from './edge-runtime'
+import happy from './happy-dom'
+import jsdom from './jsdom'
+import node from './node'
 
 export const environments = {
   node,

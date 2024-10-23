@@ -1,6 +1,4 @@
 import type { Awaitable } from '@vitest/utils'
-import { getSafeTimers, shuffle } from '@vitest/utils'
-import { processError } from '@vitest/utils/error'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { VitestRunner } from './types/runner'
 import type {
@@ -18,14 +16,16 @@ import type {
   TaskState,
   Test,
 } from './types/tasks'
-import { partitionSuiteChildren } from './utils/suite'
-import { limitConcurrency } from './utils/limit-concurrency'
-import { getFn, getHooks } from './map'
+import { getSafeTimers, shuffle } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
-import { setCurrentTest } from './test-state'
-import { hasFailed, hasTests } from './utils/tasks'
 import { PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
+import { getFn, getHooks } from './map'
+import { setCurrentTest } from './test-state'
+import { limitConcurrency } from './utils/limit-concurrency'
+import { partitionSuiteChildren } from './utils/suite'
+import { hasFailed, hasTests } from './utils/tasks'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now

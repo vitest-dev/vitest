@@ -7,10 +7,10 @@ import {
   currentLogs,
   isReport,
 } from '~/composables/client'
-import type { Params } from '~/composables/params'
-import { viewMode } from '~/composables/params'
 import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
+import type { Params } from '~/composables/params'
+import { viewMode } from '~/composables/params'
 import { getProjectNameColor } from '~/utils/task'
 
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })

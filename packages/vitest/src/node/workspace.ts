@@ -1,6 +1,25 @@
+import type {
+  TransformResult,
+  ViteDevServer,
+  InlineConfig as ViteInlineConfig,
+} from 'vite'
+import type { Typechecker } from '../typecheck/typechecker'
+import type { ProvidedContext } from '../types/general'
+import type { Vitest } from './core'
+import type { GlobalSetupFile } from './globalSetup'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
+import type { BrowserServer } from './types/browser'
+import type {
+  ResolvedConfig,
+  SerializedConfig,
+  UserConfig,
+  UserWorkspaceConfig,
+} from './types/config'
 import { promises as fs } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { deepMerge, nanoid } from '@vitest/utils'
+import fg from 'fast-glob'
 import mm from 'micromatch'
 import {
   dirname,
@@ -10,37 +29,18 @@ import {
   resolve,
   toNamespacedPath,
 } from 'pathe'
-import type {
-  TransformResult,
-  ViteDevServer,
-  InlineConfig as ViteInlineConfig,
-} from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import fg from 'fast-glob'
-import { deepMerge, nanoid } from '@vitest/utils'
-import type { Typechecker } from '../typecheck/typechecker'
 import { setup } from '../api/setup'
-import type { ProvidedContext } from '../types/general'
-import type {
-  ResolvedConfig,
-  SerializedConfig,
-  UserConfig,
-  UserWorkspaceConfig,
-} from './types/config'
-import type { BrowserServer } from './types/browser'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
-import { WorkspaceVitestPlugin } from './plugins/workspace'
-import { createViteServer } from './vite'
-import type { GlobalSetupFile } from './globalSetup'
-import { loadGlobalSetupFiles } from './globalSetup'
-import { MocksPlugins } from './plugins/mocks'
-import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
-import type { Vitest } from './core'
+import { loadGlobalSetupFiles } from './globalSetup'
+import { CoverageTransform } from './plugins/coverageTransform'
+import { MocksPlugins } from './plugins/mocks'
+import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { TestProject } from './reported-workspace-project'
 import { TestSpecification } from './spec'
-import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
+import { createViteServer } from './vite'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string

@@ -1,8 +1,9 @@
-import { defineConfig } from 'vitepress'
-import { withPwa } from '@vite-pwa/vitepress'
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
+import { withPwa } from '@vite-pwa/vitepress'
+import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import { version } from '../../package.json'
+import { teamMembers } from './contributors'
 import {
   contributing,
   discord,
@@ -18,7 +19,6 @@ import {
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
-import { teamMembers } from './contributors'
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({

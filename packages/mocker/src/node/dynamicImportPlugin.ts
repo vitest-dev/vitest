@@ -1,7 +1,7 @@
 import type { SourceMap } from 'magic-string'
-import MagicString from 'magic-string'
 import type { Plugin, Rollup } from 'vite'
 import type { Expression, Positioned } from './esmWalker'
+import MagicString from 'magic-string'
 import { esmWalker } from './esmWalker'
 
 const regexDynamicImport = /import\s*\(/

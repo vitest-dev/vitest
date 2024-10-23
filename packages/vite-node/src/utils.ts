@@ -1,8 +1,8 @@
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import { builtinModules } from 'node:module'
-import { existsSync, promises as fsp } from 'node:fs'
-import { dirname, join, resolve } from 'pathe'
 import type { Arrayable, Nullable } from './types'
+import { existsSync, promises as fsp } from 'node:fs'
+import { builtinModules } from 'node:module'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { dirname, join, resolve } from 'pathe'
 
 export const isWindows = process.platform === 'win32'
 

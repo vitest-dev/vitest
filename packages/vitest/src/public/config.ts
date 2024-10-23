@@ -1,18 +1,18 @@
+import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
+
+import type { UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../node/types/config'
 import '../node/types/vite'
 
-import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
-import type { UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../node/types/config'
-
+export { extraInlineDeps } from '../constants'
 // will import vitest declare test in module 'vite'
 export {
-  defaultBrowserPort,
   configDefaults,
-  defaultInclude,
-  defaultExclude,
   coverageConfigDefaults,
+  defaultBrowserPort,
+  defaultExclude,
+  defaultInclude,
 } from '../defaults'
 export { mergeConfig } from 'vite'
-export { extraInlineDeps } from '../constants'
 export type { Plugin } from 'vite'
 
 export type { ConfigEnv, ViteUserConfig }

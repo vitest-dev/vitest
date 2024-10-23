@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import { resolve } from 'pathe'
+import { expect, test } from 'vitest'
 import { runViteNodeCli } from '../../test-utils'
 
 test('circular 1', async () => {

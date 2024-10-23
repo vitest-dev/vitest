@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import { createChainable } from '@vitest/runner/utils'
+import { describe, expect, it } from 'vitest'
 
 describe('chainable', () => {
   it('creates', () => {

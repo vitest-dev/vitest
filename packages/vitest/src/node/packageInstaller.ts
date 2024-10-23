@@ -1,7 +1,7 @@
-import url from 'node:url'
 import { createRequire } from 'node:module'
-import c from 'tinyrainbow'
+import url from 'node:url'
 import { isPackageExists } from 'local-pkg'
+import c from 'tinyrainbow'
 import { isCI } from '../utils/env'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))

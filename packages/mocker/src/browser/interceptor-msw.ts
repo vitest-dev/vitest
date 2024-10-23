@@ -1,9 +1,9 @@
-import type { SetupWorker, StartOptions } from 'msw/browser'
 import type { HttpHandler } from 'msw'
+import type { SetupWorker, StartOptions } from 'msw/browser'
 import type { ManualMockedModule, MockedModule } from '../registry'
+import type { ModuleMockerInterceptor } from './interceptor'
 import { MockerRegistry } from '../registry'
 import { cleanUrl } from '../utils'
-import type { ModuleMockerInterceptor } from './interceptor'
 
 export interface ModuleMockerMSWInterceptorOptions {
   /**
@@ -127,11 +127,10 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
         }),
       )
       return worker.start(this.options.mswOptions)
+    }).finally(() => {
+      this.started = true
+      this.startPromise = undefined
     })
-      .finally(() => {
-        this.started = true
-        this.startPromise = undefined
-      })
     await this.startPromise
   }
 }

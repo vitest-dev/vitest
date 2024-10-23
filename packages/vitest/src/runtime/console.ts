@@ -1,10 +1,10 @@
-import { Writable } from 'node:stream'
+import type { WorkerGlobalState } from '../types/worker'
 import { Console } from 'node:console'
 import { relative } from 'node:path'
+import { Writable } from 'node:stream'
 import { getSafeTimers } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { RealDate } from '../integrations/mock/date'
-import type { WorkerGlobalState } from '../types/worker'
 import { getWorkerState } from './utils'
 
 export const UNKNOWN_TEST_ID = '__vitest__unknown_test__'

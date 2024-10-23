@@ -1,8 +1,8 @@
-import readline from 'node:readline'
 import type { Writable } from 'node:stream'
+import readline from 'node:readline'
 import { stripVTControlCharacters } from 'node:util'
-import c from 'tinyrainbow'
 import { createDefer } from '@vitest/utils'
+import c from 'tinyrainbow'
 import { stdout as getStdout } from '../utils/base'
 
 const MAX_RESULT_COUNT = 10

@@ -1,7 +1,7 @@
 import type { ModuleCacheMap } from 'vite-node/client'
 
-import { getSafeTimers } from '@vitest/utils'
 import type { WorkerGlobalState } from '../types/worker'
+import { getSafeTimers } from '@vitest/utils'
 
 const NAME_WORKER_STATE = '__vitest_worker__'
 

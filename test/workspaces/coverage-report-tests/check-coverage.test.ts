@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { expect, test } from 'vitest'
 import libCoverage from 'istanbul-lib-coverage'
 import { resolve } from 'pathe'
+import { expect, test } from 'vitest'
 
 test('coverage exists', () => {
   expect(existsSync('./coverage')).toBe(true)

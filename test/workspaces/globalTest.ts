@@ -1,6 +1,6 @@
-import { readFile } from 'node:fs/promises'
-import assert from 'node:assert/strict'
 import type { GlobalSetupContext } from 'vitest/node'
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 
 declare module 'vitest' {
   interface ProvidedContext {

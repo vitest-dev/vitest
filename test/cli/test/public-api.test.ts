@@ -1,6 +1,6 @@
-import { expect, it } from 'vitest'
 import type { File, TaskResultPack, UserConfig } from 'vitest'
 import { resolve } from 'pathe'
+import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it.each([

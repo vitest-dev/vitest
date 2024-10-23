@@ -1,5 +1,5 @@
-import { expect, it } from 'vitest'
 import { resolve } from 'pathe'
+import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it('correctly runs workspace tests when workspace config path is specified', async () => {

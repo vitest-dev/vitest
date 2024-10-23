@@ -1,7 +1,7 @@
 import Filter from 'ansi-to-html'
 import { describe, expect, it } from 'vitest'
-import ViewConsoleOutputEntry from './ViewConsoleOutputEntry.vue'
 import { render } from '~/test'
+import ViewConsoleOutputEntry from './ViewConsoleOutputEntry.vue'
 
 describe('ViewConsoleOutputEntry', () => {
   it('test html entry', () => {

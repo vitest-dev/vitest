@@ -1,6 +1,6 @@
-import type { RunnerTask } from 'vitest'
-import type { BrowserRPC } from '@vitest/browser/client'
 import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
+import type { BrowserRPC } from '@vitest/browser/client'
+import type { RunnerTask } from 'vitest'
 import type {
   BrowserPage,
   Locator,

@@ -1,5 +1,5 @@
-import { createServer } from 'vite'
 import { resolve } from 'pathe'
+import { createServer } from 'vite'
 
 let teardownHappened = false
 

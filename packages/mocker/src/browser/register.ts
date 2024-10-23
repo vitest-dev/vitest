@@ -1,9 +1,9 @@
-import { spyOn } from '@vitest/spy'
 import type { ModuleMockerCompilerHints } from './hints'
-import { createCompilerHints } from './hints'
-import { hot, rpc } from './utils'
 import type { ModuleMockerInterceptor } from './index'
+import { spyOn } from '@vitest/spy'
+import { createCompilerHints } from './hints'
 import { ModuleMocker } from './index'
+import { hot, rpc } from './utils'
 
 declare const __VITEST_GLOBAL_THIS_ACCESSOR__: string
 declare const __VITEST_MOCKER_ROOT__: string

@@ -1,9 +1,9 @@
-import vm from 'node:vm'
+import type { FileMap } from './file-map'
+import type { ImportModuleDynamically, VMModule } from './types'
 import { Module as _Module, createRequire } from 'node:module'
+import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
-import type { ImportModuleDynamically, VMModule } from './types'
-import type { FileMap } from './file-map'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap

@@ -21,10 +21,10 @@ import * as arrayCjs from '../src/cjs/array-cjs'
 // @ts-expect-error is not typed with imports
 import * as classCjs from '../src/cjs/class-cjs'
 
+import format from '../src/cjs/default-function'
+
 // @ts-expect-error is not typed with imports
 import * as nestedDefaultCjs from '../src/cjs/nested-default-cjs'
-
-import format from '../src/cjs/default-function'
 
 // @ts-expect-error is not typed with imports
 import * as nestedDefaultExternalCjs from '../src/external/nested-default-cjs'

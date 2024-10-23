@@ -1,9 +1,9 @@
-import { stripVTControlCharacters } from 'node:util'
-import { basename, dirname, isAbsolute, relative } from 'pathe'
-import c from 'tinyrainbow'
 import type { SuiteHooks, Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
+import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
+import { basename, dirname, isAbsolute, relative } from 'pathe'
+import c from 'tinyrainbow'
 import {
   F_CHECK,
   F_CROSS,

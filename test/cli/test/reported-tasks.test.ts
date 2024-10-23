@@ -1,10 +1,10 @@
-import { beforeAll, expect, it } from 'vitest'
-import { resolve } from 'pathe'
 import type { RunnerTestFile } from 'vitest'
-import type { StateManager } from 'vitest/src/node/state.js'
 import type { WorkspaceProject } from 'vitest/node'
-import { runVitest } from '../../test-utils'
+import type { StateManager } from 'vitest/src/node/state.js'
 import type { TestCase, TestCollection, TestModule } from '../../../packages/vitest/src/node/reporters/reported-tasks'
+import { resolve } from 'pathe'
+import { beforeAll, expect, it } from 'vitest'
+import { runVitest } from '../../test-utils'
 
 const now = new Date()
 // const finishedFiles: File[] = []

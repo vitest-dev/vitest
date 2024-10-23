@@ -1,9 +1,9 @@
-import { extname, join } from 'pathe'
 import type { MockedModule, MockedModuleType } from '../registry'
-import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
 import type { ModuleMockOptions } from '../types'
-import { mockObject } from '../automocker'
 import type { ModuleMockerInterceptor } from './interceptor'
+import { extname, join } from 'pathe'
+import { mockObject } from '../automocker'
+import { AutomockedModule, MockerRegistry, RedirectedModule } from '../registry'
 
 const { now } = Date
 

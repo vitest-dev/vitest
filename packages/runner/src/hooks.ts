@@ -1,4 +1,3 @@
-import { assertTypes } from '@vitest/utils'
 import type {
   AfterAllListener,
   AfterEachListener,
@@ -9,10 +8,11 @@ import type {
   TaskHook,
   TaskPopulated,
 } from './types/tasks'
-import { getCurrentSuite, getRunner } from './suite'
-import { getCurrentTest } from './test-state'
+import { assertTypes } from '@vitest/utils'
 import { withTimeout } from './context'
 import { withFixtures } from './fixture'
+import { getCurrentSuite, getRunner } from './suite'
+import { getCurrentTest } from './test-state'
 
 function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout

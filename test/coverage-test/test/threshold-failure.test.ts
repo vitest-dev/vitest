@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
-import { coverageTest, isV8Provider, normalizeURL, runVitest, test } from '../utils'
 import { sum } from '../fixtures/src/math'
+import { coverageTest, isV8Provider, normalizeURL, runVitest, test } from '../utils'
 
 test('failing thresholds', async () => {
   const { exitCode, stderr } = await runVitest({

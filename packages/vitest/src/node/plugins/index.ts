@@ -1,28 +1,28 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import { relative } from 'pathe'
+import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
   deepMerge,
   notNullish,
   toArray,
 } from '@vitest/utils'
+import { relative } from 'pathe'
+import { defaultPort } from '../../constants'
 import { configDefaults, coverageConfigDefaults } from '../../defaults'
-import type { ResolvedConfig, UserConfig } from '../types/config'
+import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
-import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { defaultPort } from '../../constants'
 import { createViteLogger } from '../viteLogger'
-import { SsrReplacerPlugin } from './ssrReplacer'
-import { CSSEnablerPlugin } from './cssEnabler'
 import { CoverageTransform } from './coverageTransform'
+import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
+import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestOptimizer } from './optimizer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
-import { VitestOptimizer } from './optimizer'
-import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
