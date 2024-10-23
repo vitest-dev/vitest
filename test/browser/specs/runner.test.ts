@@ -139,14 +139,17 @@ error with a stack
 })
 
 test('user-event', async () => {
-  const { ctx } = await runBrowserTests({
+  const { ctx, stderr } = await runBrowserTests({
     root: './fixtures/user-event',
   })
+  onTestFailed(() => console.error(stderr))
+
   expect(Object.fromEntries(ctx.state.getFiles().map(f => [f.name, f.result.state]))).toMatchInlineSnapshot(`
     {
       "cleanup-retry.test.ts": "pass",
       "cleanup1.test.ts": "pass",
       "cleanup2.test.ts": "pass",
+      "clipboard.test.ts": "pass",
     }
   `)
 })
