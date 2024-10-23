@@ -98,6 +98,7 @@ export default antfu(
     files: [
       `docs/${GLOB_SRC}`,
       `**/*.md`,
+      `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
       'perfectionist/sort-imports': 'off',
