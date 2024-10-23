@@ -172,12 +172,27 @@ export interface UserEvent {
    * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
    */
   upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
-
-  // TODO: doc https://testing-library.com/docs/user-event/clipboard/
+  /**
+   * Copies the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#copy} testing-library API
+   */
   copy: () => Promise<void>
+  /**
+   * Cuts the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#cut} testing-library API
+   */
   cut: () => Promise<void>
+  /**
+   * Pastes the copied or cut content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#paste} testing-library API
+   */
   paste: () => Promise<void>
-
   /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
