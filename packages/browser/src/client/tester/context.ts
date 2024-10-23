@@ -31,6 +31,7 @@ function triggerCommand<T>(command: string, ...args: any[]) {
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
   let __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
+  let clipboardData: any
   const keyboard = {
     unreleased: [] as string[],
   }
@@ -129,21 +130,21 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     async copy() {
       if (typeof __tl_user_event__ !== 'undefined') {
-        await __tl_user_event__.copy()
+        clipboardData = await __tl_user_event__.copy()
         return
       }
       await userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
     },
     async cut() {
       if (typeof __tl_user_event__ !== 'undefined') {
-        await __tl_user_event__.cut()
+        clipboardData = await __tl_user_event__.cut()
         return
       }
       await userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
     },
     async paste() {
       if (typeof __tl_user_event__ !== 'undefined') {
-        await __tl_user_event__.paste()
+        await __tl_user_event__.paste(clipboardData)
         return
       }
       await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
