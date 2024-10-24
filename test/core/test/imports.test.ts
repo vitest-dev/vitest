@@ -15,7 +15,7 @@ test('dynamic relative import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = './../src/timeout'
-  const variableTimeoutMod = await import(timeoutPath)
+  const variableTimeoutMod = await import(/* @vite-ignore */ timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
@@ -31,7 +31,7 @@ test('dynamic aliased import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '#/timeout'
-  const variableTimeoutMod = await import(timeoutPath)
+  const variableTimeoutMod = await import(/* @vite-ignore */ timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
@@ -40,7 +40,7 @@ test('dynamic absolute from root import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '/src/timeout'
-  const variableTimeoutMod = await import(timeoutPath)
+  const variableTimeoutMod = await import(/* @vite-ignore */ timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
@@ -49,20 +49,20 @@ test('dynamic absolute with extension import works', async () => {
   const stringTimeoutMod = await import('./../src/timeout')
 
   const timeoutPath = '/src/timeout.ts'
-  const variableTimeoutMod = await import(timeoutPath)
+  const variableTimeoutMod = await import(/* @vite-ignore */ timeoutPath)
 
   expect(stringTimeoutMod).toBe(variableTimeoutMod)
 })
 
 test('data with dynamic import works', async () => {
   const dataUri = 'data:text/javascript;charset=utf-8,export default "hi"'
-  const { default: hi } = await import(dataUri)
+  const { default: hi } = await import(/* @vite-ignore */ dataUri)
   expect(hi).toBe('hi')
 })
 
 test('dynamic import coerces to string', async () => {
   const dataUri = 'data:text/javascript;charset=utf-8,export default "hi"'
-  const { default: hi } = await import({ toString: () => dataUri } as string)
+  const { default: hi } = await import(/* @vite-ignore */ { toString: () => dataUri } as string)
   expect(hi).toBe('hi')
 })
 
@@ -81,7 +81,7 @@ test('dynamic import has null prototype', async () => {
 
 test('dynamic import throws an error', async () => {
   const path = './some-unknown-path'
-  const imported = import(path)
+  const imported = import(/* @vite-ignore */ path)
   await expect(imported).rejects.toThrowError(/Failed to load url \.\/some-unknown-path/)
   // @ts-expect-error path does not exist
   await expect(() => import('./some-unknown-path')).rejects.toThrowError(/Failed to load/)
@@ -89,8 +89,8 @@ test('dynamic import throws an error', async () => {
 
 test('can import @vite/client', async () => {
   const name = '@vite/client'
-  await expect(import(name)).resolves.not.toThrow()
-  await expect(import(`/${name}`)).resolves.not.toThrow()
+  await expect(import(/* @vite-ignore */ name)).resolves.not.toThrow()
+  await expect(import(/* @vite-ignore */ `/${name}`)).resolves.not.toThrow()
 })
 
 describe('importing special files from node_modules', async () => {
@@ -104,7 +104,7 @@ describe('importing special files from node_modules', async () => {
     writeFile(css, '.foo { color: red; }'),
     writeFile(mp3, ''),
   ])
-  const importModule = (path: string) => import(path)
+  const importModule = (path: string) => import(/* @vite-ignore */ path)
 
   test('importing wasm with ?url query', async () => {
     const mod = await importModule('../src/node_modules/file.wasm?url')
@@ -141,8 +141,8 @@ describe.runIf(process.platform === 'win32')('importing files with different dri
     const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
     const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
     expect(lowercasePath).not.toBe(uppercasePath)
-    const mod1 = await import(lowercasePath)
-    const mod2 = await import(uppercasePath)
+    const mod1 = await import(/* @vite-ignore */ lowercasePath)
+    const mod2 = await import(/* @vite-ignore */ uppercasePath)
     const mod3 = await import('./../src/timeout')
     expect(mod1).toBe(mod2)
     expect(mod1).toBe(mod3)
@@ -156,9 +156,9 @@ describe.runIf(process.platform === 'win32')('importing files with different dri
     const lowercasePath = filepath.replace(`${upperDrive}:`, `${drive}:`)
     const uppercasePath = filepath.replace(`${drive}:`, `${upperDrive}:`)
     expect(lowercasePath).not.toBe(uppercasePath)
-    const mod1 = await import(lowercasePath)
+    const mod1 = await import(/* @vite-ignore */ lowercasePath)
     vi.resetModules() // since they reference the same global ESM cache, it should not matter
-    const mod2 = await import(uppercasePath)
+    const mod2 = await import(/* @vite-ignore */ uppercasePath)
     expect(mod1).toBe(mod2)
   })
 })

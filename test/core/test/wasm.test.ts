@@ -34,7 +34,7 @@ test('supports dynamic wasm imports', async () => {
 
 test('supports imports from "data:application/wasm" URI with base64 encoding', async () => {
   const importedWasmModule = await import(
-    `data:application/wasm;base64,${wasmFileBuffer.toString('base64')}`
+    /* @vite-ignore */ `data:application/wasm;base64,${wasmFileBuffer.toString('base64')}`
   )
   expect(importedWasmModule.add(0, 42)).toBe(42)
 })
@@ -43,7 +43,7 @@ test('supports imports from "data:application/wasm" URI with base64 encoding', a
 const isVm = process.execArgv.includes('--experimental-vm-modules')
 
 test('imports from "data:application/wasm" URI without explicit encoding fail', async () => {
-  const error = await getError(() => import(`data:application/wasm,${wasmFileBuffer.toString('base64')}`))
+  const error = await getError(() => import(/* @vite-ignore */ `data:application/wasm,${wasmFileBuffer.toString('base64')}`))
   if (isVm) {
     expect(error).toMatchInlineSnapshot(`[Error: Missing data URI encoding]`)
   }
@@ -54,7 +54,7 @@ test('imports from "data:application/wasm" URI without explicit encoding fail', 
 
 test('imports from "data:application/wasm" URI with invalid encoding fail', async () => {
   // @ts-expect-error import is not typed
-  const error = await getError(() => import('data:application/wasm;charset=utf-8,oops'))
+  const error = await getError(() => import(/* @vite-ignore */ 'data:application/wasm;charset=utf-8,oops'))
   if (isVm) {
     expect(error).toMatchInlineSnapshot(`[Error: Invalid data URI encoding: charset=utf-8]`)
   }
