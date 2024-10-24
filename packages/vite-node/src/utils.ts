@@ -6,6 +6,17 @@ import { dirname, join, resolve } from 'pathe'
 
 export const isWindows = process.platform === 'win32'
 
+const drive = isWindows ? process.cwd()[0] : null
+const driveOpposite = drive
+  ? drive === drive.toUpperCase()
+    ? drive.toLowerCase()
+    : drive.toUpperCase()
+  : null
+const driveRegexp = drive ? new RegExp(`(?:^|/@fs/)${drive}(\:[\\/])`) : null
+const driveOppositeRegext = driveOpposite
+  ? new RegExp(`(?:^|/@fs/)${driveOpposite}(\:[\\/])`)
+  : null
+
 export function slash(str: string) {
   return str.replace(/\\/g, '/')
 }
@@ -15,6 +26,13 @@ export const VALID_ID_PREFIX = '/@id/'
 export function normalizeRequestId(id: string, base?: string): string {
   if (base && id.startsWith(withTrailingSlash(base))) {
     id = `/${id.slice(base.length)}`
+  }
+
+  // keep drive the same as in process cwd. ideally, this should be resolved on Vite side
+  // Vite always resolves drive letters to the upper case because of the use of `realpathSync`
+  // https://github.com/vitejs/vite/blob/0ab20a3ee26eacf302415b3087732497d0a2f358/packages/vite/src/node/utils.ts#L635
+  if (driveRegexp && !driveRegexp?.test(id) && driveOppositeRegext?.test(id)) {
+    id = id.replace(driveOppositeRegext, `${drive}$1`)
   }
 
   return id
