@@ -1,3 +1,3 @@
 export function dynamicRelativeImport(file: string) {
-  return import(`./${file}.ts`)
+  return import(/* @vite-ignore */ `./${file}.ts`)
 }
