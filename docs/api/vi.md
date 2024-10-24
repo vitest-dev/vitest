@@ -224,6 +224,10 @@ vi.mock('./example.js')
 test('1 + 1 equals 10', async () => {
   vi.mocked(example.calc).mockReturnValue(10)
   expect(example.calc(1, '+', 1)).toBe(10)
+
+  // To partially mock `function someFn(): { prop1: string, prop2: number }`
+  vi.mocked(example.someFn, { partial: true }).mockReturnValue({ prop1: 'hello' })
+  // vi.mocked(example.someFn).mockReturnValue({ prop1: "hello" }) // this is a type error
 })
 ```
 
