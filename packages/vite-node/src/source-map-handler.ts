@@ -11,6 +11,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { sourceMapCache } from './source-map-cache'
+import { slash } from './utils'
 
 // Only install once if called multiple times
 let errorFormatterInstalled = false
@@ -168,6 +169,7 @@ function mapSourcePosition(position: OriginalMapping) {
   if (!position.source) {
     return position
   }
+  position.source = slash(position.source)
   let sourceMap = sourceMapCache[position.source]
   if (!sourceMap) {
     // Call the (overridable) retrieveSourceMap function to get the source map.
