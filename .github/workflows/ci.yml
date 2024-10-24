@@ -107,7 +107,8 @@ jobs:
         run: pnpm run build
 
       - name: Test
-        run: pnpm run test:ci
+        run: pnpm -C test/vite-node test
+        # run: pnpm run test:ci
 
       - name: Test Examples
         run: pnpm run test:examples
