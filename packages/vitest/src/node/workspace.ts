@@ -18,7 +18,8 @@ import type {
 import { promises as fs } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { deepMerge, nanoid } from '@vitest/utils'
+import path from 'node:path'
+import { deepMerge, nanoid, slash } from '@vitest/utils'
 import fg from 'fast-glob'
 import mm from 'micromatch'
 import {
@@ -27,7 +28,6 @@ import {
   join,
   relative,
   resolve,
-  toNamespacedPath,
 } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -302,7 +302,10 @@ export class WorkspaceProject {
     }
 
     const files = await fg(include, globOptions)
-    return files.map(file => resolve(cwd, file))
+    // keep the slashes consistent with Vite
+    // we are not using the pathe here because it normalizes the drive letter on Windows
+    // and we want to keep it the same as working dir
+    return files.map(file => slash(path.resolve(cwd, file)))
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
@@ -329,7 +332,7 @@ export class WorkspaceProject {
 
   filterFiles(testFiles: string[], filters: string[], dir: string) {
     if (filters.length && process.platform === 'win32') {
-      filters = filters.map(f => toNamespacedPath(f))
+      filters = filters.map(f => path.toNamespacedPath(f))
     }
 
     if (filters.length) {

@@ -259,14 +259,6 @@ function normalizeCliOptions(argv: CliOptions): CliOptions {
 async function start(mode: VitestRunMode, cliFilters: string[], options: CliOptions): Promise<void> {
   try {
     process.title = 'node (vitest)'
-    // pathe always normalizes the drive letter to be uppercase
-    // if user runs Vitest from c:/, the built-in ESM loader in tests
-    // will resolve a different Vitest instance than the one in vite-node
-    // we can either
-    // 1. normalize the CWD so it works in the CLI, but might break when API is used directly
-    // 2. ask "pathe" to not normalize the drive letter
-    // 2. don't use "pathe" when resolving paths
-    process.chdir(normalize(process.cwd()))
   }
   catch {}
 
