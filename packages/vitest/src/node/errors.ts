@@ -13,3 +13,11 @@ export class GitNotFoundError extends Error {
     super('Could not find Git root. Have you initialized git with `git init`?')
   }
 }
+
+export class IncludeTaskLocationDisabledError extends Error {
+  code = 'VITEST_INCLUDE_TASK_LOCATION_DISABLED'
+
+  constructor() {
+    super('Recieved line number filters while `includeTaskLocation` option is disabled')
+  }
+}

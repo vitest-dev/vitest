@@ -152,8 +152,12 @@ export class WorkspaceProject {
     }
   }
 
-  public createSpec(moduleId: string, pool: string): DeprecatedWorkspaceSpec {
-    return new TestSpecification(this, moduleId, pool) as DeprecatedWorkspaceSpec
+  public createSpec(
+    moduleId: string,
+    pool: string,
+    testLocations?: number[] | undefined,
+  ): DeprecatedWorkspaceSpec {
+    return new TestSpecification(this, moduleId, pool, testLocations) as DeprecatedWorkspaceSpec
   }
 
   async initializeGlobalSetup() {
