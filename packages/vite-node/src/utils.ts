@@ -28,7 +28,9 @@ export function normalizeRequestId(id: string, base?: string): string {
     id = `/${id.slice(base.length)}`
   }
 
-  // keep drive the same as in process cwd
+  // keep drive the same as in process cwd. ideally, this should be resolved on Vite side
+  // Vite always resolves drive letters to the upper case because of the use of `realpathSync`
+  // https://github.com/vitejs/vite/blob/0ab20a3ee26eacf302415b3087732497d0a2f358/packages/vite/src/node/utils.ts#L635
   if (driveRegexp && !driveRegexp?.test(id) && driveOppositeRegext?.test(id)) {
     id = id.replace(driveOppositeRegext, `${drive}$1`)
   }
