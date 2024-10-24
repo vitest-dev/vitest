@@ -332,7 +332,7 @@ export class WorkspaceProject {
 
   filterFiles(testFiles: string[], filters: string[], dir: string) {
     if (filters.length && process.platform === 'win32') {
-      filters = filters.map(f => path.toNamespacedPath(f))
+      filters = filters.map(f => slash(f))
     }
 
     if (filters.length) {
