@@ -10,18 +10,13 @@ import type {
 import fs from 'node:fs'
 import path from 'node:path'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
+import { sourceMapCache } from './source-map-cache'
 
 // Only install once if called multiple times
 let errorFormatterInstalled = false
 
 // Maps a file path to a string containing the file contents
 const fileContentsCache: Record<string, string> = {}
-
-// Maps a file path to a source map for that file
-const sourceMapCache: Record<
-  string,
-  { url: string | null; map: TraceMap | null }
-> = {}
 
 // Regex for detecting source maps
 const reSourceMap = /^data:application\/json[^,]+base64,/

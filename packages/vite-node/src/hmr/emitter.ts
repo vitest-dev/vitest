@@ -1,5 +1,6 @@
 import type { HMRPayload, Plugin } from 'vite'
 import { EventEmitter } from 'node:events'
+import { sourceMapCache } from '../source-map-cache'
 
 export type EventType = string | symbol
 export type Handler<T = unknown> = (event: T) => void
@@ -72,6 +73,10 @@ export function viteNodeHmrPlugin(): Plugin {
           emitter.emit('message', payload)
         }
       }
+    },
+
+    handleHotUpdate(ctx) {
+      delete sourceMapCache[ctx.file]
     },
   }
 }
