@@ -47,3 +47,18 @@ test.each([
   const { ctx } = await run({ shuffle, sequencer: CustomSequencer })
   expect(ctx?.config.sequence.sequencer.name).toBe('CustomSequencer')
 })
+
+test('shuffle', async () => {
+  const { stderr, ctx } = await runVitest({
+    root: './fixtures/shuffle',
+  })
+  expect(stderr).toBe('')
+  expect(ctx?.state.getFiles().map(f => [f.name, f.result?.state])).toMatchInlineSnapshot(`
+    [
+      [
+        "basic.test.ts",
+        "pass",
+      ],
+    ]
+  `)
+})
