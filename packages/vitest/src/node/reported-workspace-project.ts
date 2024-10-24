@@ -1,7 +1,7 @@
 import type { ProvidedContext } from '../types/general'
+import type { Vitest } from './core'
 import type { ResolvedConfig, ResolvedProjectConfig, SerializedConfig } from './types/config'
 import type { WorkspaceProject } from './workspace'
-import type { Vitest } from './core'
 
 export class TestProject {
   /**

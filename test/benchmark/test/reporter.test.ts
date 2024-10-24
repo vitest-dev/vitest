@@ -1,5 +1,5 @@
-import { assert, expect, it } from 'vitest'
 import * as pathe from 'pathe'
+import { assert, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it('summary', async () => {

@@ -1,6 +1,6 @@
+import { fs, vol } from 'memfs'
 // hello-world.test.js
 import { beforeEach, expect, it, vi } from 'vitest'
-import { fs, vol } from 'memfs'
 import { readHelloWorld } from '../src/read-hello-world'
 
 // tell vitest to use fs mock from __mocks__ folder

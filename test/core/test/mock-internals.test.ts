@@ -1,8 +1,8 @@
 import childProcess, { exec } from 'node:child_process'
 import timers from 'node:timers'
-import { type MockInstance, afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { execDefault, execHelloWorld, execImportAll } from '../src/exec'
+import { afterEach, beforeEach, describe, expect, type MockInstance, test, vi } from 'vitest'
 import { dynamicImport } from '../src/dynamic-import'
+import { execDefault, execHelloWorld, execImportAll } from '../src/exec'
 
 vi.mock('child_process')
 vi.mock('timers') // node built in inside __mocks__

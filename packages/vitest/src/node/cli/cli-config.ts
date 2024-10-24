@@ -1,4 +1,3 @@
-import { defaultBrowserPort, defaultPort } from '../../constants'
 import type { ApiConfig } from '../types/config'
 import type {
   ForksOptions,
@@ -7,6 +6,7 @@ import type {
   WorkerContextOptions,
 } from '../types/pool-options'
 import type { CliOptions } from './cli-api'
+import { defaultBrowserPort, defaultPort } from '../../constants'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
 | never

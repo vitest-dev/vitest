@@ -1,6 +1,6 @@
-import { assertType, test } from 'vitest'
 import type { CoverageProviderModule, ResolvedCoverageOptions, Vitest } from 'vitest'
 import type { defineConfig } from 'vitest/config'
+import { assertType, test } from 'vitest'
 
 type NarrowToTestConfig<T> = T extends { test?: any } ? NonNullable<T['test']> : never
 type Configuration = NarrowToTestConfig<(Parameters<typeof defineConfig>[0])>

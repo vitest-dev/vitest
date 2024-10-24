@@ -1,5 +1,5 @@
-import { EventEmitter } from 'node:events'
 import type { HMRPayload, Plugin } from 'vite'
+import { EventEmitter } from 'node:events'
 import { sourceMapCache } from '../source-map-cache'
 
 export type EventType = string | symbol

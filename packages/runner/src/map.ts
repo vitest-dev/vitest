@@ -1,6 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
-import type { Custom, Suite, SuiteHooks, Test, TestContext } from './types/tasks'
 import type { FixtureItem } from './fixture'
+import type { Custom, Suite, SuiteHooks, Test, TestContext } from './types/tasks'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()

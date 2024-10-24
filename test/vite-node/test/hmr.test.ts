@@ -1,5 +1,5 @@
-import { test } from 'vitest'
 import { resolve } from 'pathe'
+import { test } from 'vitest'
 import { editFile, runViteNodeCli } from '../../test-utils'
 
 test('hmr.accept works correctly', async () => {

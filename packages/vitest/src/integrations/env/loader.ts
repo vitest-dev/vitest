@@ -1,10 +1,10 @@
+import type { ViteNodeRunnerOptions } from 'vite-node'
+import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
+import type { Environment } from '../../types/environment'
+import type { ContextRPC, WorkerRPC } from '../../types/worker'
 import { readFileSync } from 'node:fs'
 import { normalize, resolve } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
-import type { ViteNodeRunnerOptions } from 'vite-node'
-import type { BuiltinEnvironment, VitestEnvironment } from '../../node/types/config'
-import type { ContextRPC, WorkerRPC } from '../../types/worker'
-import type { Environment } from '../../types/environment'
 import { environments } from './index'
 
 function isBuiltinEnvironment(

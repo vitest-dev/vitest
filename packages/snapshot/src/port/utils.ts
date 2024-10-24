@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import naturalCompare from 'natural-compare'
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
-import { format as prettyFormat } from '@vitest/pretty-format'
-import { isObject } from '../../../utils/src/index'
 import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
+import { format as prettyFormat } from '@vitest/pretty-format'
+import naturalCompare from 'natural-compare'
+import { isObject } from '../../../utils/src/index'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up

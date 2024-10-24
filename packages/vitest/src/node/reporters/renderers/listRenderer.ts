@@ -1,12 +1,12 @@
-import { stripVTControlCharacters } from 'node:util'
-import c from 'tinyrainbow'
-import cliTruncate from 'cli-truncate'
 import type { SuiteHooks, Task } from '@vitest/runner'
-import { getTests } from '@vitest/runner/utils'
-import { notNullish } from '@vitest/utils'
+import type { Benchmark, BenchmarkResult } from '../../../runtime/types/benchmark'
 import type { Logger } from '../../logger'
 import type { VitestRunMode } from '../../types/config'
-import type { Benchmark, BenchmarkResult } from '../../../runtime/types/benchmark'
+import { stripVTControlCharacters } from 'node:util'
+import { getTests } from '@vitest/runner/utils'
+import { notNullish } from '@vitest/utils'
+import cliTruncate from 'cli-truncate'
+import c from 'tinyrainbow'
 import { F_RIGHT } from './figures'
 import {
   formatProjectName,

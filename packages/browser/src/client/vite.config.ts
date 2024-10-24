@@ -1,8 +1,8 @@
-import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
-import { defineConfig } from 'vite'
+import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   server: {
@@ -34,7 +34,7 @@ export default defineConfig({
   plugins: [
     {
       name: 'copy-ui-plugin',
-      /* eslint-disable no-console */
+
       closeBundle: async () => {
         const root = resolve(
           fileURLToPath(import.meta.url),

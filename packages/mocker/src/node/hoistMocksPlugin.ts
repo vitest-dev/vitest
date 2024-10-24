@@ -1,5 +1,3 @@
-import type { SourceMap } from 'magic-string'
-import MagicString from 'magic-string'
 import type {
   AwaitExpression,
   CallExpression,
@@ -11,10 +9,12 @@ import type {
   ImportExpression,
   VariableDeclaration,
 } from 'estree'
-import { findNodeAround } from 'acorn-walk'
+import type { SourceMap } from 'magic-string'
 import type { Plugin, Rollup } from 'vite'
-import { createFilter } from 'vite'
 import type { Node, Positioned } from './esmWalker'
+import { findNodeAround } from 'acorn-walk'
+import MagicString from 'magic-string'
+import { createFilter } from 'vite'
 import { esmWalker, getArbitraryModuleIdentifier } from './esmWalker'
 
 interface HoistMocksOptions {

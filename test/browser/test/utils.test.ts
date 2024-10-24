@@ -1,8 +1,8 @@
-import { inspect } from 'vitest/utils'
-import { afterEach, expect, it, test } from 'vitest'
 import { commands } from '@vitest/browser/context'
-
 import { prettyDOM } from '@vitest/browser/utils'
+import { afterEach, expect, it, test } from 'vitest'
+
+import { inspect } from 'vitest/utils'
 
 afterEach(() => {
   document.body.innerHTML = ''

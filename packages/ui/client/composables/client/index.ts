@@ -1,19 +1,19 @@
-import { createClient, getTasks } from '@vitest/ws-client'
 import type { WebSocketStatus } from '@vueuse/core'
 import type { File, SerializedConfig, TaskResultPack } from 'vitest'
-import { reactive as reactiveVue } from 'vue'
-import { createFileTask } from '@vitest/runner/utils'
 import type { BrowserRunnerState } from '../../../types'
+import { createFileTask } from '@vitest/runner/utils'
+import { createClient, getTasks } from '@vitest/ws-client'
+import { reactive as reactiveVue } from 'vue'
+import { explorerTree } from '~/composables/explorer'
+import { isFileNode } from '~/composables/explorer/utils'
+import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
-import { ui } from '../../composables/api'
-import { createStaticClient } from './static'
 import { testRunState, unhandledErrors } from './state'
-import { explorerTree } from '~/composables/explorer'
-import { isFileNode } from '~/composables/explorer/utils'
+import { createStaticClient } from './static'
 
-export { ENTRY_URL, PORT, HOST, isReport } from '../../constants'
+export { ENTRY_URL, HOST, isReport, PORT } from '../../constants'
 
 export const client = (function createVitestClient() {
   if (isReport) {

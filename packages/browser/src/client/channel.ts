@@ -1,5 +1,5 @@
-import type { CancelReason } from '@vitest/runner'
 import type { MockedModuleSerialized } from '@vitest/mocker'
+import type { CancelReason } from '@vitest/runner'
 import { getBrowserState } from './utils'
 
 export interface IframeDoneEvent {

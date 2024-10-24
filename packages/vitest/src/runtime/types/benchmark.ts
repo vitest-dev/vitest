@@ -32,4 +32,4 @@ export type BenchmarkAPI = ChainableBenchmarkAPI & {
   runIf: (condition: any) => ChainableBenchmarkAPI
 }
 
-export { BenchTaskResult, BenchOptions, BenchFactory, BenchTask }
+export { BenchFactory, BenchOptions, BenchTask, BenchTaskResult }

@@ -1,10 +1,10 @@
-import url from 'node:url'
-import os from 'node:os'
-import { writeFile } from 'node:fs/promises'
-import { basename, dirname, join, resolve } from 'pathe'
-import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
 import type { TypecheckConfig } from '../node/types/config'
 import type { RawErrsMap, TscErrorInfo } from './types'
+import { writeFile } from 'node:fs/promises'
+import os from 'node:os'
+import url from 'node:url'
+import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
+import { basename, dirname, join, resolve } from 'pathe'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const newLineRegExp = /\r?\n/

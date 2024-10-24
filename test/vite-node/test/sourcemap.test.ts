@@ -1,7 +1,7 @@
+import type { SourceMap } from 'rollup'
 /* eslint-disable no-template-curly-in-string */
 import type { TransformResult } from 'vite'
 import { describe, expect, it } from 'vitest'
-import type { SourceMap } from 'rollup'
 import { withInlineSourcemap } from '../../../packages/vite-node/src/source-map'
 
 it('regex match', () => {

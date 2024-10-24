@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of facebook/jest GitHub project tree.
  */
 
-import * as nodeos from 'node:os'
 import type { ResolvedConfig } from '../node/types/config'
+import * as nodeos from 'node:os'
 
 function getDefaultThreadsCount(config: ResolvedConfig) {
   const numCpus

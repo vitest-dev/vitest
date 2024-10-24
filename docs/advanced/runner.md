@@ -250,7 +250,7 @@ A task is an object that is part of a suite. It is automatically added to the cu
 // ./utils/custom.js
 import { createTaskCollector, getCurrentSuite, setFn } from 'vitest/suite'
 
-export { describe, beforeAll, afterAll } from 'vitest'
+export { afterAll, beforeAll, describe } from 'vitest'
 
 // this function will be called during collection phase:
 // don't call function handler here, add it to suite tasks

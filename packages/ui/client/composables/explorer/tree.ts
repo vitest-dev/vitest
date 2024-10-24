@@ -1,4 +1,8 @@
 import type { File, TaskResultPack } from '@vitest/runner'
+import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
+import { collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
+import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
+import { runFilter } from '~/composables/explorer/filter'
 import {
   filter,
   search,
@@ -9,10 +13,6 @@ import type {
   RootTreeNode,
   UITaskTreeNode,
 } from '~/composables/explorer/types'
-import { collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
-import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
-import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
-import { runFilter } from '~/composables/explorer/filter'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>

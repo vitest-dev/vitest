@@ -1,7 +1,7 @@
-import c from 'tinyrainbow'
 import type { UserConsoleLog } from '../../types/general'
-import { BaseReporter } from './base'
 import type { ListRendererOptions } from './renderers/listRenderer'
+import c from 'tinyrainbow'
+import { BaseReporter } from './base'
 import { createListRenderer } from './renderers/listRenderer'
 
 export class DefaultReporter extends BaseReporter {

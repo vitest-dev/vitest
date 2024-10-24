@@ -1,7 +1,7 @@
-import { createWorkerConstructor } from './worker'
 import type { DefineWorkerOptions } from './types'
-import { assertGlobalExists } from './utils'
 import { createSharedWorkerConstructor } from './shared-worker'
+import { assertGlobalExists } from './utils'
+import { createWorkerConstructor } from './worker'
 
 export function defineWebWorkers(options?: DefineWorkerOptions) {
   if (
