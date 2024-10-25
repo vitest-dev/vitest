@@ -60,6 +60,7 @@ export async function resolveTester(
   try {
     const indexhtml = await server.vite.transformIndexHtml(url.pathname, testerHtml)
     return replacer(indexhtml, {
+      __VITEST_FAVICON__: server.faviconUrl,
       __VITEST_INJECTOR__: injector,
       __VITEST_APPEND__: `
     __vitest_browser_runner__.runningFiles = ${tests}
