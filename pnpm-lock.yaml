@@ -752,6 +752,9 @@ importers:
       floating-vue:
         specifier: ^5.2.2
         version: 5.2.2(vue@3.5.12(typescript@5.6.3))
+      rollup:
+        specifier: ^4.24.0
+        version: 4.24.0
       splitpanes:
         specifier: ^3.1.5
         version: 3.1.5
