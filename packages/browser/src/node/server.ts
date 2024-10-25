@@ -151,7 +151,11 @@ export class BrowserServer implements IBrowserServer {
           attrs: {
             type,
             ...(async ? { async: '' } : {}),
-            ...(srcLink ? { src: slash(`/@fs/${srcLink}`) } : {}),
+            ...(srcLink
+              ? {
+                  src: srcLink.startsWith('http') ? srcLink : slash(`/@fs/${srcLink}`),
+                }
+              : {}),
           },
           injectTo: 'head',
           children: contentProcessed || '',
