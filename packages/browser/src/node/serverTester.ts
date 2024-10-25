@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { Connect } from 'vite'
 import type { BrowserServer } from './server'
 import crypto from 'node:crypto'
 import { stringify } from 'flatted'
-import type { Connect } from 'vite'
 import { replacer } from './utils'
 
 export async function resolveTester(

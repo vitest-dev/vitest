@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import { resolve } from 'pathe'
+import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const root = resolve(import.meta.dirname, '../fixtures/browser-custom-html')
