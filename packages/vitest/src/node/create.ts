@@ -4,8 +4,9 @@ import type {
 } from 'vite'
 import type { VitestOptions } from './core'
 import type { UserConfig, VitestRunMode } from './types/config'
+import { resolve } from 'node:path'
+import { slash } from '@vitest/utils'
 import { findUp } from 'find-up'
-import { resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles } from '../constants'
 import { Vitest } from './core'
@@ -19,7 +20,7 @@ export async function createVitest(
   vitestOptions: VitestOptions = {},
 ) {
   const ctx = new Vitest(mode, vitestOptions)
-  const root = resolve(options.root || process.cwd())
+  const root = slash(resolve(options.root || process.cwd()))
 
   const configPath
     = options.config === false
