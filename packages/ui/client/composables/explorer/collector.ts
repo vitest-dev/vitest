@@ -1,18 +1,12 @@
 import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
-import { isAtomTest } from '@vitest/runner/utils'
 import type { Arrayable } from '@vitest/utils'
+import { isAtomTest } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
 import { hasFailedSnapshot } from '@vitest/ws-client'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
+import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
-import {
-  createOrUpdateFileNode,
-  createOrUpdateNodeTask,
-  createOrUpdateSuiteTask,
-  isRunningTestNode,
-} from '~/composables/explorer/utils'
-import { isSuite } from '~/utils/task'
+import { explorerTree } from '~/composables/explorer/index'
 import {
   initialized,
   openedTreeItems,
@@ -20,8 +14,14 @@ import {
   uiEntries,
   uiFiles,
 } from '~/composables/explorer/state'
-import { explorerTree } from '~/composables/explorer/index'
-import { expandNodesOnEndRun } from '~/composables/explorer/expand'
+import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
+import {
+  createOrUpdateFileNode,
+  createOrUpdateNodeTask,
+  createOrUpdateSuiteTask,
+  isRunningTestNode,
+} from '~/composables/explorer/utils'
+import { isSuite } from '~/utils/task'
 
 export function runLoadFiles(
   remoteFiles: File[],

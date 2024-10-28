@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'vitest'
 import { resolve } from 'pathe'
+import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures/cache')

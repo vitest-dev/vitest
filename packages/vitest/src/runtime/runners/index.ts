@@ -1,12 +1,12 @@
 import type { VitestRunner, VitestRunnerConstructor } from '@vitest/runner'
-import { resolve } from 'pathe'
-import type { VitestExecutor } from '../execute'
-import { distDir } from '../../paths'
-import { getWorkerState } from '../utils'
-import { rpc } from '../rpc'
-import { takeCoverageInsideWorker } from '../../integrations/coverage'
-import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import type { SerializedConfig } from '../config'
+import type { VitestExecutor } from '../execute'
+import { resolve } from 'node:path'
+import { takeCoverageInsideWorker } from '../../integrations/coverage'
+import { distDir } from '../../paths'
+import { rpc } from '../rpc'
+import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
+import { getWorkerState } from '../utils'
 
 const runnersFile = resolve(distDir, 'runners.js')
 

@@ -1,7 +1,7 @@
-import c from 'tinyrainbow'
 import type { Task } from '@vitest/runner'
-import { getTests } from '@vitest/runner/utils'
 import type { Logger } from '../../logger'
+import { getTests } from '@vitest/runner/utils'
+import c from 'tinyrainbow'
 
 export interface DotRendererOptions {
   logger: Logger

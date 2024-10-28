@@ -1,8 +1,8 @@
 import type { File, Suite, Task, TaskResult } from 'vitest'
-import { expect, test } from 'vitest'
 import { resolve } from 'pathe'
-import { runVitest } from '../../test-utils'
+import { expect, test } from 'vitest'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
+import { runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures')
 

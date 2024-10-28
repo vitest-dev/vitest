@@ -1,10 +1,10 @@
-import os from 'node:os'
 import type {
   BenchmarkUserOptions,
   CoverageV8Options,
   ResolvedCoverageOptions,
   UserConfig,
 } from './node/types/config'
+import os from 'node:os'
 import { isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'

@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
-import { expect, test } from 'vitest'
 import pathe from 'pathe'
+import { expect, test } from 'vitest'
 
 import { editFile, runVitest } from '../../test-utils'
 

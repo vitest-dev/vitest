@@ -1,9 +1,9 @@
 import { stripVTControlCharacters } from 'node:util'
-import { expect, test, vi } from 'vitest'
-import { configDefaults } from 'vitest/config'
+import IstanbulProvider from '@vitest/coverage-istanbul'
 import V8Provider from '@vitest/coverage-v8'
 import packageJson from '@vitest/coverage-v8/package.json'
-import IstanbulProvider from '@vitest/coverage-istanbul'
+import { expect, test, vi } from 'vitest'
+import { configDefaults } from 'vitest/config'
 
 const version = packageJson.version
 

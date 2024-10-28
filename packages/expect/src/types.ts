@@ -6,8 +6,8 @@
  *
  */
 
-import type { Formatter } from 'tinyrainbow'
 import type { Constructable } from '@vitest/utils'
+import type { Formatter } from 'tinyrainbow'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
 
 export type ChaiPlugin = Chai.ChaiPlugin

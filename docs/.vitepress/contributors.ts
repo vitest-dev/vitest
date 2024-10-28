@@ -164,4 +164,4 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
 const teamMembers = plainTeamMembers.map(tm => createLinks(tm))
 const teamEmeritiMembers = plainTeamEmeritiMembers.map(tm => createLinks(tm))
 
-export { teamMembers, teamEmeritiMembers }
+export { teamEmeritiMembers, teamMembers }

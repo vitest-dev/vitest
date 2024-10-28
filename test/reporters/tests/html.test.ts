@@ -1,9 +1,9 @@
 import fs from 'node:fs'
-import zlib from 'node:zlib'
 import { stripVTControlCharacters } from 'node:util'
+import zlib from 'node:zlib'
+import { parse } from 'flatted'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { parse } from 'flatted'
 
 import { runVitest } from '../../test-utils'
 

@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import { x } from 'tinyexec'
+import { expect, test } from 'vitest'
 
 // use "x" directly since "runVitestCli" strips color
 

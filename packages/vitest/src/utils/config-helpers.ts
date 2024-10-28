@@ -1,8 +1,8 @@
-import type { SerializedConfig } from '../node/types/config'
 import type {
   BenchmarkBuiltinReporters,
   BuiltinReporters,
 } from '../node/reporters'
+import type { SerializedConfig } from '../node/types/config'
 
 const REGEXP_WRAP_PREFIX = '$$vitest:'
 

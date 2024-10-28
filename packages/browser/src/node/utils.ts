@@ -1,7 +1,7 @@
 import type { BrowserProviderModule, ResolvedBrowserOptions, WorkspaceProject } from 'vitest/node'
 
 export function replacer(code: string, values: Record<string, string>) {
-  return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? '')
+  return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
 }
 
 const builtinProviders = ['webdriverio', 'playwright', 'preview']

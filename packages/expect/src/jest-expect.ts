@@ -1,10 +1,17 @@
+import type { Test } from '@vitest/runner'
+import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
+import type { Constructable } from '@vitest/utils'
+import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
+import type { Assertion, ChaiPlugin } from './types'
+import { isMockFunction } from '@vitest/spy'
 import { assertTypes } from '@vitest/utils'
 import c from 'tinyrainbow'
-import type { Constructable } from '@vitest/utils'
-import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
-import { isMockFunction } from '@vitest/spy'
-import type { Test } from '@vitest/runner'
-import type { Assertion, ChaiPlugin } from './types'
+import { JEST_MATCHERS_OBJECT } from './constants'
+import {
+  diff,
+  getCustomEqualityTesters,
+  stringify,
+} from './jest-matcher-utils'
 import {
   arrayBufferEquality,
   generateToBeMessage,
@@ -15,13 +22,6 @@ import {
   subsetEquality,
   typeEquality,
 } from './jest-utils'
-import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import {
-  diff,
-  getCustomEqualityTesters,
-  stringify,
-} from './jest-matcher-utils'
-import { JEST_MATCHERS_OBJECT } from './constants'
 import { recordAsyncExpect, wrapAssertion } from './utils'
 
 // polyfill globals because expect can be used in node environment

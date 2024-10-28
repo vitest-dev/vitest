@@ -1,10 +1,10 @@
-import { channel } from '@vitest/browser/client'
 import type {
   IframeChannelEvent,
   IframeMockFactoryRequestEvent,
   IframeMockingDoneEvent,
 } from '@vitest/browser/client'
 import type { MockedModuleSerialized } from '@vitest/mocker'
+import { channel } from '@vitest/browser/client'
 import { ManualMockedModule } from '@vitest/mocker'
 import { ModuleMockerMSWInterceptor } from '@vitest/mocker/browser'
 import { nanoid } from '@vitest/utils'
@@ -41,6 +41,7 @@ export function createModuleMockerInterceptor() {
           scope: '/',
         },
       },
+      onUnhandledRequest: 'bypass',
       quiet: true,
     },
   })

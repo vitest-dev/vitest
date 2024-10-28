@@ -1,8 +1,8 @@
 // @vitest-environment node
 
+import nodeUrl from 'node:url'
 // eslint-disable-next-line unicorn/prefer-node-protocol
 import packageUrl from 'url'
-import nodeUrl from 'node:url'
 import { expect, it } from 'vitest'
 
 it('vitest resolves both "url" and "node:url" to internal URL module in Node environment', () => {

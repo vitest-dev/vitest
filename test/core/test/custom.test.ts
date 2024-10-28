@@ -1,4 +1,3 @@
-import { createChainable, getCurrentSuite } from 'vitest/suite'
 import {
   afterAll,
   afterEach,
@@ -8,6 +7,7 @@ import {
   expect,
   test,
 } from 'vitest'
+import { createChainable, getCurrentSuite } from 'vitest/suite'
 import { Gardener } from '../src/custom/gardener.js'
 
 // this function will be called, when Vitest collects tasks

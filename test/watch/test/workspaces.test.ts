@@ -1,7 +1,7 @@
-import { fileURLToPath } from 'node:url'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { afterAll, afterEach, expect, it } from 'vitest'
+import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'pathe'
+import { afterAll, afterEach, expect, it } from 'vitest'
 
 import { runVitestCli } from '../../test-utils'
 

@@ -1,8 +1,8 @@
 import type { MaybeMockedDeep } from '@vitest/spy'
-import { createSimpleStackTrace } from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
 import type { ModuleMockFactoryWithHelper, ModuleMockOptions } from '../types'
 import type { ModuleMocker } from './mocker'
+import { createSimpleStackTrace } from '@vitest/utils'
+import { parseSingleStack } from '@vitest/utils/source-map'
 
 export interface CompilerHintsOptions {
   /**
