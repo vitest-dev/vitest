@@ -4,13 +4,20 @@ import { normalize } from 'pathe'
 import { distDir } from '../../paths'
 import { generateCodeFrame } from '../error'
 
-export function MocksPlugins(): Plugin[] {
+export interface MocksPluginOptions {
+  filter?: (id: string) => boolean
+}
+
+export function MocksPlugins(options: MocksPluginOptions = {}): Plugin[] {
   const normalizedDistDir = normalize(distDir)
   return [
     hoistMocksPlugin({
       filter(id) {
         if (id.includes(normalizedDistDir)) {
           return false
+        }
+        if (options.filter) {
+          return options.filter(id)
         }
         return true
       },
