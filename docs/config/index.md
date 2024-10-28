@@ -2381,9 +2381,9 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 #### fakeTimers.shouldClearNativeTimers
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 
-Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to starting fake timers session.
+Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
 
 ### workspace<NonProjectOption /> {#workspace}
 
