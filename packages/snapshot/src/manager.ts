@@ -23,7 +23,7 @@ export class SnapshotManager {
     addSnapshotResult(this.summary, result)
   }
 
-  resolvePath(testPath: string, context?: unknown): string {
+  resolvePath(testPath: string, context?: any): string {
     const resolver
       = this.options.resolveSnapshotPath || (() => {
         return join(

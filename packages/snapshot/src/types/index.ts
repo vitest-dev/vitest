@@ -20,7 +20,7 @@ export interface SnapshotStateOptions {
   snapshotEnvironment: SnapshotEnvironment
   expand?: boolean
   snapshotFormat?: PrettyFormatOptions
-  resolveSnapshotPath?: (path: string, extension: string, context?: unknown) => string
+  resolveSnapshotPath?: (path: string, extension: string, context?: any) => string
 }
 
 export interface SnapshotMatchOptions {
