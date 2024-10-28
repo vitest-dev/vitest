@@ -5,6 +5,7 @@ import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
+import type { SerializedConfig } from '../../runtime/config'
 import type { EnvironmentOptions } from '../../types/environment'
 import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
@@ -19,7 +20,6 @@ import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 import type { Reporter } from './reporter'
-import type { SerializedConfig } from '../../runtime/config'
 
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
