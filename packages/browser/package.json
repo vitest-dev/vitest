@@ -89,7 +89,7 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.12",
-    "msw": "^2.5.0",
+    "msw": "^2.5.2",
     "sirv": "^3.0.0",
     "tinyrainbow": "^1.2.0",
     "ws": "^8.18.0"
@@ -107,8 +107,8 @@
     "mime": "^4.0.4",
     "pathe": "^1.1.2",
     "periscopic": "^4.0.2",
-    "playwright": "^1.48.1",
-    "playwright-core": "^1.48.1",
+    "playwright": "^1.48.2",
+    "playwright-core": "^1.48.2",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",
     "webdriverio": "^8.40.6"

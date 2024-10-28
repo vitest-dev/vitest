@@ -18,15 +18,15 @@
     "vue": "^3.5.12"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.2.3",
+    "@iconify-json/carbon": "^1.2.4",
     "@iconify-json/logos": "^1.2.3",
-    "@shikijs/vitepress-twoslash": "^1.22.0",
+    "@shikijs/vitepress-twoslash": "^1.22.1",
     "@unocss/reset": "^0.63.6",
     "@vite-pwa/assets-generator": "^0.2.6",
     "@vite-pwa/vitepress": "^0.5.3",
     "@vitejs/plugin-vue": "^5.1.4",
     "https-localhost": "^4.7.1",
-    "tinyglobby": "^0.2.9",
+    "tinyglobby": "^0.2.10",
     "unocss": "^0.63.6",
     "unplugin-vue-components": "^0.27.4",
     "vite": "^5.2.8",
