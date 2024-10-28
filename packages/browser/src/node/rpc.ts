@@ -90,7 +90,9 @@ export function setupBrowserRpc(server: BrowserServer) {
           return ctx.report('onUserConsoleLog', log)
         },
         resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath(testPath)
+          return ctx.snapshot.resolvePath(testPath, {
+            config: project.getSerializableConfig(),
+          })
         },
         resolveSnapshotRawPath(testPath, rawPath) {
           return ctx.snapshot.resolveRawPath(testPath, rawPath)

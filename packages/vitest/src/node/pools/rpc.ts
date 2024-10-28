@@ -20,7 +20,9 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       ctx.snapshot.add(snapshot)
     },
     resolveSnapshotPath(testPath: string) {
-      return ctx.snapshot.resolvePath(testPath)
+      return ctx.snapshot.resolvePath(testPath, {
+        config: project.getSerializableConfig(),
+      })
     },
     async getSourceMap(id, force) {
       if (force) {

@@ -19,6 +19,7 @@ import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
 import type { Reporter } from './reporter'
+import type { SerializedConfig } from '../../runtime/config'
 
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
@@ -573,7 +574,11 @@ export interface InlineConfig {
   /**
    * Resolve custom snapshot path
    */
-  resolveSnapshotPath?: (path: string, extension: string) => string
+  resolveSnapshotPath?: (
+    path: string,
+    extension: string,
+    context: { config: SerializedConfig }
+  ) => string
 
   /**
    * Path to a custom snapshot environment module that has a default export of `SnapshotEnvironment` object.
