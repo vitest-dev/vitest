@@ -10,6 +10,7 @@
     },
     {
       "matchPaths": [
+        "test/**",
         "examples/**"
       ],
       "matchUpdateTypes": [
