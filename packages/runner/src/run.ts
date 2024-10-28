@@ -246,7 +246,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
       // skipped with new PendingError
       if (test.pending || test.result?.state === 'skip') {
         test.mode = 'skip'
-        test.result = { state: 'skip' }
+        test.result = { state: 'skip', note: test.result?.note }
         updateTask(test, runner)
         setCurrentTest(undefined)
         return
@@ -334,6 +334,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
 function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions) {
   if (err instanceof PendingError) {
     result.state = 'skip'
+    result.note = err.note
     return
   }
 

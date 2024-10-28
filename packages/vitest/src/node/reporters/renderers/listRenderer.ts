@@ -144,7 +144,8 @@ function renderTree(
     }
 
     if (task.mode === 'skip' || task.mode === 'todo') {
-      suffix += ` ${c.dim(c.gray('[skipped]'))}`
+      const note = task.result?.note || 'skipped'
+      suffix += ` ${c.dim(c.gray(`[${note}]`))}`
     }
 
     if (
