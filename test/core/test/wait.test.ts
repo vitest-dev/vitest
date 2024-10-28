@@ -102,6 +102,20 @@ describe('waitFor', () => {
     vi.useRealTimers()
   })
 
+  test('fakeTimer long interval works', async () => {
+    vi.useFakeTimers()
+
+    await vi.waitFor(() => {
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve()
+        }, 60000)
+      })
+    }, { interval: 30000 })
+
+    vi.useRealTimers()
+  })
+
   test('callback stops running after timeout', async () => {
     let timedOut = false
     let callbackRanAfterTimeout = false

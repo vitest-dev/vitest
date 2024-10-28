@@ -110,7 +110,7 @@ export function waitFor<T>(
     }
 
     timeoutId = setTimeout(handleTimeout, timeout)
-    intervalId = setInterval(checkCallback, interval)
+    intervalId = setInterval(checkCallback, vi.isFakeTimers() ? 20 : interval)
   })
 }
 
