@@ -6,7 +6,7 @@ import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { createViteLogger } from '../viteLogger'
+import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
@@ -132,6 +132,7 @@ export function WorkspaceVitestPlugin(
             allowClearScreen: false,
           },
         )
+        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
       },

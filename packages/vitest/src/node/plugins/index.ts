@@ -11,7 +11,7 @@ import { configDefaults, coverageConfigDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
-import { createViteLogger } from '../viteLogger'
+import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
@@ -140,6 +140,7 @@ export async function VitestPlugin(
             allowClearScreen: false,
           },
         )
+        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
         if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
