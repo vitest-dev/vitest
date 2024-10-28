@@ -42,13 +42,14 @@ export default defineConfig({
         )
 
         const ui = resolve(root, 'ui/dist/client')
+        const uiEntryPoint = resolve(ui, 'index.html')
         const browser = resolve(root, 'browser/dist/client/__vitest__/')
 
         const timeout = setTimeout(
           () => console.log('[copy-ui-plugin] Waiting for UI to be built...'),
           1000,
         )
-        await waitFor(() => fs.existsSync(ui))
+        await waitFor(() => fs.existsSync(ui) && fs.existsSync(uiEntryPoint))
         clearTimeout(timeout)
 
         const files = globSync(['**/*'], { cwd: ui, expandDirectories: false })

@@ -17,6 +17,8 @@ import {
 import { distDir } from '../paths'
 import { VitestMocker } from './mocker'
 
+const normalizedDistDir = normalize(distDir)
+
 const { readFileSync } = fs
 
 export interface ExecuteOptions extends ViteNodeRunnerOptions {
@@ -112,7 +114,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
       }
       // always externalize Vitest because we import from there before running tests
       // so we already have it cached by Node.js
-      if (id.includes(distDir)) {
+      if (id.includes(distDir) || id.includes(normalizedDistDir)) {
         const { path } = toFilePath(id, state().config.root)
         const externalize = pathToFileURL(path).toString()
         externalizeMap.set(id, externalize)

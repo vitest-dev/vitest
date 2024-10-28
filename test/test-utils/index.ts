@@ -55,6 +55,7 @@ export async function runVitest(
   const cli = new Cli({ stdin, stdout, stderr })
 
   let ctx: Vitest | undefined
+  let thrown = false
   try {
     const { reporters, ...rest } = config
 
@@ -88,6 +89,7 @@ export async function runVitest(
     if (runnerOptions.fails !== true) {
       console.error(e)
     }
+    thrown = true
     cli.stderr += e.stack
   }
   finally {
@@ -111,6 +113,7 @@ export async function runVitest(
   }
 
   return {
+    thrown,
     ctx,
     exitCode,
     vitest: cli,
