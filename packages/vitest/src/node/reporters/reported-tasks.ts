@@ -119,14 +119,27 @@ export class TestCase extends ReportedTaskImplementation {
       return undefined
     }
     const state = result.state === 'fail'
-      ? 'failed'
+      ? 'failed' as const
       : result.state === 'pass'
-        ? 'passed'
-        : 'skipped'
+        ? 'passed' as const
+        : 'skipped' as const
+    if (state === 'skipped') {
+      return {
+        state,
+        note: result.note,
+        errors: undefined,
+      } satisfies TestResultSkipped
+    }
+    if (state === 'passed') {
+      return {
+        state,
+        errors: result.errors as TestError[] | undefined,
+      } satisfies TestResultPassed
+    }
     return {
       state,
-      errors: result.errors as TestError[] | undefined,
-    } as TestResult
+      errors: (result.errors || []) as TestError[],
+    } satisfies TestResultFailed
   }
 
   /**
@@ -441,6 +454,10 @@ export interface TestResultSkipped {
    * Skipped tests have no errors.
    */
   errors: undefined
+  /**
+   * A custom note.
+   */
+  note: string | undefined
 }
 
 export interface TestDiagnostic {
