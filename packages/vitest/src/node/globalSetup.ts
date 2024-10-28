@@ -1,5 +1,5 @@
 import type { ViteNodeRunner } from 'vite-node/client'
-import type { ProvidedContext } from '../types/general'
+import type { OnWatcherRerunHandler, ProvidedContext } from '../types/general'
 import type { ResolvedConfig } from './types/config'
 import { toArray } from '@vitest/utils'
 
@@ -9,6 +9,7 @@ export interface GlobalSetupContext {
     key: T,
     value: ProvidedContext[T]
   ) => void
+  onWatcherRerun: (cb: OnWatcherRerunHandler) => void
 }
 
 export interface GlobalSetupFile {

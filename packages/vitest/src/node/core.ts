@@ -3,7 +3,7 @@ import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
 import type { SerializedCoverageConfig } from '../runtime/config'
-import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
+import type { ArgumentsType, OnServerRestartHandler, OnWatcherRerunHandler, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
@@ -102,6 +102,7 @@ export class Vitest {
   private _onClose: (() => Awaited<unknown>)[] = []
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
+  private _onUserWatcherRerun: OnWatcherRerunHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this.unregisterWatcher?.()
@@ -113,6 +114,7 @@ export class Vitest {
     this.coverageProvider = undefined
     this.runningPromise = undefined
     this._cachedSpecs.clear()
+    this._onUserWatcherRerun = []
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
 
@@ -691,7 +693,10 @@ export class Vitest {
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
-    await this.report('onWatcherRerun', files, trigger)
+    await Promise.all([
+      this.report('onWatcherRerun', files, trigger),
+      ...this._onUserWatcherRerun.map(fn => fn(files)),
+    ])
     await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
@@ -813,7 +818,10 @@ export class Vitest {
 
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
-      await this.report('onWatcherRerun', files, triggerLabel)
+      await Promise.all([
+        this.report('onWatcherRerun', files, triggerLabel),
+        ...this._onUserWatcherRerun.map(fn => fn(files)),
+      ])
 
       await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), false)
 
@@ -1149,5 +1157,9 @@ export class Vitest {
 
   onClose(fn: () => void) {
     this._onClose.push(fn)
+  }
+
+  onWatcherRerun(fn: OnWatcherRerunHandler): void {
+    this._onUserWatcherRerun.push(fn)
   }
 }

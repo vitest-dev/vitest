@@ -126,7 +126,10 @@ export type {
   TscErrorInfo as TypeCheckErrorInfo,
 } from '../typecheck/types'
 
-export type { OnServerRestartHandler } from '../types/general'
+export type {
+  OnServerRestartHandler,
+  OnWatcherRerunHandler,
+} from '../types/general'
 
 export { createDebugger } from '../utils/debugger'
 
