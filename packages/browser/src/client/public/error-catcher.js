@@ -56,7 +56,9 @@ async function reportUnexpectedError(
   error,
 ) {
   const processedError = serializeError(error)
-  await client.rpc.onUnhandledError(processedError, type)
+  await client.waitForConnection().then(() => {
+    return client.rpc.onUnhandledError(processedError, type)
+  }).catch(console.error)
   const state = __vitest_browser_runner__
 
   if (state.type === 'orchestrator') {

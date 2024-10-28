@@ -101,8 +101,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         url.searchParams.set('contextId', contextId)
         const page = provider
           .openPage(contextId, url.toString(), () => setBreakpoint(contextId, files[0]))
-          .then(() => waitPromise)
-        promises.push(page)
+        promises.push(page, waitPromise)
       }
     })
 
