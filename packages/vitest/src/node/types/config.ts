@@ -225,6 +225,8 @@ type ReporterWithOptions<Name extends ReporterName = ReporterName> =
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
 
+export type ResolveSnapshotPathHandler = (testPath: string, snapExtension: string, context: { config: SerializedConfig }) => string
+
 export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
@@ -574,11 +576,7 @@ export interface InlineConfig {
   /**
    * Resolve custom snapshot path
    */
-  resolveSnapshotPath?: (
-    path: string,
-    extension: string,
-    context: { config: SerializedConfig }
-  ) => string
+  resolveSnapshotPath?: ResolveSnapshotPathHandler
 
   /**
    * Path to a custom snapshot environment module that has a default export of `SnapshotEnvironment` object.

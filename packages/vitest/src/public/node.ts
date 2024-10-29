@@ -79,6 +79,7 @@ export type {
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,
+  ResolveSnapshotPathHandler,
   RuntimeConfig,
   SequenceHooks,
   SequenceSetupFiles,
