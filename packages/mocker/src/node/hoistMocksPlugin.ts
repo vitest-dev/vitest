@@ -184,7 +184,6 @@ export function hoistMocks(
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
   // that returns a proxy to the module so that named exports can be mocked
   function defineImport(
-    index: number,
     importNode: ImportDeclaration & {
       start: number
       end: number
@@ -209,7 +208,7 @@ export function hoistMocks(
     // import { baz } from 'foo' --> baz -> __import_foo__.baz
     // import * as ok from 'foo' --> ok -> __import_foo__
     if (node.type === 'ImportDeclaration') {
-      const importId = defineImport(hoistIndex, node)
+      const importId = defineImport(node)
       if (!importId) {
         continue
       }
@@ -419,6 +418,7 @@ export function hoistMocks(
               declarationNode,
               'Cannot export hoisted variable. You can control hoisting behavior by placing the import from this file first.',
             )
+            // hoist "const variable = vi.hoisted(() => {})"
             hoistedNodes.push(declarationNode)
           }
           else {
@@ -427,6 +427,7 @@ export function hoistMocks(
               node.start,
               'AwaitExpression',
             )?.node as Positioned<AwaitExpression> | undefined
+            // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
             const moveNode = awaitedExpression?.argument === node ? awaitedExpression : node
             hoistedNodes.push(moveNode)
           }
@@ -499,6 +500,7 @@ export function hoistMocks(
     if (hoistIndex === end) {
       hoistIndex = end
     }
+    // don't hoist into itself if it's already at the top
     else if (hoistIndex !== node.start) {
       s.move(node.start, end, hoistIndex)
     }
