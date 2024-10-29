@@ -9,6 +9,8 @@ declare module 'vitest' {
     invalidValue: unknown
     projectConfigValue: boolean
     globalConfigValue: boolean
+
+    providedConfigValue: string
   }
 }
 
