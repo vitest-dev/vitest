@@ -46,6 +46,7 @@ export class Logger {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
     this.logUpdate = createLogUpdate(this.outputStream)
     this._highlights.clear()
+    this.registerUnhandledRejection()
   }
 
   log(...args: any[]) {
@@ -316,5 +317,25 @@ export class Logger {
       this.printError(err, { fullStack: true })
     })
     this.log(c.red(divider()))
+  }
+
+  private registerUnhandledRejection() {
+    const onUnhandledRejection = (err: unknown) => {
+      process.exitCode = 1
+
+      this.printError(err, {
+        fullStack: true,
+        type: 'Unhandled Rejection',
+      })
+
+      this.error('\n\n')
+      process.exit()
+    }
+
+    process.on('unhandledRejection', onUnhandledRejection)
+
+    this.ctx.onClose(() => {
+      process.off('unhandledRejection', onUnhandledRejection)
+    })
   }
 }
