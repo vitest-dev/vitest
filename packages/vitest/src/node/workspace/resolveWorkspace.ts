@@ -2,6 +2,7 @@ import type { Vitest } from '../core'
 import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
 import type { WorkspaceProject } from '../workspace'
 import { existsSync, promises as fs } from 'node:fs'
+import { limitConcurrency } from '@vitest/runner/utils'
 import fg from 'fast-glob'
 import { relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
@@ -48,47 +49,40 @@ export async function resolveWorkspace(
     return acc
   }, {} as UserConfig)
 
-  const projects: WorkspaceProject[] = []
+  const projectPromises: Promise<WorkspaceProject>[] = []
   const fileProjects = [...configFiles, ...nonConfigDirectories]
+  const concurrent = limitConcurrency(5)
 
-  // we have to resolve them one by one because CWD should depend on the project
   for (const filepath of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
     if (vitest.server.config.configFile === filepath) {
-      const project = await vitest._createCoreProject()
-      projects.push(project)
+      projectPromises.push(concurrent(() => vitest._createCoreProject()))
       continue
     }
 
-    projects.push(
-      await initializeProject(
+    projectPromises.push(
+      concurrent(() => initializeProject(
         filepath,
         vitest,
         { workspaceConfigPath, test: cliOverrides },
-      ),
+      )),
     )
   }
 
-  const projectPromises: Promise<WorkspaceProject>[] = []
-
   projectConfigs.forEach((options, index) => {
-    // we can resolve these in parallel because process.cwd() is not changed
-    projectPromises.push(initializeProject(
+    projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
       mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any,
-    ))
+    )))
   })
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
-  if (!projects.length && !projectPromises.length) {
+  if (!projectPromises.length) {
     return [await vitest._createCoreProject()]
   }
 
-  const resolvedProjects = await Promise.all([
-    ...projects,
-    ...projectPromises,
-  ])
+  const resolvedProjects = await Promise.all(projectPromises)
   const names = new Set<string>()
 
   // project names are guaranteed to be unique
