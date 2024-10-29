@@ -352,6 +352,7 @@ export class Vitest {
       process.exitCode = 1
     }
 
+    this.checkUnhandledErrors(errors)
     await this.report('onFinished', files, errors)
     await this.initCoverageProvider()
     await this.coverageProvider?.mergeReports?.(coverages)
@@ -613,9 +614,11 @@ export class Vitest {
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
         const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
+        const errors = this.state.getUnhandledErrors()
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
-        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors(), coverage)
+        this.checkUnhandledErrors(errors)
+        await this.report('onFinished', this.state.getFiles(files), errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
 
         this.runningPromise = undefined
@@ -893,6 +896,12 @@ export class Vitest {
       if (needsRerun.length) {
         this.scheduleRerun(needsRerun)
       }
+    }
+  }
+
+  checkUnhandledErrors(errors: unknown[]) {
+    if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
+      process.exitCode = 1
     }
   }
 
