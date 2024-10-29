@@ -87,8 +87,11 @@ describe('testing vi utils', () => {
     function fetchSomething(): Promise<Response> {
       return fetch('https://vitest.dev/')
     };
-    vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
-    vi.mocked(fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+    if (0) {
+      // type check only
+      vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
+      vi.mocked(fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+    }
   })
 
   test('vi.fn and Mock type', () => {
