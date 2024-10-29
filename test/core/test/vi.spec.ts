@@ -83,6 +83,12 @@ describe('testing vi utils', () => {
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
       baz: 'baz',
     })
+
+    function fetchSomething(): Promise<Response> {
+      return fetch('https://vitest.dev/')
+    };
+    vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
+    vi.mocked(fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
   })
 
   test('vi.fn and Mock type', () => {
