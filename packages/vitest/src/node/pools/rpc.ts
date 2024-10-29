@@ -94,7 +94,10 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       ctx.state.catchError(err, type)
     },
     onFinished(files) {
-      return ctx.report('onFinished', files, ctx.state.getUnhandledErrors())
+      const errors = ctx.state.getUnhandledErrors()
+      ctx.checkUnhandledErrors(errors)
+
+      return ctx.report('onFinished', files, errors)
     },
     onCancel(reason) {
       ctx.cancelCurrentRun(reason)

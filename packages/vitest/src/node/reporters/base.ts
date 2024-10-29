@@ -90,11 +90,6 @@ export abstract class BaseReporter implements Reporter {
     this.end = performance.now()
 
     this.reportSummary(files, errors)
-    if (errors.length) {
-      if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors) {
-        process.exitCode = 1
-      }
-    }
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
