@@ -157,6 +157,10 @@ export class CommonjsExecutor {
       static globalPaths = _Module.globalPaths
       static isBuiltin = _Module.isBuiltin
 
+      static constants = _Module.constants
+      static enableCompileCache = _Module.enableCompileCache
+      static getCompileCacheDir = _Module.getCompileCacheDir
+
       static Module = Module
     }
 

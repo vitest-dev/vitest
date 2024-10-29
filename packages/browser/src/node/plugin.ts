@@ -4,7 +4,6 @@ import type { WorkspaceProject } from 'vitest/node'
 import type { BrowserServer } from './server'
 import { lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
 import { toArray } from '@vitest/utils'
 import MagicString from 'magic-string'
@@ -12,6 +11,7 @@ import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
 import { coverageConfigDefaults, type Plugin } from 'vitest/config'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
+import { distRoot } from './constants'
 import BrowserContext from './plugins/pluginContext'
 import { resolveOrchestrator } from './serverOrchestrator'
 import { resolveTester } from './serverTester'
@@ -19,9 +19,9 @@ import { resolveTester } from './serverTester'
 export { defineBrowserCommand } from './commands/utils'
 export type { BrowserCommand } from 'vitest/node'
 
+const versionRegexp = /(?:\?|&)v=\w{8}/
+
 export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
-  const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
-  const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
 
   function isPackageExists(pkg: string, root: string) {
@@ -160,6 +160,24 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             res.end(buffer)
           })
         }
+        server.middlewares.use((req, res, next) => {
+          // 9000 mega head move
+          // Vite always caches optimized dependencies, but users might mock
+          // them in _some_ tests, while keeping original modules in others
+          // there is no way to configure that in Vite, so we patch it here
+          // to always ignore the cache-control set by Vite in the next middleware
+          if (req.url && versionRegexp.test(req.url) && !req.url.includes('chunk-')) {
+            res.setHeader('Cache-Control', 'no-cache')
+            const setHeader = res.setHeader.bind(res)
+            res.setHeader = function (name, value) {
+              if (name === 'Cache-Control') {
+                return res
+              }
+              return setHeader(name, value)
+            }
+          }
+          next()
+        })
       },
     },
     {
@@ -325,6 +343,12 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     BrowserContext(browserServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
+      filter(id) {
+        if (id.includes(distRoot)) {
+          return false
+        }
+        return true
+      },
     }),
     {
       name: 'vitest:browser:config',
