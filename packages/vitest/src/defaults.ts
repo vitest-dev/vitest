@@ -135,10 +135,10 @@ const config = {
     include: ['**/*.{test,spec}-d.?(c|m)[jt]s?(x)'],
     exclude: defaultExclude,
   },
-  server: { 
+  server: {
     deps: {
-      external: [/\/node_modules\//]
-    }
+      external: [/\/node_modules\//],
+    },
   },
   slowTestThreshold: 300,
   disableConsoleIntercept: false,
