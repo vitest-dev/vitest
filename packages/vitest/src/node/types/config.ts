@@ -225,7 +225,11 @@ type ReporterWithOptions<Name extends ReporterName = ReporterName> =
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
 
-export type ResolveSnapshotPathHandler = (testPath: string, snapExtension: string, context: { config: SerializedConfig }) => string
+export type ResolveSnapshotPathHandler = (
+  testPath: string,
+  snapExtension: string,
+  context: { config: SerializedConfig }
+) => string
 
 export interface InlineConfig {
   /**
