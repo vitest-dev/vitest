@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { explorerTree } from '~/composables/explorer'
 import {
   filter,
   filteredFiles,
@@ -11,7 +12,6 @@ import {
   treeFilter,
   uiEntries,
 } from './state'
-import { explorerTree } from '~/composables/explorer'
 
 export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   const disableFilter = computed(() => {

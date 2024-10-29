@@ -1,5 +1,5 @@
-import { cdp } from '@vitest/browser/context'
 import type { V8CoverageProvider } from './provider'
+import { cdp } from '@vitest/browser/context'
 import { loadProvider } from './load-provider'
 
 const session = cdp()

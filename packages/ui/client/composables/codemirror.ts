@@ -1,18 +1,18 @@
+import type { Task } from '@vitest/runner'
 import type { Ref, WritableComputedRef } from 'vue'
-import { watch } from 'vue'
 import CodeMirror from 'codemirror'
-import 'codemirror/mode/javascript/javascript'
+import { watch } from 'vue'
 
+import { navigateTo } from '~/composables/navigation'
+
+import 'codemirror/mode/javascript/javascript'
 // import 'codemirror/mode/css/css'
 import 'codemirror/mode/xml/xml'
-
 // import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/jsx/jsx'
 import 'codemirror/addon/display/placeholder'
 import 'codemirror/addon/scroll/simplescrollbars'
 import 'codemirror/addon/scroll/simplescrollbars.css'
-import type { Task } from '@vitest/runner'
-import { navigateTo } from '~/composables/navigation'
 
 export const codemirrorRef = shallowRef<CodeMirror.EditorFromTextArea>()
 

@@ -1,8 +1,8 @@
 import type { TinypoolWorkerMessage } from 'tinypool'
-import { parseRegexp } from '@vitest/utils'
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerContext } from '../../node/types/worker'
 import type { WorkerRpcOptions } from './types'
+import { parseRegexp } from '@vitest/utils'
 
 const REGEXP_WRAP_PREFIX = '$$vitest:'
 

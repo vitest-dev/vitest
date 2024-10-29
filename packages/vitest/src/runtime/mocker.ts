@@ -1,12 +1,12 @@
-import vm from 'node:vm'
-import { isAbsolute, resolve } from 'pathe'
-import { highlight } from '@vitest/utils'
 import type { ManualMockedModule, MockedModuleType } from '@vitest/mocker'
-import { AutomockedModule, MockerRegistry, RedirectedModule, mockObject } from '@vitest/mocker'
-import { findMockRedirect } from '@vitest/mocker/redirect'
-import { distDir } from '../paths'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
+import { isAbsolute, resolve } from 'node:path'
+import vm from 'node:vm'
+import { AutomockedModule, MockerRegistry, mockObject, RedirectedModule } from '@vitest/mocker'
+import { findMockRedirect } from '@vitest/mocker/redirect'
+import { highlight } from '@vitest/utils'
+import { distDir } from '../paths'
 
 const spyModulePath = resolve(distDir, 'spy.js')
 

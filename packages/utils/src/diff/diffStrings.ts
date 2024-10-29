@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import diffSequences from 'diff-sequences'
-import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
 import type { DiffOptions } from './types'
+import diffSequences from 'diff-sequences'
+import { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 
 // platforms compatible
 function getNewLineSymbol(string: string) {

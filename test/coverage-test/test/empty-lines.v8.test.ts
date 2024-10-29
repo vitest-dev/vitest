@@ -1,6 +1,6 @@
 import { beforeAll, expect } from 'vitest'
-import { coverageTest, describe, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 import { add } from '../fixtures/src/empty-lines'
+import { coverageTest, describe, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 type CoveredLine = 1
 type UncoveredLine = 0

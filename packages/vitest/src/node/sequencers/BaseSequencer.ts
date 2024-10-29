@@ -1,9 +1,9 @@
-import { relative, resolve } from 'pathe'
-import { slash } from 'vite-node/utils'
-import { hash } from '../hash'
 import type { Vitest } from '../core'
 import type { WorkspaceSpec } from '../pool'
 import type { TestSequencer } from './types'
+import { relative, resolve } from 'pathe'
+import { slash } from 'vite-node/utils'
+import { hash } from '../hash'
 
 export class BaseSequencer implements TestSequencer {
   protected ctx: Vitest

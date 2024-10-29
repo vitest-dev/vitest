@@ -1,12 +1,12 @@
 import type { ChaiPlugin } from '@vitest/expect'
+import type { Test } from '@vitest/runner'
 import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
+import { getNames } from '@vitest/runner/utils'
 import {
-  SnapshotClient,
   addSerializer,
+  SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import type { Test } from '@vitest/runner'
-import { getNames } from '@vitest/runner/utils'
 import { recordAsyncExpect } from '../../../../expect/src/utils'
 
 let _client: SnapshotClient

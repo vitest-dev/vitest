@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
-import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 import { useImportEnv } from '../fixtures/src/import-meta-env'
+import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 test('file using import.meta.env is included in report (#2332)', async () => {
   await runVitest(

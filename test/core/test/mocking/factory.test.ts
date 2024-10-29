@@ -1,9 +1,9 @@
 import axios from 'axios'
 import { describe, expect, it, test, vi } from 'vitest'
 import * as example from '../../src/mocks/example'
+import logger from '../../src/mocks/log'
 import * as moduleA from '../../src/mocks/moduleA'
 import * as moduleB from '../../src/mocks/moduleB'
-import logger from '../../src/mocks/log'
 
 vi
   .mock('../../src/mocks/example', () => ({
@@ -67,8 +67,7 @@ describe('mocking with factory', () => {
   })
 
   it('non-object return on factory gives error', async () => {
-    await expect(() => import('../../src/mocks/default.js').then(m => m.default)).rejects
-      .toThrowError('[vitest] vi.mock("../../src/mocks/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
+    await expect(() => import('../../src/mocks/default.js').then(m => m.default)).rejects.toThrowError('[vitest] vi.mock("../../src/mocks/default.ts", factory?: () => unknown) is not returning an object. Did you mean to return an object with a "default" key?')
   })
 
   test('defined exports on mock', async () => {

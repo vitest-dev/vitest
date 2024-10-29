@@ -1,6 +1,6 @@
+import type { SnapshotEnvironment, SnapshotEnvironmentOptions } from '../types'
 import { existsSync, promises as fs } from 'node:fs'
 import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
-import type { SnapshotEnvironment, SnapshotEnvironmentOptions } from '../types'
 
 export class NodeSnapshotEnvironment implements SnapshotEnvironment {
   constructor(private options: SnapshotEnvironmentOptions = {}) {}

@@ -2,9 +2,9 @@
 import type CodeMirror from 'codemirror'
 import type { ErrorWithDiff, File } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
-import { openInEditor } from '~/composables/error'
 import { client, isReport } from '~/composables/client'
 import { codemirrorRef } from '~/composables/codemirror'
+import { openInEditor } from '~/composables/error'
 import { lineNumber } from '~/composables/params'
 
 const props = defineProps<{

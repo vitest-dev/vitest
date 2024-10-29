@@ -1,6 +1,6 @@
 import type { BrowserUI } from 'vitest'
-import { findById } from './client'
 import { viewport } from './browser'
+import { findById } from './client'
 
 export const ui: BrowserUI = {
   setCurrentFileId(fileId: string) {

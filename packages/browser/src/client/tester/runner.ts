@@ -1,15 +1,15 @@
 import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
-import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
-import { TraceMap, originalPositionFor } from 'vitest/utils'
-import { page, userEvent } from '@vitest/browser/context'
-import { globalChannel } from '@vitest/browser/client'
-import { executor } from '../utils'
-import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { rpc } from './rpc'
 import type { VitestBrowserClientMocker } from './mocker'
+import { globalChannel } from '@vitest/browser/client'
+import { page, userEvent } from '@vitest/browser/context'
+import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
+import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
+import { originalPositionFor, TraceMap } from 'vitest/utils'
+import { executor } from '../utils'
+import { rpc } from './rpc'
+import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig

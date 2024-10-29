@@ -3,13 +3,13 @@
 // we make a custom implementatin because we don't need some features from source-map-support,
 // like polyfilled Buffer, browser support, etc.
 
-import path from 'node:path'
-import fs from 'node:fs'
 import type {
   OriginalMapping,
   SourceMapInput,
 } from '@jridgewell/trace-mapping'
-import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
+import fs from 'node:fs'
+import path from 'node:path'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 
 // Only install once if called multiple times
 let errorFormatterInstalled = false

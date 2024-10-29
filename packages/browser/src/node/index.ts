@@ -1,14 +1,16 @@
-import type { WorkspaceProject } from 'vitest/node'
 import type { Plugin } from 'vitest/config'
-import { createViteLogger, createViteServer } from 'vitest/node'
+import type { WorkspaceProject } from 'vitest/node'
 import c from 'tinyrainbow'
+import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
+import BrowserPlugin from './plugin'
 import { setupBrowserRpc } from './rpc'
 import { BrowserServer } from './server'
-import BrowserPlugin from './plugin'
+
+export { distRoot } from './constants'
+export { createBrowserPool } from './pool'
 
 export type { BrowserServer } from './server'
-export { createBrowserPool } from './pool'
 
 export async function createBrowserServer(
   project: WorkspaceProject,

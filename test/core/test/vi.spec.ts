@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import type { Mock, MockInstance, MockedFunction, MockedObject } from 'vitest'
+import type { Mock, MockedFunction, MockedObject, MockInstance } from 'vitest'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { getWorkerState } from '../../../packages/vitest/src/runtime/utils'
 
