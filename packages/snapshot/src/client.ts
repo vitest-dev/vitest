@@ -79,11 +79,10 @@ export class SnapshotClient {
     state.markSnapshotsAsCheckedForTest(name)
   }
 
-  // TODO: can we use name instead of test.id?
+  // TODO: use test.id to handle multiple tests with same name
   clearTest(filepath: string, name: string): void {
     const state = this.getSnapshotState(filepath)
-    state
-    name
+    state.clearTest(name)
   }
 
   getSnapshotState(filepath: string): SnapshotState {

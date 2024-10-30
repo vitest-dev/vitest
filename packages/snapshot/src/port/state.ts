@@ -54,7 +54,7 @@ export default class SnapshotState {
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
-  private _inlineSnapshotStacks: Array<ParsedStack>
+  private _inlineSnapshotStacks: Array<ParsedStack & { testName: string }>
   private _rawSnapshots: Array<RawSnapshot>
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
@@ -119,6 +119,11 @@ export default class SnapshotState {
     })
   }
 
+  clearTest(testName: string): void {
+    this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testName !== testName)
+    this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testName !== testName)
+  }
+
   protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
     // if called inside resolves/rejects, stacktrace is different
     const promiseIndex = stacks.findIndex(i =>
@@ -139,12 +144,13 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testName: string },
   ): void {
     this._dirty = true
     if (options.stack) {
       this._inlineSnapshots.push({
         snapshot: receivedSerialized,
+        testName: options.testName,
         ...options.stack,
       })
     }
@@ -321,7 +327,7 @@ export default class SnapshotState {
         this._inlineSnapshots = this._inlineSnapshots.filter(s => !(s.file === stack!.file && s.line === stack!.line && s.column === stack!.column))
         throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location.')
       }
-      this._inlineSnapshotStacks.push(stack)
+      this._inlineSnapshotStacks.push({ ...stack, testName })
     }
 
     // These are the conditions on when to write snapshots:
@@ -347,6 +353,7 @@ export default class SnapshotState {
 
           this._addSnapshot(key, receivedSerialized, {
             stack,
+            testName,
             rawSnapshot,
           })
         }
@@ -357,6 +364,7 @@ export default class SnapshotState {
       else {
         this._addSnapshot(key, receivedSerialized, {
           stack,
+          testName,
           rawSnapshot,
         })
         this.added++
