@@ -120,21 +120,20 @@ export default class SnapshotState {
   }
 
   clearTest(testName: string): void {
-    // TODO: key by test.id
+    // TODO: key by test.id (handle multiple tests with same title)
     // TODO: reset this.added, matched, etc..
 
     this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testName !== testName)
     this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testName !== testName)
     if (this._counters.has(testName)) {
-      let counter = this._counters.get(testName)!
-      for (const key in this._snapshotData) {
-        if (keyToTestName(key) === testName) {
-          counter--
+      const counter = this._counters.get(testName)!
+      for (let i = 1; i <= counter; i++) {
+        const key = testNameToKey(testName, counter)
+        if (key in this._snapshotData || key in this._initialData) {
           this._snapshotData[key] = this._initialData[key]
-          this._uncheckedKeys.add(key)
         }
       }
-      this._counters.set(testName, counter)
+      this._counters.delete(testName)
     }
   }
 
