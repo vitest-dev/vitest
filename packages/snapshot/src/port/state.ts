@@ -75,8 +75,8 @@ export default class SnapshotState {
   ) {
     const { data, dirty } = getSnapshotData(snapshotContent, options)
     this._fileExists = snapshotContent != null // TODO: update on watch?
-    this._initialData = data
-    this._snapshotData = data
+    this._initialData = { ...data }
+    this._snapshotData = { ...data }
     this._dirty = dirty
     this._inlineSnapshots = []
     this._inlineSnapshotStacks = []
@@ -120,6 +120,9 @@ export default class SnapshotState {
   }
 
   clearTest(testName: string): void {
+    // TODO: key by test.id
+    // TODO: reset this.added, matched, etc..
+
     this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testName !== testName)
     this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testName !== testName)
     if (this._counters.has(testName)) {
@@ -176,8 +179,9 @@ export default class SnapshotState {
     }
   }
 
+  // TODO: not used. remove it
   clear(): void {
-    this._snapshotData = this._initialData
+    this._snapshotData = { ...this._initialData }
     // this._inlineSnapshots = []
     this._counters = new Map()
     this.added = 0
