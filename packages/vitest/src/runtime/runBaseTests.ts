@@ -62,7 +62,7 @@ export async function run(
           resetModules(workerState.moduleCache, true)
         }
 
-        workerState.filepath = file.file
+        workerState.filepath = file.filepath
 
         if (method === 'run') {
           await startTests([file], runner)

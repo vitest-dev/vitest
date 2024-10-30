@@ -498,8 +498,8 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 }
 
-export async function startTests(specs: FileSpec[], runner: VitestRunner): Promise<File[]> {
-  const paths = specs.map(f => f.filepath)
+export async function startTests(specs: string[] | FileSpec[], runner: VitestRunner): Promise<File[]> {
+  const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
   await runner.onBeforeCollect?.(paths)
 
   const files = await collectTests(specs, runner)

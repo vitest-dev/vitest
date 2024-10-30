@@ -1,3 +1,4 @@
+import type { FileSpec } from '@vitest/runner/types/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'

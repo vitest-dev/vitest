@@ -26,8 +26,7 @@ export class TestSpecification {
     project: TestProject,
     moduleId: string,
     pool: Pool,
-    // location?: WorkspaceSpecLocation | undefined,
-    testLocations: number[] | undefined,
+    testLocations?: number[] | undefined,
   ) {
     this[0] = project
     this[1] = moduleId
