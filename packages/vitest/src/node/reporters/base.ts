@@ -59,11 +59,9 @@ export abstract class BaseReporter implements Reporter {
   private _lastRunTimer: NodeJS.Timeout | undefined
   private _lastRunCount = 0
   private _timeStart = new Date()
-  private _offUnhandledRejection?: () => void
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? ((isNode || isDeno) && process.stdout?.isTTY && !isCI)
-    this.registerUnhandledRejection()
   }
 
   get mode() {
@@ -72,9 +70,6 @@ export abstract class BaseReporter implements Reporter {
 
   onInit(ctx: Vitest) {
     this.ctx = ctx
-    ctx.onClose(() => {
-      this._offUnhandledRejection?.()
-    })
     ctx.logger.printBanner()
     this.start = performance.now()
   }
@@ -90,11 +85,6 @@ export abstract class BaseReporter implements Reporter {
     this.end = performance.now()
 
     this.reportSummary(files, errors)
-    if (errors.length) {
-      if (!this.ctx.config.dangerouslyIgnoreUnhandledErrors) {
-        process.exitCode = 1
-      }
-    }
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
@@ -629,22 +619,6 @@ export abstract class BaseReporter implements Reporter {
         task: tasks[0],
       })
       errorDivider()
-    }
-  }
-
-  registerUnhandledRejection() {
-    const onUnhandledRejection = async (err: unknown) => {
-      process.exitCode = 1
-      this.ctx.logger.printError(err, {
-        fullStack: true,
-        type: 'Unhandled Rejection',
-      })
-      this.ctx.logger.error('\n\n')
-      process.exit()
-    }
-    process.on('unhandledRejection', onUnhandledRejection)
-    this._offUnhandledRejection = () => {
-      process.off('unhandledRejection', onUnhandledRejection)
     }
   }
 }
