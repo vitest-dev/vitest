@@ -122,6 +122,17 @@ export default class SnapshotState {
   clearTest(testName: string): void {
     this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testName !== testName)
     this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testName !== testName)
+    if (this._counters.has(testName)) {
+      let counter = this._counters.get(testName)!
+      for (const key in this._snapshotData) {
+        if (keyToTestName(key) === testName) {
+          counter--
+          this._snapshotData[key] = this._initialData[key]
+          this._uncheckedKeys.add(key)
+        }
+      }
+      this._counters.set(testName, counter)
+    }
   }
 
   protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
