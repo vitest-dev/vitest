@@ -80,6 +80,7 @@ export type {
   ResolvedConfig,
   ResolvedProjectConfig,
   ResolveSnapshotPathHandler,
+  ResolveSnapshotPathHandlerContext,
   RuntimeConfig,
   SequenceHooks,
   SequenceSetupFiles,

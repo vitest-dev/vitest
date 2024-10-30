@@ -1,5 +1,5 @@
-import type { ErrorWithDiff, SerializedConfig } from 'vitest'
-import type { BrowserCommandContext } from 'vitest/node'
+import type { ErrorWithDiff } from 'vitest'
+import type { BrowserCommandContext, createDebugger, isFileServingAllowed, type ResolveSnapshotPathHandlerContext } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { BrowserServer } from './server'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
@@ -8,7 +8,6 @@ import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname } from 'pathe'
-import { createDebugger, isFileServingAllowed } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
@@ -90,7 +89,7 @@ export function setupBrowserRpc(server: BrowserServer) {
           return ctx.report('onUserConsoleLog', log)
         },
         resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath<{ config: SerializedConfig }>(testPath, {
+          return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
             config: project.getSerializableConfig(),
           })
         },
