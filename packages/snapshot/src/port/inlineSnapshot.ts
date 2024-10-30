@@ -9,8 +9,8 @@ import {
 
 export interface InlineSnapshot {
   snapshot: string
+  testId: string
   file: string
-  testName: string
   line: number
   column: number
 }

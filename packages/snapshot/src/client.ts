@@ -36,6 +36,7 @@ interface AssertOptions {
   received: unknown
   filepath: string
   name: string
+  testId: string
   message?: string
   isInline?: boolean
   properties?: object
@@ -74,15 +75,14 @@ export class SnapshotClient {
     return result
   }
 
-  skipTest(filepath: string, name: string): void {
+  skipTest(filepath: string, testId: string): void {
     const state = this.getSnapshotState(filepath)
-    state.markSnapshotsAsCheckedForTest(name)
+    state.markSnapshotsAsCheckedForTest(testId)
   }
 
-  // TODO: use test.id to handle multiple tests with same name
-  clearTest(filepath: string, name: string): void {
+  clearTest(filepath: string, testId: string): void {
     const state = this.getSnapshotState(filepath)
-    state.clearTest(name)
+    state.clearTest(testId)
   }
 
   getSnapshotState(filepath: string): SnapshotState {
@@ -97,6 +97,7 @@ export class SnapshotClient {
     const {
       filepath,
       name,
+      testId,
       message,
       isInline = false,
       properties,
@@ -144,6 +145,7 @@ export class SnapshotClient {
     const testName = [name, ...(message ? [message] : [])].join(' > ')
 
     const { actual, expected, key, pass } = snapshotState.match({
+      testId,
       testName,
       received,
       isInline,

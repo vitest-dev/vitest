@@ -50,11 +50,11 @@ export default class SnapshotState {
   private _counters: Map<string, number>
   private _dirty: boolean
   private _updateSnapshot: SnapshotUpdateState
-  // TODO: key by test id. how to match with `initialData`?
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
-  private _inlineSnapshotStacks: Array<ParsedStack & { testName: string }>
+  private _inlineSnapshotStacks: Array<ParsedStack & { testId: string }>
+  private _testIdToKeys = new Map<string, string[]>()
   private _rawSnapshots: Array<RawSnapshot>
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
@@ -111,30 +111,34 @@ export default class SnapshotState {
     return this._environment
   }
 
-  markSnapshotsAsCheckedForTest(testName: string): void {
-    this._uncheckedKeys.forEach((uncheckedKey) => {
-      if (keyToTestName(uncheckedKey) === testName) {
-        this._uncheckedKeys.delete(uncheckedKey)
-      }
-    })
+  markSnapshotsAsCheckedForTest(testId: string): void {
+    for (const key of this._testIdToKeys.get(testId) ?? []) {
+      this._uncheckedKeys.delete(key)
+    }
   }
 
-  clearTest(testName: string): void {
-    // TODO: key by test.id (handle multiple tests with same title)
-    // TODO: reset this.added, matched, etc..
+  clearTest(testId: string): void {
+    // TODO: reset stats: added, matched, etc..
 
-    this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testName !== testName)
-    this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testName !== testName)
-    if (this._counters.has(testName)) {
-      const counter = this._counters.get(testName)!
-      for (let i = 1; i <= counter; i++) {
-        const key = testNameToKey(testName, counter)
+    this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testId !== testId)
+    this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testId !== testId)
+
+    for (const key of this._testIdToKeys.get(testId) ?? []) {
+      const name = keyToTestName(key)
+      const counter = this._counters.get(name)
+      if (typeof counter !== 'undefined') {
         if (key in this._snapshotData || key in this._initialData) {
           this._snapshotData[key] = this._initialData[key]
         }
+        if (counter > 0) {
+          this._counters.set(name, counter - 1)
+        }
+        else {
+          this._counters.delete(name)
+        }
       }
-      this._counters.delete(testName)
     }
+    this._testIdToKeys.delete(testId)
   }
 
   protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
@@ -157,13 +161,13 @@ export default class SnapshotState {
   private _addSnapshot(
     key: string,
     receivedSerialized: string,
-    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testName: string },
+    options: { rawSnapshot?: RawSnapshotInfo; stack?: ParsedStack; testId: string },
   ): void {
     this._dirty = true
     if (options.stack) {
       this._inlineSnapshots.push({
         snapshot: receivedSerialized,
-        testName: options.testName,
+        testId: options.testId,
         ...options.stack,
       })
     }
@@ -237,6 +241,7 @@ export default class SnapshotState {
   }
 
   match({
+    testId,
     testName,
     received,
     key,
@@ -251,6 +256,8 @@ export default class SnapshotState {
     if (!key) {
       key = testNameToKey(testName, count)
     }
+    this._testIdToKeys.set(testId, (this._testIdToKeys.get(key) ?? []))
+    this._testIdToKeys.get(testId)?.push(key)
 
     // Do not mark the snapshot as "checked" if the snapshot is inline and
     // there's an external snapshot. This way the external snapshot can be
@@ -329,7 +336,7 @@ export default class SnapshotState {
         this._inlineSnapshots = this._inlineSnapshots.filter(s => !(s.file === stack!.file && s.line === stack!.line && s.column === stack!.column))
         throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location.')
       }
-      this._inlineSnapshotStacks.push({ ...stack, testName })
+      this._inlineSnapshotStacks.push({ ...stack, testId })
     }
 
     // These are the conditions on when to write snapshots:
@@ -355,7 +362,7 @@ export default class SnapshotState {
 
           this._addSnapshot(key, receivedSerialized, {
             stack,
-            testName,
+            testId,
             rawSnapshot,
           })
         }
@@ -366,7 +373,7 @@ export default class SnapshotState {
       else {
         this._addSnapshot(key, receivedSerialized, {
           stack,
-          testName,
+          testId,
           rawSnapshot,
         })
         this.added++

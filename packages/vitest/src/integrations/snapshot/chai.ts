@@ -48,6 +48,7 @@ function getTestNames(test: Test) {
   return {
     filepath: test.file.filepath,
     name: getNames(test).slice(1).join(' > '),
+    testId: test.id,
   }
 }
 
