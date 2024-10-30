@@ -112,6 +112,7 @@ export default class SnapshotState {
   }
 
   markSnapshotsAsCheckedForTest(testId: string): void {
+    // TODO: broken... for skipped test, we don't even have _testIdToKeys
     for (const key of this._testIdToKeys.get(testId) ?? []) {
       this._uncheckedKeys.delete(key)
     }
@@ -256,7 +257,7 @@ export default class SnapshotState {
     if (!key) {
       key = testNameToKey(testName, count)
     }
-    this._testIdToKeys.set(testId, (this._testIdToKeys.get(key) ?? []))
+    this._testIdToKeys.set(testId, (this._testIdToKeys.get(testId) ?? []))
     this._testIdToKeys.get(testId)?.push(key)
 
     // Do not mark the snapshot as "checked" if the snapshot is inline and
