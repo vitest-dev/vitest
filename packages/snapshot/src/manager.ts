@@ -23,9 +23,9 @@ export class SnapshotManager {
     addSnapshotResult(this.summary, result)
   }
 
-  resolvePath<T = any>(testPath: string, context?: T): string {
+  resolvePath(testPath: string, context?: any): string {
     const resolver
-      = this.options.resolveSnapshotPath<T> || (() => {
+      = this.options.resolveSnapshotPath || (() => {
         return join(
           join(dirname(testPath), '__snapshots__'),
           `${basename(testPath)}${this.extension}`,
