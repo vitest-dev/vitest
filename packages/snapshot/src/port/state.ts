@@ -178,18 +178,6 @@ export default class SnapshotState {
     }
   }
 
-  // TODO: not used. remove it
-  clear(): void {
-    this._snapshotData = { ...this._initialData }
-    // this._inlineSnapshots = []
-    this._counters = new Map()
-    this.added = 0
-    this.matched = 0
-    this.unmatched = 0
-    this.updated = 0
-    this._dirty = false
-  }
-
   async save(): Promise<SaveStatus> {
     const hasExternalSnapshots = Object.keys(this._snapshotData).length
     const hasInlineSnapshots = this._inlineSnapshots.length
