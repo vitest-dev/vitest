@@ -111,11 +111,12 @@ export default class SnapshotState {
     return this._environment
   }
 
-  markSnapshotsAsCheckedForTest(testId: string): void {
-    // TODO: broken... for skipped test, we don't even have _testIdToKeys
-    for (const key of this._testIdToKeys.get(testId) ?? []) {
-      this._uncheckedKeys.delete(key)
-    }
+  markSnapshotsAsCheckedForTest(testName: string): void {
+    this._uncheckedKeys.forEach((uncheckedKey) => {
+      if (keyToTestName(uncheckedKey) === testName) {
+        this._uncheckedKeys.delete(uncheckedKey)
+      }
+    })
   }
 
   clearTest(testId: string): void {

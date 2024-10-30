@@ -14,7 +14,7 @@ import type {
 import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
-import { getTestName, getTests } from '@vitest/runner/utils'
+import { getNames, getTestName, getTests } from '@vitest/runner/utils'
 import { createExpect } from '../../integrations/chai/index'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
@@ -58,7 +58,8 @@ export class VitestTestRunner implements VitestRunner {
       // mark snapshots in skipped tests as not obsolete
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
-          this.snapshotClient.skipTest(suite.file.filepath, test.id)
+          const name = getNames(test).slice(1).join(' > ')
+          this.snapshotClient.skipTest(suite.file.filepath, name)
         }
       }
 

@@ -75,9 +75,9 @@ export class SnapshotClient {
     return result
   }
 
-  skipTest(filepath: string, testId: string): void {
+  skipTest(filepath: string, testName: string): void {
     const state = this.getSnapshotState(filepath)
-    state.markSnapshotsAsCheckedForTest(testId)
+    state.markSnapshotsAsCheckedForTest(testName)
   }
 
   clearTest(filepath: string, testId: string): void {
