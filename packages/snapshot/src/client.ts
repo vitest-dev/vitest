@@ -50,8 +50,10 @@ export interface SnapshotClientOptions {
 }
 
 export class SnapshotClient {
+  // TODO: remove state
   filepath?: string
   name?: string
+  // TODO: do we need file map here?
   snapshotState: SnapshotState | undefined
   snapshotStateMap: Map<string, SnapshotState> = new Map()
 
@@ -65,6 +67,7 @@ export class SnapshotClient {
     this.filepath = filepath
     this.name = name
 
+    // TODO: remove and make it explicit
     if (this.snapshotState?.testFilePath !== filepath) {
       await this.finishCurrentRun()
 
@@ -78,8 +81,44 @@ export class SnapshotClient {
     }
   }
 
+  async setup(
+    filepath: string,
+    options: SnapshotStateOptions,
+  ): Promise<void> {
+    if (this.snapshotStateMap.has(filepath)) {
+      throw new Error('already setup')
+    }
+    this.snapshotStateMap.set(
+      filepath,
+      await SnapshotState.create(filepath, options),
+    )
+  }
+
+  async finish(filepath: string): Promise<SnapshotResult> {
+    const state = this.snapshotStateMap.get(filepath)
+    if (!state) {
+      throw new Error('missing setup')
+    }
+    const result = await state.pack()
+    this.snapshotStateMap.delete(filepath)
+    return result
+  }
+
+  // TODO: by test id
+  skip(filepath: string, name: string): void {
+    const state = this.snapshotStateMap.get(filepath)
+    if (!state) {
+      throw new Error('missing setup')
+    }
+    state.markSnapshotsAsCheckedForTest(name)
+  }
+
   getSnapshotState(filepath: string): SnapshotState {
-    return this.snapshotStateMap.get(filepath)!
+    const state = this.snapshotStateMap.get(filepath)
+    if (!state) {
+      throw new Error('snapshot state not initialized')
+    }
+    return state
   }
 
   clearTest(): void {
@@ -91,6 +130,7 @@ export class SnapshotClient {
     this.snapshotState?.markSnapshotsAsCheckedForTest(name)
   }
 
+  // TODO: add test id
   assert(options: AssertOptions): void {
     const {
       filepath = this.filepath,

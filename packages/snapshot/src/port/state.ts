@@ -50,6 +50,7 @@ export default class SnapshotState {
   private _counters: Map<string, number>
   private _dirty: boolean
   private _updateSnapshot: SnapshotUpdateState
+  // TODO: key by test id. how to match with `initialData`?
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
