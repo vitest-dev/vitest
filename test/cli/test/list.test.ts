@@ -235,6 +235,7 @@ test('file not found mentions strict matching for location filters', async () =>
   const { stdout, stderr } = await runVitestCli(
     'list',
     '-r=./fixtures/list',
+    '--config=custom.config.ts',
     'a/file/that/doesnt/exit:10',
   )
 
@@ -289,34 +290,34 @@ test('location filter reports multiple not found tests', async () => {
   `)
 })
 
-// Will do after feedback
-// test('throw error when range number is provided', async () => {
-//   const { stdout, stderr } = await runVitestCli(
-//     'list',
-//     '-r=./fixtures/list',
-//     'a/file/that/doesnt/exit:10-15'
-//   )
-//
-//   // Just to see output
-//   expect(stdout + '\n' + stderr).toEqual('')
-//
-//   // expect(stderr).toMatchSnapshot()
-//   // expect(stdout).toEqual('')
-// })
-//
+test('error if range location is provided', async () => {
+  const { stdout, stderr } = await runVitestCli(
+    'list',
+    '-r=./fixtures/list',
+    'a/file/that/doesnt/exit:10-15'
+  )
 
-// DOESN'T WORK
-// test('erorr if location filter provided without enabling includeTaskLocation', async () => {
-//   const { stdout, stderr } = await runVitestCli(
-//     'list',
-//     '-r=./fixtures/list',
-//     '--config=no-task-location.config.ts',
-//     'basic.test.ts:5'
-//   )
-//
-//   // Just to see output
-//   expect(stdout + '\n' + stderr).toEqual('')
-// })
+  expect(stdout).toEqual('')
+  expect(stderr).toMatchInlineSnapshot(`
+    "Error: Location filters are not allowed: a/file/that/doesnt/exit:10-15
+    "
+  `)
+})
+
+test('erorr if location filter provided without enabling includeTaskLocation', async () => {
+  const { stdout, stderr } = await runVitestCli(
+    'list',
+    '-r=./fixtures/list',
+    '--config=no-task-location.config.ts',
+    'a/file/that/doesnt/exist:5'
+  )
+
+  expect(stdout).toEqual('')
+  expect(stderr).toMatchInlineSnapshot(`
+    "Error: Recieved line number filters while \`includeTaskLocation\` option is disabled
+    "
+  `)
+})
 
 function relative(stdout: string) {
   return stdout.replace(new RegExp(slash(process.cwd()), 'gi'), '<root>')

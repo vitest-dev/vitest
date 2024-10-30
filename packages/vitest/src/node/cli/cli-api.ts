@@ -10,8 +10,9 @@ import { dirname, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { groupBy } from '../../utils/base'
 import { createVitest } from '../create'
-import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError } from '../errors'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, RangeLocationFilterProvidedError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
+import { normalize } from 'node:path'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -104,7 +105,10 @@ export async function startVitest(
       return ctx
     }
 
-    if (e instanceof IncludeTaskLocationDisabledError) {
+    if (
+      e instanceof IncludeTaskLocationDisabledError
+      || e instanceof RangeLocationFilterProvidedError
+    ) {
       ctx.logger.printError(e, { verbose: false })
       return ctx
     }
@@ -163,6 +167,44 @@ export async function prepareVitest(
   }
 
   return ctx
+}
+
+export async function collectAndProcess(
+  ctx: Vitest,
+  options: CliOptions,
+  cliFilters: string[],
+) {
+  try {
+    if (!options.filesOnly) {
+      const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
+
+      if (errors.length) {
+        console.error('\nThere were unhandled errors during test collection')
+        errors.forEach(e => console.error(e))
+        console.error('\n\n')
+        await ctx.close()
+        return
+      }
+
+      processCollected(ctx, tests, options)
+    }
+    else {
+      const files = await ctx.listFiles(cliFilters.map(normalize))
+      outputFileList(files, options)
+    }
+
+    await ctx.close()
+  } catch (e) {
+    if (
+      e instanceof IncludeTaskLocationDisabledError
+      || e instanceof RangeLocationFilterProvidedError
+    ) {
+      ctx.logger.printError(e, { verbose: false })
+      return
+    }
+
+    await ctx.close()
+  }
 }
 
 export function processCollected(ctx: Vitest, files: File[], options: CliOptions) {
@@ -284,15 +326,15 @@ export function formatCollectedAsString(files: File[]) {
   }).flat()
 }
 
-export function parseFilter(f: string) {
-  const colonIndex = f.indexOf(':')
+export function parseFilter(filter: string): Filter {
+  const colonIndex = filter.indexOf(':')
   if (colonIndex === -1) {
-    return { filename: f }
+    return { filename: filter }
   }
 
   const [parsedFilename, lineNumber] = [
-    f.substring(0, colonIndex),
-    f.substring(colonIndex + 1),
+    filter.substring(0, colonIndex),
+    filter.substring(colonIndex + 1),
   ]
 
   if (lineNumber.match(/^\d+$/)) {
@@ -302,10 +344,10 @@ export function parseFilter(f: string) {
     }
   }
   else if (lineNumber.includes('-')) {
-    throw new Error(`Range line numbers are not allowed: ${f}`)
+    throw new RangeLocationFilterProvidedError(filter)
   }
   else {
-    return { filename: f }
+    return { filename: filter }
   }
 }
 

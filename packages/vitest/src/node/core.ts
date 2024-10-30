@@ -420,13 +420,6 @@ export class Vitest {
       await this.globTestFiles(filters),
     )
 
-    if (
-      !this.config.includeTaskLocation
-      && files.some(spec => spec.testLocations && spec.testLocations.length !== 0)
-    ) {
-      throw new IncludeTaskLocationDisabledError()
-    }
-
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
       // Report coverage for uncovered files
@@ -1158,6 +1151,14 @@ export class Vitest {
     const testLocations = groupFilters(parsedFilters.map(
       f => ({ ...f, filename: resolve(dir, f.filename) }),
     ))
+
+    // Require includeTaskLocation when a location filter is passed
+    if (
+      !this.config.includeTaskLocation
+      && parsedFilters.some(f => f.lineNumber !== undefined)
+    ) {
+      throw new IncludeTaskLocationDisabledError()
+    }
 
     // Key is file and val sepcifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}

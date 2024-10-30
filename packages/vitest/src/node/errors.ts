@@ -21,3 +21,11 @@ export class IncludeTaskLocationDisabledError extends Error {
     super('Recieved line number filters while `includeTaskLocation` option is disabled')
   }
 }
+
+export class RangeLocationFilterProvidedError extends Error {
+  code = 'VITEST_RANGE_LOCATION_FILTER_PROVIDED'
+
+  constructor(filter: string) {
+    super(`Location filters are not allowed: ${filter}`)
+  }
+}

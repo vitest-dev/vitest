@@ -1,5 +1,5 @@
 import type { VitestRunMode } from '../types/config'
-import type { CliOptions } from './cli-api'
+import { collectAndProcess, type CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils'
 import cac, { type CAC, type Command } from 'cac'
@@ -7,6 +7,7 @@ import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
+import { IncludeTaskLocationDisabledError, RangeLocationFilterProvidedError } from '../errors'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
@@ -306,25 +307,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       watch: false,
       run: true,
     })
-    if (!options.filesOnly) {
-      const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
-
-      if (errors.length) {
-        console.error('\nThere were unhandled errors during test collection')
-        errors.forEach(e => console.error(e))
-        console.error('\n\n')
-        await ctx.close()
-        return
-      }
-
-      processCollected(ctx, tests, options)
-    }
-    else {
-      const files = await ctx.listFiles(cliFilters.map(normalize))
-      outputFileList(files, options)
-    }
-
-    await ctx.close()
+    collectAndProcess(ctx, options, cliFilters)
   }
   catch (e) {
     const { divider } = await import('../reporters/renderers/utils')
