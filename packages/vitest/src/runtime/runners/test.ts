@@ -44,11 +44,8 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = file
   }
 
-  onBeforeRunFiles() {
-    // this.snapshotClient.clear()
-  }
-
   onAfterRunFiles() {
+    this.snapshotClient.clear()
     this.workerState.current = undefined
   }
 
@@ -62,25 +59,19 @@ export class VitestTestRunner implements VitestRunner {
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
           const name = getNames(test).slice(1).join(' > ')
-          // this.snapshotClient.skipTestSnapshots(name)
-          this.snapshotClient.skip(suite.file.filepath, name)
+          // TODO: skip by test.id
+          this.snapshotClient.skipTest(suite.file.filepath, name)
         }
       }
 
       const result = await this.snapshotClient.finish(suite.file.filepath)
       await rpc().snapshotSaved(result)
-      // const result = await this.snapshotClient.finishCurrentRun()
-      // if (result) {
-      //   await rpc().snapshotSaved(result)
-      // }
     }
 
     this.workerState.current = suite.suite || suite.file
   }
 
   onAfterRunTask(test: Task) {
-    // this.snapshotClient.clearTest()
-
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       test.result!.heap = process.memoryUsage().heapUsed
     }
@@ -117,19 +108,13 @@ export class VitestTestRunner implements VitestRunner {
         suite.file.filepath,
         this.workerState.config.snapshotOptions,
       )
-      // // default "name" is irrelevant for Vitest since each snapshot assertion
-      // // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
-      // await this.snapshotClient.startCurrentRun(
-      //   (suite as File).filepath,
-      //   '__default_name_',
-      //   this.workerState.config.snapshotOptions,
-      // )
     }
 
     this.workerState.current = suite
   }
 
   onBeforeTryTask(test: Task) {
+    this.snapshotClient.clearTest(test.file.filepath, test.name)
     setState(
       {
         assertionCalls: 0,
@@ -140,7 +125,6 @@ export class VitestTestRunner implements VitestRunner {
         testPath: test.file.filepath,
         currentTestName: getTestName(test),
         snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
-        // snapshotState: this.snapshotClient.snapshotState,
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )

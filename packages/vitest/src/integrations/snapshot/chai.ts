@@ -44,10 +44,7 @@ function getError(expected: () => void | Error, promise: string | undefined) {
   throw new Error('snapshot function didn\'t throw')
 }
 
-function getTestNames(test?: Test) {
-  if (!test) {
-    return {}
-  }
+function getTestNames(test: Test) {
   return {
     filepath: test.file.filepath,
     name: getNames(test).slice(1).join(' > '),
@@ -69,7 +66,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           throw new Error(`${key} cannot be used with "not"`)
         }
         const expected = utils.flag(this, 'object')
-        const test = utils.flag(this, 'vitest-test')
+        const test: Test = utils.flag(this, 'vitest-test')
         if (typeof properties === 'string' && typeof message === 'undefined') {
           message = properties
           properties = undefined
@@ -96,7 +93,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         throw new Error('toMatchFileSnapshot cannot be used with "not"')
       }
       const expected = utils.flag(this, 'object')
-      const test = utils.flag(this, 'vitest-test') as Test
+      const test: Test = utils.flag(this, 'vitest-test')
       const errorMessage = utils.flag(this, 'message')
 
       const promise = getSnapshotClient().assertRaw({
@@ -127,7 +124,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       if (isNot) {
         throw new Error('toMatchInlineSnapshot cannot be used with "not"')
       }
-      const test = utils.flag(this, 'vitest-test')
+      const test: Test = utils.flag(this, 'vitest-test')
       const isInsideEach = test && (test.each || test.suite?.each)
       if (isInsideEach) {
         throw new Error(
@@ -169,7 +166,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         )
       }
       const expected = utils.flag(this, 'object')
-      const test = utils.flag(this, 'vitest-test')
+      const test: Test = utils.flag(this, 'vitest-test')
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
       getSnapshotClient().assert({
@@ -194,7 +191,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           'toThrowErrorMatchingInlineSnapshot cannot be used with "not"',
         )
       }
-      const test = utils.flag(this, 'vitest-test')
+      const test: Test = utils.flag(this, 'vitest-test')
       const isInsideEach = test && (test.each || test.suite?.each)
       if (isInsideEach) {
         throw new Error(

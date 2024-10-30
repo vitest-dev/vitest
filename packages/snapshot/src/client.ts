@@ -34,8 +34,8 @@ export interface Context {
 
 interface AssertOptions {
   received: unknown
-  filepath?: string
-  name?: string
+  filepath: string
+  name: string
   message?: string
   isInline?: boolean
   properties?: object
@@ -50,36 +50,9 @@ export interface SnapshotClientOptions {
 }
 
 export class SnapshotClient {
-  // TODO: remove state
-  filepath?: string
-  name?: string
-  // TODO: do we need file map here?
-  snapshotState: SnapshotState | undefined
   snapshotStateMap: Map<string, SnapshotState> = new Map()
 
   constructor(private options: SnapshotClientOptions = {}) {}
-
-  async startCurrentRun(
-    filepath: string,
-    name: string,
-    options: SnapshotStateOptions,
-  ): Promise<void> {
-    this.filepath = filepath
-    this.name = name
-
-    // TODO: remove and make it explicit
-    if (this.snapshotState?.testFilePath !== filepath) {
-      await this.finishCurrentRun()
-
-      if (!this.getSnapshotState(filepath)) {
-        this.snapshotStateMap.set(
-          filepath,
-          await SnapshotState.create(filepath, options),
-        )
-      }
-      this.snapshotState = this.getSnapshotState(filepath)
-    }
-  }
 
   async setup(
     filepath: string,
@@ -95,22 +68,22 @@ export class SnapshotClient {
   }
 
   async finish(filepath: string): Promise<SnapshotResult> {
-    const state = this.snapshotStateMap.get(filepath)
-    if (!state) {
-      throw new Error('missing setup')
-    }
+    const state = this.getSnapshotState(filepath)
     const result = await state.pack()
     this.snapshotStateMap.delete(filepath)
     return result
   }
 
-  // TODO: by test id
-  skip(filepath: string, name: string): void {
-    const state = this.snapshotStateMap.get(filepath)
-    if (!state) {
-      throw new Error('missing setup')
-    }
+  skipTest(filepath: string, name: string): void {
+    const state = this.getSnapshotState(filepath)
     state.markSnapshotsAsCheckedForTest(name)
+  }
+
+  // TODO: can we use name instead of test.id?
+  clearTest(filepath: string, name: string): void {
+    const state = this.getSnapshotState(filepath)
+    state
+    name
   }
 
   getSnapshotState(filepath: string): SnapshotState {
@@ -121,20 +94,10 @@ export class SnapshotClient {
     return state
   }
 
-  clearTest(): void {
-    this.filepath = undefined
-    this.name = undefined
-  }
-
-  skipTestSnapshots(name: string): void {
-    this.snapshotState?.markSnapshotsAsCheckedForTest(name)
-  }
-
-  // TODO: add test id
   assert(options: AssertOptions): void {
     const {
-      filepath = this.filepath,
-      name = this.name,
+      filepath,
+      name,
       message,
       isInline = false,
       properties,
@@ -149,6 +112,8 @@ export class SnapshotClient {
       throw new Error('Snapshot cannot be used outside of test')
     }
 
+    const snapshotState = this.getSnapshotState(filepath)
+
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received) {
         throw new Error(
@@ -162,7 +127,7 @@ export class SnapshotClient {
         if (!pass) {
           throw createMismatchError(
             'Snapshot properties mismatched',
-            this.snapshotState?.expand,
+            snapshotState.expand,
             received,
             properties,
           )
@@ -179,8 +144,6 @@ export class SnapshotClient {
 
     const testName = [name, ...(message ? [message] : [])].join(' > ')
 
-    const snapshotState = this.getSnapshotState(filepath)
-
     const { actual, expected, key, pass } = snapshotState.match({
       testName,
       received,
@@ -193,7 +156,7 @@ export class SnapshotClient {
     if (!pass) {
       throw createMismatchError(
         `Snapshot \`${key || 'unknown'}\` mismatched`,
-        this.snapshotState?.expand,
+        snapshotState.expand,
         actual?.trim(),
         expected?.trim(),
       )
@@ -205,7 +168,7 @@ export class SnapshotClient {
       throw new Error('Raw snapshot is required')
     }
 
-    const { filepath = this.filepath, rawSnapshot } = options
+    const { filepath, rawSnapshot } = options
 
     if (rawSnapshot.content == null) {
       if (!filepath) {
@@ -227,16 +190,6 @@ export class SnapshotClient {
     }
 
     return this.assert(options)
-  }
-
-  async finishCurrentRun(): Promise<SnapshotResult | null> {
-    if (!this.snapshotState) {
-      return null
-    }
-    const result = await this.snapshotState.pack()
-
-    this.snapshotState = undefined
-    return result
   }
 
   clear(): void {
