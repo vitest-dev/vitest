@@ -294,7 +294,7 @@ test('error if range location is provided', async () => {
   const { stdout, stderr } = await runVitestCli(
     'list',
     '-r=./fixtures/list',
-    'a/file/that/doesnt/exit:10-15'
+    'a/file/that/doesnt/exit:10-15',
   )
 
   expect(stdout).toEqual('')
@@ -309,7 +309,7 @@ test('erorr if location filter provided without enabling includeTaskLocation', a
     'list',
     '-r=./fixtures/list',
     '--config=no-task-location.config.ts',
-    'a/file/that/doesnt/exist:5'
+    'a/file/that/doesnt/exist:5',
   )
 
   expect(stdout).toEqual('')

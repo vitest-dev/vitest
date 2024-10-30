@@ -5,6 +5,7 @@ import type { Vitest, VitestOptions } from '../core'
 import type { WorkspaceSpec } from '../pool'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
+import { normalize } from 'node:path'
 import { getNames, getTests } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../integrations/coverage'
@@ -12,7 +13,6 @@ import { groupBy } from '../../utils/base'
 import { createVitest } from '../create'
 import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, RangeLocationFilterProvidedError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
-import { normalize } from 'node:path'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -194,7 +194,8 @@ export async function collectAndProcess(
     }
 
     await ctx.close()
-  } catch (e) {
+  }
+  catch (e) {
     if (
       e instanceof IncludeTaskLocationDisabledError
       || e instanceof RangeLocationFilterProvidedError

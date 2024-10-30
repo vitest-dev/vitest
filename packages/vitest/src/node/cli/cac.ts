@@ -1,13 +1,12 @@
 import type { VitestRunMode } from '../types/config'
-import { collectAndProcess, type CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils'
 import cac, { type CAC, type Command } from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
+import { type CliOptions, collectAndProcess } from './cli-api'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
-import { IncludeTaskLocationDisabledError, RangeLocationFilterProvidedError } from '../errors'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   const commandName = option.alias || name
@@ -301,7 +300,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
   catch {}
 
   try {
-    const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
+    const { prepareVitest } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
       ...normalizeCliOptions(options),
       watch: false,
