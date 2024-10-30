@@ -1,4 +1,4 @@
-import type { ErrorWithDiff } from 'vitest'
+import type { ErrorWithDiff, SerializedConfig } from 'vitest'
 import type { BrowserCommandContext } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { BrowserServer } from './server'
@@ -90,7 +90,7 @@ export function setupBrowserRpc(server: BrowserServer) {
           return ctx.report('onUserConsoleLog', log)
         },
         resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath(testPath, {
+          return ctx.snapshot.resolvePath<{ config: SerializedConfig }>(testPath, {
             config: project.getSerializableConfig(),
           })
         },
