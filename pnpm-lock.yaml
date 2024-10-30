@@ -1150,9 +1150,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../../packages/runner
-      '@vitest/test-dep-esm-comment':
-        specifier: file:./deps/dep-esm-comment
-        version: file:test/core/deps/dep-esm-comment
+      '@vitest/test-dep-cjs':
+        specifier: file:./deps/dep-cjs
+        version: file:test/core/deps/dep-cjs
       '@vitest/test-dep1':
         specifier: file:./deps/dep1
         version: file:test/core/deps/dep1
@@ -4033,8 +4033,8 @@ packages:
       vitest:
         optional: true
 
-  '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment':
-    resolution: {directory: test/core/deps/dep-esm-comment, type: directory}
+  '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs':
+    resolution: {directory: test/core/deps/dep-cjs, type: directory}
 
   '@vitest/test-dep1@file:test/core/deps/dep1':
     resolution: {directory: test/core/deps/dep1, type: directory}
@@ -12517,7 +12517,7 @@ snapshots:
       typescript: 5.6.3
       vitest: link:packages/vitest
 
-  '@vitest/test-dep-esm-comment@file:test/core/deps/dep-esm-comment': {}
+  '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 
