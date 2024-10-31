@@ -90,7 +90,7 @@ it.concurrent('3rd', ({ expect }) => {
 "
 `;
 
-exports[`retry.test.ts 1`] = `
+exports[`retry-inline.test.ts 1`] = `
 "import { expect, test } from 'vitest'
 
 test('inline repeats', { repeats: 1 }, () => {
@@ -102,62 +102,6 @@ test('inline retry', { retry: 1 }, (ctx) => {
   if (ctx.task.result?.retryCount === 0) {
     throw new Error('boom')
   }
-})
-
-test('file repeats', { repeats: 1 }, () => {
-  expect('foo').toMatchSnapshot()
-})
-
-test('file retry', { retry: 1 }, (ctx) => {
-  expect('foo').toMatchSnapshot()
-  if (ctx.task.result?.retryCount === 0) {
-    throw new Error('boom')
-  }
-})
-
-test('file repeats many', { repeats: 1 }, () => {
-  expect('foo').toMatchSnapshot()
-  expect('bar').toMatchSnapshot()
-})
-
-test('file retry many', { retry: 1 }, (ctx) => {
-  expect('foo').toMatchSnapshot()
-  expect('bar').toMatchSnapshot()
-  if (ctx.task.result?.retryCount === 0) {
-    throw new Error('boom')
-  }
-})
-
-test('file retry partial', { retry: 1 }, (ctx) => {
-  expect('foo').toMatchSnapshot()
-  if (ctx.task.result?.retryCount === 0) {
-    throw new Error('boom')
-  }
-  expect('bar').toMatchSnapshot()
-})
-"
-`;
-
-exports[`same-title-file.test.js 1`] = `
-"import { expect, test } from 'vitest'
-
-test('same title exist', () => {
-  // correct entry exists in .snap
-  expect('a').toMatchSnapshot()
-})
-
-test('same title exist', () => {
-  // wrong entry exists in .snap
-  expect('b').toMatchSnapshot()
-})
-
-test('same title new', () => {
-  expect('a').toMatchSnapshot()
-})
-
-test('same title new', () => {
-  expect('b').toMatchSnapshot()
-  expect('c').toMatchSnapshot()
 })
 "
 `;

@@ -1,5 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`file same title 1`] = `"foo"`;
-
-exports[`file same title 2`] = `"bar"`;
