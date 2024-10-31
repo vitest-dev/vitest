@@ -196,6 +196,36 @@ describe('jest-expect', () => {
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
   })
 
+  it('asymmetric matchers and equality testers', () => {
+    // iterable equality testers
+    expect([new Set(['x'])]).toEqual(
+      expect.arrayContaining([new Set(['x'])]),
+    )
+    expect([new Set()]).not.toEqual(
+      expect.arrayContaining([new Set(['x'])]),
+    )
+    expect({ foo: new Set(['x']) }).toEqual(
+      expect.objectContaining({ foo: new Set(['x']) }),
+    )
+    expect({ foo: new Set() }).not.toEqual(
+      expect.objectContaining({ foo: new Set(['x']) }),
+    )
+
+    // `toStrictEqual` testers
+    class Stock {
+      constructor(public type: string) {}
+    }
+    expect([new Stock('x')]).toEqual(
+      expect.arrayContaining([{ type: 'x' }]),
+    )
+    expect([new Stock('x')]).not.toStrictEqual(
+      expect.arrayContaining([{ type: 'x' }]),
+    )
+    expect([new Stock('x')]).toStrictEqual(
+      expect.arrayContaining([new Stock('x')]),
+    )
+  })
+
   it('asymmetric matchers negate', () => {
     expect('bar').toEqual(expect.not.stringContaining('zoo'))
     expect('bar').toEqual(expect.not.stringMatching(/zoo/))
