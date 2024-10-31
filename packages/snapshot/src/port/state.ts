@@ -49,7 +49,7 @@ interface SaveStatus {
 }
 
 export default class SnapshotState {
-  private _counters: Map<string, number>
+  private _counters = new CounterMap<string>()
   private _dirty: boolean
   private _updateSnapshot: SnapshotUpdateState
   private _snapshotData: SnapshotData
@@ -83,7 +83,6 @@ export default class SnapshotState {
     this._inlineSnapshotStacks = []
     this._rawSnapshots = []
     this._uncheckedKeys = new Set(Object.keys(this._snapshotData))
-    this._counters = new Map()
     this.expand = options.expand || false
     this._updateSnapshot = options.updateSnapshot
     this._snapshotFormat = {
@@ -124,17 +123,12 @@ export default class SnapshotState {
     // clear file
     for (const key of this._testIdToKeys.get(testId)) {
       const name = keyToTestName(key)
-      const counter = this._counters.get(name)
-      if (typeof counter !== 'undefined') {
+      const count = this._counters.get(name)
+      if (count > 0) {
         if (key in this._snapshotData || key in this._initialData) {
           this._snapshotData[key] = this._initialData[key]
         }
-        if (counter > 0) {
-          this._counters.set(name, counter - 1)
-        }
-        else {
-          this._counters.delete(name)
-        }
+        this._counters.set(name, count - 1)
       }
     }
     this._testIdToKeys.delete(testId)
@@ -256,8 +250,8 @@ export default class SnapshotState {
     rawSnapshot,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     // this also increments counter for inline snapshots. maybe we shouldn't?
-    this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
-    const count = Number(this._counters.get(testName))
+    this._counters.increment(testName)
+    const count = this._counters.get(testName)
 
     if (!key) {
       key = testNameToKey(testName, count)
