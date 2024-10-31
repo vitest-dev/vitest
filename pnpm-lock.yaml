@@ -361,8 +361,8 @@ importers:
         specifier: ^0.30.12
         version: 0.30.12
       msw:
-        specifier: ^2.5.2
-        version: 2.5.2(@types/node@22.8.1)(typescript@5.6.3)
+        specifier: ^2.6.0
+        version: 2.6.0(@types/node@22.8.1)(typescript@5.6.3)
       sirv:
         specifier: ^3.0.0
         version: 3.0.0
@@ -7263,6 +7263,16 @@ packages:
 
   msw@2.5.2:
     resolution: {integrity: sha512-eBsFgU30NYtrfC62XzS1rdAzFK+Br0zKU4ORqD9Qliq86362DWZyPiD6FLfMgy0Ktik83DPTXmqPMz2bqwmJdA==}
+    engines: {node: '>=18'}
+    hasBin: true
+    peerDependencies:
+      typescript: '>= 4.8.x'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  msw@2.6.0:
+    resolution: {integrity: sha512-n3tx2w0MZ3H4pxY0ozrQ4sNPzK/dGtlr2cIIyuEsgq2Bhy4wvcW6ZH2w/gXM9+MEUY6HC1fWhqtcXDxVZr5Jxw==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -16487,6 +16497,31 @@ snapshots:
       '@bundled-es-modules/tough-cookie': 0.1.6
       '@inquirer/confirm': 5.0.1(@types/node@22.8.1)
       '@mswjs/interceptors': 0.36.5
+      '@open-draft/until': 2.1.0
+      '@types/cookie': 0.6.0
+      '@types/statuses': 2.0.5
+      chalk: 4.1.2
+      graphql: 16.8.1
+      headers-polyfill: 4.0.3
+      is-node-process: 1.2.0
+      outvariant: 1.4.3
+      path-to-regexp: 6.3.0
+      strict-event-emitter: 0.5.1
+      type-fest: 4.26.1
+      yargs: 17.7.2
+    optionalDependencies:
+      typescript: 5.6.3
+    transitivePeerDependencies:
+      - '@types/node'
+
+  msw@2.6.0(@types/node@22.8.1)(typescript@5.6.3):
+    dependencies:
+      '@bundled-es-modules/cookie': 2.0.0
+      '@bundled-es-modules/statuses': 1.0.1
+      '@bundled-es-modules/tough-cookie': 0.1.6
+      '@inquirer/confirm': 5.0.1(@types/node@22.8.1)
+      '@mswjs/interceptors': 0.36.5
+      '@open-draft/deferred-promise': 2.2.0
       '@open-draft/until': 2.1.0
       '@types/cookie': 0.6.0
       '@types/statuses': 2.0.5
