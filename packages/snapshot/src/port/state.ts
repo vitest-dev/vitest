@@ -255,7 +255,7 @@ export default class SnapshotState {
     error,
     rawSnapshot,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
-    // this also increments counter for inline snapshots. maybe we don't need to?
+    // this also increments counter for inline snapshots. maybe we shouldn't?
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
 
