@@ -9,6 +9,7 @@
     "test:update": "vitest run -u --dir test-update",
     "test:update-none": "CI=true vitest run --dir test-update",
     "test:update-new": "CI=false vitest run --dir test-update",
+    "test:fixtures": "vitest",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {

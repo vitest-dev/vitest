@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`file repeats 1`] = `"foo"`;
+
+exports[`file repeats many 1`] = `"foo"`;
+
+exports[`file repeats many 2`] = `"bar"`;
+
+exports[`file retry 1`] = `"foo"`;
+
+exports[`file retry many 1`] = `"foo"`;
+
+exports[`file retry many 2`] = `"bar"`;
+
+exports[`file retry partial 1`] = `"foo"`;
+
+exports[`file retry partial 2`] = `"bar"`;
