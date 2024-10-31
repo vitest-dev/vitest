@@ -23,6 +23,7 @@ import { saveRawSnapshots } from './rawSnapshot'
 
 import {
   addExtraLineBreaks,
+  DefaultMap,
   getSnapshotData,
   keyToTestName,
   normalizeNewlines,
@@ -54,7 +55,7 @@ export default class SnapshotState {
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
   private _inlineSnapshotStacks: Array<ParsedStack & { testId: string }>
-  private _testIdToKeys = new Map<string, string[]>()
+  private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
   private _rawSnapshots: Array<RawSnapshot>
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
@@ -125,7 +126,7 @@ export default class SnapshotState {
     this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testId !== testId)
     this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testId !== testId)
 
-    for (const key of this._testIdToKeys.get(testId) ?? []) {
+    for (const key of this._testIdToKeys.get(testId)) {
       const name = keyToTestName(key)
       const counter = this._counters.get(name)
       if (typeof counter !== 'undefined') {
@@ -252,14 +253,14 @@ export default class SnapshotState {
     error,
     rawSnapshot,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
+    // this also increments counter for inline snapshots. maybe we don't need to?
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
 
     if (!key) {
       key = testNameToKey(testName, count)
     }
-    this._testIdToKeys.set(testId, (this._testIdToKeys.get(testId) ?? []))
-    this._testIdToKeys.get(testId)?.push(key)
+    this._testIdToKeys.get(testId).push(key)
 
     // Do not mark the snapshot as "checked" if the snapshot is inline and
     // there's an external snapshot. This way the external snapshot can be

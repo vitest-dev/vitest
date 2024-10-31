@@ -50,6 +50,7 @@ export interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
 }
 
+// TODO: probably we don't need much refactoring here yet. separate refactoring
 export class SnapshotClient {
   snapshotStateMap: Map<string, SnapshotState> = new Map()
 
