@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`same title exist 1`] = `"a"`;
+
+exports[`same title exist 2`] = `"wrong"`;

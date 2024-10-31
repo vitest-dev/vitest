@@ -89,3 +89,47 @@ it.concurrent('3rd', ({ expect }) => {
 })
 "
 `;
+
+exports[`same-title-file.test.js 1`] = `
+"import { expect, test } from 'vitest'
+
+test('same title exist', () => {
+  // correct entry exists in .snap
+  expect('a').toMatchSnapshot()
+})
+
+test('same title exist', () => {
+  // wrong entry exists in .snap
+  expect('b').toMatchSnapshot()
+})
+
+test('same title new', () => {
+  expect('a').toMatchSnapshot()
+})
+
+test('same title new', () => {
+  expect('b').toMatchSnapshot()
+  expect('c').toMatchSnapshot()
+})
+"
+`;
+
+exports[`same-title-inline.test.js 1`] = `
+"import { expect, test } from 'vitest'
+
+test('same title', () => {
+  expect('new').toMatchInlineSnapshot(\`"new"\`)
+  expect('new').toMatchInlineSnapshot(\`"new"\`)
+})
+
+test('same title', () => {
+  expect('a').toMatchInlineSnapshot(\`"a"\`)
+  expect('a').toMatchInlineSnapshot(\`"a"\`)
+})
+
+test('same title', () => {
+  expect('b').toMatchInlineSnapshot(\`"b"\`)
+  expect('b').toMatchInlineSnapshot(\`"b"\`)
+})
+"
+`;
