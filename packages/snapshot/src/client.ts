@@ -69,14 +69,17 @@ export class SnapshotClient {
   // }
 
   async finish(filepath: string): Promise<SnapshotResult> {
+    const states = new Set(
+      [...this.fileToTestIds.get(filepath)].map(testId =>
+        this.getSnapshotState(testId),
+      ),
+    )
+    this.fileToTestIds.delete(filepath)
     const results: SnapshotResult[] = []
-    for (const testId of this.fileToTestIds.get(filepath)) {
-      const state = this.getSnapshotState(testId)
+    for (const state of states) {
       const result = await state.pack()
-      this.testIdToSnapshotPath.delete(testId)
       results.push(result)
     }
-    this.fileToTestIds.get(filepath)
     // TODO: aggregate result
     return results[0]
   }
