@@ -51,67 +51,80 @@ export interface SnapshotClientOptions {
 }
 
 export class SnapshotClient {
-  snapshotStateMap: Map<string, SnapshotState> = new Map()
+  // snapshotStateMap: Map<string, SnapshotState> = new Map()
 
   constructor(private options: SnapshotClientOptions = {}) {}
 
-  async setup(
-    filepath: string,
-    options: SnapshotStateOptions,
-  ): Promise<void> {
-    if (this.snapshotStateMap.has(filepath)) {
-      throw new Error('already setup')
-    }
-    this.snapshotStateMap.set(
-      filepath,
-      await SnapshotState.create(filepath, options),
-    )
-  }
+  // async setup(
+  //   filepath: string,
+  //   options: SnapshotStateOptions,
+  // ): Promise<void> {
+  //   if (this.snapshotStateMap.has(filepath)) {
+  //     throw new Error('already setup')
+  //   }
+  //   this.snapshotStateMap.set(
+  //     filepath,
+  //     await SnapshotState.create(filepath, options),
+  //   )
+  // }
 
   async finish(filepath: string): Promise<SnapshotResult> {
-    const state = this.getSnapshotState(filepath)
-    const result = await state.pack()
-    this.snapshotStateMap.delete(filepath)
-    return result
+    const results: SnapshotResult[] = []
+    for (const testId of this.fileToTestIds.get(filepath)) {
+      const state = this.getSnapshotState(testId)
+      const result = await state.pack()
+      this.testIdToSnapshotPath.delete(testId)
+      results.push(result)
+    }
+    this.fileToTestIds.get(filepath)
+    // TODO: aggregate result
+    return results[0]
   }
 
   private fileToTestIds = new DefaultMap<string, Set<string>>(() => new Set())
-  private testIdToSnapshotPath: Record<string, string> = {}
+  private testIdToSnapshotPath = new Map<string, string>()
   private snapshotPathToState = new Map<string, SnapshotState>()
 
+  // resolve snapshot file for each test and reuse state for same snapshot file
+  // TODO: concurrent safe
   async setupTest(
     filepath: string,
     testId: string,
     options: SnapshotStateOptions,
-  ): Promise<void> {
+  ): Promise<SnapshotState> {
     this.fileToTestIds.get(filepath).add(testId)
     const snapshotPath = await options.snapshotEnvironment.resolvePath(filepath)
-    this.testIdToSnapshotPath[testId] = snapshotPath
-    if (!this.snapshotPathToState.has(snapshotPath)) {
+    this.testIdToSnapshotPath.set(testId, snapshotPath)
+    // share same snapshot state for same snapshot path
+    let state = this.snapshotPathToState.get(snapshotPath)
+    if (!state) {
       const content = await options.snapshotEnvironment.readSnapshotFile(snapshotPath)
-      this.snapshotPathToState.set(
-        snapshotPath,
-        new SnapshotState(filepath, snapshotPath, content, options),
-      )
+      state = new SnapshotState(filepath, snapshotPath, content, options)
+      this.snapshotPathToState.set(snapshotPath, state)
     }
+    state.clearTest(testId)
+    return state
   }
 
-  skipTest(filepath: string, testName: string): void {
-    const state = this.getSnapshotState(filepath)
+  skipTest(testId: string, testName: string): void {
+    const state = this.getSnapshotState(testId)
     state.markSnapshotsAsCheckedForTest(testName)
   }
 
-  clearTest(filepath: string, testId: string): void {
-    const state = this.getSnapshotState(filepath)
-    state.clearTest(testId)
-  }
+  // clearTest(testId: string): void {
+  //   const state = this.getSnapshotState(testId)
+  //   state.clearTest(testId)
+  // }
 
-  getSnapshotState(filepath: string): SnapshotState {
-    const state = this.snapshotStateMap.get(filepath)
-    if (!state) {
-      throw new Error('snapshot state not initialized')
+  getSnapshotState(testId: string): SnapshotState {
+    const snapshotPath = this.testIdToSnapshotPath.get(testId)
+    if (snapshotPath) {
+      const state = this.snapshotPathToState.get(snapshotPath)
+      if (state) {
+        return state
+      }
     }
-    return state
+    throw new Error('snapshot state not initialized')
   }
 
   assert(options: AssertOptions): void {
@@ -133,7 +146,7 @@ export class SnapshotClient {
       throw new Error('Snapshot cannot be used outside of test')
     }
 
-    const snapshotState = this.getSnapshotState(filepath)
+    const snapshotState = this.getSnapshotState(testId)
 
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received) {
@@ -197,7 +210,7 @@ export class SnapshotClient {
         throw new Error('Snapshot cannot be used outside of test')
       }
 
-      const snapshotState = this.getSnapshotState(filepath)
+      const snapshotState = this.getSnapshotState(options.testId)
 
       // save the filepath, so it don't lose even if the await make it out-of-context
       options.filepath ||= filepath
@@ -215,6 +228,9 @@ export class SnapshotClient {
   }
 
   clear(): void {
-    this.snapshotStateMap.clear()
+    this.fileToTestIds.clear()
+    this.testIdToSnapshotPath.clear()
+    this.snapshotPathToState.clear()
+    // this.snapshotStateMap.clear()
   }
 }
