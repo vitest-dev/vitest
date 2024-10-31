@@ -124,6 +124,9 @@ export class SnapshotClient {
         return state
       }
     }
+    // TODO:
+    // maybe should setup one for fallback in concurrent case?
+    // or just warning users to use `TestContext.expect`?
     throw new Error('snapshot state not initialized')
   }
 
