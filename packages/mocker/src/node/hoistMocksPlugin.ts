@@ -20,9 +20,9 @@ import { esmWalker } from './esmWalker'
 interface HoistMocksOptions {
   /**
    * List of modules that should always be imported before compiler hints.
-   * @default ['vitest']
+   * @default 'vitest'
    */
-  hoistedModules?: string[]
+  hoistedModule?: string
   /**
    * @default ["vi", "vitest"]
    */
@@ -163,7 +163,7 @@ export function hoistMocks(
     dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
     hoistedMethodNames = ['hoisted'],
     utilsObjectNames = ['vi', 'vitest'],
-    hoistedModules = ['vitest'],
+    hoistedModule = 'vitest',
   } = options
 
   // hoist at the start of the file, after the hashbang
@@ -192,7 +192,7 @@ export function hoistMocks(
     const source = importNode.source.value as string
     // always hoist vitest import to top of the file, so
     // "vi" helpers can access it
-    if (hoistedModules.includes(source)) {
+    if (hoistedModule === source) {
       hoistedModuleImported = true
       return
     }
@@ -305,6 +305,8 @@ export function hoistMocks(
     }
   }
 
+  const usedUtilityExports = new Set<string>()
+
   esmWalker(ast, {
     onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
@@ -338,6 +340,7 @@ export function hoistMocks(
         && isIdentifier(node.callee.property)
       ) {
         const methodName = node.callee.property.name
+        usedUtilityExports.add(node.callee.object.name)
 
         if (hoistableMockMethodNames.includes(methodName)) {
           const method = `${node.callee.object.name}.${methodName}`
@@ -530,7 +533,19 @@ export function hoistMocks(
   }
 
   if (!hoistedModuleImported && hoistedNodes.length) {
-    s.prepend(API_NOT_FOUND_CHECK(utilsObjectNames))
+    const utilityImports = [...usedUtilityExports]
+    // "vi" or "vitest" is imported from a module other than "vitest"
+    if (utilityImports.some(name => idToImportMap.has(name))) {
+      s.prepend(API_NOT_FOUND_CHECK(utilityImports))
+    }
+    // if "vi" or "vitest" are not imported at all, import them
+    else if (utilityImports.length) {
+      s.prepend(
+        `import { ${[...usedUtilityExports].join(', ')} } from ${JSON.stringify(
+          hoistedModule,
+        )}\n`,
+      )
+    }
   }
 
   return {

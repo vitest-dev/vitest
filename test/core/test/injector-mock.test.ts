@@ -33,7 +33,7 @@ test('hoists mock, unmock, hoisted', () => {
   vi.unmock('path')
   vi.hoisted(() => {})
   `)).toMatchInlineSnapshot(`
-    "if (typeof globalThis["vi"] === "undefined" && typeof globalThis["vitest"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' options") }
+    "import { vi } from "vitest"
     vi.mock('path', () => {})
     vi.unmock('path')
     vi.hoisted(() => {})"
@@ -1211,7 +1211,7 @@ await vi
     vi.mock(await import(\`./path\`), () => {});
     `),
     ).toMatchInlineSnapshot(`
-      "if (typeof globalThis["vi"] === "undefined" && typeof globalThis["vitest"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' options") }
+      "import { vi } from "vitest"
       vi.mock('./path')
       vi.mock(somePath)
       vi.mock(\`./path\`)
@@ -1271,6 +1271,58 @@ test('test', async () => {
         await import(dynamicName)
       })"
     `)
+  })
+
+  test('correctly hoists when import.meta is used', () => {
+    expect(hoistSimpleCode(`
+import { calc } from './calc'
+function sum(a, b) {
+  return calc("+", 1, 2);
+}
+
+if (import.meta.vitest) {
+  const { vi, test, expect } = import.meta.vitest
+  vi.mock('faker')
+  test('sum', () => {
+    expect(sum(1, 2)).toBe(3)
+  })
+}
+      `)).toMatchInlineSnapshot(`
+        "import { vi } from "vitest"
+        vi.mock('faker')
+        const __vi_import_0__ = await import("./calc");
+
+
+        function sum(a, b) {
+          return __vi_import_0__.calc("+", 1, 2);
+        }
+
+        if (import.meta.vitest) {
+          const { vi, test, expect } = import.meta.vitest
+            test('sum', () => {
+            expect(sum(1, 2)).toBe(3)
+          })
+        }"
+      `)
+  })
+
+  test('injects an error if a utility import is imported from an external module', () => {
+    expect(hoistSimpleCode(`
+import { expect, test, vi } from './proxy-module'
+vi.mock('vite')
+test('hi', () => {
+  expect(1 + 1).toEqual(2)
+})
+      `)).toMatchInlineSnapshot(`
+        "if (typeof globalThis["vi"] === "undefined") { throw new Error("There are some problems in resolving the mocks API.\\nYou may encounter this issue when importing the mocks API from another module other than 'vitest'.\\nTo fix this issue you can either:\\n- import the mocks API directly from 'vitest'\\n- enable the 'globals' options") }
+        __vi_import_0__.vi.mock('vite')
+        const __vi_import_0__ = await import("./proxy-module");
+
+
+        __vi_import_0__.test('hi', () => {
+          __vi_import_0__.expect(1 + 1).toEqual(2)
+        })"
+      `)
   })
 })
 
