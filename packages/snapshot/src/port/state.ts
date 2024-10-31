@@ -68,7 +68,7 @@ export default class SnapshotState {
   private updated = new CounterMap<string>()
   expand: boolean
 
-  private constructor(
+  constructor(
     public testFilePath: string,
     public snapshotPath: string,
     snapshotContent: string | null,

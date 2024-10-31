@@ -1,7 +1,7 @@
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
-import { deepMergeSnapshot } from './port/utils'
+import { deepMergeSnapshot, DefaultMap } from './port/utils'
 
 function createMismatchError(
   message: string,
@@ -73,6 +73,27 @@ export class SnapshotClient {
     const result = await state.pack()
     this.snapshotStateMap.delete(filepath)
     return result
+  }
+
+  private fileToTestIds = new DefaultMap<string, Set<string>>(() => new Set())
+  private testIdToSnapshotPath: Record<string, string> = {}
+  private snapshotPathToState = new Map<string, SnapshotState>()
+
+  async setupTest(
+    filepath: string,
+    testId: string,
+    options: SnapshotStateOptions,
+  ): Promise<void> {
+    this.fileToTestIds.get(filepath).add(testId)
+    const snapshotPath = await options.snapshotEnvironment.resolvePath(filepath)
+    this.testIdToSnapshotPath[testId] = snapshotPath
+    if (!this.snapshotPathToState.has(snapshotPath)) {
+      const content = await options.snapshotEnvironment.readSnapshotFile(snapshotPath)
+      this.snapshotPathToState.set(
+        snapshotPath,
+        new SnapshotState(filepath, snapshotPath, content, options),
+      )
+    }
   }
 
   skipTest(filepath: string, testName: string): void {
