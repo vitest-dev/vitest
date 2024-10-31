@@ -69,7 +69,9 @@ export class VitestTestRunner implements VitestRunner {
       }
 
       const result = await this.snapshotClient.finish(suite.file.filepath)
-      await rpc().snapshotSaved(result)
+      if (result) {
+        await rpc().snapshotSaved(result)
+      }
     }
 
     this.workerState.current = suite.suite || suite.file
