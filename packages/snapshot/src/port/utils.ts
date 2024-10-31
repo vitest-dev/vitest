@@ -281,3 +281,17 @@ export class DefaultMap<K, V> extends Map<K, V> {
     return super.get(key)!
   }
 }
+
+export class CounterMap<K> extends Map<K, number> {
+  increment(key: K): void {
+    this.set(key, (this.get(key) ?? 0) + 1)
+  }
+
+  total(): number {
+    let total = 0
+    for (const x of this.values()) {
+      total += x
+    }
+    return total
+  }
+}

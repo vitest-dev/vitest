@@ -23,6 +23,7 @@ import { saveRawSnapshots } from './rawSnapshot'
 
 import {
   addExtraLineBreaks,
+  CounterMap,
   DefaultMap,
   getSnapshotData,
   keyToTestName,
@@ -61,12 +62,11 @@ export default class SnapshotState {
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
   private _fileExists: boolean
-
-  added: number
+  private added = new CounterMap<string>()
+  private matched = new CounterMap<string>()
+  private unmatched = new CounterMap<string>()
+  private updated = new CounterMap<string>()
   expand: boolean
-  matched: number
-  unmatched: number
-  updated: number
 
   private constructor(
     public testFilePath: string,
@@ -85,11 +85,7 @@ export default class SnapshotState {
     this._uncheckedKeys = new Set(Object.keys(this._snapshotData))
     this._counters = new Map()
     this.expand = options.expand || false
-    this.added = 0
-    this.matched = 0
-    this.unmatched = 0
     this._updateSnapshot = options.updateSnapshot
-    this.updated = 0
     this._snapshotFormat = {
       printBasicPrototype: false,
       escapeString: false,
@@ -121,11 +117,11 @@ export default class SnapshotState {
   }
 
   clearTest(testId: string): void {
-    // TODO: reset stats: added, matched, etc..
-
+    // clear inline
     this._inlineSnapshots = this._inlineSnapshots.filter(s => s.testId !== testId)
     this._inlineSnapshotStacks = this._inlineSnapshotStacks.filter(s => s.testId !== testId)
 
+    // clear file
     for (const key of this._testIdToKeys.get(testId)) {
       const name = keyToTestName(key)
       const counter = this._counters.get(name)
@@ -142,6 +138,12 @@ export default class SnapshotState {
       }
     }
     this._testIdToKeys.delete(testId)
+
+    // clear stats
+    this.added.delete(testId)
+    this.updated.delete(testId)
+    this.matched.delete(testId)
+    this.unmatched.delete(testId)
   }
 
   protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
@@ -357,10 +359,10 @@ export default class SnapshotState {
       if (this._updateSnapshot === 'all') {
         if (!pass) {
           if (hasSnapshot) {
-            this.updated++
+            this.updated.increment(testId)
           }
           else {
-            this.added++
+            this.added.increment(testId)
           }
 
           this._addSnapshot(key, receivedSerialized, {
@@ -370,7 +372,7 @@ export default class SnapshotState {
           })
         }
         else {
-          this.matched++
+          this.matched.increment(testId)
         }
       }
       else {
@@ -379,7 +381,7 @@ export default class SnapshotState {
           testId,
           rawSnapshot,
         })
-        this.added++
+        this.added.increment(testId)
       }
 
       return {
@@ -392,7 +394,7 @@ export default class SnapshotState {
     }
     else {
       if (!pass) {
-        this.unmatched++
+        this.unmatched.increment(testId)
         return {
           actual: removeExtraLineBreaks(receivedSerialized),
           count,
@@ -405,7 +407,7 @@ export default class SnapshotState {
         }
       }
       else {
-        this.matched++
+        this.matched.increment(testId)
         return {
           actual: '',
           count,
@@ -436,10 +438,10 @@ export default class SnapshotState {
 
     const status = await this.save()
     snapshot.fileDeleted = status.deleted
-    snapshot.added = this.added
-    snapshot.matched = this.matched
-    snapshot.unmatched = this.unmatched
-    snapshot.updated = this.updated
+    snapshot.added = this.added.total()
+    snapshot.matched = this.matched.total()
+    snapshot.unmatched = this.unmatched.total()
+    snapshot.updated = this.updated.total()
     snapshot.unchecked = !status.deleted ? uncheckedCount : 0
     snapshot.uncheckedKeys = Array.from(uncheckedKeys)
 
