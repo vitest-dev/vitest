@@ -217,13 +217,31 @@ Type helper for TypeScript. Just returns the object that was passed.
 When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
 
 ```ts
-import example from './example.js'
+// example.ts
+export function add(x: number, y: number): number {
+  return x + y
+}
 
-vi.mock('./example.js')
+export function fetchSomething(): Promise<Response> {
+  return fetch('https://vitest.dev/')
+}
+```
+
+```ts
+// example.test.ts
+import * as example from './example'
+
+vi.mock('./example')
 
 test('1 + 1 equals 10', async () => {
-  vi.mocked(example.calc).mockReturnValue(10)
-  expect(example.calc(1, '+', 1)).toBe(10)
+  vi.mocked(example.add).mockReturnValue(10)
+  expect(example.add(1, 1)).toBe(10)
+})
+
+test('mock return value with only partially correct typing', async () => {
+  vi.mocked(example.fetchSomething).mockResolvedValue(new Response('hello'))
+  vi.mocked(example.fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+  // vi.mocked(example.someFn).mockResolvedValue({ ok: false }) // this is a type error
 })
 ```
 
