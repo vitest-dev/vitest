@@ -212,7 +212,7 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
 
   /**
    * Used when you want to check that an item is in a list.
-   * For testing the items in the list, this  matcher recursively checks the
+   * For testing the items in the list, this matcher recursively checks the
    * equality of all fields, rather than checking for object identity.
    *
    * @example
@@ -324,11 +324,11 @@ export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
   toHaveLength: (length: number) => void
 
   /**
-   * Use to check if property at provided reference keyPath exists for an object.
-   * For checking deeply nested properties in an object you may use dot notation or an array containing
-   * the keyPath for deep references.
+   * Use to check if a property at the specified path exists on an object.
+   * For checking deeply nested properties, you may use dot notation or an array containing
+   * the path segments for deep references.
    *
-   * Optionally, you can provide a value to check if it's equal to the value present at keyPath
+   * Optionally, you can provide a value to check if it matches the value present at the path
    * on the target object. This matcher uses 'deep equality' (like `toEqual()`) and recursively checks
    * the equality of all fields.
    *
