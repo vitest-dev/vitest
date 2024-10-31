@@ -1,7 +1,7 @@
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
 import SnapshotState from './port/state'
-import { deepMergeSnapshot, DefaultMap } from './port/utils'
+import { deepMergeSnapshot, DefaultMap, PromiseMap } from './port/utils'
 
 function createMismatchError(
   message: string,
@@ -83,7 +83,7 @@ export class SnapshotClient {
 
   private fileToTestIds = new DefaultMap<string, Set<string>>(() => new Set())
   private testIdToSnapshotPath = new Map<string, string>()
-  private snapshotPathToState = new Map<string, SnapshotState>()
+  private snapshotPathToState = new PromiseMap<string, SnapshotState>()
 
   // resolve snapshot file for each test and reuse state for same snapshot file
   // TODO: concurrent safe
@@ -95,13 +95,10 @@ export class SnapshotClient {
     this.fileToTestIds.get(filepath).add(testId)
     const snapshotPath = await options.snapshotEnvironment.resolvePath(filepath)
     this.testIdToSnapshotPath.set(testId, snapshotPath)
-    // share same snapshot state for same snapshot path
-    let state = this.snapshotPathToState.get(snapshotPath)
-    if (!state) {
+    const state = await this.snapshotPathToState.getOrCreate(snapshotPath, async () => {
       const content = await options.snapshotEnvironment.readSnapshotFile(snapshotPath)
-      state = new SnapshotState(filepath, snapshotPath, content, options)
-      this.snapshotPathToState.set(snapshotPath, state)
-    }
+      return new SnapshotState(filepath, snapshotPath, content, options)
+    })
     state.clearTest(testId)
     return state
   }
