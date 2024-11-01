@@ -32,15 +32,6 @@ interface TestOptions {
 }
 ```
 
-Vitest 1.3.0 deprecates the use of options as the last parameter. You will see a deprecation message until 2.0.0 when this syntax will be removed. If you need to pass down options, use `test` function's second argument:
-
-```ts
-import { test } from 'vitest'
-
-test('flaky test', () => {}, { retry: 3 }) // [!code --]
-test('flaky test', { retry: 3 }, () => {}) // [!code ++]
-```
-
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
 ::: tip
