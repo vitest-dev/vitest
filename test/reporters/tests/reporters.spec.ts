@@ -6,7 +6,7 @@ import { JUnitReporter } from '../../../packages/vitest/src/node/reporters/junit
 import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
 import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap-flat'
 import { getContext } from '../src/context'
-import { files } from '../src/data'
+import { files, passedFiles } from '../src/data'
 
 const beautify = (json: string) => JSON.parse(json)
 
@@ -55,6 +55,48 @@ test('JUnit reporter', async () => {
   // Act
   await reporter.onInit(context.vitest)
   await reporter.onFinished([])
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+
+test('JUnit reporter without classname', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({})
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+
+test('JUnit reporter with custom string classname', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({ classname: 'my-custom-classname' })
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+
+test('JUnit reporter with custom function classname', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({ classname: task => `file:${task.file.name}` })
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
 
   // Assert
   expect(context.output).toMatchSnapshot()

@@ -13,7 +13,7 @@ import { IndentedLogger } from './renderers/indented-logger'
 
 export interface JUnitOptions {
   outputFile?: string
-  classname?: string
+  classname?: string | ((task: Task) => string)
   suiteName?: string
   /**
    * Write <system-out> and <system-err> for console output
@@ -198,7 +198,9 @@ export class JUnitReporter implements Reporter {
       await this.writeElement(
         'testcase',
         {
-          classname: this.options.classname ?? filename,
+          classname: typeof this.options.classname === 'function'
+            ? this.options.classname(task)
+            : this.options.classname ?? filename,
           file: this.options.addFileAttribute ? filename : undefined,
           name: task.name,
           time: getDuration(task),
