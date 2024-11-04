@@ -61,11 +61,6 @@ export default withPwa(defineConfig({
   themeConfig: {
     logo: '/logo.svg',
 
-    editLink: {
-      pattern: 'https://github.com/vitest-dev/vitest/tree/main/docs/:path',
-      text: 'Suggest changes to this page',
-    },
-
     search: {
       provider: 'local',
       /* provider: 'algolia',
