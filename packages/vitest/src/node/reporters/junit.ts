@@ -208,18 +208,20 @@ export class JUnitReporter implements Reporter {
     for (const task of tasks) {
       let classname = filename
 
+      const templateVars: ClassnameTemplateVariables = {
+        filename: task.file.name,
+        filepath: task.file.filepath,
+        suitename: this.options.suiteName ?? task.suite?.name ?? '',
+      }
+
       if (typeof this.options.classnameTemplate === 'function') {
-        classname = this.options.classnameTemplate({
-          filename: task.file.name,
-          filepath: task.file.filepath,
-          suitename: task.suite?.name ?? '',
-        })
+        classname = this.options.classnameTemplate(templateVars)
       }
       else if (typeof this.options.classnameTemplate === 'string') {
         classname = this.options.classnameTemplate
-          .replace(/\{filename\}/g, task.file.name)
-          .replace(/\{filepath\}/g, task.file.filepath)
-          .replace(/\{suitename\}/g, task.suite?.name ?? '')
+          .replace(/\{filename\}/g, templateVars.filename)
+          .replace(/\{filepath\}/g, templateVars.filepath)
+          .replace(/\{suitename\}/g, templateVars.suitename)
       }
       else if (typeof this.options.classname === 'string') {
         classname = this.options.classname
