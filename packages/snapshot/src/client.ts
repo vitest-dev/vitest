@@ -60,7 +60,7 @@ export class SnapshotClient {
     options: SnapshotStateOptions,
   ): Promise<void> {
     if (this.snapshotStateMap.has(filepath)) {
-      throw new Error('already setup')
+      return
     }
     this.snapshotStateMap.set(
       filepath,
@@ -88,7 +88,9 @@ export class SnapshotClient {
   getSnapshotState(filepath: string): SnapshotState {
     const state = this.snapshotStateMap.get(filepath)
     if (!state) {
-      throw new Error('snapshot state not initialized')
+      throw new Error(
+        `The snapshot state for '${filepath}' is not found. Did you call 'SnapshotClient.setup()'?`,
+      )
     }
     return state
   }
