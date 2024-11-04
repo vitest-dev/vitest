@@ -36,7 +36,11 @@ interface AssertOptions {
   received: unknown
   filepath: string
   name: string
-  testId: string
+  /**
+   * Not required but needed for `SnapshotClient.clearTest` to implement test-retry behavior.
+   * @default name
+   */
+  testId?: string
   message?: string
   isInline?: boolean
   properties?: object
@@ -99,7 +103,7 @@ export class SnapshotClient {
     const {
       filepath,
       name,
-      testId,
+      testId = name,
       message,
       isInline = false,
       properties,
