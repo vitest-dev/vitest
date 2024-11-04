@@ -88,9 +88,22 @@ test('JUnit reporter with custom string classname', async () => {
   expect(context.output).toMatchSnapshot()
 })
 
-test('JUnit reporter with custom function classname', async () => {
+test('JUnit reporter with custom function classnameTemplate', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classname: task => `file:${task.file.name}` })
+  const reporter = new JUnitReporter({ classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath} - suite:${task.suitename}` })
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+test('JUnit reporter with custom string classnameTemplate', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({ classnameTemplate: `filename:{filename} - filepath:{filepath} - suite:{suitename}` })
   const context = getContext()
 
   // Act

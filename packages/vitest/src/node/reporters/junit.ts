@@ -11,9 +11,20 @@ import { getOutputFile } from '../../utils/config-helpers'
 import { capturePrintError } from '../error'
 import { IndentedLogger } from './renderers/indented-logger'
 
+interface ClassnameTemplateVariables {
+  filename: string
+  filepath: string
+  suitename: string
+}
+
 export interface JUnitOptions {
   outputFile?: string
-  classname?: string | ((task: Task) => string)
+  classname?: string
+
+  /**
+   * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders like {filename}, {filepath}, {suitename}.
+   */
+  classnameTemplate?: string | ((classnameVariables: ClassnameTemplateVariables) => string)
   suiteName?: string
   /**
    * Write <system-out> and <system-err> for console output
@@ -195,12 +206,29 @@ export class JUnitReporter implements Reporter {
 
   async writeTasks(tasks: Task[], filename: string): Promise<void> {
     for (const task of tasks) {
+      let classname = filename
+
+      if (typeof this.options.classnameTemplate === 'function') {
+        classname = this.options.classnameTemplate({
+          filename: task.file.name,
+          filepath: task.file.filepath,
+          suitename: task.suite?.name ?? '',
+        })
+      }
+      else if (typeof this.options.classnameTemplate === 'string') {
+        classname = this.options.classnameTemplate
+          .replace(/\{filename\}/g, task.file.name)
+          .replace(/\{filepath\}/g, task.file.filepath)
+          .replace(/\{suitename\}/g, task.suite?.name ?? '')
+      }
+      else if (typeof this.options.classname === 'string') {
+        classname = this.options.classname
+      }
+
       await this.writeElement(
         'testcase',
         {
-          classname: typeof this.options.classname === 'function'
-            ? this.options.classname(task)
-            : this.options.classname ?? filename,
+          classname,
           file: this.options.addFileAttribute ? filename : undefined,
           name: task.name,
           time: getDuration(task),

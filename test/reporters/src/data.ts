@@ -14,35 +14,6 @@ const file: File = {
 }
 file.file = file
 
-const passedFile: File = {
-  id: '1223128da3',
-  name: 'test/core/test/basic.test.ts',
-  type: 'suite',
-  meta: {},
-  mode: 'run',
-  filepath: '/vitest/test/core/test/basic.test.ts',
-  result: { state: 'pass', duration: 145.99284195899963 },
-  tasks: [
-    {
-      id: '1223128da3_0_0',
-      type: 'test',
-      name: 'Math.sqrt()',
-      mode: 'run',
-      fails: undefined,
-      meta: {},
-      file,
-      result: {
-        state: 'pass',
-        duration: 1.4422860145568848,
-      },
-      context: null as any,
-    },
-  ],
-  projectName: '',
-  file: null!,
-}
-passedFile.file = passedFile
-
 const suite: Suite = {
   id: '1223128da3_0',
   type: 'suite',
@@ -53,6 +24,37 @@ const suite: Suite = {
   result: { state: 'pass', duration: 1.90183687210083 },
   tasks: [],
 }
+
+const passedFile: File = {
+  id: '1223128da3',
+  name: 'basic.test.ts',
+  type: 'suite',
+  suite,
+  meta: {},
+  mode: 'run',
+  filepath: '/vitest/test/core/test/basic.test.ts',
+  result: { state: 'pass', duration: 145.99284195899963 },
+  tasks: [
+  ],
+  projectName: '',
+  file: null!,
+}
+passedFile.file = passedFile
+passedFile.tasks.push({
+  id: '1223128da3_0_0',
+  type: 'test',
+  name: 'Math.sqrt()',
+  mode: 'run',
+  fails: undefined,
+  suite,
+  meta: {},
+  file: passedFile,
+  result: {
+    state: 'pass',
+    duration: 1.4422860145568848,
+  },
+  context: null as any,
+})
 
 const error: ErrorWithDiff = {
   name: 'AssertionError',
