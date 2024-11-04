@@ -39,3 +39,10 @@ export function addSerializer(plugin: PrettyFormatPlugin): void {
 export function getSerializers(): PrettyFormatPlugins {
   return PLUGINS
 }
+
+// TODO: expose from pretty-format?
+export class SerializerSkipSnapshotError extends Error {}
+
+export function skipSnapshot(): never {
+  throw new SerializerSkipSnapshotError()
+}

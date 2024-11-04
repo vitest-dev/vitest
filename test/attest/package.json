@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-attest",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@ark/attest": "^0.25.0"
+  }
+}

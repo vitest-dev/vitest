@@ -321,6 +321,7 @@ export type {
   SnapshotUpdateState,
   UncheckedSnapshot,
 } from '@vitest/snapshot'
+export { skipSnapshot } from '@vitest/snapshot'
 
 /** @deprecated import from `vitest/node` instead */
 export type BrowserScript = BrowserScript_

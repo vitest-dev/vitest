@@ -69,8 +69,8 @@ const SYMBOL_REGEXP = /^Symbol\((.*)\)(.*)$/
 const NEWLINE_REGEXP = /\n/g
 
 class PrettyFormatPluginError extends Error {
-  constructor(message: string, stack: string) {
-    super(message)
+  constructor(message: string, stack: string, cause?: unknown) {
+    super(message, { cause })
     this.stack = stack
     this.name = this.constructor.name
   }
@@ -332,7 +332,7 @@ function printPlugin(
       )
   }
   catch (error: any) {
-    throw new PrettyFormatPluginError(error.message, error.stack)
+    throw new PrettyFormatPluginError(error.message, error.stack, error)
   }
   if (typeof printed !== 'string') {
     throw new TypeError(
@@ -350,7 +350,7 @@ function findPlugin(plugins: Plugins, val: unknown) {
       }
     }
     catch (error: any) {
-      throw new PrettyFormatPluginError(error.message, error.stack)
+      throw new PrettyFormatPluginError(error.message, error.stack, error)
     }
   }
 

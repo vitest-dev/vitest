@@ -19,8 +19,9 @@ import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import { saveInlineSnapshots } from './inlineSnapshot'
-import { saveRawSnapshots } from './rawSnapshot'
+import { SerializerSkipSnapshotError } from './plugins'
 
+import { saveRawSnapshots } from './rawSnapshot'
 import {
   addExtraLineBreaks,
   getSnapshotData,
@@ -261,10 +262,19 @@ export default class SnapshotState {
     // - make snapshot assertion extendable to support such options somehow (not sure)
     // - recommend to use a separate `include` combination for type testing like before, so partially skiiping snapshot is not necessary.
 
-    let receivedSerialized
-      = rawSnapshot && typeof received === 'string'
-        ? (received as string)
-        : serialize(received, undefined, this._snapshotFormat)
+    let receivedSerialized: string
+    try {
+      receivedSerialized
+        = rawSnapshot && typeof received === 'string'
+          ? (received as string)
+          : serialize(received, undefined, this._snapshotFormat)
+    }
+    catch (e) {
+      if (e instanceof Error && e.cause instanceof SerializerSkipSnapshotError) {
+        return { pass: true, actual: '<skipped>', key, count }
+      }
+      throw e
+    }
 
     if (!rawSnapshot) {
       receivedSerialized = addExtraLineBreaks(receivedSerialized)
