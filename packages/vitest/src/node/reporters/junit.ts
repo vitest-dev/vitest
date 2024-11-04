@@ -19,6 +19,7 @@ interface ClassnameTemplateVariables {
 
 export interface JUnitOptions {
   outputFile?: string
+  /** @deprecated Use `classnameTempalte` instead. */
   classname?: string
 
   /**
