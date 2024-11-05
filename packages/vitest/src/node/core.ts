@@ -77,7 +77,8 @@ export class Vitest {
 
   private coreWorkspaceProject!: WorkspaceProject
 
-  private resolvedProjects: WorkspaceProject[] = []
+  /** @private */
+  public resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
 
   public distPath = distDir

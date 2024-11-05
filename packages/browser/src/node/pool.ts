@@ -86,8 +86,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
           [...files.map(f => relative(project.config.root, f))].join(', '),
         )
         const promise = waitForTests(method, contextId, project, files)
-        promises.push(promise)
-        orchestrator.createTesters(files)
+        const tester = orchestrator.createTesters(files).catch((error) => {
+          if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
+            return
+          }
+          return Promise.reject(error)
+        })
+        promises.push(promise, tester)
       }
       else {
         const contextId = crypto.randomUUID()
@@ -156,6 +161,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     async close() {
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
+      ctx.resolvedProjects.forEach((project) => {
+        project.browser?.state.orchestrators.forEach((orchestrator) => {
+          orchestrator.$close()
+        })
+      })
     },
     runTests: files => runWorkspaceTests('run', files),
     collectTests: files => runWorkspaceTests('collect', files),
