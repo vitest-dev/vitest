@@ -5,6 +5,7 @@ import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import { version } from '../../package.json'
 import { teamMembers } from './contributors'
 import {
+  bluesky,
   contributing,
   discord,
   font,
@@ -104,6 +105,7 @@ export default ({ mode }: { mode: string }) => {
       },
 
       socialLinks: [
+        { icon: 'bluesky', link: bluesky },
         { icon: 'mastodon', link: mastodon },
         { icon: 'x', link: twitter },
         { icon: 'discord', link: discord },
