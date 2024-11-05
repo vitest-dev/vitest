@@ -425,7 +425,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       name: 'vitest:browser:transform-tester-html',
       enforce: 'pre',
       async transformIndexHtml(html, ctx) {
-        if (!ctx.path.startsWith(browserServer.prefixTesterUrl)) {
+        if (ctx.filename !== browserServer.testerFilepath) {
           return
         }
 
@@ -439,14 +439,15 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           ? browserServer.stateJs
           : await browserServer.stateJs
 
-        const testerScripts: HtmlTagDescriptor[] = []
-        if (resolve(distRoot, 'client/tester/tester.html') !== browserServer.testerFilepath) {
+        const testerTags: HtmlTagDescriptor[] = []
+        const isDefaultTemplate = resolve(distRoot, 'client/tester/tester.html') === browserServer.testerFilepath
+        if (!isDefaultTemplate) {
           const manifestContent = browserServer.manifest instanceof Promise
             ? await browserServer.manifest
             : browserServer.manifest
           const testerEntry = manifestContent['tester/tester.html']
 
-          testerScripts.push({
+          testerTags.push({
             tag: 'script',
             attrs: {
               type: 'module',
@@ -459,7 +460,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           for (const importName of testerEntry.imports || []) {
             const entryManifest = manifestContent[importName]
             if (entryManifest) {
-              testerScripts.push(
+              testerTags.push(
                 {
                   tag: 'link',
                   attrs: {
@@ -472,6 +473,24 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               )
             }
           }
+        }
+        else {
+          // inject the reset style only in the default template,
+          // allowing users to customize the style in their own template
+          testerTags.push({
+            tag: 'style',
+            children: `
+html {
+  padding: 0;
+  margin: 0;
+}
+body {
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+}`,
+            injectTo: 'head',
+          })
         }
 
         return [
@@ -504,7 +523,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               } as const
             : null,
           ...browserServer.testerScripts,
-          ...testerScripts,
+          ...testerTags,
           {
             tag: 'script',
             attrs: {

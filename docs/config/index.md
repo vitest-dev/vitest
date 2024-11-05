@@ -970,7 +970,7 @@ Silent console output from tests
 Path to setup files. They will be run before each test file.
 
 :::info
-Changing setup files will trigger rerun of all tests.
+Editing a setup file will automatically trigger a rerun of all tests.
 :::
 
 You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads.

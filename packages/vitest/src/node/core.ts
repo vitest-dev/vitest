@@ -352,6 +352,7 @@ export class Vitest {
       process.exitCode = 1
     }
 
+    this.checkUnhandledErrors(errors)
     await this.report('onFinished', files, errors)
     await this.initCoverageProvider()
     await this.coverageProvider?.mergeReports?.(coverages)
@@ -613,9 +614,11 @@ export class Vitest {
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
         const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
+        const errors = this.state.getUnhandledErrors()
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
-        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors(), coverage)
+        this.checkUnhandledErrors(errors)
+        await this.report('onFinished', this.state.getFiles(files), errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
 
         this.runningPromise = undefined
@@ -682,14 +685,14 @@ export class Vitest {
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), !trigger)
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
@@ -702,7 +705,7 @@ export class Vitest {
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
-    await this.rerunFiles(files, 'change project filter')
+    await this.rerunFiles(files, 'change project filter', pattern === '')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -723,7 +726,7 @@ export class Vitest {
         })
       })
     }
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
@@ -731,11 +734,11 @@ export class Vitest {
 
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
 
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async rerunFailed() {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
+    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
   }
 
   async updateSnapshot(files?: string[]) {
@@ -752,7 +755,7 @@ export class Vitest {
     }
 
     try {
-      await this.rerunFiles(files, 'update snapshot')
+      await this.rerunFiles(files, 'update snapshot', false)
     }
     finally {
       delete this.configOverride.snapshotOptions
@@ -893,6 +896,12 @@ export class Vitest {
       if (needsRerun.length) {
         this.scheduleRerun(needsRerun)
       }
+    }
+  }
+
+  checkUnhandledErrors(errors: unknown[]) {
+    if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
+      process.exitCode = 1
     }
   }
 

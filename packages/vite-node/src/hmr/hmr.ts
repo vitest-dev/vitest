@@ -160,8 +160,8 @@ async function fetchUpdate(
   }
 }
 
-function warnFailedFetch(err: Error, path: string | string[]) {
-  if (!err.message.match('fetch')) {
+function warnFailedFetch(err: unknown, path: string | string[]) {
+  if (!(err instanceof Error) || !err.message.match('fetch')) {
     console.error(err)
   }
 
