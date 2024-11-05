@@ -111,6 +111,7 @@ export class Vitest {
     this._browserLastPort = defaultBrowserPort
     this.pool?.close?.()
     this.pool = undefined
+    this.closingPromise = undefined
     this.projects = []
     this.resolvedProjects = []
     this._workspaceConfigPath = undefined
@@ -1053,9 +1054,7 @@ export class Vitest {
           })
           this.logger.logUpdate.done() // restore terminal cursor
         })
-      })().finally(() => {
-        this.closingPromise = undefined
-      })
+      })()
     }
     return this.closingPromise
   }

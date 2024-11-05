@@ -432,6 +432,7 @@ export class WorkspaceProject {
       )
     }
 
+    this.closingPromise = undefined
     this.testProject = new TestProject(this)
 
     this.server = server
@@ -481,9 +482,7 @@ export class WorkspaceProject {
           this.browser?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
-      ).then(() => (this._provided = {} as any)).finally(() => {
-        this.closingPromise = undefined
-      })
+      ).then(() => (this._provided = {} as any))
     }
     return this.closingPromise
   }
