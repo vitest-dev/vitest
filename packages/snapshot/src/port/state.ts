@@ -251,17 +251,6 @@ export default class SnapshotState {
       this._uncheckedKeys.delete(key)
     }
 
-    // we might needs a concept of "skipped" snapshots per snapshot for runtime type testing snapshot.
-    // (see https://github.com/arktypeio/arktype/tree/main/ark/attest#skiptypes)
-    //
-    // how to do it?
-    // - support some special errors thrown during custom serializer
-    // - create a dedicated assertion to bake such feature only for type testing use case
-    //     expect(attest(...)).toMatchTypeSnapshot()
-    //     expect(attest(...)).toMatchTypeInlineSnapshot()
-    // - make snapshot assertion extendable to support such options somehow (not sure)
-    // - recommend to use a separate `include` combination for type testing like before, so partially skiiping snapshot is not necessary.
-
     let receivedSerialized: string
     try {
       receivedSerialized

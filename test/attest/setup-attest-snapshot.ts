@@ -8,7 +8,7 @@ const attestConfig = getConfig()
 // for `attest().type.toString` and `attest().type.errors`
 expect.addSnapshotSerializer({
   test(val: unknown) {
-    // Q. better way to detect proxy?
+    // TODO(attest) better way to detect proxy?
     return (
       !!val
       && typeof val === 'function'
@@ -36,17 +36,15 @@ expect.addSnapshotSerializer({
   },
 })
 
-// not sure how to get `attest().completions` nicely, so make up own convention.
-// Q. better to get completions?
 expect.addSnapshotSerializer({
   test(val: unknown) {
-    return !!val && typeof val === 'object' && '$completions' in val && val.$completions instanceof ChainableAssertions
+    return !!val && typeof val === 'object' && '$workaroundCompletions' in val && val.$workaroundCompletions instanceof ChainableAssertions
   },
   serialize(val, config, indentation, depth, refs, printer) {
     if (attestConfig.skipTypes) {
       skipSnapshot()
     }
-    const instance = val.$completions
+    const instance = val.$workaroundCompletions
     // eslint-disable-next-line ts/no-unused-expressions
     instance.completions // getter side effect seems to do magic
     return printer(

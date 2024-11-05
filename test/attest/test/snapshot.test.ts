@@ -37,8 +37,9 @@ test('errors', () => {
 })
 
 test('completions', () => {
+  // TODO(attest) not sure how to do so quick workaround to extract `attest().completions`
   expect({
-    $completions: attest(
+    $workaroundCompletions: attest(
       () =>
         // @ts-expect-error test completions
         // eslint-disable-next-line dot-notation
