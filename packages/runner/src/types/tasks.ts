@@ -218,7 +218,13 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
   context: TaskContext<Test> & ExtraContext & TestContext
 }
 
+/**
+ * @deprecated Use `Test` instead. `type: 'custom'` will be removed in Vitest 3.0
+ */
 export interface Custom<ExtraContext = object> extends TaskPopulated {
+  /**
+   * @deprecated use `test` instead. `custom` will be removed in Vitest 3.0
+   */
   type: 'custom'
   /**
    * Task context that will be passed to the test function.
@@ -228,6 +234,9 @@ export interface Custom<ExtraContext = object> extends TaskPopulated {
 
 export type Task = Test | Suite | Custom | File
 
+/**
+ * @deprecated Vitest doesn't provide `done()` anymore
+ */
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = object> = (
   context: ExtendedContext<Test> & ExtraContext
