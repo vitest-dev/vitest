@@ -198,6 +198,9 @@ export interface BrowserOrchestrator {
 
 export interface BrowserServerState {
   orchestrators: Map<string, BrowserOrchestrator>
+  onReady: (cb: (contextId: string, orchestrator: BrowserOrchestrator) => void) => void
+  onError: (cb: (contextId: string, error: unknown) => void) => void
+  cleanListeners: () => void
   getContext: (contextId: string) => BrowserServerStateContext | undefined
   createAsyncContext: (method: 'collect' | 'run', contextId: string, files: string[]) => Promise<void>
 }

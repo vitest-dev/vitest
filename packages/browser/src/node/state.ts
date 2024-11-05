@@ -9,6 +9,8 @@ export class BrowserServerState implements IBrowserServerState {
   public readonly cdps = new Map<string, BrowserServerCDPHandler>()
 
   private contexts = new Map<string, BrowserServerStateContext>()
+  private _onReady: ((contextId: string, orchestrator: WebSocketBrowserRPC) => void) | undefined
+  private _onError: ((contextId: string, error: unknown) => void) | undefined
 
   getContext(contextId: string) {
     return this.contexts.get(contextId)
@@ -22,10 +24,30 @@ export class BrowserServerState implements IBrowserServerState {
       resolve: () => {
         defer.resolve()
         this.contexts.delete(contextId)
+        const orchestrator = this.orchestrators.get(contextId)
+        if (orchestrator) {
+          this._onReady?.(contextId, orchestrator)
+        }
       },
-      reject: defer.reject,
+      reject: (err) => {
+        this._onError?.(contextId, err)
+        defer.reject(err)
+      },
     })
     return defer
+  }
+
+  onReady(cb: (contextId: string, orchestrator: WebSocketBrowserRPC) => void) {
+    this._onReady = cb
+  }
+
+  onError(cb: (contextId: string, error: unknown) => void): void {
+    this._onError = cb
+  }
+
+  cleanListeners() {
+    this._onReady = undefined
+    this._onError = undefined
   }
 
   async removeCDPHandler(sessionId: string) {

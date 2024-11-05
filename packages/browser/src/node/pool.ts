@@ -1,7 +1,8 @@
+import type { DeferPromise } from '@vitest/utils'
 import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject, WorkspaceSpec } from 'vitest/node'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
-import { relative } from 'pathe'
+import { createDefer } from '@vitest/utils'
 import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:pool')
@@ -19,7 +20,12 @@ async function waitForTests(
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const executeTests = async (method: 'run' | 'collect', project: WorkspaceProject, files: string[]) => {
+  const executeTests = async (
+    defer: DeferPromise<void>,
+    method: 'run' | 'collect',
+    project: WorkspaceProject,
+    files: string[],
+  ) => {
     ctx.state.clearFiles(project, files)
     const browser = project.browser!
 
@@ -54,58 +60,49 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       })
     }
 
-    const filesPerThread = Math.ceil(files.length / threadsCount)
-
-    // TODO: make it smarter,
-    // Currently if we run 4/4/4/4 tests, and one of the chunks ends,
-    // but there are pending tests in another chunks, we can't redistribute them
-    const chunks: string[][] = []
-    for (let i = 0; i < files.length; i += filesPerThread) {
-      const chunk = files.slice(i, i + filesPerThread)
-      chunks.push(chunk)
-    }
-
-    debug?.(
-      `[%s] Running %s tests in %s chunks (%s threads)`,
-      project.getName() || 'core',
-      files.length,
-      chunks.length,
-      threadsCount,
-    )
-
     const orchestrators = [...browser.state.orchestrators.entries()]
 
-    const promises: Promise<void>[] = []
-
-    chunks.forEach((files, index) => {
-      if (orchestrators[index]) {
-        const [contextId, orchestrator] = orchestrators[index]
-        debug?.(
-          'Reusing orchestrator (context %s) for files: %s',
-          contextId,
-          [...files.map(f => relative(project.config.root, f))].join(', '),
-        )
-        const promise = waitForTests(method, contextId, project, files)
-        promises.push(promise)
-        orchestrator.createTesters(files)
+    browser.state.onReady(async (contextId, orchestrator) => {
+      const file = files.shift()
+      if (!file) {
+        browser.state.cleanListeners()
+        defer.resolve()
+        // No more files to run
+        // resolve the context
+        return
       }
-      else {
+      waitForTests(method, contextId, project, [file])
+      orchestrator.createTesters([file])
+    })
+
+    browser.state.onError((_, error) => {
+      browser.state.cleanListeners()
+      defer.reject(error)
+    })
+
+    const startPromises: Promise<void>[] = []
+
+    if (!orchestrators.length) {
+      files.splice(0, threadsCount).forEach((file) => {
         const contextId = crypto.randomUUID()
-        const waitPromise = waitForTests(method, contextId, project, files)
+        const waitPromise = waitForTests(method, contextId, project, [file])
         debug?.(
           'Opening a new context %s for files: %s',
           contextId,
-          [...files.map(f => relative(project.config.root, f))].join(', '),
+          file,
         )
         const url = new URL('/', origin)
         url.searchParams.set('contextId', contextId)
         const page = provider
-          .openPage(contextId, url.toString(), () => setBreakpoint(contextId, files[0]))
-        promises.push(page, waitPromise)
-      }
-    })
+          .openPage(contextId, url.toString(), () => setBreakpoint(contextId, file))
+        startPromises.push(page, waitPromise)
+      })
+    }
 
-    await Promise.all(promises)
+    await Promise.all([
+      defer,
+      ...startPromises,
+    ])
   }
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: WorkspaceSpec[]) => {
@@ -116,19 +113,16 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       groupedFiles.set(project, files)
     }
 
-    let isCancelled = false
+    const defer = createDefer<void>()
     ctx.onCancel(() => {
-      isCancelled = true
+      defer.reject(new Error('Tests cancelled'))
     })
 
-    // TODO: paralellize tests instead of running them sequentially (based on CPU?)
     for (const [project, files] of groupedFiles.entries()) {
-      if (isCancelled) {
-        break
-      }
-
-      await executeTests(method, project, files)
+      executeTests(defer, method, project, files)
     }
+
+    await defer
   }
 
   const numCpus
