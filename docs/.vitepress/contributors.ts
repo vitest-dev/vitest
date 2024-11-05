@@ -10,6 +10,7 @@ export interface CoreTeam extends DefaultTheme.TeamMember {
   // required to download avatars from GitHub
   github: string
   twitter?: string
+  bluesky?: string
   mastodon?: string
   discord?: string
   youtube?: string
@@ -29,6 +30,10 @@ export const contributors = (contributorNames).reduce<Contributor[]>((acc, name)
 
 function createLinks(tm: CoreTeam): CoreTeam {
   tm.links = [{ icon: 'github', link: `https://github.com/${tm.github}` }]
+  if (tm.bluesky) {
+    tm.links.push({ icon: 'bluesky', link: tm.bluesky })
+  }
+
   if (tm.mastodon) {
     tm.links.push({ icon: 'mastodon', link: tm.mastodon })
   }
@@ -53,6 +58,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars['sheremet-va'],
     name: 'Vladimir',
     github: 'sheremet-va',
+    bluesky: 'https://bsky.app/profile/erus.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
     twitter: 'sheremet_va',
     sponsor: 'https://github.com/sponsors/sheremet-va',
@@ -63,6 +69,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.antfu,
     name: 'Anthony Fu',
     github: 'antfu',
+    bluesky: 'https://bsky.app/profile/antfu.me',
     mastodon: 'https://elk.zone/m.webtoo.ls/@antfu',
     twitter: 'antfu7',
     discord: 'https://chat.antfu.me',
@@ -77,6 +84,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.AriPerkkio,
     name: 'Ari Perkkiö',
     github: 'AriPerkkio',
+    bluesky: 'https://bsky.app/profile/ariperkkio.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@AriPerkkio',
     twitter: 'ari_perkkio',
     sponsor: 'https://github.com/sponsors/AriPerkkio',
@@ -89,6 +97,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars['patak-dev'],
     name: 'Patak',
     github: 'patak-dev',
+    bluesky: 'https://bsky.app/profile/patak.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@patak',
     twitter: 'patak_dev',
     sponsor: 'https://github.com/sponsors/patak-dev',
@@ -101,6 +110,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars.userquin,
     name: 'Joaquín Sánchez',
     github: 'userquin',
+    bluesky: 'https://bsky.app/profile/userquin.bsky.social',
     mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
     twitter: 'userquin',
     title: 'A fullstack and android developer',
@@ -110,6 +120,7 @@ const plainTeamMembers: CoreTeam[] = [
     avatar: contributorsAvatars['hi-ogawa'],
     name: 'Hiroshi Ogawa',
     github: 'hi-ogawa',
+    bluesky: 'https://bsky.app/profile/hiogawa.bsky.social',
     twitter: 'hiroshi_18181',
     title: 'Open source enthusiast',
     desc: 'Team member of Vitest',
@@ -129,6 +140,7 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     avatar: contributorsAvatars.Aslemammad,
     name: 'Mohammad Bagher',
     github: 'Aslemammad',
+    bluesky: 'https://bsky.app/profile/aslemammad.bsky.social',
     mastodon: 'https://elk.zone/m.webtoo.ls/@aslemammad',
     twitter: 'asleMammadam',
     title: 'An open source developer',
@@ -154,6 +166,7 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     avatar: contributorsAvatars.zxch3n,
     name: 'Zixuan Chen',
     github: 'zxch3n',
+    bluesky: 'https://bsky.app/profile/zxch3n.bsky.social',
     mastodon: 'https://elk.zone/hachyderm.io/@zx',
     twitter: 'zxch3n',
     title: 'A fullstack developer',
