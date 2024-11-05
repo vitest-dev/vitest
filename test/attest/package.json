@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "test-fixtures": "cd fixtures && vitest"
   },
   "devDependencies": {
     "@ark/attest": "^0.25.0"
