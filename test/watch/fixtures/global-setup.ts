@@ -4,9 +4,9 @@ const calls: string[] = [];
 
 (globalThis as any).__CALLS = calls
 
-export default ({ onWatcherRerun }: GlobalSetupContext) => {
+export default ({ onTestsRerun }: GlobalSetupContext) => {
   calls.push('start')
-  onWatcherRerun(() => {
+  onTestsRerun(() => {
     calls.push('rerun')
   })
   return () => {

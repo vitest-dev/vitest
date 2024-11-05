@@ -1094,8 +1094,8 @@ Since Vitest 2.2.0, you can define a custom callback function to be called when 
 ```ts
 import type { GlobalSetupContext } from 'vitest/node'
 
-export default function setup({ onWatcherRerun }: GlobalSetupContext) {
-  onWatcherRerun(async () => {
+export default function setup({ onTestsRerun }: GlobalSetupContext) {
+  onTestsRerun(async () => {
     await restartDb()
   })
 }

@@ -170,7 +170,7 @@ export class WorkspaceProject {
       const teardown = await globalSetupFile.setup?.({
         provide: (key, value) => this.provide(key, value),
         config: this.config,
-        onWatcherRerun: cb => this.ctx.onWatcherRerun(cb),
+        onTestsRerun: cb => this.ctx.onTestsRerun(cb),
       })
       if (teardown == null || !!globalSetupFile.teardown) {
         continue

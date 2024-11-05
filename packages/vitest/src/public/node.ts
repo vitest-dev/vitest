@@ -128,7 +128,7 @@ export type {
 
 export type {
   OnServerRestartHandler,
-  OnWatcherRerunHandler,
+  OnTestsRerunHandler,
 } from '../types/general'
 
 export { createDebugger } from '../utils/debugger'
