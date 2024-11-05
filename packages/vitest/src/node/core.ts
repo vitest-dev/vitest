@@ -150,6 +150,8 @@ export class Vitest {
       const serverRestart = server.restart
       server.restart = async (...args) => {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
+        this.report('onServerRestart', 'config')
+        await this.close()
         await serverRestart(...args)
         // watcher is recreated on restart
         this.unregisterWatcher()
@@ -164,6 +166,8 @@ export class Vitest {
           || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
+          this.report('onServerRestart', 'config')
+          await this.close()
           await serverRestart()
           // watcher is recreated on restart
           this.unregisterWatcher()

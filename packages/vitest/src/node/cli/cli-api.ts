@@ -73,11 +73,6 @@ export async function startVitest(
     stdinCleanup = registerConsoleShortcuts(ctx, stdin, stdout)
   }
 
-  ctx.onServerRestart(async (reason) => {
-    ctx.report('onServerRestart', reason)
-    await ctx.close()
-  })
-
   ctx.onAfterSetServer(() => {
     if (ctx.config.standalone) {
       ctx.init()
