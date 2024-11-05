@@ -3,6 +3,7 @@ import type { Connect } from 'vite'
 import type { BrowserServer } from './server'
 import crypto from 'node:crypto'
 import { stringify } from 'flatted'
+import { join } from 'pathe'
 import { replacer } from './utils'
 
 export async function resolveTester(
@@ -58,7 +59,8 @@ export async function resolveTester(
     : await server.testerHtml
 
   try {
-    const indexhtml = await server.vite.transformIndexHtml(url.pathname, testerHtml)
+    const url = join('/@fs/', server.testerFilepath)
+    const indexhtml = await server.vite.transformIndexHtml(url, testerHtml)
     return replacer(indexhtml, {
       __VITEST_FAVICON__: server.faviconUrl,
       __VITEST_INJECTOR__: injector,
