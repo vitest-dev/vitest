@@ -481,7 +481,9 @@ export class WorkspaceProject {
           this.browser?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
-      ).then(() => (this._provided = {} as any))
+      ).then(() => (this._provided = {} as any)).finally(() => {
+        this.closingPromise = undefined
+      })
     }
     return this.closingPromise
   }

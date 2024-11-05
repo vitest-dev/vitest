@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config'
 import { cwdPlugin } from './cwdPlugin.js'
 
 export default defineConfig({
-  envPrefix: ['VITE_', 'CUSTOM_', 'ROOT_'],
+  envPrefix: ['VITE_', 'CUSTOM_', 'ROOT_', 'SS_'],
   plugins: [cwdPlugin('ROOT')],
   test: {
     coverage: {
