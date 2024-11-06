@@ -14,7 +14,6 @@ import {
   ogImage,
   ogUrl,
   releases,
-  twitter,
   vitestDescription,
   vitestName,
 } from './meta'
