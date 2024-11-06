@@ -139,7 +139,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     github: 'Aslemammad',
     bluesky: 'https://bsky.app/profile/aslemammad.bsky.social',
     mastodon: 'https://elk.zone/m.webtoo.ls/@aslemammad',
-    twitter: 'asleMammadam',
     title: 'An open source developer',
     desc: 'Team member of Poimandres & Vike',
   },
