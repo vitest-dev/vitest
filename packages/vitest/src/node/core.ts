@@ -150,7 +150,7 @@ export class Vitest {
       const serverRestart = server.restart
       server.restart = async (...args) => {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
-        this.report('onServerRestart', 'config')
+        this.report('onServerRestart')
         await this.close()
         await serverRestart(...args)
         // watcher is recreated on restart
