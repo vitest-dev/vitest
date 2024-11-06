@@ -153,9 +153,6 @@ export class Vitest {
         this.report('onServerRestart')
         await this.close()
         await serverRestart(...args)
-        // watcher is recreated on restart
-        this.unregisterWatcher()
-        this.registerWatcher()
       }
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
@@ -169,9 +166,6 @@ export class Vitest {
           this.report('onServerRestart', 'config')
           await this.close()
           await serverRestart()
-          // watcher is recreated on restart
-          this.unregisterWatcher()
-          this.registerWatcher()
         }
       })
     }
