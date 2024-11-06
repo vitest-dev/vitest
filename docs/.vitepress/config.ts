@@ -107,7 +107,6 @@ export default ({ mode }: { mode: string }) => {
       socialLinks: [
         { icon: 'bluesky', link: bluesky },
         { icon: 'mastodon', link: mastodon },
-        { icon: 'x', link: twitter },
         { icon: 'discord', link: discord },
         { icon: 'github', link: github },
       ],

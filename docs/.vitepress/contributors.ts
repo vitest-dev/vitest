@@ -99,7 +99,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'patak-dev',
     bluesky: 'https://bsky.app/profile/patak.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@patak',
-    twitter: 'patak_dev',
     sponsor: 'https://github.com/sponsors/patak-dev',
     title: 'A collaborative being, working',
     org: 'StackBlitz',
