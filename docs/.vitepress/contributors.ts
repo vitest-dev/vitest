@@ -110,7 +110,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'userquin',
     bluesky: 'https://bsky.app/profile/userquin.bsky.social',
     mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
-    twitter: 'userquin',
     title: 'A fullstack and android developer',
     desc: 'Vite\'s fanatical follower',
   },
