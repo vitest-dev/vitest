@@ -35,8 +35,10 @@ test('--inspect-brk stops at test file', async () => {
   send({ method: 'Debugger.getScriptSource', params: { scriptId } })
   const { result } = await response as any
 
-  expect(result.scriptSource).toContain('test("sum", () => {')
-  expect(result.scriptSource).toContain('expect(1 + 1).toBe(2)')
+  // due to vite ssr transform
+  //   __vite_ssr_identity__(__vite_ssr_import_0__.test)(...)
+  expect(result.scriptSource).toContain('test)("sum", () => {')
+  expect(result.scriptSource).toContain('expect)(1 + 1).toBe(2)')
 
   send({ method: 'Debugger.resume' })
 
