@@ -1,4 +1,4 @@
-import im from 'immutable'
+import * as im from 'immutable'
 import { expect, test } from 'vitest'
 
 test('basic', () => {
