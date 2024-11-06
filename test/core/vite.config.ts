@@ -108,7 +108,6 @@ export default defineConfig({
     server: {
       deps: {
         external: [
-          'immutable',
           'tinyspy',
           /src\/external/,
           /esm\/esm/,
