@@ -241,8 +241,10 @@ export function useFS(root: string, structure: Record<string, string | ViteUserC
   for (const file in structure) {
     const filepath = resolve(root, file)
     files.add(filepath)
-    const content = typeof structure[file] === 'string' ? structure[file] : `export default ${JSON.stringify(structure[file])}`
-    createFile(resolve(root, filepath), content)
+    const content = typeof structure[file] === 'string'
+      ? structure[file]
+      : `export default ${JSON.stringify(structure[file])}`
+    createFile(resolve(root, filepath), String(content))
   }
   return {
     editFile: (file: string, callback: (content: string) => string) => {
