@@ -84,7 +84,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'AriPerkkio',
     bluesky: 'https://bsky.app/profile/ariperkkio.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@AriPerkkio',
-    twitter: 'ari_perkkio',
     sponsor: 'https://github.com/sponsors/AriPerkkio',
     title: 'Open source engineer, working',
     desc: 'Core team member of Vitest',
