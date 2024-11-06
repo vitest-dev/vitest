@@ -1,7 +1,6 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
-  Custom,
   ExtendedContext,
   File,
   Suite,
@@ -164,7 +163,7 @@ export class VitestTestRunner implements VitestRunner {
     }
   }
 
-  extendTaskContext<T extends Test | Custom>(
+  extendTaskContext<T extends Test>(
     context: TaskContext<T>,
   ): ExtendedContext<T> {
     // create error during the test initialization so we have a nice stack trace

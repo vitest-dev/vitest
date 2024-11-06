@@ -1,7 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
 import type { VitestRunner } from './types/runner'
 import type {
-  Custom,
   ExtendedContext,
   RuntimeContext,
   SuiteCollector,
@@ -57,7 +56,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
   }) as T
 }
 
-export function createTestContext<T extends Test | Custom>(
+export function createTestContext<T extends Test>(
   test: T,
   runner: VitestRunner,
 ): ExtendedContext<T> {

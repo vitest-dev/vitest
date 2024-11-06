@@ -304,14 +304,14 @@ function createSuiteCollector(
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
-    const task: Custom = {
+    const task: Test = {
       id: '',
       name,
       suite: undefined!,
       each: options.each,
       fails: options.fails,
       context: undefined!,
-      type: 'custom',
+      type: 'test',
       file: undefined!,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
