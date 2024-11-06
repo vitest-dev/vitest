@@ -9,7 +9,6 @@ export interface Contributor {
 export interface CoreTeam extends DefaultTheme.TeamMember {
   // required to download avatars from GitHub
   github: string
-  twitter?: string
   bluesky?: string
   mastodon?: string
   discord?: string
@@ -46,10 +45,6 @@ function createLinks(tm: CoreTeam): CoreTeam {
     tm.links.push({ icon: 'youtube', link: `https://www.youtube.com/@${tm.youtube}` })
   }
 
-  if (tm.twitter) {
-    tm.links.push({ icon: 'x', link: `https://twitter.com/${tm.twitter}` })
-  }
-
   return tm
 }
 
@@ -60,7 +55,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'sheremet-va',
     bluesky: 'https://bsky.app/profile/erus.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
-    twitter: 'sheremet_va',
     sponsor: 'https://github.com/sponsors/sheremet-va',
     title: 'An open source fullstack developer',
     desc: 'Core team member of Vitest & Vite',
@@ -71,7 +65,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'antfu',
     bluesky: 'https://bsky.app/profile/antfu.me',
     mastodon: 'https://elk.zone/m.webtoo.ls/@antfu',
-    twitter: 'antfu7',
     discord: 'https://chat.antfu.me',
     youtube: 'antfu',
     sponsor: 'https://github.com/sponsors/antfu',
@@ -86,7 +79,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'AriPerkkio',
     bluesky: 'https://bsky.app/profile/ariperkkio.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@AriPerkkio',
-    twitter: 'ari_perkkio',
     sponsor: 'https://github.com/sponsors/AriPerkkio',
     title: 'Open source engineer, working',
     desc: 'Core team member of Vitest',
@@ -99,7 +91,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'patak-dev',
     bluesky: 'https://bsky.app/profile/patak.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@patak',
-    twitter: 'patak_dev',
     sponsor: 'https://github.com/sponsors/patak-dev',
     title: 'A collaborative being, working',
     org: 'StackBlitz',
@@ -112,7 +103,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'userquin',
     bluesky: 'https://bsky.app/profile/userquin.bsky.social',
     mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
-    twitter: 'userquin',
     title: 'A fullstack and android developer',
     desc: 'Vite\'s fanatical follower',
   },
@@ -121,7 +111,6 @@ const plainTeamMembers: CoreTeam[] = [
     name: 'Hiroshi Ogawa',
     github: 'hi-ogawa',
     bluesky: 'https://bsky.app/profile/hiogawa.bsky.social',
-    twitter: 'hiroshi_18181',
     title: 'Open source enthusiast',
     desc: 'Team member of Vitest',
   },
@@ -132,7 +121,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     avatar: contributorsAvatars.Dunqing,
     name: 'Dunqing',
     github: 'Dunqing',
-    twitter: '@Dunqingg',
     title: 'A passionate enthusiast of open source contributions',
     desc: 'Team member of oxc & UnoCSS',
   },
@@ -142,7 +130,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     github: 'Aslemammad',
     bluesky: 'https://bsky.app/profile/aslemammad.bsky.social',
     mastodon: 'https://elk.zone/m.webtoo.ls/@aslemammad',
-    twitter: 'asleMammadam',
     title: 'An open source developer',
     desc: 'Team member of Poimandres & Vike',
   },
@@ -158,7 +145,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     avatar: contributorsAvatars.poyoho,
     name: 'Yoho Po',
     github: 'poyoho',
-    twitter: '@yoho_po',
     title: 'It\'s no problem in my locall',
     desc: 'Core team member of Vite & Team member of Vitest',
   },
@@ -168,7 +154,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     github: 'zxch3n',
     bluesky: 'https://bsky.app/profile/zxch3n.bsky.social',
     mastodon: 'https://elk.zone/hachyderm.io/@zx',
-    twitter: 'zxch3n',
     title: 'A fullstack developer',
     desc: 'Working on CRDTs & local-first software',
   },
