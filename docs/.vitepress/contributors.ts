@@ -9,7 +9,6 @@ export interface Contributor {
 export interface CoreTeam extends DefaultTheme.TeamMember {
   // required to download avatars from GitHub
   github: string
-  twitter?: string
   bluesky?: string
   mastodon?: string
   discord?: string
@@ -44,10 +43,6 @@ function createLinks(tm: CoreTeam): CoreTeam {
 
   if (tm.youtube) {
     tm.links.push({ icon: 'youtube', link: `https://www.youtube.com/@${tm.youtube}` })
-  }
-
-  if (tm.twitter) {
-    tm.links.push({ icon: 'x', link: `https://twitter.com/${tm.twitter}` })
   }
 
   return tm
@@ -116,7 +111,6 @@ const plainTeamMembers: CoreTeam[] = [
     name: 'Hiroshi Ogawa',
     github: 'hi-ogawa',
     bluesky: 'https://bsky.app/profile/hiogawa.bsky.social',
-    twitter: 'hiroshi_18181',
     title: 'Open source enthusiast',
     desc: 'Team member of Vitest',
   },
@@ -127,7 +121,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     avatar: contributorsAvatars.Dunqing,
     name: 'Dunqing',
     github: 'Dunqing',
-    twitter: '@Dunqingg',
     title: 'A passionate enthusiast of open source contributions',
     desc: 'Team member of oxc & UnoCSS',
   },
@@ -152,7 +145,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     avatar: contributorsAvatars.poyoho,
     name: 'Yoho Po',
     github: 'poyoho',
-    twitter: '@yoho_po',
     title: 'It\'s no problem in my locall',
     desc: 'Core team member of Vite & Team member of Vitest',
   },
@@ -162,7 +154,6 @@ const plainTeamEmeritiMembers: CoreTeam[] = [
     github: 'zxch3n',
     bluesky: 'https://bsky.app/profile/zxch3n.bsky.social',
     mastodon: 'https://elk.zone/hachyderm.io/@zx',
-    twitter: 'zxch3n',
     title: 'A fullstack developer',
     desc: 'Working on CRDTs & local-first software',
   },
