@@ -60,7 +60,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'sheremet-va',
     bluesky: 'https://bsky.app/profile/erus.dev',
     mastodon: 'https://elk.zone/m.webtoo.ls/@sheremet_va',
-    twitter: 'sheremet_va',
     sponsor: 'https://github.com/sponsors/sheremet-va',
     title: 'An open source fullstack developer',
     desc: 'Core team member of Vitest & Vite',
