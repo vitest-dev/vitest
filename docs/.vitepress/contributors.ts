@@ -70,7 +70,6 @@ const plainTeamMembers: CoreTeam[] = [
     github: 'antfu',
     bluesky: 'https://bsky.app/profile/antfu.me',
     mastodon: 'https://elk.zone/m.webtoo.ls/@antfu',
-    twitter: 'antfu7',
     discord: 'https://chat.antfu.me',
     youtube: 'antfu',
     sponsor: 'https://github.com/sponsors/antfu',
