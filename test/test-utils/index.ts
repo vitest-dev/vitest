@@ -249,7 +249,7 @@ export function useFS(root: string, structure: Record<string, string | ViteUserC
       ? structure[file]
       : `export default ${JSON.stringify(structure[file])}`
     fs.mkdirSync(dirname(filepath), { recursive: true })
-    fs.writeFileSync(filepath, content, 'utf-8')
+    fs.writeFileSync(filepath, String(content), 'utf-8')
   }
   onTestFinished(() => {
     if (process.env.VITEST_FS_CLEANUP !== 'false') {
