@@ -303,10 +303,6 @@ export class Vitest {
     return this.coverageProvider
   }
 
-  private async initBrowserProviders() {
-    return Promise.all(this.projects.map(w => w.initBrowserProvider()))
-  }
-
   async mergeReports() {
     if (this.reporters.some(r => r instanceof BlobReporter)) {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
@@ -369,8 +365,6 @@ export class Vitest {
   async collect(filters?: string[]) {
     this._onClose = []
 
-    await this.initBrowserProviders()
-
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
     )
@@ -402,7 +396,6 @@ export class Vitest {
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
-      await this.initBrowserProviders()
     }
     finally {
       await this.report('onInit', this)
@@ -445,7 +438,6 @@ export class Vitest {
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
-      await this.initBrowserProviders()
     }
     finally {
       await this.report('onInit', this)
@@ -691,6 +683,10 @@ export class Vitest {
   async cancelCurrentRun(reason: CancelReason) {
     this.isCancelling = true
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
+  }
+
+  async initBrowserServers() {
+    await Promise.all(this.projects.map(p => p.initBrowserServer()))
   }
 
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
