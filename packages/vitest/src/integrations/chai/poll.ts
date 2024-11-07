@@ -1,4 +1,5 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
+import type { Test } from '@vitest/runner'
 import { getSafeTimers } from '@vitest/utils'
 import * as chai from 'chai'
 import { getWorkerState } from '../../runtime/utils'
@@ -39,6 +40,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
+    const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
+    if (!test) {
+      throw new Error('expect.poll() must be called inside a test')
+    }
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
@@ -59,7 +64,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
         return function (this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-          return new Promise((resolve, reject) => {
+          const promise = new Promise<void>((resolve, reject) => {
             let intervalId: any
             let lastError: any
             const { setTimeout, clearTimeout } = getSafeTimers()
@@ -90,6 +95,21 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }
             check()
           })
+          let awaited = false
+          test.onFinished ??= []
+          test.onFinished.push(() => {
+            if (!awaited) {
+              const name = chai.util.flag(assertion, '_poll.element') ? 'element(locator)' : 'poll(assertion)'
+              const error = new Error(`expect.${name}.${String(key)}() was not awaited. This assertion is asynchronous and must be awaited:\n\nawait expect.${name}.${String(key)}()\n`)
+              throw copyStackTrace(error, STACK_TRACE_ERROR)
+            }
+          })
+          return {
+            then(onFulfilled, onRejected) {
+              awaited = true
+              return promise.then(onFulfilled, onRejected)
+            },
+          } satisfies PromiseLike<void>
         }
       },
     })
