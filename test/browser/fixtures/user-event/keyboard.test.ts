@@ -7,7 +7,7 @@ test('non US keys', async () => {
     <input placeholder="emoji" />
   `;
   await userEvent.type(page.getByPlaceholder("#7396"), 'éèù')
-  expect.element(page.getByPlaceholder("#7396")).toHaveValue('éèù')
+  await expect.element(page.getByPlaceholder("#7396")).toHaveValue('éèù')
 
   try {
     // surrogate pair is still inconsistent
@@ -15,6 +15,6 @@ test('non US keys', async () => {
     // - webdriverio: throw an error
     // - preview: works
     await userEvent.type(page.getByPlaceholder("emoji"), '😊')
-    expect.element(page.getByPlaceholder("emoji")).toHaveValue('😊')
+    await expect.element(page.getByPlaceholder("emoji")).toHaveValue('😊')
   } catch {}
 })
