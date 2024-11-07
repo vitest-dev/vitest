@@ -13,7 +13,7 @@ const config = getConfig()
 async function setup2() {
   mkdirSync('.attest/assertions', { recursive: true })
   const binFile = path.resolve('../node_modules/.bin/attest')
-  console.log(binFile, existsSync(binFile));
+  console.error(binFile, existsSync(binFile));
   execFileSync(binFile, ['precache', '.attest/assertions/typescript.json'], {
     stdio: 'inherit',
   })
