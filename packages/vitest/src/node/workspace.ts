@@ -446,8 +446,6 @@ export class WorkspaceProject {
         return node.resolveId(id, importer)
       },
     })
-
-    await this.initBrowserServer()
   }
 
   isBrowserEnabled(): boolean {
