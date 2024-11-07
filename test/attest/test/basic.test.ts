@@ -8,6 +8,7 @@ it('skip types', { timeout: 20_000 }, async () => {
 
   // normal run with correct snapshots
   let result = await runVitestCli({ nodeOptions: { cwd: dir } }, 'run')
+  expect(result.stderr).toBe('')
   expect(result.stdout).toContain('Waiting for TypeScript')
   expect(result.stdout).toContain('Test Files  1 passed')
 
@@ -22,12 +23,14 @@ it('skip types', { timeout: 20_000 }, async () => {
       env: { ...process.env, ATTEST_skipTypes: '1' },
     },
   }, 'run', '--update')
+  expect(result.stderr).toBe('')
   expect(result.stdout).not.toContain('Waiting for TypeScript')
   expect(result.stdout).not.toContain('obsolete')
   expect(result.stdout).toContain('Test Files  1 passed')
 
   // update snapshot
   result = await runVitestCli({ nodeOptions: { cwd: dir } }, 'run', '--update')
+  expect(result.stderr).toBe('')
   expect(result.stdout).toContain('Waiting for TypeScript')
   expect(result.stdout).toContain('Snapshots  1 written')
   expect(result.stdout).toContain('Test Files  1 passed')
