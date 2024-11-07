@@ -11,6 +11,7 @@ const config = getConfig()
 
 async function setup2() {
   mkdirSync('.attest/assertions', { recursive: true })
+  console.error('[debug:process.env.PATH]', process.env.PATH);
   execFileSync('attest', ['precache', '.attest/assertions/typescript.json'], {
     stdio: 'inherit',
   })
