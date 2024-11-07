@@ -1,6 +1,7 @@
 import type { GlobalSetupContext } from 'vitest/node'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
+import path from "node:path"
 import { getConfig } from '@ark/attest/internal/config.js'
 
 const config = getConfig()
@@ -11,7 +12,9 @@ const config = getConfig()
 
 async function setup2() {
   mkdirSync('.attest/assertions', { recursive: true })
-  execFileSync('../node_modules/@ark/attest/out/cli/cli.js', ['precache', '.attest/assertions/typescript.json'], {
+  const binFile = path.resolve('../node_modules/.bin/attest')
+  console.log(binFile, existsSync(binFile));
+  execFileSync(binFile, ['precache', '.attest/assertions/typescript.json'], {
     stdio: 'inherit',
   })
 }
