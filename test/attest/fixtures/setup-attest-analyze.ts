@@ -11,7 +11,7 @@ const config = getConfig()
 
 async function setup2() {
   mkdirSync('.attest/assertions', { recursive: true })
-  execFileSync('../node_modules/.bin/attest', ['precache', '.attest/assertions/typescript.json'], {
+  execFileSync('../node_modules/@ark/attest/out/cli/cli.js', ['precache', '.attest/assertions/typescript.json'], {
     stdio: 'inherit',
   })
 }
