@@ -10,14 +10,13 @@ Next generation testing framework powered by Vite.
 <p>
 <p align="center">
   <a href="https://www.npmjs.com/package/vitest"><img src="https://img.shields.io/npm/v/vitest?color=729B1B&label="></a>
-  <a href="https://gurubase.io/g/vitest"><img src="https://img.shields.io/badge/Gurubase-Ask%20Vitest%20Guru-006BFF"></a>
 <p>
 
 <p align="center">
 <a href="https://chat.vitest.dev"><b>Get involved!</b></a>
 </p>
 <p align="center">
- <a href="https://vitest.dev">Documentation</a> | <a href="https://vitest.dev/guide/">Getting Started</a> | <a href="https://vitest.dev/guide/#examples">Examples</a> | <a href="https://vitest.dev/guide/why">Why Vitest?</a>
+ <a href="https://vitest.dev">Documentation</a> | <a href="https://vitest.dev/guide/">Getting Started</a> | <a href="https://vitest.dev/guide/#examples">Examples</a> | <a href="https://vitest.dev/guide/why">Why Vitest?</a> | <a href="https://gurubase.io/g/vitest">Ask Vitest Guru</a>
 </p>
 <p align="center">
 <a href="https://cn.vitest.dev">中文文档</a>
