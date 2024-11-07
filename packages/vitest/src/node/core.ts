@@ -685,14 +685,14 @@ export class Vitest {
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), !trigger)
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
@@ -705,7 +705,7 @@ export class Vitest {
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
-    await this.rerunFiles(files, 'change project filter')
+    await this.rerunFiles(files, 'change project filter', pattern === '')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -726,7 +726,7 @@ export class Vitest {
         })
       })
     }
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
@@ -734,11 +734,11 @@ export class Vitest {
 
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
 
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async rerunFailed() {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
+    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
   }
 
   async updateSnapshot(files?: string[]) {
@@ -755,7 +755,7 @@ export class Vitest {
     }
 
     try {
-      await this.rerunFiles(files, 'update snapshot')
+      await this.rerunFiles(files, 'update snapshot', false)
     }
     finally {
       delete this.configOverride.snapshotOptions
