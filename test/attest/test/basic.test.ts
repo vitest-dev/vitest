@@ -25,6 +25,7 @@ it('skip types', { timeout: 20_000 }, async () => {
   }, 'run', '--update')
   expect(result.stderr).toBe('')
   expect(result.stdout).not.toContain('Waiting for TypeScript')
+  expect(result.stdout).not.toContain('Snapshots 1 written')
   expect(result.stdout).not.toContain('obsolete')
   expect(result.stdout).toContain('Test Files  1 passed')
 
