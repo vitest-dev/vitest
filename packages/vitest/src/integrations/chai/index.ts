@@ -1,20 +1,20 @@
 // CI failes only for this file, but it works locally
 
-import * as chai from 'chai'
-import './setup'
+import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
 import type { TaskPopulated, Test } from '@vitest/runner'
-import { getCurrentTest } from '@vitest/runner'
 import {
-  ASYMMETRIC_MATCHERS_OBJECT,
-  GLOBAL_EXPECT,
   addCustomEqualityTesters,
+  ASYMMETRIC_MATCHERS_OBJECT,
   getState,
+  GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
-import { getTestName } from '../../utils/tasks'
+import { getCurrentTest } from '@vitest/runner'
+import { getTestName } from '@vitest/runner/utils'
+import * as chai from 'chai'
 import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
+import './setup'
 
 export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {

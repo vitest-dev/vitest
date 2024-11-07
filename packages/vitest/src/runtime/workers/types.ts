@@ -1,5 +1,5 @@
-import type { BirpcOptions } from 'birpc'
 import type { Awaitable } from '@vitest/utils'
+import type { BirpcOptions } from 'birpc'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
 

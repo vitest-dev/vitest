@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import { x } from 'tinyexec'
+import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const [nodeMajor, nodeMinor] = process.version.slice(1).split('.').map(Number)

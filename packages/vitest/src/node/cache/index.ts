@@ -1,6 +1,6 @@
-import crypto from 'node:crypto'
+import { slash } from '@vitest/utils'
 import { resolve } from 'pathe'
-import { slash } from '../../utils'
+import { hash } from '../hash'
 import { FilesStatsCache } from './files'
 import { ResultsCache } from './results'
 
@@ -26,7 +26,7 @@ export class VitestCache {
       ? resolve(
         root,
         baseDir,
-        crypto.createHash('md5').update(projectName, 'utf-8').digest('hex'),
+        hash('md5', projectName, 'hex'),
       )
       : resolve(root, baseDir)
   }

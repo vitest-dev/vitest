@@ -1,13 +1,7 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
-import { parseSingleStack } from '../utils/source-map'
-import type { VitestMocker } from '../runtime/mocker'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
+import type { VitestMocker } from '../runtime/mocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
-import { getWorkerState } from '../runtime/utils'
-import { resetModules, waitForImportsToResolve } from '../utils/modules'
-import { isChildProcess } from '../utils/base'
-import { FakeTimers } from './mock/timers'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
@@ -15,6 +9,10 @@ import type {
   MaybePartiallyMockedDeep,
   MockInstance,
 } from './spy'
+import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
+import { getWorkerState, isChildProcess, resetModules, waitForImportsToResolve } from '../runtime/utils'
+import { parseSingleStack } from '../utils/source-map'
+import { FakeTimers } from './mock/timers'
 import { fn, isMockFunction, mocks, spyOn } from './spy'
 import { waitFor, waitUntil } from './wait'
 
@@ -290,24 +288,24 @@ export interface VitestUtils {
    * @param options If the object is partially or deeply mocked
    */
   mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) &
-  (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
-  (<T>(
-    item: T,
-    options: { partial?: false; deep?: false }
-  ) => MaybeMocked<T>) &
-  (<T>(
-    item: T,
-    options: { partial?: false; deep: true }
-  ) => MaybeMockedDeep<T>) &
-  (<T>(
-    item: T,
-    options: { partial: true; deep?: false }
-  ) => MaybePartiallyMocked<T>) &
-  (<T>(
-    item: T,
-    options: { partial: true; deep: true }
-  ) => MaybePartiallyMockedDeep<T>) &
-  (<T>(item: T) => MaybeMocked<T>)
+    (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
+    (<T>(
+      item: T,
+      options: { partial?: false; deep?: false }
+    ) => MaybeMocked<T>) &
+    (<T>(
+      item: T,
+      options: { partial?: false; deep: true }
+    ) => MaybeMockedDeep<T>) &
+    (<T>(
+      item: T,
+      options: { partial: true; deep?: false }
+    ) => MaybePartiallyMocked<T>) &
+    (<T>(
+      item: T,
+      options: { partial: true; deep: true }
+    ) => MaybePartiallyMockedDeep<T>) &
+    (<T>(item: T) => MaybeMocked<T>)
 
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.

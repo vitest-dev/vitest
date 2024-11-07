@@ -1,8 +1,8 @@
-import c from 'tinyrainbow'
 import type { TaskResultPack } from '@vitest/runner'
-import { getFullName } from '../../utils'
-import { F_RIGHT } from '../../utils/figures'
+import { getFullName } from '@vitest/runner/utils'
+import c from 'tinyrainbow'
 import { DefaultReporter } from './default'
+import { F_RIGHT } from './renderers/figures'
 import { formatProjectName, getStateSymbol } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {

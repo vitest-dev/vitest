@@ -1,13 +1,13 @@
-import { Readable, Writable } from 'node:stream'
-import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import type { UserConfig as ViteUserConfig } from 'vite'
-import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach, onTestFinished } from 'vitest'
-import type { Vitest } from 'vitest/node'
-import { startVitest } from 'vitest/node'
 import type { Options } from 'tinyexec'
-import { x } from 'tinyexec'
+import type { UserConfig as ViteUserConfig } from 'vite'
+import type { UserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import fs from 'node:fs'
+import { Readable, Writable } from 'node:stream'
+import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'pathe'
+import { x } from 'tinyexec'
+import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
+import { startVitest } from 'vitest/node'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
@@ -55,6 +55,7 @@ export async function runVitest(
   const cli = new Cli({ stdin, stdout, stderr })
 
   let ctx: Vitest | undefined
+  let thrown = false
   try {
     const { reporters, ...rest } = config
 
@@ -88,6 +89,7 @@ export async function runVitest(
     if (runnerOptions.fails !== true) {
       console.error(e)
     }
+    thrown = true
     cli.stderr += e.stack
   }
   finally {
@@ -111,6 +113,7 @@ export async function runVitest(
   }
 
   return {
+    thrown,
     ctx,
     exitCode,
     vitest: cli,

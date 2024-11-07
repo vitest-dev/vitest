@@ -1,11 +1,10 @@
-import { stripVTControlCharacters } from 'node:util'
-import { getTasks } from '@vitest/runner/utils'
 import type { File } from '@vitest/runner'
-import { getFullName } from '../../utils'
-import { capturePrintError } from '../error'
-import type { WorkspaceProject } from '../workspace'
-import type { Reporter } from '../types/reporter'
 import type { Vitest } from '../core'
+import type { Reporter } from '../types/reporter'
+import type { WorkspaceProject } from '../workspace'
+import { stripVTControlCharacters } from 'node:util'
+import { getFullName, getTasks } from '@vitest/runner/utils'
+import { capturePrintError } from '../error'
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!

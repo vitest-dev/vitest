@@ -1,15 +1,15 @@
-import mm from 'micromatch'
 import type { Awaitable } from '@vitest/utils'
-import { isWindows } from '../utils/env'
-import type { BuiltinPool, Pool } from './types/pool-options'
 import type { Vitest } from './core'
+import type { TestSpecification } from './spec'
+import type { BuiltinPool, Pool } from './types/pool-options'
+import type { WorkspaceProject } from './workspace'
+import mm from 'micromatch'
+import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
-import { createVmThreadsPool } from './pools/vmThreads'
-import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
-import type { TestSpecification } from './spec'
+import { createVmThreadsPool } from './pools/vmThreads'
 
 /**
  * @deprecated use TestSpecification instead

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { expect, test } from 'vitest'
 import { resolve } from 'pathe'
+import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test('should print correct indicator position', async () => {

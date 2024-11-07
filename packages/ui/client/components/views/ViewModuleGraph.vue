@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { ResizeContext } from 'd3-graph-controller'
+import type { Selection } from 'd3-selection'
 import {
+  defineGraphConfig,
   GraphController,
   Markers,
   PositionInitializers,
-  defineGraphConfig,
 } from 'd3-graph-controller'
-import type { Selection } from 'd3-selection'
 import { isReport } from '~/composables/client'
 import type {
   ModuleGraph,

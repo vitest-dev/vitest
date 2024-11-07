@@ -1,12 +1,5 @@
-import {
-  format,
-  isNegativeNaN,
-  isObject,
-  objDisplay,
-  objectAttr,
-  toArray,
-} from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
+import type { FixtureItem } from './fixture'
+import type { VitestRunner } from './types/runner'
 import type {
   Custom,
   CustomAPI,
@@ -26,19 +19,26 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import type { VitestRunner } from './types/runner'
-import { createChainable } from './utils/chain'
 import {
-  collectTask,
+  format,
+  isNegativeNaN,
+  isObject,
+  objDisplay,
+  objectAttr,
+  toArray,
+} from '@vitest/utils'
+import { parseSingleStack } from '@vitest/utils/source-map'
+import {
   collectorContext,
+  collectTask,
   createTestContext,
   runWithSuite,
   withTimeout,
 } from './context'
-import { getHooks, setFixture, setFn, setHooks } from './map'
-import type { FixtureItem } from './fixture'
 import { mergeContextFixtures, withFixtures } from './fixture'
+import { getHooks, setFixture, setFn, setHooks } from './map'
 import { getCurrentTest } from './test-state'
+import { createChainable } from './utils/chain'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -499,7 +499,6 @@ function withAwaitAsyncAssetions<T extends (...args: any[]) => any>(fn: T, task:
 }
 
 function createSuite() {
-  // eslint-disable-next-line unicorn/consistent-function-scoping
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,
@@ -520,16 +519,17 @@ function createSuite() {
       optionsOrFactory,
     )
 
+    const isConcurrentSpecified = options.concurrent || this.concurrent || options.sequential === false
+    const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
+
     // inherit options from current suite
     if (currentSuite?.options) {
       options = { ...currentSuite.options, ...options }
     }
 
     // inherit concurrent / sequential from suite
-    const isConcurrent
-      = options.concurrent || (this.concurrent && !this.sequential)
-    const isSequential
-      = options.sequential || (this.sequential && !this.concurrent)
+    const isConcurrent = isConcurrentSpecified || (options.concurrent && !isSequentialSpecified)
+    const isSequential = isSequentialSpecified || (options.sequential && !isConcurrentSpecified)
     options.concurrent = isConcurrent && !isSequential
     options.sequential = isSequential && !isConcurrent
 

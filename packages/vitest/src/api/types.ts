@@ -1,8 +1,8 @@
-import type { BirpcReturn } from 'birpc'
 import type { File, TaskResultPack } from '@vitest/runner'
-import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { BirpcReturn } from 'birpc'
 import type { SerializedConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
+import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
 
 interface SourceMap {
   file: string

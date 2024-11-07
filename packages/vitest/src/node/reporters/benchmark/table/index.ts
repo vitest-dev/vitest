@@ -1,16 +1,16 @@
-import fs from 'node:fs'
-import c from 'tinyrainbow'
-import * as pathe from 'pathe'
 import type { File, TaskResultPack } from '@vitest/runner'
-import type { UserConsoleLog } from '../../../../types/general'
-import { BaseReporter } from '../../base'
-import { getFullName, getTasks } from '../../../../utils'
-import { getStateSymbol } from '../../renderers/utils'
 import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
+import type { UserConsoleLog } from '../../../../types/general'
+import fs from 'node:fs'
+import { getFullName, getTasks } from '@vitest/runner/utils'
+import * as pathe from 'pathe'
+import c from 'tinyrainbow'
+import { BaseReporter } from '../../base'
+import { getStateSymbol } from '../../renderers/utils'
 import {
-  type TableRendererOptions,
   createTableRenderer,
   renderTree,
+  type TableRendererOptions,
 } from './tableRender'
 
 export class TableReporter extends BaseReporter {

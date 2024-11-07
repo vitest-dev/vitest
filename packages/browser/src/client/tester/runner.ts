@@ -1,15 +1,15 @@
 import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
-import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
-import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
-import { TraceMap, originalPositionFor } from 'vitest/utils'
-import { page } from '@vitest/browser/context'
-import { globalChannel } from '@vitest/browser/client'
-import { executor } from '../utils'
-import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { rpc } from './rpc'
 import type { VitestBrowserClientMocker } from './mocker'
+import { globalChannel } from '@vitest/browser/client'
+import { page, userEvent } from '@vitest/browser/context'
+import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
+import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
+import { originalPositionFor, TraceMap } from 'vitest/utils'
+import { executor } from '../utils'
+import { rpc } from './rpc'
+import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -17,7 +17,7 @@ interface BrowserRunnerOptions {
 
 export const browserHashMap = new Map<
   string,
-  [test: boolean, timstamp: string]
+  string
 >()
 
 interface CoverageHandler {
@@ -38,6 +38,11 @@ export function createBrowserRunner(
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
+    }
+
+    onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
+      await userEvent.cleanup()
+      await super.onBeforeTryTask?.(...args)
     }
 
     onAfterRunTask = async (task: Task) => {
@@ -121,15 +126,15 @@ export function createBrowserRunner(
     }
 
     importFile = async (filepath: string) => {
-      let [test, hash] = this.hashMap.get(filepath) ?? [false, '']
-      if (hash === '') {
+      let hash = this.hashMap.get(filepath)
+      if (!hash) {
         hash = Date.now().toString()
-        this.hashMap.set(filepath, [false, hash])
+        this.hashMap.set(filepath, hash)
       }
 
       // on Windows we need the unit to resolve the test file
       const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
-      const query = `${test ? 'browserv' : 'v'}=${hash}`
+      const query = `browserv=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
       await import(/* @vite-ignore */ importpath)
     }

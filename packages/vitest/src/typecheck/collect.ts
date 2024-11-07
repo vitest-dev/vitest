@@ -1,15 +1,15 @@
-import { relative } from 'pathe'
-import { parseAstAsync } from 'vite'
-import { ancestor as walkAst } from 'acorn-walk'
+import type { File, Suite, Test } from '@vitest/runner'
 import type { RawSourceMap } from 'vite-node'
+import type { WorkspaceProject } from '../node/workspace'
 import {
   calculateSuiteHash,
   generateHash,
   interpretTaskModes,
   someTasksAreOnly,
 } from '@vitest/runner/utils'
-import type { File, Suite, Test } from '@vitest/runner'
-import type { WorkspaceProject } from '../node/workspace'
+import { ancestor as walkAst } from 'acorn-walk'
+import { relative } from 'pathe'
+import { parseAstAsync } from 'vite'
 
 interface ParsedFile extends File {
   start: number

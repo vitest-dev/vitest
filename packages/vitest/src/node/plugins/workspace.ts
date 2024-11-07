@@ -1,23 +1,24 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { basename, dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import type { WorkspaceProject } from '../workspace'
+import { existsSync, readFileSync } from 'node:fs'
+import { deepMerge } from '@vitest/utils'
+import { basename, dirname, relative, resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { deepMerge } from '../../utils/base'
-import type { WorkspaceProject } from '../workspace'
-import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
-import { SsrReplacerPlugin } from './ssrReplacer'
 import { MocksPlugins } from './mocks'
+import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestOptimizer } from './optimizer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
-import { VitestOptimizer } from './optimizer'
-import { NormalizeURLPlugin } from './normalizeURL'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -104,8 +105,8 @@ export function WorkspaceVitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+            && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -124,6 +125,14 @@ export function WorkspaceVitestPlugin(
             }
           }
         }
+        config.customLogger = createViteLogger(
+          project.logger,
+          viteConfig.logLevel || 'warn',
+          {
+            allowClearScreen: false,
+          },
+        )
+        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
       },

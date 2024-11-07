@@ -197,6 +197,10 @@ export interface TestResultSkipped {
 
 export interface TestDiagnostic {
   /**
+   * If the duration of the test is above `slowTestThreshold`.
+   */
+  slow: boolean
+  /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
@@ -398,6 +402,10 @@ declare class TestProject {
    * @experimental The public Vitest API is experimental and does not follow semver.
    */
   readonly workspaceProject: WorkspaceProject
+  /**
+   * Vite's dev server instance. Every workspace project has its own server.
+   */
+  readonly vite: ViteDevServer
   /**
    * Resolved project configuration.
    */

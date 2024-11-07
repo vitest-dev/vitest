@@ -1,13 +1,13 @@
-import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import type {
   DepOptimizationOptions,
   ResolvedConfig,
   UserConfig as ViteConfig,
 } from 'vite'
-import { dirname } from 'pathe'
 import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
-import { VitestCache } from '../cache'
+import { dirname } from 'pathe'
+import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import { rootDir } from '../../paths'
+import { VitestCache } from '../cache'
 
 export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,
@@ -75,7 +75,7 @@ export function resolveOptimizerConfig(
 
   // `optimizeDeps.disabled` is deprecated since v5.1.0-beta.1
   // https://github.com/vitejs/vite/pull/15184
-  if (major >= 5 && minor >= 1) {
+  if ((major >= 5 && minor >= 1) || major >= 6) {
     if (newConfig.optimizeDeps.disabled) {
       newConfig.optimizeDeps.noDiscovery = true
       newConfig.optimizeDeps.include = []

@@ -1,3 +1,4 @@
+import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
   Custom,
@@ -10,15 +11,15 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
-import type { ExpectStatic } from '@vitest/expect'
-import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
-import { getSnapshotClient } from '../../integrations/snapshot/chai'
-import { vi } from '../../integrations/vi'
-import { getNames, getTestName, getTests, getWorkerState } from '../../utils'
-import { createExpect } from '../../integrations/chai/index'
 import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
+import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
+import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { createExpect } from '../../integrations/chai/index'
+import { getSnapshotClient } from '../../integrations/snapshot/chai'
+import { vi } from '../../integrations/vi'
 import { rpc } from '../rpc'
+import { getWorkerState } from '../utils'
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()

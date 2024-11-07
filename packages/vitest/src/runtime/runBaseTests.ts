@@ -1,18 +1,18 @@
+import type { ResolvedTestEnvironment } from '../types/environment'
+import type { SerializedConfig } from './config'
+import type { VitestExecutor } from './execute'
 import { performance } from 'node:perf_hooks'
 import { collectTests, startTests } from '@vitest/runner'
-import { getWorkerState, resetModules } from '../utils'
-import { vi } from '../integrations/vi'
+import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,
   stopCoverageInsideWorker,
 } from '../integrations/coverage'
-import { setupChaiConfig } from '../integrations/chai/config'
-import type { ResolvedTestEnvironment } from '../types/environment'
-import type { SerializedConfig } from './config'
-import { setupGlobalEnv, withEnv } from './setup-node'
-import type { VitestExecutor } from './execute'
-import { resolveTestRunner } from './runners'
+import { vi } from '../integrations/vi'
 import { closeInspector } from './inspector'
+import { resolveTestRunner } from './runners'
+import { setupGlobalEnv, withEnv } from './setup-node'
+import { getWorkerState, resetModules } from './utils'
 
 // browser shouldn't call this!
 export async function run(

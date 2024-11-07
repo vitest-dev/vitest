@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { isAbsolute, join, resolve } from 'pathe'
 import type { PartialResolvedId } from 'rollup'
 import type { ResolvedConfig as ViteConfig, ViteDevServer } from 'vite'
+import { existsSync, readFileSync } from 'node:fs'
+import { isAbsolute, join, resolve } from 'pathe'
 import { cleanUrl } from '../utils'
 import { findMockRedirect } from './redirect'
 

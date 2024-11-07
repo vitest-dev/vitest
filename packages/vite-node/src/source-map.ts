@@ -1,8 +1,8 @@
 import type { TransformResult } from 'vite'
-import { dirname, isAbsolute, relative, resolve } from 'pathe'
-import { withTrailingSlash } from './utils'
-import { install } from './source-map-handler'
 import type { EncodedSourceMap } from './types'
+import { dirname, isAbsolute, relative, resolve } from 'pathe'
+import { install } from './source-map-handler'
+import { withTrailingSlash } from './utils'
 
 interface InstallSourceMapSupportOptions {
   getSourceMap: (source: string) => EncodedSourceMap | null | undefined

@@ -1,11 +1,11 @@
-import { normalize } from 'pathe'
-import cac, { type CAC, type Command } from 'cac'
-import c from 'tinyrainbow'
-import { version } from '../../../package.json' with { type: 'json' }
-import { toArray } from '../../utils/base'
 import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
+import { toArray } from '@vitest/utils'
+import cac, { type CAC, type Command } from 'cac'
+import { normalize } from 'pathe'
+import c from 'tinyrainbow'
+import { version } from '../../../package.json' with { type: 'json' }
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {

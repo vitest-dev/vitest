@@ -1,4 +1,3 @@
-import { AssertionError } from 'node:assert'
 import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 
 const file: File = {
@@ -26,12 +25,13 @@ const suite: Suite = {
   tasks: [],
 }
 
-const error: ErrorWithDiff = new AssertionError({
+const error: ErrorWithDiff = {
+  name: 'AssertionError',
   message: 'expected 2.23606797749979 to equal 2',
   actual: '2.23606797749979',
   expected: '2',
   operator: 'strictEqual',
-})
+}
 error.showDiff = true
 error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
 + '    at /vitest/test/core/test/basic.test.ts:8:32\n'

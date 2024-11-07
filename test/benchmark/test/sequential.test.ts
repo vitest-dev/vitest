@@ -1,6 +1,6 @@
 import fs from 'node:fs'
-import { expect, it } from 'vitest'
 import * as pathe from 'pathe'
+import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it('sequential', async () => {

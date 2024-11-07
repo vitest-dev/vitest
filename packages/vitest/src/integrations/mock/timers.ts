@@ -11,8 +11,8 @@ import type {
   InstalledClock,
 } from '@sinonjs/fake-timers'
 import { withGlobal } from '@sinonjs/fake-timers'
-import { isChildProcess } from '../../utils/base'
-import { RealDate, mockDate, resetDate } from './date'
+import { isChildProcess } from '../../runtime/utils'
+import { mockDate, RealDate, resetDate } from './date'
 
 export class FakeTimers {
   private _global: typeof globalThis

@@ -1,12 +1,12 @@
-import { resolve } from 'pathe'
 import type { UserConfig } from 'vite'
-import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
-import Components from 'unplugin-vue-components/vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import Unocss from 'unocss/vite'
-import Pages from 'vite-plugin-pages'
+import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
+import Unocss from 'unocss/vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig } from 'vite'
+import Pages from 'vite-plugin-pages'
 
 // for debug:
 // open a static file serve to share the report json

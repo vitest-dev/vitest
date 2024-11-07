@@ -1,9 +1,9 @@
-import { mockerPlugin } from '@vitest/mocker/node'
+import type { Browser } from 'playwright'
 import type { UserConfig } from 'vite'
+import { mockerPlugin } from '@vitest/mocker/node'
+import { chromium } from 'playwright'
 import { createServer } from 'vite'
 import { beforeAll, expect, it, onTestFinished } from 'vitest'
-import type { Browser } from 'playwright'
-import { chromium } from 'playwright'
 
 let browser: Browser
 beforeAll(async () => {

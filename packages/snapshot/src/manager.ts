@@ -1,9 +1,9 @@
-import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 import type {
   SnapshotResult,
   SnapshotStateOptions,
   SnapshotSummary,
 } from './types'
+import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 
 export class SnapshotManager {
   summary: SnapshotSummary = undefined!

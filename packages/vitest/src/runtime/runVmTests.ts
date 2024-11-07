@@ -1,23 +1,23 @@
+import type { SerializedConfig } from './config'
+import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
-import util from 'node:util'
-import timers from 'node:timers'
 import { performance } from 'node:perf_hooks'
+import timers from 'node:timers'
+import util from 'node:util'
 import { collectTests, startTests } from '@vitest/runner'
-import { installSourcemapsSupport } from 'vite-node/source-map'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
+import { installSourcemapsSupport } from 'vite-node/source-map'
 import { setupChaiConfig } from '../integrations/chai/config'
 import {
   startCoverageInsideWorker,
   stopCoverageInsideWorker,
 } from '../integrations/coverage'
-import * as VitestIndex from '../public/index'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
-import { getWorkerState } from './utils'
-import type { VitestExecutor } from './execute'
+import * as VitestIndex from '../public/index'
+import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
-import { closeInspector } from './inspector'
-import type { SerializedConfig } from './config'
+import { getWorkerState } from './utils'
 
 export async function run(
   method: 'run' | 'collect',

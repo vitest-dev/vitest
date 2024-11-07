@@ -7,7 +7,6 @@
 
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
 import type { ParsedStack } from '../../../utils/src/index'
-import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import type {
   SnapshotData,
   SnapshotEnvironment,
@@ -17,8 +16,9 @@ import type {
   SnapshotUpdateState,
 } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
-import { saveInlineSnapshots } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
+import { parseErrorStacktrace } from '../../../utils/src/source-map'
+import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
 
 import {
@@ -333,7 +333,7 @@ export default class SnapshotState {
     if (
       (hasSnapshot && this._updateSnapshot === 'all')
       || ((!hasSnapshot || !snapshotIsPersisted)
-      && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
+        && (this._updateSnapshot === 'new' || this._updateSnapshot === 'all'))
     ) {
       if (this._updateSnapshot === 'all') {
         if (!pass) {

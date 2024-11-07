@@ -1,19 +1,19 @@
-import { Console } from 'node:console'
-import type { Writable } from 'node:stream'
-import { createLogUpdate } from 'log-update'
-import c from 'tinyrainbow'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import type { Task } from '@vitest/runner'
 import type { ErrorWithDiff } from '@vitest/utils'
+import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
-import { toArray } from '../utils'
-import { highlightCode } from '../utils/colors'
-import { divider } from './reporters/renderers/utils'
-import { RandomSequencer } from './sequencers/RandomSequencer'
 import type { Vitest } from './core'
 import type { PrintErrorResult } from './error'
-import { printError } from './error'
 import type { WorkspaceProject } from './workspace'
+import { Console } from 'node:console'
+import { toArray } from '@vitest/utils'
+import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { createLogUpdate } from 'log-update'
+import c from 'tinyrainbow'
+import { highlightCode } from '../utils/colors'
+import { printError } from './error'
+import { divider } from './reporters/renderers/utils'
+import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
   type?: string
@@ -46,6 +46,7 @@ export class Logger {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
     this.logUpdate = createLogUpdate(this.outputStream)
     this._highlights.clear()
+    this.registerUnhandledRejection()
   }
 
   log(...args: any[]) {
@@ -316,5 +317,25 @@ export class Logger {
       this.printError(err, { fullStack: true })
     })
     this.log(c.red(divider()))
+  }
+
+  private registerUnhandledRejection() {
+    const onUnhandledRejection = (err: unknown) => {
+      process.exitCode = 1
+
+      this.printError(err, {
+        fullStack: true,
+        type: 'Unhandled Rejection',
+      })
+
+      this.error('\n\n')
+      process.exit()
+    }
+
+    process.on('unhandledRejection', onUnhandledRejection)
+
+    this.ctx.onClose(() => {
+      process.off('unhandledRejection', onUnhandledRejection)
+    })
   }
 }

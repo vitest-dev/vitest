@@ -611,8 +611,8 @@ function diff_cleanupSemanticScore_(one: string, two: string): number {
 
 export {
   Diff,
-  DIFF_EQUAL,
-  DIFF_DELETE,
-  DIFF_INSERT,
   diff_cleanupSemantic as cleanupSemantic,
+  DIFF_DELETE,
+  DIFF_EQUAL,
+  DIFF_INSERT,
 }

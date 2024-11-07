@@ -1,13 +1,14 @@
-import { stripVTControlCharacters } from 'node:util'
-import c from 'tinyrainbow'
-import cliTruncate from 'cli-truncate'
 import type { Task } from '@vitest/runner'
-import { getTests, notNullish } from '../../../../utils'
-import { F_RIGHT } from '../../../../utils/figures'
-import type { Logger } from '../../../logger'
-import { getCols, getStateSymbol } from '../../renderers/utils'
-import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
 import type { FlatBenchmarkReport } from '.'
+import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
+import type { Logger } from '../../../logger'
+import { stripVTControlCharacters } from 'node:util'
+import { getTests } from '@vitest/runner/utils'
+import { notNullish } from '@vitest/utils'
+import cliTruncate from 'cli-truncate'
+import c from 'tinyrainbow'
+import { F_RIGHT } from '../../renderers/figures'
+import { getCols, getStateSymbol } from '../../renderers/utils'
 
 export interface TableRendererOptions {
   renderSucceed?: boolean

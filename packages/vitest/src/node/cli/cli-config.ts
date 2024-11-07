@@ -1,4 +1,3 @@
-import { defaultBrowserPort, defaultPort } from '../../constants'
 import type { ApiConfig } from '../types/config'
 import type {
   ForksOptions,
@@ -7,6 +6,7 @@ import type {
   WorkerContextOptions,
 } from '../types/pool-options'
 import type { CliOptions } from './cli-api'
+import { defaultBrowserPort, defaultPort } from '../../constants'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
 | never
@@ -415,6 +415,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       screenshotDirectory: null,
       screenshotFailures: null,
       locators: null,
+      testerHtmlPath: null,
     },
   },
   pool: {
@@ -656,7 +657,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   slowTestThreshold: {
     description:
-      'Threshold in milliseconds for a test to be considered slow (default: `300`)',
+      'Threshold in milliseconds for a test or suite to be considered slow (default: `300`)',
     argument: '<threshold>',
   },
   teardownTimeout: {

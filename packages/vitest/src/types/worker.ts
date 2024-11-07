@@ -1,10 +1,10 @@
-import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
-import type { BirpcReturn } from 'birpc'
 import type { CancelReason, Task } from '@vitest/runner'
+import type { BirpcReturn } from 'birpc'
+import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { SerializedConfig } from '../runtime/config'
-import type { RunnerRPC, RuntimeRPC } from './rpc'
-import type { TransformMode } from './general'
 import type { Environment } from './environment'
+import type { TransformMode } from './general'
+import type { RunnerRPC, RuntimeRPC } from './rpc'
 
 /** @deprecated unused */
 export type ResolveIdFunction = (

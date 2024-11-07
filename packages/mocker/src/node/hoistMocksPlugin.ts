@@ -1,5 +1,3 @@
-import type { SourceMap } from 'magic-string'
-import MagicString from 'magic-string'
 import type {
   AwaitExpression,
   CallExpression,
@@ -11,11 +9,13 @@ import type {
   ImportExpression,
   VariableDeclaration,
 } from 'estree'
-import { findNodeAround } from 'acorn-walk'
+import type { SourceMap } from 'magic-string'
 import type { Plugin, Rollup } from 'vite'
-import { createFilter } from 'vite'
 import type { Node, Positioned } from './esmWalker'
-import { esmWalker } from './esmWalker'
+import { findNodeAround } from 'acorn-walk'
+import MagicString from 'magic-string'
+import { createFilter } from 'vite'
+import { esmWalker, getArbitraryModuleIdentifier } from './esmWalker'
 
 interface HoistMocksOptions {
   /**
@@ -219,7 +219,7 @@ export function hoistMocks(
         if (spec.type === 'ImportSpecifier') {
           idToImportMap.set(
             spec.local.name,
-            `${importId}.${spec.imported.name}`,
+            `${importId}.${getArbitraryModuleIdentifier(spec.imported)}`,
           )
         }
         else if (spec.type === 'ImportDefaultSpecifier') {
@@ -264,7 +264,7 @@ export function hoistMocks(
     if (
       defaultExport?.declaration === node
       || (defaultExport?.declaration.type === 'AwaitExpression'
-      && defaultExport.declaration.argument === node)
+        && defaultExport.declaration.argument === node)
     ) {
       throw createSyntaxError(defaultExport, error)
     }
@@ -294,7 +294,7 @@ export function hoistMocks(
     if (
       init
       && (init === node
-      || (init.type === 'AwaitExpression' && init.argument === node))
+        || (init.type === 'AwaitExpression' && init.argument === node))
     ) {
       return declarationNode
     }

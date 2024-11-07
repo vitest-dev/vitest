@@ -580,7 +580,7 @@ Base directory to scan for the test files. You can specify this option to speed 
 - **Default:** `'default'`
 - **CLI:** `--reporter=<name>`, `--reporter=<name1> --reporter=<name2>`
 
-Custom [reporters](/guide/reporters) for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/types/reporter.ts), a string to select built-in reporters, or a path to a custom implementation (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`).
+Custom [reporters](/guide/reporters) for output. Reporters can be [a Reporter instance](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/types/reporter.ts), a string to select built-in reporters, or a path to a custom implementation (e.g. `'./path/to/reporter.ts'`, `'@scope/reporter'`).
 
 ### outputFile<NonProjectOption />
 
@@ -970,7 +970,7 @@ Silent console output from tests
 Path to setup files. They will be run before each test file.
 
 :::info
-Changing setup files will trigger rerun of all tests.
+Editing a setup file will automatically trigger a rerun of all tests.
 :::
 
 You can use `process.env.VITEST_POOL_ID` (integer-like string) inside to distinguish between threads.
@@ -1640,21 +1640,29 @@ Run the browser in a `headless` mode. If you are running Vitest in CI, it will b
 
 Run every test in a separate iframe.
 
+#### browser.testerHtmlPath
+
+- **Type:** `string`
+- **Default:** `@vitest/browser/tester.html`
+- **Version:** Since Vitest 2.1.4
+
+A path to the HTML entry point. Can be relative to the root of the project. This file will be processed with [`transformIndexHtml`](https://vite.dev/guide/api-plugin#transformindexhtml) hook.
+
 #### browser.api
 
 - **Type:** `number | { port?, strictPort?, host? }`
 - **Default:** `63315`
 - **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`
 
-Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option.
+Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
 
 #### browser.provider
 
-- **Type:** `'webdriverio' | 'playwright' | string`
-- **Default:** `'webdriverio'`
+- **Type:** `'webdriverio' | 'playwright' | 'preview' | string`
+- **Default:** `'preview'`
 - **CLI:** `--browser.provider=playwright`
 
-Path to a provider that will be used when running browser tests. Vitest provides two providers which are `webdriverio` (default) and `playwright`. Custom providers should be exported using `default` export and have this shape:
+Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
 
 ```ts
 export interface BrowserProvider {
@@ -2174,7 +2182,7 @@ Path to custom tsconfig, relative to the project root.
 - **Default**: `300`
 - **CLI**: `--slow-test-threshold=<number>`, `--slowTestThreshold=<number>`
 
-The number of milliseconds after which a test is considered slow and reported as such in the results.
+The number of milliseconds after which a test or suite is considered slow and reported as such in the results.
 
 ### chaiConfig {#chaiconfig}
 
@@ -2373,9 +2381,9 @@ Relevant only when using with `shouldAdvanceTime: true`. increment mocked time b
 #### fakeTimers.shouldClearNativeTimers
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 
-Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to starting fake timers session.
+Tells fake timers to clear "native" (i.e. not fake) timers by delegating to their respective handlers. When disabled, it can lead to potentially unexpected behavior if timers existed prior to starting fake timers session.
 
 ### workspace<NonProjectOption /> {#workspace}
 

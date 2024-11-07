@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite'
-import { join, resolve } from 'pathe'
 import type { Vitest } from '../core'
+import { join, resolve } from 'pathe'
 import { distDir } from '../../paths'
 
 export function VitestProjectResolver(ctx: Vitest): Plugin {

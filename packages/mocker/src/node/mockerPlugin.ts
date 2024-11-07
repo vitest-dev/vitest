@@ -1,13 +1,13 @@
-import { fileURLToPath } from 'node:url'
-import { readFile } from 'node:fs/promises'
 import type { Plugin, ViteDevServer } from 'vite'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 
 import { resolve } from 'pathe'
-import { type AutomockPluginOptions, automockPlugin } from './automockPlugin'
-import { type HoistMocksPluginOptions, hoistMocksPlugin } from './hoistMocksPlugin'
+import { automockPlugin, type AutomockPluginOptions } from './automockPlugin'
 import { dynamicImportPlugin } from './dynamicImportPlugin'
-import { ServerMockResolver } from './resolver'
+import { hoistMocksPlugin, type HoistMocksPluginOptions } from './hoistMocksPlugin'
 import { interceptorPlugin } from './interceptorPlugin'
+import { ServerMockResolver } from './resolver'
 
 interface MockerPluginOptions extends AutomockPluginOptions {
   hoistMocks?: HoistMocksPluginOptions

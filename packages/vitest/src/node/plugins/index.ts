@@ -1,28 +1,28 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
-import { relative } from 'pathe'
-import { configDefaults, coverageConfigDefaults } from '../../defaults'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
   deepMerge,
   notNullish,
-  removeUndefinedValues,
   toArray,
-} from '../../utils'
+} from '@vitest/utils'
+import { relative } from 'pathe'
+import { defaultPort } from '../../constants'
+import { configDefaults, coverageConfigDefaults } from '../../defaults'
+import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
-import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { defaultPort } from '../../constants'
-import { SsrReplacerPlugin } from './ssrReplacer'
-import { CSSEnablerPlugin } from './cssEnabler'
+import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
+import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
+import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestOptimizer } from './optimizer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
-import { VitestOptimizer } from './optimizer'
-import { NormalizeURLPlugin } from './normalizeURL'
 import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
@@ -133,6 +133,15 @@ export async function VitestPlugin(
           },
         }
 
+        config.customLogger = createViteLogger(
+          ctx.logger,
+          viteConfig.logLevel || 'warn',
+          {
+            allowClearScreen: false,
+          },
+        )
+        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
+
         // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
         if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
           config.test.coverage = {
@@ -177,8 +186,8 @@ export async function VitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
-          || 'stable'
+            && testConfig.css?.modules?.classNameStrategy)
+            || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -265,4 +274,14 @@ export async function VitestPlugin(
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ].filter(notNullish)
+}
+function removeUndefinedValues<T extends Record<string, any>>(
+  obj: T,
+): T {
+  for (const key in Object.keys(obj)) {
+    if (obj[key] === undefined) {
+      delete obj[key]
+    }
+  }
+  return obj
 }

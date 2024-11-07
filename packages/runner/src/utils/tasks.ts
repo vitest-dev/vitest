@@ -1,5 +1,5 @@
-import { type Arrayable, toArray } from '@vitest/utils'
 import type { Custom, Suite, Task, Test } from '../types/tasks'
+import { type Arrayable, toArray } from '@vitest/utils'
 
 export function isAtomTest(s: Task): s is Test | Custom {
   return s.type === 'test' || s.type === 'custom'
@@ -70,4 +70,12 @@ export function getNames(task: Task): string[] {
   }
 
   return names
+}
+
+export function getFullName(task: Task, separator = ' > '): string {
+  return getNames(task).join(separator)
+}
+
+export function getTestName(task: Task, separator = ' > '): string {
+  return getNames(task).slice(1).join(separator)
 }

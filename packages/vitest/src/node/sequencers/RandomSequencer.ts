@@ -1,5 +1,5 @@
-import { shuffle } from '@vitest/utils'
 import type { WorkspaceSpec } from '../pool'
+import { shuffle } from '@vitest/utils'
 import { BaseSequencer } from './BaseSequencer'
 
 export class RandomSequencer extends BaseSequencer {

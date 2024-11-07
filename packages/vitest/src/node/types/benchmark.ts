@@ -38,7 +38,7 @@ export interface BenchmarkUserOptions {
   outputFile?:
     | string
     | (Partial<Record<BenchmarkBuiltinReporters, string>> &
-    Record<string, string>)
+      Record<string, string>)
 
   /**
    * benchmark output file to compare against

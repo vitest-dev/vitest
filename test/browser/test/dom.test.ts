@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
 import { createNode } from '#src/createNode'
+import { page } from '@vitest/browser/context'
+import { beforeEach, describe, expect, test } from 'vitest'
 import '../src/button.css'
 
 describe('dom related activity', () => {
@@ -13,6 +13,10 @@ describe('dom related activity', () => {
     await page.viewport(800, 600)
     expect(window.innerWidth).toBe(800)
     expect(window.innerHeight).toBe(600)
+  })
+
+  test('element doesn\'t exist', async () => {
+    await expect.element(page.getByText('empty')).not.toBeInTheDocument()
   })
 
   test('renders div', async () => {

@@ -1,7 +1,7 @@
-import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
-import type { ViteDevServer } from 'vite'
 import type { CancelReason } from '@vitest/runner'
+import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
+import type { ViteDevServer } from 'vite'
 import type { WorkspaceProject } from '../workspace'
 import type { ApiConfig } from './config'
 
@@ -156,8 +156,13 @@ export interface BrowserConfigOptions {
 
   /**
    * Scripts injected into the tester iframe.
+   * @deprecated Will be removed in the future, use `testerHtmlPath` instead.
    */
   testerScripts?: BrowserScript[]
+  /**
+   * Path to the index.html file that will be used to run tests.
+   */
+  testerHtmlPath?: string
 
   /**
    * Scripts injected into the main window.

@@ -1,5 +1,5 @@
-import { resolve } from 'node:path'
 import { readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { expect } from 'vitest'
 import { runVitest, test } from '../utils'
 

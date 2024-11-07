@@ -1,16 +1,16 @@
 export { SnapshotClient } from './client'
 
-export { default as SnapshotState } from './port/state'
-export { addSerializer, getSerializers } from './port/plugins'
 export { stripSnapshotIndentation } from './port/inlineSnapshot'
+export { addSerializer, getSerializers } from './port/plugins'
+export { default as SnapshotState } from './port/state'
 
 export type {
   SnapshotData,
-  SnapshotUpdateState,
-  SnapshotStateOptions,
   SnapshotMatchOptions,
   SnapshotResult,
   SnapshotSerializer,
-  UncheckedSnapshot,
+  SnapshotStateOptions,
   SnapshotSummary,
+  SnapshotUpdateState,
+  UncheckedSnapshot,
 } from './types'

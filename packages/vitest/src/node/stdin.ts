@@ -1,11 +1,13 @@
-import readline from 'node:readline'
 import type { Writable } from 'node:stream'
-import c from 'tinyrainbow'
-import prompt from 'prompts'
-import { relative, resolve } from 'pathe'
-import { getTests, isWindows, stdout } from '../utils'
-import { toArray } from '../utils/base'
 import type { Vitest } from './core'
+import readline from 'node:readline'
+import { getTests } from '@vitest/runner/utils'
+import { toArray } from '@vitest/utils'
+import { relative, resolve } from 'pathe'
+import prompt from 'prompts'
+import c from 'tinyrainbow'
+import { stdout } from '../utils/base'
+import { isWindows } from '../utils/env'
 import { WatchFilter } from './watch-filter'
 
 const keys = [
@@ -25,13 +27,13 @@ export function printShortcutsHelp() {
     `
 ${c.bold('  Watch Usage')}
 ${keys
-    .map(
-      i =>
-        c.dim('  press ')
-        + c.reset([i[0]].flat().map(c.bold).join(', '))
-        + c.dim(` to ${i[1]}`),
-    )
-    .join('\n')}
+  .map(
+    i =>
+      c.dim('  press ')
+      + c.reset([i[0]].flat().map(c.bold).join(', '))
+      + c.dim(` to ${i[1]}`),
+  )
+  .join('\n')}
 `,
   )
 }
