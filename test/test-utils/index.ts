@@ -238,14 +238,24 @@ export function resolvePath(baseUrl: string, path: string) {
 
 export function useFS(root: string, structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>) {
   const files = new Set<string>()
+  const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
+  if (!hasConfig) {
+    structure['./vitest.config.js'] = {}
+  }
   for (const file in structure) {
     const filepath = resolve(root, file)
     files.add(filepath)
     const content = typeof structure[file] === 'string'
       ? structure[file]
       : `export default ${JSON.stringify(structure[file])}`
-    createFile(resolve(root, filepath), String(content))
+    fs.mkdirSync(dirname(filepath), { recursive: true })
+    fs.writeFileSync(filepath, content, 'utf-8')
   }
+  onTestFinished(() => {
+    if (process.env.VITEST_FS_CLEANUP !== 'false') {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
   return {
     editFile: (file: string, callback: (content: string) => string) => {
       const filepath = resolve(root, file)
@@ -265,5 +275,21 @@ export function useFS(root: string, structure: Record<string, string | ViteUserC
       }
       createFile(filepath, content)
     },
+  }
+}
+
+export async function runInlineTests(
+  structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
+  config?: UserConfig,
+) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  const fs = useFS(root, structure)
+  const vitest = await runVitest({
+    root,
+    ...config,
+  })
+  return {
+    fs,
+    ...vitest,
   }
 }
