@@ -65,7 +65,7 @@ exports[`should fail poll-no-awaited.test.ts > poll-no-awaited.test.ts 1`] = `
 AssertionError: expected 3 to be 4 // Object.is equality
 Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited:
 Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited:
-Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited:
+Error: expect.poll(assertion).not.toBe() was not awaited. This assertion is asynchronous and must be awaited:
 Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited:"
 `;
 

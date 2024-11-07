@@ -16,8 +16,8 @@ export async function setupExpectDom() {
       }
       chai.util.flag(this, '_poll.element', true)
 
-      const isNot = chai.util.flag(this, 'negate')
-      const name = chai.util.flag(this, '_name')
+      const isNot = chai.util.flag(this, 'negate') as boolean
+      const name = chai.util.flag(this, '_name') as string
       // special case for `toBeInTheDocument` matcher
       if (isNot && name === 'toBeInTheDocument') {
         return elementOrLocator.query()

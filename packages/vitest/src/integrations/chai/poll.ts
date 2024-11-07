@@ -99,8 +99,12 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           test.onFinished ??= []
           test.onFinished.push(() => {
             if (!awaited) {
+              const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
               const name = chai.util.flag(assertion, '_poll.element') ? 'element(locator)' : 'poll(assertion)'
-              const error = new Error(`expect.${name}.${String(key)}() was not awaited. This assertion is asynchronous and must be awaited:\n\nawait expect.${name}.${String(key)}()\n`)
+              const assertionString = `expect.${name}.${negated}${String(key)}()`
+              const error = new Error(
+                `${assertionString} was not awaited. This assertion is asynchronous and must be awaited:\n\nawait ${assertionString}\n`,
+              )
               throw copyStackTrace(error, STACK_TRACE_ERROR)
             }
           })

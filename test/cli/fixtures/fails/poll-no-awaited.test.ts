@@ -6,7 +6,7 @@ test('poll is not awaited once', () => {
 
 test('poll is not awaited several times', () => {
   expect.poll(() => 3).toBe(3)
-  expect.poll(() => 'string').toBe('string')
+  expect.poll(() => 'string').not.toBe('correct')
 })
 
 test('poll is not awaited but there is an async assertion afterwards', async () => {
