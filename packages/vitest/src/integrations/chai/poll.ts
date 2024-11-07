@@ -104,12 +104,21 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               throw copyStackTrace(error, STACK_TRACE_ERROR)
             }
           })
+          // only .then is enough to check awaited, but we type this as `Promise<void>` in global types
+          // so let's follow it
           return {
             then(onFulfilled, onRejected) {
               awaited = true
               return promise.then(onFulfilled, onRejected)
             },
-          } satisfies PromiseLike<void>
+            catch(onRejected) {
+              return promise.catch(onRejected)
+            },
+            finally(onFinally) {
+              return promise.finally(onFinally)
+            },
+            [Symbol.toStringTag]: 'Promise',
+          } satisfies Promise<void>
         }
       },
     })
