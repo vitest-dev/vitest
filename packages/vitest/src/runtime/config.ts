@@ -158,7 +158,6 @@ export type RuntimeConfig = Pick<
   | 'printConsoleTrace'
 > & {
   sequence?: {
-    concurrent?: boolean
     hooks?: SequenceHooks
   }
 }
