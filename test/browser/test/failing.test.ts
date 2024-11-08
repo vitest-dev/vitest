@@ -2,6 +2,10 @@ import { page } from '@vitest/browser/context'
 import { expect, it } from 'vitest'
 import { throwError } from '../src/error'
 
+document.body.innerHTML = `
+  <button>Click me!</button>
+`
+
 it('correctly fails and prints a diff', () => {
   expect(1).toBe(2)
 })
