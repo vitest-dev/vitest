@@ -1010,7 +1010,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               promise,
               createAssertionMessage(utils, this, !!args.length),
               error,
-              5,
             )
           }
         },
@@ -1082,7 +1081,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               promise,
               createAssertionMessage(utils, this, !!args.length),
               error,
-              5,
             )
           }
         },

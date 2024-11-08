@@ -11,7 +11,7 @@ import type {
   UserEventTabOptions,
   UserEventTypeOptions,
 } from '../../../context'
-import { convertElementToCssSelector, getBrowserState, getWorkerState } from '../utils'
+import { convertElementToCssSelector, ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -46,6 +46,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
       }
       await triggerCommand('__vitest_cleanup', keyboard)
       keyboard.unreleased = []
+      return ensureAwaited(Promise.resolve())
     },
     click(element: Element | Locator, options: UserEventClickOptions = {}) {
       return convertToLocator(element).click(processClickOptions(options))
@@ -100,12 +101,13 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         { ...options, unreleased: keyboard.unreleased },
       )
       keyboard.unreleased = unreleased
+      return ensureAwaited(Promise.resolve())
     },
     tab(options: UserEventTabOptions = {}) {
       if (typeof __tl_user_event__ !== 'undefined') {
         return __tl_user_event__.tab(options)
       }
-      return triggerCommand('__vitest_tab', options)
+      return ensureAwaited(triggerCommand('__vitest_tab', options))
     },
     async keyboard(text: string) {
       if (typeof __tl_user_event__ !== 'undefined') {
@@ -117,6 +119,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         keyboard,
       )
       keyboard.unreleased = unreleased
+      return ensureAwaited(Promise.resolve())
     },
   }
 }
@@ -167,12 +170,12 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
-    return triggerCommand('__vitest_screenshot', name, {
+    return ensureAwaited(triggerCommand('__vitest_screenshot', name, {
       ...options,
       element: options.element
         ? convertToSelector(options.element)
         : undefined,
-    })
+    }))
   },
   getByRole() {
     throw new Error('Method "getByRole" is not implemented in the current provider.')

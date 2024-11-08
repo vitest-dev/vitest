@@ -19,7 +19,6 @@ export function recordAsyncExpect(
   promise: Promise<any>,
   assertion: string,
   error: Error,
-  stackIndex: number,
 ) {
   const test = _test as Test | undefined
   // record promise for test, that resolves before test ends
@@ -45,13 +44,13 @@ export function recordAsyncExpect(
     test.onFinished ??= []
     test.onFinished.push(() => {
       if (!resolved) {
-        const stack = error.stack?.split(/\n\r?/)
-        const printStack = stack?.slice(stackIndex).join('\n')
+        const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
+        const stack = processor(error.stack)
         console.warn([
           `Promise returned by \`${assertion}\` was not awaited. `,
           'Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. ',
           'Please remember to await the assertion.\n',
-          printStack,
+          stack,
         ].join(''))
       }
     })

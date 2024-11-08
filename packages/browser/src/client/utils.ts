@@ -25,6 +25,38 @@ export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }
 
+export function ensureAwaited<T>(promise: Promise<T>): Promise<T> {
+  const test = getWorkerState().current
+  if (!test || test.type !== 'test') {
+    return promise
+  }
+  let awaited = false
+  const sourceError = new Error('STACK_TRACE_ERROR')
+  test.onFinished ??= []
+  test.onFinished.push(() => {
+    if (!awaited) {
+      const error = new Error(
+        `The call was not awaited. This method is asynchronous and must be awaited.`,
+      )
+      error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+      throw error
+    }
+  })
+  return {
+    then(onFulfilled, onRejected) {
+      awaited = true
+      return promise.then(onFulfilled, onRejected)
+    },
+    catch(onRejected) {
+      return promise.catch(onRejected)
+    },
+    finally(onFinally) {
+      return promise.finally(onFinally)
+    },
+    [Symbol.toStringTag]: 'Promise',
+  } satisfies Promise<T>
+}
+
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]

@@ -118,7 +118,6 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         promise,
         createAssertionMessage(utils, this, true),
         error,
-        3,
       )
     },
   )

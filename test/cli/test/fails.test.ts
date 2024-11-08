@@ -109,3 +109,27 @@ it('prints a warning if the assertion is not awaited', async () => {
     ]
   `)
 })
+
+it('prints a warning if the assertion is not awaited in the browser mode', async () => {
+  const { stderr } = await runInlineTests({
+    './vitest.config.js': {
+      test: {
+        browser: {
+          enabled: true,
+          name: 'chromium',
+          provider: 'playwright',
+          headless: true,
+        },
+      },
+    },
+    'base.test.js': ts`
+    import { expect, test } from 'vitest';
+
+    test('single not awaited', () => {
+      expect(Promise.resolve(1)).resolves.toBe(1)
+    })
+    `,
+  })
+  expect(stderr).toContain('Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited')
+  expect(stderr).toContain('base.test.js:5:33')
+})
