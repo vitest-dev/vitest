@@ -4,9 +4,10 @@ import type { WorkspaceProjectConfiguration } from 'vitest/config'
 import type { UserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
+import { resolve } from 'node:path'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'pathe'
+import { dirname } from 'pathe'
 import { x } from 'tinyexec'
 import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
 import { startVitest } from 'vitest/node'
@@ -291,6 +292,12 @@ export async function runInlineTests(
   })
   return {
     fs,
+    root,
     ...vitest,
+    get results() {
+      return vitest.ctx?.state.getFiles() || []
+    },
   }
 }
+
+export const ts = String.raw
