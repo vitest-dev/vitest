@@ -76,37 +76,6 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
 // https://github.com/microsoft/playwright/blob/50775698ae13642742f2a1e8983d1d686d7f192d/packages/playwright-core/src/server/input.ts#L95
 const VALID_KEYS = new Set(['Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'Backquote', '`', '~', 'Digit1', '1', '!', 'Digit2', '2', '@', 'Digit3', '3', '#', 'Digit4', '4', '$', 'Digit5', '5', '%', 'Digit6', '6', '^', 'Digit7', '7', '&', 'Digit8', '8', '*', 'Digit9', '9', '(', 'Digit0', '0', ')', 'Minus', '-', '_', 'Equal', '=', '+', 'Backslash', '\\', '|', 'Backspace', 'Tab', 'KeyQ', 'q', 'Q', 'KeyW', 'w', 'W', 'KeyE', 'e', 'E', 'KeyR', 'r', 'R', 'KeyT', 't', 'T', 'KeyY', 'y', 'Y', 'KeyU', 'u', 'U', 'KeyI', 'i', 'I', 'KeyO', 'o', 'O', 'KeyP', 'p', 'P', 'BracketLeft', '[', '{', 'BracketRight', ']', '}', 'CapsLock', 'KeyA', 'a', 'A', 'KeyS', 's', 'S', 'KeyD', 'd', 'D', 'KeyF', 'f', 'F', 'KeyG', 'g', 'G', 'KeyH', 'h', 'H', 'KeyJ', 'j', 'J', 'KeyK', 'k', 'K', 'KeyL', 'l', 'L', 'Semicolon', ';', ':', 'Quote', '\'', '"', 'Enter', '\n', '\r', 'ShiftLeft', 'Shift', 'KeyZ', 'z', 'Z', 'KeyX', 'x', 'X', 'KeyC', 'c', 'C', 'KeyV', 'v', 'V', 'KeyB', 'b', 'B', 'KeyN', 'n', 'N', 'KeyM', 'm', 'M', 'Comma', ',', '<', 'Period', '.', '>', 'Slash', '/', '?', 'ShiftRight', 'ControlLeft', 'Control', 'MetaLeft', 'Meta', 'AltLeft', 'Alt', 'Space', ' ', 'AltRight', 'AltGraph', 'MetaRight', 'ContextMenu', 'ControlRight', 'PrintScreen', 'ScrollLock', 'Pause', 'PageUp', 'PageDown', 'Insert', 'Delete', 'Home', 'End', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'NumLock', 'NumpadDivide', 'NumpadMultiply', 'NumpadSubtract', 'Numpad7', 'Numpad8', 'Numpad9', 'Numpad4', 'Numpad5', 'Numpad6', 'NumpadAdd', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad0', 'NumpadDecimal', 'NumpadEnter'])
 
-// make string work as codepoint array to cheat `parseKeyDef` implementation
-// '😊'.length = 2    => createCodepointArrayProxy('😊').length = 1
-// '😊'[0] = '\ud83d' => createCodepointArrayProxy('😊')[0] = '😊
-function createCodepointArrayString(s: string): string {
-  const codepoints = [...s]
-  if (codepoints.length === s.length) {
-    return s
-  }
-  return new Proxy({
-    length: codepoints.length,
-    toString() {
-      return s
-    },
-    slice(start?: number, end?: number) {
-      return createCodepointArrayString(
-        codepoints.slice(start, end).join(''),
-      )
-    },
-  }, {
-    get(target, p, receiver) {
-      if (typeof p === 'string') {
-        const i = Number.parseInt(p)
-        if (i >= 0 && i < codepoints.length) {
-          return codepoints[i]
-        }
-      }
-      return Reflect.get(target, p, receiver)
-    },
-  }) as any
-}
-
 export async function keyboardImplementation(
   pressed: Set<string>,
   provider: BrowserProvider,
@@ -117,7 +86,7 @@ export async function keyboardImplementation(
 ) {
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(contextId)
-    const actions = parseKeyDef(defaultKeyMap, createCodepointArrayString(text))
+    const actions = parseKeyDef(defaultKeyMap, text)
 
     for (const { releasePrevious, releaseSelf, repeat, keyDef } of actions) {
       const key = keyDef.key!
