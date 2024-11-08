@@ -15,20 +15,20 @@ test('non US keys', async () => {
   await expect.element(page.getByPlaceholder("fill-#7396")).toHaveValue('éèù')
 
   // playwright: garbled characters
-  // webdriverio: error
+  // webdriverio: error: invalid argument: missing command parameters
   // preview: ok
   try {
-    await userEvent.fill(page.getByPlaceholder("type-emoji"), '😊😍')
+    await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
   } catch (e) {
     console.error(e)
   }
 
   // playwright: ok
-  // webdriverio: error
+  // webdriverio: error: ChromeDriver only supports characters in the BMP
   // preview: ok
   try {
-    await userEvent.type(page.getByPlaceholder("fill-emoji"), '😊😍')
+    await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
   } catch (e) {
     console.error(e)
