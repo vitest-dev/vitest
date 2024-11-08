@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { userEvent, page } from '@vitest/browser/context'
+import { userEvent, page, server } from '@vitest/browser/context'
 
 test('non US keys', async () => {
   document.body.innerHTML = `
@@ -9,12 +9,8 @@ test('non US keys', async () => {
   await userEvent.type(page.getByPlaceholder("#7396"), 'éèù')
   await expect.element(page.getByPlaceholder("#7396")).toHaveValue('éèù')
 
-  try {
-    // surrogate pair is still inconsistent
-    // - playwright: garbled characters
-    // - webdriverio: throw an error
-    // - preview: works
+  if (server.provider !== 'webdriverio') {
     await userEvent.type(page.getByPlaceholder("emoji"), '😊')
     await expect.element(page.getByPlaceholder("emoji")).toHaveValue('😊')
-  } catch {}
+  }
 })
