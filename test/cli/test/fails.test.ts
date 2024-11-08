@@ -1,5 +1,4 @@
 import type { TestCase } from 'vitest/node'
-import path from 'node:path'
 import { resolve } from 'pathe'
 
 import { glob } from 'tinyglobby'
@@ -91,21 +90,21 @@ it('prints a warning if the assertion is not awaited', async () => {
   const lines = stderr.split('\n')
   lines.forEach((line, index) => {
     if (line.includes('Promise returned by')) {
-      warnings.push(lines.slice(index, index + 2).join('\n').replace(root + path.sep, '<rootDir>'))
+      warnings.push(lines.slice(index, index + 2).join('\n').replace(`${root}/`, '<rootDir>/'))
     }
   })
   expect(warnings).toMatchInlineSnapshot(`
     [
       "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
-        at <rootDir>base.test.js:5:33",
+        at <rootDir>/base.test.js:5:33",
       "Promise returned by \`expect(actual).rejects.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
-        at <rootDir>base.test.js:10:32",
+        at <rootDir>/base.test.js:10:32",
       "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
-        at <rootDir>base.test.js:9:33",
+        at <rootDir>/base.test.js:9:33",
       "Promise returned by \`expect(actual).resolves.toBe(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
-        at <rootDir>base.test.js:14:33",
+        at <rootDir>/base.test.js:14:33",
       "Promise returned by \`expect(actual).toMatchFileSnapshot(expected)\` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in Vitest 3. Please remember to await the assertion.
-        at <rootDir>base.test.js:19:17",
+        at <rootDir>/base.test.js:19:17",
     ]
   `)
 })
