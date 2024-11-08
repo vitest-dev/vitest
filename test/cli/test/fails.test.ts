@@ -54,7 +54,7 @@ it('should not report coverage when "coverag.reportOnFailure" has default value 
 })
 
 it('prints a warning if the assertion is not awaited', async () => {
-  const { stderr, results, ctx, root } = await runInlineTests({
+  const { stderr, results, root } = await runInlineTests({
     'base.test.js': ts`
     import { expect, test } from 'vitest';
 
@@ -77,8 +77,8 @@ it('prints a warning if the assertion is not awaited', async () => {
     })
     `,
   })
-  expect(results[0].tasks).toHaveLength(4)
-  const failedTest = ctx!.state.getReportedEntity(results[0].tasks[2]) as TestCase
+  expect(results[0].children.size).toEqual(4)
+  const failedTest = results[0].children.at(2) as TestCase
   expect(failedTest.result()).toEqual({
     state: 'failed',
     errors: [
