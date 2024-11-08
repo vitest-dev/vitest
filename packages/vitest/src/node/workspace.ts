@@ -432,6 +432,7 @@ export class WorkspaceProject {
       )
     }
 
+    this.closingPromise = undefined
     this.testProject = new TestProject(this)
 
     this.server = server
@@ -476,7 +477,7 @@ export class WorkspaceProject {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all(
         [
-          this.server.close(),
+          this.server?.close(),
           this.typechecker?.stop(),
           this.browser?.close(),
           this.clearTmpDir(),
