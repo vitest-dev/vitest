@@ -147,6 +147,7 @@ test('user-event', async () => {
       "cleanup-retry.test.ts": "pass",
       "cleanup1.test.ts": "pass",
       "cleanup2.test.ts": "pass",
+      "keyboard.test.ts": "pass",
     }
   `)
 })
