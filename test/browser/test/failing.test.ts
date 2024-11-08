@@ -20,6 +20,6 @@ it('locator method is not awaited', () => {
 
 it('several locator methods are not awaited', async () => {
   page.getByRole('button').dblClick()
-  page.getByRole('button').selectOptions([])
-  page.getByRole('button').fill('123')
+  page.getByRole('button').tripleClick()
+  page.getByRole('button').click()
 })
