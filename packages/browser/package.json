@@ -95,8 +95,8 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.2",
-    "@types/ws": "^8.5.12",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/ws": "^8.5.13",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",

@@ -83,6 +83,7 @@ export class Vitest {
   public distPath = distDir
 
   private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
+  private _workspaceConfigPath?: string
 
   /** @deprecated use `_cachedSpecs` */
   projectTestFiles = this._cachedSpecs
@@ -110,6 +111,10 @@ export class Vitest {
     this._browserLastPort = defaultBrowserPort
     this.pool?.close?.()
     this.pool = undefined
+    this.closingPromise = undefined
+    this.projects = []
+    this.resolvedProjects = []
+    this._workspaceConfigPath = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
     this._cachedSpecs.clear()
@@ -145,22 +150,22 @@ export class Vitest {
       const serverRestart = server.restart
       server.restart = async (...args) => {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
+        this.report('onServerRestart')
+        await this.close()
         await serverRestart(...args)
-        // watcher is recreated on restart
-        this.unregisterWatcher()
-        this.registerWatcher()
       }
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
+          || this.resolvedProjects.some(p => p.server.config.configFile === file)
+          || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
+          this.report('onServerRestart', 'config')
+          await this.close()
           await serverRestart()
-          // watcher is recreated on restart
-          this.unregisterWatcher()
-          this.registerWatcher()
         }
       })
     }
@@ -174,8 +179,6 @@ export class Vitest {
       await this.cache.results.readFromCache()
     }
     catch { }
-
-    await Promise.all(this._onSetServer.map(fn => fn()))
 
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
@@ -193,6 +196,8 @@ export class Vitest {
     if (this.config.testNamePattern) {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
+
+    await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
   public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
@@ -235,7 +240,7 @@ export class Vitest {
       || this.projects[0]
   }
 
-  private async getWorkspaceConfigPath(): Promise<string | null> {
+  private async getWorkspaceConfigPath(): Promise<string | undefined> {
     if (this.config.workspace) {
       return this.config.workspace
     }
@@ -251,7 +256,7 @@ export class Vitest {
     })
 
     if (!workspaceConfigName) {
-      return null
+      return undefined
     }
 
     return join(configDir, workspaceConfigName)
@@ -259,6 +264,8 @@ export class Vitest {
 
   private async resolveWorkspace(cliOptions: UserConfig) {
     const workspaceConfigPath = await this.getWorkspaceConfigPath()
+
+    this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
       return [await this._createCoreProject()]
@@ -685,14 +692,14 @@ export class Vitest {
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), !trigger)
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
@@ -705,7 +712,7 @@ export class Vitest {
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
-    await this.rerunFiles(files, 'change project filter')
+    await this.rerunFiles(files, 'change project filter', pattern === '')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -726,7 +733,7 @@ export class Vitest {
         })
       })
     }
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
@@ -734,11 +741,11 @@ export class Vitest {
 
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
 
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async rerunFailed() {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
+    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
   }
 
   async updateSnapshot(files?: string[]) {
@@ -755,7 +762,7 @@ export class Vitest {
     }
 
     try {
-      await this.rerunFiles(files, 'update snapshot')
+      await this.rerunFiles(files, 'update snapshot', false)
     }
     finally {
       delete this.configOverride.snapshotOptions
