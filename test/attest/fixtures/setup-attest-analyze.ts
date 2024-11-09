@@ -9,7 +9,10 @@ const config = getConfig()
 // (probably ts server fs in memory is stale and we can invalidate on re-run via vfs.updateFile?)
 // import { setup } from "@ark/attest";
 
-async function setup2() {
+export async function setup() {
+  if (config.skipTypes) {
+    return
+  }
   mkdirSync('.attest/assertions', { recursive: true })
   execFileSync('node', ['../node_modules/@ark/attest/out/cli/cli.js', 'precache', '.attest/assertions/typescript.json'], {
     stdio: 'inherit',
@@ -17,14 +20,10 @@ async function setup2() {
 }
 
 export default async (_ctx: GlobalSetupContext) => {
-  if (config.skipTypes) {
-    return
-  }
-
-  await setup2()
+  await setup()
 
   // TODO: re-run setup
   // ctx.onWatcherRerun(async () => {
-  //   await setup2();
+  //   await setup();
   // });
 }
