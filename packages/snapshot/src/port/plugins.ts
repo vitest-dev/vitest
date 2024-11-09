@@ -9,7 +9,7 @@ import type {
   Plugin as PrettyFormatPlugin,
   Plugins as PrettyFormatPlugins,
 } from '@vitest/pretty-format'
-import { plugins as prettyFormatPlugins } from '@vitest/pretty-format'
+import { plugins as prettyFormatPlugins, PrettyFormatSkipSnapshotError } from '@vitest/pretty-format'
 
 import MockSerializer from './mockSerializer'
 
@@ -40,9 +40,6 @@ export function getSerializers(): PrettyFormatPlugins {
   return PLUGINS
 }
 
-// TODO: expose from pretty-format?
-export class SerializerSkipSnapshotError extends Error {}
-
 export function skipSnapshot(): never {
-  throw new SerializerSkipSnapshotError()
+  throw new PrettyFormatSkipSnapshotError()
 }

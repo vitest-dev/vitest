@@ -17,10 +17,10 @@ import type {
 } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
+import { PrettyFormatSkipSnapshotError } from '@vitest/pretty-format'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
-import { saveInlineSnapshots } from './inlineSnapshot'
-import { SerializerSkipSnapshotError } from './plugins'
 
+import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
 import {
   addExtraLineBreaks,
@@ -259,8 +259,8 @@ export default class SnapshotState {
           : serialize(received, undefined, this._snapshotFormat)
     }
     catch (e) {
-      if (e instanceof Error && e.cause instanceof SerializerSkipSnapshotError) {
-        return { pass: true, actual: '<skipped>', key, count }
+      if (e instanceof PrettyFormatSkipSnapshotError) {
+        return { pass: true, actual: '', key, count }
       }
       throw e
     }
