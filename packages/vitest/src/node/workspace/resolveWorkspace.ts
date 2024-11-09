@@ -2,6 +2,7 @@ import type { Vitest } from '../core'
 import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
 import type { WorkspaceProject } from '../workspace'
 import { existsSync, promises as fs } from 'node:fs'
+import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
 import fg from 'fast-glob'
 import { relative, resolve } from 'pathe'
@@ -51,7 +52,7 @@ export async function resolveWorkspace(
 
   const projectPromises: Promise<WorkspaceProject>[] = []
   const fileProjects = [...configFiles, ...nonConfigDirectories]
-  const concurrent = limitConcurrency(5)
+  const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
 
   for (const filepath of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
