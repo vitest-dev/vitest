@@ -5,11 +5,9 @@ import type { Vitest, VitestOptions } from '../core'
 import type { WorkspaceSpec } from '../pool'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { normalize } from 'node:path'
 import { getNames, getTests } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../integrations/coverage'
-import { groupBy } from '../../utils/base'
 import { createVitest } from '../create'
 import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, RangeLocationFilterProvidedError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
@@ -286,53 +284,6 @@ export function formatCollectedAsString(files: File[]) {
       return name
     })
   }).flat()
-}
-
-export function parseFilter(filter: string): Filter {
-  const colonIndex = filter.indexOf(':')
-  if (colonIndex === -1) {
-    return { filename: filter }
-  }
-
-  const [parsedFilename, lineNumber] = [
-    filter.substring(0, colonIndex),
-    filter.substring(colonIndex + 1),
-  ]
-
-  if (lineNumber.match(/^\d+$/)) {
-    return {
-      filename: parsedFilename,
-      lineNumber: Number.parseInt(lineNumber),
-    }
-  }
-  else if (lineNumber.includes('-')) {
-    throw new RangeLocationFilterProvidedError(filter)
-  }
-  else {
-    return { filename: filter }
-  }
-}
-
-interface Filter {
-  filename: string
-  lineNumber?: undefined | number
-}
-
-export function groupFilters(filters: Filter[]) {
-  const groupedFilters_ = groupBy(filters, f => f.filename)
-  const groupedFilters = Object.fromEntries(Object.entries(groupedFilters_)
-    .map((entry) => {
-      const [filename, filters] = entry
-      const testLocations = filters.map(f => f.lineNumber)
-
-      return [
-        filename,
-        testLocations.filter(l => l !== undefined) as number[],
-      ]
-    }),
-  )
-
-  return groupedFilters
 }
 
 const envPackageNames: Record<

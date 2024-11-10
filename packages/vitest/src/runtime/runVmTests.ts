@@ -22,7 +22,6 @@ import { getWorkerState } from './utils'
 
 export async function run(
   method: 'run' | 'collect',
-  // TODO consider type
   files: FileSpec[],
   config: SerializedConfig,
   executor: VitestExecutor,

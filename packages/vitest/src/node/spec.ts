@@ -20,6 +20,7 @@ export class TestSpecification {
   public readonly moduleId: string
   public readonly pool: Pool
   public readonly testLocations: number[] | undefined
+  /** @private */
   // public readonly location: WorkspaceSpecLocation | undefined
 
   constructor(

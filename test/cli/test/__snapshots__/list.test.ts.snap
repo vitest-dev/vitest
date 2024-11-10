@@ -65,16 +65,6 @@ Note when specifying the test location you have to specify the full test filenam
 "
 `;
 
-exports[`ignore filter when range location is provided 1`] = `
-"basic.test.ts > basic suite > inner suite > some test
-basic.test.ts > basic suite > inner suite > another test
-basic.test.ts > basic suite > basic test
-basic.test.ts > outside test
-math.test.ts > 1 plus 1
-math.test.ts > failing test
-"
-`;
-
 exports[`json output shows error 1`] = `
 "Error: top level error
  ❯ top-level-error.test.ts:1:7

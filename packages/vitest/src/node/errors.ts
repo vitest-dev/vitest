@@ -26,6 +26,7 @@ export class RangeLocationFilterProvidedError extends Error {
   code = 'VITEST_RANGE_LOCATION_FILTER_PROVIDED'
 
   constructor(filter: string) {
-    super(`Location filters are not allowed: ${filter}`)
+    super(`Found "-" in location filter ${filter}.  Note that range location filters `
+      + `are not supported.  Consider specifying the exact line numbers of your tests.`)
   }
 }
