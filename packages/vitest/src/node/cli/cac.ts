@@ -5,7 +5,7 @@ import cac, { type CAC, type Command } from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
-import { type CliOptions, collectAndProcess } from './cli-api'
+import { type CliOptions, outputFileList, processCollected } from './cli-api'
 import { benchCliOptionsConfig, cliOptionsConfig, collectCliOptionsConfig } from './cli-config'
 
 function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
@@ -306,7 +306,25 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       watch: false,
       run: true,
     })
-    collectAndProcess(ctx, options, cliFilters)
+    if (!options.filesOnly) {
+      const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
+
+      if (errors.length) {
+        console.error('\nThere were unhandled errors during test collection')
+        errors.forEach(e => console.error(e))
+        console.error('\n\n')
+        await ctx.close()
+        return
+      }
+
+      processCollected(ctx, tests, options)
+    }
+    else {
+      const files = await ctx.listFiles(cliFilters.map(normalize))
+      outputFileList(files, options)
+    }
+
+    await ctx.close()
   }
   catch (e) {
     const { divider } = await import('../reporters/renderers/utils')

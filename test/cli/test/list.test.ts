@@ -298,10 +298,8 @@ test('error if range location is provided', async () => {
   )
 
   expect(stdout).toEqual('')
-  expect(stderr).toMatchInlineSnapshot(`
-    "Error: Location filters are not allowed: a/file/that/doesnt/exit:10-15
-    "
-  `)
+  expect(stderr).toContain('Collect Error')
+  expect(stderr).toContain('RangeLocationFilterProvidedError')
 })
 
 test('erorr if location filter provided without enabling includeTaskLocation', async () => {
@@ -313,10 +311,8 @@ test('erorr if location filter provided without enabling includeTaskLocation', a
   )
 
   expect(stdout).toEqual('')
-  expect(stderr).toMatchInlineSnapshot(`
-    "Error: Recieved line number filters while \`includeTaskLocation\` option is disabled
-    "
-  `)
+  expect(stderr).toContain('Collect Error')
+  expect(stderr).toContain('IncludeTaskLocationDisabledError')
 })
 
 function relative(stdout: string) {

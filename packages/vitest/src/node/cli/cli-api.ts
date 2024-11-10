@@ -169,45 +169,6 @@ export async function prepareVitest(
   return ctx
 }
 
-export async function collectAndProcess(
-  ctx: Vitest,
-  options: CliOptions,
-  cliFilters: string[],
-) {
-  try {
-    if (!options.filesOnly) {
-      const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
-
-      if (errors.length) {
-        console.error('\nThere were unhandled errors during test collection')
-        errors.forEach(e => console.error(e))
-        console.error('\n\n')
-        await ctx.close()
-        return
-      }
-
-      processCollected(ctx, tests, options)
-    }
-    else {
-      const files = await ctx.listFiles(cliFilters.map(normalize))
-      outputFileList(files, options)
-    }
-
-    await ctx.close()
-  }
-  catch (e) {
-    if (
-      e instanceof IncludeTaskLocationDisabledError
-      || e instanceof RangeLocationFilterProvidedError
-    ) {
-      ctx.logger.printError(e, { verbose: false })
-      return
-    }
-
-    await ctx.close()
-  }
-}
-
 export function processCollected(ctx: Vitest, files: File[], options: CliOptions) {
   let errorsPrinted = false
 
