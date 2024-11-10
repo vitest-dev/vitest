@@ -15,7 +15,7 @@ export function interpretTaskModes(
 ): void {
   const matchedLocations: number[] = []
 
-  const traverseSuite = (suite: Suite) => {
+  const traverseSuite = (suite: Suite, parentIsOnly?: boolean) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
     suite.tasks.forEach((t) => {
@@ -60,8 +60,7 @@ export function interpretTaskModes(
           skipAllTasks(t)
         }
         else {
-          traverseSuite(t)
-          // interpretTaskModes(t, namePattern, locationFilters, onlyMode, includeTask, allowOnly)
+          traverseSuite(t, includeTask)
         }
       }
     })
@@ -74,7 +73,7 @@ export function interpretTaskModes(
     }
   }
 
-  traverseSuite(file)
+  traverseSuite(file, parentIsOnly)
 
   const nonMatching = testLocations?.filter(loc => !matchedLocations.includes(loc))
   if (nonMatching && nonMatching.length !== 0) {
