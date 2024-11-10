@@ -9,9 +9,9 @@ describe('default reporter', async () => {
       reporters: 'none',
     })
 
-    expect(stdout).contain('✓ b2 test')
+    expect(stdout).contain('✓ b2 passed > b2 test')
     expect(stdout).not.contain('✓ nested b1 test')
-    expect(stdout).contain('× b failed test')
+    expect(stdout).contain('× b1 failed > b failed test')
   })
 
   test('show full test suite when only one file', async () => {
@@ -21,9 +21,9 @@ describe('default reporter', async () => {
       reporters: 'none',
     })
 
-    expect(stdout).contain('✓ a1 test')
-    expect(stdout).contain('✓ nested a3 test')
-    expect(stdout).contain('× a failed test')
+    expect(stdout).contain('✓ a passed > a1 test')
+    expect(stdout).contain('✓ a passed > nested a > nested a3 test')
+    expect(stdout).contain('× a failed > a failed test')
     expect(stdout).contain('nested a failed 1 test')
   })
 
@@ -43,8 +43,9 @@ describe('default reporter', async () => {
     vitest.write('\n')
     await vitest.waitForStdout('Filename pattern: a')
     await vitest.waitForStdout('Waiting for file changes...')
-    expect(vitest.stdout).contain('✓ a1 test')
-    expect(vitest.stdout).contain('✓ nested a3 test')
+
+    expect(vitest.stdout).contain('✓ a passed > a1 test')
+    expect(vitest.stdout).contain('✓ a passed > nested a > nested a3 test')
 
     // rerun and two files
     vitest.write('p')

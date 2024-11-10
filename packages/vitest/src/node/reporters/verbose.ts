@@ -7,15 +7,11 @@ import { formatProjectName, getStateSymbol } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {
   protected verbose = true
-
-  constructor() {
-    super()
-    this.rendererOptions.renderSucceed = true
-  }
+  renderSucceed = true
 
   onTaskUpdate(packs: TaskResultPack[]) {
     if (this.isTTY) {
-      return
+      return super.onTaskUpdate(packs)
     }
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])

@@ -89,6 +89,7 @@ test('merge reports', async () => {
     test 1-2
 
      ❯ first.test.ts (2 tests | 1 failed) <time>
+       ✓ test 1-1
        × test 1-2 <time>
          → expected 1 to be 2 // Object.is equality
     stdout | second.test.ts > test 2-1
@@ -97,6 +98,8 @@ test('merge reports', async () => {
      ❯ second.test.ts (3 tests | 1 failed) <time>
        × test 2-1 <time>
          → expected 1 to be 2 // Object.is equality
+       ✓ group > test 2-2
+       ✓ group > test 2-3
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
