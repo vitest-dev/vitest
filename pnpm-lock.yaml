@@ -10,7 +10,7 @@ overrides:
   acorn: 8.11.3
   mlly: ^1.7.2
   rollup: ^4.24.4
-  vite: https://pkg.pr.new/vite@7a33f6f
+  vite: https://pkg.pr.new/vite@55461b4
   vitest: workspace:*
 
 patchedDependencies:
@@ -116,8 +116,8 @@ importers:
         specifier: ^5.6.3
         version: 5.6.3
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:packages/vitest
@@ -151,10 +151,10 @@ importers:
         version: 0.2.6
       '@vite-pwa/vitepress':
         specifier: ^0.5.3
-        version: 0.5.3(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))
+        version: 0.5.3(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))
       '@vitejs/plugin-vue':
         specifier: ^5.1.4
-        version: 5.1.4(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+        version: 5.1.4(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
@@ -163,16 +163,16 @@ importers:
         version: 0.2.10
       unocss:
         specifier: ^0.64.0
-        version: 0.64.0(postcss@8.4.47)(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+        version: 0.64.0(postcss@8.4.47)(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
       unplugin-vue-components:
         specifier: ^0.27.4
         version: 0.27.4(@babel/parser@7.26.2)(rollup@4.24.4)(vue@3.5.12(typescript@5.6.3))
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vite-plugin-pwa:
         specifier: ^0.20.5
-        version: 0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
+        version: 0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
       vitepress:
         specifier: ^1.5.0
         version: 1.5.0(@algolia/client-search@4.20.0)(@types/node@22.9.0)(@types/react@18.2.79)(jiti@1.21.6)(postcss@8.4.47)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.2)(typescript@5.6.3)(yaml@2.4.5)
@@ -189,8 +189,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -210,8 +210,8 @@ importers:
         specifier: ^4.7.2
         version: 4.7.2
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -241,8 +241,8 @@ importers:
         specifier: ^1.48.0
         version: 1.48.0
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -250,8 +250,8 @@ importers:
   examples/profiling:
     devDependencies:
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -260,10 +260,10 @@ importers:
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: ^2.1.0
-        version: 2.1.0(@sveltejs/kit@1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))
+        version: 2.1.0(@sveltejs/kit@1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))
       '@sveltejs/kit':
         specifier: ^1.20.2
-        version: 1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+        version: 1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
       svelte:
         specifier: ^3.59.1
         version: 3.59.1
@@ -277,8 +277,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -295,8 +295,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@20.11.5)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@20.11.5)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -317,7 +317,7 @@ importers:
         version: 18.2.79
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5))
+        version: 4.2.1(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5))
       '@vitest/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -337,8 +337,8 @@ importers:
         specifier: ^4.7.2
         version: 4.7.2
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -612,8 +612,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
 
   packages/pretty-format:
     dependencies:
@@ -721,7 +721,7 @@ importers:
         version: 0.64.0
       '@vitejs/plugin-vue':
         specifier: ^5.1.4
-        version: 5.1.4(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+        version: 5.1.4(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -760,7 +760,7 @@ importers:
         version: 3.1.5
       unocss:
         specifier: ^0.64.0
-        version: 0.64.0(postcss@8.4.47)(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+        version: 0.64.0(postcss@8.4.47)(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
       unplugin-auto-import:
         specifier: ^0.18.3
         version: 0.18.3(@vueuse/core@11.2.0(vue@3.5.12(typescript@5.6.3)))(rollup@4.24.4)(webpack-sources@3.2.3)
@@ -768,11 +768,11 @@ importers:
         specifier: ^0.27.4
         version: 0.27.4(@babel/parser@7.26.2)(rollup@4.24.4)(vue@3.5.12(typescript@5.6.3))
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vite-plugin-pages:
         specifier: ^0.32.3
-        version: 0.32.3(@vue/compiler-sfc@3.5.12)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue-router@4.4.5(vue@3.5.12(typescript@5.6.3)))
+        version: 0.32.3(@vue/compiler-sfc@3.5.12)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue-router@4.4.5(vue@3.5.12(typescript@5.6.3)))
       vue:
         specifier: ^3.5.12
         version: 3.5.12(typescript@5.6.3)
@@ -823,8 +823,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
     devDependencies:
       '@jridgewell/trace-mapping':
         specifier: ^0.3.25
@@ -896,8 +896,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vite-node:
         specifier: workspace:*
         version: link:../vite-node
@@ -1050,7 +1050,7 @@ importers:
         version: 18.2.79
       '@vitejs/plugin-basic-ssl':
         specifier: ^1.0.2
-        version: 1.0.2(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+        version: 1.0.2(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -1095,7 +1095,7 @@ importers:
         version: 8.5.9
       '@vitejs/plugin-basic-ssl':
         specifier: ^1.0.2
-        version: 1.0.2(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+        version: 1.0.2(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
       '@vitest/runner':
         specifier: workspace:^
         version: link:../../packages/runner
@@ -1109,8 +1109,8 @@ importers:
         specifier: ^1.4.4
         version: 1.4.4(@swc/core@1.4.1)(rollup@4.24.4)
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1124,8 +1124,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1221,7 +1221,7 @@ importers:
         version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
-        version: 5.1.4(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+        version: 5.1.4(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -1253,8 +1253,8 @@ importers:
         specifier: ^1.4.4
         version: 1.4.4(@swc/core@1.4.1)(rollup@4.24.4)
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1328,8 +1328,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vite-node:
         specifier: workspace:*
         version: link:../../packages/vite-node
@@ -1386,8 +1386,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/browser
       vite:
-        specifier: https://pkg.pr.new/vite@7a33f6f
-        version: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+        specifier: https://pkg.pr.new/vite@55461b4
+        version: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -3257,7 +3257,7 @@ packages:
     hasBin: true
     peerDependencies:
       svelte: ^3.54.0 || ^4.0.0-next.0
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
 
   '@sveltejs/vite-plugin-svelte-inspector@1.0.4':
     resolution: {integrity: sha512-zjiuZ3yydBtwpF3bj0kQNV0YXe+iKE545QGZVTaylW3eAzFr+pJ/cwK8lZEaRp4JtaJXhD5DyWAV4AxLh6DgaQ==}
@@ -3266,7 +3266,7 @@ packages:
     peerDependencies:
       '@sveltejs/vite-plugin-svelte': ^2.2.0
       svelte: ^3.54.0 || ^4.0.0
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
 
   '@sveltejs/vite-plugin-svelte@2.4.6':
     resolution: {integrity: sha512-zO79p0+DZnXPnF0ltIigWDx/ux7Ni+HRaFOw720Qeivc1azFUrJxTl0OryXVibYNx1hCboGia1NRV3x8RNv4cA==}
@@ -3274,7 +3274,7 @@ packages:
     engines: {node: ^14.18.0 || >= 16}
     peerDependencies:
       svelte: ^3.54.0 || ^4.0.0
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
 
   '@swc/core-darwin-arm64@1.4.1':
     resolution: {integrity: sha512-ePyfx0348UbR4DOAW24TedeJbafnzha8liXFGuQ4bdXtEVXhLfPngprrxKrAddCuv42F9aTxydlF6+adD3FBhA==}
@@ -3734,7 +3734,7 @@ packages:
     resolution: {integrity: sha512-4Ijf3cQblSjdC3XV4SvzkEj17z6gNsuMGy7M+TvNN4cZhGLWQCIChtHR525ESGxJ4kdZ6FoIUoxmLdWHMOpX4Q==}
     version: 0.64.0
     peerDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
     peerDependenciesMeta:
       vite:
         optional: true
@@ -3810,7 +3810,7 @@ packages:
     resolution: {integrity: sha512-QrfXlI8YcIaqQc4WRVrLbCho8eEi5pjs1/C8AwnUHGximEDN6MZNUk0htjo4QZ+50IA2b4RrYdz1N3875bJoFg==}
     version: 0.64.0
     peerDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
 
   '@vite-pwa/assets-generator@0.2.6':
     resolution: {integrity: sha512-kK44dXltvoubEo5B+6tCGjUrOWOE1+dA4DForbFpO1rKy2wSkAVGrs8tyfN6DzTig89/QKyV8XYodgmaKyrYng==}
@@ -3832,21 +3832,21 @@ packages:
     version: 1.0.2
     engines: {node: '>=14.6.0'}
     peerDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
 
   '@vitejs/plugin-react@4.2.1':
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
     version: 4.2.1
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
 
   '@vitejs/plugin-vue@5.1.4':
     resolution: {integrity: sha512-N2XSI2n3sQqp5w7Y/AN/L2XDjBIRGqXko+eDp42sydYSBeJuSm5a1sLf8zakmo8u7tA8NmBgoDLA1HeOESjp9A==}
     version: 5.1.4
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
       vue: ^3.2.25
 
   '@vitest/eslint-plugin@1.1.7':
@@ -8820,7 +8820,7 @@ packages:
     engines: {node: '>=14'}
     peerDependencies:
       '@unocss/webpack': 0.64.0
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
     peerDependenciesMeta:
       '@unocss/webpack':
         optional: true
@@ -8965,7 +8965,7 @@ packages:
       '@solidjs/router': '*'
       '@vue/compiler-sfc': ^2.7.0 || ^3.0.0
       react-router: '*'
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
       vue-router: '*'
     peerDependenciesMeta:
       '@solidjs/router':
@@ -8983,16 +8983,16 @@ packages:
     engines: {node: '>=16.0.0'}
     peerDependencies:
       '@vite-pwa/assets-generator': ^0.2.6
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
       workbox-build: ^7.1.0
       workbox-window: ^7.1.0
     peerDependenciesMeta:
       '@vite-pwa/assets-generator':
         optional: true
 
-  vite@https://pkg.pr.new/vite@7a33f6f:
-    resolution: {tarball: https://pkg.pr.new/vite@7a33f6f}
-    version: 6.0.0-beta.8
+  vite@https://pkg.pr.new/vite@55461b4:
+    resolution: {tarball: https://pkg.pr.new/vite@55461b4}
+    version: 6.0.0-beta.9
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -9035,7 +9035,7 @@ packages:
     resolution: {integrity: sha512-SgHtMLoqaeeGnd2evZ849ZbACbnwQCIwRH57t18FxcXoZop0uQu0uzlIhJBlF/eWVzuce0sHeqPcDo+evVcg8Q==}
     version: 0.2.5
     peerDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f
+      vite: https://pkg.pr.new/vite@55461b4
     peerDependenciesMeta:
       vite:
         optional: true
@@ -11471,14 +11471,14 @@ snapshots:
       magic-string: 0.25.9
       string.prototype.matchall: 4.0.11
 
-  '@sveltejs/adapter-auto@2.1.0(@sveltejs/kit@1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))':
+  '@sveltejs/adapter-auto@2.1.0(@sveltejs/kit@1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))':
     dependencies:
-      '@sveltejs/kit': 1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+      '@sveltejs/kit': 1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
       import-meta-resolve: 3.0.0
 
-  '@sveltejs/kit@1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
+  '@sveltejs/kit@1.20.2(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+      '@sveltejs/vite-plugin-svelte': 2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
       '@types/cookie': 0.5.1
       cookie: 0.5.0
       devalue: 4.3.2
@@ -11492,30 +11492,30 @@ snapshots:
       svelte: 3.59.1
       tiny-glob: 0.2.9
       undici: 5.22.1
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte-inspector@1.0.4(@sveltejs/vite-plugin-svelte@2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
+  '@sveltejs/vite-plugin-svelte-inspector@1.0.4(@sveltejs/vite-plugin-svelte@2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+      '@sveltejs/vite-plugin-svelte': 2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
       debug: 4.3.7
       svelte: 3.59.1
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
+  '@sveltejs/vite-plugin-svelte@2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 1.0.4(@sveltejs/vite-plugin-svelte@2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))(svelte@3.59.1)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+      '@sveltejs/vite-plugin-svelte-inspector': 1.0.4(@sveltejs/vite-plugin-svelte@2.4.6(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)))(svelte@3.59.1)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
       debug: 4.3.7
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.12
       svelte: 3.59.1
       svelte-hmr: 0.15.3(svelte@3.59.1)
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
-      vitefu: 0.2.5(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vitefu: 0.2.5(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))
     transitivePeerDependencies:
       - supports-color
 
@@ -12040,13 +12040,13 @@ snapshots:
 
   '@ungap/structured-clone@1.2.0': {}
 
-  '@unocss/astro@0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))':
+  '@unocss/astro@0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))':
     dependencies:
       '@unocss/core': 0.64.0
       '@unocss/reset': 0.64.0
-      '@unocss/vite': 0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+      '@unocss/vite': 0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
     optionalDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -12175,7 +12175,7 @@ snapshots:
     dependencies:
       '@unocss/core': 0.64.0
 
-  '@unocss/vite@0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))':
+  '@unocss/vite@0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@rollup/pluginutils': 5.1.3(rollup@4.24.4)
@@ -12185,7 +12185,7 @@ snapshots:
       chokidar: 3.6.0
       magic-string: 0.30.12
       tinyglobby: 0.2.10
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -12200,30 +12200,30 @@ snapshots:
       sharp-ico: 0.1.5
       unconfig: 0.3.11
 
-  '@vite-pwa/vitepress@0.5.3(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))':
+  '@vite-pwa/vitepress@0.5.3(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))':
     dependencies:
-      vite-plugin-pwa: 0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
+      vite-plugin-pwa: 0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
     optionalDependencies:
       '@vite-pwa/assets-generator': 0.2.6
 
-  '@vitejs/plugin-basic-ssl@1.0.2(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
+  '@vitejs/plugin-basic-ssl@1.0.2(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))':
     dependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
 
-  '@vitejs/plugin-react@4.2.1(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5))':
+  '@vitejs/plugin-react@4.2.1(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5))':
     dependencies:
       '@babel/core': 7.24.4
       '@babel/plugin-transform-react-jsx-self': 7.23.3(@babel/core@7.24.4)
       '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.24.4)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-vue@5.1.4(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))':
+  '@vitejs/plugin-vue@5.1.4(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))':
     dependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vue: 3.5.12(typescript@5.6.3)
 
   '@vitest/eslint-plugin@1.1.7(@typescript-eslint/utils@8.10.0(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3))(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3)(vitest@packages+vitest)':
@@ -18097,9 +18097,9 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  unocss@0.64.0(postcss@8.4.47)(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3)):
+  unocss@0.64.0(postcss@8.4.47)(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3)):
     dependencies:
-      '@unocss/astro': 0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+      '@unocss/astro': 0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
       '@unocss/cli': 0.64.0(rollup@4.24.4)
       '@unocss/core': 0.64.0
       '@unocss/postcss': 0.64.0(postcss@8.4.47)
@@ -18115,9 +18115,9 @@ snapshots:
       '@unocss/transformer-compile-class': 0.64.0
       '@unocss/transformer-directives': 0.64.0
       '@unocss/transformer-variant-group': 0.64.0
-      '@unocss/vite': 0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+      '@unocss/vite': 0.64.0(rollup@4.24.4)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
     optionalDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
     transitivePeerDependencies:
       - postcss
       - rollup
@@ -18287,7 +18287,7 @@ snapshots:
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.2
 
-  vite-plugin-pages@0.32.3(@vue/compiler-sfc@3.5.12)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue-router@4.4.5(vue@3.5.12(typescript@5.6.3))):
+  vite-plugin-pages@0.32.3(@vue/compiler-sfc@3.5.12)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue-router@4.4.5(vue@3.5.12(typescript@5.6.3))):
     dependencies:
       '@types/debug': 4.1.12
       debug: 4.3.7
@@ -18297,7 +18297,7 @@ snapshots:
       json5: 2.2.3
       local-pkg: 0.5.0
       picocolors: 1.0.1
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       yaml: 2.4.5
     optionalDependencies:
       '@vue/compiler-sfc': 3.5.12
@@ -18305,12 +18305,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-plugin-pwa@0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0):
+  vite-plugin-pwa@0.20.5(@vite-pwa/assets-generator@0.2.6)(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0):
     dependencies:
       debug: 4.3.7
       pretty-bytes: 6.1.1
       tinyglobby: 0.2.10
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       workbox-build: 7.1.0(@types/babel__core@7.20.5)
       workbox-window: 7.3.0
     optionalDependencies:
@@ -18318,7 +18318,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite@https://pkg.pr.new/vite@7a33f6f(@types/node@20.11.5)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5):
+  vite@https://pkg.pr.new/vite@55461b4(@types/node@20.11.5)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5):
     dependencies:
       esbuild: 0.24.0
       postcss: 8.4.47
@@ -18330,7 +18330,7 @@ snapshots:
       tsx: 4.19.2
       yaml: 2.4.5
 
-  vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5):
+  vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5):
     dependencies:
       esbuild: 0.24.0
       postcss: 8.4.47
@@ -18342,7 +18342,7 @@ snapshots:
       tsx: 4.19.2
       yaml: 2.4.5
 
-  vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5):
+  vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.7.2)(yaml@2.4.5):
     dependencies:
       esbuild: 0.24.0
       postcss: 8.4.47
@@ -18354,9 +18354,9 @@ snapshots:
       tsx: 4.7.2
       yaml: 2.4.5
 
-  vitefu@0.2.5(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)):
+  vitefu@0.2.5(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)):
     optionalDependencies:
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
 
   vitepress-plugin-tabs@0.5.0(vitepress@1.5.0(@algolia/client-search@4.20.0)(@types/node@22.9.0)(@types/react@18.2.79)(jiti@1.21.6)(postcss@8.4.47)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.2)(typescript@5.6.3)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3)):
     dependencies:
@@ -18372,7 +18372,7 @@ snapshots:
       '@shikijs/transformers': 1.22.2
       '@shikijs/types': 1.22.2
       '@types/markdown-it': 14.1.2
-      '@vitejs/plugin-vue': 5.1.4(vite@https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
+      '@vitejs/plugin-vue': 5.1.4(vite@https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5))(vue@3.5.12(typescript@5.6.3))
       '@vue/devtools-api': 7.6.2
       '@vue/shared': 3.5.12
       '@vueuse/core': 11.2.0(vue@3.5.12(typescript@5.6.3))
@@ -18381,7 +18381,7 @@ snapshots:
       mark.js: 8.11.1
       minisearch: 7.1.0
       shiki: 1.22.2
-      vite: https://pkg.pr.new/vite@7a33f6f(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
+      vite: https://pkg.pr.new/vite@55461b4(@types/node@22.9.0)(jiti@1.21.6)(terser@5.36.0)(tsx@4.19.2)(yaml@2.4.5)
       vue: 3.5.12(typescript@5.6.3)
     optionalDependencies:
       postcss: 8.4.47
