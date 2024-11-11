@@ -47,10 +47,14 @@ export async function collectTests(
   ctx: WorkspaceProject,
   filepath: string,
 ): Promise<null | FileInformation> {
+  // TODO: can we avoid ssr transform entirely?
+  // const request = await ctx.server.transformRequest(filepath)
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
   if (!request) {
     return null
   }
+  // unwrap __vite_ssr_identity__ for now
+  request.code = request.code.replace(/__vite_ssr_identity__\((\w+\.\w+)\)/g, '                     ($1)')
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.getName()
