@@ -80,6 +80,17 @@ export const config: UserConfig = {
     //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
     //   },
     // },
+    {
+      // workaround `crossorigin` issues on some browsers
+      // https://github.com/vitejs/vite/issues/6648
+      name: 'no-crossorigin-for-same-assets',
+      apply: 'build',
+      transformIndexHtml(html) {
+        return html
+          .replace('crossorigin src="./assets/', 'src="./assets/')
+          .replace('crossorigin href="./assets/', 'href="./assets/')
+      },
+    },
   ],
   build: {
     outDir: './dist/client',
