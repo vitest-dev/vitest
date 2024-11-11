@@ -64,7 +64,7 @@ export default <Environment>{
     const { keys, originals } = populateGlobal(global, win, {
       bindFunctions: true,
       // jsdom doesn't support Request and Response, but happy-dom does
-      additionalKeys: ['Request', 'Response'],
+      additionalKeys: ['Request', 'Response', 'MessagePort', 'fetch'],
     })
 
     return {

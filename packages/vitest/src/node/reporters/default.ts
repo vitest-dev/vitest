@@ -41,7 +41,7 @@ export class DefaultReporter extends BaseReporter {
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
       this.rendererOptions.slowTestThreshold
         = this.ctx.config.slowTestThreshold
-      this.rendererOptions.mode = this.mode
+      this.rendererOptions.mode = this.ctx.config.mode
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer) {
         this.renderer = createListRenderer(files, this.rendererOptions).start()

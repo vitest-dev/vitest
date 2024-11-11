@@ -1,6 +1,8 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { WorkspaceProjectConfiguration } from 'vitest/config'
 import type { UserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
@@ -233,4 +235,62 @@ export function editFile(file: string, callback: (content: string) => string) {
 export function resolvePath(baseUrl: string, path: string) {
   const filename = fileURLToPath(baseUrl)
   return resolve(dirname(filename), path)
+}
+
+export function useFS(root: string, structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>) {
+  const files = new Set<string>()
+  const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
+  if (!hasConfig) {
+    structure['./vitest.config.js'] = {}
+  }
+  for (const file in structure) {
+    const filepath = resolve(root, file)
+    files.add(filepath)
+    const content = typeof structure[file] === 'string'
+      ? structure[file]
+      : `export default ${JSON.stringify(structure[file])}`
+    fs.mkdirSync(dirname(filepath), { recursive: true })
+    fs.writeFileSync(filepath, String(content), 'utf-8')
+  }
+  onTestFinished(() => {
+    if (process.env.VITEST_FS_CLEANUP !== 'false') {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+  return {
+    editFile: (file: string, callback: (content: string) => string) => {
+      const filepath = resolve(root, file)
+      if (!files.has(filepath)) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      const content = fs.readFileSync(filepath, 'utf-8')
+      fs.writeFileSync(filepath, callback(content))
+    },
+    createFile: (file: string, content: string) => {
+      if (file.startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      const filepath = resolve(root, file)
+      if (!files.has(filepath)) {
+        throw new Error(`file ${file} already exists in the test file system`)
+      }
+      createFile(filepath, content)
+    },
+  }
+}
+
+export async function runInlineTests(
+  structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
+  config?: UserConfig,
+) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  const fs = useFS(root, structure)
+  const vitest = await runVitest({
+    root,
+    ...config,
+  })
+  return {
+    fs,
+    ...vitest,
+  }
 }
