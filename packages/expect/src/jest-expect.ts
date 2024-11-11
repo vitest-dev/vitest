@@ -595,6 +595,27 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       throw new AssertionError(formatCalls(spy, msg, args))
     }
   })
+  def('toHaveBeenCalledOnceWith', function (...args) {
+    const spy = getSpy(this)
+    const spyName = spy.getMockName()
+    const callCount = spy.mock.calls.length
+    const hasCallWithArgs = spy.mock.calls.some(callArg =>
+      jestEquals(callArg, args, [...customTesters, iterableEquality]),
+    )
+    const pass = hasCallWithArgs && callCount === 1
+    const isNot = utils.flag(this, 'negate') as boolean
+
+    const msg = utils.getMessage(this, [
+      pass,
+      `expected "${spyName}" to be called once with arguments: #{exp}`,
+      `expected "${spyName}" to not be called once with arguments: #{exp}`,
+      args,
+    ])
+
+    if ((pass && isNot) || (!pass && !isNot)) {
+      throw new AssertionError(formatCalls(spy, msg, args))
+    }
+  })
   def(
     ['toHaveBeenNthCalledWith', 'nthCalledWith'],
     function (times: number, ...args: any[]) {
