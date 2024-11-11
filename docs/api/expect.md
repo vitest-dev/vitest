@@ -876,6 +876,30 @@ test('spy function', () => {
 })
 ```
 
+## toHaveBeenCalledOnceWith
+
+- **Type**: `(...args: any[]) => Awaitable<void>`
+
+This assertion checks if a function was called exactly once and with certain parameters. Requires a spy function to be passed to `expect`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
+
+test('spy function', () => {
+  const buySpy = vi.spyOn(market, 'buy')
+
+  market.buy('apples', 10)
+
+  expect(buySpy).toHaveBeenCalledOnceWith('apples', 10)
+})
+```
+
 ## toHaveBeenLastCalledWith
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
