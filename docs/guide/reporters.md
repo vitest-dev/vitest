@@ -251,6 +251,11 @@ AssertionError: expected 5 to be 4 // Object.is equality
 
 The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively. These can also be customized via reporter options `suiteName` and `classnameTemplate`. `classnameTemplate` can either be a template string or a function.
 
+The supported placeholders for the `classnameTemplate` option are:
+- filename
+- filepath
+- suitename
+
 ```ts
 export default defineConfig({
   test: {
