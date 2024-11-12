@@ -62,5 +62,10 @@ export function useCodeMirror(
 }
 
 export async function showSource(task: Task) {
-  navigateTo(task, task.location?.line ?? 0)
+  navigateTo({
+    file: task.file.id,
+    line: task.location?.line ?? 0,
+    view: 'editor',
+    test: null,
+  })
 }

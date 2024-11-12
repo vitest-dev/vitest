@@ -56,6 +56,7 @@ const failedSnapshot = computed(() => {
 
 function toggleOpen() {
   if (!expandable) {
+    onItemClick?.(task.value!)
     return
   }
 

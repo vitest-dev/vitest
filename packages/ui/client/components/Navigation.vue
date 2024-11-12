@@ -11,9 +11,9 @@ import {
   coverageVisible,
   dashboardVisible,
   disableCoverage,
-  navigateTo,
   showCoverage,
   showDashboard,
+  showReport,
 } from '~/composables/navigation'
 
 function updateSnapshot() {
@@ -50,7 +50,7 @@ function expandTests() {
 
 <template>
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
-  <Explorer border="r base" :on-item-click="navigateTo" :nested="true" @run="onRunAll">
+  <Explorer border="r base" :on-item-click="showReport" :nested="true" @run="onRunAll">
     <template #header="{ filteredFiles }">
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
