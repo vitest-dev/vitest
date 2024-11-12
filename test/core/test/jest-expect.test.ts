@@ -634,14 +634,14 @@ describe('toHaveBeenCalledWith', () => {
   })
 })
 
-describe('toHaveBeenCalledOnceWith', () => {
+describe('toHaveBeenCalledExactlyOnceWith', () => {
   describe('negated', () => {
     it('fails if called', () => {
       const mock = vi.fn()
       mock(3)
 
       expect(() => {
-        expect(mock).not.toHaveBeenCalledOnceWith(3)
+        expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
       }).toThrow(/^expected "spy" to not be called once with arguments: \[ 3 \][^e]/)
     })
 
@@ -650,19 +650,19 @@ describe('toHaveBeenCalledOnceWith', () => {
       mock(3)
       mock(3)
 
-      expect(mock).not.toHaveBeenCalledOnceWith(3)
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
     })
 
     it('passes if not called', () => {
       const mock = vi.fn()
-      expect(mock).not.toHaveBeenCalledOnceWith(3)
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
     })
 
     it('passes if called with a different argument', () => {
       const mock = vi.fn()
       mock(4)
 
-      expect(mock).not.toHaveBeenCalledOnceWith(3)
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
     })
   })
 
@@ -670,14 +670,14 @@ describe('toHaveBeenCalledOnceWith', () => {
     const mock = vi.fn()
 
     expect(() => {
-      expect(mock).toHaveBeenCalledOnceWith(3)
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
     }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
 
     mock(3)
     mock(3)
 
     expect(() => {
-      expect(mock).toHaveBeenCalledOnceWith(3)
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
     }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
   })
 
@@ -686,7 +686,7 @@ describe('toHaveBeenCalledOnceWith', () => {
     mock(4)
 
     expect(() => {
-      expect(mock).toHaveBeenCalledOnceWith(3)
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
     }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
   })
 
@@ -694,7 +694,7 @@ describe('toHaveBeenCalledOnceWith', () => {
     const mock = vi.fn()
     mock(3)
 
-    expect(mock).toHaveBeenCalledOnceWith(3)
+    expect(mock).toHaveBeenCalledExactlyOnceWith(3)
   })
 })
 

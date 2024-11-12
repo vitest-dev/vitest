@@ -595,7 +595,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       throw new AssertionError(formatCalls(spy, msg, args))
     }
   })
-  def('toHaveBeenCalledOnceWith', function (...args) {
+  def('toHaveBeenCalledExactlyOnceWith', function (...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const callCount = spy.mock.calls.length

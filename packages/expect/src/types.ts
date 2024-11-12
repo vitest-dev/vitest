@@ -640,9 +640,9 @@ export interface Assertion<T = any>
    * exactly once.
    *
    * @example
-   * expect(mockFunc).toHaveBeenCalledOnceWith('arg1', 42);
+   * expect(mockFunc).toHaveBeenCalledExactlyOnceWith('arg1', 42);
    */
-  toHaveBeenCalledOnceWith: <E extends any[]>(...args: E) => void
+  toHaveBeenCalledExactlyOnceWith: <E extends any[]>(...args: E) => void
 
   /**
    * Checks that a value satisfies a custom matcher function.

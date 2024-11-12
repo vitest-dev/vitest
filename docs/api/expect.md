@@ -876,7 +876,7 @@ test('spy function', () => {
 })
 ```
 
-## toHaveBeenCalledOnceWith
+## toHaveBeenCalledExactlyOnceWith
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
@@ -896,7 +896,7 @@ test('spy function', () => {
 
   market.buy('apples', 10)
 
-  expect(buySpy).toHaveBeenCalledOnceWith('apples', 10)
+  expect(buySpy).toHaveBeenCalledExactlyOnceWith('apples', 10)
 })
 ```
 
