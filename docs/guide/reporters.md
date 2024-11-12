@@ -172,7 +172,7 @@ Example output using basic reporter:
 
 ### Verbose Reporter
 
-Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. It also displays currently running tests that are taking longer than [`slowTestThreshold`](/config/#slowtestthreshold). Similar to `default` reporter, you can disable the summary by configuring the reporter.
 
 :::code-group
 ```bash [CLI]
@@ -189,6 +189,24 @@ export default defineConfig({
 })
 ```
 :::
+
+Example output for tests in progress with default `slowTestThreshold: 300`:
+
+```bash
+ ✓ __tests__/example-1.test.ts (2) 725ms
+   ✓ first test file (2) 725ms
+     ✓ 2 + 2 should equal 4
+     ✓ 4 - 2 should equal 2
+
+ ❯ test/example-2.test.ts 3/5
+   ↳ should run longer than three seconds 1.57s
+ ❯ test/example-3.test.ts 1/5
+
+ Test Files 2 passed (4)
+      Tests 10 passed | 3 skipped (65)
+   Start at 11:01:36
+   Duration 2.00s
+```
 
 Example of final terminal output for a passing test suite:
 

@@ -30,7 +30,7 @@ export class DefaultReporter extends BaseReporter {
 
   onInit(ctx: Vitest) {
     super.onInit(ctx)
-    this.summary?.onInit(ctx)
+    this.summary?.onInit(ctx, { verbose: this.verbose })
   }
 
   onPathsCollected(paths: string[] = []) {

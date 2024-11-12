@@ -3,12 +3,16 @@ import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import { getTests } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
-import { F_POINTER } from './renderers/figures'
+import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
 import { formatProjectName, formatTime, formatTimeString, padSummaryTitle } from './renderers/utils'
 import { WindowRenderer } from './renderers/windowedRenderer'
 
-const DURATION_UPDATE_INTERVAL_MS = 500
+const DURATION_UPDATE_INTERVAL_MS = 100
 const FINISHED_TEST_CLEANUP_TIME_MS = 1_000
+
+interface Options {
+  verbose?: boolean
+}
 
 interface Counter {
   total: number
@@ -19,9 +23,17 @@ interface Counter {
   todo: number
 }
 
+interface SlowTest {
+  name?: string
+  startTime: number
+  timeout: NodeJS.Timeout
+
+}
+
 interface RunningTest extends Pick<Counter, 'total' | 'completed'> {
   filename: File['name']
   projectName: File['projectName']
+  slowTests: Map<Test['id'], SlowTest>
 }
 
 /**
@@ -30,6 +42,7 @@ interface RunningTest extends Pick<Counter, 'total' | 'completed'> {
  */
 export class SummaryReporter implements Reporter {
   private ctx!: Vitest
+  private options!: Options
   private renderer!: WindowRenderer
 
   private suites = emptyCounters()
@@ -46,11 +59,17 @@ export class SummaryReporter implements Reporter {
   private allFinishedTests = new Set<File['id']>()
 
   private startTime = ''
+  private currentTime = 0
   private duration = 0
   private durationInterval: NodeJS.Timeout | undefined = undefined
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest, options: Options = {}) {
     this.ctx = ctx
+
+    this.options = {
+      verbose: false,
+      ...options,
+    }
 
     this.renderer = new WindowRenderer({
       logger: ctx.logger,
@@ -88,7 +107,10 @@ export class SummaryReporter implements Reporter {
       }
 
       if (task?.type === 'test' || task?.type === 'custom') {
-        if (task.result?.state !== 'run') {
+        if (task.result?.state === 'run') {
+          this.onTestStart(task)
+        }
+        else {
           this.onTestFinished(task)
         }
       }
@@ -127,9 +149,12 @@ export class SummaryReporter implements Reporter {
       const finished = this.finishedTests.entries().next().value
 
       if (finished) {
+        const slowTests = this.runningTests.get(finished[0])?.slowTests
+        slowTests?.forEach(slowTest => clearTimeout(slowTest.timeout))
+
         clearTimeout(finished[1])
-        this.finishedTests.delete(finished[0])
         this.runningTests.delete(finished[0])
+        this.finishedTests.delete(finished[0])
       }
     }
 
@@ -138,12 +163,13 @@ export class SummaryReporter implements Reporter {
       completed: 0,
       filename: file.name,
       projectName: file.projectName,
+      slowTests: new Map(),
     })
 
     this.maxParallelTests = Math.max(this.maxParallelTests, this.runningTests.size)
   }
 
-  private onTestFinished(test: Test | Custom) {
+  private getTestStats(test: Test | Custom) {
     const file = test.file
     let stats = this.runningTests.get(file.id)
 
@@ -157,6 +183,43 @@ export class SummaryReporter implements Reporter {
         return
       }
     }
+
+    return stats
+  }
+
+  private onTestStart(test: Test | Custom) {
+    // Track slow running tests only on verbose mode
+    if (!this.options.verbose) {
+      return
+    }
+
+    const stats = this.getTestStats(test)
+
+    if (!stats) {
+      return
+    }
+
+    const slowTest: SlowTest = {
+      name: undefined,
+      startTime: performance.now(),
+      timeout: setTimeout(() => {
+        slowTest.name = test.name
+      }, this.ctx.config.slowTestThreshold).unref(),
+    }
+
+    stats.slowTests.set(test.id, slowTest)
+  }
+
+  private onTestFinished(test: Test | Custom) {
+    const file = test.file
+    const stats = this.getTestStats(test)
+
+    if (!stats) {
+      return
+    }
+
+    clearTimeout(stats.slowTests.get(test.id)?.timeout)
+    stats.slowTests.delete(test.id)
 
     stats.completed++
     const result = test.result
@@ -225,6 +288,19 @@ export class SummaryReporter implements Reporter {
         + test.filename
         + c.dim(` ${test.completed}/${test.total}`),
       )
+
+      const slowTests = Array.from(test.slowTests.values()).filter(t => t.name)
+
+      for (const [index, slowTest] of slowTests.entries()) {
+        const elapsed = this.currentTime - slowTest.startTime
+        const icon = index === slowTests.length - 1 ? F_TREE_NODE_END : F_TREE_NODE_MIDDLE
+
+        summary.push(
+          c.bold(c.yellow(`   ${icon} `))
+          + slowTest.name
+          + c.bold(c.yellow(` ${formatTime(Math.max(0, elapsed))}`)),
+        )
+      }
     }
 
     if (this.runningTests.size > 0) {
@@ -246,8 +322,9 @@ export class SummaryReporter implements Reporter {
     this.startTime = formatTimeString(new Date())
 
     this.durationInterval = setInterval(() => {
-      this.duration = performance.now() - start
-    }, DURATION_UPDATE_INTERVAL_MS)
+      this.currentTime = performance.now()
+      this.duration = this.currentTime - start
+    }, DURATION_UPDATE_INTERVAL_MS).unref()
   }
 }
 
