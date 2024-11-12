@@ -12,7 +12,7 @@ import { createLogUpdate } from 'log-update'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './error'
-import { divider } from './reporters/renderers/utils'
+import { divider, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
@@ -24,6 +24,8 @@ export interface ErrorOptions {
   task?: Task
   showCodeFrame?: boolean
 }
+
+const PAD = '      '
 
 const ESC = '\x1B['
 const ERASE_DOWN = `${ESC}J`
@@ -64,13 +66,18 @@ export class Logger {
     this.console.warn(...args)
   }
 
-  clearFullScreen(message: string) {
+  clearFullScreen(message = '') {
     if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
     }
 
-    this.console.log(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}${message}`)
+    if (message) {
+      this.console.log(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}${message}`)
+    }
+    else {
+      (this.outputStream as Writable).write(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}`)
+    }
   }
 
   clearScreen(message: string, force = false) {
@@ -201,23 +208,13 @@ export class Logger {
   printBanner() {
     this.log()
 
-    const versionTest = this.ctx.config.watch
-      ? c.blue(`v${this.ctx.version}`)
-      : c.cyan(`v${this.ctx.version}`)
-    const mode = this.ctx.config.watch ? c.blue(' DEV ') : c.cyan(' RUN ')
+    const color = this.ctx.config.watch ? 'blue' : 'cyan'
+    const mode = this.ctx.config.watch ? 'DEV' : 'RUN'
 
-    this.log(
-      `${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(
-        this.ctx.config.root,
-      )}`,
-    )
+    this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
     if (this.ctx.config.sequence.sequencer === RandomSequencer) {
-      this.log(
-        c.gray(
-          `      Running tests with seed "${this.ctx.config.sequence.seed}"`,
-        ),
-      )
+      this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
     this.ctx.projects.forEach((project) => {
@@ -231,52 +228,32 @@ export class Logger {
       const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
       const provider = project.browser.provider.name
       const providerString = provider === 'preview' ? '' : ` by ${provider}`
-      this.log(
-        c.dim(
-          c.green(
-            `     ${output} Browser runner started${providerString} at ${new URL('/', origin)}`,
-          ),
-        ),
-      )
+
+      this.log(PAD + c.dim(c.green(`${output} Browser runner started${providerString} at ${new URL('/', origin)}`)))
     })
 
     if (this.ctx.config.ui) {
-      this.log(
-        c.dim(
-          c.green(
-            `      UI started at http://${
-              this.ctx.config.api?.host || 'localhost'
-            }:${c.bold(`${this.ctx.server.config.server.port}`)}${
-              this.ctx.config.uiBase
-            }`,
-          ),
-        ),
-      )
+      const host = this.ctx.config.api?.host || 'localhost'
+      const port = this.ctx.server.config.server.port
+      const base = this.ctx.config.uiBase
+
+      this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
     }
     else if (this.ctx.config.api?.port) {
       const resolvedUrls = this.ctx.server.resolvedUrls
       // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
-      const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${
-        this.ctx.config.api.port
-      }`
-      const origin
-        = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
-      this.log(c.dim(c.green(`      API started at ${new URL('/', origin)}`)))
+      const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
+      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
+
+      this.log(PAD + c.dim(c.green(`API started at ${new URL('/', origin)}`)))
     }
 
     if (this.ctx.coverageProvider) {
-      this.log(
-        c.dim('      Coverage enabled with ')
-        + c.yellow(this.ctx.coverageProvider.name),
-      )
+      this.log(PAD + c.dim('Coverage enabled with ') + c.yellow(this.ctx.coverageProvider.name))
     }
 
     if (this.ctx.config.standalone) {
-      this.log(
-        c.yellow(
-          `\nVitest is running in standalone mode. Edit a test file to rerun tests.`,
-        ),
-      )
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
     }
     else {
       this.log()
