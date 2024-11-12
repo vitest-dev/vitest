@@ -176,7 +176,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
   /**
    * Sets internal mock name. Useful to see the name of the mock if an assertion fails.
    */
-  mockName(n: string): this
+  mockName(name: string): this
   /**
    * Current context of the mock. It stores information about all invocation calls, instances, and results.
    */
@@ -242,7 +242,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
   /**
    * Accepts a value that will be returned whenever the mock function is called.
    */
-  mockReturnValue(obj: ReturnType<T>): this
+  mockReturnValue(value: ReturnType<T>): this
   /**
    * Accepts a value that will be returned during the next function call. If chained, every consecutive call will return the specified value.
    *
@@ -257,14 +257,14 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * // 'first call', 'second call', 'default'
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockReturnValueOnce(obj: ReturnType<T>): this
+  mockReturnValueOnce(value: ReturnType<T>): this
   /**
    * Accepts a value that will be resolved when async function is called.
    * @example
    * const asyncMock = vi.fn().mockResolvedValue(42)
    * asyncMock() // Promise<42>
    */
-  mockResolvedValue(obj: Awaited<ReturnType<T>>): this
+  mockResolvedValue(value: Awaited<ReturnType<T>>): this
   /**
    * Accepts a value that will be resolved during the next function call. If chained, every consecutive call will resolve specified value.
    * @example
@@ -277,14 +277,14 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * // Promise<'first call'>, Promise<'second call'>, Promise<'default'>
    * console.log(myMockFn(), myMockFn(), myMockFn())
    */
-  mockResolvedValueOnce(obj: Awaited<ReturnType<T>>): this
+  mockResolvedValueOnce(value: Awaited<ReturnType<T>>): this
   /**
    * Accepts an error that will be rejected when async function is called.
    * @example
    * const asyncMock = vi.fn().mockRejectedValue(new Error('Async error'))
    * await asyncMock() // throws 'Async error'
    */
-  mockRejectedValue(obj: any): this
+  mockRejectedValue(error: unknown): this
   /**
    * Accepts a value that will be rejected during the next function call. If chained, every consecutive call will reject specified value.
    * @example
@@ -296,7 +296,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * await asyncMock() // first call
    * await asyncMock() // throws "Async error"
    */
-  mockRejectedValueOnce(obj: any): this
+  mockRejectedValueOnce(error: unknown): this
 }
 /* eslint-enable ts/method-signature-style */
 
