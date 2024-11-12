@@ -1,6 +1,7 @@
 import type {
   CloneOption,
   DefineWorkerOptions,
+  PostMessageArgs,
   Procedure,
 } from './types'
 import { InlineWorkerRunner } from './runner'
@@ -35,7 +36,7 @@ export function createWorkerConstructor(
     >()
 
     private _vw_name: string
-    private _vw_messageQueue: any[] | null = []
+    private _vw_messageQueue: PostMessageArgs[] | null = []
 
     public onmessage: null | Procedure = null
     public onmessageerror: null | Procedure = null
@@ -69,14 +70,14 @@ export function createWorkerConstructor(
         dispatchEvent: (event: Event) => {
           return this._vw_workerTarget.dispatchEvent(event)
         },
-        addEventListener: (...args: any[]) => {
+        addEventListener: (...args: Parameters<typeof addEventListener>) => {
           if (args[1]) {
             this._vw_insideListeners.set(args[0], args[1])
           }
-          return this._vw_workerTarget.addEventListener(...args as [any, any])
+          return this._vw_workerTarget.addEventListener(...args)
         },
         removeEventListener: this._vw_workerTarget.removeEventListener,
-        postMessage: (...args: any[]) => {
+        postMessage: (...args: Parameters<typeof postMessage>) => {
           if (!args.length) {
             throw new SyntaxError(
               '"postMessage" requires at least one argument.',
@@ -99,11 +100,11 @@ export function createWorkerConstructor(
       selfProxy = new Proxy(context, {
         get(target, prop, receiver) {
           if (Reflect.has(target, prop)) {
-            return Reflect.get(target, prop, receiver)
+            return Reflect.get(target, prop, receiver) as unknown
           }
           return globalThis[prop as 'crypto']
         },
-      }) as any
+      }) as unknown as typeof globalThis
 
       this._vw_workerTarget.addEventListener('message', (e) => {
         context.onmessage?.(e as MessageEvent)
@@ -132,7 +133,7 @@ export function createWorkerConstructor(
 
           return runner.executeFile(fsPath).then(() => {
             // worker should be new every time, invalidate its sub dependency
-            runnerOptions.moduleCache.invalidateSubDepTree([
+            runnerOptions.moduleCache!.invalidateSubDepTree([
               fsPath,
               runner.mocker.getMockPath(fsPath),
             ])
@@ -147,12 +148,12 @@ export function createWorkerConstructor(
             debug('worker %s successfully initialized', this._vw_name)
           })
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           debug('worker %s failed to initialize: %o', this._vw_name, e)
           const EventConstructor = globalThis.ErrorEvent || globalThis.Event
           const error = new EventConstructor('error', {
             error: e,
-            message: e.message,
+            message: e instanceof Error ? e.message : undefined,
           })
           this.dispatchEvent(error)
           this.onerror?.(error)
@@ -172,7 +173,7 @@ export function createWorkerConstructor(
     }
 
     postMessage(
-      ...args: [any, StructuredSerializeOptions | Transferable[] | undefined]
+      ...args: PostMessageArgs
     ): void {
       if (!args.length) {
         throw new SyntaxError('"postMessage" requires at least one argument.')

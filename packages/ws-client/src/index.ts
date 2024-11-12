@@ -83,10 +83,10 @@ export function createClient(url: string, options: VitestClientOptions = {}) {
   }
 
   const birpcHandlers: BirpcOptions<WebSocketHandlers> = {
-    post: msg => ctx.ws.send(msg),
+    post: (msg: string) => ctx.ws.send(msg),
     on: fn => (onMessage = fn),
-    serialize: e =>
-      stringify(e, (_, v) => {
+    serialize: (e: unknown) =>
+      stringify(e, (_, v: unknown) => {
         if (v instanceof Error) {
           return {
             name: v.name,

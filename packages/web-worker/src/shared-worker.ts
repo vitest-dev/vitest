@@ -10,7 +10,7 @@ function convertNodePortToWebPort(port: NodeMessagePort): MessagePort {
   if (!('addEventListener' in port)) {
     Object.defineProperty(port, 'addEventListener', {
       value(...args: any[]) {
-        return this.addListener(...args)
+        return this.addListener(...args) as unknown
       },
       configurable: true,
       enumerable: true,
@@ -19,14 +19,14 @@ function convertNodePortToWebPort(port: NodeMessagePort): MessagePort {
   if (!('removeEventListener' in port)) {
     Object.defineProperty(port, 'removeEventListener', {
       value(...args: any[]) {
-        return this.removeListener(...args)
+        return this.removeListener(...args) as unknown
       },
       configurable: true,
       enumerable: true,
     })
   }
   if (!('dispatchEvent' in port)) {
-    const emit = (port as any).emit.bind(port)
+    const emit = (port as any).emit.bind(port) as (event: any) => boolean
     Object.defineProperty(port, 'emit', {
       value(event: any) {
         if (event.name === 'message') {
@@ -42,7 +42,7 @@ function convertNodePortToWebPort(port: NodeMessagePort): MessagePort {
     })
     Object.defineProperty(port, 'dispatchEvent', {
       value(event: any) {
-        return this.emit(event)
+        return this.emit(event) as unknown
       },
       configurable: true,
       enumerable: true,
@@ -94,8 +94,8 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
         dispatchEvent: (event: Event) => {
           return this._vw_workerTarget.dispatchEvent(event)
         },
-        addEventListener: (...args: any[]) => {
-          return this._vw_workerTarget.addEventListener(...args as [any, any])
+        addEventListener: (...args: Parameters<typeof addEventListener>) => {
+          return this._vw_workerTarget.addEventListener(...args)
         },
         removeEventListener: this._vw_workerTarget.removeEventListener,
         get self() {
@@ -106,11 +106,11 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
       selfProxy = new Proxy(context, {
         get(target, prop, receiver) {
           if (Reflect.has(target, prop)) {
-            return Reflect.get(target, prop, receiver)
+            return Reflect.get(target, prop, receiver) as unknown
           }
-          return Reflect.get(globalThis, prop, receiver)
+          return Reflect.get(globalThis, prop, receiver) as unknown
         },
-      }) as any
+      }) as unknown as typeof globalThis
 
       const channel = new MessageChannel()
       this.port = convertNodePortToWebPort(channel.port1)
@@ -135,7 +135,7 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
 
           return runner.executeFile(fsPath).then(() => {
             // worker should be new every time, invalidate its sub dependency
-            runnerOptions.moduleCache.invalidateSubDepTree([
+            runnerOptions.moduleCache!.invalidateSubDepTree([
               fsPath,
               runner.mocker.getMockPath(fsPath),
             ])
@@ -147,12 +147,12 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
             debug('shared worker %s successfully initialized', this._vw_name)
           })
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           debug('shared worker %s failed to initialize: %o', this._vw_name, e)
           const EventConstructor = globalThis.ErrorEvent || globalThis.Event
           const error = new EventConstructor('error', {
             error: e,
-            message: e.message,
+            message: e instanceof Error ? e.message : undefined,
           })
           this.dispatchEvent(error)
           this.onerror?.(error)

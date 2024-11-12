@@ -1,4 +1,5 @@
 import type { WorkerGlobalState } from 'vitest'
+import type { ExecuteOptions } from 'vitest/execute'
 import type { CloneOption } from './types'
 import { readFileSync as _readFileSync } from 'node:fs'
 import ponyfillStructuredClone from '@ungap/structured-clone'
@@ -9,9 +10,9 @@ const readFileSync = _readFileSync
 
 export const debug = createDebug('vitest:web-worker')
 
-export function getWorkerState(): WorkerGlobalState {
+function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
-  return globalThis.__vitest_worker__
+  return globalThis.__vitest_worker__ as WorkerGlobalState
 }
 
 export function assertGlobalExists(name: string) {
@@ -23,7 +24,7 @@ export function assertGlobalExists(name: string) {
 }
 
 function createClonedMessageEvent(
-  data: any,
+  data: unknown,
   transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined,
   clone: CloneOption,
 ) {
@@ -52,7 +53,7 @@ function createClonedMessageEvent(
       )
     }
     return new MessageEvent('message', {
-      data: ponyfillStructuredClone(data, { lossy: true } as any),
+      data: ponyfillStructuredClone(data, { lossy: true }),
       origin,
     })
   }
@@ -79,7 +80,7 @@ export function createMessageEvent(
   }
 }
 
-export function getRunnerOptions(): any {
+export function getRunnerOptions(): ExecuteOptions {
   const state = getWorkerState()
   const { config, rpc, moduleCache } = state
 
