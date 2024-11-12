@@ -113,6 +113,17 @@ export async function VitestPlugin(
             // https://github.com/vitejs/vite/pull/16453
             emptyOutDir: false,
           },
+          // @ts-expect-error environments only exists in Vite 6
+          environments: {
+            ssr: {
+              resolve: {
+                // by default Vite resolves `module` field, which not always a native ESM module
+                // setting this option can bypass that and fallback to cjs version
+                mainFields: [],
+                conditions: ['node'],
+              },
+            },
+          },
           test: {
             poolOptions: {
               threads: {
