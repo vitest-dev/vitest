@@ -656,7 +656,36 @@ export interface Assertion<T = any>
    */
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
 
+  /**
+   * This assertion checks if a `Mock` was called before another `Mock`.
+   * @param mock - A mock function created by `vi.spyOn` or `vi.fn`
+   * @param failIfNoFirstInvocation - Fail if the first mock was never called
+   * @example
+   * const mock1 = vi.fn()
+   * const mock2 = vi.fn()
+   *
+   * mock1()
+   * mock2()
+   * mock1()
+   *
+   * expect(mock1).toHaveBeenCalledBefore(mock2)
+   */
   toHaveBeenCalledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+
+  /**
+   * This assertion checks if a `Mock` was called after another `Mock`.
+   * @param mock - A mock function created by `vi.spyOn` or `vi.fn`
+   * @param failIfNoFirstInvocation - Fail if the first mock was never called
+   * @example
+   * const mock1 = vi.fn()
+   * const mock2 = vi.fn()
+   *
+   * mock2()
+   * mock1()
+   * mock2()
+   *
+   * expect(mock1).toHaveBeenCalledAfter(mock2)
+   */
   toHaveBeenCalledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
 
   /**
