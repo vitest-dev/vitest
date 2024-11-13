@@ -113,7 +113,8 @@ export async function VitestPlugin(
             // https://github.com/vitejs/vite/pull/16453
             emptyOutDir: false,
           },
-          // @ts-expect-error environments only exists in Vite 6
+          // eslint-disable-next-line ts/ban-ts-comment 
+          // @ts-ignore Vite 6 compat
           environments: {
             ssr: {
               resolve: {
