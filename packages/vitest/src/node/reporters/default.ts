@@ -1,7 +1,7 @@
-import c from 'tinyrainbow'
 import type { UserConsoleLog } from '../../types/general'
-import { BaseReporter } from './base'
 import type { ListRendererOptions } from './renderers/listRenderer'
+import c from 'tinyrainbow'
+import { BaseReporter } from './base'
 import { createListRenderer } from './renderers/listRenderer'
 
 export class DefaultReporter extends BaseReporter {
@@ -41,7 +41,7 @@ export class DefaultReporter extends BaseReporter {
       this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
       this.rendererOptions.slowTestThreshold
         = this.ctx.config.slowTestThreshold
-      this.rendererOptions.mode = this.mode
+      this.rendererOptions.mode = this.ctx.config.mode
       const files = this.ctx.state.getFiles(this.watchFilters)
       if (!this.renderer) {
         this.renderer = createListRenderer(files, this.rendererOptions).start()

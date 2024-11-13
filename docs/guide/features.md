@@ -22,7 +22,7 @@ Learn more at [Configuring Vitest](/guide/#configuring-vitest).
 $ vitest
 ```
 
-When you modify your source code or the test files, Vitest smartly searches the module graph and only reruns the related tests, [just like how HMR works in Vite!](https://twitter.com/antfu7/status/1468233216939245579)
+When you modify your source code or the test files, Vitest smartly searches the module graph and only reruns the related tests, just like how HMR works in Vite!
 
 `vitest` starts in `watch mode` **by default in development environment** and `run mode` in CI environment (when `process.env.CI` presents) smartly. You can use `vitest watch` or `vitest run` to explicitly specify the desired mode.
 

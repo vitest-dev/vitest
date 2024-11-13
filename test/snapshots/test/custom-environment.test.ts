@@ -1,6 +1,6 @@
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { afterEach, expect, test } from 'vitest'
 import { dirname, resolve } from 'pathe'
+import { afterEach, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const testFileName = resolve(import.meta.dirname, './fixtures/custom-snapshot-environment/test/snapshots.test.ts')

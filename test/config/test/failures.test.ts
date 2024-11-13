@@ -1,8 +1,8 @@
-import { beforeEach, expect, test } from 'vitest'
 import type { UserConfig } from 'vitest/node'
-import { version } from 'vitest/package.json'
-
 import { normalize, resolve } from 'pathe'
+import { beforeEach, expect, test } from 'vitest'
+
+import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
 
 const providers = ['playwright', 'webdriverio', 'preview'] as const

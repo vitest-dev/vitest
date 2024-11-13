@@ -1,6 +1,6 @@
 import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
-import type { ChainableFunction } from '../utils/chain'
 import type { FixtureItem } from '../fixture'
+import type { ChainableFunction } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'

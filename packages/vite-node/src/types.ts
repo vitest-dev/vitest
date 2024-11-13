@@ -1,5 +1,5 @@
-import type { ViteHotContext } from 'vite/types/hot.js'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
+import type { ViteHotContext } from 'vite/types/hot.js'
 import type { ModuleCacheMap, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
@@ -33,8 +33,8 @@ export interface StartOfSourceMap {
 }
 
 export type {
-  EncodedSourceMap,
   DecodedSourceMap,
+  EncodedSourceMap,
   SourceMapInput,
 } from '@jridgewell/trace-mapping'
 

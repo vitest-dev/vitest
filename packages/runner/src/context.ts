@@ -1,5 +1,5 @@
 import type { Awaitable } from '@vitest/utils'
-import { getSafeTimers } from '@vitest/utils'
+import type { VitestRunner } from './types/runner'
 import type {
   Custom,
   ExtendedContext,
@@ -8,7 +8,7 @@ import type {
   TaskContext,
   Test,
 } from './types/tasks'
-import type { VitestRunner } from './types/runner'
+import { getSafeTimers } from '@vitest/utils'
 import { PendingError } from './errors'
 
 export const collectorContext: RuntimeContext = {

@@ -1,7 +1,7 @@
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
 import { GithubActionsReporter } from '../../../packages/vitest/src/node/reporters'
+import { runVitest } from '../../test-utils'
 
 test(GithubActionsReporter, async () => {
   let { stdout, stderr } = await runVitest(

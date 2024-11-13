@@ -1,16 +1,17 @@
-import { resolve } from 'pathe'
-import { mergeConfig } from 'vite'
 import type {
   InlineConfig as ViteInlineConfig,
   UserConfig as ViteUserConfig,
 } from 'vite'
-import { findUp } from 'find-up'
-import { configFiles } from '../constants'
 import type { VitestOptions } from './core'
+import type { UserConfig, VitestRunMode } from './types/config'
+import { resolve } from 'node:path'
+import { slash } from '@vitest/utils'
+import { findUp } from 'find-up'
+import { mergeConfig } from 'vite'
+import { configFiles } from '../constants'
 import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
-import type { UserConfig, VitestRunMode } from './types/config'
 
 export async function createVitest(
   mode: VitestRunMode,
@@ -19,7 +20,7 @@ export async function createVitest(
   vitestOptions: VitestOptions = {},
 ) {
   const ctx = new Vitest(mode, vitestOptions)
-  const root = resolve(options.root || process.cwd())
+  const root = slash(resolve(options.root || process.cwd()))
 
   const configPath
     = options.config === false

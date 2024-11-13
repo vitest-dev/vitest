@@ -1,6 +1,6 @@
 import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
-import type { VitestExecutor } from '../../../runtime/execute'
 import type { SerializedConfig } from '../../../runtime/config'
+import type { VitestExecutor } from '../../../runtime/execute'
 
 export async function resolveSnapshotEnvironment(
   config: SerializedConfig,

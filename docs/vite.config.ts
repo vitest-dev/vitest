@@ -1,8 +1,8 @@
 import type { Plugin } from 'vite'
-import { defineConfig } from 'vite'
-import Components from 'unplugin-vue-components/vite'
-import Unocss from 'unocss/vite'
 import { presetAttributify, presetIcons, presetUno } from 'unocss'
+import Unocss from 'unocss/vite'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   optimizeDeps: {

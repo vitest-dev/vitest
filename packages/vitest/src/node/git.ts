@@ -1,5 +1,5 @@
-import { resolve } from 'pathe'
 import type { Output } from 'tinyexec'
+import { resolve } from 'pathe'
 import { x } from 'tinyexec'
 
 export interface GitOptions {

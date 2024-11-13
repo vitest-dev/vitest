@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest'
 import { resolveConfig as viteResolveConfig } from 'vite'
-import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
+import { expect, test } from 'vitest'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
+import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
 const vitestCli = createCLI()
 

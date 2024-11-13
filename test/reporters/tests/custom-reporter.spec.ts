@@ -1,8 +1,8 @@
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 
-import TestReporter from '../src/custom-reporter'
 import { runVitest, runVitestCli } from '../../test-utils'
+import TestReporter from '../src/custom-reporter'
 
 const customTsReporterPath = resolve(__dirname, '../src/custom-reporter.ts')
 const customJSReporterPath = resolve(__dirname, '../src/custom-reporter.js')

@@ -1,7 +1,7 @@
 import { expect, test, vi } from 'vitest'
+import x from '../../src/mocks/export-default-circle-index.js'
 // @ts-expect-error not typed
 import { main, mainB } from '../../src/mocks/main.js'
-import x from '../../src/mocks/export-default-circle-index.js'
 
 vi.mock('../../src/mocks/A', async () => ({
   ...(await vi.importActual<any>('../../src/mocks/A')),

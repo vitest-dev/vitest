@@ -98,8 +98,10 @@ export default antfu(
     files: [
       `docs/${GLOB_SRC}`,
       `**/*.md`,
+      `**/*.md/${GLOB_SRC}`,
     ],
     rules: {
+      'perfectionist/sort-imports': 'off',
       'style/max-statements-per-line': 'off',
       'import/newline-after-import': 'off',
       'import/first': 'off',
@@ -122,6 +124,7 @@ export default antfu(
       `test/${GLOB_SRC}`,
     ],
     rules: {
+      'antfu/no-top-level-await': 'off',
       'unicorn/consistent-function-scoping': 'off',
     },
   },

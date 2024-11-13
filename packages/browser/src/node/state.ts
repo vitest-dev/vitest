@@ -1,7 +1,7 @@
-import { createDefer } from '@vitest/utils'
 import type { BrowserServerStateContext, BrowserServerState as IBrowserServerState } from 'vitest/node'
-import type { WebSocketBrowserRPC } from './types'
 import type { BrowserServerCDPHandler } from './cdp'
+import type { WebSocketBrowserRPC } from './types'
+import { createDefer } from '@vitest/utils'
 
 export class BrowserServerState implements IBrowserServerState {
   public readonly orchestrators = new Map<string, WebSocketBrowserRPC>()

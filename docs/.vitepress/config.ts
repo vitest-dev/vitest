@@ -1,9 +1,11 @@
-import { defineConfig } from 'vitepress'
-import { withPwa } from '@vite-pwa/vitepress'
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
+import { withPwa } from '@vite-pwa/vitepress'
+import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 import { version } from '../../package.json'
+import { teamMembers } from './contributors'
 import {
+  bluesky,
   contributing,
   discord,
   font,
@@ -12,13 +14,11 @@ import {
   ogImage,
   ogUrl,
   releases,
-  twitter,
   vitestDescription,
   vitestName,
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
-import { teamMembers } from './contributors'
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({
@@ -104,8 +104,8 @@ export default ({ mode }: { mode: string }) => {
       },
 
       socialLinks: [
+        { icon: 'bluesky', link: bluesky },
         { icon: 'mastodon', link: mastodon },
-        { icon: 'x', link: twitter },
         { icon: 'discord', link: discord },
         { icon: 'github', link: github },
       ],

@@ -1,7 +1,7 @@
-import { deepMergeSnapshot } from './port/utils'
-import SnapshotState from './port/state'
-import type { SnapshotResult, SnapshotStateOptions } from './types'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
+import type { SnapshotResult, SnapshotStateOptions } from './types'
+import SnapshotState from './port/state'
+import { deepMergeSnapshot } from './port/utils'
 
 function createMismatchError(
   message: string,

@@ -1,11 +1,11 @@
-import { createRequire } from 'node:module'
+import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
 
-// we need native dirname, because windows __dirname has \\
-import { dirname } from 'node:path'
+import { createRequire } from 'node:module'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import vm from 'node:vm'
-import { resolve } from 'pathe'
 import createDebug from 'debug'
+import { extractSourceMap } from './source-map'
 import {
   cleanUrl,
   createImportMetaEnvProxy,
@@ -17,8 +17,6 @@ import {
   slash,
   toFilePath,
 } from './utils'
-import type { HotContext, ModuleCache, ViteNodeRunnerOptions } from './types'
-import { extractSourceMap } from './source-map'
 
 const { setTimeout, clearTimeout } = globalThis
 

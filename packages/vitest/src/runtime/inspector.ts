@@ -1,7 +1,7 @@
-import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
 import type { ContextRPC } from '../types/worker'
 import type { SerializedConfig } from './config'
+import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 
 const __require = createRequire(import.meta.url)
 let inspector: typeof import('node:inspector')

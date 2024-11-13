@@ -1,8 +1,8 @@
-import { stripVTControlCharacters } from 'node:util'
-import { expect, test, vi } from 'vitest'
 import type { DiffOptions } from '@vitest/utils/diff'
-import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/runner'
+import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { expect, test, vi } from 'vitest'
 import { displayDiff } from '../../../packages/vitest/src/node/error'
 
 test('displays string diff', () => {

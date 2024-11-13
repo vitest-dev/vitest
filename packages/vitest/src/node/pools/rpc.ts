@@ -1,8 +1,8 @@
-import { mkdir, writeFile } from 'node:fs/promises'
 import type { RawSourceMap } from 'vite-node'
-import { join } from 'pathe'
-import type { WorkspaceProject } from '../workspace'
 import type { RuntimeRPC } from '../../types/rpc'
+import type { WorkspaceProject } from '../workspace'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { join } from 'pathe'
 import { hash } from '../hash'
 
 const created = new Set()
@@ -94,7 +94,10 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       ctx.state.catchError(err, type)
     },
     onFinished(files) {
-      return ctx.report('onFinished', files, ctx.state.getUnhandledErrors())
+      const errors = ctx.state.getUnhandledErrors()
+      ctx.checkUnhandledErrors(errors)
+
+      return ctx.report('onFinished', files, errors)
     },
     onCancel(reason) {
       ctx.cancelCurrentRun(reason)
@@ -107,7 +110,10 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
 
 // serialize rollup error on server to preserve details as a test error
 function handleRollupError(e: unknown): never {
-  if (e instanceof Error && 'plugin' in e) {
+  if (
+    e instanceof Error
+    && ('plugin' in e || 'frame' in e || 'id' in e)
+  ) {
     // eslint-disable-next-line no-throw-literal
     throw {
       name: e.name,

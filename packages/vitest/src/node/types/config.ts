@@ -1,32 +1,32 @@
-import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
-import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-import type { ViteNodeServerOptions } from 'vite-node'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
+import type { ViteNodeServerOptions } from 'vite-node'
+import type { ChaiConfig } from '../../integrations/chai/config'
+import type { EnvironmentOptions } from '../../types/environment'
+import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
+import type { HappyDOMOptions } from '../../types/happy-dom-options'
+import type { JSDOMOptions } from '../../types/jsdom-options'
 import type {
   BuiltinReporterOptions,
   BuiltinReporters,
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
-import type { ChaiConfig } from '../../integrations/chai/config'
-import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
-import type { JSDOMOptions } from '../../types/jsdom-options'
-import type { HappyDOMOptions } from '../../types/happy-dom-options'
-import type { EnvironmentOptions } from '../../types/environment'
+import type { BenchmarkUserOptions } from './benchmark'
+import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
-import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Reporter } from './reporter'
-import type { BenchmarkUserOptions } from './benchmark'
 
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
-export type { CoverageV8Options, CoverageIstanbulOptions } from './coverage'
-export type { BrowserScript, BrowserConfigOptions } from './browser'
+export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
+export type { BrowserConfigOptions, BrowserScript } from './browser'
+export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-export type { SerializedConfig, RuntimeConfig } from '../../runtime/config'
 
 export type BuiltinEnvironment =
   | 'node'
@@ -45,7 +45,7 @@ export type ApiConfig = Pick<
   'port' | 'strictPort' | 'host' | 'middlewareMode'
 >
 
-export type { JSDOMOptions, HappyDOMOptions, EnvironmentOptions }
+export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
 

@@ -1,11 +1,11 @@
 /// <reference types="vite-plugin-pages/client" />
 
+import FloatingVue, { VTooltip } from 'floating-vue'
+import routes from 'virtual:generated-pages'
 import {
   createRouter as _createRouter,
   createWebHashHistory,
 } from 'vue-router'
-import FloatingVue, { VTooltip } from 'floating-vue'
-import routes from 'virtual:generated-pages'
 import 'd3-graph-controller/default.css'
 import 'splitpanes/dist/splitpanes.css'
 import '@unocss/reset/tailwind.css'

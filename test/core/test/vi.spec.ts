@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import type { Mock, MockInstance, MockedFunction, MockedObject } from 'vitest'
+import type { Mock, MockedFunction, MockedObject, MockInstance } from 'vitest'
 import { describe, expect, expectTypeOf, test, vi } from 'vitest'
 import { getWorkerState } from '../../../packages/vitest/src/runtime/utils'
 
@@ -83,6 +83,15 @@ describe('testing vi utils', () => {
     vi.mocked(mockFactoryAsync, { partial: true, deep: true }).mockResolvedValue({
       baz: 'baz',
     })
+
+    function fetchSomething(): Promise<Response> {
+      return fetch('https://vitest.dev/')
+    };
+    if (0) {
+      // type check only
+      vi.mocked(fetchSomething).mockResolvedValue(new Response(null))
+      vi.mocked(fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+    }
   })
 
   test('vi.fn and Mock type', () => {

@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
-import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils.js'
 import * as transpiled from '../fixtures/src/pre-bundle/bundle.js'
+import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils.js'
 
 test('{ excludeAfterRemap: true } should exclude files that come up after remapping', async () => {
   await runVitest({

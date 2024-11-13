@@ -1,7 +1,8 @@
+import type { ViteDevServer } from 'vite'
 import type { ProvidedContext } from '../types/general'
+import type { Vitest } from './core'
 import type { ResolvedConfig, ResolvedProjectConfig, SerializedConfig } from './types/config'
 import type { WorkspaceProject } from './workspace'
-import type { Vitest } from './core'
 
 export class TestProject {
   /**
@@ -15,6 +16,10 @@ export class TestProject {
    */
   public readonly workspaceProject: WorkspaceProject
 
+  /**
+   * Vite's dev server instance. Every workspace project has its own server.
+   */
+  public readonly vite: ViteDevServer
   /**
    * Resolved project configuration.
    */
@@ -32,6 +37,7 @@ export class TestProject {
   constructor(workspaceProject: WorkspaceProject) {
     this.workspaceProject = workspaceProject
     this.vitest = workspaceProject.ctx
+    this.vite = workspaceProject.server
     this.globalConfig = workspaceProject.ctx.config
     this.config = workspaceProject.config
     this.name = workspaceProject.getName()

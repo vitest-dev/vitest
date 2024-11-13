@@ -1,15 +1,18 @@
-import { resolveModule } from 'local-pkg'
-import { normalize, relative, resolve } from 'pathe'
-import c from 'tinyrainbow'
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import { toArray } from '@vitest/utils'
-import { isCI, stdProvider } from '../../utils/env'
+import type { Logger } from '../logger'
+import type { BenchmarkBuiltinReporters } from '../reporters'
 import type {
   ApiConfig,
   ResolvedConfig,
   UserConfig,
   VitestRunMode,
 } from '../types/config'
+import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
+import { toArray } from '@vitest/utils'
+import { resolveModule } from 'local-pkg'
+import { normalize, relative, resolve } from 'pathe'
+import c from 'tinyrainbow'
 import {
   defaultBrowserPort,
   defaultInspectPort,
@@ -17,15 +20,12 @@ import {
   extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
+import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { VitestCache } from '../cache'
+import { builtinPools } from '../pool'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
-import type { BenchmarkBuiltinReporters } from '../reporters'
-import { builtinPools } from '../pool'
-import type { Logger } from '../logger'
-import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 
 function resolvePath(path: string, root: string) {
   return normalize(

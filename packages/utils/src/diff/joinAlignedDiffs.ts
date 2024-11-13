@@ -6,8 +6,8 @@
  */
 
 import type { Diff } from './cleanupSemantic'
-import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import type { DiffOptionsColor, DiffOptionsNormalized } from './types'
+import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 
 function formatTrailingSpaces(
   line: string,

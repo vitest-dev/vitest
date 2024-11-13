@@ -90,7 +90,7 @@ test('dynamic import throws an error', async () => {
 test('can import @vite/client', async () => {
   const name = '@vite/client'
   await expect(import(name)).resolves.not.toThrow()
-  await expect(import(`/${name}`)).resolves.not.toThrow()
+  await expect(import(/* @vite-ignore */ `/${name}`)).resolves.not.toThrow()
 })
 
 describe('importing special files from node_modules', async () => {

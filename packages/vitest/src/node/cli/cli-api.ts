@@ -1,18 +1,16 @@
-/* eslint-disable no-console */
-
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'pathe'
-import type { UserConfig as ViteUserConfig } from 'vite'
 import type { File, Suite, Task } from '@vitest/runner'
-import { getNames, getTests } from '@vitest/runner/utils'
-import { CoverageProviderMap } from '../../integrations/coverage'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
-import { createVitest } from '../create'
-import { registerConsoleShortcuts } from '../stdin'
 import type { Vitest, VitestOptions } from '../core'
-import { FilesNotFoundError, GitNotFoundError } from '../errors'
-import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import type { WorkspaceSpec } from '../pool'
+import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { getNames, getTests } from '@vitest/runner/utils'
+import { dirname, relative, resolve } from 'pathe'
+import { CoverageProviderMap } from '../../integrations/coverage'
+import { createVitest } from '../create'
+import { FilesNotFoundError, GitNotFoundError } from '../errors'
+import { registerConsoleShortcuts } from '../stdin'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -74,10 +72,6 @@ export async function startVitest(
   if (stdin.isTTY && ctx.config.watch) {
     stdinCleanup = registerConsoleShortcuts(ctx, stdin, stdout)
   }
-
-  ctx.onServerRestart((reason) => {
-    ctx.report('onServerRestart', reason)
-  })
 
   ctx.onAfterSetServer(() => {
     if (ctx.config.standalone) {

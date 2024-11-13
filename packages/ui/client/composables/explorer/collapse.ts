@@ -1,7 +1,7 @@
+import { explorerTree } from '~/composables/explorer/index'
+import { openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import type { UITaskTreeNode } from '~/composables/explorer/types'
 import { isFileNode, isParentNode } from '~/composables/explorer/utils'
-import { openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
-import { explorerTree } from '~/composables/explorer/index'
 
 /**
  * Collapse all nodes: all children collapsed.
