@@ -36,6 +36,7 @@ export async function createVitest(
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.mode || mode,
     plugins: await VitestPlugin(options, ctx),
+    test: options,
   }
 
   const server = await createViteServer(
