@@ -2369,7 +2369,7 @@ Color of truncate annotation, default is output with no color.
 - **Type**: `boolean`
 - **Default**: `true`
 
-Allows to set pretty-format option printBasicPrototype for diff output
+Print basic prototype `Object` and `Array` in diff output
 
 ### fakeTimers
 

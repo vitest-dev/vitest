@@ -639,6 +639,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
       omitAnnotationLines: {
         description: 'Omit annotation lines from the output (default: `false`)',
       },
+      printBasicPrototype: {
+        description: 'Print basic prototype Object and Array (default: `true`)',
+      },
       truncateThreshold: {
         description: 'Number of lines to show before and after each change (default: `0`)',
         argument: '<threshold>',
