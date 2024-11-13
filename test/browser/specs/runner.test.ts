@@ -101,8 +101,8 @@ log with a stack
 error with a stack
  ❯ test/logs.test.ts:59:10
     `.trim())
-    // console.trace doens't add additional stack trace
-    expect(stderr).not.toMatch('test/logs.test.ts:60:10')
+    // console.trace processes the stack trace correctly
+    expect(stderr).toMatch('test/logs.test.ts:60:10')
   })
 
   test.runIf(browser === 'webkit')(`logs have stack traces in safari`, () => {
@@ -115,16 +115,21 @@ log with a stack
 error with a stack
  ❯ test/logs.test.ts:59:16
     `.trim())
-    // console.trace doens't add additional stack trace
-    expect(stderr).not.toMatch('test/logs.test.ts:60:16')
+    // console.trace processes the stack trace correctly
+    expect(stderr).toMatch('test/logs.test.ts:60:16')
   })
 
   test(`stack trace points to correct file in every browser`, () => {
     // dependeing on the browser it references either `.toBe()` or `expect()`
-    expect(stderr).toMatch(/test\/failing.test.ts:5:(12|17)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:10:(12|17)/)
 
     // column is 18 in safari, 8 in others
     expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
+
+    expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.')
+    expect(stderr).toMatch(/test\/failing.test.ts:18:(27|36)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|33)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|39)/)
   })
 
   test('popup apis should log a warning', () => {

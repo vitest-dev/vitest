@@ -22,7 +22,7 @@ import {
   subsetEquality,
   typeEquality,
 } from './jest-utils'
-import { recordAsyncExpect, wrapAssertion } from './utils'
+import { createAssertionMessage, recordAsyncExpect, wrapAssertion } from './utils'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -983,6 +983,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           }
 
           return (...args: any[]) => {
+            utils.flag(this, '_name', key)
             const promise = obj.then(
               (value: any) => {
                 utils.flag(this, 'object', value)
@@ -1004,7 +1005,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               },
             )
 
-            return recordAsyncExpect(test, promise)
+            return recordAsyncExpect(
+              test,
+              promise,
+              createAssertionMessage(utils, this, !!args.length),
+              error,
+            )
           }
         },
       })
@@ -1045,6 +1051,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           }
 
           return (...args: any[]) => {
+            utils.flag(this, '_name', key)
             const promise = wrapper.then(
               (value: any) => {
                 const _error = new AssertionError(
@@ -1069,7 +1076,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               },
             )
 
-            return recordAsyncExpect(test, promise)
+            return recordAsyncExpect(
+              test,
+              promise,
+              createAssertionMessage(utils, this, !!args.length),
+              error,
+            )
           }
         },
       })
