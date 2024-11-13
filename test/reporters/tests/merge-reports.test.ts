@@ -88,13 +88,13 @@ test('merge reports', async () => {
     beforeEach
     test 1-2
 
-     ❯ first.test.ts  (2 tests | 1 failed) <time>
+     ❯ first.test.ts (2 tests | 1 failed) <time>
        × test 1-2 <time>
          → expected 1 to be 2 // Object.is equality
     stdout | second.test.ts > test 2-1
     test 2-1
 
-     ❯ second.test.ts  (3 tests | 1 failed) <time>
+     ❯ second.test.ts (3 tests | 1 failed) <time>
        × test 2-1 <time>
          → expected 1 to be 2 // Object.is equality
 

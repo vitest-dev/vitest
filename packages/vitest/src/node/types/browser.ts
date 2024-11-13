@@ -194,6 +194,7 @@ export interface BrowserServerStateContext {
 export interface BrowserOrchestrator {
   createTesters: (files: string[]) => Promise<void>
   onCancel: (reason: CancelReason) => Promise<void>
+  $close: () => void
 }
 
 export interface BrowserServerState {

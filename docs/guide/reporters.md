@@ -263,7 +263,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Outputs a report of the test results in JSON format. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/#outputfile) configuration option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/#outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -322,9 +322,14 @@ Example of a JSON report:
       "message": "",
       "name": "/root-directory/__tests__/test-file-1.test.ts"
     }
-  ]
+  ],
+  "coverageMap": {}
 }
 ```
+
+::: info
+Since Vitest 2.2, the JSON reporter includes coverage information in `coverageMap` if coverage is enabled.
+:::
 
 ### HTML Reporter
 

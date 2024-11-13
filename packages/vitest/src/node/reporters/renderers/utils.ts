@@ -254,6 +254,12 @@ export function formatProjectName(name: string | undefined, suffix = ' ') {
   const index = name
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+
   const colors = [c.blue, c.yellow, c.cyan, c.green, c.magenta]
+
   return colors[index % colors.length](`|${name}|`) + suffix
+}
+
+export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan', label: string, message: string) {
+  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${c[color](message)}`
 }

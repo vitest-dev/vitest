@@ -147,6 +147,8 @@ export interface TaskResult {
    * `repeats` option is set. This number also contains `retryCount`.
    */
   repeatCount?: number
+  /** @private */
+  note?: string
 }
 
 /**
@@ -611,7 +613,7 @@ export interface TaskContext<Task extends Custom | Test = Custom | Test> {
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
    */
-  skip: () => void
+  skip: (note?: string) => void
 }
 
 export type ExtendedContext<T extends Custom | Test> = TaskContext<T> &

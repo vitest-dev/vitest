@@ -176,8 +176,60 @@ const test = base.extend({
   ],
 })
 
-test('', () => {})
+test('works correctly')
 ```
+
+#### Default fixture
+
+Since Vitest 2.2, you can provide different values in different [projects](/guide/workspace). To enable this feature, pass down `{ injected: true }` to the options. If the key is not specified in the [project configuration](/config/#provide), then the default value will be used.
+
+:::code-group
+```ts [fixtures.test.ts]
+import { test as base } from 'vitest'
+
+const test = base.extend({
+  url: [
+    // default value if "url" is not defined in the config
+    'default',
+    // mark the fixure as "injected" to allow the override
+    { injected: true },
+  ],
+})
+
+test('works correctly', ({ url }) => {
+  // url is "/default" in "project-new"
+  // url is "/full" in "project-full"
+  // url is "/empty" in "project-empty"
+})
+```
+```ts [vitest.workspace.ts]
+import { defineWorkspace } from 'vitest/config'
+
+export default defineWorkspace([
+  {
+    test: {
+      name: 'project-new',
+    },
+  },
+  {
+    test: {
+      name: 'project-full',
+      provide: {
+        url: '/full',
+      },
+    },
+  },
+  {
+    test: {
+      name: 'project-empty',
+      provide: {
+        url: '/empty',
+      },
+    },
+  },
+])
+```
+:::
 
 #### TypeScript
 
@@ -194,7 +246,7 @@ const myTest = test.extend<MyFixtures>({
   archive: []
 })
 
-myTest('', (context) => {
+myTest('types are defined correctly', (context) => {
   expectTypeOf(context.todos).toEqualTypeOf<number[]>()
   expectTypeOf(context.archive).toEqualTypeOf<number[]>()
 })
