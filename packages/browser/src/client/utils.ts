@@ -36,7 +36,7 @@ export function ensureAwaited<T>(promise: () => Promise<T>): Promise<T> {
   test.onFinished.push(() => {
     if (!awaited) {
       const error = new Error(
-        `The call was not awaited. This method is asynchronous and must be awaited.`,
+        `The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.`,
       )
       error.stack = sourceError.stack?.replace(sourceError.message, error.message)
       throw error
