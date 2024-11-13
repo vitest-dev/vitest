@@ -1,13 +1,13 @@
-import { resolve } from 'pathe'
 import type { SourceMapInput } from '@jridgewell/trace-mapping'
-import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import type { ErrorWithDiff, ParsedStack } from './types'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
+import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
 
 export {
-  TraceMap,
-  originalPositionFor,
   generatedPositionFor,
+  originalPositionFor,
+  TraceMap,
 } from '@jridgewell/trace-mapping'
 export type { SourceMapInput } from '@jridgewell/trace-mapping'
 

@@ -17,7 +17,7 @@ When you run Vitest it reports multiple time metrics of your tests:
 
 - Transform: How much time was spent transforming the files. See [File Transform](#file-transform).
 - Setup: Time spent for running the [`setupFiles`](/config/#setupfiles) files.
-- Collect: Time spent for colleting all tests in the test files. This includes the time it took to import all file dependencies.
+- Collect: Time spent for collecting all tests in the test files. This includes the time it took to import all file dependencies.
 - Tests: Time spent for actually running the test cases.
 - Environment: Time spent for setting up the test [`environment`](/config/#environment), for example JSDOM.
 - Prepare: Time Vitest uses to prepare the test runner.

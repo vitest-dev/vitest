@@ -1,13 +1,14 @@
-import { existsSync, promises as fs } from 'node:fs'
-import { isMainThread } from 'node:worker_threads'
-import { dirname, relative, resolve } from 'pathe'
-import fg from 'fast-glob'
-import { mergeConfig } from 'vite'
 import type { Vitest } from '../core'
 import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
 import type { WorkspaceProject } from '../workspace'
-import { initializeProject } from '../workspace'
+import { existsSync, promises as fs } from 'node:fs'
+import os from 'node:os'
+import { limitConcurrency } from '@vitest/runner/utils'
+import fg from 'fast-glob'
+import { relative, resolve } from 'pathe'
+import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { initializeProject } from '../workspace'
 import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
@@ -49,63 +50,40 @@ export async function resolveWorkspace(
     return acc
   }, {} as UserConfig)
 
-  const cwd = process.cwd()
-
-  const projects: WorkspaceProject[] = []
-  const fileProjects = [...configFiles, ...nonConfigDirectories]
-
-  try {
-    // we have to resolve them one by one because CWD should depend on the project
-    for (const filepath of fileProjects) {
-      // if file leads to the root config, then we can just reuse it because we already initialized it
-      if (vitest.server.config.configFile === filepath) {
-        const project = await vitest._createCoreProject()
-        projects.push(project)
-        continue
-      }
-
-      const directory = filepath.endsWith('/')
-        ? filepath.slice(0, -1)
-        : dirname(filepath)
-
-      if (isMainThread) {
-        process.chdir(directory)
-      }
-      projects.push(
-        await initializeProject(
-          filepath,
-          vitest,
-          { workspaceConfigPath, test: cliOverrides },
-        ),
-      )
-    }
-  }
-  finally {
-    if (isMainThread) {
-      process.chdir(cwd)
-    }
-  }
-
   const projectPromises: Promise<WorkspaceProject>[] = []
+  const fileProjects = [...configFiles, ...nonConfigDirectories]
+  const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
+
+  for (const filepath of fileProjects) {
+    // if file leads to the root config, then we can just reuse it because we already initialized it
+    if (vitest.server.config.configFile === filepath) {
+      projectPromises.push(concurrent(() => vitest._createCoreProject()))
+      continue
+    }
+
+    projectPromises.push(
+      concurrent(() => initializeProject(
+        filepath,
+        vitest,
+        { workspaceConfigPath, test: cliOverrides },
+      )),
+    )
+  }
 
   projectConfigs.forEach((options, index) => {
-    // we can resolve these in parallel because process.cwd() is not changed
-    projectPromises.push(initializeProject(
+    projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
       mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any,
-    ))
+    )))
   })
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
-  if (!projects.length && !projectPromises.length) {
+  if (!projectPromises.length) {
     return [await vitest._createCoreProject()]
   }
 
-  const resolvedProjects = await Promise.all([
-    ...projects,
-    ...projectPromises,
-  ])
+  const resolvedProjects = await Promise.all(projectPromises)
   const names = new Set<string>()
 
   // project names are guaranteed to be unique

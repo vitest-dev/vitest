@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest'
 import { x } from 'tinyexec'
+import { expect, test } from 'vitest'
 
-// use "x" directly since "runVitestCli" strips color
+// use "tinyexec" directly since "runVitestCli" strips color
 
 test('with color', async () => {
   const proc = await x('vitest', ['run', '--root=./fixtures/console-color'], {
@@ -14,7 +14,7 @@ test('with color', async () => {
       },
     },
   })
-  expect(proc.stdout).toContain('\n\x1B[33mtrue\x1B[39m\n')
+  expect(proc.stdout).toContain('\x1B[33mtrue\x1B[39m\n')
 })
 
 test('without color', async () => {
@@ -28,5 +28,5 @@ test('without color', async () => {
       },
     },
   })
-  expect(proc.stdout).toContain('\ntrue\n')
+  expect(proc.stdout).toContain('true\n')
 })

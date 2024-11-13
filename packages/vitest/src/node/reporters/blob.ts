@@ -1,12 +1,12 @@
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import type { File } from '@vitest/runner'
+import type { Vitest } from '../core'
+import type { Reporter } from '../types/reporter'
+import type { WorkspaceProject } from '../workspace'
 import { existsSync } from 'node:fs'
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
 import { dirname, resolve } from 'pathe'
-import type { File } from '@vitest/runner'
 import { getOutputFile } from '../../utils/config-helpers'
-import type { WorkspaceProject } from '../workspace'
-import type { Reporter } from '../types/reporter'
-import type { Vitest } from '../core'
 
 export interface BlobOptions {
   outputFile?: string

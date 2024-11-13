@@ -1,9 +1,9 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
-import { describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
+import { describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 

@@ -1,7 +1,7 @@
-import fs from 'node:fs'
 import type { Stats } from 'node:fs'
-import { relative } from 'pathe'
 import type { WorkspaceSpec } from '../pool'
+import fs from 'node:fs'
+import { relative } from 'pathe'
 
 type FileStatsCache = Pick<Stats, 'size'>
 

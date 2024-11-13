@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import { resolve } from 'pathe'
+import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test('should print function name', async () => {

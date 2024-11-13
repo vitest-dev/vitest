@@ -31,6 +31,9 @@ test('cwd is resolved correctly', () => {
 
   expect(process.env.ROOT_CWD_CONFIG).toBe(rootPath)
   expect(process.env.ROOT_CWD_SERVER).toBe(rootPath)
-  expect(process.env.SPACE_2_CWD_CONFIG).toBe(spaceRoot)
-  expect(process.env.SPACE_2_CWD_SERVER).toBe(spaceRoot)
+
+  // ideally, it should be a `spaceRoot`, but support was reverted
+  // in https://github.com/vitest-dev/vitest/pull/6811
+  expect(process.env.SPACE_2_CWD_CONFIG).toBe(rootPath)
+  expect(process.env.SPACE_2_CWD_SERVER).toBe(rootPath)
 })

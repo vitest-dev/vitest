@@ -1,39 +1,39 @@
-import { existsSync, promises as fs } from 'node:fs'
+import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
-import { dirname, join, normalize, relative } from 'pathe'
-import mm from 'micromatch'
-import { ViteNodeRunner } from 'vite-node/client'
-import { SnapshotManager } from '@vitest/snapshot/manager'
-import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
-import { ViteNodeServer } from 'vite-node/server'
 import type { defineWorkspace } from 'vitest/config'
-import { noop, slash, toArray } from '@vitest/utils'
-import { getTasks, hasFailed } from '@vitest/runner/utils'
-import { version } from '../../package.json' with { type: 'json' }
-import { getCoverageProvider } from '../integrations/coverage'
-import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
-import { WebSocketReporter } from '../api/setup'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
+import type { ProcessPool, WorkspaceSpec } from './pool'
+import type { TestSpecification } from './spec'
+import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
+import type { CoverageProvider } from './types/coverage'
+import type { Reporter } from './types/reporter'
+import { existsSync, promises as fs } from 'node:fs'
+import { getTasks, hasFailed } from '@vitest/runner/utils'
+import { SnapshotManager } from '@vitest/snapshot/manager'
+import { noop, slash, toArray } from '@vitest/utils'
+import mm from 'micromatch'
+import { dirname, join, normalize, relative } from 'pathe'
+import { ViteNodeRunner } from 'vite-node/client'
+import { ViteNodeServer } from 'vite-node/server'
+import { version } from '../../package.json' with { type: 'json' }
+import { WebSocketReporter } from '../api/setup'
+import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
+import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
-import type { ProcessPool, WorkspaceSpec } from './pool'
+import { VitestCache } from './cache'
+import { resolveConfig } from './config/resolveConfig'
+import { FilesNotFoundError, GitNotFoundError } from './errors'
+import { Logger } from './logger'
+import { VitestPackageInstaller } from './packageInstaller'
 import { createPool, getFilePoolName } from './pool'
+import { BlobReporter, readBlobs } from './reporters/blob'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
-import { resolveConfig } from './config/resolveConfig'
-import { Logger } from './logger'
-import { VitestCache } from './cache'
 import { WorkspaceProject } from './workspace'
-import { VitestPackageInstaller } from './packageInstaller'
-import { BlobReporter, readBlobs } from './reporters/blob'
-import { FilesNotFoundError, GitNotFoundError } from './errors'
-import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
-import type { Reporter } from './types/reporter'
-import type { CoverageProvider } from './types/coverage'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
-import type { TestSpecification } from './spec'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -83,6 +83,7 @@ export class Vitest {
   public distPath = distDir
 
   private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
+  private _workspaceConfigPath?: string
 
   /** @deprecated use `_cachedSpecs` */
   projectTestFiles = this._cachedSpecs
@@ -110,6 +111,10 @@ export class Vitest {
     this._browserLastPort = defaultBrowserPort
     this.pool?.close?.()
     this.pool = undefined
+    this.closingPromise = undefined
+    this.projects = []
+    this.resolvedProjects = []
+    this._workspaceConfigPath = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
     this._cachedSpecs.clear()
@@ -145,22 +150,22 @@ export class Vitest {
       const serverRestart = server.restart
       server.restart = async (...args) => {
         await Promise.all(this._onRestartListeners.map(fn => fn()))
+        this.report('onServerRestart')
+        await this.close()
         await serverRestart(...args)
-        // watcher is recreated on restart
-        this.unregisterWatcher()
-        this.registerWatcher()
       }
 
       // since we set `server.hmr: false`, Vite does not auto restart itself
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
+          || this.resolvedProjects.some(p => p.server.config.configFile === file)
+          || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
+          this.report('onServerRestart', 'config')
+          await this.close()
           await serverRestart()
-          // watcher is recreated on restart
-          this.unregisterWatcher()
-          this.registerWatcher()
         }
       })
     }
@@ -174,8 +179,6 @@ export class Vitest {
       await this.cache.results.readFromCache()
     }
     catch { }
-
-    await Promise.all(this._onSetServer.map(fn => fn()))
 
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
@@ -193,6 +196,8 @@ export class Vitest {
     if (this.config.testNamePattern) {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
+
+    await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
   public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
@@ -235,7 +240,7 @@ export class Vitest {
       || this.projects[0]
   }
 
-  private async getWorkspaceConfigPath(): Promise<string | null> {
+  private async getWorkspaceConfigPath(): Promise<string | undefined> {
     if (this.config.workspace) {
       return this.config.workspace
     }
@@ -251,7 +256,7 @@ export class Vitest {
     })
 
     if (!workspaceConfigName) {
-      return null
+      return undefined
     }
 
     return join(configDir, workspaceConfigName)
@@ -259,6 +264,8 @@ export class Vitest {
 
   private async resolveWorkspace(cliOptions: UserConfig) {
     const workspaceConfigPath = await this.getWorkspaceConfigPath()
+
+    this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
       return [await this._createCoreProject()]
@@ -352,6 +359,7 @@ export class Vitest {
       process.exitCode = 1
     }
 
+    this.checkUnhandledErrors(errors)
     await this.report('onFinished', files, errors)
     await this.initCoverageProvider()
     await this.coverageProvider?.mergeReports?.(coverages)
@@ -613,9 +621,11 @@ export class Vitest {
       .finally(async () => {
         // can be duplicate files if different projects are using the same file
         const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
+        const errors = this.state.getUnhandledErrors()
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
-        await this.report('onFinished', this.state.getFiles(files), this.state.getUnhandledErrors(), coverage)
+        this.checkUnhandledErrors(errors)
+        await this.report('onFinished', this.state.getFiles(files), errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
 
         this.runningPromise = undefined
@@ -682,14 +692,14 @@ export class Vitest {
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string) {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
     await this.report('onWatcherRerun', files, trigger)
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), !trigger)
+    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
@@ -702,7 +712,7 @@ export class Vitest {
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
-    await this.rerunFiles(files, 'change project filter')
+    await this.rerunFiles(files, 'change project filter', pattern === '')
   }
 
   async changeNamePattern(pattern: string, files: string[] = this.state.getFilepaths(), trigger?: string) {
@@ -723,7 +733,7 @@ export class Vitest {
         })
       })
     }
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
@@ -731,11 +741,11 @@ export class Vitest {
 
     const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
 
-    await this.rerunFiles(files, trigger)
+    await this.rerunFiles(files, trigger, pattern === '')
   }
 
   async rerunFailed() {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed')
+    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
   }
 
   async updateSnapshot(files?: string[]) {
@@ -752,7 +762,7 @@ export class Vitest {
     }
 
     try {
-      await this.rerunFiles(files, 'update snapshot')
+      await this.rerunFiles(files, 'update snapshot', false)
     }
     finally {
       delete this.configOverride.snapshotOptions
@@ -893,6 +903,12 @@ export class Vitest {
       if (needsRerun.length) {
         this.scheduleRerun(needsRerun)
       }
+    }
+  }
+
+  checkUnhandledErrors(errors: unknown[]) {
+    if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
+      process.exitCode = 1
     }
   }
 

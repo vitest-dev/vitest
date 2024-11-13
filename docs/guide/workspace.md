@@ -10,11 +10,11 @@ title: Workspace | Guide
 
 :::
 
-Vitest provides built-in support for monorepos through a workspace configuration file. You can create a workspace to define your project's setups.
+Vitest provides a way to define multiple project configurations within a single Vitest process. This feature is particularly useful for monorepo setups but can also be used to run tests with different configurations, such as `resolve.alias`, `plugins`, or `test.browser` and more.
 
 ## Defining a Workspace
 
-A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file, if applicable). Vitest supports `ts`, `js`, and `json` extensions for this file.
+A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file or working directory if it doesn't exist). Vitest supports `ts`, `js`, and `json` extensions for this file.
 
 ::: tip NAMING
 Please note that this feature is named `workspace`, not `workspaces` (without an "s" at the end).
@@ -80,7 +80,7 @@ export default defineWorkspace([
 :::
 
 ::: warning
-All projects must have unique names; otherwise, Vitest will throw an error. If a name is not provided in the inline configuration, Vitest will assign a number. For project configurations defined with glob syntax, Vitest will default to using the "name" property in the nearest `package.json` file or the folder name if no such file exists.
+All projects must have unique names; otherwise, Vitest will throw an error. If a name is not provided in the inline configuration, Vitest will assign a number. For project configurations defined with glob syntax, Vitest will default to using the "name" property in the nearest `package.json` file or, if none exists, the folder name.
 :::
 
 If you do not use inline configurations, you can create a small JSON file in your root directory:

@@ -5,13 +5,13 @@ import { hideAllPoppers } from 'floating-vue'
 // @ts-expect-error missing types
 import { RecycleScroller } from 'vue-virtual-scroller'
 
-import { activeFileId } from '~/composables/params'
+import { config } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
 
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-import { config } from '~/composables/client'
-
 import { panels } from '~/composables/navigation'
+import { activeFileId } from '~/composables/params'
+
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 defineOptions({ inheritAttrs: false })
 

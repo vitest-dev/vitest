@@ -1,8 +1,8 @@
+import type { Procedure } from './types'
 import {
   MessageChannel,
   type MessagePort as NodeMessagePort,
 } from 'node:worker_threads'
-import type { Procedure } from './types'
 import { InlineWorkerRunner } from './runner'
 import { debug, getFileIdFromUrl, getRunnerOptions } from './utils'
 

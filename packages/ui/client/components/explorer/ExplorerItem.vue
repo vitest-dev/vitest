@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import type { Task, TaskState } from '@vitest/runner'
-import { nextTick } from 'vue'
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { Tooltip as VueTooltip } from 'floating-vue'
+import { nextTick } from 'vue'
 import { client, isReport, runFiles } from '~/composables/client'
-import { coverageEnabled } from '~/composables/navigation'
-import type { TaskTreeNodeType } from '~/composables/explorer/types'
+import { showSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
-import { showSource } from '~/composables/codemirror'
+import type { TaskTreeNodeType } from '~/composables/explorer/types'
+import { coverageEnabled } from '~/composables/navigation'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {

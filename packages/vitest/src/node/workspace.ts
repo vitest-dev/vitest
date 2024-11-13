@@ -1,6 +1,26 @@
+import type {
+  TransformResult,
+  ViteDevServer,
+  InlineConfig as ViteInlineConfig,
+} from 'vite'
+import type { Typechecker } from '../typecheck/typechecker'
+import type { ProvidedContext } from '../types/general'
+import type { Vitest } from './core'
+import type { GlobalSetupFile } from './globalSetup'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
+import type { BrowserServer } from './types/browser'
+import type {
+  ResolvedConfig,
+  SerializedConfig,
+  UserConfig,
+  UserWorkspaceConfig,
+} from './types/config'
 import { promises as fs } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { deepMerge, nanoid, slash } from '@vitest/utils'
+import fg from 'fast-glob'
 import mm from 'micromatch'
 import {
   dirname,
@@ -8,39 +28,19 @@ import {
   join,
   relative,
   resolve,
-  toNamespacedPath,
 } from 'pathe'
-import type {
-  TransformResult,
-  ViteDevServer,
-  InlineConfig as ViteInlineConfig,
-} from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
-import fg from 'fast-glob'
-import { deepMerge, nanoid } from '@vitest/utils'
-import type { Typechecker } from '../typecheck/typechecker'
 import { setup } from '../api/setup'
-import type { ProvidedContext } from '../types/general'
-import type {
-  ResolvedConfig,
-  SerializedConfig,
-  UserConfig,
-  UserWorkspaceConfig,
-} from './types/config'
-import type { BrowserServer } from './types/browser'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
-import { WorkspaceVitestPlugin } from './plugins/workspace'
-import { createViteServer } from './vite'
-import type { GlobalSetupFile } from './globalSetup'
-import { loadGlobalSetupFiles } from './globalSetup'
-import { MocksPlugins } from './plugins/mocks'
-import { CoverageTransform } from './plugins/coverageTransform'
 import { serializeConfig } from './config/serializeConfig'
-import type { Vitest } from './core'
+import { loadGlobalSetupFiles } from './globalSetup'
+import { CoverageTransform } from './plugins/coverageTransform'
+import { MocksPlugins } from './plugins/mocks'
+import { WorkspaceVitestPlugin } from './plugins/workspace'
 import { TestProject } from './reported-workspace-project'
 import { TestSpecification } from './spec'
-import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
+import { createViteServer } from './vite'
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   workspaceConfigPath: string
@@ -302,7 +302,10 @@ export class WorkspaceProject {
     }
 
     const files = await fg(include, globOptions)
-    return files.map(file => resolve(cwd, file))
+    // keep the slashes consistent with Vite
+    // we are not using the pathe here because it normalizes the drive letter on Windows
+    // and we want to keep it the same as working dir
+    return files.map(file => slash(path.resolve(cwd, file)))
   }
 
   async isTargetFile(id: string, source?: string): Promise<boolean> {
@@ -329,7 +332,7 @@ export class WorkspaceProject {
 
   filterFiles(testFiles: string[], filters: string[], dir: string) {
     if (filters.length && process.platform === 'win32') {
-      filters = filters.map(f => toNamespacedPath(f))
+      filters = filters.map(f => slash(f))
     }
 
     if (filters.length) {
@@ -360,12 +363,21 @@ export class WorkspaceProject {
       return
     }
     await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
-    const { createBrowserServer } = await import('@vitest/browser')
+    const { createBrowserServer, distRoot } = await import('@vitest/browser')
     await this.browser?.close()
     const browser = await createBrowserServer(
       this,
       configFile,
-      [...MocksPlugins()],
+      [
+        ...MocksPlugins({
+          filter(id) {
+            if (id.includes(distRoot)) {
+              return false
+            }
+            return true
+          },
+        }),
+      ],
       [CoverageTransform(this.ctx)],
     )
     this.browser = browser
@@ -420,6 +432,7 @@ export class WorkspaceProject {
       )
     }
 
+    this.closingPromise = undefined
     this.testProject = new TestProject(this)
 
     this.server = server
@@ -464,7 +477,7 @@ export class WorkspaceProject {
     if (!this.closingPromise) {
       this.closingPromise = Promise.all(
         [
-          this.server.close(),
+          this.server?.close(),
           this.typechecker?.stop(),
           this.browser?.close(),
           this.clearTmpDir(),

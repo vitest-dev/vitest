@@ -1,5 +1,5 @@
-import { type Arrayable, toArray } from '@vitest/utils'
 import type { Custom, Suite, Task, Test } from '../types/tasks'
+import { type Arrayable, toArray } from '@vitest/utils'
 
 export function isAtomTest(s: Task): s is Test | Custom {
   return s.type === 'test' || s.type === 'custom'

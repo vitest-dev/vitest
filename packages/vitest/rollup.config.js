@@ -1,16 +1,16 @@
 import fs from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, normalize, resolve } from 'pathe'
-import esbuild from 'rollup-plugin-esbuild'
-import dts from 'rollup-plugin-dts'
-import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import license from 'rollup-plugin-license'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import fg from 'fast-glob'
-import c from 'tinyrainbow'
+import { dirname, join, normalize, resolve } from 'pathe'
 import { defineConfig } from 'rollup'
+import dts from 'rollup-plugin-dts'
+import esbuild from 'rollup-plugin-esbuild'
+import license from 'rollup-plugin-license'
+import c from 'tinyrainbow'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')

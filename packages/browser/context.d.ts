@@ -60,6 +60,12 @@ export interface UserEvent {
    */
   setup: () => UserEvent
   /**
+   * Cleans up the user event instance, releasing any resources or state it holds,
+   * such as keyboard press state. For the default `userEvent` instance, this method
+   * is automatically called after each test case.
+   */
+  cleanup: () => Promise<void>
+  /**
    * Click on an element. Uses provider's API under the hood and supports all its options.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API
    * @see {@link https://webdriver.io/docs/api/element/click/} WebdriverIO API
