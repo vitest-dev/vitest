@@ -1,5 +1,5 @@
 import type { ErrorWithDiff } from 'vitest'
-import type { BrowserCommandContext } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { BrowserServer } from './server'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
@@ -90,7 +90,9 @@ export function setupBrowserRpc(server: BrowserServer) {
           return ctx.report('onUserConsoleLog', log)
         },
         resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath(testPath)
+          return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+            config: project.getSerializableConfig(),
+          })
         },
         resolveSnapshotRawPath(testPath, rawPath) {
           return ctx.snapshot.resolveRawPath(testPath, rawPath)

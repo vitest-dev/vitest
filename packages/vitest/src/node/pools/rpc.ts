@@ -1,5 +1,6 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
+import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import type { WorkspaceProject } from '../workspace'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'pathe'
@@ -20,7 +21,9 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       ctx.snapshot.add(snapshot)
     },
     resolveSnapshotPath(testPath: string) {
-      return ctx.snapshot.resolvePath(testPath)
+      return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+        config: project.getSerializableConfig(),
+      })
     },
     async getSourceMap(id, force) {
       if (force) {

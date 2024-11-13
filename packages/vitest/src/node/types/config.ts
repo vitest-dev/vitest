@@ -6,6 +6,7 @@ import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
+import type { SerializedConfig } from '../../runtime/config'
 import type { EnvironmentOptions } from '../../types/environment'
 import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
@@ -224,6 +225,14 @@ type ReporterWithOptions<Name extends ReporterName = ReporterName> =
       ? [Name, object]
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
+
+export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
+
+export type ResolveSnapshotPathHandler = (
+  testPath: string,
+  snapExtension: string,
+  context: ResolveSnapshotPathHandlerContext
+) => string
 
 export interface InlineConfig {
   /**
@@ -574,7 +583,7 @@ export interface InlineConfig {
   /**
    * Resolve custom snapshot path
    */
-  resolveSnapshotPath?: (path: string, extension: string) => string
+  resolveSnapshotPath?: ResolveSnapshotPathHandler
 
   /**
    * Path to a custom snapshot environment module that has a default export of `SnapshotEnvironment` object.

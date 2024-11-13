@@ -1899,7 +1899,7 @@ A list of paths to snapshot serializer modules for snapshot testing, useful if y
 
 ### resolveSnapshotPath<NonProjectOption />
 
-- **Type**: `(testPath: string, snapExtension: string) => string`
+- **Type**: `(testPath: string, snapExtension: string, context: { config: SerializedConfig }) => string`
 - **Default**: stores snapshot files in `__snapshots__` directory
 
 Overrides default snapshot path. For example, to store snapshots next to test files:
