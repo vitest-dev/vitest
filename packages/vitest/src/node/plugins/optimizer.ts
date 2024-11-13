@@ -20,7 +20,7 @@ export function VitestOptimizer(): Plugin {
         )
 
         viteConfig.cacheDir
-          = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
+          = viteConfig.cacheDir || webOptimizer.cacheDir || ssrOptimizer.cacheDir
         viteConfig.optimizeDeps = webOptimizer.optimizeDeps
         viteConfig.ssr ??= {}
         viteConfig.ssr.optimizeDeps = ssrOptimizer.optimizeDeps
