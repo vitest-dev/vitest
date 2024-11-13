@@ -599,9 +599,58 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   diff: {
     description:
-      'Path to a diff config that will be used to generate diff interface',
+      'DiffOptions object or a path to a module which exports DiffOptions object',
     argument: '<path>',
-    normalize: true,
+    subcommands: {
+      aAnnotation: {
+        description: 'Annotation for expected lines (default: `Expected`)',
+        argument: '<annotation>',
+      },
+      aIndicator: {
+        description: 'Indicator for expected lines (default: `-`)',
+        argument: '<indicator>',
+      },
+      bAnnotation: {
+        description: 'Annotation for received lines (default: `Received`)',
+        argument: '<annotation>',
+      },
+      bIndicator: {
+        description: 'Indicator for received lines (default: `+`)',
+        argument: '<indicator>',
+      },
+      commonIndicator: {
+        description: 'Indicator for common lines (default: ` `)',
+        argument: '<indicator>',
+      },
+      contextLines: {
+        description: 'Number of lines of context to show around each change (default: `5`)',
+        argument: '<lines>',
+      },
+      emptyFirstOrLastLinePlaceholder: {
+        description: 'Placeholder for an empty first or last line (default: `""`)',
+        argument: '<placeholder>',
+      },
+      expand: {
+        description: 'Expand all common lines (default: `true`)',
+      },
+      includeChangeCounts: {
+        description: 'Include comparison counts in diff output (default: `false`)',
+      },
+      omitAnnotationLines: {
+        description: 'Omit annotation lines from the output (default: `false`)',
+      },
+      printBasicPrototype: {
+        description: 'Print basic prototype Object and Array (default: `true`)',
+      },
+      truncateThreshold: {
+        description: 'Number of lines to show before and after each change (default: `0`)',
+        argument: '<threshold>',
+      },
+      truncateAnnotation: {
+        description: 'Annotation for truncated lines (default: `... Diff result is truncated`)',
+        argument: '<annotation>',
+      },
+    },
   },
   exclude: {
     description: 'Additional file globs to be excluded from test',
