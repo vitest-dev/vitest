@@ -636,6 +636,15 @@ export interface Assertion<T = any>
   toHaveBeenCalledOnce: () => void
 
   /**
+   * Ensure that a mock function is called with specific arguments and called
+   * exactly once.
+   *
+   * @example
+   * expect(mockFunc).toHaveBeenCalledExactlyOnceWith('arg1', 42);
+   */
+  toHaveBeenCalledExactlyOnceWith: <E extends any[]>(...args: E) => void
+
+  /**
    * Checks that a value satisfies a custom matcher function.
    *
    * @param matcher - A function returning a boolean based on the custom condition

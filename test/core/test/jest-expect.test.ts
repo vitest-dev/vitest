@@ -634,6 +634,70 @@ describe('toHaveBeenCalledWith', () => {
   })
 })
 
+describe('toHaveBeenCalledExactlyOnceWith', () => {
+  describe('negated', () => {
+    it('fails if called', () => {
+      const mock = vi.fn()
+      mock(3)
+
+      expect(() => {
+        expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+      }).toThrow(/^expected "spy" to not be called once with arguments: \[ 3 \][^e]/)
+    })
+
+    it('passes if called multiple times with args', () => {
+      const mock = vi.fn()
+      mock(3)
+      mock(3)
+
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+
+    it('passes if not called', () => {
+      const mock = vi.fn()
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+
+    it('passes if called with a different argument', () => {
+      const mock = vi.fn()
+      mock(4)
+
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+  })
+
+  it('fails if not called or called too many times', () => {
+    const mock = vi.fn()
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+
+    mock(3)
+    mock(3)
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+  })
+
+  it('fails if called with wrong args', () => {
+    const mock = vi.fn()
+    mock(4)
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+  })
+
+  it('passes if called exactly once with args', () => {
+    const mock = vi.fn()
+    mock(3)
+
+    expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+  })
+})
+
 describe('async expect', () => {
   it('resolves', async () => {
     await expect((async () => 'true')()).resolves.toBe('true')
