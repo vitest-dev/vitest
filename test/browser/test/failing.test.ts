@@ -14,12 +14,8 @@ it('correctly print error in another file', () => {
   throwError()
 })
 
-it('locator method is not awaited', () => {
-  page.getByRole('button').click()
-})
-
-it('several locator methods are not awaited', async () => {
+it('several locator methods are not awaited', () => {
   page.getByRole('button').dblClick()
-  page.getByRole('button').tripleClick()
   page.getByRole('button').click()
+  page.getByRole('button').tripleClick()
 })

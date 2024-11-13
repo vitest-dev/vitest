@@ -58,28 +58,28 @@ class PreviewLocator extends Locator {
   }
 
   click(): Promise<void> {
-    return ensureAwaited(userEvent.click(this.element()))
+    return ensureAwaited(() => userEvent.click(this.element()))
   }
 
   dblClick(): Promise<void> {
-    return ensureAwaited(userEvent.dblClick(this.element()))
+    return ensureAwaited(() => userEvent.dblClick(this.element()))
   }
 
   tripleClick(): Promise<void> {
-    return ensureAwaited(userEvent.tripleClick(this.element()))
+    return ensureAwaited(() => userEvent.tripleClick(this.element()))
   }
 
   hover(): Promise<void> {
-    return ensureAwaited(userEvent.hover(this.element()))
+    return ensureAwaited(() => userEvent.hover(this.element()))
   }
 
   unhover(): Promise<void> {
-    return ensureAwaited(userEvent.unhover(this.element()))
+    return ensureAwaited(() => userEvent.unhover(this.element()))
   }
 
   async fill(text: string): Promise<void> {
     await this.clear()
-    return ensureAwaited(userEvent.type(this.element(), text))
+    return ensureAwaited(() => userEvent.type(this.element(), text))
   }
 
   async upload(file: string | string[] | File | File[]): Promise<void> {
@@ -100,7 +100,7 @@ class PreviewLocator extends Locator {
       return fileInstance
     })
     const uploadFiles = await Promise.all(uploadPromise)
-    return ensureAwaited(userEvent.upload(this.element() as HTMLElement, uploadFiles))
+    return ensureAwaited(() => userEvent.upload(this.element() as HTMLElement, uploadFiles))
   }
 
   selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
@@ -110,7 +110,7 @@ class PreviewLocator extends Locator {
       }
       return option
     })
-    return ensureAwaited(userEvent.selectOptions(this.element(), options as string[] | HTMLElement[]))
+    return ensureAwaited(() => userEvent.selectOptions(this.element(), options as string[] | HTMLElement[]))
   }
 
   async dropTo(): Promise<void> {
@@ -118,7 +118,7 @@ class PreviewLocator extends Locator {
   }
 
   clear(): Promise<void> {
-    return ensureAwaited(userEvent.clear(this.element()))
+    return ensureAwaited(() => userEvent.clear(this.element()))
   }
 
   async screenshot(): Promise<never> {

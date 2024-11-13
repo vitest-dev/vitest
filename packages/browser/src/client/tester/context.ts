@@ -40,13 +40,14 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
       return createUserEvent(__tl_user_event_base__, options)
     },
     async cleanup() {
-      if (typeof __tl_user_event_base__ !== 'undefined') {
-        __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
-        return
-      }
-      await triggerCommand('__vitest_cleanup', keyboard)
-      keyboard.unreleased = []
-      return ensureAwaited(Promise.resolve())
+      return ensureAwaited(async () => {
+        if (typeof __tl_user_event_base__ !== 'undefined') {
+          __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
+          return
+        }
+        await triggerCommand('__vitest_cleanup', keyboard)
+        keyboard.unreleased = []
+      })
     },
     click(element: Element | Locator, options: UserEventClickOptions = {}) {
       return convertToLocator(element).click(processClickOptions(options))
@@ -85,41 +86,45 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
 
     // testing-library user-event
     async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.type(
-          element instanceof Element ? element : element.element(),
-          text,
-          options,
-        )
-      }
+      return ensureAwaited(async () => {
+        if (typeof __tl_user_event__ !== 'undefined') {
+          return __tl_user_event__.type(
+            element instanceof Element ? element : element.element(),
+            text,
+            options,
+          )
+        }
 
-      const selector = convertToSelector(element)
-      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
-        '__vitest_type',
-        selector,
-        text,
-        { ...options, unreleased: keyboard.unreleased },
-      )
-      keyboard.unreleased = unreleased
-      return ensureAwaited(Promise.resolve())
+        const selector = convertToSelector(element)
+        const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+          '__vitest_type',
+          selector,
+          text,
+          { ...options, unreleased: keyboard.unreleased },
+        )
+        keyboard.unreleased = unreleased
+      })
     },
     tab(options: UserEventTabOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.tab(options)
-      }
-      return ensureAwaited(triggerCommand('__vitest_tab', options))
+      return ensureAwaited(() => {
+        if (typeof __tl_user_event__ !== 'undefined') {
+          return __tl_user_event__.tab(options)
+        }
+        return triggerCommand('__vitest_tab', options)
+      })
     },
     async keyboard(text: string) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.keyboard(text)
-      }
-      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
-        '__vitest_keyboard',
-        text,
-        keyboard,
-      )
-      keyboard.unreleased = unreleased
-      return ensureAwaited(Promise.resolve())
+      return ensureAwaited(async () => {
+        if (typeof __tl_user_event__ !== 'undefined') {
+          return __tl_user_event__.keyboard(text)
+        }
+        const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+          '__vitest_keyboard',
+          text,
+          keyboard,
+        )
+        keyboard.unreleased = unreleased
+      })
     },
   }
 }
@@ -170,7 +175,7 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
-    return ensureAwaited(triggerCommand('__vitest_screenshot', name, {
+    return ensureAwaited(() => triggerCommand('__vitest_screenshot', name, {
       ...options,
       element: options.element
         ? convertToSelector(options.element)

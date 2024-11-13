@@ -127,10 +127,9 @@ error with a stack
     expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
 
     expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited.')
-    expect(stderr).toMatch(/test\/failing.test.ts:18:(27|33)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:22:(27|36)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:23:(27|39)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:24:(27|33)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:18:(27|36)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|39)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|33)/)
   })
 
   test('popup apis should log a warning', () => {

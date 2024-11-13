@@ -25,10 +25,10 @@ export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }
 
-export function ensureAwaited<T>(promise: Promise<T>): Promise<T> {
+export function ensureAwaited<T>(promise: () => Promise<T>): Promise<T> {
   const test = getWorkerState().current
   if (!test || test.type !== 'test') {
-    return promise
+    return promise()
   }
   let awaited = false
   const sourceError = new Error('STACK_TRACE_ERROR')
@@ -42,16 +42,18 @@ export function ensureAwaited<T>(promise: Promise<T>): Promise<T> {
       throw error
     }
   })
+  // don't even start the promise if it's not awaited to not cause any unhanded promise rejections
+  let promiseResult: Promise<T> | undefined
   return {
     then(onFulfilled, onRejected) {
       awaited = true
-      return promise.then(onFulfilled, onRejected)
+      return (promiseResult ||= promise()).then(onFulfilled, onRejected)
     },
     catch(onRejected) {
-      return promise.catch(onRejected)
+      return (promiseResult ||= promise()).catch(onRejected)
     },
     finally(onFinally) {
-      return promise.finally(onFinally)
+      return (promiseResult ||= promise()).finally(onFinally)
     },
     [Symbol.toStringTag]: 'Promise',
   } satisfies Promise<T>

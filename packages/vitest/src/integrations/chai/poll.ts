@@ -64,7 +64,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
         return function (this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-          const promise = new Promise<void>((resolve, reject) => {
+          const promise = () => new Promise<void>((resolve, reject) => {
             let intervalId: any
             let lastError: any
             const { setTimeout, clearTimeout } = getSafeTimers()
@@ -103,23 +103,24 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               const name = chai.util.flag(assertion, '_poll.element') ? 'element(locator)' : 'poll(assertion)'
               const assertionString = `expect.${name}.${negated}${String(key)}()`
               const error = new Error(
-                `${assertionString} was not awaited. This assertion is asynchronous and must be awaited:\n\nawait ${assertionString}\n`,
+                `${assertionString} was not awaited. This assertion is asynchronous and must be awaited, otherwise it is not executed to avoid unhandled rejections:\n\nawait ${assertionString}\n`,
               )
               throw copyStackTrace(error, STACK_TRACE_ERROR)
             }
           })
+          let resultPromise: Promise<void> | undefined
           // only .then is enough to check awaited, but we type this as `Promise<void>` in global types
           // so let's follow it
           return {
             then(onFulfilled, onRejected) {
               awaited = true
-              return promise.then(onFulfilled, onRejected)
+              return (resultPromise ||= promise()).then(onFulfilled, onRejected)
             },
             catch(onRejected) {
-              return promise.catch(onRejected)
+              return (resultPromise ||= promise()).catch(onRejected)
             },
             finally(onFinally) {
-              return promise.finally(onFinally)
+              return (resultPromise ||= promise()).finally(onFinally)
             },
             [Symbol.toStringTag]: 'Promise',
           } satisfies Promise<void>

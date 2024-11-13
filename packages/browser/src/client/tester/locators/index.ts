@@ -202,7 +202,7 @@ export abstract class Locator {
       || this.worker.current?.file?.filepath
       || undefined
 
-    return ensureAwaited(this.rpc.triggerCommand<T>(
+    return ensureAwaited(() => this.rpc.triggerCommand<T>(
       this.state.contextId,
       command,
       filepath,
