@@ -96,7 +96,7 @@ export function WorkspaceVitestPlugin(
               ),
             },
           },
-          // eslint-disable-next-line ts/ban-ts-comment 
+          // eslint-disable-next-line ts/ban-ts-comment
           // @ts-ignore Vite 6 compat
           environments: {
             ssr: {
