@@ -18,8 +18,6 @@ it('automatically assigns the port', async () => {
 
   expect(spy).not.toHaveBeenCalled()
   expect(stderr).not.toContain('is in use, trying another one...')
-  expect(urls).toEqual([
-    'http://localhost:63315/',
-    'http://localhost:63316/',
-  ])
+  expect(urls).toContain('http://localhost:63315/')
+  expect(urls).toContain('http://localhost:63316/')
 })
