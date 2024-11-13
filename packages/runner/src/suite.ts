@@ -710,7 +710,11 @@ export function createTaskCollector(
   }
 
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
-    const _context = mergeContextFixtures(fixtures, context)
+    const _context = mergeContextFixtures(
+      fixtures,
+      context || {},
+      (key: string) => getRunner().injectValue?.(key),
+    )
 
     return createTest(function fn(
       name: string | Function,
