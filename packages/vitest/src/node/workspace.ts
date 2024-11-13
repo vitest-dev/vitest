@@ -358,16 +358,15 @@ export class WorkspaceProject {
     return testFiles
   }
 
-  async initBrowserServer(configFile: string | undefined) {
-    if (!this.isBrowserEnabled()) {
+  async initBrowserServer() {
+    if (!this.isBrowserEnabled() || this.browser) {
       return
     }
     await this.ctx.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
-    await this.browser?.close()
     const browser = await createBrowserServer(
       this,
-      configFile,
+      this.server.config.configFile,
       [
         ...MocksPlugins({
           filter(id) {
@@ -408,9 +407,7 @@ export class WorkspaceProject {
   }
 
   static async createCoreProject(ctx: Vitest) {
-    const project = WorkspaceProject.createBasicProject(ctx)
-    await project.initBrowserServer(ctx.server.config.configFile)
-    return project
+    return WorkspaceProject.createBasicProject(ctx)
   }
 
   async setServer(options: UserConfig, server: ViteDevServer) {
@@ -449,8 +446,6 @@ export class WorkspaceProject {
         return node.resolveId(id, importer)
       },
     })
-
-    await this.initBrowserServer(this.server.config.configFile)
   }
 
   isBrowserEnabled(): boolean {
@@ -495,8 +490,11 @@ export class WorkspaceProject {
   }
 
   async initBrowserProvider() {
-    if (!this.isBrowserEnabled()) {
+    if (!this.isBrowserEnabled() || this.browser?.provider) {
       return
+    }
+    if (!this.browser) {
+      await this.initBrowserServer()
     }
     await this.browser?.initBrowserProvider()
   }

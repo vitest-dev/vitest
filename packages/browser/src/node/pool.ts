@@ -131,6 +131,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       if (isCancelled) {
         break
       }
+      await project.initBrowserProvider()
 
       await executeTests(method, project, files)
     }

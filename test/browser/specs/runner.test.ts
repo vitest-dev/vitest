@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
-import { defaultBrowserPort } from 'vitest/config'
-import { browser, provider, runBrowserTests } from './utils'
+import { browser, runBrowserTests } from './utils'
 
 describe('running browser tests', async () => {
   let stderr: string
@@ -28,8 +27,6 @@ describe('running browser tests', async () => {
     onTestFailed(() => {
       console.error(stderr)
     })
-
-    expect(stdout).toContain(`Browser runner started by ${provider} at http://localhost:${defaultBrowserPort}/`)
 
     expect(browserResultJson.testResults).toHaveLength(19)
     expect(passedTests).toHaveLength(17)
