@@ -876,7 +876,7 @@ test('spy function', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWith
+## toHaveBeenCalledExactlyOnceWith <Version>2.2.0</Version> {#tohavebeencalledexactlyoncewith}
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
