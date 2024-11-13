@@ -24,7 +24,7 @@
     "@unocss/reset": "^0.64.0",
     "@vite-pwa/assets-generator": "^0.2.6",
     "@vite-pwa/vitepress": "^0.5.3",
-    "@vitejs/plugin-vue": "^5.1.4",
+    "@vitejs/plugin-vue": "^5.1.5",
     "https-localhost": "^4.7.1",
     "tinyglobby": "^0.2.10",
     "unocss": "^0.64.0",

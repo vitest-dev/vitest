@@ -89,7 +89,7 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.12",
-    "msw": "^2.6.0",
+    "msw": "^2.6.4",
     "sirv": "^3.0.0",
     "tinyrainbow": "^1.2.0",
     "ws": "^8.18.0"
