@@ -113,6 +113,18 @@ export async function VitestPlugin(
             // https://github.com/vitejs/vite/pull/16453
             emptyOutDir: false,
           },
+          // eslint-disable-next-line ts/ban-ts-comment
+          // @ts-ignore Vite 6 compat
+          environments: {
+            ssr: {
+              resolve: {
+                // by default Vite resolves `module` field, which not always a native ESM module
+                // setting this option can bypass that and fallback to cjs version
+                mainFields: [],
+                conditions: ['node'],
+              },
+            },
+          },
           test: {
             poolOptions: {
               threads: {
