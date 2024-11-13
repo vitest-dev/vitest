@@ -3,19 +3,17 @@ import type {
   ResolvedConfig,
   UserConfig as ViteConfig,
 } from 'vite'
-import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
+import type { DepsOptimizationOptions } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import { rootDir } from '../../paths'
-import { VitestCache } from '../cache'
 
 export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
-  testConfig: InlineConfig,
 ) {
   const testOptions = _testOptions || {}
-  const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions }
+  const newConfig: { optimizeDeps: DepOptimizationOptions }
     = {} as any
   const [major, minor, fix] = viteVersion.split('.').map(Number)
   const allowed
@@ -32,7 +30,6 @@ export function resolveOptimizerConfig(
     testOptions.enabled ??= false
   }
   if (!allowed || testOptions?.enabled !== true) {
-    newConfig.cacheDir = undefined
     newConfig.optimizeDeps = {
       // experimental in Vite >2.9.2, entries remains to help with older versions
       disabled: true,
@@ -40,9 +37,6 @@ export function resolveOptimizerConfig(
     }
   }
   else {
-    const root = testConfig.root ?? process.cwd()
-    const cacheDir
-      = testConfig.cache !== false ? testConfig.cache?.dir : undefined
     const currentInclude = testOptions.include || viteOptions?.include || []
     const exclude = [
       'vitest',
@@ -60,8 +54,6 @@ export function resolveOptimizerConfig(
       (n: string) => !exclude.includes(n),
     )
 
-    newConfig.cacheDir
-      = cacheDir ?? VitestCache.resolveCacheDir(root, cacheDir, testConfig.name)
     newConfig.optimizeDeps = {
       ...viteOptions,
       ...testOptions,

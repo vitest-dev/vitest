@@ -11,16 +11,12 @@ export function VitestOptimizer(): Plugin {
         const webOptimizer = resolveOptimizerConfig(
           testConfig.deps?.optimizer?.web,
           viteConfig.optimizeDeps,
-          testConfig,
         )
         const ssrOptimizer = resolveOptimizerConfig(
           testConfig.deps?.optimizer?.ssr,
           viteConfig.ssr?.optimizeDeps,
-          testConfig,
         )
 
-        viteConfig.cacheDir
-          = viteConfig.cacheDir || webOptimizer.cacheDir || ssrOptimizer.cacheDir
         viteConfig.optimizeDeps = webOptimizer.optimizeDeps
         viteConfig.ssr ??= {}
         viteConfig.ssr.optimizeDeps = ssrOptimizer.optimizeDeps
