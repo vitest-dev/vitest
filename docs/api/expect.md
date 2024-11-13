@@ -876,6 +876,44 @@ test('spy function', () => {
 })
 ```
 
+## toHaveBeenCalledBefore <Version>2.2.0</Version> {#tohavebeencalledbefore}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called before another `Mock`.
+
+```ts
+test('calls mock1 before mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock1()
+  mock2()
+  mock1()
+
+  expect(mock1).toHaveBeenCalledBefore(mock2)
+})
+```
+
+## toHaveBeenCalledAfter <Version>2.2.0</Version> {#tohavebeencalledafter}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called after another `Mock`.
+
+```ts
+test('calls mock1 after mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock2()
+  mock1()
+  mock2()
+
+  expect(mock1).toHaveBeenCalledAfter(mock2)
+})
+```
+
 ## toHaveBeenCalledExactlyOnceWith <Version>2.2.0</Version> {#tohavebeencalledexactlyoncewith}
 
 - **Type**: `(...args: any[]) => Awaitable<void>`

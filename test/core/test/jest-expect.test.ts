@@ -698,6 +698,158 @@ describe('toHaveBeenCalledExactlyOnceWith', () => {
   })
 })
 
+describe('toHaveBeenCalledBefore', () => {
+  it('success if expect mock is called before result mock', () => {
+    const expectMock = vi.fn()
+    const resultMock = vi.fn()
+
+    expectMock()
+    resultMock()
+
+    expect(expectMock).toHaveBeenCalledBefore(resultMock)
+  })
+
+  it('throws if expect is not a spy', () => {
+    expect(() => {
+      expect(1).toHaveBeenCalledBefore(vi.fn())
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if result is not a spy', () => {
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledBefore(1 as any)
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if expect mock is called after result mock', () => {
+    const expectMock = vi.fn()
+    const resultMock = vi.fn()
+
+    resultMock()
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledBefore(resultMock)
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+
+  it('throws with correct mock name if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock2()
+    mock1()
+
+    expect(() => {
+      expect(mock1).toHaveBeenCalledBefore(mock2)
+    }).toThrow(/^expected "mock1" to have been called before "mock2"/)
+  })
+
+  it('fails if expect mock is not called', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledBefore(resultMock)
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+
+  it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(vi.fn()).toHaveBeenCalledBefore(resultMock, false)
+  })
+
+  it('fails if result mock is not called', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledBefore(vi.fn())
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+})
+
+describe('toHaveBeenCalledAfter', () => {
+  it('success if expect mock is called after result mock', () => {
+    const resultMock = vi.fn()
+    const expectMock = vi.fn()
+
+    resultMock()
+    expectMock()
+
+    expect(expectMock).toHaveBeenCalledAfter(resultMock)
+  })
+
+  it('throws if expect is not a spy', () => {
+    expect(() => {
+      expect(1).toHaveBeenCalledAfter(vi.fn())
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if result is not a spy', () => {
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledAfter(1 as any)
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if expect mock is called before result mock', () => {
+    const resultMock = vi.fn()
+    const expectMock = vi.fn()
+
+    expectMock()
+    resultMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledAfter(resultMock)
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+
+  it('throws with correct mock name if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock1()
+    mock2()
+
+    expect(() => {
+      expect(mock1).toHaveBeenCalledAfter(mock2)
+    }).toThrow(/^expected "mock1" to have been called after "mock2"/)
+  })
+
+  it('fails if result mock is not called', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledAfter(vi.fn())
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+
+  it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(expectMock).toHaveBeenCalledAfter(vi.fn(), false)
+  })
+
+  it('fails if expect mock is not called', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledAfter(resultMock)
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+})
+
 describe('async expect', () => {
   it('resolves', async () => {
     await expect((async () => 'true')()).resolves.toBe('true')

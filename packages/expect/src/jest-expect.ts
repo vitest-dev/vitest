@@ -656,6 +656,74 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     },
   )
+
+  /**
+   * Used for `toHaveBeenCalledBefore` and `toHaveBeenCalledAfter` to determine if the expected spy was called before the result spy.
+   */
+  function isSpyCalledBeforeAnotherSpy(beforeSpy: MockInstance, afterSpy: MockInstance, failIfNoFirstInvocation: number): boolean {
+    const beforeInvocationCallOrder = beforeSpy.mock.invocationCallOrder
+
+    const afterInvocationCallOrder = afterSpy.mock.invocationCallOrder
+
+    if (beforeInvocationCallOrder.length === 0) {
+      return !failIfNoFirstInvocation
+    }
+
+    if (afterInvocationCallOrder.length === 0) {
+      return false
+    }
+
+    return beforeInvocationCallOrder[0] < afterInvocationCallOrder[0]
+  }
+
+  def(
+    ['toHaveBeenCalledBefore'],
+    function (resultSpy: MockInstance, failIfNoFirstInvocation = true) {
+      const expectSpy = getSpy(this)
+
+      if (!isMockFunction(resultSpy)) {
+        throw new TypeError(
+          `${utils.inspect(resultSpy)} is not a spy or a call to a spy`,
+        )
+      }
+
+      this.assert(
+        isSpyCalledBeforeAnotherSpy(
+          expectSpy,
+          resultSpy,
+          failIfNoFirstInvocation,
+        ),
+        `expected "${expectSpy.getMockName()}" to have been called before "${resultSpy.getMockName()}"`,
+        `expected "${expectSpy.getMockName()}" to not have been called before "${resultSpy.getMockName()}"`,
+        resultSpy,
+        expectSpy,
+      )
+    },
+  )
+  def(
+    ['toHaveBeenCalledAfter'],
+    function (resultSpy: MockInstance, failIfNoFirstInvocation = true) {
+      const expectSpy = getSpy(this)
+
+      if (!isMockFunction(resultSpy)) {
+        throw new TypeError(
+          `${utils.inspect(resultSpy)} is not a spy or a call to a spy`,
+        )
+      }
+
+      this.assert(
+        isSpyCalledBeforeAnotherSpy(
+          resultSpy,
+          expectSpy,
+          failIfNoFirstInvocation,
+        ),
+        `expected "${expectSpy.getMockName()}" to have been called after "${resultSpy.getMockName()}"`,
+        `expected "${expectSpy.getMockName()}" to not have been called after "${resultSpy.getMockName()}"`,
+        resultSpy,
+        expectSpy,
+      )
+    },
+  )
   def(
     ['toThrow', 'toThrowError'],
     function (expected?: string | Constructable | RegExp | Error) {
