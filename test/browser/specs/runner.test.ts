@@ -128,8 +128,8 @@ error with a stack
 
     expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.')
     expect(stderr).toMatch(/test\/failing.test.ts:18:(27|36)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|39)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|33)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|33)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|39)/)
   })
 
   test('popup apis should log a warning', () => {
