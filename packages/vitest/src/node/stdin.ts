@@ -149,6 +149,11 @@ export function registerConsoleShortcuts(
     })
 
     on()
+
+    if (typeof filter === 'undefined') {
+      return
+    }
+
     const files = ctx.state.getFilepaths()
     // if running in standalone mode, Vitest instance doesn't know about any test file
     const cliFiles
@@ -192,6 +197,10 @@ export function registerConsoleShortcuts(
     })
 
     on()
+
+    if (typeof filter === 'undefined') {
+      return
+    }
 
     latestFilename = filter?.trim() || ''
     const lastResults = watchFilter.getLastResults()
