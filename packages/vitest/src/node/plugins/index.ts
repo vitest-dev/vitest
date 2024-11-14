@@ -191,6 +191,8 @@ export async function VitestPlugin(
         ) {
           const watch = config.server!.watch
           if (watch) {
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore Vite 6 compat
             watch.useFsEvents = false
             watch.usePolling = false
           }
