@@ -63,12 +63,6 @@ export class TestProject {
   public ctx: Vitest
 
   /**
-   * The workspace project this test project is associated with.
-   * @deprecated use the current project instead
-   */
-  public readonly workspaceProject: TestProject
-
-  /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
   public readonly tmpDir = join(tmpdir(), nanoid())
@@ -96,7 +90,6 @@ export class TestProject {
   ) {
     this.vitest = vitest
     this.ctx = vitest
-    this.workspaceProject = this
     this.globalConfig = vitest.config
   }
 
