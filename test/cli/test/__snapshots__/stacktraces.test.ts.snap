@@ -48,14 +48,14 @@ exports[`stacktrace should print error frame source file correctly > error-in-de
 
  FAIL  error-in-deps.test.js > error in deps
 ReferenceError: bar is not defined
- ❯ add foo.js:3:3
+ ❯ Module.add foo.js:3:3
       1| export function add() {
       2|   // eslint-disable-next-line no-undef
       3|   return bar()
        |   ^
       4| }
       5| 
- ❯ error-in-deps.test.js:5:6
+ ❯ error-in-deps.test.js:5:3
 
 ⎯⎯[1/1]⎯
 
@@ -107,7 +107,7 @@ exports[`stacktraces should respect sourcemaps > add-in-js.test.js > add-in-js.t
 `;
 
 exports[`stacktraces should respect sourcemaps > error-in-deps.test.js > error-in-deps.test.js 1`] = `
-" ❯ error-in-deps.test.js:5:6
+" ❯ error-in-deps.test.js:5:3
 
 ⎯⎯[1/1]⎯
 
@@ -159,11 +159,11 @@ exports[`stacktraces should respect sourcemaps > mocked-imported.test.ts > mocke
 `;
 
 exports[`stacktraces should respect sourcemaps > require-assertions.test.js > require-assertions.test.js 1`] = `
-" ❯ require-assertions.test.js:3:5
+" ❯ require-assertions.test.js:3:1
       1| import { test } from 'vitest'
       2| 
       3| test('assertion is not called', () => {
-       |     ^
+       | ^
       4|   // no expect
       5| })
 "
