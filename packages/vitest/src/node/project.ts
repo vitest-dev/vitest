@@ -127,7 +127,7 @@ export class TestProject {
    * Get the provided context. The project context is merged with the global context.
    */
   getProvidedContext(): ProvidedContext {
-    if (this.isCore()) {
+    if (this.isRootProject()) {
       return this._provided
     }
     // globalSetup can run even if core workspace is not part of the test run
@@ -200,8 +200,13 @@ export class TestProject {
   /**
    * Is this the root project. The root project is the one that has the root config.
    */
-  public isCore(): boolean {
+  public isRootProject(): boolean {
     return this.vitest.getCoreWorkspaceProject() === this
+  }
+
+  /** @deprecated use `isRootProject` instead */
+  public isCore(): boolean {
+    return this.isRootProject()
   }
 
   /** @deprecated use createSpecification instead */

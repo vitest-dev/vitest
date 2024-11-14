@@ -163,8 +163,7 @@ export class Logger {
     }
     this.ctx.projects.forEach((project) => {
       const config = project.config
-      const name = project.getName()
-      const output = project.isCore() || !name ? '' : `[${name}]`
+      const output = project.isRootProject() || !project.name ? '' : `[${project.name}]`
       if (output) {
         this.console.error(c.bgCyan(`${output} Config`))
       }
@@ -256,10 +255,9 @@ export class Logger {
       return
     }
 
-    const name = project.getName()
-    const output = project.isCore()
+    const output = project.isRootProject()
       ? ''
-      : formatProjectName(name)
+      : formatProjectName(project.name)
     const provider = project.browser.provider.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
