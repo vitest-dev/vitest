@@ -1,5 +1,6 @@
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { version as viteVersion } from 'vite'
 import { beforeAll, expect } from 'vitest'
 import { isBrowser, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
@@ -20,7 +21,11 @@ test('files should not contain query parameters', () => {
   expect(files).not.toContain('Counter.component.ts?vue&type=script&src=true&lang.ts.html')
 })
 
-test('coverage results matches snapshot', async () => {
+test('coverage results matches snapshot', async (ctx) => {
+  if (viteVersion[0] >= '6') {
+    ctx.skip()
+  }
+
   const coverageMap = await readCoverageMap()
   const summary = coverageMap.getCoverageSummary()
 

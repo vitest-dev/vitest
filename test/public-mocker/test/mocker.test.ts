@@ -54,7 +54,7 @@ async function createTestServer(config: UserConfig) {
         globalThisAccessor: 'Symbol.for("vitest.mocker")',
         hoistMocks: {
           utilsObjectNames: ['mocker'],
-          hoistedModules: ['virtual:mocker'],
+          hoistedModule: 'virtual:mocker',
           hoistableMockMethodNames: ['customMock'],
           dynamicImportMockMethodNames: ['customMock'],
           hoistedMethodNames: ['customHoisted'],

@@ -1,10 +1,12 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
-import { describe, expect, it } from 'vitest'
-
+import { version as viteVersion } from 'vite'
+import { describe, expect, it as vitestIt } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const [major] = process.version.slice(1).split('.').map(num => Number(num))
+
+const it = viteVersion[0] >= '6' ? (vitestIt.skip as typeof vitestIt) : vitestIt
 
 // To prevent the warnining coming up in snapshots
 process.setMaxListeners(20)

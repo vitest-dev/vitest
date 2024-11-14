@@ -12,7 +12,7 @@ import { createLogUpdate } from 'log-update'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './error'
-import { divider, withLabel } from './reporters/renderers/utils'
+import { divider, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
@@ -217,21 +217,6 @@ export class Logger {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
-    this.ctx.projects.forEach((project) => {
-      if (!project.browser) {
-        return
-      }
-      const name = project.getName()
-      const output = project.isCore() ? '' : ` [${name}]`
-
-      const resolvedUrls = project.browser.vite.resolvedUrls
-      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-      const provider = project.browser.provider.name
-      const providerString = provider === 'preview' ? '' : ` by ${provider}`
-
-      this.log(PAD + c.dim(c.green(`${output} Browser runner started${providerString} at ${new URL('/', origin)}`)))
-    })
-
     if (this.ctx.config.ui) {
       const host = this.ctx.config.api?.host || 'localhost'
       const port = this.ctx.server.config.server.port
@@ -258,6 +243,30 @@ export class Logger {
     else {
       this.log()
     }
+  }
+
+  printBrowserBanner(project: WorkspaceProject) {
+    if (!project.browser) {
+      return
+    }
+
+    const resolvedUrls = project.browser.vite.resolvedUrls
+    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+    if (!origin) {
+      return
+    }
+
+    const name = project.getName()
+    const output = project.isCore()
+      ? ''
+      : formatProjectName(name)
+    const provider = project.browser.provider.name
+    const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
+    this.log(
+      c.dim(
+        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/', origin))}\n`,
+      ),
+    )
   }
 
   printUnhandledErrors(errors: unknown[]) {

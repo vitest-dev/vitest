@@ -6,6 +6,7 @@
  *
  */
 
+import type { MockInstance } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { Formatter } from 'tinyrainbow'
 import type { diff, getMatcherUtils, stringify } from './jest-matcher-utils'
@@ -636,6 +637,15 @@ export interface Assertion<T = any>
   toHaveBeenCalledOnce: () => void
 
   /**
+   * Ensure that a mock function is called with specific arguments and called
+   * exactly once.
+   *
+   * @example
+   * expect(mockFunc).toHaveBeenCalledExactlyOnceWith('arg1', 42);
+   */
+  toHaveBeenCalledExactlyOnceWith: <E extends any[]>(...args: E) => void
+
+  /**
    * Checks that a value satisfies a custom matcher function.
    *
    * @param matcher - A function returning a boolean based on the custom condition
@@ -645,6 +655,38 @@ export interface Assertion<T = any>
    * expect(age).toSatisfy(val => val >= 18, 'Age must be at least 18');
    */
   toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
+
+  /**
+   * This assertion checks if a `Mock` was called before another `Mock`.
+   * @param mock - A mock function created by `vi.spyOn` or `vi.fn`
+   * @param failIfNoFirstInvocation - Fail if the first mock was never called
+   * @example
+   * const mock1 = vi.fn()
+   * const mock2 = vi.fn()
+   *
+   * mock1()
+   * mock2()
+   * mock1()
+   *
+   * expect(mock1).toHaveBeenCalledBefore(mock2)
+   */
+  toHaveBeenCalledBefore: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
+
+  /**
+   * This assertion checks if a `Mock` was called after another `Mock`.
+   * @param mock - A mock function created by `vi.spyOn` or `vi.fn`
+   * @param failIfNoFirstInvocation - Fail if the first mock was never called
+   * @example
+   * const mock1 = vi.fn()
+   * const mock2 = vi.fn()
+   *
+   * mock2()
+   * mock1()
+   * mock2()
+   *
+   * expect(mock1).toHaveBeenCalledAfter(mock2)
+   */
+  toHaveBeenCalledAfter: (mock: MockInstance, failIfNoFirstInvocation?: boolean) => void
 
   /**
    * Checks that a promise resolves successfully at least once.

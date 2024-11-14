@@ -61,7 +61,8 @@ function getSuiteHooks(
   return hooks
 }
 
-async function callTaskHooks(
+async function callTestHooks(
+  runner: VitestRunner,
   task: Task,
   hooks: ((result: TaskResult) => Awaitable<void>)[],
   sequence: SequenceHooks,
@@ -71,11 +72,21 @@ async function callTaskHooks(
   }
 
   if (sequence === 'parallel') {
-    await Promise.all(hooks.map(fn => fn(task.result!)))
+    try {
+      await Promise.all(hooks.map(fn => fn(task.result!)))
+    }
+    catch (e) {
+      failTask(task.result!, e, runner.config.diffOptions)
+    }
   }
   else {
     for (const fn of hooks) {
-      await fn(task.result!)
+      try {
+        await fn(task.result!)
+      }
+      catch (e) {
+        failTask(task.result!, e, runner.config.diffOptions)
+      }
     }
   }
 }
@@ -246,7 +257,7 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
       // skipped with new PendingError
       if (test.pending || test.result?.state === 'skip') {
         test.mode = 'skip'
-        test.result = { state: 'skip' }
+        test.result = { state: 'skip', note: test.result?.note }
         updateTask(test, runner)
         setCurrentTest(undefined)
         return
@@ -271,24 +282,15 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
         failTask(test.result, e, runner.config.diffOptions)
       }
 
-      try {
-        await callTaskHooks(test, test.onFinished || [], 'stack')
-      }
-      catch (e) {
-        failTask(test.result, e, runner.config.diffOptions)
-      }
+      await callTestHooks(runner, test, test.onFinished || [], 'stack')
 
       if (test.result.state === 'fail') {
-        try {
-          await callTaskHooks(
-            test,
-            test.onFailed || [],
-            runner.config.sequence.hooks,
-          )
-        }
-        catch (e) {
-          failTask(test.result, e, runner.config.diffOptions)
-        }
+        await callTestHooks(
+          runner,
+          test,
+          test.onFailed || [],
+          runner.config.sequence.hooks,
+        )
       }
 
       delete test.onFailed
@@ -331,9 +333,10 @@ export async function runTest(test: Test | Custom, runner: VitestRunner): Promis
   updateTask(test, runner)
 }
 
-function failTask(result: TaskResult, err: unknown, diffOptions?: DiffOptions) {
+function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | undefined) {
   if (err instanceof PendingError) {
     result.state = 'skip'
+    result.note = err.note
     return
   }
 

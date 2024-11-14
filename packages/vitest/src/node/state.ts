@@ -40,6 +40,7 @@ export class StateManager {
         task.mode = 'skip'
         task.result ??= { state: 'skip' }
         task.result.state = 'skip'
+        task.result.note = _err.note
       }
       return
     }
