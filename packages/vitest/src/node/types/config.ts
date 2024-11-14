@@ -1101,7 +1101,8 @@ export type ProjectConfig = Omit<
 
 export type ResolvedProjectConfig = Omit<
   ResolvedConfig,
-  NonProjectOptions
+  // some options cannot be set, but they are inherited from the workspace
+  Exclude<NonProjectOptions, 'coverage' | 'watch'>
 >
 
 export interface UserWorkspaceConfig extends ViteUserConfig {

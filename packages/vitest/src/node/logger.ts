@@ -4,7 +4,7 @@ import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
 import type { PrintErrorResult } from './error'
-import type { WorkspaceProject } from './workspace'
+import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
@@ -18,7 +18,7 @@ import { RandomSequencer } from './sequencers/RandomSequencer'
 export interface ErrorOptions {
   type?: string
   fullStack?: boolean
-  project?: WorkspaceProject
+  project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
   task?: Task
@@ -245,7 +245,7 @@ export class Logger {
     }
   }
 
-  printBrowserBanner(project: WorkspaceProject) {
+  printBrowserBanner(project: TestProject) {
     if (!project.browser) {
       return
     }

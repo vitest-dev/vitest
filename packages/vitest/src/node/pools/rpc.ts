@@ -1,7 +1,7 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
+import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import type { WorkspaceProject } from '../workspace'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'pathe'
 import { hash } from '../hash'
@@ -13,7 +13,7 @@ interface MethodsOptions {
   cacheFs?: boolean
 }
 
-export function createMethodsRPC(project: WorkspaceProject, options: MethodsOptions = {}): RuntimeRPC {
+export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
   const ctx = project.ctx
   const cacheFs = options.cacheFs ?? false
   return {

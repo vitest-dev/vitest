@@ -7,8 +7,7 @@ import type {
   TaskMeta,
 } from '@vitest/runner'
 import type { TestError } from '@vitest/utils'
-import type { WorkspaceProject } from '../workspace'
-import { TestProject } from '../reported-workspace-project'
+import type { TestProject } from '../project'
 
 class ReportedTaskImplementation {
   /**
@@ -36,10 +35,10 @@ class ReportedTaskImplementation {
 
   protected constructor(
     task: RunnerTask,
-    project: WorkspaceProject,
+    project: TestProject,
   ) {
     this.task = task
-    this.project = project.testProject || (project.testProject = new TestProject(project))
+    this.project = project
     this.id = task.id
     this.location = task.location
   }
@@ -47,7 +46,7 @@ class ReportedTaskImplementation {
   /**
    * Creates a new reported task instance and stores it in the project's state for future use.
    */
-  static register(task: RunnerTask, project: WorkspaceProject) {
+  static register(task: RunnerTask, project: TestProject) {
     const state = new this(task, project) as TestCase | TestSuite | TestModule
     storeTask(project, task, state)
     return state
@@ -80,7 +79,7 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
-  protected constructor(task: RunnerTestCase | RunnerCustomCase, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestCase | RunnerCustomCase, project: TestProject) {
     super(task, project)
 
     this.name = task.name
@@ -184,9 +183,9 @@ export class TestCase extends ReportedTaskImplementation {
 
 class TestCollection {
   #task: RunnerTestSuite | RunnerTestFile
-  #project: WorkspaceProject
+  #project: TestProject
 
-  constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
+  constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
     this.#task = task
     this.#project = project
   }
@@ -296,7 +295,7 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
    */
   public readonly children: TestCollection
 
-  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
     super(task, project)
     this.children = new TestCollection(task, project)
   }
@@ -328,7 +327,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public readonly options: TaskOptions
 
-  protected constructor(task: RunnerTestSuite, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestSuite, project: TestProject) {
     super(task, project)
 
     this.name = task.name
@@ -371,7 +370,7 @@ export class TestModule extends SuiteImplementation {
    */
   public readonly moduleId: string
 
-  protected constructor(task: RunnerTestFile, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
   }
@@ -523,18 +522,18 @@ function getTestState(test: TestCase): TestResult['state'] | 'running' {
 }
 
 function storeTask(
-  project: WorkspaceProject,
+  project: TestProject,
   runnerTask: RunnerTask,
   reportedTask: TestCase | TestSuite | TestModule,
 ): void {
-  project.ctx.state.reportedTasksMap.set(runnerTask, reportedTask)
+  project.vitest.state.reportedTasksMap.set(runnerTask, reportedTask)
 }
 
 function getReportedTask(
-  project: WorkspaceProject,
+  project: TestProject,
   runnerTask: RunnerTask,
 ): TestCase | TestSuite | TestModule {
-  const reportedTask = project.ctx.state.getReportedEntity(runnerTask)
+  const reportedTask = project.vitest.state.getReportedEntity(runnerTask)
   if (!reportedTask) {
     throw new Error(
       `Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`,

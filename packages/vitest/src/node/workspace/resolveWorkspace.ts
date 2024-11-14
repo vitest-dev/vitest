@@ -1,6 +1,6 @@
 import type { Vitest } from '../core'
+import type { TestProject } from '../project'
 import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
-import type { WorkspaceProject } from '../workspace'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
@@ -8,7 +8,7 @@ import fg from 'fast-glob'
 import { relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { initializeProject } from '../workspace'
+import { initializeProject } from '../project'
 import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
@@ -16,7 +16,7 @@ export async function resolveWorkspace(
   cliOptions: UserConfig,
   workspaceConfigPath: string,
   workspaceDefinition: WorkspaceProjectConfiguration[],
-): Promise<WorkspaceProject[]> {
+): Promise<TestProject[]> {
   const { configFiles, projectConfigs, nonConfigDirectories } = await resolveWorkspaceProjectConfigs(
     vitest,
     workspaceConfigPath,
@@ -50,7 +50,7 @@ export async function resolveWorkspace(
     return acc
   }, {} as UserConfig)
 
-  const projectPromises: Promise<WorkspaceProject>[] = []
+  const projectPromises: Promise<TestProject>[] = []
   const fileProjects = [...configFiles, ...nonConfigDirectories]
   const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
 

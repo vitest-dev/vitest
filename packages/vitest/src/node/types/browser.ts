@@ -2,7 +2,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
-import type { WorkspaceProject } from '../workspace'
+import type { TestProject } from '../project'
 import type { ApiConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
@@ -32,7 +32,7 @@ export interface BrowserProvider {
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
-    ctx: WorkspaceProject,
+    ctx: TestProject,
     options: BrowserProviderInitializationOptions
   ): Awaitable<void>
 }
@@ -180,7 +180,7 @@ export interface BrowserConfigOptions {
 export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
-  project: WorkspaceProject
+  project: TestProject
   contextId: string
 }
 
