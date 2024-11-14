@@ -6,22 +6,11 @@ TypeCheckError: This expression is not callable. Type 'ExpectArray<number>' has 
 TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.
-TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
-TypeCheckError: Unused '@ts-expect-error' directive."
+TypeCheckError: Unused '@ts-expect-error' directive.
+TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures."
 `;
 
 exports[`should fail > typecheck files 2`] = `
-" FAIL  expect-error.test-d.ts [ expect-error.test-d.ts ]
-TypeCheckError: Unused '@ts-expect-error' directive.
- ❯ expect-error.test-d.ts:4:3
-      2| 
-      3| test('failing test with expect-error', () => {
-      4|   // @ts-expect-error expect nothing
-       |   ^
-      5|   expectTypeOf(1).toEqualTypeOf<number>()"
-`;
-
-exports[`should fail > typecheck files 3`] = `
 " FAIL  fail.test-d.ts > nested suite
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
  ❯ fail.test-d.ts:15:19
@@ -30,6 +19,17 @@ TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has n
      15|   expectTypeOf(1).toBeVoid()
        |                   ^
      16| })"
+`;
+
+exports[`should fail > typecheck files 3`] = `
+" FAIL  expect-error.test-d.ts > failing test with expect-error
+TypeCheckError: Unused '@ts-expect-error' directive.
+ ❯ expect-error.test-d.ts:4:3
+      2| 
+      3| test('failing test with expect-error', () => {
+      4|   // @ts-expect-error expect nothing
+       |   ^
+      5|   expectTypeOf(1).toEqualTypeOf<number>()"
 `;
 
 exports[`should fail > typecheck files 4`] = `
