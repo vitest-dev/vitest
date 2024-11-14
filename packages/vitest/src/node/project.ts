@@ -67,9 +67,10 @@ export class TestProject {
    * @deprecated use the current project instead
    */
   public readonly workspaceProject: TestProject
-  /** @deprecated use the current project instead */
-  public testProject: TestProject
 
+  /**
+   * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
+   */
   public readonly tmpDir = join(tmpdir(), nanoid())
 
   vitenode!: ViteNodeServer
@@ -93,7 +94,6 @@ export class TestProject {
     /** @deprecated */
     public options?: InitializeProjectOptions,
   ) {
-    this.testProject = this
     this.vitest = vitest
     this.ctx = vitest
     this.workspaceProject = this
@@ -554,7 +554,6 @@ export class TestProject {
     }
 
     this.closingPromise = undefined
-    this.testProject = this
 
     this._vite = server
 
@@ -628,7 +627,6 @@ export class TestProject {
         vitest.config.provide[providedKey],
       )
     }
-    project.testProject = project
     return project
   }
 
