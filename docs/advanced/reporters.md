@@ -384,55 +384,6 @@ function onFileCollected(testModule: TestModule): void {
 }
 ```
 
-### TestProject
-
-`TestProject` is a project assosiated with the module. Every test and suite inside that module will reference the same project.
-
-Project is useful to get the configuration or provided context.
-
-```ts
-declare class TestProject {
-  /**
-   * The global vitest instance.
-   * @experimental The public Vitest API is experimental and does not follow semver.
-   */
-  readonly vitest: Vitest
-  /**
-   * The workspace project this test project is associated with.
-   * @experimental The public Vitest API is experimental and does not follow semver.
-   */
-  readonly workspaceProject: WorkspaceProject
-  /**
-   * Vite's dev server instance. Every workspace project has its own server.
-   */
-  readonly vite: ViteDevServer
-  /**
-   * Resolved project configuration.
-   */
-  readonly config: ResolvedProjectConfig
-  /**
-   * Resolved global configuration. If there are no workspace projects, this will be the same as `config`.
-   */
-  readonly globalConfig: ResolvedConfig
-  /**
-   * Serialized project configuration. This is the config that tests receive.
-   */
-  get serializedConfig(): SerializedConfig
-  /**
-   * The name of the project or an empty string if not set.
-   */
-  name(): string
-  /**
-   * Custom context provided to the project.
-   */
-  context(): ProvidedContext
-  /**
-   * Provide a custom serializable context to the project. This context will be available for tests once they run.
-   */
-  provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]): void
-}
-```
-
 ## Exported Reporters
 
 `vitest` comes with a few [built-in reporters](/guide/reporters) that you can use out of the box.

@@ -1,3 +1,7 @@
+---
+outline: [2, 3]
+---
+
 # Node API
 
 ::: warning
@@ -135,3 +139,130 @@ export default function setup({ provide }) {
 }
 ```
 :::
+
+## TestProject <Version>2.2.0</Version>
+
+- **Alias**: `WorkspaceProject` before 2.2.0
+
+### name
+
+The name is a unique string assigned by the user or interpreted by Vitest. If user did not provide a name, Vitest tries to load a `package.json` in the root of the project and takes the `name` property from there. If there is no `package.json`, Vitest uses the name of the folder by default. Inline projects use numbers as the name (converted to string).
+
+::: code-group
+```ts [node.js]
+import { createVitest } from 'vitest/node'
+
+const vitest = await createVitest('test')
+vitest.projects.map(p => p.name) === [
+  '@pkg/server',
+  'utils',
+  '2',
+  'custom'
+]
+```
+```ts [vitest.workspace.js]
+export default [
+  './packages/server', // has package.json with "@pkg/server"
+  './utils', // doesn't have a package.json file
+  {
+    // doesn't customize the name
+    test: {
+      pool: 'node',
+    },
+  },
+  {
+    // customized the name
+    test: {
+      name: 'custom',
+    },
+  },
+]
+```
+:::
+
+### vitest
+
+`vitest` references the global [`vitest`](#vitest) process.
+
+### serializedConfig
+
+This is the test config that all tests will receive. Vitest [serializes config](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/config/serializeConfig.ts) manually by removing all functions and properties that are not possible to serialize. Since this value is available in both tests and node, it is exported from the main entry point.
+
+```ts
+import type { SerializedConfig } from 'vitest'
+
+const config: SerializedConfig = vitest.projects[0].serializedConfig
+```
+
+### globalConfig
+
+The test config that `vitest` was initialized with. If this is the root project, `globalConfig` and `config` will reference the same object. This config is useful for values that cannot be set on the project level, like `coverage` or `reporters`.
+
+```ts
+import type { ResolvedConfig } from 'vitest/node'
+
+vitest.config === vitest.projects[0].globalConfig
+```
+
+### config
+
+This is the project's resolved test config.
+
+### vite
+
+This is project's `ViteDevServer`. All projects have their own Vite servers.
+
+### browser
+
+This value will be set only if tests are running in the browser. If `browser` is enabled, but tests didn't run yet, this will be `undefined`. If you need to check if the project supports browser tests, use `project.isBrowserSupported()` method.
+
+::: warning
+The browser API is even more experimental and doesn't follow SemVer. The browser API will be standardized separately from the rest of the APIs.
+:::
+
+### provide
+
+A way to provide custom values to tests in addition to [`config.provide`](/config/#provide) field.
+
+::: code-group
+```ts [node.js]
+import { createVitest } from 'vitest/node'
+
+const vitest = await createVitest('test')
+const project = vitest.projects.find(p => p.name === 'custom')
+project.provide('key', 'value')
+await vitest.start()
+```
+```ts [test.spec.js]
+import { inject } from 'vitest'
+const value = inject('key')
+```
+:::
+
+The values can be provided dynamicaly. Provided value in tests will be updated on their next run.
+
+### getProvidedContext
+
+This returns the context object. Every project also inherits the global context set by `vitest.provide`.
+
+```ts
+import { createVitest } from 'vitest/node'
+
+const vitest = await createVitest('test')
+vitest.provide('global', true)
+const project = vitest.projects.find(p => p.name === 'custom')
+project.provide('key', 'value')
+
+// { global: true, key: 'value' }
+const context = project.getProvidedContext()
+```
+
+::: tip
+Project context values will always override global ones.
+:::
+
+### createSpecification
+### isRootProject
+### globTestFiles
+### matchesTestGlob
+### close
