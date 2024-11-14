@@ -460,14 +460,14 @@ export class Vitest {
       }
       deps.add(filepath)
 
-      const mod = project.server.moduleGraph.getModuleById(filepath)
+      const mod = project.vite.moduleGraph.getModuleById(filepath)
       const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
       if (!transformed) {
         return
       }
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       await Promise.all(dependencies.map(async (dep) => {
-        const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const path = await project.vite.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           await addImports(project, fsPath)

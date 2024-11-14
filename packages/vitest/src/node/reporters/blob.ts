@@ -46,7 +46,7 @@ export class BlobReporter implements Reporter {
       (project) => {
         return [
           project.getName(),
-          [...project.server.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
+          [...project.vite.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
             if (!mod[1].file) {
               return null
             }
@@ -136,10 +136,10 @@ export async function readBlobs(
         return
       }
       moduleIds.forEach(([moduleId, file, url]) => {
-        const moduleNode = project.server.moduleGraph.createFileOnlyEntry(file)
+        const moduleNode = project.vite.moduleGraph.createFileOnlyEntry(file)
         moduleNode.url = url
         moduleNode.id = moduleId
-        project.server.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
+        project.vite.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
       })
     })
   })

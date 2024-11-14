@@ -7,8 +7,8 @@ import { isFileServingAllowed } from 'vitest/node'
 
 function assertFileAccess(path: string, project: WorkspaceProject) {
   if (
-    !isFileServingAllowed(path, project.server)
-    && !isFileServingAllowed(path, project.ctx.server)
+    !isFileServingAllowed(path, project.vite)
+    && !isFileServingAllowed(path, project.vitest.server)
   ) {
     throw new Error(
       `Access denied to "${path}". See Vite config documentation for "server.fs": https://vitejs.dev/config/server-options.html#server-fs-strict.`,

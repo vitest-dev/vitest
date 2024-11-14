@@ -22,14 +22,14 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     },
     resolveSnapshotPath(testPath: string) {
       return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
-        config: project.getSerializableConfig(),
+        config: project.serializedConfig,
       })
     },
     async getSourceMap(id, force) {
       if (force) {
-        const mod = project.server.moduleGraph.getModuleById(id)
+        const mod = project.vite.moduleGraph.getModuleById(id)
         if (mod) {
-          project.server.moduleGraph.invalidateModule(mod)
+          project.vite.moduleGraph.invalidateModule(mod)
         }
       }
       const r = await project.vitenode.transformRequest(id)
