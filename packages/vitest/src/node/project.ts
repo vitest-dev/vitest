@@ -209,7 +209,7 @@ export class TestProject {
     return this.isRootProject()
   }
 
-  /** @deprecated use createSpecification instead */
+  /** @deprecated use `createSpecification` instead */
   public createSpec(moduleId: string, pool: string): DeprecatedWorkspaceSpec {
     return new TestSpecification(this, moduleId, pool) as DeprecatedWorkspaceSpec
   }
