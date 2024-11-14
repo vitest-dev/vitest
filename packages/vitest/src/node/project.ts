@@ -219,7 +219,7 @@ export class TestProject {
     return this._initializeGlobalSetup()
   }
 
-  /** @private */
+  /** @internal */
   async _initializeGlobalSetup() {
     if (this._globalSetups) {
       return
@@ -253,7 +253,7 @@ export class TestProject {
     return this._teardownGlobalSetup()
   }
 
-  /** @private */
+  /** @internal */
   async _teardownGlobalSetup() {
     if (!this._globalSetups) {
       return
@@ -379,14 +379,14 @@ export class TestProject {
     return isBrowserEnabled(this.config)
   }
 
-  /** @private */
+  /** @internal */
   _markTestFile(testPath: string): void {
     this.testFilesList?.push(testPath)
   }
 
   /**
    * Returns if the file is a test file. Requires `.globTestFiles()` to be called first.
-   * @private
+   * @internal
    */
   isTestFile(testPath: string): boolean {
     return !!this.testFilesList && this.testFilesList.includes(testPath)
@@ -394,7 +394,7 @@ export class TestProject {
 
   /**
    * Returns if the file is a typecheck test file. Requires `.globTestFiles()` to be called first.
-   * @private
+   * @internal
    */
   isTypecheckFile(testPath: string): boolean {
     return !!this.typecheckFilesList && this.typecheckFilesList.includes(testPath)
@@ -405,7 +405,7 @@ export class TestProject {
     return this._serializeOverridenConfig()
   }
 
-  /** @private */
+  /** @internal */
   async globFiles(include: string[], exclude: string[], cwd: string) {
     const globOptions: fg.Options = {
       dot: true,
@@ -478,7 +478,7 @@ export class TestProject {
     return testFiles
   }
 
-  /** @private */
+  /** @internal */
   async _initBrowserServer() {
     if (!this.isBrowserEnabled() || this.browser) {
       return
@@ -534,7 +534,7 @@ export class TestProject {
     return this._configureServer(options, server)
   }
 
-  /** @private */
+  /** @internal */
   async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     this._config = resolveConfig(
       this.vitest.mode,
@@ -601,7 +601,7 @@ export class TestProject {
     return this._initBrowserProvider()
   }
 
-  /** @private */
+  /** @internal */
   async _initBrowserProvider(): Promise<void> {
     if (!this.isBrowserEnabled() || this.browser?.provider) {
       return
