@@ -67,9 +67,9 @@ export function createTestContext<T extends Test | Custom>(
 
   context.task = test
 
-  context.skip = () => {
+  context.skip = (note?: string) => {
     test.pending = true
-    throw new PendingError('test is skipped; abort execution', test)
+    throw new PendingError('test is skipped; abort execution', test, note)
   }
 
   context.onTestFailed = (fn) => {

@@ -230,7 +230,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           'msw/browser',
         ]
 
-        if (project.config.diff) {
+        if (typeof project.config.diff === 'string') {
           entries.push(project.config.diff)
         }
 

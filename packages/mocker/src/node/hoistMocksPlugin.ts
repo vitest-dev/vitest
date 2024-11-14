@@ -6,23 +6,23 @@ import type {
   Expression,
   Identifier,
   ImportDeclaration,
-  ImportExpression,
   VariableDeclaration,
 } from 'estree'
 import type { SourceMap } from 'magic-string'
+import type { RollupAstNode } from 'rollup'
 import type { Plugin, Rollup } from 'vite'
 import type { Node, Positioned } from './esmWalker'
 import { findNodeAround } from 'acorn-walk'
 import MagicString from 'magic-string'
 import { createFilter } from 'vite'
-import { esmWalker, getArbitraryModuleIdentifier } from './esmWalker'
+import { esmWalker } from './esmWalker'
 
 interface HoistMocksOptions {
   /**
    * List of modules that should always be imported before compiler hints.
-   * @default ['vitest']
+   * @default 'vitest'
    */
-  hoistedModules?: string[]
+  hoistedModule?: string
   /**
    * @default ["vi", "vitest"]
    */
@@ -106,10 +106,13 @@ function isIdentifier(node: any): node is Positioned<Identifier> {
   return node.type === 'Identifier'
 }
 
-function getBetterEnd(code: string, node: Node) {
+function getNodeTail(code: string, node: Node) {
   let end = node.end
   if (code[node.end] === ';') {
     end += 1
+  }
+  if (code[node.end] === '\n') {
+    return end + 1
   }
   if (code[node.end + 1] === '\n') {
     end += 1
@@ -160,48 +163,43 @@ export function hoistMocks(
     dynamicImportMockMethodNames = ['mock', 'unmock', 'doMock', 'doUnmock'],
     hoistedMethodNames = ['hoisted'],
     utilsObjectNames = ['vi', 'vitest'],
-    hoistedModules = ['vitest'],
+    hoistedModule = 'vitest',
   } = options
 
-  const hoistIndex = code.match(hashbangRE)?.[0].length ?? 0
+  // hoist at the start of the file, after the hashbang
+  let hoistIndex = hashbangRE.exec(code)?.[0].length ?? 0
 
   let hoistedModuleImported = false
 
   let uid = 0
   const idToImportMap = new Map<string, string>()
 
+  const imports: {
+    node: RollupAstNode<ImportDeclaration>
+    id: string
+  }[] = []
+
   // this will transform import statements into dynamic ones, if there are imports
   // it will keep the import as is, if we don't need to mock anything
   // in browser environment it will wrap the module value with "vitest_wrap_module" function
   // that returns a proxy to the module so that named exports can be mocked
-  const transformImportDeclaration = (node: ImportDeclaration) => {
-    const source = node.source.value as string
-
-    const importId = `__vi_import_${uid++}__`
-    const hasSpecifiers = node.specifiers.length > 0
-    const code = hasSpecifiers
-      ? `const ${importId} = await import('${source}')\n`
-      : `await import('${source}')\n`
-    return {
-      code,
-      id: importId,
-    }
-  }
-
-  function defineImport(node: Positioned<ImportDeclaration>) {
+  function defineImport(
+    importNode: ImportDeclaration & {
+      start: number
+      end: number
+    },
+  ) {
+    const source = importNode.source.value as string
     // always hoist vitest import to top of the file, so
     // "vi" helpers can access it
-    if (hoistedModules.includes(node.source.value as string)) {
+    if (hoistedModule === source) {
       hoistedModuleImported = true
       return
     }
+    const importId = `__vi_import_${uid++}__`
+    imports.push({ id: importId, node: importNode })
 
-    const declaration = transformImportDeclaration(node)
-    if (!declaration) {
-      return null
-    }
-    s.appendLeft(hoistIndex, declaration.code)
-    return declaration.id
+    return importId
   }
 
   // 1. check all import statements and record id -> importName map
@@ -214,13 +212,20 @@ export function hoistMocks(
       if (!importId) {
         continue
       }
-      s.remove(node.start, getBetterEnd(code, node))
       for (const spec of node.specifiers) {
         if (spec.type === 'ImportSpecifier') {
-          idToImportMap.set(
-            spec.local.name,
-            `${importId}.${getArbitraryModuleIdentifier(spec.imported)}`,
-          )
+          if (spec.imported.type === 'Identifier') {
+            idToImportMap.set(
+              spec.local.name,
+              `${importId}.${spec.imported.name}`,
+            )
+          }
+          else {
+            idToImportMap.set(
+              spec.local.name,
+              `${importId}[${JSON.stringify(spec.imported.value as string)}]`,
+            )
+          }
         }
         else if (spec.type === 'ImportDefaultSpecifier') {
           idToImportMap.set(spec.local.name, `${importId}.default`)
@@ -235,7 +240,7 @@ export function hoistMocks(
 
   const declaredConst = new Set<string>()
   const hoistedNodes: Positioned<
-    CallExpression | VariableDeclaration | AwaitExpression
+  CallExpression | VariableDeclaration | AwaitExpression
   >[] = []
 
   function createSyntaxError(node: Positioned<Node>, message: string) {
@@ -300,6 +305,8 @@ export function hoistMocks(
     }
   }
 
+  const usedUtilityExports = new Set<string>()
+
   esmWalker(ast, {
     onIdentifier(id, info, parentStack) {
       const binding = idToImportMap.get(id.name)
@@ -333,6 +340,7 @@ export function hoistMocks(
         && isIdentifier(node.callee.property)
       ) {
         const methodName = node.callee.property.name
+        usedUtilityExports.add(node.callee.object.name)
 
         if (hoistableMockMethodNames.includes(methodName)) {
           const method = `${node.callee.object.name}.${methodName}`
@@ -346,6 +354,35 @@ export function hoistMocks(
               declarationNode,
               `Cannot export the result of "${method}". Remove export declaration because "${method}" doesn\'t return anything.`,
             )
+          }
+          // rewrite vi.mock(import('..')) into vi.mock('..')
+          if (
+            node.type === 'CallExpression'
+            && node.callee.type === 'MemberExpression'
+            && dynamicImportMockMethodNames.includes((node.callee.property as Identifier).name)
+          ) {
+            const moduleInfo = node.arguments[0] as Positioned<Expression>
+            // vi.mock(import('./path')) -> vi.mock('./path')
+            if (moduleInfo.type === 'ImportExpression') {
+              const source = moduleInfo.source as Positioned<Expression>
+              s.overwrite(
+                moduleInfo.start,
+                moduleInfo.end,
+                s.slice(source.start, source.end),
+              )
+            }
+            // vi.mock(await import('./path')) -> vi.mock('./path')
+            if (
+              moduleInfo.type === 'AwaitExpression'
+              && moduleInfo.argument.type === 'ImportExpression'
+            ) {
+              const source = moduleInfo.argument.source as Positioned<Expression>
+              s.overwrite(
+                moduleInfo.start,
+                moduleInfo.end,
+                s.slice(source.start, source.end),
+              )
+            }
           }
           hoistedNodes.push(node)
         }
@@ -394,9 +431,8 @@ export function hoistMocks(
               'AwaitExpression',
             )?.node as Positioned<AwaitExpression> | undefined
             // hoist "await vi.hoisted(async () => {})" or "vi.hoisted(() => {})"
-            hoistedNodes.push(
-              awaitedExpression?.argument === node ? awaitedExpression : node,
-            )
+            const moveNode = awaitedExpression?.argument === node ? awaitedExpression : node
+            hoistedNodes.push(moveNode)
           }
         }
       }
@@ -446,24 +482,6 @@ export function hoistMocks(
     )
   }
 
-  function rewriteMockDynamicImport(
-    nodeCode: string,
-    moduleInfo: Positioned<ImportExpression>,
-    expressionStart: number,
-    expressionEnd: number,
-    mockStart: number,
-  ) {
-    const source = moduleInfo.source as Positioned<Expression>
-    const importPath = s.slice(source.start, source.end)
-    const nodeCodeStart = expressionStart - mockStart
-    const nodeCodeEnd = expressionEnd - mockStart
-    return (
-      nodeCode.slice(0, nodeCodeStart)
-      + importPath
-      + nodeCode.slice(nodeCodeEnd)
-    )
-  }
-
   // validate hoistedNodes doesn't have nodes inside other nodes
   for (let i = 0; i < hoistedNodes.length; i++) {
     const node = hoistedNodes[i]
@@ -479,61 +497,55 @@ export function hoistMocks(
     }
   }
 
-  // Wait for imports to be hoisted and then hoist the mocks
-  const hoistedCode = hoistedNodes
-    .map((node) => {
-      const end = getBetterEnd(code, node)
-      /**
-       * In the following case, we need to change the `user` to user: __vi_import_x__.user
-       * So we should get the latest code from `s`.
-       *
-       * import user from './user'
-       * vi.mock('./mock.js', () => ({ getSession: vi.fn().mockImplementation(() => ({ user })) }))
-       */
-      let nodeCode = s.slice(node.start, end)
+  // hoist vi.mock/vi.hoisted
+  for (const node of hoistedNodes) {
+    const end = getNodeTail(code, node)
+    if (hoistIndex === end) {
+      hoistIndex = end
+    }
+    // don't hoist into itself if it's already at the top
+    else if (hoistIndex !== node.start) {
+      s.move(node.start, end, hoistIndex)
+    }
+  }
 
-      // rewrite vi.mock(import('..')) into vi.mock('..')
-      if (
-        node.type === 'CallExpression'
-        && node.callee.type === 'MemberExpression'
-        && dynamicImportMockMethodNames.includes((node.callee.property as Identifier).name)
-      ) {
-        const moduleInfo = node.arguments[0] as Positioned<Expression>
-        // vi.mock(import('./path')) -> vi.mock('./path')
-        if (moduleInfo.type === 'ImportExpression') {
-          nodeCode = rewriteMockDynamicImport(
-            nodeCode,
-            moduleInfo,
-            moduleInfo.start,
-            moduleInfo.end,
-            node.start,
-          )
-        }
-        // vi.mock(await import('./path')) -> vi.mock('./path')
-        if (
-          moduleInfo.type === 'AwaitExpression'
-          && moduleInfo.argument.type === 'ImportExpression'
-        ) {
-          nodeCode = rewriteMockDynamicImport(
-            nodeCode,
-            moduleInfo.argument as Positioned<ImportExpression>,
-            moduleInfo.start,
-            moduleInfo.end,
-            node.start,
-          )
-        }
-      }
+  // hoist actual dynamic imports last so they are inserted after all hoisted mocks
+  for (const { node: importNode, id: importId } of imports) {
+    const source = importNode.source.value as string
 
-      s.remove(node.start, end)
-      return `${nodeCode}${nodeCode.endsWith('\n') ? '' : '\n'}`
-    })
-    .join('')
-
-  if (hoistedCode || hoistedModuleImported) {
-    s.prepend(
-      (!hoistedModuleImported && hoistedCode ? API_NOT_FOUND_CHECK(utilsObjectNames) : '')
-      + hoistedCode,
+    s.update(
+      importNode.start,
+      importNode.end,
+      `const ${importId} = await import(${JSON.stringify(
+        source,
+      )});\n`,
     )
+
+    if (importNode.start === hoistIndex) {
+      // no need to hoist, but update hoistIndex to keep the order
+      hoistIndex = importNode.end
+    }
+    else {
+      // There will be an error if the module is called before it is imported,
+      // so the module import statement is hoisted to the top
+      s.move(importNode.start, importNode.end, hoistIndex)
+    }
+  }
+
+  if (!hoistedModuleImported && hoistedNodes.length) {
+    const utilityImports = [...usedUtilityExports]
+    // "vi" or "vitest" is imported from a module other than "vitest"
+    if (utilityImports.some(name => idToImportMap.has(name))) {
+      s.prepend(API_NOT_FOUND_CHECK(utilityImports))
+    }
+    // if "vi" or "vitest" are not imported at all, import them
+    else if (utilityImports.length) {
+      s.prepend(
+        `import { ${[...usedUtilityExports].join(', ')} } from ${JSON.stringify(
+          hoistedModule,
+        )}\n`,
+      )
+    }
   }
 
   return {

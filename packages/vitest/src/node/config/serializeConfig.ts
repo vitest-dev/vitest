@@ -37,6 +37,7 @@ export function serializeConfig(
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
+    // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,
     disableConsoleIntercept: config.disableConsoleIntercept,
