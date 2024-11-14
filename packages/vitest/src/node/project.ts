@@ -70,8 +70,7 @@ export class TestProject {
   /** @deprecated use the current project instead */
   public testProject: TestProject
 
-  public readonly id = nanoid()
-  public readonly tmpDir = join(tmpdir(), this.id)
+  public readonly tmpDir = join(tmpdir(), nanoid())
 
   vitenode!: ViteNodeServer
   runner!: ViteNodeRunner
