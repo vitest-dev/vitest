@@ -5,8 +5,8 @@ import type {
   BrowserScript,
   CDPSession,
   BrowserServer as IBrowserServer,
+  TestProject,
   Vite,
-  WorkspaceProject,
 } from 'vitest/node'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
@@ -42,7 +42,7 @@ export class BrowserServer implements IBrowserServer {
   private stackTraceOptions: StackTraceParserOptions
 
   constructor(
-    public project: WorkspaceProject,
+    public project: TestProject,
     public base: string,
   ) {
     this.stackTraceOptions = {

@@ -1117,10 +1117,13 @@ export type UserProjectConfigExport =
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
 
-export type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
+export type TestProjectConfiguration = string | (UserProjectConfigExport & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * @example '../vite.config.ts'
    */
   extends?: string
 })
+
+/** @deprecated use `TestProjectConfiguration` instead */
+export type WorkspaceProjectConfiguration = TestProjectConfiguration

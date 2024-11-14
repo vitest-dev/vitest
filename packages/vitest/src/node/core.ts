@@ -204,7 +204,7 @@ export class Vitest {
   }
 
   public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
-    this.getCoreWorkspaceProject().provide(key, value)
+    this.getRootTestProject().provide(key, value)
   }
 
   /**
@@ -222,7 +222,12 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
+  /** @deprecated use `getRootTestProject` */
   public getCoreWorkspaceProject(): TestProject {
+    return this.coreWorkspaceProject
+  }
+
+  public getRootTestProject(): TestProject {
     return this.coreWorkspaceProject
   }
 
@@ -232,14 +237,14 @@ export class Vitest {
   public getProjectByTaskId(taskId: string): TestProject {
     const task = this.state.idMap.get(taskId)
     const projectName = (task as File).projectName || task?.file?.projectName || ''
-    return this.projects.find(p => p.getName() === projectName)
-      || this.getCoreWorkspaceProject()
+    return this.projects.find(p => p.name === projectName)
+      || this.getRootTestProject()
       || this.projects[0]
   }
 
   public getProjectByName(name: string = '') {
-    return this.projects.find(p => p.getName() === name)
-      || this.getCoreWorkspaceProject()
+    return this.projects.find(p => p.name === name)
+      || this.getRootTestProject()
       || this.projects[0]
   }
 
@@ -475,7 +480,7 @@ export class Vitest {
       }))
     }
 
-    await addImports(spec.project.workspaceProject, spec.moduleId)
+    await addImports(spec.project, spec.moduleId)
     deps.delete(spec.moduleId)
 
     return deps
@@ -558,7 +563,7 @@ export class Vitest {
 
   async initializeGlobalSetup(paths: TestSpecification[]) {
     const projects = new Set(paths.map(spec => spec.project))
-    const coreProject = this.getCoreWorkspaceProject()
+    const coreProject = this.getRootTestProject()
     if (!projects.has(coreProject)) {
       projects.add(coreProject)
     }
@@ -1125,7 +1130,7 @@ export class Vitest {
   }
 
   /**
-   * @deprecated use globTestSpecs instead
+   * @deprecated use `globTestSpecs` instead
    */
   public async globTestFiles(filters: string[] = []) {
     return this.globTestSpecs(filters)

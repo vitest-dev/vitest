@@ -32,7 +32,7 @@ export async function groupFilesByEnv(
   const filesWithEnv = await Promise.all(
     files.map(async (spec) => {
       const file = spec.moduleId
-      const project = spec.project.workspaceProject
+      const project = spec.project
       const code = await fs.readFile(file, 'utf-8')
 
       // 1. Check for control comments in the file

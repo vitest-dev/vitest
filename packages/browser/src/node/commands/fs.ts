@@ -1,11 +1,11 @@
-import type { BrowserCommand, WorkspaceProject } from 'vitest/node'
+import type { BrowserCommand, TestProject } from 'vitest/node'
 import type { BrowserCommands } from '../../../context'
 import fs, { promises as fsp } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import mime from 'mime/lite'
 import { isFileServingAllowed } from 'vitest/node'
 
-function assertFileAccess(path: string, project: WorkspaceProject) {
+function assertFileAccess(path: string, project: TestProject) {
   if (
     !isFileServingAllowed(path, project.vite)
     && !isFileServingAllowed(path, project.vitest.server)

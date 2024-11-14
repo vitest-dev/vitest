@@ -23,7 +23,7 @@ export class GithubActionsReporter implements Reporter {
     }>()
     for (const error of errors) {
       projectErrors.push({
-        project: this.ctx.getCoreWorkspaceProject(),
+        project: this.ctx.getRootTestProject(),
         title: 'Unhandled error',
         error,
       })

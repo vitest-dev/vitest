@@ -1,6 +1,6 @@
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
-import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
+import type { TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
@@ -15,9 +15,9 @@ export async function resolveWorkspace(
   vitest: Vitest,
   cliOptions: UserConfig,
   workspaceConfigPath: string,
-  workspaceDefinition: WorkspaceProjectConfiguration[],
+  workspaceDefinition: TestProjectConfiguration[],
 ): Promise<TestProject[]> {
-  const { configFiles, projectConfigs, nonConfigDirectories } = await resolveWorkspaceProjectConfigs(
+  const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
     vitest,
     workspaceConfigPath,
     workspaceDefinition,
@@ -113,10 +113,10 @@ export async function resolveWorkspace(
   return resolvedProjects
 }
 
-async function resolveWorkspaceProjectConfigs(
+async function resolveTestProjectConfigs(
   vitest: Vitest,
   workspaceConfigPath: string,
-  workspaceDefinition: WorkspaceProjectConfiguration[],
+  workspaceDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
   const projectsOptions: UserWorkspaceConfig[] = []

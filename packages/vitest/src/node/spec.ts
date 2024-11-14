@@ -22,15 +22,15 @@ export class TestSpecification {
   // public readonly location: WorkspaceSpecLocation | undefined
 
   constructor(
-    workspaceProject: TestProject,
+    project: TestProject,
     moduleId: string,
     pool: Pool,
     // location?: WorkspaceSpecLocation | undefined,
   ) {
-    this[0] = workspaceProject
+    this[0] = project
     this[1] = moduleId
     this[2] = { pool }
-    this.project = workspaceProject
+    this.project = project
     this.moduleId = moduleId
     this.pool = pool
     // this.location = location

@@ -1,5 +1,5 @@
 import type { Plugin } from 'vitest/config'
-import type { WorkspaceProject } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
@@ -13,7 +13,7 @@ export { createBrowserPool } from './pool'
 export type { BrowserServer } from './server'
 
 export async function createBrowserServer(
-  project: WorkspaceProject,
+  project: TestProject,
   configFile: string | undefined,
   prePlugins: Plugin[] = [],
   postPlugins: Plugin[] = [],

@@ -104,10 +104,10 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     for (const name in specsByProject) {
       const project = specsByProject[name][0].project
       const files = specsByProject[name].map(spec => spec.moduleId)
-      const checker = await createWorkspaceTypechecker(project.workspaceProject, files)
+      const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project.workspaceProject, checker.getTestFiles())
+      ctx.state.collectFiles(project, checker.getTestFiles())
       await ctx.report('onCollected')
     }
   }

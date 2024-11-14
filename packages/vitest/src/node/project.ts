@@ -132,7 +132,7 @@ export class TestProject {
     // globalSetup can run even if core workspace is not part of the test run
     // so we need to inherit its provided context
     return {
-      ...this.vitest.getCoreWorkspaceProject().getProvidedContext(),
+      ...this.vitest.getRootTestProject().getProvidedContext(),
       ...this._provided,
     }
   }
@@ -200,7 +200,7 @@ export class TestProject {
    * Is this the root project. The root project is the one that has the root config.
    */
   public isRootProject(): boolean {
-    return this.vitest.getCoreWorkspaceProject() === this
+    return this.vitest.getRootTestProject() === this
   }
 
   /** @deprecated use `isRootProject` instead */
