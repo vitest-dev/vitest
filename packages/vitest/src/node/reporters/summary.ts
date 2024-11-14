@@ -1,11 +1,13 @@
-import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
+import type { Custom, File, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { HookOptions } from './task-parser'
 import { getTests } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
 import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
 import { formatProjectName, formatTime, formatTimeString, padSummaryTitle } from './renderers/utils'
 import { WindowRenderer } from './renderers/windowedRenderer'
+import { TaskParser } from './task-parser'
 
 const DURATION_UPDATE_INTERVAL_MS = 100
 const FINISHED_TEST_CLEANUP_TIME_MS = 1_000
@@ -21,14 +23,6 @@ interface Counter {
   failed: number
   skipped: number
   todo: number
-}
-
-interface HookOptions {
-  name: string
-  file: File
-  id: File['id'] | Test['id']
-  type: Task['type']
-
 }
 
 interface SlowTask {
@@ -50,8 +44,7 @@ interface RunningTest extends Pick<Counter, 'total' | 'completed'> {
  * Reporter extension that renders summary and forwards all other logs above itself.
  * Intended to be used by other reporters, not as a standalone reporter.
  */
-export class SummaryReporter implements Reporter {
-  private ctx!: Vitest
+export class SummaryReporter extends TaskParser implements Reporter {
   private options!: Options
   private renderer!: WindowRenderer
 
@@ -98,66 +91,6 @@ export class SummaryReporter implements Reporter {
     this.suites.total = (paths || []).length
   }
 
-  onTaskUpdate(packs: TaskResultPack[]) {
-    const startingTestFiles: File[] = []
-    const finishedTestFiles: File[] = []
-
-    const startingTests: (Test | Custom)[] = []
-    const finishedTests: (Test | Custom)[] = []
-
-    const startingHooks: HookOptions[] = []
-    const endingHooks: HookOptions[] = []
-
-    for (const pack of packs) {
-      const task = this.ctx.state.idMap.get(pack[0])
-
-      if (task?.type === 'suite' && 'filepath' in task && task.result?.state) {
-        if (task?.result?.state === 'run') {
-          startingTestFiles.push(task)
-        }
-        else {
-          // Skipped tests are not reported, do it manually
-          for (const test of getTests(task)) {
-            if (!test.result || test.result?.state === 'skip') {
-              finishedTests.push(test)
-            }
-          }
-
-          finishedTestFiles.push(task.file)
-        }
-      }
-
-      if (task?.type === 'test' || task?.type === 'custom') {
-        if (task.result?.state === 'run') {
-          startingTests.push(task)
-        }
-        else if (task.result?.hooks?.afterEach !== 'run') {
-          finishedTests.push(task)
-        }
-      }
-
-      if (task?.result?.hooks) {
-        for (const [hook, state] of Object.entries(task.result.hooks)) {
-          if (state === 'run') {
-            startingHooks.push({ name: hook, file: task.file, id: task.id, type: task.type })
-          }
-          else {
-            endingHooks.push({ name: hook, file: task.file, id: task.id, type: task.type })
-          }
-        }
-      }
-    }
-
-    endingHooks.forEach(hook => this.onHookEnd(hook))
-    finishedTests.forEach(test => this.onTestFinished(test))
-    finishedTestFiles.forEach(file => this.onTestFileFinished(file))
-
-    startingTestFiles.forEach(file => this.onTestFilePrepare(file))
-    startingTests.forEach(test => this.onTestStart(test))
-    startingHooks.forEach(hook => this.onHookStart(hook),
-    )
-  }
-
   onWatcherRerun() {
     this.runningTests.clear()
     this.finishedTests.clear()
@@ -177,7 +110,7 @@ export class SummaryReporter implements Reporter {
     clearInterval(this.durationInterval)
   }
 
-  private onTestFilePrepare(file: File) {
+  onTestFilePrepare(file: File) {
     if (this.allFinishedTests.has(file.id) || this.runningTests.has(file.id)) {
       return
     }
@@ -202,40 +135,7 @@ export class SummaryReporter implements Reporter {
     this.maxParallelTests = Math.max(this.maxParallelTests, this.runningTests.size)
   }
 
-  private getTestStats(test: Test | Custom) {
-    const file = test.file
-    let stats = this.runningTests.get(file.id)
-
-    if (!stats) {
-      // It's possible that that test finished before it's preparation was even reported
-      this.onTestFilePrepare(test.file)
-      stats = this.runningTests.get(file.id)!
-
-      // It's also possible that this update came after whole test file was reported as finished
-      if (!stats) {
-        return
-      }
-    }
-
-    return stats
-  }
-
-  private getHookStats({ file, id, type }: HookOptions) {
-    // Track slow running hooks only on verbose mode
-    if (!this.options.verbose) {
-      return
-    }
-
-    const stats = this.runningTests.get(file.id)
-
-    if (!stats) {
-      return
-    }
-
-    return type === 'suite' ? stats : stats?.tests.get(id)
-  }
-
-  private onHookStart(options: HookOptions) {
+  onHookStart(options: HookOptions) {
     const stats = this.getHookStats(options)
 
     if (!stats) {
@@ -258,7 +158,7 @@ export class SummaryReporter implements Reporter {
     hook.onFinish = () => clearTimeout(timeout)
   }
 
-  private onHookEnd(options: HookOptions) {
+  onHookEnd(options: HookOptions) {
     const stats = this.getHookStats(options)
 
     if (stats?.hook?.name !== options.name) {
@@ -269,7 +169,7 @@ export class SummaryReporter implements Reporter {
     stats.hook.visible = false
   }
 
-  private onTestStart(test: Test | Custom) {
+  onTestStart(test: Test | Custom) {
     // Track slow running tests only on verbose mode
     if (!this.options.verbose) {
       return
@@ -300,7 +200,7 @@ export class SummaryReporter implements Reporter {
     stats.tests.set(test.id, slowTest)
   }
 
-  private onTestFinished(test: Test | Custom) {
+  onTestFinished(test: Test | Custom) {
     const stats = this.getTestStats(test)
 
     if (!stats) {
@@ -324,7 +224,7 @@ export class SummaryReporter implements Reporter {
     }
   }
 
-  private onTestFileFinished(file: File) {
+  onTestFileFinished(file: File) {
     if (this.allFinishedTests.has(file.id)) {
       return
     }
@@ -360,6 +260,39 @@ export class SummaryReporter implements Reporter {
       // Remove finished test immediatelly.
       this.removeTestFile(file.id)
     }
+  }
+
+  private getTestStats(test: Test | Custom) {
+    const file = test.file
+    let stats = this.runningTests.get(file.id)
+
+    if (!stats) {
+      // It's possible that that test finished before it's preparation was even reported
+      this.onTestFilePrepare(test.file)
+      stats = this.runningTests.get(file.id)!
+
+      // It's also possible that this update came after whole test file was reported as finished
+      if (!stats) {
+        return
+      }
+    }
+
+    return stats
+  }
+
+  private getHookStats({ file, id, type }: HookOptions) {
+    // Track slow running hooks only on verbose mode
+    if (!this.options.verbose) {
+      return
+    }
+
+    const stats = this.runningTests.get(file.id)
+
+    if (!stats) {
+      return
+    }
+
+    return type === 'suite' ? stats : stats?.tests.get(id)
   }
 
   private createSummary() {

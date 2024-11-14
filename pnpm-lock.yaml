@@ -1303,6 +1303,9 @@ importers:
 
   test/reporters:
     devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../packages/runner
       flatted:
         specifier: ^3.2.9
         version: 3.2.9
