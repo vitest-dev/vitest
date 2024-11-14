@@ -47,8 +47,6 @@ export async function collectTests(
   ctx: WorkspaceProject,
   filepath: string,
 ): Promise<null | FileInformation> {
-  // TODO: can we avoid ssr transform entirely?
-  // const request = await ctx.server.transformRequest(filepath)
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
   if (!request) {
     return null
