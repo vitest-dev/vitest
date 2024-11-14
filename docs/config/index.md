@@ -1089,6 +1089,18 @@ inject('wsPort') === 3000
 ```
 :::
 
+Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing the tests.
+
+```ts
+import type { GlobalSetupContext } from 'vitest/node'
+
+export default function setup({ onTestsRerun }: GlobalSetupContext) {
+  onTestsRerun(async () => {
+    await restartDb()
+  })
+}
+```
+
 ### forceRerunTriggers<NonProjectOption />
 
 - **Type**: `string[]`
@@ -1887,7 +1899,7 @@ A list of paths to snapshot serializer modules for snapshot testing, useful if y
 
 ### resolveSnapshotPath<NonProjectOption />
 
-- **Type**: `(testPath: string, snapExtension: string) => string`
+- **Type**: `(testPath: string, snapExtension: string, context: { config: SerializedConfig }) => string`
 - **Default**: stores snapshot files in `__snapshots__` directory
 
 Overrides default snapshot path. For example, to store snapshots next to test files:
@@ -2284,22 +2296,32 @@ export default defineConfig({
 ### diff
 
 - **Type:** `string`
-- **CLI:** `--diff=<value>`
+- **CLI:** `--diff=<path>`
 
-Path to a diff config that will be used to generate diff interface. Useful if you want to customize diff display.
+`DiffOptions` object or a path to a module which exports `DiffOptions`. Useful if you want to customize diff display.
+
+For example, as a config object:
 
 :::code-group
-```ts [vitest.diff.ts]
-import type { DiffOptions } from 'vitest'
-import c from 'tinyrainbow'
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+import c from 'picocolors'
 
-export default {
-  aIndicator: c.bold('--'),
-  bIndicator: c.bold('++'),
-  omitAnnotationLines: true,
-} satisfies DiffOptions
+export default defineConfig({
+  test: {
+    diff: {
+      aIndicator: c.bold('--'),
+      bIndicator: c.bold('++'),
+      omitAnnotationLines: true,
+    }
+  }
+})
 ```
+:::
 
+Or as a module:
+
+:::code-group
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
@@ -2309,12 +2331,32 @@ export default defineConfig({
   }
 })
 ```
+
+```ts [vitest.diff.ts]
+import type { DiffOptions } from 'vitest'
+import c from 'picocolors'
+
+export default {
+  aIndicator: c.bold('--'),
+  bIndicator: c.bold('++'),
+  omitAnnotationLines: true,
+} satisfies DiffOptions
+```
 :::
+
+#### diff.expand
+
+- **Type**: `boolean`
+- **Default**: `true`
+- **CLI:** `--diff.expand=false`
+
+Expand all common lines.
 
 #### diff.truncateThreshold
 
 - **Type**: `number`
 - **Default**: `0`
+- **CLI:** `--diff.truncateThreshold=<path>`
 
 The maximum length of diff result to be displayed. Diffs above this threshold will be truncated.
 Truncation won't take effect with default value 0.
@@ -2323,6 +2365,7 @@ Truncation won't take effect with default value 0.
 
 - **Type**: `string`
 - **Default**: `'... Diff result is truncated'`
+- **CLI:** `--diff.truncateAnnotation=<annotation>`
 
 Annotation that is output at the end of diff result if it's truncated.
 
@@ -2332,6 +2375,13 @@ Annotation that is output at the end of diff result if it's truncated.
 - **Default**: `noColor = (string: string): string => string`
 
 Color of truncate annotation, default is output with no color.
+
+#### diff.printBasicPrototype
+
+- **Type**: `boolean`
+- **Default**: `true`
+
+Print basic prototype `Object` and `Array` in diff output
 
 ### fakeTimers
 

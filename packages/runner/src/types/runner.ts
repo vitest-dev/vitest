@@ -148,6 +148,10 @@ export interface VitestRunner {
    */
   importFile: (filepath: string, source: VitestRunnerImportSource) => unknown
   /**
+   * Function that is called when the runner attempts to get the value when `test.extend` is used with `{ injected: true }`
+   */
+  injectValue?: (key: string) => unknown
+  /**
    * Publicly available configuration.
    */
   config: VitestRunnerConfig
