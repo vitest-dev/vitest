@@ -90,7 +90,7 @@ test('JUnit reporter with custom string classname', async () => {
 
 test('JUnit reporter with custom function classnameTemplate', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath} - suite:${task.suitename}` })
+  const reporter = new JUnitReporter({ classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath}` })
   const context = getContext()
 
   // Act
@@ -103,7 +103,7 @@ test('JUnit reporter with custom function classnameTemplate', async () => {
 })
 test('JUnit reporter with custom string classnameTemplate', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classnameTemplate: `filename:{filename} - filepath:{filepath} - suite:{suitename}` })
+  const reporter = new JUnitReporter({ classnameTemplate: `filename:{filename} - filepath:{filepath}` })
   const context = getContext()
 
   // Act

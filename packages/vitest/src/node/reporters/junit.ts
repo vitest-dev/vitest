@@ -14,7 +14,6 @@ import { IndentedLogger } from './renderers/indented-logger'
 interface ClassnameTemplateVariables {
   filename: string
   filepath: string
-  suitename: string
 }
 
 export interface JUnitOptions {
@@ -23,7 +22,7 @@ export interface JUnitOptions {
   classname?: string
 
   /**
-   * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders like {filename}, {filepath}, {suitename}.
+   * Template for the classname attribute. Can be either a string or a function. The string can contain placeholders {filename} and {filepath}.
    */
   classnameTemplate?: string | ((classnameVariables: ClassnameTemplateVariables) => string)
   suiteName?: string
@@ -212,7 +211,6 @@ export class JUnitReporter implements Reporter {
       const templateVars: ClassnameTemplateVariables = {
         filename: task.file.name,
         filepath: task.file.filepath,
-        suitename: this.options.suiteName ?? task.suite?.name ?? '',
       }
 
       if (typeof this.options.classnameTemplate === 'function') {
@@ -222,7 +220,6 @@ export class JUnitReporter implements Reporter {
         classname = this.options.classnameTemplate
           .replace(/\{filename\}/g, templateVars.filename)
           .replace(/\{filepath\}/g, templateVars.filepath)
-          .replace(/\{suitename\}/g, templateVars.suitename)
       }
       else if (typeof this.options.classname === 'string') {
         classname = this.options.classname

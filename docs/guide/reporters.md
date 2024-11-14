@@ -254,13 +254,12 @@ The outputted XML contains nested `testsuites` and `testcase` tags. You can use 
 The supported placeholders for the `classnameTemplate` option are:
 - filename
 - filepath
-- suitename
 
 ```ts
 export default defineConfig({
   test: {
     reporters: [
-      ['junit', { suiteName: 'custom suite name', classnameTemplate: 'filename:{filename} - filepath:{filepath} - suite:{suitename}' }]
+      ['junit', { suiteName: 'custom suite name', classnameTemplate: 'filename:{filename} - filepath:{filepath}' }]
     ]
   },
 })
