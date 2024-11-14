@@ -54,6 +54,7 @@ export async function initializeProject(
 ) {
   const project = new WorkspaceProject(workspacePath, ctx, options)
 
+  const { extends: extendsConfig, workspaceConfigPath, ...restOptions } = options
   const root
     = options.root
     || (typeof workspacePath === 'number'
@@ -62,14 +63,14 @@ export async function initializeProject(
         ? workspacePath
         : dirname(workspacePath))
 
-  const configFile = options.extends
-    ? resolve(dirname(options.workspaceConfigPath), options.extends)
+  const configFile = extendsConfig
+    ? resolve(dirname(workspaceConfigPath), extendsConfig)
     : typeof workspacePath === 'number' || workspacePath.endsWith('/')
       ? false
       : workspacePath
 
   const config: ViteInlineConfig = {
-    ...options,
+    ...restOptions,
     root,
     configFile,
     // this will make "mode": "test" | "benchmark" inside defineConfig
