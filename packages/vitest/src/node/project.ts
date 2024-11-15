@@ -499,7 +499,7 @@ export class TestProject {
   }
 
   /**
-   * Closes the project and all associated resources. This will only be called once.
+   * Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts.
    * If the resources are needed again, create a new project.
    */
   public close(): Promise<void> {
@@ -511,7 +511,10 @@ export class TestProject {
           this.browser?.close(),
           this.clearTmpDir(),
         ].filter(Boolean),
-      ).then(() => (this._provided = {} as any))
+      ).then(() => {
+        this._provided = {} as any
+        this._vite = undefined
+      })
     }
     return this.closingPromise
   }
@@ -603,7 +606,8 @@ export class TestProject {
     await this.browser?.initBrowserProvider()
   }
 
-  static createBasicProject(vitest: Vitest): TestProject {
+  /** @internal */
+  static _createBasicProject(vitest: Vitest): TestProject {
     const project = new TestProject(
       vitest.config.name || vitest.config.root,
       vitest,
@@ -621,11 +625,6 @@ export class TestProject {
       )
     }
     return project
-  }
-
-  /** @deprecated */
-  static async createCoreProject(vitest: Vitest): Promise<TestProject> {
-    return TestProject.createBasicProject(vitest)
   }
 }
 

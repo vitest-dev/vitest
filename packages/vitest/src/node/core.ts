@@ -193,7 +193,7 @@ export class Vitest {
       )
     }
     if (!this.coreWorkspaceProject) {
-      this.coreWorkspaceProject = TestProject.createBasicProject(this)
+      this.coreWorkspaceProject = TestProject._createBasicProject(this)
     }
 
     if (this.config.testNamePattern) {
@@ -208,26 +208,17 @@ export class Vitest {
   }
 
   /**
-   * @deprecated internal, use `_createCoreProject` instead
-   */
-  createCoreProject() {
-    return this._createCoreProject()
-  }
-
-  /**
    * @internal
    */
   _createCoreProject() {
-    this.coreWorkspaceProject = TestProject.createBasicProject(this)
-    return this.coreWorkspaceProject
-  }
-
-  /** @deprecated use `getRootTestProject` */
-  public getCoreWorkspaceProject(): TestProject {
+    this.coreWorkspaceProject = TestProject._createBasicProject(this)
     return this.coreWorkspaceProject
   }
 
   public getRootTestProject(): TestProject {
+    if (!this.coreWorkspaceProject) {
+      throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
+    }
     return this.coreWorkspaceProject
   }
 
@@ -1033,11 +1024,11 @@ export class Vitest {
           teardownProjects.push(this.coreWorkspaceProject)
         }
         // do teardown before closing the server
-        for await (const project of teardownProjects.reverse()) {
+        for (const project of teardownProjects.reverse()) {
           await project._teardownGlobalSetup()
         }
 
-        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close().then(() => (w as any)._vite = undefined as any))
+        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close())
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
         if (!this.resolvedProjects.includes(this.coreWorkspaceProject)) {

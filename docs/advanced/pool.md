@@ -40,12 +40,12 @@ export default defineConfig({
 The file specified in `pool` option should export a function (can be async) that accepts `Vitest` interface as its first option. This function needs to return an object matching `ProcessPool` interface:
 
 ```ts
-import { ProcessPool, WorkspaceProject } from 'vitest/node'
+import { ProcessPool, TestSpecification } from 'vitest/node'
 
 export interface ProcessPool {
   name: string
-  runTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
-  collectTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
+  runTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
+  collectTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
   close?: () => Promise<void>
 }
 ```
