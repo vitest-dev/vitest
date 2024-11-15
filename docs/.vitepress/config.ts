@@ -216,24 +216,39 @@ export default ({ mode }: { mode: string }) => {
           {
             items: [
               {
-                text: 'Vitest Node API',
-                link: '/advanced/api',
+                text: 'API',
+                items: [
+
+                  {
+                    text: 'Vitest Node API',
+                    link: '/advanced/api',
+                  },
+                  {
+                    text: 'Runner API',
+                    link: '/advanced/runner',
+                  },
+                  {
+                    text: 'Task Metadata',
+                    link: '/advanced/metadata',
+                  },
+                ],
               },
               {
-                text: 'Runner API',
-                link: '/advanced/runner',
-              },
-              {
-                text: 'Task Metadata',
-                link: '/advanced/metadata',
-              },
-              {
-                text: 'Extending Reporters',
-                link: '/advanced/reporters',
-              },
-              {
-                text: 'Custom Pool',
-                link: '/advanced/pool',
+                text: 'Guides',
+                items: [
+                  {
+                    text: 'Running Tests',
+                    link: '/advanced/guide/tests',
+                  },
+                  {
+                    text: 'Extending Reporters',
+                    link: '/advanced/reporters',
+                  },
+                  {
+                    text: 'Custom Pool',
+                    link: '/advanced/pool',
+                  },
+                ],
               },
             ],
           },

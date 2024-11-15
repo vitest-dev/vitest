@@ -87,8 +87,6 @@ class MyReporter implements Reporter {
   }
 }
 ```
-
-We are planning to stabilize this API in Vitest 2.1.
 :::
 
 ### TestCase

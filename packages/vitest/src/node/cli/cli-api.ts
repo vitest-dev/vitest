@@ -42,7 +42,7 @@ export async function startVitest(
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
-): Promise<Vitest | undefined> {
+): Promise<Vitest> {
   const root = resolve(options.root || process.cwd())
 
   const ctx = await prepareVitest(

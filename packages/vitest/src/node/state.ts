@@ -90,6 +90,10 @@ export class StateManager {
     })
   }
 
+  getTestModules(keys?: string[]): TestModule[] {
+    return this.getFiles(keys).map(file => this.getReportedEntity(file) as TestModule)
+  }
+
   getFilepaths(): string[] {
     return Array.from(this.filesMap.keys())
   }
