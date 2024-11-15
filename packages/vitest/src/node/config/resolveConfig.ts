@@ -680,6 +680,7 @@ export function resolveConfig(
       resolve(viteConfig.cacheDir, 'vitest'),
       resolved.name,
     )
+    // console.log("[resolveConfig]", [viteConfig.cacheDir, cacheDir])
 
     if (resolved.cache && resolved.cache.dir) {
       logger.console.warn(

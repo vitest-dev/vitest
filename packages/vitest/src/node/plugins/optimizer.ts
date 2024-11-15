@@ -12,12 +12,16 @@ export function VitestOptimizer(): Plugin {
           testConfig.deps?.optimizer?.web,
           viteConfig.optimizeDeps,
           testConfig,
+          viteConfig.cacheDir,
         )
         const ssrOptimizer = resolveOptimizerConfig(
           testConfig.deps?.optimizer?.ssr,
           viteConfig.ssr?.optimizeDeps,
           testConfig,
+          viteConfig.cacheDir,
         )
+
+        // console.log("[vitest:normalize-optimizer]", [testConfig, viteConfig.cacheDir, webOptimizer.cacheDir, ssrOptimizer.cacheDir]);
 
         viteConfig.cacheDir
           = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
