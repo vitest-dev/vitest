@@ -42,8 +42,6 @@ export function resolveOptimizerConfig(
   }
   else {
     const root = testConfig.root ?? process.cwd()
-    // const cacheDir
-    //   = testConfig.cache !== false ? testConfig.cache?.dir : undefined
     const currentInclude = testOptions.include || viteOptions?.include || []
     const exclude = [
       'vitest',
@@ -62,8 +60,6 @@ export function resolveOptimizerConfig(
     )
 
     newConfig.cacheDir = (testConfig.cache !== false && testConfig.cache?.dir) || VitestCache.resolveCacheDir(root, viteCacheDir, testConfig.name)
-    // newConfig.cacheDir
-    //   = cacheDir ?? VitestCache.resolveCacheDir(root, cacheDir, testConfig.name)
     newConfig.optimizeDeps = {
       ...viteOptions,
       ...testOptions,

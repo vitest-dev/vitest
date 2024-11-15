@@ -21,8 +21,6 @@ export function VitestOptimizer(): Plugin {
           viteConfig.cacheDir,
         )
 
-        // console.log("[vitest:normalize-optimizer]", [testConfig, viteConfig.cacheDir, webOptimizer.cacheDir, ssrOptimizer.cacheDir]);
-
         viteConfig.cacheDir
           = webOptimizer.cacheDir || ssrOptimizer.cacheDir || viteConfig.cacheDir
         viteConfig.optimizeDeps = webOptimizer.optimizeDeps
