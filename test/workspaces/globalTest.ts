@@ -9,6 +9,8 @@ declare module 'vitest' {
     invalidValue: unknown
     projectConfigValue: boolean
     globalConfigValue: boolean
+
+    providedConfigValue: string
   }
 }
 
@@ -35,8 +37,9 @@ export async function teardown() {
   try {
     assert.ok(results.success)
     assert.equal(results.numTotalTestSuites, 28)
-    assert.equal(results.numTotalTests, 31)
-    assert.equal(results.numPassedTests, 31)
+    assert.equal(results.numTotalTests, 33)
+    assert.equal(results.numPassedTests, 33)
+    assert.ok(results.coverageMap)
 
     const shared = results.testResults.filter((r: any) => r.name.includes('space_shared/test.spec.ts'))
 

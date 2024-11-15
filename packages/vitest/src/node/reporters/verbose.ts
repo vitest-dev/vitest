@@ -43,6 +43,9 @@ export class VerboseReporter extends DefaultReporter {
             ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
           )
         }
+        if (task.result?.note) {
+          title += c.dim(c.gray(` [${task.result.note}]`))
+        }
         this.ctx.logger.log(title)
         if (task.result.state === 'fail') {
           task.result.errors?.forEach((error) => {

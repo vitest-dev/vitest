@@ -3,7 +3,7 @@ import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
 import type { SerializedCoverageConfig } from '../runtime/config'
-import type { ArgumentsType, OnServerRestartHandler, ProvidedContext, UserConsoleLog } from '../types/general'
+import type { ArgumentsType, OnServerRestartHandler, OnTestsRerunHandler, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
@@ -77,7 +77,8 @@ export class Vitest {
 
   private coreWorkspaceProject!: WorkspaceProject
 
-  private resolvedProjects: WorkspaceProject[] = []
+  /** @private */
+  public resolvedProjects: WorkspaceProject[] = []
   public projects: WorkspaceProject[] = []
 
   public distPath = distDir
@@ -103,6 +104,7 @@ export class Vitest {
   private _onClose: (() => Awaited<unknown>)[] = []
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
+  private _onUserTestsRerun: OnTestsRerunHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this.unregisterWatcher?.()
@@ -118,6 +120,7 @@ export class Vitest {
     this.coverageProvider = undefined
     this.runningPromise = undefined
     this._cachedSpecs.clear()
+    this._onUserTestsRerun = []
 
     const resolved = resolveConfig(this.mode, options, server.config, this.logger)
 
@@ -302,10 +305,6 @@ export class Vitest {
     return this.coverageProvider
   }
 
-  private async initBrowserProviders() {
-    return Promise.all(this.projects.map(w => w.initBrowserProvider()))
-  }
-
   async mergeReports() {
     if (this.reporters.some(r => r instanceof BlobReporter)) {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
@@ -368,8 +367,6 @@ export class Vitest {
   async collect(filters?: string[]) {
     this._onClose = []
 
-    await this.initBrowserProviders()
-
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
     )
@@ -401,7 +398,6 @@ export class Vitest {
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
-      await this.initBrowserProviders()
     }
     finally {
       await this.report('onInit', this)
@@ -444,7 +440,6 @@ export class Vitest {
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
-      await this.initBrowserProviders()
     }
     finally {
       await this.report('onInit', this)
@@ -692,13 +687,20 @@ export class Vitest {
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
   }
 
+  async initBrowserServers() {
+    await Promise.all(this.projects.map(p => p.initBrowserServer()))
+  }
+
   async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
-    await this.report('onWatcherRerun', files, trigger)
+    await Promise.all([
+      this.report('onWatcherRerun', files, trigger),
+      ...this._onUserTestsRerun.map(fn => fn(files)),
+    ])
     await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
@@ -820,7 +822,10 @@ export class Vitest {
 
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
-      await this.report('onWatcherRerun', files, triggerLabel)
+      await Promise.all([
+        this.report('onWatcherRerun', files, triggerLabel),
+        ...this._onUserTestsRerun.map(fn => fn(files)),
+      ])
 
       await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), false)
 
@@ -1156,5 +1161,9 @@ export class Vitest {
 
   onClose(fn: () => void) {
     this._onClose.push(fn)
+  }
+
+  onTestsRerun(fn: OnTestsRerunHandler): void {
+    this._onUserTestsRerun.push(fn)
   }
 }

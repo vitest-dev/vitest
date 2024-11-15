@@ -79,6 +79,8 @@ export type {
   ProjectConfig,
   ResolvedConfig,
   ResolvedProjectConfig,
+  ResolveSnapshotPathHandler,
+  ResolveSnapshotPathHandlerContext,
   RuntimeConfig,
   SequenceHooks,
   SequenceSetupFiles,
@@ -126,7 +128,10 @@ export type {
   TscErrorInfo as TypeCheckErrorInfo,
 } from '../typecheck/types'
 
-export type { OnServerRestartHandler } from '../types/general'
+export type {
+  OnServerRestartHandler,
+  OnTestsRerunHandler,
+} from '../types/general'
 
 export { createDebugger } from '../utils/debugger'
 
