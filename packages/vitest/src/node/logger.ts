@@ -105,7 +105,7 @@ export class Logger {
   printError(err: unknown, options: ErrorOptions = {}): PrintErrorResult | undefined {
     const { fullStack = false, type } = options
     const project = options.project
-      ?? this.ctx.getRootTestProject()
+      ?? this.ctx.coreWorkspaceProject
       ?? this.ctx.projects[0]
     return printError(err, project, {
       type,

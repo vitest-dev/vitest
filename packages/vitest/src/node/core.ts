@@ -75,7 +75,8 @@ export class Vitest {
 
   public packageInstaller: VitestPackageInstaller
 
-  private coreWorkspaceProject!: TestProject
+  /** @internal */
+  public coreWorkspaceProject!: TestProject
 
   /** @private */
   public resolvedProjects: TestProject[] = []
