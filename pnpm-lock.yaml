@@ -1183,6 +1183,12 @@ importers:
       memfs:
         specifier: ^4.8.2
         version: 4.8.2
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-19:
+        specifier: npm:react@19.0.0-rc-b01722d5-20241114
+        version: react@19.0.0-rc-b01722d5-20241114
       sweetalert2:
         specifier: ^11.6.16
         version: 11.6.16
@@ -1224,7 +1230,7 @@ importers:
         version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
-        version: 5.1.5(vite@5.4.0(@types/node@22.9.0)(terser@5.36.0))(vue@3.5.12(typescript@5.6.3))
+        version: 5.2.0(vite@5.4.0(@types/node@22.9.0)(terser@5.36.0))(vue@3.5.12(typescript@5.6.3))
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -1239,7 +1245,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 15.11.4
+        version: 15.11.6
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1266,7 +1272,7 @@ importers:
         version: 3.5.12(typescript@5.6.3)
       webdriverio:
         specifier: latest
-        version: 9.2.12
+        version: 9.2.14
 
   test/dts-fixture:
     devDependencies:
@@ -1363,7 +1369,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 15.11.4
+        version: 15.11.6
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1396,7 +1402,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 9.2.12
+        version: 9.2.14
 
   test/workspaces:
     devDependencies:
@@ -3980,6 +3986,13 @@ packages:
       vite: ^5.4.0
       vue: ^3.2.25
 
+  '@vitejs/plugin-vue@5.2.0':
+    resolution: {integrity: sha512-7n7KdUEtx/7Yl7I/WVAMZ1bEb0eVvXF3ummWTeLcs/9gvo9pJhuLdouSXGjdZ/MKD1acf1I272+X0RMua4/R3g==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      vite: ^5.4.0
+      vue: ^3.2.25
+
   '@vitest/eslint-plugin@1.1.7':
     resolution: {integrity: sha512-pTWGW3y6lH2ukCuuffpan6kFxG6nIuoesbhMiQxskyQMRcCN5t9SXsKrNHvEw3p8wcCsgJoRqFZVkOTn6TjclA==}
     peerDependencies:
@@ -6166,6 +6179,10 @@ packages:
     resolution: {integrity: sha512-AU6tzh3ADd28vSmXahgLsGyGGihXPGeKH0owDn9lhHolB6vIwEhag//T+TBzDoAcHhmVEwlxwSgtW1KZep+1MA==}
     engines: {node: '>=18.0.0'}
 
+  happy-dom@15.11.6:
+    resolution: {integrity: sha512-elX7iUTu+5+3b2+NGQc0L3eWyq9jKhuJJ4GpOMxxT/c2pg9O3L5H3ty2VECX0XXZgRmmRqXyOK8brA2hDI6LsQ==}
+    engines: {node: '>=18.0.0'}
+
   has-bigints@1.0.2:
     resolution: {integrity: sha512-tSvCKtBr9lkF0Ex0aQiP9N+OpV4zi2r/Nee5VkRDbaqv35RLYMzbwQfFSZZH0kR+Rd6302UJZ2p/bJCEoR3VoQ==}
 
@@ -7868,6 +7885,10 @@ packages:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
     engines: {node: '>=0.10.0'}
 
+  react@19.0.0-rc-b01722d5-20241114:
+    resolution: {integrity: sha512-VT5vig/1unX2lH2RiEuQoKJkn/wnuQw7xwNndsVeVx7TQPQu+6GUjhBomhyZIW3M1bDgPGG5wEBgjNoIXYkeEQ==}
+    engines: {node: '>=0.10.0'}
+
   read-pkg-up@7.0.1:
     resolution: {integrity: sha512-zK0TB7Xd6JpCLmlLmufqykGE+/TlOePD6qKClNW7hHDKFh/J7/7gCWGR7joEQEW1bKq3a3yUZSObOoWLFQ4ohg==}
     engines: {node: '>=8'}
@@ -9343,8 +9364,8 @@ packages:
       devtools:
         optional: true
 
-  webdriverio@9.2.12:
-    resolution: {integrity: sha512-XtptP5mrubvr6s1GrtPk1DqdfcMvnaYqZCTfWT0EIebFFnQSz9sc0c9qn553zoNB6Xfe6+kyTRh9Tyj7AFIrEg==}
+  webdriverio@9.2.14:
+    resolution: {integrity: sha512-85yEbwN3MwdrGzKZoGkLUf1J5cpfnc7knL4u/Y6XWd0gGwYjv60I5ZPsgSnXzNXAkq2kmtkammf1AM3ihqFM3A==}
     engines: {node: '>=18.20.0'}
     peerDependencies:
       puppeteer-core: ^22.3.0
@@ -12428,6 +12449,11 @@ snapshots:
       vite: 5.4.0(@types/node@22.9.0)(terser@5.36.0)
       vue: 3.5.12(typescript@5.6.3)
 
+  '@vitejs/plugin-vue@5.2.0(vite@5.4.0(@types/node@22.9.0)(terser@5.36.0))(vue@3.5.12(typescript@5.6.3))':
+    dependencies:
+      vite: 5.4.0(@types/node@22.9.0)(terser@5.36.0)
+      vue: 3.5.12(typescript@5.6.3)
+
   '@vitest/eslint-plugin@1.1.7(@typescript-eslint/utils@8.10.0(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3))(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3)(vitest@packages+vitest)':
     dependencies:
       '@typescript-eslint/utils': 8.10.0(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3)
@@ -15169,6 +15195,12 @@ snapshots:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
 
+  happy-dom@15.11.6:
+    dependencies:
+      entities: 4.5.0
+      webidl-conversions: 7.0.0
+      whatwg-mimetype: 3.0.0
+
   has-bigints@1.0.2: {}
 
   has-flag@3.0.0: {}
@@ -17108,6 +17140,8 @@ snapshots:
     dependencies:
       loose-envify: 1.4.0
 
+  react@19.0.0-rc-b01722d5-20241114: {}
+
   read-pkg-up@7.0.1:
     dependencies:
       find-up: 4.1.0
@@ -18868,7 +18902,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriverio@9.2.12:
+  webdriverio@9.2.14:
     dependencies:
       '@types/node': 20.14.15
       '@types/sinonjs__fake-timers': 8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)
