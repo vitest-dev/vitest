@@ -677,10 +677,9 @@ export function resolveConfig(
   if (resolved.cache !== false) {
     let cacheDir = VitestCache.resolveCacheDir(
       '',
-      resolve(viteConfig.cacheDir, 'vitest'),
+      viteConfig.cacheDir,
       resolved.name,
     )
-    // console.log("[resolveConfig]", [viteConfig.cacheDir, cacheDir])
 
     if (resolved.cache && resolved.cache.dir) {
       logger.console.warn(
