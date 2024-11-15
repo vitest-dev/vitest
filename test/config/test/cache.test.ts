@@ -58,7 +58,6 @@ test('use cacheDir', async () => {
 })
 
 describe('with optimizer enabled', () => {
-  // TODO: is this working?
   const deps = {
     optimizer: {
       web: {

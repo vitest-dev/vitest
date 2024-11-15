@@ -142,6 +142,7 @@ export async function VitestPlugin(
                   ?? viteConfig.test?.isolate,
               },
             },
+            deps: testConfig.deps ?? viteConfig.test?.deps,
           },
         }
 
