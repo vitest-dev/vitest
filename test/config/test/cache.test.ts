@@ -77,7 +77,7 @@ describe('with optimizer enabled', () => {
     expect(stderr).toBe('')
 
     const cachePath = ctx!.cache.results.getCachePath()
-    const path = resolve(project, 'node_modules/.vite/vitest/results.json')
+    const path = resolve(root, 'node_modules/.vite/vitest/results.json')
     expect(cachePath).toBe(path)
   })
 
@@ -117,7 +117,7 @@ describe('with optimizer enabled', () => {
     expect(stderr).toBe('')
 
     const cachePath = ctx!.cache.results.getCachePath()
-    const path = resolve(project, 'node_modules/.vite-custom/results.json')
+    const path = resolve(root, 'node_modules/.vite-custom/results.json')
     expect(cachePath).toBe(path)
   })
 })
