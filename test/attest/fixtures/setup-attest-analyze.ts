@@ -9,7 +9,7 @@ const config = getConfig()
 // (probably ts server fs in memory is stale and we can invalidate on re-run via vfs.updateFile?)
 // import { setup } from "@ark/attest";
 
-export async function setup() {
+async function setup() {
   if (config.skipTypes) {
     return
   }
@@ -19,11 +19,10 @@ export async function setup() {
   })
 }
 
-export default async (_ctx: GlobalSetupContext) => {
+export default async (ctx: GlobalSetupContext) => {
   await setup()
 
-  // TODO: re-run setup
-  // ctx.onWatcherRerun(async () => {
-  //   await setup();
-  // });
+  ctx.onTestsRerun(async () => {
+    await setup();
+  });
 }
