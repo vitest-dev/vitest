@@ -35,7 +35,7 @@ const reactIsMethods = [
 ] as const
 
 const ReactIs: typeof ReactIs18 = Object.fromEntries(
-  reactIsMethods.map(m => [m, (v: any) => (ReactIs18 as any)[m](v) || ReactIs19[m](v)])
+  reactIsMethods.map(m => [m, (v: any) => (ReactIs18 as any)[m](v) || ReactIs19[m](v)]),
 ) as any
 
 // Given element.props.children, or subtree during recursive traversal,
