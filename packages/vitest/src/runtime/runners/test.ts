@@ -16,6 +16,7 @@ import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
 import { createExpect } from '../../integrations/chai/index'
+import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
 import { vi } from '../../integrations/vi'
 import { rpc } from '../rpc'
@@ -87,6 +88,12 @@ export class VitestTestRunner implements VitestRunner {
 
   onCancel(_reason: CancelReason) {
     this.cancelRun = true
+  }
+
+  injectValue(key: string) {
+    // inject has a very limiting type controlled by ProvidedContext
+    // some tests override it which causes the build to fail
+    return (inject as any)(key)
   }
 
   async onBeforeRunTask(test: Task) {

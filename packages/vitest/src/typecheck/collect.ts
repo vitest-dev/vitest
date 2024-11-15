@@ -51,6 +51,8 @@ export async function collectTests(
   if (!request) {
     return null
   }
+  // unwrap __vite_ssr_identity__ for Vite 6
+  request.code = request.code.replace(/__vite_ssr_identity__\((\w+\.\w+)\)/g, '(                     $1)')
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.getName()

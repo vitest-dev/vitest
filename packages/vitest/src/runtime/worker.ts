@@ -1,6 +1,7 @@
 import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { VitestWorker } from './workers/types'
 import { pathToFileURL } from 'node:url'
+import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import { loadEnvironment } from '../integrations/env/loader'
@@ -90,6 +91,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
       },
       rpc,
       providedContext: ctx.providedContext,
+      onFilterStackTrace(stack) {
+        return createStackString(parseStacktrace(stack))
+      },
     } satisfies WorkerGlobalState
 
     const methodName = method === 'collect' ? 'collectTests' : 'runTests'

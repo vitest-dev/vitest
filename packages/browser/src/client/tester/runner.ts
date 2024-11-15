@@ -7,7 +7,8 @@ import { page, userEvent } from '@vitest/browser/context'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { originalPositionFor, TraceMap } from 'vitest/utils'
-import { executor } from '../utils'
+import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
+import { executor, getWorkerState } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
@@ -29,7 +30,7 @@ export function createBrowserRunner(
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
-): { new (options: BrowserRunnerOptions): VitestRunner } {
+): { new (options: BrowserRunnerOptions): VitestRunner & { sourceMapCache: Map<string, any> } } {
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: SerializedConfig
     hashMap = browserHashMap
@@ -171,6 +172,14 @@ export async function initiateRunner(
   ])
   runner.config.diffOptions = diffOptions
   cachedRunner = runner
+  getWorkerState().onFilterStackTrace = (stack: string) => {
+    const stacks = parseStacktrace(stack, {
+      getSourceMap(file) {
+        return runner.sourceMapCache.get(file)
+      },
+    })
+    return createStackString(stacks)
+  }
   return runner
 }
 

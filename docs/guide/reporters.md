@@ -249,7 +249,7 @@ AssertionError: expected 5 to be 4 // Object.is equality
 </testsuites>
 ```
 
-The outputted XML contains nested `testsuites` and `testcase` tags. You can use the environment variables `VITEST_JUNIT_SUITE_NAME` and `VITEST_JUNIT_CLASSNAME` to configure their `name` and `classname` attributes, respectively. These can also be customized via reporter options `suiteName` and `classnameTemplate`. `classnameTemplate` can either be a template string or a function.
+The outputted XML contains nested `testsuites` and `testcase` tags. These can also be customized via reporter options `suiteName` and `classnameTemplate`. `classnameTemplate` can either be a template string or a function.
 
 The supported placeholders for the `classnameTemplate` option are:
 - filename
@@ -267,7 +267,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Outputs a report of the test results in JSON format. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/#outputfile) configuration option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. Can either be printed to the terminal or written to a file using the [`outputFile`](/config/#outputfile) configuration option.
 
 :::code-group
 ```bash [CLI]
@@ -326,9 +326,14 @@ Example of a JSON report:
       "message": "",
       "name": "/root-directory/__tests__/test-file-1.test.ts"
     }
-  ]
+  ],
+  "coverageMap": {}
 }
 ```
+
+::: info
+Since Vitest 2.2, the JSON reporter includes coverage information in `coverageMap` if coverage is enabled.
+:::
 
 ### HTML Reporter
 

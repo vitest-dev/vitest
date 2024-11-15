@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "2.1.4",
+  "version": "2.2.0-beta.1",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -89,14 +89,14 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.12",
-    "msw": "^2.6.0",
+    "msw": "^2.6.4",
     "sirv": "^3.0.0",
     "tinyrainbow": "^1.2.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.2",
-    "@types/ws": "^8.5.12",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/ws": "^8.5.13",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
