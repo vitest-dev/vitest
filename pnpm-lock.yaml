@@ -627,6 +627,9 @@ importers:
       react-is:
         specifier: ^18.3.1
         version: 18.3.1
+      react-is-19:
+        specifier: npm:react-is@19.0.0-rc-b01722d5-20241114
+        version: react-is@19.0.0-rc-b01722d5-20241114
 
   packages/runner:
     dependencies:
@@ -7849,6 +7852,9 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
+
+  react-is@19.0.0-rc-b01722d5-20241114:
+    resolution: {integrity: sha512-nR4blVGWugab7X2wN/FXLNKw1HWVK8lO9+rv0ip2xN5j6RNvXOV1PKtWOm2TuDzq52Nc6ASyno8FFy088ejsfA==}
 
   react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
@@ -17089,6 +17095,8 @@ snapshots:
   react-is@17.0.2: {}
 
   react-is@18.3.1: {}
+
+  react-is@19.0.0-rc-b01722d5-20241114: {}
 
   react-refresh@0.14.0: {}
 
