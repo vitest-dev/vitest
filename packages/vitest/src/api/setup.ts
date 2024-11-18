@@ -72,8 +72,11 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           }
           return fs.writeFile(id, content, 'utf-8')
         },
-        async rerun(files) {
-          await ctx.rerunFiles(files)
+        async rerun(files, resetTestNamePattern) {
+          await ctx.rerunFiles(files, undefined, true, resetTestNamePattern)
+        },
+        async rerunTask(id) {
+          await ctx.rerunTask(id)
         },
         getConfig() {
           return ctx.getRootTestProject().serializedConfig

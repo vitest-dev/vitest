@@ -2,6 +2,7 @@ import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
+import type { RunnerTask, RunnerTestSuite } from '../public'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, OnTestsRerunHandler, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
@@ -687,7 +688,11 @@ export class Vitest {
     await Promise.all(this.projects.map(p => p._initBrowserServer()))
   }
 
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true, resetTestNamePattern = false) {
+    if (resetTestNamePattern) {
+      this.configOverride.testNamePattern = undefined
+    }
+
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
@@ -702,11 +707,29 @@ export class Vitest {
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
+  private isSuite(task: RunnerTask): task is RunnerTestSuite {
+    return Object.hasOwnProperty.call(task, 'tasks')
+  }
+
+  async rerunTask(id: string) {
+    const task = this.state.idMap.get(id)
+    if (!task) {
+      throw new Error(`Task ${id} was not found`)
+    }
+    await this.changeNamePattern(
+      task.name,
+      [task.file.filepath],
+      this.isSuite(task) ? 'rerun suite' : 'rerun test',
+    )
+  }
+
   async changeProjectName(pattern: string) {
     if (pattern === '') {
       delete this.configOverride.project
     }
-    else { this.configOverride.project = pattern }
+    else {
+      this.configOverride.project = pattern
+    }
 
     this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
