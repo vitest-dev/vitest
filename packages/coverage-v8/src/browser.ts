@@ -59,5 +59,13 @@ function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
     return false
   }
 
+  if (coverage.url === window.location.href) {
+    return false
+  }
+
+  if (coverage.url.includes('?browserv=') || coverage.url.includes('&browserv=')) {
+    return false
+  }
+
   return true
 }
