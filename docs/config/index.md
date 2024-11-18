@@ -583,6 +583,24 @@ These options are passed down to `setup` method of current [`environment`](#envi
 
 ::: warning
 This API is deprecated. Use [workspace](/guide/workspace) to define different configurations instead.
+
+```ts
+export default defineConfig({
+  test: {
+    environmentMatchGlobs: [ // [!code --]
+      ['./*.jsdom.test.ts', 'jsdom'], // [!code --]
+    ], // [!code --]
+    workspace: [ // [!code ++]
+      { // [!code ++]
+        test: { // [!code ++]
+          extends: true, // [!code ++]
+          environment: 'jsdom', // [!code ++]
+        }, // [!code ++]
+      }, // [!code ++]
+    ], // [!code ++]
+  },
+})
+```
 :::
 
 Automatically assign environment based on globs. The first match will be used.
@@ -611,7 +629,25 @@ export default defineConfig({
 - **Default:** `[]`
 
 ::: warning
-This API is deprecated. Use [workspace](/guide/workspace) to define different configurations instead.
+This API is deprecated. Use [workspace](/guide/workspace) to define different configurations instead:
+
+```ts
+export default defineConfig({
+  test: {
+    poolMatchGlobs: [ // [!code --]
+      ['./*.threads.test.ts', 'threads'], // [!code --]
+    ], // [!code --]
+    workspace: [ // [!code ++]
+      { // [!code ++]
+        test: { // [!code ++]
+          extends: true, // [!code ++]
+          pool: 'threads', // [!code ++]
+        }, // [!code ++]
+      }, // [!code ++]
+    ], // [!code ++]
+  },
+})
+```
 :::
 
 Automatically assign pool in which tests will run based on globs. The first match will be used.
