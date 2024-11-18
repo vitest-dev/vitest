@@ -406,12 +406,12 @@ export abstract class BaseReporter implements Reporter {
     const errorDivider = () => this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
-      this.error(`${errorBanner(`Failed Suites ${failedSuites.length}`)}\n`)
+      this.error(`\n${errorBanner(`Failed Suites ${failedSuites.length}`)}\n`)
       this.printTaskErrors(failedSuites, errorDivider)
     }
 
     if (failedTests.length) {
-      this.error(`${errorBanner(`Failed Tests ${failedTests.length}`)}\n`)
+      this.error(`\n${errorBanner(`Failed Tests ${failedTests.length}`)}\n`)
       this.printTaskErrors(failedTests, errorDivider)
     }
 
@@ -492,7 +492,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         this.ctx.logger.error(
-          `${c.red(c.bold(c.inverse(' FAIL ')))}${formatProjectName(projectName)} ${name}`,
+          `${c.red(c.bold(c.inverse(' FAIL ')))} ${formatProjectName(projectName)}${name}`,
         )
       }
 
