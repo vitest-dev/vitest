@@ -140,7 +140,7 @@ export interface VitestRunner {
    *
    * @see https://vitest.dev/advanced/runner.html#your-task-function
    */
-  extendTaskContext?: <T extends Test | Custom>(
+  extendTaskContext?: <T extends Test>(
     context: TaskContext<T>
   ) => ExtendedContext<T>
   /**
