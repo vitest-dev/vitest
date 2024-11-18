@@ -1,6 +1,7 @@
 import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
+import restoreCursor from 'restore-cursor'
 
 const DEFAULT_RENDER_INTERVAL = 16
 
@@ -49,6 +50,9 @@ export class WindowRenderer {
       this.interceptStream(process.stdout, 'output'),
       this.interceptStream(process.stderr, 'error'),
     )
+
+    restoreCursor()
+    this.write(HIDE_CURSOR, 'output')
 
     this.start()
   }
@@ -129,7 +133,6 @@ export class WindowRenderer {
 
     this.write(windowContent.join('\n'))
     this.write(SYNC_END)
-    this.write(HIDE_CURSOR)
 
     this.windowHeight = rowCount + Math.max(0, padding)
   }

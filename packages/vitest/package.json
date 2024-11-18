@@ -162,6 +162,7 @@
     "expect-type": "^1.1.0",
     "magic-string": "^0.30.12",
     "pathe": "^1.1.2",
+    "restore-cursor": "^5.1.0",
     "std-env": "^3.8.0",
     "tinybench": "^2.9.0",
     "tinyexec": "^0.3.1",
