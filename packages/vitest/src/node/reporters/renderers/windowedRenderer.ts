@@ -32,6 +32,7 @@ export class WindowRenderer {
 
   private windowHeight = 0
   private finished = false
+  private cleanups: (() => void)[] = []
 
   constructor(options: Options) {
     this.options = {
@@ -44,8 +45,10 @@ export class WindowRenderer {
       error: options.logger.errorStream.write.bind(options.logger.errorStream),
     }
 
-    this.interceptStream(process.stdout, 'output')
-    this.interceptStream(process.stderr, 'error')
+    this.cleanups.push(
+      this.interceptStream(process.stdout, 'output'),
+      this.interceptStream(process.stderr, 'error'),
+    )
 
     this.start()
   }
@@ -57,6 +60,7 @@ export class WindowRenderer {
 
   stop() {
     this.write(SHOW_CURSOR, 'output')
+    this.cleanups.splice(0).map(fn => fn())
     clearInterval(this.renderInterval)
   }
 
@@ -145,6 +149,8 @@ export class WindowRenderer {
   }
 
   private interceptStream(stream: NodeJS.WriteStream, type: StreamType) {
+    const original = stream.write
+
     // @ts-expect-error -- not sure how 2 overloads should be typed
     stream.write = (chunk, _, callback) => {
       if (chunk) {
@@ -156,6 +162,10 @@ export class WindowRenderer {
         }
       }
       callback?.()
+    }
+
+    return function restore() {
+      stream.write = original
     }
   }
 
