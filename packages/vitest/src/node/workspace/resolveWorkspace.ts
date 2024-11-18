@@ -147,10 +147,6 @@ async function resolveTestProjectConfigs(
   // directories that don't have a config file inside, but should be treated as projects
   const nonConfigProjectDirectories: string[] = []
 
-  const relativeWorkpaceConfigPath = workspaceConfigPath
-    ? relative(vitest.config.root, workspaceConfigPath)
-    : undefined
-
   for (const definition of workspaceDefinition) {
     if (typeof definition === 'string') {
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
@@ -160,6 +156,9 @@ async function resolveTestProjectConfigs(
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
+          const relativeWorkpaceConfigPath = workspaceConfigPath
+            ? relative(vitest.config.root, workspaceConfigPath)
+            : undefined
           const note = workspaceConfigPath ? `Workspace config file "${relativeWorkpaceConfigPath}"` : 'Inline workspace'
           throw new Error(`${note} references a non-existing file or a directory: ${file}`)
         }
@@ -226,20 +225,20 @@ async function resolveTestProjectConfigs(
 
     const workspacesFs = await fg.glob(workspaceGlobMatches, globOptions)
 
-    await Promise.all(workspacesFs.map(async (filepath) => {
+    await Promise.all(workspacesFs.map(async (path) => {
       // directories are allowed with a glob like `packages/*`
       // in this case every directory is treated as a project
-      if (filepath.endsWith('/')) {
-        const configFile = await resolveDirectoryConfig(filepath)
+      if (path.endsWith('/')) {
+        const configFile = await resolveDirectoryConfig(path)
         if (configFile) {
           workspaceConfigFiles.push(configFile)
         }
         else {
-          nonConfigProjectDirectories.push(filepath)
+          nonConfigProjectDirectories.push(path)
         }
       }
       else {
-        workspaceConfigFiles.push(filepath)
+        workspaceConfigFiles.push(path)
       }
     }))
   }
