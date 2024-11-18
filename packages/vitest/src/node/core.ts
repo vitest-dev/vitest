@@ -94,6 +94,9 @@ export class Vitest {
   /** @private */
   public _browserLastPort = defaultBrowserPort
 
+  /** @internal */
+  public _options: UserConfig = {}
+
   constructor(
     public readonly mode: VitestRunMode,
     options: VitestOptions = {},
@@ -109,6 +112,7 @@ export class Vitest {
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+    this._options = options
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -212,7 +216,7 @@ export class Vitest {
   /**
    * @internal
    */
-  _createCoreProject() {
+  _createRootProject() {
     this.coreWorkspaceProject = TestProject._createBasicProject(this)
     return this.coreWorkspaceProject
   }
@@ -241,11 +245,7 @@ export class Vitest {
       || this.projects[0]
   }
 
-  private async getWorkspaceConfigPath(): Promise<string | undefined> {
-    if (this.config.workspace) {
-      return this.config.workspace
-    }
-
+  private async resolveWorkspaceConfigPath(): Promise<string | undefined> {
     const configDir = this.server.config.configFile
       ? dirname(this.server.config.configFile)
       : this.config.root
@@ -264,12 +264,21 @@ export class Vitest {
   }
 
   private async resolveWorkspace(cliOptions: UserConfig) {
-    const workspaceConfigPath = await this.getWorkspaceConfigPath()
+    if (Array.isArray(this.config.workspace)) {
+      return resolveWorkspace(
+        this,
+        cliOptions,
+        undefined,
+        this.config.workspace,
+      )
+    }
+
+    const workspaceConfigPath = this.config.workspace || await this.resolveWorkspaceConfigPath()
 
     this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
-      return [this._createCoreProject()]
+      return [this._createRootProject()]
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {

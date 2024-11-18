@@ -27,7 +27,6 @@ import {
   isAbsolute,
   join,
   relative,
-  resolve,
 } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -640,7 +639,7 @@ export interface SerializedTestProject {
 }
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
-  workspaceConfigPath: string
+  configFile: string | false
   extends?: string
 }
 
@@ -651,7 +650,7 @@ export async function initializeProject(
 ) {
   const project = new TestProject(workspacePath, ctx, options)
 
-  const { extends: extendsConfig, workspaceConfigPath, ...restOptions } = options
+  const { extends: extendsConfig, configFile, ...restOptions } = options
   const root
     = options.root
     || (typeof workspacePath === 'number'
@@ -660,11 +659,11 @@ export async function initializeProject(
         ? workspacePath
         : dirname(workspacePath))
 
-  const configFile = extendsConfig
-    ? resolve(dirname(workspaceConfigPath), extendsConfig)
-    : typeof workspacePath === 'number' || workspacePath.endsWith('/')
-      ? false
-      : workspacePath
+  // const configFile = extendsConfig
+  //   ? resolve(dirname(workspaceConfigPath), extendsConfig)
+  //   : typeof workspacePath === 'number' || workspacePath.endsWith('/')
+  //     ? false
+  //     : workspacePath
 
   const config: ViteInlineConfig = {
     ...restOptions,

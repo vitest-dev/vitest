@@ -14,7 +14,7 @@ import { isDynamicPattern } from './fast-glob-pattern'
 export async function resolveWorkspace(
   vitest: Vitest,
   cliOptions: UserConfig,
-  workspaceConfigPath: string,
+  workspaceConfigPath: string | undefined,
   workspaceDefinition: TestProjectConfiguration[],
 ): Promise<TestProject[]> {
   const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
@@ -54,10 +54,27 @@ export async function resolveWorkspace(
   const fileProjects = [...configFiles, ...nonConfigDirectories]
   const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
 
+  projectConfigs.forEach((options, index) => {
+    const parentConfigPath = workspaceConfigPath || vitest.server.config.configFile
+    // if extends a config file, resolve the file path
+    const configFile = typeof options.extends === 'string' && typeof parentConfigPath === 'string'
+      ? resolve(parentConfigPath, options.extends)
+      : false
+    // if extends a root config, use the users root options
+    const rootOptions = options.extends === true
+      ? vitest._options
+      : {}
+    projectPromises.push(concurrent(() => initializeProject(
+      index,
+      vitest,
+      mergeConfig(rootOptions, { configFile, ...options }) as any,
+    )))
+  })
+
   for (const filepath of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
     if (vitest.server.config.configFile === filepath) {
-      projectPromises.push(concurrent(() => vitest._createCoreProject()))
+      projectPromises.push(concurrent(() => vitest._createRootProject()))
       continue
     }
 
@@ -65,22 +82,14 @@ export async function resolveWorkspace(
       concurrent(() => initializeProject(
         filepath,
         vitest,
-        { workspaceConfigPath, test: cliOverrides },
+        { configFile: filepath, test: cliOverrides },
       )),
     )
   }
 
-  projectConfigs.forEach((options, index) => {
-    projectPromises.push(concurrent(() => initializeProject(
-      index,
-      vitest,
-      mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any,
-    )))
-  })
-
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return [await vitest._createCoreProject()]
+    return [vitest._createRootProject()]
   }
 
   const resolvedProjects = await Promise.all(projectPromises)
@@ -115,11 +124,11 @@ export async function resolveWorkspace(
 
 async function resolveTestProjectConfigs(
   vitest: Vitest,
-  workspaceConfigPath: string,
+  workspaceConfigPath: string | undefined,
   workspaceDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
-  const projectsOptions: UserWorkspaceConfig[] = []
+  const projectsOptions: (UserWorkspaceConfig & { extends?: true | string })[] = []
 
   // custom config files that were specified directly or resolved from a directory
   const workspaceConfigFiles: string[] = []
@@ -130,7 +139,9 @@ async function resolveTestProjectConfigs(
   // directories that don't have a config file inside, but should be treated as projects
   const nonConfigProjectDirectories: string[] = []
 
-  const relativeWorkpaceConfigPath = relative(vitest.config.root, workspaceConfigPath)
+  const relativeWorkpaceConfigPath = workspaceConfigPath
+    ? relative(vitest.config.root, workspaceConfigPath)
+    : undefined
 
   for (const definition of workspaceDefinition) {
     if (typeof definition === 'string') {
@@ -141,7 +152,8 @@ async function resolveTestProjectConfigs(
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
-          throw new Error(`Workspace config file "${relativeWorkpaceConfigPath}" references a non-existing file or a directory: ${file}`)
+          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkpaceConfigPath}"` : 'Inline workspace'
+          throw new Error(`${note} references a non-existing file or a directory: ${file}`)
         }
 
         const stats = await fs.stat(file)
