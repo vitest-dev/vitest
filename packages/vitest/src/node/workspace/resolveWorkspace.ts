@@ -56,9 +56,10 @@ export async function resolveWorkspace(
 
   projectConfigs.forEach((options, index) => {
     const parentConfigPath = workspaceConfigPath || vitest.server.config.configFile
+    const configDir = parentConfigPath ? dirname(parentConfigPath) : vitest.config.root
     // if extends a config file, resolve the file path
     const configFile = typeof options.extends === 'string' && typeof parentConfigPath === 'string'
-      ? resolve(parentConfigPath, options.extends)
+      ? resolve(configDir, options.extends)
       : false
     // if extends a root config, use the users root options
     const rootOptions = options.extends === true
@@ -66,9 +67,7 @@ export async function resolveWorkspace(
       : {}
     // if `root` is configured, resolve it relative to the workespace file or vite root (like other options)
     // if `root` is not specified, inline configs use the same root as the root project
-    const root = options.root
-      ? resolve(workspaceConfigPath || vitest.config.root)
-      : vitest.config.root
+    const root = options.root ? resolve(configDir) : vitest.config.root
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
