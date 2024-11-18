@@ -581,6 +581,10 @@ These options are passed down to `setup` method of current [`environment`](#envi
 - **Type:** `[string, EnvironmentName][]`
 - **Default:** `[]`
 
+::: warning
+This API is deprecated. Use [workspace](/guide/workspace) to define different configurations instead.
+:::
+
 Automatically assign environment based on globs. The first match will be used.
 
 For example:
@@ -605,6 +609,10 @@ export default defineConfig({
 
 - **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'][]`
 - **Default:** `[]`
+
+::: warning
+This API is deprecated. Use [workspace](/guide/workspace) to define different configurations instead.
+:::
 
 Automatically assign pool in which tests will run based on globs. The first match will be used.
 
@@ -1713,7 +1721,7 @@ This is an experimental feature. Breaking changes might not follow SemVer, pleas
 - **Default:** `false`
 - **CLI:** `--browser`, `--browser.enabled=false`
 
-Run all tests inside a browser by default. Can be overridden with [`poolMatchGlobs`](#poolmatchglobs) option.
+Run all tests inside a browser by default.
 
 #### browser&#46;name
 

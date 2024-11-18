@@ -314,6 +314,7 @@ export interface InlineConfig {
    *
    * Format: [glob, environment-name]
    *
+   * @deprecated use [`workspace`](https://vitest.dev/guide/workspace.html) instead
    * @default []
    * @example [
    *   // all tests in tests/dom will run in jsdom
@@ -370,6 +371,7 @@ export interface InlineConfig {
    *
    * Format: [glob, pool-name]
    *
+   * @deprecated use [`workspace`](https://vitest.dev/guide/workspace.html) instead
    * @default []
    * @example [
    *   // all tests in "forks" directory will run using "poolOptions.forks" API
