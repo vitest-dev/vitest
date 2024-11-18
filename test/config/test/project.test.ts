@@ -11,14 +11,11 @@ test.each([
   { pattern: '!project*', expected: ['space_1'] },
   { pattern: '!project', expected: ['project_1', 'project_2', 'space_1'] },
 ])('should match projects correctly: $pattern', async ({ pattern, expected }) => {
-  const { stdout, stderr } = await runVitest({
+  const { ctx } = await runVitest({
     root: 'fixtures/project',
     reporters: ['basic'],
     project: pattern,
   })
 
-  expect(stderr).toBeFalsy()
-  expect(stdout).toBeTruthy()
-
-  expected.forEach(name => expect(stdout).toContain(name))
+  expect(ctx?.projects.map(p => p.name).sort()).toEqual(expected)
 })
