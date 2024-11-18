@@ -55,11 +55,10 @@ export async function resolveWorkspace(
   const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
 
   projectConfigs.forEach((options, index) => {
-    const parentConfigPath = workspaceConfigPath || vitest.server.config.configFile
-    const configDir = parentConfigPath ? dirname(parentConfigPath) : vitest.config.root
+    const configRoot = workspaceConfigPath ? dirname(workspaceConfigPath) : vitest.config.root
     // if extends a config file, resolve the file path
-    const configFile = typeof options.extends === 'string' && typeof parentConfigPath === 'string'
-      ? resolve(configDir, options.extends)
+    const configFile = typeof options.extends === 'string'
+      ? resolve(configRoot, options.extends)
       : false
     // if extends a root config, use the users root options
     const rootOptions = options.extends === true
@@ -67,7 +66,9 @@ export async function resolveWorkspace(
       : {}
     // if `root` is configured, resolve it relative to the workespace file or vite root (like other options)
     // if `root` is not specified, inline configs use the same root as the root project
-    const root = options.root ? resolve(configDir) : vitest.config.root
+    const root = options.root
+      ? resolve(configRoot, options.root)
+      : vitest.config.root
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
