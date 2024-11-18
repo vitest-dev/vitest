@@ -11,10 +11,9 @@ import c from 'tinyrainbow'
 import { isCI, isDeno, isNode } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
 import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
-import { countTestErrors, divider, formatProjectName, formatTimeString, getStateString, getStateSymbol, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
+import { countTestErrors, divider, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
 
 const BADGE_PADDING = '       '
-const LAST_RUN_LOG_TIMEOUT = 1_500
 
 export interface BaseOptions {
   isTTY?: boolean
@@ -27,14 +26,12 @@ export abstract class BaseReporter implements Reporter {
   failedUnwatchedFiles: Task[] = []
   isTTY: boolean
   ctx: Vitest = undefined!
+  renderSucceed = false
 
   protected verbose = false
 
   private _filesInWatchMode = new Map<string, number>()
   private _timeStart = formatTimeString(new Date())
-  private _lastRunTimeout = 0
-  private _lastRunTimer: NodeJS.Timeout | undefined
-  private _lastRunCount = 0
 
   constructor(options: BaseOptions = {}) {
     this.isTTY = options.isTTY ?? ((isNode || isDeno) && process.stdout?.isTTY && !isCI)
@@ -65,9 +62,6 @@ export abstract class BaseReporter implements Reporter {
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
-    if (this.isTTY) {
-      return
-    }
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
 
@@ -117,6 +111,8 @@ export abstract class BaseReporter implements Reporter {
 
     this.log(` ${title} ${task.name} ${suffix}`)
 
+    const anyFailed = tests.some(test => test.result?.state === 'fail')
+
     for (const test of tests) {
       const duration = test.result?.duration
 
@@ -137,6 +133,15 @@ export abstract class BaseReporter implements Reporter {
           + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}`,
         )
       }
+
+      // also print skipped tests that have notes
+      else if (test.result?.state === 'skip' && test.result.note) {
+        this.log(`   ${getStateSymbol(test)} ${getTestName(test)}${c.dim(c.gray(` [${test.result.note}]`))}`)
+      }
+
+      else if (this.renderSucceed || anyFailed) {
+        this.log(`   ${c.green(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}`)
+      }
     }
   }
 
@@ -153,8 +158,6 @@ export abstract class BaseReporter implements Reporter {
   }
 
   onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
-    this.resetLastRunLog()
-
     const failed = errors.length > 0 || hasFailed(files)
 
     if (failed) {
@@ -177,38 +180,9 @@ export abstract class BaseReporter implements Reporter {
     }
 
     this.log(BADGE_PADDING + hints.join(c.dim(', ')))
-
-    if (this._lastRunCount) {
-      const LAST_RUN_TEXT = `rerun x${this._lastRunCount}`
-      const LAST_RUN_TEXTS = [
-        c.blue(LAST_RUN_TEXT),
-        c.gray(LAST_RUN_TEXT),
-        c.dim(c.gray(LAST_RUN_TEXT)),
-      ]
-      this.ctx.logger.logUpdate(BADGE_PADDING + LAST_RUN_TEXTS[0])
-      this._lastRunTimeout = 0
-      this._lastRunTimer = setInterval(() => {
-        this._lastRunTimeout += 1
-        if (this._lastRunTimeout >= LAST_RUN_TEXTS.length) {
-          this.resetLastRunLog()
-        }
-        else {
-          this.ctx.logger.logUpdate(
-            BADGE_PADDING + LAST_RUN_TEXTS[this._lastRunTimeout],
-          )
-        }
-      }, LAST_RUN_LOG_TIMEOUT / LAST_RUN_TEXTS.length)
-    }
-  }
-
-  private resetLastRunLog() {
-    clearInterval(this._lastRunTimer)
-    this._lastRunTimer = undefined
-    this.ctx.logger.logUpdate.clear()
   }
 
   onWatcherRerun(files: string[], trigger?: string) {
-    this.resetLastRunLog()
     this.watchFilters = files
     this.failedUnwatchedFiles = this.ctx.state.getFiles().filter(file =>
       !files.includes(file.filepath) && hasFailed(file),
@@ -222,11 +196,7 @@ export abstract class BaseReporter implements Reporter {
 
     let banner = trigger ? c.dim(`${this.relative(trigger)} `) : ''
 
-    if (files.length > 1 || !files.length) {
-      // we need to figure out how to handle rerun all from stdin
-      this._lastRunCount = 0
-    }
-    else if (files.length === 1) {
+    if (files.length === 1) {
       const rerun = this._filesInWatchMode.get(files[0]) ?? 1
       banner += c.blue(`x${rerun} `)
     }
@@ -248,10 +218,8 @@ export abstract class BaseReporter implements Reporter {
 
     this.log('')
 
-    if (!this.isTTY) {
-      for (const task of this.failedUnwatchedFiles) {
-        this.printTask(task)
-      }
+    for (const task of this.failedUnwatchedFiles) {
+      this.printTask(task)
     }
 
     this._timeStart = formatTimeString(new Date())
@@ -351,6 +319,8 @@ export abstract class BaseReporter implements Reporter {
   }
 
   reportTestSummary(files: File[], errors: unknown[]) {
+    this.log()
+
     const affectedFiles = [
       ...this.failedUnwatchedFiles,
       ...files,
@@ -364,21 +334,21 @@ export abstract class BaseReporter implements Reporter {
 
     for (const [index, snapshot] of snapshotOutput.entries()) {
       const title = index === 0 ? 'Snapshots' : ''
-      this.log(`${padTitle(title)} ${snapshot}`)
+      this.log(`${padSummaryTitle(title)} ${snapshot}`)
     }
 
     if (snapshotOutput.length > 1) {
       this.log()
     }
 
-    this.log(padTitle('Test Files'), getStateString(affectedFiles))
-    this.log(padTitle('Tests'), getStateString(tests))
+    this.log(padSummaryTitle('Test Files'), getStateString(affectedFiles))
+    this.log(padSummaryTitle('Tests'), getStateString(tests))
 
     if (this.ctx.projects.some(c => c.config.typecheck.enabled)) {
       const failed = tests.filter(t => t.meta?.typecheck && t.result?.errors?.length)
 
       this.log(
-        padTitle('Type Errors'),
+        padSummaryTitle('Type Errors'),
         failed.length
           ? c.bold(c.red(`${failed.length} failed`))
           : c.dim('no errors'),
@@ -387,19 +357,19 @@ export abstract class BaseReporter implements Reporter {
 
     if (errors.length) {
       this.log(
-        padTitle('Errors'),
+        padSummaryTitle('Errors'),
         c.bold(c.red(`${errors.length} error${errors.length > 1 ? 's' : ''}`)),
       )
     }
 
-    this.log(padTitle('Start at'), this._timeStart)
+    this.log(padSummaryTitle('Start at'), this._timeStart)
 
     const collectTime = sum(files, file => file.collectDuration)
     const testsTime = sum(files, file => file.result?.duration)
     const setupTime = sum(files, file => file.setupDuration)
 
     if (this.watchFilters) {
-      this.log(padTitle('Duration'), time(collectTime + testsTime + setupTime))
+      this.log(padSummaryTitle('Duration'), formatTime(collectTime + testsTime + setupTime))
     }
     else {
       const executionTime = this.end - this.start
@@ -409,16 +379,16 @@ export abstract class BaseReporter implements Reporter {
       const typecheck = sum(this.ctx.projects, project => project.typechecker?.getResult().time)
 
       const timers = [
-        `transform ${time(transformTime)}`,
-        `setup ${time(setupTime)}`,
-        `collect ${time(collectTime)}`,
-        `tests ${time(testsTime)}`,
-        `environment ${time(environmentTime)}`,
-        `prepare ${time(prepareTime)}`,
-        typecheck && `typecheck ${time(typecheck)}`,
+        `transform ${formatTime(transformTime)}`,
+        `setup ${formatTime(setupTime)}`,
+        `collect ${formatTime(collectTime)}`,
+        `tests ${formatTime(testsTime)}`,
+        `environment ${formatTime(environmentTime)}`,
+        `prepare ${formatTime(prepareTime)}`,
+        typecheck && `typecheck ${formatTime(typecheck)}`,
       ].filter(Boolean).join(', ')
 
-      this.log(padTitle('Duration'), time(executionTime) + c.dim(` (${timers})`))
+      this.log(padSummaryTitle('Duration'), formatTime(executionTime) + c.dim(` (${timers})`))
     }
 
     this.log()
@@ -542,17 +512,6 @@ export abstract class BaseReporter implements Reporter {
 
 function errorBanner(message: string) {
   return c.red(divider(c.bold(c.inverse(` ${message} `))))
-}
-
-function padTitle(str: string) {
-  return c.dim(`${str.padStart(11)} `)
-}
-
-function time(time: number) {
-  if (time > 1000) {
-    return `${(time / 1000).toFixed(2)}s`
-  }
-  return `${Math.round(time)}ms`
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {

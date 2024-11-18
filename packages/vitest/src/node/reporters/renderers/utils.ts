@@ -1,4 +1,4 @@
-import type { SuiteHooks, Task } from '@vitest/runner'
+import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
@@ -186,25 +186,6 @@ export function getStateSymbol(task: Task) {
   return ' '
 }
 
-export function getHookStateSymbol(task: Task, hookName: keyof SuiteHooks) {
-  const state = task.result?.hooks?.[hookName]
-
-  // pending
-  if (state && state === 'run') {
-    let spinnerMap = hookSpinnerMap.get(task)
-    if (!spinnerMap) {
-      spinnerMap = new Map<string, () => string>()
-      hookSpinnerMap.set(task, spinnerMap)
-    }
-    let spinner = spinnerMap.get(hookName)
-    if (!spinner) {
-      spinner = elegantSpinner()
-      spinnerMap.set(hookName, spinner)
-    }
-    return c.yellow(spinner())
-  }
-}
-
 export const spinnerFrames
   = process.platform === 'win32'
     ? ['-', '\\', '|', '/']
@@ -247,6 +228,13 @@ export function formatTimeString(date: Date) {
   return date.toTimeString().split(' ')[0]
 }
 
+export function formatTime(time: number) {
+  if (time > 1000) {
+    return `${(time / 1000).toFixed(2)}s`
+  }
+  return `${Math.round(time)}ms`
+}
+
 export function formatProjectName(name: string | undefined, suffix = ' ') {
   if (!name) {
     return ''
@@ -260,6 +248,10 @@ export function formatProjectName(name: string | undefined, suffix = ' ') {
   return colors[index % colors.length](`|${name}|`) + suffix
 }
 
-export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan', label: string, message: string) {
-  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${c[color](message)}`
+export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
+  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${message ? c[color](message) : ''}`
+}
+
+export function padSummaryTitle(str: string) {
+  return c.dim(`${str.padStart(11)} `)
 }

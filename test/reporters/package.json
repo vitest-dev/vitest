@@ -6,6 +6,7 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "@vitest/runner": "workspace:*",
     "flatted": "^3.2.9",
     "pkg-reporter": "./reportPkg/",
     "vitest": "workspace:*",

@@ -96,33 +96,54 @@ This example will write separate JSON and XML reports as well as printing a verb
 
 ### Default Reporter
 
-By default (i.e. if no reporter is specified), Vitest will display results for each test suite hierarchically as they run, and then collapse after a suite passes. When all tests have finished running, the final terminal output will display a summary of results and details of any failed tests.
+By default (i.e. if no reporter is specified), Vitest will display summary of running tests and their status at the bottom. Once a suite passes, its status will be reported on top of the summary.
+
+You can disable the summary by configuring the reporter:
+
+:::code-group
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    reporters: [
+      ['default', { summary: false }]
+    ]
+  },
+})
+```
+:::
 
 Example output for tests in progress:
 
 ```bash
-✓ __tests__/file1.test.ts (2) 725ms
-✓ __tests__/file2.test.ts (5) 746ms
-  ✓ second test file (2) 746ms
-    ✓ 1 + 1 should equal 2
-    ✓ 2 - 1 should equal 1
+ ✓ test/example-1.test.ts (5 tests | 1 skipped) 306ms
+ ✓ test/example-2.test.ts (5 tests | 1 skipped) 307ms
+
+ ❯ test/example-3.test.ts 3/5
+ ❯ test/example-4.test.ts 1/5
+
+ Test Files 2 passed (4)
+      Tests 10 passed | 3 skipped (65)
+   Start at 11:01:36
+   Duration 2.00s
 ```
 
 Final output after tests have finished:
 
 ```bash
-✓ __tests__/file1.test.ts (2) 725ms
-✓ __tests__/file2.test.ts (2) 746ms
+ ✓ test/example-1.test.ts (5 tests | 1 skipped) 306ms
+ ✓ test/example-2.test.ts (5 tests | 1 skipped) 307ms
+ ✓ test/example-3.test.ts (5 tests | 1 skipped) 307ms
+ ✓ test/example-4.test.ts (5 tests | 1 skipped) 307ms
 
- Test Files  2 passed (2)
-      Tests  4 passed (4)
+ Test Files  4 passed (4)
+      Tests  16 passed | 4 skipped (20)
    Start at  12:34:32
    Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
 ```
 
 ### Basic Reporter
 
-The `basic` reporter displays the test files that have run and a summary of results after the entire suite has finished running. Individual tests are not included in the report unless they fail.
+The `basic` reporter is equivalent to `default` reporter without `summary`.
 
 :::code-group
 ```bash [CLI]
@@ -151,7 +172,7 @@ Example output using basic reporter:
 
 ### Verbose Reporter
 
-Follows the same hierarchical structure as the `default` reporter, but does not collapse sub-trees for passed test suites. The final terminal output displays all tests that have run, including those that have passed.
+Verbose reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. It also displays currently running tests that are taking longer than [`slowTestThreshold`](/config/#slowtestthreshold). Similar to `default` reporter, you can disable the summary by configuring the reporter.
 
 :::code-group
 ```bash [CLI]
@@ -161,11 +182,31 @@ npx vitest --reporter=verbose
 ```ts [vitest.config.ts]
 export default defineConfig({
   test: {
-    reporters: ['verbose']
+    reporters: [
+      ['verbose', { summary: false }]
+    ]
   },
 })
 ```
 :::
+
+Example output for tests in progress with default `slowTestThreshold: 300`:
+
+```bash
+ ✓ __tests__/example-1.test.ts (2) 725ms
+   ✓ first test file (2) 725ms
+     ✓ 2 + 2 should equal 4
+     ✓ 4 - 2 should equal 2
+
+ ❯ test/example-2.test.ts 3/5
+   ↳ should run longer than three seconds 1.57s
+ ❯ test/example-3.test.ts 1/5
+
+ Test Files 2 passed (4)
+      Tests 10 passed | 3 skipped (65)
+   Start at 11:01:36
+   Duration 2.00s
+```
 
 Example of final terminal output for a passing test suite:
 
