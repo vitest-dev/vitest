@@ -700,7 +700,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   project: {
     description:
-      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`',
+      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.',
     argument: '<name>',
     array: true,
   },
