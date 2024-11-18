@@ -582,7 +582,7 @@ These options are passed down to `setup` method of current [`environment`](#envi
 - **Default:** `[]`
 
 ::: warning
-This API is deprecated. Use [workspace](/guide/workspace) to define different configurations instead.
+This API was deprecated in Vitest 2.2. Use [workspace](/guide/workspace) to define different configurations instead.
 
 ```ts
 export default defineConfig({
@@ -629,7 +629,7 @@ export default defineConfig({
 - **Default:** `[]`
 
 ::: warning
-This API is deprecated. Use [workspace](/guide/workspace) to define different configurations instead:
+This API was deprecated in Vitest 2.2. Use [workspace](/guide/workspace) to define different configurations instead:
 
 ```ts
 export default defineConfig({
