@@ -167,7 +167,7 @@ export default [
   {
     // doesn't customize the name
     test: {
-      pool: 'node',
+      pool: 'threads',
     },
   },
   {
@@ -222,7 +222,7 @@ The browser API is even more experimental and doesn't follow SemVer. The browser
 
 ### provide
 
-A way to provide custom values to tests in addition to [`config.provide`](/config/#provide) field. All values are validated with `structuredClone` before they are stored, but the values on `providedContext` themselves are not cloned.
+A way to provide custom values to tests in addition to [`config.provide`](/config/#provide) field. All values are validated with [`structuredClone`](https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone) before they are stored, but the values on `providedContext` themselves are not cloned.
 
 ::: code-group
 ```ts [node.js]

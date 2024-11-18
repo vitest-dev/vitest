@@ -163,7 +163,7 @@ export class Logger {
     }
     this.ctx.projects.forEach((project) => {
       const config = project.config
-      const output = project.isRootProject() || !project.name ? '' : `[${project.name}]`
+      const output = (project.isRootProject() || !project.name) ? '' : `[${project.name}]`
       if (output) {
         this.console.error(c.bgCyan(`${output} Config`))
       }

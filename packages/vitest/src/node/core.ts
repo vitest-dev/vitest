@@ -236,7 +236,7 @@ export class Vitest {
 
   public getProjectByName(name: string = '') {
     return this.projects.find(p => p.name === name)
-      || this.getRootTestProject()
+      || this.coreWorkspaceProject
       || this.projects[0]
   }
 

@@ -111,7 +111,7 @@ export class TestProject {
         },
       )
     }
-    // casting `any` because the devault type is `never` since `ProvidedContext` is empty
+    // casting `any` because the default type is `never` since `ProvidedContext` is empty
     (this._provided as any)[key] = value
   }
 
@@ -190,7 +190,7 @@ export class TestProject {
   }
 
   /**
-   * Is this the root project. The root project is the one that has the root config.
+   * Check if this is the root project. The root project is the one that has the root config.
    */
   public isRootProject(): boolean {
     return this.vitest.getRootTestProject() === this
