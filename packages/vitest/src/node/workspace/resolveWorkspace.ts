@@ -74,7 +74,7 @@ export async function resolveWorkspace(
   for (const filepath of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
     if (vitest.server.config.configFile === filepath) {
-      projectPromises.push(concurrent(() => vitest._createRootProject()))
+      projectPromises.push(Promise.resolve(vitest._createRootProject()))
       continue
     }
 
@@ -97,9 +97,9 @@ export async function resolveWorkspace(
 
   // project names are guaranteed to be unique
   for (const project of resolvedProjects) {
-    const name = project.getName()
+    const name = project.name
     if (names.has(name)) {
-      const duplicate = resolvedProjects.find(p => p.getName() === name && p !== project)!
+      const duplicate = resolvedProjects.find(p => p.name === name && p !== project)!
       const filesError = fileProjects.length
         ? [
             '\n\nYour config matched these files:\n',

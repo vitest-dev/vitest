@@ -1120,7 +1120,7 @@ export type UserProjectConfigExport =
 export type TestProjectConfiguration = string | (UserProjectConfigExport & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
-   * If `true`, will inherit all options from the root config. If `root` config doesn't exist, will throw an error.
+   * If `true`, will inherit all options from the root config.
    * @example '../vite.config.ts'
    */
   extends?: string | true

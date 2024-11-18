@@ -14,7 +14,7 @@ export class FilesStatsCache {
 
   public async populateStats(root: string, specs: WorkspaceSpec[]) {
     const promises = specs.map((spec) => {
-      const key = `${spec[0].getName()}:${relative(root, spec[1])}`
+      const key = `${spec[0].name}:${relative(root, spec[1])}`
       return this.updateStats(spec[1], key)
     })
     await Promise.all(promises)

@@ -33,7 +33,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     if (!origin) {
       throw new Error(
-        `Can't find browser origin URL for project "${project.getName()}" when running tests for files "${files.join('", "')}"`,
+        `Can't find browser origin URL for project "${project.name}" when running tests for files "${files.join('", "')}"`,
       )
     }
 
@@ -67,7 +67,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     debug?.(
       `[%s] Running %s tests in %s chunks (%s threads)`,
-      project.getName() || 'core',
+      project.name || 'core',
       files.length,
       chunks.length,
       threadsCount,

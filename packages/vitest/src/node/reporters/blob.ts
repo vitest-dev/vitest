@@ -45,7 +45,7 @@ export class BlobReporter implements Reporter {
     const modules = this.ctx.projects.map<MergeReportModuleKeys>(
       (project) => {
         return [
-          project.getName(),
+          project.name,
           [...project.vite.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
             if (!mod[1].file) {
               return null
@@ -126,7 +126,7 @@ export async function readBlobs(
 
   // fake module graph - it is used to check if module is imported, but we don't use values inside
   const projects = Object.fromEntries(
-    projectsArray.map(p => [p.getName(), p]),
+    projectsArray.map(p => [p.name, p]),
   )
 
   blobs.forEach((blob) => {

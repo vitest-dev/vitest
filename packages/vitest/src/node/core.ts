@@ -195,7 +195,7 @@ export class Vitest {
     const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
     if (filters.length > 0) {
       this.projects = this.projects.filter(p =>
-        filters.some(pattern => pattern.test(p.getName())),
+        filters.some(pattern => pattern.test(p.name)),
       )
     }
     if (!this.coreWorkspaceProject) {
@@ -740,7 +740,7 @@ export class Vitest {
       this.configOverride.project = pattern
     }
 
-    this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
+    this.projects = this.resolvedProjects.filter(p => p.name === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
     await this.rerunFiles(files, 'change project filter', pattern === '')
   }
