@@ -5,7 +5,7 @@ import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
 import fg from 'fast-glob'
-import { relative, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { initializeProject } from '../project'
@@ -64,25 +64,33 @@ export async function resolveWorkspace(
     const rootOptions = options.extends === true
       ? vitest._options
       : {}
+    // if `root` is configured, resolve it relative to the workespace file or vite root (like other options)
+    // if `root` is not specified, inline configs use the same root as the root project
+    const root = options.root
+      ? resolve(workspaceConfigPath || vitest.config.root)
+      : vitest.config.root
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      mergeConfig(rootOptions, { configFile, ...options }) as any,
+      mergeConfig(rootOptions, { ...options, root, configFile }) as any,
     )))
   })
 
-  for (const filepath of fileProjects) {
+  for (const path of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
-    if (vitest.server.config.configFile === filepath) {
+    if (vitest.server.config.configFile === path) {
       projectPromises.push(Promise.resolve(vitest._createRootProject()))
       continue
     }
 
+    const configFile = path.endsWith('/') ? false : path
+    const root = path.endsWith('/') ? path : dirname(path)
+
     projectPromises.push(
       concurrent(() => initializeProject(
-        filepath,
+        path,
         vitest,
-        { configFile: filepath, test: cliOverrides },
+        { root, configFile, test: cliOverrides },
       )),
     )
   }

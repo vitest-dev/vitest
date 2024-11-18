@@ -22,12 +22,7 @@ import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
 import fg from 'fast-glob'
 import mm from 'micromatch'
-import {
-  dirname,
-  isAbsolute,
-  join,
-  relative,
-} from 'pathe'
+import { isAbsolute, join, relative } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { setup } from '../api/setup'
@@ -651,29 +646,15 @@ export async function initializeProject(
   const project = new TestProject(workspacePath, ctx, options)
 
   const { extends: extendsConfig, configFile, ...restOptions } = options
-  const root
-    = options.root
-    || (typeof workspacePath === 'number'
-      ? undefined
-      : workspacePath.endsWith('/')
-        ? workspacePath
-        : dirname(workspacePath))
-
-  // const configFile = extendsConfig
-  //   ? resolve(dirname(workspaceConfigPath), extendsConfig)
-  //   : typeof workspacePath === 'number' || workspacePath.endsWith('/')
-  //     ? false
-  //     : workspacePath
 
   const config: ViteInlineConfig = {
     ...restOptions,
-    root,
     configFile,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [
       ...(options.plugins || []),
-      WorkspaceVitestPlugin(project, { ...options, root, workspacePath }),
+      WorkspaceVitestPlugin(project, { ...options, workspacePath }),
     ],
   }
 

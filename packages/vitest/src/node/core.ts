@@ -168,7 +168,7 @@ export class Vitest {
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
-          || this.resolvedProjects.some(p => p.server.config.configFile === file)
+          || this.resolvedProjects.some(p => p.vite.config.configFile === file)
           || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -246,6 +246,10 @@ export class Vitest {
   }
 
   private async resolveWorkspaceConfigPath(): Promise<string | undefined> {
+    if (typeof this.config.workspace === 'string') {
+      return this.config.workspace
+    }
+
     const configDir = this.server.config.configFile
       ? dirname(this.server.config.configFile)
       : this.config.root
@@ -273,7 +277,7 @@ export class Vitest {
       )
     }
 
-    const workspaceConfigPath = this.config.workspace || await this.resolveWorkspaceConfigPath()
+    const workspaceConfigPath = await this.resolveWorkspaceConfigPath()
 
     this._workspaceConfigPath = workspaceConfigPath
 
