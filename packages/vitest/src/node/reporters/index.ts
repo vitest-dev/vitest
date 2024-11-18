@@ -30,7 +30,7 @@ export {
 }
 export type { BaseReporter, Reporter }
 
-export type { TestProject } from '../reported-workspace-project'
+export type { TestProject } from '../project'
 /**
  * @deprecated Use `TestModule` instead
  */

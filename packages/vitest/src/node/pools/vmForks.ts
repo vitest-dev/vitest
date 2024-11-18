@@ -3,8 +3,8 @@ import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
 import type { Vitest } from '../core'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
 import type { ResolvedConfig, SerializedConfig } from '../types/config'
-import type { WorkspaceProject } from '../workspace'
 import EventEmitter from 'node:events'
 import * as nodeos from 'node:os'
 import { resolve } from 'node:path'
@@ -19,7 +19,7 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createChildProcessChannel(project: WorkspaceProject) {
+function createChildProcessChannel(project: TestProject) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -107,7 +107,7 @@ export function createVmForksPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
+      project: TestProject,
       config: SerializedConfig,
       files: string[],
       environment: ContextTestEnvironment,
@@ -161,8 +161,8 @@ export function createVmForksPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, SerializedConfig>()
-      const getConfig = (project: WorkspaceProject): SerializedConfig => {
+      const configs = new Map<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }

@@ -1,4 +1,4 @@
-import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject, WorkspaceSpec } from 'vitest/node'
+import type { BrowserProvider, ProcessPool, TestProject, TestSpecification, Vitest } from 'vitest/node'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
 import { relative } from 'pathe'
@@ -9,7 +9,7 @@ const debug = createDebugger('vitest:browser:pool')
 async function waitForTests(
   method: 'run' | 'collect',
   contextId: string,
-  project: WorkspaceProject,
+  project: TestProject,
   files: string[],
 ) {
   const context = project.browser!.state.createAsyncContext(method, contextId, files)
@@ -19,7 +19,7 @@ async function waitForTests(
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const executeTests = async (method: 'run' | 'collect', project: WorkspaceProject, files: string[]) => {
+  const executeTests = async (method: 'run' | 'collect', project: TestProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
     const browser = project.browser!
 
@@ -113,11 +113,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     await Promise.all(promises)
   }
 
-  const runWorkspaceTests = async (method: 'run' | 'collect', specs: WorkspaceSpec[]) => {
-    const groupedFiles = new Map<WorkspaceProject, string[]>()
-    for (const [project, file] of specs) {
+  const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
+    const groupedFiles = new Map<TestProject, string[]>()
+    for (const { project, moduleId } of specs) {
       const files = groupedFiles.get(project) || []
-      files.push(file)
+      files.push(moduleId)
       groupedFiles.set(project, files)
     }
 
@@ -131,7 +131,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       if (isCancelled) {
         break
       }
-      await project.initBrowserProvider()
+      await project._initBrowserProvider()
 
       await executeTests(method, project, files)
     }
@@ -142,7 +142,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  function getThreadsCount(project: WorkspaceProject) {
+  function getThreadsCount(project: TestProject) {
     const config = project.config.browser
     if (!config.headless || !project.browser!.provider.supportsParallelism) {
       return 1

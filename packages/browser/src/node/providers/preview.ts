@@ -1,9 +1,9 @@
-import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
+import type { BrowserProvider, TestProject } from 'vitest/node'
 
 export class PreviewBrowserProvider implements BrowserProvider {
   public name = 'preview' as const
   public supportsParallelism: boolean = false
-  private project!: WorkspaceProject
+  private project!: TestProject
   private open = false
 
   getSupportedBrowsers() {
@@ -19,7 +19,7 @@ export class PreviewBrowserProvider implements BrowserProvider {
     return {}
   }
 
-  async initialize(project: WorkspaceProject) {
+  async initialize(project: TestProject) {
     this.project = project
     this.open = false
     if (project.config.browser.headless) {

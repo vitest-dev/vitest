@@ -38,6 +38,7 @@
     "strict": true,
     "declaration": true,
     "noEmit": true,
+    "stripInternal": true,
     "esModuleInterop": true,
     "skipLibCheck": true
   }

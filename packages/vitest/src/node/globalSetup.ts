@@ -4,11 +4,20 @@ import type { ResolvedConfig } from './types/config'
 import { toArray } from '@vitest/utils'
 
 export interface GlobalSetupContext {
+  /**
+   * Config of the current project.
+   */
   config: ResolvedConfig
+  /**
+   * Provide a value to the test context. This value will be available to all tests via `inject`.
+   */
   provide: <T extends keyof ProvidedContext & string>(
     key: T,
     value: ProvidedContext[T]
   ) => void
+  /**
+   * Register a function that will be called before tests run again in watch mode.
+   */
   onTestsRerun: (cb: OnTestsRerunHandler) => void
 }
 

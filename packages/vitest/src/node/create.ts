@@ -18,7 +18,7 @@ export async function createVitest(
   options: UserConfig,
   viteOverrides: ViteUserConfig = {},
   vitestOptions: VitestOptions = {},
-) {
+): Promise<Vitest> {
   const ctx = new Vitest(mode, vitestOptions)
   const root = slash(resolve(options.root || process.cwd()))
 

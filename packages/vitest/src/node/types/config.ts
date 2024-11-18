@@ -1101,7 +1101,8 @@ export type ProjectConfig = Omit<
 
 export type ResolvedProjectConfig = Omit<
   ResolvedConfig,
-  NonProjectOptions
+  // some options cannot be set, but they are inherited from the workspace
+  Exclude<NonProjectOptions, 'coverage' | 'watch'>
 >
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
@@ -1116,10 +1117,13 @@ export type UserProjectConfigExport =
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
 
-export type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
+export type TestProjectConfiguration = string | (UserProjectConfigExport & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * @example '../vite.config.ts'
    */
   extends?: string
 })
+
+/** @deprecated use `TestProjectConfiguration` instead */
+export type WorkspaceProjectConfiguration = TestProjectConfiguration

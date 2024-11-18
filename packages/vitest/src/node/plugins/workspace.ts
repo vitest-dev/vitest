@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { TestProject } from '../project'
 import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
-import type { WorkspaceProject } from '../workspace'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -26,7 +26,7 @@ interface WorkspaceOptions extends UserWorkspaceConfig {
 }
 
 export function WorkspaceVitestPlugin(
-  project: WorkspaceProject,
+  project: TestProject,
   options: WorkspaceOptions,
 ) {
   return <VitePlugin[]>[
@@ -153,7 +153,7 @@ export function WorkspaceVitestPlugin(
       },
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
-        await project.setServer(options, server)
+        await project._configureServer(options, server)
 
         await server.watcher.close()
       },

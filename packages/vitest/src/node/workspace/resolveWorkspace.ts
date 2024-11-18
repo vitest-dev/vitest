@@ -1,6 +1,6 @@
 import type { Vitest } from '../core'
-import type { UserConfig, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../types/config'
-import type { WorkspaceProject } from '../workspace'
+import type { TestProject } from '../project'
+import type { TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
@@ -8,16 +8,16 @@ import fg from 'fast-glob'
 import { relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { initializeProject } from '../workspace'
+import { initializeProject } from '../project'
 import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
   vitest: Vitest,
   cliOptions: UserConfig,
   workspaceConfigPath: string,
-  workspaceDefinition: WorkspaceProjectConfiguration[],
-): Promise<WorkspaceProject[]> {
-  const { configFiles, projectConfigs, nonConfigDirectories } = await resolveWorkspaceProjectConfigs(
+  workspaceDefinition: TestProjectConfiguration[],
+): Promise<TestProject[]> {
+  const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
     vitest,
     workspaceConfigPath,
     workspaceDefinition,
@@ -50,7 +50,7 @@ export async function resolveWorkspace(
     return acc
   }, {} as UserConfig)
 
-  const projectPromises: Promise<WorkspaceProject>[] = []
+  const projectPromises: Promise<TestProject>[] = []
   const fileProjects = [...configFiles, ...nonConfigDirectories]
   const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
 
@@ -100,9 +100,9 @@ export async function resolveWorkspace(
         : [' ']
       throw new Error([
         `Project name "${name}"`,
-        project.server.config.configFile ? ` from "${relative(vitest.config.root, project.server.config.configFile)}"` : '',
+        project.vite.config.configFile ? ` from "${relative(vitest.config.root, project.vite.config.configFile)}"` : '',
         ' is not unique.',
-        duplicate?.server.config.configFile ? ` The project is already defined by "${relative(vitest.config.root, duplicate.server.config.configFile)}".` : '',
+        duplicate?.vite.config.configFile ? ` The project is already defined by "${relative(vitest.config.root, duplicate.vite.config.configFile)}".` : '',
         filesError,
         'All projects in a workspace should have unique names. Make sure your configuration is correct.',
       ].join(''))
@@ -113,10 +113,10 @@ export async function resolveWorkspace(
   return resolvedProjects
 }
 
-async function resolveWorkspaceProjectConfigs(
+async function resolveTestProjectConfigs(
   vitest: Vitest,
   workspaceConfigPath: string,
-  workspaceDefinition: WorkspaceProjectConfiguration[],
+  workspaceDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
   const projectsOptions: UserWorkspaceConfig[] = []
