@@ -6,7 +6,7 @@ import { JUnitReporter } from '../../../packages/vitest/src/node/reporters/junit
 import { TapReporter } from '../../../packages/vitest/src/node/reporters/tap'
 import { TapFlatReporter } from '../../../packages/vitest/src/node/reporters/tap-flat'
 import { getContext } from '../src/context'
-import { files } from '../src/data'
+import { files, passedFiles } from '../src/data'
 
 const beautify = (json: string) => JSON.parse(json)
 
@@ -55,6 +55,61 @@ test('JUnit reporter', async () => {
   // Act
   await reporter.onInit(context.vitest)
   await reporter.onFinished([])
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+
+test('JUnit reporter without classname', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({})
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+
+test('JUnit reporter with custom string classname', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({ classname: 'my-custom-classname' })
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+
+test('JUnit reporter with custom function classnameTemplate', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({ classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath}` })
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
+
+  // Assert
+  expect(context.output).toMatchSnapshot()
+})
+test('JUnit reporter with custom string classnameTemplate', async () => {
+  // Arrange
+  const reporter = new JUnitReporter({ classnameTemplate: `filename:{filename} - filepath:{filepath}` })
+  const context = getContext()
+
+  // Act
+  await reporter.onInit(context.vitest)
+
+  await reporter.onFinished(passedFiles)
 
   // Assert
   expect(context.output).toMatchSnapshot()

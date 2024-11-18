@@ -25,6 +25,37 @@ const suite: Suite = {
   tasks: [],
 }
 
+const passedFile: File = {
+  id: '1223128da3',
+  name: 'basic.test.ts',
+  type: 'suite',
+  suite,
+  meta: {},
+  mode: 'run',
+  filepath: '/vitest/test/core/test/basic.test.ts',
+  result: { state: 'pass', duration: 145.99284195899963 },
+  tasks: [
+  ],
+  projectName: '',
+  file: null!,
+}
+passedFile.file = passedFile
+passedFile.tasks.push({
+  id: '1223128da3_0_0',
+  type: 'test',
+  name: 'Math.sqrt()',
+  mode: 'run',
+  fails: undefined,
+  suite,
+  meta: {},
+  file: passedFile,
+  result: {
+    state: 'pass',
+    duration: 1.4422860145568848,
+  },
+  context: null as any,
+})
+
 const error: ErrorWithDiff = {
   name: 'AssertionError',
   message: 'expected 2.23606797749979 to equal 2',
@@ -176,5 +207,6 @@ file.tasks = [suite]
 suite.tasks = tasks
 
 const files = [file]
+const passedFiles = [passedFile]
 
-export { files }
+export { files, passedFiles }
