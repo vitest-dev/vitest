@@ -26,6 +26,7 @@ const StatusMap: Record<TaskState, Status> = {
   run: 'pending',
   skip: 'skipped',
   todo: 'todo',
+  queued: 'pending',
 }
 
 export interface JsonAssertionResult {
