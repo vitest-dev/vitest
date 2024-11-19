@@ -113,7 +113,7 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public result(): TestResult | undefined {
     const result = this.task.result
-    if (!result || result.state === 'run') {
+    if (!result || result.state === 'run' || result.state === 'queued') {
       return undefined
     }
     const state = result.state === 'fail'
@@ -163,7 +163,7 @@ export class TestCase extends ReportedTaskImplementation {
   public diagnostic(): TestDiagnostic | undefined {
     const result = this.task.result
     // startTime should always be available if the test has properly finished
-    if (!result || result.state === 'run' || !result.startTime) {
+    if (!result || result.state === 'run' || result.state === 'queued' || !result.startTime) {
       return undefined
     }
     const duration = result.duration || 0

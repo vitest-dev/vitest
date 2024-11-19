@@ -39,7 +39,7 @@ export class TaskParser {
       const task = this.ctx.state.idMap.get(pack[0])
 
       if (task?.type === 'suite' && 'filepath' in task && task.result?.state) {
-        if (task?.result?.state === 'run') {
+        if (task?.result?.state === 'run' || task?.result?.state === 'queued') {
           startingTestFiles.push(task)
         }
         else {
@@ -55,7 +55,7 @@ export class TaskParser {
       }
 
       if (task?.type === 'test') {
-        if (task.result?.state === 'run') {
+        if (task.result?.state === 'run' || task.result?.state === 'queued') {
           startingTests.push(task)
         }
         else if (task.result?.hooks?.afterEach !== 'run') {
@@ -65,7 +65,7 @@ export class TaskParser {
 
       if (task?.result?.hooks) {
         for (const [hook, state] of Object.entries(task.result.hooks)) {
-          if (state === 'run') {
+          if (state === 'run' || state === 'queued') {
             startingHooks.push({ name: hook, file: task.file, id: task.id, type: task.type })
           }
           else {

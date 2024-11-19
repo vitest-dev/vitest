@@ -72,8 +72,8 @@ export function interpretTaskModes(
     })
 
     // if all subtasks are skipped, mark as skip
-    if (suite.mode === 'run') {
-      if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run')) {
+    if (suite.mode === 'run' || suite.mode === 'queued') {
+      if (suite.tasks.length && suite.tasks.every(i => i.mode !== 'run' && i.mode !== 'queued')) {
         suite.mode = 'skip'
       }
     }
@@ -115,7 +115,7 @@ export function someTasksAreOnly(suite: Suite): boolean {
 
 function skipAllTasks(suite: Suite) {
   suite.tasks.forEach((t) => {
-    if (t.mode === 'run') {
+    if (t.mode === 'run' || t.mode === 'queued') {
       t.mode = 'skip'
       if (t.type === 'suite') {
         skipAllTasks(t)
