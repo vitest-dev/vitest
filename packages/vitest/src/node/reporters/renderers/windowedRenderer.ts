@@ -1,7 +1,9 @@
 import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
-import restoreCursor from 'restore-cursor'
+
+// @ts-expect-error -- untyped, cannot use v4 due to other deps
+import onExit from 'signal-exit'
 
 const DEFAULT_RENDER_INTERVAL = 16
 
@@ -46,12 +48,17 @@ export class WindowRenderer {
       error: options.logger.errorStream.write.bind(options.logger.errorStream),
     }
 
+    // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
+    onExit(() => {
+      this.flushBuffer()
+      this.write(SHOW_CURSOR)
+    })
+
     this.cleanups.push(
       this.interceptStream(process.stdout, 'output'),
       this.interceptStream(process.stderr, 'error'),
     )
 
-    restoreCursor()
     this.write(HIDE_CURSOR, 'output')
 
     this.start()
