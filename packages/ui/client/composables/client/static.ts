@@ -89,16 +89,15 @@ export function createStaticClient(): VitestClient {
   async function registerMetadata() {
     const res = await fetch(window.METADATA_PATH!)
     const contentType = res.headers.get('content-type')?.toLowerCase() || ''
-    if (
-      contentType.includes('application/gzip')
-      || contentType.includes('application/x-gzip')
-    ) {
+    // workaround sirv (vite preview) responding decoded data for direct .gz request
+    // https://github.com/lukeed/sirv/issues/158
+    // https://github.com/vitejs/vite/issues/12266
+    if (res.headers.get('content-type') === 'application/json') {
+      metadata = parse(await res.text()) as HTMLReportMetadata
+    } else {
       const compressed = new Uint8Array(await res.arrayBuffer())
       const decompressed = strFromU8(decompressSync(compressed))
       metadata = parse(decompressed) as HTMLReportMetadata
-    }
-    else {
-      metadata = parse(await res.text()) as HTMLReportMetadata
     }
     const event = new Event('open')
     ctx.ws.dispatchEvent(event)
