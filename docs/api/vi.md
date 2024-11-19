@@ -253,9 +253,9 @@ Imports module, bypassing all checks if it should be mocked. Can be useful if yo
 
 ```ts
 vi.mock('./example.js', async () => {
-  const axios = await vi.importActual('./example.js')
+  const originalModule = await vi.importActual('./example.js')
 
-  return { ...axios, get: vi.fn() }
+  return { ...originalModule, get: vi.fn() }
 })
 ```
 
