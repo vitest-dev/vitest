@@ -8,10 +8,20 @@ import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'pathe'
 import { x } from 'tinyexec'
-import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
+import { afterEach, onTestFinished, vi, type WorkerGlobalState } from 'vitest'
 import { startVitest } from 'vitest/node'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
+
+vi.mock('tinyrainbow', async (importOriginal) => {
+  const { getDefaultColors, createColors, isSupported } = await importOriginal<any>()
+  return {
+    default: getDefaultColors(),
+    getDefaultColors,
+    createColors,
+    isSupported,
+  }
+})
 
 interface VitestRunnerCLIOptions {
   std?: 'inherit'
