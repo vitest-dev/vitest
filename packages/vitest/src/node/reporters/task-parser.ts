@@ -81,7 +81,6 @@ export class TaskParser {
 
     startingTestFiles.forEach(file => this.onTestFilePrepare(file))
     startingTests.forEach(test => this.onTestStart(test))
-    startingHooks.forEach(hook => this.onHookStart(hook),
-    )
+    startingHooks.forEach(hook => this.onHookStart(hook))
   }
 }
