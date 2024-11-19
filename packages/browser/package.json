@@ -32,13 +32,16 @@
       "default": "./dist/client.js"
     },
     "./matchers": {
-      "types": "./matchers.d.ts"
+      "types": "./matchers.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts"
+      "types": "./providers/webdriverio.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/playwright": {
-      "types": "./providers/playwright.d.ts"
+      "types": "./providers/playwright.d.ts",
+      "default": "./dummy.js"
     },
     "./locator": {
       "types": "./dist/locators/index.d.ts",
