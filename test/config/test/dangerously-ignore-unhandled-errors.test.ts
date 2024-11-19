@@ -3,13 +3,13 @@ import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test('{ dangerouslyIgnoreUnhandledErrors: true }', async () => {
-  const { stderr, stdout, exitCode } = await runVitest({
+  const { stderr, exitCode } = await runVitest({
     root: 'fixtures/dangerously-ignore-unhandled-errors',
     dangerouslyIgnoreUnhandledErrors: true,
   })
 
   expect(exitCode).toBe(0)
-  expect(stdout).toMatch('Vitest caught 1 unhandled error during the test run')
+  expect(stderr).toMatch('Vitest caught 1 unhandled error during the test run')
   expect(stderr).toMatch('Error: intentional unhandled error')
 })
 
@@ -24,12 +24,12 @@ test('{ dangerouslyIgnoreUnhandledErrors: true } without reporter', async () => 
 })
 
 test('{ dangerouslyIgnoreUnhandledErrors: false }', async () => {
-  const { stderr, stdout, exitCode } = await runVitest({
+  const { stderr, exitCode } = await runVitest({
     root: 'fixtures/dangerously-ignore-unhandled-errors',
     dangerouslyIgnoreUnhandledErrors: false,
   })
 
   expect(exitCode).toBe(1)
-  expect(stdout).toMatch('Vitest caught 1 unhandled error during the test run')
+  expect(stderr).toMatch('Vitest caught 1 unhandled error during the test run')
   expect(stderr).toMatch('Error: intentional unhandled error')
 })
