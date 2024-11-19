@@ -400,7 +400,7 @@ export interface TaskOptions {
   shuffle: boolean | undefined
   retry: number | undefined
   repeats: number | undefined
-  mode: 'run' | 'only' | 'skip' | 'todo'
+  mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
 }
 
 function buildOptions(
