@@ -416,8 +416,8 @@ importers:
         specifier: ^1.48.2
         version: 1.48.2
       safaridriver:
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^1.0.0
+        version: 1.0.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -8117,6 +8117,10 @@ packages:
 
   safaridriver@0.1.2:
     resolution: {integrity: sha512-4R309+gWflJktzPXBQCobbWEHlzC4aK3a+Ov3tz2Ib2aBxiwd11phkdIBH1l0EO22x24CJMUQkpKFumRriCSRg==}
+
+  safaridriver@1.0.0:
+    resolution: {integrity: sha512-J92IFbskyo7OYB3Dt4aTdyhag1GlInrfbPCmMteb7aBK7PwlnGz1HI0+oyNN97j7pV9DqUAVoVgkNRMrfY47mQ==}
+    engines: {node: '>=18.0.0'}
 
   safe-array-concat@1.1.2:
     resolution: {integrity: sha512-vj6RsCsWBCf19jIeHEfkRMw8DPiBb+DMXklQ/1SGDHOMlHdPUkZXFQ2YdplS23zESTijAcurb1aSgJA3AgMu1Q==}
@@ -17421,6 +17425,8 @@ snapshots:
       mri: 1.2.0
 
   safaridriver@0.1.2: {}
+
+  safaridriver@1.0.0: {}
 
   safe-array-concat@1.1.2:
     dependencies:

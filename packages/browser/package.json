@@ -109,7 +109,7 @@
     "periscopic": "^4.0.2",
     "playwright": "^1.48.2",
     "playwright-core": "^1.48.2",
-    "safaridriver": "^0.1.2",
+    "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
     "webdriverio": "^8.40.6"
   }
