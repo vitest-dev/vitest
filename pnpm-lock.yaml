@@ -1342,6 +1342,9 @@ importers:
       tinyexec:
         specifier: ^0.3.0
         version: 0.3.0
+      tinyrainbow:
+        specifier: ^1.2.0
+        version: 1.2.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.9.0)(terser@5.36.0)
