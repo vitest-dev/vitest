@@ -282,11 +282,11 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
 
 ## TypeScript
 
-By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/context` is referenced somewhere in your tests or setup file to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
+By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests or setup file to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
 
 ::: code-block
 ```ts [default]
-/// <reference types="@vitest/browser/context" />
+/// <reference types="@vitest/browser/matchers" />
 ```
 ```ts [playwright]
 /// <reference types="@vitest/browser/providers/playwright" />
