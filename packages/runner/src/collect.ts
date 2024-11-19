@@ -108,6 +108,10 @@ export async function collectTests(
       config.allowOnly,
     )
 
+    if (file.mode === 'queued') {
+      file.mode = 'run'
+    }
+
     files.push(file)
   }
 
