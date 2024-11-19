@@ -383,7 +383,7 @@ export interface InlineConfig {
   /**
    * Path to a workspace configuration file
    */
-  workspace?: string
+  workspace?: string | TestProjectConfiguration[]
 
   /**
    * Update snapshot
@@ -1120,9 +1120,10 @@ export type UserProjectConfigExport =
 export type TestProjectConfiguration = string | (UserProjectConfigExport & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
+   * If `true`, the project will inherit all options from the root config.
    * @example '../vite.config.ts'
    */
-  extends?: string
+  extends?: string | true
 })
 
 /** @deprecated use `TestProjectConfiguration` instead */

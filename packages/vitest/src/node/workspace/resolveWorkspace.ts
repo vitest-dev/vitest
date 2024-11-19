@@ -5,7 +5,7 @@ import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
 import fg from 'fast-glob'
-import { relative, resolve } from 'pathe'
+import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { initializeProject } from '../project'
@@ -14,7 +14,7 @@ import { isDynamicPattern } from './fast-glob-pattern'
 export async function resolveWorkspace(
   vitest: Vitest,
   cliOptions: UserConfig,
-  workspaceConfigPath: string,
+  workspaceConfigPath: string | undefined,
   workspaceDefinition: TestProjectConfiguration[],
 ): Promise<TestProject[]> {
   const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
@@ -54,33 +54,50 @@ export async function resolveWorkspace(
   const fileProjects = [...configFiles, ...nonConfigDirectories]
   const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
 
-  for (const filepath of fileProjects) {
+  projectConfigs.forEach((options, index) => {
+    const configRoot = workspaceConfigPath ? dirname(workspaceConfigPath) : vitest.config.root
+    // if extends a config file, resolve the file path
+    const configFile = typeof options.extends === 'string'
+      ? resolve(configRoot, options.extends)
+      : false
+    // if extends a root config, use the users root options
+    const rootOptions = options.extends === true
+      ? vitest._options
+      : {}
+    // if `root` is configured, resolve it relative to the workespace file or vite root (like other options)
+    // if `root` is not specified, inline configs use the same root as the root project
+    const root = options.root
+      ? resolve(configRoot, options.root)
+      : vitest.config.root
+    projectPromises.push(concurrent(() => initializeProject(
+      index,
+      vitest,
+      mergeConfig(rootOptions, { ...options, root, configFile }) as any,
+    )))
+  })
+
+  for (const path of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
-    if (vitest.server.config.configFile === filepath) {
-      projectPromises.push(concurrent(() => vitest._createCoreProject()))
+    if (vitest.server.config.configFile === path) {
+      projectPromises.push(Promise.resolve(vitest._createRootProject()))
       continue
     }
 
+    const configFile = path.endsWith('/') ? false : path
+    const root = path.endsWith('/') ? path : dirname(path)
+
     projectPromises.push(
       concurrent(() => initializeProject(
-        filepath,
+        path,
         vitest,
-        { workspaceConfigPath, test: cliOverrides },
+        { root, configFile, test: cliOverrides },
       )),
     )
   }
 
-  projectConfigs.forEach((options, index) => {
-    projectPromises.push(concurrent(() => initializeProject(
-      index,
-      vitest,
-      mergeConfig(options, { workspaceConfigPath, test: cliOverrides }) as any,
-    )))
-  })
-
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return [await vitest._createCoreProject()]
+    return [vitest._createRootProject()]
   }
 
   const resolvedProjects = await Promise.all(projectPromises)
@@ -88,9 +105,9 @@ export async function resolveWorkspace(
 
   // project names are guaranteed to be unique
   for (const project of resolvedProjects) {
-    const name = project.getName()
+    const name = project.name
     if (names.has(name)) {
-      const duplicate = resolvedProjects.find(p => p.getName() === name && p !== project)!
+      const duplicate = resolvedProjects.find(p => p.name === name && p !== project)!
       const filesError = fileProjects.length
         ? [
             '\n\nYour config matched these files:\n',
@@ -115,11 +132,11 @@ export async function resolveWorkspace(
 
 async function resolveTestProjectConfigs(
   vitest: Vitest,
-  workspaceConfigPath: string,
+  workspaceConfigPath: string | undefined,
   workspaceDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
-  const projectsOptions: UserWorkspaceConfig[] = []
+  const projectsOptions: (UserWorkspaceConfig & { extends?: true | string })[] = []
 
   // custom config files that were specified directly or resolved from a directory
   const workspaceConfigFiles: string[] = []
@@ -130,8 +147,6 @@ async function resolveTestProjectConfigs(
   // directories that don't have a config file inside, but should be treated as projects
   const nonConfigProjectDirectories: string[] = []
 
-  const relativeWorkpaceConfigPath = relative(vitest.config.root, workspaceConfigPath)
-
   for (const definition of workspaceDefinition) {
     if (typeof definition === 'string') {
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
@@ -141,7 +156,11 @@ async function resolveTestProjectConfigs(
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
-          throw new Error(`Workspace config file "${relativeWorkpaceConfigPath}" references a non-existing file or a directory: ${file}`)
+          const relativeWorkpaceConfigPath = workspaceConfigPath
+            ? relative(vitest.config.root, workspaceConfigPath)
+            : undefined
+          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkpaceConfigPath}"` : 'Inline workspace'
+          throw new Error(`${note} references a non-existing file or a directory: ${file}`)
         }
 
         const stats = await fs.stat(file)
@@ -206,20 +225,20 @@ async function resolveTestProjectConfigs(
 
     const workspacesFs = await fg.glob(workspaceGlobMatches, globOptions)
 
-    await Promise.all(workspacesFs.map(async (filepath) => {
+    await Promise.all(workspacesFs.map(async (path) => {
       // directories are allowed with a glob like `packages/*`
       // in this case every directory is treated as a project
-      if (filepath.endsWith('/')) {
-        const configFile = await resolveDirectoryConfig(filepath)
+      if (path.endsWith('/')) {
+        const configFile = await resolveDirectoryConfig(path)
         if (configFile) {
           workspaceConfigFiles.push(configFile)
         }
         else {
-          nonConfigProjectDirectories.push(filepath)
+          nonConfigProjectDirectories.push(path)
         }
       }
       else {
-        workspaceConfigFiles.push(filepath)
+        workspaceConfigFiles.push(path)
       }
     }))
   }

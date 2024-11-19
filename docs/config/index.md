@@ -2437,11 +2437,13 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 
 ### workspace<NonProjectOption /> {#workspace}
 
-- **Type:** `string`
+- **Type:** `string | TestProjectConfiguration`
 - **CLI:** `--workspace=./file.js`
 - **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
 
 Path to a [workspace](/guide/workspace) config file relative to [root](#root).
+
+Since Vitest 2.2, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
 
 ### isolate
 

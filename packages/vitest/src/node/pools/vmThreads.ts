@@ -116,7 +116,7 @@ export function createVmThreadsPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {

@@ -90,3 +90,39 @@ it('vite import analysis is applied when loading workspace config', async () => 
   expect(stderr).toBe('')
   expect(stdout).toContain('test - a')
 })
+
+it('can define inline workspace config programmatically', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/api',
+    env: {
+      TEST_ROOT: '1',
+    },
+    workspace: [
+      {
+        extends: true,
+        test: {
+          name: 'project-1',
+        },
+      },
+      {
+        test: {
+          name: 'project-2',
+          env: {
+            TEST_ROOT: '2',
+          },
+        },
+      },
+      {
+        extends: './vite.custom.config.js',
+        test: {
+          name: 'project-3',
+        },
+      },
+    ],
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('project-1')
+  expect(stdout).toContain('project-2')
+  expect(stdout).toContain('project-3')
+  expect(stdout).toContain('3 passed')
+})

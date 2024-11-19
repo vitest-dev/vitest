@@ -94,6 +94,9 @@ export class Vitest {
   /** @private */
   public _browserLastPort = defaultBrowserPort
 
+  /** @internal */
+  public _options: UserConfig = {}
+
   constructor(
     public readonly mode: VitestRunMode,
     options: VitestOptions = {},
@@ -109,6 +112,7 @@ export class Vitest {
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+    this._options = options
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -164,7 +168,7 @@ export class Vitest {
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
-          || this.resolvedProjects.some(p => p.server.config.configFile === file)
+          || this.resolvedProjects.some(p => p.vite.config.configFile === file)
           || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -191,7 +195,7 @@ export class Vitest {
     const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
     if (filters.length > 0) {
       this.projects = this.projects.filter(p =>
-        filters.some(pattern => pattern.test(p.getName())),
+        filters.some(pattern => pattern.test(p.name)),
       )
     }
     if (!this.coreWorkspaceProject) {
@@ -212,7 +216,7 @@ export class Vitest {
   /**
    * @internal
    */
-  _createCoreProject() {
+  _createRootProject() {
     this.coreWorkspaceProject = TestProject._createBasicProject(this)
     return this.coreWorkspaceProject
   }
@@ -241,8 +245,8 @@ export class Vitest {
       || this.projects[0]
   }
 
-  private async getWorkspaceConfigPath(): Promise<string | undefined> {
-    if (this.config.workspace) {
+  private async resolveWorkspaceConfigPath(): Promise<string | undefined> {
+    if (typeof this.config.workspace === 'string') {
       return this.config.workspace
     }
 
@@ -264,12 +268,21 @@ export class Vitest {
   }
 
   private async resolveWorkspace(cliOptions: UserConfig) {
-    const workspaceConfigPath = await this.getWorkspaceConfigPath()
+    if (Array.isArray(this.config.workspace)) {
+      return resolveWorkspace(
+        this,
+        cliOptions,
+        undefined,
+        this.config.workspace,
+      )
+    }
+
+    const workspaceConfigPath = await this.resolveWorkspaceConfigPath()
 
     this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
-      return [this._createCoreProject()]
+      return [this._createRootProject()]
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
@@ -731,7 +744,7 @@ export class Vitest {
       this.configOverride.project = pattern
     }
 
-    this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
+    this.projects = this.resolvedProjects.filter(p => p.name === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
     await this.rerunFiles(files, 'change project filter', pattern === '')
   }

@@ -116,7 +116,7 @@ export function createForksPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
@@ -199,7 +199,7 @@ export function createForksPool(
           const grouped = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName()
+              project.name
               + environment.name
               + JSON.stringify(environment.options),
           )
@@ -256,7 +256,7 @@ export function createForksPool(
           const filesByOptions = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName() + JSON.stringify(environment.options),
+              project.name + JSON.stringify(environment.options),
           )
 
           for (const files of Object.values(filesByOptions)) {
