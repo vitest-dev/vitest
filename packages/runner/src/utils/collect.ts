@@ -172,7 +172,7 @@ export function createFileTask(
     id: generateHash(`${path}${projectName || ''}`),
     name: path,
     type: 'suite',
-    mode: 'run',
+    mode: 'queued',
     filepath,
     tasks: [],
     meta: Object.create(null),
