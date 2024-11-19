@@ -1,9 +1,12 @@
 import type { WorkspaceSpec } from 'vitest/node'
-import { expect } from 'vitest'
-import { readCoverageMap, runVitest, test } from '../utils'
+import { expect, test } from 'vitest'
+import { isV8Provider, readCoverageMap, runVitest } from '../utils'
 
 for (const isolate of [true, false]) {
-  test(`{ isolate: ${isolate} }`, async () => {
+  // TODO: Requires #6736
+  const fails = isV8Provider() && isolate === false
+
+  test(`{ isolate: ${isolate} }`, { fails }, async () => {
     await runVitest({
       include: ['fixtures/test/isolation-*'],
       setupFiles: ['fixtures/setup.isolation.ts'],
