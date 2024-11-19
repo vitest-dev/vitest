@@ -66,6 +66,10 @@ export async function runVitest(
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...rest,
+      env: {
+        NO_COLOR: 'true',
+        ...rest.env,
+      },
     }, {
       ...viteOverrides,
       server: {

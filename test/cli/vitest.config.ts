@@ -13,9 +13,6 @@ export default defineConfig({
     chaiConfig: {
       truncateThreshold: 999,
     },
-    env: {
-      NO_COLOR: 'true',
-    },
   },
   server: {
     watch: {
