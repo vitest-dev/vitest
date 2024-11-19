@@ -5,6 +5,10 @@
   "rangeStrategy": "bump",
   "packageRules": [
     {
+      "groupName": "Eslint packages",
+      "matchPackageNames": ["/eslint/"]
+    },
+    {
       "depTypeList": ["peerDependencies"],
       "enabled": false
     },
