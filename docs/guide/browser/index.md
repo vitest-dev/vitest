@@ -282,7 +282,7 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
 
 ## TypeScript
 
-By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests or setup file to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
+By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfile) or a [config file](/config/file) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
 
 ::: code-block
 ```ts [default]
@@ -293,6 +293,31 @@ By default, TypeScript doesn't recognize providers options and extra `expect` pr
 ```
 ```ts [webdriverio]
 /// <reference types="@vitest/browser/providers/webdriverio" />
+```
+
+Alternatively, you can also add them to `compilerOptions.types` field in your `tsconfig.json` file. Note that specifying anything in this field will disable [auto loading](https://www.typescriptlang.org/tsconfig/#types) of `@types/*` packages.
+
+::: code-block
+```json [default]
+{
+  "compilerOptions": {
+    "types": ["@vitest/browser/matchers"]
+  }
+}
+```
+```json [playwright]
+{
+  "compilerOptions": {
+    "types": ["@vitest/browser/providers/playwright"]
+  }
+}
+```
+```json [webdriverio]
+{
+  "compilerOptions": {
+    "types": ["@vitest/browser/providers/webdriverio"]
+  }
+}
 ```
 :::
 
