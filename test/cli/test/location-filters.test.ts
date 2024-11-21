@@ -84,6 +84,18 @@ describe('location filter with list command', () => {
     expect(stderr).toContain('Collect Error')
     expect(stderr).toContain('IncludeTaskLocationDisabledError')
   })
+
+  test('fails on part of filename with location filter', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'list',
+      '-r=./fixtures/location-filters',
+      'math:999',
+    )
+
+    expect(stdout).toEqual('')
+    expect(stderr).toContain('Collect Error')
+    expect(stderr).toContain('LocationFilterFileNotFoundError')
+  })
 })
 
 describe('location filter with run command', () => {
