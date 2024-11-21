@@ -5,7 +5,7 @@ import type {
   InlineConfig as ViteInlineConfig,
 } from 'vite'
 import type { Typechecker } from '../typecheck/typechecker'
-import type { ProvidedContext } from '../types/general'
+import type { OnTestsRerunHandler, ProvidedContext } from '../types/general'
 import type { Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { BrowserServer } from './types/browser'
@@ -217,11 +217,7 @@ export class TestProject {
     )
 
     for (const globalSetupFile of this._globalSetups) {
-      const teardown = await globalSetupFile.setup?.({
-        provide: (key, value) => this.provide(key, value),
-        config: this.config,
-        onTestsRerun: cb => this.vitest.onTestsRerun(cb),
-      })
+      const teardown = await globalSetupFile.setup?.(this)
       if (teardown == null || !!globalSetupFile.teardown) {
         continue
       }
@@ -232,6 +228,10 @@ export class TestProject {
       }
       globalSetupFile.teardown = teardown
     }
+  }
+
+  onTestsRerun(cb: OnTestsRerunHandler) {
+    this.vitest.onTestsRerun(cb)
   }
 
   /** @deprecated */
