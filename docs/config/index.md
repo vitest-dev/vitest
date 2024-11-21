@@ -1102,7 +1102,7 @@ inject('wsPort') === 3000
 ```
 :::
 
-Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests.
+Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
 
 ```ts
 import type { TestProject } from 'vitest/node'

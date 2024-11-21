@@ -8,6 +8,7 @@ import type { Typechecker } from '../typecheck/typechecker'
 import type { OnTestsRerunHandler, ProvidedContext } from '../types/general'
 import type { Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
+import type { Logger } from './logger'
 import type { BrowserServer } from './types/browser'
 import type {
   ResolvedConfig,
@@ -87,13 +88,15 @@ export class TestProject {
     this.globalConfig = vitest.config
   }
 
+  // "provide" is a property, not a method to keep the context when destructed in the global setup,
+  // making it a method would be a breaking change, and can be done in Vitest 3 at minimum
   /**
    * Provide a value to the test context. This value will be available to all tests with `inject`.
    */
-  provide<T extends keyof ProvidedContext & string>(
+  provide = <T extends keyof ProvidedContext & string>(
     key: T,
     value: ProvidedContext[T],
-  ): void {
+  ): void => {
     try {
       structuredClone(value)
     }
@@ -230,17 +233,17 @@ export class TestProject {
     }
   }
 
-  onTestsRerun(cb: OnTestsRerunHandler) {
+  onTestsRerun(cb: OnTestsRerunHandler): void {
     this.vitest.onTestsRerun(cb)
   }
 
   /** @deprecated */
-  teardownGlobalSetup() {
+  teardownGlobalSetup(): Promise<void> {
     return this._teardownGlobalSetup()
   }
 
   /** @internal */
-  async _teardownGlobalSetup() {
+  async _teardownGlobalSetup(): Promise<void> {
     if (!this._globalSetups) {
       return
     }
@@ -250,7 +253,7 @@ export class TestProject {
   }
 
   /** @deprecated use `vitest.logger` instead */
-  get logger() {
+  get logger(): Logger {
     return this.vitest.logger
   }
 
