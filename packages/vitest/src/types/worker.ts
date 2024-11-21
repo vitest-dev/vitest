@@ -1,5 +1,4 @@
-import type { CancelReason, Task } from '@vitest/runner'
-import type { FileSpec } from '@vitest/runner/types/runner'
+import type { CancelReason, FileSpec, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { SerializedConfig } from '../runtime/config'

@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner/types/runner'
+import type { FileSpec } from '@vitest/runner'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'

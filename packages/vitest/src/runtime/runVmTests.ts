@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner/types/runner'
+import type { FileSpec } from '@vitest/runner'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
