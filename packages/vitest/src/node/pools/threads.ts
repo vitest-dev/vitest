@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpec } from '@vitest/runner/types/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
@@ -262,10 +262,11 @@ export function createThreadsPool(
             // Always run environments isolated between each other
             await pool.recycleWorkers()
 
+            const filenames = files.map(f => f.file)
             await runFiles(
               files[0].project,
               getConfig(files[0].project),
-              files.map(f => f.file),
+              filenames,
               files[0].environment,
               invalidates,
             )

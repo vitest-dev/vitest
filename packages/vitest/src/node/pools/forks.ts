@@ -266,10 +266,11 @@ export function createForksPool(
             // Always run environments isolated between each other
             await pool.recycleWorkers()
 
+            const filenames = files.map(f => f.file)
             await runFiles(
               files[0].project,
               getConfig(files[0].project),
-              files.map(f => f.file),
+              filenames,
               files[0].environment,
               invalidates,
             )
