@@ -1,12 +1,14 @@
 import { describe, expect, test } from 'vitest'
 import { runVitestCli } from '../../test-utils'
 
+const fixturePath = './fixtures/location-filters'
+
 describe('location filter with list command', () => {
   test('finds test at correct line number', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
-      '-r=./fixtures/location-filters',
-      'basic.test.ts:5',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:5`,
     )
 
     expect(stdout).toMatchInlineSnapshot(`
@@ -19,8 +21,8 @@ describe('location filter with list command', () => {
   test('handles file with a dash in the name', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
-      '-r=./fixtures/location-filters',
-      'math-with-dashes-in-name.test.ts:3',
+      `-r=${fixturePath}`,
+      `${fixturePath}/math-with-dashes-in-name.test.ts:3`,
     )
 
     expect(stdout).toMatchInlineSnapshot(`
@@ -33,8 +35,8 @@ describe('location filter with list command', () => {
   test('reports not found test', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
-      '-r=./fixtures/location-filters',
-      'basic.test.ts:99',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:99`,
     )
 
     expect(stdout).toEqual('')
@@ -47,10 +49,10 @@ describe('location filter with list command', () => {
   test('reports multiple not found tests', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
-      '-r=./fixtures/location-filters',
-      'basic.test.ts:5',
-      'basic.test.ts:12',
-      'basic.test.ts:99',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:5`,
+      `${fixturePath}/basic.test.ts:12`,
+      `${fixturePath}/basic.test.ts:99`,
     )
 
     expect(stdout).toEqual('')
@@ -63,8 +65,8 @@ describe('location filter with list command', () => {
   test('errors if range location is provided', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
-      '-r=./fixtures/location-filters',
-      'a/file/that/doesnt/exit:10-15',
+      `-r=${fixturePath}`,
+      `${fixturePath}/a/file/that/doesnt/exit:10-15`,
     )
 
     expect(stdout).toEqual('')
@@ -75,9 +77,9 @@ describe('location filter with list command', () => {
   test('erorrs if includeTaskLocation is not enabled', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
-      '-r=./fixtures/location-filters',
+      `-r=${fixturePath}`,
       '--config=no-task-location.config.ts',
-      'a/file/that/doesnt/exist:5',
+      `${fixturePath}/a/file/that/doesnt/exist:5`,
     )
 
     expect(stdout).toEqual('')
@@ -88,8 +90,8 @@ describe('location filter with list command', () => {
   test('fails on part of filename with location filter', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
-      '-r=./fixtures/location-filters',
-      'math:999',
+      `-r=${fixturePath}`,
+      `math:999`,
     )
 
     expect(stdout).toEqual('')
@@ -102,10 +104,11 @@ describe('location filter with run command', () => {
   test('finds test at correct line number', async () => {
     const { stdout, stderr } = await runVitestCli(
       'run',
-      '-r=./fixtures/location-filters',
-      '--config=vitest.config.ts',
-      'math.test.ts:3',
+      `-r=${fixturePath}`,
+      `${fixturePath}/math.test.ts:3`,
     )
+
+    // expect(`${stdout}\n--------------------\n${stderr}`).toEqual('')
 
     expect(stdout).contain('1 passed')
     expect(stdout).contain('1 skipped')
@@ -115,8 +118,8 @@ describe('location filter with run command', () => {
   test('handles file with a dash in the name', async () => {
     const { stdout, stderr } = await runVitestCli(
       'run',
-      '-r=./fixtures/location-filters',
-      'math-with-dashes-in-name.test.ts:3',
+      `-r=${fixturePath}`,
+      `${fixturePath}/math-with-dashes-in-name.test.ts:3`,
     )
 
     expect(stdout).contain('1 passed')
@@ -127,8 +130,8 @@ describe('location filter with run command', () => {
   test('reports not found test', async () => {
     const { stdout, stderr } = await runVitestCli(
       'run',
-      '-r=./fixtures/location-filters',
-      'basic.test.ts:99',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:99`,
     )
 
     expect(stdout).toContain('4 skipped')
@@ -138,10 +141,10 @@ describe('location filter with run command', () => {
   test('reports multiple not found tests', async () => {
     const { stdout, stderr } = await runVitestCli(
       'run',
-      '-r=./fixtures/location-filters',
-      'basic.test.ts:5',
-      'basic.test.ts:12',
-      'basic.test.ts:99',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:5`,
+      `${fixturePath}/basic.test.ts:12`,
+      `${fixturePath}/basic.test.ts:99`,
     )
 
     expect(stdout).toContain('4 skipped')
@@ -151,8 +154,8 @@ describe('location filter with run command', () => {
   test('errors if range location is provided', async () => {
     const { stderr } = await runVitestCli(
       'run',
-      '-r=./fixtures/location-filters',
-      'a/file/that/doesnt/exit:10-15',
+      `-r=${fixturePath}`,
+      `${fixturePath}/a/file/that/doesnt/exit:10-15`,
     )
 
     expect(stderr).toContain('Error: Found "-"')
@@ -161,9 +164,9 @@ describe('location filter with run command', () => {
   test('errors if includeTaskLocation is not enabled', async () => {
     const { stderr } = await runVitestCli(
       'run',
-      '-r=./fixtures/location-filters',
-      '--config=no-task-location.config.ts',
-      'a/file/that/doesnt/exist:5',
+      `-r=${fixturePath}`,
+      `--config=no-task-location.config.ts`,
+      `${fixturePath}/a/file/that/doesnt/exist:5`,
     )
 
     expect(stderr).toMatchInlineSnapshot(`
@@ -175,8 +178,8 @@ describe('location filter with run command', () => {
   test('fails on part of filename with location filter', async () => {
     const { stdout, stderr } = await runVitestCli(
       'run',
-      '-r=./fixtures/location-filters',
-      'math:999',
+      `-r=${fixturePath}`,
+      `math:999`,
     )
 
     expect(stdout).not.contain('math.test.ts')

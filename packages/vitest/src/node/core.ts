@@ -1146,12 +1146,8 @@ export class Vitest {
 
   public async globTestSpecs(filters: string[] = []) {
     const files: TestSpecification[] = []
-    const dir = this.config.dir || this.config.root
+    const dir = process.cwd()
     const parsedFilters = filters.map(f => parseFilter(f))
-    const testLocations = groupFilters(parsedFilters.map(
-      f => ({ ...f, filename: resolve(dir, f.filename) }),
-    ))
-
     // Require includeTaskLocation when a location filter is passed
     if (
       !this.config.includeTaskLocation
@@ -1159,6 +1155,10 @@ export class Vitest {
     ) {
       throw new IncludeTaskLocationDisabledError()
     }
+
+    const testLocations = groupFilters(parsedFilters.map(
+      f => ({ ...f, filename: resolve(dir, f.filename) }),
+    ))
 
     // Key is file and val sepcifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}
