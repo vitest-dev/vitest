@@ -88,8 +88,7 @@
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
-      "acorn@8.11.3": "patches/acorn@8.11.3.patch",
-      "tinypool": "patches/tinypool.patch"
+      "acorn@8.11.3": "patches/acorn@8.11.3.patch"
     }
   }
 }

@@ -85,7 +85,6 @@ export function createVmForksPool(
 
     env,
     execArgv: [
-      '--trace-exit',
       '--experimental-import-meta-resolve',
       '--experimental-vm-modules',
       '--require',

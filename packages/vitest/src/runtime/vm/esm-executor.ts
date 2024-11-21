@@ -63,7 +63,6 @@ export class EsmExecutor {
     fileURL: string,
     getCode: () => string | Promise<string>,
   ) {
-    console.log('load esm', fileURL)
     const code = await getCode()
     // TODO: should not be allowed in strict mode, implement in #2854
     if (fileURL.endsWith('.json')) {
@@ -102,7 +101,6 @@ export class EsmExecutor {
     if (cached) {
       return cached
     }
-    console.log('import wasm', fileUrl)
     const m = this.loadWebAssemblyModule(getCode(), fileUrl)
     this.moduleCache.set(fileUrl, m)
     return m
@@ -190,7 +188,6 @@ export class EsmExecutor {
     if (cached) {
       return cached
     }
-    console.log('import data', identifier)
 
     const match = identifier.match(dataURIRegex)
 

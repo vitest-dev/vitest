@@ -217,7 +217,6 @@ export class CommonjsExecutor {
     module: NodeModule,
     filename: string,
   ): Record<string, unknown> {
-    console.log('require', filename)
     const cached = this.requireCache.get(filename)
     if (cached) {
       return cached.exports
@@ -259,7 +258,6 @@ export class CommonjsExecutor {
   }
 
   private requireCoreModule(identifier: string) {
-    console.log('require core', identifier)
     const normalized = identifier.replace(/^node:/, '')
     if (this.builtinCache[normalized]) {
       return this.builtinCache[normalized].exports
