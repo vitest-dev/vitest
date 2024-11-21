@@ -2,9 +2,6 @@ import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
 
-// @ts-expect-error -- untyped, cannot use v4 due to other deps
-import onExit from 'signal-exit'
-
 const DEFAULT_RENDER_INTERVAL = 16
 
 const ESC = '\x1B['
@@ -48,15 +45,10 @@ export class WindowRenderer {
       error: options.logger.errorStream.write.bind(options.logger.errorStream),
     }
 
-    // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
-    onExit(() => {
-      this.flushBuffer()
-      this.write(SHOW_CURSOR)
-    })
-
     this.cleanups.push(
       this.interceptStream(process.stdout, 'output'),
       this.interceptStream(process.stderr, 'error'),
+      this.addProcessExitListeners(),
     )
 
     this.write(HIDE_CURSOR, 'output')
@@ -181,6 +173,32 @@ export class WindowRenderer {
 
   private write(message: string, type: 'output' | 'error' = 'output') {
     (this.streams[type] as Writable['write'])(message)
+  }
+
+  private addProcessExitListeners() {
+    const onExit = (signal?: string | number, exitCode?: number) => {
+      // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
+      this.flushBuffer()
+      this.stop()
+
+      // Interrupted signals don't set exit code automatically.
+      // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
+      if (process.exitCode === undefined) {
+        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
+      }
+
+      process.exit()
+    }
+
+    process.once('SIGINT', onExit)
+    process.once('SIGTERM', onExit)
+    process.once('exit', onExit)
+
+    return function cleanup() {
+      process.off('SIGINT', onExit)
+      process.off('SIGTERM', onExit)
+      process.off('exit', onExit)
+    }
   }
 }
 
