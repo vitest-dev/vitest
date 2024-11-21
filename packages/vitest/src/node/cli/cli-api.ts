@@ -9,7 +9,7 @@ import { getNames, getTests } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { createVitest } from '../create'
-import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, RangeLocationFilterProvidedError } from '../errors'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
 
 export interface CliOptions extends UserConfig {
@@ -106,6 +106,7 @@ export async function startVitest(
     if (
       e instanceof IncludeTaskLocationDisabledError
       || e instanceof RangeLocationFilterProvidedError
+      || e instanceof LocationFilterFileNotFoundError
     ) {
       ctx.logger.printError(e, { verbose: false })
       return ctx

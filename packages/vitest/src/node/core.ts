@@ -28,7 +28,7 @@ import { wildcardPatternToRegExp } from '../utils/base'
 import { VitestCache } from './cache'
 import { groupFilters, parseFilter } from './cli/filter'
 import { resolveConfig } from './config/resolveConfig'
-import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError } from './errors'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
@@ -1188,11 +1188,9 @@ export class Vitest {
 
     Object.entries(testLocations).forEach(([filepath, loc]) => {
       if (loc.length !== 0 && !testLocHasMatch[filepath]) {
-        const rel = relative(dir, filepath)
-
-        this.logger.printError(new Error(`Couldn\'t find file "${rel}".\n`
-          + 'Note when specifying the test location you have to specify the full test filename.',
-        ))
+        throw new LocationFilterFileNotFoundError(
+          relative(dir, filepath),
+        )
       }
     })
 

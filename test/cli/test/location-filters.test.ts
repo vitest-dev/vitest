@@ -140,11 +140,10 @@ describe('location filter with run command', () => {
       'math:999',
     )
 
-    expect(stdout).contain('math.test.ts')
-    expect(stdout).contain('math-with-dashes-in-name.test.ts')
+    expect(stdout).not.contain('math.test.ts')
+    expect(stdout).not.contain('math-with-dashes-in-name.test.ts')
     expect(stderr).toMatchInlineSnapshot(`
-      "Error: Couldn't find file "math". Ignoring test location filter.
-      Note when specifying the test location you have to specify the full test filename.
+      "Error: Couldn't find file math. Note when specifying the test location you have to specify the full test filename.
       "
     `)
   })
