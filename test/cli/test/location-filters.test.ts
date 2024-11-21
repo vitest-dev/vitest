@@ -6,12 +6,11 @@ describe('location filter with list command', () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
       '-r=./fixtures/location-filters',
-      '--config=custom.config.ts',
       'basic.test.ts:5',
     )
 
     expect(stdout).toMatchInlineSnapshot(`
-      "[custom] basic.test.ts > basic suite > inner suite > some test
+      "basic.test.ts > basic suite > inner suite > some test
       "
     `)
     expect(stderr).toEqual('')
@@ -21,7 +20,6 @@ describe('location filter with list command', () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
       '-r=./fixtures/location-filters',
-      '--config=custom.config.ts',
       'basic.test.ts:99',
     )
 
@@ -36,7 +34,6 @@ describe('location filter with list command', () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
       '-r=./fixtures/location-filters',
-      '--config=custom.config.ts',
       'basic.test.ts:5',
       'basic.test.ts:12',
       'basic.test.ts:99',
