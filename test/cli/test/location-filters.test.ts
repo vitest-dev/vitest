@@ -16,6 +16,20 @@ describe('location filter with list command', () => {
     expect(stderr).toEqual('')
   })
 
+  test('handles file with a dash in the name', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'list',
+      '-r=./fixtures/location-filters',
+      'math-with-dashes-in-name.test.ts:3',
+    )
+
+    expect(stdout).toMatchInlineSnapshot(`
+      "math-with-dashes-in-name.test.ts > 1 plus 1
+      "
+    `)
+    expect(stderr).toEqual('')
+  })
+
   test('reports not found test', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
@@ -73,6 +87,19 @@ describe('location filter with list command', () => {
 })
 
 describe('location filter with run command', () => {
+  test('finds test at correct line number', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'run',
+      '-r=./fixtures/location-filters',
+      '--config=vitest.config.ts',
+      'math.test.ts:3',
+    )
+
+    expect(stdout).contain('1 passed')
+    expect(stdout).contain('1 skipped')
+    expect(stderr).toEqual('')
+  })
+
   test('handles file with a dash in the name', async () => {
     const { stdout, stderr } = await runVitestCli(
       'run',
@@ -148,4 +175,3 @@ describe('location filter with run command', () => {
     `)
   })
 })
-//
