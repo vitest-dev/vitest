@@ -4,6 +4,13 @@ test('hi', async () => {
   await new Promise(resolve => setTimeout(resolve, 1000))
 }, 10)
 
+test('timeout on long synchronous task', async () => {
+  const start = Date.now();
+
+  while (Date.now() < start + 20) {
+  }
+}, 15)
+
 suite('suite timeout', {
   timeout: 100,
 }, () => {
