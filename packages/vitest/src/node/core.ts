@@ -592,38 +592,39 @@ export class Vitest {
 
     // schedule the new run
     this.runningPromise = (async () => {
-      if (!this.pool) {
-        this.pool = createPool(this)
-      }
-
-      const invalidates = Array.from(this.invalidates)
-      this.invalidates.clear()
-      this.snapshot.clear()
-      this.state.clearErrors()
-
-      if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
-        await this.coverageProvider?.clean()
-      }
-
-      await this.initializeGlobalSetup(specs)
-
       try {
-        await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
-      }
-      catch (err) {
-        this.state.catchError(err, 'Unhandled Error')
-      }
+        if (!this.pool) {
+          this.pool = createPool(this)
+        }
 
-      const files = this.state.getFiles()
+        const invalidates = Array.from(this.invalidates)
+        this.invalidates.clear()
+        this.snapshot.clear()
+        this.state.clearErrors()
 
-      if (hasFailed(files)) {
-        process.exitCode = 1
+        if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
+          await this.coverageProvider?.clean()
+        }
+
+        await this.initializeGlobalSetup(specs)
+
+        try {
+          await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
+        }
+        catch (err) {
+          this.state.catchError(err, 'Unhandled Error')
+        }
+
+        const files = this.state.getFiles()
+
+        if (hasFailed(files)) {
+          process.exitCode = 1
+        }
+
+        this.cache.results.updateResults(files)
+        await this.cache.results.writeToCache()
       }
-
-      this.cache.results.updateResults(files)
-      await this.cache.results.writeToCache()
-    })()
-      .finally(async () => {
+      finally {
         // can be duplicate files if different projects are using the same file
         const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
         const errors = this.state.getUnhandledErrors()
@@ -632,7 +633,9 @@ export class Vitest {
         this.checkUnhandledErrors(errors)
         await this.report('onFinished', this.state.getFiles(files), errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
-
+      }
+    })()
+      .finally(() => {
         this.runningPromise = undefined
         this.isFirstRun = false
 
@@ -681,7 +684,7 @@ export class Vitest {
         process.exitCode = 1
       }
     })()
-      .finally(async () => {
+      .finally(() => {
         this.runningPromise = undefined
 
         // all subsequent runs will treat this as a fresh run
