@@ -8,6 +8,6 @@
     "test-fixtures-skip-types": "cd fixtures && ATTEST_skipTypes=1 vitest"
   },
   "devDependencies": {
-    "@ark/attest": "^0.25.0"
+    "@ark/attest": "^0.28.0"
   }
 }
