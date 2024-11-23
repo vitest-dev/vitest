@@ -103,3 +103,13 @@ test('rerun current pattern tests', async () => {
   await vitest.waitForStdout('Test name pattern: /sum/')
   await vitest.waitForStdout('1 passed')
 })
+
+test('cli filter as watch filename pattern', async () => {
+  const { vitest } = await runVitest(_options, ['math'])
+
+  vitest.write('r')
+
+  await vitest.waitForStdout('RERUN')
+  await vitest.waitForStdout('Filename pattern: math')
+  await vitest.waitForStdout('1 passed')
+})
