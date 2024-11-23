@@ -220,16 +220,25 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
   context: TaskContext<Test> & ExtraContext & TestContext
 }
 
+/**
+ * @deprecated Use `Test` instead. `type: 'custom'` is not used since 2.2
+ */
 export interface Custom<ExtraContext = object> extends TaskPopulated {
+  /**
+   * @deprecated use `test` instead. `custom` is not used since 2.2
+   */
   type: 'custom'
   /**
    * Task context that will be passed to the test function.
    */
-  context: TaskContext<Custom> & ExtraContext & TestContext
+  context: TaskContext<Test> & ExtraContext & TestContext
 }
 
 export type Task = Test | Suite | Custom | File
 
+/**
+ * @deprecated Vitest doesn't provide `done()` anymore
+ */
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = object> = (
   context: ExtendedContext<Test> & ExtraContext
@@ -515,14 +524,14 @@ export interface AfterAllListener {
 
 export interface BeforeEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test | Custom> & ExtraContext,
+    context: ExtendedContext<Test> & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
 
 export interface AfterEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test | Custom> & ExtraContext,
+    context: ExtendedContext<Test> & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
@@ -552,7 +561,7 @@ export interface TaskCustomOptions extends TestOptions {
    * If nothing is provided, the runner will try to get the function using `getFn(task)`.
    * If the runner cannot find the function, the task will be marked as failed.
    */
-  handler?: (context: TaskContext<Custom>) => Awaitable<void>
+  handler?: (context: TaskContext<Test>) => Awaitable<void>
 }
 
 export interface SuiteCollector<ExtraContext = object> {
@@ -563,11 +572,12 @@ export interface SuiteCollector<ExtraContext = object> {
   test: TestAPI<ExtraContext>
   tasks: (
     | Suite
+    // TODO: remove in Vitest 3
     | Custom<ExtraContext>
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
-  task: (name: string, options?: TaskCustomOptions) => Custom<ExtraContext>
+  task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks<ExtraContext>>(
@@ -593,7 +603,7 @@ export interface TestContext {}
 /**
  * Context that's always available in the test function.
  */
-export interface TaskContext<Task extends Custom | Test = Custom | Test> {
+export interface TaskContext<Task extends Test = Test> {
   /**
    * Metadata of the current test
    */
@@ -616,7 +626,7 @@ export interface TaskContext<Task extends Custom | Test = Custom | Test> {
   skip: (note?: string) => void
 }
 
-export type ExtendedContext<T extends Custom | Test> = TaskContext<T> &
+export type ExtendedContext<T extends Test> = TaskContext<T> &
   TestContext
 
 export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>

@@ -1,6 +1,6 @@
 import type { File, Suite, Test } from '@vitest/runner'
 import type { RawSourceMap } from 'vite-node'
-import type { WorkspaceProject } from '../node/workspace'
+import type { TestProject } from '../node/project'
 import {
   calculateSuiteHash,
   generateHash,
@@ -44,7 +44,7 @@ export interface FileInformation {
 }
 
 export async function collectTests(
-  ctx: WorkspaceProject,
+  ctx: TestProject,
   filepath: string,
 ): Promise<null | FileInformation> {
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
@@ -55,7 +55,7 @@ export async function collectTests(
   request.code = request.code.replace(/__vite_ssr_identity__\((\w+\.\w+)\)/g, '(                     $1)')
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
-  const projectName = ctx.getName()
+  const projectName = ctx.name
   const typecheckSubprojectName = projectName ? `${projectName}:__typecheck__` : '__typecheck__'
   const file: ParsedFile = {
     filepath,

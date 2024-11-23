@@ -416,8 +416,8 @@ importers:
         specifier: ^1.48.2
         version: 1.48.2
       safaridriver:
-        specifier: ^0.1.2
-        version: 0.1.2
+        specifier: ^1.0.0
+        version: 1.0.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
@@ -627,6 +627,9 @@ importers:
       react-is:
         specifier: ^18.3.1
         version: 18.3.1
+      react-is-19:
+        specifier: npm:react-is@19.0.0-rc-b01722d5-20241114
+        version: react-is@19.0.0-rc-b01722d5-20241114
 
   packages/runner:
     dependencies:
@@ -880,6 +883,9 @@ importers:
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
+      restore-cursor:
+        specifier: ^5.1.0
+        version: 5.1.0
       std-env:
         specifier: ^3.8.0
         version: 3.8.0
@@ -890,8 +896,8 @@ importers:
         specifier: ^0.3.1
         version: 0.3.1
       tinypool:
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^1.0.2
+        version: 1.0.2
       tinyrainbow:
         specifier: ^1.2.0
         version: 1.2.0
@@ -1186,6 +1192,12 @@ importers:
       memfs:
         specifier: ^4.8.2
         version: 4.8.2
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-19:
+        specifier: npm:react@19.0.0-rc-b01722d5-20241114
+        version: react@19.0.0-rc-b01722d5-20241114
       sweetalert2:
         specifier: ^11.6.16
         version: 11.6.16
@@ -1227,7 +1239,7 @@ importers:
         version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
-        version: 5.1.5(vite@5.4.0(@types/node@22.9.0)(terser@5.36.0))(vue@3.5.12(typescript@5.6.3))
+        version: 5.2.0(vite@5.4.0(@types/node@22.9.0)(terser@5.36.0))(vue@3.5.12(typescript@5.6.3))
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -1242,7 +1254,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 15.11.4
+        version: 15.11.6
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1269,7 +1281,7 @@ importers:
         version: 3.5.12(typescript@5.6.3)
       webdriverio:
         specifier: latest
-        version: 9.2.12
+        version: 9.2.14
 
   test/dts-fixture:
     devDependencies:
@@ -1309,6 +1321,9 @@ importers:
 
   test/reporters:
     devDependencies:
+      '@vitest/runner':
+        specifier: workspace:*
+        version: link:../../packages/runner
       flatted:
         specifier: ^3.2.9
         version: 3.2.9
@@ -1366,7 +1381,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 15.11.4
+        version: 15.11.6
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -1399,7 +1414,7 @@ importers:
         version: link:../../packages/vitest
       webdriverio:
         specifier: latest
-        version: 9.2.12
+        version: 9.2.14
 
   test/workspaces:
     devDependencies:
@@ -4007,6 +4022,13 @@ packages:
       vite: ^5.4.0
       vue: ^3.2.25
 
+  '@vitejs/plugin-vue@5.2.0':
+    resolution: {integrity: sha512-7n7KdUEtx/7Yl7I/WVAMZ1bEb0eVvXF3ummWTeLcs/9gvo9pJhuLdouSXGjdZ/MKD1acf1I272+X0RMua4/R3g==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      vite: ^5.4.0
+      vue: ^3.2.25
+
   '@vitest/eslint-plugin@1.1.7':
     resolution: {integrity: sha512-pTWGW3y6lH2ukCuuffpan6kFxG6nIuoesbhMiQxskyQMRcCN5t9SXsKrNHvEw3p8wcCsgJoRqFZVkOTn6TjclA==}
     peerDependencies:
@@ -6203,6 +6225,10 @@ packages:
     resolution: {integrity: sha512-AU6tzh3ADd28vSmXahgLsGyGGihXPGeKH0owDn9lhHolB6vIwEhag//T+TBzDoAcHhmVEwlxwSgtW1KZep+1MA==}
     engines: {node: '>=18.0.0'}
 
+  happy-dom@15.11.6:
+    resolution: {integrity: sha512-elX7iUTu+5+3b2+NGQc0L3eWyq9jKhuJJ4GpOMxxT/c2pg9O3L5H3ty2VECX0XXZgRmmRqXyOK8brA2hDI6LsQ==}
+    engines: {node: '>=18.0.0'}
+
   has-bigints@1.0.2:
     resolution: {integrity: sha512-tSvCKtBr9lkF0Ex0aQiP9N+OpV4zi2r/Nee5VkRDbaqv35RLYMzbwQfFSZZH0kR+Rd6302UJZ2p/bJCEoR3VoQ==}
 
@@ -7196,6 +7222,10 @@ packages:
     resolution: {integrity: sha512-vqiC06CuhBTUdZH+RYl8sFrL096vA45Ok5ISO6sE/Mr1jRbGH4Csnhi8f3wKVl7x8mO4Au7Ir9D3Oyv1VYMFJw==}
     engines: {node: '>=12'}
 
+  mimic-function@5.0.1:
+    resolution: {integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==}
+    engines: {node: '>=18'}
+
   mimic-response@3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
@@ -7489,6 +7519,10 @@ packages:
   onetime@6.0.0:
     resolution: {integrity: sha512-1FlR+gjXK7X+AsAHso35MnyN5KqGwJRi/31ft6x0M194ht7S+rWAvd7PHss9xSKMzE0asv1pyIHaJYq+BbacAQ==}
     engines: {node: '>=12'}
+
+  onetime@7.0.0:
+    resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
+    engines: {node: '>=18'}
 
   oniguruma-to-js@0.4.3:
     resolution: {integrity: sha512-X0jWUcAlxORhOqqBREgPMgnshB7ZGYszBNspP+tS9hPD3l13CdaXcHbgImoHUHlrvGx/7AvFEkTRhAGYh+jzjQ==}
@@ -7907,6 +7941,9 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
+  react-is@19.0.0-rc-b01722d5-20241114:
+    resolution: {integrity: sha512-nR4blVGWugab7X2wN/FXLNKw1HWVK8lO9+rv0ip2xN5j6RNvXOV1PKtWOm2TuDzq52Nc6ASyno8FFy088ejsfA==}
+
   react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
     engines: {node: '>=0.10.0'}
@@ -7917,6 +7954,10 @@ packages:
 
   react@18.3.1:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
+    engines: {node: '>=0.10.0'}
+
+  react@19.0.0-rc-b01722d5-20241114:
+    resolution: {integrity: sha512-VT5vig/1unX2lH2RiEuQoKJkn/wnuQw7xwNndsVeVx7TQPQu+6GUjhBomhyZIW3M1bDgPGG5wEBgjNoIXYkeEQ==}
     engines: {node: '>=0.10.0'}
 
   read-pkg-up@7.0.1:
@@ -8047,6 +8088,10 @@ packages:
     resolution: {integrity: sha512-I9fPXU9geO9bHOt9pHHOhOkYerIMsmVaWB0rA2AI9ERh/+x/i7MV5HKBNrg+ljO5eoPVgCcnFuRjJ9uH6I/3eg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  restore-cursor@5.1.0:
+    resolution: {integrity: sha512-oMA2dcrw6u0YfxJQXm342bFKX/E4sG9rbTzO9ptUcR/e8A33cHuvStiYOwH7fszkZlZ1z/ta9AAoPk2F4qIOHA==}
+    engines: {node: '>=18'}
+
   ret@0.2.2:
     resolution: {integrity: sha512-M0b3YWQs7R3Z917WRQy1HHA7Ba7D8hvZg6UE5mLykJxQVE2ju0IXbGlaHPPlkY+WN7wFP+wUMXmBFA0aV6vYGQ==}
     engines: {node: '>=4'}
@@ -8129,6 +8174,10 @@ packages:
 
   safaridriver@0.1.2:
     resolution: {integrity: sha512-4R309+gWflJktzPXBQCobbWEHlzC4aK3a+Ov3tz2Ib2aBxiwd11phkdIBH1l0EO22x24CJMUQkpKFumRriCSRg==}
+
+  safaridriver@1.0.0:
+    resolution: {integrity: sha512-J92IFbskyo7OYB3Dt4aTdyhag1GlInrfbPCmMteb7aBK7PwlnGz1HI0+oyNN97j7pV9DqUAVoVgkNRMrfY47mQ==}
+    engines: {node: '>=18.0.0'}
 
   safe-array-concat@1.1.2:
     resolution: {integrity: sha512-vj6RsCsWBCf19jIeHEfkRMw8DPiBb+DMXklQ/1SGDHOMlHdPUkZXFQ2YdplS23zESTijAcurb1aSgJA3AgMu1Q==}
@@ -8724,8 +8773,8 @@ packages:
       picocolors:
         optional: true
 
-  tinypool@1.0.1:
-    resolution: {integrity: sha512-URZYihUbRPcGv95En+sz6MfghfIc2OJ1sv/RmhWZLouPY0/8Vo80viwPvg3dlaS9fuq7fQMEfgRRK7BBZThBEA==}
+  tinypool@1.0.2:
+    resolution: {integrity: sha512-al6n+QEANGFOMf/dmUMsuS5/r9B06uwlyNjZZql/zv8J7ybHCgoihBNORZCY2mzUuAnomQa2JdhyHKzZxPCrFA==}
     engines: {node: ^18.0.0 || >=20.0.0}
 
   tinyrainbow@1.2.0:
@@ -9404,8 +9453,8 @@ packages:
       devtools:
         optional: true
 
-  webdriverio@9.2.12:
-    resolution: {integrity: sha512-XtptP5mrubvr6s1GrtPk1DqdfcMvnaYqZCTfWT0EIebFFnQSz9sc0c9qn553zoNB6Xfe6+kyTRh9Tyj7AFIrEg==}
+  webdriverio@9.2.14:
+    resolution: {integrity: sha512-85yEbwN3MwdrGzKZoGkLUf1J5cpfnc7knL4u/Y6XWd0gGwYjv60I5ZPsgSnXzNXAkq2kmtkammf1AM3ihqFM3A==}
     engines: {node: '>=18.20.0'}
     peerDependencies:
       puppeteer-core: ^22.3.0
@@ -12534,6 +12583,11 @@ snapshots:
       vite: 5.4.0(@types/node@22.9.0)(terser@5.36.0)
       vue: 3.5.12(typescript@5.6.3)
 
+  '@vitejs/plugin-vue@5.2.0(vite@5.4.0(@types/node@22.9.0)(terser@5.36.0))(vue@3.5.12(typescript@5.6.3))':
+    dependencies:
+      vite: 5.4.0(@types/node@22.9.0)(terser@5.36.0)
+      vue: 3.5.12(typescript@5.6.3)
+
   '@vitest/eslint-plugin@1.1.7(@typescript-eslint/utils@8.10.0(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3))(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3)(vitest@packages+vitest)':
     dependencies:
       '@typescript-eslint/utils': 8.10.0(eslint@9.14.0(jiti@1.21.6))(typescript@5.6.3)
@@ -15288,6 +15342,12 @@ snapshots:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
 
+  happy-dom@15.11.6:
+    dependencies:
+      entities: 4.5.0
+      webidl-conversions: 7.0.0
+      whatwg-mimetype: 3.0.0
+
   has-bigints@1.0.2: {}
 
   has-flag@3.0.0: {}
@@ -16498,6 +16558,8 @@ snapshots:
 
   mimic-fn@4.0.0: {}
 
+  mimic-function@5.0.1: {}
+
   mimic-response@3.1.0: {}
 
   mimic-response@4.0.0: {}
@@ -16757,6 +16819,10 @@ snapshots:
   onetime@6.0.0:
     dependencies:
       mimic-fn: 4.0.0
+
+  onetime@7.0.0:
+    dependencies:
+      mimic-function: 5.0.1
 
   oniguruma-to-js@0.4.3:
     dependencies:
@@ -17226,6 +17292,8 @@ snapshots:
 
   react-is@18.3.1: {}
 
+  react-is@19.0.0-rc-b01722d5-20241114: {}
+
   react-refresh@0.14.0: {}
 
   react@18.2.0:
@@ -17235,6 +17303,8 @@ snapshots:
   react@18.3.1:
     dependencies:
       loose-envify: 1.4.0
+
+  react@19.0.0-rc-b01722d5-20241114: {}
 
   read-pkg-up@7.0.1:
     dependencies:
@@ -17379,6 +17449,11 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
+  restore-cursor@5.1.0:
+    dependencies:
+      onetime: 7.0.0
+      signal-exit: 4.1.0
+
   ret@0.2.2: {}
 
   reusify@1.0.4: {}
@@ -17486,6 +17561,8 @@ snapshots:
       mri: 1.2.0
 
   safaridriver@0.1.2: {}
+
+  safaridriver@1.0.0: {}
 
   safe-array-concat@1.1.2:
     dependencies:
@@ -18181,7 +18258,7 @@ snapshots:
     optionalDependencies:
       picocolors: 1.1.1
 
-  tinypool@1.0.1: {}
+  tinypool@1.0.2: {}
 
   tinyrainbow@1.2.0: {}
 
@@ -19006,7 +19083,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriverio@9.2.12:
+  webdriverio@9.2.14:
     dependencies:
       '@types/node': 20.14.15
       '@types/sinonjs__fake-timers': 8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)

@@ -9,7 +9,7 @@ import type {
 import type {
   BrowserProvider,
   BrowserProviderInitializationOptions,
-  WorkspaceProject,
+  TestProject,
 } from 'vitest/node'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
@@ -27,7 +27,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public browser: Browser | null = null
 
   private browserName!: PlaywrightBrowser
-  private ctx!: WorkspaceProject
+  private project!: TestProject
 
   private options?: {
     launch?: LaunchOptions
@@ -44,10 +44,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   initialize(
-    project: WorkspaceProject,
+    project: TestProject,
     { browser, options }: PlaywrightProviderOptions,
   ) {
-    this.ctx = project
+    this.project = project
     this.browserName = browser
     this.options = options as any
   }
@@ -62,7 +62,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     this.browserPromise = (async () => {
-      const options = this.ctx.config.browser
+      const options = this.project.config.browser
 
       const playwright = await import('playwright')
 
@@ -71,20 +71,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         headless: options.headless,
       } satisfies LaunchOptions
 
-      if (this.ctx.config.inspector.enabled) {
+      if (this.project.config.inspector.enabled) {
         // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
-        const port = this.ctx.config.inspector.port || 9229
-        const host = this.ctx.config.inspector.host || '127.0.0.1'
+        const port = this.project.config.inspector.port || 9229
+        const host = this.project.config.inspector.host || '127.0.0.1'
 
         launchOptions.args ||= []
         launchOptions.args.push(`--remote-debugging-port=${port}`)
         launchOptions.args.push(`--remote-debugging-address=${host}`)
 
-        this.ctx.logger.log(`Debugger listening on ws://${host}:${port}`)
+        this.project.logger.log(`Debugger listening on ws://${host}:${port}`)
       }
 
       // start Vitest UI maximized only on supported browsers
-      if (this.ctx.config.browser.ui && this.browserName === 'chromium') {
+      if (this.project.config.browser.ui && this.browserName === 'chromium') {
         if (!launchOptions.args) {
           launchOptions.args = []
         }
@@ -113,7 +113,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       ignoreHTTPSErrors: true,
       serviceWorkers: 'allow',
     } satisfies BrowserContextOptions
-    if (this.ctx.config.browser.ui) {
+    if (this.project.config.browser.ui) {
       options.viewport = null
     }
     const context = await browser.newContext(options)

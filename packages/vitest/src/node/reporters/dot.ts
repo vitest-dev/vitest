@@ -5,6 +5,8 @@ import { createDotRenderer } from './renderers/dotRenderer'
 export class DotReporter extends BaseReporter {
   renderer?: ReturnType<typeof createDotRenderer>
 
+  onTaskUpdate() {}
+
   onCollected() {
     if (this.isTTY) {
       const files = this.ctx.state.getFiles(this.watchFilters)

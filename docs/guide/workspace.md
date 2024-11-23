@@ -14,19 +14,30 @@ Vitest provides a way to define multiple project configurations within a single 
 
 ## Defining a Workspace
 
-A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file or working directory if it doesn't exist). Vitest supports `ts`, `js`, and `json` extensions for this file.
+A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file or working directory if it doesn't exist). Note that `projects` is just an alias and does not change the behavior or semantics of this feature. Vitest supports `ts`, `js`, and `json` extensions for this file.
+
+Since Vitest 2.2, you can also define a workspace in the root config. In this case, Vitest will ignore the `vitest.workspace` file in the root, if one exists.
 
 ::: tip NAMING
 Please note that this feature is named `workspace`, not `workspaces` (without an "s" at the end).
 :::
 
-Workspace configuration file must have a default export with a list of files or glob patterns referencing your projects. For example, if you have a folder named `packages` that contains your projects, you can define a workspace with this config file:
+A workspace is a list of inlined configs, files, or glob patterns referencing your projects. For example, if you have a folder named `packages` that contains your projects, you can either create a workspace file or define an array in the root config:
 
 :::code-group
 ```ts [vitest.workspace.ts]
 export default [
   'packages/*'
 ]
+```
+```ts [vitest.config.ts <Version>2.2.0</Version>]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    workspace: ['packages/*'],
+  },
+})
 ```
 :::
 
@@ -43,6 +54,15 @@ You can also reference projects with their config files:
 export default [
   'packages/*/vitest.config.{e2e,unit}.ts'
 ]
+```
+```ts [vitest.config.ts <Version>2.2.0</Version>]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    workspace: ['packages/*/vitest.config.{e2e,unit}.ts'],
+  },
+})
 ```
 :::
 
@@ -77,19 +97,57 @@ export default defineWorkspace([
   }
 ])
 ```
+```ts [vitest.config.ts <Version>2.2.0</Version>]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    workspace: [
+      // matches every folder and file inside the `packages` folder
+      'packages/*',
+      {
+        // add "extends: true" to inherit the options from the root config
+        extends: true,
+        test: {
+          include: ['tests/**/*.{browser}.test.{ts,js}'],
+          // it is recommended to define a name when using inline configs
+          name: 'happy-dom',
+          environment: 'happy-dom',
+        }
+      },
+      {
+        test: {
+          include: ['tests/**/*.{node}.test.{ts,js}'],
+          name: 'node',
+          environment: 'node',
+        }
+      }
+    ]
+  }
+})
+```
 :::
 
 ::: warning
 All projects must have unique names; otherwise, Vitest will throw an error. If a name is not provided in the inline configuration, Vitest will assign a number. For project configurations defined with glob syntax, Vitest will default to using the "name" property in the nearest `package.json` file or, if none exists, the folder name.
 :::
 
-If you do not use inline configurations, you can create a small JSON file in your root directory:
+If you do not use inline configurations, you can create a small JSON file in your root directory or just specify it in the root config:
 
 :::code-group
 ```json [vitest.workspace.json]
 [
   "packages/*"
 ]
+```
+```ts [vitest.config.ts <Version>2.2.0</Version>]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    workspace: ['packages/*'],
+  },
+})
 ```
 :::
 
@@ -195,7 +253,7 @@ export default mergeConfig(
 ```
 :::
 
-At the `defineWorkspace` level, you can use the `extends` option to inherit from your root-level configuration. All options will be merged.
+Additionally, at the `defineWorkspace` level, you can use the `extends` option to inherit from your root-level configuration. All options will be merged.
 
 ::: code-group
 ```ts [vitest.workspace.ts]
@@ -217,6 +275,36 @@ export default defineWorkspace([
     },
   },
 ])
+```
+```ts [vitest.config.ts <Version>2.2.0</Version>]
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    pool: 'threads',
+    workspace: [
+      {
+        // will inherit options from this config like plugins and pool
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['**/*.unit.test.ts'],
+        },
+      },
+      {
+        // won't inherit any options from this config
+        // this is the default behaviour
+        extends: false,
+        test: {
+          name: 'integration',
+          include: ['**/*.integration.test.ts'],
+        },
+      },
+    ],
+  },
+})
 ```
 :::
 

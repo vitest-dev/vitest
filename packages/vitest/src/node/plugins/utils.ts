@@ -13,6 +13,7 @@ export function resolveOptimizerConfig(
   _testOptions: DepsOptimizationOptions | undefined,
   viteOptions: DepOptimizationOptions | undefined,
   testConfig: InlineConfig,
+  viteCacheDir: string | undefined,
 ) {
   const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions }
@@ -41,8 +42,6 @@ export function resolveOptimizerConfig(
   }
   else {
     const root = testConfig.root ?? process.cwd()
-    const cacheDir
-      = testConfig.cache !== false ? testConfig.cache?.dir : undefined
     const currentInclude = testOptions.include || viteOptions?.include || []
     const exclude = [
       'vitest',
@@ -60,8 +59,7 @@ export function resolveOptimizerConfig(
       (n: string) => !exclude.includes(n),
     )
 
-    newConfig.cacheDir
-      = cacheDir ?? VitestCache.resolveCacheDir(root, cacheDir, testConfig.name)
+    newConfig.cacheDir = (testConfig.cache !== false && testConfig.cache?.dir) || VitestCache.resolveCacheDir(root, viteCacheDir, testConfig.name)
     newConfig.optimizeDeps = {
       ...viteOptions,
       ...testOptions,

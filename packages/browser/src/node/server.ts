@@ -5,8 +5,8 @@ import type {
   BrowserScript,
   CDPSession,
   BrowserServer as IBrowserServer,
+  TestProject,
   Vite,
-  WorkspaceProject,
 } from 'vitest/node'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
@@ -42,7 +42,7 @@ export class BrowserServer implements IBrowserServer {
   private stackTraceOptions: StackTraceParserOptions
 
   constructor(
-    public project: WorkspaceProject,
+    public project: TestProject,
     public base: string,
   ) {
     this.stackTraceOptions = {
@@ -174,13 +174,13 @@ export class BrowserServer implements IBrowserServer {
     const browser = this.project.config.browser.name
     if (!browser) {
       throw new Error(
-        `[${this.project.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
+        `[${this.project.name}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
       )
     }
     const supportedBrowsers = this.provider.getSupportedBrowsers()
     if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
       throw new Error(
-        `[${this.project.getName()}] Browser "${browser}" is not supported by the browser provider "${
+        `[${this.project.name}] Browser "${browser}" is not supported by the browser provider "${
           this.provider.name
         }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
       )

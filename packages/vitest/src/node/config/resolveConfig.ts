@@ -521,10 +521,10 @@ export function resolveConfig(
     }
   }
 
-  if (resolved.workspace) {
+  if (typeof resolved.workspace === 'string') {
     // if passed down from the CLI and it's relative, resolve relative to CWD
     resolved.workspace
-      = options.workspace && options.workspace[0] === '.'
+      = typeof options.workspace === 'string' && options.workspace[0] === '.'
         ? resolve(process.cwd(), options.workspace)
         : resolvePath(resolved.workspace, resolved.root)
   }
@@ -677,7 +677,7 @@ export function resolveConfig(
   if (resolved.cache !== false) {
     let cacheDir = VitestCache.resolveCacheDir(
       '',
-      resolve(viteConfig.cacheDir, 'vitest'),
+      viteConfig.cacheDir,
       resolved.name,
     )
 

@@ -1,10 +1,10 @@
 import { expect } from 'vitest'
 import { coverageConfigDefaults } from 'vitest/config'
-import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
+import { readCoverageMap, runVitest, test } from '../utils'
 
 test('default exclude should ignore test files', async () => {
   await runVitest({
-    include: [normalizeURL(import.meta.url)],
+    include: ['fixtures/test/math.test.ts'],
     coverage: {
       all: true,
       reporter: 'json',
@@ -18,7 +18,7 @@ test('default exclude should ignore test files', async () => {
 
 test('overriden exclude should not apply defaults', async () => {
   await runVitest({
-    include: [normalizeURL(import.meta.url)],
+    include: ['fixtures/test/math.test.ts'],
     coverage: {
       all: true,
       reporter: 'json',
@@ -62,8 +62,4 @@ test('test files are not automatically excluded from report when excludes is set
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
   expect(files).toContain('<process-cwd>/fixtures/src/test-that-looks-like-source-file.ts')
-})
-
-coverageTest('dummy', () => {
-  expect(1 + 1).toBe(2)
 })

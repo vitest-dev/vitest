@@ -1,11 +1,12 @@
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, SerializedConfig, TaskResultPack } from 'vitest'
+import type { File, SerializedConfig, Task, TaskResultPack } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
 import { createFileTask } from '@vitest/runner/utils'
 import { createClient, getTasks } from '@vitest/ws-client'
 import { reactive as reactiveVue } from 'vue'
 import { explorerTree } from '~/composables/explorer'
 import { isFileNode } from '~/composables/explorer/utils'
+import { isSuite as isTaskSuite } from '~/utils/task'
 import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
@@ -65,7 +66,21 @@ export const isConnecting = computed(() => status.value === 'CONNECTING')
 export const isDisconnected = computed(() => status.value === 'CLOSED')
 
 export function runAll() {
-  return runFiles(client.state.getFiles()/* , true */)
+  return runFiles(client.state.getFiles())
+}
+
+function clearTaskResult(task: Task) {
+  delete task.result
+  const node = explorerTree.nodes.get(task.id)
+  if (node) {
+    node.state = undefined
+    node.duration = undefined
+    if (isTaskSuite(task)) {
+      for (const t of task.tasks) {
+        clearTaskResult(t)
+      }
+    }
+  }
 }
 
 function clearResults(useFiles: File[]) {
@@ -98,7 +113,15 @@ export function runFiles(useFiles: File[]) {
 
   explorerTree.startRun()
 
-  return client.rpc.rerun(useFiles.map(i => i.filepath))
+  return client.rpc.rerun(useFiles.map(i => i.filepath), true)
+}
+
+export function runTask(task: Task) {
+  clearTaskResult(task)
+
+  explorerTree.startRun()
+
+  return client.rpc.rerunTask(task.id)
 }
 
 export function runCurrent() {

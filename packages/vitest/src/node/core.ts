@@ -2,6 +2,7 @@ import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
+import type { RunnerTask, RunnerTestSuite } from '../public'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, OnTestsRerunHandler, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
@@ -9,7 +10,7 @@ import type { TestSpecification } from './spec'
 import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
-import { existsSync, promises as fs } from 'node:fs'
+import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, slash, toArray } from '@vitest/utils'
@@ -28,11 +29,11 @@ import { resolveConfig } from './config/resolveConfig'
 import { FilesNotFoundError, GitNotFoundError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
-import { createPool, getFilePoolName } from './pool'
+import { createPool } from './pool'
+import { TestProject } from './project'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
-import { WorkspaceProject } from './workspace'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
@@ -75,15 +76,16 @@ export class Vitest {
 
   public packageInstaller: VitestPackageInstaller
 
-  private coreWorkspaceProject!: WorkspaceProject
+  /** @internal */
+  public coreWorkspaceProject!: TestProject
 
   /** @private */
-  public resolvedProjects: WorkspaceProject[] = []
-  public projects: WorkspaceProject[] = []
+  public resolvedProjects: TestProject[] = []
+  public projects: TestProject[] = []
 
   public distPath = distDir
 
-  private _cachedSpecs = new Map<string, WorkspaceSpec[]>()
+  private _cachedSpecs = new Map<string, TestSpecification[]>()
   private _workspaceConfigPath?: string
 
   /** @deprecated use `_cachedSpecs` */
@@ -91,6 +93,9 @@ export class Vitest {
 
   /** @private */
   public _browserLastPort = defaultBrowserPort
+
+  /** @internal */
+  public _options: UserConfig = {}
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -107,6 +112,7 @@ export class Vitest {
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
 
   async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+    this._options = options
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -162,7 +168,7 @@ export class Vitest {
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
-          || this.resolvedProjects.some(p => p.server.config.configFile === file)
+          || this.resolvedProjects.some(p => p.vite.config.configFile === file)
           || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -189,11 +195,11 @@ export class Vitest {
     const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
     if (filters.length > 0) {
       this.projects = this.projects.filter(p =>
-        filters.some(pattern => pattern.test(p.getName())),
+        filters.some(pattern => pattern.test(p.name)),
       )
     }
     if (!this.coreWorkspaceProject) {
-      this.coreWorkspaceProject = WorkspaceProject.createBasicProject(this)
+      this.coreWorkspaceProject = TestProject._createBasicProject(this)
     }
 
     if (this.config.testNamePattern) {
@@ -204,47 +210,43 @@ export class Vitest {
   }
 
   public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
-    this.getCoreWorkspaceProject().provide(key, value)
-  }
-
-  /**
-   * @deprecated internal, use `_createCoreProject` instead
-   */
-  createCoreProject() {
-    return this._createCoreProject()
+    this.getRootTestProject().provide(key, value)
   }
 
   /**
    * @internal
    */
-  async _createCoreProject() {
-    this.coreWorkspaceProject = await WorkspaceProject.createCoreProject(this)
+  _createRootProject() {
+    this.coreWorkspaceProject = TestProject._createBasicProject(this)
     return this.coreWorkspaceProject
   }
 
-  public getCoreWorkspaceProject(): WorkspaceProject {
+  public getRootTestProject(): TestProject {
+    if (!this.coreWorkspaceProject) {
+      throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
+    }
     return this.coreWorkspaceProject
   }
 
   /**
    * @deprecated use Reported Task API instead
    */
-  public getProjectByTaskId(taskId: string): WorkspaceProject {
+  public getProjectByTaskId(taskId: string): TestProject {
     const task = this.state.idMap.get(taskId)
     const projectName = (task as File).projectName || task?.file?.projectName || ''
-    return this.projects.find(p => p.getName() === projectName)
-      || this.getCoreWorkspaceProject()
+    return this.projects.find(p => p.name === projectName)
+      || this.getRootTestProject()
       || this.projects[0]
   }
 
   public getProjectByName(name: string = '') {
-    return this.projects.find(p => p.getName() === name)
-      || this.getCoreWorkspaceProject()
+    return this.projects.find(p => p.name === name)
+      || this.coreWorkspaceProject
       || this.projects[0]
   }
 
-  private async getWorkspaceConfigPath(): Promise<string | undefined> {
-    if (this.config.workspace) {
+  private async resolveWorkspaceConfigPath(): Promise<string | undefined> {
+    if (typeof this.config.workspace === 'string') {
       return this.config.workspace
     }
 
@@ -266,12 +268,21 @@ export class Vitest {
   }
 
   private async resolveWorkspace(cliOptions: UserConfig) {
-    const workspaceConfigPath = await this.getWorkspaceConfigPath()
+    if (Array.isArray(this.config.workspace)) {
+      return resolveWorkspace(
+        this,
+        cliOptions,
+        undefined,
+        this.config.workspace,
+      )
+    }
+
+    const workspaceConfigPath = await this.resolveWorkspaceConfigPath()
 
     this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
-      return [await this._createCoreProject()]
+      return [this._createRootProject()]
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
@@ -315,7 +326,7 @@ export class Vitest {
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
 
-    const workspaceSpecs = new Map<WorkspaceProject, File[]>()
+    const workspaceSpecs = new Map<TestProject, File[]>()
     for (const file of files) {
       const project = this.getProjectByName(file.projectName)
       const specs = workspaceSpecs.get(project) || []
@@ -454,20 +465,20 @@ export class Vitest {
   }
 
   private async getTestDependencies(spec: WorkspaceSpec, deps = new Set<string>()) {
-    const addImports = async (project: WorkspaceProject, filepath: string) => {
+    const addImports = async (project: TestProject, filepath: string) => {
       if (deps.has(filepath)) {
         return
       }
       deps.add(filepath)
 
-      const mod = project.server.moduleGraph.getModuleById(filepath)
+      const mod = project.vite.moduleGraph.getModuleById(filepath)
       const transformed = mod?.ssrTransformResult || await project.vitenode.transformRequest(filepath)
       if (!transformed) {
         return
       }
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       await Promise.all(dependencies.map(async (dep) => {
-        const path = await project.server.pluginContainer.resolveId(dep, filepath, { ssr: true })
+        const path = await project.vite.pluginContainer.resolveId(dep, filepath, { ssr: true })
         const fsPath = path && !path.external && path.id.split('?')[0]
         if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           await addImports(project, fsPath)
@@ -475,7 +486,7 @@ export class Vitest {
       }))
     }
 
-    await addImports(spec.project.workspaceProject, spec.moduleId)
+    await addImports(spec.project, spec.moduleId)
     deps.delete(spec.moduleId)
 
     return deps
@@ -534,7 +545,7 @@ export class Vitest {
    * @deprecated remove when vscode extension supports "getFileWorkspaceSpecs"
    */
   getProjectsByTestFile(file: string) {
-    return this.getFileWorkspaceSpecs(file)
+    return this.getFileWorkspaceSpecs(file) as WorkspaceSpec[]
   }
 
   getFileWorkspaceSpecs(file: string) {
@@ -543,14 +554,13 @@ export class Vitest {
       return _cached
     }
 
-    const specs: WorkspaceSpec[] = []
+    const specs: TestSpecification[] = []
     for (const project of this.projects) {
       if (project.isTestFile(file)) {
-        const pool = getFilePoolName(project, file)
-        specs.push(project.createSpec(file, pool))
+        specs.push(project.createSpecification(file))
       }
       if (project.isTypecheckFile(file)) {
-        specs.push(project.createSpec(file, 'typescript'))
+        specs.push(project.createSpecification(file, 'typescript'))
       }
     }
     specs.forEach(spec => this.ensureSpecCached(spec))
@@ -558,13 +568,13 @@ export class Vitest {
   }
 
   async initializeGlobalSetup(paths: TestSpecification[]) {
-    const projects = new Set(paths.map(spec => spec.project.workspaceProject))
-    const coreProject = this.getCoreWorkspaceProject()
+    const projects = new Set(paths.map(spec => spec.project))
+    const coreProject = this.getRootTestProject()
     if (!projects.has(coreProject)) {
       projects.add(coreProject)
     }
     for (const project of projects) {
-      await project.initializeGlobalSetup()
+      await project._initializeGlobalSetup()
     }
   }
 
@@ -582,38 +592,39 @@ export class Vitest {
 
     // schedule the new run
     this.runningPromise = (async () => {
-      if (!this.pool) {
-        this.pool = createPool(this)
-      }
-
-      const invalidates = Array.from(this.invalidates)
-      this.invalidates.clear()
-      this.snapshot.clear()
-      this.state.clearErrors()
-
-      if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
-        await this.coverageProvider?.clean()
-      }
-
-      await this.initializeGlobalSetup(specs)
-
       try {
-        await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
-      }
-      catch (err) {
-        this.state.catchError(err, 'Unhandled Error')
-      }
+        if (!this.pool) {
+          this.pool = createPool(this)
+        }
 
-      const files = this.state.getFiles()
+        const invalidates = Array.from(this.invalidates)
+        this.invalidates.clear()
+        this.snapshot.clear()
+        this.state.clearErrors()
 
-      if (hasFailed(files)) {
-        process.exitCode = 1
+        if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
+          await this.coverageProvider?.clean()
+        }
+
+        await this.initializeGlobalSetup(specs)
+
+        try {
+          await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
+        }
+        catch (err) {
+          this.state.catchError(err, 'Unhandled Error')
+        }
+
+        const files = this.state.getFiles()
+
+        if (hasFailed(files)) {
+          process.exitCode = 1
+        }
+
+        this.cache.results.updateResults(files)
+        await this.cache.results.writeToCache()
       }
-
-      this.cache.results.updateResults(files)
-      await this.cache.results.writeToCache()
-    })()
-      .finally(async () => {
+      finally {
         // can be duplicate files if different projects are using the same file
         const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
         const errors = this.state.getUnhandledErrors()
@@ -622,7 +633,9 @@ export class Vitest {
         this.checkUnhandledErrors(errors)
         await this.report('onFinished', this.state.getFiles(files), errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
-
+      }
+    })()
+      .finally(() => {
         this.runningPromise = undefined
         this.isFirstRun = false
 
@@ -671,7 +684,7 @@ export class Vitest {
         process.exitCode = 1
       }
     })()
-      .finally(async () => {
+      .finally(() => {
         this.runningPromise = undefined
 
         // all subsequent runs will treat this as a fresh run
@@ -688,10 +701,14 @@ export class Vitest {
   }
 
   async initBrowserServers() {
-    await Promise.all(this.projects.map(p => p.initBrowserServer()))
+    await Promise.all(this.projects.map(p => p._initBrowserServer()))
   }
 
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true) {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true, resetTestNamePattern = false) {
+    if (resetTestNamePattern) {
+      this.configOverride.testNamePattern = undefined
+    }
+
     if (this.filenamePattern) {
       const filteredFiles = await this.globTestFiles([this.filenamePattern])
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
@@ -706,13 +723,31 @@ export class Vitest {
     await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
+  private isSuite(task: RunnerTask): task is RunnerTestSuite {
+    return Object.hasOwnProperty.call(task, 'tasks')
+  }
+
+  async rerunTask(id: string) {
+    const task = this.state.idMap.get(id)
+    if (!task) {
+      throw new Error(`Task ${id} was not found`)
+    }
+    await this.changeNamePattern(
+      task.name,
+      [task.file.filepath],
+      this.isSuite(task) ? 'rerun suite' : 'rerun test',
+    )
+  }
+
   async changeProjectName(pattern: string) {
     if (pattern === '') {
       delete this.configOverride.project
     }
-    else { this.configOverride.project = pattern }
+    else {
+      this.configOverride.project = pattern
+    }
 
-    this.projects = this.resolvedProjects.filter(p => p.getName() === pattern)
+    this.projects = this.resolvedProjects.filter(p => p.name === pattern)
     const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
     await this.rerunFiles(files, 'change project filter', pattern === '')
   }
@@ -889,14 +924,15 @@ export class Vitest {
   onAdd = async (id: string) => {
     id = slash(id)
     this.updateLastChanged(id)
+    const fileContent = readFileSync(id, 'utf-8')
 
-    const matchingProjects: WorkspaceProject[] = []
-    await Promise.all(this.projects.map(async (project) => {
-      if (await project.isTargetFile(id)) {
+    const matchingProjects: TestProject[] = []
+    this.projects.forEach((project) => {
+      if (project.matchesTestGlob(id, fileContent)) {
         matchingProjects.push(project)
-        project.testFilesList?.push(id)
+        project._markTestFile(id)
       }
-    }))
+    })
 
     if (matchingProjects.length > 0) {
       this.changedTests.add(id)
@@ -1028,11 +1064,11 @@ export class Vitest {
           teardownProjects.push(this.coreWorkspaceProject)
         }
         // do teardown before closing the server
-        for await (const project of teardownProjects.reverse()) {
-          await project.teardownGlobalSetup()
+        for (const project of teardownProjects.reverse()) {
+          await project._teardownGlobalSetup()
         }
 
-        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close().then(() => w.server = undefined as any))
+        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close())
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
         if (!this.resolvedProjects.includes(this.coreWorkspaceProject)) {
@@ -1107,32 +1143,31 @@ export class Vitest {
   }
 
   public async globTestSpecs(filters: string[] = []) {
-    const files: WorkspaceSpec[] = []
+    const files: TestSpecification[] = []
     await Promise.all(this.projects.map(async (project) => {
       const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
       testFiles.forEach((file) => {
-        const pool = getFilePoolName(project, file)
-        const spec = project.createSpec(file, pool)
+        const spec = project.createSpecification(file)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec = project.createSpec(file, 'typescript')
+        const spec = project.createSpecification(file, 'typescript')
         this.ensureSpecCached(spec)
         files.push(spec)
       })
     }))
-    return files
+    return files as WorkspaceSpec[]
   }
 
   /**
-   * @deprecated use globTestSpecs instead
+   * @deprecated use `globTestSpecs` instead
    */
   public async globTestFiles(filters: string[] = []) {
     return this.globTestSpecs(filters)
   }
 
-  private ensureSpecCached(spec: WorkspaceSpec) {
+  private ensureSpecCached(spec: TestSpecification) {
     const file = spec[1]
     const specs = this._cachedSpecs.get(file) || []
     const included = specs.some(_s => _s[0] === spec[0] && _s[2].pool === spec[2].pool)

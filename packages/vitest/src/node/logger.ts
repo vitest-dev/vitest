@@ -4,7 +4,7 @@ import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
 import type { PrintErrorResult } from './error'
-import type { WorkspaceProject } from './workspace'
+import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
@@ -18,7 +18,7 @@ import { RandomSequencer } from './sequencers/RandomSequencer'
 export interface ErrorOptions {
   type?: string
   fullStack?: boolean
-  project?: WorkspaceProject
+  project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
   task?: Task
@@ -105,7 +105,7 @@ export class Logger {
   printError(err: unknown, options: ErrorOptions = {}): PrintErrorResult | undefined {
     const { fullStack = false, type } = options
     const project = options.project
-      ?? this.ctx.getCoreWorkspaceProject()
+      ?? this.ctx.coreWorkspaceProject
       ?? this.ctx.projects[0]
     return printError(err, project, {
       type,
@@ -163,8 +163,7 @@ export class Logger {
     }
     this.ctx.projects.forEach((project) => {
       const config = project.config
-      const name = project.getName()
-      const output = project.isCore() || !name ? '' : `[${name}]`
+      const output = (project.isRootProject() || !project.name) ? '' : `[${project.name}]`
       if (output) {
         this.console.error(c.bgCyan(`${output} Config`))
       }
@@ -245,7 +244,7 @@ export class Logger {
     }
   }
 
-  printBrowserBanner(project: WorkspaceProject) {
+  printBrowserBanner(project: TestProject) {
     if (!project.browser) {
       return
     }
@@ -256,10 +255,9 @@ export class Logger {
       return
     }
 
-    const name = project.getName()
-    const output = project.isCore()
+    const output = project.isRootProject()
       ? ''
-      : formatProjectName(name)
+      : formatProjectName(project.name)
     const provider = project.browser.provider.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(

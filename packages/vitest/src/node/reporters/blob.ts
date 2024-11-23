@@ -1,7 +1,7 @@
 import type { File } from '@vitest/runner'
 import type { Vitest } from '../core'
+import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
-import type { WorkspaceProject } from '../workspace'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
@@ -45,8 +45,8 @@ export class BlobReporter implements Reporter {
     const modules = this.ctx.projects.map<MergeReportModuleKeys>(
       (project) => {
         return [
-          project.getName(),
-          [...project.server.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
+          project.name,
+          [...project.vite.moduleGraph.idToModuleMap.entries()].map<SerializedModuleNode | null>((mod) => {
             if (!mod[1].file) {
               return null
             }
@@ -79,7 +79,7 @@ export class BlobReporter implements Reporter {
 export async function readBlobs(
   currentVersion: string,
   blobsDirectory: string,
-  projectsArray: WorkspaceProject[],
+  projectsArray: TestProject[],
 ) {
   // using process.cwd() because --merge-reports can only be used in CLI
   const resolvedDir = resolve(process.cwd(), blobsDirectory)
@@ -126,7 +126,7 @@ export async function readBlobs(
 
   // fake module graph - it is used to check if module is imported, but we don't use values inside
   const projects = Object.fromEntries(
-    projectsArray.map(p => [p.getName(), p]),
+    projectsArray.map(p => [p.name, p]),
   )
 
   blobs.forEach((blob) => {
@@ -136,10 +136,10 @@ export async function readBlobs(
         return
       }
       moduleIds.forEach(([moduleId, file, url]) => {
-        const moduleNode = project.server.moduleGraph.createFileOnlyEntry(file)
+        const moduleNode = project.vite.moduleGraph.createFileOnlyEntry(file)
         moduleNode.url = url
         moduleNode.id = moduleId
-        project.server.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
+        project.vite.moduleGraph.idToModuleMap.set(moduleId, moduleNode)
       })
     })
   })

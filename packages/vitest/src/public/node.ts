@@ -15,8 +15,8 @@ export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool, WorkspaceSpec } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
-export { TestProject } from '../node/reported-workspace-project'
-export type { SerializedTestProject } from '../node/reported-workspace-project'
+export type { SerializedTestProject, TestProject } from '../node/project'
+export type { WorkspaceProject } from '../node/project'
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
 
@@ -110,7 +110,6 @@ export type {
 export const TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
-export type { WorkspaceProject } from '../node/workspace'
 
 /**
  * @deprecated Use `ModuleDiagnostic` instead

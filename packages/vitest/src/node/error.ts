@@ -1,7 +1,7 @@
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions } from './logger'
-import type { WorkspaceProject } from './workspace'
+import type { TestProject } from './project'
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
@@ -55,7 +55,7 @@ export function capturePrintError(
 
 export function printError(
   error: unknown,
-  project: WorkspaceProject | undefined,
+  project: TestProject | undefined,
   options: PrintErrorOptions,
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
@@ -338,7 +338,7 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
 
 export function printStack(
   logger: Logger,
-  project: WorkspaceProject,
+  project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,

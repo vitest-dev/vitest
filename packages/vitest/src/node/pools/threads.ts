@@ -3,9 +3,9 @@ import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
 import type { Vitest } from '../core'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
 import type { SerializedConfig } from '../types/config'
 import type { WorkerContext } from '../types/worker'
-import type { WorkspaceProject } from '../workspace'
 import * as nodeos from 'node:os'
 import { resolve } from 'node:path'
 import { MessageChannel } from 'node:worker_threads'
@@ -15,7 +15,7 @@ import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
-function createWorkerChannel(project: WorkspaceProject) {
+function createWorkerChannel(project: TestProject) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
@@ -93,7 +93,7 @@ export function createThreadsPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
+      project: TestProject,
       config: SerializedConfig,
       files: string[],
       environment: ContextTestEnvironment,
@@ -111,7 +111,7 @@ export function createThreadsPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
@@ -151,8 +151,8 @@ export function createThreadsPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new WeakMap<WorkspaceProject, SerializedConfig>()
-      const getConfig = (project: WorkspaceProject): SerializedConfig => {
+      const configs = new WeakMap<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }
@@ -195,7 +195,7 @@ export function createThreadsPool(
           const grouped = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName()
+              project.name
               + environment.name
               + JSON.stringify(environment.options),
           )
@@ -252,7 +252,7 @@ export function createThreadsPool(
           const filesByOptions = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName() + JSON.stringify(environment.options),
+              project.name + JSON.stringify(environment.options),
           )
 
           for (const files of Object.values(filesByOptions)) {

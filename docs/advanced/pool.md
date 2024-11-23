@@ -40,12 +40,12 @@ export default defineConfig({
 The file specified in `pool` option should export a function (can be async) that accepts `Vitest` interface as its first option. This function needs to return an object matching `ProcessPool` interface:
 
 ```ts
-import { ProcessPool, WorkspaceProject } from 'vitest/node'
+import { ProcessPool, TestSpecification } from 'vitest/node'
 
 export interface ProcessPool {
   name: string
-  runTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
-  collectTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
+  runTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
+  collectTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
   close?: () => Promise<void>
 }
 ```
@@ -65,9 +65,9 @@ To communicate between different processes, you can create methods object using 
 ```ts
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { createMethodsRPC, WorkspaceProject } from 'vitest/node'
+import { createMethodsRPC, TestProject } from 'vitest/node'
 
-function createRpc(project: WorkspaceProject, wss: WebSocketServer) {
+function createRpc(project: TestProject, wss: WebSocketServer) {
   return createBirpc(
     createMethodsRPC(project),
     {
@@ -83,7 +83,7 @@ function createRpc(project: WorkspaceProject, wss: WebSocketServer) {
 To make sure every test is collected, you would call `ctx.state.collectFiles` and report it to Vitest reporters:
 
 ```ts
-async function runTests(project: WorkspaceProject, tests: string[]) {
+async function runTests(project: TestProject, tests: string[]) {
   // ... running tests, put into "files" and "tasks"
   const methods = createMethodsRPC(project)
   await methods.onCollected(files)

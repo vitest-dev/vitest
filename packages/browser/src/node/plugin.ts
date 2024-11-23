@@ -1,6 +1,6 @@
 import type { Stats } from 'node:fs'
 import type { HtmlTagDescriptor } from 'vite'
-import type { WorkspaceProject } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import type { BrowserServer } from './server'
 import { lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -583,7 +583,7 @@ function getRequire() {
   return _require
 }
 
-function resolveCoverageFolder(project: WorkspaceProject) {
+function resolveCoverageFolder(project: TestProject) {
   const options = project.ctx.config
   const htmlReporter = options.coverage?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {
