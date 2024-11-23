@@ -8,22 +8,32 @@ const attestConfig = getConfig()
 // for `attest().type.toString` and `attest().type.errors`
 expect.addSnapshotSerializer({
   test(val: unknown) {
-    // TODO(attest) better way to detect proxy?
+    // TODO(attest) more better way to target attest object?
     return (
       !!val
-      && typeof val === 'function'
-      && typeof (val as any).snap === 'function'
+      && (typeof val === 'object' || typeof val === 'function')
+      && typeof (val as any).unwrap === 'function'
     )
   },
-  serialize(val, _config, _indentation, _depth, _refs, _printer) {
+  serialize(val, config, indentation, depth, refs, printer) {
     if (attestConfig.skipTypes) {
       skipSnapshot()
     }
-    return val.serializedActual
+    const serialized = val.unwrap();
+    if (typeof serialized === 'string') {
+      return serialized;
+    }
+    return printer(
+      serialized,
+      config,
+      indentation,
+      depth,
+      refs,
+    )
   },
 })
 
-// for `attest()` to work like `attest().type.toString`
+// make `attest(xxx)` to work like `attest().type.toString`
 expect.addSnapshotSerializer({
   test(val: unknown) {
     return val instanceof ChainableAssertions
@@ -33,27 +43,6 @@ expect.addSnapshotSerializer({
       skipSnapshot()
     }
     return val.type.toString.serializedActual
-  },
-})
-
-expect.addSnapshotSerializer({
-  test(val: unknown) {
-    return !!val && typeof val === 'object' && '$workaroundCompletions' in val && val.$workaroundCompletions instanceof ChainableAssertions
-  },
-  serialize(val, config, indentation, depth, refs, printer) {
-    if (attestConfig.skipTypes) {
-      skipSnapshot()
-    }
-    const instance = val.$workaroundCompletions
-    // eslint-disable-next-line ts/no-unused-expressions
-    instance.completions // getter side effect seems to do magic
-    return printer(
-      instance.serializedActual,
-      config,
-      indentation,
-      depth,
-      refs,
-    )
   },
 })
 
