@@ -61,7 +61,7 @@ export async function run(
     getSourceMap: source => workerState.moduleCache.getSourceMap(source),
   })
 
-  await startCoverageInsideWorker(config.coverage, executor)
+  await startCoverageInsideWorker(config.coverage, executor, { isolate: false })
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
@@ -100,7 +100,7 @@ export async function run(
     vi.restoreAllMocks()
   }
 
-  await stopCoverageInsideWorker(config.coverage, executor)
+  await stopCoverageInsideWorker(config.coverage, executor, { isolate: false })
 }
 
 function resolveCss(mod: NodeJS.Module) {

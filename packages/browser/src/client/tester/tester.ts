@@ -122,7 +122,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   try {
     await Promise.all([
       setupCommonEnv(config),
-      startCoverageInsideWorker(config.coverage, executor),
+      startCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }),
       (async () => {
         const VitestIndex = await import('vitest')
         Object.defineProperty(window, '__vitest_index__', {
@@ -160,7 +160,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       }, 'Cleanup Error')
     }
     state.environmentTeardownRun = true
-    await stopCoverageInsideWorker(config.coverage, executor).catch((error) => {
+    await stopCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }).catch((error) => {
       client.rpc.onUnhandledError({
         name: error.name,
         message: error.message,
