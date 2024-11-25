@@ -917,14 +917,14 @@ describe('async expect', () => {
     await expect((async () => {
       throw new Error('err')
     })()).rejects.toThrow('err')
-    expect((async () => {
+    await expect((async () => {
       throw new TestError('error')
     })()).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    expect((async () => {
+    await expect((async () => {
       throw err
     })()).rejects.toThrow(err)
-    expect((async () => {
+    await expect((async () => {
       throw new Error('message')
     })()).rejects.toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
