@@ -140,6 +140,10 @@ declare class TestCase {
    */
   ok(): boolean
   /**
+   * Checks if the test was skipped.
+   */
+  skipped(): boolean
+  /**
    * Custom metadata that was attached to the test during its execution.
    */
   meta(): TaskMeta

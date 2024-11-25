@@ -30,7 +30,7 @@ export type WorkspaceSpec = TestSpecification & [
 ]
 
 export type RunWithFiles = (
-  files: WorkspaceSpec[],
+  files: TestSpecification[],
   invalidates?: string[]
 ) => Awaitable<void>
 
@@ -116,7 +116,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       || execArg.startsWith('--diagnostic-dir'),
   )
 
-  async function executeTests(method: 'runTests' | 'collectTests', files: WorkspaceSpec[], invalidate?: string[]) {
+  async function executeTests(method: 'runTests' | 'collectTests', files: TestSpecification[], invalidate?: string[]) {
     const options: PoolProcessOptions = {
       execArgv: [...execArgv, ...conditions],
       env: {
@@ -166,7 +166,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       return poolInstance as ProcessPool
     }
 
-    const filesByPool: Record<LocalPool, WorkspaceSpec[]> = {
+    const filesByPool: Record<LocalPool, TestSpecification[]> = {
       forks: [],
       threads: [],
       vmThreads: [],

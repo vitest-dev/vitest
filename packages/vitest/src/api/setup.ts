@@ -82,7 +82,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           return ctx.getRootTestProject().serializedConfig
         },
         async getTransformResult(projectName: string, id, browser = false) {
-          const project = ctx.getProjectByName(projectName)
+          const project = ctx.getTestProjectByName(projectName)
           const result: TransformResultWithSource | null | undefined = browser
             ? await project.browser!.vite.transformRequest(id)
             : await project.vitenode.transformRequest(id)
@@ -107,7 +107,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           return ctx.state.getUnhandledErrors()
         },
         async getTestFiles() {
-          const spec = await ctx.globTestSpecs()
+          const spec = await ctx.globTestSpecifications()
           return spec.map(spec => [
             {
               name: spec.project.config.name,
