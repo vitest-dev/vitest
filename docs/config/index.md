@@ -1711,17 +1711,11 @@ export default defineConfig({
 ```
 
 ::: tip
-To have a better type safety when using built-in providers, you can add one of these types (for provider that you are using) to your tsconfig's `compilerOptions.types` field:
+To have a better type safety when using built-in providers, you should reference one of these types (for provider that you are using) in your [config file](/config/file):
 
-```json
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/providers/webdriverio",
-      "@vitest/browser/providers/playwright"
-    ]
-  }
-}
+```ts
+/// <reference types="@vitest/browser/providers/playwright" />
+/// <reference types="@vitest/browser/providers/webdriverio" />
 ```
 :::
 
