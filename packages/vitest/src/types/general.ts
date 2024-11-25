@@ -1,3 +1,5 @@
+import type { TestSpecification } from '../node/spec'
+
 export type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 
 export type Awaitable<T> = T | PromiseLike<T>
@@ -46,5 +48,5 @@ export interface ModuleGraphData {
 }
 
 export type OnServerRestartHandler = (reason?: string) => Promise<void> | void
-export type OnTestsRerunHandler = (testFiles: string[]) => Promise<void> | void
+export type OnTestsRerunHandler = (testFiles: TestSpecification[]) => Promise<void> | void
 export interface ProvidedContext {}

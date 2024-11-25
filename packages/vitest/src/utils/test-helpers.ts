@@ -1,4 +1,4 @@
-import type { WorkspaceSpec } from '../node/pool'
+import type { TestSpecification } from '../node/spec'
 import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
 import { promises as fs } from 'node:fs'
@@ -27,7 +27,7 @@ function getTransformMode(
 }
 
 export async function groupFilesByEnv(
-  files: Array<WorkspaceSpec>,
+  files: Array<TestSpecification>,
 ) {
   const filesWithEnv = await Promise.all(
     files.map(async (spec) => {

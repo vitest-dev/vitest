@@ -165,7 +165,7 @@ export function createVmThreadsPool(
           return configs.get(project)!
         }
 
-        const config = project.getSerializableConfig()
+        const config = project.serializedConfig
         configs.set(project, config)
         return config
       }

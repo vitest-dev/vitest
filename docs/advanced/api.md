@@ -339,6 +339,16 @@ if (import.meta.vitest) {
 `) // true if `includeSource` is set
 ```
 
+### onTestsRerun
+
+This is a shorthand for `project.vitest.onTestsRerun`. It accepts a callback that will be awaited when the tests have been scheduled to rerun (usually, due to a file change).
+
+```ts
+project.onTestsRerun((specs) => {
+  console.log(specs)
+})
+```
+
 ### close
 
 Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts. If the resources are needed again, create a new project.

@@ -150,6 +150,13 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
+   * Checks if the test was skipped.
+   */
+  public skipped(): boolean {
+    return this.task.mode !== 'run' && this.task.mode !== 'only'
+  }
+
+  /**
    * Custom metadata that was attached to the test during its execution.
    */
   public meta(): TaskMeta {

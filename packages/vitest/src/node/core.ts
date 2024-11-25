@@ -2,7 +2,6 @@ import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
-import type { RunnerTask, RunnerTestSuite } from '../public'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, OnServerRestartHandler, OnTestsRerunHandler, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
@@ -10,6 +9,7 @@ import type { TestSpecification } from './spec'
 import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
+import type { TestRunResult } from './types/tests'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
@@ -48,16 +48,23 @@ export interface VitestOptions {
 }
 
 export class Vitest {
+  /**
+   * Current Vitest version.
+   */
   public readonly version = version
   static readonly version = version
 
-  config: ResolvedConfig = undefined!
-  configOverride: Partial<ResolvedConfig> = {}
+  public config: ResolvedConfig = undefined!
+  private configOverride: Partial<ResolvedConfig> = {}
 
   server: ViteDevServer = undefined!
-  state: StateManager = undefined!
+  /**
+   * @experimental The State API is experimental and not subject to semver.
+   */
+  public state: StateManager = undefined!
   snapshot: SnapshotManager = undefined!
   cache: VitestCache = undefined!
+  /** @internal */
   reporters: Reporter[] = undefined!
   coverageProvider: CoverageProvider | null | undefined
   logger: Logger
@@ -69,25 +76,28 @@ export class Vitest {
   changedTests: Set<string> = new Set()
   watchedTests: Set<string> = new Set()
   filenamePattern?: string[]
-  runningPromise?: Promise<void>
+  /** @internal */
+  runningPromise?: Promise<TestRunResult>
+  /** @internal */
   closingPromise?: Promise<void>
+  /** @internal */
   isCancelling = false
 
+  /** @internal */
   isFirstRun = true
+  /** @internal */
   restartsCount = 0
   runner: ViteNodeRunner = undefined!
 
   public packageInstaller: VitestPackageInstaller
+  public projects: TestProject[] = []
+  public distPath = distDir
 
   /** TODO: rename to `_coreRootProject` */
   /** @internal */
-  public coreWorkspaceProject!: TestProject
-
-  /** @private */
+  public coreWorkspaceProject: TestProject | undefined
+  /** @internal */
   public resolvedProjects: TestProject[] = []
-  public projects: TestProject[] = []
-
-  public distPath = distDir
 
   private _cachedSpecs = new Map<string, TestSpecification[]>()
   private _workspaceConfigPath?: string
@@ -97,7 +107,6 @@ export class Vitest {
 
   /** @internal */
   public _browserLastPort = defaultBrowserPort
-
   /** @internal */
   public _options: UserConfig = {}
 
@@ -213,18 +222,22 @@ export class Vitest {
     await Promise.all(this._onSetServer.map(fn => fn()))
   }
 
-  public provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) {
+  /**
+   * Provide a value to the test context. This value will be available to all tests with `inject`.
+   */
+  public provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) => {
     this.getRootTestProject().provide(key, value)
   }
 
-  /**
-   * @internal
-   */
+  /** @internal */
   _createRootProject() {
     this.coreWorkspaceProject = TestProject._createBasicProject(this)
     return this.coreWorkspaceProject
   }
 
+  /**
+   * Return project that has the root (or "global") config.
+   */
   public getRootTestProject(): TestProject {
     if (!this.coreWorkspaceProject) {
       throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
@@ -243,10 +256,21 @@ export class Vitest {
       || this.projects[0]
   }
 
-  public getProjectByName(name: string = '') {
-    return this.projects.find(p => p.name === name)
+  /**
+   * @deprecated use `getTestProjectByName` instead
+   */
+  public getProjectByName(name = ''): TestProject {
+    return this.getTestProjectByName(name)
+  }
+
+  public getTestProjectByName(name: string = ''): TestProject {
+    const project = this.projects.find(p => p.name === name)
       || this.coreWorkspaceProject
       || this.projects[0]
+    if (!project) {
+      throw new Error(`Project "${name}" was not found.`)
+    }
+    return project
   }
 
   private async resolveWorkspaceConfigPath(): Promise<string | undefined> {
@@ -271,7 +295,7 @@ export class Vitest {
     return join(configDir, workspaceConfigName)
   }
 
-  private async resolveWorkspace(cliOptions: UserConfig) {
+  private async resolveWorkspace(cliOptions: UserConfig): Promise<TestProject[]> {
     if (Array.isArray(this.config.workspace)) {
       return resolveWorkspace(
         this,
@@ -305,7 +329,7 @@ export class Vitest {
     )
   }
 
-  private async initCoverageProvider() {
+  private async initCoverageProvider(): Promise<CoverageProvider | null | undefined> {
     if (this.coverageProvider !== undefined) {
       return
     }
@@ -320,7 +344,10 @@ export class Vitest {
     return this.coverageProvider
   }
 
-  async mergeReports() {
+  /**
+   * Merge reports from multiple runs located in the `--merge-reports` directory.
+   */
+  public async mergeReports(): Promise<TestRunResult> {
     if (this.reporters.some(r => r instanceof BlobReporter)) {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
     }
@@ -332,7 +359,7 @@ export class Vitest {
 
     const workspaceSpecs = new Map<TestProject, File[]>()
     for (const file of files) {
-      const project = this.getProjectByName(file.projectName)
+      const project = this.getTestProjectByName(file.projectName)
       const specs = workspaceSpecs.get(project) || []
       specs.push(file)
       workspaceSpecs.set(project, specs)
@@ -373,17 +400,22 @@ export class Vitest {
       process.exitCode = 1
     }
 
-    this.checkUnhandledErrors(errors)
+    this._checkUnhandledErrors(errors)
     await this.report('onFinished', files, errors)
     await this.initCoverageProvider()
     await this.coverageProvider?.mergeReports?.(coverages)
+
+    return {
+      tests: this.state.getTestModules(),
+      errors: this.state.getUnhandledErrors(),
+    }
   }
 
-  async collect(filters?: string[]) {
+  async collect(filters?: string[]): Promise<TestRunResult> {
     this._onClose = []
 
     const files = await this.filterTestsBySource(
-      await this.globTestFiles(filters),
+      await this.globTestSpecifications(filters),
     )
 
     // if run with --changed, don't exit if no tests are found
@@ -391,22 +423,29 @@ export class Vitest {
       return { tests: [], errors: [] }
     }
 
-    await this.collectFiles(files)
-
-    return {
-      tests: this.state.getFiles(),
-      errors: this.state.getUnhandledErrors(),
-    }
+    return await this.collectFiles(files)
   }
 
-  async listFiles(filters?: string[]) {
+  /**
+   * Returns the list of test files that match the config and filters.
+   * @param filters String filters to match the test files
+   */
+  async listFiles(filters?: string[]): Promise<TestSpecification[]> {
     const files = await this.filterTestsBySource(
-      await this.globTestFiles(filters),
+      await this.globTestSpecifications(filters),
     )
 
     return files
   }
 
+  /**
+   * Initialize reporters, the coverage provider, and run tests.
+   * This method can throw an error:
+   *   - `FilesNotFoundError` if no tests are found
+   *   - `GitNotFoundError` if `--related` flag is used, but git repository is not initialized
+   *   - `Error` from the user reporters
+   * @param filters String filters to match the test files
+   */
   async start(filters?: string[]) {
     this._onClose = []
 
@@ -420,7 +459,7 @@ export class Vitest {
 
     this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
     const files = await this.filterTestsBySource(
-      await this.globTestFiles(filters),
+      await this.globTestSpecifications(filters),
     )
 
     // if run with --changed, don't exit if no tests are found
@@ -438,19 +477,30 @@ export class Vitest {
       }
     }
 
+    let testModules: TestRunResult = {
+      tests: [],
+      errors: [],
+    }
+
     if (files.length) {
       // populate once, update cache on watch
       await this.cache.stats.populateStats(this.config.root, files)
 
-      await this.runFiles(files, true)
+      testModules = await this.runFiles(files, true)
     }
 
     if (this.config.watch) {
       await this.report('onWatcherStart')
     }
+
+    return testModules
   }
 
-  async init() {
+  /**
+   * Initialize reporters and the coverage provider. This method doesn't run any tests.
+   * If the `--watch` flag is provided, Vitest will still run those tests.
+   */
+  async init(): Promise<void> {
     this._onClose = []
 
     try {
@@ -462,14 +512,14 @@ export class Vitest {
     }
 
     // populate test files cache so watch mode can trigger a file rerun
-    await this.globTestFiles()
+    await this.globTestSpecifications()
 
     if (this.config.watch) {
       await this.report('onWatcherStart')
     }
   }
 
-  private async getTestDependencies(spec: WorkspaceSpec, deps = new Set<string>()) {
+  private async getTestDependencies(spec: TestSpecification, deps = new Set<string>()): Promise<Set<string>> {
     const addImports = async (project: TestProject, filepath: string) => {
       if (deps.has(filepath)) {
         return
@@ -497,7 +547,7 @@ export class Vitest {
     return deps
   }
 
-  async filterTestsBySource(specs: WorkspaceSpec[]) {
+  private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
     if (this.config.changed && !this.config.related) {
       const { VitestGit } = await import('./git')
       const vitestGit = new VitestGit(this.config.root)
@@ -536,10 +586,10 @@ export class Vitest {
 
     const runningTests = []
 
-    for (const [filepath, deps] of testGraphs) {
+    for (const [specification, deps] of testGraphs) {
       // if deps or the test itself were changed
-      if (related.some(path => path === filepath[1] || deps.has(path))) {
-        runningTests.push(filepath)
+      if (related.some(path => path === specification.moduleId || deps.has(path))) {
+        runningTests.push(specification)
       }
     }
 
@@ -547,32 +597,41 @@ export class Vitest {
   }
 
   /**
-   * @deprecated remove when vscode extension supports "getFileWorkspaceSpecs"
+   * @deprecated remove when vscode extension supports "getModuleTestSpecifications"
    */
-  getProjectsByTestFile(file: string) {
-    return this.getFileWorkspaceSpecs(file) as WorkspaceSpec[]
+  getProjectsByTestFile(file: string): WorkspaceSpec[] {
+    return this.getModuleTestSpecifications(file) as WorkspaceSpec[]
   }
 
-  getFileWorkspaceSpecs(file: string) {
-    const _cached = this._cachedSpecs.get(file)
+  /** @deprecated */
+  getFileWorkspaceSpecs(file: string): WorkspaceSpec[] {
+    return this.getModuleTestSpecifications(file) as WorkspaceSpec[]
+  }
+
+  /**
+   * Get test specifications assosiated with the given module. If module is not a test file, an empty array is returned.
+   * @param moduleId The module ID to get test specifications for.
+   */
+  public getModuleTestSpecifications(moduleId: string): TestSpecification[] {
+    const _cached = this._cachedSpecs.get(moduleId)
     if (_cached) {
       return _cached
     }
 
     const specs: TestSpecification[] = []
     for (const project of this.projects) {
-      if (project.isTestFile(file)) {
-        specs.push(project.createSpecification(file))
+      if (project.isTestFile(moduleId)) {
+        specs.push(project.createSpecification(moduleId))
       }
-      if (project.isTypecheckFile(file)) {
-        specs.push(project.createSpecification(file, 'typescript'))
+      if (project.isTypecheckFile(moduleId)) {
+        specs.push(project.createSpecification(moduleId, 'typescript'))
       }
     }
-    specs.forEach(spec => this.ensureSpecCached(spec))
+    specs.forEach(spec => this.ensureSpecificationCached(spec))
     return specs
   }
 
-  async initializeGlobalSetup(paths: TestSpecification[]) {
+  private async initializeGlobalSetup(paths: TestSpecification[]): Promise<void> {
     const projects = new Set(paths.map(spec => spec.project))
     const coreProject = this.getRootTestProject()
     if (!projects.has(coreProject)) {
@@ -583,7 +642,16 @@ export class Vitest {
     }
   }
 
-  async runFiles(specs: TestSpecification[], allTestsRun: boolean) {
+  /**
+   * Run tests for the given test specifications.
+   * @param specitifactions A list of specifications to run.
+   * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
+   */
+  public async runTestSpecifications(specitifactions: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
+    return await this.runFiles(specitifactions, allTestsRun)
+  }
+
+  private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
@@ -628,6 +696,11 @@ export class Vitest {
 
         this.cache.results.updateResults(files)
         await this.cache.results.writeToCache()
+
+        return {
+          tests: this.state.getTestModules(),
+          errors: this.state.getUnhandledErrors(),
+        }
       }
       finally {
         // can be duplicate files if different projects are using the same file
@@ -635,7 +708,7 @@ export class Vitest {
         const errors = this.state.getUnhandledErrors()
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
-        this.checkUnhandledErrors(errors)
+        this._checkUnhandledErrors(errors)
         await this.report('onFinished', this.state.getFiles(files), errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
       }
@@ -652,7 +725,7 @@ export class Vitest {
     return await this.runningPromise
   }
 
-  async collectFiles(specs: WorkspaceSpec[]) {
+  async collectFiles(specs: TestSpecification[]): Promise<TestRunResult> {
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
 
@@ -688,6 +761,11 @@ export class Vitest {
       if (hasFailed(files)) {
         process.exitCode = 1
       }
+
+      return {
+        tests: this.state.getTestModules(),
+        errors: this.state.getUnhandledErrors(),
+      }
     })()
       .finally(() => {
         this.runningPromise = undefined
@@ -715,21 +793,18 @@ export class Vitest {
     }
 
     if (this.filenamePattern) {
-      const filteredFiles = await this.globTestFiles(this.filenamePattern)
+      const filteredFiles = await this.globTestSpecifications(this.filenamePattern)
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
+    const specifications = files.flatMap(file => this.getModuleTestSpecifications(file))
     await Promise.all([
       this.report('onWatcherRerun', files, trigger),
-      ...this._onUserTestsRerun.map(fn => fn(files)),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
     ])
-    await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), allTestsRun)
+    await this.runFiles(specifications, allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
-  }
-
-  private isSuite(task: RunnerTask): task is RunnerTestSuite {
-    return Object.hasOwnProperty.call(task, 'tasks')
   }
 
   async rerunTask(id: string) {
@@ -740,7 +815,7 @@ export class Vitest {
     await this.changeNamePattern(
       task.name,
       [task.file.filepath],
-      this.isSuite(task) ? 'rerun suite' : 'rerun test',
+      'tasks' in task ? 'rerun suite' : 'rerun test',
     )
   }
 
@@ -753,7 +828,7 @@ export class Vitest {
     }
 
     this.projects = this.resolvedProjects.filter(p => p.name === pattern)
-    const files = (await this.globTestSpecs()).map(spec => spec.moduleId)
+    const files = (await this.globTestSpecifications()).map(spec => spec.moduleId)
     await this.rerunFiles(files, 'change project filter', pattern === '')
   }
 
@@ -787,10 +862,18 @@ export class Vitest {
   }
 
   async rerunFailed() {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
+    const failedTests = this.state.getFailedFilepaths()
+    if (!failedTests.length) {
+      return
+    }
+    await this.rerunFiles(failedTests, 'rerun failed', false)
   }
 
-  async updateSnapshot(files?: string[]) {
+  /**
+   * Run tests, and update snapshots for failed tests.
+   * @param files Files to update snapshot for. If not provided, all failed files and unchecked files will be updated.
+   */
+  async updateSnapshot(files?: string[]): Promise<void> {
     // default to failed files
     files = files || [
       ...this.state.getFailedFilepaths(),
@@ -812,7 +895,7 @@ export class Vitest {
   }
 
   private _rerunTimer: any
-  private async scheduleRerun(triggerId: string[]) {
+  private async scheduleRerun(triggerId: string[]): Promise<void> {
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
     await this.runningPromise
@@ -862,26 +945,21 @@ export class Vitest {
 
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
+      const specifications = files.flatMap(file => this.getProjectsByTestFile(file))
       await Promise.all([
         this.report('onWatcherRerun', files, triggerLabel),
-        ...this._onUserTestsRerun.map(fn => fn(files)),
+        ...this._onUserTestsRerun.map(fn => fn(specifications)),
       ])
 
-      await this.runFiles(files.flatMap(file => this.getProjectsByTestFile(file)), false)
+      await this.runFiles(specifications, false)
 
       await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
 
-  public getModuleProjects(filepath: string) {
-    return this.projects.filter((project) => {
-      return project.getModulesByFilepath(filepath).size
-      // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
-    })
-  }
-
   /**
    * Watch only the specified tests. If no tests are provided, all tests will be watched.
+   * @deprecated Do not use this method. It will be replaced with a different API in the future.
    */
   public watchTests(tests: string[]) {
     this.watchedTests = new Set(
@@ -889,11 +967,10 @@ export class Vitest {
     )
   }
 
-  private updateLastChanged(filepath: string) {
-    const projects = this.getModuleProjects(filepath)
-    projects.forEach(({ server, browser }) => {
-      const serverMods = server.moduleGraph.getModulesByFile(filepath)
-      serverMods?.forEach(mod => server.moduleGraph.invalidateModule(mod))
+  public invalidateFile(filepath: string): void {
+    this.projects.forEach(({ vite, browser }) => {
+      const serverMods = vite.moduleGraph.getModulesByFile(filepath)
+      serverMods?.forEach(mod => vite.moduleGraph.invalidateModule(mod))
 
       if (browser) {
         const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
@@ -902,17 +979,22 @@ export class Vitest {
     })
   }
 
-  onChange = (id: string) => {
+  /** @deprecated use `invalidateFile` */
+  updateLastChanged(filepath: string): void {
+    this.invalidateFile(filepath)
+  }
+
+  private onChange = (id: string): void => {
     id = slash(id)
     this.logger.clearHighlightCache(id)
-    this.updateLastChanged(id)
+    this.invalidateFile(id)
     const needsRerun = this.handleFileChanged(id)
     if (needsRerun.length) {
       this.scheduleRerun(needsRerun)
     }
   }
 
-  onUnlink = (id: string) => {
+  private onUnlink = (id: string): void => {
     id = slash(id)
     this.logger.clearHighlightCache(id)
     this.invalidates.add(id)
@@ -926,9 +1008,9 @@ export class Vitest {
     }
   }
 
-  onAdd = async (id: string) => {
+  private onAdd = (id: string): void => {
     id = slash(id)
-    this.updateLastChanged(id)
+    this.invalidateFile(id)
     const fileContent = readFileSync(id, 'utf-8')
 
     const matchingProjects: TestProject[] = []
@@ -952,14 +1034,15 @@ export class Vitest {
     }
   }
 
-  checkUnhandledErrors(errors: unknown[]) {
+  /** @internal */
+  public _checkUnhandledErrors(errors: unknown[]): void {
     if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
       process.exitCode = 1
     }
   }
 
   private unregisterWatcher = noop
-  private registerWatcher() {
+  private registerWatcher(): void {
     const watcher = this.server.watcher
 
     if (this.config.forceRerunTriggers.length) {
@@ -991,7 +1074,10 @@ export class Vitest {
       return [filepath]
     }
 
-    const projects = this.getModuleProjects(filepath)
+    const projects = this.projects.filter((project) => {
+      const moduleGraph = project.browser?.vite.moduleGraph || project.vite.moduleGraph
+      return moduleGraph.getModulesByFile(filepath)?.size
+    })
     if (!projects.length) {
       // if there are no modules it's possible that server was restarted
       // we don't have information about importers anymore, so let's check if the file is a test file at least
@@ -1005,8 +1091,9 @@ export class Vitest {
     const files: string[] = []
 
     for (const project of projects) {
-      const mods = project.getModulesByFilepath(filepath)
-      if (!mods.size) {
+      const mods = project.browser?.vite.moduleGraph.getModulesByFile(filepath)
+        || project.vite.moduleGraph.getModulesByFile(filepath)
+      if (!mods || !mods.size) {
         continue
       }
 
@@ -1041,7 +1128,7 @@ export class Vitest {
     return Array.from(new Set(files))
   }
 
-  private async reportCoverage(coverage: unknown, allTestsRun: boolean) {
+  private async reportCoverage(coverage: unknown, allTestsRun: boolean): Promise<void> {
     if (this.state.getCountOfFailedTests() > 0) {
       await this.coverageProvider?.onTestFailure?.()
 
@@ -1061,11 +1148,14 @@ export class Vitest {
     }
   }
 
-  async close() {
+  /**
+   * Closes all projects and their associated resources. This can only be called once; the closing promise is cached until the server restarts.
+   */
+  public async close(): Promise<void> {
     if (!this.closingPromise) {
       this.closingPromise = (async () => {
         const teardownProjects = [...this.projects]
-        if (!teardownProjects.includes(this.coreWorkspaceProject)) {
+        if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
           teardownProjects.push(this.coreWorkspaceProject)
         }
         // do teardown before closing the server
@@ -1076,7 +1166,7 @@ export class Vitest {
         const closePromises: unknown[] = this.resolvedProjects.map(w => w.close())
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
-        if (!this.resolvedProjects.includes(this.coreWorkspaceProject)) {
+        if (this.coreWorkspaceProject && !this.resolvedProjects.includes(this.coreWorkspaceProject)) {
           closePromises.push(this.coreWorkspaceProject.close().then(() => this.server = undefined as any))
         }
 
@@ -1104,9 +1194,10 @@ export class Vitest {
   }
 
   /**
-   * Close the thread pool and exit the process
+   * Closes all projects and exit the process
+   * @param force If true, the process will exit immediately after closing the projects.
    */
-  async exit(force = false) {
+  async exit(force = false): Promise<void> {
     setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
@@ -1121,7 +1212,9 @@ export class Vitest {
           else if (runningServers > 1) {
             console.warn(`Tests closed successfully but something prevents ${runningServers} Vite servers from exiting`)
           }
-          else { console.warn('Tests closed successfully but something prevents the main process from exiting') }
+          else {
+            console.warn('Tests closed successfully but something prevents the main process from exiting')
+          }
 
           console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
         }
@@ -1136,6 +1229,7 @@ export class Vitest {
     }
   }
 
+  /** @internal */
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
     await Promise.all(this.reporters.map(r => r[name]?.(
       // @ts-expect-error let me go
@@ -1143,11 +1237,17 @@ export class Vitest {
     )))
   }
 
-  public async getTestFilepaths() {
-    return this.globTestSpecs().then(specs => specs.map(spec => spec.moduleId))
+  /** @internal */
+  public async _globTestFilepaths() {
+    const specifications = await this.globTestSpecifications()
+    return Array.from(specifications.map(spec => spec.moduleId))
   }
 
-  public async globTestSpecs(filters: string[] = []) {
+  /**
+   * Glob test files in every project and create a TestSpecification for each file and pool.
+   * @param filters String filters to match the test files.
+   */
+  public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     const files: TestSpecification[] = []
     const dir = process.cwd()
     const parsedFilters = filters.map(f => parseFilter(f))
@@ -1177,7 +1277,7 @@ export class Vitest {
         testLocHasMatch[file] = true
 
         const spec = project.createSpecification(file, undefined, loc)
-        this.ensureSpecCached(spec)
+        this.ensureSpecificationCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
@@ -1185,7 +1285,7 @@ export class Vitest {
         testLocHasMatch[file] = true
 
         const spec = project.createSpecification(file, 'typescript', loc)
-        this.ensureSpecCached(spec)
+        this.ensureSpecificationCached(spec)
         files.push(spec)
       })
     }))
@@ -1202,14 +1302,21 @@ export class Vitest {
   }
 
   /**
-   * @deprecated use `globTestSpecs` instead
+   * @deprecated use `globTestSpecifications` instead
    */
-  public async globTestFiles(filters: string[] = []) {
-    return this.globTestSpecs(filters)
+  public async globTestSpecs(filters: string[] = []) {
+    return this.globTestSpecifications(filters)
   }
 
-  private ensureSpecCached(spec: TestSpecification) {
-    const file = spec[1]
+  /**
+   * @deprecated use `globTestSpecifications` instead
+   */
+  public async globTestFiles(filters: string[] = []) {
+    return this.globTestSpecifications(filters)
+  }
+
+  private ensureSpecificationCached(spec: TestSpecification) {
+    const file = spec.moduleId
     const specs = this._cachedSpecs.get(file) || []
     const included = specs.some(_s => _s[0] === spec[0] && _s[2].pool === spec[2].pool)
     if (!included) {
@@ -1218,7 +1325,9 @@ export class Vitest {
     }
   }
 
-  // The server needs to be running for communication
+  /**
+   * Should the server be kept running after the tests are done.
+   */
   shouldKeepServer() {
     return !!this.config?.watch
   }
