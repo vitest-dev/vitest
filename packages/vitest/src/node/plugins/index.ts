@@ -269,7 +269,7 @@ export async function VitestPlugin(
               console.log('[debug] watcher is ready')
             })
           }
-          await ctx.setServer(options, server, userConfig)
+          await ctx._setServer(options, server, userConfig)
           if (options.api && options.watch) {
             (await import('../../api/setup')).setup(ctx)
           }
