@@ -1065,15 +1065,28 @@ Beware that the global setup is running in a different global scope, so your tes
 
 :::code-group
 ```js [globalSetup.js]
-export default function setup({ provide }) {
-  provide('wsPort', 3000)
+export default function setup(project) {
+  project.provide('wsPort', 3000)
 }
 ```
-```ts [globalSetup.ts]
+```ts [globalSetup.ts <Version>2.0.0</Version>]
 import type { GlobalSetupContext } from 'vitest/node'
 
 export default function setup({ provide }: GlobalSetupContext) {
   provide('wsPort', 3000)
+}
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    wsPort: number
+  }
+}
+```
+```ts [globalSetup.ts <Version>2.2.0</Version>]
+import type { TestProject } from 'vitest/node'
+
+export default function setup(project: TestProject) {
+  project.provide('wsPort', 3000)
 }
 
 declare module 'vitest' {
@@ -1089,13 +1102,13 @@ inject('wsPort') === 3000
 ```
 :::
 
-Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing the tests.
+Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
 
 ```ts
-import type { GlobalSetupContext } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 
-export default function setup({ onTestsRerun }: GlobalSetupContext) {
-  onTestsRerun(async () => {
+export default function setup(project: TestProject) {
+  project.onTestsRerun(async () => {
     await restartDb()
   })
 }
