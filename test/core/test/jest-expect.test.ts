@@ -3,7 +3,7 @@ import { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -917,14 +917,14 @@ describe('async expect', () => {
     await expect((async () => {
       throw new Error('err')
     })()).rejects.toThrow('err')
-    expect((async () => {
+    await expect((async () => {
       throw new TestError('error')
     })()).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    expect((async () => {
+    await expect((async () => {
       throw err
     })()).rejects.toThrow(err)
-    expect((async () => {
+    await expect((async () => {
       throw new Error('message')
     })()).rejects.toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
@@ -1011,6 +1011,12 @@ describe('async expect', () => {
   })
 
   describe('promise auto queuing', () => {
+    // silence warning
+    beforeAll(() => {
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      return () => spy.mockRestore()
+    })
+
     it.fails('fails', () => {
       expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
         .resolves
