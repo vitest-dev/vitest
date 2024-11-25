@@ -55,7 +55,7 @@ export class Vitest {
   static readonly version = version
 
   public config: ResolvedConfig = undefined!
-  private configOverride: Partial<ResolvedConfig> = {}
+  configOverride: Partial<ResolvedConfig> = {}
 
   server: ViteDevServer = undefined!
   /**
@@ -124,7 +124,13 @@ export class Vitest {
   private _onCancelListeners: ((reason: CancelReason) => Promise<void> | void)[] = []
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
 
-  async setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+  /** @deprecated internal */
+  setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+    return this._setServer(options, server, cliOptions)
+  }
+
+  /** @internal */
+  async _setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this._options = options
     this.unregisterWatcher?.()
     clearTimeout(this._rerunTimer)
