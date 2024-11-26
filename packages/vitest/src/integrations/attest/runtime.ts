@@ -1,8 +1,9 @@
 import type { ChaiPlugin } from '@vitest/expect'
-import type {
-  Plugin as PrettyFormatPlugin,
+import {
+  type Plugin as PrettyFormatPlugin,
+  PrettyFormatSkipSnapshotError,
 } from '@vitest/pretty-format'
-import { addSerializer, skipSnapshot, stripSnapshotIndentation } from '@vitest/snapshot'
+import { addSerializer, stripSnapshotIndentation } from '@vitest/snapshot'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import * as chai from 'chai'
 import { getSnapshotClient, getTestNames } from '../snapshot/chai'
@@ -106,7 +107,7 @@ const prettyFormatPlugin: PrettyFormatPlugin = {
   },
   serialize(val: AttestSnapshotWrapper, config, indentation, depth, refs, printer) {
     if (!enabled) {
-      skipSnapshot()
+      throw new PrettyFormatSkipSnapshotError()
     }
     if (typeof val.value === 'string') {
       return val.value

@@ -1,7 +1,7 @@
 export { SnapshotClient } from './client'
 
 export { stripSnapshotIndentation } from './port/inlineSnapshot'
-export { addSerializer, getSerializers, skipSnapshot } from './port/plugins'
+export { addSerializer, getSerializers } from './port/plugins'
 export { default as SnapshotState } from './port/state'
 
 export type {
