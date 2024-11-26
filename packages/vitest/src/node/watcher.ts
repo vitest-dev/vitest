@@ -5,8 +5,8 @@ import { noop, slash } from '@vitest/utils'
 import mm from 'micromatch'
 
 export class VitestWatcher {
-  public invalidates: Set<string> = new Set()
-  public changedTests: Set<string> = new Set()
+  public readonly invalidates: Set<string> = new Set()
+  public readonly changedTests: Set<string> = new Set()
 
   private _onRerun: ((file: string) => void)[] = []
   private _onFilterTestFile: ((file: string) => boolean)[] = []

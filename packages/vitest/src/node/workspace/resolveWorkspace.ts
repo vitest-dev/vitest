@@ -78,8 +78,8 @@ export async function resolveWorkspace(
 
   for (const path of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
-    if (vitest.server.config.configFile === path) {
-      projectPromises.push(Promise.resolve(vitest._createRootProject()))
+    if (vitest.vite.config.configFile === path) {
+      projectPromises.push(Promise.resolve(vitest._ensureRootProject()))
       continue
     }
 
@@ -97,7 +97,7 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return [vitest._createRootProject()]
+    return [vitest._ensureRootProject()]
   }
 
   const resolvedProjects = await Promise.all(projectPromises)
@@ -193,8 +193,8 @@ async function resolveTestProjectConfigs(
     // if the config is inlined, we can resolve it immediately
     else if (typeof definition === 'function') {
       projectsOptions.push(await definition({
-        command: vitest.server.config.command,
-        mode: vitest.server.config.mode,
+        command: vitest.vite.config.command,
+        mode: vitest.vite.config.mode,
         isPreview: false,
         isSsrBuild: false,
       }))
