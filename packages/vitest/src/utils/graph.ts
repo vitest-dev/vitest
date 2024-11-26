@@ -12,7 +12,7 @@ export async function getModuleGraph(
   const externalized = new Set<string>()
   const inlined = new Set<string>()
 
-  const project = ctx.getTestProjectByName(projectName)
+  const project = ctx.getProjectByName(projectName)
 
   async function get(mod?: ModuleNode, seen = new Map<ModuleNode, string>()) {
     if (!mod || !mod.id) {

@@ -196,7 +196,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     for (const [projectName, coveragePerProject] of this.coverageFiles.entries()) {
       for (const [transformMode, coverageByTestfiles] of Object.entries(coveragePerProject) as Entries<typeof coveragePerProject>) {
         const filenames = Object.values(coverageByTestfiles)
-        const project = this.ctx.getTestProjectByName(projectName as string)
+        const project = this.ctx.getProjectByName(projectName as string)
 
         for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (onDebug.enabled) {
