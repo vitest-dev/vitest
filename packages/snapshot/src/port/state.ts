@@ -19,7 +19,6 @@ import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
 import { PrettyFormatSkipSnapshotError } from '@vitest/pretty-format'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
-
 import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
 import {
