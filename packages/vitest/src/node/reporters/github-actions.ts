@@ -30,7 +30,7 @@ export class GithubActionsReporter implements Reporter {
     }
     for (const file of files) {
       const tasks = getTasks(file)
-      const project = this.ctx.getProjectByTaskId(file.id)
+      const project = this.ctx.getProjectByName(file.projectName || '')
       for (const task of tasks) {
         if (task.result?.state !== 'fail') {
           continue

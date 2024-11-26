@@ -12,6 +12,25 @@ export class VitestSpecifications {
 
   constructor(private vitest: Vitest) {}
 
+  public getModuleSpecifications(moduleId: string): TestSpecification[] {
+    const _cached = this.getCachedSpecifications(moduleId)
+    if (_cached) {
+      return _cached
+    }
+
+    const specs: TestSpecification[] = []
+    for (const project of this.vitest.projects) {
+      if (project.isTestFile(moduleId)) {
+        specs.push(project.createSpecification(moduleId))
+      }
+      if (project.isTypecheckFile(moduleId)) {
+        specs.push(project.createSpecification(moduleId, 'typescript'))
+      }
+    }
+    specs.forEach(spec => this.ensureSpecificationCached(spec))
+    return specs
+  }
+
   public async getRelevantTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     return this.filterTestsBySource(
       await this.globTestSpecifications(filters),
@@ -72,15 +91,15 @@ export class VitestSpecifications {
     return files
   }
 
-  public getCachedSpecifications(moduleId: string): TestSpecification[] | undefined {
-    return this._cachedSpecs.get(moduleId)
-  }
-
   public clearCache(): void {
     this._cachedSpecs.clear()
   }
 
-  public ensureSpecificationCached(spec: TestSpecification): TestSpecification[] {
+  private getCachedSpecifications(moduleId: string): TestSpecification[] | undefined {
+    return this._cachedSpecs.get(moduleId)
+  }
+
+  private ensureSpecificationCached(spec: TestSpecification): TestSpecification[] {
     const file = spec.moduleId
     const specs = this._cachedSpecs.get(file) || []
     const included = specs.some(_s => _s.project === spec.project && _s.pool === spec.pool)

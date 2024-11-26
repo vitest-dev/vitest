@@ -80,7 +80,7 @@ export class TapReporter implements Reporter {
       else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
-        const project = this.ctx.getProjectByTaskId(task.id)
+        const project = this.ctx.getProjectByName(task.file.projectName || '')
 
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
