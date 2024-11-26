@@ -80,7 +80,7 @@ export class VitestSpecifications {
     this._cachedSpecs.clear()
   }
 
-  public ensureSpecificationCached(spec: TestSpecification): void {
+  public ensureSpecificationCached(spec: TestSpecification): TestSpecification[] {
     const file = spec.moduleId
     const specs = this._cachedSpecs.get(file) || []
     const included = specs.some(_s => _s.project === spec.project && _s.pool === spec.pool)
@@ -88,6 +88,7 @@ export class VitestSpecifications {
       specs.push(spec)
       this._cachedSpecs.set(file, specs)
     }
+    return specs
   }
 
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
