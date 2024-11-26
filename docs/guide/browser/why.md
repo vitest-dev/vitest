@@ -1,9 +1,9 @@
 ---
-title: Why Browser Mode? | Browser Mode
+title: Why Browser Mode | Browser Mode
 outline: deep
 ---
 
-# Why Browser Mode?
+# Why Browser Mode
 
 ## Motivation
 
