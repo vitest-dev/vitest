@@ -58,45 +58,21 @@ export class Vitest {
   public readonly watcher: VitestWatcher
   public readonly distPath = distDir
 
-  /**
-   * @experimental The State API is experimental and not subject to semver.
-   */
-  // TODO: getter
-  public state: StateManager = undefined!
-  // TODO: getter
-  public snapshot: SnapshotManager = undefined!
-  // TODO: getter
-  public cache: VitestCache = undefined!
-
   public projects: TestProject[] = []
 
-  /** @internal */
-  configOverride: Partial<ResolvedConfig> = {}
-  /** @internal */
-  reporters: Reporter[] = undefined!
-
-  coverageProvider: CoverageProvider | null | undefined
-  pool: ProcessPool | undefined
-
-  vitenode: ViteNodeServer = undefined!
-  runner: ViteNodeRunner = undefined!
-
-  /** @internal */
-  filenamePattern?: string[]
-  /** @internal */
-  runningPromise?: Promise<TestRunResult>
-  /** @internal */
-  closingPromise?: Promise<void>
-  /** @internal */
-  isCancelling = false
-  /** @internal */
-  coreWorkspaceProject: TestProject | undefined
-  /** @internal */
-  resolvedProjects: TestProject[] = []
-  /** @internal */
-  _browserLastPort = defaultBrowserPort
-  /** @internal */
-  _options: UserConfig = {}
+  /** @internal */ coverageProvider: CoverageProvider | null | undefined
+  /** @internal */ filenamePattern?: string[]
+  /** @internal */ runningPromise?: Promise<TestRunResult>
+  /** @internal */ closingPromise?: Promise<void>
+  /** @internal */ isCancelling = false
+  /** @internal */ coreWorkspaceProject: TestProject | undefined
+  /** @internal */ resolvedProjects: TestProject[] = []
+  /** @internal */ _browserLastPort = defaultBrowserPort
+  /** @internal */ _options: UserConfig = {}
+  /** @internal */ configOverride: Partial<ResolvedConfig> = {}
+  /** @internal */ reporters: Reporter[] = undefined!
+  /** @internal */ vitenode: ViteNodeServer = undefined!
+  /** @internal */ runner: ViteNodeRunner = undefined!
 
   // TODO: remove in 3.0
   private watchedTests: Set<string> = new Set()
@@ -104,11 +80,15 @@ export class Vitest {
   private isFirstRun = true
   private restartsCount = 0
 
-  private _ready = false
-  private _config: ResolvedConfig | undefined
-  private _vite: ViteDevServer | undefined
-  private _workspaceConfigPath?: string
   private specifications: VitestSpecifications
+  private pool: ProcessPool | undefined
+  private _ready = false
+  private _config?: ResolvedConfig
+  private _vite?: ViteDevServer
+  private _state?: StateManager
+  private _cache?: VitestCache
+  private _snapshot?: SnapshotManager
+  private _workspaceConfigPath?: string
 
   constructor(
     public readonly mode: VitestRunMode,
@@ -128,12 +108,12 @@ export class Vitest {
   private _onCancelListeners: ((reason: CancelReason) => Awaitable<void>)[] = []
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
 
-  /** @deprecated will be removed in 3.0 */
+  /** @deprecated will be removed in 3.0, use `vitest.watcher` */
   public get invalidates() {
     return this.watcher.invalidates
   }
 
-  /** @deprecated will be removed in 3.0 */
+  /** @deprecated will be removed in 3.0, use `vitest.watcher` */
   public get changedTests() {
     return this.watcher.changedTests
   }
@@ -142,9 +122,7 @@ export class Vitest {
    * The global config.
    */
   get config(): ResolvedConfig {
-    if (!this._config) {
-      throw new Error('The config was not set. It means that `vitest.config` was called before the Vite server was established.')
-    }
+    assert(this._config, 'config')
     return this._config
   }
 
@@ -157,10 +135,33 @@ export class Vitest {
    * Global Vite's dev server instance.
    */
   get vite(): ViteDevServer {
-    if (!this._vite) {
-      throw new Error('The server was not set. It means that `vitest.vite` was called before the Vite server was established.')
-    }
+    assert(this._vite, 'vite', 'server')
     return this._vite
+  }
+
+  /**
+   * The global test state manager.
+   * @experimental The State API is experimental and not subject to semver.
+   */
+  get state(): StateManager {
+    assert(this._state, 'state')
+    return this._state
+  }
+
+  /**
+   * The global snapshot manager. You can access the current state on `snapshot.summary`.
+   */
+  get snapshot(): SnapshotManager {
+    assert(this._snapshot, 'snapshot', 'snapshot manager')
+    return this._snapshot
+  }
+
+  /**
+   * Test results and test file stats cache. Primarily used by the sequencer to order tests.
+   */
+  get cache(): VitestCache {
+    assert(this._cache, 'cache')
+    return this._cache
   }
 
   /**
@@ -199,9 +200,9 @@ export class Vitest {
 
     this._vite = server
     this._config = resolved
-    this.state = new StateManager()
-    this.cache = new VitestCache(this.version)
-    this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
+    this._state = new StateManager()
+    this._cache = new VitestCache(this.version)
+    this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
     if (this.config.watch) {
       this.watcher.registerWatcher()
@@ -287,7 +288,10 @@ export class Vitest {
   }
 
   /** @internal */
-  _createRootProject() {
+  _ensureRootProject() {
+    if (this.coreWorkspaceProject) {
+      return this.coreWorkspaceProject
+    }
     this.coreWorkspaceProject = TestProject._createBasicProject(this)
     return this.coreWorkspaceProject
   }
@@ -308,9 +312,7 @@ export class Vitest {
   public getProjectByTaskId(taskId: string): TestProject {
     const task = this.state.idMap.get(taskId)
     const projectName = (task as File).projectName || task?.file?.projectName || ''
-    return this.projects.find(p => p.name === projectName)
-      || this.getRootTestProject()
-      || this.projects[0]
+    return this.getProjectByName(projectName)
   }
 
   public getProjectByName(name: string): TestProject {
@@ -360,7 +362,7 @@ export class Vitest {
     this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
-      return [this._createRootProject()]
+      return [this._ensureRootProject()]
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
@@ -1135,5 +1137,11 @@ export class Vitest {
   /** @internal */
   onAfterSetServer(fn: OnServerRestartHandler) {
     this._onSetServer.push(fn)
+  }
+}
+
+function assert(condition: unknown, property: string, name: string = property): asserts condition {
+  if (!condition) {
+    throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Either await the Vitest promise or check that it is initialized with \`vitest.ready()\` before accessing \`vitest.${property}\`.`)
   }
 }
