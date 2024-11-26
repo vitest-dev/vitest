@@ -1148,6 +1148,7 @@ export class Vitest {
     const files: TestSpecification[] = []
     const dir = process.cwd()
     const parsedFilters = filters.map(f => parseFilter(f))
+
     // Require includeTaskLocation when a location filter is passed
     if (
       !this.config.includeTaskLocation
@@ -1157,7 +1158,7 @@ export class Vitest {
     }
 
     const testLocations = groupFilters(parsedFilters.map(
-      f => ({ ...f, filename: resolve(dir, f.filename) }),
+      f => ({ ...f, filename: slash(resolve(dir, f.filename)) }),
     ))
 
     // Key is file and val sepcifies whether we have matched this file with testLocation
