@@ -77,6 +77,10 @@ export class WindowRenderer {
     clearInterval(this.renderInterval)
   }
 
+  getColumns() {
+    return 'columns' in this.options.logger.outputStream ? this.options.logger.outputStream.columns : 80
+  }
+
   private flushBuffer() {
     if (this.buffer.length === 0) {
       return this.render()
@@ -112,11 +116,11 @@ export class WindowRenderer {
     }
 
     const windowContent = this.options.getWindow()
-    const rowCount = getRenderedRowCount(windowContent, this.options.logger.outputStream)
+    const rowCount = getRenderedRowCount(windowContent, this.getColumns())
     let padding = this.windowHeight - rowCount
 
     if (padding > 0 && message) {
-      padding -= getRenderedRowCount([message], this.options.logger.outputStream)
+      padding -= getRenderedRowCount([message], this.getColumns())
     }
 
     this.write(SYNC_START)
@@ -203,9 +207,8 @@ export class WindowRenderer {
 }
 
 /** Calculate the actual row count needed to render `rows` into `stream` */
-function getRenderedRowCount(rows: string[], stream: Options['logger']['outputStream']) {
+function getRenderedRowCount(rows: string[], columns: number) {
   let count = 0
-  const columns = 'columns' in stream ? stream.columns : 80
 
   for (const row of rows) {
     const text = stripVTControlCharacters(row)
