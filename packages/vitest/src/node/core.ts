@@ -93,9 +93,6 @@ export class Vitest {
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
 
-  // TODO: remove in 3.0
-  private watchedTests: Set<string> = new Set()
-
   private isFirstRun = true
   private restartsCount = 0
 
@@ -178,7 +175,7 @@ export class Vitest {
   }
 
   /**
-   * Test results and test file stats cache. Primarily used by the sequencer to order tests.
+   * Test results and test file stats cache. Primarily used by the sequencer to sort tests.
    */
   get cache(): VitestCache {
     assert(this._cache, 'cache')
@@ -316,7 +313,7 @@ export class Vitest {
   }
 
   /** @internal */
-  _ensureRootProject() {
+  _ensureRootProject(): TestProject {
     if (this.coreWorkspaceProject) {
       return this.coreWorkspaceProject
     }
@@ -628,6 +625,24 @@ export class Vitest {
     return this.runFiles(specifications, allTestsRun)
   }
 
+  /**
+   * Rerun files and trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun` events.
+   * @param specifications A list of specifications to run.
+   * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
+   */
+  public async rerunTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
+    this.configOverride.testNamePattern = undefined
+    const files = specifications.map(spec => spec.moduleId)
+    await Promise.all([
+      this.report('onWatcherRerun', files, 'rerun test'),
+      ...this._onUserTestsRerun.map(fn => fn(specifications)),
+    ])
+    const result = await this.runTestSpecifications(specifications, allTestsRun)
+
+    await this.report('onWatcherStart', this.state.getFiles(files))
+    return result
+  }
+
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
     const filepaths = specs.map(spec => spec.moduleId)
     this.state.collectPaths(filepaths)
@@ -781,24 +796,6 @@ export class Vitest {
     for (const project of projects) {
       await project._initializeGlobalSetup()
     }
-  }
-
-  /**
-   * Rerun files and trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun` events.
-   * @param specifications A list of specifications to run.
-   * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
-   */
-  public async rerunTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
-    this.configOverride.testNamePattern = undefined
-    const files = specifications.map(spec => spec.moduleId)
-    await Promise.all([
-      this.report('onWatcherRerun', files, 'rerun test'),
-      ...this._onUserTestsRerun.map(fn => fn(specifications)),
-    ])
-    const result = await this.runTestSpecifications(specifications, allTestsRun)
-
-    await this.report('onWatcherStart', this.state.getFiles(files))
-    return result
   }
 
   /** @internal */
@@ -970,12 +967,6 @@ export class Vitest {
       await this.report('onWatcherStart', this.state.getFiles(files))
     }, WATCHER_DEBOUNCE)
   }
-
-  /**
-   * Watch only the specified tests. If no tests are provided, all tests will be watched.
-   * @deprecated This method does nothing. It will be remove in Vitest 3.0.
-   */
-  public watchTests(_tests: string[]): void {}
 
   /**
    * Invalidate a file in all projects.
