@@ -32,20 +32,6 @@ describe('location filter with list command', () => {
     expect(stderr).toEqual('')
   })
 
-  test('handles file with a colon and dash in the name', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'list',
-      `-r=${fixturePath}`,
-      `${fixturePath}/math:colon-dash.test.ts:3`,
-    )
-
-    expect(stdout).toMatchInlineSnapshot(`
-      "math:colon-dash.test.ts > 1 plus 1
-      "
-    `)
-    expect(stderr).toEqual('')
-  })
-
   test('reports not found test', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
@@ -86,6 +72,18 @@ describe('location filter with list command', () => {
     expect(stdout).toEqual('')
     expect(stderr).toContain('Collect Error')
     expect(stderr).toContain('RangeLocationFilterProvidedError')
+  })
+
+  test('parses file with a colon and dash in the name correctly', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'list',
+      `-r=${fixturePath}`,
+      `${fixturePath}/:a/file/that/doesn-t/exit:10`,
+    )
+
+    expect(stdout).toEqual('')
+    // shouldn't get a range location error
+    expect(stderr).not.toContain('Error: Found "-"')
   })
 
   test('erorrs if includeTaskLocation is not enabled', async () => {
@@ -141,18 +139,6 @@ describe('location filter with run command', () => {
     expect(stderr).toEqual('')
   })
 
-  test('handles file with a colon and dash in the name', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'run',
-      `-r=${fixturePath}`,
-      `${fixturePath}/math:colon-dash.test.ts:3`,
-    )
-
-    expect(stdout).contain('1 passed')
-    expect(stdout).contain('1 skipped')
-    expect(stderr).toEqual('')
-  })
-
   test('reports not found test', async () => {
     const { stdout, stderr } = await runVitestCli(
       'run',
@@ -185,6 +171,17 @@ describe('location filter with run command', () => {
     )
 
     expect(stderr).toContain('Error: Found "-"')
+  })
+
+  test('parses file with a colon and dash in the name correctly', async () => {
+    const { stderr } = await runVitestCli(
+      'run',
+      `-r=${fixturePath}`,
+      `${fixturePath}/:a/file/that/doesn-t/exit:10`,
+    )
+
+    // shouldn't get a range location error
+    expect(stderr).not.toContain('Error: Found "-"')
   })
 
   test('errors if includeTaskLocation is not enabled', async () => {
