@@ -31,10 +31,8 @@ export async function VitestPlugin(
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
-  const getRoot = () => ctx.config?.root || options.root || process.cwd()
-
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot(), ctx.version)
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), ctx.version)
     return (await import('@vitest/ui')).default(ctx)
   }
 
@@ -101,7 +99,7 @@ export async function VitestPlugin(
             ws: testConfig.api?.middlewareMode ? false : undefined,
             preTransformRequests: false,
             fs: {
-              allow: resolveFsAllow(getRoot(), testConfig.config),
+              allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
             },
           },
           build: {
@@ -213,7 +211,7 @@ export async function VitestPlugin(
               name: string,
               filename: string,
             ) => {
-              const root = getRoot()
+              const root = ctx.config.root || options.root || process.cwd()
               return generateScopedClassName(
                 classNameStrategy,
                 name,
