@@ -133,6 +133,52 @@ const plugin: ChaiPlugin = (chai, utils) => {
       })
     },
   )
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchTypeCompletionSnapshot',
+    function (
+      this: Record<string, unknown>,
+      message?: string,
+    ) {
+      const options = setupOptions(this, 'toMatchTypeCompletionSnapshot')
+      let value: any
+      if (enabled) {
+        const types = getTypeAssertions(this)
+        value = types[0][1].completions
+      }
+      getSnapshotClient().assert({
+        received: new AttestSnapshotWrapper(value),
+        message,
+        ...options,
+      })
+    },
+  )
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchTypeCompletionInlineSnapshot',
+    function __INLINE_SNAPSHOT__(
+      this: Record<string, unknown>,
+      inlineSnapshot?: string,
+      message?: string,
+    ) {
+      const assertOptions = setupOptions(this, 'toMatchTypeCompletionInlineSnapshot')
+      if (inlineSnapshot) {
+        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+      }
+      let value: any
+      if (enabled) {
+        const types = getTypeAssertions(this)
+        value = types[0][1].completions
+      }
+      getSnapshotClient().assert({
+        received: new AttestSnapshotWrapper(value),
+        message,
+        isInline: true,
+        inlineSnapshot,
+        ...assertOptions,
+      })
+    },
+  )
 }
 
 class AttestSnapshotWrapper {

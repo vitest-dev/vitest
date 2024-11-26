@@ -19,3 +19,29 @@ test('type error', () => {
     // @ts-expect-error test
     '1' / 2).toMatchTypeErrorSnapshot();
 })
+
+test('completions', () => {
+  expect(
+    () =>
+      // @ts-expect-error test
+      // eslint-disable-next-line dot-notation
+      (1 + 2)['to'],
+  ).toMatchTypeCompletionInlineSnapshot(`
+    {
+      "to": [
+        "toExponential",
+        "toFixed",
+        "toLocaleString",
+        "toPrecision",
+        "toString",
+      ],
+    }
+  `)
+
+  expect(
+    () =>
+      // @ts-expect-error test
+      // eslint-disable-next-line dot-notation
+      (1 + 2)['to'],
+  ).toMatchTypeCompletionSnapshot()
+})

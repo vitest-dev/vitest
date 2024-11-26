@@ -1,5 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`completions 2`] = `
+{
+  "to": [
+    "toExponential",
+    "toFixed",
+    "toLocaleString",
+    "toPrecision",
+    "toString",
+  ],
+}
+`;
+
 exports[`file snapshot 1`] = `number`;
 
 exports[`file snapshot 2`] = `(precision?: number | undefined) => string`;
