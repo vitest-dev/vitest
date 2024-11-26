@@ -927,6 +927,9 @@ export class Vitest {
    */
   public watchTests(_tests: string[]): void {}
 
+  /**
+   * Invalidate a file in all projects.
+   */
   public invalidateFile(filepath: string): void {
     this.projects.forEach(({ vite, browser }) => {
       const serverMods = vite.moduleGraph.getModulesByFile(filepath)
