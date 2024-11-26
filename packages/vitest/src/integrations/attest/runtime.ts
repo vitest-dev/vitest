@@ -3,9 +3,9 @@ import type {
   Plugin as PrettyFormatPlugin,
 } from '@vitest/pretty-format'
 import { addSerializer, skipSnapshot, stripSnapshotIndentation } from '@vitest/snapshot'
+import { parseStacktrace } from '@vitest/utils/source-map'
 import * as chai from 'chai'
 import { getSnapshotClient, getTestNames } from '../snapshot/chai'
-import { parseStacktrace } from '@vitest/utils/source-map'
 
 // lazy load '@ark/attest` only when enabled
 let lib: typeof import('@ark/attest')
@@ -27,8 +27,8 @@ const plugin: ChaiPlugin = (chai, utils) => {
         //         expect(value).xxx(...)
         //       then `value` is analyzed and can query from `xxx()`'s caller position?
         // TODO: probably we can use own location probing
-        const parsed = parseStacktrace(new Error().stack ?? "");
-        const location = parsed[0];
+        const parsed = parseStacktrace(new Error('-').stack ?? '')
+        const location = parsed[0]
         const types = lib.getTypeAssertionsAtPosition({
           file: location.file,
           method: location.method,
@@ -42,6 +42,8 @@ const plugin: ChaiPlugin = (chai, utils) => {
       getSnapshotClient().assert({
         received: new AttestSnapshotWrapper(value),
         message,
+        error: utils.flag(this, 'error'),
+        errorMessage: utils.flag(this, 'message'),
         ...getTestNames(test),
       })
     },
@@ -56,8 +58,8 @@ const plugin: ChaiPlugin = (chai, utils) => {
     ) {
       let value: any
       if (enabled) {
-        const parsed = parseStacktrace(new Error().stack ?? "");
-        const location = parsed[0];
+        const parsed = parseStacktrace(new Error('-').stack ?? '')
+        const location = parsed[0]
         const types = lib.getTypeAssertionsAtPosition({
           file: location.file,
           method: location.method,
@@ -65,7 +67,6 @@ const plugin: ChaiPlugin = (chai, utils) => {
           char: 3,
         })
         value = types[0][1].args[0].type
-        console.log({ location, value })
       }
       utils.flag(this, '_name', 'toMatchTypeInlineSnapshot')
       const isNot = utils.flag(this, 'negate')
@@ -85,10 +86,10 @@ const plugin: ChaiPlugin = (chai, utils) => {
       getSnapshotClient().assert({
         received: new AttestSnapshotWrapper(value),
         message,
-        isInline: true,
-        inlineSnapshot,
         error: utils.flag(this, 'error'),
         errorMessage: utils.flag(this, 'message'),
+        isInline: true,
+        inlineSnapshot,
         ...getTestNames(test),
       })
     },

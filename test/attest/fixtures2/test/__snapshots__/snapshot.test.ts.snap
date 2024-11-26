@@ -1,5 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`file 1`] = `number`;
-
-exports[`file 2`] = `(precision?: number | undefined) => string`;

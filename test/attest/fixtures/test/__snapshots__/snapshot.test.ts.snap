@@ -2,8 +2,4 @@
 
 exports[`file 1`] = `number`;
 
-exports[`file 2`] = `(fractionDigits?: number | undefined) => string`;
-
-exports[`mixed 2`] = `3`;
-
-exports[`mixed 4`] = `number`;
+exports[`file 2`] = `(precision?: number | undefined) => string`;
