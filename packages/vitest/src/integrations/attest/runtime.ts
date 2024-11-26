@@ -2,7 +2,7 @@ import type { ChaiPlugin } from '@vitest/expect'
 import type {
   Plugin as PrettyFormatPlugin,
 } from '@vitest/pretty-format'
-import { addSerializer, skipSnapshot } from '@vitest/snapshot'
+import { addSerializer, skipSnapshot, stripSnapshotIndentation } from '@vitest/snapshot'
 import * as chai from 'chai'
 import { getSnapshotClient, getTestNames } from '../snapshot/chai'
 import { parseStacktrace } from '@vitest/utils/source-map'
@@ -17,10 +17,8 @@ const plugin: ChaiPlugin = (chai, utils) => {
     'toMatchTypeSnapshot',
     function (
       this: Record<string, unknown>,
+      message?: string,
     ) {
-      utils.flag(this, '_name', 'toMatchTypeSnapshot')
-      const test = utils.flag(this, 'vitest-test')
-      const errorMessage = utils.flag(this, 'message')
       let value: any
       if (enabled) {
         // TODO: can we specify ".attest/assertions" directory?
@@ -39,10 +37,58 @@ const plugin: ChaiPlugin = (chai, utils) => {
         })
         value = types[0][1].args[0].type
       }
+      utils.flag(this, '_name', 'toMatchTypeSnapshot')
+      const test = utils.flag(this, 'vitest-test')
       getSnapshotClient().assert({
         received: new AttestSnapshotWrapper(value),
-        isInline: false,
-        errorMessage,
+        message,
+        ...getTestNames(test),
+      })
+    },
+  )
+  utils.addMethod(
+    chai.Assertion.prototype,
+    'toMatchTypeInlineSnapshot',
+    function __INLINE_SNAPSHOT__(
+      this: Record<string, unknown>,
+      inlineSnapshot?: string,
+      message?: string,
+    ) {
+      let value: any
+      if (enabled) {
+        const parsed = parseStacktrace(new Error().stack ?? "");
+        const location = parsed[0];
+        const types = lib.getTypeAssertionsAtPosition({
+          file: location.file,
+          method: location.method,
+          line: location.line,
+          char: 3,
+        })
+        value = types[0][1].args[0].type
+        console.log({ location, value })
+      }
+      utils.flag(this, '_name', 'toMatchTypeInlineSnapshot')
+      const isNot = utils.flag(this, 'negate')
+      if (isNot) {
+        throw new Error('toMatchTypeInlineSnapshot cannot be used with "not"')
+      }
+      const test = utils.flag(this, 'vitest-test')
+      const isInsideEach = test && (test.each || test.suite?.each)
+      if (isInsideEach) {
+        throw new Error(
+          'InlineSnapshot cannot be used inside of test.each or describe.each',
+        )
+      }
+      if (inlineSnapshot) {
+        inlineSnapshot = stripSnapshotIndentation(inlineSnapshot)
+      }
+      getSnapshotClient().assert({
+        received: new AttestSnapshotWrapper(value),
+        message,
+        isInline: true,
+        inlineSnapshot,
+        error: utils.flag(this, 'error'),
+        errorMessage: utils.flag(this, 'message'),
         ...getTestNames(test),
       })
     },

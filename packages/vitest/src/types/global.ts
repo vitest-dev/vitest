@@ -65,6 +65,11 @@ declare module '@vitest/expect' {
     toMatchSnapshot: SnapshotMatcher<T>
     toMatchInlineSnapshot: InlineSnapshotMatcher<T>
     toMatchTypeSnapshot: SnapshotMatcher<T>
+    toMatchTypeInlineSnapshot: InlineSnapshotMatcher<T>
+    toMatchTypeErrorSnapshot: SnapshotMatcher<T>
+    toMatchTypeErrorInlineSnapshot: InlineSnapshotMatcher<T>
+    toMatchTypeCompletionSnapshot: SnapshotMatcher<T>
+    toMatchTypeCompletionInlineSnapshot: InlineSnapshotMatcher<T>
 
     /**
      * Checks that an error thrown by a function matches a previously recorded snapshot.
