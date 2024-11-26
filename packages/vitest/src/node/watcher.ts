@@ -33,18 +33,6 @@ export class VitestWatcher {
     return this
   }
 
-  public invalidateFile(filepath: string): void {
-    this.vitest.projects.forEach(({ vite, browser }) => {
-      const serverMods = vite.moduleGraph.getModulesByFile(filepath)
-      serverMods?.forEach(mod => vite.moduleGraph.invalidateModule(mod))
-
-      if (browser) {
-        const browserMods = browser.vite.moduleGraph.getModulesByFile(filepath)
-        browserMods?.forEach(mod => browser.vite.moduleGraph.invalidateModule(mod))
-      }
-    })
-  }
-
   public unregisterWatcher: () => void = noop
   public registerWatcher(): this {
     const watcher = this.vitest.vite.watcher
@@ -79,7 +67,7 @@ export class VitestWatcher {
   private onChange = (id: string): void => {
     id = slash(id)
     this.vitest.logger.clearHighlightCache(id)
-    this.invalidateFile(id)
+    this.vitest.invalidateFile(id)
     const needsRerun = this.handleFileChanged(id)
     if (needsRerun) {
       this.scheduleRerun(id)
@@ -102,7 +90,7 @@ export class VitestWatcher {
 
   private onAdd = (id: string): void => {
     id = slash(id)
-    this.invalidateFile(id)
+    this.vitest.invalidateFile(id)
     const fileContent = readFileSync(id, 'utf-8')
 
     const matchingProjects: TestProject[] = []
