@@ -284,7 +284,8 @@ export default ({ mode }: { mode: string }) => {
           },
           footer(),
         ],
-        '/(?!team)': [
+        '/team': [],
+        '/': [
           {
             text: 'Introduction',
             collapsed: false,
