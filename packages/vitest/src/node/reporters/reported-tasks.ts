@@ -311,6 +311,13 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
     super(task, project)
     this.children = new TestCollection(task, project)
   }
+
+  /**
+   * Errors that happened outside of the test run during collection, like syntax errors.
+   */
+  public errors(): TestError[] {
+    return (this.task.result?.errors as TestError[] | undefined) || []
+  }
 }
 
 export class TestSuite extends SuiteImplementation {
