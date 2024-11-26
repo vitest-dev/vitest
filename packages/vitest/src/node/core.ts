@@ -11,11 +11,10 @@ import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
-import { promises as fs, readFileSync } from 'node:fs'
+import { promises as fs } from 'node:fs'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
-import { noop, slash, toArray } from '@vitest/utils'
-import mm from 'micromatch'
+import { noop, toArray } from '@vitest/utils'
 import { dirname, join, normalize, relative } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -36,6 +35,7 @@ import { BlobReporter, readBlobs } from './reporters/blob'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
+import { VitestWatcher } from './watcher'
 import { resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
@@ -57,6 +57,8 @@ export class Vitest {
   public readonly packageInstaller: VitestPackageInstaller
   public readonly distPath = distDir
 
+  /** @experimental */
+  public watcher: VitestWatcher
   /**
    * @experimental The State API is experimental and not subject to semver.
    */
@@ -97,8 +99,6 @@ export class Vitest {
   /** @internal */
   _options: UserConfig = {}
 
-  private invalidates: Set<string> = new Set()
-  private changedTests: Set<string> = new Set()
   // TODO: remove in 3.0
   private watchedTests: Set<string> = new Set()
 
@@ -117,6 +117,9 @@ export class Vitest {
     this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
     this.specifications = new VitestSpecifications(this)
+    this.watcher = new VitestWatcher(this).onWatcherRerun(file =>
+      this.scheduleRerun([file]), // TODO: error handling
+    )
   }
 
   private _onRestartListeners: OnServerRestartHandler[] = []
@@ -124,6 +127,16 @@ export class Vitest {
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Awaitable<void>)[] = []
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
+
+  /** @deprecated will be removed in 3.0 */
+  public get invalidates() {
+    return this.watcher.invalidates
+  }
+
+  /** @deprecated will be removed in 3.0 */
+  public get changedTests() {
+    return this.watcher.changedTests
+  }
 
   /**
    * The global config.
@@ -158,7 +171,7 @@ export class Vitest {
   /** @internal */
   async _setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     this._options = options
-    this.unregisterWatcher?.()
+    this.watcher.unregisterWatcher()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
     this._browserLastPort = defaultBrowserPort
@@ -182,7 +195,7 @@ export class Vitest {
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
 
     if (this.config.watch) {
-      this.registerWatcher()
+      this.watcher.registerWatcher()
     }
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
@@ -592,8 +605,8 @@ export class Vitest {
           this.pool = createPool(this)
         }
 
-        const invalidates = Array.from(this.invalidates)
-        this.invalidates.clear()
+        const invalidates = Array.from(this.watcher.invalidates)
+        this.watcher.invalidates.clear()
         this.snapshot.clear()
         this.state.clearErrors()
 
@@ -666,8 +679,8 @@ export class Vitest {
         this.pool = createPool(this)
       }
 
-      const invalidates = Array.from(this.invalidates)
-      this.invalidates.clear()
+      const invalidates = Array.from(this.watcher.invalidates)
+      this.watcher.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
 
@@ -855,6 +868,7 @@ export class Vitest {
   }
 
   private _rerunTimer: any
+  // we can't use a single `triggerId` yet because vscode extension relies on this
   private async scheduleRerun(triggerId: string[]): Promise<void> {
     const currentCount = this.restartsCount
     clearTimeout(this._rerunTimer)
@@ -867,8 +881,8 @@ export class Vitest {
     }
 
     this._rerunTimer = setTimeout(async () => {
-      if (this.changedTests.size === 0) {
-        this.invalidates.clear()
+      if (this.watcher.changedTests.size === 0) {
+        this.watcher.invalidates.clear()
         return
       }
 
@@ -880,7 +894,7 @@ export class Vitest {
       this.isFirstRun = false
 
       this.snapshot.clear()
-      let files = Array.from(this.changedTests)
+      let files = Array.from(this.watcher.changedTests)
 
       if (this.filenamePattern) {
         const filteredFiles = await this.globTestSpecifications(this.filenamePattern)
@@ -892,7 +906,7 @@ export class Vitest {
         }
       }
 
-      this.changedTests.clear()
+      this.watcher.changedTests.clear()
 
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
@@ -931,148 +945,11 @@ export class Vitest {
     this.invalidateFile(filepath)
   }
 
-  private onChange = (id: string): void => {
-    id = slash(id)
-    this.logger.clearHighlightCache(id)
-    this.invalidateFile(id)
-    const needsRerun = this.handleFileChanged(id)
-    if (needsRerun.length) {
-      this.scheduleRerun(needsRerun)
-    }
-  }
-
-  private onUnlink = (id: string): void => {
-    id = slash(id)
-    this.logger.clearHighlightCache(id)
-    this.invalidates.add(id)
-
-    if (this.state.filesMap.has(id)) {
-      this.state.filesMap.delete(id)
-      this.cache.results.removeFromCache(id)
-      this.cache.stats.removeStats(id)
-      this.changedTests.delete(id)
-      this.report('onTestRemoved', id)
-    }
-  }
-
-  private onAdd = (id: string): void => {
-    id = slash(id)
-    this.invalidateFile(id)
-    const fileContent = readFileSync(id, 'utf-8')
-
-    const matchingProjects: TestProject[] = []
-    this.projects.forEach((project) => {
-      if (project.matchesTestGlob(id, fileContent)) {
-        matchingProjects.push(project)
-        project._markTestFile(id)
-      }
-    })
-
-    if (matchingProjects.length > 0) {
-      this.changedTests.add(id)
-      this.scheduleRerun([id])
-    }
-    else {
-      // it's possible that file was already there but watcher triggered "add" event instead
-      const needsRerun = this.handleFileChanged(id)
-      if (needsRerun.length) {
-        this.scheduleRerun(needsRerun)
-      }
-    }
-  }
-
   /** @internal */
   public _checkUnhandledErrors(errors: unknown[]): void {
     if (errors.length && !this.config.dangerouslyIgnoreUnhandledErrors) {
       process.exitCode = 1
     }
-  }
-
-  private unregisterWatcher = noop
-  private registerWatcher(): void {
-    const watcher = this.server.watcher
-
-    if (this.config.forceRerunTriggers.length) {
-      watcher.add(this.config.forceRerunTriggers)
-    }
-
-    watcher.on('change', this.onChange)
-    watcher.on('unlink', this.onUnlink)
-    watcher.on('add', this.onAdd)
-
-    this.unregisterWatcher = () => {
-      watcher.off('change', this.onChange)
-      watcher.off('unlink', this.onUnlink)
-      watcher.off('add', this.onAdd)
-      this.unregisterWatcher = noop
-    }
-  }
-
-  /**
-   * @returns A value indicating whether rerun is needed (changedTests was mutated)
-   */
-  private handleFileChanged(filepath: string): string[] {
-    if (this.changedTests.has(filepath) || this.invalidates.has(filepath)) {
-      return []
-    }
-
-    if (mm.isMatch(filepath, this.config.forceRerunTriggers)) {
-      this.state.getFilepaths().forEach(file => this.changedTests.add(file))
-      return [filepath]
-    }
-
-    const projects = this.projects.filter((project) => {
-      const moduleGraph = project.browser?.vite.moduleGraph || project.vite.moduleGraph
-      return moduleGraph.getModulesByFile(filepath)?.size
-    })
-    if (!projects.length) {
-      // if there are no modules it's possible that server was restarted
-      // we don't have information about importers anymore, so let's check if the file is a test file at least
-      if (this.state.filesMap.has(filepath) || this.projects.some(project => project.isTestFile(filepath))) {
-        this.changedTests.add(filepath)
-        return [filepath]
-      }
-      return []
-    }
-
-    const files: string[] = []
-
-    for (const project of projects) {
-      const mods = project.browser?.vite.moduleGraph.getModulesByFile(filepath)
-        || project.vite.moduleGraph.getModulesByFile(filepath)
-      if (!mods || !mods.size) {
-        continue
-      }
-
-      this.invalidates.add(filepath)
-
-      // one of test files that we already run, or one of test files that we can run
-      if (this.state.filesMap.has(filepath) || project.isTestFile(filepath)) {
-        this.changedTests.add(filepath)
-        files.push(filepath)
-        continue
-      }
-
-      let rerun = false
-      for (const mod of mods) {
-        mod.importers.forEach((i) => {
-          if (!i.file) {
-            return
-          }
-
-          const heedsRerun = this.handleFileChanged(i.file)
-          if (heedsRerun.length) {
-            rerun = true
-          }
-        })
-      }
-
-      if (rerun) {
-        files.push(filepath)
-      }
-    }
-
-    return Array.from(new Set(files))
   }
 
   private async reportCoverage(coverage: unknown, allTestsRun: boolean): Promise<void> {
