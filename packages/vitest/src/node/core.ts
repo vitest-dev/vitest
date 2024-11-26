@@ -104,6 +104,7 @@ export class Vitest {
   private isFirstRun = true
   private restartsCount = 0
 
+  private _ready = false
   private _config: ResolvedConfig | undefined
   private _vite: ViteDevServer | undefined
   private _workspaceConfigPath?: string
@@ -162,6 +163,14 @@ export class Vitest {
     return this._vite
   }
 
+  /**
+   * Returns whether Vitest was fully initialised. This means that the Vite server was established and the workspace config was resolved.
+   * It's not necessary to call this method unless the instance was created manually via the public API, and the promise was not awaited.
+   */
+  public ready(): boolean {
+    return this._ready
+  }
+
   /** @deprecated internal */
   setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
     return this._setServer(options, server, cliOptions)
@@ -169,6 +178,7 @@ export class Vitest {
 
   /** @internal */
   async _setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+    this._ready = false
     this._options = options
     this.watcher.unregisterWatcher()
     clearTimeout(this._rerunTimer)
@@ -215,6 +225,7 @@ export class Vitest {
       // hijack server restart
       const serverRestart = server.restart
       server.restart = async (...args) => {
+        this._ready = false
         await Promise.all(this._onRestartListeners.map(fn => fn()))
         this.report('onServerRestart')
         await this.close()
@@ -228,6 +239,7 @@ export class Vitest {
           || this.resolvedProjects.some(p => p.vite.config.configFile === file)
           || file === this._workspaceConfigPath
         if (isConfig) {
+          this._ready = false
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
           this.report('onServerRestart', 'config')
           await this.close()
@@ -264,6 +276,7 @@ export class Vitest {
     }
 
     await Promise.all(this._onSetServer.map(fn => fn()))
+    this._ready = true
   }
 
   /**
