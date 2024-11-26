@@ -18,6 +18,17 @@ import './setup'
 
 export function createExpect(test?: TaskPopulated) {
   const expect = ((value: any, message?: string): Assertion => {
+    // TODO
+    // - need attest caller() here? but that would be too costly
+    // - how to delay this until type assertion is called e.g. `expect(...).toMatchTypeSnapshot()`?
+    //   maybe `caller({ upStackBy: ... })` works?
+    // TODO
+    // - can we delay import of `@arktype/attest`?
+    //   (probably check if enabled we can do dynamic import)
+    //   ENABLE_VITEST_TYPE=1
+    // TODO
+    // - how about transforming `expect().toMatchTypeSnapshot` to `__expectAttest__().toMatchTypeSnapshot`?
+    //   that should make runtime implementation easier?
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion

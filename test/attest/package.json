@@ -5,7 +5,9 @@
   "scripts": {
     "test": "vitest",
     "test-fixtures": "cd fixtures && vitest",
-    "test-fixtures-skip-types": "cd fixtures && ATTEST_skipTypes=1 vitest"
+    "test-fixtures-skip-types": "cd fixtures && ATTEST_skipTypes=1 vitest",
+    "test-fixtures2": "cd fixtures2 && VITEST_ATTEST=1 vitest",
+    "test-fixtures2-skip-types": "cd fixtures2 && vitest"
   },
   "devDependencies": {
     "@ark/attest": "^0.28.0"
