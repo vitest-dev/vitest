@@ -17,7 +17,7 @@ it('skip types', { timeout: 20_000 }, async () => {
   // [NO ATTEST] pass with wrong snapshot
   editFile(
     join(dir, 'test/__snapshots__/snapshot.test.ts.snap'),
-    s => s.replace('exports[`file 1`] = `number`', ''),
+    s => s.replace('exports[`file snapshot 1`] = `number`', ''),
   )
   result = await runVitestCli({ nodeOptions: options }, 'run', '--update')
   expect(result.stderr).toBe('')
