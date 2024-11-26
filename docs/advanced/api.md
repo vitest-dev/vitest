@@ -4,10 +4,6 @@ outline: [2, 3]
 
 # Node API
 
-::: warning
-Vitest exposes experimental private API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
-:::
-
 ## startVitest
 
 You can start running Vitest tests using its Node API:
@@ -98,7 +94,56 @@ Benchmark mode calls `bench` functions and throws an error, when it encounters `
 
 You can start running tests or benchmarks with `start` method. You can pass an array of strings to filter test files.
 
-### `provide`
+### config
+
+The root (or global) config. If workspace feature is enabled, projects will reference this as `globalConfig`.
+
+::: warning
+This is Vitest config, it doesn't extend _Vite_ config. It only has resolved values from the `test` property.
+:::
+
+### vite
+
+This is a global [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver).
+
+### state
+
+::: warning
+Public state is an experimental state. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
+:::
+
+Global state stores information about the current tests. It uses the same API from `@vitest/runner` by default, but we recommend using the [Reported API](/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()` on the `@vitest/runner` API:
+
+```ts
+const task = vitest.state.idMap.get(taskId) // old API
+const testCase = vitest.state.getReportedEntity(task) // new API
+```
+
+In the future, the old API won't be exposed anymore.
+
+### snapshot
+
+The global snapshot manager. Vitest keeps track of all snapshots using the `snapshot.add` method.
+
+You can get the latest summary of snapshots via the `vitest.snapshot.summay` property.
+
+### cache
+
+Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
+
+### ready
+
+Vitest needs to be resolved with the Vite server to be properly initialized. If the `Vitest` instance was created manually, you might need to check the `ready` status before accessing the `vite`, `state`, `cache`, `config`, and `snapshot` properties; otherwise, they will throw an error in the getter.
+
+In normal circumstances, you would never call this method because `createVitest` and `startVitest` return already resolved Vitest instance.
+
+### getRootTestProject
+
+This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace.
+
+The primary goal of the root project is to setup the global config. In fact, `rootProject.config` references `rootProject.globalConfig` and `vitest.config` directly.
+
+### provide
 
 Vitest exposes `provide` method which is a shorthand for `vitest.getRootTestProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
 
@@ -130,17 +175,63 @@ declare module 'vitest' {
 Technically, `provide` is a method of [`TestProject`](#testproject), so it is limited to the specific project. However, all projects inherit the values from the core project which makes `vitest.provide` universal way of passing down values to tests.
 :::
 
-::: tip
-This method is also available to [global setup files](/config/#globalsetup) for cases where you cannot use the public API:
+### getProvidedContext
 
-```js
-export default function setup({ provide }) {
-  provide('wsPort', 3000)
-}
-```
+This returns the root context object. This is a shorthand for `vitest.getRootTestProject().getProvidedContext`.
+
+### getProjectByName
+
+This method returns the project by its name. Simillar to calling `vitest.projects.find`.
+
+::: warning
+In case the project doesn't exist, this method will return the root project - make sure to check the names again if you need to make sure the project you are looking for is the one returned.
 :::
 
-## TestProject <Version>3.0.0</Version> {#testproject}
+### globTestSpecifications
+
+This method constructs new [test specifications](#testspecification) by collecting every test in all projects with [`project.globTestFiles`](#globtestfiles). It accepts string filters to match the test files.
+
+::: warning
+As of Vitest 2.2.0, it's possible to have multiple test specifications with the same module ID (file path) if `poolMatchGlob` has several pools or if `typecheck` is enabled.
+:::
+
+```ts
+const specifications = await vitest.globTestSpecifications(['my-filter'])
+// [TestSpecification{ moduleId: '/tests/my-filter.test.ts', pool: 'forks' }]
+console.log(specifications)
+```
+
+### mergeReports
+### collect
+### listFiles
+### start
+### init
+
+### getModuleSpecifications
+
+Returns a list of test specifications related to the module ID. The ID should already be resolved to an absolute file path. If ID doesn't match `include` or `includeSource` patterns, the returned array will be empty.
+
+::: warning
+As of Vitest 2.2.0, this method uses a cache to check if the file is a test. To make sure that the cache is not empty, call `globTestSpecifications` at least once.
+:::
+
+### runTestSpecifications
+### rerunTestSpecifications
+### collectTests
+### cancelCurrentRun
+### updateSnapshot
+### invalidateFile
+### close
+### exit
+
+### shouldKeepServer
+### onServerRestart
+### onCancel
+### onClose
+### onTestsRerun
+### onFilterWatchedSpecification
+
+## TestProject <Version>2.2.0</Version> {#testproject}
 
 - **Alias**: `WorkspaceProject` before 3.0.0
 
@@ -210,7 +301,7 @@ This is the project's resolved test config.
 
 ### vite
 
-This is project's `ViteDevServer`. All projects have their own Vite servers.
+This is project's [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver). All projects have their own Vite servers.
 
 ### browser
 
@@ -240,6 +331,16 @@ const value = inject('key')
 :::
 
 The values can be provided dynamicaly. Provided value in tests will be updated on their next run.
+
+::: tip
+This method is also available to [global setup files](/config/#globalsetup) for cases where you cannot use the public API:
+
+```js
+export default function setup({ provide }) {
+  provide('wsPort', 3000)
+}
+```
+:::
 
 ### getProvidedContext
 
@@ -284,11 +385,7 @@ await vitest.runFiles([specification], true)
 
 ### isRootProject
 
-Checks if the current project is the root project. You can also get the root project by calling `vitest.getRootTestProject()`.
-
-The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace.
-
-The primary goal of the root project is to setup the global config. In fact, `rootProject.config` references `rootProject.globalConfig` and `vitest.config` directly.
+Checks if the current project is the root project. You can also get the root project by calling [`vitest.getRootTestProject()`](#getroottestproject).
 
 ### globTestFiles
 
@@ -354,3 +451,7 @@ project.onTestsRerun((specs) => {
 Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts. If the resources are needed again, create a new project.
 
 In detail, this method closes the Vite server, stops the typechecker service, closes the browser if it's running, deletes the temporary directory that holds the source code, and resets the provided context.
+
+## TestSpecification
+
+<!-- TODO -->
