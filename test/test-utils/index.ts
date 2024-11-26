@@ -109,14 +109,12 @@ export async function runVitest(
     if (getCurrentTest()) {
       onTestFinished(async () => {
         await ctx?.close()
-        await ctx?.closingPromise
         process.exit = exit
       })
     }
     else {
       afterEach(async () => {
         await ctx?.close()
-        await ctx?.closingPromise
         process.exit = exit
       })
     }
