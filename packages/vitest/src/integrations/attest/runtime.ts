@@ -13,6 +13,18 @@ let lib: typeof import('@ark/attest')
 let enabled = false
 
 const plugin: ChaiPlugin = (chai, utils) => {
+  function getTypeAssertions(ctx: object) {
+    const parsed = parseStacktrace(utils.flag(ctx, '__vitest_expect_stack'))
+    const location = parsed[0]
+    const types = lib.getTypeAssertionsAtPosition({
+      file: location.file,
+      method: location.method,
+      line: location.line,
+      char: location.column,
+    })
+    return types
+  }
+
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchTypeSnapshot',
@@ -22,20 +34,7 @@ const plugin: ChaiPlugin = (chai, utils) => {
     ) {
       let value: any
       if (enabled) {
-        // TODO: can we specify ".attest/assertions" directory?
-        // TODO: caller here cannot get call stack of `expect(value)`
-        //       can attest support such analysis that
-        //         expect(value).xxx(...)
-        //       then `value` is analyzed and can query from `xxx()`'s caller position?
-        // TODO: probably we can use own location probing
-        const parsed = parseStacktrace(new Error('-').stack ?? '')
-        const location = parsed[0]
-        const types = lib.getTypeAssertionsAtPosition({
-          file: location.file,
-          method: location.method,
-          line: location.line,
-          char: 3,
-        })
+        const types = getTypeAssertions(this)
         value = types[0][1].args[0].type
       }
       utils.flag(this, '_name', 'toMatchTypeSnapshot')
@@ -59,14 +58,7 @@ const plugin: ChaiPlugin = (chai, utils) => {
     ) {
       let value: any
       if (enabled) {
-        const parsed = parseStacktrace(new Error('-').stack ?? '')
-        const location = parsed[0]
-        const types = lib.getTypeAssertionsAtPosition({
-          file: location.file,
-          method: location.method,
-          line: location.line,
-          char: 3,
-        })
+        const types = getTypeAssertions(this)
         value = types[0][1].args[0].type
       }
       utils.flag(this, '_name', 'toMatchTypeInlineSnapshot')
