@@ -39,6 +39,7 @@ export function getContext(): Context {
     } as any,
   }
 
+  // @ts-expect-error logger is readonly
   context.logger = {
     ctx: context as Vitest,
     log: (text: string) => output += `${text}\n`,

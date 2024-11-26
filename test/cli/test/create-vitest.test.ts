@@ -12,8 +12,8 @@ it(createVitest, async () => {
       },
     ],
   })
-  const testFiles = await ctx.globTestFiles()
-  await ctx.runFiles(testFiles, false)
+  const testFiles = await ctx.globTestSpecifications()
+  await ctx.runTestSpecifications(testFiles, false)
   expect(onFinished.mock.calls[0]).toMatchObject([
     [
       {
