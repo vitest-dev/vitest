@@ -171,8 +171,7 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
   let errorsPrinted = false
 
   forEachSuite(files, (suite) => {
-    const errors = suite.task.result?.errors || []
-    errors.forEach((error) => {
+    suite.errors().forEach((error) => {
       errorsPrinted = true
       ctx.logger.printError(error, {
         project: suite.project,
@@ -245,10 +244,11 @@ function processJsonOutput(files: TestModule[], options: CliOptions) {
   }
 }
 
-function forEachSuite(modules: TestModule[], callback: (suite: TestSuite) => void) {
-  modules.forEach((task) => {
-    for (const module of task.children.allSuites()) {
-      callback(module)
+function forEachSuite(modules: TestModule[], callback: (suite: TestSuite | TestModule) => void) {
+  modules.forEach((testModule) => {
+    callback(testModule)
+    for (const suite of testModule.children.allSuites()) {
+      callback(suite)
     }
   })
 }
@@ -284,11 +284,11 @@ export function formatCollectedAsJSON(files: TestModule[]) {
   return results
 }
 
-export function formatCollectedAsString(files: TestModule[]) {
+export function formatCollectedAsString(testModules: TestModule[]) {
   const results: string[] = []
 
-  files.forEach((file) => {
-    for (const test of file.children.allTests()) {
+  testModules.forEach((testModule) => {
+    for (const test of testModule.children.allTests()) {
       if (test.skipped()) {
         continue
       }

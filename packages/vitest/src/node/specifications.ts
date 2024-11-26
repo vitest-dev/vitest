@@ -147,7 +147,7 @@ export class VitestSpecifications {
       }),
     )
 
-    const runningTests = []
+    const runningTests: TestSpecification[] = []
 
     for (const [specification, deps] of testGraphs) {
       // if deps or the test itself were changed

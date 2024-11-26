@@ -266,6 +266,10 @@ declare class TestSuite {
    * Options that the suite was initiated with.
    */
   readonly options: TaskOptions
+  /**
+   * Errors that happened outside of the test run during collection, like syntax errors.
+   */
+  public errors(): TestError[]
 }
 ```
 
@@ -274,7 +278,7 @@ declare class TestSuite {
 `TestModule` represents a single file that contains suites and tests.
 
 ```ts
-declare class TestModule extends SuiteImplementation {
+declare class TestModule extends TestSuite {
   readonly type = 'module'
   /**
    * Collection of suites and tests that are part of this module.
