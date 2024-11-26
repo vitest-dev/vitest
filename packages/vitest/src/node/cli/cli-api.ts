@@ -268,8 +268,9 @@ export function formatCollectedAsJSON(files: TestModule[]) {
       if (test.skipped()) {
         continue
       }
+      const fullName = `${test.module.task.name} > ${test.fullName}`
       const result: TestCollectJSONResult = {
-        name: test.fullName,
+        name: fullName,
         file: test.module.moduleId,
       }
       if (test.project.name) {
@@ -292,8 +293,9 @@ export function formatCollectedAsString(files: TestModule[]) {
       if (test.skipped()) {
         continue
       }
+      const fullName = `${test.module.task.name} > ${test.fullName}`
       results.push(
-        (test.project.name ? `[${test.project.name}] ` : '') + test.fullName,
+        (test.project.name ? `[${test.project.name}] ` : '') + fullName,
       )
     }
   })
