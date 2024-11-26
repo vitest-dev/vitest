@@ -1,7 +1,7 @@
 {
   "name": "@vitest/ui",
   "type": "module",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "UI for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -81,7 +81,7 @@
     "unocss": "^0.64.0",
     "unplugin-auto-import": "^0.18.3",
     "unplugin-vue-components": "^0.27.4",
-    "vite": "^5.0.0",
+    "vite": "^5.0.0 || ^6.0.0",
     "vite-plugin-pages": "^0.32.3",
     "vue": "^3.5.12",
     "vue-router": "^4.4.5",
