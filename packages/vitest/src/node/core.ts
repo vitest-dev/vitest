@@ -50,14 +50,33 @@ export interface VitestOptions {
 export class Vitest {
   /**
    * Current Vitest version.
+   * @example '2.0.0'
    */
   public readonly version = version
   static readonly version = version
+  /**
+   * The logger instance used to log messages. It's recommended to use this logger instead of `console`.
+   * It's possible to override stdout and stderr streams when initiating Vitest.
+   * @example
+   * new Vitest('test', {
+   *   stdout: new Writable(),
+   * })
+   */
   public readonly logger: Logger
+  /**
+   * The package installer instance used to install Vitest packages.
+   * @example
+   * await vitest.packageInstaller.ensureInstalled('@vitest/browser', process.cwd())
+   */
   public readonly packageInstaller: VitestPackageInstaller
-  public readonly watcher: VitestWatcher
+  /**
+   * A path to the built Vitest directory. This is usually a folder in `node_modules`.
+   */
   public readonly distPath = distDir
-
+  /**
+   * A list of projects that are currently running.
+   * If projects were filtered with `--project` flag, they won't appear here.
+   */
   public projects: TestProject[] = []
 
   /** @internal */ coverageProvider: CoverageProvider | null | undefined
@@ -80,7 +99,8 @@ export class Vitest {
   private isFirstRun = true
   private restartsCount = 0
 
-  private specifications: VitestSpecifications
+  private readonly specifications: VitestSpecifications
+  private readonly watcher: VitestWatcher
   private pool: ProcessPool | undefined
   private _ready = false
   private _config?: ResolvedConfig
@@ -107,6 +127,7 @@ export class Vitest {
   private _onSetServer: OnServerRestartHandler[] = []
   private _onCancelListeners: ((reason: CancelReason) => Awaitable<void>)[] = []
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
+  private _onFilterWatchedSpecification: ((spec: TestSpecification) => boolean)[] = []
 
   /** @deprecated will be removed in 3.0, use `vitest.watcher` */
   public get invalidates() {
@@ -285,6 +306,13 @@ export class Vitest {
    */
   public provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) => {
     this.getRootTestProject().provide(key, value)
+  }
+
+  /**
+   * Get global provided context.
+   */
+  public getProvidedContext(): ProvidedContext {
+    return this.getRootTestProject().getProvidedContext()
   }
 
   /** @internal */
@@ -760,16 +788,17 @@ export class Vitest {
    * @param specifications A list of specifications to run.
    * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
    */
-  public async rerunTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<void> {
+  public async rerunTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
     this.configOverride.testNamePattern = undefined
     const files = specifications.map(spec => spec.moduleId)
     await Promise.all([
       this.report('onWatcherRerun', files, 'rerun test'),
       ...this._onUserTestsRerun.map(fn => fn(specifications)),
     ])
-    await this.runTestSpecifications(specifications, allTestsRun)
+    const result = await this.runTestSpecifications(specifications, allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
+    return result
   }
 
   /** @internal */
@@ -924,7 +953,13 @@ export class Vitest {
 
       const triggerIds = new Set(triggerId.map(id => relative(this.config.root, id)))
       const triggerLabel = Array.from(triggerIds).join(', ')
-      const specifications = files.flatMap(file => this.getModuleSpecifications(file))
+      // get file specifications and filter them if needed
+      const specifications = files.flatMap(file => this.getModuleSpecifications(file)).filter((specification) => {
+        if (this._onFilterWatchedSpecification.length === 0) {
+          return true
+        }
+        return this._onFilterWatchedSpecification.every(fn => fn(specification))
+      })
       await Promise.all([
         this.report('onWatcherRerun', files, triggerLabel),
         ...this._onUserTestsRerun.map(fn => fn(specifications)),
@@ -1132,6 +1167,17 @@ export class Vitest {
    */
   onTestsRerun(fn: OnTestsRerunHandler): void {
     this._onUserTestsRerun.push(fn)
+  }
+
+  /**
+   * Register a handler that will be called when a file is changed.
+   * This callback should return `true` of `false` indicating whether the test file needs to be rerun.
+   * @example
+   * const testsToRun = [resolve('./test.spec.ts')]
+   * vitest.onFilterWatchedSpecification(specification => testsToRun.includes(specification.moduleId))
+   */
+  onFilterWatchedSpecification(fn: (specification: TestSpecification) => boolean): void {
+    this._onFilterWatchedSpecification.push(fn)
   }
 
   /** @internal */

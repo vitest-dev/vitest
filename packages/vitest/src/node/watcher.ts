@@ -5,11 +5,16 @@ import { noop, slash } from '@vitest/utils'
 import mm from 'micromatch'
 
 export class VitestWatcher {
+  /**
+   * Modules that will be invalidated on the next run.
+   */
   public readonly invalidates: Set<string> = new Set()
+  /**
+   * Test files that have changed and need to be rerun.
+   */
   public readonly changedTests: Set<string> = new Set()
 
-  private _onRerun: ((file: string) => void)[] = []
-  private _onFilterTestFile: ((file: string) => boolean)[] = []
+  private readonly _onRerun: ((file: string) => void)[] = []
 
   constructor(private vitest: Vitest) {}
 
@@ -21,15 +26,6 @@ export class VitestWatcher {
    */
   onWatcherRerun(cb: (file: string) => void): this {
     this._onRerun.push(cb)
-    return this
-  }
-
-  /**
-   * Register a handler that will be called when a file is changed.
-   * This callback should return a value indicating whether the test file needs to be rerun.
-   */
-  onFilterTestFile(cb: (file: string) => boolean): this {
-    this._onFilterTestFile.push(cb)
     return this
   }
 
@@ -55,12 +51,6 @@ export class VitestWatcher {
   }
 
   private scheduleRerun(file: string): void {
-    for (const testFile of this.changedTests) {
-      if (this._onFilterTestFile.some(cb => cb(testFile))) {
-        this.changedTests.delete(testFile)
-      }
-    }
-
     this._onRerun.forEach(cb => cb(file))
   }
 

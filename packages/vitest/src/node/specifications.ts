@@ -8,7 +8,7 @@ import { groupFilters, parseFilter } from './cli/filter'
 import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 
 export class VitestSpecifications {
-  private _cachedSpecs = new Map<string, TestSpecification[]>()
+  private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
 
   constructor(private vitest: Vitest) {}
 
