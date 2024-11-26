@@ -12,7 +12,7 @@ export async function setupCommonEnv(config: SerializedConfig) {
   resetRunOnceCounter()
   setupDefines(config.defines)
   setupEnv(config.env)
-  await setupAttest()
+  await setupAttest(config)
 
   if (globalSetup) {
     return

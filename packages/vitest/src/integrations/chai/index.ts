@@ -21,11 +21,11 @@ export function createExpect(test?: TaskPopulated) {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
-    if (globalThis.process?.env.VITEST_ATTEST) {
+    const _test = test || getCurrentTest()
+    if (getWorkerState().config.attest) {
       // TODO: avoid incuring new Error for non attest assertion
       chai.util.flag(assert, '__vitest_expect_stack', new Error('-').stack)
     }
-    const _test = test || getCurrentTest()
     if (_test) {
       // @ts-expect-error internal
       return assert.withTest(_test) as Assertion

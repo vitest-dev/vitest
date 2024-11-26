@@ -164,5 +164,6 @@ export function serializeConfig(
     benchmark: config.benchmark && {
       includeSamples: config.benchmark.includeSamples,
     },
+    attest: config.attest,
   }
 }

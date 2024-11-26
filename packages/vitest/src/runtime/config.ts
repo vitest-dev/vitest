@@ -133,6 +133,7 @@ export interface SerializedConfig {
   benchmark?: {
     includeSamples: boolean
   }
+  attest: boolean
 }
 
 export interface SerializedCoverageConfig {

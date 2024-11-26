@@ -1,4 +1,5 @@
 import type { ChaiPlugin } from '@vitest/expect'
+import type { SerializedConfig } from '../../runtime/config'
 import {
   type Plugin as PrettyFormatPlugin,
   PrettyFormatSkipSnapshotError,
@@ -114,11 +115,10 @@ const prettyFormatPlugin: PrettyFormatPlugin = {
   },
 }
 
-export async function setupAttest() {
+export async function setupAttest(config: SerializedConfig) {
   chai.use(plugin)
   addSerializer(prettyFormatPlugin)
-  // TODO: vitest config
-  enabled = !!globalThis.process?.env.VITEST_ATTEST
+  enabled = config.attest
   if (enabled) {
     lib = await import('@ark/attest')
   }

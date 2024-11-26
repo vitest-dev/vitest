@@ -7,10 +7,9 @@ it('skip types', { timeout: 20_000 }, async () => {
   // for now, use cli since cwd is essential for attest
   const dir = join(import.meta.dirname, '../fixtures')
   const options: SpawnOptions = { cwd: dir }
-  const optionsWithAttest: SpawnOptions = { cwd: dir, env: { ...process.env, VITEST_ATTEST: 'true' } }
 
   // [ATTEST] pass with correct snapshots
-  let result = await runVitestCli({ nodeOptions: optionsWithAttest }, 'run')
+  let result = await runVitestCli({ nodeOptions: options }, 'run', '--attest')
   expect(result.stderr).toBe('')
   expect(result.stdout).toContain('Waiting for TypeScript')
   expect(result.stdout).toContain('Test Files  1 passed')
@@ -28,7 +27,7 @@ it('skip types', { timeout: 20_000 }, async () => {
   expect(result.stdout).toContain('Test Files  1 passed')
 
   // [ATTEST] update snapshot
-  result = await runVitestCli({ nodeOptions: optionsWithAttest }, 'run', '--update')
+  result = await runVitestCli({ nodeOptions: options }, 'run', '--attest', '--update')
   expect(result.stderr).toBe('')
   expect(result.stdout).toContain('Waiting for TypeScript')
   expect(result.stdout).toContain('Snapshots  1 written')

@@ -15,9 +15,7 @@ async function setup() {
 }
 
 export async function globalSetupAttest(project: TestProject) {
-  // TODO: vitest level config
-  // TODO: workspace support?
-  if (!process.env.VITEST_ATTEST) {
+  if (!project.config.attest) {
     return
   }
 
