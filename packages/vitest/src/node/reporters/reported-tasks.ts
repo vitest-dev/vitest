@@ -11,7 +11,7 @@ import type { TestProject } from '../project'
 class ReportedTaskImplementation {
   /**
    * Task instance.
-   * @experimental Public runner task API is experimental and does not follow semver.
+   * @internal
    */
   public readonly task: RunnerTask
 
@@ -32,6 +32,7 @@ class ReportedTaskImplementation {
    */
   public readonly location: { line: number; column: number } | undefined
 
+  /** @internal */
   protected constructor(
     task: RunnerTask,
     project: TestProject,
@@ -44,6 +45,7 @@ class ReportedTaskImplementation {
 
   /**
    * Creates a new reported task instance and stores it in the project's state for future use.
+   * @internal
    */
   static register(task: RunnerTask, project: TestProject) {
     const state = new this(task, project) as TestCase | TestSuite | TestModule
@@ -55,6 +57,7 @@ class ReportedTaskImplementation {
 export class TestCase extends ReportedTaskImplementation {
   #fullName: string | undefined
 
+  /** @internal */
   declare public readonly task: RunnerTestCase
   public readonly type = 'test'
 
@@ -78,6 +81,7 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
+  /** @internal */
   protected constructor(task: RunnerTestCase, project: TestProject) {
     super(task, project)
 
@@ -294,6 +298,7 @@ class TestCollection {
 export type { TestCollection }
 
 abstract class SuiteImplementation extends ReportedTaskImplementation {
+  /** @internal */
   declare public readonly task: RunnerTestSuite | RunnerTestFile
 
   /**
@@ -301,6 +306,7 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
    */
   public readonly children: TestCollection
 
+  /** @internal */
   protected constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
     super(task, project)
     this.children = new TestCollection(task, project)
@@ -310,6 +316,7 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
 export class TestSuite extends SuiteImplementation {
   #fullName: string | undefined
 
+  /** @internal */
   declare public readonly task: RunnerTestSuite
   public readonly type = 'suite'
 
@@ -333,6 +340,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public readonly options: TaskOptions
 
+  /** @internal */
   protected constructor(task: RunnerTestSuite, project: TestProject) {
     super(task, project)
 
@@ -365,6 +373,7 @@ export class TestSuite extends SuiteImplementation {
 }
 
 export class TestModule extends SuiteImplementation {
+  /** @internal */
   declare public readonly task: RunnerTestFile
   declare public readonly location: undefined
   public readonly type = 'module'
@@ -376,6 +385,7 @@ export class TestModule extends SuiteImplementation {
    */
   public readonly moduleId: string
 
+  /** @internal */
   protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
