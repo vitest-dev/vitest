@@ -1,7 +1,6 @@
 import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
-import restoreCursor from 'restore-cursor'
 
 const DEFAULT_RENDER_INTERVAL = 16
 
@@ -49,9 +48,9 @@ export class WindowRenderer {
     this.cleanups.push(
       this.interceptStream(process.stdout, 'output'),
       this.interceptStream(process.stderr, 'error'),
+      this.addProcessExitListeners(),
     )
 
-    restoreCursor()
     this.write(HIDE_CURSOR, 'output')
 
     this.start()
@@ -174,6 +173,32 @@ export class WindowRenderer {
 
   private write(message: string, type: 'output' | 'error' = 'output') {
     (this.streams[type] as Writable['write'])(message)
+  }
+
+  private addProcessExitListeners() {
+    const onExit = (signal?: string | number, exitCode?: number) => {
+      // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
+      this.flushBuffer()
+      this.stop()
+
+      // Interrupted signals don't set exit code automatically.
+      // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
+      if (process.exitCode === undefined) {
+        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
+      }
+
+      process.exit()
+    }
+
+    process.once('SIGINT', onExit)
+    process.once('SIGTERM', onExit)
+    process.once('exit', onExit)
+
+    return function cleanup() {
+      process.off('SIGINT', onExit)
+      process.off('SIGTERM', onExit)
+      process.off('exit', onExit)
+    }
   }
 }
 
