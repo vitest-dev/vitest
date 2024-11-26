@@ -93,12 +93,7 @@ class MyReporter implements Reporter {
 
 ```ts
 declare class TestCase {
-  readonly type = 'test' | 'custom'
-  /**
-   * Task instance.
-   * @experimental Public task API is experimental and does not follow semver.
-   */
-  readonly task: RunnerTestCase | RunnerCustomCase
+  readonly type = 'test'
   /**
    * The project associated with the test.
    */
@@ -237,11 +232,6 @@ export interface TestDiagnostic {
 declare class TestSuite {
   readonly type = 'suite'
   /**
-   * Task instance.
-   * @experimental Public task API is experimental and does not follow semver.
-   */
-  readonly task: RunnerTestSuite
-  /**
    * The project associated with the test.
    */
   readonly project: TestProject
@@ -286,11 +276,6 @@ declare class TestSuite {
 ```ts
 declare class TestModule extends SuiteImplementation {
   readonly type = 'module'
-  /**
-   * Task instance.
-   * @experimental Public task API is experimental and does not follow semver.
-   */
-  readonly task: RunnerTestFile
   /**
    * Collection of suites and tests that are part of this module.
    */
