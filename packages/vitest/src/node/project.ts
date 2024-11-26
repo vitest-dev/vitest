@@ -219,17 +219,10 @@ export class TestProject {
       this.runner,
       this.config.globalSetup,
     )
-    if (this.config.attest) {
-      await this.vitest.packageInstaller.ensureInstalled(
-        '@ark/attest',
-        this.config.root,
-        this.vitest.version,
-      )
-      this._globalSetups.push({
-        file: 'attest',
-        setup: globalSetupAttest,
-      })
-    }
+    this._globalSetups.push({
+      file: 'attest',
+      setup: globalSetupAttest,
+    })
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.(this)

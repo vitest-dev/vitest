@@ -12,7 +12,7 @@ it('skip types', { timeout: 20_000 }, async () => {
   let result = await runVitestCli({ nodeOptions: options }, 'run', '--attest')
   expect(result.stderr).toBe('')
   expect(result.stdout).toContain('Waiting for TypeScript')
-  expect(result.stdout).toContain('Test Files  1 passed')
+  expect(result.stdout).toContain('Test Files  2 passed')
 
   // [NO ATTEST] pass with wrong snapshot
   editFile(
@@ -24,12 +24,12 @@ it('skip types', { timeout: 20_000 }, async () => {
   expect(result.stdout).not.toContain('Waiting for TypeScript')
   expect(result.stdout).not.toContain('Snapshots 1 written')
   expect(result.stdout).not.toContain('obsolete')
-  expect(result.stdout).toContain('Test Files  1 passed')
+  expect(result.stdout).toContain('Test Files  2 passed')
 
   // [ATTEST] update snapshot
   result = await runVitestCli({ nodeOptions: options }, 'run', '--attest', '--update')
   expect(result.stderr).toBe('')
   expect(result.stdout).toContain('Waiting for TypeScript')
   expect(result.stdout).toContain('Snapshots  1 written')
-  expect(result.stdout).toContain('Test Files  1 passed')
+  expect(result.stdout).toContain('Test Files  2 passed')
 })
