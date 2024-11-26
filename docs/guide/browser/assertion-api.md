@@ -32,35 +32,17 @@ Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-libr
 - [`toHaveRole`](https://github.com/testing-library/jest-dom#toHaveRole)
 - [`toHaveErrorMessage`](https://github.com/testing-library/jest-dom#toHaveErrorMessage)
 
-If you are using TypeScript or want to have correct type hints in `expect`, make sure you have either `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` specified in your `tsconfig` depending on the provider you use. If you use the default `preview` provider, you can specify `@vitest/browser/matchers` instead.
+If you are using [TypeScript](/guide/browser/#typescript) or want to have correct type hints in `expect`, make sure you have either `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` referenced in your [setup file](/config/#setupfile) or a [config file](/config/file) depending on the provider you use. If you use the default `preview` provider, you can specify `@vitest/browser/matchers` instead.
 
 ::: code-group
-```json [preview]
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/matchers"
-    ]
-  }
-}
+```ts [preview]
+/// <reference types="@vitest/browser/matchers" />
 ```
-```json [playwright]
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/providers/playwright"
-    ]
-  }
-}
+```ts [playwright]
+/// <reference types="@vitest/browser/providers/playwright" />
 ```
-```json [webdriverio]
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/providers/webdriverio"
-    ]
-  }
-}
+```ts [webdriverio]
+/// <reference types="@vitest/browser/providers/webdriverio" />
 ```
 :::
 
