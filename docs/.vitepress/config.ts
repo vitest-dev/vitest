@@ -138,7 +138,8 @@ export default ({ mode }: { mode: string }) => {
       },
 
       nav: [
-        { text: 'Guide & API', link: '/guide/', activeMatch: '^/(guide|api|config)/(?!browser)' },
+        { text: 'Guide & API', link: '/guide/', activeMatch: '^/(guide|api)/(?!browser)' },
+        { text: 'Config', link: '/config/', activeMatch: '^/config/' },
         { text: 'Browser Mode', link: '/guide/browser', activeMatch: '^/guide/browser/' },
         {
           text: 'Resources',
