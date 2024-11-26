@@ -268,9 +268,8 @@ export function formatCollectedAsJSON(files: TestModule[]) {
       if (test.skipped()) {
         continue
       }
-      const fullName = `${test.module.task.name} > ${test.fullName}`
       const result: TestCollectJSONResult = {
-        name: fullName,
+        name: test.fullName,
         file: test.module.moduleId,
       }
       if (test.project.name) {
