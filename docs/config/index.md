@@ -9,7 +9,7 @@ To create a Vitest configuration file, follow [the guide](/config/file). Make su
 ::: warning
 _All_ listed options here are located on a `test` property inside the config:
 
-```ts
+```ts [vitest.config.js]
 export default defineConfig({
   test: {
     exclude: [],
@@ -248,7 +248,7 @@ This option will also affect if a file should be treated as a module when extern
 
 Setting this option will _override_ the default, if you wish to still search `node_modules` for packages include it along with any other options:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -355,8 +355,7 @@ Vitest uses Vite SSR primitives to run tests which has [certain pitfalls](https:
 
 By default, `vitest` does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the `--globals` option to CLI or add `globals: true` in the config.
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -368,8 +367,7 @@ export default defineConfig({
 
 To get TypeScript working with the global APIs, add `vitest/globals` to the `types` field in your `tsconfig.json`
 
-```json
-// tsconfig.json
+```json [tsconfig.json]
 {
   "compilerOptions": {
     "types": ["vitest/globals"]
@@ -379,8 +377,7 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 
 If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 import AutoImport from 'unplugin-auto-import/vite'
 
@@ -454,7 +451,7 @@ If you are running Vitest with [`--isolate=false`](#isolate) flag, your tests wi
 
 Starting from 0.23.0, you can also define custom environment. When non-builtin environment is used, Vitest will try to load package `vitest-environment-${name}`. That package should export an object with the shape of `Environment`:
 
-```ts
+```ts [environment.js]
 import type { Environment } from 'vitest'
 
 export default <Environment>{
@@ -476,7 +473,7 @@ Vitest also exposes `builtinEnvironments` through `vitest/environments` entry, i
 ::: tip
 jsdom environment exposes `jsdom` global variable equal to the current [JSDOM](https://github.com/jsdom/jsdom) instance. If you want TypeScript to recognize it, you can add `vitest/jsdom` to your `tsconfig.json` when you use this environment:
 
-```json
+```json [tsconfig.json]
 {
   "compilerOptions": {
     "types": ["vitest/jsdom"]
@@ -501,7 +498,7 @@ Automatically assign environment based on globs. The first match will be used.
 
 For example:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -526,7 +523,7 @@ Automatically assign pool in which tests will run based on globs. The first matc
 
 For example:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -645,7 +642,7 @@ Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads`
 
 Options for `threads` pool.
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -717,7 +714,7 @@ Be careful when using, it as some options may crash worker, e.g. --prof, --title
 
 Options for `forks` pool.
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -780,7 +777,7 @@ Be careful when using, it as some options may crash worker, e.g. --prof, --title
 
 Options for `vmThreads` pool.
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -861,7 +858,7 @@ Be careful when using, it as some options may crash worker, e.g. --prof, --title
 
 Options for `vmForks` pool.
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -1032,9 +1029,7 @@ Properties have to be strings and values need to be [serializable](https://devel
 ::: tip
 If you are using TypeScript, you will need to augment `ProvidedContext` type for type safe access:
 
-```ts
-// vitest.shims.d.ts
-
+```ts [vitest.shims.d.ts]
 declare module 'vitest' {
   export interface ProvidedContext {
     API_KEY: string
@@ -1064,9 +1059,22 @@ Global setup runs only if there is at least one running test. This means that gl
 Beware that the global setup is running in a different global scope, so your tests don't have access to variables defined here. However, you can pass down serializable data to tests via [`provide`](#provide) method:
 
 :::code-group
-```js [globalSetup.js]
-export default function setup(project) {
+```ts [example.test.js]
+import { inject } from 'vitest'
+
+inject('wsPort') === 3000
+```
+```ts [globalSetup.ts <Version>2.2.0</Version>]
+import type { TestProject } from 'vitest/node'
+
+export default function setup(project: TestProject) {
   project.provide('wsPort', 3000)
+}
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    wsPort: number
+  }
 }
 ```
 ```ts [globalSetup.ts <Version>2.0.0</Version>]
@@ -1082,29 +1090,11 @@ declare module 'vitest' {
   }
 }
 ```
-```ts [globalSetup.ts <Version>2.2.0</Version>]
-import type { TestProject } from 'vitest/node'
-
-export default function setup(project: TestProject) {
-  project.provide('wsPort', 3000)
-}
-
-declare module 'vitest' {
-  export interface ProvidedContext {
-    wsPort: number
-  }
-}
-```
-```ts [example.test.js]
-import { inject } from 'vitest'
-
-inject('wsPort') === 3000
-```
 :::
 
 Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
 
-```ts
+```ts [globalSetup.ts]
 import type { TestProject } from 'vitest/node'
 
 export default function setup(project: TestProject) {
@@ -1213,7 +1203,7 @@ List of files excluded from coverage as glob patterns.
 
 This option overrides all default options. Extend the default options when adding new patterns to ignore:
 
-```ts
+```ts [vitest.config.js]
 import { coverageConfigDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -1502,7 +1492,7 @@ By default Vite uses ESBuild which removes comments and Typescript types from `.
 
 If you want to apply ESBuild to other files as well, define them in [`esbuild` options](https://vitejs.dev/config/shared-options.html#esbuild):
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -1665,11 +1655,10 @@ Run the browser in a `headless` mode. If you are running Vitest in CI, it will b
 
 Run every test in a separate iframe.
 
-#### browser.testerHtmlPath
+#### browser.testerHtmlPath <Version>2.1.4</Version> {#browser-testerhtmlpath}
 
 - **Type:** `string`
 - **Default:** `@vitest/browser/tester.html`
-- **Version:** Since Vitest 2.1.4
 
 A path to the HTML entry point. Can be relative to the root of the project. This file will be processed with [`transformIndexHtml`](https://vite.dev/guide/api-plugin#transformindexhtml) hook.
 
@@ -1709,8 +1698,8 @@ This is an advanced API for library authors. If you just need to run tests in a 
 
 Options that will be passed down to provider when calling `provider.initialize`.
 
-```ts
-export default defineConfig({
+```ts [vitest.config.js]
+export default {
   test: {
     browser: {
       providerOptions: {
@@ -1720,7 +1709,7 @@ export default defineConfig({
       }
     }
   }
-})
+}
 ```
 
 ::: tip
@@ -1911,7 +1900,7 @@ A list of paths to snapshot serializer modules for snapshot testing, useful if y
 
 Overrides default snapshot path. For example, to store snapshots next to test files:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -2016,7 +2005,7 @@ Use this option if you want to disable the cache feature. At the moment Vitest s
 
 The cache directory is controlled by the Vite's [`cacheDir`](https://vitejs.dev/config/shared-options.html#cachedir) option:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -2026,7 +2015,7 @@ export default defineConfig({
 
 You can limit the directory only for Vitest by using `process.env.VITEST`:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -2259,7 +2248,7 @@ Custom handler for `console.log` in tests. If you return `false`, Vitest will no
 
 Can be useful for filtering out logs from third-party libraries.
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -2279,7 +2268,7 @@ Apply a filtering function to each frame of each stack trace when handling error
 
 Can be useful for filtering out stack trace frames from third-party libraries.
 
-```ts
+```ts [vitest.config.ts]
 import type { ParsedStack } from 'vitest'
 import { defineConfig } from 'vitest/config'
 

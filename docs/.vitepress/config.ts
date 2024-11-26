@@ -19,6 +19,10 @@ import {
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
+import {
+  groupIconMdPlugin,
+  groupIconVitePlugin,
+} from 'vitepress-plugin-group-icons'
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({
@@ -56,9 +60,26 @@ export default ({ mode }: { mode: string }) => {
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
     ],
     lastUpdated: true,
+    vite: {
+      plugins: [
+        groupIconVitePlugin({
+          customIcon: {
+            'CLI': 'vscode-icons:file-type-shell',
+            'vitest.workspace': 'vscode-icons:file-type-vitest',
+            'vitest.config': 'vscode-icons:file-type-vitest',
+            '.spec.ts': 'vscode-icons:file-type-testts',
+            '.test.ts': 'vscode-icons:file-type-testts',
+            '.spec.js': 'vscode-icons:file-type-testjs',
+            '.test.js': 'vscode-icons:file-type-testjs',
+            'marko': 'vscode-icons:file-type-marko',
+          },
+        }),
+      ],
+    },
     markdown: {
       config(md) {
         md.use(tabsMarkdownPlugin)
+        md.use(groupIconMdPlugin)
       },
       theme: {
         light: 'github-light',

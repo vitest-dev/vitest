@@ -93,7 +93,8 @@ bun add -D vitest @vitest/browser webdriverio
 
 To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
-```ts
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     browser: {
@@ -184,8 +185,7 @@ If you need to run some tests using Node-based runner, you can define a [workspa
 
 {#workspace-config}
 
-```ts
-// vitest.workspace.ts
+```ts [vitest.workspace.ts]
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
@@ -225,7 +225,7 @@ export default defineWorkspace([
 == Playwright
 You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/config/#browser-provideroptions) field:
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     browser: {
@@ -284,7 +284,7 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
 
 By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfile) or a [config file](/config/file) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
 
-::: code-block
+::: code-group
 ```ts [default]
 /// <reference types="@vitest/browser/matchers" />
 ```
@@ -294,10 +294,11 @@ By default, TypeScript doesn't recognize providers options and extra `expect` pr
 ```ts [webdriverio]
 /// <reference types="@vitest/browser/providers/webdriverio" />
 ```
+:::
 
 Alternatively, you can also add them to `compilerOptions.types` field in your `tsconfig.json` file. Note that specifying anything in this field will disable [auto loading](https://www.typescriptlang.org/tsconfig/#types) of `@types/*` packages.
 
-::: code-block
+::: code-group
 ```json [default]
 {
   "compilerOptions": {
@@ -358,7 +359,8 @@ When using headless mode, Vitest won't open the UI automatically. If you want to
 
 Here's an example configuration enabling headless mode:
 
-```ts
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     browser: {

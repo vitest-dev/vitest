@@ -14,7 +14,7 @@ To configure `vitest` itself, add `test` property in your Vite config. You'll al
 
 Using `defineConfig` from `vite` you should follow this:
 
-```ts
+```ts [vite.config.js]
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
@@ -27,7 +27,7 @@ export default defineConfig({
 
 The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
 
-```ts
+```ts [vite.config.js]
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 
@@ -40,7 +40,7 @@ export default defineConfig({
 
 Using `defineConfig` from `vitest/config` you should follow this:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -52,7 +52,7 @@ export default defineConfig({
 
 You can retrieve Vitest's default options to expand them if needed:
 
-```ts
+```ts [vitest.config.js]
 import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -64,7 +64,7 @@ export default defineConfig({
 
 When using a separate `vitest.config.js`, you can also extend Vite's options from another config file if needed:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config'
 
@@ -77,7 +77,7 @@ export default mergeConfig(viteConfig, defineConfig({
 
 If your Vite config is defined as a function, you can define the config like this:
 
-```ts
+```ts [vitest.config.js]
 import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config'
 
