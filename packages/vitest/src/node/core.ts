@@ -55,10 +55,9 @@ export class Vitest {
   static readonly version = version
   public readonly logger: Logger
   public readonly packageInstaller: VitestPackageInstaller
+  public readonly watcher: VitestWatcher
   public readonly distPath = distDir
 
-  /** @experimental */
-  public watcher: VitestWatcher
   /**
    * @experimental The State API is experimental and not subject to semver.
    */
