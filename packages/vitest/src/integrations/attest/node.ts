@@ -2,7 +2,7 @@ import type { TestProject } from '../../node/project'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
 
-async function setup() {
+async function precache() {
   // TODO: programatic API
   mkdirSync('.attest/assertions', { recursive: true })
   execFileSync('attest', ['precache', '.attest/assertions/typescript.json'], {
@@ -19,6 +19,6 @@ export async function globalSetupAttest(project: TestProject) {
     return
   }
 
-  await setup()
-  project.onTestsRerun(() => setup())
+  await precache()
+  project.onTestsRerun(() => precache())
 }
