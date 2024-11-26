@@ -2,7 +2,7 @@ import { groupBy } from '../../utils/base'
 import { RangeLocationFilterProvidedError } from '../errors'
 
 export function parseFilter(filter: string): Filter {
-  const colonIndex = filter.indexOf(':')
+  const colonIndex = filter.lastIndexOf(':')
   if (colonIndex === -1) {
     return { filename: filter }
   }
@@ -18,7 +18,7 @@ export function parseFilter(filter: string): Filter {
       lineNumber: Number.parseInt(lineNumber),
     }
   }
-  else if (lineNumber.includes('-')) {
+  else if (lineNumber.match(/^\d+-\d+$/)) {
     throw new RangeLocationFilterProvidedError(filter)
   }
   else {
