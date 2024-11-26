@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest'
 describe('waitFor', () => {
   describe('options', () => {
     test('timeout', async () => {
-      expect(async () => {
+      await expect(async () => {
         await vi.waitFor(() => {
           return new Promise((resolve) => {
             setTimeout(() => {
@@ -125,7 +125,7 @@ describe('waitFor', () => {
 describe('waitUntil', () => {
   describe('options', () => {
     test('timeout', async () => {
-      expect(async () => {
+      await expect(async () => {
         await vi.waitUntil(() => {
           return new Promise((resolve) => {
             setTimeout(() => {

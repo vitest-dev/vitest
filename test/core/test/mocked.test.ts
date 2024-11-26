@@ -129,11 +129,11 @@ describe('default exported classes', () => {
   })
 })
 
-test('async functions should be mocked', () => {
+test('async functions should be mocked', async () => {
   expect(asyncFunc()).toBeUndefined()
   expect(vi.mocked(asyncFunc).mockResolvedValue).toBeDefined()
   vi.mocked(asyncFunc).mockResolvedValue('foo')
-  expect(asyncFunc()).resolves.toBe('foo')
+  await expect(asyncFunc()).resolves.toBe('foo')
 })
 
 function getError(cb: () => void): string {

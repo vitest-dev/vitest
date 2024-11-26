@@ -4,6 +4,7 @@ import type { Assertion } from 'vitest'
 
 declare module 'vitest' {
   interface JestAssertion<T = any> extends jsdomMatchers.default.TestingLibraryMatchers<void, T> {}
+  interface AsymmetricMatchersContaining extends jsdomMatchers.default.TestingLibraryMatchers<void, void> {}
 
   type Promisify<O> = {
     [K in keyof O]: O[K] extends (...args: infer A) => infer R

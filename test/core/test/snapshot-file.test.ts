@@ -13,12 +13,12 @@ describe('snapshots', () => {
   for (const [path, file] of Object.entries(files)) {
     test(path, async () => {
       const entries = JSON.parse(await file()) as any[]
-      expect(entries.map(i => objectToCSS(i[0], i[1])).join('\n'))
+      await expect(entries.map(i => objectToCSS(i[0], i[1])).join('\n'))
         .toMatchFileSnapshot(path.replace('input.json', 'output.css'))
     })
   }
 })
 
-test('handle empty file', () => {
-  expect('').toMatchFileSnapshot('./fixtures/snapshot-empty.txt')
+test('handle empty file', async () => {
+  await expect('').toMatchFileSnapshot('./fixtures/snapshot-empty.txt')
 })
