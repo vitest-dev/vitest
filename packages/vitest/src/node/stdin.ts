@@ -122,7 +122,7 @@ export function registerConsoleShortcuts(
       return inputFilePattern()
     }
     if (name === 'b') {
-      await ctx.initBrowserServers()
+      await ctx._initBrowserServers()
       ctx.projects.forEach((project) => {
         ctx.logger.log()
         ctx.logger.printBrowserBanner(project)

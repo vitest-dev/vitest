@@ -34,6 +34,7 @@ export function getContext(): Context {
     config: config as ResolvedConfig,
     server: server as ViteDevServer,
     getProjectByTaskId: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
+    getProjectByName: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
     snapshot: {
       summary: { added: 100, _test: true },
     } as any,
