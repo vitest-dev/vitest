@@ -213,4 +213,9 @@ export async function setupAttest(config: SerializedConfig) {
   if (enabled) {
     lib = await import('@ark/attest')
   }
+  else {
+    if (typeof process !== 'undefined') {
+      process.env.ATTEST_skipTypes = 'true'
+    }
+  }
 }

@@ -569,17 +569,6 @@ export class TestProject {
         return node.resolveId(id, importer)
       },
     })
-
-    if (this.config.attest) {
-      await this.vitest.packageInstaller.ensureInstalled(
-        '@ark/attest',
-        this.config.root,
-        this.vitest.version,
-      )
-    }
-    else {
-      process.env.ATTEST_skipTypes = 'true'
-    }
   }
 
   private _serializeOverridenConfig(): SerializedConfig {
@@ -640,6 +629,17 @@ export class TestProject {
       )
     }
     return project
+  }
+
+  /** @internal */
+  async _initAttest(): Promise<void> {
+    if (this.config.attest) {
+      await this.vitest.packageInstaller.ensureInstalled(
+        '@ark/attest',
+        this.config.root,
+        this.vitest.version,
+      )
+    }
   }
 }
 
