@@ -117,7 +117,7 @@ This will pass, because it expects an error, but the word “answer” has a typ
 
 ```ts
 // @ts-expect-error answer is not a string
-assertType<string>(answr) //
+assertType<string>(answr)
 ```
 :::
 
@@ -125,7 +125,7 @@ assertType<string>(answr) //
 
 To enable typechecking, just add [`--typecheck`](/config/#typecheck) flag to your Vitest command in `package.json`:
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest --typecheck"

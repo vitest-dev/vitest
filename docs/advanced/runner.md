@@ -246,8 +246,7 @@ Vitest exposes a `Custom` task type that allows users to reuse built-int reporte
 
 A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
-```js
-// ./utils/custom.js
+```js [custom.js]
 import { createTaskCollector, getCurrentSuite, setFn } from 'vitest/suite'
 
 export { afterAll, beforeAll, describe } from 'vitest'
@@ -270,9 +269,8 @@ export const myCustomTask = createTaskCollector(
 )
 ```
 
-```js
-// ./garden/tasks.test.js
-import { afterAll, beforeAll, describe, myCustomTask } from '../custom.js'
+```js [tasks.test.js]
+import { afterAll, beforeAll, describe, myCustomTask } from './custom.js'
 import { gardener } from './gardener.js'
 
 describe('take care of the garden', () => {

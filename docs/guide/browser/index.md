@@ -7,6 +7,10 @@ outline: deep
 
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
+::: tip
+If you are looking for documentation for `expect`, `vi` or any general API like workspaces or type testing, refer to the ["Getting Started" guide](/guide/).
+:::
+
 <img alt="Vitest UI" img-light src="/ui-browser-1-light.png">
 <img alt="Vitest UI" img-dark src="/ui-browser-1-dark.png">
 
@@ -51,7 +55,7 @@ bun add -D vitest @vitest/browser
 ::: warning
 However, to run tests in CI you need to install either [`playwright`](https://npmjs.com/package/playwright) or [`webdriverio`](https://www.npmjs.com/package/webdriverio). We also recommend switching to either one of them for testing locally instead of using the default `preview` provider since it relies on simulating events instead of using Chrome DevTools Protocol.
 
-If you don't already use one of these tools, we recommend starting with Playwright because it supports parallel execution, which makes your tests run faster. Additionally, the Chrome DevTools Protocol that Playwright uses is generally faster than WebDriver.
+If you don't already use one of these tools, we recommend starting with Playwright because it supports parallel execution, which makes your tests run faster. Additionally, Playwright uses [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) which is generally faster than WebDriver.
 
 ::: tabs key:provider
 == Playwright
@@ -93,7 +97,8 @@ bun add -D vitest @vitest/browser webdriverio
 
 To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
-```ts
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     browser: {
@@ -114,6 +119,21 @@ Since Vitest 2.1.5, the CLI no longer prints the Vite URL automatically. You can
 If you have not used Vite before, make sure you have your framework's plugin installed and specified in the config. Some frameworks might require extra configuration to work - check their Vite related documentation to be sure.
 
 ::: code-group
+```ts [react]
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      name: 'chromium',
+    }
+  }
+})
+```
 ```ts [vue]
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
@@ -176,16 +196,11 @@ export default defineConfig({
 ```
 :::
 
-::: tip
-`react` doesn't require a plugin to work, but `preact` requires [extra configuration](https://preactjs.com/guide/v10/getting-started/#create-a-vite-powered-preact-app) to make aliases work.
-:::
-
 If you need to run some tests using Node-based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
 
 {#workspace-config}
 
-```ts
-// vitest.workspace.ts
+```ts [vitest.workspace.ts]
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
@@ -225,7 +240,7 @@ export default defineWorkspace([
 == Playwright
 You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/config/#browser-provideroptions) field:
 
-```ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     browser: {
@@ -282,9 +297,9 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
 
 ## TypeScript
 
-By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfile) or a [config file](/config/file) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
+By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfile) or a [config file](/config/) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
 
-::: code-block
+::: code-group
 ```ts [default]
 /// <reference types="@vitest/browser/matchers" />
 ```
@@ -294,10 +309,11 @@ By default, TypeScript doesn't recognize providers options and extra `expect` pr
 ```ts [webdriverio]
 /// <reference types="@vitest/browser/providers/webdriverio" />
 ```
+:::
 
 Alternatively, you can also add them to `compilerOptions.types` field in your `tsconfig.json` file. Note that specifying anything in this field will disable [auto loading](https://www.typescriptlang.org/tsconfig/#types) of `@types/*` packages.
 
-::: code-block
+::: code-group
 ```json [default]
 {
   "compilerOptions": {
@@ -354,11 +370,12 @@ By default, Vitest will automatically open the browser UI for development. Your 
 
 Headless mode is another option available in the browser mode. In headless mode, the browser runs in the background without a user interface, which makes it useful for running automated tests. The headless option in Vitest can be set to a boolean value to enable or disable headless mode.
 
-When using headless mode, Vitest won't open the UI automatically. If you want to continue using the UI but have tests run headlessly, you can install the [`@vitest/ui`](/guide/ui) package and pass the --ui flag when running Vitest.
+When using headless mode, Vitest won't open the UI automatically. If you want to continue using the UI but have tests run headlessly, you can install the [`@vitest/ui`](/guide/ui) package and pass the `--ui` flag when running Vitest.
 
 Here's an example configuration enabling headless mode:
 
-```ts
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     browser: {

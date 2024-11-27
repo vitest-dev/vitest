@@ -47,15 +47,13 @@ The `npx` tool will execute the specified command. By default, `npx` will first 
 
 As an example, we will write a simple test that verifies the output of a function that adds two numbers.
 
-``` js
-// sum.js
+``` js [sum.js]
 export function sum(a, b) {
   return a + b
 }
 ```
 
-``` js
-// sum.test.js
+``` js [sum.test.js]
 import { expect, test } from 'vitest'
 import { sum } from './sum.js'
 
@@ -65,12 +63,12 @@ test('adds 1 + 2 to equal 3', () => {
 ```
 
 ::: tip
-By default, tests must contain ".test." or ".spec." in their file name.
+By default, tests must contain `.test.` or `.spec.` in their file name.
 :::
 
 Next, in order to execute the test, add the following section to your `package.json`:
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest"
@@ -108,7 +106,7 @@ Vitest supports the same extensions for your configuration file as Vite does: `.
 
 If you are not using Vite as your build tool, you can configure Vitest using the `test` property in your config file:
 
-```ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -124,7 +122,7 @@ Even if you do not use Vite yourself, Vitest relies heavily on it for its transf
 
 If you are already using Vite, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash directive](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file.
 
-```ts
+```ts [vite.config.ts]
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 
@@ -137,7 +135,7 @@ export default defineConfig({
 
 The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
 
-```ts
+```ts [vite.config.ts]
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 
@@ -181,7 +179,7 @@ However, we recommend using the same file for both Vite and Vitest, instead of c
 
 Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
 
-```ts
+```ts [vitest.workspace.ts]
 import { defineWorkspace } from 'vitest/config'
 
 export default defineWorkspace([
@@ -216,7 +214,7 @@ export default defineWorkspace([
 In a project where Vitest is installed, you can use the `vitest` binary in your npm scripts, or run it directly with `npx vitest`. Here are the default npm scripts in a scaffolded Vitest project:
 
 <!-- prettier-ignore -->
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest",

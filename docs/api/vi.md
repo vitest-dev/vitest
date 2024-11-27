@@ -136,8 +136,7 @@ For example, you have this file structure:
 
 If you call `vi.mock` in a test file without a factory or options provided, it will find a file in the `__mocks__` folder to use as a module:
 
-```ts
-// increment.test.js
+```ts [increment.test.js]
 import { vi } from 'vitest'
 
 // axios is a default export from `__mocks__/axios.js`
@@ -175,14 +174,13 @@ import { increment } from './increment.js'
 ```
 :::
 
-```ts
-// ./increment.js
+```ts [increment.js]
 export function increment(number) {
   return number + 1
 }
 ```
 
-```ts
+```ts [increment.test.js]
 import { beforeEach, test } from 'vitest'
 import { increment } from './increment.js'
 
@@ -216,8 +214,7 @@ Type helper for TypeScript. Just returns the object that was passed.
 
 When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
 
-```ts
-// example.ts
+```ts [example.ts]
 export function add(x: number, y: number): number {
   return x + y
 }
@@ -227,8 +224,7 @@ export function fetchSomething(): Promise<Response> {
 }
 ```
 
-```ts
-// example.test.ts
+```ts [example.test.ts]
 import * as example from './example'
 
 vi.mock('./example')
@@ -277,14 +273,13 @@ Removes module from the mocked registry. All calls to import will return the ori
 
 The same as [`vi.unmock`](#vi-unmock), but is not hoisted to the top of the file. The next import of the module will import the original module instead of the mock. This will not unmock previously imported modules.
 
-```ts
-// ./increment.js
+```ts [increment.js]
 export function increment(number) {
   return number + 1
 }
 ```
 
-```ts
+```ts [increment.test.js]
 import { increment } from './increment.js'
 
 // increment is already mocked, because vi.mock is hoisted

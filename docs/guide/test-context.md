@@ -74,8 +74,7 @@ Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you c
 
 For example, we first create `myTest` with two fixtures, `todos` and `archive`.
 
-```ts
-// my-test.ts
+```ts [my-test.ts]
 import { test } from 'vitest'
 
 const todos = []
@@ -98,7 +97,7 @@ export const myTest = test.extend({
 
 Then we can import and use it.
 
-```ts
+```ts [my-test.test.ts]
 import { expect } from 'vitest'
 import { myTest } from './my-test.js'
 

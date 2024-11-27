@@ -677,12 +677,96 @@ Stop test execution when given number of tests have failed (default: `0`)
 
 Retry the test specific number of times if it fails (default: `0`)
 
-### diff
+### diff.aAnnotation
 
-- **CLI:** `--diff <path>`
-- **Config:** [diff](/config/#diff)
+- **CLI:** `--diff.aAnnotation <annotation>`
+- **Config:** [diff.aAnnotation](/config/#diff-aannotation)
 
-Path to a diff config that will be used to generate diff interface
+Annotation for expected lines (default: `Expected`)
+
+### diff.aIndicator
+
+- **CLI:** `--diff.aIndicator <indicator>`
+- **Config:** [diff.aIndicator](/config/#diff-aindicator)
+
+Indicator for expected lines (default: `-`)
+
+### diff.bAnnotation
+
+- **CLI:** `--diff.bAnnotation <annotation>`
+- **Config:** [diff.bAnnotation](/config/#diff-bannotation)
+
+Annotation for received lines (default: `Received`)
+
+### diff.bIndicator
+
+- **CLI:** `--diff.bIndicator <indicator>`
+- **Config:** [diff.bIndicator](/config/#diff-bindicator)
+
+Indicator for received lines (default: `+`)
+
+### diff.commonIndicator
+
+- **CLI:** `--diff.commonIndicator <indicator>`
+- **Config:** [diff.commonIndicator](/config/#diff-commonindicator)
+
+Indicator for common lines (default: ` `)
+
+### diff.contextLines
+
+- **CLI:** `--diff.contextLines <lines>`
+- **Config:** [diff.contextLines](/config/#diff-contextlines)
+
+Number of lines of context to show around each change (default: `5`)
+
+### diff.emptyFirstOrLastLinePlaceholder
+
+- **CLI:** `--diff.emptyFirstOrLastLinePlaceholder <placeholder>`
+- **Config:** [diff.emptyFirstOrLastLinePlaceholder](/config/#diff-emptyfirstorlastlineplaceholder)
+
+Placeholder for an empty first or last line (default: `""`)
+
+### diff.expand
+
+- **CLI:** `--diff.expand`
+- **Config:** [diff.expand](/config/#diff-expand)
+
+Expand all common lines (default: `true`)
+
+### diff.includeChangeCounts
+
+- **CLI:** `--diff.includeChangeCounts`
+- **Config:** [diff.includeChangeCounts](/config/#diff-includechangecounts)
+
+Include comparison counts in diff output (default: `false`)
+
+### diff.omitAnnotationLines
+
+- **CLI:** `--diff.omitAnnotationLines`
+- **Config:** [diff.omitAnnotationLines](/config/#diff-omitannotationlines)
+
+Omit annotation lines from the output (default: `false`)
+
+### diff.printBasicPrototype
+
+- **CLI:** `--diff.printBasicPrototype`
+- **Config:** [diff.printBasicPrototype](/config/#diff-printbasicprototype)
+
+Print basic prototype Object and Array (default: `true`)
+
+### diff.truncateThreshold
+
+- **CLI:** `--diff.truncateThreshold <threshold>`
+- **Config:** [diff.truncateThreshold](/config/#diff-truncatethreshold)
+
+Number of lines to show before and after each change (default: `0`)
+
+### diff.truncateAnnotation
+
+- **CLI:** `--diff.truncateAnnotation <annotation>`
+- **Config:** [diff.truncateAnnotation](/config/#diff-truncateannotation)
+
+Annotation for truncated lines (default: `... Diff result is truncated`)
 
 ### exclude
 
@@ -759,7 +843,7 @@ The name of the project to run if you are using Vitest workspace feature. This c
 - **CLI:** `--slowTestThreshold <threshold>`
 - **Config:** [slowTestThreshold](/config/#slowtestthreshold)
 
-Threshold in milliseconds for a test to be considered slow (default: `300`)
+Threshold in milliseconds for a test or suite to be considered slow (default: `300`)
 
 ### teardownTimeout
 
