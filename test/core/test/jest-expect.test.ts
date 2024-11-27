@@ -199,6 +199,13 @@ describe('jest-expect', () => {
     expect(0).toEqual(expect.oneOf([expect.any(Number), undefined]))
     expect('string').toEqual(expect.oneOf([expect.any(String), undefined]))
     expect({ a: 0 }).toEqual(expect.oneOf([expect.objectContaining({ a: 0 }), null]))
+    expect({
+      name: 'apple',
+      count: 1
+    }).toEqual({
+      name: expect.oneOf(['apple', 'banana', 'orange']),
+      count: 1,
+    })
     expect(null).toEqual(expect.oneOf([expect.any(Object)]))
     expect(null).toEqual(expect.oneOf([null]))
     expect(undefined).toEqual(expect.oneOf([undefined]))
