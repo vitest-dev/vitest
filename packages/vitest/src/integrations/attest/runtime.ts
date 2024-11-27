@@ -13,7 +13,7 @@ import { getSnapshotClient, getTestNames } from '../snapshot/chai'
 let lib: typeof import('@ark/attest')
 let enabled = false
 
-const plugin: ChaiPlugin = (chai, utils) => {
+const attestChai: ChaiPlugin = (chai, utils) => {
   function getTypeAssertions(ctx: object) {
     const parsed = parseStacktrace(utils.flag(ctx, '__vitest_expect_stack'))
     const location = parsed[0]
@@ -186,7 +186,7 @@ class AttestSnapshotWrapper {
   constructor(public value?: unknown) {}
 }
 
-const prettyFormatPlugin: PrettyFormatPlugin = {
+const attestPrettyFormat: PrettyFormatPlugin = {
   test(val: unknown) {
     return !!(val && val instanceof AttestSnapshotWrapper)
   },
@@ -204,9 +204,9 @@ const prettyFormatPlugin: PrettyFormatPlugin = {
   },
 }
 
-export async function setupAttest(config: SerializedConfig) {
-  chai.use(plugin)
-  addSerializer(prettyFormatPlugin)
+export async function attestSetup(config: SerializedConfig) {
+  chai.use(attestChai)
+  addSerializer(attestPrettyFormat)
   enabled = config.attest
   if (enabled) {
     lib = await import('@ark/attest')

@@ -14,7 +14,7 @@ async function precache() {
   })
 }
 
-export async function globalSetupAttest(project: TestProject) {
+export async function attestGlobalSetup(project: TestProject) {
   await precache()
   project.onTestsRerun(() => precache())
 }
