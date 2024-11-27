@@ -1,20 +1,18 @@
 import type { TestProject } from '../../node/project'
-import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
-
-async function precache() {
-  // TODO: programatic API
-  mkdirSync('.attest/assertions', { recursive: true })
-  execFileSync('attest', ['precache', '.attest/assertions/typescript.json'], {
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      ATTEST_attestAliases: JSON.stringify(['attest', 'expect']),
-    },
-  })
-}
+import path from 'node:path'
 
 export async function attestGlobalSetup(project: TestProject) {
-  await precache()
+  process.env.ATTEST_attestAliases = JSON.stringify(['attest', 'expect'])
+
+  const { writeAssertionData } = await import('@ark/attest')
+  const filepath = path.join(project.config.root, '.attest/assertions/typescript.json')
+  mkdirSync(path.dirname(filepath), { recursive: true })
+
+  function precache(): void {
+    return writeAssertionData(filepath)
+  }
+
+  precache()
   project.onTestsRerun(() => precache())
 }
