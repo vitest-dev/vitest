@@ -634,6 +634,7 @@ export class TestProject {
   /** @internal */
   async _initAttest(): Promise<void> {
     if (this.config.attest) {
+      // TODO: inject custom setupFiles and globalSetupFiles here?
       await this.vitest.packageInstaller.ensureInstalled(
         '@ark/attest',
         this.config.root,

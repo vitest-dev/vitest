@@ -153,7 +153,7 @@ export function replaceInlineSnap(
 
   const startMatch = startRegex.exec(codeStartingAtIndex)
 
-  const firstKeywordMatch = /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot|toMatchTypeInlineSnapshot|toMatchTypeCompletionInlineSnapshot/.exec(
+  const firstKeywordMatch = /toMatchInlineSnapshot|toThrowErrorMatchingInlineSnapshot/.exec(
     codeStartingAtIndex,
   )
 
