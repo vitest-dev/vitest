@@ -10,6 +10,7 @@ import * as chai from 'chai'
 import { getSnapshotClient, getTestNames } from '../snapshot/chai'
 
 // lazy load '@ark/attest` only when enabled
+// TODO: can we read file .attest on our own? this is used only for `getTypeAssertionsAtPosition`.
 let lib: typeof import('@ark/attest')
 let enabled = false
 
