@@ -332,9 +332,6 @@ function printPlugin(
       )
   }
   catch (error: any) {
-    if (error instanceof PrettyFormatSkipSnapshotError) {
-      throw error
-    }
     throw new PrettyFormatPluginError(error.message, error.stack)
   }
   if (typeof printed !== 'string') {
@@ -546,5 +543,3 @@ export const plugins: {
   ReactElement,
   ReactTestComponent,
 }
-
-export class PrettyFormatSkipSnapshotError extends Error {}

@@ -17,7 +17,6 @@ import type {
 } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
-import { PrettyFormatSkipSnapshotError } from '@vitest/pretty-format'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
@@ -235,6 +234,7 @@ export default class SnapshotState {
     isInline,
     error,
     rawSnapshot,
+    skip,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
@@ -250,19 +250,15 @@ export default class SnapshotState {
       this._uncheckedKeys.delete(key)
     }
 
-    let receivedSerialized: string
-    try {
-      receivedSerialized
-        = rawSnapshot && typeof received === 'string'
-          ? (received as string)
-          : serialize(received, undefined, this._snapshotFormat)
+    // allow no-op snapshot assertion for attest
+    if (skip) {
+      return { pass: true, actual: '', key, count }
     }
-    catch (e) {
-      if (e instanceof PrettyFormatSkipSnapshotError) {
-        return { pass: true, actual: '', key, count }
-      }
-      throw e
-    }
+
+    let receivedSerialized
+      = rawSnapshot && typeof received === 'string'
+        ? (received as string)
+        : serialize(received, undefined, this._snapshotFormat)
 
     if (!rawSnapshot) {
       receivedSerialized = addExtraLineBreaks(receivedSerialized)
