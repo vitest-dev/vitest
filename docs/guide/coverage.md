@@ -12,8 +12,7 @@ Both `v8` and `istanbul` support are optional. By default, `v8` will be used.
 
 You can select the coverage tool by setting `test.coverage.provider` to `v8` or `istanbul`:
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -29,13 +28,14 @@ When you start the Vitest process, it will prompt you to install the correspondi
 
 Or if you prefer to install them manually:
 
-```bash
-# For v8
+::: code-group
+```bash [v8]
 npm i -D @vitest/coverage-v8
-
-# For istanbul
+```
+```bash [istanbul]
 npm i -D @vitest/coverage-istanbul
 ```
+:::
 
 ## Coverage Setup
 
@@ -47,7 +47,7 @@ This helps Vitest to reduce the amount of files picked by [`coverage.all`](https
 To test with coverage enabled, you can pass the `--coverage` flag in CLI.
 By default, reporter `['text', 'html', 'clover', 'json']` will be used.
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest",
@@ -58,8 +58,7 @@ By default, reporter `['text', 'html', 'clover', 'json']` will be used.
 
 To configure it, set `test.coverage` options in your config file:
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -75,7 +74,7 @@ export default defineConfig({
 
 You can use custom coverage reporters by passing either the name of the package or absolute path in `test.coverage.reporter`:
 
-```ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -95,8 +94,7 @@ export default defineConfig({
 
 Custom reporters are loaded by Istanbul and must match its reporter interface. See [built-in reporters' implementation](https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib) for reference.
 
-```js
-// custom-reporter.cjs
+```js [custom-reporter.cjs]
 const { ReportBase } = require('istanbul-lib-report')
 
 module.exports = class CustomReporter extends ReportBase {
@@ -123,8 +121,7 @@ module.exports = class CustomReporter extends ReportBase {
 
 It's also possible to provide your custom coverage provider by passing `'custom'` in `test.coverage.provider`:
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -139,8 +136,7 @@ export default defineConfig({
 
 The custom providers require a `customProviderModule` option which is a module name or path where to load the `CoverageProviderModule` from. It must export an object that implements `CoverageProviderModule` as default export:
 
-```ts
-// my-custom-coverage-provider.ts
+```ts [my-custom-coverage-provider.ts]
 import type {
   CoverageProvider,
   CoverageProviderModule,
@@ -176,7 +172,7 @@ Please refer to the type definition for more details.
 
 When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vite.config.js` file.
 
-```js
+```js [vitest.config.js]
 import { defineConfig } from 'vite'
 
 export default defineConfig({

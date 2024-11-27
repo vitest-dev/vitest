@@ -175,22 +175,22 @@ Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plug
 
 1. Provide an alias
 
-```ts
-// vitest.config.js
-export default {
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
   test: {
     alias: {
-      '$app/forms': resolve('./mocks/forms.js')
-    }
-  }
-}
+      '$app/forms': resolve('./mocks/forms.js'),
+    },
+  },
+})
 ```
 
 2. Provide a plugin that resolves a virtual module
 
-```ts
-// vitest.config.js
-export default {
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+export default defineConfig({
   plugins: [
     {
       name: 'virtual-modules',
@@ -198,10 +198,10 @@ export default {
         if (id === '$app/forms') {
           return 'virtual:$app/forms'
         }
-      }
-    }
-  ]
-}
+      },
+    },
+  ],
+})
 ```
 
 The benefit of the second approach is that you can dynamically create different virtual entrypoints. If you redirect several virtual modules into a single file, then all of them will be affected by `vi.mock`, so make sure to use unique identifiers.
@@ -210,7 +210,7 @@ The benefit of the second approach is that you can dynamically create different 
 
 Beware that it is not possible to mock calls to methods that are called inside other methods of the same file. For example, in this code:
 
-```ts
+```ts [foobar.js]
 export function foo() {
   return 'foo'
 }
@@ -222,7 +222,7 @@ export function foobar() {
 
 It is not possible to mock the `foo` method from the outside because it is referenced directly. So this code will have no effect on the `foo` call inside `foobar` (but it will affect the `foo` call in other modules):
 
-```ts
+```ts [foobar.test.ts]
 import { vi } from 'vitest'
 import * as mod from './foobar.js'
 
@@ -239,8 +239,7 @@ vi.mock('./foobar.js', async (importOriginal) => {
 
 You can confirm this behaviour by providing the implementation to the `foobar` method directly:
 
-```ts
-// foobar.test.js
+```ts [foobar.test.js]
 import * as mod from './foobar.js'
 
 vi.spyOn(mod, 'foo')
@@ -249,8 +248,7 @@ vi.spyOn(mod, 'foo')
 mod.foobar(mod.foo)
 ```
 
-```ts
-// foobar.js
+```ts [foobar.js]
 export function foo() {
   return 'foo'
 }
@@ -382,8 +380,7 @@ module.exports = fs.promises
 ```
 :::
 
-```ts
-// read-hello-world.js
+```ts [read-hello-world.js]
 import { readFileSync } from 'node:fs'
 
 export function readHelloWorld(path) {
@@ -391,8 +388,7 @@ export function readHelloWorld(path) {
 }
 ```
 
-```ts
-// hello-world.test.js
+```ts [hello-world.test.js]
 import { beforeEach, expect, it, vi } from 'vitest'
 import { fs, vol } from 'memfs'
 import { readHelloWorld } from './read-hello-world.js'
@@ -595,13 +591,12 @@ vi.mock(import('./dog.js'), () => {
 
 This method can also be used to pass an instance of a class to a function that accepts the same interface:
 
-```ts
-// ./src/feed.ts
+```ts [src/feed.ts]
 function feed(dog: Dog) {
   // ...
 }
-
-// ./tests/dog.test.ts
+```
+```ts [tests/dog.test.ts]
 import { expect, test, vi } from 'vitest'
 import { feed } from '../src/feed.js'
 
@@ -667,13 +662,11 @@ You can also spy on getters and setters using the same method.
 I want to…
 
 ### Mock exported variables
-```js
-// some-path.js
+```js [example.js]
 export const getter = 'variable'
 ```
-```ts
-// some-path.test.ts
-import * as exports from './some-path.js'
+```ts [example.test.ts]
+import * as exports from './example.js'
 
 vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 ```
@@ -686,21 +679,20 @@ vi.spyOn(exports, 'getter', 'get').mockReturnValue('mocked')
 Don't forget that a `vi.mock` call is hoisted to top of the file. It will always be executed before all imports.
 :::
 
-```ts
-// ./some-path.js
+```ts [example.js]
 export function method() {}
 ```
 ```ts
-import { method } from './some-path.js'
+import { method } from './example.js'
 
-vi.mock('./some-path.js', () => ({
+vi.mock('./example.js', () => ({
   method: vi.fn()
 }))
 ```
 
 2. Example with `vi.spyOn`:
 ```ts
-import * as exports from './some-path.js'
+import * as exports from './example.js'
 
 vi.spyOn(exports, 'method').mockImplementation(() => {})
 ```
@@ -708,14 +700,13 @@ vi.spyOn(exports, 'method').mockImplementation(() => {})
 ### Mock an exported class implementation
 
 1. Example with `vi.mock` and `.prototype`:
-```ts
-// ./some-path.ts
+```ts [example.js]
 export class SomeClass {}
 ```
 ```ts
-import { SomeClass } from './some-path.js'
+import { SomeClass } from './example.js'
 
-vi.mock(import('./some-path.js'), () => {
+vi.mock(import('./example.js'), () => {
   const SomeClass = vi.fn()
   SomeClass.prototype.someMethod = vi.fn()
   return { SomeClass }
@@ -726,7 +717,7 @@ vi.mock(import('./some-path.js'), () => {
 2. Example with `vi.spyOn`:
 
 ```ts
-import * as mod from './some-path.js'
+import * as mod from './example.js'
 
 const SomeClass = vi.fn()
 SomeClass.prototype.someMethod = vi.fn()
@@ -738,26 +729,23 @@ vi.spyOn(mod, 'SomeClass').mockImplementation(SomeClass)
 
 1. Example using cache:
 
-```ts
-// some-path.ts
+```ts [example.js]
 export function useObject() {
   return { method: () => true }
 }
 ```
 
-```ts
-// useObject.js
-import { useObject } from './some-path.js'
+```ts [useObject.js]
+import { useObject } from './example.js'
 
 const obj = useObject()
 obj.method()
 ```
 
-```ts
-// useObject.test.js
-import { useObject } from './some-path.js'
+```ts [useObject.test.js]
+import { useObject } from './example.js'
 
-vi.mock(import('./some-path.js'), () => {
+vi.mock(import('./example.js'), () => {
   let _cache
   const useObject = () => {
     if (!_cache) {
@@ -863,8 +851,7 @@ it('the value is restored before running an other test', () => {
 })
 ```
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 export default defineConfig({
   test: {
     unstubEnvs: true,

@@ -153,8 +153,7 @@ export default defineConfig({
 
 Workspace projects do not support all configuration properties. For better type safety, use the `defineProject` method instead of `defineConfig` within project configuration files:
 
-:::code-group
-```ts [packages/a/vitest.config.ts] twoslash
+```ts twoslash [packages/a/vitest.config.ts]
 // @errors: 2769
 import { defineProject } from 'vitest/config'
 
@@ -167,13 +166,12 @@ export default defineProject({
   }
 })
 ```
-:::
 
 ## Running tests
 
 To run tests inside the workspace, define a script in your root `package.json`:
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest"
@@ -237,7 +235,6 @@ bun test --project e2e --project unit
 
 None of the configuration options are inherited from the root-level config file. You can create a shared config file and merge it with the project config yourself:
 
-::: code-group
 ```ts [packages/a/vitest.config.ts]
 import { defineProject, mergeConfig } from 'vitest/config'
 import configShared from '../vitest.shared.js'
@@ -251,7 +248,6 @@ export default mergeConfig(
   })
 )
 ```
-:::
 
 Additionally, at the `defineWorkspace` level, you can use the `extends` option to inherit from your root-level configuration. All options will be merged.
 

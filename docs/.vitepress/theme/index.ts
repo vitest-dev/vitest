@@ -10,6 +10,7 @@ import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
 import '@shikijs/vitepress-twoslash/style.css'
+import 'virtual:group-icons.css'
 
 if (inBrowser) {
   import('./pwa')

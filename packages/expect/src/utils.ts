@@ -56,9 +56,9 @@ export function recordAsyncExpect(
     })
 
     return {
-      then(onFullfilled, onRejected) {
+      then(onFulfilled, onRejected) {
         resolved = true
-        return promise.then(onFullfilled, onRejected)
+        return promise.then(onFulfilled, onRejected)
       },
       catch(onRejected) {
         return promise.catch(onRejected)

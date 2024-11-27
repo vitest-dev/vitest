@@ -137,7 +137,7 @@ expect.addSnapshotSerializer({
 
 We also support [snapshotSerializers](/config/#snapshotserializers) option to implicitly add custom serializers.
 
-```ts
+```ts [path/to/custom-serializer.ts]
 import { SnapshotSerializer } from 'vitest'
 
 export default {
@@ -157,12 +157,12 @@ export default {
 } satisfies SnapshotSerializer
 ```
 
-```ts
-import { defineConfig } from 'vite'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    snapshotSerializers: ['path/to/custom-serializer.ts']
+    snapshotSerializers: ['path/to/custom-serializer.ts'],
   },
 })
 ```
@@ -242,14 +242,15 @@ test('snapshot', () => {
 
 We believe this is a more reasonable default for readability and overall DX. If you still prefer Jest's behavior, you can change your config:
 
-```ts
-// vitest.config.js
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
 export default defineConfig({
   test: {
     snapshotFormat: {
-      printBasicPrototype: true
-    }
-  }
+      printBasicPrototype: true,
+    },
+  },
 })
 ```
 

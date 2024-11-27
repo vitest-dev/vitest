@@ -16,9 +16,7 @@ This guide explains how to write tests inside your source code. If you need to w
 
 To get started, put a `if (import.meta.vitest)` block at the end of your source file and write some tests inside it. For example:
 
-```ts
-// src/index.ts
-
+```ts [src/index.ts]
 // the implementation
 export function add(...args: number[]) {
   return args.reduce((a, b) => a + b, 0)
@@ -37,8 +35,7 @@ if (import.meta.vitest) {
 
 Update the `includeSource` config for Vitest to grab the files under `src/`:
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -58,8 +55,7 @@ $ npx vitest
 
 For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -77,8 +73,7 @@ export default defineConfig({
 <details mt4>
 <summary text-xl>unbuild</summary>
 
-```ts
-// build.config.ts
+```ts [build.config.ts]
 import { defineBuildConfig } from 'unbuild'
 
 export default defineBuildConfig({
@@ -96,8 +91,7 @@ Learn more: [unbuild](https://github.com/unjs/unbuild)
 <details my2>
 <summary text-xl>Rollup</summary>
 
-```ts
-// rollup.config.js
+```ts [rollup.config.js]
 import replace from '@rollup/plugin-replace' // [!code ++]
 
 export default {
@@ -118,8 +112,7 @@ Learn more: [Rollup](https://rollupjs.org/)
 
 To get TypeScript support for `import.meta.vitest`, add `vitest/importMeta` to your `tsconfig.json`:
 
-```json
-// tsconfig.json
+```json [tsconfig.json]
 {
   "compilerOptions": {
     "types": [
