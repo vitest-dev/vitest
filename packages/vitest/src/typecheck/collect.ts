@@ -1,4 +1,5 @@
 import type { File, Suite, Test } from '@vitest/runner'
+import type { Node } from 'estree'
 import type { RawSourceMap } from 'vite-node'
 import type { TestProject } from '../node/project'
 import {
@@ -10,7 +11,6 @@ import {
 import { ancestor as walkAst } from 'acorn-walk'
 import { relative } from 'pathe'
 import { parseAstAsync } from 'vite'
-import type { Node } from "estree"
 
 interface ParsedFile extends File {
   start: number
@@ -85,7 +85,7 @@ export async function collectTests(
       return getName(callee.tag)
     }
     if (callee.type === 'MemberExpression') {
-      const object = callee.object as any;
+      const object = callee.object as any
       // direct call as `__vite_ssr_exports_0__.test()`
       if (object?.name?.startsWith('__vite_ssr_')) {
         return getName(callee.property)
@@ -94,10 +94,10 @@ export async function collectTests(
       return getName(object?.property)
     }
     // unwrap (0, ...)
-    if (callee.type === "SequenceExpression" && callee.expressions.length === 2) {
-      const [e0, e1] = callee.expressions;
-      if (e0.type === "Literal" && e0.value === 0) {
-        return getName(e1);
+    if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
+      const [e0, e1] = callee.expressions
+      if (e0.type === 'Literal' && e0.value === 0) {
+        return getName(e1)
       }
     }
     return null
