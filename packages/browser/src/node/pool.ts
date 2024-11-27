@@ -12,7 +12,7 @@ async function waitForTests(
   project: TestProject,
   files: string[],
 ) {
-  const context = project.browser!.state.createAsyncContext(method, contextId, files)
+  const context = project.browser!.state.createAsyncContext(method, contextId, files, project.name)
   return await context
 }
 

@@ -80,7 +80,6 @@ export class TestProject {
     /** @deprecated */
     public path: string | number,
     vitest: Vitest,
-    /** @deprecated */
     public options?: InitializeProjectOptions,
   ) {
     this.vitest = vitest
@@ -492,7 +491,7 @@ export class TestProject {
           },
         }),
       ],
-      [CoverageTransform(this.ctx)],
+      [CoverageTransform(this.vitest)],
     )
     this.browser = browser
     if (this.config.browser.ui) {
@@ -605,7 +604,7 @@ export class TestProject {
     if (!this.browser) {
       await this._initBrowserServer()
     }
-    await this.browser?.initBrowserProvider()
+    await this.browser?.initBrowserProvider(this)
   }
 
   /** @internal */
@@ -627,6 +626,47 @@ export class TestProject {
       )
     }
     return project
+  }
+
+  /** @internal */
+  static _cloneBrowserProject(project: TestProject, config: ResolvedConfig): TestProject {
+    const clone = new TestProject(
+      project.path,
+      project.vitest,
+    )
+    clone.vitenode = project.vitenode
+    clone.runner = project.runner
+    clone._vite = project._vite
+    clone._config = config
+    for (const _providedKey in config.provide) {
+      const providedKey = _providedKey as keyof ProvidedContext
+      // type is very strict here, so we cast it to any
+      (clone.provide as (key: string, value: unknown) => void)(
+        providedKey,
+        project.config.provide[providedKey],
+      )
+    }
+    clone._initBrowserServer = async function _initBrowserServer() {
+      if (clone.browser) {
+        return
+      }
+      await project._initBrowserServer()
+      const { cloneBrowserServer } = await import('@vitest/browser')
+      this.browser = cloneBrowserServer(clone, project.browser!)
+    }
+    clone._initBrowserProvider = async function _initBrowserProvider() {
+      if (!this.isBrowserEnabled() || this.browser?.provider) {
+        return
+      }
+      if (!this.browser) {
+        await this._initBrowserServer()
+      }
+      if (!project.browser?.provider) {
+        await project.browser?.initBrowserProvider(project)
+      }
+      await this.browser?.initBrowserProvider(clone)
+    }
+    return clone
   }
 }
 

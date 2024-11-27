@@ -80,7 +80,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         launchOptions.args.push(`--remote-debugging-port=${port}`)
         launchOptions.args.push(`--remote-debugging-address=${host}`)
 
-        this.project.logger.log(`Debugger listening on ws://${host}:${port}`)
+        this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
       }
 
       // start Vitest UI maximized only on supported browsers

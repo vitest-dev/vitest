@@ -1,5 +1,4 @@
 import type { Vitest } from '../core'
-import type { TestProject } from '../project'
 import type { TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
@@ -8,7 +7,7 @@ import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { initializeProject } from '../project'
+import { initializeProject, TestProject } from '../project'
 import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
@@ -97,7 +96,7 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return [vitest._createRootProject()]
+    return resolveBrowserWorkspace([vitest._createRootProject()])
   }
 
   const resolvedProjects = await Promise.all(projectPromises)
@@ -127,6 +126,43 @@ export async function resolveWorkspace(
     names.add(name)
   }
 
+  return resolveBrowserWorkspace(resolvedProjects)
+}
+
+export function resolveBrowserWorkspace(
+  resolvedProjects: TestProject[],
+) {
+  const names = new Set<string>(resolvedProjects.map(p => p.name))
+  resolvedProjects.forEach((project) => {
+    const capabilities = project.config.browser.capabilities
+    if (!project.config.browser.enabled || !capabilities || capabilities.length === 0) {
+      return
+    }
+    const [firstCapability, ...restCapabilities] = capabilities
+
+    project.config.name ||= firstCapability.browser
+    project.config.browser.name = firstCapability.browser
+    project.config.browser.providerOptions = firstCapability
+
+    restCapabilities.forEach(({ browser, ...capability }) => {
+      if (names.has(browser)) {
+        // TODO: better error message - add how to fix
+        throw new Error(`Project name "${browser}" already exists in the workspace.`)
+      }
+
+      const clone = TestProject._cloneBrowserProject(project, {
+        ...project.config,
+        name: browser,
+        browser: {
+          ...project.config.browser,
+          name: browser,
+          providerOptions: capability,
+        },
+      })
+
+      resolvedProjects.push(clone)
+    })
+  })
   return resolvedProjects
 }
 

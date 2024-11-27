@@ -23,8 +23,10 @@ export async function resolveTester(
   }
 
   const { contextId, testFile } = server.resolveTesterUrl(url.pathname)
-  const project = server.project
   const state = server.state
+  const context = state.getContext(contextId)
+  // TODO: what happens if no context? (how is it possible?)
+  const project = server.vitest.getProjectByName(context?.projectName ?? '')
   const { testFiles } = await project.globTestFiles()
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
@@ -33,7 +35,6 @@ export async function resolveTester(
       ? '__vitest_browser_runner__.files'
       : JSON.stringify([testFile])
   const iframeId = JSON.stringify(testFile)
-  const context = state.getContext(contextId)
   const files = context?.files ?? []
   const method = context?.method ?? 'run'
 
@@ -43,7 +44,7 @@ export async function resolveTester(
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
-    __VITEST_CONFIG__: JSON.stringify(server.getSerializableConfig()),
+    __VITEST_CONFIG__: JSON.stringify(server.wrapSerializedConfig(project.name)),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: server.vite.config.root,

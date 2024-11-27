@@ -1,5 +1,5 @@
 import type { Plugin } from 'vitest/config'
-import type { TestProject } from 'vitest/node'
+import type { BrowserServer as IBrowserServer, TestProject } from 'vitest/node'
 import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
@@ -18,10 +18,10 @@ export async function createBrowserServer(
   prePlugins: Plugin[] = [],
   postPlugins: Plugin[] = [],
 ) {
-  if (project.ctx.version !== version) {
-    project.ctx.logger.warn(
+  if (project.vitest.version !== version) {
+    project.vitest.logger.warn(
       c.yellow(
-        `Loaded ${c.inverse(c.yellow(` vitest@${project.ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/browser@${version} `))}.`
+        `Loaded ${c.inverse(c.yellow(` vitest@${project.vitest.version} `))} and ${c.inverse(c.yellow(` @vitest/browser@${version} `))}.`
         + '\nRunning mixed versions is not supported and may lead into bugs'
         + '\nUpdate your dependencies and make sure the versions match.',
       ),
@@ -34,7 +34,7 @@ export async function createBrowserServer(
 
   const logLevel = (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info'
 
-  const logger = createViteLogger(project.logger, logLevel, {
+  const logger = createViteLogger(project.vitest.logger, logLevel, {
     allowClearScreen: false,
   })
 
@@ -76,4 +76,17 @@ export async function createBrowserServer(
   setupBrowserRpc(server)
 
   return server
+}
+
+export function cloneBrowserServer(
+  project: TestProject,
+  browserServer: IBrowserServer,
+) {
+  const clone = new BrowserServer(
+    project,
+    '/',
+  )
+  clone.state = browserServer.state as any
+  clone.setServer(browserServer.vite)
+  return clone
 }

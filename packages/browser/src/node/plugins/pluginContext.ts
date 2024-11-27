@@ -5,7 +5,6 @@ import type { BrowserServer } from '../server'
 import { fileURLToPath } from 'node:url'
 import { slash } from '@vitest/utils'
 import { dirname, resolve } from 'pathe'
-import builtinCommands from '../commands/index'
 
 const VIRTUAL_ID_CONTEXT = '\0@vitest/browser/context'
 const ID_CONTEXT = '@vitest/browser/context'
@@ -13,21 +12,6 @@ const ID_CONTEXT = '@vitest/browser/context'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default function BrowserContext(server: BrowserServer): Plugin {
-  const project = server.project
-  project.config.browser.commands ??= {}
-  for (const [name, command] of Object.entries(builtinCommands)) {
-    project.config.browser.commands[name] ??= command
-  }
-
-  // validate names because they can't be used as identifiers
-  for (const command in project.config.browser.commands) {
-    if (!/^[a-z_$][\w$]*$/i.test(command)) {
-      throw new Error(
-        `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
-      )
-    }
-  }
-
   return {
     name: 'vitest:browser:virtual-module:context',
     enforce: 'pre',
@@ -48,7 +32,7 @@ async function generateContextFile(
   this: PluginContext,
   server: BrowserServer,
 ) {
-  const commands = Object.keys(server.project.config.browser.commands ?? {})
+  const commands = Object.keys(server.config.browser.commands ?? {})
   const filepathCode
     = '__vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined'
   const provider = server.provider
@@ -77,7 +61,7 @@ export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
   provider: ${JSON.stringify(provider.name)},
-  browser: ${JSON.stringify(server.project.config.browser.name)},
+  browser: __vitest_browser_runner__.config.browser.name,
   commands: {
     ${commandsCode}
   },

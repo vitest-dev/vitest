@@ -7,7 +7,6 @@ export async function resolveOrchestrator(
   url: URL,
   res: ServerResponse<IncomingMessage>,
 ) {
-  const project = server.project
   let contextId = url.searchParams.get('contextId')
   // it's possible to open the page without a context
   if (!contextId) {
@@ -15,7 +14,8 @@ export async function resolveOrchestrator(
     contextId = contexts[contexts.length - 1] ?? 'none'
   }
 
-  const files = server.state.getContext(contextId!)?.files ?? []
+  const contextState = server.state.getContext(contextId!)
+  const files = contextState?.files ?? []
 
   const injectorJs = typeof server.injectorJs === 'string'
     ? server.injectorJs
@@ -23,7 +23,8 @@ export async function resolveOrchestrator(
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
-    __VITEST_CONFIG__: JSON.stringify(server.getSerializableConfig()),
+    // TODO: check when context is not found
+    __VITEST_CONFIG__: JSON.stringify(server.wrapSerializedConfig(contextState?.projectName || '')),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: server.vite.config.root,
     }),
@@ -39,7 +40,7 @@ export async function resolveOrchestrator(
 
   if (!server.orchestratorScripts) {
     server.orchestratorScripts = (await server.formatScripts(
-      project.config.browser.orchestratorScripts,
+      server.config.browser.orchestratorScripts,
     )).map((script) => {
       let html = '<script '
       for (const attr in script.attrs || {}) {
@@ -55,7 +56,7 @@ export async function resolveOrchestrator(
     : await server.orchestratorHtml
 
   // if UI is enabled, use UI HTML and inject the orchestrator script
-  if (project.config.browser.ui) {
+  if (server.config.browser.ui) {
     const manifestContent = server.manifest instanceof Promise
       ? await server.manifest
       : server.manifest
