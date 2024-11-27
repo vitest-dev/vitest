@@ -302,8 +302,16 @@ export default ({ mode }: { mode: string }) => {
             items: guide(),
           },
           {
-            text: 'Browser Mode',
-            link: '/guide/browser',
+            items: [
+              {
+                text: 'Browser Mode',
+                link: '/guide/browser',
+              },
+              {
+                text: 'Advanced API',
+                link: '/advanced/api',
+              },
+            ],
           },
         ],
       },
