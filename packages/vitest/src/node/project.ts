@@ -637,7 +637,6 @@ export class TestProject {
       await this.vitest.packageInstaller.ensureInstalled(
         '@ark/attest',
         this.config.root,
-        this.vitest.version,
       )
     }
   }
