@@ -15,15 +15,6 @@ async function precache() {
 }
 
 export async function globalSetupAttest(project: TestProject) {
-  if (!project.config.attest) {
-    process.env.ATTEST_skipTypes = 'true'
-    return
-  }
-  await project.vitest.packageInstaller.ensureInstalled(
-    '@ark/attest',
-    project.config.root,
-    project.vitest.version,
-  )
   await precache()
   project.onTestsRerun(() => precache())
 }

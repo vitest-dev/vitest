@@ -219,10 +219,12 @@ export class TestProject {
       this.runner,
       this.config.globalSetup,
     )
-    this._globalSetups.push({
-      file: 'attest',
-      setup: globalSetupAttest,
-    })
+    if (this.config.attest) {
+      this._globalSetups.push({
+        file: 'attest',
+        setup: globalSetupAttest,
+      })
+    }
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.(this)
@@ -567,6 +569,17 @@ export class TestProject {
         return node.resolveId(id, importer)
       },
     })
+
+    if (this.config.attest) {
+      await this.vitest.packageInstaller.ensureInstalled(
+        '@ark/attest',
+        this.config.root,
+        this.vitest.version,
+      )
+    }
+    else {
+      process.env.ATTEST_skipTypes = 'true'
+    }
   }
 
   private _serializeOverridenConfig(): SerializedConfig {
