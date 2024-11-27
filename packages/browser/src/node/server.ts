@@ -5,8 +5,10 @@ import type {
   BrowserScript,
   CDPSession,
   BrowserServer as IBrowserServer,
+  ResolvedConfig,
   TestProject,
   Vite,
+  Vitest,
 } from 'vitest/node'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
@@ -15,6 +17,7 @@ import { slash } from '@vitest/utils'
 import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
 import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
+import builtinCommands from './commands/index'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 
@@ -40,11 +43,15 @@ export class BrowserServer implements IBrowserServer {
   public vite!: Vite.ViteDevServer
 
   private stackTraceOptions: StackTraceParserOptions
+  public vitest: Vitest
+  public config: ResolvedConfig
 
   constructor(
-    public project: TestProject,
+    project: TestProject,
     public base: string,
   ) {
+    this.vitest = project.vitest
+    this.config = project.config
     this.stackTraceOptions = {
       frameFilter: project.config.onStackTrace,
       getSourceMap: (id) => {
@@ -62,6 +69,20 @@ export class BrowserServer implements IBrowserServer {
         }
         return id
       },
+    }
+
+    project.config.browser.commands ??= {}
+    for (const [name, command] of Object.entries(builtinCommands)) {
+      project.config.browser.commands[name] ??= command
+    }
+
+    // validate names because they can't be used as identifiers
+    for (const command in project.config.browser.commands) {
+      if (!/^[a-z_$][\w$]*$/i.test(command)) {
+        throw new Error(
+          `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
+        )
+      }
     }
 
     this.state = new BrowserServerState()
@@ -115,8 +136,9 @@ export class BrowserServer implements IBrowserServer {
     this.vite = server
   }
 
-  getSerializableConfig() {
-    const config = wrapConfig(this.project.getSerializableConfig())
+  wrapSerializedConfig(projectName: string) {
+    const project = this.vitest.getProjectByName(projectName)
+    const config = wrapConfig(project.serializedConfig)
     config.env ??= {}
     config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
     return config
@@ -165,28 +187,28 @@ export class BrowserServer implements IBrowserServer {
     return (await Promise.all(promises))
   }
 
-  async initBrowserProvider() {
+  async initBrowserProvider(project: TestProject) {
     if (this.provider) {
       return
     }
-    const Provider = await getBrowserProvider(this.project.config.browser, this.project)
+    const Provider = await getBrowserProvider(project.config.browser, project)
     this.provider = new Provider()
-    const browser = this.project.config.browser.name
+    const browser = project.config.browser.name
     if (!browser) {
       throw new Error(
-        `[${this.project.name}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
+        `[${project.name}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
       )
     }
     const supportedBrowsers = this.provider.getSupportedBrowsers()
     if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
       throw new Error(
-        `[${this.project.name}] Browser "${browser}" is not supported by the browser provider "${
+        `[${project.name}] Browser "${browser}" is not supported by the browser provider "${
           this.provider.name
         }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
       )
     }
-    const providerOptions = this.project.config.browser.providerOptions
-    await this.provider.initialize(this.project, {
+    const providerOptions = project.config.browser.providerOptions
+    await this.provider.initialize(project, {
       browser,
       options: providerOptions,
     })

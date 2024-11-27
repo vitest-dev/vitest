@@ -1,5 +1,5 @@
 import type { ErrorWithDiff } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { BrowserServer } from './server'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
@@ -16,9 +16,8 @@ const debug = createDebugger('vitest:browser:api')
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
 export function setupBrowserRpc(server: BrowserServer) {
-  const project = server.project
   const vite = server.vite
-  const ctx = project.ctx
+  const vitest = server.vitest
 
   const wss = new WebSocketServer({ noServer: true })
 
@@ -32,13 +31,16 @@ export function setupBrowserRpc(server: BrowserServer) {
       return
     }
 
+    // TODO: validate that params exist
     const type = searchParams.get('type') ?? 'tester'
     const sessionId = searchParams.get('sessionId') ?? '0'
+    const projectName = searchParams.get('projectName') ?? ''
+    const project = vitest.getProjectByName(projectName)
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(sessionId, ws)
+      const rpc = setupClient(project, sessionId, ws)
       const state = server.state
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(sessionId, rpc)
@@ -61,7 +63,7 @@ export function setupBrowserRpc(server: BrowserServer) {
     }
   }
 
-  function setupClient(sessionId: string, ws: WebSocket) {
+  function setupClient(project: TestProject, sessionId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(server.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
@@ -73,32 +75,32 @@ export function setupBrowserRpc(server: BrowserServer) {
             const _error = error as ErrorWithDiff
             _error.stacks = server.parseErrorStacktrace(_error)
           }
-          ctx.state.catchError(error, type)
+          vitest.state.catchError(error, type)
         },
         async onCollected(files) {
-          ctx.state.collectFiles(project, files)
-          await ctx.report('onCollected', files)
+          vitest.state.collectFiles(project, files)
+          await vitest.report('onCollected', files)
         },
         async onTaskUpdate(packs) {
-          ctx.state.updateTasks(packs)
-          await ctx.report('onTaskUpdate', packs)
+          vitest.state.updateTasks(packs)
+          await vitest.report('onTaskUpdate', packs)
         },
         onAfterSuiteRun(meta) {
-          ctx.coverageProvider?.onAfterSuiteRun(meta)
+          vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
         sendLog(log) {
-          return ctx.report('onUserConsoleLog', log)
+          return vitest.report('onUserConsoleLog', log)
         },
         resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
-            config: project.getSerializableConfig(),
+          return vitest.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+            config: project.serializedConfig,
           })
         },
         resolveSnapshotRawPath(testPath, rawPath) {
-          return ctx.snapshot.resolveRawPath(testPath, rawPath)
+          return vitest.snapshot.resolveRawPath(testPath, rawPath)
         },
         snapshotSaved(snapshot) {
-          ctx.snapshot.add(snapshot)
+          vitest.snapshot.add(snapshot)
         },
         async readSnapshotFile(snapshotPath) {
           checkFileAccess(snapshotPath)
@@ -124,16 +126,16 @@ export function setupBrowserRpc(server: BrowserServer) {
           return mod?.transformResult?.map
         },
         onCancel(reason) {
-          ctx.cancelCurrentRun(reason)
+          vitest.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {
           return mockResolver.resolveId(id, importer)
         },
         debug(...args) {
-          ctx.logger.console.debug(...args)
+          vitest.logger.console.debug(...args)
         },
         getCountOfFailedTests() {
-          return ctx.state.getCountOfFailedTests()
+          return vitest.state.getCountOfFailedTests()
         },
         async triggerCommand(contextId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', contextId, command)
@@ -201,7 +203,7 @@ export function setupBrowserRpc(server: BrowserServer) {
       },
     )
 
-    ctx.onCancel(reason => rpc.onCancel(reason))
+    vitest.onCancel(reason => rpc.onCancel(reason))
 
     return rpc
   }

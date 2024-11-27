@@ -55,8 +55,13 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
+   * @deprecated use `capabilities` instead
    */
   name: string
+
+  capabilities?: ({
+    browser: string
+  } & BrowserProviderOptions)[]
 
   /**
    * Browser provider
@@ -74,6 +79,7 @@ export interface BrowserConfigOptions {
    *
    * @example
    * { playwright: { launch: { devtools: true } }
+   * @deprecated use `capabilities` instead
    */
   providerOptions?: BrowserProviderOptions
 
@@ -187,6 +193,7 @@ export interface BrowserCommandContext {
 export interface BrowserServerStateContext {
   files: string[]
   method: 'run' | 'collect'
+  projectName: string
   resolve: () => void
   reject: (v: unknown) => void
 }
@@ -200,7 +207,7 @@ export interface BrowserOrchestrator {
 export interface BrowserServerState {
   orchestrators: Map<string, BrowserOrchestrator>
   getContext: (contextId: string) => BrowserServerStateContext | undefined
-  createAsyncContext: (method: 'collect' | 'run', contextId: string, files: string[]) => Promise<void>
+  createAsyncContext: (method: 'collect' | 'run', contextId: string, files: string[], projectName: string) => Promise<void>
 }
 
 export interface BrowserServer {
@@ -208,7 +215,7 @@ export interface BrowserServer {
   state: BrowserServerState
   provider: BrowserProvider
   close: () => Promise<void>
-  initBrowserProvider: () => Promise<void>
+  initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: ErrorWithDiff, options?: StackTraceParserOptions) => ParsedStack[]
 }

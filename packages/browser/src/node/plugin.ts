@@ -1,6 +1,6 @@
 import type { Stats } from 'node:fs'
 import type { HtmlTagDescriptor } from 'vite'
-import type { TestProject } from 'vitest/node'
+import type { Vitest } from 'vitest/node'
 import type { BrowserServer } from './server'
 import { lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -22,10 +22,8 @@ export type { BrowserCommand } from 'vitest/node'
 const versionRegexp = /(?:\?|&)v=\w{8}/
 
 export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
-  const project = browserServer.project
-
   function isPackageExists(pkg: string, root: string) {
-    return browserServer.project.ctx.packageInstaller.isPackageExists?.(pkg, {
+    return browserServer.vitest.packageInstaller.isPackageExists?.(pkg, {
       paths: [root],
     })
   }
@@ -89,7 +87,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           },
         )
 
-        const coverageFolder = resolveCoverageFolder(project)
+        const coverageFolder = resolveCoverageFolder(browserServer.vitest)
         const coveragePath = coverageFolder ? coverageFolder[1] : undefined
         if (coveragePath && base === coveragePath) {
           throw new Error(
@@ -113,7 +111,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           )
         }
 
-        const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
+        const screenshotFailures = browserServer.config.browser.ui && browserServer.config.browser.screenshotFailures
 
         if (screenshotFailures) {
         // eslint-disable-next-line prefer-arrow-callback
@@ -184,16 +182,17 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
+        const project = browserServer.vitest.getProjectByName(browserServer.config.name)
         const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
         )
-        const setupFiles = toArray(project.config.setupFiles)
+        const setupFiles = toArray(browserServer.config.setupFiles)
 
         // replace env values - cannot be reassign at runtime
         const define: Record<string, string> = {}
-        for (const env in (project.config.env || {})) {
-          const stringValue = JSON.stringify(project.config.env[env])
+        for (const env in (browserServer.config.env || {})) {
+          const stringValue = JSON.stringify(browserServer.config.env[env])
           define[`import.meta.env.${env}`] = stringValue
         }
 
@@ -204,7 +203,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           resolve(vitestDist, 'browser.js'),
           resolve(vitestDist, 'runners.js'),
           resolve(vitestDist, 'utils.js'),
-          ...(project.config.snapshotSerializers || []),
+          ...(browserServer.config.snapshotSerializers || []),
         ]
 
         const exclude = [
@@ -230,22 +229,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           'msw/browser',
         ]
 
-        if (typeof project.config.diff === 'string') {
-          entries.push(project.config.diff)
+        if (typeof browserServer.config.diff === 'string') {
+          entries.push(browserServer.config.diff)
         }
 
-        if (project.ctx.coverageProvider) {
-          const coverage = project.ctx.config.coverage
+        if (browserServer.vitest.coverageProvider) {
+          const coverage = browserServer.vitest.config.coverage
           const provider = coverage.provider
           if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [project.config.root])
+            const path = tryResolve('@vitest/coverage-v8', [browserServer.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [project.config.root])
+            const path = tryResolve('@vitest/coverage-istanbul', [browserServer.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-istanbul')
@@ -266,7 +265,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           '@vitest/browser > @testing-library/dom',
         ]
 
-        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
+        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : browserServer.config.root
 
         const svelte = isPackageExists('vitest-browser-svelte', fileRoot)
         if (svelte) {
@@ -360,7 +359,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
-        const defaultPort = project.ctx._browserLastPort++
+        const defaultPort = browserServer.vitest._browserLastPort++
 
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
@@ -378,8 +377,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         viteConfig.server.fs.allow = viteConfig.server.fs.allow || []
         viteConfig.server.fs.allow.push(
           ...resolveFsAllow(
-            project.ctx.config.root,
-            project.ctx.server.config.configFile,
+            browserServer.vitest.config.root,
+            browserServer.vitest.server.config.configFile,
           ),
           distRoot,
         )
@@ -394,6 +393,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
+        const project = browserServer.vitest.getProjectByName(browserServer.config.name)
         if (!project.isTestFile(id) || !code.includes('import.meta.vitest')) {
           return
         }
@@ -431,7 +431,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
 
         if (!browserServer.testerScripts) {
           const testerScripts = await browserServer.formatScripts(
-            project.config.browser.testerScripts,
+            browserServer.config.browser.testerScripts,
           )
           browserServer.testerScripts = testerScripts
         }
@@ -583,8 +583,8 @@ function getRequire() {
   return _require
 }
 
-function resolveCoverageFolder(project: TestProject) {
-  const options = project.ctx.config
+function resolveCoverageFolder(vitest: Vitest) {
+  const options = vitest.config
   const htmlReporter = options.coverage?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {
       if (typeof reporter === 'string') {

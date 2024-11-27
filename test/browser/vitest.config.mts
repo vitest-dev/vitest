@@ -39,6 +39,10 @@ export default defineConfig({
     browser: {
       enabled: true,
       name: browser,
+      capabilities: [
+        { browser: 'webkit' },
+        { browser: 'firefox' },
+      ],
       headless: false,
       provider,
       isolate: false,

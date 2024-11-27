@@ -36,7 +36,7 @@ import { TestProject } from './project'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { StateManager } from './state'
-import { resolveWorkspace } from './workspace/resolveWorkspace'
+import { resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -286,7 +286,7 @@ export class Vitest {
     this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
-      return [this._createRootProject()]
+      return resolveBrowserWorkspace([this._createRootProject()])
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
