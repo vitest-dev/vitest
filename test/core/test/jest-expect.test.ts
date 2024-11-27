@@ -194,6 +194,14 @@ describe('jest-expect', () => {
         sum: expect.closeTo(0.4),
       })
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
+
+    expect(0).toEqual(expect.oneOf([0, 1, 2]))
+    expect(0).toEqual(expect.oneOf([expect.any(Number), undefined]))
+    expect('string').toEqual(expect.oneOf([expect.any(String), undefined]))
+    expect({ a: 0 }).toEqual(expect.oneOf([expect.objectContaining({ a: 0 }), null]))
+    expect(null).toEqual(expect.oneOf([expect.any(Object)]))
+    expect(null).toEqual(expect.oneOf([null]))
+    expect(undefined).toEqual(expect.oneOf([undefined]))
   })
 
   it('asymmetric matchers negate', () => {
@@ -201,6 +209,11 @@ describe('jest-expect', () => {
     expect('bar').toEqual(expect.not.stringMatching(/zoo/))
     expect({ bar: 'zoo' }).toEqual(expect.not.objectContaining({ zoo: 'bar' }))
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
+    expect(0).toEqual(expect.not.oneOf([1, 2, 3]))
+    expect('foo').toEqual(expect.not.oneOf([expect.any(Number), undefined]))
+    expect({ a: 0 }).toEqual(expect.not.oneOf([expect.objectContaining({ b: 0 }), null]))
+    expect(null).toEqual(expect.not.oneOf([expect.any(String)]))
+    expect(undefined).toEqual(expect.not.oneOf([expect.any(Object)]))
   })
 
   it('expect.extend', async () => {
