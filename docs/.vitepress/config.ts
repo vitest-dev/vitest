@@ -66,6 +66,7 @@ export default ({ mode }: { mode: string }) => {
         groupIconVitePlugin({
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
+            'vitest.shims': 'vscode-icons:file-type-vitest',
             'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
@@ -209,6 +210,20 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Getting Started',
                 link: '/guide/browser/',
                 docFooterText: 'Getting Started | Browser Mode',
+              },
+            ],
+          },
+          {
+            text: 'Configuration',
+            collapsed: false,
+            items: [
+              {
+                text: 'Configuring Playwright',
+                link: '/guide/browser/playwright',
+              },
+              {
+                text: 'Configuring WebdriverIO',
+                link: '/guide/browser/webdriverio',
               },
             ],
           },
