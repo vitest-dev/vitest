@@ -426,7 +426,10 @@ export class Vitest {
 
       this.logger.printNoTestFound(filters)
 
-      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
+      if (this.config.watch) {
+        this.report('onFinished', [], [])
+      }
+      else if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
         const exitCode = this.config.passWithNoTests ? 0 : 1
         process.exitCode = exitCode
         throw new FilesNotFoundError(this.mode)

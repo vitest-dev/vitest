@@ -194,11 +194,11 @@ export class Logger {
     }
     else {
       if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+        this.log(`No ${config.mode} files found${config.watch ? '' : ', exiting with code 0'}`)
       }
       else {
         this.error(
-          c.red(`\nNo ${config.mode} files found, exiting with code 1`),
+          c.red(`\nNo ${config.mode} files found${config.watch ? '' : ', exiting with code 1'}`),
         )
       }
     }
