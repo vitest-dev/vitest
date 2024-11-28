@@ -132,7 +132,6 @@ export async function resolveWorkspace(
 export function resolveBrowserWorkspace(
   resolvedProjects: TestProject[],
 ) {
-  const names = new Set<string>(resolvedProjects.map(p => p.name))
   resolvedProjects.forEach((project) => {
     const capabilities = project.config.browser.capabilities
     if (!project.config.browser.enabled || !capabilities || capabilities.length === 0) {
@@ -140,19 +139,16 @@ export function resolveBrowserWorkspace(
     }
     const [firstCapability, ...restCapabilities] = capabilities
 
-    project.config.name ||= firstCapability.browser
+    project.config.name ||= project.config.name
+      ? `${project.config.name} (${firstCapability.browser})`
+      : firstCapability.browser
     project.config.browser.name = firstCapability.browser
     project.config.browser.providerOptions = firstCapability
 
     restCapabilities.forEach(({ browser, ...capability }) => {
-      if (names.has(browser)) {
-        // TODO: better error message - add how to fix
-        throw new Error(`Project name "${browser}" already exists in the workspace.`)
-      }
-
       const clone = TestProject._cloneBrowserProject(project, {
         ...project.config,
-        name: browser,
+        name: project.config.name ? `${project.config} (${browser})` : browser,
         browser: {
           ...project.config.browser,
           name: browser,
