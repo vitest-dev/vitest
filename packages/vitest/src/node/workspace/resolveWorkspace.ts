@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import type { TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
+import type { ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
@@ -8,6 +8,7 @@ import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { initializeProject, TestProject } from '../project'
+import { withLabel } from '../reporters/renderers/utils'
 import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
@@ -96,7 +97,7 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return resolveBrowserWorkspace([vitest._createRootProject()])
+    return resolveBrowserWorkspace(vitest, [vitest._createRootProject()])
   }
 
   const resolvedProjects = await Promise.all(projectPromises)
@@ -126,10 +127,11 @@ export async function resolveWorkspace(
     names.add(name)
   }
 
-  return resolveBrowserWorkspace(resolvedProjects)
+  return resolveBrowserWorkspace(vitest, resolvedProjects)
 }
 
 export function resolveBrowserWorkspace(
+  vitest: Vitest,
   resolvedProjects: TestProject[],
 ) {
   resolvedProjects.forEach((project) => {
@@ -142,19 +144,57 @@ export function resolveBrowserWorkspace(
     project.config.name ||= project.config.name
       ? `${project.config.name} (${firstCapability.browser})`
       : firstCapability.browser
+
+    if (project.config.browser.name) {
+      vitest.logger.warn(
+        withLabel('yellow', 'Vitest', `Browser name "${project.config.browser.name}" is ignored because it's overriden by the capabilities. To hide this warning, remove the "name" property from the browser configuration.`),
+      )
+    }
+
+    if (project.config.browser.providerOptions) {
+      vitest.logger.warn(
+        withLabel('yellow', 'Vitest', `"providerOptions"${project.config.name ? ` in "${project.config.name}" project` : ''} is ignored because it's overriden by the capabilities. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
+      )
+    }
+
     project.config.browser.name = firstCapability.browser
     project.config.browser.providerOptions = firstCapability
 
     restCapabilities.forEach(({ browser, ...capability }) => {
-      const clone = TestProject._cloneBrowserProject(project, {
+      // TODO: cover with tests
+      // browser-only options
+      const {
+        locators,
+        viewport,
+        testerHtmlPath,
+        screenshotDirectory,
+        screenshotFailures,
+        // @ts-expect-error remove just in case
+        browser: _browser,
+        // TODO: need a lot of tests
+        ...overrideConfig
+      } = capability
+      const currentConfig = project.config.browser
+      const clonedConfig = mergeConfig<any, any>({
         ...project.config,
         name: project.config.name ? `${project.config} (${browser})` : browser,
         browser: {
           ...project.config.browser,
+          locators: locators
+            ? {
+                testIdAttribute: locators.testIdAttribute ?? currentConfig.locators.testIdAttribute,
+              }
+            : project.config.browser.locators,
+          viewport: viewport ?? currentConfig.viewport,
+          testerHtmlPath: testerHtmlPath ?? currentConfig.testerHtmlPath,
+          screenshotDirectory: screenshotDirectory ?? currentConfig.screenshotDirectory,
+          screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
           name: browser,
           providerOptions: capability,
         },
-      })
+        // TODO: should resolve, not merge/override
+      } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
+      const clone = TestProject._cloneBrowserProject(project, clonedConfig)
 
       resolvedProjects.push(clone)
     })

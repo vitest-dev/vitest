@@ -1081,14 +1081,16 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
+  | 'workspace'
 
 export type ProjectConfig = Omit<
-  UserConfig,
+  InlineConfig,
   NonProjectOptions
   | 'sequencer'
   | 'deps'
   | 'poolOptions'
 > & {
+  mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
   poolOptions?: {

@@ -643,7 +643,7 @@ export class TestProject {
       // type is very strict here, so we cast it to any
       (clone.provide as (key: string, value: unknown) => void)(
         providedKey,
-        project.config.provide[providedKey],
+        config.provide[providedKey],
       )
     }
     clone._initBrowserServer = deduped(async () => {

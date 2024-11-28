@@ -291,7 +291,7 @@ export class Vitest {
     this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
-      return resolveBrowserWorkspace([this._createRootProject()])
+      return resolveBrowserWorkspace(this, [this._createRootProject()])
     }
 
     const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {

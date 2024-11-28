@@ -230,9 +230,30 @@ export function resolveConfig(
     }
   }
 
+  const browser = resolved.browser
+
+  if (browser.enabled) {
+    if (!browser.name && !browser.capabilities) {
+      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.capabilities" options, none were set.`)
+    }
+
+    if (browser.name && browser.capabilities) {
+      throw new Error(`Cannot use both "browser.name" and "browser.capabilities" options at the same time. Use only "browser.capabilities" instead.`)
+    }
+
+    if (browser.capabilities && !browser.capabilities.length) {
+      throw new Error(`"browser.capabilities" was set in the config, but the array is empty. Define at least one browser capability.`)
+    }
+
+    // TODO: don't throw if --project=chromium is passed filtering capabilities to a single one
+    // if (browser.provider === 'preview' && (browser.capabilities?.length || 0) > 1) {
+    //   throw new Error(`Browser provider "preview" does not support multiple capabilities. Use "playwright" or "webdriverio" instead.`)
+    // }
+  }
+
   // Browser-mode "Playwright + Chromium" only features:
-  if (resolved.browser.enabled && !(resolved.browser.provider === 'playwright' && resolved.browser.name === 'chromium')) {
-    const browserConfig = { browser: { provider: resolved.browser.provider, name: resolved.browser.name } }
+  if (browser.enabled && !(browser.provider === 'playwright' && browser.name === 'chromium')) {
+    const browserConfig = { browser: { provider: browser.provider, name: browser.name } }
 
     if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
       throw new Error(

@@ -3,7 +3,7 @@ import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
 import type { TestProject } from '../project'
-import type { ApiConfig } from './config'
+import type { ApiConfig, ProjectConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
   browser: string
@@ -45,6 +45,32 @@ export interface BrowserProviderOptions {}
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 
+type UnsupportedProperties =
+  | 'browser'
+  | 'typecheck'
+  | 'alias'
+  | 'sequence'
+  | 'root'
+  | 'pool'
+  | 'poolOptions'
+  // browser mode doesn't support a custom runner
+  | 'runner'
+  // non-browser options
+  | 'api'
+  | 'deps'
+  | 'testTransformMode'
+  | 'poolMatchGlobs'
+  | 'environmentMatchGlobs'
+  | 'environment'
+  | 'environmentOptions'
+  | 'server'
+  | 'benchmark'
+
+// TODO: document all options
+export interface BrowserCapabilities extends BrowserProviderOptions, Omit<ProjectConfig, UnsupportedProperties>, Pick<BrowserConfigOptions, 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
+  browser: string
+}
+
 export interface BrowserConfigOptions {
   /**
    * if running tests in the browser should be the default
@@ -57,11 +83,12 @@ export interface BrowserConfigOptions {
    * Name of the browser
    * @deprecated use `capabilities` instead
    */
-  name: string
+  name?: string
 
-  capabilities?: ({
-    browser: string
-  } & BrowserProviderOptions)[]
+  /**
+   * Configurations for different browsers
+   */
+  capabilities?: BrowserCapabilities[]
 
   /**
    * Browser provider
@@ -254,6 +281,8 @@ export interface BrowserScript {
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
+  name: string
+  providerOptions?: BrowserProviderOptions
   enabled: boolean
   headless: boolean
   isolate: boolean
