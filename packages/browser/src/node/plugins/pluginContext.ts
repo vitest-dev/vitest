@@ -40,7 +40,7 @@ async function generateContextFile(
   const commandsCode = commands
     .filter(command => !command.startsWith('__vitest'))
     .map((command) => {
-      return `    ["${command}"]: (...args) => rpc().triggerCommand(contextId, "${command}", filepath(), args),`
+      return `    ["${command}"]: (...args) => rpc().triggerCommand(sessionId, "${command}", filepath(), args),`
     })
     .join('\n')
 
@@ -55,7 +55,7 @@ import { page, createUserEvent, cdp } from '${distContextPath}'
 ${userEventNonProviderImport}
 const filepath = () => ${filepathCode}
 const rpc = () => __vitest_worker__.rpc
-const contextId = __vitest_browser_runner__.contextId
+const sessionId = __vitest_browser_runner__.sessionId
 
 export const server = {
   platform: ${JSON.stringify(process.platform)},

@@ -22,11 +22,10 @@ export async function resolveTester(
     )
   }
 
-  const { contextId, testFile } = server.resolveTesterUrl(url.pathname)
-  const state = server.state
-  const context = state.getContext(contextId)
-  // TODO: what happens if no context? (how is it possible?)
-  const project = server.vitest.getProjectByName(context?.projectName ?? '')
+  const { sessionId, testFile } = server.resolveTesterUrl(url.pathname)
+  const session = server.vitest._browserSessions.getSession(sessionId)
+  // TODO: if no session, 400
+  const project = server.vitest.getProjectByName(session?.project.name ?? '')
   const { testFiles } = await project.globTestFiles()
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
@@ -35,22 +34,22 @@ export async function resolveTester(
       ? '__vitest_browser_runner__.files'
       : JSON.stringify([testFile])
   const iframeId = JSON.stringify(testFile)
-  const files = context?.files ?? []
-  const method = context?.method ?? 'run'
+  const files = session?.files ?? []
+  const method = session?.method ?? 'run'
 
   const injectorJs = typeof server.injectorJs === 'string'
     ? server.injectorJs
     : await server.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
+    __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider.name),
     __VITEST_CONFIG__: JSON.stringify(server.wrapSerializedConfig(project.name)),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: server.vite.config.root,
     }),
     __VITEST_TYPE__: '"tester"',
-    __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
@@ -74,7 +73,7 @@ export async function resolveTester(
     })
   }
   catch (err) {
-    context?.reject(err)
+    session?.reject(err)
     next(err)
   }
 }

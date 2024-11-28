@@ -1,7 +1,9 @@
+import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { BrowserServer } from './server'
+import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
 import { ServerMockResolver } from '@vitest/mocker/node'
@@ -21,7 +23,7 @@ export function setupBrowserRpc(server: BrowserServer) {
 
   const wss = new WebSocketServer({ noServer: true })
 
-  vite.httpServer?.on('upgrade', (request, socket, head) => {
+  vite.httpServer?.on('upgrade', (request, socket: Duplex, head: Buffer) => {
     if (!request.url) {
       return
     }
@@ -31,26 +33,34 @@ export function setupBrowserRpc(server: BrowserServer) {
       return
     }
 
-    // TODO: validate that params exist
-    const type = searchParams.get('type') ?? 'tester'
-    const sessionId = searchParams.get('sessionId') ?? '0'
-    const projectName = searchParams.get('projectName') ?? ''
-    const project = vitest.getProjectByName(projectName)
+    const type = searchParams.get('type')
+    const sessionId = searchParams.get('sessionId') ?? ''
+    const rpcId = searchParams.get('rpcId')
+    const session = vitest._browserSessions.getSession(sessionId)
+
+    if (type !== 'tester' && type !== 'orchestrator') {
+      throw new Error(`[vitest] Type query in ${request.url} is invalid. Type should be either "tester" or "orchestrator".`)
+    }
+    if (!session || !sessionId || !rpcId) {
+      throw new Error(`[vitest] Invalid URL ${request.url}. "sessionId" and "rpcId" are required.`)
+    }
+
+    const project = session.project
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, sessionId, ws)
-      const state = server.state
+      const rpc = setupClient(project, rpcId, ws)
+      const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
-      clients.set(sessionId, rpc)
+      clients.set(rpcId, rpc)
 
-      debug?.('[%s] Browser API connected to %s', sessionId, type)
+      debug?.('[%s] Browser API connected to %s', rpcId, type)
 
       ws.on('close', () => {
-        debug?.('[%s] Browser API disconnected from %s', sessionId, type)
-        clients.delete(sessionId)
-        server.state.removeCDPHandler(sessionId)
+        debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        clients.delete(rpcId)
+        server.removeCDPHandler(rpcId)
       })
     })
   })
@@ -63,7 +73,7 @@ export function setupBrowserRpc(server: BrowserServer) {
     }
   }
 
-  function setupClient(project: TestProject, sessionId: string, ws: WebSocket) {
+  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(server.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
@@ -137,9 +147,9 @@ export function setupBrowserRpc(server: BrowserServer) {
         getCountOfFailedTests() {
           return vitest.state.getCountOfFailedTests()
         },
-        async triggerCommand(contextId, command, testPath, payload) {
-          debug?.('[%s] Triggering command "%s"', contextId, command)
-          const provider = server.provider
+        async triggerCommand(sessionId, command, testPath, payload) {
+          debug?.('[%s] Triggering command "%s"', sessionId, command)
+          const provider = project.browser!.provider
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
@@ -147,32 +157,29 @@ export function setupBrowserRpc(server: BrowserServer) {
           if (!commands || !commands[command]) {
             throw new Error(`Unknown command "${command}".`)
           }
-          if (provider.beforeCommand) {
-            await provider.beforeCommand(command, payload)
-          }
+          await provider.beforeCommand?.(command, payload)
           const context = Object.assign(
             {
               testPath,
               project,
               provider,
-              contextId,
+              contextId: sessionId,
+              sessionId,
             },
-            provider.getCommandsContext(contextId),
+            provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
           let result
           try {
             result = await commands[command](context, ...payload)
           }
           finally {
-            if (provider.afterCommand) {
-              await provider.afterCommand(command, payload)
-            }
+            await provider.afterCommand?.(command, payload)
           }
           return result
         },
-        finishBrowserTests(contextId: string) {
-          debug?.('[%s] Finishing browser tests for context', contextId)
-          return server.state.getContext(contextId)?.resolve()
+        finishBrowserTests(sessionId: string) {
+          debug?.('[%s] Finishing browser tests for session', sessionId)
+          return vitest._browserSessions.getSession(sessionId)?.resolve()
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
@@ -182,12 +189,12 @@ export function setupBrowserRpc(server: BrowserServer) {
         },
 
         // CDP
-        async sendCdpEvent(contextId: string, event: string, payload?: Record<string, unknown>) {
-          const cdp = await server.ensureCDPHandler(contextId, sessionId)
+        async sendCdpEvent(sessionId: string, event: string, payload?: Record<string, unknown>) {
+          const cdp = await server.ensureCDPHandler(sessionId, rpcId)
           return cdp.send(event, payload)
         },
-        async trackCdpEvent(contextId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
-          const cdp = await server.ensureCDPHandler(contextId, sessionId)
+        async trackCdpEvent(sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
+          const cdp = await server.ensureCDPHandler(sessionId, rpcId)
           cdp[type](event, listenerId)
         },
       },

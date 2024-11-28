@@ -86,7 +86,6 @@ export function cloneBrowserServer(
     project,
     '/',
   )
-  clone.state = browserServer.state as any
   clone.setServer(browserServer.vite)
   return clone
 }

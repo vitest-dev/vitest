@@ -472,11 +472,11 @@ export class TestProject {
   }
 
   /** @internal */
-  async _initBrowserServer() {
+  _initBrowserServer = deduped(async () => {
     if (!this.isBrowserEnabled() || this.browser) {
       return
     }
-    await this.vitest.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
+    await this.vitest.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.vitest.version)
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
     const browser = await createBrowserServer(
       this,
@@ -497,7 +497,7 @@ export class TestProject {
     if (this.config.browser.ui) {
       setup(this.vitest, browser.vite)
     }
-  }
+  })
 
   /**
    * Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts.
@@ -597,7 +597,7 @@ export class TestProject {
   }
 
   /** @internal */
-  async _initBrowserProvider(): Promise<void> {
+  _initBrowserProvider = deduped(async (): Promise<void> => {
     if (!this.isBrowserEnabled() || this.browser?.provider) {
       return
     }
@@ -605,7 +605,7 @@ export class TestProject {
       await this._initBrowserServer()
     }
     await this.browser?.initBrowserProvider(this)
-  }
+  })
 
   /** @internal */
   static _createBasicProject(vitest: Vitest): TestProject {
@@ -646,27 +646,39 @@ export class TestProject {
         project.config.provide[providedKey],
       )
     }
-    clone._initBrowserServer = async function _initBrowserServer() {
+    clone._initBrowserServer = deduped(async () => {
       if (clone.browser) {
         return
       }
       await project._initBrowserServer()
       const { cloneBrowserServer } = await import('@vitest/browser')
-      this.browser = cloneBrowserServer(clone, project.browser!)
-    }
-    clone._initBrowserProvider = async function _initBrowserProvider() {
-      if (!this.isBrowserEnabled() || this.browser?.provider) {
+      clone.browser = cloneBrowserServer(clone, project.browser!)
+    })
+    clone._initBrowserProvider = deduped(async () => {
+      if (!clone.isBrowserEnabled() || clone.browser?.provider) {
         return
       }
-      if (!this.browser) {
-        await this._initBrowserServer()
+      if (!clone.browser) {
+        await clone._initBrowserServer()
       }
       if (!project.browser?.provider) {
         await project.browser?.initBrowserProvider(project)
       }
-      await this.browser?.initBrowserProvider(clone)
-    }
+      await clone.browser?.initBrowserProvider(clone)
+    })
     return clone
+  }
+}
+
+function deduped(cb: () => Promise<void>) {
+  let _promise: Promise<void> | undefined
+  return () => {
+    if (!_promise) {
+      _promise = cb().finally(() => {
+        _promise = undefined
+      })
+    }
+    return _promise
   }
 }
 

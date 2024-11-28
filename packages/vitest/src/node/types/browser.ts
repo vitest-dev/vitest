@@ -26,9 +26,9 @@ export interface BrowserProvider {
   getSupportedBrowsers: () => readonly string[]
   beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
   afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  getCommandsContext: (contextId: string) => Record<string, unknown>
-  openPage: (contextId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
-  getCDPSession?: (contextId: string) => Promise<CDPSession>
+  getCommandsContext: (sessionId: string) => Record<string, unknown>
+  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
+  getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
@@ -187,13 +187,15 @@ export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
   project: TestProject
+  /** @deprecated use `sessionId` instead */
   contextId: string
+  sessionId: string
 }
 
-export interface BrowserServerStateContext {
+export interface BrowserServerStateSession {
   files: string[]
   method: 'run' | 'collect'
-  projectName: string
+  project: TestProject
   resolve: () => void
   reject: (v: unknown) => void
 }
@@ -206,8 +208,6 @@ export interface BrowserOrchestrator {
 
 export interface BrowserServerState {
   orchestrators: Map<string, BrowserOrchestrator>
-  getContext: (contextId: string) => BrowserServerStateContext | undefined
-  createAsyncContext: (method: 'collect' | 'run', contextId: string, files: string[], projectName: string) => Promise<void>
 }
 
 export interface BrowserServer {

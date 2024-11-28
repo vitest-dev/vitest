@@ -46,6 +46,8 @@ export class BrowserServer implements IBrowserServer {
   public vitest: Vitest
   public config: ResolvedConfig
 
+  public readonly cdps = new Map<string, BrowserServerCDPHandler>()
+
   constructor(
     project: TestProject,
     public base: string,
@@ -145,11 +147,11 @@ export class BrowserServer implements IBrowserServer {
   }
 
   resolveTesterUrl(pathname: string) {
-    const [contextId, testFile] = pathname
+    const [sessionId, testFile] = pathname
       .slice(this.prefixTesterUrl.length)
       .split('/')
     const decodedTestFile = decodeURIComponent(testFile)
-    return { contextId, testFile: decodedTestFile }
+    return { sessionId, testFile: decodedTestFile }
   }
 
   async formatScripts(
@@ -236,37 +238,46 @@ export class BrowserServer implements IBrowserServer {
 
   private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
-  async ensureCDPHandler(contextId: string, sessionId: string) {
-    const cachedHandler = this.state.cdps.get(sessionId)
+  async ensureCDPHandler(sessionId: string, rpcId: string) {
+    const cachedHandler = this.cdps.get(rpcId)
     if (cachedHandler) {
       return cachedHandler
     }
+    const browserSession = this.vitest._browserSessions.getSession(sessionId)
+    if (!browserSession) {
+      throw new Error(`Session "${sessionId}" not found.`)
+    }
 
-    const provider = this.provider
+    const browser = browserSession.project.browser!
+    const provider = browser.provider
     if (!provider.getCDPSession) {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessionsPromises.get(sessionId) ?? await (async () => {
-      const promise = provider.getCDPSession!(contextId).finally(() => {
-        this.cdpSessionsPromises.delete(sessionId)
+    const promise = this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
+      const promise = provider.getCDPSession!(sessionId).finally(() => {
+        this.cdpSessionsPromises.delete(rpcId)
       })
-      this.cdpSessionsPromises.set(sessionId, promise)
+      this.cdpSessionsPromises.set(rpcId, promise)
       return promise
     })()
 
     const session = await promise
-    const rpc = this.state.testers.get(sessionId)
+    const rpc = (browser.state as BrowserServerState).testers.get(rpcId)
     if (!rpc) {
-      throw new Error(`Tester RPC "${sessionId}" was not established.`)
+      throw new Error(`Tester RPC "${rpcId}" was not established.`)
     }
 
     const handler = new BrowserServerCDPHandler(session, rpc)
-    this.state.cdps.set(
-      sessionId,
+    this.cdps.set(
+      rpcId,
       handler,
     )
     return handler
+  }
+
+  async removeCDPHandler(sessionId: string) {
+    this.cdps.delete(sessionId)
   }
 
   async close() {
