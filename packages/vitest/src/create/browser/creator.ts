@@ -228,9 +228,9 @@ function getPossibleProvider(dependencies: Record<string, string>) {
 function getProviderDocsLink(provider: string) {
   switch (provider) {
     case 'playwright':
-      return 'https://playwright.dev'
+      return 'https://vitest.dev/guide/browser/playwright'
     case 'webdriverio':
-      return 'https://webdriver.io'
+      return 'https://vitest.dev/guide/browser/webdriverio'
   }
 }
 
@@ -251,7 +251,7 @@ async function generateWorkspaceFile(options: {
   configPath: string
   rootConfig: string
   provider: string
-  browser: string
+  browsers: string[]
 }) {
   const relativeRoot = relative(dirname(options.configPath), options.rootConfig)
   const workspaceContent = [
@@ -265,10 +265,11 @@ async function generateWorkspaceFile(options: {
     `    test: {`,
     `      browser: {`,
     `        enabled: true,`,
-    `        name: '${options.browser}',`,
     `        provider: '${options.provider}',`,
     options.provider !== 'preview' && `        // ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `        providerOptions: {},`,
+    `        capabilities: [`,
+    ...options.browsers.map(browser => `        { browser: '${browser}' },`),
+    `        ],`,
     `      },`,
     `    },`,
     `  },`,
@@ -283,7 +284,7 @@ async function generateFrameworkConfigFile(options: {
   framework: string
   frameworkPlugin: string | null
   provider: string
-  browser: string
+  browsers: string[]
 }) {
   const frameworkImport = options.framework === 'svelte'
     ? `import { svelte } from '${options.frameworkPlugin}'`
@@ -297,10 +298,11 @@ async function generateFrameworkConfigFile(options: {
     `  test: {`,
     `    browser: {`,
     `      enabled: true,`,
-    `      name: '${options.browser}',`,
     `      provider: '${options.provider}',`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `      providerOptions: {},`,
+    `      capabilities: [`,
+    ...options.browsers.map(browser => `      { browser: '${browser}' },`),
+    `      ],`,
     `    },`,
     `  },`,
     `})`,
@@ -391,9 +393,10 @@ export async function create() {
     return fail()
   }
 
-  const { browser } = await prompt({
-    type: 'select',
-    name: 'browser',
+  // TODO: allow multiselect
+  const { browsers } = await prompt({
+    type: 'multiselect',
+    name: 'browsers',
     message: 'Choose a browser',
     choices: getBrowserNames(provider).map(browser => ({
       title: browser,
@@ -471,7 +474,7 @@ export async function create() {
       configPath: browserWorkspaceFile,
       rootConfig,
       provider,
-      browser,
+      browsers,
     })
     log(c.green('✔'), 'Created a workspace file for browser tests:', c.bold(relative(process.cwd(), browserWorkspaceFile)))
   }
@@ -482,7 +485,7 @@ export async function create() {
       framework,
       frameworkPlugin,
       provider,
-      browser,
+      browsers,
     })
     log(c.green('✔'), 'Created a config file for browser tests', c.bold(relative(process.cwd(), configPath)))
   }
