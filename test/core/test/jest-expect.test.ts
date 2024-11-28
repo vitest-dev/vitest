@@ -4,7 +4,6 @@ import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { snapshot } from 'node:test'
 
 class TestError extends Error {}
 
@@ -202,7 +201,7 @@ describe('jest-expect', () => {
     expect({ a: 0 }).toEqual(expect.oneOf([expect.objectContaining({ a: 0 }), null]))
     expect({
       name: 'apple',
-      count: 1
+      count: 1,
     }).toEqual({
       name: expect.oneOf(['apple', 'banana', 'orange']),
       count: 1,

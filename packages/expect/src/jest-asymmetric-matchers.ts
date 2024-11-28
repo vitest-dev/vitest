@@ -377,7 +377,6 @@ class CloseTo extends AsymmetricMatcher<number> {
   }
 }
 
-
 class OneOf<T = unknown> extends AsymmetricMatcher<Array<T>> {
   constructor(sample: Array<T>, inverse = false) {
     super(sample, inverse)
