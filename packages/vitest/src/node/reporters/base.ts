@@ -71,6 +71,9 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
+  /**
+   * Callback invoked with a single `Task` from `onTaskUpdate`
+   */
   protected printTask(task: Task) {
     if (
       !('filepath' in task)
