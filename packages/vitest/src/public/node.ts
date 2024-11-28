@@ -61,7 +61,7 @@ export type {
   BrowserScript,
   BrowserServer,
   BrowserServerState,
-  BrowserServerStateContext,
+  BrowserServerStateSession as BrowserServerStateContext,
   CDPSession,
   ResolvedBrowserOptions,
 } from '../node/types/browser'

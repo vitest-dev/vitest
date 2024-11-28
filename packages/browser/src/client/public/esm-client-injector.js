@@ -24,7 +24,7 @@
     viteConfig: { __VITEST_VITE_CONFIG__ },
     files: { __VITEST_FILES__ },
     type: { __VITEST_TYPE__ },
-    contextId: { __VITEST_CONTEXT_ID__ },
+    sessionId: { __VITEST_SESSION_ID__ },
     testerId: { __VITEST_TESTER_ID__ },
     provider: { __VITEST_PROVIDER__ },
     providedContext: { __VITEST_PROVIDED_CONTEXT__ },

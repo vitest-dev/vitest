@@ -1,4 +1,4 @@
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand, TestSpecification, WorkspaceSpec } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
@@ -102,6 +102,19 @@ export default defineConfig({
     }, 'default'],
     env: {
       BROWSER: browser,
+    },
+    sequence: {
+      sequencer: class Sequencer {
+        shard() {
+          return []
+        }
+
+        sort(specifications: TestSpecification[]) {
+          const webkit = specifications.find(p => p.project.name === 'webkit')
+          const firefox = specifications.find(p => p.project.name === 'firefox')
+          return [firefox, webkit] as WorkspaceSpec[]
+        }
+      },
     },
   },
   plugins: [

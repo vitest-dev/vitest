@@ -93,7 +93,7 @@ class IframeOrchestrator {
     iframe.setAttribute(
       'src',
       `${url.pathname}__vitest_test__/__test__/${
-        getBrowserState().contextId
+        getBrowserState().sessionId
       }/${encodeURIComponent(file)}`,
     )
     iframe.setAttribute('data-vitest', 'true')
@@ -212,7 +212,7 @@ getBrowserState().createTesters = async (files) => {
 }
 
 async function done() {
-  await client.rpc.finishBrowserTests(getBrowserState().contextId)
+  await client.rpc.finishBrowserTests(getBrowserState().sessionId)
 }
 
 async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {

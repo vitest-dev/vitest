@@ -12,9 +12,9 @@ import sirv from 'sirv'
 import { coverageConfigDefaults, type Plugin } from 'vitest/config'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { distRoot } from './constants'
+import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
+import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
-import { resolveOrchestrator } from './serverOrchestrator'
-import { resolveTester } from './serverTester'
 
 export { defineBrowserCommand } from './commands/utils'
 export type { BrowserCommand } from 'vitest/node'
@@ -45,38 +45,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           }
           next()
         })
-        // eslint-disable-next-line prefer-arrow-callback
-        server.middlewares.use(async function vitestBrowserMode(req, res, next) {
-          if (!req.url || !browserServer.provider) {
-            return next()
-          }
-          const url = new URL(req.url, 'http://localhost')
-          if (!url.pathname.startsWith(browserServer.prefixTesterUrl) && url.pathname !== base) {
-            return next()
-          }
-
-          res.setHeader(
-            'Cache-Control',
-            'no-cache, max-age=0, must-revalidate',
-          )
-          res.setHeader('Content-Type', 'text/html; charset=utf-8')
-
-          // remove custom iframe related headers to allow the iframe to load
-          res.removeHeader('X-Frame-Options')
-
-          if (url.pathname === base) {
-            const html = await resolveOrchestrator(browserServer, url, res)
-            res.write(html, 'utf-8')
-            res.end()
-            return
-          }
-
-          const html = await resolveTester(browserServer, url, res, next)
-          if (html) {
-            res.write(html, 'utf-8')
-            res.end()
-          }
-        })
+        server.middlewares.use(createOrchestratorMiddleware(browserServer))
+        server.middlewares.use(createTesterMiddleware(browserServer))
 
         server.middlewares.use(
           `${base}favicon.svg`,

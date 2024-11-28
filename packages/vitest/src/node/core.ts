@@ -25,6 +25,7 @@ import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../consta
 import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { groupFilters, parseFilter } from './cli/filter'
 import { resolveConfig } from './config/resolveConfig'
@@ -79,7 +80,11 @@ export class Vitest {
 
   public packageInstaller: VitestPackageInstaller
 
-  /** TODO: rename to `_coreRootProject` */
+  // it's possible to share the same provider between different project,
+  // so we need a single place where to store them
+  // the `state` is shared with the UI, so we can't reuse it
+  /** @internal */ _browserSessions = new BrowserSessions()
+
   /** @internal */
   public coreWorkspaceProject!: TestProject
 

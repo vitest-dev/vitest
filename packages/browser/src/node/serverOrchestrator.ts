@@ -7,14 +7,14 @@ export async function resolveOrchestrator(
   url: URL,
   res: ServerResponse<IncomingMessage>,
 ) {
-  let contextId = url.searchParams.get('contextId')
+  let sessionId = url.searchParams.get('sessionId')
   // it's possible to open the page without a context
-  if (!contextId) {
+  if (!sessionId) {
     const contexts = [...server.state.orchestrators.keys()]
-    contextId = contexts[contexts.length - 1] ?? 'none'
+    sessionId = contexts[contexts.length - 1] ?? 'none'
   }
 
-  const contextState = server.state.getContext(contextId!)
+  const contextState = server.vitest._browserSessions.getSession(sessionId!)
   const files = contextState?.files ?? []
 
   const injectorJs = typeof server.injectorJs === 'string'
@@ -22,15 +22,15 @@ export async function resolveOrchestrator(
     : await server.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(server.provider.name),
+    __VITEST_PROVIDER__: JSON.stringify(server.config.browser.provider || 'preview'),
     // TODO: check when context is not found
-    __VITEST_CONFIG__: JSON.stringify(server.wrapSerializedConfig(contextState?.projectName || '')),
+    __VITEST_CONFIG__: JSON.stringify(server.wrapSerializedConfig(contextState?.project.name || '')),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: server.vite.config.root,
     }),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
-    __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: '"none"',
     __VITEST_PROVIDED_CONTEXT__: '{}',
   })
@@ -81,6 +81,6 @@ export async function resolveOrchestrator(
     __VITEST_SCRIPTS__: server.orchestratorScripts,
     __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
     __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherUrl}"></script>`,
-    __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
+    __VITEST_SESSION_ID__: JSON.stringify(sessionId),
   })
 }
