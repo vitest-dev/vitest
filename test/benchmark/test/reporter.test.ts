@@ -1,5 +1,7 @@
+import type { RunnerTestCase } from 'vitest'
 import * as pathe from 'pathe'
 import { assert, expect, it } from 'vitest'
+import { TaskParser } from 'vitest/src/node/reporters/task-parser.js'
 import { runVitest } from '../../test-utils'
 
 it('summary', async () => {
@@ -13,12 +15,13 @@ it('summary', async () => {
 it('non-tty', async () => {
   const root = pathe.join(import.meta.dirname, '../fixtures/basic')
   const result = await runVitest({ root }, ['base.bench.ts'], 'benchmark')
-  const lines = result.stdout.split('\n').slice(3).slice(0, 10)
+  const lines = result.stdout.split('\n').slice(4).slice(0, 11)
   const expected = `\
  ✓ base.bench.ts > sort
      name
    · normal
    · reverse
+
  ✓ base.bench.ts > timeout
      name
    · timeout100
@@ -26,7 +29,34 @@ it('non-tty', async () => {
    · timeout50
    · timeout25
 `
-  expect(lines).toMatchObject(expected.trim().split('\n').map(s => expect.stringContaining(s)))
+
+  for (const [index, line] of expected.trim().split('\n').entries()) {
+    expect(lines[index]).toMatch(line)
+  }
+})
+
+it('reports passed tasks just once', async () => {
+  const passed: string[] = []
+
+  class CustomReporter extends TaskParser {
+    onTestFinished(_test: RunnerTestCase): void {
+      passed.push(_test.name)
+    }
+  }
+
+  await runVitest({
+    root: pathe.join(import.meta.dirname, '../fixtures/reporter'),
+    benchmark: {
+      reporters: new CustomReporter(),
+    },
+  }, ['multiple.bench.ts'], 'benchmark')
+
+  expect(passed).toMatchInlineSnapshot(`
+    [
+      "first",
+      "second",
+    ]
+  `)
 })
 
 it.for([true, false])('includeSamples %s', async (includeSamples) => {
