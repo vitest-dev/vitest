@@ -4,6 +4,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { snapshot } from 'node:test'
 
 class TestError extends Error {}
 
@@ -1558,6 +1559,9 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
   snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
   snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
+  snapshotError(() => expect('foo').toEqual(expect.oneOf(['bar', 'baz'])))
+  snapshotError(() => expect(0).toEqual(expect.oneOf([expect.any(String), null, undefined])))
+  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.oneOf([expect.objectContaining({ k: 'v', k3: 'v3' }), null, undefined])))
 
   // simple truncation if pretty-format is too long
   snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))
