@@ -8,7 +8,6 @@ import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
 import { inspect, isPrimitive } from '@vitest/utils'
 import { normalize, relative } from 'pathe'
-import sliceAnsi from 'slice-ansi'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
 import {
@@ -17,7 +16,7 @@ import {
 } from '../utils/source-map'
 import { Logger } from './logger'
 import { F_POINTER } from './reporters/renderers/figures'
-import { divider } from './reporters/renderers/utils'
+import { divider, truncateString } from './reporters/renderers/utils'
 
 interface PrintErrorOptions {
   type?: string
@@ -446,12 +445,4 @@ export function generateCodeFrame(
 
 function lineNo(no: number | string = '') {
   return c.gray(`${String(no).padStart(3, ' ')}| `)
-}
-
-function truncateString(text: string, maxLength: number): string {
-  if (stripVTControlCharacters(text).length <= maxLength) {
-    return text
-  }
-
-  return `${sliceAnsi(text, 0, maxLength - 3)}...`
 }

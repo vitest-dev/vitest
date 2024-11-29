@@ -307,6 +307,10 @@ export class Logger {
     this.log(c.red(divider()))
   }
 
+  getColumns() {
+    return 'columns' in this.outputStream ? this.outputStream.columns : 80
+  }
+
   onExit(listener: Listener) {
     this.exitListeners.push(listener)
   }

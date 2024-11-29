@@ -77,10 +77,6 @@ export class WindowRenderer {
     clearInterval(this.renderInterval)
   }
 
-  getColumns() {
-    return 'columns' in this.options.logger.outputStream ? this.options.logger.outputStream.columns : 80
-  }
-
   private flushBuffer() {
     if (this.buffer.length === 0) {
       return this.render()
@@ -116,11 +112,11 @@ export class WindowRenderer {
     }
 
     const windowContent = this.options.getWindow()
-    const rowCount = getRenderedRowCount(windowContent, this.getColumns())
+    const rowCount = getRenderedRowCount(windowContent, this.options.logger.getColumns())
     let padding = this.windowHeight - rowCount
 
     if (padding > 0 && message) {
-      padding -= getRenderedRowCount([message], this.getColumns())
+      padding -= getRenderedRowCount([message], this.options.logger.getColumns())
     }
 
     this.write(SYNC_START)
