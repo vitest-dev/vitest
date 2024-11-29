@@ -889,9 +889,6 @@ importers:
       pathe:
         specifier: ^1.1.2
         version: 1.1.2
-      slice-ansi:
-        specifier: ^7.1.0
-        version: 7.1.0
       std-env:
         specifier: ^3.8.0
         version: 3.8.0
@@ -998,6 +995,9 @@ importers:
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
+      slice-ansi:
+        specifier: ^7.1.0
+        version: 7.1.0
       strip-literal:
         specifier: ^2.1.1
         version: 2.1.1
