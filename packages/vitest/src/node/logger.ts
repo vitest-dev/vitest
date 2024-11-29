@@ -25,12 +25,16 @@ export interface ErrorOptions {
   showCodeFrame?: boolean
 }
 
+type Listener = () => void
+
 const PAD = '      '
 
 const ESC = '\x1B['
 const ERASE_DOWN = `${ESC}J`
 const ERASE_SCROLLBACK = `${ESC}3J`
 const CURSOR_TO_START = `${ESC}1;1H`
+const HIDE_CURSOR = `${ESC}?25l`
+const SHOW_CURSOR = `${ESC}?25h`
 const CLEAR_SCREEN = '\x1Bc'
 
 export class Logger {
@@ -38,6 +42,7 @@ export class Logger {
 
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
+  private exitListeners: Listener[] = []
   public console: Console
 
   constructor(
@@ -46,9 +51,11 @@ export class Logger {
     public errorStream: NodeJS.WriteStream | Writable = process.stderr,
   ) {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
-    this.logUpdate = createLogUpdate(this.outputStream)
     this._highlights.clear()
+    this.addProcessExitListeners()
     this.registerUnhandledRejection()
+
+    ;(this.outputStream as Writable).write(HIDE_CURSOR)
   }
 
   log(...args: any[]) {
@@ -301,6 +308,38 @@ export class Logger {
       this.printError(err, { fullStack: true })
     })
     this.log(c.red(divider()))
+  }
+
+  onExit(listener: Listener) {
+    this.exitListeners.push(listener)
+  }
+
+  private addProcessExitListeners() {
+    const onExit = (signal?: string | number, exitCode?: number) => {
+      this.exitListeners.forEach(fn => fn())
+      ;(this.outputStream as Writable).write(SHOW_CURSOR)
+
+      // Interrupted signals don't set exit code automatically.
+      // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
+      if (process.exitCode === undefined) {
+        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
+      }
+
+      process.exit()
+    }
+
+    process.once('SIGINT', onExit)
+    process.once('SIGTERM', onExit)
+    process.once('exit', onExit)
+
+    this.ctx.onClose(() => {
+      process.off('SIGINT', onExit)
+      process.off('SIGTERM', onExit)
+      process.off('exit', onExit)
+
+      this.exitListeners.forEach(fn => fn())
+      ;(this.outputStream as Writable).write(SHOW_CURSOR)
+    })
   }
 
   private registerUnhandledRejection() {
