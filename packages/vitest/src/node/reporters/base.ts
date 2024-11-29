@@ -440,7 +440,7 @@ export abstract class BaseReporter implements Reporter {
     const benches = getTests(files)
     const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 
-    this.log(withLabel('cyan', 'BENCH', 'Summary\n'))
+    this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
 
     for (const bench of topBenches) {
       const group = bench.suite || bench.file
