@@ -8,7 +8,6 @@ import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
-import { createLogUpdate } from 'log-update'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './error'
@@ -38,8 +37,6 @@ const SHOW_CURSOR = `${ESC}?25h`
 const CLEAR_SCREEN = '\x1Bc'
 
 export class Logger {
-  logUpdate: ReturnType<typeof createLogUpdate>
-
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
   private exitListeners: Listener[] = []

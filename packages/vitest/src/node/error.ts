@@ -7,8 +7,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
 import { inspect, isPrimitive } from '@vitest/utils'
-import cliTruncate from 'cli-truncate'
 import { normalize, relative } from 'pathe'
+import sliceAnsi from 'slice-ansi'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
 import {
@@ -413,7 +413,7 @@ export function generateCodeFrame(
 
         res.push(
           lineNo(j + 1)
-          + cliTruncate(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
+          + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
         )
 
         if (j === i) {
@@ -446,4 +446,12 @@ export function generateCodeFrame(
 
 function lineNo(no: number | string = '') {
   return c.gray(`${String(no).padStart(3, ' ')}| `)
+}
+
+function truncateString(text: string, maxLength: number): string {
+  if (stripVTControlCharacters(text).length <= maxLength) {
+    return text
+  }
+
+  return `${sliceAnsi(text, 0, maxLength - 3)}...`
 }
