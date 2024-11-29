@@ -19,7 +19,7 @@ declare module 'vitest/node' {
     > & {
       /**
        * The maximum time in milliseconds to wait for `userEvent` action to complete.
-       * @default TODO: 1000? or 0 like playwright?
+       * @default 0 (no timeout)
        */
       actionTimeout?: number
     }
