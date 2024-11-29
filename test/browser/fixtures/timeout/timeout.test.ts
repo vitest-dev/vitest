@@ -5,9 +5,14 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-test('click', async () => {
+test('click default', async () => {
   document.body.innerHTML = '<div><span>hello</span></div>'
   await page.getByText('world').click()
+})
+
+test('click override', async () => {
+  document.body.innerHTML = '<div><span>hello</span></div>'
+  await page.getByText('world').click({ timeout: 345 })
 })
 
 test('element', async () => {
