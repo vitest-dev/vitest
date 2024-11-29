@@ -21,7 +21,8 @@ declare module 'vitest/node' {
        * The maximum time in milliseconds to wait for `userEvent` action to complete.
        * @default TODO: 1000? or 0 like playwright?
        */
-      actionTimeout?: number }
+      actionTimeout?: number
+    }
   }
 
   export interface BrowserCommandContext {
