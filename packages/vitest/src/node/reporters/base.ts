@@ -134,6 +134,10 @@ export abstract class BaseReporter implements Reporter {
         )
       }
 
+      else if (this.ctx.config.hideSkippedTests && (test.mode === 'skip' || test.result?.state === 'skip')) {
+        // Skipped tests are hidden when --hideSkippedTests
+      }
+
       // also print skipped tests that have notes
       else if (test.result?.state === 'skip' && test.result.note) {
         this.log(`   ${getStateSymbol(test)} ${getTestName(test)}${c.dim(c.gray(` [${test.result.note}]`))}`)
