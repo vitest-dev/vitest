@@ -31,7 +31,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private options?: {
     launch?: LaunchOptions
-    context?: BrowserContextOptions
+    context?: BrowserContextOptions & { actionTimeout?: number }
   }
 
   public contexts = new Map<string, BrowserContext>()
@@ -108,8 +108,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     const browser = await this.openBrowser()
+    const { actionTimeout, ...contextOptions } = this.options?.context ?? {}
     const options = {
-      ...this.options?.context,
+      ...contextOptions,
       ignoreHTTPSErrors: true,
       serviceWorkers: 'allow',
     } satisfies BrowserContextOptions
@@ -117,6 +118,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       options.viewport = null
     }
     const context = await browser.newContext(options)
+    if (actionTimeout) {
+      context.setDefaultTimeout(actionTimeout)
+    }
     this.contexts.set(contextId, context)
     return context
   }
@@ -187,7 +191,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   async openPage(contextId: string, url: string, beforeNavigate?: () => Promise<void>) {
     const browserPage = await this.openBrowserPage(contextId)
     await beforeNavigate?.()
-    await browserPage.goto(url)
+    await browserPage.goto(url, { timeout: 0 })
   }
 
   async getCDPSession(contextId: string) {

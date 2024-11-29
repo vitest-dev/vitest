@@ -16,7 +16,12 @@ declare module 'vitest/node' {
     context?: Omit<
       BrowserContextOptions,
       'ignoreHTTPSErrors' | 'serviceWorkers'
-    >
+    > & {
+      /**
+       * The maximum time in milliseconds to wait for `userEvent` action to complete.
+       * @default TODO: 1000? or 0 like playwright?
+       */
+      actionTimeout?: number }
   }
 
   export interface BrowserCommandContext {

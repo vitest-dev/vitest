@@ -30,7 +30,6 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
       const { element: selector, ...config } = options
       const element = context.iframe.locator(`${selector}`)
       const buffer = await element.screenshot({
-        timeout: 1000,
         ...config,
         path: savePath,
       })

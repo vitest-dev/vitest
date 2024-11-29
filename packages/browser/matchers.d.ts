@@ -17,6 +17,10 @@ declare module 'vitest' {
   type PromisifyDomAssertion<T> = Promisify<Assertion<T>>
 
   interface ExpectStatic {
+    /**
+     * `expect.element(locator)` is a shorthand for `expect.poll(() => locator.element())`.
+     * You can set default timeout via `expect.poll.timeout` config.
+     */
     element: <T extends Element | Locator>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element | null>>
   }
 }
