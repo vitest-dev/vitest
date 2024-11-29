@@ -7,8 +7,6 @@ const DEFAULT_RENDER_INTERVAL = 16
 const ESC = '\x1B['
 const CLEAR_LINE = `${ESC}K`
 const MOVE_CURSOR_ONE_ROW_UP = `${ESC}1A`
-const HIDE_CURSOR = `${ESC}?25l`
-const SHOW_CURSOR = `${ESC}?25h`
 const SYNC_START = `${ESC}?2026h`
 const SYNC_END = `${ESC}?2026l`
 
@@ -48,10 +46,13 @@ export class WindowRenderer {
     this.cleanups.push(
       this.interceptStream(process.stdout, 'output'),
       this.interceptStream(process.stderr, 'error'),
-      this.addProcessExitListeners(),
     )
 
-    this.write(HIDE_CURSOR, 'output')
+    // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
+    this.options.logger.onExit(() => {
+      this.flushBuffer()
+      this.stop()
+    })
 
     this.start()
   }
@@ -62,7 +63,6 @@ export class WindowRenderer {
   }
 
   stop() {
-    this.write(SHOW_CURSOR, 'output')
     this.cleanups.splice(0).map(fn => fn())
     clearInterval(this.renderInterval)
   }
@@ -177,32 +177,6 @@ export class WindowRenderer {
 
   private write(message: string, type: 'output' | 'error' = 'output') {
     (this.streams[type] as Writable['write'])(message)
-  }
-
-  private addProcessExitListeners() {
-    const onExit = (signal?: string | number, exitCode?: number) => {
-      // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
-      this.flushBuffer()
-      this.stop()
-
-      // Interrupted signals don't set exit code automatically.
-      // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
-      if (process.exitCode === undefined) {
-        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
-      }
-
-      process.exit()
-    }
-
-    process.once('SIGINT', onExit)
-    process.once('SIGTERM', onExit)
-    process.once('exit', onExit)
-
-    return function cleanup() {
-      process.off('SIGINT', onExit)
-      process.off('SIGTERM', onExit)
-      process.off('exit', onExit)
-    }
   }
 }
 
