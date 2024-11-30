@@ -27,13 +27,13 @@ declare module 'vitest/node' {
   }
 }
 
-type PWHoverOptions = Parameters<Page['hover']>[1]
-type PWClickOptions = Parameters<Page['click']>[1]
-type PWDoubleClickOptions = Parameters<Page['dblclick']>[1]
-type PWFillOptions = Parameters<Page['fill']>[2]
-type PWScreenshotOptions = Parameters<Page['screenshot']>[0]
-type PWSelectOptions = Parameters<Page['selectOption']>[2]
-type PWDragAndDropOptions = Parameters<Page['dragAndDrop']>[2]
+type PWHoverOptions = NonNullable<Parameters<Page['hover']>[1]>
+type PWClickOptions = NonNullable<Parameters<Page['click']>[1]>
+type PWDoubleClickOptions = NonNullable<Parameters<Page['dblclick']>[1]>
+type PWFillOptions = NonNullable<Parameters<Page['fill']>[2]>
+type PWScreenshotOptions = NonNullable<Parameters<Page['screenshot']>[0]>
+type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
+type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
 
 declare module '@vitest/browser/context' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
