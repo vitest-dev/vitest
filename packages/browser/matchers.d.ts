@@ -1,6 +1,6 @@
 import type { Locator } from '@vitest/browser/context'
 import type jsdomMatchers from './jest-dom.js'
-import type { Assertion } from 'vitest'
+import type { Assertion, ExpectPollOptions } from 'vitest'
 
 declare module 'vitest' {
   interface JestAssertion<T = any> extends jsdomMatchers.default.TestingLibraryMatchers<void, T> {}
