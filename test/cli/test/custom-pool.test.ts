@@ -4,7 +4,7 @@ import { runVitest } from '../../test-utils'
 test('can run custom pools with Vitest', async () => {
   const vitest = await runVitest({
     root: './fixtures/custom-pool',
-    reporters: ['basic'],
+    reporters: [['default', { isTTY: false }]],
   })
 
   expect(vitest.stderr).toMatchInlineSnapshot(`

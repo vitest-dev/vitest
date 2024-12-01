@@ -34,7 +34,7 @@ test('merge reports', async () => {
     .replace(/Start at [\w\s:]+/, 'Start at <time>')
   const stderrArr = stderrDefault.split('\n')
   const stderrCheck = [
-    ...stderrArr.slice(3, 19),
+    ...stderrArr.slice(4, 19),
     ...stderrArr.slice(21, -3),
   ]
 

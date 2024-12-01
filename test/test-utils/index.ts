@@ -8,10 +8,14 @@ import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'pathe'
 import { x } from 'tinyexec'
+import * as tinyrainbow from 'tinyrainbow'
 import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
 import { startVitest } from 'vitest/node'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
+
+// override default colors to disable them in tests
+Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
 
 interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -66,6 +70,10 @@ export async function runVitest(
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...rest,
+      env: {
+        NO_COLOR: 'true',
+        ...rest.env,
+      },
     }, {
       ...viteOverrides,
       server: {

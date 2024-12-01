@@ -78,6 +78,7 @@ export class Vitest {
 
   public packageInstaller: VitestPackageInstaller
 
+  /** TODO: rename to `_coreRootProject` */
   /** @internal */
   public coreWorkspaceProject!: TestProject
 
@@ -93,7 +94,7 @@ export class Vitest {
   /** @deprecated use `_cachedSpecs` */
   projectTestFiles = this._cachedSpecs
 
-  /** @private */
+  /** @internal */
   public _browserLastPort = defaultBrowserPort
 
   /** @internal */
