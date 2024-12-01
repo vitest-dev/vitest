@@ -1283,6 +1283,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/dts-playwright:
+    devDependencies:
+      '@vitest/browser':
+        specifier: workspace:*
+        version: link:../../packages/browser
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/global-setup:
     devDependencies:
       vitest:
