@@ -14,7 +14,7 @@ Vitest runs tests in pools. By default, there are several pools:
 
 You can provide your own pool by specifying a file path:
 
-```ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -27,13 +27,30 @@ export default defineConfig({
         customProperty: true,
       },
     },
-    // you can also specify pool for a subset of files
-    poolMatchGlobs: [
-      ['**/*.custom.test.ts', './my-custom-pool.ts'],
+  },
+})
+```
+
+If you need to run tests in different pools, use the [workspace](/guide/workspace) feature:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    workspace: [
+      {
+        extends: true,
+        test: {
+          pool: 'threads',
+        },
+      },
     ],
   },
 })
 ```
+
+::: info
+The `workspace` field was introduced in Vitest 2.2. To define a workspace in Vitest <2.2, create a separate `vitest.workspace.ts` file.
+:::
 
 ## API
 
