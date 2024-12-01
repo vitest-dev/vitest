@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dts-fixture",
+  "name": "@vitest/test-dts-playwright",
   "type": "module",
   "private": true,
   "scripts": {
