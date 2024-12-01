@@ -24,3 +24,28 @@ test('prints error properties', async () => {
 
   expect(result.stderr).toContain(`Serialized Error: { code: 404, status: 'not found' }`)
 })
+
+test('prints skipped tests by default', async () => {
+  const { stdout } = await runVitest({
+    include: ['fixtures/all-passing-or-skipped.test.ts'],
+    reporters: [['verbose', { isTTY: true, summary: false }]],
+    config: false,
+  })
+
+  expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
+  expect(stdout).toContain('✓ 2 + 3 = 5')
+  expect(stdout).toContain('↓ 3 + 3 = 6')
+})
+
+test('hides skipped tests when --hideSkippedTests', async () => {
+  const { stdout } = await runVitest({
+    include: ['fixtures/all-passing-or-skipped.test.ts'],
+    reporters: [['verbose', { isTTY: true, summary: false }]],
+    hideSkippedTests: true,
+    config: false,
+  })
+
+  expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
+  expect(stdout).toContain('✓ 2 + 3 = 5')
+  expect(stdout).not.toContain('↓ 3 + 3 = 6')
+})
