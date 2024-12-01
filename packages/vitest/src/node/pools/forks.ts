@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
@@ -102,7 +102,7 @@ export function createForksPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: FileSpec[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {

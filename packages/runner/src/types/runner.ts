@@ -39,7 +39,10 @@ export interface VitestRunnerConfig {
   diffOptions?: DiffOptions
 }
 
-export interface FileSpec {
+/**
+ * Possible options to run a single file in a test.
+ */
+export interface FileSpecification {
   filepath: string
   testLocations: number[] | undefined
 }
