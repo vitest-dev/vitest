@@ -16,7 +16,7 @@ export const hover: UserEventCommand<UserEvent['hover']> = async (
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
-    await browser.$(selector).moveTo(options)
+    await browser.$(selector).moveTo(options as any)
   }
   else {
     throw new TypeError(`Provider "${context.provider.name}" does not support hover`)
