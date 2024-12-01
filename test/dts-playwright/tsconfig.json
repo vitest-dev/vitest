@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "noEmit": true,
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "noEmit": true
   },
   "include": ["src"]
 }
