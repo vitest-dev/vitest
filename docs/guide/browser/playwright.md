@@ -78,3 +78,19 @@ Vitest awlays sets `ignoreHTTPSErrors` to `true` in case your server is served v
 
 It is also recommended to use [`test.browser.viewport`](/config/#browser-headless) instead of specifying it here as it will be lost when tests are running in headless mode.
 :::
+
+## `actionTimeout` <Version>2.2.0</Version>
+
+- **Default:** no timeout, 1 second before 2.2.0
+
+This value configures the default timeout it takes for Playwright to wait until all accessibility checks pass and [the action](/guide/browser/interactivity-api) is actually done.
+
+You can also configure the action timeout per-action:
+
+```ts
+import { page, userEvent } from '@vitest/browser/context'
+
+await userEvent.click(page.getByRole('button'), {
+  timeout: 1_000,
+})
+```
