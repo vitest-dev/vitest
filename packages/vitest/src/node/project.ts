@@ -27,6 +27,7 @@ import { isAbsolute, join, relative } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { setup } from '../api/setup'
+import { attestGlobalSetup } from '../integrations/attest/node'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { loadGlobalSetupFiles } from './globalSetup'
@@ -223,6 +224,12 @@ export class TestProject {
       this.runner,
       this.config.globalSetup,
     )
+    if (this.config.attest) {
+      this._globalSetups.push({
+        file: 'attest',
+        setup: attestGlobalSetup,
+      })
+    }
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.(this)
@@ -627,6 +634,18 @@ export class TestProject {
       )
     }
     return project
+  }
+
+  /** @internal */
+  async _initAttest(): Promise<void> {
+    if (this.config.attest) {
+      // TODO: inject custom setupFiles and globalSetupFiles here?
+      // TODO: also ensure 'typescript'?
+      await this.vitest.packageInstaller.ensureInstalled(
+        '@ark/attest',
+        this.config.root,
+      )
+    }
   }
 }
 

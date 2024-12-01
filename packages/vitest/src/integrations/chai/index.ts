@@ -22,6 +22,10 @@ export function createExpect(test?: TaskPopulated) {
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
+    if (getWorkerState().config.attest) {
+      // TODO: avoid incuring new Error for non attest assertion
+      chai.util.flag(assert, '__vitest_expect_stack', new Error('-').stack)
+    }
     if (_test) {
       // @ts-expect-error internal
       return assert.withTest(_test) as Assertion

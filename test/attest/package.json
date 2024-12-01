@@ -1,0 +1,13 @@
+{
+  "name": "@vitest/test-attest",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test-fixtures": "cd fixtures && vitest --attest",
+    "test-fixtures-skip-types": "cd fixtures && vitest"
+  },
+  "devDependencies": {
+    "@ark/attest": "^0.28.0"
+  }
+}

@@ -698,6 +698,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       exclude: null,
     },
   },
+  // TODO: what to name?
+  attest: {
+    description: 'Enable runtime type assertions (default: `false`)',
+  },
   project: {
     description:
       'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.',

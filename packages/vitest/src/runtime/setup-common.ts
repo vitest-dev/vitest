@@ -4,6 +4,7 @@ import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { addSerializer } from '@vitest/snapshot'
 import { setSafeTimers } from '@vitest/utils'
+import { attestSetup } from '../integrations/attest/runtime'
 import { resetRunOnceCounter } from '../integrations/run-once'
 
 let globalSetup = false
@@ -11,6 +12,7 @@ export async function setupCommonEnv(config: SerializedConfig) {
   resetRunOnceCounter()
   setupDefines(config.defines)
   setupEnv(config.env)
+  await attestSetup(config)
 
   if (globalSetup) {
     return

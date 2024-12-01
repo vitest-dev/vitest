@@ -20,7 +20,6 @@ import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
 import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
-
 import {
   addExtraLineBreaks,
   getSnapshotData,
@@ -235,6 +234,7 @@ export default class SnapshotState {
     isInline,
     error,
     rawSnapshot,
+    skip,
   }: SnapshotMatchOptions): SnapshotReturnOptions {
     this._counters.set(testName, (this._counters.get(testName) || 0) + 1)
     const count = Number(this._counters.get(testName))
@@ -248,6 +248,11 @@ export default class SnapshotState {
     // removed with `--updateSnapshot`.
     if (!(isInline && this._snapshotData[key] !== undefined)) {
       this._uncheckedKeys.delete(key)
+    }
+
+    // allow no-op snapshot assertion for attest
+    if (skip) {
+      return { pass: true, actual: '', key, count }
     }
 
     let receivedSerialized

@@ -122,6 +122,7 @@
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" rollup -c --watch -m inline"
   },
   "peerDependencies": {
+    "@ark/attest": "*",
     "@edge-runtime/vm": "*",
     "@types/node": "^18.0.0 || >=20.0.0",
     "@vitest/browser": "workspace:*",
@@ -130,6 +131,9 @@
     "jsdom": "*"
   },
   "peerDependenciesMeta": {
+    "@ark/attest": {
+      "optional": true
+    },
     "@edge-runtime/vm": {
       "optional": true
     },
@@ -174,6 +178,7 @@
   "devDependencies": {
     "@ampproject/remapping": "^2.3.0",
     "@antfu/install-pkg": "^0.4.1",
+    "@ark/attest": "^0.28.0",
     "@edge-runtime/vm": "^4.0.4",
     "@sinonjs/fake-timers": "11.1.0",
     "@types/debug": "^4.1.12",

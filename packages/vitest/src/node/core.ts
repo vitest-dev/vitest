@@ -209,6 +209,10 @@ export class Vitest {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
 
+    for (const project of projects) {
+      await project._initAttest()
+    }
+
     await Promise.all(this._onSetServer.map(fn => fn()))
   }
 

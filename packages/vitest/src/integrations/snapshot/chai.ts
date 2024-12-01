@@ -44,7 +44,7 @@ function getError(expected: () => void | Error, promise: string | undefined) {
   throw new Error('snapshot function didn\'t throw')
 }
 
-function getTestNames(test?: Test) {
+export function getTestNames(test?: Test) {
   if (!test) {
     return {}
   }
