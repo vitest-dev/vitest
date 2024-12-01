@@ -1,3 +1,4 @@
+import type { FileSpec } from '@vitest/runner'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
@@ -21,7 +22,7 @@ import { getWorkerState } from './utils'
 
 export async function run(
   method: 'run' | 'collect',
-  files: string[],
+  files: FileSpec[],
   config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<void> {
@@ -85,7 +86,7 @@ export async function run(
   const { vi } = VitestIndex
 
   for (const file of files) {
-    workerState.filepath = file
+    workerState.filepath = file.filepath
 
     if (method === 'run') {
       await startTests([file], runner)

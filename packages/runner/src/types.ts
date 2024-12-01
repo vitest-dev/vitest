@@ -1,5 +1,6 @@
 export type {
   CancelReason,
+  FileSpec,
   VitestRunner,
   VitestRunnerConfig,
   VitestRunnerConstructor,

@@ -131,11 +131,16 @@ export class TestProject {
    * Creates a new test specification. Specifications describe how to run tests.
    * @param moduleId The file path
    */
-  public createSpecification(moduleId: string, pool?: string): TestSpecification {
+  public createSpecification(
+    moduleId: string,
+    pool?: string,
+    testLocations?: number[] | undefined,
+  ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this, moduleId),
+      testLocations,
     )
   }
 

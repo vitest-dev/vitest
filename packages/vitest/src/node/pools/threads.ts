@@ -1,3 +1,4 @@
+import type { FileSpec } from '@vitest/runner/types/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
@@ -95,11 +96,13 @@ export function createThreadsPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpec[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
@@ -124,7 +127,7 @@ export function createThreadsPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(
+            `Failed to terminate worker while running ${paths.join(
               ', ',
             )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
           )
@@ -135,7 +138,7 @@ export function createThreadsPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error

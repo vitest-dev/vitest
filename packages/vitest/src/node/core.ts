@@ -11,6 +11,7 @@ import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, slash, toArray } from '@vitest/utils'
@@ -25,8 +26,9 @@ import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { VitestCache } from './cache'
+import { groupFilters, parseFilter } from './cli/filter'
 import { resolveConfig } from './config/resolveConfig'
-import { FilesNotFoundError, GitNotFoundError } from './errors'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
@@ -1144,19 +1146,55 @@ export class Vitest {
 
   public async globTestSpecs(filters: string[] = []) {
     const files: TestSpecification[] = []
+    const dir = process.cwd()
+    const parsedFilters = filters.map(f => parseFilter(f))
+
+    // Require includeTaskLocation when a location filter is passed
+    if (
+      !this.config.includeTaskLocation
+      && parsedFilters.some(f => f.lineNumber !== undefined)
+    ) {
+      throw new IncludeTaskLocationDisabledError()
+    }
+
+    const testLocations = groupFilters(parsedFilters.map(
+      f => ({ ...f, filename: slash(resolve(dir, f.filename)) }),
+    ))
+
+    // Key is file and val sepcifies whether we have matched this file with testLocation
+    const testLocHasMatch: { [f: string]: boolean } = {}
+
     await Promise.all(this.projects.map(async (project) => {
-      const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
+      const { testFiles, typecheckTestFiles } = await project.globTestFiles(
+        parsedFilters.map(f => f.filename),
+      )
+
       testFiles.forEach((file) => {
-        const spec = project.createSpecification(file)
+        const loc = testLocations[file]
+        testLocHasMatch[file] = true
+
+        const spec = project.createSpecification(file, undefined, loc)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec = project.createSpecification(file, 'typescript')
+        const loc = testLocations[file]
+        testLocHasMatch[file] = true
+
+        const spec = project.createSpecification(file, 'typescript', loc)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
     }))
+
+    Object.entries(testLocations).forEach(([filepath, loc]) => {
+      if (loc.length !== 0 && !testLocHasMatch[filepath]) {
+        throw new LocationFilterFileNotFoundError(
+          relative(dir, filepath),
+        )
+      }
+    })
+
     return files as WorkspaceSpec[]
   }
 

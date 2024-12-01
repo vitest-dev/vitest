@@ -1,3 +1,4 @@
+import type { FileSpec } from '@vitest/runner'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
@@ -17,7 +18,7 @@ import { getWorkerState, resetModules } from './utils'
 // browser shouldn't call this!
 export async function run(
   method: 'run' | 'collect',
-  files: string[],
+  files: FileSpec[],
   config: SerializedConfig,
   environment: ResolvedTestEnvironment,
   executor: VitestExecutor,
@@ -61,7 +62,7 @@ export async function run(
           resetModules(workerState.moduleCache, true)
         }
 
-        workerState.filepath = file
+        workerState.filepath = file.filepath
 
         if (method === 'run') {
           await startTests([file], runner)
