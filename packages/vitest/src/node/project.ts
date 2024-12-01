@@ -134,13 +134,13 @@ export class TestProject {
   public createSpecification(
     moduleId: string,
     pool?: string,
-    testLocations?: number[] | undefined,
+    locations?: number[] | undefined,
   ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this, moduleId),
-      testLocations,
+      locations,
     )
   }
 

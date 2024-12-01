@@ -16,19 +16,29 @@ export class TestSpecification {
    */
   public readonly 2: { pool: Pool }
 
+  /**
+   * The test project that the module belongs to.
+   */
   public readonly project: TestProject
+  /**
+   * The ID of the module in the Vite module graph. It is usually an absolute file path.
+   */
   public readonly moduleId: string
+  /**
+   * The current test pool. It's possible to have multiple pools in a single test project with `poolMatchGlob` and `typecheck.enabled`.
+   * @experimental In Vitest 3, the project will only support a single pool
+   */
   public readonly pool: Pool
-  /** @private */
-  public readonly testLocations: number[] | undefined
-  // public readonly location: WorkspaceSpecLocation | undefined
+  /**
+   * Line numbers of the test locations in the module to run.
+   */
+  public readonly locations: number[] | undefined
 
   constructor(
     project: TestProject,
     moduleId: string,
     pool: Pool,
-    testLocations?: number[] | undefined,
-    // location?: WorkspaceSpecLocation | undefined,
+    locations?: number[] | undefined,
   ) {
     this[0] = project
     this[1] = moduleId
@@ -36,8 +46,7 @@ export class TestSpecification {
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
-    this.testLocations = testLocations
-    // this.location = location
+    this.locations = locations
   }
 
   toJSON(): SerializedTestSpecification {
@@ -47,7 +56,7 @@ export class TestSpecification {
         root: this.project.config.root,
       },
       this.moduleId,
-      { pool: this.pool },
+      { pool: this.pool, locations: this.locations },
     ]
   }
 
@@ -61,8 +70,3 @@ export class TestSpecification {
     yield this.pool
   }
 }
-
-// interface WorkspaceSpecLocation {
-//   start: number
-//   end: number
-// }

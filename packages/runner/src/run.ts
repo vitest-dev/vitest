@@ -1,6 +1,6 @@
 import type { Awaitable } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { FileSpec, VitestRunner } from './types/runner'
+import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
   ExtendedContext,
   File,
@@ -514,7 +514,7 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 }
 
-export async function startTests(specs: string[] | FileSpec[], runner: VitestRunner): Promise<File[]> {
+export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
   await runner.onBeforeCollect?.(paths)
 
@@ -532,7 +532,7 @@ export async function startTests(specs: string[] | FileSpec[], runner: VitestRun
   return files
 }
 
-async function publicCollect(specs: string[] | FileSpec[], runner: VitestRunner): Promise<File[]> {
+async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
 
   await runner.onBeforeCollect?.(paths)
