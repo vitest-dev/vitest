@@ -69,7 +69,7 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@vue/test-utils": "^2.4.6",
-    "@vueuse/core": "^11.2.0",
+    "@vueuse/core": "^12.0.0",
     "ansi-to-html": "^0.7.2",
     "birpc": "0.2.19",
     "codemirror": "^5.65.18",
