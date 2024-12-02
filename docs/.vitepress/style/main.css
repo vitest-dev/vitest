@@ -169,7 +169,6 @@ img.resizable-img {
 
 /* old document warning */
 :root {
-  --vp-c-brand-softest: rgb(39, 40, 67);
   --vp-layout-top-height: 96px;
   @media (min-width: 455px) {
     --vp-layout-top-height: 64px;
