@@ -1,13 +1,14 @@
-import { h } from 'vue'
-import Theme, { VPBadge } from 'vitepress/theme'
 import type { EnhanceAppContext } from 'vitepress'
+import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
 import { inBrowser } from 'vitepress'
+import Theme, { VPBadge } from 'vitepress/theme'
+import { h } from 'vue'
+import HomePage from '../components/HomePage.vue'
+import Version from '../components/Version.vue'
+import WrappedLayout from '../components/WrappedLayout.vue'
 import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
-import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
-import HomePage from '../components/HomePage.vue'
-import Version from '../components/Version.vue'
 import '@shikijs/vitepress-twoslash/style.css'
 
 if (inBrowser)
@@ -16,7 +17,7 @@ if (inBrowser)
 export default {
   ...Theme,
   Layout() {
-    return h(Theme.Layout, null, {
+    return h(WrappedLayout, null, {
       'home-features-after': () => h(HomePage),
     })
   },
