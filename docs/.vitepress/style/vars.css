@@ -22,6 +22,10 @@
   --vp-code-copy-code-bg: rgba(125,125,125,0.1);
   --vp-code-copy-code-hover-bg: rgba(125,125,125,0.2);
   --vp-c-disabled-bg: rgba(125,125,125,0.2);
+
+  /* Old Document */
+  --vp-c-old-document-bg: #f4f8e0;
+  --vp-c-old-document-text: #2a3a1b;
 }
 
 .dark {
@@ -35,6 +39,10 @@
   --vp-c-text-dark-2: rgba(235, 235, 235, 0.60);
   /* fix lang name: check the same above (this is the default) */
   --vp-c-text-dark-3: rgba(235, 235, 235, 0.38);
+
+  /* Old Document */
+  --vp-c-old-document-bg: #2d3b2e;
+  --vp-c-old-document-text: #c5d9b6;
 }
 
 /**
