@@ -41,7 +41,7 @@ Vitest requires Vite >=v5.0.0 and Node >=v18.0.0
 
 It is recommended that you install a copy of `vitest` in your `package.json`, using one of the methods listed above. However, if you would prefer to run `vitest` directly, you can use `npx vitest` (the `npx` tool comes with npm and Node.js).
 
-The `npx` tool will execute the specified command. By default, `npx` will first check if the command exists in the local project's binaries. If it is not found there, `npx` will look in the system's $PATH and execute it if found. If the command is not found in either location, `npx` will install it in a temporary location prior to execution.
+The `npx` tool will execute the specified command. By default, `npx` will first check if the command exists in the local project's binaries. If it is not found there, `npx` will look in the system's `$PATH` and execute it if found. If the command is not found in either location, `npx` will install it in a temporary location prior to execution.
 
 ## Writing Tests
 
