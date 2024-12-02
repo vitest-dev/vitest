@@ -439,7 +439,7 @@ You can use it like below in your [setup file](/config/#setupfiles)
 ```js
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
-import { HttpResponse, graphql, http } from 'msw'
+import { graphql, http, HttpResponse } from 'msw'
 
 const posts = [
   {
