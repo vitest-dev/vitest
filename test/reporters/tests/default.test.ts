@@ -94,4 +94,27 @@ describe('default reporter', async () => {
     expect(stdout).toContain('✓ 2 + 3 = 5')
     expect(stdout).not.toContain('↓ 3 + 3 = 6')
   })
+
+  test('prints retry count', async () => {
+    const { stdout } = await runVitest({
+      include: ['fixtures/retry.test.ts'],
+      reporters: [['default', { isTTY: true, summary: false }]],
+      retry: 3,
+      config: false,
+    })
+
+    expect(stdout).toContain('1 passed')
+    expect(stdout).toContain('✓ pass after retries (retry x3)')
+  })
+
+  test('prints repeat count', async () => {
+    const { stdout } = await runVitest({
+      include: ['fixtures/repeats.test.ts'],
+      reporters: [['default', { isTTY: true, summary: false }]],
+      config: false,
+    })
+
+    expect(stdout).toContain('1 passed')
+    expect(stdout).toContain('✓ repeat couple of times (repeat x3)')
+  })
 }, 120000)

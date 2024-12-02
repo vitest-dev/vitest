@@ -114,11 +114,19 @@ export abstract class BaseReporter implements Reporter {
     const anyFailed = tests.some(test => test.result?.state === 'fail')
 
     for (const test of tests) {
-      const duration = test.result?.duration
+      const { duration, retryCount, repeatCount } = test.result || {}
+      let suffix = ''
+
+      if (retryCount != null && retryCount > 0) {
+        suffix += c.yellow(` (retry x${retryCount})`)
+      }
+
+      if (repeatCount != null && repeatCount > 0) {
+        suffix += c.yellow(` (repeat x${repeatCount})`)
+      }
 
       if (test.result?.state === 'fail') {
-        const suffix = this.getDurationPrefix(test)
-        this.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${suffix}`))
+        this.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
 
         test.result?.errors?.forEach((e) => {
           // print short errors, full errors will be at the end in summary
@@ -130,7 +138,7 @@ export abstract class BaseReporter implements Reporter {
       else if (duration && duration > this.ctx.config.slowTestThreshold) {
         this.log(
           `   ${c.yellow(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}`
-          + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}`,
+          + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}${suffix}`,
         )
       }
 
@@ -144,7 +152,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${c.dim(getStateSymbol(test))} ${getTestName(test, c.dim(' > '))}`)
+        this.log(`   ${c.dim(getStateSymbol(test))} ${getTestName(test, c.dim(' > '))}${suffix}`)
       }
     }
   }
