@@ -24,7 +24,7 @@ Since Vitest 2.1, if your `include` and `typecheck.include` overlap, Vitest will
 
 Using CLI flags, like `--allowOnly` and `-t` are also supported for type checking.
 
-```ts
+```ts [mount.test-d.ts]
 import { assertType, expectTypeOf } from 'vitest'
 import { mount } from './mount.js'
 

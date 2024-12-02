@@ -3,6 +3,10 @@ import { withPwa } from '@vite-pwa/vitepress'
 import type { DefaultTheme } from 'vitepress'
 import { defineConfig } from 'vitepress'
 import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
+import {
+  groupIconMdPlugin,
+  groupIconVitePlugin,
+} from 'vitepress-plugin-group-icons'
 import { version } from '../../package.json'
 import { teamMembers } from './contributors'
 import {
@@ -20,10 +24,6 @@ import {
 } from './meta'
 import { pwa } from './scripts/pwa'
 import { transformHead } from './scripts/transformHead'
-import {
-  groupIconMdPlugin,
-  groupIconVitePlugin,
-} from 'vitepress-plugin-group-icons'
 
 export default ({ mode }: { mode: string }) => {
   return withPwa(defineConfig({
@@ -145,7 +145,7 @@ export default ({ mode }: { mode: string }) => {
           text: 'Resources',
           items: [
             {
-              text: 'Advanced',
+              text: 'Advanced API',
               link: '/advanced/api',
               activeMatch: '^/advanced/',
             },
@@ -311,6 +311,10 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Advanced API',
                 link: '/advanced/api',
               },
+              {
+                text: 'Comparisons',
+                link: '/guide/comparisons',
+              },
             ],
           },
         ],
@@ -360,16 +364,16 @@ function introduction(): DefaultTheme.SidebarItem[] {
 function guide(): DefaultTheme.SidebarItem[] {
   return [
     {
-      text: 'Workspace',
-      link: '/guide/workspace',
-    },
-    {
       text: 'CLI',
       link: '/guide/cli',
     },
     {
       text: 'Test Filtering',
       link: '/guide/filtering',
+    },
+    {
+      text: 'Workspace',
+      link: '/guide/workspace',
     },
     {
       text: 'Reporters',
@@ -420,10 +424,6 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/debugging',
     },
     {
-      text: 'Comparisons',
-      link: '/guide/comparisons',
-    },
-    {
       text: 'Migration Guide',
       link: '/guide/migration',
     },
@@ -432,12 +432,18 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/common-errors',
     },
     {
-      text: 'Profiling Test Performance',
-      link: '/guide/profiling-test-performance',
-    },
-    {
-      text: 'Improving Performance',
-      link: '/guide/improving-performance',
+      text: 'Performance',
+      collapsed: false,
+      items: [
+        {
+          text: 'Profiling Test Performance',
+          link: '/guide/profiling-test-performance',
+        },
+        {
+          text: 'Improving Performance',
+          link: '/guide/improving-performance',
+        },
+      ],
     },
   ]
 }
