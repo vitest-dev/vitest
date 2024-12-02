@@ -24,7 +24,7 @@ export class VitestSpecifications {
         specs.push(project.createSpecification(moduleId))
       }
       if (project.isTypecheckFile(moduleId)) {
-        specs.push(project.createSpecification(moduleId, 'typescript'))
+        specs.push(project.createSpecification(moduleId, [], 'typescript'))
       }
     }
     specs.forEach(spec => this.ensureSpecificationCached(spec))
@@ -66,7 +66,7 @@ export class VitestSpecifications {
         const loc = testLocations[file]
         testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, undefined, loc)
+        const spec = project.createSpecification(file, loc)
         this.ensureSpecificationCached(spec)
         files.push(spec)
       })
@@ -74,7 +74,7 @@ export class VitestSpecifications {
         const loc = testLocations[file]
         testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, 'typescript', loc)
+        const spec = project.createSpecification(file, loc, 'typescript')
         this.ensureSpecificationCached(spec)
         files.push(spec)
       })

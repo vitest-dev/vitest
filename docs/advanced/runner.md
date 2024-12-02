@@ -1,4 +1,4 @@
-# Test Runner
+# Runner API
 
 ::: warning
 This is advanced API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.

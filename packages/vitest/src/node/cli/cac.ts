@@ -58,7 +58,7 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   }
 }
 
-interface CLIOptions {
+export interface CliParseOptions {
   allowUnknownOptions?: boolean
 }
 
@@ -70,7 +70,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export function createCLI(options: CLIOptions = {}) {
+export function createCLI(options: CliParseOptions = {}) {
   const cli = cac('vitest')
 
   cli.version(version)
@@ -196,7 +196,7 @@ export function createCLI(options: CLIOptions = {}) {
   return cli
 }
 
-export function parseCLI(argv: string | string[], config: CLIOptions = {}): {
+export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
   filter: string[]
   options: CliOptions
 } {
@@ -307,7 +307,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       run: true,
     })
     if (!options.filesOnly) {
-      const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
+      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
 
       if (errors.length) {
         console.error('\nThere were unhandled errors during test collection')

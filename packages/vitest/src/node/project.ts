@@ -133,8 +133,8 @@ export class TestProject {
    */
   public createSpecification(
     moduleId: string,
-    pool?: string,
     locations?: number[] | undefined,
+    pool?: string,
   ): TestSpecification {
     return new TestSpecification(
       this,
@@ -417,8 +417,8 @@ export class TestProject {
   /**
    * Test if a file matches the test globs. This does the actual glob matching unlike `isTestFile`.
    */
-  public matchesTestGlob(filepath: string, source?: string): boolean {
-    const relativeId = relative(this.config.dir || this.config.root, filepath)
+  public matchesTestGlob(moduleId: string, source?: string): boolean {
+    const relativeId = relative(this.config.dir || this.config.root, moduleId)
     if (mm.isMatch(relativeId, this.config.exclude)) {
       return false
     }
@@ -429,7 +429,7 @@ export class TestProject {
       this.config.includeSource?.length
       && mm.isMatch(relativeId, this.config.includeSource)
     ) {
-      const code = source || readFileSync(filepath, 'utf-8')
+      const code = source || readFileSync(moduleId, 'utf-8')
       return this.isInSourceTestCode(code)
     }
     return false

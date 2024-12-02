@@ -491,8 +491,8 @@ export class Vitest {
     await this.coverageProvider?.mergeReports?.(coverages)
 
     return {
-      tests: this.state.getTestModules(),
-      errors: this.state.getUnhandledErrors(),
+      testModules: this.state.getTestModules(),
+      unhandledErrors: this.state.getUnhandledErrors(),
     }
   }
 
@@ -503,7 +503,7 @@ export class Vitest {
 
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      return { tests: [], errors: [] }
+      return { testModules: [], unhandledErrors: [] }
     }
 
     return this.collectTests(files)
@@ -555,8 +555,8 @@ export class Vitest {
     }
 
     let testModules: TestRunResult = {
-      tests: [],
-      errors: [],
+      testModules: [],
+      unhandledErrors: [],
     }
 
     if (files.length) {
@@ -690,8 +690,8 @@ export class Vitest {
         await this.cache.results.writeToCache()
 
         return {
-          tests: this.state.getTestModules(),
-          errors: this.state.getUnhandledErrors(),
+          testModules: this.state.getTestModules(),
+          unhandledErrors: this.state.getUnhandledErrors(),
         }
       }
       finally {
@@ -759,8 +759,8 @@ export class Vitest {
       }
 
       return {
-        tests: this.state.getTestModules(),
-        errors: this.state.getUnhandledErrors(),
+        testModules: this.state.getTestModules(),
+        unhandledErrors: this.state.getUnhandledErrors(),
       }
     })()
       .finally(() => {
