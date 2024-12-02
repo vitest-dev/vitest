@@ -6,6 +6,7 @@ import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 export const version = Vitest.version
 
 export { parseCLI } from '../node/cli/cac'
+export type { CliParseOptions } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
 export type { Vitest } from '../node/core'
@@ -94,7 +95,6 @@ export type {
   VitestEnvironment,
   VitestRunMode,
 } from '../node/types/config'
-
 export type {
   BaseCoverageOptions,
   CoverageIstanbulOptions,
@@ -107,6 +107,8 @@ export type {
   ReportContext,
   ResolvedCoverageOptions,
 } from '../node/types/coverage'
+
+export type { TestRunResult } from '../node/types/tests'
 /**
  * @deprecated Use `TestModule` instead
  */
