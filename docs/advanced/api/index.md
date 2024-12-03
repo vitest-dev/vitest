@@ -36,7 +36,7 @@ You can pass down a list of filters as a second argument. Vitest will run only t
 
 Additionally, you can use the third argument to pass in CLI arguments, which will override any test config options. Alternatively, you can pass in the complete Vite config as the fourth argument, which will take precedence over any other user-defined options.
 
-After running the tests, you can get the results from the [`state.getTestModules`](/advanced/reporters#reported-tasks) API:
+After running the tests, you can get the results from the [`state.getTestModules`](/advanced/api/test-module) API:
 
 ```ts
 import type { TestModule } from 'vitest/node'

@@ -92,7 +92,7 @@ This is project's [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitede
 
 ## browser
 
-This value will be set only if tests are running in the browser. If `browser` is enabled, but tests didn't run yet, this will be `undefined`. If you need to check if the project supports browser tests, use `project.isBrowserSupported()` method.
+This value will be set only if tests are running in the browser. If `browser` is enabled, but tests didn't run yet, this will be `undefined`. If you need to check if the project supports browser tests, use `project.isBrowserEnabled()` method.
 
 ::: warning
 The browser API is even more experimental and doesn't follow SemVer. The browser API will be standardized separately from the rest of the APIs.
@@ -188,6 +188,8 @@ await vitest.runFiles([specification], true)
 
 ::: warning
 `createSpecification` expects an absolute file path. It doesn't resolve the file or check that it exists on the file system.
+
+Also note that `project.createSpecification` always returns a new instance.
 :::
 
 ## isRootProject
@@ -264,6 +266,14 @@ project.onTestsRerun((specs) => {
   console.log(specs)
 })
 ```
+
+## isBrowserEnabled
+
+```ts
+function isBrowserEnabled(): boolean
+```
+
+Returns `true` if this project runs tests in the browser.
 
 ## close
 
