@@ -617,11 +617,19 @@ export class Vitest {
   }
 
   /**
+   * Vitest automatically caches test specifications for each file. This method clears the cache for the given file or the whole cache alltogether.
+   */
+  public clearSpecificationsCache(moduleId?: string) {
+    this.specifications.clearCache(moduleId)
+  }
+
+  /**
    * Run tests for the given test specifications. This does not trigger `onWatcher*` events.
    * @param specifications A list of specifications to run.
    * @param allTestsRun Indicates whether all tests were run. This only matters for coverage.
    */
   public runTestSpecifications(specifications: TestSpecification[], allTestsRun = false): Promise<TestRunResult> {
+    specifications.forEach(spec => this.specifications.ensureSpecificationCached(spec))
     return this.runFiles(specifications, allTestsRun)
   }
 
@@ -1072,7 +1080,7 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this.server, ...this.resolvedProjects.map(p => p.server)].filter(Boolean).length
+          const runningServers = [this.vite, ...this.resolvedProjects.map(p => p.vite)].filter(Boolean).length
 
           if (runningServers === 1) {
             console.warn('Tests closed successfully but something prevents Vite server from exiting')
@@ -1128,28 +1136,28 @@ export class Vitest {
   /**
    * Should the server be kept running after the tests are done.
    */
-  shouldKeepServer() {
+  shouldKeepServer(): boolean {
     return !!this.config?.watch
   }
 
   /**
    * Register a handler that will be called when the server is restarted due to a config change.
    */
-  onServerRestart(fn: OnServerRestartHandler) {
+  onServerRestart(fn: OnServerRestartHandler): void {
     this._onRestartListeners.push(fn)
   }
 
   /**
    * Register a handler that will be called when the test run is cancelled with `vitest.cancelCurrentRun`.
    */
-  onCancel(fn: (reason: CancelReason) => Awaitable<void>) {
+  onCancel(fn: (reason: CancelReason) => Awaitable<void>): void {
     this._onCancelListeners.push(fn)
   }
 
   /**
    * Register a handler that will be called when the server is closed.
    */
-  onClose(fn: () => Awaitable<void>) {
+  onClose(fn: () => Awaitable<void>): void {
     this._onClose.push(fn)
   }
 
@@ -1172,7 +1180,7 @@ export class Vitest {
   }
 
   /** @internal */
-  onAfterSetServer(fn: OnServerRestartHandler) {
+  onAfterSetServer(fn: OnServerRestartHandler): void {
     this._onSetServer.push(fn)
   }
 }

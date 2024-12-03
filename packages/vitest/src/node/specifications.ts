@@ -92,21 +92,29 @@ export class VitestSpecifications {
     return files
   }
 
-  public clearCache(): void {
-    this._cachedSpecs.clear()
+  public clearCache(moduleId?: string): void {
+    if (moduleId) {
+      this._cachedSpecs.delete(moduleId)
+    }
+    else {
+      this._cachedSpecs.clear()
+    }
   }
 
   private getCachedSpecifications(moduleId: string): TestSpecification[] | undefined {
     return this._cachedSpecs.get(moduleId)
   }
 
-  private ensureSpecificationCached(spec: TestSpecification): TestSpecification[] {
+  public ensureSpecificationCached(spec: TestSpecification): TestSpecification[] {
     const file = spec.moduleId
     const specs = this._cachedSpecs.get(file) || []
-    const included = specs.some(_s => _s.project === spec.project && _s.pool === spec.pool)
-    if (!included) {
+    const index = specs.findIndex(_s => _s.project === spec.project && _s.pool === spec.pool)
+    if (index === -1) {
       specs.push(spec)
       this._cachedSpecs.set(file, specs)
+    }
+    else {
+      specs.splice(index, 1, spec)
     }
     return specs
   }
