@@ -131,6 +131,22 @@ for (const task of suite.children) {
 Note that `suite.children` will only iterate the first level of nesting, it won't go deeper.
 :::
 
+## ok
+
+```ts
+function ok(): boolean
+```
+
+Checks if the suite has any failed tests. This will also return `false` if suite failed during collection. In that case, check the [`errors()`](#errors) for thrown errors.
+
+## skipped
+
+```ts
+function skipped(): boolean
+```
+
+Checks if the suite was skipped during collection.
+
 ## errors
 
 ```ts

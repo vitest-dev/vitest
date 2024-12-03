@@ -140,7 +140,7 @@ This returns the root context object. This is a shorthand for `vitest.getRootTes
 ## getProjectByName
 
 ```ts
-function getProjectByName(name: string): ProvidedContext
+function getProjectByName(name: string): TestProject
 ```
 
 This method returns the project by its name. Simillar to calling `vitest.projects.find`.

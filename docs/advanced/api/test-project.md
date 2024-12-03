@@ -259,7 +259,7 @@ if (import.meta.vitest) {
 function onTestsRerun(cb: OnTestsRerunHandler): void
 ```
 
-This is a shorthand for `project.vitest.onTestsRerun`. It accepts a callback that will be awaited when the tests have been scheduled to rerun (usually, due to a file change).
+This is a shorthand for [`project.vitest.onTestsRerun`](/advanced/api/vitest#ontestsrerun). It accepts a callback that will be awaited when the tests have been scheduled to rerun (usually, due to a file change).
 
 ```ts
 project.onTestsRerun((specs) => {

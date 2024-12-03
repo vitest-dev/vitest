@@ -44,6 +44,15 @@ class ReportedTaskImplementation {
   }
 
   /**
+   * Checks if the test did not fail the suite.
+   * If the test is not finished yet or was skipped, it will return `true`.
+   */
+  public ok(): boolean {
+    const result = this.task.result
+    return !result || result.state !== 'fail'
+  }
+
+  /**
    * Creates a new reported task instance and stores it in the project's state for future use.
    * @internal
    */
@@ -142,15 +151,6 @@ export class TestCase extends ReportedTaskImplementation {
       state,
       errors: (result.errors || []) as TestError[],
     } satisfies TestResultFailed
-  }
-
-  /**
-   * Checks if the test did not fail the suite.
-   * If the test is not finished yet or was skipped, it will return `true`.
-   */
-  public ok(): boolean {
-    const result = this.result()
-    return !result || result.state !== 'failed'
   }
 
   /**
@@ -314,6 +314,14 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
   }
 
   /**
+   * Checks if the suite was skipped during collection.
+   */
+  public skipped(): boolean {
+    const mode = this.task.mode
+    return mode === 'skip' || mode === 'todo'
+  }
+
+  /**
    * Errors that happened outside of the test run during collection, like syntax errors.
    */
   public errors(): TestError[] {
@@ -365,6 +373,12 @@ export class TestSuite extends SuiteImplementation {
   }
 
   /**
+   * Checks if the suite has any failed tests.
+   * This will also return `false` if suite failed during collection.
+   */
+  declare public ok: () => boolean
+
+  /**
    * Full name of the suite including all parent suites separated with `>`.
    */
   public get fullName(): string {
@@ -398,6 +412,17 @@ export class TestModule extends SuiteImplementation {
     super(task, project)
     this.moduleId = task.filepath
   }
+
+  /**
+   * Checks if the module has any failed tests.
+   * This will also return `false` if module failed during collection.
+   */
+  declare public ok: () => boolean
+
+  /**
+   * Checks if the module was skipped and didn't run.
+   */
+  declare public skipped: () => boolean
 
   /**
    * Useful information about the module like duration, memory usage, etc.
