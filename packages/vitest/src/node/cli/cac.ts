@@ -247,10 +247,13 @@ async function benchmark(cliFilters: string[], options: CliOptions): Promise<voi
   await start('benchmark', cliFilters, options)
 }
 
-function normalizeCliOptions(argv: CliOptions): CliOptions {
+function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions {
   if (argv.exclude) {
     argv.cliExclude = toArray(argv.exclude)
     delete argv.exclude
+  }
+  if (cliFilters.some(filter => filter.includes(':'))) {
+    argv.includeTaskLocation ??= true
   }
 
   return argv
@@ -264,7 +267,7 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
 
   try {
     const { startVitest } = await import('./cli-api')
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
     if (!ctx.shouldKeepServer()) {
       await ctx.exit()
     }
@@ -302,7 +305,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
   try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
-      ...normalizeCliOptions(options),
+      ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,
     })
