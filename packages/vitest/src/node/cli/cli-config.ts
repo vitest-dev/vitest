@@ -780,6 +780,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   printConsoleTrace: {
     description: 'Always print console stack traces',
   },
+  includeTaskLocation: {
+    description: 'Collect test and suite locations in the `location` property',
+  },
 
   // CLI only options
   run: {
@@ -839,7 +842,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   poolMatchGlobs: null,
   deps: null,
   name: null,
-  includeTaskLocation: null,
   snapshotEnvironment: null,
   compare: null,
   outputJson: null,
