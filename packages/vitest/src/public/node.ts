@@ -26,18 +26,19 @@ export type { JsonOptions } from '../node/reporters/json'
 
 export type { JUnitOptions } from '../node/reporters/junit'
 
-export { TestCase, TestModule, TestSuite } from '../node/reporters/reported-tasks'
-
 export type {
   ModuleDiagnostic,
 
   TaskOptions,
+  TestCase,
   TestCollection,
   TestDiagnostic,
+  TestModule,
   TestResult,
   TestResultFailed,
   TestResultPassed,
   TestResultSkipped,
+  TestSuite,
 } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 

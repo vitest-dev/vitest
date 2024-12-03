@@ -1,17 +1,37 @@
 # TestCase
 
-The `TestCase` class represents a single test.
+The `TestCase` class represents a single test. This class is only available in the main thread. Refer to the ["Runner API"](/advanced/runner#tasks) if you are working with runtime tasks.
+
+The `TestCase` instance always has a `type` property with the value of `test`. You can use it to distinguish between different task types:
+
+```ts
+if (task.type === 'test') {
+  task // TestCase
+}
+```
+
+## project
+
+This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
+
+## module
+
+This is a direct reference to the [`TestModule`](/advanced/api/test-module) where the test is defined.
+
+## name
+
+This is a test name that was passed to the `test` function:
+
+```ts
+import { test } from 'vitest'
+
+test('the validation works correctly', () => {
+  // ...
+})
+```
 
 ```ts
 declare class TestCase {
-  readonly type = 'test'
-  /**
-   * The project associated with the test.
-   */
-  readonly project: TestProject
-  /**
-   * Direct reference to the test module where the test is defined.
-   */
   readonly module: TestModule
   /**
    * Name of the test.
