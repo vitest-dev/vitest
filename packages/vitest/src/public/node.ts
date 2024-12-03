@@ -140,6 +140,8 @@ export type {
 
 export { createDebugger } from '../utils/debugger'
 
+export { generateFileHash } from '@vitest/runner/utils'
+
 export {
   esbuildVersion,
   isFileServingAllowed,
