@@ -113,7 +113,7 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Test results. Will be `undefined` if test is not finished yet or was just collected.
+   * Test results. Will be `undefined` if test is skipped, not finished yet or was just collected.
    */
   public result(): TestResult | undefined {
     const result = this.task.result
@@ -541,6 +541,9 @@ export interface ModuleDiagnostic {
 }
 
 function getTestState(test: TestCase): TestResult['state'] | 'running' {
+  if (test.skipped()) {
+    return 'skipped'
+  }
   const result = test.result()
   return result ? result.state : 'running'
 }
