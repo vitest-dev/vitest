@@ -6,6 +6,7 @@ import '../style/main.css'
 import '../style/vars.css'
 import 'uno.css'
 import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client'
+import OldDocument from '../components/OldDocument.vue'
 import HomePage from '../components/HomePage.vue'
 import Version from '../components/Version.vue'
 import '@shikijs/vitepress-twoslash/style.css'
@@ -18,6 +19,7 @@ export default {
   Layout() {
     return h(Theme.Layout, null, {
       'home-features-after': () => h(HomePage),
+      'layout-top': () => h(OldDocument),
     })
   },
   enhanceApp({ app }: EnhanceAppContext) {

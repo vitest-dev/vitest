@@ -13,6 +13,7 @@ declare module 'vue' {
     HomePage: typeof import('./components/HomePage.vue')['default']
     ListItem: typeof import('./components/ListItem.vue')['default']
     NonProjectOption: typeof import('./components/NonProjectOption.vue')['default']
+    OldDocument: typeof import('./components/OldDocument.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Version: typeof import('./components/Version.vue')['default']

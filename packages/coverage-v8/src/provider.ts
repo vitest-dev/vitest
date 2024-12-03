@@ -23,7 +23,8 @@ import { BaseCoverageProvider } from 'vitest/coverage'
 import type { AfterSuiteRunMeta, CoverageProvider, CoverageV8Options, ReportContext, ResolvedCoverageOptions } from 'vitest'
 import type { Vitest } from 'vitest/node'
 
-// @ts-expect-error missing types
+// eslint-disable-next-line ts/prefer-ts-expect-error
+// @ts-ignore missing types
 import _TestExclude from 'test-exclude'
 
 interface TestExclude {
