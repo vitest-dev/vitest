@@ -1,7 +1,7 @@
 <template>
   <div class="old-document">
     <p>
-      This documentation covers Vitest v1.6 <strong>(old version)</strong>. For the
+      This documentation covers Vitest v1 <strong>(old version)</strong>. For the
       latest version, see
       <a href="https://vitest.dev" class="new-document-link">https://vitest.dev</a>.
     </p>
