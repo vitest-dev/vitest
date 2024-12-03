@@ -25,17 +25,19 @@ const vitest = await startVitest(
 )
 const testModules = vitest.state.getTestModules()
 for (const testModule of testModules) {
-  console.log(testModule.moduleId, 'results', testModule.result())
+  console.log(testModule.moduleId, testModule.ok() ? 'passed' : 'failed')
 }
 ```
 
 ::: tip
-[`TestModule`](/advanced/reporters#TestModule), [`TestSuite`](/advanced/reporters#TestSuite) and [`TestCase`](/advanced/reporters#TestCase) APIs are not experimental and follow SemVer since Vitest 2.1.
+[`TestModule`](/advanced/api/test-module), [`TestSuite`](/advanced/api/test-suite) and [`TestCase`](/advanced/api/test-case) APIs are not experimental and follow SemVer since Vitest 2.1.
 :::
 
 ## `createVitest`
 
-`createVitest` method doesn't validate that required packages are installed. This method also doesn't respect `config.standalone` or `config.mergeReports`. Vitest also won't be closed automatically even if `watch` is disabled.
+Creates a [Vitest](/advanced/api/vitest) instances without running tests.
+
+`createVitest` method doesn't validate that required packages are installed. It also doesn't respect `config.standalone` or `config.mergeReports`. Vitest won't be closed automatically even if `watch` is disabled.
 
 ```ts
 import { createVitest } from 'vitest/node'
@@ -55,13 +57,14 @@ vitest.onClose(() => {})
 vitest.onTestsRerun((files) => {})
 
 try {
-  // this will set process.exitCode to 1 if tests failed
+  // this will set process.exitCode to 1 if tests failed,
+  // and won't close the process automatically
   await vitest.start(['my-filter'])
 }
 catch (err) {
   // this can throw
   // "FilesNotFoundError" if no files were found
-  // "GitNotFoundError" if `--changed` is enabled and repository is not initialized
+  // "GitNotFoundError" with `--changed` and repository is not initialized
 }
 finally {
   await vitest.close()
