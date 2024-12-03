@@ -20,6 +20,7 @@ export default {
   Layout() {
     return h(DefaultTheme.Layout, null, {
       'home-features-after': () => h(HomePage),
+      'layout-top': () => h(OldDocument),
     })
   },
   enhanceApp({ app }) {
