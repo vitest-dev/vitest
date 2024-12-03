@@ -180,14 +180,6 @@ interface Test<ExtraContext = object> extends TaskBase {
    */
   fails?: boolean
   /**
-   * Hooks that will run if the task fails. The order depends on the `sequence.hooks` option.
-   */
-  onFailed?: OnTestFailedHandler[]
-  /**
-   * Hooks that will run after the task finishes. The order depends on the `sequence.hooks` option.
-   */
-  onFinished?: OnTestFinishedHandler[]
-  /**
    * Store promises (from async expects) to wait for them before finishing the test
    */
   promises?: Promise<any>[]

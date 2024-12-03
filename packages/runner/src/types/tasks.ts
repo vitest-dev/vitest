@@ -87,10 +87,12 @@ export interface TaskPopulated extends TaskBase {
   fails?: boolean
   /**
    * Hooks that will run if the task fails. The order depends on the `sequence.hooks` option.
+   * @internal
    */
   onFailed?: OnTestFailedHandler[]
   /**
    * Hooks that will run after the task finishes. The order depends on the `sequence.hooks` option.
+   * @internal
    */
   onFinished?: OnTestFinishedHandler[]
   /**
