@@ -154,10 +154,11 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks if the test was skipped.
+   * Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
    */
   public skipped(): boolean {
-    return this.task.mode !== 'run' && this.task.mode !== 'only'
+    const mode = this.task?.result?.state || this.task.mode
+    return mode === 'skip' || mode === 'todo'
   }
 
   /**
