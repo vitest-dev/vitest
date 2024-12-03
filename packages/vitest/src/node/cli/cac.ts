@@ -265,8 +265,8 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
   try {
     const { startVitest } = await import('./cli-api')
     const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
-    if (!ctx?.shouldKeepServer()) {
-      await ctx?.exit()
+    if (!ctx.shouldKeepServer()) {
+      await ctx.exit()
     }
   }
   catch (e) {
