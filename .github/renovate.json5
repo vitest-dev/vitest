@@ -28,6 +28,9 @@
     // manually bumping
     "node",
     "vite",
+    // bumping breaks coverage
+    // https://github.com/vitest-dev/vitest/actions/runs/12121857184/job/33793728382?pr=6920
+    "vue",
     // we patch these packages
     "@types/chai",
     "@sinonjs/fake-timers",
