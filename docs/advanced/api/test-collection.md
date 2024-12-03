@@ -8,8 +8,8 @@ Most methods return an iterator instead of an array for better performance in ca
 Also note that the collection itself is an iterator:
 
 ```ts
-for (const task of module.children) {
-  console.log(task.type, task.name)
+for (const child of module.children) {
+  console.log(child.type, child.name)
 }
 ```
 :::
