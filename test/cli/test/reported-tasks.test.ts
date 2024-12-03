@@ -63,6 +63,11 @@ it('correctly reports a file', () => {
   const deepTests = [...testModule.children.allTests()]
   expect(deepTests).toHaveLength(19)
 
+  expect([...testModule.children.allTests('skipped')]).toHaveLength(5)
+  expect([...testModule.children.allTests('passed')]).toHaveLength(9)
+  expect([...testModule.children.allTests('failed')]).toHaveLength(5)
+  expect([...testModule.children.allTests('running')]).toHaveLength(0)
+
   const suites = [...testModule.children.suites()]
   expect(suites).toHaveLength(3)
   const deepSuites = [...testModule.children.allSuites()]

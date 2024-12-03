@@ -152,7 +152,7 @@ If the test did not finish running yet, the meta will be an empty object.
 function result(): TestResult | undefined
 ```
 
-Test results. It will be `undefined` if test is not finished yet or was just collected.
+Test results. It will be `undefined` if test is skipped during collection, not finished yet or was just collected.
 
 If the test was skipped, the return value will be `TestResultSkipped`:
 
