@@ -23,7 +23,7 @@ class ReportedTaskImplementation {
   /**
    * Unique identifier.
    * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the project name, module url and test position.
+   * The ID is based on the project name, module url and test order.
    */
   public readonly id: string
 
@@ -157,7 +157,7 @@ export class TestCase extends ReportedTaskImplementation {
    * Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
    */
   public skipped(): boolean {
-    const mode = this.task?.result?.state || this.task.mode
+    const mode = this.task.result?.state || this.task.mode
     return mode === 'skip' || mode === 'todo'
   }
 
@@ -469,8 +469,8 @@ export interface TestResultFailed {
 
 export interface TestResultSkipped {
   /**
-   * The test was skipped with `only`, `skip` or `todo` flag.
-   * You can see which one was used in the `mode` option.
+   * The test was skipped with `only` (on another test), `skip` or `todo` flag.
+   * You can see which one was used in the `options.mode` option.
    */
   state: 'skipped'
   /**
@@ -478,7 +478,7 @@ export interface TestResultSkipped {
    */
   errors: undefined
   /**
-   * A custom note.
+   * A custom note passed down to `ctx.skip(note)`.
    */
   note: string | undefined
 }
