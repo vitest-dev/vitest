@@ -3,7 +3,8 @@ import type { TestProject } from './reporters'
 import type { TestSpecification } from './spec'
 import { existsSync } from 'node:fs'
 import mm from 'micromatch'
-import { relative, resolve } from 'pathe'
+import { join, relative, resolve } from 'pathe'
+import { isWindows } from '../utils/env'
 import { groupFilters, parseFilter } from './cli/filter'
 import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 
@@ -173,9 +174,10 @@ export class VitestSpecifications {
       }
       const dependencies = [...transformed.deps || [], ...transformed.dynamicDeps || []]
       await Promise.all(dependencies.map(async (dep) => {
-        const path = await project.vite.pluginContainer.resolveId(dep, filepath, { ssr: true })
-        const fsPath = path && !path.external && path.id.split('?')[0]
-        if (fsPath && !fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
+        const fsPath = dep.startsWith('/@fs/')
+          ? dep.slice(isWindows ? 5 : 4)
+          : join(project.config.root, dep)
+        if (!fsPath.includes('node_modules') && !deps.has(fsPath) && existsSync(fsPath)) {
           await addImports(project, fsPath)
         }
       }))
