@@ -1,46 +1,152 @@
 # TestSuite
 
+The `TestSuite` class represents a single suite. This class is only available in the main thread. Refer to the ["Runner API"](/advanced/runner#tasks) if you are working with runtime tasks.
+
+The `TestSuite` instance always has a `type` property with the value of `suite`. You can use it to distinguish between different task types:
+
 ```ts
-declare class TestSuite {
-  readonly type = 'suite'
-  /**
-   * The project associated with the test.
-   */
-  readonly project: TestProject
-  /**
-   * Direct reference to the test module where the suite is defined.
-   */
-  readonly module: TestModule
-  /**
-   * Name of the suite.
-   */
-  readonly name: string
-  /**
-   * Full name of the suite including all parent suites separated with `>`.
-   */
-  readonly fullName: string
-  /**
-   * Unique identifier.
-   * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the project name, module id and test position.
-   */
-  readonly id: string
-  /**
-   * Location in the module where the suite was defined.
-   * Locations are collected only if `includeTaskLocation` is enabled in the config.
-   */
-  readonly location: { line: number; column: number } | undefined
-  /**
-   * Collection of suites and tests that are part of this suite.
-   */
-  readonly children: TaskCollection
-  /**
-   * Options that the suite was initiated with.
-   */
-  readonly options: TaskOptions
-  /**
-   * Errors that happened outside of the test run during collection, like syntax errors.
-   */
-  public errors(): TestError[]
+if (task.type === 'suite') {
+  task // TestSuite
 }
 ```
+
+## project
+
+This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
+
+## module
+
+This is a direct reference to the [`TestModule`](/advanced/api/test-module) where the test is defined.
+
+## name
+
+This is a suite name that was passed to the `describe` function.
+
+```ts
+import { describe } from 'vitest'
+
+// [!code word:'the validation logic']
+describe('the validation logic', () => {
+  // ...
+})
+```
+
+## fullName
+
+The name of the suite including all parent suites separated with `>` symbol. This suite has a full name "the validation logic > validating cities":
+
+```ts
+import { describe, test } from 'vitest'
+
+// [!code word:'the validation logic']
+// [!code word:'validating cities']
+describe('the validation logic', () => {
+  describe('validating cities', () => {
+    // ...
+  })
+})
+```
+
+## id
+
+This is suite's unique identifier. This ID is deterministic and will be the same for the same suite across multiple runs. The ID is based on the [project](/advanced/api/test-project) name, module ID and suite order.
+
+The ID looks like this:
+
+```
+1223128da3_0_0_0
+^^^^^^^^^^ the file hash
+           ^ suite index
+             ^ nested suite index
+               ^ test index
+```
+
+::: tip
+You can generate file hash with `generateFileHash` function from `vitest/node` which is available since Vitest 2.2:
+
+```ts
+import { generateFileHash } from 'vitest/node'
+
+const hash = generateFileHash(
+  '/file/path.js', // relative path
+  undefined, // the project name or `undefined` is not set
+)
+```
+:::
+
+::: danger
+Don't try to parse the ID. It can have a minus at the start: `-1223128da3_0_0_0`.
+:::
+
+## location
+
+The location in the module where the suite was defined. Locations are collected only if [`includeTaskLocation`](/config/#includetasklocation) is enabled in the config. Note that this option is automatically enabled if `--reporter=html`, `--ui` or `--browser` flags are used.
+
+The location of this suite will be equal to `{ line: 3, column: 1 }`:
+
+```ts:line-numbers {3}
+import { describe } from 'vitest'
+
+describe('the validation works correctly', () => {
+  // ...
+})
+```
+
+## parent
+
+Parent suite. If the suite was called directly inside the [module](/advanced/api/test-module), the parent will be the module itself.
+
+## options
+
+```ts
+interface TaskOptions {
+  each: boolean | undefined
+  concurrent: boolean | undefined
+  shuffle: boolean | undefined
+  retry: number | undefined
+  repeats: number | undefined
+  mode: 'run' | 'only' | 'skip' | 'todo'
+}
+```
+
+The options that suite was collected with.
+
+## children
+
+This is a [collection](/advanced/api/test-collection) of all suites and tests inside the current suite.
+
+```ts
+for (const task of suite.children) {
+  if (task.type === 'test') {
+    console.log('test', task.fullName)
+  }
+  else {
+    // task is TaskSuite
+    console.log('suite', task.name)
+  }
+}
+```
+
+::: warning
+Note that `suite.children` will only iterate the first level of nesting, it won't go deeper.
+:::
+
+## errors
+
+```ts
+function errors(): TestError[]
+```
+
+Errors that happened outside of the test run during collection, like syntax errors.
+
+```ts {4}
+import { describe } from 'vitest'
+
+describe('collection failed', () => {
+  throw new Error('a custom error')
+})
+```
+
+::: warning
+Note that errors are serialized into simple object: `instanceof Error` will always return `false`.
+:::

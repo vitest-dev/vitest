@@ -1,50 +1,93 @@
 # TestCollection
 
-`TestCollection` represents a collection of suites and tests. It also provides useful methods to iterate over itself.
+`TestCollection` represents a collection of top-level [suites](/advanced/api/test-suite) and [tests](/advanced/api/test-case) in a suite or a module. It also provides useful methods to iterate over itself.
+
+::: info
+Most methods return an iterator instead of an array for better performance in case you don't need every item in the collection. If you prefer working with array, you can spread the iterator: `[...children.allSuites()]`.
+
+Also note that the collection itself is an iterator:
 
 ```ts
-declare class TestCollection {
-  /**
-   * Returns the test or suite at a specific index in the array.
-   */
-  at(index: number): TestCase | TestSuite | undefined
-  /**
-   * The number of tests and suites in the collection.
-   */
-  size: number
-  /**
-   * Returns the collection in array form for easier manipulation.
-   */
-  array(): (TestCase | TestSuite)[]
-  /**
-   * Filters all suites that are part of this collection and its children.
-   */
-  allSuites(): IterableIterator<TestSuite>
-  /**
-   * Filters all tests that are part of this collection and its children.
-   */
-  allTests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase>
-  /**
-   * Filters only the tests that are part of this collection.
-   */
-  tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase>
-  /**
-   * Filters only the suites that are part of this collection.
-   */
-  suites(): IterableIterator<TestSuite>;
-  [Symbol.iterator](): IterableIterator<TestSuite | TestCase>
+for (const task of module.children) {
+  console.log(task.type, task.name)
 }
 ```
+:::
 
-For example, you can iterate over all tests inside a module by calling `testModule.children.allTests()`:
+## size
+
+The number of tests and suites in the collection.
+
+::: warning
+This number includes only tests and suites at the top-level, it doesn't include nested suites and tests.
+:::
+
+## at
 
 ```ts
-function onFileCollected(testModule: TestModule): void {
-  console.log('collecting tests in', testModule.moduleId)
+function at(index: number): TestCase | TestSuite | undefined
+```
 
-  // iterate over all tests and suites in the module
-  for (const task of testModule.children.allTests()) {
-    console.log('collected', task.type, task.fullName)
+Returns the test or suite at a specific index. This method accepts negative indexes.
+
+## array
+
+```ts
+function array(): (TestCase | TestSuite)[]
+```
+
+The same collection but as an array. This is useful if you want to use `Array` methods like `map` and `filter` that are not supported by the `TaskCollection` implementation.
+
+## allSuites
+
+```ts
+function allSuites(): Generator<TestSuite, undefined, void>
+```
+
+Filters all suites that are part of this collection and its children.
+
+```ts
+for (const suite of module.children.allSuites()) {
+  if (suite.errors().length) {
+    console.log('failed to collect', suite.errors())
   }
 }
 ```
+
+## allTests
+
+```ts
+function allTests(
+  state?: TestResult['state'] | 'running'
+): Generator<TestCase, undefined, void>
+```
+
+Filters all tests that are part of this collection and its children.
+
+```ts
+for (const test of module.children.allTests()) {
+  if (!test.result()) {
+    console.log('test', test.fullName, 'did not finish')
+  }
+}
+```
+
+You can pass down a `state` value to filter tests by the state.
+
+## tests
+
+```ts
+function tests(
+  state?: TestResult['state'] | 'running'
+): Generator<TestCase, undefined, void>
+```
+
+Filters only the tests that are part of this collection. You can pass down a `state` value to filter tests by the state.
+
+## suites
+
+```ts
+function suites(): Generator<TestSuite, undefined, void>
+```
+
+Filters only the suites that are part of this collection.

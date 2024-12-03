@@ -1,4 +1,5 @@
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
+import { transformerNotationWordHighlight } from '@shikijs/transformers'
 import { withPwa } from '@vite-pwa/vitepress'
 import type { DefaultTheme } from 'vitepress'
 import { defineConfig } from 'vitepress'
@@ -87,8 +88,9 @@ export default ({ mode }: { mode: string }) => {
         dark: 'github-dark',
       },
       codeTransformers: mode === 'development'
-        ? []
+        ? [transformerNotationWordHighlight()]
         : [
+            transformerNotationWordHighlight(),
             transformerTwoslash({
               processHoverInfo: (info) => {
                 if (info.includes(process.cwd())) {

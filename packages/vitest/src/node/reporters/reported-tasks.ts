@@ -202,7 +202,7 @@ class TestCollection {
   }
 
   /**
-   * Returns the test or suite at a specific index in the array.
+   * Returns the test or suite at a specific index.
    */
   at(index: number): TestCase | TestSuite | undefined {
     if (index < 0) {
