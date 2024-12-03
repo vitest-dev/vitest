@@ -20,11 +20,12 @@ This is a direct reference to the [`TestModule`](/advanced/api/test-module) wher
 
 ## name
 
-This is a test name that was passed to the `test` function. This test has a name "the validation works correctly":
+This is a test name that was passed to the `test` function.
 
-```ts{3}
+```ts
 import { test } from 'vitest'
 
+// [!code word:'the validation works correctly']
 test('the validation works correctly', () => {
   // ...
 })
@@ -34,12 +35,12 @@ test('the validation works correctly', () => {
 
 The name of the test including all parent suites separated with `>` symbol. This test has a full name "the validation logic > the validation works correctly":
 
-```ts{3,6}
-import { test, describe } from 'vitest'
+```ts
+import { describe, test } from 'vitest'
 
+// [!code word:'the validation works correctly']
+// [!code word:'the validation logic']
 describe('the validation logic', () => {
-  // ...
-
   test('the validation works correctly', () => {
     // ...
   })
@@ -70,6 +71,10 @@ const hash = generateFileHash(
   undefined, // the project name or `undefined` is not set
 )
 ```
+:::
+
+::: danger
+Don't try to parse the ID. It can have a minus at the start: `-1223128da3_0_0_0`.
 :::
 
 ## location
@@ -129,7 +134,7 @@ function meta(): TaskMeta
 
 Custom metadata that was attached to the test during its execution. The meta can be attached by assigning a property to the `ctx.task.meta` object during a test run:
 
-```ts:line-numbers {3,6}
+```ts {3,6}
 import { test } from 'vitest'
 
 test('the validation works correctly', ({ task }) => {
