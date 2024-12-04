@@ -101,7 +101,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps --no-shell
 
       - name: Build
         run: pnpm run build
@@ -150,8 +150,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: needs.changed.outputs.should_skip != 'true'
-        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
+        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps --no-shell
 
       - name: Build
         run: pnpm run build
