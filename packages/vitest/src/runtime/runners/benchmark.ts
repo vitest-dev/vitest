@@ -71,6 +71,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           const task = e.task
           const taskRes = task.result!
           const result = benchmark.result!.benchmark!
+          benchmark.result!.state = 'pass'
           Object.assign(result, taskRes)
           // compute extra stats and free raw samples as early as possible
           const samples = result.samples
@@ -114,13 +115,14 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       const task = new Task(benchmarkInstance, benchmark.name, benchmarkFn)
       benchmarkTasks.set(benchmark, task)
       addBenchTaskListener(task, benchmark)
-      updateTask(benchmark)
     })
 
     const { setTimeout } = getSafeTimers()
     const tasks: [BenchTask, Benchmark][] = []
+
     for (const benchmark of benchmarkGroup) {
       const task = benchmarkTasks.get(benchmark)!
+      updateTask(benchmark)
       await task.warmup()
       tasks.push([
         await new Promise<BenchTask>(resolve =>
