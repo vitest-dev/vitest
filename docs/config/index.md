@@ -12,9 +12,7 @@ If you are using Vite and have a `vite.config` file, Vitest will read it to matc
 
 To configure `vitest` itself, add `test` property in your Vite config. You'll also need to add a reference to Vitest types using a [triple slash command](https://www.typescriptlang.org/docs/handbook/triple-slash-directives.html#-reference-types-) at the top of your config file, if you are importing `defineConfig` from `vite` itself.
 
-<details>
-  <summary>Open Config Examples</summary>
-
+::: details Open Config Examples
 Using `defineConfig` from `vite` you should follow this:
 
 ```ts [vite.config.js]
@@ -93,7 +91,7 @@ export default defineConfig(configEnv => mergeConfig(
   })
 ))
 ```
-</details>
+:::
 
 ::: warning
 _All listed options_ on this page are located within a `test` property inside the configuration:

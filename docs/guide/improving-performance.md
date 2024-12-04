@@ -91,9 +91,7 @@ Collect the results stored in `.vitest-reports` directory from each machine and 
 vitest --merge-reports
 ```
 
-<details>
-  <summary>Github action example</summary>
-
+::: details Github action example
 This setup is also used at https://github.com/vitest-tests/test-sharding.
 
 ```yaml
@@ -162,7 +160,7 @@ jobs:
         run: npx vitest --merge-reports
 ```
 
-</details>
+:::
 
 :::tip
 Test sharding can also become useful on high CPU-count machines.
