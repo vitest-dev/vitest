@@ -319,3 +319,33 @@ test('browser.name filteres all browser.configs are required', async () => {
   })
   expect(stderr).toMatch('"browser.configs" was set in the config, but the array is empty. Define at least one browser config. The "browser.name" was set to "chromium" which filtered all configs (firefox). Did you mean to use another name?')
 })
+
+test('browser.configs throws an error if no custom name is provided', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      configs: [
+        { browser: 'firefox' },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "firefox" was already defined. If you have multiple configs for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+})
+
+test('browser.configs throws an error if no custom name is provided, but the config name is inherited', async () => {
+  const { stderr } = await runVitest({
+    name: 'custom',
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      configs: [
+        { browser: 'firefox' },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "custom (firefox)" was already defined. If you have multiple configs for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+})
+

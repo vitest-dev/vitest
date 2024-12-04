@@ -158,6 +158,12 @@ export class TestProject {
     if (!this._vite) {
       throw new Error('The server was not set. It means that `project.vite` was called before the Vite server was established.')
     }
+    // checking it once should be enough
+    Object.defineProperty(this, 'vite', {
+      configurable: true,
+      writable: true,
+      value: this._vite,
+    })
     return this._vite
   }
 
@@ -168,6 +174,12 @@ export class TestProject {
     if (!this._config) {
       throw new Error('The config was not set. It means that `project.config` was called before the Vite server was established.')
     }
+    // checking it once should be enough
+    Object.defineProperty(this, 'config', {
+      configurable: true,
+      writable: true,
+      value: this._config,
+    })
     return this._config
   }
 
