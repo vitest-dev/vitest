@@ -66,8 +66,10 @@ type UnsupportedProperties =
   | 'server'
   | 'benchmark'
 
-// TODO: document all options
-export interface BrowserConfig extends BrowserProviderOptions, Omit<ProjectConfig, UnsupportedProperties>, Pick<BrowserConfigOptions, 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
+export interface BrowserConfig
+  extends BrowserProviderOptions,
+  Omit<ProjectConfig, UnsupportedProperties>,
+  Pick<BrowserConfigOptions, 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
   browser: string
 }
 
