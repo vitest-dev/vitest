@@ -7,7 +7,7 @@ import type { ApiConfig, ProjectConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
   browser: string
-  options?: BrowserConfig
+  options?: BrowserProviderOptions
 }
 
 export interface CDPSession {

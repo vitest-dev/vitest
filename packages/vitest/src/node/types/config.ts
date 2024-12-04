@@ -25,7 +25,7 @@ import type { Reporter } from './reporter'
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
-export type { BrowserConfigOptions, BrowserScript } from './browser'
+export type { BrowserConfig, BrowserConfigOptions, BrowserScript } from './browser'
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
