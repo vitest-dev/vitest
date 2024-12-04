@@ -39,7 +39,7 @@ const defaultCoverageExcludes = [
   '**/\x00*',
   'cypress/**',
   'storybook-static/**',
-  '*.stories.*,
+  '*.stories.*',
   'test?(s)/**',
   'test?(-*).?(c|m)[jt]s?(x)',
   '**/*{.,-}{test,spec,bench,benchmark}?(-d).?(c|m)[jt]s?(x)',
