@@ -34,7 +34,13 @@ const vitestSponsors = {
       img: '/bit.svg',
     },
   ],
-  // gold: [],
+  gold: [
+    {
+      name: 'vital',
+      url: 'https://vital.io/',
+      img: '/vital.svg',
+    },
+  ],
 } satisfies Record<string, Sponsor[]>
 
 export const sponsors = [
@@ -48,9 +54,9 @@ export const sponsors = [
     size: 'big',
     items: vitestSponsors.platinum,
   },
-  // {
-  //   tier: 'Gold Sponsors',
-  //   size: 'medium',
-  //   items: vitestSponsors.gold,
-  // },
+  {
+    tier: 'Gold Sponsors',
+    size: 'medium',
+    items: vitestSponsors.gold,
+  },
 ]
