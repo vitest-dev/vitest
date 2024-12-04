@@ -61,7 +61,7 @@
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^5.0.6",
     "istanbul-reports": "^3.1.7",
-    "magic-string": "^0.30.12",
+    "magic-string": "^0.30.14",
     "magicast": "^0.3.5",
     "std-env": "^3.8.0",
     "test-exclude": "^7.0.1",
