@@ -52,6 +52,7 @@ export type {
   BrowserBuiltinProvider,
   BrowserCommand,
   BrowserCommandContext,
+  BrowserConfig,
   BrowserConfigOptions,
   BrowserOrchestrator,
   BrowserProvider,
