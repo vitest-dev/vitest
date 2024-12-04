@@ -10,6 +10,7 @@ import { createBenchmarkJsonReport, flattenFormattedBenchmarkReport } from './js
 import { renderTable } from './tableRender'
 
 export class BenchmarkReporter extends DefaultReporter {
+  protected verbose = true
   compare?: Parameters<typeof renderTable>[0]['compare']
 
   async onInit(ctx: Vitest) {
