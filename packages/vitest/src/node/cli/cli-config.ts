@@ -416,7 +416,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       screenshotFailures: null,
       locators: null,
       testerHtmlPath: null,
-      capabilities: null,
+      configs: null,
     },
   },
   pool: {

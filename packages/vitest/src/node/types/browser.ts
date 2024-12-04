@@ -7,7 +7,7 @@ import type { ApiConfig, ProjectConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
   browser: string
-  options?: BrowserProviderOptions
+  options?: BrowserConfig
 }
 
 export interface CDPSession {
@@ -67,7 +67,7 @@ type UnsupportedProperties =
   | 'benchmark'
 
 // TODO: document all options
-export interface BrowserCapabilities extends BrowserProviderOptions, Omit<ProjectConfig, UnsupportedProperties>, Pick<BrowserConfigOptions, 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
+export interface BrowserConfig extends BrowserProviderOptions, Omit<ProjectConfig, UnsupportedProperties>, Pick<BrowserConfigOptions, 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
   browser: string
 }
 
@@ -81,14 +81,14 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
-   * @deprecated use `capabilities` instead
+   * @deprecated use `configs` instead. if both are defined, this will filter `configs` by name.
    */
   name?: string
 
   /**
-   * Configurations for different browsers
+   * Configurations for different browser setups
    */
-  capabilities?: BrowserCapabilities[]
+  configs?: BrowserConfig[]
 
   /**
    * Browser provider
@@ -106,7 +106,7 @@ export interface BrowserConfigOptions {
    *
    * @example
    * { playwright: { launch: { devtools: true } }
-   * @deprecated use `capabilities` instead
+   * @deprecated use `configs` instead
    */
   providerOptions?: BrowserProviderOptions
 

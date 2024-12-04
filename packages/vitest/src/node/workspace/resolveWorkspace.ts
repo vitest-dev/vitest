@@ -135,32 +135,26 @@ export function resolveBrowserWorkspace(
   resolvedProjects: TestProject[],
 ) {
   resolvedProjects.forEach((project) => {
-    const capabilities = project.config.browser.capabilities
-    if (!project.config.browser.enabled || !capabilities || capabilities.length === 0) {
+    const configs = project.config.browser.configs
+    if (!project.config.browser.enabled || !configs || configs.length === 0) {
       return
     }
-    const [firstCapability, ...restCapabilities] = capabilities
+    const [firstConfig, ...restConfigs] = configs
 
     project.config.name ||= project.config.name
-      ? `${project.config.name} (${firstCapability.browser})`
-      : firstCapability.browser
-
-    if (project.config.browser.name) {
-      vitest.logger.warn(
-        withLabel('yellow', 'Vitest', `Browser name "${project.config.browser.name}" is ignored because it's overriden by the capabilities. To hide this warning, remove the "name" property from the browser configuration.`),
-      )
-    }
+      ? `${project.config.name} (${firstConfig.browser})`
+      : firstConfig.browser
 
     if (project.config.browser.providerOptions) {
       vitest.logger.warn(
-        withLabel('yellow', 'Vitest', `"providerOptions"${project.config.name ? ` in "${project.config.name}" project` : ''} is ignored because it's overriden by the capabilities. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
+        withLabel('yellow', 'Vitest', `"providerOptions"${project.config.name ? ` in "${project.config.name}" project` : ''} is ignored because it's overriden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
       )
     }
 
-    project.config.browser.name = firstCapability.browser
-    project.config.browser.providerOptions = firstCapability
+    project.config.browser.name = firstConfig.browser
+    project.config.browser.providerOptions = firstConfig
 
-    restCapabilities.forEach(({ browser, ...capability }) => {
+    restConfigs.forEach(({ browser, ...capability }) => {
       // TODO: cover with tests
       // browser-only options
       const {
@@ -191,6 +185,7 @@ export function resolveBrowserWorkspace(
           screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
           name: browser,
           providerOptions: capability,
+          configs: undefined, // projects cannot spawn more configs
         },
         // TODO: should resolve, not merge/override
       } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig

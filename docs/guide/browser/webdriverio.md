@@ -20,7 +20,7 @@ Alternatively, you can also add it to `compilerOptions.types` field in your `tsc
 }
 ```
 
-Vitest opens a single page to run all tests in the same file. You can configure any property specified in `RemoteOptions` in `capabilities`:
+Vitest opens a single page to run all tests in the same file. You can configure any property specified in `RemoteOptions` in `configs`:
 
 ```ts{9-12} [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -28,7 +28,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     browser: {
-      capabilities: [
+      configs: [
         {
           browser: 'chrome',
           capabilities: {
@@ -57,7 +57,7 @@ export default defineConfig({
 })
 ```
 
-`providerOptions` is deprecated in favour of `capabilities`.
+`providerOptions` is deprecated in favour of `configs`.
 :::
 
 You can find most available options in the [WebdriverIO documentation](https://webdriver.io/docs/configuration/). Note that Vitest will ignore all test runner options because we only use `webdriverio`'s browser capabilities.

@@ -234,53 +234,6 @@ export default defineWorkspace([
 ])
 ```
 
-### Provider Configuration
-
-:::tabs key:provider
-== Playwright
-You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/config/#browser-provideroptions) field:
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    browser: {
-      providerOptions: {
-        launch: {
-          devtools: true,
-        },
-        context: {
-          geolocation: {
-            latitude: 45,
-            longitude: -30,
-          },
-          reducedMotion: 'reduce',
-        },
-      },
-    },
-  },
-})
-```
-== WebdriverIO
-You can configure what [options](https://webdriver.io/docs/configuration#webdriverio) Vitest should use when starting a browser via [`providerOptions`](/config/#browser-provideroptions) field:
-
-```ts
-export default defineConfig({
-  test: {
-    browser: {
-      browser: 'chrome',
-      providerOptions: {
-        region: 'eu',
-        capabilities: {
-          browserVersion: '27.0',
-          platformName: 'Windows 10',
-        },
-      },
-    },
-  },
-})
-```
-:::
-
 ## Browser Option Types
 
 The browser option in Vitest depends on the provider. Vitest will fail, if you pass `--browser` and don't specify its name in the config file. Available options:
