@@ -237,13 +237,17 @@ export function resolveConfig(
       throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.configs" options, none were set.`)
     }
 
+    const configs = browser.configs
     if (browser.name && browser.configs) {
       // --browser=chromium filters configs to a single one
-      browser.configs = browser.configs.filter(capability => capability.browser === browser.name)
+      browser.configs = browser.configs.filter(config_ => config_.browser === browser.name)
     }
 
     if (browser.configs && !browser.configs.length) {
-      throw new Error(`"browser.configs" was set in the config, but the array is empty. Define at least one browser capability.`)
+      throw new Error([
+        `"browser.configs" was set in the config, but the array is empty. Define at least one browser config.`,
+        browser.name && configs?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${configs.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
+      ].join(''))
     }
   }
 

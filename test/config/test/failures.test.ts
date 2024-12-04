@@ -288,3 +288,34 @@ test('maxConcurrency 0 prints a warning', async () => {
   expect(ctx?.config.maxConcurrency).toBe(5)
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })
+
+test('browser.name or browser.configs are required', async () => {
+  const { stderr, exitCode } = await runVitestCli('--browser.enabled')
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.configs" options, none were set.')
+})
+
+test('browser.configs is empty', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      configs: [],
+    },
+  })
+  expect(stderr).toMatch('"browser.configs" was set in the config, but the array is empty. Define at least one browser config.')
+})
+
+test('browser.name filteres all browser.configs are required', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      name: 'chromium',
+      provider: 'playwright',
+      configs: [
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toMatch('"browser.configs" was set in the config, but the array is empty. Define at least one browser config. The "browser.name" was set to "chromium" which filtered all configs (firefox). Did you mean to use another name?')
+})
