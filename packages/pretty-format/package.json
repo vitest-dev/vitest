@@ -39,6 +39,6 @@
   "devDependencies": {
     "@types/react-is": "^18.3.0",
     "react-is": "^18.3.1",
-    "react-is-19": "npm:react-is@19.0.0-rc-b01722d5-20241114"
+    "react-is-19": "npm:react-is@19.0.0-rc-fb9a90fa48-20240614"
   }
 }

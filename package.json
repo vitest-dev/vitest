@@ -3,7 +3,7 @@
   "type": "module",
   "version": "2.2.0-beta.2",
   "private": true,
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "pnpm@9.14.4",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -37,12 +37,12 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.8.0",
-    "@antfu/ni": "^0.23.0",
-    "@playwright/test": "^1.48.2",
+    "@antfu/ni": "^0.23.1",
+    "@playwright/test": "^1.49.0",
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.3.0",
-    "@types/node": "^22.9.0",
+    "@types/node": "^22.10.1",
     "@types/ws": "^8.5.13",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -52,19 +52,19 @@
     "changelogithub": "^0.13.11",
     "esbuild": "^0.24.0",
     "eslint": "^9.14.0",
-    "magic-string": "^0.30.12",
+    "magic-string": "^0.30.14",
     "pathe": "^1.1.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.25.0",
+    "rollup": "^4.28.0",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-esbuild": "^6.1.1",
     "rollup-plugin-license": "^3.5.3",
     "tinyglobby": "^0.2.10",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "vite": "^5.4.0",
     "vitest": "workspace:*",
-    "zx": "^8.2.2"
+    "zx": "^8.2.4"
   },
   "pnpm": {
     "overrides": {
