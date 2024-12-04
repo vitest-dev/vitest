@@ -1,8 +1,9 @@
 import { VerboseReporter } from '../verbose'
-import { TableReporter } from './table'
+import { BenchmarkReporter } from './reporter'
 
 export const BenchmarkReportsMap = {
-  default: TableReporter,
+  default: BenchmarkReporter,
   verbose: VerboseReporter,
 }
+
 export type BenchmarkBuiltinReporters = keyof typeof BenchmarkReportsMap

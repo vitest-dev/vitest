@@ -1,0 +1,40 @@
+diff --git a/dist/main.cjs b/dist/main.cjs
+index dcc8a29741f99dc5dbe2d812197ec512d92db682..9fcd951769284bf645a15833b1efc976816f9e71 100644
+--- a/dist/main.cjs
++++ b/dist/main.cjs
+@@ -509,12 +509,12 @@ var y = class {
+     if (!e)
+       throw new Error("No process was started");
+     let n = "", r = "";
+-    if (this._streamErr)
+-      for await (let o of this._streamErr)
+-        n += o.toString();
+     if (this._streamOut)
+       for await (let o of this._streamOut)
+         r += o.toString();
++    if (this._streamErr)
++      for await (let o of this._streamErr)
++        n += o.toString();
+     if (await this._processClosed, this._options?.stdin && await this._options.stdin, e.removeAllListeners(), this._thrownError)
+       throw this._thrownError;
+     let s = {
+diff --git a/dist/main.js b/dist/main.js
+index 52f8f317d27fff0279305dbaf998e310b46a34f4..cba25835975aa12fb3e01ee463bc89d7cf51ab92 100644
+--- a/dist/main.js
++++ b/dist/main.js
+@@ -513,12 +513,12 @@ var R = class {
+     if (!e)
+       throw new Error("No process was started");
+     let n = "", r = "";
+-    if (this._streamErr)
+-      for await (let o of this._streamErr)
+-        n += o.toString();
+     if (this._streamOut)
+       for await (let o of this._streamOut)
+         r += o.toString();
++    if (this._streamErr)
++      for await (let o of this._streamErr)
++        n += o.toString();
+     if (await this._processClosed, this._options?.stdin && await this._options.stdin, e.removeAllListeners(), this._thrownError)
+       throw this._thrownError;
+     let s = {

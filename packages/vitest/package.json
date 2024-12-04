@@ -189,7 +189,6 @@
     "birpc": "0.2.19",
     "cac": "^6.7.14",
     "chai-subset": "^1.6.0",
-    "cli-truncate": "^4.0.0",
     "fast-glob": "3.3.2",
     "find-up": "^6.3.0",
     "flatted": "^3.3.1",
@@ -197,10 +196,10 @@
     "happy-dom": "^15.11.4",
     "jsdom": "^25.0.1",
     "local-pkg": "^0.5.0",
-    "log-update": "^5.0.1",
     "micromatch": "^4.0.8",
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
+    "slice-ansi": "^7.1.0",
     "strip-literal": "^2.1.0",
     "ws": "^8.18.0"
   }
