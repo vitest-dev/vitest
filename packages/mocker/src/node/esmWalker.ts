@@ -195,7 +195,7 @@ export function esmWalker(
               if (
                 (parent?.type === 'TemplateLiteral'
                   && parent?.expressions.includes(child))
-                  || (parent?.type === 'CallExpression' && parent?.callee === child)
+                || (parent?.type === 'CallExpression' && parent?.callee === child)
               ) {
                 return
               }
@@ -253,7 +253,7 @@ export function esmWalker(
       const classDeclaration
         = (parent.type === 'PropertyDefinition'
           && grandparent?.type === 'ClassBody')
-          || (parent.type === 'ClassDeclaration' && node === parent.superClass)
+        || (parent.type === 'ClassDeclaration' && node === parent.superClass)
 
       const classExpression
         = parent.type === 'ClassExpression' && node === parent.id
@@ -277,7 +277,7 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
     parent.type === 'CatchClause'
     || ((parent.type === 'VariableDeclarator'
       || parent.type === 'ClassDeclaration')
-      && parent.id === id)
+    && parent.id === id)
   ) {
     return false
   }
