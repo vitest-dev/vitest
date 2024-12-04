@@ -1,6 +1,4 @@
 import { createRequire } from 'node:module'
-import { expect, test } from 'vitest'
-
 // @ts-expect-error no ts
 import * as dep1 from '@vitest/test-dep1'
 
@@ -12,6 +10,8 @@ import depEsmComment from '@vitest/test-dep-cjs/esm-comment'
 
 // @ts-expect-error no ts
 import depEsmString from '@vitest/test-dep-cjs/esm-string'
+
+import { expect, test } from 'vitest'
 
 const require = createRequire(import.meta.url)
 

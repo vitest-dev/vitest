@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util'
-import { assert, describe, expect, test, vi, vitest } from 'vitest'
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
+import { assert, describe, expect, test, vi, vitest } from 'vitest'
 import * as globalMock from '../src/global-mock'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'

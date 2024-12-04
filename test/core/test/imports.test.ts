@@ -2,10 +2,10 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
 import { describe, expect, test, vi } from 'vitest'
-import { dynamicRelativeImport } from '../src/relative-import'
-
 // @ts-expect-error module is not typed
 import promiseExport from '../src/cjs/promise-export'
+
+import { dynamicRelativeImport } from '../src/relative-import'
 
 test('promise export works correctly', async () => {
   await expect(promiseExport).resolves.toEqual({ value: 42 })

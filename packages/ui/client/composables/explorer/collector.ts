@@ -1,5 +1,6 @@
 import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
+import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { isAtomTest } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
 import { hasFailedSnapshot } from '@vitest/ws-client'
@@ -14,7 +15,6 @@ import {
   uiEntries,
   uiFiles,
 } from '~/composables/explorer/state'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import {
   createOrUpdateFileNode,
   createOrUpdateNodeTask,
