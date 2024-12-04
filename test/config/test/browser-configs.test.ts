@@ -52,7 +52,7 @@ test('assignes names as browsers in a custom project', async () => {
   ])
 })
 
-test.only('inherits browser options', async () => {
+test('inherits browser options', async () => {
   const { projects } = await vitest({
     setupFiles: ['/test/setup.ts'],
     provide: {
