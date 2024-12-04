@@ -241,8 +241,8 @@ importers:
         specifier: latest
         version: 25.0.1
       playwright:
-        specifier: ^1.48.0
-        version: 1.48.0
+        specifier: ^1.49.0
+        version: 1.49.0
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.10.1)(terser@5.36.0)
@@ -1067,8 +1067,8 @@ importers:
         specifier: link:./injected-lib
         version: link:injected-lib
       playwright:
-        specifier: ^1.48.0
-        version: 1.48.0
+        specifier: ^1.49.0
+        version: 1.49.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1316,8 +1316,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mocker
       playwright:
-        specifier: ^1.48.0
-        version: 1.48.0
+        specifier: ^1.49.0
+        version: 1.49.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -7720,18 +7720,8 @@ packages:
   pkg-types@1.2.1:
     resolution: {integrity: sha512-sQoqa8alT3nHjGuTjuKgOnvjo4cljkufdtLMnO2LBP/wRwuDlo1tkaEdMxCRhyGRPacv/ztlZgDPm2b7FAmEvw==}
 
-  playwright-core@1.48.0:
-    resolution: {integrity: sha512-RBvzjM9rdpP7UUFrQzRwR8L/xR4HyC1QXMzGYTbf1vjw25/ya9NRAVnXi/0fvFopjebvyPzsmoK58xxeEOaVvA==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   playwright-core@1.49.0:
     resolution: {integrity: sha512-R+3KKTQF3npy5GTiKH/T+kdhoJfJojjHESR1YEWhYuEKRVfVaxH3+4+GvXE5xyCngCxhxnykk0Vlah9v8fs3jA==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.48.0:
-    resolution: {integrity: sha512-qPqFaMEHuY/ug8o0uteYJSRfMGFikhUysk8ZvAtfKmUK3kc/6oNl/y3EczF8OFGYIi/Ex2HspMfzYArk6+XQSA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -17047,15 +17037,7 @@ snapshots:
       mlly: 1.7.3
       pathe: 1.1.2
 
-  playwright-core@1.48.0: {}
-
   playwright-core@1.49.0: {}
-
-  playwright@1.48.0:
-    dependencies:
-      playwright-core: 1.48.0
-    optionalDependencies:
-      fsevents: 2.3.2
 
   playwright@1.49.0:
     dependencies:
