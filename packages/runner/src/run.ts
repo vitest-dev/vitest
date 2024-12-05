@@ -2,6 +2,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpec, VitestRunner } from './types/runner'
 import type {
+  ExtendedContext,
   File,
   HookCleanupCallback,
   HookListener,
@@ -62,32 +63,48 @@ function getSuiteHooks(
 
 async function callTestHooks(
   runner: VitestRunner,
-  task: Task,
-  hooks: ((result: TaskResult) => Awaitable<void>)[],
+  test: Test,
+  hooks: ((context: ExtendedContext<Test>) => Awaitable<void>)[],
   sequence: SequenceHooks,
 ) {
   if (sequence === 'stack') {
     hooks = hooks.slice().reverse()
   }
 
+  if (!hooks.length) {
+    return
+  }
+
+  const onTestFailed = test.context.onTestFailed
+  const onTestFinished = test.context.onTestFinished
+  test.context.onTestFailed = () => {
+    throw new Error(`Cannot call "onTestFailed" inside a test hook.`)
+  }
+  test.context.onTestFinished = () => {
+    throw new Error(`Cannot call "onTestFinished" inside a test hook.`)
+  }
+
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map(fn => fn(task.result!)))
+      await Promise.all(hooks.map(fn => fn(test.context)))
     }
     catch (e) {
-      failTask(task.result!, e, runner.config.diffOptions)
+      failTask(test.result!, e, runner.config.diffOptions)
     }
   }
   else {
     for (const fn of hooks) {
       try {
-        await fn(task.result!)
+        await fn(test.context)
       }
       catch (e) {
-        failTask(task.result!, e, runner.config.diffOptions)
+        failTask(test.result!, e, runner.config.diffOptions)
       }
     }
   }
+
+  test.context.onTestFailed = onTestFailed
+  test.context.onTestFinished = onTestFinished
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
