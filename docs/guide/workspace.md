@@ -41,7 +41,7 @@ export default defineConfig({
 ```
 :::
 
-Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. Since Vitest 2.1, if this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
+Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. If this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
 
 ::: warning
 Vitest does not treat the root `vitest.config` file as a workspace project unless it is explicitly specified in the workspace configuration. Consequently, the root configuration will only influence global options such as `reporters` and `coverage`.

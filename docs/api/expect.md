@@ -465,7 +465,7 @@ test('structurally the same, but semantically different', () => {
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. Since Vitest 1.0, if you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
+`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. If you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
 
 ```ts
 import { expect, test } from 'vitest'
