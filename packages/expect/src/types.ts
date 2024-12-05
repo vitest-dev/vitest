@@ -151,6 +151,17 @@ export interface AsymmetricMatchersContaining {
    * expect(5.11).toEqual(expect.closeTo(5.12)); // with default precision
    */
   closeTo: (expected: number, precision?: number) => any
+
+  /**
+   * Matches if the received value satisfies custom matcher function.
+   *
+   * @param matcher - A function returning a boolean based on the custom condition
+   * @param message - Optional custom error message on failure
+   *
+   * @example
+   * expect(age).toEqual(expect.toSatisfy(val => val >= 18, 'Age must be at least 18'));
+   */
+  toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
 }
 
 export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
