@@ -1,4 +1,4 @@
-import type { File, TaskResultPack, TaskState, Test } from '@vitest/runner'
+import type { Custom, File, TaskResultPack, TaskState, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import { getTests } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
@@ -78,7 +78,7 @@ class DotSummary extends TaskParser {
     }
   }
 
-  onTestStart(test: Test) {
+  onTestStart(test: Test | Custom) {
     if (this.finishedTests.has(test.id)) {
       return
     }
@@ -86,7 +86,7 @@ class DotSummary extends TaskParser {
     this.tests.set(test.id, test.mode || 'run')
   }
 
-  onTestFinished(test: Test) {
+  onTestFinished(test: Test | Custom) {
     if (this.finishedTests.has(test.id)) {
       return
     }

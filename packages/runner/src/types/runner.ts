@@ -1,5 +1,6 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import type {
+  Custom,
   ExtendedContext,
   File,
   SequenceHooks,
@@ -90,7 +91,7 @@ export interface VitestRunner {
   /**
    * When the task has finished running, but before cleanup hooks are called
    */
-  onTaskFinished?: (test: Test) => unknown
+  onTaskFinished?: (test: Test | Custom) => unknown
   /**
    * Called after result and state are set.
    */

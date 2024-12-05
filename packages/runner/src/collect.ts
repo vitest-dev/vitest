@@ -60,7 +60,7 @@ export async function collectTests(
       mergeHooks(fileHooks, getHooks(defaultTasks))
 
       for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
-        if (c.type === 'test' || c.type === 'suite') {
+        if (c.type === 'test' || c.type === 'custom' || c.type === 'suite') {
           file.tasks.push(c)
         }
         else if (c.type === 'collector') {

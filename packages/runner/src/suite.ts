@@ -1,6 +1,7 @@
 import type { FixtureItem } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
+  Custom,
   CustomAPI,
   File,
   Fixtures,
@@ -293,7 +294,7 @@ function createSuiteCollector(
   each?: boolean,
   suiteOptions?: TestOptions,
 ) {
-  const tasks: (Test | Suite | SuiteCollector)[] = []
+  const tasks: (Test | Custom | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite

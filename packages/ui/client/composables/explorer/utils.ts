@@ -1,5 +1,6 @@
 import type { File, Task } from '@vitest/runner'
 import type {
+  CustomTestTreeNode,
   FileTreeNode,
   ParentTreeNode,
   SuiteTreeNode,
@@ -12,12 +13,12 @@ import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
 import { getProjectNameColor, isSuite as isTaskSuite } from '~/utils/task'
 
-export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
-  return node.type === 'test'
+export function isTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomTestTreeNode {
+  return node.type === 'test' || node.type === 'custom'
 }
 
-export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode {
-  return node.mode === 'run' && (node.type === 'test')
+export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode | CustomTestTreeNode {
+  return node.mode === 'run' && (node.type === 'test' || node.type === 'custom')
 }
 
 export function isFileNode(node: UITaskTreeNode): node is FileTreeNode {
@@ -160,7 +161,7 @@ export function createOrUpdateNode(
           indent: node.indent + 1,
           duration,
           state: task.result?.state,
-        } as TestTreeNode
+        } as TestTreeNode | CustomTestTreeNode
       }
       else {
         taskNode = {

@@ -25,7 +25,7 @@ export interface RootTreeNode extends TaskTreeNode {
   tasks: FileTreeNode[]
 }
 
-export type TaskTreeNodeType = 'file' | 'suite' | 'test'
+export type TaskTreeNodeType = 'file' | 'suite' | 'test' | 'custom'
 
 export interface UITaskTreeNode extends TaskTreeNode {
   type: TaskTreeNodeType
@@ -40,6 +40,11 @@ export interface UITaskTreeNode extends TaskTreeNode {
 export interface TestTreeNode extends UITaskTreeNode {
   fileId: string
   type: 'test'
+}
+
+export interface CustomTestTreeNode extends UITaskTreeNode {
+  fileId: string
+  type: 'custom'
 }
 
 export interface ParentTreeNode extends UITaskTreeNode {

@@ -161,7 +161,7 @@ export type Suite = Suite_
 export type File = File_
 /** @deprecated use `RunnerTestCase` instead */
 export type Test = Test_
-/** @deprecated do not use `Custom`, use `RunnerTestCase` instead */
+/** @deprecated use `RunnerCustomCase` instead */
 export type Custom = Custom_
 /** @deprecated use `RunnerTask` instead */
 export type Task = Task_

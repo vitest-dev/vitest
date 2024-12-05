@@ -1,4 +1,5 @@
 import type {
+  Custom as RunnerCustomCase,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
@@ -55,7 +56,7 @@ class ReportedTaskImplementation {
 export class TestCase extends ReportedTaskImplementation {
   #fullName: string | undefined
 
-  declare public readonly task: RunnerTestCase
+  declare public readonly task: RunnerTestCase | RunnerCustomCase
   public readonly type = 'test'
 
   /**
@@ -78,7 +79,7 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
-  protected constructor(task: RunnerTestCase, project: TestProject) {
+  protected constructor(task: RunnerTestCase | RunnerCustomCase, project: TestProject) {
     super(task, project)
 
     this.name = task.name
@@ -404,7 +405,7 @@ export interface TaskOptions {
 }
 
 function buildOptions(
-  task: RunnerTestCase | RunnerTestFile | RunnerTestSuite,
+  task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite,
 ): TaskOptions {
   return {
     each: task.each,

@@ -1,4 +1,4 @@
-import type { File, Task, TaskResultPack, Test } from '@vitest/runner'
+import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import { getTests } from '@vitest/runner/utils'
 
@@ -19,8 +19,8 @@ export class TaskParser {
   onHookStart(_options: HookOptions) {}
   onHookEnd(_options: HookOptions) {}
 
-  onTestStart(_test: Test) {}
-  onTestFinished(_test: Test) {}
+  onTestStart(_test: Test | Custom) {}
+  onTestFinished(_test: Test | Custom) {}
 
   onTestFilePrepare(_file: File) {}
   onTestFileFinished(_file: File) {}
@@ -29,8 +29,8 @@ export class TaskParser {
     const startingTestFiles: File[] = []
     const finishedTestFiles: File[] = []
 
-    const startingTests: Test[] = []
-    const finishedTests: Test[] = []
+    const startingTests: (Test | Custom)[] = []
+    const finishedTests: (Test | Custom)[] = []
 
     const startingHooks: HookOptions[] = []
     const endingHooks: HookOptions[] = []
@@ -54,7 +54,7 @@ export class TaskParser {
         }
       }
 
-      if (task?.type === 'test') {
+      if (task?.type === 'test' || task?.type === 'custom') {
         if (task.result?.state === 'run') {
           startingTests.push(task)
         }
