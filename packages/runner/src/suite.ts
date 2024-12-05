@@ -255,8 +255,9 @@ function parseArguments<T extends (...args: any[]) => any>(
         'Cannot use two objects as arguments. Please provide options and a function callback in that order.',
       )
     }
-    // TODO: more info, add a name
-    // console.warn('The third argument is deprecated. Please use the second argument for options.')
+    console.warn(
+      'Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration',
+    )
     options = optionsOrTest
   }
   // it('', () => {}, 1000)

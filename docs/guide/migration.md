@@ -5,6 +5,30 @@ outline: deep
 
 # Migration Guide
 
+## Migrating to Vitest 3.0
+
+### Test Options as a Third Argument
+
+Vitest 3.0 prints a warning if you pass down an object as a third argument to `test` or `describe` functions:
+
+```ts
+test('validation works', () => {
+  // ...
+}, { retry: 3 }) // [!code --]
+
+test('validation works', { retry: 3 }, () => { // [!code ++]
+  // ...
+})
+```
+
+Vitest 4.0 will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
+
+```ts
+test('validation works', () => {
+  // ...
+}, 1000) // timeout
+```
+
 ## Migrating to Vitest 2.0
 
 ### Default Pool is `forks`
