@@ -574,12 +574,12 @@ function createSuite() {
           if (arrayOnlyCases) {
             suite(
               formatTitle(_name, items, idx),
-              () => handler(...items),
               options,
+              () => handler(...items),
             )
           }
           else {
-            suite(formatTitle(_name, items, idx), () => handler(i), options)
+            suite(formatTitle(_name, items, idx), options, () => handler(i))
           }
         }
         else {
@@ -647,12 +647,12 @@ export function createTaskCollector(
           if (arrayOnlyCases) {
             test(
               formatTitle(_name, items, idx),
-              () => handler(...items),
               options,
+              () => handler(...items),
             )
           }
           else {
-            test(formatTitle(_name, items, idx), () => handler(i), options)
+            test(formatTitle(_name, items, idx), options, () => handler(i))
           }
         }
         else {
