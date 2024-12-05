@@ -906,10 +906,23 @@ Vitest provides a way to run all tests in random order via CLI flag [`--sequence
 ```ts
 import { describe, test } from 'vitest'
 
+// or describe('suite', { shuffle: true }, ...)
 describe.shuffle('suite', () => {
   test('random test 1', async () => { /* ... */ })
   test('random test 2', async () => { /* ... */ })
   test('random test 3', async () => { /* ... */ })
+
+  // `shuffle` is inherited
+  describe('still random', () => {
+    test('random 4.1', async () => { /* ... */ })
+    test('random 4.2', async () => { /* ... */ })
+  })
+
+  // disable shuffle inside
+  describe('not random', { shuffle: false }, () => {
+    test('in order 5.1', async () => { /* ... */ })
+    test('in order 5.2', async () => { /* ... */ })
+  })
 })
 // order depends on sequence.seed option in config (Date.now() by default)
 ```

@@ -207,8 +207,7 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  const api = config.shuffle ? suite.shuffle : suite
-  return api('', { concurrent: config.concurrent }, () => {})
+  return suite('', { concurrent: config.concurrent }, () => {})
 }
 
 export function clearCollectorContext(
@@ -292,7 +291,6 @@ function createSuiteCollector(
   name: string,
   factory: SuiteFactory = () => {},
   mode: RunMode,
-  shuffle?: boolean,
   each?: boolean,
   suiteOptions?: TestOptions,
 ) {
@@ -331,9 +329,7 @@ function createSuiteCollector(
     ) {
       task.concurrent = true
     }
-    if (shuffle) {
-      task.shuffle = true
-    }
+    task.shuffle = suiteOptions?.shuffle
 
     const context = createTestContext(task, runner)
     // create test context
@@ -425,7 +421,7 @@ function createSuiteCollector(
       mode,
       each,
       file: undefined!,
-      shuffle,
+      shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: Object.create(null),
       concurrent: suiteOptions?.concurrent,
@@ -523,8 +519,10 @@ function createSuite() {
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
 
     // inherit options from current suite
-    if (currentSuite?.options) {
-      options = { ...currentSuite.options, ...options }
+    options = {
+      ...currentSuite?.options,
+      ...options,
+      shuffle: this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle,
     }
 
     // inherit concurrent / sequential from suite
@@ -537,7 +535,6 @@ function createSuite() {
       formatName(name),
       factory,
       mode,
-      this.shuffle,
       this.each,
       options,
     )
