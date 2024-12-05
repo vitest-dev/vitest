@@ -26,7 +26,7 @@ Vitest 4.0 will throw an error if the third argument is an object. Note that the
 ```ts
 test('validation works', () => {
   // ...
-}, 1000) // timeout
+}, 1000) // Ok ✅
 ```
 
 ## Migrating to Vitest 2.0
