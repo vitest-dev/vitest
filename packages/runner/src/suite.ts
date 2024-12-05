@@ -500,7 +500,7 @@ function createSuite() {
     this: Record<string, boolean | undefined>,
     name: string | Function,
     factoryOrOptions?: SuiteFactory | TestOptions,
-    optionsOrFactory: number | TestOptions | SuiteFactory = {},
+    optionsOrFactory?: number | TestOptions | SuiteFactory,
   ) {
     const mode: RunMode = this.only
       ? 'only'
