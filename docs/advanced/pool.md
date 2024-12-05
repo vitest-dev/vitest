@@ -49,7 +49,7 @@ export default defineConfig({
 ```
 
 ::: info
-The `workspace` field was introduced in Vitest 2.2. To define a workspace in Vitest <2.2, create a separate `vitest.workspace.ts` file.
+The `workspace` field was introduced in Vitest 3. To define a workspace in [Vitest <3](https://v2.vitest.dev/), create a separate `vitest.workspace.ts` file.
 :::
 
 ## API

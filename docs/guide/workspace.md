@@ -16,7 +16,7 @@ Vitest provides a way to define multiple project configurations within a single 
 
 A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file or working directory if it doesn't exist). Note that `projects` is just an alias and does not change the behavior or semantics of this feature. Vitest supports `ts`, `js`, and `json` extensions for this file.
 
-Since Vitest 2.2, you can also define a workspace in the root config. In this case, Vitest will ignore the `vitest.workspace` file in the root, if one exists.
+Since Vitest 3, you can also define a workspace in the root config. In this case, Vitest will ignore the `vitest.workspace` file in the root, if one exists.
 
 ::: tip NAMING
 Please note that this feature is named `workspace`, not `workspaces` (without an "s" at the end).
