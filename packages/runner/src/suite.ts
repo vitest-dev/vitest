@@ -1,8 +1,6 @@
 import type { FixtureItem } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
-  Custom,
-  CustomAPI,
   File,
   Fixtures,
   RunMode,
@@ -294,7 +292,7 @@ function createSuiteCollector(
   each?: boolean,
   suiteOptions?: TestOptions,
 ) {
-  const tasks: (Test | Custom | Suite | SuiteCollector)[] = []
+  const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -609,7 +607,7 @@ function createSuite() {
 export function createTaskCollector(
   fn: (...args: any[]) => any,
   context?: Record<string, unknown>,
-): CustomAPI {
+): TestAPI {
   const taskFn = fn as any
 
   taskFn.each = function <T>(
@@ -730,7 +728,7 @@ export function createTaskCollector(
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
     taskFn,
-  ) as CustomAPI
+  ) as TestAPI
 
   if (context) {
     (_test as any).mergeContext(context)

@@ -1,4 +1,4 @@
-import type { Custom, File, Test } from '@vitest/runner'
+import type { File, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { HookOptions } from './task-parser'
@@ -169,7 +169,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
     stats.hook.visible = false
   }
 
-  onTestStart(test: Test | Custom) {
+  onTestStart(test: Test) {
     // Track slow running tests only on verbose mode
     if (!this.options.verbose) {
       return
@@ -200,7 +200,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
     stats.tests.set(test.id, slowTest)
   }
 
-  onTestFinished(test: Test | Custom) {
+  onTestFinished(test: Test) {
     const stats = this.getTestStats(test)
 
     if (!stats) {
@@ -262,7 +262,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
     }
   }
 
-  private getTestStats(test: Test | Custom) {
+  private getTestStats(test: Test) {
     const file = test.file
     let stats = this.runningTests.get(file.id)
 

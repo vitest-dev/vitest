@@ -18,4 +18,5 @@ export {
   hasFailed,
   hasTests,
   isAtomTest,
+  isTestCase,
 } from './tasks'

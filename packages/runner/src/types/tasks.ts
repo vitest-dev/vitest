@@ -223,18 +223,9 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
 /**
  * @deprecated Use `Test` instead. `type: 'custom'` is not used since 2.2
  */
-export interface Custom<ExtraContext = object> extends TaskPopulated {
-  /**
-   * @deprecated use `test` instead. `custom` is not used since 2.2
-   */
-  type: 'custom'
-  /**
-   * Task context that will be passed to the test function.
-   */
-  context: TaskContext<Test> & ExtraContext & TestContext
-}
+export type Custom<ExtraContext = object> = Test<ExtraContext>
 
-export type Task = Test | Suite | Custom | File
+export type Task = Test | Suite | File
 
 /**
  * @deprecated Vitest doesn't provide `done()` anymore
@@ -441,6 +432,7 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
     }>
   }
 
+/** @deprecated use `TestAPI` instead */
 export type { TestAPI as CustomAPI }
 
 export interface FixtureOptions {
@@ -578,8 +570,6 @@ export interface SuiteCollector<ExtraContext = object> {
   test: TestAPI<ExtraContext>
   tasks: (
     | Suite
-    // TODO: remove in Vitest 3
-    | Custom<ExtraContext>
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
