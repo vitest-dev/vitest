@@ -1,7 +1,7 @@
-import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
+import type { File, Task, TaskResultPack, Test } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
-import { isAtomTest } from '@vitest/runner/utils'
+import { isTestCase } from '@vitest/runner/utils/tasks'
 import { toArray } from '@vitest/utils'
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { client, findById } from '~/composables/client'
@@ -460,12 +460,12 @@ export function collectTestsTotalData(
   return filesSummary
 }
 
-function* testsCollector(suite: Arrayable<Task>): Generator<Test | Custom> {
+function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
   const arraySuites = toArray(suite)
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
-    if (isAtomTest(s)) {
+    if (isTestCase(s)) {
       yield s
     }
     else {

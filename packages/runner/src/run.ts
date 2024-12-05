@@ -2,7 +2,6 @@ import type { Awaitable } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpec, VitestRunner } from './types/runner'
 import type {
-  Custom,
   File,
   HookCleanupCallback,
   HookListener,
@@ -177,7 +176,7 @@ async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
   )
 }
 
-export async function runTest(test: Test | Custom, runner: VitestRunner): Promise<void> {
+export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run') {
@@ -471,7 +470,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
-  if (c.type === 'test' || c.type === 'custom') {
+  if (c.type === 'test') {
     return limitMaxConcurrency(() => runTest(c, runner))
   }
   else if (c.type === 'suite') {
