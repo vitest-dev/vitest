@@ -42,6 +42,10 @@ import {
 
 If you are using `getCurrentSuite().custom()`, the `type` of the returned task is now is equal to `'test'`. The `Custom` type will be removed in Vitest 4.
 
+### `onTestFinished` and `onTestFailed` Now Receive a Context
+
+The [`onTestFinished`](/api/#ontestfinished) and [`onTestFailed`](/api/#ontestfailed) hooks previously received a test result as the first argument. Now, they receive a test context, like `beforeEach` and `afterEach`.
+
 ## Migrating to Vitest 2.0
 
 ### Default Pool is `forks`

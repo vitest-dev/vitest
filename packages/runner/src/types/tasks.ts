@@ -608,12 +608,12 @@ export interface TaskContext<Task extends Test = Test> {
   /**
    * Extract hooks on test failed
    */
-  onTestFailed: (fn: OnTestFailedHandler) => void
+  onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
    * Extract hooks on test failed
    */
-  onTestFinished: (fn: OnTestFinishedHandler) => void
+  onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
 
   /**
    * Mark tests as skipped. All execution after this call will be skipped.
@@ -625,8 +625,8 @@ export interface TaskContext<Task extends Test = Test> {
 export type ExtendedContext<T extends Test> = TaskContext<T> &
   TestContext
 
-export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
-export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
+export type OnTestFailedHandler = (context: ExtendedContext<Test>) => Awaitable<void>
+export type OnTestFinishedHandler = (context: ExtendedContext<Test>) => Awaitable<void>
 
 export interface TaskHook<HookListener> {
   (fn: HookListener, timeout?: number): void
