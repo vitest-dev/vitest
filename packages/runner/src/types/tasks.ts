@@ -2,7 +2,7 @@ import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
 import type { ChainableFunction } from '../utils/chain'
 
-export type RunMode = 'run' | 'skip' | 'only' | 'todo'
+export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
 export type TaskState = RunMode | 'pass' | 'fail'
 
 export interface TaskBase {
@@ -23,6 +23,7 @@ export interface TaskBase {
    * - **only**: only this task and other tasks with `only` mode will run
    * - **todo**: task is marked as a todo, alias for `skip`
    * - **run**: task will run or already ran
+   * - **queued**: task will start running next. It can only exist on the File
    */
   mode: RunMode
   /**

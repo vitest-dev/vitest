@@ -257,7 +257,7 @@ function forEachSuite(tasks: Task[], callback: (suite: Suite) => void) {
 
 export function formatCollectedAsJSON(files: File[]) {
   return files.map((file) => {
-    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
+    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'queued' || test.mode === 'only')
     return tests.map((test) => {
       const result: any = {
         name: getNames(test).slice(1).join(' > '),
@@ -276,7 +276,7 @@ export function formatCollectedAsJSON(files: File[]) {
 
 export function formatCollectedAsString(files: File[]) {
   return files.map((file) => {
-    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
+    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'queued' || test.mode === 'only')
     return tests.map((test) => {
       const name = getNames(test).join(' > ')
       if (test.file.projectName) {

@@ -4,6 +4,7 @@ import { toArray } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectorContext } from './context'
 import { getHooks, setHooks } from './map'
+import { updateTask } from './run'
 import { runSetupFiles } from './setup'
 import {
   clearCollectorContext,
@@ -34,6 +35,7 @@ export async function collectTests(
     const file = createFileTask(filepath, config.root, config.name, runner.pool)
     file.shuffle = config.sequence.shuffle
 
+    updateTask(file, runner)
     runner.onCollectStart?.(file)
 
     clearCollectorContext(filepath, runner)
@@ -106,6 +108,10 @@ export async function collectTests(
       false,
       config.allowOnly,
     )
+
+    if (file.mode === 'queued') {
+      file.mode = 'run'
+    }
 
     files.push(file)
   }
