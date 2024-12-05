@@ -253,8 +253,9 @@ function parseArguments<T extends (...args: any[]) => any>(
         'Cannot use two objects as arguments. Please provide options and a function callback in that order.',
       )
     }
-    // TODO: more info, add a name
-    // console.warn('The third argument is deprecated. Please use the second argument for options.')
+    console.warn(
+      'Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration',
+    )
     options = optionsOrTest
   }
   // it('', () => {}, 1000)
@@ -497,7 +498,7 @@ function createSuite() {
     this: Record<string, boolean | undefined>,
     name: string | Function,
     factoryOrOptions?: SuiteFactory | TestOptions,
-    optionsOrFactory: number | TestOptions | SuiteFactory = {},
+    optionsOrFactory?: number | TestOptions | SuiteFactory,
   ) {
     const mode: RunMode = this.only
       ? 'only'
@@ -563,7 +564,7 @@ function createSuite() {
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -635,7 +636,7 @@ export function createTaskCollector(
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]

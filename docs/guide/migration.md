@@ -5,6 +5,43 @@ outline: deep
 
 # Migration Guide
 
+## Migrating to Vitest 3.0
+
+### Test Options as a Third Argument
+
+Vitest 3.0 prints a warning if you pass down an object as a third argument to `test` or `describe` functions:
+
+```ts
+test('validation works', () => {
+  // ...
+}, { retry: 3 }) // [!code --]
+
+test('validation works', { retry: 3 }, () => { // [!code ++]
+  // ...
+})
+```
+
+Vitest 4.0 will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
+
+```ts
+test('validation works', () => {
+  // ...
+}, 1000) // Ok ✅
+```
+
+### `Custom` Type is Deprecated <Badge type="warning">experimental API</Badge> {#custom-type-is-deprecated}
+
+The `Custom` type is now equal to the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
+
+```ts
+import {
+  RunnerCustomCase, // [!code --]
+  RunnerTestCase, // [!code ++]
+} from 'vitest'
+```
+
+If you are using `getCurrentSuite().custom()`, the `type` of the returned task is now is equal to `'test'`. The `Custom` type will be removed in Vitest 4.
+
 ## Migrating to Vitest 2.0
 
 ### Default Pool is `forks`

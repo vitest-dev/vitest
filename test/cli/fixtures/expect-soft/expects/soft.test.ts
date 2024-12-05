@@ -69,17 +69,13 @@ test('passed', () => {
 })
 
 let num = 0
-test('retry will passed', () => {
+test('retry will passed', { retry: 1 }, () => {
   expect.soft(num += 1).toBe(3)
   expect.soft(num += 1).toBe(4)
-}, {
-  retry: 1,
 })
 
 num = 0
-test('retry will failed', () => {
+test('retry will failed', { retry: 1 }, () => {
   expect.soft(num += 1).toBe(4)
   expect.soft(num += 1).toBe(5)
-}, {
-  retry: 1,
 })
