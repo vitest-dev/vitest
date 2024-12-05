@@ -30,7 +30,7 @@ export default [
   'packages/*'
 ]
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -55,7 +55,7 @@ export default [
   'packages/*/vitest.config.{e2e,unit}.ts'
 ]
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -97,7 +97,7 @@ export default defineWorkspace([
   }
 ])
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -140,7 +140,7 @@ If you do not use inline configurations, you can create a small JSON file in you
   "packages/*"
 ]
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -272,7 +272,7 @@ export default defineWorkspace([
   },
 ])
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 

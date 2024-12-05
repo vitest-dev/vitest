@@ -140,9 +140,9 @@ export default function setup({ provide }) {
 ```
 :::
 
-## TestProject <Version>2.2.0</Version> {#testproject}
+## TestProject <Version>3.0.0</Version> {#testproject}
 
-- **Alias**: `WorkspaceProject` before 2.2.0
+- **Alias**: `WorkspaceProject` before 3.0.0
 
 ### name
 

@@ -876,7 +876,7 @@ test('spy function', () => {
 })
 ```
 
-## toHaveBeenCalledBefore <Version>2.2.0</Version> {#tohavebeencalledbefore}
+## toHaveBeenCalledBefore <Version>3.0.0</Version> {#tohavebeencalledbefore}
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -895,7 +895,7 @@ test('calls mock1 before mock2', () => {
 })
 ```
 
-## toHaveBeenCalledAfter <Version>2.2.0</Version> {#tohavebeencalledafter}
+## toHaveBeenCalledAfter <Version>3.0.0</Version> {#tohavebeencalledafter}
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -914,7 +914,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWith <Version>2.2.0</Version> {#tohavebeencalledexactlyoncewith}
+## toHaveBeenCalledExactlyOnceWith <Version>3.0.0</Version> {#tohavebeencalledexactlyoncewith}
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 

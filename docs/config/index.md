@@ -1193,7 +1193,7 @@ import { inject } from 'vitest'
 
 inject('wsPort') === 3000
 ```
-```ts [globalSetup.ts <Version>2.2.0</Version>]
+```ts [globalSetup.ts <Version>3.0.0</Version>]
 import type { TestProject } from 'vitest/node'
 
 export default function setup(project: TestProject) {
