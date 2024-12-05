@@ -3391,8 +3391,8 @@ packages:
   '@shikijs/engine-oniguruma@1.24.1':
     resolution: {integrity: sha512-KdrTIBIONWd+Xs61eh8HdIpfigtrseat9dpARvaOe2x0g/FNTbwbkGr3y92VSOVD1XotzEskh3v/nCzyWjkf7g==}
 
-  '@shikijs/transformers@1.22.2':
-    resolution: {integrity: sha512-8f78OiBa6pZDoZ53lYTmuvpFPlWtevn23bzG+azpPVvZg7ITax57o/K3TC91eYL3OMJOO0onPbgnQyZjRos8XQ==}
+  '@shikijs/transformers@1.24.0':
+    resolution: {integrity: sha512-Qf/hby+PRPkoHncjYnJf5svK1aCsOUtQhuLzKPnmeXJtuUZCmbH0pTpdNtXe9tgln/RHlyRJnv7q46HHS1sO0Q==}
 
   '@shikijs/twoslash@1.24.1':
     resolution: {integrity: sha512-TbXYtUREusATSCAWLw5dSwmc54Ga9wYF1gTfrOTEQJB3iFejtjA6VFZSpIGnmnQemVr4NNBTK6+4yxcFIZXD7A==}
@@ -11767,11 +11767,6 @@ snapshots:
   '@shikijs/engine-oniguruma@1.24.1':
     dependencies:
       '@shikijs/types': 1.24.1
-      '@shikijs/vscode-textmate': 9.3.0
-
-  '@shikijs/transformers@1.22.2':
-    dependencies:
-      '@shikijs/types': 1.24.0
       '@shikijs/vscode-textmate': 9.3.0
 
   '@shikijs/transformers@1.24.0':
