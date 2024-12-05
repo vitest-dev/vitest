@@ -19,7 +19,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
     return []
   }
 
-  if (task.type === 'test' || task.type === 'custom') {
+  if (task.type === 'test') {
     return [{ ...task, level }]
   }
   else {

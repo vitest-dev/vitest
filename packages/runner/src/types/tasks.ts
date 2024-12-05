@@ -234,7 +234,7 @@ export interface Custom<ExtraContext = object> extends TaskPopulated {
   context: TaskContext<Test> & ExtraContext & TestContext
 }
 
-export type Task = Test | Suite | Custom | File
+export type Task = Test | Suite | File
 
 /**
  * @deprecated Vitest doesn't provide `done()` anymore
@@ -578,8 +578,6 @@ export interface SuiteCollector<ExtraContext = object> {
   test: TestAPI<ExtraContext>
   tasks: (
     | Suite
-    // TODO: remove in Vitest 3
-    | Custom<ExtraContext>
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
