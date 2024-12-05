@@ -1,7 +1,6 @@
 import type { FixtureItem } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
-  Custom,
   CustomAPI,
   File,
   Fixtures,
@@ -250,15 +249,9 @@ function parseArguments<T extends (...args: any[]) => any>(
 
   // it('', () => {}, { retry: 2 })
   if (typeof optionsOrTest === 'object') {
-    // it('', { retry: 2 }, { retry: 3 })
-    if (typeof optionsOrFn === 'object') {
-      throw new TypeError(
-        'Cannot use two objects as arguments. Please provide options and a function callback in that order.',
-      )
-    }
-    // TODO: more info, add a name
-    // console.warn('The third argument is deprecated. Please use the second argument for options.')
-    options = optionsOrTest
+    throw new TypeError(
+      'Expected the third argument to be a function or a timeout number, instead got an object. If you need to configure options, use the second argument.',
+    )
   }
   // it('', () => {}, 1000)
   else if (typeof optionsOrTest === 'number') {
@@ -296,7 +289,7 @@ function createSuiteCollector(
   each?: boolean,
   suiteOptions?: TestOptions,
 ) {
-  const tasks: (Test | Custom | Suite | SuiteCollector)[] = []
+  const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -503,7 +496,7 @@ function createSuite() {
     this: Record<string, boolean | undefined>,
     name: string | Function,
     factoryOrOptions?: SuiteFactory | TestOptions,
-    optionsOrFactory: number | TestOptions | SuiteFactory = {},
+    optionsOrFactory?: number | TestOptions | SuiteFactory,
   ) {
     const mode: RunMode = this.only
       ? 'only'
