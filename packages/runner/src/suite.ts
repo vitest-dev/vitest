@@ -566,7 +566,7 @@ function createSuite() {
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -574,12 +574,12 @@ function createSuite() {
           if (arrayOnlyCases) {
             suite(
               formatTitle(_name, items, idx),
-              options,
               () => handler(...items),
+              options,
             )
           }
           else {
-            suite(formatTitle(_name, items, idx), options, () => handler(i))
+            suite(formatTitle(_name, items, idx), () => handler(i), options)
           }
         }
         else {
@@ -638,7 +638,7 @@ export function createTaskCollector(
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -647,12 +647,12 @@ export function createTaskCollector(
           if (arrayOnlyCases) {
             test(
               formatTitle(_name, items, idx),
-              options,
               () => handler(...items),
+              options,
             )
           }
           else {
-            test(formatTitle(_name, items, idx), options, () => handler(i))
+            test(formatTitle(_name, items, idx), () => handler(i), options)
           }
         }
         else {
