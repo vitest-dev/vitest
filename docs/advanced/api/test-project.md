@@ -166,11 +166,10 @@ Project context values will always override root project's context.
 function createSpecification(
   moduleId: string,
   locations?: number[],
-  pool?: string,
 ): TestSpecification
 ```
 
-Create a [test specification](/advanced/api/test-specification) that can be used in [`vitest.runTestSpecifications`](/advanced/api/vitest#runtestspecifications). Specification scopes the test file to a specific `project`, `locations` (optional) and `pool` (optional).
+Create a [test specification](/advanced/api/test-specification) that can be used in [`vitest.runTestSpecifications`](/advanced/api/vitest#runtestspecifications). Specification scopes the test file to a specific `project` and test `locations` (optional). Test [locations](/advanced/api/test-case#location) are code lines where the test is defined in the source code. If locations are provided, Vitest will only run tests defined on those lines. Note that if [`testNamePattern`](/config/#testnamepattern) is defined, then it will also be applied.
 
 ```ts
 import { createVitest } from 'vitest/node'
@@ -179,15 +178,14 @@ import { resolve } from 'node:path/posix'
 const vitest = await createVitest('test')
 const project = vitest.projects[0]
 const specification = project.createSpecification(
-  resolve('./basic.test.ts'),
+  resolve('./example.test.ts'),
   [20, 40], // optional test lines
-  'threads', // optional override
 )
-await vitest.runFiles([specification], true)
+await vitest.runTestSpecifications([specification])
 ```
 
 ::: warning
-`createSpecification` expects an absolute file path. It doesn't resolve the file or check that it exists on the file system.
+`createSpecification` expects resolved [module ID](/advanced/api/test-specification#moduleid). It doesn't auto-resolve the file or check that it exists on the file system.
 
 Also note that `project.createSpecification` always returns a new instance.
 :::
