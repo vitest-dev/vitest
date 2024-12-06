@@ -70,16 +70,16 @@ import type { RunnerTestFile } from 'vitest'
 import type { Reporter, TestModule } from 'vitest/reporters'
 
 class MyReporter implements Reporter {
-  ctx!: Vitest
+  private vitest!: Vitest
 
-  onInit(ctx: Vitest) {
-    this.ctx = ctx
+  onInit(vitest: Vitest) {
+    this.vitest = vitest
   }
 
   onFinished(files: RunnerTestFile[]) {
-    for (const fileTask of files) {
+    for (const file of files) {
       // note that the old task implementation uses "file" instead of "module"
-      const testModule = this.ctx.state.getReportedEntity(fileTask) as TestModule
+      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
       for (const task of testModule.children) {
         //                          ^?
         console.log('finished', task.type, task.fullName)
