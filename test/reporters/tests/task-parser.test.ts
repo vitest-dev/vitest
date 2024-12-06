@@ -1,5 +1,5 @@
 import type { File, Test } from '@vitest/runner'
-import type { WorkspaceSpec } from 'vitest/node'
+import type { TestSpecification } from 'vitest/node'
 import type { Reporter } from 'vitest/reporters'
 import type { HookOptions } from '../../../packages/vitest/src/node/reporters/task-parser'
 import { expect, test } from 'vitest'
@@ -132,7 +132,7 @@ class TaskReporter extends TaskParser implements Reporter {
 }
 
 class Sorter {
-  sort(files: WorkspaceSpec[]) {
+  sort(files: TestSpecification[]) {
     return files.sort((a, b) => {
       const idA = Number.parseInt(
         a.moduleId.match(/example-(\d*)\.test\.ts/)![1],
@@ -151,7 +151,7 @@ class Sorter {
     })
   }
 
-  shard(files: WorkspaceSpec[]) {
+  shard(files: TestSpecification[]) {
     return files
   }
 }

@@ -1,3 +1,7 @@
+---
+title: Advanced API
+---
+
 # Getting Started
 
 ::: warning
