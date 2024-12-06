@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "2.1.0-beta.6",
+  "version": "3.0.0-beta.1",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -65,12 +65,12 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "loupe": "^3.1.1",
+    "loupe": "^3.1.2",
     "tinyrainbow": "^1.2.0"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
-    "@types/estree": "^1.0.5",
+    "@types/estree": "^1.0.6",
     "diff-sequences": "^29.6.3",
     "tinyhighlight": "^0.3.2"
   }

@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { Tooltip as VueTooltip } from 'floating-vue'
 import type { File } from 'vitest'
+import { Tooltip as VueTooltip } from 'floating-vue'
+import { isDark, toggleDark } from '~/composables'
+import { client, isReport, runAll, runFiles } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer'
+import { initialized, shouldShowExpandAll } from '~/composables/explorer/state'
 import {
   coverageConfigured,
   coverageEnabled,
@@ -11,10 +15,6 @@ import {
   showCoverage,
   showDashboard,
 } from '~/composables/navigation'
-import { client, isReport, runAll, runFiles } from '~/composables/client'
-import { isDark, toggleDark } from '~/composables'
-import { explorerTree } from '~/composables/explorer'
-import { initialized, shouldShowExpandAll } from '~/composables/explorer/state'
 
 function updateSnapshot() {
   return client.rpc.updateSnapshot()

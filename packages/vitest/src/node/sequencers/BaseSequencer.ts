@@ -1,9 +1,9 @@
-import { createHash } from 'node:crypto'
-import { relative, resolve } from 'pathe'
-import { slash } from 'vite-node/utils'
 import type { Vitest } from '../core'
 import type { WorkspaceSpec } from '../pool'
 import type { TestSequencer } from './types'
+import { relative, resolve } from 'pathe'
+import { slash } from 'vite-node/utils'
+import { hash } from '../hash'
 
 export class BaseSequencer implements TestSequencer {
   protected ctx: Vitest
@@ -25,7 +25,7 @@ export class BaseSequencer implements TestSequencer {
         const specPath = fullPath?.slice(config.root.length)
         return {
           spec,
-          hash: createHash('sha1').update(specPath).digest('hex'),
+          hash: hash('sha1', specPath, 'hex'),
         }
       })
       .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))

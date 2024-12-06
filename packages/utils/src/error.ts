@@ -1,6 +1,6 @@
+import type { TestError } from './types'
 import { type DiffOptions, printDiffOrStringify } from './diff'
 import { format, stringify } from './display'
-import type { TestError } from './types'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {
@@ -133,8 +133,8 @@ export function processError(
   if (
     err.showDiff
     || (err.showDiff === undefined
-    && err.expected !== undefined
-    && err.actual !== undefined)
+      && err.expected !== undefined
+      && err.actual !== undefined)
   ) {
     err.diff = printDiffOrStringify(err.actual, err.expected, {
       ...diffOptions,

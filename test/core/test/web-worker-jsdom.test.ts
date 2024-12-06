@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
-import '@vitest/web-worker'
-
 import { expect, it } from 'vitest'
+
 import GlobalsWorker from '../src/web-worker/worker-globals?worker'
+import '@vitest/web-worker'
 
 it('worker with invalid url throws an error', async () => {
   const url = import.meta.url

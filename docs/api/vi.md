@@ -136,8 +136,7 @@ For example, you have this file structure:
 
 If you call `vi.mock` in a test file without a factory or options provided, it will find a file in the `__mocks__` folder to use as a module:
 
-```ts
-// increment.test.js
+```ts [increment.test.js]
 import { vi } from 'vitest'
 
 // axios is a default export from `__mocks__/axios.js`
@@ -175,14 +174,13 @@ import { increment } from './increment.js'
 ```
 :::
 
-```ts
-// ./increment.js
+```ts [increment.js]
 export function increment(number) {
   return number + 1
 }
 ```
 
-```ts
+```ts [increment.test.js]
 import { beforeEach, test } from 'vitest'
 import { increment } from './increment.js'
 
@@ -216,14 +214,30 @@ Type helper for TypeScript. Just returns the object that was passed.
 
 When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that the first level values are mocked. You can pass down `{ deep: true }` as a second argument to tell TypeScript that the whole object is mocked, if it actually is.
 
-```ts
-import example from './example.js'
+```ts [example.ts]
+export function add(x: number, y: number): number {
+  return x + y
+}
 
-vi.mock('./example.js')
+export function fetchSomething(): Promise<Response> {
+  return fetch('https://vitest.dev/')
+}
+```
+
+```ts [example.test.ts]
+import * as example from './example'
+
+vi.mock('./example')
 
 test('1 + 1 equals 10', async () => {
-  vi.mocked(example.calc).mockReturnValue(10)
-  expect(example.calc(1, '+', 1)).toBe(10)
+  vi.mocked(example.add).mockReturnValue(10)
+  expect(example.add(1, 1)).toBe(10)
+})
+
+test('mock return value with only partially correct typing', async () => {
+  vi.mocked(example.fetchSomething).mockResolvedValue(new Response('hello'))
+  vi.mocked(example.fetchSomething, { partial: true }).mockResolvedValue({ ok: false })
+  // vi.mocked(example.someFn).mockResolvedValue({ ok: false }) // this is a type error
 })
 ```
 
@@ -235,9 +249,9 @@ Imports module, bypassing all checks if it should be mocked. Can be useful if yo
 
 ```ts
 vi.mock('./example.js', async () => {
-  const axios = await vi.importActual('./example.js')
+  const originalModule = await vi.importActual('./example.js')
 
-  return { ...axios, get: vi.fn() }
+  return { ...originalModule, get: vi.fn() }
 })
 ```
 
@@ -259,14 +273,13 @@ Removes module from the mocked registry. All calls to import will return the ori
 
 The same as [`vi.unmock`](#vi-unmock), but is not hoisted to the top of the file. The next import of the module will import the original module instead of the mock. This will not unmock previously imported modules.
 
-```ts
-// ./increment.js
+```ts [increment.js]
 export function increment(number) {
   return number + 1
 }
 ```
 
-```ts
+```ts [increment.test.js]
 import { increment } from './increment.js'
 
 // increment is already mocked, because vi.mock is hoisted
@@ -385,15 +398,18 @@ Checks that a given parameter is a mock function. If you are using TypeScript, i
 
 ### vi.clearAllMocks
 
-Will call [`.mockClear()`](/api/mock#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
+Calls [`.mockClear()`](/api/mock#mockclear) on all spies.
+This will clear mock history without affecting mock implementations.
 
 ### vi.resetAllMocks
 
-Will call [`.mockReset()`](/api/mock#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Calls [`.mockReset()`](/api/mock#mockreset) on all spies.
+This will clear mock history and reset each mock's implementation to its original.
 
 ### vi.restoreAllMocks
 
-Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
+Calls [`.mockRestore()`](/api/mock#mockrestore) on all spies.
+This will clear mock history, restore all original mock implementations, , and restore original descriptors of spied-on objects.
 
 ### vi.spyOn
 
@@ -435,7 +451,7 @@ console.log(cart.getApples()) // still 42!
 :::
 
 ::: tip
-It is not possible to spy on a specific exported method in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
+It is not possible to spy on exported methods in [Browser Mode](/guide/browser/). Instead, you can spy on every exported method by calling `vi.mock("./file-path.js", { spy: true })`. This will mock every export but keep its implementation intact, allowing you to assert if the method was called correctly.
 
 ```ts
 import { calculator } from './src/calculator.ts'
@@ -777,6 +793,8 @@ await vi.runOnlyPendingTimersAsync()
 If fake timers are enabled, this method simulates a user changing the system clock (will affect date related API like `hrtime`, `performance.now` or `new Date()`) - however, it will not fire any timers. If fake timers are not enabled, this method will only mock `Date.*` calls.
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
+
+Accepts the same string and number arguments as the `Date`.
 
 ```ts
 const date = new Date(1998, 11, 19)

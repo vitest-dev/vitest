@@ -6,19 +6,23 @@ afterEach(() => {
 })
 
 test('server-url http', async () => {
-  const { stdout, stderr } = await runBrowserTests({
+  const { stderr, ctx } = await runBrowserTests({
     root: './fixtures/server-url',
+    watch: true, // otherwise the browser is closed before we can get the url
   })
+  const url = ctx?.projects[0].browser?.vite.resolvedUrls?.local[0]
   expect(stderr).toBe('')
-  expect(stdout).toContain('Browser runner started at http://localhost:5173/')
+  expect(url).toBe('http://localhost:51133/')
 })
 
 test('server-url https', async () => {
   process.env.TEST_HTTPS = '1'
-  const { stdout, stderr } = await runBrowserTests({
+  const { stdout, stderr, ctx } = await runBrowserTests({
     root: './fixtures/server-url',
+    watch: true, // otherwise the browser is closed before we can get the url
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('Browser runner started at https://localhost:5173/')
+  const url = ctx?.projects[0].browser?.vite.resolvedUrls?.local[0]
+  expect(url).toBe('https://localhost:51122/')
   expect(stdout).toContain('Test Files  1 passed')
 })

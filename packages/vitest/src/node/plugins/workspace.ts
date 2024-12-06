@@ -1,23 +1,24 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { basename, dirname, relative, resolve } from 'pathe'
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { TestProject } from '../project'
+import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import { existsSync, readFileSync } from 'node:fs'
+import { deepMerge } from '@vitest/utils'
+import { basename, dirname, relative, resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { deepMerge } from '../../utils/base'
-import type { WorkspaceProject } from '../workspace'
-import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
-import { SsrReplacerPlugin } from './ssrReplacer'
 import { MocksPlugins } from './mocks'
+import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestOptimizer } from './optimizer'
+import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
-import { VitestResolver } from './vitestResolver'
-import { VitestOptimizer } from './optimizer'
-import { NormalizeURLPlugin } from './normalizeURL'
+import { VitestProjectResolver } from './vitestResolver'
 
 interface WorkspaceOptions extends UserWorkspaceConfig {
   root?: string
@@ -25,7 +26,7 @@ interface WorkspaceOptions extends UserWorkspaceConfig {
 }
 
 export function WorkspaceVitestPlugin(
-  project: WorkspaceProject,
+  project: TestProject,
   options: WorkspaceOptions,
 ) {
   return <VitePlugin[]>[
@@ -85,6 +86,7 @@ export function WorkspaceVitestPlugin(
             watch: null,
             open: false,
             hmr: false,
+            ws: false,
             preTransformRequests: false,
             middlewareMode: true,
             fs: {
@@ -92,6 +94,18 @@ export function WorkspaceVitestPlugin(
                 project.ctx.config.root,
                 project.ctx.server.config.configFile,
               ),
+            },
+          },
+          // eslint-disable-next-line ts/ban-ts-comment
+          // @ts-ignore Vite 6 compat
+          environments: {
+            ssr: {
+              resolve: {
+                // by default Vite resolves `module` field, which not always a native ESM module
+                // setting this option can bypass that and fallback to cjs version
+                mainFields: [],
+                conditions: ['node'],
+              },
             },
           },
           test: {
@@ -103,7 +117,7 @@ export function WorkspaceVitestPlugin(
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
-          && testConfig.css?.modules?.classNameStrategy)
+            && testConfig.css?.modules?.classNameStrategy)
           || 'stable'
 
         if (classNameStrategy !== 'scoped') {
@@ -123,6 +137,14 @@ export function WorkspaceVitestPlugin(
             }
           }
         }
+        config.customLogger = createViteLogger(
+          project.logger,
+          viteConfig.logLevel || 'warn',
+          {
+            allowClearScreen: false,
+          },
+        )
+        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
       },
@@ -131,7 +153,7 @@ export function WorkspaceVitestPlugin(
       },
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
-        await project.setServer(options, server)
+        await project._configureServer(options, server)
 
         await server.watcher.close()
       },
@@ -140,7 +162,7 @@ export function WorkspaceVitestPlugin(
     ...CSSEnablerPlugin(project),
     CoverageTransform(project.ctx),
     ...MocksPlugins(),
-    VitestResolver(project.ctx),
+    VitestProjectResolver(project.ctx),
     VitestOptimizer(),
     NormalizeURLPlugin(),
   ]

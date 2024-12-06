@@ -1,14 +1,13 @@
 import type { Awaitable } from '@vitest/utils'
-import { getSafeTimers } from '@vitest/utils'
+import type { VitestRunner } from './types/runner'
 import type {
-  Custom,
   ExtendedContext,
   RuntimeContext,
   SuiteCollector,
   TaskContext,
   Test,
 } from './types/tasks'
-import type { VitestRunner } from './types/runner'
+import { getSafeTimers } from '@vitest/utils'
 import { PendingError } from './errors'
 
 export const collectorContext: RuntimeContext = {
@@ -57,7 +56,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
   }) as T
 }
 
-export function createTestContext<T extends Test | Custom>(
+export function createTestContext<T extends Test>(
   test: T,
   runner: VitestRunner,
 ): ExtendedContext<T> {
@@ -67,19 +66,23 @@ export function createTestContext<T extends Test | Custom>(
 
   context.task = test
 
-  context.skip = () => {
+  context.skip = (note?: string) => {
     test.pending = true
-    throw new PendingError('test is skipped; abort execution', test)
+    throw new PendingError('test is skipped; abort execution', test, note)
   }
 
-  context.onTestFailed = (fn) => {
+  context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
-    test.onFailed.push(fn)
+    test.onFailed.push(
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+    )
   }
 
-  context.onTestFinished = (fn) => {
+  context.onTestFinished = (handler, timeout) => {
     test.onFinished ||= []
-    test.onFinished.push(fn)
+    test.onFinished.push(
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+    )
   }
 
   return (runner.extendTaskContext?.(context) as ExtendedContext<T>) || context

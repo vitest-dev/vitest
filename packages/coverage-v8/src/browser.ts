@@ -1,5 +1,5 @@
-import { cdp } from '@vitest/browser/context'
 import type { V8CoverageProvider } from './provider'
+import { cdp } from '@vitest/browser/context'
 import { loadProvider } from './load-provider'
 
 const session = cdp()
@@ -56,6 +56,14 @@ function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
   }
 
   if (coverage.url.includes('__vitest__/assets')) {
+    return false
+  }
+
+  if (coverage.url === window.location.href) {
+    return false
+  }
+
+  if (coverage.url.includes('?browserv=') || coverage.url.includes('&browserv=')) {
     return false
   }
 

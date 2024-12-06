@@ -1,13 +1,13 @@
-import { dirname, relative, resolve } from 'node:path'
+import type { Agent } from '@antfu/install-pkg'
+import type { BrowserBuiltinProvider } from '../../node/types/browser'
 import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
-import prompt from 'prompts'
-import c from 'tinyrainbow'
-import type { Agent } from '@antfu/install-pkg'
+import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
 import { findUp } from 'find-up'
+import prompt from 'prompts'
 import { x } from 'tinyexec'
-import type { BrowserBuiltinProvider } from '../../node/types/browser'
+import c from 'tinyrainbow'
 import { configFiles } from '../../constants'
 import { generateExampleFiles } from './examples'
 
@@ -115,7 +115,7 @@ function getFrameworkTestPackage(framework: string) {
     case 'preact':
       return '@testing-library/preact'
     case 'solid':
-      return 'solid-testing-library'
+      return '@solidjs/testing-library'
     case 'marko':
       return '@marko/testing-library'
   }
@@ -258,11 +258,8 @@ async function generateWorkspaceFile(options: {
     `import { defineWorkspace } from 'vitest/config'`,
     '',
     'export default defineWorkspace([',
-    '  // This will keep running your existing tests.',
-    '  // If you don\'t need to run those in Node.js anymore,',
-    '  // You can safely remove it from the workspace file',
-    '  // Or move the browser test configuration to the config file.',
-    `  '${relativeRoot}',`,
+    '  // If you want to keep running your existing tests in Node.js, uncomment the next line.',
+    `  // '${relativeRoot}',`,
     `  {`,
     `    extends: '${relativeRoot}',`,
     `    test: {`,

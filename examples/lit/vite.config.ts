@@ -9,8 +9,8 @@ export default defineConfig({
     // https://lit.dev/docs/tools/testing/#testing-in-the-browser
     browser: {
       enabled: true,
-      name: 'chrome',
-      provider: 'webdriverio',
+      name: 'chromium',
+      provider: 'playwright',
     },
   },
 })

@@ -1,9 +1,9 @@
-import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
 import type { Filter, UITaskTreeNode } from '~/composables/explorer/types'
-import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
-import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { findById } from '~/composables/client'
+import { filterAll, filterNode } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
+import { filteredFiles, openedTreeItems, treeFilter, uiEntries } from '~/composables/explorer/state'
+import { createOrUpdateNode, createOrUpdateSuiteTask, isFileNode, isParentNode } from '~/composables/explorer/utils'
 
 /**
  * Expand the node: only direct children will be expanded

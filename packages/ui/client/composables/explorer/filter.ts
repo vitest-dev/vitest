@@ -1,15 +1,15 @@
 import type { Task } from '@vitest/runner'
-import { caseInsensitiveMatch } from '~/utils/task'
 import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
+import { client, findById } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer/index'
+import { filteredFiles, uiEntries } from '~/composables/explorer/state'
 import {
   isFileNode,
   isParentNode,
   isTestNode,
   sortedRootTasks,
 } from '~/composables/explorer/utils'
-import { client, findById } from '~/composables/client'
-import { filteredFiles, uiEntries } from '~/composables/explorer/state'
-import { explorerTree } from '~/composables/explorer/index'
+import { caseInsensitiveMatch } from '~/utils/task'
 
 export function testMatcher(task: Task, search: string, filter: Filter) {
   return task ? matchTask(task, search, filter) : false

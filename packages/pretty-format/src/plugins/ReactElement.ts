@@ -5,14 +5,38 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as ReactIs from 'react-is'
 import type { Config, NewPlugin, Printer, Refs } from '../types'
+import * as ReactIs18 from 'react-is'
+// @ts-expect-error no type
+import * as ReactIs19 from 'react-is-19'
 import {
   printChildren,
   printElement,
   printElementAsLeaf,
   printProps,
 } from './lib/markup'
+
+const reactIsMethods = [
+  'isAsyncMode',
+  'isConcurrentMode',
+  'isContextConsumer',
+  'isContextProvider',
+  'isElement',
+  'isForwardRef',
+  'isFragment',
+  'isLazy',
+  'isMemo',
+  'isPortal',
+  'isProfiler',
+  'isStrictMode',
+  'isSuspense',
+  'isSuspenseList',
+  'isValidElementType',
+] as const
+
+const ReactIs: typeof ReactIs18 = Object.fromEntries(
+  reactIsMethods.map(m => [m, (v: any) => (ReactIs18 as any)[m](v) || ReactIs19[m](v)]),
+) as any
 
 // Given element.props.children, or subtree during recursive traversal,
 // return flattened array of children.

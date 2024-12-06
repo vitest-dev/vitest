@@ -311,6 +311,87 @@ exports[`asymmetric matcher error 23`] = `
 }
 `;
 
+exports[`diff 1`] = `
+{
+  "actual": "undefined",
+  "diff": "- Expected: 
+true
+
++ Received: 
+undefined",
+  "expected": "true",
+  "message": "expected undefined to be truthy",
+}
+`;
+
+exports[`diff 2`] = `
+{
+  "actual": "Object {
+  "hello": "world",
+}",
+  "diff": "- Expected: 
+false
+
++ Received: 
+Object {
+  "hello": "world",
+}",
+  "expected": "false",
+  "message": "expected { hello: 'world' } to be falsy",
+}
+`;
+
+exports[`diff 3`] = `
+{
+  "actual": "Object {
+  "hello": "world",
+}",
+  "diff": "- Expected: 
+NaN
+
++ Received: 
+Object {
+  "hello": "world",
+}",
+  "expected": "NaN",
+  "message": "expected { hello: 'world' } to be NaN",
+}
+`;
+
+exports[`diff 4`] = `
+{
+  "actual": "Object {
+  "hello": "world",
+}",
+  "diff": "- Expected: 
+undefined
+
++ Received: 
+Object {
+  "hello": "world",
+}",
+  "expected": "undefined",
+  "message": "expected { hello: 'world' } to be undefined",
+}
+`;
+
+exports[`diff 5`] = `
+{
+  "actual": "Object {
+  "hello": "world",
+}",
+  "diff": "- Expected: 
+null
+
++ Received: 
+Object {
+  "hello": "world",
+}",
+  "expected": "null",
+  "message": "expected { hello: 'world' } to be null",
+}
+`;
+
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
   "actual": "Array [

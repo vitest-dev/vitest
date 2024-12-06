@@ -1,18 +1,16 @@
-/* eslint-disable no-console */
-
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'pathe'
-import type { UserConfig as ViteUserConfig } from 'vite'
 import type { File, Suite, Task } from '@vitest/runner'
-import { CoverageProviderMap } from '../../integrations/coverage'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
-import { createVitest } from '../create'
-import { registerConsoleShortcuts } from '../stdin'
 import type { Vitest, VitestOptions } from '../core'
-import { FilesNotFoundError, GitNotFoundError } from '../errors'
-import { getNames, getTests } from '../../utils'
-import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import type { WorkspaceSpec } from '../pool'
+import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { getNames, getTests } from '@vitest/runner/utils'
+import { dirname, relative, resolve } from 'pathe'
+import { CoverageProviderMap } from '../../integrations/coverage'
+import { createVitest } from '../create'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
+import { registerConsoleShortcuts } from '../stdin'
 
 export interface CliOptions extends UserConfig {
   /**
@@ -44,7 +42,7 @@ export async function startVitest(
   options: CliOptions = {},
   viteOverrides?: ViteUserConfig,
   vitestOptions?: VitestOptions,
-): Promise<Vitest | undefined> {
+): Promise<Vitest> {
   const root = resolve(options.root || process.cwd())
 
   const ctx = await prepareVitest(
@@ -60,7 +58,7 @@ export async function startVitest(
 
     if (requiredPackages) {
       if (
-        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root))
+        !(await ctx.packageInstaller.ensureInstalled(requiredPackages, root, ctx.version))
       ) {
         process.exitCode = 1
         return ctx
@@ -74,10 +72,6 @@ export async function startVitest(
   if (stdin.isTTY && ctx.config.watch) {
     stdinCleanup = registerConsoleShortcuts(ctx, stdin, stdout)
   }
-
-  ctx.onServerRestart((reason) => {
-    ctx.report('onServerRestart', reason)
-  })
 
   ctx.onAfterSetServer(() => {
     if (ctx.config.standalone) {
@@ -106,6 +100,15 @@ export async function startVitest(
 
     if (e instanceof GitNotFoundError) {
       ctx.logger.error(e.message)
+      return ctx
+    }
+
+    if (
+      e instanceof IncludeTaskLocationDisabledError
+      || e instanceof RangeLocationFilterProvidedError
+      || e instanceof LocationFilterFileNotFoundError
+    ) {
+      ctx.logger.printError(e, { verbose: false })
       return ctx
     }
 

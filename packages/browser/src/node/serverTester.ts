@@ -1,14 +1,17 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { Connect } from 'vite'
+import type { BrowserServer } from './server'
 import crypto from 'node:crypto'
 import { stringify } from 'flatted'
+import { join } from 'pathe'
 import { replacer } from './utils'
-import type { BrowserServer } from './server'
 
 export async function resolveTester(
   server: BrowserServer,
   url: URL,
   res: ServerResponse<IncomingMessage>,
-): Promise<string> {
+  next: Connect.NextFunction,
+): Promise<string | undefined> {
   const csp = res.getHeader('Content-Security-Policy')
   if (typeof csp === 'string') {
     // add frame-ancestors to allow the iframe to be loaded by Vitest,
@@ -51,36 +54,26 @@ export async function resolveTester(
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 
-  if (!server.testerScripts) {
-    const testerScripts = await server.formatScripts(
-      project.config.browser.testerScripts,
-    )
-    const clientScript = `<script type="module" src="${server.project.config.base || '/'}@vite/client"></script>`
-    const stateJs = typeof server.stateJs === 'string'
-      ? server.stateJs
-      : await server.stateJs
-    const stateScript = `<script type="module">${stateJs}</script>`
-    server.testerScripts = `${stateScript}${clientScript}${testerScripts}`
-  }
-
   const testerHtml = typeof server.testerHtml === 'string'
     ? server.testerHtml
     : await server.testerHtml
 
-  return replacer(testerHtml, {
-    __VITEST_FAVICON__: server.faviconUrl,
-    __VITEST_TITLE__: 'Vitest Browser Tester',
-    __VITEST_SCRIPTS__: server.testerScripts,
-    __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
-    __VITEST_INTERNAL_SCRIPTS__: [
-      `<script type="module" src="${server.errorCatcherUrl}"></script>`,
-      server.locatorsUrl ? `<script type="module" src="${server.locatorsUrl}"></script>` : '',
-    ].join('\n'),
-    __VITEST_APPEND__: `<script data-vitest-append type="module">
-__vitest_browser_runner__.runningFiles = ${tests}
-__vitest_browser_runner__.iframeId = ${iframeId}
-__vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
-document.querySelector('script[data-vitest-append]').remove()
-</script>`,
-  })
+  try {
+    const url = join('/@fs/', server.testerFilepath)
+    const indexhtml = await server.vite.transformIndexHtml(url, testerHtml)
+    return replacer(indexhtml, {
+      __VITEST_FAVICON__: server.faviconUrl,
+      __VITEST_INJECTOR__: injector,
+      __VITEST_APPEND__: `
+    __vitest_browser_runner__.runningFiles = ${tests}
+    __vitest_browser_runner__.iframeId = ${iframeId}
+    __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
+    document.querySelector('script[data-vitest-append]').remove()
+    `,
+    })
+  }
+  catch (err) {
+    context?.reject(err)
+    next(err)
+  }
 }

@@ -27,7 +27,7 @@ import { expect, test } from 'vitest'
 import { render } from '@testing-library/jsx'
 import HelloWorld from './HelloWorld.jsx'
 
-test('renders name', () => {
+test('renders name', async () => {
   const { getByText } = render(<HelloWorld name="Vitest" />)
   await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })
@@ -67,7 +67,7 @@ import { expect, test } from 'vitest'
 import { render } from 'vitest-browser-vue'
 import HelloWorld from './HelloWorld.vue'
 
-test('renders name', () => {
+test('renders name', async () => {
   const { getByText } = render(HelloWorld, {
     props: { name: 'Vitest' },
   })
@@ -97,7 +97,7 @@ import { expect, test } from 'vitest'
 import { render } from 'vitest-browser-svelte'
 import HelloWorld from './HelloWorld.svelte'
 
-test('renders name', () => {
+test('renders name', async () => {
   const { getByText } = render(HelloWorld, { name: 'Vitest' })
   await expect.element(getByText('Hello Vitest!')).toBeInTheDocument()
 })

@@ -1,20 +1,36 @@
+import type { ContextRPC, WorkerGlobalState } from '../types/worker'
+import type { VitestWorker } from './workers/types'
 import { pathToFileURL } from 'node:url'
+import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import { loadEnvironment } from '../integrations/env/loader'
-import { isChildProcess, setProcessTitle } from '../utils/base'
-import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
-import type { VitestWorker } from './workers/types'
+import { isChildProcess, setProcessTitle } from './utils'
 import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {
   setProcessTitle(`vitest ${poolId}`)
+
+  const isProfiling = process.execArgv.some(
+    execArg =>
+      execArg.startsWith('--prof')
+      || execArg.startsWith('--cpu-prof')
+      || execArg.startsWith('--heap-prof')
+      || execArg.startsWith('--diagnostic-dir'),
+  )
+
+  if (isProfiling) {
+    // Work-around for nodejs/node#55094
+    process.on('SIGTERM', () => {
+      process.exit()
+    })
+  }
 }
 
 // this is what every pool executes when running tests
-async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
+async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   disposeInternalListeners()
 
   const prepareStart = performance.now()
@@ -75,9 +91,12 @@ async function execute(mehtod: 'run' | 'collect', ctx: ContextRPC) {
       },
       rpc,
       providedContext: ctx.providedContext,
+      onFilterStackTrace(stack) {
+        return createStackString(parseStacktrace(stack))
+      },
     } satisfies WorkerGlobalState
 
-    const methodName = mehtod === 'collect' ? 'collectTests' : 'runTests'
+    const methodName = method === 'collect' ? 'collectTests' : 'runTests'
 
     if (!worker[methodName] || typeof worker[methodName] !== 'function') {
       throw new TypeError(

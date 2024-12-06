@@ -1,6 +1,6 @@
+import type { V8CoverageProvider } from './provider'
 import inspector, { type Profiler } from 'node:inspector'
 import { provider } from 'std-env'
-import type { V8CoverageProvider } from './provider'
 import { loadProvider } from './load-provider'
 
 const session = new inspector.Session()

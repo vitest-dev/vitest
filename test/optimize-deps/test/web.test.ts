@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
-import { expect, test } from 'vitest'
-
 // @ts-expect-error untyped
 import { importMetaUrl } from '@vitest/test-dep-url'
+
+import { expect, test } from 'vitest'
 
 test('import.meta.url', () => {
   expect(importMetaUrl).toContain('/node_modules/.vite/vitest/deps/')

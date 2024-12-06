@@ -1,4 +1,3 @@
-import type { FetchResult, RawSourceMap, ViteNodeResolveId } from 'vite-node'
 import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
@@ -11,16 +10,30 @@ export interface RuntimeRPC {
     externalize?: string
     id?: string
   }>
-  transform: (id: string, transformMode: TransformMode) => Promise<FetchResult>
+  transform: (id: string, transformMode: TransformMode) => Promise<{
+    code?: string
+  }>
   resolveId: (
     id: string,
     importer: string | undefined,
     transformMode: TransformMode
-  ) => Promise<ViteNodeResolveId | null>
+  ) => Promise<{
+    external?: boolean | 'absolute' | 'relative'
+    id: string
+    /** @deprecated */
+    meta?: Record<string, any> | null
+    /** @deprecated */
+    moduleSideEffects?: boolean | 'no-treeshake' | null
+    /** @deprecated */
+    syntheticNamedExports?: boolean | string | null
+  } | null>
+  /**
+   * @deprecated unused
+   */
   getSourceMap: (
     id: string,
     force?: boolean
-  ) => Promise<RawSourceMap | undefined>
+  ) => Promise<any>
 
   onFinished: (files: File[], errors?: unknown[]) => void
   onPathsCollected: (paths: string[]) => void

@@ -8,10 +8,11 @@ import type {
   TaskHook,
   TaskPopulated,
 } from './types/tasks'
-import { getCurrentSuite, getRunner } from './suite'
-import { getCurrentTest } from './test-state'
+import { assertTypes } from '@vitest/utils'
 import { withTimeout } from './context'
 import { withFixtures } from './fixture'
+import { getCurrentSuite, getRunner } from './suite'
+import { getCurrentTest } from './test-state'
 
 function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout
@@ -35,6 +36,7 @@ function getDefaultHookTimeout() {
  * ```
  */
 export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
+  assertTypes(fn, '"beforeAll" callback', ['function'])
   return getCurrentSuite().on(
     'beforeAll',
     withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
@@ -59,6 +61,7 @@ export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
  * ```
  */
 export function afterAll(fn: AfterAllListener, timeout?: number): void {
+  assertTypes(fn, '"afterAll" callback', ['function'])
   return getCurrentSuite().on(
     'afterAll',
     withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
@@ -86,6 +89,7 @@ export function beforeEach<ExtraContext = object>(
   fn: BeforeEachListener<ExtraContext>,
   timeout?: number,
 ): void {
+  assertTypes(fn, '"beforeEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
@@ -113,6 +117,7 @@ export function afterEach<ExtraContext = object>(
   fn: AfterEachListener<ExtraContext>,
   timeout?: number,
 ): void {
+  assertTypes(fn, '"afterEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
     withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
@@ -183,6 +188,8 @@ function createTestHook<T>(
   handler: (test: TaskPopulated, handler: T, timeout?: number) => void,
 ): TaskHook<T> {
   return (fn: T, timeout?: number) => {
+    assertTypes(fn, `"${name}" callback`, ['function'])
+
     const current = getCurrentTest()
 
     if (!current) {

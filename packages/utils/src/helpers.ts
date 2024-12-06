@@ -290,3 +290,57 @@ export function isNegativeNaN(val: number): boolean {
 
   return isNegative
 }
+
+function toString(v: any) {
+  return Object.prototype.toString.call(v)
+}
+
+function isPlainObject(val: any): val is object {
+  return (
+    toString(val) === '[object Object]'
+    && (!val.constructor || val.constructor.name === 'Object')
+  )
+}
+
+function isMergeableObject(item: any): item is object {
+  return isPlainObject(item) && !Array.isArray(item)
+}
+
+/**
+ * Deep merge :P
+ *
+ * Will merge objects only if they are plain
+ *
+ * Do not merge types - it is very expensive and usually it's better to case a type here
+ */
+export function deepMerge<T extends object = object>(
+  target: T,
+  ...sources: any[]
+): T {
+  if (!sources.length) {
+    return target as any
+  }
+
+  const source = sources.shift()
+  if (source === undefined) {
+    return target as any
+  }
+
+  if (isMergeableObject(target) && isMergeableObject(source)) {
+    (Object.keys(source) as (keyof T)[]).forEach((key) => {
+      const _source = source as T
+      if (isMergeableObject(_source[key])) {
+        if (!target[key]) {
+          target[key] = {} as any
+        }
+
+        deepMerge(target[key] as any, _source[key])
+      }
+      else {
+        target[key] = _source[key] as any
+      }
+    })
+  }
+
+  return deepMerge(target, ...sources)
+}

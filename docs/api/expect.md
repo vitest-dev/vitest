@@ -61,7 +61,11 @@ test('expect.soft test', () => {
 
 ## poll
 
-- **Type:** `ExpectStatic & (actual: () => any, options: { interval, timeout, message }) => Assertions`
+```ts
+interface ExpectPoll extends ExpectStatic {
+  (actual: () => T, options: { interval; timeout; message }): Promise<Assertions<T>>
+}
+```
 
 `expect.poll` reruns the _assertion_ until it is succeeded. You can configure how many times Vitest should rerun the `expect.poll` callback by setting `interval` and `timeout` options.
 
@@ -78,7 +82,7 @@ test('element exists', async () => {
 ```
 
 ::: warning
-`expect.poll` makes every assertion asynchronous, so do not forget to await it otherwise you might get unhandled promise rejections.
+`expect.poll` makes every assertion asynchronous, so you need to await it. Since Vitest 2.2, if you forget to await it, the test will fail with a warning to do so.
 
 `expect.poll` doesn't work with several matchers:
 
@@ -781,7 +785,7 @@ it('render basic', async () => {
 })
 ```
 
-Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`.
+Note that since file system operation is async, you need to use `await` with `toMatchFileSnapshot()`. If `await` is not used, Vitest treats it like `expect.soft`, meaning the code after the statement will continue to run even if the snapshot mismatches. After the test finishes, Vitest will check the snapshot and fail if there is a mismatch.
 
 ## toThrowErrorMatchingSnapshot
 
@@ -869,6 +873,68 @@ test('spy function', () => {
 
   expect(buySpy).toHaveBeenCalledWith('apples', 10)
   expect(buySpy).toHaveBeenCalledWith('apples', 20)
+})
+```
+
+## toHaveBeenCalledBefore <Version>2.2.0</Version> {#tohavebeencalledbefore}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called before another `Mock`.
+
+```ts
+test('calls mock1 before mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock1()
+  mock2()
+  mock1()
+
+  expect(mock1).toHaveBeenCalledBefore(mock2)
+})
+```
+
+## toHaveBeenCalledAfter <Version>2.2.0</Version> {#tohavebeencalledafter}
+
+- **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
+
+This assertion checks if a `Mock` was called after another `Mock`.
+
+```ts
+test('calls mock1 after mock2', () => {
+  const mock1 = vi.fn()
+  const mock2 = vi.fn()
+
+  mock2()
+  mock1()
+  mock2()
+
+  expect(mock1).toHaveBeenCalledAfter(mock2)
+})
+```
+
+## toHaveBeenCalledExactlyOnceWith <Version>2.2.0</Version> {#tohavebeencalledexactlyoncewith}
+
+- **Type**: `(...args: any[]) => Awaitable<void>`
+
+This assertion checks if a function was called exactly once and with certain parameters. Requires a spy function to be passed to `expect`.
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+const market = {
+  buy(subject: string, amount: number) {
+    // ...
+  },
+}
+
+test('spy function', () => {
+  const buySpy = vi.spyOn(market, 'buy')
+
+  market.buy('apples', 10)
+
+  expect(buySpy).toHaveBeenCalledExactlyOnceWith('apples', 10)
 })
 ```
 
@@ -1181,6 +1247,8 @@ test('buyApples returns new stock id', async () => {
 
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
+
+Since Vitest 2.2, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 3, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## rejects
@@ -1210,6 +1278,8 @@ test('buyApples throws an error when no id provided', async () => {
 
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
+
+Since Vitest 2.2, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 3, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## expect.assertions

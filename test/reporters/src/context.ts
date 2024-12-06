@@ -1,9 +1,9 @@
 import type { ModuleGraph, ViteDevServer } from 'vite'
-import type { Logger } from '../../../packages/vitest/src/node/logger'
 import type { Vitest } from '../../../packages/vitest/src/node/core'
-import type { File } from '../../../packages/vitest/src/public/index'
+import type { Logger } from '../../../packages/vitest/src/node/logger'
 import type { StateManager } from '../../../packages/vitest/src/node/state'
 import type { ResolvedConfig } from '../../../packages/vitest/src/node/types/config'
+import type { File } from '../../../packages/vitest/src/public/index'
 
 interface Context {
   vitest: Vitest

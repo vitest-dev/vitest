@@ -1,16 +1,16 @@
-import fs from 'node:fs'
-import c from 'tinyrainbow'
-import * as pathe from 'pathe'
 import type { File, TaskResultPack } from '@vitest/runner'
-import type { UserConsoleLog } from '../../../../types/general'
-import { BaseReporter } from '../../base'
-import { getFullName, getTasks } from '../../../../utils'
-import { getStateSymbol } from '../../renderers/utils'
 import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
+import type { UserConsoleLog } from '../../../../types/general'
+import fs from 'node:fs'
+import { getFullName, getTasks } from '@vitest/runner/utils'
+import * as pathe from 'pathe'
+import c from 'tinyrainbow'
+import { BaseReporter } from '../../base'
+import { getStateSymbol } from '../../renderers/utils'
 import {
-  type TableRendererOptions,
   createTableRenderer,
   renderTree,
+  type TableRendererOptions,
 } from './tableRender'
 
 export class TableReporter extends BaseReporter {
@@ -167,10 +167,8 @@ interface FormattedBenchmarkGroup {
   benchmarks: FormattedBenchmarkResult[]
 }
 
-export type FormattedBenchmarkResult = Omit<BenchmarkResult, 'samples'> & {
+export type FormattedBenchmarkResult = BenchmarkResult & {
   id: string
-  sampleCount: number
-  median: number
 }
 
 function createFormattedBenchmarkReport(files: File[]) {
@@ -183,18 +181,7 @@ function createFormattedBenchmarkReport(files: File[]) {
         for (const t of task.tasks) {
           const benchmark = t.meta.benchmark && t.result?.benchmark
           if (benchmark) {
-            const { samples, ...rest } = benchmark
-            benchmarks.push({
-              id: t.id,
-              sampleCount: samples.length,
-              median:
-                samples.length % 2
-                  ? samples[Math.floor(samples.length / 2)]
-                  : (samples[samples.length / 2]
-                  + samples[samples.length / 2 - 1])
-                  / 2,
-              ...rest,
-            })
+            benchmarks.push({ id: t.id, ...benchmark, samples: [] })
           }
         }
         if (benchmarks.length) {

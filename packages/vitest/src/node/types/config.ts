@@ -1,31 +1,33 @@
-import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
-import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
+import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-import type { ViteNodeServerOptions } from 'vite-node'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
+import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
+import type { ViteNodeServerOptions } from 'vite-node'
+import type { ChaiConfig } from '../../integrations/chai/config'
+import type { SerializedConfig } from '../../runtime/config'
+import type { EnvironmentOptions } from '../../types/environment'
+import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
+import type { HappyDOMOptions } from '../../types/happy-dom-options'
+import type { JSDOMOptions } from '../../types/jsdom-options'
 import type {
   BuiltinReporterOptions,
   BuiltinReporters,
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
-import type { ChaiConfig } from '../../integrations/chai/config'
-import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
-import type { JSDOMOptions } from '../../types/jsdom-options'
-import type { HappyDOMOptions } from '../../types/happy-dom-options'
-import type { EnvironmentOptions } from '../../types/environment'
+import type { BenchmarkUserOptions } from './benchmark'
+import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
 import type { Pool, PoolOptions, ResolvedPoolOptions } from './pool-options'
-import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { Reporter } from './reporter'
-import type { BenchmarkUserOptions } from './benchmark'
 
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
-export type { CoverageV8Options, CoverageIstanbulOptions } from './coverage'
-export type { BrowserScript, BrowserConfigOptions } from './browser'
+export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
+export type { BrowserConfigOptions, BrowserScript } from './browser'
+export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-export type { SerializedConfig, RuntimeConfig } from '../../runtime/config'
 
 export type BuiltinEnvironment =
   | 'node'
@@ -44,7 +46,7 @@ export type ApiConfig = Pick<
   'port' | 'strictPort' | 'host' | 'middlewareMode'
 >
 
-export type { JSDOMOptions, HappyDOMOptions, EnvironmentOptions }
+export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
 
@@ -224,6 +226,14 @@ type ReporterWithOptions<Name extends ReporterName = ReporterName> =
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
 
+export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
+
+export type ResolveSnapshotPathHandler = (
+  testPath: string,
+  snapExtension: string,
+  context: ResolveSnapshotPathHandlerContext
+) => string
+
 export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
@@ -304,6 +314,7 @@ export interface InlineConfig {
    *
    * Format: [glob, environment-name]
    *
+   * @deprecated use [`workspace`](https://vitest.dev/config/#environmentmatchglobs) instead
    * @default []
    * @example [
    *   // all tests in tests/dom will run in jsdom
@@ -360,6 +371,7 @@ export interface InlineConfig {
    *
    * Format: [glob, pool-name]
    *
+   * @deprecated use [`workspace`](https://vitest.dev/config/#poolmatchglobs) instead
    * @default []
    * @example [
    *   // all tests in "forks" directory will run using "poolOptions.forks" API
@@ -373,7 +385,7 @@ export interface InlineConfig {
   /**
    * Path to a workspace configuration file
    */
-  workspace?: string
+  workspace?: string | TestProjectConfiguration[]
 
   /**
    * Update snapshot
@@ -563,7 +575,7 @@ export interface InlineConfig {
   /**
    * Path to a module which has a default export of diff config.
    */
-  diff?: string
+  diff?: string | SerializedDiffOptions
 
   /**
    * Paths to snapshot serializer modules.
@@ -573,7 +585,7 @@ export interface InlineConfig {
   /**
    * Resolve custom snapshot path
    */
-  resolveSnapshotPath?: (path: string, extension: string) => string
+  resolveSnapshotPath?: ResolveSnapshotPathHandler
 
   /**
    * Path to a custom snapshot environment module that has a default export of `SnapshotEnvironment` object.
@@ -979,7 +991,7 @@ export interface ResolvedConfig
   mode: VitestRunMode
 
   base?: string
-  diff?: string
+  diff?: string | SerializedDiffOptions
   bail?: number
 
   setupFiles: string[]
@@ -1091,7 +1103,8 @@ export type ProjectConfig = Omit<
 
 export type ResolvedProjectConfig = Omit<
   ResolvedConfig,
-  NonProjectOptions
+  // some options cannot be set, but they are inherited from the workspace
+  Exclude<NonProjectOptions, 'coverage' | 'watch'>
 >
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
@@ -1106,10 +1119,14 @@ export type UserProjectConfigExport =
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
 
-export type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
+export type TestProjectConfiguration = string | (UserProjectConfigExport & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
+   * If `true`, the project will inherit all options from the root config.
    * @example '../vite.config.ts'
    */
-  extends?: string
+  extends?: string | true
 })
+
+/** @deprecated use `TestProjectConfiguration` instead */
+export type WorkspaceProjectConfiguration = TestProjectConfiguration

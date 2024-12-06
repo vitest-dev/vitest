@@ -1,16 +1,12 @@
+import type { Reporter } from 'vitest/reporters'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, test, type UserConsoleLog } from 'vitest'
 import { DefaultReporter } from 'vitest/reporters'
 import { runVitest } from '../../test-utils'
 
 class LogReporter extends DefaultReporter {
   isTTY = true
-  renderer = {
-    start() {},
-    update() {},
-    stop() {},
-    clear() {},
-  }
+  onTaskUpdate() {}
 }
 
 test('should print logs correctly', async () => {
@@ -65,4 +61,34 @@ suite stderr afterAll
 stderr | console.test.ts
 global stderr afterAll`,
   )
+})
+
+test.for(['forks', 'threads'])('interleave (pool = %s)', async (pool) => {
+  const logs: UserConsoleLog[] = []
+  const { stderr } = await runVitest({
+    root: './fixtures',
+    pool,
+    reporters: [
+      {
+        onUserConsoleLog(log) {
+          logs.push(log)
+        },
+      } satisfies Reporter,
+    ],
+  }, [resolve('./fixtures/console-interleave.test.ts')])
+  expect(stderr).toBe('')
+  expect(logs).toMatchObject([
+    {
+      type: 'stdout',
+      content: expect.stringContaining('1'),
+    },
+    {
+      type: 'stderr',
+      content: expect.stringContaining('2'),
+    },
+    {
+      type: 'stdout',
+      content: expect.stringContaining('3'),
+    },
+  ])
 })

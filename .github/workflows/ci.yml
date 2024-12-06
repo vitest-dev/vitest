@@ -61,7 +61,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275 # v45.0.1
+        uses: tj-actions/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf # v45.0.4
         with:
           files: |
             docs/**
@@ -101,7 +101,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps --only-shell
 
       - name: Build
         run: pnpm run build
@@ -150,8 +150,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: needs.changed.outputs.should_skip != 'true'
-        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
+        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps --only-shell
 
       - name: Build
         run: pnpm run build

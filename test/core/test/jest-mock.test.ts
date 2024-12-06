@@ -218,7 +218,7 @@ describe('jest mock compat layer', () => {
     expect(a.mock.invocationCallOrder[0]).toBeLessThan(b.mock.invocationCallOrder[0])
   })
 
-  it('getter spyOn', () => {
+  it('should spy on property getter, and mockRestore should restore original descriptor', () => {
     const obj = {
       get getter() {
         return 'original'
@@ -244,9 +244,39 @@ describe('jest mock compat layer', () => {
     spy.mockRestore()
 
     expect(obj.getter).toBe('original')
+    expect(spy).not.toHaveBeenCalled()
   })
 
-  it('getter function spyOn', () => {
+  it('should spy on property getter, and mockReset should not restore original descriptor', () => {
+    const obj = {
+      get getter() {
+        return 'original'
+      },
+    }
+
+    const spy = vi.spyOn(obj, 'getter', 'get')
+
+    expect(obj.getter).toBe('original')
+
+    spy.mockImplementation(() => 'mocked').mockImplementationOnce(() => 'once')
+
+    expect(obj.getter).toBe('once')
+    expect(obj.getter).toBe('mocked')
+    expect(obj.getter).toBe('mocked')
+
+    spy.mockReturnValue('returned').mockReturnValueOnce('returned-once')
+
+    expect(obj.getter).toBe('returned-once')
+    expect(obj.getter).toBe('returned')
+    expect(obj.getter).toBe('returned')
+
+    spy.mockReset()
+
+    expect(obj.getter).toBe('original')
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('should spy on function returned from property getter', () => {
     const obj = {
       get getter() {
         return function () {
@@ -266,7 +296,7 @@ describe('jest mock compat layer', () => {
     expect(obj.getter()).toBe('mocked')
   })
 
-  it('setter spyOn', () => {
+  it('should spy on property setter (1)', () => {
     let setValue = 'original'
     let mockedValue = 'none'
 
@@ -309,7 +339,7 @@ describe('jest mock compat layer', () => {
     expect(setValue).toBe('last')
   })
 
-  it('should work - setter', () => {
+  it('should spy on property setter (2), and mockRestore should restore original descriptor', () => {
     const obj = {
       _property: false,
       set property(value) {
@@ -327,8 +357,8 @@ describe('jest mock compat layer', () => {
     obj.property = false
     spy.mockRestore()
     obj.property = true
-    // unlike jest, mockRestore only restores implementation to the original one,
-    // we are still spying on the setter
+    // like jest, mockRestore restores the original descriptor,
+    // we are not spying on the setter any more
     expect(spy).not.toHaveBeenCalled()
     expect(obj.property).toBe(true)
   })
@@ -356,6 +386,30 @@ describe('jest mock compat layer', () => {
     expect(obj.method()).toBe('original')
     expect(vi.isMockFunction(obj.method)).toBe(false)
     expect(obj.method).not.toBe(spy1)
+  })
+
+  it('should spy on property setter (2), and mockReset should not restore original descriptor', () => {
+    const obj = {
+      _property: false,
+      set property(value) {
+        this._property = value
+      },
+      get property() {
+        return this._property
+      },
+    }
+
+    const spy = vi.spyOn(obj, 'property', 'set')
+    obj.property = true
+    expect(spy).toHaveBeenCalled()
+    expect(obj.property).toBe(true)
+    obj.property = false
+    spy.mockReset()
+    obj.property = true
+    // unlike jest, vitest's mockReset will restore original implementation without restoring the original descriptor.
+    // We are still spying on the setter
+    expect(spy).toHaveBeenCalled()
+    expect(obj.property).toBe(true)
   })
 
   it('throwing', async () => {
@@ -432,5 +486,36 @@ describe('jest mock compat layer', () => {
 
     testFn.mockRestore()
     expect(testFn()).toBe(true)
+  })
+
+  abstract class Dog_ {
+    public name: string
+
+    constructor(name: string) {
+      this.name = name
+    }
+
+    abstract speak(): string
+    abstract feed(): void
+  }
+
+  it('mocks classes', () => {
+    const Dog = vi.fn<(name: string) => Dog_>(function Dog_(name: string) {
+      this.name = name
+    } as (this: any, name: string) => Dog_)
+
+    ;(Dog as any).getType = vi.fn(() => 'mocked animal')
+
+    Dog.prototype.speak = vi.fn(() => 'loud bark!')
+    Dog.prototype.feed = vi.fn()
+
+    const dogMax = new Dog('Max')
+    expect(dogMax.name).toBe('Max')
+
+    expect(dogMax.speak()).toBe('loud bark!')
+    expect(dogMax.speak).toHaveBeenCalled()
+
+    vi.mocked(dogMax.speak).mockReturnValue('woof woof')
+    expect(dogMax.speak()).toBe('woof woof')
   })
 })

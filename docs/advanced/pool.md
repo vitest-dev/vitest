@@ -1,7 +1,7 @@
 # Custom Pool
 
 ::: warning
-This is advanced API. If you are just running tests, you probably don't need this. It is primarily used by library authors.
+This is advanced API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
 :::
 
 Vitest runs tests in pools. By default, there are several pools:
@@ -14,7 +14,7 @@ Vitest runs tests in pools. By default, there are several pools:
 
 You can provide your own pool by specifying a file path:
 
-```ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -27,25 +27,42 @@ export default defineConfig({
         customProperty: true,
       },
     },
-    // you can also specify pool for a subset of files
-    poolMatchGlobs: [
-      ['**/*.custom.test.ts', './my-custom-pool.ts'],
+  },
+})
+```
+
+If you need to run tests in different pools, use the [workspace](/guide/workspace) feature:
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    workspace: [
+      {
+        extends: true,
+        test: {
+          pool: 'threads',
+        },
+      },
     ],
   },
 })
 ```
+
+::: info
+The `workspace` field was introduced in Vitest 2.2. To define a workspace in Vitest <2.2, create a separate `vitest.workspace.ts` file.
+:::
 
 ## API
 
 The file specified in `pool` option should export a function (can be async) that accepts `Vitest` interface as its first option. This function needs to return an object matching `ProcessPool` interface:
 
 ```ts
-import { ProcessPool, WorkspaceProject } from 'vitest/node'
+import { ProcessPool, TestSpecification } from 'vitest/node'
 
 export interface ProcessPool {
   name: string
-  runTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
-  collectTests: (files: [project: WorkspaceProject, testFile: string][], invalidates?: string[]) => Promise<void>
+  runTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
+  collectTests: (files: TestSpecification[], invalidates?: string[]) => Promise<void>
   close?: () => Promise<void>
 }
 ```
@@ -65,9 +82,9 @@ To communicate between different processes, you can create methods object using 
 ```ts
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { WorkspaceProject, createMethodsRPC } from 'vitest/node'
+import { createMethodsRPC, TestProject } from 'vitest/node'
 
-function createRpc(project: WorkspaceProject, wss: WebSocketServer) {
+function createRpc(project: TestProject, wss: WebSocketServer) {
   return createBirpc(
     createMethodsRPC(project),
     {
@@ -83,7 +100,7 @@ function createRpc(project: WorkspaceProject, wss: WebSocketServer) {
 To make sure every test is collected, you would call `ctx.state.collectFiles` and report it to Vitest reporters:
 
 ```ts
-async function runTests(project: WorkspaceProject, tests: string[]) {
+async function runTests(project: TestProject, tests: string[]) {
   // ... running tests, put into "files" and "tasks"
   const methods = createMethodsRPC(project)
   await methods.onCollected(files)

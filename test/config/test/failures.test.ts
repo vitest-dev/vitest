@@ -1,8 +1,8 @@
-import { beforeEach, expect, test } from 'vitest'
-import type { UserConfig } from 'vitest'
-import { version } from 'vitest/package.json'
-
+import type { UserConfig } from 'vitest/node'
 import { normalize, resolve } from 'pathe'
+import { beforeEach, expect, test } from 'vitest'
+
+import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
 
 const providers = ['playwright', 'webdriverio', 'preview'] as const
@@ -247,7 +247,9 @@ test('coverage.autoUpdate cannot update thresholds when configuration file doesn
 })
 
 test('boolean flag 100 should not crash CLI', async () => {
-  const { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+  // non-zero coverage shows up, which is non-deterministic, so strip it.
+  stderr = stderr.replace(/\([0-9.]+%\) does/g, '(0%) does')
 
   expect(stderr).toMatch('ERROR: Coverage for lines (0%) does not meet global threshold (100%)')
   expect(stderr).toMatch('ERROR: Coverage for functions (0%) does not meet global threshold (100%)')
@@ -278,4 +280,11 @@ test('mergeReports doesn\'t work with watch mode enabled', async () => {
   const { stderr } = await runVitest({ watch: true, mergeReports: '.vitest-reports' })
 
   expect(stderr).toMatch('Cannot merge reports with --watch enabled')
+})
+
+test('maxConcurrency 0 prints a warning', async () => {
+  const { stderr, ctx } = await runVitest({ maxConcurrency: 0 })
+
+  expect(ctx?.config.maxConcurrency).toBe(5)
+  expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })

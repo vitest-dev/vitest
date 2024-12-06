@@ -58,5 +58,7 @@ declare module '@vitest/browser/context' {
       arg1: string
       arg2: string
     }>
+
+    stripVTControlCharacters: (text: string) => Promise<string>
   }
 }

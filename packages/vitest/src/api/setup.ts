@@ -1,24 +1,26 @@
-import { existsSync, promises as fs } from 'node:fs'
-
-import { createBirpc } from 'birpc'
-import { parse, stringify } from 'flatted'
-import type { WebSocket } from 'ws'
-import { WebSocketServer } from 'ws'
-import type { ViteDevServer } from 'vite'
 import type { File, TaskResultPack } from '@vitest/runner'
-import { API_PATH } from '../constants'
+
+import type { ViteDevServer } from 'vite'
+import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
-import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type { Reporter } from '../node/types/reporter'
-import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
-import { parseErrorStacktrace } from '../utils/source-map'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
+import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
   WebSocketHandlers,
   WebSocketRPC,
 } from './types'
+import { existsSync, promises as fs } from 'node:fs'
+import { isPrimitive, noop } from '@vitest/utils'
+import { createBirpc } from 'birpc'
+import { parse, stringify } from 'flatted'
+import { WebSocketServer } from 'ws'
+import { API_PATH } from '../constants'
+import { getModuleGraph } from '../utils/graph'
+import { stringifyReplace } from '../utils/serialization'
+import { parseErrorStacktrace } from '../utils/source-map'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer) {
   const wss = new WebSocketServer({ noServer: true })
@@ -70,11 +72,14 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           }
           return fs.writeFile(id, content, 'utf-8')
         },
-        async rerun(files) {
-          await ctx.rerunFiles(files)
+        async rerun(files, resetTestNamePattern) {
+          await ctx.rerunFiles(files, undefined, true, resetTestNamePattern)
+        },
+        async rerunTask(id) {
+          await ctx.rerunTask(id)
         },
         getConfig() {
-          return ctx.getCoreWorkspaceProject().getSerializableConfig()
+          return ctx.getRootTestProject().serializedConfig
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)

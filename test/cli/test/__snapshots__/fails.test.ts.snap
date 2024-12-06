@@ -28,6 +28,14 @@ exports[`should fail hooks-called.test.ts > hooks-called.test.ts 1`] = `
 Error: before all"
 `;
 
+exports[`should fail hooks-fail-afterAll.test.ts > hooks-fail-afterAll.test.ts 1`] = `"TypeError: "afterAll" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-afterEach.test.ts > hooks-fail-afterEach.test.ts 1`] = `"TypeError: "afterEach" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-beforeAll.test.ts > hooks-fail-beforeAll.test.ts 1`] = `"TypeError: "beforeAll" callback value must be function, received "string""`;
+
+exports[`should fail hooks-fail-beforeEach.test.ts > hooks-fail-beforeEach.test.ts 1`] = `"TypeError: "beforeEach" callback value must be function, received "string""`;
+
 exports[`should fail inline-snapshop-inside-each.test.ts > inline-snapshop-inside-each.test.ts 1`] = `
 "Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
@@ -49,6 +57,17 @@ exports[`should fail mock-import-proxy-module.test.ts > mock-import-proxy-module
 exports[`should fail nested-suite.test.ts > nested-suite.test.ts 1`] = `"AssertionError: expected true to be false // Object.is equality"`;
 
 exports[`should fail no-assertions.test.ts > no-assertions.test.ts 1`] = `"Error: expected any number of assertion, but got none"`;
+
+exports[`should fail node-browser-context.test.ts > node-browser-context.test.ts 1`] = `"Error: @vitest/browser/context can be imported only inside the Browser Mode. Your test is running in forks pool. Make sure your regular tests are excluded from the "test.include" glob pattern."`;
+
+exports[`should fail poll-no-awaited.test.ts > poll-no-awaited.test.ts 1`] = `
+"Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:
+AssertionError: expected 3 to be 4 // Object.is equality
+Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:
+Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:
+Error: expect.poll(assertion).not.toBe() was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:
+Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:"
+`;
 
 exports[`should fail primitive-error.test.ts > primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
 

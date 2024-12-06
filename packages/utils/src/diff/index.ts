@@ -8,6 +8,7 @@
 // This is a fork of Jest's jest-diff package, but it doesn't depend on Node environment (like chalk).
 
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
+import type { DiffOptions } from './types'
 import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
@@ -15,19 +16,18 @@ import {
 import c from 'tinyrainbow'
 import { stringify } from '../display'
 import { deepClone, getOwnProperties, getType as getSimpleType } from '../helpers'
-import { getType } from './getType'
-import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
+import { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import { NO_DIFF_MESSAGE, SIMILAR_MESSAGE } from './constants'
 import { diffLinesRaw, diffLinesUnified, diffLinesUnified2 } from './diffLines'
+import { getType } from './getType'
 import { normalizeDiffOptions } from './normalizeDiffOptions'
 import { diffStringsRaw, diffStringsUnified } from './printDiffs'
-import type { DiffOptions } from './types'
 
-export type { DiffOptions, DiffOptionsColor } from './types'
+export type { DiffOptions, DiffOptionsColor, SerializedDiffOptions } from './types'
 
 export { diffLinesRaw, diffLinesUnified, diffLinesUnified2 }
 export { diffStringsRaw, diffStringsUnified }
-export { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff }
+export { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT }
 
 function getCommonMessage(message: string, options?: DiffOptions) {
   const { commonColor } = normalizeDiffOptions(options)
@@ -180,11 +180,12 @@ function getFormatOptions(
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
 ): PrettyFormatOptions {
-  const { compareKeys } = normalizeDiffOptions(options)
+  const { compareKeys, printBasicPrototype } = normalizeDiffOptions(options)
 
   return {
     ...formatOptions,
     compareKeys,
+    printBasicPrototype,
   }
 }
 

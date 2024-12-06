@@ -1,11 +1,10 @@
-import { getTasks } from '@vitest/runner/utils'
-import stripAnsi from 'strip-ansi'
 import type { File } from '@vitest/runner'
-import { getFullName } from '../../utils'
-import { capturePrintError } from '../error'
-import type { WorkspaceProject } from '../workspace'
-import type { Reporter } from '../types/reporter'
 import type { Vitest } from '../core'
+import type { TestProject } from '../project'
+import type { Reporter } from '../types/reporter'
+import { stripVTControlCharacters } from 'node:util'
+import { getFullName, getTasks } from '@vitest/runner/utils'
+import { capturePrintError } from '../error'
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
@@ -17,14 +16,14 @@ export class GithubActionsReporter implements Reporter {
   onFinished(files: File[] = [], errors: unknown[] = []) {
     // collect all errors and associate them with projects
     const projectErrors = new Array<{
-      project: WorkspaceProject
+      project: TestProject
       title: string
       error: unknown
       file?: File
     }>()
     for (const error of errors) {
       projectErrors.push({
-        project: this.ctx.getCoreWorkspaceProject(),
+        project: this.ctx.getRootTestProject(),
         title: 'Unhandled error',
         error,
       })
@@ -64,7 +63,7 @@ export class GithubActionsReporter implements Reporter {
           line: String(stack.line),
           column: String(stack.column),
         },
-        message: stripAnsi(result.output),
+        message: stripVTControlCharacters(result.output),
       })
       this.ctx.logger.log(`\n${formatted}`)
     }

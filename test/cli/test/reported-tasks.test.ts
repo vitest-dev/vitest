@@ -1,10 +1,10 @@
-import { beforeAll, expect, it } from 'vitest'
-import { resolve } from 'pathe'
 import type { RunnerTestFile } from 'vitest'
-import type { StateManager } from 'vitest/src/node/state.js'
 import type { WorkspaceProject } from 'vitest/node'
-import { runVitest } from '../../test-utils'
+import type { StateManager } from 'vitest/src/node/state.js'
 import type { TestCase, TestCollection, TestModule } from '../../../packages/vitest/src/node/reporters/reported-tasks'
+import { resolve } from 'pathe'
+import { beforeAll, expect, it } from 'vitest'
+import { runVitest } from '../../test-utils'
 
 const now = new Date()
 // const finishedFiles: File[] = []
@@ -14,9 +14,11 @@ let project: WorkspaceProject
 let files: RunnerTestFile[]
 let testModule: TestModule
 
+const root = resolve(__dirname, '..', 'fixtures', 'reported-tasks')
+
 beforeAll(async () => {
   const { ctx } = await runVitest({
-    root: resolve(__dirname, '..', 'fixtures', 'reported-tasks'),
+    root,
     include: ['**/*.test.ts'],
     reporters: [
       'verbose',
@@ -33,7 +35,7 @@ beforeAll(async () => {
     logHeapUsage: true,
   })
   state = ctx!.state
-  project = ctx!.getCoreWorkspaceProject()
+  project = ctx!.getRootTestProject()
   files = state.getFiles()
   expect(files).toHaveLength(1)
   testModule = state.getReportedEntity(files[0])! as TestModule
@@ -52,8 +54,8 @@ it('correctly reports a file', () => {
   expect(testModule.task).toBe(files[0])
   expect(testModule.id).toBe(files[0].id)
   expect(testModule.location).toBeUndefined()
-  expect(testModule.moduleId).toBe(resolve('./fixtures/reported-tasks/1_first.test.ts'))
-  expect(testModule.project.workspaceProject).toBe(project)
+  expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
+  expect(testModule.project).toBe(project)
   expect(testModule.children.size).toBe(14)
 
   const tests = [...testModule.children.tests()]
@@ -139,7 +141,7 @@ it('correctly reports failed test', () => {
     stacks: [
       {
         column: 13,
-        file: resolve('./fixtures/reported-tasks/1_first.test.ts'),
+        file: resolve(root, './1_first.test.ts'),
         line: 10,
         method: '',
       },
@@ -215,6 +217,15 @@ it('correctly passed down metadata', () => {
   const testMetadata = findTest(testModule.children, 'registers a metadata')
   const meta = testMetadata.meta()
   expect(meta).toHaveProperty('key', 'value')
+})
+
+it('correctly builds the full name', () => {
+  const suiteTopLevel = testModule.children.suites().next().value!
+  const suiteSecondLevel = suiteTopLevel.children.suites().next().value!
+  const test = suiteSecondLevel.children.at(0) as TestCase
+  expect(test.fullName).toBe('a group > a nested group > runs a test in a nested group')
+  expect(suiteTopLevel.fullName).toBe('a group')
+  expect(suiteSecondLevel.fullName).toBe('a group > a nested group')
 })
 
 function date(time: Date) {

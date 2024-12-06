@@ -1,13 +1,12 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { TestProject } from './reported-workspace-project'
+import type { TestProject } from './project'
 import type { Pool } from './types/pool-options'
-import type { WorkspaceProject } from './workspace'
 
 export class TestSpecification {
   /**
    * @deprecated use `project` instead
    */
-  public readonly 0: WorkspaceProject
+  public readonly 0: TestProject
   /**
    * @deprecated use `moduleId` instead
    */
@@ -20,20 +19,24 @@ export class TestSpecification {
   public readonly project: TestProject
   public readonly moduleId: string
   public readonly pool: Pool
+  /** @private */
+  public readonly testLocations: number[] | undefined
   // public readonly location: WorkspaceSpecLocation | undefined
 
   constructor(
-    workspaceProject: WorkspaceProject,
+    project: TestProject,
     moduleId: string,
     pool: Pool,
+    testLocations?: number[] | undefined,
     // location?: WorkspaceSpecLocation | undefined,
   ) {
-    this[0] = workspaceProject
+    this[0] = project
     this[1] = moduleId
     this[2] = { pool }
-    this.project = workspaceProject.testProject
+    this.project = project
     this.moduleId = moduleId
     this.pool = pool
+    this.testLocations = testLocations
     // this.location = location
   }
 
@@ -53,7 +56,7 @@ export class TestSpecification {
    * @deprecated
    */
   *[Symbol.iterator]() {
-    yield this.project.workspaceProject
+    yield this.project
     yield this.moduleId
     yield this.pool
   }

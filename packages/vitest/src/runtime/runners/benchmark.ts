@@ -4,17 +4,17 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { SerializedConfig } from '../config'
+import type { VitestExecutor } from '../execute'
+import type {
+  Benchmark,
+  BenchmarkResult,
+  BenchTask,
+} from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
-import { getWorkerState } from '../../utils'
-import type {
-  BenchTask,
-  Benchmark,
-  BenchmarkResult,
-} from '../types/benchmark'
-import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
+import { getWorkerState } from '../utils'
 
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {
@@ -72,6 +72,15 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           const taskRes = task.result!
           const result = benchmark.result!.benchmark!
           Object.assign(result, taskRes)
+          // compute extra stats and free raw samples as early as possible
+          const samples = result.samples
+          result.sampleCount = samples.length
+          result.median = samples.length % 2
+            ? samples[Math.floor(samples.length / 2)]
+            : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2
+          if (!runner.config.benchmark?.includeSamples) {
+            result.samples.length = 0
+          }
           updateTask(benchmark)
         },
         {

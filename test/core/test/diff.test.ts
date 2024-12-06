@@ -1,8 +1,8 @@
-import { expect, test, vi } from 'vitest'
-import stripAnsi from 'strip-ansi'
 import type { DiffOptions } from '@vitest/utils/diff'
-import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/runner'
+import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { expect, test, vi } from 'vitest'
 import { displayDiff } from '../../../packages/vitest/src/node/error'
 
 test('displays string diff', () => {
@@ -10,7 +10,7 @@ test('displays string diff', () => {
   const stringB = 'Hello BWorld'
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(printDiffOrStringify(stringA, stringB), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     Expected: "Hello BWorld"
     Received: "Hello AWorld"
@@ -23,7 +23,7 @@ test('displays object diff', () => {
   const objectB = { a: 1, b: 3 }
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(objectA, objectB), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -42,7 +42,7 @@ test('display truncated object diff', () => {
   const objectB = { a: 1, b: 3, c: 4, d: 5, e: 6 }
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(objectA, objectB, { truncateThreshold: 4 }), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -63,7 +63,7 @@ test('display one line string diff', () => {
   const string2 = 'string2'
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(string1, string2), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -79,7 +79,7 @@ test('display one line string diff should not be affected by truncateThreshold',
   const string2 = 'string2'
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(string1, string2, { truncateThreshold: 3 }), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -95,7 +95,7 @@ test('display multiline string diff', () => {
   const string2 = 'string2\nstring2\nstring1'
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(string1, string2), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -114,7 +114,7 @@ test('display truncated multiline string diff', () => {
   const string2 = 'string2\nstring2\nstring1'
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(string1, string2, { truncateThreshold: 2 }), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -132,7 +132,7 @@ test('display truncated multiple items array diff', () => {
   const array2 = Array.from({ length: 45000 }).fill('bar')
   const console = { log: vi.fn(), error: vi.fn() }
   displayDiff(diff(array1, array2, { truncateThreshold: 3 }), console as any)
-  expect(stripAnsi(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -148,7 +148,7 @@ test('display truncated multiple items array diff', () => {
 })
 
 test('asymmetric matcher in object', () => {
-  expect(stripAnsi(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() }))).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(getErrorDiff({ x: 0, y: 'foo' }, { x: 1, y: expect.anything() }))).toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -162,7 +162,7 @@ test('asymmetric matcher in object', () => {
 
 test('asymmetric matcher in object with truncated diff', () => {
   expect(
-    stripAnsi(getErrorDiff(
+    stripVTControlCharacters(getErrorDiff(
       { w: 'foo', x: 0, y: 'bar', z: 'baz' },
       { w: expect.anything(), x: 1, y: expect.anything(), z: 'bar' },
       { truncateThreshold: 3 },
@@ -180,7 +180,7 @@ test('asymmetric matcher in object with truncated diff', () => {
 })
 
 test('asymmetric matcher in array', () => {
-  expect(stripAnsi(getErrorDiff([0, 'foo'], [1, expect.anything()]))).toMatchInlineSnapshot(`
+  expect(stripVTControlCharacters(getErrorDiff([0, 'foo'], [1, expect.anything()]))).toMatchInlineSnapshot(`
     "- Expected
     + Received
 
@@ -194,7 +194,7 @@ test('asymmetric matcher in array', () => {
 
 test('asymmetric matcher in array  with truncated diff', () => {
   expect(
-    stripAnsi(getErrorDiff(
+    stripVTControlCharacters(getErrorDiff(
       [0, 'foo', 2],
       [1, expect.anything(), 3],
       { truncateThreshold: 2 },
@@ -212,7 +212,7 @@ test('asymmetric matcher in array  with truncated diff', () => {
 
 test('asymmetric matcher in nested', () => {
   expect(
-    stripAnsi(getErrorDiff(
+    stripVTControlCharacters(getErrorDiff(
       [{ x: 0, y: 'foo' }, [0, 'bar']],
       [{ x: 1, y: expect.anything() }, [1, expect.anything()]],
     )),
@@ -237,7 +237,7 @@ test('asymmetric matcher in nested', () => {
 
 test('asymmetric matcher in nested with truncated diff', () => {
   expect(
-    stripAnsi(getErrorDiff(
+    stripVTControlCharacters(getErrorDiff(
       [{ x: 0, y: 'foo', z: 'bar' }, [0, 'bar', 'baz']],
       [{ x: 1, y: expect.anything(), z: expect.anything() }, [1, expect.anything(), expect.anything()]],
       { truncateThreshold: 5 },
@@ -266,7 +266,7 @@ test('diff for multi-line string compared by characters', () => {
   bar,
   `
   expect(
-    stripAnsi(diffStringsUnified(string1, string2)),
+    stripVTControlCharacters(diffStringsUnified(string1, string2)),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -291,7 +291,7 @@ test('truncated diff for multi-line string compared by characters', () => {
   BAZ,
   `
   expect(
-    stripAnsi(diffStringsUnified(string1, string2, { truncateThreshold: 3 })),
+    stripVTControlCharacters(diffStringsUnified(string1, string2, { truncateThreshold: 3 })),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received
@@ -316,7 +316,7 @@ test('getter only property', () => {
     get: () => ({ a: 'b' }),
   })
   expect(
-    stripAnsi(getErrorDiff(x, y)),
+    stripVTControlCharacters(getErrorDiff(x, y)),
   ).toMatchInlineSnapshot(`
     "- Expected
     + Received

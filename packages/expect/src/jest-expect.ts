@@ -1,10 +1,17 @@
+import type { Test } from '@vitest/runner'
+import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
+import type { Constructable } from '@vitest/utils'
+import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
+import type { Assertion, ChaiPlugin } from './types'
+import { isMockFunction } from '@vitest/spy'
 import { assertTypes } from '@vitest/utils'
 import c from 'tinyrainbow'
-import type { Constructable } from '@vitest/utils'
-import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
-import { isMockFunction } from '@vitest/spy'
-import type { Test } from '@vitest/runner'
-import type { Assertion, ChaiPlugin } from './types'
+import { JEST_MATCHERS_OBJECT } from './constants'
+import {
+  diff,
+  getCustomEqualityTesters,
+  stringify,
+} from './jest-matcher-utils'
 import {
   arrayBufferEquality,
   generateToBeMessage,
@@ -15,14 +22,7 @@ import {
   subsetEquality,
   typeEquality,
 } from './jest-utils'
-import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import {
-  diff,
-  getCustomEqualityTesters,
-  stringify,
-} from './jest-matcher-utils'
-import { JEST_MATCHERS_OBJECT } from './constants'
-import { recordAsyncExpect, wrapSoft } from './utils'
+import { createAssertionMessage, recordAsyncExpect, wrapAssertion } from './utils'
 
 // polyfill globals because expect can be used in node environment
 declare class Node {
@@ -43,7 +43,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => any,
   ) {
     const addMethod = (n: keyof Assertion) => {
-      const softWrapper = wrapSoft(utils, fn)
+      const softWrapper = wrapAssertion(utils, n, fn)
       utils.addMethod(chai.Assertion.prototype, n, softWrapper)
       utils.addMethod(
         (globalThis as any)[JEST_MATCHERS_OBJECT].matchers,
@@ -195,6 +195,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const { subset: actualSubset, stripped } = getObjectSubset(
       actual,
       expected,
+      customTesters,
     )
     if ((pass && isNot) || (!pass && !isNot)) {
       const msg = utils.getMessage(this, [
@@ -308,8 +309,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       Boolean(obj),
       'expected #{this} to be truthy',
       'expected #{this} to not be truthy',
+      true,
       obj,
-      false,
     )
   })
   def('toBeFalsy', function () {
@@ -318,8 +319,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       !obj,
       'expected #{this} to be falsy',
       'expected #{this} to not be falsy',
-      obj,
       false,
+      obj,
     )
   })
   def('toBeGreaterThan', function (expected: number | bigint) {
@@ -330,8 +331,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual > expected,
       `expected ${actual} to be greater than ${expected}`,
       `expected ${actual} to be not greater than ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -343,8 +344,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual >= expected,
       `expected ${actual} to be greater than or equal to ${expected}`,
       `expected ${actual} to be not greater than or equal to ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -356,8 +357,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual < expected,
       `expected ${actual} to be less than ${expected}`,
       `expected ${actual} to be not less than ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
@@ -369,29 +370,49 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       actual <= expected,
       `expected ${actual} to be less than or equal to ${expected}`,
       `expected ${actual} to be not less than or equal to ${expected}`,
-      actual,
       expected,
+      actual,
       false,
     )
   })
   def('toBeNaN', function () {
-    return this.be.NaN
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      Number.isNaN(obj),
+      'expected #{this} to be NaN',
+      'expected #{this} not to be NaN',
+      Number.NaN,
+      obj,
+    )
   })
   def('toBeUndefined', function () {
-    return this.be.undefined
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      undefined === obj,
+      'expected #{this} to be undefined',
+      'expected #{this} not to be undefined',
+      undefined,
+      obj,
+    )
   })
   def('toBeNull', function () {
-    return this.be.null
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      obj === null,
+      'expected #{this} to be null',
+      'expected #{this} not to be null',
+      null,
+      obj,
+    )
   })
   def('toBeDefined', function () {
-    const negate = utils.flag(this, 'negate')
-    utils.flag(this, 'negate', false)
-
-    if (negate) {
-      return this.be.undefined
-    }
-
-    return this.not.be.undefined
+    const obj = utils.flag(this, 'object')
+    this.assert(
+      typeof obj !== 'undefined',
+      'expected #{this} to be defined',
+      'expected #{this} to be undefined',
+      obj,
+    )
   })
   def(
     'toBeTypeOf',
@@ -574,6 +595,27 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       throw new AssertionError(formatCalls(spy, msg, args))
     }
   })
+  def('toHaveBeenCalledExactlyOnceWith', function (...args) {
+    const spy = getSpy(this)
+    const spyName = spy.getMockName()
+    const callCount = spy.mock.calls.length
+    const hasCallWithArgs = spy.mock.calls.some(callArg =>
+      jestEquals(callArg, args, [...customTesters, iterableEquality]),
+    )
+    const pass = hasCallWithArgs && callCount === 1
+    const isNot = utils.flag(this, 'negate') as boolean
+
+    const msg = utils.getMessage(this, [
+      pass,
+      `expected "${spyName}" to be called once with arguments: #{exp}`,
+      `expected "${spyName}" to not be called once with arguments: #{exp}`,
+      args,
+    ])
+
+    if ((pass && isNot) || (!pass && !isNot)) {
+      throw new AssertionError(formatCalls(spy, msg, args))
+    }
+  })
   def(
     ['toHaveBeenNthCalledWith', 'nthCalledWith'],
     function (times: number, ...args: any[]) {
@@ -614,6 +656,74 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     },
   )
+
+  /**
+   * Used for `toHaveBeenCalledBefore` and `toHaveBeenCalledAfter` to determine if the expected spy was called before the result spy.
+   */
+  function isSpyCalledBeforeAnotherSpy(beforeSpy: MockInstance, afterSpy: MockInstance, failIfNoFirstInvocation: number): boolean {
+    const beforeInvocationCallOrder = beforeSpy.mock.invocationCallOrder
+
+    const afterInvocationCallOrder = afterSpy.mock.invocationCallOrder
+
+    if (beforeInvocationCallOrder.length === 0) {
+      return !failIfNoFirstInvocation
+    }
+
+    if (afterInvocationCallOrder.length === 0) {
+      return false
+    }
+
+    return beforeInvocationCallOrder[0] < afterInvocationCallOrder[0]
+  }
+
+  def(
+    ['toHaveBeenCalledBefore'],
+    function (resultSpy: MockInstance, failIfNoFirstInvocation = true) {
+      const expectSpy = getSpy(this)
+
+      if (!isMockFunction(resultSpy)) {
+        throw new TypeError(
+          `${utils.inspect(resultSpy)} is not a spy or a call to a spy`,
+        )
+      }
+
+      this.assert(
+        isSpyCalledBeforeAnotherSpy(
+          expectSpy,
+          resultSpy,
+          failIfNoFirstInvocation,
+        ),
+        `expected "${expectSpy.getMockName()}" to have been called before "${resultSpy.getMockName()}"`,
+        `expected "${expectSpy.getMockName()}" to not have been called before "${resultSpy.getMockName()}"`,
+        resultSpy,
+        expectSpy,
+      )
+    },
+  )
+  def(
+    ['toHaveBeenCalledAfter'],
+    function (resultSpy: MockInstance, failIfNoFirstInvocation = true) {
+      const expectSpy = getSpy(this)
+
+      if (!isMockFunction(resultSpy)) {
+        throw new TypeError(
+          `${utils.inspect(resultSpy)} is not a spy or a call to a spy`,
+        )
+      }
+
+      this.assert(
+        isSpyCalledBeforeAnotherSpy(
+          resultSpy,
+          expectSpy,
+          failIfNoFirstInvocation,
+        ),
+        `expected "${expectSpy.getMockName()}" to have been called after "${resultSpy.getMockName()}"`,
+        `expected "${expectSpy.getMockName()}" to not have been called after "${resultSpy.getMockName()}"`,
+        resultSpy,
+        expectSpy,
+      )
+    },
+  )
   def(
     ['toThrow', 'toThrowError'],
     function (expected?: string | Constructable | RegExp | Error) {
@@ -622,7 +732,8 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         || typeof expected === 'undefined'
         || expected instanceof RegExp
       ) {
-        return this.throws(expected)
+        // Fixes the issue related to `chai` <https://github.com/vitest-dev/vitest/issues/6618>
+        return this.throws(expected === '' ? /^$/ : expected)
       }
 
       const obj = this._obj
@@ -961,6 +1072,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           }
 
           return (...args: any[]) => {
+            utils.flag(this, '_name', key)
             const promise = obj.then(
               (value: any) => {
                 utils.flag(this, 'object', value)
@@ -982,7 +1094,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               },
             )
 
-            return recordAsyncExpect(test, promise)
+            return recordAsyncExpect(
+              test,
+              promise,
+              createAssertionMessage(utils, this, !!args.length),
+              error,
+            )
           }
         },
       })
@@ -1023,6 +1140,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           }
 
           return (...args: any[]) => {
+            utils.flag(this, '_name', key)
             const promise = wrapper.then(
               (value: any) => {
                 const _error = new AssertionError(
@@ -1047,7 +1165,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
               },
             )
 
-            return recordAsyncExpect(test, promise)
+            return recordAsyncExpect(
+              test,
+              promise,
+              createAssertionMessage(utils, this, !!args.length),
+              error,
+            )
           }
         },
       })

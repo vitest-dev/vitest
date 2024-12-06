@@ -1,15 +1,21 @@
-import { Readable, Writable } from 'node:stream'
-import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import type { UserConfig as ViteUserConfig } from 'vite'
-import { type UserConfig, type VitestRunMode, type WorkerGlobalState, afterEach, onTestFinished } from 'vitest'
-import type { Vitest } from 'vitest/node'
-import { startVitest } from 'vitest/node'
 import type { Options } from 'tinyexec'
-import { x } from 'tinyexec'
+import type { UserConfig as ViteUserConfig } from 'vite'
+import type { WorkspaceProjectConfiguration } from 'vitest/config'
+import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
+import { webcrypto as crypto } from 'node:crypto'
+import fs from 'node:fs'
+import { Readable, Writable } from 'node:stream'
+import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'pathe'
+import { x } from 'tinyexec'
+import * as tinyrainbow from 'tinyrainbow'
+import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
+import { startVitest } from 'vitest/node'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
+
+// override default colors to disable them in tests
+Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
 
 interface VitestRunnerCLIOptions {
   std?: 'inherit'
@@ -55,6 +61,7 @@ export async function runVitest(
   const cli = new Cli({ stdin, stdout, stderr })
 
   let ctx: Vitest | undefined
+  let thrown = false
   try {
     const { reporters, ...rest } = config
 
@@ -63,6 +70,10 @@ export async function runVitest(
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...rest,
+      env: {
+        NO_COLOR: 'true',
+        ...rest.env,
+      },
     }, {
       ...viteOverrides,
       server: {
@@ -88,6 +99,7 @@ export async function runVitest(
     if (runnerOptions.fails !== true) {
       console.error(e)
     }
+    thrown = true
     cli.stderr += e.stack
   }
   finally {
@@ -111,6 +123,7 @@ export async function runVitest(
   }
 
   return {
+    thrown,
     ctx,
     exitCode,
     vitest: cli,
@@ -231,3 +244,67 @@ export function resolvePath(baseUrl: string, path: string) {
   const filename = fileURLToPath(baseUrl)
   return resolve(dirname(filename), path)
 }
+
+export function useFS(root: string, structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>) {
+  const files = new Set<string>()
+  const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
+  if (!hasConfig) {
+    structure['./vitest.config.js'] = {}
+  }
+  for (const file in structure) {
+    const filepath = resolve(root, file)
+    files.add(filepath)
+    const content = typeof structure[file] === 'string'
+      ? structure[file]
+      : `export default ${JSON.stringify(structure[file])}`
+    fs.mkdirSync(dirname(filepath), { recursive: true })
+    fs.writeFileSync(filepath, String(content), 'utf-8')
+  }
+  onTestFinished(() => {
+    if (process.env.VITEST_FS_CLEANUP !== 'false') {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
+  return {
+    editFile: (file: string, callback: (content: string) => string) => {
+      const filepath = resolve(root, file)
+      if (!files.has(filepath)) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      const content = fs.readFileSync(filepath, 'utf-8')
+      fs.writeFileSync(filepath, callback(content))
+    },
+    createFile: (file: string, content: string) => {
+      if (file.startsWith('..')) {
+        throw new Error(`file ${file} is outside of the test file system`)
+      }
+      const filepath = resolve(root, file)
+      if (!files.has(filepath)) {
+        throw new Error(`file ${file} already exists in the test file system`)
+      }
+      createFile(filepath, content)
+    },
+  }
+}
+
+export async function runInlineTests(
+  structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
+  config?: UserConfig,
+) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  const fs = useFS(root, structure)
+  const vitest = await runVitest({
+    root,
+    ...config,
+  })
+  return {
+    fs,
+    root,
+    ...vitest,
+    get results() {
+      return (vitest.ctx?.state.getFiles() || []).map(file => vitest.ctx?.state.getReportedEntity(file) as TestModule)
+    },
+  }
+}
+
+export const ts = String.raw

@@ -1,21 +1,21 @@
+import type { RawSourceMap } from '@ampproject/remapping'
+import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
+import type { ParsedStack } from '@vitest/utils'
+import type { ChildProcess } from 'node:child_process'
+import type { Vitest } from '../node/core'
+import type { TestProject } from '../node/project'
+import type { Awaitable } from '../types/general'
+import type { FileInformation } from './collect'
+import type { TscErrorInfo } from './types'
 import { rm } from 'node:fs/promises'
 import { performance } from 'node:perf_hooks'
-import type { ChildProcess } from 'node:child_process'
+import { getTasks } from '@vitest/runner/utils'
+import { generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
 import { basename, extname, resolve } from 'pathe'
-import { TraceMap, generatedPositionFor } from '@vitest/utils/source-map'
-import type { RawSourceMap } from '@ampproject/remapping'
-import type { ParsedStack } from '@vitest/utils'
-import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
 import { x } from 'tinyexec'
-import { getTasks } from '../utils'
-import type { WorkspaceProject } from '../node/workspace'
-import type { Awaitable } from '../types/general'
-import type { Vitest } from '../node/core'
+import { collectTests } from './collect'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
-import type { FileInformation } from './collect'
-import { collectTests } from './collect'
-import type { TscErrorInfo } from './types'
 
 export class TypeCheckError extends Error {
   name = 'TypeCheckError'
@@ -54,7 +54,7 @@ export class Typechecker {
 
   protected files: string[] = []
 
-  constructor(protected ctx: WorkspaceProject) {}
+  constructor(protected ctx: TestProject) {}
 
   public setFiles(files: string[]) {
     this.files = files

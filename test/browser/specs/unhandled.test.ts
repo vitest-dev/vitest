@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
-import { runBrowserTests } from './utils'
+import { browser, runBrowserTests } from './utils'
 
 test('prints correct unhandled error stack', async () => {
-  const { stderr, browser } = await runBrowserTests({
+  const { stderr } = await runBrowserTests({
     root: './fixtures/unhandled',
   })
 

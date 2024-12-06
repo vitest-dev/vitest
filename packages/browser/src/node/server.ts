@@ -1,31 +1,33 @@
-import { readFile } from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
+import type { HtmlTagDescriptor } from 'vite'
+import type { ErrorWithDiff, SerializedConfig } from 'vitest'
 import type {
   BrowserProvider,
   BrowserScript,
   CDPSession,
   BrowserServer as IBrowserServer,
+  TestProject,
   Vite,
-  WorkspaceProject,
 } from 'vitest/node'
-import { join, resolve } from 'pathe'
-import type { ErrorWithDiff } from '@vitest/utils'
+import { existsSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { slash } from '@vitest/utils'
-import { type StackTraceParserOptions, parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
-import type { SerializedConfig } from 'vitest'
+import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
+import { join, resolve } from 'pathe'
+import { BrowserServerCDPHandler } from './cdp'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
-import { BrowserServerCDPHandler } from './cdp'
 
 export class BrowserServer implements IBrowserServer {
   public faviconUrl: string
   public prefixTesterUrl: string
 
   public orchestratorScripts: string | undefined
-  public testerScripts: string | undefined
+  public testerScripts: HtmlTagDescriptor[] | undefined
 
   public manifest: Promise<Vite.Manifest> | Vite.Manifest
   public testerHtml: Promise<string> | string
+  public testerFilepath: string
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
   public errorCatcherUrl: string
@@ -40,7 +42,7 @@ export class BrowserServer implements IBrowserServer {
   private stackTraceOptions: StackTraceParserOptions
 
   constructor(
-    public project: WorkspaceProject,
+    public project: TestProject,
     public base: string,
   ) {
     this.stackTraceOptions = {
@@ -76,8 +78,16 @@ export class BrowserServer implements IBrowserServer {
       )
     })().then(manifest => (this.manifest = manifest))
 
+    const testerHtmlPath = project.config.browser.testerHtmlPath
+      ? resolve(project.config.root, project.config.browser.testerHtmlPath)
+      : resolve(distRoot, 'client/tester/tester.html')
+    if (!existsSync(testerHtmlPath)) {
+      throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
+    }
+    this.testerFilepath = testerHtmlPath
+
     this.testerHtml = readFile(
-      resolve(distRoot, 'client/tester/tester.html'),
+      testerHtmlPath,
       'utf8',
     ).then(html => (this.testerHtml = html))
     this.orchestratorHtml = (project.config.browser.ui
@@ -124,11 +134,11 @@ export class BrowserServer implements IBrowserServer {
     scripts: BrowserScript[] | undefined,
   ) {
     if (!scripts?.length) {
-      return ''
+      return []
     }
     const server = this.vite
     const promises = scripts.map(
-      async ({ content, src, async, id, type = 'module' }, index) => {
+      async ({ content, src, async, id, type = 'module' }, index): Promise<HtmlTagDescriptor> => {
         const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
         const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
         await server.moduleGraph.ensureEntryFromUrl(transformId)
@@ -136,12 +146,23 @@ export class BrowserServer implements IBrowserServer {
           = content && type === 'module'
             ? (await server.pluginContainer.transform(content, transformId)).code
             : content
-        return `<script type="${type}"${async ? ' async' : ''}${
-          srcLink ? ` src="${slash(`/@fs/${srcLink}`)}"` : ''
-        }>${contentProcessed || ''}</script>`
+        return {
+          tag: 'script',
+          attrs: {
+            type,
+            ...(async ? { async: '' } : {}),
+            ...(srcLink
+              ? {
+                  src: srcLink.startsWith('http') ? srcLink : slash(`/@fs/${srcLink}`),
+                }
+              : {}),
+          },
+          injectTo: 'head',
+          children: contentProcessed || '',
+        }
       },
     )
-    return (await Promise.all(promises)).join('\n')
+    return (await Promise.all(promises))
   }
 
   async initBrowserProvider() {
@@ -153,13 +174,13 @@ export class BrowserServer implements IBrowserServer {
     const browser = this.project.config.browser.name
     if (!browser) {
       throw new Error(
-        `[${this.project.getName()}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
+        `[${this.project.name}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
       )
     }
     const supportedBrowsers = this.provider.getSupportedBrowsers()
     if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
       throw new Error(
-        `[${this.project.getName()}] Browser "${browser}" is not supported by the browser provider "${
+        `[${this.project.name}] Browser "${browser}" is not supported by the browser provider "${
           this.provider.name
         }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
       )

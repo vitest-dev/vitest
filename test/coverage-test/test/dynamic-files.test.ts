@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
-import { coverageTest, isV8Provider, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 import { runDynamicFileCJS, runDynamicFileESM } from '../fixtures/src/dynamic-files'
+import { coverageTest, isV8Provider, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 test('does not crash when files are created and removed during test run (#3657)', async () => {
   await runVitest({

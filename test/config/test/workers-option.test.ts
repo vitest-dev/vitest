@@ -1,4 +1,5 @@
-import { type UserConfig, describe, expect, test, vi } from 'vitest'
+import type { UserConfig } from 'vitest/node'
+import { describe, expect, test, vi } from 'vitest'
 
 import { getWorkersCountByPercentage } from 'vitest/src/utils/workers.js'
 import * as testUtils from '../../test-utils'

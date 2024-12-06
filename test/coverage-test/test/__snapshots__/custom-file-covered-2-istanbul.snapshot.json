@@ -8,7 +8,7 @@
       },
       "end": {
         "line": 1,
-        "column": 18
+        "column": null
       }
     },
     "1": {
@@ -18,7 +18,7 @@
       },
       "end": {
         "line": 3,
-        "column": 20
+        "column": null
       }
     }
   },
@@ -32,7 +32,7 @@
         },
         "end": {
           "line": 1,
-          "column": 18
+          "column": null
         }
       },
       "loc": {
@@ -42,7 +42,7 @@
         },
         "end": {
           "line": 1,
-          "column": 18
+          "column": null
         }
       }
     },
@@ -55,7 +55,7 @@
         },
         "end": {
           "line": 3,
-          "column": 20
+          "column": null
         }
       },
       "loc": {
@@ -65,7 +65,7 @@
         },
         "end": {
           "line": 3,
-          "column": 20
+          "column": null
         }
       }
     }

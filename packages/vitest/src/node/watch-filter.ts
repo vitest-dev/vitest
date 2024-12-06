@@ -1,9 +1,9 @@
-import readline from 'node:readline'
 import type { Writable } from 'node:stream'
-import c from 'tinyrainbow'
-import stripAnsi from 'strip-ansi'
+import readline from 'node:readline'
+import { stripVTControlCharacters } from 'node:util'
 import { createDefer } from '@vitest/utils'
-import { stdout as getStdout } from '../utils'
+import c from 'tinyrainbow'
+import { stdout as getStdout } from '../utils/base'
 
 const MAX_RESULT_COUNT = 10
 const SELECTION_MAX_INDEX = 7
@@ -74,9 +74,9 @@ export class WatchFilter {
           break
         case key?.ctrl && key?.name === 'c':
         case key?.name === 'escape':
-          this.cancel()
+          this.write(`${ESC}1G${ESC}0J`) // clean content
           onSubmit(undefined)
-          break
+          return
         case key?.name === 'enter':
         case key?.name === 'return':
           onSubmit(
@@ -198,7 +198,7 @@ export class WatchFilter {
       const columns = 'columns' in this.stdout ? this.stdout.columns : 80
 
       // We have to take care of screen width in case of long lines
-      rows += 1 + Math.floor(Math.max(stripAnsi(line).length - 1, 0) / columns)
+      rows += 1 + Math.floor(Math.max(stripVTControlCharacters(line).length - 1, 0) / columns)
     }
 
     this.write(`${ESC}1G`) // move to the beginning of the line
@@ -222,10 +222,6 @@ export class WatchFilter {
     const cursortPos
       = this.keywordOffset() + (this.currentKeyword?.length || 0)
     this.write(`${ESC}${cursortPos}G`)
-  }
-
-  private cancel() {
-    this.write(`${ESC}J`) // erase down
   }
 
   private write(data: string) {

@@ -1,5 +1,4 @@
 import type {
-  Custom as RunnerCustomCase,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
@@ -7,9 +6,7 @@ import type {
   TaskMeta,
 } from '@vitest/runner'
 import type { TestError } from '@vitest/utils'
-import { getTestName } from '../../utils/tasks'
-import type { WorkspaceProject } from '../workspace'
-import { TestProject } from '../reported-workspace-project'
+import type { TestProject } from '../project'
 
 class ReportedTaskImplementation {
   /**
@@ -37,10 +34,10 @@ class ReportedTaskImplementation {
 
   protected constructor(
     task: RunnerTask,
-    project: WorkspaceProject,
+    project: TestProject,
   ) {
     this.task = task
-    this.project = project.testProject || (project.testProject = new TestProject(project))
+    this.project = project
     this.id = task.id
     this.location = task.location
   }
@@ -48,7 +45,7 @@ class ReportedTaskImplementation {
   /**
    * Creates a new reported task instance and stores it in the project's state for future use.
    */
-  static register(task: RunnerTask, project: WorkspaceProject) {
+  static register(task: RunnerTask, project: TestProject) {
     const state = new this(task, project) as TestCase | TestSuite | TestModule
     storeTask(project, task, state)
     return state
@@ -58,7 +55,7 @@ class ReportedTaskImplementation {
 export class TestCase extends ReportedTaskImplementation {
   #fullName: string | undefined
 
-  declare public readonly task: RunnerTestCase | RunnerCustomCase
+  declare public readonly task: RunnerTestCase
   public readonly type = 'test'
 
   /**
@@ -81,7 +78,7 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
-  protected constructor(task: RunnerTestCase | RunnerCustomCase, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestCase, project: TestProject) {
     super(task, project)
 
     this.name = task.name
@@ -101,7 +98,12 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      this.#fullName = getTestName(this.task, ' > ')
+      if (this.parent.type !== 'module') {
+        this.#fullName = `${this.parent.fullName} > ${this.name}`
+      }
+      else {
+        this.#fullName = this.name
+      }
     }
     return this.#fullName
   }
@@ -115,14 +117,27 @@ export class TestCase extends ReportedTaskImplementation {
       return undefined
     }
     const state = result.state === 'fail'
-      ? 'failed'
+      ? 'failed' as const
       : result.state === 'pass'
-        ? 'passed'
-        : 'skipped'
+        ? 'passed' as const
+        : 'skipped' as const
+    if (state === 'skipped') {
+      return {
+        state,
+        note: result.note,
+        errors: undefined,
+      } satisfies TestResultSkipped
+    }
+    if (state === 'passed') {
+      return {
+        state,
+        errors: result.errors as TestError[] | undefined,
+      } satisfies TestResultPassed
+    }
     return {
       state,
-      errors: result.errors as TestError[] | undefined,
-    } as TestResult
+      errors: (result.errors || []) as TestError[],
+    } satisfies TestResultFailed
   }
 
   /**
@@ -151,9 +166,12 @@ export class TestCase extends ReportedTaskImplementation {
     if (!result || result.state === 'run' || !result.startTime) {
       return undefined
     }
+    const duration = result.duration || 0
+    const slow = duration > this.project.globalConfig.slowTestThreshold
     return {
+      slow,
       heap: result.heap,
-      duration: result.duration!,
+      duration,
       startTime: result.startTime,
       retryCount: result.retryCount ?? 0,
       repeatCount: result.repeatCount ?? 0,
@@ -164,9 +182,9 @@ export class TestCase extends ReportedTaskImplementation {
 
 class TestCollection {
   #task: RunnerTestSuite | RunnerTestFile
-  #project: WorkspaceProject
+  #project: TestProject
 
-  constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
+  constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
     this.#task = task
     this.#project = project
   }
@@ -198,7 +216,7 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  *allTests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+  *allTests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield * child.children.allTests(state)
@@ -218,7 +236,7 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  *tests(state?: TestResult['state'] | 'running'): IterableIterator<TestCase> {
+  *tests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
@@ -239,7 +257,7 @@ class TestCollection {
   /**
    * Filters only the suites that are part of this collection.
    */
-  *suites(): IterableIterator<TestSuite> {
+  *suites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -250,7 +268,7 @@ class TestCollection {
   /**
    * Filters all suites that are part of this collection and its children.
    */
-  *allSuites(): IterableIterator<TestSuite> {
+  *allSuites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -259,7 +277,7 @@ class TestCollection {
     }
   }
 
-  *[Symbol.iterator](): IterableIterator<TestSuite | TestCase> {
+  *[Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
     for (const task of this.#task.tasks) {
       yield getReportedTask(this.#project, task) as TestSuite | TestCase
     }
@@ -276,7 +294,7 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
    */
   public readonly children: TestCollection
 
-  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
     super(task, project)
     this.children = new TestCollection(task, project)
   }
@@ -308,7 +326,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public readonly options: TaskOptions
 
-  protected constructor(task: RunnerTestSuite, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestSuite, project: TestProject) {
     super(task, project)
 
     this.name = task.name
@@ -328,7 +346,12 @@ export class TestSuite extends SuiteImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      this.#fullName = getTestName(this.task, ' > ')
+      if (this.parent.type !== 'module') {
+        this.#fullName = `${this.parent.fullName} > ${this.name}`
+      }
+      else {
+        this.#fullName = this.name
+      }
     }
     return this.#fullName
   }
@@ -346,7 +369,7 @@ export class TestModule extends SuiteImplementation {
    */
   public readonly moduleId: string
 
-  protected constructor(task: RunnerTestFile, project: WorkspaceProject) {
+  protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
   }
@@ -381,7 +404,7 @@ export interface TaskOptions {
 }
 
 function buildOptions(
-  task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite,
+  task: RunnerTestCase | RunnerTestFile | RunnerTestSuite,
 ): TaskOptions {
   return {
     each: task.each,
@@ -429,9 +452,17 @@ export interface TestResultSkipped {
    * Skipped tests have no errors.
    */
   errors: undefined
+  /**
+   * A custom note.
+   */
+  note: string | undefined
 }
 
 export interface TestDiagnostic {
+  /**
+   * If the duration of the test is above `slowTestThreshold`.
+   */
+  slow: boolean
   /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
@@ -490,18 +521,18 @@ function getTestState(test: TestCase): TestResult['state'] | 'running' {
 }
 
 function storeTask(
-  project: WorkspaceProject,
+  project: TestProject,
   runnerTask: RunnerTask,
   reportedTask: TestCase | TestSuite | TestModule,
 ): void {
-  project.ctx.state.reportedTasksMap.set(runnerTask, reportedTask)
+  project.vitest.state.reportedTasksMap.set(runnerTask, reportedTask)
 }
 
 function getReportedTask(
-  project: WorkspaceProject,
+  project: TestProject,
   runnerTask: RunnerTask,
 ): TestCase | TestSuite | TestModule {
-  const reportedTask = project.ctx.state.getReportedEntity(runnerTask)
+  const reportedTask = project.vitest.state.getReportedEntity(runnerTask)
   if (!reportedTask) {
     throw new Error(
       `Task instance was not found for ${runnerTask.type} "${runnerTask.name}"`,

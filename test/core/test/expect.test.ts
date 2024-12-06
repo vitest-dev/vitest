@@ -1,5 +1,5 @@
-import nodeAssert from 'node:assert'
 import type { Tester } from '@vitest/expect'
+import nodeAssert from 'node:assert'
 import { getCurrentTest } from '@vitest/runner'
 import { assert, describe, expect, expectTypeOf, test, vi } from 'vitest'
 

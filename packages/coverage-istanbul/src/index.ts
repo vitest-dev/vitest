@@ -1,5 +1,5 @@
-import { COVERAGE_STORE_KEY } from './constants'
 import type { IstanbulCoverageProvider } from './provider'
+import { COVERAGE_STORE_KEY } from './constants'
 
 export async function getProvider(): Promise<IstanbulCoverageProvider> {
   // to not bundle the provider

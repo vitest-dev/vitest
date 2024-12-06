@@ -1,28 +1,34 @@
-import { fileURLToPath } from 'node:url'
-import { createRequire } from 'node:module'
-import { lstatSync, readFileSync } from 'node:fs'
 import type { Stats } from 'node:fs'
-import { basename, extname, resolve } from 'pathe'
-import sirv from 'sirv'
-import type { WorkspaceProject } from 'vitest/node'
-import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
-import { type Plugin, coverageConfigDefaults } from 'vitest/config'
-import { toArray } from '@vitest/utils'
-import { defaultBrowserPort } from 'vitest/config'
-import { dynamicImportPlugin } from '@vitest/mocker/node'
-import MagicString from 'magic-string'
-import BrowserContext from './plugins/pluginContext'
+import type { HtmlTagDescriptor } from 'vite'
+import type { TestProject } from 'vitest/node'
 import type { BrowserServer } from './server'
+import { lstatSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { dynamicImportPlugin } from '@vitest/mocker/node'
+import { toArray } from '@vitest/utils'
+import MagicString from 'magic-string'
+import { basename, dirname, extname, resolve } from 'pathe'
+import sirv from 'sirv'
+import { coverageConfigDefaults, type Plugin } from 'vitest/config'
+import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
+import { distRoot } from './constants'
+import BrowserContext from './plugins/pluginContext'
 import { resolveOrchestrator } from './serverOrchestrator'
 import { resolveTester } from './serverTester'
 
-export type { BrowserCommand } from 'vitest/node'
 export { defineBrowserCommand } from './commands/utils'
+export type { BrowserCommand } from 'vitest/node'
+
+const versionRegexp = /(?:\?|&)v=\w{8}/
 
 export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
-  const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
-  const distRoot = resolve(pkgRoot, 'dist')
   const project = browserServer.project
+
+  function isPackageExists(pkg: string, root: string) {
+    return browserServer.project.ctx.packageInstaller.isPackageExists?.(pkg, {
+      paths: [root],
+    })
+  }
 
   return [
     {
@@ -67,9 +73,11 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             return
           }
 
-          const html = await resolveTester(browserServer, url, res)
-          res.write(html, 'utf-8')
-          res.end()
+          const html = await resolveTester(browserServer, url, res, next)
+          if (html) {
+            res.write(html, 'utf-8')
+            res.end()
+          }
         })
 
         server.middlewares.use(
@@ -152,6 +160,24 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             res.end(buffer)
           })
         }
+        server.middlewares.use((req, res, next) => {
+          // 9000 mega head move
+          // Vite always caches optimized dependencies, but users might mock
+          // them in _some_ tests, while keeping original modules in others
+          // there is no way to configure that in Vite, so we patch it here
+          // to always ignore the cache-control set by Vite in the next middleware
+          if (req.url && versionRegexp.test(req.url) && !req.url.includes('chunk-')) {
+            res.setHeader('Cache-Control', 'no-cache')
+            const setHeader = res.setHeader.bind(res)
+            res.setHeader = function (name, value) {
+              if (name === 'Cache-Control') {
+                return res
+              }
+              return setHeader(name, value)
+            }
+          }
+          next()
+        })
       },
     },
     {
@@ -168,7 +194,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         const define: Record<string, string> = {}
         for (const env in (project.config.env || {})) {
           const stringValue = JSON.stringify(project.config.env[env])
-          define[`process.env.${env}`] = stringValue
           define[`import.meta.env.${env}`] = stringValue
         }
 
@@ -205,7 +230,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           'msw/browser',
         ]
 
-        if (project.config.diff) {
+        if (typeof project.config.diff === 'string') {
           entries.push(project.config.diff)
         }
 
@@ -213,14 +238,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           const coverage = project.ctx.config.coverage
           const provider = coverage.provider
           if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
+            const path = tryResolve('@vitest/coverage-v8', [project.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
+            const path = tryResolve('@vitest/coverage-istanbul', [project.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-istanbul')
@@ -232,6 +257,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
 
         const include = [
+          'vitest > expect-type',
           'vitest > @vitest/snapshot > magic-string',
           'vitest > chai',
           'vitest > chai > loupe',
@@ -240,18 +266,18 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           '@vitest/browser > @testing-library/dom',
         ]
 
-        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (react) {
-          include.push(react)
-        }
-        const vue = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (vue) {
-          include.push(vue)
+        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
+
+        const svelte = isPackageExists('vitest-browser-svelte', fileRoot)
+        if (svelte) {
+          exclude.push('vitest-browser-svelte')
         }
 
-        const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
-        if (svelte) {
-          exclude.push(svelte)
+        // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
+        // have ?. until Vitest 3.0 for backwards compatibility
+        const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
+        if (vueTestUtils) {
+          include.push('@vue/test-utils')
         }
 
         return {
@@ -286,7 +312,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId === '/__vitest_msw__') {
+        if (rawId === '/mockServiceWorker.js') {
           return this.resolve('msw/mockServiceWorker.js', distRoot, {
             skipSelf: true,
           })
@@ -295,8 +321,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     },
     {
       name: 'vitest:browser:assets',
+      configureServer(server) {
+        server.middlewares.use(
+          '/__vitest__',
+          sirv(resolve(distRoot, 'client/__vitest__')),
+        )
+      },
       resolveId(id) {
-        if (id.startsWith('/__vitest_browser__/') || id.startsWith('/__vitest__/')) {
+        if (id.startsWith('/__vitest_browser__/')) {
           return resolve(distRoot, 'client', id.slice(1))
         }
       },
@@ -311,28 +343,35 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     BrowserContext(browserServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
+      filter(id) {
+        if (id.includes(distRoot)) {
+          return false
+        }
+        return true
+      },
     }),
     {
       name: 'vitest:browser:config',
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        viteConfig.esbuild ||= {}
-        viteConfig.esbuild.legalComments = 'inline'
-
-        const server = resolveApiServerConfig(
-          viteConfig.test?.browser || {},
-          defaultBrowserPort,
-        ) || {
-          port: defaultBrowserPort,
+        if (viteConfig.esbuild !== false) {
+          viteConfig.esbuild ||= {}
+          viteConfig.esbuild.legalComments = 'inline'
         }
 
-        // browser never runs in middleware mode
-        server.middlewareMode = false
+        const defaultPort = project.ctx._browserLastPort++
+
+        const api = resolveApiServerConfig(
+          viteConfig.test?.browser || {},
+          defaultPort,
+        )
 
         viteConfig.server = {
           ...viteConfig.server,
-          ...server,
+          port: defaultPort,
+          ...api,
+          middlewareMode: false,
           open: false,
         }
         viteConfig.server.fs ??= {}
@@ -368,31 +407,146 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
       },
     },
-    // TODO: remove this when @testing-library/vue supports ESM
+    {
+      name: 'vitest:browser:worker',
+      transform(code, id, _options) {
+        // https://github.com/vitejs/vite/blob/ba56cf43b5480f8519349f7d7fe60718e9af5f1a/packages/vite/src/node/plugins/worker.ts#L46
+        if (/(?:\?|&)worker_file&type=\w+(?:&|$)/.test(id)) {
+          const s = new MagicString(code)
+          s.prepend('globalThis.__vitest_browser_runner__ = { wrapDynamicImport: f => f() };\n')
+          return {
+            code: s.toString(),
+            map: s.generateMap({ hires: 'boundary' }),
+          }
+        }
+      },
+    },
+    {
+      name: 'vitest:browser:transform-tester-html',
+      enforce: 'pre',
+      async transformIndexHtml(html, ctx) {
+        if (ctx.filename !== browserServer.testerFilepath) {
+          return
+        }
+
+        if (!browserServer.testerScripts) {
+          const testerScripts = await browserServer.formatScripts(
+            project.config.browser.testerScripts,
+          )
+          browserServer.testerScripts = testerScripts
+        }
+        const stateJs = typeof browserServer.stateJs === 'string'
+          ? browserServer.stateJs
+          : await browserServer.stateJs
+
+        const testerTags: HtmlTagDescriptor[] = []
+        const isDefaultTemplate = resolve(distRoot, 'client/tester/tester.html') === browserServer.testerFilepath
+        if (!isDefaultTemplate) {
+          const manifestContent = browserServer.manifest instanceof Promise
+            ? await browserServer.manifest
+            : browserServer.manifest
+          const testerEntry = manifestContent['tester/tester.html']
+
+          testerTags.push({
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              crossorigin: '',
+              src: `${browserServer.base}${testerEntry.file}`,
+            },
+            injectTo: 'head',
+          })
+
+          for (const importName of testerEntry.imports || []) {
+            const entryManifest = manifestContent[importName]
+            if (entryManifest) {
+              testerTags.push(
+                {
+                  tag: 'link',
+                  attrs: {
+                    href: `${browserServer.base}${entryManifest.file}`,
+                    rel: 'modulepreload',
+                    crossorigin: '',
+                  },
+                  injectTo: 'head',
+                },
+              )
+            }
+          }
+        }
+        else {
+          // inject the reset style only in the default template,
+          // allowing users to customize the style in their own template
+          testerTags.push({
+            tag: 'style',
+            children: `
+html {
+  padding: 0;
+  margin: 0;
+}
+body {
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+}`,
+            injectTo: 'head',
+          })
+        }
+
+        return [
+          {
+            tag: 'script',
+            children: '{__VITEST_INJECTOR__}',
+            injectTo: 'head-prepend' as const,
+          },
+          {
+            tag: 'script',
+            children: stateJs,
+            injectTo: 'head-prepend',
+          } as const,
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: browserServer.errorCatcherUrl,
+            },
+            injectTo: 'head' as const,
+          },
+          browserServer.locatorsUrl
+            ? {
+                tag: 'script',
+                attrs: {
+                  type: 'module',
+                  src: browserServer.locatorsUrl,
+                },
+                injectTo: 'head',
+              } as const
+            : null,
+          ...browserServer.testerScripts,
+          ...testerTags,
+          {
+            tag: 'script',
+            attrs: {
+              'type': 'module',
+              'data-vitest-append': '',
+            },
+            children: '{__VITEST_APPEND__}',
+            injectTo: 'body',
+          } as const,
+        ].filter(s => s != null)
+      },
+    },
     {
       name: 'vitest:browser:support-testing-library',
       config() {
         return {
-          define: {
-            // testing-library/preact
-            'process.env.PTL_SKIP_AUTO_CLEANUP': !!process.env.PTL_SKIP_AUTO_CLEANUP,
-            // testing-library/react
-            'process.env.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            'process.env?.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            // testing-library/svelte, testing-library/solid
-            'process.env.STL_SKIP_AUTO_CLEANUP': !!process.env.STL_SKIP_AUTO_CLEANUP,
-            // testing-library/vue
-            'process.env.VTL_SKIP_AUTO_CLEANUP': !!process.env.VTL_SKIP_AUTO_CLEANUP,
-            // dom.debug()
-            'process.env.DEBUG_PRINT_LIMIT': process.env.DEBUG_PRINT_LIMIT || 7000,
-          },
           optimizeDeps: {
             esbuildOptions: {
               plugins: [
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    build.onResolve({ filter: /@vue\/test-utils/ }, (args) => {
+                    build.onResolve({ filter: /^@vue\/test-utils$/ }, (args) => {
                       const _require = getRequire()
                       // resolve to CJS instead of the browser because the browser version expects a global Vue object
                       const resolved = _require.resolve(args.path, {
@@ -429,7 +583,7 @@ function getRequire() {
   return _require
 }
 
-function resolveCoverageFolder(project: WorkspaceProject) {
+function resolveCoverageFolder(project: TestProject) {
   const options = project.ctx.config
   const htmlReporter = options.coverage?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {

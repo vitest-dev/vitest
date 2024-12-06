@@ -1,9 +1,9 @@
 /* eslint-disable no-sparse-arrays */
 import { AssertionError } from 'node:assert'
-import { describe, expect, it, vi } from 'vitest'
+import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import stripAnsi from 'strip-ansi'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -106,6 +106,13 @@ describe('jest-expect', () => {
       // eslint-disable-next-line no-throw-literal
       throw ''
     }).toThrow(/^$/)
+    expect(() => {
+      // eslint-disable-next-line no-throw-literal
+      throw ''
+    }).toThrow('')
+    expect(() => {
+      throw new Error('error')
+    }).not.toThrowError('')
     expect([1, 2, 3]).toHaveLength(3)
     expect('abc').toHaveLength(3)
     expect('').not.toHaveLength(5)
@@ -627,6 +634,222 @@ describe('toHaveBeenCalledWith', () => {
   })
 })
 
+describe('toHaveBeenCalledExactlyOnceWith', () => {
+  describe('negated', () => {
+    it('fails if called', () => {
+      const mock = vi.fn()
+      mock(3)
+
+      expect(() => {
+        expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+      }).toThrow(/^expected "spy" to not be called once with arguments: \[ 3 \][^e]/)
+    })
+
+    it('passes if called multiple times with args', () => {
+      const mock = vi.fn()
+      mock(3)
+      mock(3)
+
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+
+    it('passes if not called', () => {
+      const mock = vi.fn()
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+
+    it('passes if called with a different argument', () => {
+      const mock = vi.fn()
+      mock(4)
+
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+  })
+
+  it('fails if not called or called too many times', () => {
+    const mock = vi.fn()
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+
+    mock(3)
+    mock(3)
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+  })
+
+  it('fails if called with wrong args', () => {
+    const mock = vi.fn()
+    mock(4)
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+  })
+
+  it('passes if called exactly once with args', () => {
+    const mock = vi.fn()
+    mock(3)
+
+    expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+  })
+})
+
+describe('toHaveBeenCalledBefore', () => {
+  it('success if expect mock is called before result mock', () => {
+    const expectMock = vi.fn()
+    const resultMock = vi.fn()
+
+    expectMock()
+    resultMock()
+
+    expect(expectMock).toHaveBeenCalledBefore(resultMock)
+  })
+
+  it('throws if expect is not a spy', () => {
+    expect(() => {
+      expect(1).toHaveBeenCalledBefore(vi.fn())
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if result is not a spy', () => {
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledBefore(1 as any)
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if expect mock is called after result mock', () => {
+    const expectMock = vi.fn()
+    const resultMock = vi.fn()
+
+    resultMock()
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledBefore(resultMock)
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+
+  it('throws with correct mock name if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock2()
+    mock1()
+
+    expect(() => {
+      expect(mock1).toHaveBeenCalledBefore(mock2)
+    }).toThrow(/^expected "mock1" to have been called before "mock2"/)
+  })
+
+  it('fails if expect mock is not called', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledBefore(resultMock)
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+
+  it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(vi.fn()).toHaveBeenCalledBefore(resultMock, false)
+  })
+
+  it('fails if result mock is not called', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledBefore(vi.fn())
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+})
+
+describe('toHaveBeenCalledAfter', () => {
+  it('success if expect mock is called after result mock', () => {
+    const resultMock = vi.fn()
+    const expectMock = vi.fn()
+
+    resultMock()
+    expectMock()
+
+    expect(expectMock).toHaveBeenCalledAfter(resultMock)
+  })
+
+  it('throws if expect is not a spy', () => {
+    expect(() => {
+      expect(1).toHaveBeenCalledAfter(vi.fn())
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if result is not a spy', () => {
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledAfter(1 as any)
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if expect mock is called before result mock', () => {
+    const resultMock = vi.fn()
+    const expectMock = vi.fn()
+
+    expectMock()
+    resultMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledAfter(resultMock)
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+
+  it('throws with correct mock name if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock1()
+    mock2()
+
+    expect(() => {
+      expect(mock1).toHaveBeenCalledAfter(mock2)
+    }).toThrow(/^expected "mock1" to have been called after "mock2"/)
+  })
+
+  it('fails if result mock is not called', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledAfter(vi.fn())
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+
+  it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(expectMock).toHaveBeenCalledAfter(vi.fn(), false)
+  })
+
+  it('fails if expect mock is not called', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledAfter(resultMock)
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+})
+
 describe('async expect', () => {
   it('resolves', async () => {
     await expect((async () => 'true')()).resolves.toBe('true')
@@ -694,14 +917,14 @@ describe('async expect', () => {
     await expect((async () => {
       throw new Error('err')
     })()).rejects.toThrow('err')
-    expect((async () => {
+    await expect((async () => {
       throw new TestError('error')
     })()).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    expect((async () => {
+    await expect((async () => {
       throw err
     })()).rejects.toThrow(err)
-    expect((async () => {
+    await expect((async () => {
       throw new Error('message')
     })()).rejects.toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
@@ -788,6 +1011,12 @@ describe('async expect', () => {
   })
 
   describe('promise auto queuing', () => {
+    // silence warning
+    beforeAll(() => {
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      return () => spy.mockRestore()
+    })
+
     it.fails('fails', () => {
       expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
         .resolves
@@ -877,7 +1106,7 @@ it('correctly prints diff', () => {
   }
   catch (err) {
     const error = processError(err)
-    const diff = stripAnsi(error.diff)
+    const diff = stripVTControlCharacters(error.diff)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -890,7 +1119,7 @@ it('correctly prints diff for the cause', () => {
   }
   catch (err) {
     const error = processError(new Error('wrapper', { cause: err }))
-    const diff = stripAnsi(error.cause.diff)
+    const diff = stripVTControlCharacters(error.cause.diff)
     expect(diff).toContain('-   "a": 2')
     expect(diff).toContain('+   "a": 1')
   }
@@ -906,7 +1135,7 @@ it('correctly prints diff with asymmetric matchers', () => {
   }
   catch (err) {
     const error = processError(err)
-    expect(stripAnsi(error.diff)).toMatchInlineSnapshot(`
+    expect(stripVTControlCharacters(error.diff)).toMatchInlineSnapshot(`
       "- Expected
       + Received
 
@@ -927,12 +1156,12 @@ function trim(s: string): string {
 function getError(f: () => unknown) {
   try {
     f()
-    return expect.unreachable()
   }
   catch (error) {
     const processed = processError(error)
-    return [stripAnsi(processed.message), stripAnsi(trim(processed.diff))]
+    return [stripVTControlCharacters(processed.message), stripVTControlCharacters(trim(processed.diff))]
   }
+  return expect.unreachable()
 }
 
 it('toMatchObject error diff', () => {
@@ -1059,6 +1288,126 @@ it('toMatchObject error diff', () => {
       }",
     ]
   `)
+
+  // https://github.com/vitest-dev/vitest/issues/6543
+  class Foo {
+    constructor(public value: any) {}
+  }
+
+  class Bar {
+    constructor(public value: any) {}
+  }
+
+  expect(new Foo(0)).toMatchObject(new Bar(0))
+  expect(new Foo(0)).toMatchObject({ value: 0 })
+  expect({ value: 0 }).toMatchObject(new Bar(0))
+
+  expect(getError(() => expect(new Foo(0)).toMatchObject(new Bar(1)))).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: +0 } to match object Bar{ value: 1 }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": 1,
+    + Foo {
+    +   "value": 0,
+      }",
+    ]
+  `)
+
+  expect(getError(() => expect(new Foo(0)).toMatchObject({ value: 1 }))).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: +0 } to match object { value: 1 }",
+      "- Expected
+    + Received
+
+    - Object {
+    -   "value": 1,
+    + Foo {
+    +   "value": 0,
+      }",
+    ]
+  `)
+
+  expect(getError(() => expect({ value: 0 }).toMatchObject(new Bar(1)))).toMatchInlineSnapshot(`
+    [
+      "expected { value: +0 } to match object Bar{ value: 1 }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": 1,
+    + Object {
+    +   "value": 0,
+      }",
+    ]
+  `)
+
+  expect(getError(() =>
+    expect({
+      bad: new Foo(1),
+      good: new Foo(0),
+    }).toMatchObject({
+      bad: new Bar(2),
+      good: new Bar(0),
+    }),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected { bad: Foo{ value: 1 }, …(1) } to match object { bad: Bar{ value: 2 }, …(1) }",
+      "- Expected
+    + Received
+
+      Object {
+    -   "bad": Bar {
+    -     "value": 2,
+    +   "bad": Foo {
+    +     "value": 1,
+        },
+        "good": Bar {
+          "value": 0,
+        },
+      }",
+    ]
+  `)
+
+  expect(getError(() =>
+    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Bar(0))),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Bar{ value: +0 } }",
+      "- Expected
+    + Received
+
+    - Bar {
+    -   "value": Bar {
+    -     "value": 0,
+    + Foo {
+    +   "value": Foo {
+    +     "value": 1,
+        },
+      }",
+    ]
+  `)
+
+  expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(1)))
+  expect(getError(() =>
+    expect(new Foo(new Foo(1))).toMatchObject(new Bar(new Foo(2))),
+  )).toMatchInlineSnapshot(`
+    [
+      "expected Foo{ value: Foo{ value: 1 } } to match object Bar{ value: Foo{ value: 2 } }",
+      "- Expected
+    + Received
+
+    - Bar {
+    + Foo {
+        "value": Foo {
+    -     "value": 2,
+    +     "value": 1,
+        },
+      }",
+    ]
+  `)
 })
 
 it('toHaveProperty error diff', () => {
@@ -1136,8 +1485,8 @@ function snapshotError(f: () => unknown) {
   catch (error) {
     const e = processError(error)
     expect({
-      message: stripAnsi(e.message),
-      diff: e.diff ? stripAnsi(e.diff) : e.diff,
+      message: stripVTControlCharacters(e.message),
+      diff: e.diff ? stripVTControlCharacters(e.diff) : e.diff,
       expected: e.expected,
       actual: e.actual,
     }).toMatchSnapshot()
@@ -1234,3 +1583,11 @@ it('toMatch/toContain diff', () => {
 })
 
 it('timeout', () => new Promise(resolve => setTimeout(resolve, 500)))
+
+it('diff', () => {
+  snapshotError(() => expect(undefined).toBeTruthy())
+  snapshotError(() => expect({ hello: 'world' }).toBeFalsy())
+  snapshotError(() => expect({ hello: 'world' }).toBeNaN())
+  snapshotError(() => expect({ hello: 'world' }).toBeUndefined())
+  snapshotError(() => expect({ hello: 'world' }).toBeNull())
+})

@@ -1,7 +1,7 @@
-import * as nodeos from 'node:os'
+import type { BrowserProvider, ProcessPool, TestProject, TestSpecification, Vitest } from 'vitest/node'
 import crypto from 'node:crypto'
+import * as nodeos from 'node:os'
 import { relative } from 'pathe'
-import type { BrowserProvider, ProcessPool, Vitest, WorkspaceProject, WorkspaceSpec } from 'vitest/node'
 import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:pool')
@@ -9,7 +9,7 @@ const debug = createDebugger('vitest:browser:pool')
 async function waitForTests(
   method: 'run' | 'collect',
   contextId: string,
-  project: WorkspaceProject,
+  project: TestProject,
   files: string[],
 ) {
   const context = project.browser!.state.createAsyncContext(method, contextId, files)
@@ -19,7 +19,7 @@ async function waitForTests(
 export function createBrowserPool(ctx: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const executeTests = async (method: 'run' | 'collect', project: WorkspaceProject, files: string[]) => {
+  const executeTests = async (method: 'run' | 'collect', project: TestProject, files: string[]) => {
     ctx.state.clearFiles(project, files)
     const browser = project.browser!
 
@@ -33,7 +33,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     if (!origin) {
       throw new Error(
-        `Can't find browser origin URL for project "${project.getName()}" when running tests for files "${files.join('", "')}"`,
+        `Can't find browser origin URL for project "${project.name}" when running tests for files "${files.join('", "')}"`,
       )
     }
 
@@ -67,7 +67,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
 
     debug?.(
       `[%s] Running %s tests in %s chunks (%s threads)`,
-      project.getName() || 'core',
+      project.name || 'core',
       files.length,
       chunks.length,
       threadsCount,
@@ -86,8 +86,13 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
           [...files.map(f => relative(project.config.root, f))].join(', '),
         )
         const promise = waitForTests(method, contextId, project, files)
-        promises.push(promise)
-        orchestrator.createTesters(files)
+        const tester = orchestrator.createTesters(files).catch((error) => {
+          if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
+            return
+          }
+          return Promise.reject(error)
+        })
+        promises.push(promise, tester)
       }
       else {
         const contextId = crypto.randomUUID()
@@ -101,19 +106,18 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
         url.searchParams.set('contextId', contextId)
         const page = provider
           .openPage(contextId, url.toString(), () => setBreakpoint(contextId, files[0]))
-          .then(() => waitPromise)
-        promises.push(page)
+        promises.push(page, waitPromise)
       }
     })
 
     await Promise.all(promises)
   }
 
-  const runWorkspaceTests = async (method: 'run' | 'collect', specs: WorkspaceSpec[]) => {
-    const groupedFiles = new Map<WorkspaceProject, string[]>()
-    for (const [project, file] of specs) {
+  const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
+    const groupedFiles = new Map<TestProject, string[]>()
+    for (const { project, moduleId } of specs) {
       const files = groupedFiles.get(project) || []
-      files.push(file)
+      files.push(moduleId)
       groupedFiles.set(project, files)
     }
 
@@ -127,6 +131,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       if (isCancelled) {
         break
       }
+      await project._initBrowserProvider()
 
       await executeTests(method, project, files)
     }
@@ -137,7 +142,7 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
       ? nodeos.availableParallelism()
       : nodeos.cpus().length
 
-  function getThreadsCount(project: WorkspaceProject) {
+  function getThreadsCount(project: TestProject) {
     const config = project.config.browser
     if (!config.headless || !project.browser!.provider.supportsParallelism) {
       return 1
@@ -157,6 +162,11 @@ export function createBrowserPool(ctx: Vitest): ProcessPool {
     async close() {
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
+      ctx.resolvedProjects.forEach((project) => {
+        project.browser?.state.orchestrators.forEach((orchestrator) => {
+          orchestrator.$close()
+        })
+      })
     },
     runTests: files => runWorkspaceTests('run', files),
     collectTests: files => runWorkspaceTests('collect', files),

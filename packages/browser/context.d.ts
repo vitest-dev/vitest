@@ -1,5 +1,5 @@
 import type { SerializedConfig } from 'vitest'
-import { ARIARole } from './aria-role'
+import { ARIARole } from './aria-role.js'
 
 export type BufferEncoding =
   | 'ascii'
@@ -59,6 +59,12 @@ export interface UserEvent {
    * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
    */
   setup: () => UserEvent
+  /**
+   * Cleans up the user event instance, releasing any resources or state it holds,
+   * such as keyboard press state. For the default `userEvent` instance, this method
+   * is automatically called after each test case.
+   */
+  cleanup: () => Promise<void>
   /**
    * Click on an element. Uses provider's API under the hood and supports all its options.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API

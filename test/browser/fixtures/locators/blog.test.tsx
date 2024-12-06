@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
+import { page, userEvent } from '@vitest/browser/context'
 import Blog from '../../src/blog-app/blog'
 
 test('renders blog posts', async () => {
@@ -18,7 +18,7 @@ test('renders blog posts', async () => {
 
   await expect.element(secondPost.getByRole('heading')).toHaveTextContent('qui est esse')
 
-  await secondPost.getByRole('button', { name: 'Delete' }).click()
+  await userEvent.click(secondPost.getByRole('button', { name: 'Delete' }))
 
   expect(screen.getByRole('listitem').all()).toHaveLength(3)
 

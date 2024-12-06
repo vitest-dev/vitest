@@ -1,8 +1,12 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
-import { describe, expect, it } from 'vitest'
-
+import { version as viteVersion } from 'vite'
+import { describe, expect, it as vitestIt } from 'vitest'
 import { runVitest } from '../../test-utils'
+
+const [major] = process.version.slice(1).split('.').map(num => Number(num))
+
+const it = viteVersion[0] >= '6' ? (vitestIt.skip as typeof vitestIt) : vitestIt
 
 // To prevent the warnining coming up in snapshots
 process.setMaxListeners(20)
@@ -19,7 +23,7 @@ describe('stacktraces should respect sourcemaps', async () => {
       const lines = String(stderr).split(/\n/g)
       const index = lines.findIndex(val => val.includes(`${file}:`))
       const msg = lines.slice(index, index + 8).join('\n')
-      expect(msg).toMatchSnapshot(file)
+      expect(removeLines(msg)).toMatchSnapshot(file)
     })
   }
 })
@@ -49,7 +53,7 @@ describe('stacktrace should print error frame source file correctly', async () =
     const { stderr } = await runVitest({ root }, [testFile])
 
     // expect to print framestack of foo.js
-    expect(stderr).toMatchSnapshot('error-in-deps')
+    expect(removeLines(stderr)).toMatchSnapshot('error-in-deps')
   })
 })
 
@@ -63,11 +67,11 @@ describe('stacktrace filtering', async () => {
       onStackTrace: (_error, { method }) => method !== 'b',
     }, [testFile])
 
-    expect(stderr).toMatchSnapshot('stacktrace-filtering')
+    expect(removeLines(stderr)).toMatchSnapshot('stacktrace-filtering')
   })
 })
 
-it('stacktrace in vmThreads', async () => {
+it.runIf(major < 22)('stacktrace in vmThreads', async () => {
   const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
   const { stderr } = await runVitest({
@@ -75,5 +79,9 @@ it('stacktrace in vmThreads', async () => {
     pool: 'vmThreads',
   }, [testFile])
 
-  expect(stderr).toMatchSnapshot()
+  expect(removeLines(stderr)).toMatchSnapshot()
 })
+
+function removeLines(log: string) {
+  return log.replace(/⎯{2,}/g, '⎯⎯')
+}

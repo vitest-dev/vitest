@@ -1,19 +1,19 @@
 import type { DeferPromise } from '@vitest/utils'
-import { createDefer } from '@vitest/utils'
 import type { TypecheckResults } from '../../typecheck/typechecker'
-import { Typechecker } from '../../typecheck/typechecker'
-import { groupBy } from '../../utils/base'
-import { hasFailed } from '../../utils/tasks'
 import type { Vitest } from '../core'
 import type { ProcessPool, WorkspaceSpec } from '../pool'
-import type { WorkspaceProject } from '../workspace'
+import type { TestProject } from '../project'
+import { hasFailed } from '@vitest/runner/utils'
+import { createDefer } from '@vitest/utils'
+import { Typechecker } from '../../typecheck/typechecker'
+import { groupBy } from '../../utils/base'
 
 export function createTypecheckPool(ctx: Vitest): ProcessPool {
-  const promisesMap = new WeakMap<WorkspaceProject, DeferPromise<void>>()
-  const rerunTriggered = new WeakSet<WorkspaceProject>()
+  const promisesMap = new WeakMap<TestProject, DeferPromise<void>>()
+  const rerunTriggered = new WeakSet<TestProject>()
 
   async function onParseEnd(
-    project: WorkspaceProject,
+    project: TestProject,
     { files, sourceErrors }: TypecheckResults,
   ) {
     const checker = project.typechecker!
@@ -49,7 +49,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   }
 
   async function createWorkspaceTypechecker(
-    project: WorkspaceProject,
+    project: TestProject,
     files: string[],
   ) {
     const checker = project.typechecker ?? new Typechecker(project)
@@ -90,7 +90,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     return checker
   }
 
-  async function startTypechecker(project: WorkspaceProject, files: string[]) {
+  async function startTypechecker(project: TestProject, files: string[]) {
     if (project.typechecker) {
       return project.typechecker
     }
@@ -104,10 +104,10 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     for (const name in specsByProject) {
       const project = specsByProject[name][0].project
       const files = specsByProject[name].map(spec => spec.moduleId)
-      const checker = await createWorkspaceTypechecker(project.workspaceProject, files)
+      const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project.workspaceProject, checker.getTestFiles())
+      ctx.state.collectFiles(project, checker.getTestFiles())
       await ctx.report('onCollected')
     }
   }

@@ -1,11 +1,11 @@
-import { fileURLToPath } from 'node:url'
+import type { PluginContext } from 'rollup'
 import type { Plugin } from 'vitest/config'
 import type { BrowserProvider } from 'vitest/node'
-import { dirname, resolve } from 'pathe'
-import type { PluginContext } from 'rollup'
-import { slash } from '@vitest/utils'
-import builtinCommands from '../commands/index'
 import type { BrowserServer } from '../server'
+import { fileURLToPath } from 'node:url'
+import { slash } from '@vitest/utils'
+import { dirname, resolve } from 'pathe'
+import builtinCommands from '../commands/index'
 
 const VIRTUAL_ID_CONTEXT = '\0@vitest/browser/context'
 const ID_CONTEXT = '@vitest/browser/context'
@@ -67,7 +67,7 @@ async function generateContextFile(
   const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
 
   return `
-import { page, userEvent as __userEvent_CDP__, cdp } from '${distContextPath}'
+import { page, createUserEvent, cdp } from '${distContextPath}'
 ${userEventNonProviderImport}
 const filepath = () => ${filepathCode}
 const rpc = () => __vitest_worker__.rpc
@@ -84,61 +84,21 @@ export const server = {
   config: __vitest_browser_runner__.config,
 }
 export const commands = server.commands
-export const userEvent = ${getUserEvent(provider)}
+export const userEvent = createUserEvent(_userEventSetup)
 export { page, cdp }
 `
 }
 
-function getUserEvent(provider: BrowserProvider) {
-  if (provider.name !== 'preview') {
-    return '__userEvent_CDP__'
-  }
-  // TODO: have this in a separate file
-  return String.raw`{
-  ..._userEventSetup,
-  setup() {
-    const userEvent = __vitest_user_event__.setup()
-    userEvent.setup = this.setup
-    userEvent.fill = this.fill.bind(userEvent)
-    userEvent._upload = userEvent.upload.bind(userEvent)
-    userEvent.upload = this.upload.bind(userEvent)
-    userEvent.dragAndDrop = this.dragAndDrop
-    return userEvent
-  },
-  async upload(element, file) {
-    const uploadPromise = (Array.isArray(file) ? file : [file]).map(async (file) => {
-      if (typeof file !== 'string') {
-        return file
-      }
-
-      const { content: base64, basename, mime } = await rpc().triggerCommand(contextId, "__vitest_fileInfo", filepath(), [file, 'base64'])
-      const fileInstance = fetch(base64)
-        .then(r => r.blob())
-        .then(blob => new File([blob], basename, { type: mime }))
-      return fileInstance
-    })
-    const uploadFiles = await Promise.all(uploadPromise)
-    return this._upload(element, uploadFiles)
-  },
-  async fill(element, text) {
-    await this.clear(element)
-    await this.type(element, text)
-  },
-  dragAndDrop: async () => {
-    throw new Error('Provider "preview" does not support dragging elements')
-  }
-}`
-}
-
 async function getUserEventImport(provider: BrowserProvider, resolve: (id: string, importer: string) => Promise<null | { id: string }>) {
   if (provider.name !== 'preview') {
-    return ''
+    return 'const _userEventSetup = undefined'
   }
   const resolved = await resolve('@testing-library/user-event', __dirname)
   if (!resolved) {
     throw new Error(`Failed to resolve user-event package from ${__dirname}`)
   }
-  return `import { userEvent as __vitest_user_event__ } from '${slash(
-    `/@fs/${resolved.id}`,
-  )}'\nconst _userEventSetup = __vitest_user_event__.setup()\n`
+  return `\
+import { userEvent as __vitest_user_event__ } from '${slash(`/@fs/${resolved.id}`)}'
+const _userEventSetup = __vitest_user_event__
+`
 }
