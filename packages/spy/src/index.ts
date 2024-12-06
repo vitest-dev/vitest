@@ -467,15 +467,10 @@ export function spyOn<T, K extends keyof T>(
 
   const currentStub = getSpy(obj, method, accessType)
   if (currentStub) {
-    // TODO: should we reset?
     return currentStub
   }
 
   const stub = tinyspy.internalSpyOn(obj, objMethod as any)
-
-  // if (vitestSpy in stub) {
-  //   return stub as any as MockInstance
-  // }
 
   return enhanceSpy(stub) as MockInstance
 }

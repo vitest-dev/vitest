@@ -115,7 +115,7 @@ export function mockObject(
               const type = getType(value)
               const isFunction
                 = type.includes('Function') && typeof value === 'function'
-              if (isFunction && !value._isMockFunction) {
+              if (isFunction) {
                 // mock and delegate calls to original prototype method, which should be also mocked already
                 const original = this[key]
                 const mock = spyOn(this, key as string)
