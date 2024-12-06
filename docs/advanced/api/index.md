@@ -75,6 +75,30 @@ const vitest = await createVitest('test', {
 The ["Running Tests"](/advanced/guide/tests#createvitest) guide has a usage example.
 :::
 
+## resolveConfig
+
+```ts
+function resolveConfig(
+  options: UserConfig = {},
+  viteOverrides: ViteUserConfig = {},
+): Promise<{
+  vitestConfig: ResolvedConfig
+  viteConfig: ResolvedViteConfig
+}>
+```
+
+This method resolves the config with custom parameters. If no parameters are gived, the `root` will be `process.cwd()`.
+
+::: info
+Due to how Vite's `createServer` works, Vitest has to resolve the config during the plugin's `configResolve` hook. Therefore, this method is not actually used internally and is exposed exclusively as a public API.
+
+If you pass down the config to the `startVitest` or `createVitest` APIs, Vitest will still resolve the config again.
+:::
+
+::: warning
+The `resolveConfig` doesn't resolve the `workspace`. To resolve workspace configs, Vitest needs an established Vite server.
+:::
+
 ## parseCLI
 
 ```ts
