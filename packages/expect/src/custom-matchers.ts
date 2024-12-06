@@ -1,7 +1,7 @@
 import type { MatchersObject } from './types'
 
 // selectively ported from https://github.com/jest-community/jest-extended
-export const jestExtendedMatchers: MatchersObject = {
+export const customMatchers: MatchersObject = {
   toSatisfy(actual: unknown, expected: (actual: unknown) => boolean, message?: string) {
     const { printReceived, printExpected, matcherHint } = this.utils
     const pass = expected(actual)

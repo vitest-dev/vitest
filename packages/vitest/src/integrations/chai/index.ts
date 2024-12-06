@@ -5,9 +5,9 @@ import type { TaskPopulated, Test } from '@vitest/runner'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
+  customMatchers,
   getState,
   GLOBAL_EXPECT,
-  jestExtendedMatchers,
   setState,
 } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
@@ -110,7 +110,7 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'assertions', assertions)
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
-  expect.extend(jestExtendedMatchers)
+  expect.extend(customMatchers)
 
   return expect
 }
