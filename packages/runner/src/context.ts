@@ -43,7 +43,6 @@ export function withTimeout<T extends (...args: any[]) => any>(
   // this function name is used to filter error in test/cli/test/fails.test.ts
   return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     return Promise.race([
-      fn(...args),
       new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
           clearTimeout(timer)
@@ -51,6 +50,9 @@ export function withTimeout<T extends (...args: any[]) => any>(
         }, timeout)
         // `unref` might not exist in browser
         timer.unref?.()
+      }),
+      Promise.resolve(fn(...args)).then((result) => {
+        return new Promise(resolve => setTimeout(resolve, 0, result))
       }),
     ]) as Awaitable<void>
   }) as T
