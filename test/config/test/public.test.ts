@@ -22,6 +22,7 @@ test('applies custom options', async () => {
 })
 
 test('respects root', async () => {
+  process.env.GITHUB_ACTIONS = 'false'
   const configRoot = resolve(import.meta.dirname, '../fixtures/public-config')
   const { viteConfig, vitestConfig } = await resolveConfig({
     root: configRoot,
@@ -32,6 +33,7 @@ test('respects root', async () => {
 })
 
 test('respects custom config', async () => {
+  process.env.GITHUB_ACTIONS = 'false'
   const config = resolve(import.meta.dirname, '../fixtures/public-config/vitest.custom.config.ts')
   const { viteConfig, vitestConfig } = await resolveConfig({
     config,
