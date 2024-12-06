@@ -375,8 +375,7 @@ export class TestProject {
     return isBrowserEnabled(this.config)
   }
 
-  /** @internal */
-  _markTestFile(testPath: string): void {
+  private markTestFile(testPath: string): void {
     this.testFilesList?.push(testPath)
   }
 
@@ -384,7 +383,7 @@ export class TestProject {
    * Returns if the file is a test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isTestFile(testPath: string): boolean {
+  isCachedTestFile(testPath: string): boolean {
     return !!this.testFilesList && this.testFilesList.includes(testPath)
   }
 
@@ -392,7 +391,7 @@ export class TestProject {
    * Returns if the file is a typecheck test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isTypecheckFile(testPath: string): boolean {
+  isCachedTypecheckFile(testPath: string): boolean {
     return !!this.typecheckFilesList && this.typecheckFilesList.includes(testPath)
   }
 
@@ -417,14 +416,18 @@ export class TestProject {
   }
 
   /**
-   * Test if a file matches the test globs. This does the actual glob matching unlike `isTestFile`.
+   * Test if a file matches the test globs. This does the actual glob matching if the test is not cached, unlike `isCachedTestFile`.
    */
   public matchesTestGlob(moduleId: string, source?: () => string): boolean {
+    if (this.isCachedTestFile(moduleId)) {
+      return true
+    }
     const relativeId = relative(this.config.dir || this.config.root, moduleId)
     if (mm.isMatch(relativeId, this.config.exclude)) {
       return false
     }
     if (mm.isMatch(relativeId, this.config.include)) {
+      this.markTestFile(moduleId)
       return true
     }
     if (
@@ -432,7 +435,10 @@ export class TestProject {
       && mm.isMatch(relativeId, this.config.includeSource)
     ) {
       const code = source?.() || readFileSync(moduleId, 'utf-8')
-      return this.isInSourceTestCode(code)
+      if (this.isInSourceTestCode(code)) {
+        this.markTestFile(moduleId)
+        return true
+      }
     }
     return false
   }
