@@ -5,11 +5,16 @@ import { existsSync, promises as fs } from 'node:fs'
 import { join, resolve } from 'pathe'
 import c from 'tinyrainbow'
 
-function hashCode(s: string) {
+// Reason for 5381:
+// https://stackoverflow.com/questions/10696223/reason-for-the-number-5381-in-the-djb-hash-function
+const ALTERNATIVE_HASH_CODE_STARTING_VALUE = 5381
+
+// This is djb hash function
+function hashCode(s: string, startingValue = 0) {
   return s.split('').reduce((a, b) => {
     a = (a << 5) - a + b.charCodeAt(0)
     return a & a
-  }, 0)
+  }, startingValue)
 }
 
 export class Debugger {
@@ -50,9 +55,7 @@ export class Debugger {
   }
 
   encodeId(id: string) {
-    return `${id.replace(/[^\w@\-]/g, '_').replace(/_+/g, '_')}-${hashCode(
-      id,
-    )}.js`
+    return `${hashCode(id, 0)}-${hashCode(id, ALTERNATIVE_HASH_CODE_STARTING_VALUE)}.js`
   }
 
   async recordExternalize(id: string, path: string) {
