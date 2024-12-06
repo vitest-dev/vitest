@@ -2,9 +2,9 @@
 title: TestProject
 ---
 
-# TestProject <Version>2.2.0</Version> {#testproject}
+# TestProject <Version>3.0.0</Version> {#testproject}
 
-- **Alias**: `WorkspaceProject` before 2.2.0
+- **Alias**: `WorkspaceProject` before 3.0.0
 
 ::: warning
 This guide describes the advanced Node.js API. If you just want to create a workspace, follow the ["Workspace"](/guide/workspace) guide.

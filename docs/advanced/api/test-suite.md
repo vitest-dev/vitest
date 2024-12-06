@@ -62,7 +62,7 @@ The ID looks like this:
 ```
 
 ::: tip
-You can generate file hash with `generateFileHash` function from `vitest/node` which is available since Vitest 2.2:
+You can generate file hash with `generateFileHash` function from `vitest/node` which is available since Vitest 3:
 
 ```ts
 import { generateFileHash } from 'vitest/node'
