@@ -98,6 +98,12 @@ export function registerConsoleShortcuts(
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
+      ctx.isFailedModel = false
+      return ctx.changeNamePattern('')
+    }
+    // rerun current pattern tests
+    if (name === 'r') {
+      ctx.isFailedModel = false
       const files = await ctx.getTestFilepaths()
       return ctx.changeNamePattern('', files, 'rerun all tests')
     }
@@ -107,6 +113,7 @@ export function registerConsoleShortcuts(
     }
     // rerun only failed tests
     if (name === 'f') {
+      ctx.isFailedModel = true
       return ctx.rerunFailed()
     }
     // change project filter
