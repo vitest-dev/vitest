@@ -2,7 +2,7 @@ import type { Awaitable } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpec, VitestRunner } from './types/runner'
 import type {
-  Custom,
+  ExtendedContext,
   File,
   HookCleanupCallback,
   HookListener,
@@ -63,32 +63,48 @@ function getSuiteHooks(
 
 async function callTestHooks(
   runner: VitestRunner,
-  task: Task,
-  hooks: ((result: TaskResult) => Awaitable<void>)[],
+  test: Test,
+  hooks: ((context: ExtendedContext<Test>) => Awaitable<void>)[],
   sequence: SequenceHooks,
 ) {
   if (sequence === 'stack') {
     hooks = hooks.slice().reverse()
   }
 
+  if (!hooks.length) {
+    return
+  }
+
+  const onTestFailed = test.context.onTestFailed
+  const onTestFinished = test.context.onTestFinished
+  test.context.onTestFailed = () => {
+    throw new Error(`Cannot call "onTestFailed" inside a test hook.`)
+  }
+  test.context.onTestFinished = () => {
+    throw new Error(`Cannot call "onTestFinished" inside a test hook.`)
+  }
+
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map(fn => fn(task.result!)))
+      await Promise.all(hooks.map(fn => fn(test.context)))
     }
     catch (e) {
-      failTask(task.result!, e, runner.config.diffOptions)
+      failTask(test.result!, e, runner.config.diffOptions)
     }
   }
   else {
     for (const fn of hooks) {
       try {
-        await fn(task.result!)
+        await fn(test.context)
       }
       catch (e) {
-        failTask(task.result!, e, runner.config.diffOptions)
+        failTask(test.result!, e, runner.config.diffOptions)
       }
     }
   }
+
+  test.context.onTestFailed = onTestFailed
+  test.context.onTestFinished = onTestFinished
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
@@ -177,7 +193,7 @@ async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
   )
 }
 
-export async function runTest(test: Test | Custom, runner: VitestRunner): Promise<void> {
+export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run') {
@@ -412,7 +428,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
           }
           else {
             const { sequence } = runner.config
-            if (sequence.shuffle || suite.shuffle) {
+            if (suite.shuffle) {
               // run describe block independently from tests
               const suites = tasksGroup.filter(
                 group => group.type === 'suite',
@@ -471,7 +487,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 let limitMaxConcurrency: ReturnType<typeof limitConcurrency>
 
 async function runSuiteChild(c: Task, runner: VitestRunner) {
-  if (c.type === 'test' || c.type === 'custom') {
+  if (c.type === 'test') {
     return limitMaxConcurrency(() => runTest(c, runner))
   }
   else if (c.type === 'suite') {

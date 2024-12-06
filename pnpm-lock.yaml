@@ -21,7 +21,7 @@ patchedDependencies:
     hash: s5kzatt2y2dzfxfynxzvzt5kbm
     path: patches/@types__chai@4.3.6.patch
   '@types/sinonjs__fake-timers@8.1.5':
-    hash: ggdsr7nrdrzokhhihsihc2hdja
+    hash: yuuqouzdhxwdvk3q6qf2uf434a
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
   acorn@8.11.3:
     hash: no36qihqjrd3chyjw73dk5xfkm
@@ -949,7 +949,7 @@ importers:
         version: 2.4.9
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.5
-        version: 8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)
+        version: 8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)
       acorn-walk:
         specifier: ^8.3.4
         version: 8.3.4
@@ -12205,7 +12205,7 @@ snapshots:
 
   '@types/resolve@1.20.2': {}
 
-  '@types/sinonjs__fake-timers@8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)': {}
+  '@types/sinonjs__fake-timers@8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)': {}
 
   '@types/stack-utils@2.0.3':
     optional: true
@@ -19114,7 +19114,7 @@ snapshots:
   webdriverio@9.4.1:
     dependencies:
       '@types/node': 20.14.15
-      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=ggdsr7nrdrzokhhihsihc2hdja)
+      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)
       '@wdio/config': 9.2.8
       '@wdio/logger': 9.1.3
       '@wdio/protocols': 9.2.2

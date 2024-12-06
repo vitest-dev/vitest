@@ -1,23 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`concurrent snapshot update 1`] = `
-"import { it } from 'vitest'
-
-it.concurrent('1st', ({ expect }) => {
-  expect('hi1').toMatchInlineSnapshot(\`"hi1"\`)
-})
-
-it.concurrent('2nd', ({ expect }) => {
-  expect('hi2').toMatchInlineSnapshot(\`"hi2"\`)
-})
-
-it.concurrent('3rd', ({ expect }) => {
-  expect('hi3').toMatchInlineSnapshot(\`"hi3"\`)
-})
-"
-`;
-
-exports[`js snapshots generated correctly 1`] = `
+exports[`inline.test.js 1`] = `
 "import { describe, expect, test } from 'vitest'
 
 // when snapshots are generated Vitest reruns \`toMatchInlineSnapshot\` checks
@@ -86,6 +69,59 @@ describe('snapshots with properties', () => {
       }
     \`)
   })
+})
+"
+`;
+
+exports[`inline-concurrent.test.js 1`] = `
+"import { it } from 'vitest'
+
+it.concurrent('1st', ({ expect }) => {
+  expect('hi1').toMatchInlineSnapshot(\`"hi1"\`)
+})
+
+it.concurrent('2nd', ({ expect }) => {
+  expect('hi2').toMatchInlineSnapshot(\`"hi2"\`)
+})
+
+it.concurrent('3rd', ({ expect }) => {
+  expect('hi3').toMatchInlineSnapshot(\`"hi3"\`)
+})
+"
+`;
+
+exports[`retry-inline.test.ts 1`] = `
+"import { expect, test } from 'vitest'
+
+test('inline repeats', { repeats: 1 }, () => {
+  expect('foo').toMatchInlineSnapshot(\`"foo"\`)
+})
+
+test('inline retry', { retry: 1 }, (ctx) => {
+  expect('foo').toMatchInlineSnapshot(\`"foo"\`)
+  if (ctx.task.result?.retryCount === 0) {
+    throw new Error('boom')
+  }
+})
+"
+`;
+
+exports[`same-title-inline.test.js 1`] = `
+"import { expect, test } from 'vitest'
+
+test('same title', () => {
+  expect('new').toMatchInlineSnapshot(\`"new"\`)
+  expect('new').toMatchInlineSnapshot(\`"new"\`)
+})
+
+test('same title', () => {
+  expect('a').toMatchInlineSnapshot(\`"a"\`)
+  expect('a').toMatchInlineSnapshot(\`"a"\`)
+})
+
+test('same title', () => {
+  expect('b').toMatchInlineSnapshot(\`"b"\`)
+  expect('b').toMatchInlineSnapshot(\`"b"\`)
 })
 "
 `;

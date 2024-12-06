@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`file normal 1`] = `"@SNAP4"`;
+
+exports[`file repeats 1`] = `"@SNAP5"`;
+
+exports[`file repeats many 1`] = `"@SNAP7"`;
+
+exports[`file repeats many 2`] = `"@SNAP8"`;
+
+exports[`file retry 1`] = `"@SNAP6"`;
+
+exports[`file retry many 1`] = `"@SNAP9"`;
+
+exports[`file retry many 2`] = `"@SNAP10"`;
+
+exports[`file retry partial 1`] = `"@SNAP11"`;
+
+exports[`file retry partial 2`] = `"@SNAP12"`;

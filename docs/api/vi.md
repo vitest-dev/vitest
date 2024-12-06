@@ -398,15 +398,18 @@ Checks that a given parameter is a mock function. If you are using TypeScript, i
 
 ### vi.clearAllMocks
 
-Will call [`.mockClear()`](/api/mock#mockclear) on all spies. This will clear mock history, but not reset its implementation to the default one.
+Calls [`.mockClear()`](/api/mock#mockclear) on all spies.
+This will clear mock history without affecting mock implementations.
 
 ### vi.resetAllMocks
 
-Will call [`.mockReset()`](/api/mock#mockreset) on all spies. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Calls [`.mockReset()`](/api/mock#mockreset) on all spies.
+This will clear mock history and reset each mock's implementation to its original.
 
 ### vi.restoreAllMocks
 
-Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies. This will clear mock history and reset its implementation to the original one.
+Calls [`.mockRestore()`](/api/mock#mockrestore) on all spies.
+This will clear mock history, restore all original mock implementations, , and restore original descriptors of spied-on objects.
 
 ### vi.spyOn
 

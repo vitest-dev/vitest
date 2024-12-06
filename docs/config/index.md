@@ -1953,21 +1953,24 @@ Custom [commands](/guide/browser/commands) that can be imported during browser t
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test. This will clear mock history, but not reset its implementation to the default one.
+Will call [`.mockClear()`](/api/mock#mockclear) on all spies before each test.
+This will clear mock history without affecting mock implementations.
 
 ### mockReset
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test. This will clear mock history and reset its implementation to an empty function (will return `undefined`).
+Will call [`.mockReset()`](/api/mock#mockreset) on all spies before each test.
+This will clear mock history and reset each implementation to its original.
 
 ### restoreMocks
 
 - **Type:** `boolean`
 - **Default:** `false`
 
-Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test. This will clear mock history and reset its implementation to the original one.
+Will call [`.mockRestore()`](/api/mock#mockrestore) on all spies before each test.
+This will clear mock history, restore each implementation to its original, and restore original descriptors of spied-on objects..
 
 ### unstubEnvs {#unstubenvs}
 
@@ -2524,7 +2527,7 @@ Installs fake timers with the specified Unix epoch.
 #### fakeTimers.toFake
 
 - **Type:** `('setTimeout' | 'clearTimeout' | 'setImmediate' | 'clearImmediate' | 'setInterval' | 'clearInterval' | 'Date' | 'nextTick' | 'hrtime' | 'requestAnimationFrame' | 'cancelAnimationFrame' | 'requestIdleCallback' | 'cancelIdleCallback' | 'performance' | 'queueMicrotask')[]`
-- **Default:** `['setTimeout', 'clearTimeout', 'setImmediate', 'clearImmediate', 'setInterval', 'clearInterval', 'Date']`
+- **Default:** everything available globally except `nextTick`
 
 An array with names of global methods and APIs to fake.
 

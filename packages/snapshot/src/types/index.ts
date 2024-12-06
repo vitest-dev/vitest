@@ -24,6 +24,7 @@ export interface SnapshotStateOptions {
 }
 
 export interface SnapshotMatchOptions {
+  testId: string
   testName: string
   received: unknown
   key?: string

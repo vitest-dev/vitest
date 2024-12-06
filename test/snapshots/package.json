@@ -3,10 +3,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "pnpm run test:generate && pnpm run test:update && pnpm run test:snaps",
-    "test:generate": "node tools/generate-inline-test.mjs",
+    "test": "pnpm run test:generate && pnpm run test:update && pnpm test:update-new && pnpm test:update-none && pnpm run test:snaps",
+    "test:generate": "rm -rf ./test-update && cp -r ./test/fixtures/test-update ./test-update",
     "test:snaps": "vitest run --dir test",
     "test:update": "vitest run -u --dir test-update",
+    "test:update-none": "CI=true vitest run --dir test-update",
+    "test:update-new": "CI=false vitest run --dir test-update",
+    "test:fixtures": "vitest",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {

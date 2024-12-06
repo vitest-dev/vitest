@@ -198,14 +198,17 @@ export interface MockInstance<T extends Procedure = Procedure> {
    */
   mockClear(): this
   /**
-   * Performs the same actions as `mockClear` and sets the inner implementation to an empty function (returning `undefined` when invoked). This also resets all "once" implementations. It is useful for completely resetting a mock to its default state.
+   * Does what `mockClear` does and resets inner implementation to the original function. This also resets all "once" implementations.
+   *
+   * Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+   * Resetting a mock from `vi.fn(impl)` will set implementation to `impl`. It is useful for completely resetting a mock to its default state.
    *
    * To automatically call this method before each test, enable the [`mockReset`](https://vitest.dev/config/#mockreset) setting in the configuration.
    * @see https://vitest.dev/api/mock#mockreset
    */
   mockReset(): this
   /**
-   * Does what `mockReset` does and restores inner implementation to the original function.
+   * Does what `mockReset` does and restores original descriptors of spied-on objects.
    *
    * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
    * @see https://vitest.dev/api/mock#mockrestore
@@ -536,7 +539,7 @@ function enhanceSpy<T extends Procedure>(
 
   stub.mockReset = () => {
     stub.mockClear()
-    implementation = (() => undefined) as T
+    implementation = undefined
     onceImplementations = []
     return stub
   }
@@ -544,7 +547,6 @@ function enhanceSpy<T extends Procedure>(
   stub.mockRestore = () => {
     stub.mockReset()
     state.restore()
-    implementation = undefined
     return stub
   }
 

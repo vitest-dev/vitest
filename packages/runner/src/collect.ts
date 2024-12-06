@@ -32,6 +32,7 @@ export async function collectTests(
     const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
 
     const file = createFileTask(filepath, config.root, config.name, runner.pool)
+    file.shuffle = config.sequence.shuffle
 
     runner.onCollectStart?.(file)
 
@@ -59,7 +60,7 @@ export async function collectTests(
       mergeHooks(fileHooks, getHooks(defaultTasks))
 
       for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
-        if (c.type === 'test' || c.type === 'custom' || c.type === 'suite') {
+        if (c.type === 'test' || c.type === 'suite') {
           file.tasks.push(c)
         }
         else if (c.type === 'collector') {
