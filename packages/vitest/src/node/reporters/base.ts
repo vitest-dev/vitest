@@ -221,7 +221,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (this.ctx.filenamePattern) {
-      this.log(BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern))
+      this.log(BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern.join(', ')))
     }
 
     if (this.ctx.configOverride.testNamePattern) {
