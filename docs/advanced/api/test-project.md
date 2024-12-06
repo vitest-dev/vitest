@@ -230,7 +230,10 @@ This method looks at several config options:
 ## matchesTestGlob
 
 ```ts
-function matchesTestGlob(moduleId: string, source?: string): boolean
+function matchesTestGlob(
+  moduleId: string,
+  source?: () => string
+): boolean
 ```
 
 This method checks if the file is a regular test file. It uses the same config properties that `globTestFiles` uses for validation.
@@ -246,7 +249,7 @@ const project = vitest.projects[0]
 
 project.matchesTestGlob(resolve('./basic.test.ts')) // true
 project.matchesTestGlob(resolve('./basic.ts')) // false
-project.matchesTestGlob(resolve('./basic.ts'), `
+project.matchesTestGlob(resolve('./basic.ts'), () => `
 if (import.meta.vitest) {
   // ...
 }
