@@ -21,10 +21,10 @@ export class VitestSpecifications {
 
     const specs: TestSpecification[] = []
     for (const project of this.vitest.projects) {
-      if (project.isTestFile(moduleId)) {
+      if (project.isCachedTestFile(moduleId)) {
         specs.push(project.createSpecification(moduleId))
       }
-      if (project.isTypecheckFile(moduleId)) {
+      if (project.isCachedTypecheckFile(moduleId)) {
         specs.push(project.createSpecification(moduleId, [], 'typescript'))
       }
     }

@@ -87,7 +87,6 @@ export class VitestWatcher {
     this.vitest.projects.forEach((project) => {
       if (project.matchesTestGlob(id, () => (_fileContent = readFileSync(id, 'utf-8')))) {
         matchingProjects.push(project)
-        project._markTestFile(id)
       }
     })
 
@@ -124,7 +123,7 @@ export class VitestWatcher {
     if (!projects.length) {
       // if there are no modules it's possible that server was restarted
       // we don't have information about importers anymore, so let's check if the file is a test file at least
-      if (this.vitest.state.filesMap.has(filepath) || this.vitest.projects.some(project => project.isTestFile(filepath))) {
+      if (this.vitest.state.filesMap.has(filepath) || this.vitest.projects.some(project => project.isCachedTestFile(filepath))) {
         this.changedTests.add(filepath)
         return true
       }
@@ -143,7 +142,7 @@ export class VitestWatcher {
       this.invalidates.add(filepath)
 
       // one of test files that we already run, or one of test files that we can run
-      if (this.vitest.state.filesMap.has(filepath) || project.isTestFile(filepath)) {
+      if (this.vitest.state.filesMap.has(filepath) || project.isCachedTestFile(filepath)) {
         this.changedTests.add(filepath)
         files.push(filepath)
         continue
