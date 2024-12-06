@@ -249,6 +249,27 @@ This method invalidates the file in the cache of every project. It is mostly use
 If you disable Vitest's watcher but keep Vitest running, it is important to manually clear the cache with this method because there is no way to disable the cache. This method will also invalidate file's importers.
 :::
 
+## import
+
+<!--@include: ./import-example.md-->
+
+Import a file using Vite module runner. The file will be transformed by Vite with the global config and executed in a separate context. Note that `moduleId` will be relative to the `config.root`.
+
+::: danger
+`project.import` reuses Vite's module graph, so importing the same module using a regular import will return a different module:
+
+```ts
+import * as staticExample from './example.js'
+const dynamicExample = await vitest.import('./example.js')
+
+dynamicExample !== staticExample // ✅
+```
+:::
+
+::: info
+Internally, Vitest uses this method to import global setups, custom coverage providers, workspace file, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
+:::
+
 ## close
 
 ```ts

@@ -355,6 +355,14 @@ export class Vitest {
     return project
   }
 
+  /**
+   * Import a file using Vite module runner. The file will be transformed by Vite and executed in a separate context.
+   * @param moduleId The ID of the module in Vite module graph
+   */
+  public import<T>(moduleId: string): Promise<T> {
+    return this.runner.executeId(moduleId)
+  }
+
   private async resolveWorkspaceConfigPath(): Promise<string | undefined> {
     if (typeof this.config.workspace === 'string') {
       return this.config.workspace
@@ -395,9 +403,9 @@ export class Vitest {
       return [this._ensureRootProject()]
     }
 
-    const workspaceModule = await this.runner.executeFile(workspaceConfigPath) as {
+    const workspaceModule = await this.import<{
       default: ReturnType<typeof defineWorkspace>
-    }
+    }>(workspaceConfigPath)
 
     if (!workspaceModule.default || !Array.isArray(workspaceModule.default)) {
       throw new TypeError(`Workspace config file "${workspaceConfigPath}" must export a default array of project paths.`)
