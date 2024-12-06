@@ -2,7 +2,6 @@ import type { Awaitable } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
-  ExtendedContext,
   File,
   HookCleanupCallback,
   HookListener,
@@ -15,6 +14,7 @@ import type {
   TaskResultPack,
   TaskState,
   Test,
+  TestContext,
 } from './types/tasks'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
@@ -64,7 +64,7 @@ function getSuiteHooks(
 async function callTestHooks(
   runner: VitestRunner,
   test: Test,
-  hooks: ((context: ExtendedContext<Test>) => Awaitable<void>)[],
+  hooks: ((context: TestContext) => Awaitable<void>)[],
   sequence: SequenceHooks,
 ) {
   if (sequence === 'stack') {

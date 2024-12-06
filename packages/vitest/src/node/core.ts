@@ -4,7 +4,7 @@ import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
 import type { SerializedCoverageConfig } from '../runtime/config'
-import type { ArgumentsType, OnServerRestartHandler, OnTestsRerunHandler, ProvidedContext, UserConsoleLog } from '../types/general'
+import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
@@ -1203,3 +1203,6 @@ function assert(condition: unknown, property: string, name: string = property): 
     throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Either await the Vitest promise or check that it is initialized with \`vitest.ready()\` before accessing \`vitest.${property}\`.`)
   }
 }
+
+export type OnServerRestartHandler = (reason?: string) => Promise<void> | void
+export type OnTestsRerunHandler = (testFiles: TestSpecification[]) => Promise<void> | void
