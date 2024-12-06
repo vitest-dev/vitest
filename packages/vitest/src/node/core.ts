@@ -321,6 +321,11 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
+  /** @deprecated use `getRootTestProject` instead */
+  public getCoreWorkspaceProject(): TestProject {
+    return this.getRootTestProject()
+  }
+
   /**
    * Return project that has the root (or "global") config.
    */
