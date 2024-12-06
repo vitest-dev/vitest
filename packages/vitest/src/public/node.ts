@@ -46,7 +46,7 @@ export type {
   TestSequencer,
   TestSequencerConstructor,
 } from '../node/sequencers/types'
-export { TestSpecification } from '../node/spec'
+export type { TestSpecification } from '../node/spec'
 export { registerConsoleShortcuts } from '../node/stdin'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
