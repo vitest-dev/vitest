@@ -8,7 +8,7 @@ export const version = Vitest.version
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
-export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
+export { resolveApiServerConfig } from '../node/config/resolveConfig'
 export type {
   OnServerRestartHandler,
   OnTestsRerunHandler,
@@ -19,6 +19,7 @@ export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../n
 export type { GlobalSetupContext } from '../node/globalSetup'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { VitestPlugin } from '../node/plugins'
+export { resolveConfig } from '../node/plugins/publicConfig'
 export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool, WorkspaceSpec } from '../node/pool'
 export { getFilePoolName } from '../node/pool'

@@ -256,6 +256,12 @@ export async function VitestPlugin(
         }
 
         hijackVitePluginInject(viteConfig)
+
+        Object.defineProperty(viteConfig, '_vitest', {
+          value: options,
+          enumerable: false,
+          configurable: true,
+        })
       },
       configureServer: {
         // runs after vite:import-analysis as it relies on `server` instance on Vite 5
