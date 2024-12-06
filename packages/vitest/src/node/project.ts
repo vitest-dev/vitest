@@ -135,6 +135,7 @@ export class TestProject {
   public createSpecification(
     moduleId: string,
     locations?: number[] | undefined,
+    /** @internal */
     pool?: string,
   ): TestSpecification {
     return new TestSpecification(

@@ -26,19 +26,19 @@ export class TestSpecification {
   public readonly moduleId: string
   /**
    * The current test pool. It's possible to have multiple pools in a single test project with `poolMatchGlob` and `typecheck.enabled`.
-   * @experimental In Vitest 3, the project will only support a single pool
+   * @experimental In Vitest 4, the project will only support a single pool and this property will be removed.
    */
   public readonly pool: Pool
   /**
-   * Line numbers of the test locations in the module to run.
+   * Line numbers of the test locations to run.
    */
-  public readonly locations: number[] | undefined
+  public readonly testLines: number[] | undefined
 
   constructor(
     project: TestProject,
     moduleId: string,
     pool: Pool,
-    locations?: number[] | undefined,
+    testLines?: number[] | undefined,
   ) {
     this[0] = project
     this[1] = moduleId
@@ -46,7 +46,7 @@ export class TestSpecification {
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
-    this.locations = locations
+    this.testLines = testLines
   }
 
   toJSON(): SerializedTestSpecification {
@@ -56,7 +56,7 @@ export class TestSpecification {
         root: this.project.config.root,
       },
       this.moduleId,
-      { pool: this.pool, locations: this.locations },
+      { pool: this.pool, testLines: this.testLines },
     ]
   }
 
