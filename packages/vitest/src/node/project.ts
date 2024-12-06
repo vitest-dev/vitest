@@ -62,8 +62,11 @@ export class TestProject {
    */
   public readonly tmpDir = join(tmpdir(), nanoid())
 
+  /** @experimental This will be removed */
   vitenode!: ViteNodeServer
+  /** @experimental This will be removed */
   runner!: ViteNodeRunner
+  /** @experimental This will be removed */
   typechecker?: Typechecker
 
   private closingPromise: Promise<void> | undefined
