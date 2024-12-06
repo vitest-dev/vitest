@@ -2,6 +2,7 @@
 // I just found this convenient for a quick PoC...
 
 /* eslint-disable no-lone-blocks */
+
 import type { ExpectStatic } from './types'
 
 declare const expect: ExpectStatic
@@ -68,7 +69,6 @@ export function typesTests() {
   // expect.arrayContaining
   // https://github.com/jestjs/jest/issues/13812#issue-1555843276
   {
-    //   ^?
     expect([1, 2, 3]).toEqual(expect.arrayContaining(['a']))
     expect([1, 2, 3]).toEqual(expect.arrayContaining([expect.any(Number)]))
     expect([1, 2, 3]).toEqual(expect.arrayContaining([expect.anything()]))
