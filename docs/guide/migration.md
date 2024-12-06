@@ -29,7 +29,7 @@ test('validation works', () => {
 }, 1000) // Ok ✅
 ```
 
-### `Custom` Type is Deprecated <Badge type="warning">experimental API</Badge> {#custom-type-is-deprecated}
+### `Custom` Type is Deprecated <Badge type="warning">experimental</Badge> {#custom-type-is-deprecated}
 
 The `Custom` type is now equal to the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
 
