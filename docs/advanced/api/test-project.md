@@ -215,6 +215,13 @@ function globTestFiles(filters?: string[]): {
 
 Globs all test files. This function returns an object with regular tests and typecheck tests.
 
+This method accepts `filters`. Filters can only a part of the file path, unlike in other methods on the [`Vitest`](/advanced/api/vitest) instance:
+
+```js
+project.globTestFiles(['foo']) // ✅
+project.globTestFiles(['basic/foo.js:10']) // ❌
+```
+
 ::: tip
 Vitest uses [fast-glob](https://www.npmjs.com/package/fast-glob) to find test files. `test.dir`, `test.root`, `root` or `process.cwd()` define the `cwd` option.
 

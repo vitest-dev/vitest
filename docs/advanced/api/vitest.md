@@ -10,6 +10,49 @@ Vitest instance requires the current test mode. It can be either:
 - `test` when running runtime tests
 - `benchmark` when running benchmarks <Badge type="warning">experimental</Badge>
 
+::: details New in Vitest 3
+Vitest 3 is one step closer to stabilising the public API. To achieve that, we deprecated and removed some of the previously public methods on the `Vitest` class. These APIs were made private:
+
+- `configOverride` (use [`setGlobalTestNamePattern`](#setglobaltestnamepattern) or [`enableSnapshotUpdate`](#enablesnapshotupdate))
+- `coverageProvider`
+- `filenamePattern`
+- `runningPromise`
+- `closingPromise`
+- `isCancelling`
+- `coreWorkspaceProject`
+- `resolvedProjects`
+- `_browserLastPort`
+- `_options`
+- `reporters`
+- `vitenode`
+- `runner`
+- `pool`
+- `setServer`
+- `_initBrowserServers`
+- `rerunTask`
+- `changeProjectName`
+- `changeNamePattern`
+- `changeFilenamePattern`
+- `rerunFailed`
+- `updateSnapshot`
+- `_createRootProject` (renamed to `_ensureRootProject`, but still private)
+- `filterTestsBySource` (this was moved to the new internal `vitest.specifications` instance)
+- `runFiles` (use [`runTestSpecifications`](#runtestspecifications) instead)
+- `onAfterSetServer`
+
+These APIs were deprecated:
+- `invalidates`
+- `changedTests` (use [`onFilterWatchedSpecification`](#onfilterwatchedspecification) instead)
+- `server` (use [`vite`](#vite) instead)
+- `getProjectsByTestFile` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
+- `getFileWorkspaceSpecs` (use [`getModuleSpecifications`](#getmodulespecifications) instead)
+- `getModuleProjects` (filter by [`this.projects`](#projects) yourself)
+- `updateLastChanged` (renamed to [`invalidateFile`](#invalidatefile))
+- `globTestSpecs` (use [`globTestSpecifications`](#globtestspecifications) instead)
+- `globTestFiles` (use [`globTestSpecifications`](#globtestspecifications) instead)
+- `listFile` (use [`getRelevantTestSpecifications`](#getrelevanttestspecifications) instead)
+:::
+
 ## mode
 
 ### test
@@ -65,13 +108,19 @@ You can get the latest summary of snapshots via the `vitest.snapshot.summay` pro
 
 Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
 
+## projects
+
+An array of [test projects](/advanced/api/test-project) that belong to the user's workspace. If the user did not specify a custom workspace, the workspace will only have a [root project](#getrootproject).
+
+Vitest will ensure that there is always at least one project in the workspace. If the user specifies a non-existent `--project` name, Vitest will throw an error.
+
 ## getRootProject
 
 ```ts
 function getRootProject(): TestProject
 ```
 
-This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace.
+This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace, or the workspace is not defined at all.
 
 The primary goal of the root project is to setup the global config. In fact, `rootProject.config` references `rootProject.globalConfig` and `vitest.config` directly:
 
@@ -162,11 +211,80 @@ const specifications = await vitest.globTestSpecifications(['my-filter'])
 console.log(specifications)
 ```
 
+## getRelevantTestSpecifications
+
+```ts
+function getRelevantTestSpecifications(
+  filters?: string[]
+): Promise<TestSpecification[]>
+```
+
+This method resolves every test specification by calling [`project.globTestFiles`](/advanced/api/test-project#globtestfiles). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli). If `--changed` flag was specified, the list will be filtered to include only files that changed. `getRelevantTestSpecifications` doesn't run any test files.
+
+::: warning
+This method can be slow because it needs to filter `--changed` flags. Do not use it if you just need a list of test files.
+
+- If you need to get the list of specifications for known test files, use [`getModuleSpecifications`](#getmodulespecifications) instead.
+- If you need to get the list of all possible test files, use [`globTestSpecifications`](#globtestspecifications).
+:::
+
 ## mergeReports
+
+```ts
+function mergeReports(directory?: string): Promise<TestRunResult>
+```
+
+Merge reports from multiple runs located in the specified directory (`--merge-reports` if not specified). This value can also be set on `config.mergeReports` (by default, it will read `.vitest-reports` folder).
+
+Note that the `directory` will always be resolved relative to the working directory.
+
+This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.mergeReports` is set.
+
 ## collect
-## listFiles
+
+```ts
+function collect(filters?: string[]): Promise<TestRunResult>
+```
+
+Execute test files without running test callbacks. `collect` returns unhandled errors and an array of [test modules](/advanced/api/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
+
+This method resolves tests specifications based on the config `include`, `exclude`, `includeSource` values. Read more at [`project.globTestFiles`](/advanced/api/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed.
+
+::: warning
+Note that Vitest doesn't use static analysis to collect tests. Vitest will run every test file in isolation, just like it runs regular tests.
+
+This makes this method very slow, unless you disable isolation before collecting tests.
+:::
+
 ## start
+
+```ts
+function start(filters?: string[]): Promise<TestRunResult>
+```
+
+Initialize reporters, the coverage provider, and run tests. This method accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
+
+::: warning
+This method should not be called if [`vitest.init()`](#init) is also invoked. Use [`runTestSpecifications`](#runtestspecifications) or [`rerunTestSpecifications`](#reruntestspecifications) instead if you need to run tests after Vitest was inititalised.
+:::
+
+This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.mergeReports` and `config.standalone` are not set.
+
 ## init
+
+```ts
+function init(): Promise<void>
+```
+
+Initialize reporters and the coverage provider. This method doesn't run any tests. If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
+
+Internally, this method is called only if [`--standalone`](/guide/cli#standalone) flag is enabled.
+
+::: warning
+This method should not be called if [`vitest.start()`](#start) is also invoked.
+:::
+
+This method is called automatically by [`startVitest`](/advanced/guide/tests) if `config.standalone` is set.
 
 ## getModuleSpecifications
 
@@ -217,6 +335,23 @@ function runTestSpecifications(
 This method emits `reporter.onWatcherRerun` and `onTestsRerun` events, then it runs tests with [`runTestSpecifications`](#runtestspecifications). If there were no errors in the main process, it will emit `reporter.onWatcherStart` event.
 
 ## collectTests
+
+```ts
+function collectTests(
+  specifications: TestSpecification[]
+): Promise<TestRunResult>
+```
+
+Execute test files without running test callbacks. `collectTests` returns unhandled errors and an array of [test modules](/advanced/api/test-module).
+
+This method works exactly the same as [`collect`](#collect), but you need to provide test specifications yourself.
+
+::: warning
+Note that Vitest doesn't use static analysis to collect tests. Vitest will run every test file in isolation, just like it runs regular tests.
+
+This makes this method very slow, unless you disable isolation before collecting tests.
+:::
+
 ## cancelCurrentRun
 
 ```ts
@@ -225,7 +360,50 @@ function cancelCurrentRun(reason: CancelReason): Promise<void>
 
 This method will gracefully cancel all ongoing tests. It will wait for started tests to finish running and will not run tests that were scheduled to run but haven't started yet.
 
-## updateSnapshot
+## setGlobalTestNamePattern
+
+```ts
+function setGlobalTestNamePattern(pattern: string | RegExp): void
+```
+
+This methods overrides the global [test name pattern](/config/#testnamepattern).
+
+::: warning
+This method doesn't start running any tests. To run tests with updated pattern, call [`runTestSpecifications`](#runtestspecifications).
+:::
+
+## resetGlobalTestNamePattern
+
+```ts
+function resetGlobalTestNamePattern(): void
+```
+
+This methods resets the [test name pattern](/config/#testnamepattern). It means Vitest won't skip any tests now.
+
+::: warning
+This method doesn't start running any tests. To run tests without a pattern, call [`runTestSpecifications`](#runtestspecifications).
+:::
+
+## enableSnapshotUpdate
+
+```ts
+function enableSnapshotUpdate(): void
+```
+
+Enable the mode that allows updating snapshots when running tests. Every test that runs after this method is called will update snapshots. To disable the mode, call [`resetSnapshotUpdate`](#resetsnapshotupdate).
+
+::: warning
+This method doesn't start running any tests. To update snapshots, run tests with [`runTestSpecifications`](#runtestspecifications).
+:::
+
+## resetSnapshotUpdate
+
+```ts
+function resetSnapshotUpdate(): void
+```
+
+Disable the mode that allows updating snapshots when running tests. This method doesn't start running any tests.
+
 ## invalidateFile
 
 ```ts
