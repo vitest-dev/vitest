@@ -422,6 +422,20 @@ export function isMockFunction(fn: any): fn is MockInstance {
   )
 }
 
+function getSpy(
+  obj: unknown,
+  method: keyof any,
+  accessType?: 'get' | 'set',
+): MockInstance | undefined {
+  const desc = Object.getOwnPropertyDescriptor(obj, method)
+  if (desc) {
+    const fn = desc[accessType ?? 'value']
+    if (typeof fn === 'function' && vitestSpy in fn) {
+      return fn
+    }
+  }
+}
+
 export function spyOn<T, S extends Properties<Required<T>>>(
   obj: T,
   methodName: S,
@@ -451,11 +465,17 @@ export function spyOn<T, K extends keyof T>(
   } as const
   const objMethod = accessType ? { [dictionary[accessType]]: method } : method
 
+  const currentStub = getSpy(obj, method, accessType)
+  if (currentStub) {
+    // TODO: should we reset?
+    return currentStub
+  }
+
   const stub = tinyspy.internalSpyOn(obj, objMethod as any)
 
-  if (vitestSpy in stub) {
-    return stub as any as MockInstance
-  }
+  // if (vitestSpy in stub) {
+  //   return stub as any as MockInstance
+  // }
 
   return enhanceSpy(stub) as MockInstance
 }
