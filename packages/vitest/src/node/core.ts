@@ -255,10 +255,6 @@ export class Vitest {
       })
     }
 
-    this.reporters = resolved.mode === 'benchmark'
-      ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
-      : await createReporters(resolved.reporters, this)
-
     this.cache.results.setConfig(resolved.root, resolved.cache)
     try {
       await this.cache.results.readFromCache()
@@ -281,6 +277,10 @@ export class Vitest {
     if (this.config.testNamePattern) {
       this.configOverride.testNamePattern = this.config.testNamePattern
     }
+
+    this.reporters = resolved.mode === 'benchmark'
+      ? await createBenchmarkReporters(toArray(resolved.benchmark?.reporters), this.runner)
+      : await createReporters(resolved.reporters, this)
 
     await Promise.all(this._onSetServer.map(fn => fn()))
   }
