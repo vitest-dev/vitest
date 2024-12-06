@@ -1,5 +1,6 @@
 ---
 outline: deep
+title: Vitest API
 ---
 
 # Vitest
@@ -7,7 +8,7 @@ outline: deep
 Vitest instance requires the current test mode. It can be either:
 
 - `test` when running runtime tests
-- `benchmark` when running benchmarks
+- `benchmark` when running benchmarks <Badge type="warning">experimental</Badge>
 
 ## mode
 
@@ -15,7 +16,7 @@ Vitest instance requires the current test mode. It can be either:
 
 Test mode will only call functions inside `test` or `it`, and throws an error when `bench` is encountered. This mode uses `include` and `exclude` options in the config to find test files.
 
-### benchmark
+### benchmark <Badge type="warning">experimental</Badge>
 
 Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
 
@@ -39,10 +40,10 @@ This is Vitest config, it doesn't extend _Vite_ config. It only has resolved val
 
 This is a global [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver).
 
-## state
+## state <Badge type="warning">experimental</Badge>
 
 ::: warning
-Public `state` is an experimental API. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
+Public `state` is an experimental API (except `vitest.state.getReportedEntity`). Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
 
 Global state stores information about the current tests. It uses the same API from `@vitest/runner` by default, but we recommend using the [Reported API](/advanced/reporters#reported-tasks) instead by calling `state.getReportedEntity()` on the `@vitest/runner` API:
@@ -63,18 +64,6 @@ You can get the latest summary of snapshots via the `vitest.snapshot.summay` pro
 ## cache
 
 Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
-
-## ready
-
-```ts
-function ready(): boolean
-```
-
-Vitest needs to be resolved with the Vite server to be properly initialized. If the `Vitest` instance was created manually, you might need to check the `ready` status before accessing the `vite`, `state`, `cache`, `config`, and `snapshot` properties; otherwise, they will throw an error in the getter.
-
-::: tip
-In normal circumstances, you would never call this method because `createVitest` and `startVitest` return already resolved Vitest instance.
-:::
 
 ## getRootProject
 
