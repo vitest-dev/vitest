@@ -5,8 +5,8 @@ import type {
   InlineConfig as ViteInlineConfig,
 } from 'vite'
 import type { Typechecker } from '../typecheck/typechecker'
-import type { OnTestsRerunHandler, ProvidedContext } from '../types/general'
-import type { Vitest } from './core'
+import type { ProvidedContext } from '../types/general'
+import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
 import type { BrowserServer } from './types/browser'

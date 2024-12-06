@@ -90,7 +90,6 @@ import type {
   Constructable as Constructable_,
   MutableArray as MutableArray_,
   Nullable as Nullable_,
-  OnServerRestartHandler as OnServerRestartHandler_,
 } from '../types/general'
 import type {
   WorkerRPC as WorkerRPC_,
@@ -211,8 +210,6 @@ export type ArgumentsType<T> = ArgumentsType_<T>
 export type MutableArray<T extends readonly any[]> = MutableArray_<T>
 /** @deprecated do not use, internal helper */
 export type Constructable = Constructable_
-/** @deprecated import from `vitest/node` instead */
-export type OnServerRestartHandler = OnServerRestartHandler_
 
 export type {
   RunnerRPC,

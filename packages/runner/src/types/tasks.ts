@@ -119,7 +119,7 @@ export interface TaskResult {
   state: TaskState
   /**
    * Errors that occurred during the task execution. It is possible to have several errors
-   * if `expect.soft()` failed multiple times.
+   * if `expect.soft()` failed multiple times or `retry` was triggered.
    */
   errors?: ErrorWithDiff[]
   /**
@@ -210,6 +210,7 @@ export interface File extends Suite {
   /**
    * Whether the file is initiated without running any tests.
    * This is done to populate state on the server side by Vitest.
+   * @internal
    */
   local?: boolean
 }
@@ -219,7 +220,7 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
   /**
    * Test context that will be passed to the test function.
    */
-  context: TaskContext<Test> & ExtraContext & TestContext
+  context: TestContext & ExtraContext
 }
 
 /**
@@ -234,7 +235,7 @@ export type Task = Test | Suite | File
  */
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = object> = (
-  context: ExtendedContext<Test> & ExtraContext
+  context: TestContext & ExtraContext
 ) => Awaitable<any> | void
 
 // jest's ExtractEachCallbackArgs
@@ -319,7 +320,7 @@ interface TestForFunction<ExtraContext> {
   // test.for([[1, 2], [3, 4, 5]])
   <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
     T,
-    ExtendedContext<Test> & ExtraContext
+    TestContext & ExtraContext
   >
 
   // test.for`
@@ -329,7 +330,7 @@ interface TestForFunction<ExtraContext> {
   // `
   (strings: TemplateStringsArray, ...values: any[]): TestForFunctionReturn<
     any,
-    ExtendedContext<Test> & ExtraContext
+    TestContext & ExtraContext
   >
 }
 
@@ -462,8 +463,8 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
       : never)
 export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
   [K in keyof T]:
-    | Fixture<T, K, ExtraContext & ExtendedContext<Test>>
-    | [Fixture<T, K, ExtraContext & ExtendedContext<Test>>, FixtureOptions?];
+    | Fixture<T, K, ExtraContext & TestContext>
+    | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?];
 }
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
@@ -524,14 +525,14 @@ export interface AfterAllListener {
 
 export interface BeforeEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test> & ExtraContext,
+    context: TestContext & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
 
 export interface AfterEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test> & ExtraContext,
+    context: TestContext & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
@@ -561,7 +562,7 @@ export interface TaskCustomOptions extends TestOptions {
    * If nothing is provided, the runner will try to get the function using `getFn(task)`.
    * If the runner cannot find the function, the task will be marked as failed.
    */
-  handler?: (context: TaskContext<Test>) => Awaitable<void>
+  handler?: (context: TestContext) => Awaitable<void>
 }
 
 export interface SuiteCollector<ExtraContext = object> {
@@ -596,12 +597,7 @@ export interface RuntimeContext {
 /**
  * User's custom test context.
  */
-export interface TestContext {}
-
-/**
- * Context that's always available in the test function.
- */
-export interface TaskContext<Task extends Test = Test> {
+export interface TestContext {
   /**
    * Metadata of the current test
    */
@@ -624,11 +620,17 @@ export interface TaskContext<Task extends Test = Test> {
   skip: (note?: string) => void
 }
 
-export type ExtendedContext<T extends Test> = TaskContext<T> &
-  TestContext
+/**
+ * Context that's always available in the test function.
+ * @deprecated use `TestContext` instead
+ */
+export interface TaskContext extends TestContext {}
 
-export type OnTestFailedHandler = (context: ExtendedContext<Test>) => Awaitable<void>
-export type OnTestFinishedHandler = (context: ExtendedContext<Test>) => Awaitable<void>
+/** @deprecated use `TestContext` instead */
+export type ExtendedContext = TaskContext & TestContext
+
+export type OnTestFailedHandler = (context: TestContext) => Awaitable<void>
+export type OnTestFinishedHandler = (context: TestContext) => Awaitable<void>
 
 export interface TaskHook<HookListener> {
   (fn: HookListener, timeout?: number): void

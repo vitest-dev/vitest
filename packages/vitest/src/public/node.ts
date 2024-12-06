@@ -9,7 +9,11 @@ export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
-export type { Vitest } from '../node/core'
+export type {
+  OnServerRestartHandler,
+  OnTestsRerunHandler,
+  Vitest,
+} from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export type { GlobalSetupContext } from '../node/globalSetup'
@@ -132,11 +136,6 @@ export type {
   RawErrsMap as TypeCheckRawErrorsMap,
   RootAndTarget as TypeCheckRootAndTarget,
 } from '../typecheck/types'
-
-export type {
-  OnServerRestartHandler,
-  OnTestsRerunHandler,
-} from '../types/general'
 
 export { createDebugger } from '../utils/debugger'
 
