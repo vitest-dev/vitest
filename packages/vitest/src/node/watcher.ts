@@ -81,11 +81,11 @@ export class VitestWatcher {
   private onAdd = (id: string): void => {
     id = slash(id)
     this.vitest.invalidateFile(id)
-    const fileContent = readFileSync(id, 'utf-8')
+    let _fileContent: string | undefined
 
     const matchingProjects: TestProject[] = []
     this.vitest.projects.forEach((project) => {
-      if (project.matchesTestGlob(id, fileContent)) {
+      if (project.matchesTestGlob(id, () => (_fileContent = readFileSync(id, 'utf-8')))) {
         matchingProjects.push(project)
         project._markTestFile(id)
       }
