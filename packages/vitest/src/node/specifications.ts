@@ -51,7 +51,7 @@ export class VitestSpecifications {
       throw new IncludeTaskLocationDisabledError()
     }
 
-    const testLocations = groupFilters(parsedFilters.map(
+    const testLines = groupFilters(parsedFilters.map(
       f => ({ ...f, filename: resolve(dir, f.filename) }),
     ))
 
@@ -64,24 +64,24 @@ export class VitestSpecifications {
       )
 
       testFiles.forEach((file) => {
-        const loc = testLocations[file]
+        const lines = testLines[file]
         testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, loc)
+        const spec = project.createSpecification(file, lines)
         this.ensureSpecificationCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const loc = testLocations[file]
+        const lines = testLines[file]
         testLocHasMatch[file] = true
 
-        const spec = project.createSpecification(file, loc, 'typescript')
+        const spec = project.createSpecification(file, lines, 'typescript')
         this.ensureSpecificationCached(spec)
         files.push(spec)
       })
     }))
 
-    Object.entries(testLocations).forEach(([filepath, loc]) => {
+    Object.entries(testLines).forEach(([filepath, loc]) => {
       if (loc.length !== 0 && !testLocHasMatch[filepath]) {
         throw new LocationFilterFileNotFoundError(
           relative(dir, filepath),
