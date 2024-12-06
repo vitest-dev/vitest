@@ -93,15 +93,15 @@ export function createPool(ctx: Vitest): ProcessPool {
   const potentialConditions = new Set([
     'production',
     'development',
-    ...ctx.server.config.resolve.conditions,
+    ...ctx.vite.config.resolve.conditions,
   ])
   const conditions = [...potentialConditions]
     .filter((condition) => {
       if (condition === 'production') {
-        return ctx.server.config.isProduction
+        return ctx.vite.config.isProduction
       }
       if (condition === 'development') {
-        return !ctx.server.config.isProduction
+        return !ctx.vite.config.isProduction
       }
       return true
     })
@@ -191,7 +191,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     const Sequencer = ctx.config.sequence.sequencer
     const sequencer = new Sequencer(ctx)
 
-    async function sortSpecs(specs: WorkspaceSpec[]) {
+    async function sortSpecs(specs: TestSpecification[]) {
       if (ctx.config.shard) {
         specs = await sequencer.shard(specs)
       }
@@ -200,7 +200,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     await Promise.all(
       Object.entries(filesByPool).map(async (entry) => {
-        const [pool, files] = entry as [Pool, WorkspaceSpec[]]
+        const [pool, files] = entry as [Pool, TestSpecification[]]
 
         if (!files.length) {
           return null

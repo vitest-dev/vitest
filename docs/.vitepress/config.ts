@@ -472,12 +472,23 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/debugging',
     },
     {
-      text: 'Migration Guide',
-      link: '/guide/migration',
-    },
-    {
       text: 'Common Errors',
       link: '/guide/common-errors',
+    },
+    {
+      text: 'Migration Guide',
+      link: '/guide/migration',
+      collapsed: false,
+      items: [
+        {
+          text: 'Migrating to Vitest 3.0',
+          link: '/guide/migration#vitest-3',
+        },
+        {
+          text: 'Migrating from Jest',
+          link: '/guide/migration#jest',
+        },
+      ],
     },
     {
       text: 'Performance',

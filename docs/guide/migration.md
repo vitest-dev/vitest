@@ -5,7 +5,7 @@ outline: deep
 
 # Migration Guide
 
-## Migrating to Vitest 3.0
+## Migrating to Vitest 3.0 {#vitest-3}
 
 ### Test Options as a Third Argument
 
@@ -29,9 +29,9 @@ test('validation works', () => {
 }, 1000) // Ok ✅
 ```
 
-### `Custom` Type is Deprecated <Badge type="warning">experimental</Badge> {#custom-type-is-deprecated}
+### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
-The `Custom` type is now equal to the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
+The `Custom` type is now an alias for the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
 
 ```ts
 import {
@@ -46,7 +46,13 @@ If you are using `getCurrentSuite().custom()`, the `type` of the returned task i
 
 The [`onTestFinished`](/api/#ontestfinished) and [`onTestFailed`](/api/#ontestfailed) hooks previously received a test result as the first argument. Now, they receive a test context, like `beforeEach` and `afterEach`.
 
-## Migrating to Vitest 2.0
+### Changes to `resolveConfig` Type Signature <Badge type="danger">API</Badge> {#changes-to-resolveconfig-type-signature}
+
+The [`resolveConfig`](/advanced/api/#resolveconfig) is now more useful. Instead of accepting already resolved Vite config, it now accepts a user config and returns resolved config.
+
+This function is not used internally and exposed exclusively as a public API.
+
+## Migrating to Vitest 2.0 {#vitest-2}
 
 ### Default Pool is `forks`
 
@@ -328,7 +334,7 @@ It is still possible to mock `process.nextTick` by explicitly specifying it by u
 
 However, mocking `process.nextTick` is not possible when using `--pool=forks`. Use a different `--pool` option if you need `process.nextTick` mocking.
 
-## Migrating from Jest
+## Migrating from Jest {#jest}
 
 Vitest has been designed with a Jest compatible API, in order to make the migration from Jest as simple as possible. Despite those efforts, you may still run into the following differences:
 
