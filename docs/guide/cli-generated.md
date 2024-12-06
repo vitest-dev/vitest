@@ -887,6 +887,13 @@ Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`)
 
 Always print console stack traces
 
+### includeTaskLocation
+
+- **CLI:** `--includeTaskLocation`
+- **Config:** [includeTaskLocation](/config/#includetasklocation)
+
+Collect test and suite locations in the `location` property
+
 ### run
 
 - **CLI:** `--run`

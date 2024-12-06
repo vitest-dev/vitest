@@ -68,4 +68,4 @@ describe('a group of tests', () => { // [!code error]
 function toJSON(): SerializedTestSpecification
 ```
 
-`toJSON` generates a JSON-friendly object that can be consumed by the [Browser Mode](/guide/browser) or [Vitest UI](/guide/ui).
+`toJSON` generates a JSON-friendly object that can be consumed by the [Browser Mode](/guide/browser/) or [Vitest UI](/guide/ui).
