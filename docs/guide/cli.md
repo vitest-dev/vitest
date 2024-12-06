@@ -19,7 +19,7 @@ vitest foobar
 
 Will run only the test file that contains `foobar` in their paths. This filter only checks inclusion and doesn't support regexp or glob patterns (unless your terminal processes it before Vitest receives the filter).
 
-Since Vitest 2.2, you can also specify the test by filename and line number:
+Since Vitest 3, you can also specify the test by filename and line number:
 
 ```bash
 $ vitest basic/foo.test.ts:10
