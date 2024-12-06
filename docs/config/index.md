@@ -26,7 +26,7 @@ export default defineConfig({
 })
 ```
 
-The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
+The `<reference types="vitest" />` will stop working in Vitest 4, but you can already start migrating to `vitest/config`:
 
 ```ts [vite.config.js]
 /// <reference types="vitest/config" />
@@ -579,8 +579,8 @@ These options are passed down to `setup` method of current [`environment`](#envi
 - **Type:** `[string, EnvironmentName][]`
 - **Default:** `[]`
 
-::: warning
-This API was deprecated in Vitest 2.2. Use [workspace](/guide/workspace) to define different configurations instead.
+::: danger DEPRECATED
+This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead.
 
 ```ts
 export default defineConfig({
@@ -626,8 +626,8 @@ export default defineConfig({
 - **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'][]`
 - **Default:** `[]`
 
-::: warning
-This API was deprecated in Vitest 2.2. Use [workspace](/guide/workspace) to define different configurations instead:
+::: danger DEPRECATED
+This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead:
 
 ```ts
 export default defineConfig({
@@ -1193,7 +1193,7 @@ import { inject } from 'vitest'
 
 inject('wsPort') === 3000
 ```
-```ts [globalSetup.ts <Version>2.2.0</Version>]
+```ts [globalSetup.ts <Version>3.0.0</Version>]
 import type { TestProject } from 'vitest/node'
 
 export default function setup(project: TestProject) {
@@ -1221,7 +1221,7 @@ declare module 'vitest' {
 ```
 :::
 
-Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
+Since Vitest 3, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
 
 ```ts [globalSetup.ts]
 import type { TestProject } from 'vitest/node'
@@ -2571,7 +2571,7 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 
 Path to a [workspace](/guide/workspace) config file relative to [root](#root).
 
-Since Vitest 2.2, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
+Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
 
 ### isolate
 
