@@ -10,6 +10,31 @@ if (task.type === 'suite') {
 }
 ```
 
+::: warning
+We are planning to introduce a new Reporter API that will be using this API by default. For now, the Reporter API uses [runner tasks](/advanced/runner#tasks), but you can still access `TestSuite` via `vitest.state.getReportedEntity` method:
+
+```ts
+import type { RunnerTestFile, TestModule, Vitest } from 'vitest/node'
+
+class Reporter {
+  private vitest!: Vitest
+
+  onInit(vitest: Vitest) {
+    this.vitest = vitest
+  }
+
+  onFinished(files: RunnerTestFile[]) {
+    for (const file of files) {
+      const testModule = this.vitest.getReportedEntity(file) as TestModule
+      for (const suite of testModule.children.allSuites()) {
+        console.log(suite) // TestSuite
+      }
+    }
+  }
+}
+```
+:::
+
 ## project
 
 This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
