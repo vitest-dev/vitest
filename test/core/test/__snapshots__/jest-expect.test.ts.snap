@@ -454,3 +454,71 @@ exports[`toMatch/toContain diff 3`] = `
   "message": "expected 'hellohellohellohellohellohellohellohe…' to match /world/",
 }
 `;
+
+exports[`toSatisfy() > error message 1`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expect(received).toSatisfy()
+
+Expected value to satisfy:
+[Function isOdd]
+
+Received:
+2",
+}
+`;
+
+exports[`toSatisfy() > error message 2`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expect(received).toSatisfy()
+
+Expected value to satisfy:
+ODD
+
+Received:
+2",
+}
+`;
+
+exports[`toSatisfy() > error message 3`] = `
+{
+  "actual": "Object {
+  "value": 2,
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "value": toSatisfy<(value) => value % 2 !== 0>,
++   "value": 2,
+  }",
+  "expected": "Object {
+  "value": toSatisfy<(value) => value % 2 !== 0>,
+}",
+  "message": "expected { value: 2 } to deeply equal { value: toSatisfy{…} }",
+}
+`;
+
+exports[`toSatisfy() > error message 4`] = `
+{
+  "actual": "Object {
+  "value": 2,
+}",
+  "diff": "- Expected
++ Received
+
+  Object {
+-   "value": toSatisfy<(value) => value % 2 !== 0, ODD>,
++   "value": 2,
+  }",
+  "expected": "Object {
+  "value": toSatisfy<(value) => value % 2 !== 0, ODD>,
+}",
+  "message": "expected { value: 2 } to deeply equal { value: toSatisfy{…} }",
+}
+`;

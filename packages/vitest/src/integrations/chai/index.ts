@@ -7,6 +7,7 @@ import {
   ASYMMETRIC_MATCHERS_OBJECT,
   getState,
   GLOBAL_EXPECT,
+  jestExtendedMatchers,
   setState,
 } from '@vitest/expect'
 import { getCurrentTest } from '@vitest/runner'
@@ -108,6 +109,8 @@ export function createExpect(test?: TaskPopulated) {
 
   chai.util.addMethod(expect, 'assertions', assertions)
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
+
+  expect.extend(jestExtendedMatchers)
 
   return expect
 }

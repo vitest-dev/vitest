@@ -377,29 +377,6 @@ class CloseTo extends AsymmetricMatcher<number> {
   }
 }
 
-class ToSatisfy extends AsymmetricMatcher<(value: any) => boolean> {
-  constructor(sample: (value: any) => boolean, private message?: string, inverse?: boolean) {
-    super(sample, inverse)
-  }
-
-  asymmetricMatch(other: unknown) {
-    const pass = this.sample(other)
-    return this.inverse ? !pass : pass
-  }
-
-  toString() {
-    return `${this.inverse ? 'not.' : ''}ToSatisfy`
-  }
-
-  getExpectedType() {
-    return 'Function'
-  }
-
-  toAsymmetricMatcher() {
-    return `${this.toString()}${this.message ? `<${this.message}>` : ''}`
-  }
-}
-
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'anything', () => new Anything())
 
@@ -433,12 +410,6 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
     chai.expect,
     'closeTo',
     (expected: any, precision?: number) => new CloseTo(expected, precision),
-  )
-
-  utils.addMethod(
-    chai.expect,
-    'toSatisfy',
-    (expected: any, message?: string) => new ToSatisfy(expected, message),
   );
 
   // defineProperty does not work
@@ -452,7 +423,5 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
       new StringMatching(expected, true),
     closeTo: (expected: any, precision?: number) =>
       new CloseTo(expected, precision, true),
-    toSatisfy: (expected: any, message?: string) =>
-      new ToSatisfy(expected, message, true),
   }
 }

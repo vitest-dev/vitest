@@ -612,7 +612,7 @@ describe('toSatisfy()', () => {
     expect(() => {
       expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'odd') })
     }).toThrowErrorMatchingInlineSnapshot(
-      `[AssertionError: expected { value: 2 } to deeply equal { value: ToSatisfy<odd> }]`,
+      `[AssertionError: expected { value: 2 } to deeply equal { value: toSatisfy{…} }]`,
     )
 
     expect(() => {
@@ -636,8 +636,15 @@ describe('toSatisfy()', () => {
         }),
       )
     }).toThrowErrorMatchingInlineSnapshot(
-      `[AssertionError: expected Error: 2 to match object { message: ToSatisfy }]`,
+      `[AssertionError: expected Error: 2 to match object { message: toSatisfy{…} }]`,
     )
+  })
+
+  it('error message', () => {
+    snapshotError(() => expect(2).toSatisfy(isOdd))
+    snapshotError(() => expect(2).toSatisfy(isOdd, 'ODD'))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd) }))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'ODD') }))
   })
 })
 
