@@ -1,12 +1,20 @@
+import type { CoverageProviderModule } from 'vitest/node'
 import type { V8CoverageProvider } from './provider'
 import inspector, { type Profiler } from 'node:inspector'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'
 
 const session = new inspector.Session()
+let enabled = false
 
-export default {
-  startCoverage(): void {
+export default <CoverageProviderModule>{
+  startCoverage({ isolate }) {
+    if (isolate === false && enabled) {
+      return
+    }
+
+    enabled = true
+
     session.connect()
     session.post('Profiler.enable')
     session.post('Profiler.startPreciseCoverage', {
@@ -34,7 +42,11 @@ export default {
     })
   },
 
-  stopCoverage(): void {
+  stopCoverage({ isolate }) {
+    if (isolate === false) {
+      return
+    }
+
     session.post('Profiler.stopPreciseCoverage')
     session.post('Profiler.disable')
     session.disconnect()
