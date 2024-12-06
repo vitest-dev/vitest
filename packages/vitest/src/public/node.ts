@@ -1,6 +1,9 @@
 import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 import { createServer as _createServer } from 'vite'
+import { Vitest } from '../node/core'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
+
+export const version = Vitest.version
 
 export { parseCLI } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
@@ -135,9 +138,12 @@ export type {
 export { createDebugger } from '../utils/debugger'
 
 export {
+  esbuildVersion,
   isFileServingAllowed,
   parseAst,
   parseAstAsync,
+  rollupVersion,
+  version as viteVersion,
 } from 'vite'
 
 export type * as Vite from 'vite'
