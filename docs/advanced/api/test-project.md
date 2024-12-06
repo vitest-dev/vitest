@@ -198,7 +198,7 @@ Also note that `project.createSpecification` always returns a new instance.
 function isRootProject(): boolean
 ```
 
-Checks if the current project is the root project. You can also get the root project by calling [`vitest.getRootTestProject()`](#getroottestproject).
+Checks if the current project is the root project. You can also get the root project by calling [`vitest.getRootProject()`](#getrootproject).
 
 ## globTestFiles
 

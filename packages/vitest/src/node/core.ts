@@ -302,14 +302,14 @@ export class Vitest {
    * Provide a value to the test context. This value will be available to all tests with `inject`.
    */
   public provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) => {
-    this.getRootTestProject().provide(key, value)
+    this.getRootProject().provide(key, value)
   }
 
   /**
    * Get global provided context.
    */
   public getProvidedContext(): ProvidedContext {
-    return this.getRootTestProject().getProvidedContext()
+    return this.getRootProject().getProvidedContext()
   }
 
   /** @internal */
@@ -321,15 +321,15 @@ export class Vitest {
     return this.coreWorkspaceProject
   }
 
-  /** @deprecated use `getRootTestProject` instead */
+  /** @deprecated use `getRootProject` instead */
   public getCoreWorkspaceProject(): TestProject {
-    return this.getRootTestProject()
+    return this.getRootProject()
   }
 
   /**
    * Return project that has the root (or "global") config.
    */
-  public getRootTestProject(): TestProject {
+  public getRootProject(): TestProject {
     if (!this.coreWorkspaceProject) {
       throw new Error(`Root project is not initialized. This means that the Vite server was not established yet and the the workspace config is not resolved.`)
     }
@@ -810,7 +810,7 @@ export class Vitest {
 
   private async initializeGlobalSetup(paths: TestSpecification[]): Promise<void> {
     const projects = new Set(paths.map(spec => spec.project))
-    const coreProject = this.getRootTestProject()
+    const coreProject = this.getRootProject()
     if (!projects.has(coreProject)) {
       projects.add(coreProject)
     }

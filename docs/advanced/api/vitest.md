@@ -76,10 +76,10 @@ Vitest needs to be resolved with the Vite server to be properly initialized. If 
 In normal circumstances, you would never call this method because `createVitest` and `startVitest` return already resolved Vitest instance.
 :::
 
-## getRootTestProject
+## getRootProject
 
 ```ts
-function getRootTestProject(): TestProject
+function getRootProject(): TestProject
 ```
 
 This returns the root test project. The root project generally doesn't run any tests and is not included in `vitest.projects` unless the user explicitly includes the root config in their workspace.
@@ -99,7 +99,7 @@ function provide<T extends keyof ProvidedContext & string>(
 ): void
 ```
 
-Vitest exposes `provide` method which is a shorthand for `vitest.getRootTestProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
+Vitest exposes `provide` method which is a shorthand for `vitest.getRootProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
 
 To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
 
@@ -135,7 +135,7 @@ Technically, `provide` is a method of [`TestProject`](/advanced/api/test-project
 function getProvidedContext(): ProvidedContext
 ```
 
-This returns the root context object. This is a shorthand for `vitest.getRootTestProject().getProvidedContext`.
+This returns the root context object. This is a shorthand for `vitest.getRootProject().getProvidedContext`.
 
 ## getProjectByName
 

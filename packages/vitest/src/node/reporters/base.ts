@@ -270,7 +270,7 @@ export abstract class BaseReporter implements Reporter {
 
       const project = task
         ? this.ctx.getProjectByName(task.file.projectName || '')
-        : this.ctx.getRootTestProject()
+        : this.ctx.getRootProject()
 
       const stack = log.browser
         ? (project.browser?.parseStacktrace(log.origin) || [])
