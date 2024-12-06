@@ -253,6 +253,27 @@ if (import.meta.vitest) {
 `) // true if `includeSource` is set
 ```
 
+## import
+
+<!--@include: ./import-example.md-->
+
+Import a file using Vite module runner. The file will be transformed by Vite with provided project's config and executed in a separate context. Note that `moduleId` will be relative to the `config.root`.
+
+::: danger
+`project.import` reuses Vite's module graph, so importing the same module using a regular import will return a different module:
+
+```ts
+import * as staticExample from './example.js'
+const dynamicExample = await project.import('./example.js')
+
+dynamicExample !== staticExample // ✅
+```
+:::
+
+::: info
+Internally, Vitest uses this method to import global setups, custom coverage providers, workspace file, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
+:::
+
 ## onTestsRerun
 
 ```ts

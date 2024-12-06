@@ -62,12 +62,10 @@ export class TestProject {
    */
   public readonly tmpDir = join(tmpdir(), nanoid())
 
-  /** @experimental This will be removed */
-  vitenode!: ViteNodeServer
-  /** @experimental This will be removed */
-  runner!: ViteNodeRunner
-  /** @experimental This will be removed */
-  typechecker?: Typechecker
+  /** @internal */ vitenode!: ViteNodeServer
+  /** @internal */ typechecker?: Typechecker
+
+  private runner!: ViteNodeRunner
 
   private closingPromise: Promise<void> | undefined
 
@@ -522,6 +520,14 @@ export class TestProject {
       })
     }
     return this.closingPromise
+  }
+
+  /**
+   * Import a file using Vite module runner.
+   * @param moduleId The ID of the module in Vite module graph
+   */
+  public import<T>(moduleId: string): Promise<T> {
+    return this.runner.executeId(moduleId)
   }
 
   /** @deprecated use `name` instead */

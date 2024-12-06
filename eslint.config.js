@@ -28,6 +28,8 @@ export default antfu(
       'packages/browser/**/esm-client-injector.js',
       // contains technically invalid code to display pretty diff
       'docs/guide/snapshot.md',
+      // uses invalid js example
+      'docs/advanced/api/import-example.md',
     ],
   },
   {
