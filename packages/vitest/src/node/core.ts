@@ -79,6 +79,7 @@ export class Vitest {
    */
   public projects: TestProject[] = []
 
+  /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ coverageProvider: CoverageProvider | null | undefined
   /** @internal */ filenamePattern?: string[]
   /** @internal */ runningPromise?: Promise<TestRunResult>
@@ -88,7 +89,6 @@ export class Vitest {
   /** @internal */ resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _options: UserConfig = {}
-  /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ reporters: Reporter[] = undefined!
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
@@ -125,12 +125,12 @@ export class Vitest {
   private _onUserTestsRerun: OnTestsRerunHandler[] = []
   private _onFilterWatchedSpecification: ((spec: TestSpecification) => boolean)[] = []
 
-  /** @deprecated will be removed in 3.0, use `vitest.watcher` */
+  /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
   public get invalidates() {
     return this.watcher.invalidates
   }
 
-  /** @deprecated will be removed in 3.0, use `vitest.watcher` */
+  /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
   public get changedTests() {
     return this.watcher.changedTests
   }
@@ -269,6 +269,9 @@ export class Vitest {
       this.projects = this.projects.filter(p =>
         filters.some(pattern => pattern.test(p.name)),
       )
+      if (!this.projects.length) {
+        throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
+      }
     }
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
@@ -430,14 +433,14 @@ export class Vitest {
   }
 
   /**
-   * Merge reports from multiple runs located in the `--merge-reports` directory.
+   * Merge reports from multiple runs located in the specified directory (`--merge-reports` by default).
    */
-  public async mergeReports(): Promise<TestRunResult> {
+  public async mergeReports(directory?: string): Promise<TestRunResult> {
     if (this.reporters.some(r => r instanceof BlobReporter)) {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
     }
 
-    const { files, errors, coverages } = await readBlobs(this.version, this.config.mergeReports, this.projects)
+    const { files, errors, coverages } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
 
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
@@ -509,11 +512,16 @@ export class Vitest {
     return this.collectTests(files)
   }
 
+  /** @deprecated use `getRelevantTestSpecifications` instead */
+  public listFiles(filters?: string[]): Promise<TestSpecification[]> {
+    return this.getRelevantTestSpecifications(filters)
+  }
+
   /**
    * Returns the list of test files that match the config and filters.
    * @param filters String filters to match the test files
    */
-  listFiles(filters?: string[]): Promise<TestSpecification[]> {
+  getRelevantTestSpecifications(filters?: string[]): Promise<TestSpecification[]> {
     return this.specifications.getRelevantTestSpecifications(filters)
   }
 
@@ -575,7 +583,7 @@ export class Vitest {
 
   /**
    * Initialize reporters and the coverage provider. This method doesn't run any tests.
-   * If the `--watch` flag is provided, Vitest will still run those tests.
+   * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
   async init(): Promise<void> {
     this._onClose = []
@@ -890,10 +898,7 @@ export class Vitest {
     await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
   }
 
-  /**
-   * Run tests, and update snapshots for failed tests.
-   * @param files Files to update snapshot for. If not provided, all failed files and unchecked files will be updated.
-   */
+  /** @internal */
   async updateSnapshot(files?: string[]): Promise<void> {
     // default to failed files
     files = files || [
@@ -901,18 +906,56 @@ export class Vitest {
       ...this.snapshot.summary.uncheckedKeysByFile.map(s => s.filePath),
     ]
 
-    this.configOverride.snapshotOptions = {
-      updateSnapshot: 'all',
-      // environment is resolved inside a worker thread
-      snapshotEnvironment: null as any,
-    }
+    this.enableSnapshotUpdate()
 
     try {
       await this.rerunFiles(files, 'update snapshot', false)
     }
     finally {
-      delete this.configOverride.snapshotOptions
+      this.resetSnapshotUpdate()
     }
+  }
+
+  /**
+   * Enable the mode that allows updating snapshots when running tests.
+   * This method doesn't run any tests.
+   *
+   * Every test that runs after this method is called will update snapshots.
+   * To disable the mode, call `resetSnapshotUpdate`.
+   */
+  public enableSnapshotUpdate(): void {
+    this.configOverride.snapshotOptions = {
+      updateSnapshot: 'all',
+      // environment is resolved inside a worker thread
+      snapshotEnvironment: null as any,
+    }
+  }
+
+  /**
+   * Disable the mode that allows updating snapshots when running tests.
+   */
+  public resetSnapshotUpdate(): void {
+    delete this.configOverride.snapshotOptions
+  }
+
+  /**
+   * Set the global test name pattern to a regexp.
+   * This method doesn't run any tests.
+   */
+  public setGlobalTestNamePattern(pattern: string | RegExp): void {
+    if (pattern instanceof RegExp) {
+      this.configOverride.testNamePattern = pattern
+    }
+    else {
+      this.configOverride.testNamePattern = pattern ? new RegExp(pattern) : undefined
+    }
+  }
+
+  /**
+   * Resets the global test name pattern. This method doesn't run any tests.
+   */
+  public resetGlobalTestNamePattern(): void {
+    this.configOverride.testNamePattern = undefined
   }
 
   private _rerunTimer: any
@@ -1073,7 +1116,7 @@ export class Vitest {
    * Closes all projects and exit the process
    * @param force If true, the process will exit immediately after closing the projects.
    */
-  async exit(force = false): Promise<void> {
+  public async exit(force = false): Promise<void> {
     setTimeout(() => {
       this.report('onProcessTimeout').then(() => {
         console.warn(`close timed out after ${this.config.teardownTimeout}ms`)
@@ -1131,6 +1174,14 @@ export class Vitest {
    */
   public async globTestFiles(filters: string[] = []) {
     return this.globTestSpecifications(filters)
+  }
+
+  /** @deprecated filter by `this.projects` yourself */
+  public getModuleProjects(filepath: string) {
+    return this.projects.filter((project) => {
+      return project.getModulesByFilepath(filepath).size
+      // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
+    })
   }
 
   /**

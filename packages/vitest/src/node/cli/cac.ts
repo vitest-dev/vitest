@@ -323,7 +323,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       processCollected(ctx, tests, options)
     }
     else {
-      const files = await ctx.listFiles(cliFilters.map(normalize))
+      const files = await ctx.getRelevantTestSpecifications(cliFilters.map(normalize))
       outputFileList(files, options)
     }
 
