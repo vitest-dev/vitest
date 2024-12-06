@@ -35,7 +35,7 @@ beforeAll(async () => {
     logHeapUsage: true,
   })
   state = ctx!.state
-  project = ctx!.getRootTestProject()
+  project = ctx!.getRootProject()
   files = state.getFiles()
   expect(files).toHaveLength(1)
   testModule = state.getReportedEntity(files[0])! as TestModule

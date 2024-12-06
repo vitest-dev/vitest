@@ -63,7 +63,7 @@ export default class HTMLReporter implements Reporter {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
-      config: this.ctx.getRootTestProject().serializedConfig,
+      config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       moduleGraph: {},
       sources: {},

@@ -79,7 +79,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           await ctx.rerunTask(id)
         },
         getConfig() {
-          return ctx.getRootTestProject().serializedConfig
+          return ctx.getRootProject().serializedConfig
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
