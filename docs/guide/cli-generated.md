@@ -395,7 +395,7 @@ Should browser test files run in parallel. Use `--browser.fileParallelism=false`
 - **CLI:** `--pool <pool>`
 - **Config:** [pool](/config/#pool)
 
-Specify pool, if not running in the browser (default: `threads`)
+Specify pool, if not running in the browser (default: `forks`)
 
 ### poolOptions.threads.isolate
 

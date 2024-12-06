@@ -420,7 +420,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   pool: {
     description:
-      'Specify pool, if not running in the browser (default: `threads`)',
+      'Specify pool, if not running in the browser (default: `forks`)',
     argument: '<pool>',
     subcommands: null, // don't support custom objects
   },
