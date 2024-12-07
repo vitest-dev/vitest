@@ -26,7 +26,7 @@ exports[`asymmetric matcher error 3`] = `
   "diff": "- Expected
 + Received
 
-  Object {
+  {
 -   "foo": StringContaining "xx",
 +   "foo": "hello",
   }",
@@ -45,7 +45,7 @@ exports[`asymmetric matcher error 4`] = `
   "diff": "- Expected
 + Received
 
-  Object {
+  {
 -   "foo": StringNotContaining "ll",
 +   "foo": "hello",
   }",
@@ -90,7 +90,7 @@ exports[`asymmetric matcher error 7`] = `
   "diff": "- Expected
 + Received
 
-  Object {
+  {
 -   "foo": stringContainingCustom<xx>,
 +   "foo": "hello",
   }",
@@ -109,7 +109,7 @@ exports[`asymmetric matcher error 8`] = `
   "diff": "- Expected
 + Received
 
-  Object {
+  {
 -   "foo": not.stringContainingCustom<ll>,
 +   "foo": "hello",
   }",
@@ -161,7 +161,7 @@ exports[`asymmetric matcher error 12`] = `
 + Received
 
 - ObjectContaining {
-+ Object {
++ {
     "k": "v",
 -   "k3": "v3",
 +   "k2": "v2",
@@ -184,7 +184,7 @@ exports[`asymmetric matcher error 13`] = `
 + Received
 
 - ArrayContaining [
-+ Array [
++ [
     "a",
 -   "c",
 +   "b",
@@ -333,7 +333,7 @@ exports[`diff 2`] = `
 false
 
 + Received: 
-Object {
+{
   "hello": "world",
 }",
   "expected": "false",
@@ -350,7 +350,7 @@ exports[`diff 3`] = `
 NaN
 
 + Received: 
-Object {
+{
   "hello": "world",
 }",
   "expected": "NaN",
@@ -367,7 +367,7 @@ exports[`diff 4`] = `
 undefined
 
 + Received: 
-Object {
+{
   "hello": "world",
 }",
   "expected": "undefined",
@@ -384,7 +384,7 @@ exports[`diff 5`] = `
 null
 
 + Received: 
-Object {
+{
   "hello": "world",
 }",
   "expected": "null",
@@ -400,7 +400,7 @@ exports[`toHaveBeenNthCalledWith error 1`] = `
   "diff": "- Expected
 + Received
 
-  Array [
+  [
 -   "hey",
 +   "Hi",
   ]",
