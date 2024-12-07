@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { userEvent, page, server } from '@vitest/browser/context'
+import { userEvent, page } from '@vitest/browser/context'
 
 test('non US keys', async () => {
   document.body.innerHTML = `
@@ -33,4 +33,21 @@ test('non US keys', async () => {
   } catch (e) {
     console.error(e)
   }
+})
+
+test.only('click with modifier', async () => {
+  document.body.innerHTML = `
+    <div id="test">test shift and click</div>
+  `
+  const el = document.getElementById("test")
+  el.addEventListener("pointerup", (e) => {
+    if (e.shiftKey && e.type === 'pointerup') {
+      el.textContent += " [ok]"
+    }
+  });
+
+  await userEvent.keyboard('{Shift>}')
+  await userEvent.click(el)
+  await userEvent.keyboard('{/Shift}')
+  await expect.poll(() => el.textContent).toContain("[ok]")
 })

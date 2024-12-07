@@ -50,6 +50,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
       })
     },
     click(element: Element | Locator, options: UserEventClickOptions = {}) {
+      if (typeof __tl_user_event__ !== 'undefined') {
+        return __tl_user_event__.click(
+          element instanceof Element ? element : element.element(),
+        )
+      }
       return convertToLocator(element).click(processClickOptions(options))
     },
     dblClick(element: Element | Locator, options: UserEventClickOptions = {}) {
