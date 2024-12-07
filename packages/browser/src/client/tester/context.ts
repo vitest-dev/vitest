@@ -128,35 +128,35 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     async cleanup() {
       userEvent = userEventBase.setup(options ?? {})
     },
-    click(element) {
-      return userEvent.click(toElement(element))
+    async click(element) {
+      await userEvent.click(toElement(element))
     },
-    dblClick(element) {
-      return userEvent.dblClick(toElement(element))
+    async dblClick(element) {
+      await userEvent.dblClick(toElement(element))
     },
-    tripleClick(element) {
-      return userEvent.tripleClick(toElement(element))
+    async tripleClick(element) {
+      await userEvent.tripleClick(toElement(element))
     },
-    selectOptions(element, value) {
+    async selectOptions(element, value) {
       const options = (Array.isArray(value) ? value : [value]).map((option) => {
         if (typeof option !== 'string') {
           return toElement(option)
         }
         return option
       })
-      return userEvent.selectOptions(
+      await userEvent.selectOptions(
         element,
         options as string[] | HTMLElement[],
       )
     },
-    clear(element) {
-      return userEvent.clear(toElement(element))
+    async clear(element) {
+      await userEvent.clear(toElement(element))
     },
-    hover(element: Element | Locator) {
-      return userEvent.hover(toElement(element))
+    async hover(element: Element | Locator) {
+      await userEvent.hover(toElement(element))
     },
-    unhover(element: Element | Locator) {
-      return userEvent.unhover(toElement(element))
+    async unhover(element: Element | Locator) {
+      await userEvent.unhover(toElement(element))
     },
     async upload(element: Element | Locator, files: string | string[] | File | File[]) {
       const uploadPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
@@ -183,18 +183,18 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
       await userEvent.clear(toElement(element))
       return userEvent.type(toElement(element), text)
     },
-    dragAndDrop() {
+    async dragAndDrop() {
       throw new Error(`The "preview" provider doesn't support 'userEvent.dragAndDrop'`)
     },
 
     async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
-      return userEvent.type(toElement(element), text, options)
+      await userEvent.type(toElement(element), text, options)
     },
-    tab(options: UserEventTabOptions = {}) {
-      return userEvent.tab(options)
+    async tab(options: UserEventTabOptions = {}) {
+      await userEvent.tab(options)
     },
     async keyboard(text: string) {
-      return userEvent.keyboard(text)
+      await userEvent.keyboard(text)
     },
   }
 }
