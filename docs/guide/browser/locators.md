@@ -389,7 +389,7 @@ It is recommended to use this only after the other locators don't work for your 
 
 ## Methods
 
-All methods are asynchronous and must be awaited. Since Vitest 2.2, tests will fail if a method is not awaited.
+All methods are asynchronous and must be awaited. Since Vitest 3, tests will fail if a method is not awaited.
 
 ### click
 

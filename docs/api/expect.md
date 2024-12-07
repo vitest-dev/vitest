@@ -82,7 +82,7 @@ test('element exists', async () => {
 ```
 
 ::: warning
-`expect.poll` makes every assertion asynchronous, so you need to await it. Since Vitest 2.2, if you forget to await it, the test will fail with a warning to do so.
+`expect.poll` makes every assertion asynchronous, so you need to await it. Since Vitest 3, if you forget to await it, the test will fail with a warning to do so.
 
 `expect.poll` doesn't work with several matchers:
 
@@ -465,7 +465,7 @@ test('structurally the same, but semantically different', () => {
 
 - **Type:** `(received: string) => Awaitable<void>`
 
-`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. Since Vitest 1.0, if you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
+`toContain` asserts if the actual value is in an array. `toContain` can also check whether a string is a substring of another string. If you are running tests in a browser-like environment, this assertion can also check if class is contained in a `classList`, or an element is inside another one.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -876,7 +876,7 @@ test('spy function', () => {
 })
 ```
 
-## toHaveBeenCalledBefore <Version>2.2.0</Version> {#tohavebeencalledbefore}
+## toHaveBeenCalledBefore <Version>3.0.0</Version> {#tohavebeencalledbefore}
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -895,7 +895,7 @@ test('calls mock1 before mock2', () => {
 })
 ```
 
-## toHaveBeenCalledAfter <Version>2.2.0</Version> {#tohavebeencalledafter}
+## toHaveBeenCalledAfter <Version>3.0.0</Version> {#tohavebeencalledafter}
 
 - **Type**: `(mock: MockInstance, failIfNoFirstInvocation?: boolean) => Awaitable<void>`
 
@@ -914,7 +914,7 @@ test('calls mock1 after mock2', () => {
 })
 ```
 
-## toHaveBeenCalledExactlyOnceWith <Version>2.2.0</Version> {#tohavebeencalledexactlyoncewith}
+## toHaveBeenCalledExactlyOnceWith <Version>3.0.0</Version> {#tohavebeencalledexactlyoncewith}
 
 - **Type**: `(...args: any[]) => Awaitable<void>`
 
@@ -1248,7 +1248,7 @@ test('buyApples returns new stock id', async () => {
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions are actually called, you may use [`expect.assertions(number)`](#expect-assertions).
 
-Since Vitest 2.2, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 3, the test will be marked as "failed" if the assertion is not awaited.
+Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## rejects
@@ -1279,7 +1279,7 @@ test('buyApples throws an error when no id provided', async () => {
 :::warning
 If the assertion is not awaited, then you will have a false-positive test that will pass every time. To make sure that assertions were actually called, you can use [`expect.assertions(number)`](#expect-assertions).
 
-Since Vitest 2.2, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 3, the test will be marked as "failed" if the assertion is not awaited.
+Since Vitest 3, if a method is not awaited, Vitest will show a warning at the end of the test. In Vitest 4, the test will be marked as "failed" if the assertion is not awaited.
 :::
 
 ## expect.assertions

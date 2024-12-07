@@ -48,7 +48,8 @@ export interface VitestOptions {
 }
 
 export class Vitest {
-  version = version
+  public readonly version = version
+  static readonly version = version
 
   config: ResolvedConfig = undefined!
   configOverride: Partial<ResolvedConfig> = {}
