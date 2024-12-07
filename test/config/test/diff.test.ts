@@ -4,7 +4,7 @@ import { runVitest } from '../../test-utils'
 
 test.for([
   [undefined],
-  [{ expand: false, printBasicPrototype: false }],
+  [{ expand: false, printBasicPrototype: true }],
 ])(`inline diff options: %o`, async ([options]) => {
   const { ctx } = await runVitest({
     root: './fixtures/diff',
