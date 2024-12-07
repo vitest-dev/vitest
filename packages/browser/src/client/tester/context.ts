@@ -30,7 +30,10 @@ function triggerCommand<T>(command: string, ...args: any[]) {
 }
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
-  let __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
+  if (__tl_user_event_base__) {
+    return createPreviewUserEvent(__tl_user_event_base__, options ?? {})
+  }
+
   const keyboard = {
     unreleased: [] as string[],
   }
@@ -41,112 +44,37 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     async cleanup() {
       return ensureAwaited(async () => {
-        if (typeof __tl_user_event_base__ !== 'undefined') {
-          __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
-          return
-        }
         await triggerCommand('__vitest_cleanup', keyboard)
         keyboard.unreleased = []
       })
     },
     click(element: Element | Locator, options: UserEventClickOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.click(
-          element instanceof Element ? element : element.element(),
-        )
-      }
       return convertToLocator(element).click(processClickOptions(options))
     },
     dblClick(element: Element | Locator, options: UserEventClickOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.dblClick(
-          element instanceof Element ? element : element.element(),
-        )
-      }
       return convertToLocator(element).dblClick(processClickOptions(options))
     },
     tripleClick(element: Element | Locator, options: UserEventClickOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.tripleClick(
-          element instanceof Element ? element : element.element(),
-        )
-      }
       return convertToLocator(element).tripleClick(processClickOptions(options))
     },
     selectOptions(element, value) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        const options = (Array.isArray(value) ? value : [value]).map((option) => {
-          if (typeof option !== 'string' && 'element' in option) {
-            return option.element() as HTMLElement
-          }
-          return option
-        })
-        return __tl_user_event__.selectOptions(
-          element,
-          options as string[] | HTMLElement[],
-        )
-      }
       return convertToLocator(element).selectOptions(value)
     },
     clear(element: Element | Locator) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.clear(
-          element instanceof Element ? element : element.element(),
-        )
-      }
       return convertToLocator(element).clear()
     },
     hover(element: Element | Locator, options: UserEventHoverOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.hover(
-          element instanceof Element ? element : element.element(),
-        )
-      }
       return convertToLocator(element).hover(processHoverOptions(options))
     },
     unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.unhover(
-          element instanceof Element ? element : element.element(),
-        )
-      }
       return convertToLocator(element).unhover(options)
     },
     async upload(element: Element | Locator, files: string | string[] | File | File[]) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        const uploadPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
-          if (typeof file !== 'string') {
-            return file
-          }
-
-          const { content: base64, basename, mime } = await triggerCommand<{
-            content: string
-            basename: string
-            mime: string
-          }>('__vitest_fileInfo', file, 'base64')
-
-          const fileInstance = fetch(`data:${mime};base64,${base64}`)
-            .then(r => r.blob())
-            .then(blob => new File([blob], basename, { type: mime }))
-          return fileInstance
-        })
-        const uploadFiles = await Promise.all(uploadPromise)
-        return __tl_user_event__.upload((element instanceof Element ? element : element.element()) as HTMLElement, uploadFiles)
-      }
       return convertToLocator(element).upload(files)
     },
 
     // non userEvent events, but still useful
     async fill(element: Element | Locator, text: string, options) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        await __tl_user_event__.clear(
-          element instanceof Element ? element : element.element(),
-        )
-        return __tl_user_event__.type(
-          element instanceof Element ? element : element.element(),
-          text,
-        )
-      }
       return convertToLocator(element).fill(text, options)
     },
     dragAndDrop(source: Element | Locator, target: Element | Locator, options = {}) {
@@ -158,14 +86,6 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     // testing-library user-event
     async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
       return ensureAwaited(async () => {
-        if (typeof __tl_user_event__ !== 'undefined') {
-          return __tl_user_event__.type(
-            element instanceof Element ? element : element.element(),
-            text,
-            options,
-          )
-        }
-
         const selector = convertToSelector(element)
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_type',
@@ -178,17 +98,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     },
     tab(options: UserEventTabOptions = {}) {
       return ensureAwaited(() => {
-        if (typeof __tl_user_event__ !== 'undefined') {
-          return __tl_user_event__.tab(options)
-        }
         return triggerCommand('__vitest_tab', options)
       })
     },
     async keyboard(text: string) {
       return ensureAwaited(async () => {
-        if (typeof __tl_user_event__ !== 'undefined') {
-          return __tl_user_event__.keyboard(text)
-        }
         const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
           '__vitest_keyboard',
           text,
@@ -196,6 +110,95 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         )
         keyboard.unreleased = unreleased
       })
+    },
+  }
+}
+
+function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options: TestingLibraryOptions): UserEvent {
+  let userEvent = userEventBase.setup(options)
+
+  function toElement(element: Element | Locator) {
+    return element instanceof Element ? element : element.element()
+  }
+
+  return {
+    setup(options?: any) {
+      return createPreviewUserEvent(userEventBase, options)
+    },
+    async cleanup() {
+      userEvent = userEventBase.setup(options ?? {})
+    },
+    click(element) {
+      return userEvent.click(toElement(element))
+    },
+    dblClick(element) {
+      return userEvent.dblClick(toElement(element))
+    },
+    tripleClick(element) {
+      return userEvent.tripleClick(toElement(element))
+    },
+    selectOptions(element, value) {
+      const options = (Array.isArray(value) ? value : [value]).map((option) => {
+        if (typeof option !== 'string') {
+          return toElement(option)
+        }
+        return option
+      })
+      return userEvent.selectOptions(
+        element,
+        options as string[] | HTMLElement[],
+      )
+    },
+    clear(element) {
+      return userEvent.clear(toElement(element))
+    },
+    hover(element: Element | Locator) {
+      return userEvent.hover(
+        element instanceof Element ? element : element.element(),
+      )
+    },
+    unhover(element: Element | Locator) {
+      return userEvent.unhover(
+        element instanceof Element ? element : element.element(),
+      )
+    },
+    async upload(element: Element | Locator, files: string | string[] | File | File[]) {
+      const uploadPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
+        if (typeof file !== 'string') {
+          return file
+        }
+
+        const { content: base64, basename, mime } = await triggerCommand<{
+          content: string
+          basename: string
+          mime: string
+        }>('__vitest_fileInfo', file, 'base64')
+
+        const fileInstance = fetch(`data:${mime};base64,${base64}`)
+          .then(r => r.blob())
+          .then(blob => new File([blob], basename, { type: mime }))
+        return fileInstance
+      })
+      const uploadFiles = await Promise.all(uploadPromise)
+      return userEvent.upload((element instanceof Element ? element : element.element()) as HTMLElement, uploadFiles)
+    },
+
+    async fill(element: Element | Locator, text: string) {
+      await userEvent.clear(toElement(element))
+      return userEvent.type(toElement(element), text)
+    },
+    dragAndDrop() {
+      throw new Error(`The "preview" provider doesn't support 'userEvent.dragAndDrop'`)
+    },
+
+    async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
+      return userEvent.type(toElement(element), text, options)
+    },
+    tab(options: UserEventTabOptions = {}) {
+      return userEvent.tab(options)
+    },
+    async keyboard(text: string) {
+      return userEvent.keyboard(text)
     },
   }
 }
