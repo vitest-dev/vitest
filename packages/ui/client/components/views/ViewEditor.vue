@@ -182,11 +182,8 @@ const { pause, resume } = watch(
 
     cmValue.on('changes', codemirrorChanges)
 
-    // restore caret position
-    const { ch, line } = currentPosition.value ?? {}
-    console.log('WTF: ', currentPosition.value)
-    console.error('WTF', new Error('WTF'))
-    if (typeof ch === 'number' && typeof line === 'number') {
+    // restore caret position: the watchDebounced below will use old value
+    if (currentPosition.value) {
       currentPosition.value = undefined
     }
   },
