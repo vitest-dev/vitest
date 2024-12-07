@@ -69,12 +69,12 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
       return convertToLocator(element).unhover(options)
     },
-    async upload(element: Element | Locator, files: string | string[] | File | File[]) {
+    upload(element: Element | Locator, files: string | string[] | File | File[]) {
       return convertToLocator(element).upload(files)
     },
 
     // non userEvent events, but still useful
-    async fill(element: Element | Locator, text: string, options) {
+    fill(element: Element | Locator, text: string, options) {
       return convertToLocator(element).fill(text, options)
     },
     dragAndDrop(source: Element | Locator, target: Element | Locator, options = {}) {
