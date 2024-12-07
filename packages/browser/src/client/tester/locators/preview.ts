@@ -77,51 +77,19 @@ class PreviewLocator extends Locator {
   }
 
   async fill(text: string): Promise<void> {
-    await this.clear()
-    return ensureAwaited(() => userEvent.type(this.element(), text))
+    return ensureAwaited(() => userEvent.fill(this.element(), text))
   }
 
   async upload(file: string | string[] | File | File[]): Promise<void> {
-    const uploadPromise = (Array.isArray(file) ? file : [file]).map(async (file) => {
-      if (typeof file !== 'string') {
-        return file
-      }
-
-      const { content: base64, basename, mime } = await this.triggerCommand<{
-        content: string
-        basename: string
-        mime: string
-      }>('__vitest_fileInfo', file, 'base64')
-
-      const fileInstance = fetch(`data:${mime};base64,${base64}`)
-        .then(r => r.blob())
-        .then(blob => new File([blob], basename, { type: mime }))
-      return fileInstance
-    })
-    const uploadFiles = await Promise.all(uploadPromise)
-    return ensureAwaited(() => userEvent.upload(this.element() as HTMLElement, uploadFiles))
+    return ensureAwaited(() => userEvent.upload(this.element(), file))
   }
 
-  selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    const options = (Array.isArray(options_) ? options_ : [options_]).map((option) => {
-      if (typeof option !== 'string' && 'element' in option) {
-        return option.element() as HTMLElement
-      }
-      return option
-    })
-    return ensureAwaited(() => userEvent.selectOptions(this.element(), options as string[] | HTMLElement[]))
-  }
-
-  async dropTo(): Promise<void> {
-    throw new Error('The "preview" provider doesn\'t support `dropTo` method.')
+  selectOptions(options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
+    return ensureAwaited(() => userEvent.selectOptions(this.element(), options))
   }
 
   clear(): Promise<void> {
     return ensureAwaited(() => userEvent.clear(this.element()))
-  }
-
-  async screenshot(): Promise<never> {
-    throw new Error('The "preview" provider doesn\'t support `screenshot` method.')
   }
 
   protected locator(selector: string) {
