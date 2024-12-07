@@ -32,15 +32,6 @@ interface TestOptions {
 }
 ```
 
-Vitest 1.3.0 deprecates the use of options as the last parameter. You will see a deprecation message until 2.0.0 when this syntax will be removed. If you need to pass down options, use `test` function's second argument:
-
-```ts
-import { test } from 'vitest'
-
-test('flaky test', () => {}, { retry: 3 }) // [!code --]
-test('flaky test', { retry: 3 }, () => {}) // [!code ++]
-```
-
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
 ::: tip
@@ -487,6 +478,11 @@ export interface Options {
   signal?: AbortSignal
 
   /**
+   * Throw if a task fails (events will not work if true)
+   */
+  throws?: boolean
+
+  /**
    * warmup time (milliseconds)
    * @default 100ms
    */
@@ -507,6 +503,119 @@ export interface Options {
    * teardown function to run after each benchmark task (cycle)
    */
   teardown?: Hook
+}
+```
+After the test case is run, the output structure information is as follows:
+
+```
+  name                      hz     min     max    mean     p75     p99    p995    p999     rme  samples
+· normal sorting  6,526,368.12  0.0001  0.3638  0.0002  0.0002  0.0002  0.0002  0.0004  ±1.41%   652638
+```
+```ts
+export interface TaskResult {
+  /*
+   * the last error that was thrown while running the task
+   */
+  error?: unknown
+
+  /**
+   * The amount of time in milliseconds to run the benchmark task (cycle).
+   */
+  totalTime: number
+
+  /**
+   * the minimum value in the samples
+   */
+  min: number
+  /**
+   * the maximum value in the samples
+   */
+  max: number
+
+  /**
+   * the number of operations per second
+   */
+  hz: number
+
+  /**
+   * how long each operation takes (ms)
+   */
+  period: number
+
+  /**
+   * task samples of each task iteration time (ms)
+   */
+  samples: number[]
+
+  /**
+   * samples mean/average (estimate of the population mean)
+   */
+  mean: number
+
+  /**
+   * samples variance (estimate of the population variance)
+   */
+  variance: number
+
+  /**
+   * samples standard deviation (estimate of the population standard deviation)
+   */
+  sd: number
+
+  /**
+   * standard error of the mean (a.k.a. the standard deviation of the sampling distribution of the sample mean)
+   */
+  sem: number
+
+  /**
+   * degrees of freedom
+   */
+  df: number
+
+  /**
+   * critical value of the samples
+   */
+  critical: number
+
+  /**
+   * margin of error
+   */
+  moe: number
+
+  /**
+   * relative margin of error
+   */
+  rme: number
+
+  /**
+   * median absolute deviation
+   */
+  mad: number
+
+  /**
+   * p50/median percentile
+   */
+  p50: number
+
+  /**
+   * p75 percentile
+   */
+  p75: number
+
+  /**
+   * p99 percentile
+   */
+  p99: number
+
+  /**
+   * p995 percentile
+   */
+  p995: number
+
+  /**
+   * p999 percentile
+   */
+  p999: number
 }
 ```
 
@@ -797,10 +906,23 @@ Vitest provides a way to run all tests in random order via CLI flag [`--sequence
 ```ts
 import { describe, test } from 'vitest'
 
+// or describe('suite', { shuffle: true }, ...)
 describe.shuffle('suite', () => {
   test('random test 1', async () => { /* ... */ })
   test('random test 2', async () => { /* ... */ })
   test('random test 3', async () => { /* ... */ })
+
+  // `shuffle` is inherited
+  describe('still random', () => {
+    test('random 4.1', async () => { /* ... */ })
+    test('random 4.2', async () => { /* ... */ })
+  })
+
+  // disable shuffle inside
+  describe('not random', { shuffle: false }, () => {
+    test('in order 5.1', async () => { /* ... */ })
+    test('in order 5.2', async () => { /* ... */ })
+  })
 })
 // order depends on sequence.seed option in config (Date.now() by default)
 ```
@@ -1004,7 +1126,7 @@ These hooks will throw an error if they are called outside of the test body.
 
 ### onTestFinished {#ontestfinished}
 
-This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
+This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`.
 
 ```ts {1,5}
 import { onTestFinished, test } from 'vitest'
@@ -1061,7 +1183,7 @@ This hook is always called in reverse order and is not affected by [`sequence.ho
 
 ### onTestFailed
 
-This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.
+This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`. This hook is useful for debugging.
 
 ```ts {1,5-7}
 import { onTestFailed, test } from 'vitest'

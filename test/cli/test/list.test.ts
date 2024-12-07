@@ -17,8 +17,8 @@ test.each([
   ['basic'],
   ['json', '--json'],
   ['json with a file', '--json=./list.json'],
-])('%s output shows error', async () => {
-  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts')
+])('%s output shows error', async (_, ...args) => {
+  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts', ...args)
   expect(stdout).toBe('')
   expect(stderr).toMatchSnapshot()
   expect(exitCode).toBe(1)

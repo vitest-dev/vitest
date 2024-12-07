@@ -20,6 +20,7 @@ The `userEvent` API is explained in detail at [Interactivity API](/guide/browser
  */
 export const userEvent: {
   setup: () => UserEvent
+  cleanup: () => Promise<void>
   click: (element: Element, options?: UserEventClickOptions) => Promise<void>
   dblClick: (element: Element, options?: UserEventDoubleClickOptions) => Promise<void>
   tripleClick: (element: Element, options?: UserEventTripleClickOptions) => Promise<void>

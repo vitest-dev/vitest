@@ -4,17 +4,17 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { SerializedConfig } from '../config'
+import type { VitestExecutor } from '../execute'
+import type {
+  Benchmark,
+  BenchmarkResult,
+  BenchTask,
+} from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
-import { getWorkerState } from '../../utils'
-import type {
-  BenchTask,
-  Benchmark,
-  BenchmarkResult,
-} from '../types/benchmark'
-import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
+import { getWorkerState } from '../utils'
 
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {

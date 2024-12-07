@@ -1,14 +1,14 @@
-import type { BrowserProviderModule, ResolvedBrowserOptions, WorkspaceProject } from 'vitest/node'
+import type { BrowserProviderModule, ResolvedBrowserOptions, TestProject } from 'vitest/node'
 
 export function replacer(code: string, values: Record<string, string>) {
-  return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? '')
+  return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
 }
 
 const builtinProviders = ['webdriverio', 'playwright', 'preview']
 
 export async function getBrowserProvider(
   options: ResolvedBrowserOptions,
-  project: WorkspaceProject,
+  project: TestProject,
 ): Promise<BrowserProviderModule> {
   if (options.provider == null || builtinProviders.includes(options.provider)) {
     const providers = await import('./providers')

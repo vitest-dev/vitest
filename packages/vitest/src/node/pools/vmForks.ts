@@ -1,26 +1,26 @@
-import * as nodeos from 'node:os'
-import v8 from 'node:v8'
-import EventEmitter from 'node:events'
-import { createBirpc } from 'birpc'
-import { resolve } from 'pathe'
+import type { FileSpec } from '@vitest/runner'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
+import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
+import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
+import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
+import type { ResolvedConfig, SerializedConfig } from '../types/config'
+import EventEmitter from 'node:events'
+import * as nodeos from 'node:os'
+import { resolve } from 'node:path'
+import v8 from 'node:v8'
+import { createBirpc } from 'birpc'
 import Tinypool from 'tinypool'
 import { rootDir } from '../../paths'
-import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
-import { groupFilesByEnv } from '../../utils/test-helpers'
-import { AggregateError } from '../../utils/base'
-import type { WorkspaceProject } from '../workspace'
-import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
 import { wrapSerializableConfig } from '../../utils/config-helpers'
-import type { ResolvedConfig, SerializedConfig } from '../types/config'
-import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
-import type { Vitest } from '../core'
-import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
+import { getWorkerMemoryLimit, stringToBytes } from '../../utils/memory-limit'
+import { groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createChildProcessChannel(project: WorkspaceProject) {
+function createChildProcessChannel(project: TestProject) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -108,13 +108,15 @@ export function createVmForksPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
+      project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpec[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { channel, cleanup } = createChildProcessChannel(project)
       const workerId = ++id
       const data: ContextRPC = {
@@ -125,7 +127,7 @@ export function createVmForksPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
@@ -138,7 +140,7 @@ export function createVmForksPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(', ')}.`,
+            `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
@@ -147,7 +149,7 @@ export function createVmForksPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error
@@ -162,8 +164,8 @@ export function createVmForksPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, SerializedConfig>()
-      const getConfig = (project: WorkspaceProject): SerializedConfig => {
+      const configs = new Map<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }

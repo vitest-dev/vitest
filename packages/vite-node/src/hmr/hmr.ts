@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
 
-import type { HMRPayload, Update } from 'vite/types/hmrPayload.js'
 import type { CustomEventMap } from 'vite/types/customEvent.js'
-import c from 'tinyrainbow'
-import createDebug from 'debug'
+import type { HMRPayload, Update } from 'vite/types/hmrPayload.js'
 import type { ViteNodeRunner } from '../client'
 import type { HotContext } from '../types'
-import { normalizeRequestId } from '../utils'
 import type { HMREmitter } from './emitter'
+import createDebug from 'debug'
+import c from 'tinyrainbow'
+import { normalizeRequestId } from '../utils'
 
 export type ModuleNamespace = Record<string, any> & {
   [Symbol.toStringTag]: 'Module'
@@ -160,8 +160,8 @@ async function fetchUpdate(
   }
 }
 
-function warnFailedFetch(err: Error, path: string | string[]) {
-  if (!err.message.match('fetch')) {
+function warnFailedFetch(err: unknown, path: string | string[]) {
+  if (!(err instanceof Error) || !err.message.match('fetch')) {
     console.error(err)
   }
 

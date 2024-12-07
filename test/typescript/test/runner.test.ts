@@ -92,7 +92,7 @@ describe('ignoreSourceErrors', () => {
     const vitest = await runVitest({
       root: resolve(__dirname, '../fixtures/source-error'),
     })
-    expect(vitest.stdout).toContain('Unhandled Errors')
+    expect(vitest.stderr).toContain('Unhandled Errors')
     expect(vitest.stderr).toContain('Unhandled Source Error')
     expect(vitest.stderr).toContain('TypeCheckError: Cannot find name \'thisIsSourceError\'')
   })

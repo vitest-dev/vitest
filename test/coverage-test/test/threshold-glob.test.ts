@@ -1,7 +1,7 @@
 import { expect } from 'vitest'
-import { coverageTest, isV8Provider, normalizeURL, runVitest, test } from '../utils'
-import { sum } from '../fixtures/src/math'
 import { isEven, isOdd } from '../fixtures/src/even'
+import { sum } from '../fixtures/src/math'
+import { coverageTest, isV8Provider, normalizeURL, runVitest, test } from '../utils'
 
 test('threshold glob patterns count in global coverage', async () => {
   await runVitest({

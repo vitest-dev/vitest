@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 import type Convert from 'ansi-to-html'
+import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
+import { browserState, config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
-import { browserState, config } from '~/composables/client'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
@@ -19,7 +19,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
     return []
   }
 
-  if (task.type === 'test' || task.type === 'custom') {
+  if (task.type === 'test') {
     return [{ ...task, level }]
   }
   else {

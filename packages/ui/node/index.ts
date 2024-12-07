@@ -1,11 +1,11 @@
+import type { Plugin } from 'vite'
+import type { Vitest } from 'vitest/node'
 import { fileURLToPath } from 'node:url'
+import { toArray } from '@vitest/utils'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
-import type { Plugin } from 'vite'
-import { coverageConfigDefaults } from 'vitest/config'
-import type { Vitest } from 'vitest/node'
-import { toArray } from '@vitest/utils'
 import c from 'tinyrainbow'
+import { coverageConfigDefaults } from 'vitest/config'
 import { version } from '../package.json'
 
 export default (ctx: Vitest): Plugin => {

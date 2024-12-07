@@ -22,8 +22,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
-import { isObject } from '@vitest/utils'
 import type { Tester, TesterContext } from './types'
+import { isObject } from '@vitest/utils'
 
 // Extracted out of jasmine 2.5.2
 export function equals(

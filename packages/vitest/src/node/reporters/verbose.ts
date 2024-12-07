@@ -1,21 +1,17 @@
-import c from 'tinyrainbow'
 import type { TaskResultPack } from '@vitest/runner'
-import { getFullName } from '../../utils'
-import { F_RIGHT } from '../../utils/figures'
+import { getFullName } from '@vitest/runner/utils'
+import c from 'tinyrainbow'
 import { DefaultReporter } from './default'
+import { F_RIGHT } from './renderers/figures'
 import { formatProjectName, getStateSymbol } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {
   protected verbose = true
-
-  constructor() {
-    super()
-    this.rendererOptions.renderSucceed = true
-  }
+  renderSucceed = true
 
   onTaskUpdate(packs: TaskResultPack[]) {
     if (this.isTTY) {
-      return
+      return super.onTaskUpdate(packs)
     }
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
@@ -42,6 +38,9 @@ export class VerboseReporter extends DefaultReporter {
           title += c.magenta(
             ` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`,
           )
+        }
+        if (task.result?.note) {
+          title += c.dim(c.gray(` [${task.result.note}]`))
         }
         this.ctx.logger.log(title)
         if (task.result.state === 'fail') {

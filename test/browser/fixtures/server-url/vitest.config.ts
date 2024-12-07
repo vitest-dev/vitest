@@ -6,7 +6,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl'
 // test https by
 //   TEST_HTTPS=1 pnpm test-fixtures --root fixtures/server-url
 
-const provider = process.env.PROVIDER || 'webdriverio';
+const provider = process.env.PROVIDER || 'playwright';
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome');
 
 // ignore https errors due to self-signed certificate from plugin-basic-ssl
@@ -17,7 +17,7 @@ const providerOptions = (function () {
     case 'playwright': return { page: { ignoreHTTPSErrors: true } }
     case 'webdriverio': return { strictSSL: false, capabilities: { acceptInsecureCerts: true } }
   }
-})()
+})() as any
 
 export default defineConfig({
   plugins: [
@@ -25,6 +25,7 @@ export default defineConfig({
   ],
   test: {
     browser: {
+      api: process.env.TEST_HTTPS ? 51122 : 51133,
       enabled: true,
       provider,
       name: browser,

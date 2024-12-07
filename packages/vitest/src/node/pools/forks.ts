@@ -1,21 +1,23 @@
-import v8 from 'node:v8'
-import * as nodeos from 'node:os'
-import EventEmitter from 'node:events'
-import { Tinypool } from 'tinypool'
+import type { FileSpec } from '@vitest/runner'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
-import { createBirpc } from 'birpc'
-import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
-import type { WorkspaceProject } from '../workspace'
-import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import { wrapSerializableConfig } from '../../utils/config-helpers'
-import { groupBy, resolve } from '../../utils'
-import type { SerializedConfig } from '../types/config'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
-import type { Vitest } from '../core'
 import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
+import type { Vitest } from '../core'
+import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
+import EventEmitter from 'node:events'
+import * as nodeos from 'node:os'
+import { resolve } from 'node:path'
+import v8 from 'node:v8'
+import { createBirpc } from 'birpc'
+import { Tinypool } from 'tinypool'
+import { groupBy } from '../../utils/base'
+import { wrapSerializableConfig } from '../../utils/config-helpers'
+import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
-function createChildProcessChannel(project: WorkspaceProject) {
+function createChildProcessChannel(project: TestProject) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -98,13 +100,15 @@ export function createForksPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
+      project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpec[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { channel, cleanup } = createChildProcessChannel(project)
       const workerId = ++id
       const data: ContextRPC = {
@@ -115,7 +119,7 @@ export function createForksPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
@@ -128,7 +132,7 @@ export function createForksPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(', ')}.`,
+            `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
@@ -137,7 +141,7 @@ export function createForksPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error
@@ -152,8 +156,8 @@ export function createForksPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new WeakMap<WorkspaceProject, SerializedConfig>()
-      const getConfig = (project: WorkspaceProject): SerializedConfig => {
+      const configs = new WeakMap<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }
@@ -198,7 +202,7 @@ export function createForksPool(
           const grouped = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName()
+              project.name
               + environment.name
               + JSON.stringify(environment.options),
           )
@@ -255,7 +259,7 @@ export function createForksPool(
           const filesByOptions = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName() + JSON.stringify(environment.options),
+              project.name + JSON.stringify(environment.options),
           )
 
           for (const files of Object.values(filesByOptions)) {

@@ -1,15 +1,15 @@
-import mm from 'micromatch'
 import type { Awaitable } from '@vitest/utils'
-import { isWindows } from '../utils/env'
-import type { BuiltinPool, Pool } from './types/pool-options'
 import type { Vitest } from './core'
+import type { TestProject } from './project'
+import type { TestSpecification } from './spec'
+import type { BuiltinPool, Pool } from './types/pool-options'
+import mm from 'micromatch'
+import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
-import { createVmThreadsPool } from './pools/vmThreads'
-import type { WorkspaceProject } from './workspace'
 import { createTypecheckPool } from './pools/typecheck'
 import { createVmForksPool } from './pools/vmForks'
-import type { TestSpecification } from './spec'
+import { createVmThreadsPool } from './pools/vmThreads'
 
 /**
  * @deprecated use TestSpecification instead
@@ -18,7 +18,7 @@ export type WorkspaceSpec = TestSpecification & [
   /**
    * @deprecated use spec.project instead
    */
-  project: WorkspaceProject,
+  project: TestProject,
   /**
    * @deprecated use spec.moduleId instead
    */
@@ -57,14 +57,14 @@ export const builtinPools: BuiltinPool[] = [
   'typescript',
 ]
 
-function getDefaultPoolName(project: WorkspaceProject): Pool {
+function getDefaultPoolName(project: TestProject): Pool {
   if (project.config.browser.enabled) {
     return 'browser'
   }
   return project.config.pool
 }
 
-export function getFilePoolName(project: WorkspaceProject, file: string) {
+export function getFilePoolName(project: TestProject, file: string) {
   for (const [glob, pool] of project.config.poolMatchGlobs) {
     if ((pool as Pool) === 'browser') {
       throw new Error(

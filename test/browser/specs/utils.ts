@@ -1,5 +1,5 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
-import type { UserConfig } from 'vitest'
+import type { UserConfig } from 'vitest/node'
 import { runVitest } from '../../test-utils'
 
 export const provider = process.env.PROVIDER || 'playwright'

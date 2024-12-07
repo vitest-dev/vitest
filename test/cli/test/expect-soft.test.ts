@@ -1,5 +1,5 @@
-import { resolve } from 'node:path'
 import type { UserConfig } from 'vitest'
+import { resolve } from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { getCurrentTest } from 'vitest/suite'
 import { runVitest } from '../../test-utils'

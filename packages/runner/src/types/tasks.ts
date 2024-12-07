@@ -1,6 +1,6 @@
 import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
-import type { ChainableFunction } from '../utils/chain'
 import type { FixtureItem } from '../fixture'
+import type { ChainableFunction } from '../utils/chain'
 
 export type RunMode = 'run' | 'skip' | 'only' | 'todo'
 export type TaskState = RunMode | 'pass' | 'fail'
@@ -147,6 +147,8 @@ export interface TaskResult {
    * `repeats` option is set. This number also contains `retryCount`.
    */
   repeatCount?: number
+  /** @private */
+  note?: string
 }
 
 /**
@@ -218,16 +220,16 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
   context: TaskContext<Test> & ExtraContext & TestContext
 }
 
-export interface Custom<ExtraContext = object> extends TaskPopulated {
-  type: 'custom'
-  /**
-   * Task context that will be passed to the test function.
-   */
-  context: TaskContext<Custom> & ExtraContext & TestContext
-}
+/**
+ * @deprecated Use `Test` instead. `type: 'custom'` is not used since 2.2
+ */
+export type Custom<ExtraContext = object> = Test<ExtraContext>
 
-export type Task = Test | Suite | Custom | File
+export type Task = Test | Suite | File
 
+/**
+ * @deprecated Vitest doesn't provide `done()` anymore
+ */
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = object> = (
   context: ExtendedContext<Test> & ExtraContext
@@ -275,16 +277,16 @@ interface EachFunctionReturn<T extends any[]> {
   (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
-    options: TestOptions
+    options: TestCollectorOptions
   ): void
   (
     name: string | Function,
     fn: (...args: T) => Awaitable<void>,
-    options?: number | TestOptions
+    options?: number | TestCollectorOptions
   ): void
   (
     name: string | Function,
-    options: TestOptions,
+    options: TestCollectorOptions,
     fn: (...args: T) => Awaitable<void>
   ): void
 }
@@ -305,7 +307,7 @@ interface TestForFunctionReturn<Arg, Context> {
   ): void
   (
     name: string | Function,
-    options: TestOptions,
+    options: TestCollectorOptions,
     fn: (args: Arg, context: Context) => Awaitable<void>
   ): void
 }
@@ -336,16 +338,16 @@ interface TestCollectorCallable<C = object> {
   <ExtraContext extends C>(
     name: string | Function,
     fn: TestFunction<ExtraContext>,
-    options: TestOptions
+    options: TestCollectorOptions
   ): void
   <ExtraContext extends C>(
     name: string | Function,
     fn?: TestFunction<ExtraContext>,
-    options?: number | TestOptions
+    options?: number | TestCollectorOptions
   ): void
   <ExtraContext extends C>(
     name: string | Function,
-    options?: TestOptions,
+    options?: TestCollectorOptions,
     fn?: TestFunction<ExtraContext>
   ): void
 }
@@ -358,6 +360,8 @@ type ChainableTestAPI<ExtraContext = object> = ChainableFunction<
     for: TestForFunction<ExtraContext>
   }
 >
+
+type TestCollectorOptions = Omit<TestOptions, 'shuffle'>
 
 export interface TestOptions {
   /**
@@ -389,6 +393,10 @@ export interface TestOptions {
    */
   sequential?: boolean
   /**
+   * Whether the tasks of the suite run in a random order.
+   */
+  shuffle?: boolean
+  /**
    * Whether the test should be skipped.
    */
   skip?: boolean
@@ -411,11 +419,11 @@ interface ExtendedAPI<ExtraContext> {
   runIf: (condition: any) => ChainableTestAPI<ExtraContext>
 }
 
-export type CustomAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
+export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
   ExtendedAPI<ExtraContext> & {
     extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
-    ) => CustomAPI<{
+    ) => TestAPI<{
       [K in keyof T | keyof ExtraContext]: K extends keyof T
         ? T[K]
         : K extends keyof ExtraContext
@@ -424,7 +432,8 @@ export type CustomAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
     }>
   }
 
-export type TestAPI<ExtraContext = object> = CustomAPI<ExtraContext>
+/** @deprecated use `TestAPI` instead */
+export type { TestAPI as CustomAPI }
 
 export interface FixtureOptions {
   /**
@@ -513,14 +522,14 @@ export interface AfterAllListener {
 
 export interface BeforeEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test | Custom> & ExtraContext,
+    context: ExtendedContext<Test> & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
 
 export interface AfterEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test | Custom> & ExtraContext,
+    context: ExtendedContext<Test> & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
@@ -550,7 +559,7 @@ export interface TaskCustomOptions extends TestOptions {
    * If nothing is provided, the runner will try to get the function using `getFn(task)`.
    * If the runner cannot find the function, the task will be marked as failed.
    */
-  handler?: (context: TaskContext<Custom>) => Awaitable<void>
+  handler?: (context: TaskContext<Test>) => Awaitable<void>
 }
 
 export interface SuiteCollector<ExtraContext = object> {
@@ -561,11 +570,10 @@ export interface SuiteCollector<ExtraContext = object> {
   test: TestAPI<ExtraContext>
   tasks: (
     | Suite
-    | Custom<ExtraContext>
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
-  task: (name: string, options?: TaskCustomOptions) => Custom<ExtraContext>
+  task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
   clear: () => void
   on: <T extends keyof SuiteHooks<ExtraContext>>(
@@ -591,7 +599,7 @@ export interface TestContext {}
 /**
  * Context that's always available in the test function.
  */
-export interface TaskContext<Task extends Custom | Test = Custom | Test> {
+export interface TaskContext<Task extends Test = Test> {
   /**
    * Metadata of the current test
    */
@@ -600,25 +608,25 @@ export interface TaskContext<Task extends Custom | Test = Custom | Test> {
   /**
    * Extract hooks on test failed
    */
-  onTestFailed: (fn: OnTestFailedHandler) => void
+  onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
    * Extract hooks on test failed
    */
-  onTestFinished: (fn: OnTestFinishedHandler) => void
+  onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
 
   /**
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
    */
-  skip: () => void
+  skip: (note?: string) => void
 }
 
-export type ExtendedContext<T extends Custom | Test> = TaskContext<T> &
+export type ExtendedContext<T extends Test> = TaskContext<T> &
   TestContext
 
-export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
-export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
+export type OnTestFailedHandler = (context: ExtendedContext<Test>) => Awaitable<void>
+export type OnTestFinishedHandler = (context: ExtendedContext<Test>) => Awaitable<void>
 
 export interface TaskHook<HookListener> {
   (fn: HookListener, timeout?: number): void

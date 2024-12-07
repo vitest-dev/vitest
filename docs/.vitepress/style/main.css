@@ -6,6 +6,10 @@ html:not(.dark) [img-dark] {
   display: none;
 }
 
+details summary {
+  cursor: pointer;
+}
+
 /* Overrides */
 
 .sp .sp-link.link:hover,

@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
-import { captureStdout, coverageTest, isV8Provider, normalizeURL, runVitest, test } from '../utils'
 import { sum } from '../fixtures/src/math'
+import { captureStdout, coverageTest, isV8Provider, normalizeURL, runVitest, test } from '../utils'
 
 test('report is not generated when tests fail', async () => {
   const stdout = captureStdout()

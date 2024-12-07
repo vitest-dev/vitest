@@ -1,5 +1,5 @@
-import { expect, test, vi } from 'vitest'
 import axios from 'axios'
+import { expect, test, vi } from 'vitest'
 import { getAuthToken } from '../../src/env'
 
 vi.mock(import('../../src/env'), { spy: true })

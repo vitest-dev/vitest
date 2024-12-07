@@ -18,8 +18,7 @@ Of course, you can create your reporter from scratch. Just extend the `BaseRepor
 
 And here is an example of a custom reporter:
 
-```ts
-// ./custom-reporter.js
+```ts [custom-reporter.js]
 import { BaseReporter } from 'vitest/reporters'
 
 export default class CustomReporter extends BaseReporter {
@@ -32,8 +31,7 @@ export default class CustomReporter extends BaseReporter {
 
 Or implement the `Reporter` interface:
 
-```ts
-// ./custom-reporter.js
+```ts [custom-reporter.js]
 import { Reporter } from 'vitest/reporters'
 
 export default class CustomReporter implements Reporter {
@@ -45,7 +43,7 @@ export default class CustomReporter implements Reporter {
 
 Then you can use your custom reporter in the `vitest.config.ts` file:
 
-```ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 import CustomReporter from './custom-reporter.js'
 
@@ -87,8 +85,6 @@ class MyReporter implements Reporter {
   }
 }
 ```
-
-We are planning to stabilize this API in Vitest 2.1.
 :::
 
 ### TestCase
@@ -196,6 +192,10 @@ export interface TestResultSkipped {
 }
 
 export interface TestDiagnostic {
+  /**
+   * If the duration of the test is above `slowTestThreshold`.
+   */
+  slow: boolean
   /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
@@ -377,51 +377,6 @@ function onFileCollected(testModule: TestModule): void {
   for (const task of testModule.children.allTests()) {
     console.log('collected', task.type, task.fullName)
   }
-}
-```
-
-### TestProject
-
-`TestProject` is a project assosiated with the module. Every test and suite inside that module will reference the same project.
-
-Project is useful to get the configuration or provided context.
-
-```ts
-declare class TestProject {
-  /**
-   * The global vitest instance.
-   * @experimental The public Vitest API is experimental and does not follow semver.
-   */
-  readonly vitest: Vitest
-  /**
-   * The workspace project this test project is associated with.
-   * @experimental The public Vitest API is experimental and does not follow semver.
-   */
-  readonly workspaceProject: WorkspaceProject
-  /**
-   * Resolved project configuration.
-   */
-  readonly config: ResolvedProjectConfig
-  /**
-   * Resolved global configuration. If there are no workspace projects, this will be the same as `config`.
-   */
-  readonly globalConfig: ResolvedConfig
-  /**
-   * Serialized project configuration. This is the config that tests receive.
-   */
-  get serializedConfig(): SerializedConfig
-  /**
-   * The name of the project or an empty string if not set.
-   */
-  name(): string
-  /**
-   * Custom context provided to the project.
-   */
-  context(): ProvidedContext
-  /**
-   * Provide a custom serializable context to the project. This context will be available for tests once they run.
-   */
-  provide<T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]): void
 }
 ```
 

@@ -52,3 +52,9 @@ it.each(['index.js', 'index.cjs', 'index.mjs'])('correctly runs --watch %s', asy
   editFile(entryPath, c => c.replace('test 1', 'test 2'))
   await viteNode.waitForStdout('test 2')
 })
+
+it('error stack', async () => {
+  const entryPath = resolve(__dirname, '../src/watch/source-map.ts')
+  const { viteNode } = await runViteNodeCli('--watch', entryPath)
+  await viteNode.waitForStdout('source-map.ts:7:11')
+})

@@ -1,24 +1,23 @@
+import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { Vitest } from './core'
+import type { ErrorOptions } from './logger'
+import type { TestProject } from './project'
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
+import { inspect, isPrimitive } from '@vitest/utils'
+import cliTruncate from 'cli-truncate'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
-import cliTruncate from 'cli-truncate'
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
-import { inspect } from '@vitest/utils'
+import { TypeCheckError } from '../typecheck/typechecker'
 import {
   lineSplitRE,
   positionToOffset,
 } from '../utils/source-map'
-import { F_POINTER } from '../utils/figures'
-import { TypeCheckError } from '../typecheck/typechecker'
-import { isPrimitive } from '../utils'
-import type { Vitest } from './core'
-import { divider } from './reporters/renderers/utils'
-import type { ErrorOptions } from './logger'
 import { Logger } from './logger'
-import type { WorkspaceProject } from './workspace'
+import { F_POINTER } from './reporters/renderers/figures'
+import { divider } from './reporters/renderers/utils'
 
 interface PrintErrorOptions {
   type?: string
@@ -56,7 +55,7 @@ export function capturePrintError(
 
 export function printError(
   error: unknown,
-  project: WorkspaceProject | undefined,
+  project: TestProject | undefined,
   options: PrintErrorOptions,
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
@@ -117,6 +116,16 @@ export function printError(
 
   if (e.codeFrame) {
     logger.error(`${e.codeFrame}\n`)
+  }
+
+  if ('__vitest_rollup_error__' in e) {
+    // https://github.com/vitejs/vite/blob/95020ab49e12d143262859e095025cf02423c1d9/packages/vite/src/node/server/middlewares/error.ts#L25-L36
+    const err = e.__vitest_rollup_error__ as any
+    logger.error([
+      err.plugin && `  Plugin: ${c.magenta(err.plugin)}`,
+      err.id && `  File: ${c.cyan(err.id)}${err.loc ? `:${err.loc.line}:${err.loc.column}` : ''}`,
+      err.frame && c.yellow((err.frame as string).split(/\r?\n/g).map(l => ` `.repeat(2) + l).join(`\n`)),
+    ].filter(Boolean).join('\n'))
   }
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
@@ -329,7 +338,7 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
 
 export function printStack(
   logger: Logger,
-  project: WorkspaceProject,
+  project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,

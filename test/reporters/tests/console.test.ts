@@ -1,17 +1,12 @@
-import { resolve } from 'pathe'
-import { type UserConsoleLog, expect, test } from 'vitest'
 import type { Reporter } from 'vitest/reporters'
+import { resolve } from 'pathe'
+import { expect, test, type UserConsoleLog } from 'vitest'
 import { DefaultReporter } from 'vitest/reporters'
 import { runVitest } from '../../test-utils'
 
 class LogReporter extends DefaultReporter {
   isTTY = true
-  renderer = {
-    start() {},
-    update() {},
-    stop() {},
-    clear() {},
-  }
+  onTaskUpdate() {}
 }
 
 test('should print logs correctly', async () => {

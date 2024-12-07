@@ -1,6 +1,6 @@
+import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
-  Custom,
   ExtendedContext,
   File,
   Suite,
@@ -10,15 +10,16 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
-import type { ExpectStatic } from '@vitest/expect'
-import { GLOBAL_EXPECT, getState, setState } from '@vitest/expect'
-import { getSnapshotClient } from '../../integrations/snapshot/chai'
-import { vi } from '../../integrations/vi'
-import { getNames, getTestName, getTests, getWorkerState } from '../../utils'
-import { createExpect } from '../../integrations/chai/index'
 import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
+import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
+import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { createExpect } from '../../integrations/chai/index'
+import { inject } from '../../integrations/inject'
+import { getSnapshotClient } from '../../integrations/snapshot/chai'
+import { vi } from '../../integrations/vi'
 import { rpc } from '../rpc'
+import { getWorkerState } from '../utils'
 
 export class VitestTestRunner implements VitestRunner {
   private snapshotClient = getSnapshotClient()
@@ -43,11 +44,8 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = file
   }
 
-  onBeforeRunFiles() {
-    this.snapshotClient.clear()
-  }
-
   onAfterRunFiles() {
+    this.snapshotClient.clear()
     this.workerState.current = undefined
   }
 
@@ -61,22 +59,18 @@ export class VitestTestRunner implements VitestRunner {
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
           const name = getNames(test).slice(1).join(' > ')
-          this.snapshotClient.skipTestSnapshots(name)
+          this.snapshotClient.skipTest(suite.file.filepath, name)
         }
       }
 
-      const result = await this.snapshotClient.finishCurrentRun()
-      if (result) {
-        await rpc().snapshotSaved(result)
-      }
+      const result = await this.snapshotClient.finish(suite.file.filepath)
+      await rpc().snapshotSaved(result)
     }
 
     this.workerState.current = suite.suite || suite.file
   }
 
   onAfterRunTask(test: Task) {
-    this.snapshotClient.clearTest()
-
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       test.result!.heap = process.memoryUsage().heapUsed
     }
@@ -86,6 +80,12 @@ export class VitestTestRunner implements VitestRunner {
 
   onCancel(_reason: CancelReason) {
     this.cancelRun = true
+  }
+
+  injectValue(key: string) {
+    // inject has a very limiting type controlled by ProvidedContext
+    // some tests override it which causes the build to fail
+    return (inject as any)(key)
   }
 
   async onBeforeRunTask(test: Task) {
@@ -109,11 +109,8 @@ export class VitestTestRunner implements VitestRunner {
 
     // initialize snapshot state before running file suite
     if (suite.mode !== 'skip' && 'filepath' in suite) {
-      // default "name" is irrelevant for Vitest since each snapshot assertion
-      // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
-      await this.snapshotClient.startCurrentRun(
-        (suite as File).filepath,
-        '__default_name_',
+      await this.snapshotClient.setup(
+        suite.file.filepath,
         this.workerState.config.snapshotOptions,
       )
     }
@@ -122,6 +119,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   onBeforeTryTask(test: Task) {
+    this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
       {
         assertionCalls: 0,
@@ -131,7 +129,7 @@ export class VitestTestRunner implements VitestRunner {
         expectedAssertionsNumberErrorGen: null,
         testPath: test.file.filepath,
         currentTestName: getTestName(test),
-        snapshotState: this.snapshotClient.snapshotState,
+        snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )
@@ -163,7 +161,7 @@ export class VitestTestRunner implements VitestRunner {
     }
   }
 
-  extendTaskContext<T extends Test | Custom>(
+  extendTaskContext<T extends Test>(
     context: TaskContext<T>,
   ): ExtendedContext<T> {
     // create error during the test initialization so we have a nice stack trace

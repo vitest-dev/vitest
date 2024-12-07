@@ -1,9 +1,9 @@
+import type { Task } from '@vitest/runner'
+import type { SnapshotSummary } from '@vitest/snapshot'
 import { stripVTControlCharacters } from 'node:util'
+import { slash } from '@vitest/utils'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
 import c from 'tinyrainbow'
-import type { SuiteHooks, Task } from '@vitest/runner'
-import type { SnapshotSummary } from '@vitest/snapshot'
-import { slash } from '../../../utils/base'
 import {
   F_CHECK,
   F_CROSS,
@@ -12,7 +12,7 @@ import {
   F_DOWN_RIGHT,
   F_LONG_DASH,
   F_POINTER,
-} from '../../../utils/figures'
+} from './figures'
 
 export const spinnerMap = new WeakMap<Task, () => string>()
 export const hookSpinnerMap = new WeakMap<Task, Map<string, () => string>>()
@@ -186,25 +186,6 @@ export function getStateSymbol(task: Task) {
   return ' '
 }
 
-export function getHookStateSymbol(task: Task, hookName: keyof SuiteHooks) {
-  const state = task.result?.hooks?.[hookName]
-
-  // pending
-  if (state && state === 'run') {
-    let spinnerMap = hookSpinnerMap.get(task)
-    if (!spinnerMap) {
-      spinnerMap = new Map<string, () => string>()
-      hookSpinnerMap.set(task, spinnerMap)
-    }
-    let spinner = spinnerMap.get(hookName)
-    if (!spinner) {
-      spinner = elegantSpinner()
-      spinnerMap.set(hookName, spinner)
-    }
-    return c.yellow(spinner())
-  }
-}
-
 export const spinnerFrames
   = process.platform === 'win32'
     ? ['-', '\\', '|', '/']
@@ -247,13 +228,33 @@ export function formatTimeString(date: Date) {
   return date.toTimeString().split(' ')[0]
 }
 
+export function formatTime(time: number) {
+  if (time > 1000) {
+    return `${(time / 1000).toFixed(2)}s`
+  }
+  return `${Math.round(time)}ms`
+}
+
 export function formatProjectName(name: string | undefined, suffix = ' ') {
   if (!name) {
     return ''
   }
+  if (!c.isColorSupported) {
+    return `|${name}|${suffix}`
+  }
   const index = name
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
-  const colors = [c.blue, c.yellow, c.cyan, c.green, c.magenta]
-  return colors[index % colors.length](`|${name}|`) + suffix
+
+  const colors = [c.black, c.yellow, c.cyan, c.green, c.magenta]
+
+  return c.inverse(colors[index % colors.length](` ${name} `)) + suffix
+}
+
+export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
+  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${message ? c[color](message) : ''}`
+}
+
+export function padSummaryTitle(str: string) {
+  return c.dim(`${str.padStart(11)} `)
 }

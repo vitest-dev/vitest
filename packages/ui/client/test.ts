@@ -1,7 +1,7 @@
 import {
-  type RenderOptions,
   render as _render,
   cleanup,
+  type RenderOptions,
 } from '@testing-library/vue'
 import { VTooltip } from 'floating-vue'
 import { afterEach } from 'vitest'
@@ -21,4 +21,4 @@ afterEach(() => {
   cleanup()
 })
 
-export { within, screen } from '@testing-library/vue'
+export { screen, within } from '@testing-library/vue'

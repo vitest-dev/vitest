@@ -1,13 +1,11 @@
 import type { ChaiPlugin, MatcherState } from './types'
 import { GLOBAL_EXPECT } from './constants'
-import { getState } from './state'
 import {
   diff,
   getCustomEqualityTesters,
   getMatcherUtils,
   stringify,
 } from './jest-matcher-utils'
-
 import {
   equals,
   isA,
@@ -15,6 +13,8 @@ import {
   pluralize,
   subsetEquality,
 } from './jest-utils'
+
+import { getState } from './state'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch: (other: unknown) => boolean
@@ -188,11 +188,11 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
     const result
       = this.sample.length === 0
       || (Array.isArray(other)
-      && this.sample.every(item =>
-        other.some(another =>
-          equals(item, another, matcherContext.customTesters),
-        ),
-      ))
+        && this.sample.every(item =>
+          other.some(another =>
+            equals(item, another, matcherContext.customTesters),
+          ),
+        ))
 
     return this.inverse ? !result : result
   }

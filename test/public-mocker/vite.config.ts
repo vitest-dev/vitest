@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
 import { mockerPlugin } from '@vitest/mocker/node'
+import { defineConfig } from 'vite'
 
 export default defineConfig({
   root: 'fixtures/redirect',
@@ -8,7 +8,7 @@ export default defineConfig({
       globalThisAccessor: 'Symbol.for("vitest.mocker")',
       hoistMocks: {
         utilsObjectNames: ['mocker'],
-        hoistedModules: ['virtual:mocker'],
+        hoistedModule: 'virtual:mocker',
         hoistableMockMethodNames: ['customMock'],
         dynamicImportMockMethodNames: ['customMock'],
         hoistedMethodNames: ['customHoisted'],

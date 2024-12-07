@@ -1,9 +1,9 @@
-import { getSafeTimers } from '@vitest/utils'
 import type { CancelReason } from '@vitest/runner'
-import { createBirpc } from 'birpc'
 import type { BirpcOptions, BirpcReturn } from 'birpc'
 import type { RunnerRPC, RuntimeRPC } from '../types/rpc'
 import type { WorkerRPC } from '../types/worker'
+import { getSafeTimers } from '@vitest/utils'
+import { createBirpc } from 'birpc'
 import { getWorkerState } from './utils'
 
 const { get } = Reflect

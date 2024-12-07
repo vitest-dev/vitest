@@ -1,13 +1,13 @@
 import { stripVTControlCharacters } from 'node:util'
-import { assert, describe, expect, test, vi, vitest } from 'vitest'
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
-import { two } from '../src/submodule'
+import { assert, describe, expect, test, vi, vitest } from 'vitest'
+import * as globalMock from '../src/global-mock'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
-import { MockedC, asyncFunc, exportedStream } from '../src/mockedC'
+import { asyncFunc, exportedStream, MockedC } from '../src/mockedC'
 import MockedDefault, { MockedC as MockedD } from '../src/mockedD'
-import * as globalMock from '../src/global-mock'
+import { two } from '../src/submodule'
 
 vitest.mock('../src/submodule')
 vitest.mock('virtual-module', () => ({ value: 'mock' }))
@@ -129,11 +129,11 @@ describe('default exported classes', () => {
   })
 })
 
-test('async functions should be mocked', () => {
+test('async functions should be mocked', async () => {
   expect(asyncFunc()).toBeUndefined()
   expect(vi.mocked(asyncFunc).mockResolvedValue).toBeDefined()
   vi.mocked(asyncFunc).mockResolvedValue('foo')
-  expect(asyncFunc()).resolves.toBe('foo')
+  await expect(asyncFunc()).resolves.toBe('foo')
 })
 
 function getError(cb: () => void): string {

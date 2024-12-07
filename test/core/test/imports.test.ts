@@ -2,10 +2,10 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'pathe'
 import { describe, expect, test, vi } from 'vitest'
-import { dynamicRelativeImport } from '../src/relative-import'
-
 // @ts-expect-error module is not typed
 import promiseExport from '../src/cjs/promise-export'
+
+import { dynamicRelativeImport } from '../src/relative-import'
 
 test('promise export works correctly', async () => {
   await expect(promiseExport).resolves.toEqual({ value: 42 })
@@ -90,7 +90,7 @@ test('dynamic import throws an error', async () => {
 test('can import @vite/client', async () => {
   const name = '@vite/client'
   await expect(import(name)).resolves.not.toThrow()
-  await expect(import(`/${name}`)).resolves.not.toThrow()
+  await expect(import(/* @vite-ignore */ `/${name}`)).resolves.not.toThrow()
 })
 
 describe('importing special files from node_modules', async () => {

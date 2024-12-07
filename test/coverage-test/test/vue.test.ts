@@ -1,5 +1,5 @@
-import { resolve } from 'node:path'
 import { readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { beforeAll, expect } from 'vitest'
 import { isBrowser, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 

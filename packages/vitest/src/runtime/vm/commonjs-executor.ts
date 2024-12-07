@@ -1,9 +1,9 @@
-import vm from 'node:vm'
+import type { FileMap } from './file-map'
+import type { ImportModuleDynamically, VMModule } from './types'
 import { Module as _Module, createRequire } from 'node:module'
+import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
-import type { ImportModuleDynamically, VMModule } from './types'
-import type { FileMap } from './file-map'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap
@@ -156,6 +156,11 @@ export class CommonjsExecutor {
       // @ts-expect-error not typed
       static globalPaths = _Module.globalPaths
       static isBuiltin = _Module.isBuiltin
+
+      static constants = _Module.constants
+      static enableCompileCache = _Module.enableCompileCache
+      static getCompileCacheDir = _Module.getCompileCacheDir
+      static flushCompileCache = _Module.flushCompileCache
 
       static Module = Module
     }

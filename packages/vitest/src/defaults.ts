@@ -1,10 +1,10 @@
-import os from 'node:os'
 import type {
   BenchmarkUserOptions,
   CoverageV8Options,
   ResolvedCoverageOptions,
   UserConfig,
 } from './node/types/config'
+import os from 'node:os'
 import { isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
@@ -88,15 +88,6 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
 export const fakeTimersDefaults = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
-  toFake: [
-    'setTimeout',
-    'clearTimeout',
-    'setInterval',
-    'clearInterval',
-    'setImmediate',
-    'clearImmediate',
-    'Date',
-  ],
 } satisfies NonNullable<UserConfig['fakeTimers']>
 
 const config = {

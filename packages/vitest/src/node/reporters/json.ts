@@ -1,11 +1,12 @@
-import { existsSync, promises as fs } from 'node:fs'
-import { dirname, resolve } from 'pathe'
 import type { File, Suite, TaskMeta, TaskState } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
-import { getSuites, getTests } from '../../utils'
-import { getOutputFile } from '../../utils/config-helpers'
-import type { Reporter } from '../types/reporter'
+import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Vitest } from '../core'
+import type { Reporter } from '../types/reporter'
+import { existsSync, promises as fs } from 'node:fs'
+import { getSuites, getTests } from '@vitest/runner/utils'
+import { dirname, resolve } from 'pathe'
+import { getOutputFile } from '../../utils/config-helpers'
 
 // for compatibility reasons, the reporter produces a JSON similar to the one produced by the Jest JSON reporter
 // the following types are extracted from the Jest repository (and simplified)
@@ -63,7 +64,7 @@ export interface JsonTestResults {
   success: boolean
   testResults: Array<JsonTestResult>
   snapshot: SnapshotSummary
-  // coverageMap?: CoverageMap | null | undefined
+  coverageMap?: CoverageMap | null | undefined
   // numRuntimeErrorTestSuites: number
   // wasInterrupted: boolean
 }
@@ -86,7 +87,7 @@ export class JsonReporter implements Reporter {
     this.start = Date.now()
   }
 
-  protected async logTasks(files: File[]) {
+  protected async logTasks(files: File[], coverageMap?: CoverageMap | null) {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
@@ -188,13 +189,14 @@ export class JsonReporter implements Reporter {
       startTime: this.start,
       success,
       testResults,
+      coverageMap,
     }
 
     await this.writeReport(JSON.stringify(result))
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
-    await this.logTasks(files)
+  async onFinished(files = this.ctx.state.getFiles(), _errors: unknown[] = [], coverageMap?: unknown) {
+    await this.logTasks(files, coverageMap as CoverageMap)
   }
 
   /**
