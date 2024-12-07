@@ -1707,9 +1707,6 @@ it('error equality', () => {
 
   {
     // cyclic (fail)
-    // currently it fails by 'Maximum call stack size exceeded'
-    // due to chai's error formatting
-    // https://github.com/chaijs/chai/issues/1645
     const e1 = new Error('hello')
     e1.cause = e1
     const e2 = new Error('world')
