@@ -1,4 +1,5 @@
-import { page, server, userEvent } from '@vitest/browser/context'
+import { userEvent } from '@testing-library/user-event'
+import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
   getByLabelSelector,
