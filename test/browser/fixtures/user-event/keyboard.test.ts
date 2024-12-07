@@ -35,7 +35,7 @@ test('non US keys', async () => {
   }
 })
 
-test.only('click with modifier', async () => {
+test('click with modifier', async () => {
   document.body.innerHTML = `
     <div id="test">test shift and click</div>
   `
