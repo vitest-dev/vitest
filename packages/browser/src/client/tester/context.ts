@@ -153,14 +153,10 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
       return userEvent.clear(toElement(element))
     },
     hover(element: Element | Locator) {
-      return userEvent.hover(
-        element instanceof Element ? element : element.element(),
-      )
+      return userEvent.hover(toElement(element))
     },
     unhover(element: Element | Locator) {
-      return userEvent.unhover(
-        element instanceof Element ? element : element.element(),
-      )
+      return userEvent.unhover(toElement(element))
     },
     async upload(element: Element | Locator, files: string | string[] | File | File[]) {
       const uploadPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
@@ -180,7 +176,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
         return fileInstance
       })
       const uploadFiles = await Promise.all(uploadPromise)
-      return userEvent.upload((element instanceof Element ? element : element.element()) as HTMLElement, uploadFiles)
+      return userEvent.upload(toElement(element) as HTMLElement, uploadFiles)
     },
 
     async fill(element: Element | Locator, text: string) {
