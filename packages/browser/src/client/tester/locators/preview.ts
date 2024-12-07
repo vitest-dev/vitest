@@ -8,7 +8,7 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
-import { convertElementToCssSelector, ensureAwaited } from '../../utils'
+import { convertElementToCssSelector } from '../../utils'
 import { getElementError } from '../public-utils'
 import { Locator, selectorEngine } from './index'
 
@@ -57,39 +57,39 @@ class PreviewLocator extends Locator {
   }
 
   click(): Promise<void> {
-    return ensureAwaited(() => userEvent.click(this.element()))
+    return userEvent.click(this.element())
   }
 
   dblClick(): Promise<void> {
-    return ensureAwaited(() => userEvent.dblClick(this.element()))
+    return userEvent.dblClick(this.element())
   }
 
   tripleClick(): Promise<void> {
-    return ensureAwaited(() => userEvent.tripleClick(this.element()))
+    return userEvent.tripleClick(this.element())
   }
 
   hover(): Promise<void> {
-    return ensureAwaited(() => userEvent.hover(this.element()))
+    return userEvent.hover(this.element())
   }
 
   unhover(): Promise<void> {
-    return ensureAwaited(() => userEvent.unhover(this.element()))
+    return userEvent.unhover(this.element())
   }
 
   async fill(text: string): Promise<void> {
-    return ensureAwaited(() => userEvent.fill(this.element(), text))
+    return userEvent.fill(this.element(), text)
   }
 
   async upload(file: string | string[] | File | File[]): Promise<void> {
-    return ensureAwaited(() => userEvent.upload(this.element(), file))
+    return userEvent.upload(this.element(), file)
   }
 
   selectOptions(options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    return ensureAwaited(() => userEvent.selectOptions(this.element(), options))
+    return userEvent.selectOptions(this.element(), options)
   }
 
   clear(): Promise<void> {
-    return ensureAwaited(() => userEvent.clear(this.element()))
+    return userEvent.clear(this.element())
   }
 
   protected locator(selector: string) {

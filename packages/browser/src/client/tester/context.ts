@@ -39,8 +39,8 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
   }
 
   return {
-    setup(options?: any) {
-      return createUserEvent(__tl_user_event_base__, options)
+    setup() {
+      return createUserEvent()
     },
     async cleanup() {
       return ensureAwaited(async () => {
@@ -121,7 +121,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     return element instanceof Element ? element : element.element()
   }
 
-  return {
+  const vitestUserEvent: UserEvent = {
     setup(options?: any) {
       return createPreviewUserEvent(userEventBase, options)
     },
@@ -197,6 +197,16 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
       await userEvent.keyboard(text)
     },
   }
+
+  for (const [name, fn] of Object.entries(vitestUserEvent)) {
+    if (name !== 'setup') {
+      (vitestUserEvent as any)[name] = function (this: any, ...args: any[]) {
+        return ensureAwaited(() => fn.apply(this, args))
+      }
+    }
+  }
+
+  return vitestUserEvent
 }
 
 export function cdp() {
