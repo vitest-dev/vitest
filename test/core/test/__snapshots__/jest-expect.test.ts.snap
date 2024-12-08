@@ -221,6 +221,57 @@ exports[`asymmetric matcher error 15`] = `
 
 exports[`asymmetric matcher error 16`] = `
 {
+  "actual": "foo",
+  "diff": "- Expected: 
+OneOf<"bar" | "baz">
+
++ Received: 
+"foo"",
+  "expected": "OneOf<"bar" | "baz">",
+  "message": "expected 'foo' to deeply equal OneOf<"bar" | "baz">",
+}
+`;
+
+exports[`asymmetric matcher error 17`] = `
+{
+  "actual": "0",
+  "diff": "- Expected: 
+OneOf<Any<String> | null | undefined>
+
++ Received: 
+0",
+  "expected": "OneOf<Any<String> | null | undefined>",
+  "message": "expected +0 to deeply equal OneOf<Any<String> | null | undefined>",
+}
+`;
+
+exports[`asymmetric matcher error 18`] = `
+{
+  "actual": "Object {
+  "k": "v",
+  "k2": "v2",
+}",
+  "diff": "- Expected: 
+OneOf<ObjectContaining {
+  "k": "v",
+  "k3": "v3",
+} | null | undefined>
+
++ Received: 
+Object {
+  "k": "v",
+  "k2": "v2",
+}",
+  "expected": "OneOf<ObjectContaining {
+  "k": "v",
+  "k3": "v3",
+} | null | undefined>",
+  "message": "expected { k: 'v', k2: 'v2' } to deeply equal OneOf{…}",
+}
+`;
+
+exports[`asymmetric matcher error 19`] = `
+{
   "actual": "hello",
   "diff": undefined,
   "expected": "StringContaining "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"",
@@ -228,7 +279,7 @@ exports[`asymmetric matcher error 16`] = `
 }
 `;
 
-exports[`asymmetric matcher error 17`] = `
+exports[`asymmetric matcher error 20`] = `
 {
   "actual": "hello",
   "diff": undefined,
@@ -237,7 +288,7 @@ exports[`asymmetric matcher error 17`] = `
 }
 `;
 
-exports[`asymmetric matcher error 18`] = `
+exports[`asymmetric matcher error 21`] = `
 {
   "actual": "hello",
   "diff": "- Expected: 
@@ -250,7 +301,7 @@ stringContainingCustom<xx>
 }
 `;
 
-exports[`asymmetric matcher error 19`] = `
+exports[`asymmetric matcher error 22`] = `
 {
   "actual": "hello",
   "diff": undefined,
@@ -259,7 +310,7 @@ exports[`asymmetric matcher error 19`] = `
 }
 `;
 
-exports[`asymmetric matcher error 20`] = `
+exports[`asymmetric matcher error 23`] = `
 {
   "actual": "hello",
   "diff": "- Expected: 
@@ -272,7 +323,7 @@ stringContainingCustom<ll>
 }
 `;
 
-exports[`asymmetric matcher error 21`] = `
+exports[`asymmetric matcher error 24`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected: 
@@ -285,7 +336,7 @@ StringContaining "ll"
 }
 `;
 
-exports[`asymmetric matcher error 22`] = `
+exports[`asymmetric matcher error 25`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected: 
@@ -298,7 +349,7 @@ stringContainingCustom<ll>
 }
 `;
 
-exports[`asymmetric matcher error 23`] = `
+exports[`asymmetric matcher error 26`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected: 
