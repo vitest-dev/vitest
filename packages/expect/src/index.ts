@@ -1,4 +1,5 @@
 export * from './constants'
+export { customMatchers } from './custom-matchers'
 export * from './jest-asymmetric-matchers'
 export { JestChaiExpect } from './jest-expect'
 export { JestExtend } from './jest-extend'
