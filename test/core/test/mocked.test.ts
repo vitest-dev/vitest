@@ -78,6 +78,9 @@ describe('mocked classes', () => {
 
     expect(MockedC.prototype.doSomething).toHaveBeenCalledOnce()
     expect(MockedC.prototype.doSomething).not.toHaveReturnedWith('A')
+
+    vi.mocked(instance.doSomething).mockRestore()
+    expect(instance.doSomething()).not.toBe('A')
   })
 
   test('should mock getters', () => {
