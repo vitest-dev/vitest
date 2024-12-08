@@ -78,7 +78,7 @@ AssertionError: expected { hello: &apos;x&apos; } to deeply equal { hello: &apos
 - Expected
 + Received
 
-  Object {
+  {
 -   &quot;hello&quot;: &quot;y&quot;,
 +   &quot;hello&quot;: &quot;x&quot;,
   }

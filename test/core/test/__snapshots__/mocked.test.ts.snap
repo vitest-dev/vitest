@@ -47,21 +47,21 @@ Received:
 
   1st spy call return:
 
-  Object {
+  {
 -   "a": "4",
 +   "a": "1",
   }
 
   2nd spy call return:
 
-  Object {
+  {
 -   "a": "4",
 +   "a": "1",
   }
 
   3rd spy call return:
 
-  Object {
+  {
 -   "a": "4",
 +   "a": "1",
   }

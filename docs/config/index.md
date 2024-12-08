@@ -2507,7 +2507,7 @@ Color of truncate annotation, default is output with no color.
 #### diff.printBasicPrototype
 
 - **Type**: `boolean`
-- **Default**: `true`
+- **Default**: `false`
 
 Print basic prototype `Object` and `Array` in diff output
 

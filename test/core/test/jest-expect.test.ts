@@ -1139,7 +1139,7 @@ it('correctly prints diff with asymmetric matchers', () => {
       "- Expected
       + Received
 
-        Object {
+        {
           "a": Any<Number>,
       -   "b": Any<Function>,
       +   "b": "string",
@@ -1173,7 +1173,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "c": 4,
     +   "c": 3,
       }",
@@ -1188,7 +1188,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "b": 3,
     +   "b": 2,
       }",
@@ -1203,8 +1203,8 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "c": Object {
+      {
+        "c": {
     -     "d": 5,
     +     "d": 4,
         },
@@ -1219,7 +1219,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
         "a": 1,
         "b": 2,
     -   "c": 4,
@@ -1236,9 +1236,9 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
         "a": 1,
-        "c": Object {
+        "c": {
     -     "d": 4,
     +     "d": 3,
         },
@@ -1254,12 +1254,12 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "c": Object {
+      {
+        "c": {
     -     "d": 5,
     +     "d": 4,
         },
-        "foo": Object {
+        "foo": {
     -     "value": "biz",
     +     "value": "bar",
         },
@@ -1276,9 +1276,9 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "children": Array [
-          Object {
+      {
+        "children": [
+          {
     -       "firstName": "Paul",
     +       "firstName": "Jessica",
           },
@@ -1322,7 +1322,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-    - Object {
+    - {
     -   "value": 1,
     + Foo {
     +   "value": 0,
@@ -1338,7 +1338,7 @@ it('toMatchObject error diff', () => {
 
     - Bar {
     -   "value": 1,
-    + Object {
+    + {
     +   "value": 0,
       }",
     ]
@@ -1358,7 +1358,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "bad": Bar {
     -     "value": 2,
     +   "bad": Foo {
