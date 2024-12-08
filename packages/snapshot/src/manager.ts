@@ -6,8 +6,8 @@ import type {
 import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 
 export class SnapshotManager {
-  summary: SnapshotSummary = undefined!
-  extension = '.snap'
+  public summary!: SnapshotSummary
+  public extension = '.snap'
 
   constructor(
     public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>,

@@ -140,6 +140,9 @@ importers:
       '@iconify-json/logos':
         specifier: ^1.2.3
         version: 1.2.3
+      '@shikijs/transformers':
+        specifier: ^1.24.0
+        version: 1.24.0
       '@shikijs/vitepress-twoslash':
         specifier: ^1.24.0
         version: 1.24.0(typescript@5.7.2)
@@ -3387,8 +3390,8 @@ packages:
   '@shikijs/engine-oniguruma@1.24.0':
     resolution: {integrity: sha512-Eua0qNOL73Y82lGA4GF5P+G2+VXX9XnuUxkiUuwcxQPH4wom+tE39kZpBFXfUuwNYxHSkrSxpB1p4kyRW0moSg==}
 
-  '@shikijs/transformers@1.22.2':
-    resolution: {integrity: sha512-8f78OiBa6pZDoZ53lYTmuvpFPlWtevn23bzG+azpPVvZg7ITax57o/K3TC91eYL3OMJOO0onPbgnQyZjRos8XQ==}
+  '@shikijs/transformers@1.24.0':
+    resolution: {integrity: sha512-Qf/hby+PRPkoHncjYnJf5svK1aCsOUtQhuLzKPnmeXJtuUZCmbH0pTpdNtXe9tgln/RHlyRJnv7q46HHS1sO0Q==}
 
   '@shikijs/twoslash@1.24.0':
     resolution: {integrity: sha512-ELyIoD54dFDlb4eGt5sy54WhFeJ39N1hR9W7ADwHWn3XH7cOPjj320EPCh2t76fIoLb0auD46tVLQVVMn93qsA==}
@@ -11744,9 +11747,9 @@ snapshots:
       '@shikijs/types': 1.24.0
       '@shikijs/vscode-textmate': 9.3.0
 
-  '@shikijs/transformers@1.22.2':
+  '@shikijs/transformers@1.24.0':
     dependencies:
-      shiki: 1.22.2
+      shiki: 1.24.0
 
   '@shikijs/twoslash@1.24.0(typescript@5.7.2)':
     dependencies:
@@ -18819,7 +18822,7 @@ snapshots:
       '@docsearch/js': 3.6.2(@algolia/client-search@4.20.0)(@types/react@18.2.79)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)
       '@iconify-json/simple-icons': 1.2.11
       '@shikijs/core': 1.22.2
-      '@shikijs/transformers': 1.22.2
+      '@shikijs/transformers': 1.24.0
       '@shikijs/types': 1.22.2
       '@types/markdown-it': 14.1.2
       '@vitejs/plugin-vue': 5.2.1(vite@5.4.0(@types/node@22.10.1)(terser@5.36.0))(vue@3.5.12(typescript@5.7.2))

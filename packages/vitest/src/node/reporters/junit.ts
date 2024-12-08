@@ -260,7 +260,7 @@ export class JUnitReporter implements Reporter {
                   const result = capturePrintError(
                     error,
                     this.ctx,
-                    { project: this.ctx.getProjectByTaskId(task.id), task },
+                    { project: this.ctx.getProjectByName(task.file.projectName || ''), task },
                   )
                   await this.baseLog(
                     escapeXML(stripVTControlCharacters(result.output.trim())),

@@ -8,4 +8,5 @@ export {
   setFn,
   setHooks,
 } from '@vitest/runner'
+export type { VitestRunner, VitestRunnerConfig } from '@vitest/runner'
 export { createChainable } from '@vitest/runner/utils'

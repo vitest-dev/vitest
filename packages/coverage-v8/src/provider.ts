@@ -288,7 +288,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
   private async convertCoverage(
     coverage: RawCoverage,
-    project: TestProject = this.ctx.getRootTestProject(),
+    project: TestProject = this.ctx.getRootProject(),
     transformMode?: AfterSuiteRunMeta['transformMode'],
   ): Promise<CoverageMap> {
     let fetchCache = project.vitenode.fetchCache

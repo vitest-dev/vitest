@@ -79,7 +79,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           await ctx.rerunTask(id)
         },
         getConfig() {
-          return ctx.getRootTestProject().serializedConfig
+          return ctx.getRootProject().serializedConfig
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
@@ -107,7 +107,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
           return ctx.state.getUnhandledErrors()
         },
         async getTestFiles() {
-          const spec = await ctx.globTestSpecs()
+          const spec = await ctx.globTestSpecifications()
           return spec.map(spec => [
             {
               name: spec.project.config.name,
@@ -177,7 +177,6 @@ export class WebSocketReporter implements Reporter {
     }
 
     packs.forEach(([taskId, result]) => {
-      const project = this.ctx.getProjectByTaskId(taskId)
       const task = this.ctx.state.idMap.get(taskId)
       const isBrowser = task && task.file.pool === 'browser'
 
@@ -186,10 +185,13 @@ export class WebSocketReporter implements Reporter {
           return
         }
 
-        const stacks = isBrowser
-          ? project.browser?.parseErrorStacktrace(error)
-          : parseErrorStacktrace(error)
-        error.stacks = stacks
+        if (isBrowser) {
+          const project = this.ctx.getProjectByName(task!.file.projectName || '')
+          error.stacks = project.browser?.parseErrorStacktrace(error)
+        }
+        else {
+          error.stacks = parseErrorStacktrace(error)
+        }
       })
     })
 

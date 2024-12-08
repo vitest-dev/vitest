@@ -31,11 +31,21 @@ $ vitest basic/foo.test.ts:10
 ```
 
 ::: warning
-Note that you have to specify the full filename, and specify the exact line number, i.e. you can't do
+Note that Vitest requires the full filename for this feature to work. It can be relative to the current working directory or an absolute file path.
 
 ```bash
-$ vitest foo:10
-$ vitest basic/foo.test.ts:10-25
+$ vitest basic/foo.js:10 # ✅
+$ vitest ./basic/foo.js:10 # ✅
+$ vitest /users/project/basic/foo.js:10 # ✅
+$ vitest foo:10 # ❌
+$ vitest ./basic/foo:10 # ❌
+```
+
+At the moment Vitest also doesn't support ranges:
+
+```bash
+$ vitest basic/foo.test.ts:10, basic/foo.test.ts:25 # ✅
+$ vitest basic/foo.test.ts:10-25 # ❌
 ```
 :::
 

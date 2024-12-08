@@ -288,3 +288,13 @@ test('maxConcurrency 0 prints a warning', async () => {
   expect(ctx?.config.maxConcurrency).toBe(5)
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })
+
+test('non existing project name will throw', async () => {
+  const { stderr } = await runVitest({ project: 'non-existing-project' })
+  expect(stderr).toMatch('No projects matched the filter "non-existing-project".')
+})
+
+test('non existing project name array will throw', async () => {
+  const { stderr } = await runVitest({ project: ['non-existing-project', 'also-non-existing'] })
+  expect(stderr).toMatch('No projects matched the filter "non-existing-project", "also-non-existing".')
+})
