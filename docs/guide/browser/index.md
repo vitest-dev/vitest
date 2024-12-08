@@ -401,7 +401,31 @@ Headless mode is not available by default. You need to use either [`playwright`]
 
 ## Examples
 
-Vitest provides packages to render components for several popular frameworks out of the box:
+By default, you don't need any external packages to work with the Browser Mode:
+
+```js [example.test.js]
+import { expect, test } from 'vitest'
+import { page } from '@vitest/browser/context'
+import { render } from './my-render-function.js'
+
+test('properly handles form inputs', async () => {
+  render() // mount DOM elements
+
+  // Asserts initial state.
+  await expect.element(page.getByText('Hi, my name is Alice')).toBeInTheDocument()
+
+  // Get the input DOM node by querying the associated label.
+  const usernameInput = page.getByLabelText(/username/i)
+
+  // Type the name into the input. This already validates that the input
+  // is filled correctly, no need to check the value manually.
+  await usernameInput.fill('Bob')
+
+  await expect.element(page.getByText('Hi, my name is Bob')).toBeInTheDocument()
+})
+```
+
+However, Vitest also provides packages to render components for several popular frameworks out of the box:
 
 - [`vitest-browser-vue`](https://github.com/vitest-dev/vitest-browser-vue) to render [vue](https://vuejs.org) components
 - [`vitest-browser-svelte`](https://github.com/vitest-dev/vitest-browser-svelte) to render [svelte](https://svelte.dev) components
@@ -490,6 +514,8 @@ For unsupported frameworks, we recommend using `testing-library` packages:
 - [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
 - [`@solidjs/testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
+
+You can also see more examples in [`browser-examples`](https://github.com/vitest-tests/browser-examples) repository.
 
 ::: warning
 `testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](/guide/browser/interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
