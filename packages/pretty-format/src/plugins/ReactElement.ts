@@ -6,9 +6,9 @@
  */
 
 import type { Config, NewPlugin, Printer, Refs } from '../types'
+import * as ReactIs19 from 'react-is'
 // @ts-expect-error no type
 import * as ReactIs18 from 'react-is-18'
-import * as ReactIs19 from 'react-is'
 import {
   printChildren,
   printElement,
