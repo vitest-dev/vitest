@@ -15,7 +15,7 @@ export function interpretTaskModes(
 ): void {
   const matchedLocations: number[] = []
 
-  const traverseSuite = (suite: Suite, parentIsOnly?: boolean) => {
+  const traverseSuite = (suite: Suite, parentIsOnly?: boolean, parentMatchedWithLocation?: boolean) => {
     const suiteIsOnly = parentIsOnly || suite.mode === 'only'
 
     suite.tasks.forEach((t) => {
@@ -37,22 +37,28 @@ export function interpretTaskModes(
           t.mode = 'run'
         }
       }
+
+      let hasLocationMatch = parentMatchedWithLocation
+      // Match test location against provided locations, only run if present
+      // in `testLocations`. Note: if `includeTaskLocations` is not enabled,
+      // all test will be skipped.
+      if (testLocations !== undefined && testLocations.length !== 0) {
+        if (t.location && testLocations?.includes(t.location.line)) {
+          t.mode = 'run'
+          matchedLocations.push(t.location.line)
+          hasLocationMatch = true
+        }
+        else if (parentMatchedWithLocation) {
+          t.mode = 'run'
+        }
+        else if (t.type === 'test') {
+          t.mode = 'skip'
+        }
+      }
+
       if (t.type === 'test') {
         if (namePattern && !getTaskFullName(t).match(namePattern)) {
           t.mode = 'skip'
-        }
-
-        // Match test location against provided locations, only run if present
-        // in `testLocations`.  Note: if `includeTaskLocations` is not enabled,
-        // all test will be skipped.
-        if (testLocations !== undefined && testLocations.length !== 0) {
-          if (t.location && testLocations?.includes(t.location.line)) {
-            t.mode = 'run'
-            matchedLocations.push(t.location.line)
-          }
-          else {
-            t.mode = 'skip'
-          }
         }
       }
       else if (t.type === 'suite') {
@@ -60,7 +66,7 @@ export function interpretTaskModes(
           skipAllTasks(t)
         }
         else {
-          traverseSuite(t, includeTask)
+          traverseSuite(t, includeTask, hasLocationMatch)
         }
       }
     })
@@ -73,7 +79,7 @@ export function interpretTaskModes(
     }
   }
 
-  traverseSuite(file, parentIsOnly)
+  traverseSuite(file, parentIsOnly, false)
 
   const nonMatching = testLocations?.filter(loc => !matchedLocations.includes(loc))
   if (nonMatching && nonMatching.length !== 0) {
