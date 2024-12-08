@@ -8,7 +8,7 @@ export const version = Vitest.version
 export { parseCLI } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
-export type { Vitest } from '../node/core'
+export type { Vitest, VitestOptions } from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export type { GlobalSetupContext } from '../node/globalSetup'
@@ -52,6 +52,7 @@ export type {
   BrowserBuiltinProvider,
   BrowserCommand,
   BrowserCommandContext,
+  BrowserConfig,
   BrowserConfigOptions,
   BrowserOrchestrator,
   BrowserProvider,
@@ -61,7 +62,7 @@ export type {
   BrowserScript,
   BrowserServer,
   BrowserServerState,
-  BrowserServerStateContext,
+  BrowserServerStateSession as BrowserServerStateContext,
   CDPSession,
   ResolvedBrowserOptions,
 } from '../node/types/browser'

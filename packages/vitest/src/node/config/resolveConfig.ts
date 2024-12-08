@@ -230,9 +230,30 @@ export function resolveConfig(
     }
   }
 
+  const browser = resolved.browser
+
+  if (browser.enabled) {
+    if (!browser.name && !browser.configs) {
+      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.configs" options, none were set.`)
+    }
+
+    const configs = browser.configs
+    if (browser.name && browser.configs) {
+      // --browser=chromium filters configs to a single one
+      browser.configs = browser.configs.filter(config_ => config_.browser === browser.name)
+    }
+
+    if (browser.configs && !browser.configs.length) {
+      throw new Error([
+        `"browser.configs" was set in the config, but the array is empty. Define at least one browser config.`,
+        browser.name && configs?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${configs.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
+      ].join(''))
+    }
+  }
+
   // Browser-mode "Playwright + Chromium" only features:
-  if (resolved.browser.enabled && !(resolved.browser.provider === 'playwright' && resolved.browser.name === 'chromium')) {
-    const browserConfig = { browser: { provider: resolved.browser.provider, name: resolved.browser.name } }
+  if (browser.enabled && !(browser.provider === 'playwright' && browser.name === 'chromium')) {
+    const browserConfig = { browser: { provider: browser.provider, name: browser.name } }
 
     if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
       throw new Error(

@@ -27,7 +27,7 @@ export const keyboard: UserEventCommand<(text: string, state: KeyboardState) => 
   await keyboardImplementation(
     pressed,
     context.provider,
-    context.contextId,
+    context.sessionId,
     text,
     async () => {
       if (context.provider instanceof PlaywrightBrowserProvider) {
@@ -53,9 +53,9 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
   context,
   state,
 ) => {
-  const { provider, contextId } = context
+  const { provider, sessionId } = context
   if (provider instanceof PlaywrightBrowserProvider) {
-    const page = provider.getPage(contextId)
+    const page = provider.getPage(sessionId)
     for (const key of state.unreleased) {
       await page.keyboard.up(key)
     }
@@ -79,13 +79,13 @@ const VALID_KEYS = new Set(['Escape', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 
 export async function keyboardImplementation(
   pressed: Set<string>,
   provider: BrowserProvider,
-  contextId: string,
+  sessionId: string,
   text: string,
   selectAll: () => Promise<void>,
   skipRelease: boolean,
 ) {
   if (provider instanceof PlaywrightBrowserProvider) {
-    const page = provider.getPage(contextId)
+    const page = provider.getPage(sessionId)
     const actions = parseKeyDef(defaultKeyMap, text)
 
     for (const { releasePrevious, releaseSelf, repeat, keyDef } of actions) {

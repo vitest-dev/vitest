@@ -5,8 +5,10 @@ import type {
   BrowserScript,
   CDPSession,
   BrowserServer as IBrowserServer,
+  ResolvedConfig,
   TestProject,
   Vite,
+  Vitest,
 } from 'vitest/node'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
@@ -15,6 +17,7 @@ import { slash } from '@vitest/utils'
 import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
 import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
+import builtinCommands from './commands/index'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 
@@ -40,11 +43,17 @@ export class BrowserServer implements IBrowserServer {
   public vite!: Vite.ViteDevServer
 
   private stackTraceOptions: StackTraceParserOptions
+  public vitest: Vitest
+  public config: ResolvedConfig
+
+  public readonly cdps = new Map<string, BrowserServerCDPHandler>()
 
   constructor(
-    public project: TestProject,
+    project: TestProject,
     public base: string,
   ) {
+    this.vitest = project.vitest
+    this.config = project.config
     this.stackTraceOptions = {
       frameFilter: project.config.onStackTrace,
       getSourceMap: (id) => {
@@ -62,6 +71,20 @@ export class BrowserServer implements IBrowserServer {
         }
         return id
       },
+    }
+
+    project.config.browser.commands ??= {}
+    for (const [name, command] of Object.entries(builtinCommands)) {
+      project.config.browser.commands[name] ??= command
+    }
+
+    // validate names because they can't be used as identifiers
+    for (const command in project.config.browser.commands) {
+      if (!/^[a-z_$][\w$]*$/i.test(command)) {
+        throw new Error(
+          `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
+        )
+      }
     }
 
     this.state = new BrowserServerState()
@@ -115,19 +138,20 @@ export class BrowserServer implements IBrowserServer {
     this.vite = server
   }
 
-  getSerializableConfig() {
-    const config = wrapConfig(this.project.getSerializableConfig())
+  wrapSerializedConfig(projectName: string) {
+    const project = this.vitest.getProjectByName(projectName)
+    const config = wrapConfig(project.serializedConfig)
     config.env ??= {}
     config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
     return config
   }
 
   resolveTesterUrl(pathname: string) {
-    const [contextId, testFile] = pathname
+    const [sessionId, testFile] = pathname
       .slice(this.prefixTesterUrl.length)
       .split('/')
     const decodedTestFile = decodeURIComponent(testFile)
-    return { contextId, testFile: decodedTestFile }
+    return { sessionId, testFile: decodedTestFile }
   }
 
   async formatScripts(
@@ -165,28 +189,28 @@ export class BrowserServer implements IBrowserServer {
     return (await Promise.all(promises))
   }
 
-  async initBrowserProvider() {
+  async initBrowserProvider(project: TestProject) {
     if (this.provider) {
       return
     }
-    const Provider = await getBrowserProvider(this.project.config.browser, this.project)
+    const Provider = await getBrowserProvider(project.config.browser, project)
     this.provider = new Provider()
-    const browser = this.project.config.browser.name
+    const browser = project.config.browser.name
     if (!browser) {
       throw new Error(
-        `[${this.project.name}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
+        `[${project.name}] Browser name is required. Please, set \`test.browser.name\` option manually.`,
       )
     }
     const supportedBrowsers = this.provider.getSupportedBrowsers()
     if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
       throw new Error(
-        `[${this.project.name}] Browser "${browser}" is not supported by the browser provider "${
+        `[${project.name}] Browser "${browser}" is not supported by the browser provider "${
           this.provider.name
         }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
       )
     }
-    const providerOptions = this.project.config.browser.providerOptions
-    await this.provider.initialize(this.project, {
+    const providerOptions = project.config.browser.providerOptions
+    await this.provider.initialize(project, {
       browser,
       options: providerOptions,
     })
@@ -214,37 +238,46 @@ export class BrowserServer implements IBrowserServer {
 
   private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
-  async ensureCDPHandler(contextId: string, sessionId: string) {
-    const cachedHandler = this.state.cdps.get(sessionId)
+  async ensureCDPHandler(sessionId: string, rpcId: string) {
+    const cachedHandler = this.cdps.get(rpcId)
     if (cachedHandler) {
       return cachedHandler
     }
+    const browserSession = this.vitest._browserSessions.getSession(sessionId)
+    if (!browserSession) {
+      throw new Error(`Session "${sessionId}" not found.`)
+    }
 
-    const provider = this.provider
+    const browser = browserSession.project.browser!
+    const provider = browser.provider
     if (!provider.getCDPSession) {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessionsPromises.get(sessionId) ?? await (async () => {
-      const promise = provider.getCDPSession!(contextId).finally(() => {
-        this.cdpSessionsPromises.delete(sessionId)
+    const promise = this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
+      const promise = provider.getCDPSession!(sessionId).finally(() => {
+        this.cdpSessionsPromises.delete(rpcId)
       })
-      this.cdpSessionsPromises.set(sessionId, promise)
+      this.cdpSessionsPromises.set(rpcId, promise)
       return promise
     })()
 
     const session = await promise
-    const rpc = this.state.testers.get(sessionId)
+    const rpc = (browser.state as BrowserServerState).testers.get(rpcId)
     if (!rpc) {
-      throw new Error(`Tester RPC "${sessionId}" was not established.`)
+      throw new Error(`Tester RPC "${rpcId}" was not established.`)
     }
 
     const handler = new BrowserServerCDPHandler(session, rpc)
-    this.state.cdps.set(
-      sessionId,
+    this.cdps.set(
+      rpcId,
       handler,
     )
     return handler
+  }
+
+  async removeCDPHandler(sessionId: string) {
+    this.cdps.delete(sessionId)
   }
 
   async close() {
