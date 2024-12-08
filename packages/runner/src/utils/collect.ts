@@ -51,10 +51,8 @@ export function interpretTaskModes(
         else if (parentMatchedWithLocation) {
           t.mode = 'run'
         }
-        else {
-          if (t.type === 'test') {
-            t.mode = 'skip'
-          }
+        else if (t.type === 'test') {
+          t.mode = 'skip'
         }
       }
 
