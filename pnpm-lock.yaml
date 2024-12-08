@@ -625,14 +625,14 @@ importers:
         version: 1.2.0
     devDependencies:
       '@types/react-is':
-        specifier: ^18.3.0
-        version: 18.3.0
+        specifier: ^19.0.0
+        version: 19.0.0
       react-is:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-is-19:
-        specifier: npm:react-is@19.0.0-rc-fb9a90fa48-20240614
-        version: react-is@19.0.0-rc-fb9a90fa48-20240614
+        specifier: ^19.0.0
+        version: 19.0.0
+      react-is-18:
+        specifier: npm:react-is@18.3.1
+        version: react-is@18.3.1
 
   packages/runner:
     dependencies:
@@ -3755,8 +3755,8 @@ packages:
   '@types/react-dom@18.2.14':
     resolution: {integrity: sha512-V835xgdSVmyQmI1KLV2BEIUgqEuinxp9O4G6g3FqO/SqLac049E53aysv0oEFD2kHfejeKU+ZqL2bcFWj9gLAQ==}
 
-  '@types/react-is@18.3.0':
-    resolution: {integrity: sha512-KZJpHUkAdzyKj/kUHJDc6N7KyidftICufJfOFpiG6haL/BDQNQt5i4n1XDUL/nDZAtGLHDSWRYpLzKTAKSvX6w==}
+  '@types/react-is@19.0.0':
+    resolution: {integrity: sha512-71dSZeeJ0t3aoPyY9x6i+JNSvg5m9EF2i2OlSZI5QoJuI8Ocgor610i+4A10TQmURR+0vLwcVCEYFpXdzM1Biw==}
 
   '@types/react@18.2.79':
     resolution: {integrity: sha512-RwGAGXPl9kSXwdNTafkOEuFrTBD5SA2B3iEB96xi8+xu5ddUa/cpvyVCSNn+asgLCTHkb5ZxN8gbuibYJi4s1w==}
@@ -7926,8 +7926,8 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
-  react-is@19.0.0-rc-fb9a90fa48-20240614:
-    resolution: {integrity: sha512-60qI7v1B9RhmZwjTCnAgzcuABOQsIH20vTbETQPaze96s1lY2lSawv9dvXAfF8Z1MIqOppWSKLNOshF0WsZ3OA==}
+  react-is@19.0.0:
+    resolution: {integrity: sha512-H91OHcwjZsbq3ClIDHMzBShc1rotbfACdWENsmEf0IFvZ3FgGPtdHMcsv45bQ1hAbgdfiA8SnxTKfDS+x/8m2g==}
 
   react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
@@ -12194,7 +12194,7 @@ snapshots:
     dependencies:
       '@types/react': 18.2.79
 
-  '@types/react-is@18.3.0':
+  '@types/react-is@19.0.0':
     dependencies:
       '@types/react': 18.2.79
 
@@ -17301,7 +17301,7 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-is@19.0.0-rc-fb9a90fa48-20240614: {}
+  react-is@19.0.0: {}
 
   react-refresh@0.14.0: {}
 
