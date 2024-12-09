@@ -75,7 +75,7 @@
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn-walk": "^8.3.4",
-    "msw": "^2.6.6",
+    "msw": "^2.6.8",
     "pathe": "^1.1.2",
     "vite": "^5.4.0"
   }

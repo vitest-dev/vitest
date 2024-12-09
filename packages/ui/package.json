@@ -76,7 +76,7 @@
     "codemirror-theme-vars": "^0.1.2",
     "d3-graph-controller": "^3.0.11",
     "floating-vue": "^5.2.2",
-    "rollup": "^4.28.0",
+    "rollup": "^4.28.1",
     "splitpanes": "^3.1.5",
     "unocss": "^0.65.1",
     "unplugin-auto-import": "^0.18.6",
