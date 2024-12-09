@@ -134,6 +134,7 @@ test('inherits browser options', async () => {
         locators: {
           testIdAttribute: 'data-custom',
         },
+
         testerHtmlPath: '/custom-overriden-path.html',
       },
     },
