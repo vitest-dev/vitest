@@ -158,7 +158,7 @@
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "chai": "^5.1.2",
-    "debug": "^4.3.7",
+    "debug": "^4.4.0",
     "expect-type": "^1.1.0",
     "magic-string": "^0.30.14",
     "pathe": "^1.1.2",
