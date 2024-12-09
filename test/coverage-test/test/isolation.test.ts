@@ -14,7 +14,12 @@ for (const isolate of [true, false]) {
 
       coverage: {
         all: false,
-        reporter: 'json',
+        reporter: ['json', 'html'],
+      },
+
+      // @ts-expect-error -- merged in runVitest
+      browser: {
+        isolate,
       },
     })
 
@@ -33,6 +38,7 @@ for (const isolate of [true, false]) {
     expect(math.toSummary().branches.pct).toBe(100)
   })
 }
+
 class Sorter {
   sort(files: WorkspaceSpec[]) {
     return files.sort((a) => {
