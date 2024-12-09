@@ -134,7 +134,7 @@ describe('location filter with list command', () => {
     expect(stderr).not.toContain('Error: Found "-"')
   })
 
-  test('erorrs if includeTaskLocation is not enabled', async () => {
+  test('errors if includeTaskLocation is not enabled', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
       `-r=${fixturePath}`,
@@ -276,7 +276,7 @@ describe('location filter with run command', () => {
     )
 
     expect(stderr).toMatchInlineSnapshot(`
-      "Error: Recieved line number filters while \`includeTaskLocation\` option is disabled
+      "Error: Received line number filters while \`includeTaskLocation\` option is disabled
       "
     `)
   })

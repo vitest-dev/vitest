@@ -102,7 +102,7 @@ You can start running tests or benchmarks with `start` method. You can pass an a
 
 Vitest exposes `provide` method which is a shorthand for `vitest.getRootTestProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
 
-To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
+To receive the values in the test, you need to import `inject` method from `vitest` entrypoint:
 
 ```ts
 import { inject } from 'vitest'
@@ -239,7 +239,7 @@ const value = inject('key')
 ```
 :::
 
-The values can be provided dynamicaly. Provided value in tests will be updated on their next run.
+The values can be provided dynamically. Provided value in tests will be updated on their next run.
 
 ### getProvidedContext
 

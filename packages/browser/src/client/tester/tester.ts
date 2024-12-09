@@ -149,7 +149,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
         (page[cleanupSymbol] as any)()
       }
       // need to cleanup for each tester
-      // since playwright keybaord API is stateful on page instance level
+      // since playwright keyboard API is stateful on page instance level
       await userEvent.cleanup()
     }
     catch (error: any) {

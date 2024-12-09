@@ -1164,7 +1164,7 @@ export class Vitest {
       f => ({ ...f, filename: slash(resolve(dir, f.filename)) }),
     ))
 
-    // Key is file and val sepcifies whether we have matched this file with testLocation
+    // Key is file and val specifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}
 
     await Promise.all(this.projects.map(async (project) => {
