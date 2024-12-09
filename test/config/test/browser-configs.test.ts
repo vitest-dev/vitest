@@ -57,7 +57,7 @@ test('inherits browser options', async () => {
     setupFiles: ['/test/setup.ts'],
     provide: {
       browser: true,
-    },
+    } as any,
     browser: {
       enabled: true,
       headless: true,
@@ -99,7 +99,7 @@ test('inherits browser options', async () => {
       setupFiles: ['/test/setup.ts'],
       provide: {
         browser: true,
-      },
+      } as any,
       browser: {
         enabled: true,
         headless: true,
@@ -121,7 +121,7 @@ test('inherits browser options', async () => {
       setupFiles: ['/test/setup.ts'],
       provide: {
         browser: true,
-      },
+      } as any,
       browser: {
         enabled: true,
         headless: true,
