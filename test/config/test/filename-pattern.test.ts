@@ -35,6 +35,42 @@ test('match by pattern that also matches current working directory', async () =>
   expect(stdout).not.toMatch('test/example.test.ts')
 })
 
+test('no matches by file name in run mode {passWithNoTests: false}', async () => {
+  const { exitCode, stderr } = await runVitest(
+    { passWithNoTests: false, root: './fixtures/filters' },
+    ['non-matching-filename-pattern'],
+  )
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('No test files found, exiting with code 1')
+  expect(stderr).toMatch('filter:  non-matching-filename-pattern')
+})
+
+test('no matches by file name in run mode {passWithNoTests: true}', async () => {
+  const { exitCode, stdout, stderr } = await runVitest(
+    { passWithNoTests: true, root: './fixtures/filters' },
+    ['non-matching-filename-pattern'],
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stdout).toMatch('No test files found, exiting with code 0')
+  expect(stderr).toMatch('filter:  non-matching-filename-pattern')
+})
+
+test('no matches by file name in watch mode', async () => {
+  const { exitCode, stdout, stderr } = await runVitest(
+    { watch: true, root: './fixtures/filters' },
+    ['non-matching-filename-pattern'],
+  )
+
+  expect(exitCode).toBe(0)
+  expect(stderr).not.toMatch('exiting')
+
+  expect(stderr).toMatch('No test files found\n')
+  expect(stderr).toMatch('filter:  non-matching-filename-pattern')
+  expect(stdout).toMatch('Waiting for file changes...')
+})
+
 test.each([
   ['the parent of CWD', resolve(process.cwd(), '..')],
   ['the parent of CWD with slash', join(resolve(process.cwd(), '..'), '/')],
