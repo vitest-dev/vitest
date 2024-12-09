@@ -44,7 +44,7 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
-      - name: Diff LICENCSE.md
+      - name: Diff LICENSE.md
         run: |
           if ! git diff --exit-code packages/vitest/LICENSE.md; then
             echo "::error::LICENSE.md has changed. Please commit the updated LICENSE.md file after the build."
