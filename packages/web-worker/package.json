@@ -41,11 +41,11 @@
     "vitest": "workspace:*"
   },
   "dependencies": {
-    "debug": "^4.3.7"
+    "debug": "^4.4.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
     "@types/ungap__structured-clone": "^1.2.0",
-    "@ungap/structured-clone": "^1.2.0"
+    "@ungap/structured-clone": "^1.2.1"
   }
 }
