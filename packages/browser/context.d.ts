@@ -303,6 +303,22 @@ interface LocatorSelectors {
 
 export interface Locator extends LocatorSelectors {
   /**
+   * Selector string that will be used to locate the element by the browser provider.
+   * You can use this string in the commands API:
+   * ```ts
+   * // playwright
+   * function test({ selector, iframe }) {
+   *   await iframe.locator(selector).click()
+   * }
+   * // webdriverio
+   * function test({ selector, browser }) {
+   *   await browser.$(selector).click()
+   * }
+   * ```
+   */
+  selector: string
+
+  /**
    * Click on an element. You can use the options to set the cursor position.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
    */
