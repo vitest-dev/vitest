@@ -391,7 +391,15 @@ export class Vitest {
       return { tests: [], errors: [] }
     }
 
-    await this.collectFiles(files)
+    const reporters = this.reporters
+    this.reporters = []
+
+    try {
+      await this.collectFiles(files)
+    }
+    finally {
+      this.reporters = reporters
+    }
 
     return {
       tests: this.state.getFiles(),

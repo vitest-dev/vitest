@@ -78,6 +78,10 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       ctx.state.collectPaths(paths)
       return ctx.report('onPathsCollected', paths)
     },
+    onQueued(file) {
+      ctx.state.collectFiles(project, [file])
+      return ctx.report('onQueued', file)
+    },
     onCollected(files) {
       ctx.state.collectFiles(project, files)
       return ctx.report('onCollected', files)

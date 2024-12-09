@@ -28,6 +28,10 @@ export class DefaultReporter extends BaseReporter {
     }
   }
 
+  onQueued(file: File) {
+    this.summary?.onQueued(file)
+  }
+
   onInit(ctx: Vitest) {
     super.onInit(ctx)
     this.summary?.onInit(ctx, { verbose: this.verbose })

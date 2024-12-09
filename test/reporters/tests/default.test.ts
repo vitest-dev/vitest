@@ -70,6 +70,20 @@ describe('default reporter', async () => {
     expect(result.stderr).not.toContain(`status: 'not found'`)
   })
 
+  test('prints queued tests as soon as they are added', async () => {
+    const { stdout, vitest } = await runVitest({
+      include: ['fixtures/long-loading-task.test.ts'],
+      reporters: [['default', { isTTY: true, summary: true }]],
+      config: 'fixtures/vitest.config.ts',
+      watch: true,
+    })
+
+    await vitest.waitForStdout('❯ fixtures/long-loading-task.test.ts 0/0')
+    await vitest.waitForStdout('Waiting for file changes...')
+
+    expect(stdout).toContain('✓ fixtures/long-loading-task.test.ts (1 test)')
+  })
+
   test('prints skipped tests by default when a single file is run', async () => {
     const { stdout } = await runVitest({
       include: ['fixtures/all-passing-or-skipped.test.ts'],

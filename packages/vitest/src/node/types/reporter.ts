@@ -7,6 +7,7 @@ export interface Reporter {
   onInit?: (ctx: Vitest) => void
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
+  onQueued?: (file: File) => Awaitable<void>
   onCollected?: (files?: File[]) => Awaitable<void>
   onFinished?: (
     files: File[],

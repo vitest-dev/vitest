@@ -68,6 +68,12 @@ export async function resolveTestRunner(
     return p
   }
 
+  const originalOnCollectStart = testRunner.onCollectStart
+  testRunner.onCollectStart = async (file) => {
+    await rpc().onQueued(file)
+    await originalOnCollectStart?.call(testRunner, file)
+  }
+
   const originalOnCollected = testRunner.onCollected
   testRunner.onCollected = async (files) => {
     const state = getWorkerState()

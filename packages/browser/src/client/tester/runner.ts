@@ -104,6 +104,10 @@ export function createBrowserRunner(
       }
     }
 
+    onCollectStart = (file: File) => {
+      return rpc().onQueued(file)
+    }
+
     onCollected = async (files: File[]): Promise<unknown> => {
       files.forEach((file) => {
         file.prepareDuration = state.durations.prepare

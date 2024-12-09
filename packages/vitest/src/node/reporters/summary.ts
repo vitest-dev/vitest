@@ -87,6 +87,10 @@ export class SummaryReporter extends TaskParser implements Reporter {
     })
   }
 
+  onQueued(file: File) {
+    this.onTestFilePrepare(file)
+  }
+
   onPathsCollected(paths?: string[]) {
     this.suites.total = (paths || []).length
   }
