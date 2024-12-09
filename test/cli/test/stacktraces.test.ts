@@ -8,7 +8,7 @@ const [major] = process.version.slice(1).split('.').map(num => Number(num))
 
 const it = viteVersion[0] >= '6' ? (vitestIt.skip as typeof vitestIt) : vitestIt
 
-// To prevent the warnining coming up in snapshots
+// To prevent the warning coming up in snapshots
 process.setMaxListeners(20)
 
 describe('stacktraces should respect sourcemaps', async () => {

@@ -69,7 +69,7 @@ export class ServerMockResolver {
     }
     const isOptimized = resolved.id.startsWith(withTrailingSlash(this.server.config.cacheDir))
     let url: string
-    // normalise the URL to be acceptible by the browser
+    // normalise the URL to be acceptable by the browser
     // https://github.com/vitejs/vite/blob/e833edf026d495609558fd4fb471cf46809dc369/packages/vite/src/node/plugins/importAnalysis.ts#L335
     const root = this.server.config.root
     if (resolved.id.startsWith(withTrailingSlash(root))) {
