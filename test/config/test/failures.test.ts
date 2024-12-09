@@ -288,3 +288,83 @@ test('maxConcurrency 0 prints a warning', async () => {
   expect(ctx?.config.maxConcurrency).toBe(5)
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })
+
+test('browser.name or browser.configs are required', async () => {
+  const { stderr, exitCode } = await runVitestCli('--browser.enabled')
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.configs" options, none were set.')
+})
+
+test('browser.configs is empty', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      configs: [],
+    },
+  })
+  expect(stderr).toMatch('"browser.configs" was set in the config, but the array is empty. Define at least one browser config.')
+})
+
+test('browser.name filteres all browser.configs are required', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      name: 'chromium',
+      provider: 'playwright',
+      configs: [
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toMatch('"browser.configs" was set in the config, but the array is empty. Define at least one browser config. The "browser.name" was set to "chromium" which filtered all configs (firefox). Did you mean to use another name?')
+})
+
+test('browser.configs throws an error if no custom name is provided', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      configs: [
+        { browser: 'firefox' },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "firefox" was already defined. If you have multiple configs for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+})
+
+test('browser.configs throws an error if no custom name is provided, but the config name is inherited', async () => {
+  const { stderr } = await runVitest({
+    name: 'custom',
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      configs: [
+        { browser: 'firefox' },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "custom (firefox)" was already defined. If you have multiple configs for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+})
+
+test('throws an error if name conflicts with a workspace name', async () => {
+  const { stderr } = await runVitest({
+    workspace: [
+      { test: { name: '1 (firefox)' } },
+      {
+        test: {
+          browser: {
+            enabled: true,
+            provider: 'playwright',
+            configs: [
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+    ],
+  })
+  expect(stderr).toMatch('Cannot redefine the project name for a nameless project. The project name "firefox" was already defined. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+})

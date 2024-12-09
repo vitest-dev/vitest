@@ -1,6 +1,5 @@
 import type { Vitest } from '../core'
-import type { TestProject } from '../project'
-import type { TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
+import type { BrowserConfig, ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
@@ -8,7 +7,8 @@ import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { initializeProject } from '../project'
+import { initializeProject, TestProject } from '../project'
+import { withLabel } from '../reporters/renderers/utils'
 import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
@@ -97,7 +97,7 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return [vitest._createRootProject()]
+    return resolveBrowserWorkspace(vitest, new Set(), [vitest._createRootProject()])
   }
 
   const resolvedProjects = await Promise.all(projectPromises)
@@ -127,7 +127,99 @@ export async function resolveWorkspace(
     names.add(name)
   }
 
+  return resolveBrowserWorkspace(vitest, names, resolvedProjects)
+}
+
+export function resolveBrowserWorkspace(
+  vitest: Vitest,
+  names: Set<string>,
+  resolvedProjects: TestProject[],
+) {
+  const newConfigs: [project: TestProject, config: ResolvedConfig][] = []
+
+  resolvedProjects.forEach((project) => {
+    const configs = project.config.browser.configs
+    if (!project.config.browser.enabled || !configs || configs.length === 0) {
+      return
+    }
+    const [firstConfig, ...restConfigs] = configs
+    const originalName = project.config.name
+
+    const newName = originalName
+      ? `${originalName} (${firstConfig.browser})`
+      : firstConfig.browser
+    if (names.has(newName)) {
+      throw new Error(`Cannot redefine the project name for a nameless project. The project name "${firstConfig.browser}" was already defined. All projects in a workspace should have unique names. Make sure your configuration is correct.`)
+    }
+    names.add(newName)
+
+    if (project.config.browser.providerOptions) {
+      vitest.logger.warn(
+        withLabel('yellow', 'Vitest', `"providerOptions"${originalName ? ` in "${originalName}" project` : ''} is ignored because it's overriden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
+      )
+    }
+
+    restConfigs.forEach((config) => {
+      const browser = config.browser
+      const name = config.name
+      const newName = name || (originalName ? `${originalName} (${browser})` : browser)
+      if (names.has(newName)) {
+        throw new Error(
+          [
+            `Cannot define a nested project for a ${browser} browser. The project name "${newName}" was already defined. `,
+            'If you have multiple configs for the same browser, make sure to define a custom "name". ',
+            'All projects in a workspace should have unique names. Make sure your configuration is correct.',
+          ].join(''),
+        )
+      }
+      names.add(newName)
+      const clonedConfig = cloneConfig(project, config)
+      clonedConfig.name = newName
+      newConfigs.push([project, clonedConfig])
+    })
+
+    Object.assign(project.config, cloneConfig(project, firstConfig))
+    project.config.name = newName
+  })
+  newConfigs.forEach(([project, clonedConfig]) => {
+    const clone = TestProject._cloneBrowserProject(project, clonedConfig)
+    resolvedProjects.push(clone)
+  })
   return resolvedProjects
+}
+
+function cloneConfig(project: TestProject, { browser, ...config }: BrowserConfig) {
+  const {
+    locators,
+    viewport,
+    testerHtmlPath,
+    screenshotDirectory,
+    screenshotFailures,
+    // @ts-expect-error remove just in case
+    browser: _browser,
+    name,
+    ...overrideConfig
+  } = config
+  const currentConfig = project.config.browser
+  return mergeConfig<any, any>({
+    ...project.config,
+    browser: {
+      ...project.config.browser,
+      locators: locators
+        ? {
+            testIdAttribute: locators.testIdAttribute ?? currentConfig.locators.testIdAttribute,
+          }
+        : project.config.browser.locators,
+      viewport: viewport ?? currentConfig.viewport,
+      testerHtmlPath: testerHtmlPath ?? currentConfig.testerHtmlPath,
+      screenshotDirectory: screenshotDirectory ?? currentConfig.screenshotDirectory,
+      screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
+      name: browser,
+      providerOptions: config,
+      configs: undefined, // projects cannot spawn more configs
+    },
+    // TODO: should resolve, not merge/override
+  } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
 }
 
 async function resolveTestProjectConfigs(
