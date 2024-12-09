@@ -8,6 +8,8 @@ title: Advanced API
 This guide lists advanced APIs to run tests via a Node.js script. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
 :::
 
+You can import any method from the `vitest/node` entry-point.
+
 ## startVitest
 
 ```ts
@@ -91,7 +93,24 @@ function resolveConfig(
 }>
 ```
 
-This method resolves the config with custom parameters. If no parameters are gived, the `root` will be `process.cwd()`.
+This method resolves the config with custom parameters. If no parameters are given, the `root` will be `process.cwd()`.
+
+```ts
+import { resolveConfig } from 'vitest/node'
+
+// vitestConfig only has resolved "test" properties
+const { vitestConfig, viteConfig } = await resolveConfig({
+  mode: 'custom',
+  configFile: false,
+  resolve: {
+    conditions: ['custom']
+  },
+  test: {
+    setupFiles: ['/my-setup-file.js'],
+    pool: 'threads',
+  },
+})
+```
 
 ::: info
 Due to how Vite's `createServer` works, Vitest has to resolve the config during the plugin's `configResolve` hook. Therefore, this method is not actually used internally and is exposed exclusively as a public API.
@@ -101,6 +120,8 @@ If you pass down the config to the `startVitest` or `createVitest` APIs, Vitest 
 
 ::: warning
 The `resolveConfig` doesn't resolve the `workspace`. To resolve workspace configs, Vitest needs an established Vite server.
+
+Also note that `viteConfig.test` will not be fully resolved. If you need Vitest config, use `vitestConfig` instead.
 :::
 
 ## parseCLI

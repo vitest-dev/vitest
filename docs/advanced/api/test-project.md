@@ -68,7 +68,7 @@ const config: SerializedConfig = vitest.projects[0].serializedConfig
 The `serializedConfig` property is a getter. Every time it's accessed Vitest serializes the config again in case it was changed. This also means that it always returns a different reference:
 
 ```ts
-project.serializedConfig === project.serializedConfig // false
+project.serializedConfig === project.serializedConfig // ❌
 ```
 :::
 
