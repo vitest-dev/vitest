@@ -8,7 +8,7 @@ let enabled = false
 
 type ScriptCoverage = Awaited<ReturnType<typeof session.send<'Profiler.takePreciseCoverage'>>>
 
-export default <CoverageProviderModule>{
+export default {
   async startCoverage() {
     if (enabled) {
       return
@@ -47,7 +47,7 @@ export default <CoverageProviderModule>{
   async getProvider(): Promise<V8CoverageProvider> {
     return loadProvider()
   },
-}
+} satisfies CoverageProviderModule
 
 function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
   if (!coverage.url.startsWith(window.location.origin)) {

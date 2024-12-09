@@ -7,7 +7,7 @@ import { loadProvider } from './load-provider'
 const session = new inspector.Session()
 let enabled = false
 
-export default <CoverageProviderModule>{
+export default {
   startCoverage({ isolate }) {
     if (isolate === false && enabled) {
       return
@@ -55,7 +55,7 @@ export default <CoverageProviderModule>{
   async getProvider(): Promise<V8CoverageProvider> {
     return loadProvider()
   },
-}
+} satisfies CoverageProviderModule
 
 function filterResult(coverage: Profiler.ScriptCoverage): boolean {
   if (!coverage.url.startsWith('file://')) {
