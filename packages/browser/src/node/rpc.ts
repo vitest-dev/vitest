@@ -75,6 +75,10 @@ export function setupBrowserRpc(server: BrowserServer) {
           }
           ctx.state.catchError(error, type)
         },
+        async onQueued(file) {
+          ctx.state.collectFiles(project, [file])
+          await ctx.report('onQueued', file)
+        },
         async onCollected(files) {
           ctx.state.collectFiles(project, files)
           await ctx.report('onCollected', files)
