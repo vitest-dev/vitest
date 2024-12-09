@@ -49,7 +49,7 @@ export class WindowRenderer {
     )
 
     // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
-    this.options.logger.onExit(() => {
+    this.options.logger.onTerminalCleanup(() => {
       this.flushBuffer()
       this.stop()
     })

@@ -39,7 +39,7 @@ const CLEAR_SCREEN = '\x1Bc'
 export class Logger {
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
-  private exitListeners: Listener[] = []
+  private cleanupListeners: Listener[] = []
   public console: Console
 
   constructor(
@@ -49,7 +49,7 @@ export class Logger {
   ) {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
     this._highlights.clear()
-    this.addProcessExitListeners()
+    this.addCleanupListeners()
     this.registerUnhandledRejection()
 
     ;(this.outputStream as Writable).write(HIDE_CURSOR)
@@ -311,14 +311,18 @@ export class Logger {
     return 'columns' in this.outputStream ? this.outputStream.columns : 80
   }
 
-  onExit(listener: Listener) {
-    this.exitListeners.push(listener)
+  onTerminalCleanup(listener: Listener) {
+    this.cleanupListeners.push(listener)
   }
 
-  private addProcessExitListeners() {
-    const onExit = (signal?: string | number, exitCode?: number) => {
-      this.exitListeners.forEach(fn => fn())
+  private addCleanupListeners() {
+    const cleanup = () => {
+      this.cleanupListeners.forEach(fn => fn())
       ;(this.outputStream as Writable).write(SHOW_CURSOR)
+    }
+
+    const onExit = (signal?: string | number, exitCode?: number) => {
+      cleanup()
 
       // Interrupted signals don't set exit code automatically.
       // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
@@ -337,9 +341,7 @@ export class Logger {
       process.off('SIGINT', onExit)
       process.off('SIGTERM', onExit)
       process.off('exit', onExit)
-
-      this.exitListeners.forEach(fn => fn())
-      ;(this.outputStream as Writable).write(SHOW_CURSOR)
+      cleanup()
     })
   }
 
