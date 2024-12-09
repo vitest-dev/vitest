@@ -32,7 +32,11 @@ export const client = (function createVitestClient() {
         },
         onFinished(_files, errors) {
           explorerTree.endRun()
-          testRunState.value = 'idle'
+          // don't change the testRunState.value here:
+          // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
+          // - if we change here the state before the tasks states are updated, the cursor position will be lost
+          // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
+          // testRunState.value = 'idle'
           unhandledErrors.value = (errors || []).map(parseError)
         },
         onFinishedReportCoverage() {
