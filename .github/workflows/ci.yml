@@ -44,6 +44,13 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Diff LICENSE.md
+        run: |
+          if ! git diff --exit-code packages/vitest/LICENSE.md; then
+            echo "::error::LICENSE.md has changed. Please commit the updated LICENSE.md file after the build."
+            exit 1
+          fi
+
       # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
       - name: Check workflow files
         run: |
