@@ -1215,7 +1215,7 @@ export class Vitest {
   }
 
   /**
-   * Register a handler that will be called when the tests are reruning.
+   * Register a handler that will be called when the tests are rerunning.
    */
   onTestsRerun(fn: OnTestsRerunHandler): void {
     this._onUserTestsRerun.push(fn)

@@ -81,11 +81,11 @@ export class VitestWatcher {
   private onAdd = (id: string): void => {
     id = slash(id)
     this.vitest.invalidateFile(id)
-    let _fileContent: string | undefined
+    let fileContent: string | undefined
 
     const matchingProjects: TestProject[] = []
     this.vitest.projects.forEach((project) => {
-      if (project.matchesTestGlob(id, () => (_fileContent = readFileSync(id, 'utf-8')))) {
+      if (project.matchesTestGlob(id, () => (fileContent ??= readFileSync(id, 'utf-8')))) {
         matchingProjects.push(project)
       }
     })
@@ -155,8 +155,8 @@ export class VitestWatcher {
             return
           }
 
-          const heedsRerun = this.handleFileChanged(i.file)
-          if (heedsRerun) {
+          const needsRerun = this.handleFileChanged(i.file)
+          if (needsRerun) {
             rerun = true
           }
         })
