@@ -3,7 +3,7 @@ import { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -605,6 +605,46 @@ describe('toSatisfy()', () => {
     expect(isOddMock).not.toBeCalled()
     expect(1).toSatisfy(isOddMock)
     expect(isOddMock).toBeCalled()
+  })
+
+  it('asymmetric matcher', () => {
+    expect({ value: 1 }).toEqual({ value: expect.toSatisfy(isOdd) })
+    expect(() => {
+      expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'odd') })
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected { value: 2 } to deeply equal { value: toSatisfy{…} }]`,
+    )
+
+    expect(() => {
+      throw new Error('1')
+    }).toThrow(
+      expect.toSatisfy((e) => {
+        assert(e instanceof Error)
+        expect(e).toMatchObject({ message: expect.toSatisfy(isOdd) })
+        return true
+      }),
+    )
+
+    expect(() => {
+      expect(() => {
+        throw new Error('2')
+      }).toThrow(
+        expect.toSatisfy((e) => {
+          assert(e instanceof Error)
+          expect(e).toMatchObject({ message: expect.toSatisfy(isOdd) })
+          return true
+        }),
+      )
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected Error: 2 to match object { message: toSatisfy{…} }]`,
+    )
+  })
+
+  it('error message', () => {
+    snapshotError(() => expect(2).toSatisfy(isOdd))
+    snapshotError(() => expect(2).toSatisfy(isOdd, 'ODD'))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd) }))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'ODD') }))
   })
 })
 
