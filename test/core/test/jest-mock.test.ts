@@ -363,6 +363,31 @@ describe('jest mock compat layer', () => {
     expect(obj.property).toBe(true)
   })
 
+  it('spyOn returns the same spy twice', () => {
+    const obj = {
+      method() {
+        return 'original'
+      },
+    }
+
+    const spy1 = vi.spyOn(obj, 'method').mockImplementation(() => 'mocked')
+    const spy2 = vi.spyOn(obj, 'method')
+
+    expect(vi.isMockFunction(obj.method)).toBe(true)
+    expect(obj.method()).toBe('mocked')
+    expect(spy1).toBe(spy2)
+
+    spy2.mockImplementation(() => 'mocked2')
+
+    expect(obj.method()).toBe('mocked2')
+
+    spy2.mockRestore()
+
+    expect(obj.method()).toBe('original')
+    expect(vi.isMockFunction(obj.method)).toBe(false)
+    expect(obj.method).not.toBe(spy1)
+  })
+
   it('should spy on property setter (2), and mockReset should not restore original descriptor', () => {
     const obj = {
       _property: false,
