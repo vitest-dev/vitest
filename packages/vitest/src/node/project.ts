@@ -196,7 +196,7 @@ export class TestProject {
    * Serialized project configuration. This is the config that tests receive.
    */
   public get serializedConfig(): SerializedConfig {
-    return this._serializeOverridenConfig()
+    return this._serializeOverriddenConfig()
   }
 
   /** @deprecated use `vite` instead */
@@ -408,7 +408,7 @@ export class TestProject {
 
   /** @deprecated use `serializedConfig` instead */
   getSerializableConfig(): SerializedConfig {
-    return this._serializeOverridenConfig()
+    return this._serializeOverriddenConfig()
   }
 
   /** @internal */
@@ -613,7 +613,7 @@ export class TestProject {
     })
   }
 
-  private _serializeOverridenConfig(): SerializedConfig {
+  private _serializeOverriddenConfig(): SerializedConfig {
     // TODO: serialize the config _once_ or when needed
     const config = serializeConfig(
       this.config,

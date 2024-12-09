@@ -55,7 +55,7 @@ export default defineConfig({
 })
 ```
 
-Now you can call `vi.mock` in your code and the mocker should kick in automatially:
+Now you can call `vi.mock` in your code and the mocker should kick in automatically:
 
 ```ts
 import { mocked } from './some-module.js'
@@ -94,7 +94,7 @@ import { spyOn } from '@vitest/spy'
 mockObject(
   {
     // this is needed because it can be used in vm context
-    globalContructors: {
+    globalConstructors: {
       Object,
       // ...
     },

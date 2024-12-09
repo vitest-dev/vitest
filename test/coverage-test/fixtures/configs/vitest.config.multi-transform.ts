@@ -25,11 +25,11 @@ function MultiTransformPlugin(): Plugin {
     transform(code, id, options) {
       if (id.includes('src/multi-environment')) {
         const ssr = options?.ssr || false
-        const transforMode = `transformMode is ${ssr ? 'ssr' : 'csr'}`
+        const transformMode = `transformMode is ${ssr ? 'ssr' : 'csr'}`
         const padding = '\n*****'.repeat(ssr ? 0 : 15)
 
         const transformed = new MagicString(code)
-        transformed.replace('\'default-padding\'', `\`${transforMode} ${padding}\``)
+        transformed.replace('\'default-padding\'', `\`${transformMode} ${padding}\``)
 
         const map = remapping(
           [transformed.generateMap({ hires: true }), this.getCombinedSourcemap() as any],

@@ -25,7 +25,7 @@ it.each(files)('should fail %s', async (file) => {
   expect(msg).toMatchSnapshot()
 }, 30_000)
 
-it('should report coverage when "coverag.reportOnFailure: true" and tests fail', async () => {
+it('should report coverage when "coverage.reportOnFailure: true" and tests fail', async () => {
   const { stdout } = await runVitest({
     root,
     coverage: {
@@ -39,7 +39,7 @@ it('should report coverage when "coverag.reportOnFailure: true" and tests fail',
   expect(stdout).toMatch('Coverage report from istanbul')
 })
 
-it('should not report coverage when "coverag.reportOnFailure" has default value and tests fail', async () => {
+it('should not report coverage when "coverage.reportOnFailure" has default value and tests fail', async () => {
   const { stdout } = await runVitest({
     root,
     coverage: {

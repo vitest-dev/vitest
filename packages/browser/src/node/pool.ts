@@ -126,7 +126,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    // TODO: paralellize tests instead of running them sequentially (based on CPU?)
+    // TODO: parallelize tests instead of running them sequentially (based on CPU?)
     for (const [project, files] of groupedFiles.entries()) {
       if (isCancelled) {
         break

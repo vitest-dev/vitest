@@ -158,6 +158,22 @@ export class FakeTimers {
         )
       }
 
+      // setImmediate/clearImmediate is not possible to mock when it's not globally available and it throws an internal error.
+      // this might be @sinonjs/fake-timers's bug and inconsistent behavior, but for now, we silently filter out these two beforehand for browser testing.
+      // https://github.com/sinonjs/fake-timers/issues/277
+      // https://github.com/sinonjs/sinon/issues/2085
+      const existingFakedMethods = (this._userConfig?.toFake || toFake).filter(
+        (method) => {
+          switch (method) {
+            case 'setImmediate':
+            case 'clearImmediate':
+              return method in this._global && this._global[method]
+            default:
+              return true
+          }
+        },
+      )
+
       this._clock = this._fakeTimers.install({
         now: Date.now(),
         ...this._userConfig,
