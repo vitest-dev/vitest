@@ -493,7 +493,7 @@ exports[`toSatisfy() > error message 3`] = `
   "diff": "- Expected
 + Received
 
-  Object {
+  {
 -   "value": toSatisfy<(value) => value % 2 !== 0>,
 +   "value": 2,
   }",
@@ -512,7 +512,7 @@ exports[`toSatisfy() > error message 4`] = `
   "diff": "- Expected
 + Received
 
-  Object {
+  {
 -   "value": toSatisfy<(value) => value % 2 !== 0, ODD>,
 +   "value": 2,
   }",
