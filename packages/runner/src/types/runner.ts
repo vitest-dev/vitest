@@ -1,6 +1,5 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import type {
-  Custom,
   ExtendedContext,
   File,
   SequenceHooks,
@@ -38,6 +37,11 @@ export interface VitestRunnerConfig {
   retry: number
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
+}
+
+export interface FileSpec {
+  filepath: string
+  testLocations: number[] | undefined
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'
@@ -86,7 +90,7 @@ export interface VitestRunner {
   /**
    * When the task has finished running, but before cleanup hooks are called
    */
-  onTaskFinished?: (test: Test | Custom) => unknown
+  onTaskFinished?: (test: Test) => unknown
   /**
    * Called after result and state are set.
    */

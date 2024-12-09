@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
-import { browser, runBrowserTests } from './utils'
+import { browser, provider, runBrowserTests } from './utils'
 
 describe('running browser tests', async () => {
   let stderr: string
@@ -152,4 +152,18 @@ test('user-event', async () => {
       "keyboard.test.ts": "pass",
     }
   `)
+})
+
+test('timeout', async () => {
+  const { stderr } = await runBrowserTests({
+    root: './fixtures/timeout',
+  })
+  expect(stderr).toContain('Matcher did not succeed in 500ms')
+  if (provider === 'playwright') {
+    expect(stderr).toContain('locator.click: Timeout 500ms exceeded.')
+    expect(stderr).toContain('locator.click: Timeout 345ms exceeded.')
+  }
+  if (provider === 'webdriverio') {
+    expect(stderr).toContain('Cannot find element with locator')
+  }
 })

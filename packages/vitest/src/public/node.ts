@@ -1,13 +1,16 @@
 import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 import { createServer as _createServer } from 'vite'
+import { Vitest } from '../node/core'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
+
+export const version = Vitest.version
 
 export { parseCLI } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
 export type { Vitest } from '../node/core'
 export { createVitest } from '../node/create'
-export { FilesNotFoundError as TestsNotFoundError, GitNotFoundError } from '../node/errors'
+export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export type { GlobalSetupContext } from '../node/globalSetup'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { VitestPlugin } from '../node/plugins'
@@ -122,9 +125,9 @@ export type {
   CollectLineNumbers as TypeCheckCollectLineNumbers,
   CollectLines as TypeCheckCollectLines,
   Context as TypeCheckContext,
+  TscErrorInfo as TypeCheckErrorInfo,
   RawErrsMap as TypeCheckRawErrorsMap,
   RootAndTarget as TypeCheckRootAndTarget,
-  TscErrorInfo as TypeCheckErrorInfo,
 } from '../typecheck/types'
 
 export type {
@@ -135,9 +138,12 @@ export type {
 export { createDebugger } from '../utils/debugger'
 
 export {
+  esbuildVersion,
   isFileServingAllowed,
   parseAst,
   parseAstAsync,
+  rollupVersion,
+  version as viteVersion,
 } from 'vite'
 
 export type * as Vite from 'vite'

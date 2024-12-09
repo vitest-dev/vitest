@@ -73,14 +73,18 @@ export function createTestContext<T extends Test>(
     throw new PendingError('test is skipped; abort execution', test, note)
   }
 
-  context.onTestFailed = (fn) => {
+  context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
-    test.onFailed.push(fn)
+    test.onFailed.push(
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+    )
   }
 
-  context.onTestFinished = (fn) => {
+  context.onTestFinished = (handler, timeout) => {
     test.onFinished ||= []
-    test.onFinished.push(fn)
+    test.onFinished.push(
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+    )
   }
 
   return (runner.extendTaskContext?.(context) as ExtendedContext<T>) || context

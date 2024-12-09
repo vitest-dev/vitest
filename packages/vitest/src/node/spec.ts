@@ -19,12 +19,15 @@ export class TestSpecification {
   public readonly project: TestProject
   public readonly moduleId: string
   public readonly pool: Pool
+  /** @private */
+  public readonly testLocations: number[] | undefined
   // public readonly location: WorkspaceSpecLocation | undefined
 
   constructor(
     project: TestProject,
     moduleId: string,
     pool: Pool,
+    testLocations?: number[] | undefined,
     // location?: WorkspaceSpecLocation | undefined,
   ) {
     this[0] = project
@@ -33,6 +36,7 @@ export class TestSpecification {
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
+    this.testLocations = testLocations
     // this.location = location
   }
 

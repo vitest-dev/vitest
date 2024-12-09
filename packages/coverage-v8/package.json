@@ -1,7 +1,7 @@
 {
   "name": "@vitest/coverage-v8",
   "type": "module",
-  "version": "2.2.0-beta.2",
+  "version": "3.0.0-beta.1",
   "description": "V8 coverage provider for Vitest",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -56,12 +56,12 @@
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
     "@bcoe/v8-coverage": "^0.2.3",
-    "debug": "^4.3.7",
+    "debug": "^4.4.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
     "istanbul-lib-source-maps": "^5.0.6",
     "istanbul-reports": "^3.1.7",
-    "magic-string": "^0.30.12",
+    "magic-string": "^0.30.14",
     "magicast": "^0.3.5",
     "std-env": "^3.8.0",
     "test-exclude": "^7.0.1",

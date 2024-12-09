@@ -11,6 +11,7 @@ import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import { existsSync, promises as fs, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { getTasks, hasFailed } from '@vitest/runner/utils'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { noop, slash, toArray } from '@vitest/utils'
@@ -25,8 +26,9 @@ import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { VitestCache } from './cache'
+import { groupFilters, parseFilter } from './cli/filter'
 import { resolveConfig } from './config/resolveConfig'
-import { FilesNotFoundError, GitNotFoundError } from './errors'
+import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
@@ -46,7 +48,8 @@ export interface VitestOptions {
 }
 
 export class Vitest {
-  version = version
+  public readonly version = version
+  static readonly version = version
 
   config: ResolvedConfig = undefined!
   configOverride: Partial<ResolvedConfig> = {}
@@ -65,7 +68,7 @@ export class Vitest {
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
   watchedTests: Set<string> = new Set()
-  filenamePattern?: string
+  filenamePattern?: string[]
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
   isCancelling = false
@@ -76,6 +79,7 @@ export class Vitest {
 
   public packageInstaller: VitestPackageInstaller
 
+  /** TODO: rename to `_coreRootProject` */
   /** @internal */
   public coreWorkspaceProject!: TestProject
 
@@ -91,7 +95,7 @@ export class Vitest {
   /** @deprecated use `_cachedSpecs` */
   projectTestFiles = this._cachedSpecs
 
-  /** @private */
+  /** @internal */
   public _browserLastPort = defaultBrowserPort
 
   /** @internal */
@@ -414,6 +418,7 @@ export class Vitest {
       await this.report('onInit', this)
     }
 
+    this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
     )
@@ -592,38 +597,39 @@ export class Vitest {
 
     // schedule the new run
     this.runningPromise = (async () => {
-      if (!this.pool) {
-        this.pool = createPool(this)
-      }
-
-      const invalidates = Array.from(this.invalidates)
-      this.invalidates.clear()
-      this.snapshot.clear()
-      this.state.clearErrors()
-
-      if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
-        await this.coverageProvider?.clean()
-      }
-
-      await this.initializeGlobalSetup(specs)
-
       try {
-        await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
-      }
-      catch (err) {
-        this.state.catchError(err, 'Unhandled Error')
-      }
+        if (!this.pool) {
+          this.pool = createPool(this)
+        }
 
-      const files = this.state.getFiles()
+        const invalidates = Array.from(this.invalidates)
+        this.invalidates.clear()
+        this.snapshot.clear()
+        this.state.clearErrors()
 
-      if (hasFailed(files)) {
-        process.exitCode = 1
+        if (!this.isFirstRun && this.config.coverage.cleanOnRerun) {
+          await this.coverageProvider?.clean()
+        }
+
+        await this.initializeGlobalSetup(specs)
+
+        try {
+          await this.pool.runTests(specs as WorkspaceSpec[], invalidates)
+        }
+        catch (err) {
+          this.state.catchError(err, 'Unhandled Error')
+        }
+
+        const files = this.state.getFiles()
+
+        if (hasFailed(files)) {
+          process.exitCode = 1
+        }
+
+        this.cache.results.updateResults(files)
+        await this.cache.results.writeToCache()
       }
-
-      this.cache.results.updateResults(files)
-      await this.cache.results.writeToCache()
-    })()
-      .finally(async () => {
+      finally {
         // can be duplicate files if different projects are using the same file
         const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
         const errors = this.state.getUnhandledErrors()
@@ -632,7 +638,9 @@ export class Vitest {
         this.checkUnhandledErrors(errors)
         await this.report('onFinished', this.state.getFiles(files), errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
-
+      }
+    })()
+      .finally(() => {
         this.runningPromise = undefined
         this.isFirstRun = false
 
@@ -681,7 +689,7 @@ export class Vitest {
         process.exitCode = 1
       }
     })()
-      .finally(async () => {
+      .finally(() => {
         this.runningPromise = undefined
 
         // all subsequent runs will treat this as a fresh run
@@ -707,7 +715,7 @@ export class Vitest {
     }
 
     if (this.filenamePattern) {
-      const filteredFiles = await this.globTestFiles([this.filenamePattern])
+      const filteredFiles = await this.globTestFiles(this.filenamePattern)
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
@@ -771,9 +779,9 @@ export class Vitest {
   }
 
   async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
-    this.filenamePattern = pattern
+    this.filenamePattern = pattern ? [pattern] : []
 
-    const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
+    const trigger = this.filenamePattern.length ? 'change filename pattern' : 'reset filename pattern'
 
     await this.rerunFiles(files, trigger, pattern === '')
   }
@@ -841,7 +849,7 @@ export class Vitest {
       let files = Array.from(this.changedTests)
 
       if (this.filenamePattern) {
-        const filteredFiles = await this.globTestFiles([this.filenamePattern])
+        const filteredFiles = await this.globTestFiles(this.filenamePattern)
         files = files.filter(file => filteredFiles.some(f => f[1] === file))
 
         // A file that does not match the current filename pattern was changed
@@ -1141,19 +1149,55 @@ export class Vitest {
 
   public async globTestSpecs(filters: string[] = []) {
     const files: TestSpecification[] = []
+    const dir = process.cwd()
+    const parsedFilters = filters.map(f => parseFilter(f))
+
+    // Require includeTaskLocation when a location filter is passed
+    if (
+      !this.config.includeTaskLocation
+      && parsedFilters.some(f => f.lineNumber !== undefined)
+    ) {
+      throw new IncludeTaskLocationDisabledError()
+    }
+
+    const testLocations = groupFilters(parsedFilters.map(
+      f => ({ ...f, filename: slash(resolve(dir, f.filename)) }),
+    ))
+
+    // Key is file and val sepcifies whether we have matched this file with testLocation
+    const testLocHasMatch: { [f: string]: boolean } = {}
+
     await Promise.all(this.projects.map(async (project) => {
-      const { testFiles, typecheckTestFiles } = await project.globTestFiles(filters)
+      const { testFiles, typecheckTestFiles } = await project.globTestFiles(
+        parsedFilters.map(f => f.filename),
+      )
+
       testFiles.forEach((file) => {
-        const spec = project.createSpecification(file)
+        const loc = testLocations[file]
+        testLocHasMatch[file] = true
+
+        const spec = project.createSpecification(file, undefined, loc)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
       typecheckTestFiles.forEach((file) => {
-        const spec = project.createSpecification(file, 'typescript')
+        const loc = testLocations[file]
+        testLocHasMatch[file] = true
+
+        const spec = project.createSpecification(file, 'typescript', loc)
         this.ensureSpecCached(spec)
         files.push(spec)
       })
     }))
+
+    Object.entries(testLocations).forEach(([filepath, loc]) => {
+      if (loc.length !== 0 && !testLocHasMatch[filepath]) {
+        throw new LocationFilterFileNotFoundError(
+          relative(dir, filepath),
+        )
+      }
+    })
+
     return files as WorkspaceSpec[]
   }
 

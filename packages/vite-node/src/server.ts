@@ -190,6 +190,7 @@ export class ViteNodeServer {
   }
 
   getSourceMap(source: string) {
+    source = normalizeModuleId(source)
     const fetchResult = this.fetchCache.get(source)?.result
     if (fetchResult?.map) {
       return fetchResult.map

@@ -1,8 +1,8 @@
 import type { Task } from '@vitest/runner'
+import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
 import { client, findById } from '~/composables/client'
 import { explorerTree } from '~/composables/explorer/index'
 import { filteredFiles, uiEntries } from '~/composables/explorer/state'
-import type { FileTreeNode, Filter, FilterResult, ParentTreeNode, UITaskTreeNode } from '~/composables/explorer/types'
 import {
   isFileNode,
   isParentNode,

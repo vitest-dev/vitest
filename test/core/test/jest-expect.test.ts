@@ -3,7 +3,7 @@ import { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
-import { describe, expect, it, vi } from 'vitest'
+import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -606,6 +606,46 @@ describe('toSatisfy()', () => {
     expect(1).toSatisfy(isOddMock)
     expect(isOddMock).toBeCalled()
   })
+
+  it('asymmetric matcher', () => {
+    expect({ value: 1 }).toEqual({ value: expect.toSatisfy(isOdd) })
+    expect(() => {
+      expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'odd') })
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected { value: 2 } to deeply equal { value: toSatisfy{…} }]`,
+    )
+
+    expect(() => {
+      throw new Error('1')
+    }).toThrow(
+      expect.toSatisfy((e) => {
+        assert(e instanceof Error)
+        expect(e).toMatchObject({ message: expect.toSatisfy(isOdd) })
+        return true
+      }),
+    )
+
+    expect(() => {
+      expect(() => {
+        throw new Error('2')
+      }).toThrow(
+        expect.toSatisfy((e) => {
+          assert(e instanceof Error)
+          expect(e).toMatchObject({ message: expect.toSatisfy(isOdd) })
+          return true
+        }),
+      )
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected Error: 2 to match object { message: toSatisfy{…} }]`,
+    )
+  })
+
+  it('error message', () => {
+    snapshotError(() => expect(2).toSatisfy(isOdd))
+    snapshotError(() => expect(2).toSatisfy(isOdd, 'ODD'))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd) }))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'ODD') }))
+  })
 })
 
 describe('toHaveBeenCalled', () => {
@@ -917,14 +957,14 @@ describe('async expect', () => {
     await expect((async () => {
       throw new Error('err')
     })()).rejects.toThrow('err')
-    expect((async () => {
+    await expect((async () => {
       throw new TestError('error')
     })()).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    expect((async () => {
+    await expect((async () => {
       throw err
     })()).rejects.toThrow(err)
-    expect((async () => {
+    await expect((async () => {
       throw new Error('message')
     })()).rejects.toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
@@ -1011,6 +1051,12 @@ describe('async expect', () => {
   })
 
   describe('promise auto queuing', () => {
+    // silence warning
+    beforeAll(() => {
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      return () => spy.mockRestore()
+    })
+
     it.fails('fails', () => {
       expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
         .resolves
@@ -1133,7 +1179,7 @@ it('correctly prints diff with asymmetric matchers', () => {
       "- Expected
       + Received
 
-        Object {
+        {
           "a": Any<Number>,
       -   "b": Any<Function>,
       +   "b": "string",
@@ -1167,7 +1213,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "c": 4,
     +   "c": 3,
       }",
@@ -1182,7 +1228,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "b": 3,
     +   "b": 2,
       }",
@@ -1197,8 +1243,8 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "c": Object {
+      {
+        "c": {
     -     "d": 5,
     +     "d": 4,
         },
@@ -1213,7 +1259,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
         "a": 1,
         "b": 2,
     -   "c": 4,
@@ -1230,9 +1276,9 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
         "a": 1,
-        "c": Object {
+        "c": {
     -     "d": 4,
     +     "d": 3,
         },
@@ -1248,12 +1294,12 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "c": Object {
+      {
+        "c": {
     -     "d": 5,
     +     "d": 4,
         },
-        "foo": Object {
+        "foo": {
     -     "value": "biz",
     +     "value": "bar",
         },
@@ -1270,9 +1316,9 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "children": Array [
-          Object {
+      {
+        "children": [
+          {
     -       "firstName": "Paul",
     +       "firstName": "Jessica",
           },
@@ -1316,7 +1362,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-    - Object {
+    - {
     -   "value": 1,
     + Foo {
     +   "value": 0,
@@ -1332,7 +1378,7 @@ it('toMatchObject error diff', () => {
 
     - Bar {
     -   "value": 1,
-    + Object {
+    + {
     +   "value": 0,
       }",
     ]
@@ -1352,7 +1398,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "bad": Bar {
     -     "value": 2,
     +   "bad": Foo {

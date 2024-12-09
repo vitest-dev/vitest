@@ -28,7 +28,9 @@ export function setupInspect(ctx: ContextRPC) {
       )
 
       if (config.inspectBrk) {
-        const firstTestFile = ctx.files[0]
+        const firstTestFile = typeof ctx.files[0] === 'string'
+          ? ctx.files[0]
+          : ctx.files[0].filepath
 
         // Stop at first test file
         if (firstTestFile) {

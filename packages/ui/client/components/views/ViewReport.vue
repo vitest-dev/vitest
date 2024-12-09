@@ -4,6 +4,7 @@ import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 import { browserState, config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
+import { selectedTest } from '~/composables/params'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
@@ -19,7 +20,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
     return []
   }
 
-  if (task.type === 'test' || task.type === 'custom') {
+  if (task.type === 'test') {
     return [{ ...task, level }]
   }
   else {
@@ -127,12 +128,24 @@ function showScreenshotModal(task: Task) {
   timestamp.value = Date.now()
   showScreenshot.value = true
 }
+
+watch(() => [selectedTest.value] as const, ([test]) => {
+  if (test != null) {
+    // Have to wrap the selector in [id=''] since #{test} will produce an invalid selector because the test ID is a number
+    const testElement = document.querySelector(`[id='${test}'`)
+    if (testElement != null) {
+      nextTick(() => {
+        testElement.scrollIntoView()
+      })
+    }
+  }
+}, { flush: 'post' })
 </script>
 
 <template>
   <div h-full class="scrolls">
     <template v-if="failed.length">
-      <div v-for="task of failed" :key="task.id">
+      <div v-for="task of failed" :id="task.id" :key="task.id">
         <div
           bg="red-500/10"
           text="red-500 sm"

@@ -276,15 +276,15 @@ export class Logger {
         + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
       ),
     )
-    this.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
-    this.log(errorMessage)
+    this.error(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
+    this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
         fullStack: true,
         type: (err as ErrorWithDiff).type || 'Unhandled Error',
       })
     })
-    this.log(c.red(divider()))
+    this.error(c.red(divider()))
   }
 
   printSourceTypeErrors(errors: TypeCheckError[]) {

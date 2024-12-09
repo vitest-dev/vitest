@@ -161,7 +161,7 @@ export type Suite = Suite_
 export type File = File_
 /** @deprecated use `RunnerTestCase` instead */
 export type Test = Test_
-/** @deprecated use `RunnerCustomCase` instead */
+/** @deprecated do not use `Custom`, use `RunnerTestCase` instead */
 export type Custom = Custom_
 /** @deprecated use `RunnerTask` instead */
 export type Task = Task_
@@ -277,27 +277,27 @@ export {
   test,
 } from '@vitest/runner'
 export type {
-  Custom as RunnerCustomCase,
   ExtendedContext,
-  File as RunnerTestFile,
   HookCleanupCallback,
   HookListener,
   OnTestFailedHandler,
   OnTestFinishedHandler,
   RunMode,
+  Custom as RunnerCustomCase,
+  Task as RunnerTask,
+  TaskBase as RunnerTaskBase,
+  TaskResult as RunnerTaskResult,
+  TaskResultPack as RunnerTaskResultPack,
+  Test as RunnerTestCase,
+  File as RunnerTestFile,
   Suite as RunnerTestSuite,
   SuiteAPI,
   SuiteCollector,
   SuiteFactory,
-  Task as RunnerTask,
-  TaskBase as RunnerTaskBase,
   TaskContext,
   TaskCustomOptions,
   TaskMeta,
-  TaskResult as RunnerTaskResult,
-  TaskResultPack as RunnerTaskResultPack,
   TaskState,
-  Test as RunnerTestCase,
   TestAPI,
   TestContext,
   TestFunction,

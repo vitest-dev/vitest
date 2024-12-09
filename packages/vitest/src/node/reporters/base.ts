@@ -114,11 +114,19 @@ export abstract class BaseReporter implements Reporter {
     const anyFailed = tests.some(test => test.result?.state === 'fail')
 
     for (const test of tests) {
-      const duration = test.result?.duration
+      const { duration, retryCount, repeatCount } = test.result || {}
+      let suffix = ''
+
+      if (retryCount != null && retryCount > 0) {
+        suffix += c.yellow(` (retry x${retryCount})`)
+      }
+
+      if (repeatCount != null && repeatCount > 0) {
+        suffix += c.yellow(` (repeat x${repeatCount})`)
+      }
 
       if (test.result?.state === 'fail') {
-        const suffix = this.getDurationPrefix(test)
-        this.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${suffix}`))
+        this.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
 
         test.result?.errors?.forEach((e) => {
           // print short errors, full errors will be at the end in summary
@@ -130,8 +138,12 @@ export abstract class BaseReporter implements Reporter {
       else if (duration && duration > this.ctx.config.slowTestThreshold) {
         this.log(
           `   ${c.yellow(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}`
-          + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}`,
+          + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}${suffix}`,
         )
+      }
+
+      else if (this.ctx.config.hideSkippedTests && (test.mode === 'skip' || test.result?.state === 'skip')) {
+        // Skipped tests are hidden when --hideSkippedTests
       }
 
       // also print skipped tests that have notes
@@ -140,7 +152,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${c.green(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}`)
+        this.log(`   ${c.dim(getStateSymbol(test))} ${getTestName(test, c.dim(' > '))}${suffix}`)
       }
     }
   }
@@ -209,7 +221,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (this.ctx.filenamePattern) {
-      this.log(BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern))
+      this.log(BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern.join(', ')))
     }
 
     if (this.ctx.configOverride.testNamePattern) {
@@ -406,12 +418,12 @@ export abstract class BaseReporter implements Reporter {
     const errorDivider = () => this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
-      this.error(`${errorBanner(`Failed Suites ${failedSuites.length}`)}\n`)
+      this.error(`\n${errorBanner(`Failed Suites ${failedSuites.length}`)}\n`)
       this.printTaskErrors(failedSuites, errorDivider)
     }
 
     if (failedTests.length) {
-      this.error(`${errorBanner(`Failed Tests ${failedTests.length}`)}\n`)
+      this.error(`\n${errorBanner(`Failed Tests ${failedTests.length}`)}\n`)
       this.printTaskErrors(failedTests, errorDivider)
     }
 
@@ -492,7 +504,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         this.ctx.logger.error(
-          `${c.red(c.bold(c.inverse(' FAIL ')))}${formatProjectName(projectName)} ${name}`,
+          `${c.red(c.bold(c.inverse(' FAIL ')))} ${formatProjectName(projectName)}${name}`,
         )
       }
 

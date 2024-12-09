@@ -197,7 +197,13 @@ await asyncMock() // throws Error<'Async error'>
 function mockReset(): MockInstance<T>
 ```
 
-Performs the same actions as `mockClear` and sets the inner implementation to an empty function (returning `undefined` when invoked). This also resets all "once" implementations. It is useful for completely resetting a mock to its default state.
+Does what `mockClear` does and resets inner implementation to the original function.
+This also resets all "once" implementations.
+
+Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+resetting a mock from `vi.fn(impl)` will restore implementation to `impl`.
+
+This is useful when you want to reset a mock to its original state.
 
 To automatically call this method before each test, enable the [`mockReset`](/config/#mockreset) setting in the configuration.
 
@@ -207,9 +213,10 @@ To automatically call this method before each test, enable the [`mockReset`](/co
 function mockRestore(): MockInstance<T>
 ```
 
-Performs the same actions as `mockReset` and restores the inner implementation to the original function.
+Does what `mockReset` does and restores original descriptors of spied-on objects.
 
-Note that restoring a mock created with `vi.fn()` will set the implementation to an empty function that returns `undefined`. Restoring a mock created with `vi.fn(impl)` will restore the implementation to `impl`.
+Note that restoring a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+Restoring a mock from `vi.fn(impl)` will restore implementation to `impl`.
 
 To automatically call this method before each test, enable the [`restoreMocks`](/config/#restoremocks) setting in the configuration.
 

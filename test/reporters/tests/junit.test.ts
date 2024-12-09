@@ -72,6 +72,28 @@ test('emits <failure> when beforeAll/afterAll failed', async () => {
   expect(xml).toMatchSnapshot()
 })
 
+test('time', async () => {
+  const { stdout } = await runVitest({ reporters: 'junit', root: './fixtures/duration' })
+
+  const xml = stabilizeReportWOTime(stdout)
+
+  const fastTestRegex = /<testcase classname="basic\.test\.ts" name="fast" time="(?<floatNumber>[\d.]+)">/
+  const fastTestTime = matchJunitTime(xml, fastTestRegex)
+  expect(fastTestTime).toBeGreaterThan(0)
+
+  const slowTestRegex = /<testcase classname="basic\.test\.ts" name="slow" time="(?<floatNumber>[\d.]+)">/
+  const slowTestTime = matchJunitTime(xml, slowTestRegex)
+  expect(slowTestTime).toBeGreaterThan(0.2)
+
+  const testsuiteRegex = /<testsuite name="basic\.test\.ts" timestamp="\.\.\." hostname="\.\.\." tests="2" failures="0" errors="0" skipped="0" time="(?<floatNumber>[\d.]+)">/
+  const testsuiteTime = matchJunitTime(xml, testsuiteRegex)
+  expect(testsuiteTime).toBeCloseTo(fastTestTime + slowTestTime, 1)
+
+  const testsuitesRegex = /<testsuites name="vitest tests" tests="2" failures="0" errors="0" time="(?<floatNumber>[\d.]+)">/
+  const testsuitesTime = matchJunitTime(xml, testsuitesRegex)
+  expect(testsuitesTime).toBeCloseTo(testsuiteTime, 1)
+})
+
 test('format error', async () => {
   const { stdout } = await runVitest({ reporters: 'junit', root }, ['error.test.ts'])
   expect(stabilizeReport(stdout)).toMatchSnapshot()
@@ -116,6 +138,18 @@ test('options.suiteName changes name property', async () => {
 
 function stabilizeReport(report: string) {
   return report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+}
+
+function stabilizeReportWOTime(report: string) {
+  return report.replaceAll(/(timestamp|hostname)=".*?"/g, '$1="..."')
+}
+
+function matchJunitTime(xml: string, regex: RegExp) {
+  const match = xml.match(regex)
+  expect(match).not.toBeNull()
+  const time = Number.parseFloat(match!.groups!.floatNumber)
+  expect(time).toBeGreaterThanOrEqual(0)
+  return time
 }
 
 test.each([true, false])('includeConsoleOutput %s', async (t) => {

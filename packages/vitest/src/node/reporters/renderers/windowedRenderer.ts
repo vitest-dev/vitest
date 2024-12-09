@@ -1,7 +1,6 @@
 import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
-import restoreCursor from 'restore-cursor'
 
 const DEFAULT_RENDER_INTERVAL = 16
 
@@ -49,9 +48,9 @@ export class WindowRenderer {
     this.cleanups.push(
       this.interceptStream(process.stdout, 'output'),
       this.interceptStream(process.stderr, 'error'),
+      this.addProcessExitListeners(),
     )
 
-    restoreCursor()
     this.write(HIDE_CURSOR, 'output')
 
     this.start()
@@ -76,6 +75,10 @@ export class WindowRenderer {
     this.finished = true
     this.flushBuffer()
     clearInterval(this.renderInterval)
+  }
+
+  getColumns() {
+    return 'columns' in this.options.logger.outputStream ? this.options.logger.outputStream.columns : 80
   }
 
   private flushBuffer() {
@@ -113,11 +116,11 @@ export class WindowRenderer {
     }
 
     const windowContent = this.options.getWindow()
-    const rowCount = getRenderedRowCount(windowContent, this.options.logger.outputStream)
+    const rowCount = getRenderedRowCount(windowContent, this.getColumns())
     let padding = this.windowHeight - rowCount
 
     if (padding > 0 && message) {
-      padding -= getRenderedRowCount([message], this.options.logger.outputStream)
+      padding -= getRenderedRowCount([message], this.getColumns())
     }
 
     this.write(SYNC_START)
@@ -175,12 +178,37 @@ export class WindowRenderer {
   private write(message: string, type: 'output' | 'error' = 'output') {
     (this.streams[type] as Writable['write'])(message)
   }
+
+  private addProcessExitListeners() {
+    const onExit = (signal?: string | number, exitCode?: number) => {
+      // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
+      this.flushBuffer()
+      this.stop()
+
+      // Interrupted signals don't set exit code automatically.
+      // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
+      if (process.exitCode === undefined) {
+        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
+      }
+
+      process.exit()
+    }
+
+    process.once('SIGINT', onExit)
+    process.once('SIGTERM', onExit)
+    process.once('exit', onExit)
+
+    return function cleanup() {
+      process.off('SIGINT', onExit)
+      process.off('SIGTERM', onExit)
+      process.off('exit', onExit)
+    }
+  }
 }
 
 /** Calculate the actual row count needed to render `rows` into `stream` */
-function getRenderedRowCount(rows: string[], stream: Options['logger']['outputStream']) {
+function getRenderedRowCount(rows: string[], columns: number) {
   let count = 0
-  const columns = 'columns' in stream ? stream.columns : 80
 
   for (const row of rows) {
     const text = stripVTControlCharacters(row)
