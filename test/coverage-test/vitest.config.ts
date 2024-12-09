@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  server: {
+    watch: null,
+  },
   test: {
     reporters: 'verbose',
     isolate: false,
