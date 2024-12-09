@@ -3,7 +3,6 @@ import type { SnapshotSummary } from '@vitest/snapshot'
 import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
-import sliceAnsi from 'slice-ansi'
 import c from 'tinyrainbow'
 import {
   F_CHECK,
@@ -238,9 +237,11 @@ export function padSummaryTitle(str: string) {
 }
 
 export function truncateString(text: string, maxLength: number): string {
-  if (stripVTControlCharacters(text).length <= maxLength) {
+  const plainText = stripVTControlCharacters(text)
+
+  if (plainText.length <= maxLength) {
     return text
   }
 
-  return `${sliceAnsi(text, 0, maxLength - 1)}…`
+  return `${plainText.slice(0, maxLength - 1)}…`
 }
