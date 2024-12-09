@@ -190,7 +190,7 @@ const test = base.extend({
   url: [
     // default value if "url" is not defined in the config
     'default',
-    // mark the fixure as "injected" to allow the override
+    // mark the fixture as "injected" to allow the override
     { injected: true },
   ],
 })

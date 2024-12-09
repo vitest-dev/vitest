@@ -38,7 +38,7 @@ test('update snapshot', async () => {
   expect(files).toHaveLength(1)
   expect(files[0].result.state).toBe('fail')
 
-  // updateSnapshot API to simulate "u" commmand
+  // updateSnapshot API to simulate "u" command
   await vitest.updateSnapshot()
 
   // verify snapshot value is updated

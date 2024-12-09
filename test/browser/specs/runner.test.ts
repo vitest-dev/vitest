@@ -120,7 +120,7 @@ error with a stack
   })
 
   test(`stack trace points to correct file in every browser`, () => {
-    // dependeing on the browser it references either `.toBe()` or `expect()`
+    // depending on the browser it references either `.toBe()` or `expect()`
     expect(stderr).toMatch(/test\/failing.test.ts:10:(12|17)/)
 
     // column is 18 in safari, 8 in others
