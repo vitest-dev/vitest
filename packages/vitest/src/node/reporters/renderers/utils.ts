@@ -14,18 +14,15 @@ import {
   F_POINTER,
 } from './figures'
 
-export const spinnerMap = new WeakMap<Task, () => string>()
-export const hookSpinnerMap = new WeakMap<Task, Map<string, () => string>>()
 export const pointer = c.yellow(F_POINTER)
 export const skipped = c.dim(c.gray(F_DOWN))
-
 export const benchmarkPass = c.green(F_DOT)
 export const testPass = c.green(F_CHECK)
 export const taskFail = c.red(F_CROSS)
 export const suiteFail = c.red(F_POINTER)
 export const pending = c.gray('·')
 
-export function getCols(delta = 0) {
+function getCols(delta = 0) {
   let length = process.stdout?.columns
   if (!length || Number.isNaN(length)) {
     length = 30
@@ -167,12 +164,6 @@ export function getStateSymbol(task: Task) {
     if (task.type === 'suite') {
       return pointer
     }
-    let spinner = spinnerMap.get(task)
-    if (!spinner) {
-      spinner = elegantSpinner()
-      spinnerMap.set(task, spinner)
-    }
-    return c.yellow(spinner())
   }
 
   if (task.result.state === 'pass') {
@@ -184,20 +175,6 @@ export function getStateSymbol(task: Task) {
   }
 
   return ' '
-}
-
-export const spinnerFrames
-  = process.platform === 'win32'
-    ? ['-', '\\', '|', '/']
-    : ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-
-export function elegantSpinner() {
-  let index = 0
-
-  return () => {
-    index = ++index % spinnerFrames.length
-    return spinnerFrames[index]
-  }
 }
 
 export function duration(time: number, locale = 'en-us') {
@@ -257,4 +234,14 @@ export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', l
 
 export function padSummaryTitle(str: string) {
   return c.dim(`${str.padStart(11)} `)
+}
+
+export function truncateString(text: string, maxLength: number): string {
+  const plainText = stripVTControlCharacters(text)
+
+  if (plainText.length <= maxLength) {
+    return text
+  }
+
+  return `${plainText.slice(0, maxLength - 1)}…`
 }
