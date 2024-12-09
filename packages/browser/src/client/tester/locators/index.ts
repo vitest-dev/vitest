@@ -185,6 +185,14 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
+  public toString(): string {
+    return this.selector
+  }
+
+  public toJSON(): string {
+    return this.selector
+  }
+
   private get state(): BrowserRunnerState {
     return getBrowserState()
   }

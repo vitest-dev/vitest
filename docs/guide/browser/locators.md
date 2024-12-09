@@ -708,3 +708,35 @@ This method returns an array of new locators that match the selector.
 Internally, this method calls `.elements` and wraps every element using [`page.elementLocator`](/guide/browser/context#page).
 
 - [See `locator.elements()`](#elements)
+
+## Properties
+
+### selector
+
+The `selector` is a string that will be used to locate the element by the browser provider. Playwright will use a `playwright` locator syntax while `preview` and `webdriverio` will use CSS.
+
+::: danger
+You should not use this string in your test code. The `selector` string should only be used when working with the Commands API:
+
+```ts [commands.ts]
+import type { BrowserCommand } from 'vitest/node'
+
+const test: BrowserCommand<string> = function test(context, selector) {
+  // playwright
+  await context.iframe.locator(selector).click()
+  // webdriverio
+  await context.browser.$(selector).click()
+}
+```
+
+```ts [example.test.ts]
+import { test } from 'vitest'
+import { commands, page } from '@vitest/browser/context'
+
+test('works correctly', async () => {
+  await commands.test(page.getByText('Hello').selector) // ✅
+  // vitest will automatically unwrap it to a string
+  await commands.test(page.getByText('Hello')) // ✅
+})
+```
+:::

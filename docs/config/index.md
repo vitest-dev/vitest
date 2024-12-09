@@ -144,6 +144,12 @@ Include globs for in-source test files.
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
 
+### name
+
+- **Type:** `string`
+
+Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+
 ### server {#server}
 
 - **Type:** `{ sourcemap?, deps?, ... }`

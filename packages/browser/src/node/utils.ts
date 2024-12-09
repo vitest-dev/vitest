@@ -22,9 +22,9 @@ export async function getBrowserProvider(
   let customProviderModule
 
   try {
-    customProviderModule = (await project.runner.executeId(
+    customProviderModule = (await project.import<{ default: BrowserProviderModule }>(
       options.provider,
-    )) as { default: BrowserProviderModule }
+    ))
   }
   catch (error) {
     throw new Error(

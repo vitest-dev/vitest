@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
@@ -101,7 +101,7 @@ export function createVmThreadsPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: FileSpec[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
@@ -165,7 +165,7 @@ export function createVmThreadsPool(
           return configs.get(project)!
         }
 
-        const config = project.getSerializableConfig()
+        const config = project.serializedConfig
         configs.set(project, config)
         return config
       }

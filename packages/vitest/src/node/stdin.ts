@@ -98,7 +98,7 @@ export function registerConsoleShortcuts(
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
-      const files = await ctx.getTestFilepaths()
+      const files = await ctx._globTestFilepaths()
       return ctx.changeNamePattern('', files, 'rerun all tests')
     }
     // rerun current pattern tests
@@ -122,7 +122,7 @@ export function registerConsoleShortcuts(
       return inputFilePattern()
     }
     if (name === 'b') {
-      await ctx.initBrowserServers()
+      await ctx._initBrowserServers()
       ctx.projects.forEach((project) => {
         ctx.logger.log()
         ctx.logger.printBrowserBanner(project)
@@ -167,7 +167,7 @@ export function registerConsoleShortcuts(
     // if running in standalone mode, Vitest instance doesn't know about any test file
     const cliFiles
       = ctx.config.standalone && !files.length
-        ? await ctx.getTestFilepaths()
+        ? await ctx._globTestFilepaths()
         : undefined
 
     await ctx.changeNamePattern(
