@@ -156,7 +156,7 @@ export class ExternalModulesExecutor {
     return {}
   }
 
-  private wrapCoreSynteticModule(
+  private wrapCoreSyntheticModule(
     identifier: string,
     exports: Record<string, unknown>,
   ) {
@@ -267,7 +267,7 @@ export class ExternalModulesExecutor {
         return await this.esm.createDataModule(identifier)
       case 'builtin': {
         const exports = this.require(identifier)
-        return this.wrapCoreSynteticModule(identifier, exports)
+        return this.wrapCoreSyntheticModule(identifier, exports)
       }
       case 'vite':
         return await this.vite.createViteModule(url)
