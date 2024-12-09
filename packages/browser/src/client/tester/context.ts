@@ -15,7 +15,6 @@ import { convertElementToCssSelector, ensureAwaited, getBrowserState, getWorkerS
 
 // this file should not import anything directly, only types and utils
 
-const state = () => getWorkerState()
 // @ts-expect-error not typed global
 const provider = __vitest_browser_runner__.provider
 function filepath() {
@@ -319,8 +318,7 @@ function getTaskFullName(task: RunnerTask): string {
 }
 
 function processClickOptions(options_?: UserEventClickOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
+  if (!options_) {
     return options_
   }
   if (provider === 'playwright') {
@@ -347,8 +345,7 @@ function processClickOptions(options_?: UserEventClickOptions) {
 }
 
 function processHoverOptions(options_?: UserEventHoverOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
+  if (!options_) {
     return options_
   }
 
@@ -374,8 +371,7 @@ function processHoverOptions(options_?: UserEventHoverOptions) {
 }
 
 function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
+  if (!options_) {
     return options_
   }
   if (provider === 'playwright') {
@@ -433,11 +429,14 @@ function processPlaywrightPosition(position: { x: number; y: number }) {
 }
 
 function getIframeScale() {
-  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  const testerUi = window.parent.document.querySelector(`iframe[data-vitest]`)?.parentElement
   if (!testerUi) {
     throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
   const scaleAttribute = testerUi.getAttribute('data-scale')
+  if (scaleAttribute === null) {
+    return 1
+  }
   const scale = Number(scaleAttribute)
   if (Number.isNaN(scale)) {
     throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
