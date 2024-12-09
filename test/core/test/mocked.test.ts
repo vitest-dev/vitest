@@ -228,7 +228,7 @@ describe('temporary mock implementation', () => {
     expect(mock()).toBe(1)
   })
 
-  test('temporary mock implementation with async callback works as expecetd', async () => {
+  test('temporary mock implementation with async callback works as expected', async () => {
     const mock = vi.fn(() => 1)
 
     expect.assertions(3)

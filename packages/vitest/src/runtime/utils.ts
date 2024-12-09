@@ -54,7 +54,7 @@ export function resetModules(modules: ModuleCacheMap, resetMocks = false) {
     /\/vite-node\/dist\//,
     // yarn's .store folder
     /vitest-virtual-\w+\/dist/,
-    // cnpm
+    // pnpm
     /@vitest\/dist/,
     // don't clear mocks
     ...(!resetMocks ? [/^mock:/] : []),

@@ -8,7 +8,7 @@ Breaking changes might not follow SemVer, please pin Vitest's version when using
 
 Vitest exposes two methods to initiate Vitest:
 
-- `startVitest` initiates Vitest, validates the packages are installed and runs tests immidiatly
+- `startVitest` initiates Vitest, validates the packages are installed and runs tests immediately
 - `createVitest` only initiates Vitest and doesn't run any tests
 
 ## `startVitest`
