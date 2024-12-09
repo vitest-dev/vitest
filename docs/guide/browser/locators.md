@@ -719,7 +719,7 @@ The `selector` is a string that will be used to locate the element by the browse
 You should not use this string in your test code. The `selector` string should only be used when working with the Commands API:
 
 ```ts [commands.ts]
-import type { BrowserCommand } from '@vitest/browser'
+import type { BrowserCommand } from 'vitest/node'
 
 const test: BrowserCommand<string> = function test(context, selector) {
   // playwright
