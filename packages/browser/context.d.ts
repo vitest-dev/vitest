@@ -315,8 +315,9 @@ export interface Locator extends LocatorSelectors {
    *   await browser.$(selector).click()
    * }
    * ```
+   * @see {@link https://vitest.dev/guide/browser/locators#selector}
    */
-  selector: string
+  readonly selector: string
 
   /**
    * Click on an element. You can use the options to set the cursor position.
