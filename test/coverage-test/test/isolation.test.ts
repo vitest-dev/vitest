@@ -31,7 +31,6 @@ for (const isolate of [true, false]) {
           reporter: ['json', 'html'],
         },
 
-        // @ts-expect-error -- merged in runVitest
         browser: {
           isolate,
         },
