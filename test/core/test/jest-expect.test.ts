@@ -1,5 +1,5 @@
 /* eslint-disable no-sparse-arrays */
-import { AssertionError } from 'node:assert'
+import nodeAssert, { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
@@ -1114,7 +1114,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise resolved "+0" instead of rejecting'))
+      expect(error).toMatchObject({ message: 'promise resolved "+0" instead of rejecting' })
     }
 
     try {
@@ -1122,7 +1122,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise rejected "+0" instead of resolving'))
+      expect(error).toMatchObject({ message: 'promise rejected "+0" instead of resolving' })
     }
   })
 })
@@ -1606,6 +1606,174 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(() => {
     throw new MyError2('hello')
   }).toThrow(MyError1))
+})
+
+it('error equality', () => {
+  class MyError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  class YourError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  {
+    // different custom property
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'b')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+
+    // toThrowError also compare errors similar to toEqual
+    snapshotError(() =>
+      expect(() => {
+        throw e1
+      }).toThrowError(e2),
+    )
+  }
+
+  {
+    // different message
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2)
+    assert.notDeepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+  }
+
+  {
+    // different class
+    const e1 = new MyError('hello', 'a')
+    const e2 = new YourError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
+    assert.deepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+  }
+
+  {
+    // same
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'a')
+    expect(e1).toEqual(e2)
+    expect(e1).toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.deepStrictEqual(e1, e2)
+
+    expect(() => {
+      throw e1
+    }).toThrowError(e2)
+  }
+
+  {
+    // same
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'a')
+    expect(e1).toEqual(e2)
+    expect(e1).toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.deepStrictEqual(e1, e2)
+  }
+
+  {
+    // different cause
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('hello', { cause: 'y' })
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+  }
+
+  {
+    // different cause (asymmetric fail)
+    const e1 = new Error('hello')
+    const e2 = new Error('hello', { cause: 'y' })
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+  }
+
+  {
+    // different cause (asymmetric pass)
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('hello')
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // different cause (fail by other props)
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('world')
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // different cause
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = { something: 'else' }
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // AggregateError (pass)
+    const e1 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })
+    const e2 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // AggregateError (fail)
+    const e1 = new AggregateError([new Error('inner', { cause: 'x' })], 'outer', { cause: 'x' })
+    const e2 = new AggregateError([new Error('inner', { cause: 'y' })], 'outer', { cause: 'x' })
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // cyclic (pass)
+    const e1 = new Error('hi')
+    e1.cause = e1
+    const e2 = new Error('hi')
+    e2.cause = e2
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // cyclic (fail)
+    const e1 = new Error('hello')
+    e1.cause = e1
+    const e2 = new Error('world')
+    e2.cause = e2
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // asymmetric matcher
+    const e1 = new Error('hello', { cause: 'x' })
+    expect(e1).toEqual(expect.objectContaining({
+      message: 'hello',
+      cause: 'x',
+    }))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'hello',
+      cause: 'y',
+    })))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'world',
+      cause: 'x',
+    })))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'world',
+      cause: 'y',
+    })))
+  }
 })
 
 it('toHaveBeenNthCalledWith error', () => {
