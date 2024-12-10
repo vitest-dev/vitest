@@ -514,7 +514,7 @@ exports[`error equality 8`] = `
   "diff": "- Expected
 + Received
 
-- Object {
+- {
 -   "something": "else",
 + Error {
 +   "message": "hello",
@@ -536,7 +536,7 @@ exports[`error equality 9`] = `
   AggregateError {
     "message": "outer",
     "cause": "x",
-    "errors": Array [
+    "errors": [
       Error {
         "message": "inner",
 -       "cause": "y",
