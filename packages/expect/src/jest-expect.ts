@@ -1033,9 +1033,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       )
     })
   })
-  def('toSatisfy', function (matcher: Function, message?: string) {
-    return this.be.satisfy(matcher, message)
-  })
 
   // @ts-expect-error @internal
   def('withContext', function (this: any, context: Record<string, any>) {

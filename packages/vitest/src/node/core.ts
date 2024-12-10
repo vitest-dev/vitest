@@ -68,7 +68,7 @@ export class Vitest {
   invalidates: Set<string> = new Set()
   changedTests: Set<string> = new Set()
   watchedTests: Set<string> = new Set()
-  filenamePattern?: string
+  filenamePattern?: string[]
   runningPromise?: Promise<void>
   closingPromise?: Promise<void>
   isCancelling = false
@@ -418,6 +418,7 @@ export class Vitest {
       await this.report('onInit', this)
     }
 
+    this.filenamePattern = filters && filters?.length > 0 ? filters : undefined
     const files = await this.filterTestsBySource(
       await this.globTestFiles(filters),
     )
@@ -714,7 +715,7 @@ export class Vitest {
     }
 
     if (this.filenamePattern) {
-      const filteredFiles = await this.globTestFiles([this.filenamePattern])
+      const filteredFiles = await this.globTestFiles(this.filenamePattern)
       files = files.filter(file => filteredFiles.some(f => f[1] === file))
     }
 
@@ -778,9 +779,9 @@ export class Vitest {
   }
 
   async changeFilenamePattern(pattern: string, files: string[] = this.state.getFilepaths()) {
-    this.filenamePattern = pattern
+    this.filenamePattern = pattern ? [pattern] : []
 
-    const trigger = this.filenamePattern ? 'change filename pattern' : 'reset filename pattern'
+    const trigger = this.filenamePattern.length ? 'change filename pattern' : 'reset filename pattern'
 
     await this.rerunFiles(files, trigger, pattern === '')
   }
@@ -848,7 +849,7 @@ export class Vitest {
       let files = Array.from(this.changedTests)
 
       if (this.filenamePattern) {
-        const filteredFiles = await this.globTestFiles([this.filenamePattern])
+        const filteredFiles = await this.globTestFiles(this.filenamePattern)
         files = files.filter(file => filteredFiles.some(f => f[1] === file))
 
         // A file that does not match the current filename pattern was changed
