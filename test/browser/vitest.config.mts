@@ -38,8 +38,10 @@ export default defineConfig({
     snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {
       enabled: true,
-      name: browser,
       headless: false,
+      configs: [
+        { browser },
+      ],
       provider,
       isolate: false,
       testerScripts: [

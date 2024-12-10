@@ -46,7 +46,7 @@ export class VitestPackageInstaller {
     }
 
     const prompts = await import('prompts')
-    const { install } = await prompts.prompt({
+    const { install } = await prompts.default({
       type: 'confirm',
       name: 'install',
       message: c.reset(`Do you want to install ${c.green(dependency)}?`),
