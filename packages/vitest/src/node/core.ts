@@ -24,6 +24,7 @@ import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../consta
 import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
 import { FilesNotFoundError } from './errors'
@@ -88,6 +89,7 @@ export class Vitest {
   /** @internal */ coreWorkspaceProject: TestProject | undefined
   /** @internal */ resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
+  /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _options: UserConfig = {}
   /** @internal */ reporters: Reporter[] = undefined!
   /** @internal */ vitenode: ViteNodeServer = undefined!
