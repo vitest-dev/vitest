@@ -279,7 +279,9 @@ exports[`asymmetric matcher error 21`] = `
 StringContaining "ll"
 
 + Received: 
-[Error: hello]",
+Error {
+  "message": "hello",
+}",
   "expected": "StringContaining "ll"",
   "message": "expected error to match asymmetric matcher",
 }
@@ -292,7 +294,9 @@ exports[`asymmetric matcher error 22`] = `
 stringContainingCustom<ll>
 
 + Received: 
-[Error: hello]",
+Error {
+  "message": "hello",
+}",
   "expected": "stringContainingCustom<ll>",
   "message": "expected error to match asymmetric matcher",
 }
@@ -305,7 +309,9 @@ exports[`asymmetric matcher error 23`] = `
 [Function MyError1]
 
 + Received: 
-[Error: hello]",
+MyError2 {
+  "message": "hello",
+}",
   "expected": "[Function MyError1]",
   "message": "expected error to be instance of MyError1",
 }
@@ -389,6 +395,234 @@ null
 }",
   "expected": "null",
   "message": "expected { hello: 'world' } to be null",
+}
+`;
+
+exports[`error equality 1`] = `
+{
+  "actual": "[Error: hi]",
+  "diff": "- Expected
++ Received
+
+  MyError {
+    "message": "hi",
+-   "custom": "b",
++   "custom": "a",
+  }",
+  "expected": "[Error: hi]",
+  "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hi { custom: 'b' }",
+}
+`;
+
+exports[`error equality 2`] = `
+{
+  "actual": "[Error: hi]",
+  "diff": "- Expected
++ Received
+
+  MyError {
+    "message": "hi",
+-   "custom": "b",
++   "custom": "a",
+  }",
+  "expected": "[Error: hi]",
+  "message": "expected a thrown error to be Error: hi { custom: 'b' }",
+}
+`;
+
+exports[`error equality 3`] = `
+{
+  "actual": "[Error: hi]",
+  "diff": "- Expected
++ Received
+
+  MyError {
+-   "message": "hello",
++   "message": "hi",
+    "custom": "a",
+  }",
+  "expected": "[Error: hello]",
+  "message": "expected Error: hi { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
+}
+`;
+
+exports[`error equality 4`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- YourError {
++ MyError {
+    "message": "hello",
+    "custom": "a",
+  }",
+  "expected": "[Error: hello]",
+  "message": "expected Error: hello { custom: 'a' } to deeply equal Error: hello { custom: 'a' }",
+}
+`;
+
+exports[`error equality 5`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+  Error {
+    "message": "hello",
+-   "cause": "y",
++   "cause": "x",
+  }",
+  "expected": "[Error: hello]",
+  "message": "expected Error: hello to deeply equal Error: hello",
+}
+`;
+
+exports[`error equality 6`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+  Error {
+    "message": "hello",
+-   "cause": "y",
+  }",
+  "expected": "[Error: hello]",
+  "message": "expected Error: hello to deeply equal Error: hello",
+}
+`;
+
+exports[`error equality 7`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+  Error {
+-   "message": "world",
++   "message": "hello",
+  }",
+  "expected": "[Error: world]",
+  "message": "expected Error: hello to deeply equal Error: world",
+}
+`;
+
+exports[`error equality 8`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- {
+-   "something": "else",
++ Error {
++   "message": "hello",
++   "cause": "x",
+  }",
+  "expected": "Object {
+  "something": "else",
+}",
+  "message": "expected Error: hello to deeply equal { something: 'else' }",
+}
+`;
+
+exports[`error equality 9`] = `
+{
+  "actual": "[AggregateError: outer]",
+  "diff": "- Expected
++ Received
+
+  AggregateError {
+    "message": "outer",
+    "cause": "x",
+    "errors": [
+      Error {
+        "message": "inner",
+-       "cause": "y",
++       "cause": "x",
+      },
+    ],
+  }",
+  "expected": "[AggregateError: outer]",
+  "message": "expected AggregateError: outer { …(1) } to deeply equal AggregateError: outer { …(1) }",
+}
+`;
+
+exports[`error equality 10`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+  Error {
+-   "message": "world",
++   "message": "hello",
+    "cause": [Circular],
+  }",
+  "expected": "[Error: world]",
+  "message": "expected Error: hello to deeply equal Error: world",
+}
+`;
+
+exports[`error equality 11`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
+-   "cause": "y",
++ Error {
+    "message": "hello",
++   "cause": "x",
+  }",
+  "expected": "ObjectContaining {
+  "cause": "y",
+  "message": "hello",
+}",
+  "message": "expected Error: hello to deeply equal ObjectContaining{…}",
+}
+`;
+
+exports[`error equality 12`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
++ Error {
++   "message": "hello",
+    "cause": "x",
+-   "message": "world",
+  }",
+  "expected": "ObjectContaining {
+  "cause": "x",
+  "message": "world",
+}",
+  "message": "expected Error: hello to deeply equal ObjectContaining{…}",
+}
+`;
+
+exports[`error equality 13`] = `
+{
+  "actual": "[Error: hello]",
+  "diff": "- Expected
++ Received
+
+- ObjectContaining {
+-   "cause": "y",
+-   "message": "world",
++ Error {
++   "message": "hello",
++   "cause": "x",
+  }",
+  "expected": "ObjectContaining {
+  "cause": "y",
+  "message": "world",
+}",
+  "message": "expected Error: hello to deeply equal ObjectContaining{…}",
 }
 `;
 

@@ -431,7 +431,17 @@ test('stocks are not the same', () => {
 ```
 
 :::warning
-A _deep equality_ will not be performed for `Error` objects. Only the `message` property of an Error is considered for equality. To customize equality to check properties other than `message`, use [`expect.addEqualityTesters`](#expect-addequalitytesters). To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
+For `Error` objects, non-enumerable properties such as `name`, `message`, `cause` and `AggregateError.errors` are also compared. For `Error.cause`, the comparison is done asymmetrically:
+
+```ts
+// success
+expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi'))
+
+// fail
+expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' }))
+```
+
+To test if something was thrown, use [`toThrowError`](#tothrowerror) assertion.
 :::
 
 ## toStrictEqual
@@ -649,8 +659,9 @@ test('the number of elements must match exactly', () => {
 
 You can provide an optional argument to test that a specific error is thrown:
 
-- regular expression: error message matches the pattern
-- string: error message includes the substring
+- `RegExp`: error message matches the pattern
+- `string`: error message includes the substring
+- `Error`, `AsymmetricMatcher`: compare with a received object similar to `toEqual(received)`
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
@@ -678,6 +689,13 @@ test('throws on pineapples', () => {
   expect(() => getFruitStock('pineapples')).toThrowError(
     /^Pineapples are not in stock$/,
   )
+
+  expect(() => getFruitStock('pineapples')).toThrowError(
+    new Error('Pineapples are not in stock'),
+  )
+  expect(() => getFruitStock('pineapples')).toThrowError(expect.objectContaining({
+    message: 'Pineapples are not in stock',
+  }))
 })
 ```
 
