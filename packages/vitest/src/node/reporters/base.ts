@@ -152,7 +152,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${c.dim(getStateSymbol(test))} ${getTestName(test, c.dim(' > '))}${suffix}`)
+        this.log(`   ${getStateSymbol(test)} ${getTestName(test, c.dim(' > '))}${suffix}`)
       }
     }
   }
