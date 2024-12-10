@@ -433,7 +433,7 @@ export class Vitest {
   }
 
   /**
-   * Merge reports from multiple runs located in the specified directory (`--merge-reports` by default).
+   * Merge reports from multiple runs located in the specified directory (value from `--merge-reports` if not specified).
    */
   public async mergeReports(directory?: string): Promise<TestRunResult> {
     if (this.reporters.some(r => r instanceof BlobReporter)) {

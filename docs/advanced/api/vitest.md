@@ -226,7 +226,7 @@ This method can be slow because it needs to filter `--changed` flags. Do not use
 function mergeReports(directory?: string): Promise<TestRunResult>
 ```
 
-Merge reports from multiple runs located in the specified directory (`--merge-reports` if not specified). This value can also be set on `config.mergeReports` (by default, it will read `.vitest-reports` folder).
+Merge reports from multiple runs located in the specified directory (value from `--merge-reports` if not specified). This value can also be set on `config.mergeReports` (by default, it will read `.vitest-reports` folder).
 
 Note that the `directory` will always be resolved relative to the working directory.
 
