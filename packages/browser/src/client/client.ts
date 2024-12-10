@@ -14,7 +14,7 @@ export const RPC_ID
     : getBrowserState().testerId
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}`
+}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}`
 
 let setCancel = (_: CancelReason) => {}
 export const onCancel = new Promise<CancelReason>((resolve) => {

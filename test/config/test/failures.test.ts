@@ -369,6 +369,22 @@ test('throws an error if name conflicts with a workspace name', async () => {
   expect(stderr).toMatch('Cannot redefine the project name for a nameless project. The project name "firefox" was already defined. All projects in a workspace should have unique names. Make sure your configuration is correct.')
 })
 
+test('throws an error if several browsers are headed in nonTTY mode', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      headless: false,
+      configs: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toContain('Found multiple projects that run browser tests in headed mode: "chromium", "firefox"')
+  expect(stderr).toContain('Please, filter projects with --browser=name or --project=name flag or run tests with "headless: true" option')
+})
+
 test('non existing project name will throw', async () => {
   const { stderr } = await runVitest({ project: 'non-existing-project' })
   expect(stderr).toMatch('No projects matched the filter "non-existing-project".')

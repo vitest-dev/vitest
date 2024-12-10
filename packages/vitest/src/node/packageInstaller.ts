@@ -2,7 +2,7 @@ import { createRequire } from 'node:module'
 import url from 'node:url'
 import { isPackageExists } from 'local-pkg'
 import c from 'tinyrainbow'
-import { isCI } from '../utils/env'
+import { isTTY } from '../utils/env'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -31,8 +31,6 @@ export class VitestPackageInstaller {
       return true
     }
 
-    const promptInstall = !isCI && process.stdout.isTTY
-
     process.stderr.write(
       c.red(
         `${c.inverse(
@@ -41,7 +39,7 @@ export class VitestPackageInstaller {
       ),
     )
 
-    if (!promptInstall) {
+    if (!isTTY) {
       return false
     }
 
