@@ -268,9 +268,9 @@ export abstract class BaseReporter implements Reporter {
         write('\n')
       }
 
-      const project = log.taskId
-        ? this.ctx.getProjectByTaskId(log.taskId)
-        : this.ctx.getRootTestProject()
+      const project = task
+        ? this.ctx.getProjectByName(task.file.projectName || '')
+        : this.ctx.getRootProject()
 
       const stack = log.browser
         ? (project.browser?.parseStacktrace(log.origin) || [])
@@ -511,7 +511,7 @@ export abstract class BaseReporter implements Reporter {
       const screenshotPaths = tasks.map(t => t.meta?.failScreenshotPath).filter(screenshot => screenshot != null)
 
       this.ctx.logger.printError(error, {
-        project: this.ctx.getProjectByTaskId(tasks[0].id),
+        project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),
         verbose: this.verbose,
         screenshotPaths,
         task: tasks[0],

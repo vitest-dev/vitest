@@ -1,4 +1,4 @@
-import type { WorkspaceSpec } from '../node/pool'
+import type { TestSpecification } from '../node/spec'
 import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
 import { promises as fs } from 'node:fs'
@@ -27,13 +27,10 @@ function getTransformMode(
 }
 
 export async function groupFilesByEnv(
-  files: Array<WorkspaceSpec>,
+  files: Array<TestSpecification>,
 ) {
   const filesWithEnv = await Promise.all(
-    files.map(async (spec) => {
-      const filepath = spec.moduleId
-      const { testLocations } = spec
-      const project = spec.project
+    files.map(async ({ moduleId: filepath, project, testLines }) => {
       const code = await fs.readFile(filepath, 'utf-8')
 
       // 1. Check for control comments in the file
@@ -74,7 +71,7 @@ export async function groupFilesByEnv(
       return {
         file: {
           filepath,
-          testLocations,
+          testLocations: testLines,
         },
         project,
         environment,

@@ -1,7 +1,7 @@
 # Custom Pool
 
 ::: warning
-This is advanced API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
+This is an advanced and very low-level API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
 :::
 
 Vitest runs tests in pools. By default, there are several pools:
@@ -49,7 +49,7 @@ export default defineConfig({
 ```
 
 ::: info
-The `workspace` field was introduced in Vitest 3. To define a workspace in [Vitest <3](https://v2.vitest.dev/), create a separate `vitest.workspace.ts` file.
+The `workspace` field was introduced in Vitest 3. To define a workspace in [Vitest 2](https://v2.vitest.dev/), create a separate `vitest.workspace.ts` file.
 :::
 
 ## API
@@ -57,7 +57,7 @@ The `workspace` field was introduced in Vitest 3. To define a workspace in [Vite
 The file specified in `pool` option should export a function (can be async) that accepts `Vitest` interface as its first option. This function needs to return an object matching `ProcessPool` interface:
 
 ```ts
-import { ProcessPool, TestSpecification } from 'vitest/node'
+import type { ProcessPool, TestSpecification } from 'vitest/node'
 
 export interface ProcessPool {
   name: string
@@ -69,9 +69,9 @@ export interface ProcessPool {
 
 The function is called only once (unless the server config was updated), and it's generally a good idea to initialize everything you need for tests inside that function and reuse it when `runTests` is called.
 
-Vitest calls `runTest` when new tests are scheduled to run. It will not call it if `files` is empty. The first argument is an array of tuples: the first element is a reference to a workspace project and the second one is an absolute path to a test file. Files are sorted using [`sequencer`](/config/#sequence-sequencer) before `runTests` is called. It's possible (but unlikely) to have the same file twice, but it will always have a different project - this is implemented via [`vitest.workspace.ts`](/guide/workspace) configuration.
+Vitest calls `runTest` when new tests are scheduled to run. It will not call it if `files` is empty. The first argument is an array of [TestSpecifications](/advanced/api/test-specification). Files are sorted using [`sequencer`](/config/#sequence-sequencer) before `runTests` is called. It's possible (but unlikely) to have the same file twice, but it will always have a different project - this is implemented via [`vitest.workspace.ts`](/guide/workspace) configuration.
 
-Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onFinished`](/guide/reporters) only after `runTests` is resolved).
+Vitest will wait until `runTests` is executed before finishing a run (i.e., it will emit [`onFinished`](/advanced/reporters) only after `runTests` is resolved).
 
 If you are using a custom pool, you will have to provide test files and their results yourself - you can reference [`vitest.state`](https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/node/state.ts) for that (most important are `collectFiles` and `updateTasks`). Vitest uses `startTests` function from `@vitest/runner` package to do that.
 
@@ -97,16 +97,4 @@ function createRpc(project: TestProject, wss: WebSocketServer) {
 }
 ```
 
-To make sure every test is collected, you would call `ctx.state.collectFiles` and report it to Vitest reporters:
-
-```ts
-async function runTests(project: TestProject, tests: string[]) {
-  // ... running tests, put into "files" and "tasks"
-  const methods = createMethodsRPC(project)
-  await methods.onCollected(files)
-  // most reporters rely on results being updated in "onTaskUpdate"
-  await methods.onTaskUpdate(tasks)
-}
-```
-
-You can see a simple example in [pool/custom-pool.ts](https://github.com/vitest-dev/vitest/blob/main/test/run/pool-custom-fixtures/pool/custom-pool.ts).
+You can see a simple example of a pool made from scratch that doesn't run tests but marks them as collected in [pool/custom-pool.ts](https://github.com/vitest-dev/vitest/blob/main/test/cli/fixtures/custom-pool/pool/custom-pool.ts).
