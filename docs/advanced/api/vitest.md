@@ -63,14 +63,6 @@ Test mode will only call functions inside `test` or `it`, and throws an error wh
 
 Benchmark mode calls `bench` functions and throws an error, when it encounters `test` or `it`. This mode uses `benchmark.include` and `benchmark.exclude` options in the config to find benchmark files.
 
-## start
-
-```ts
-function start(filters: string[]): Promise<TestRunResult>
-```
-
-You can start running tests or benchmarks with `start` method. You can pass an array of strings to filter test files.
-
 ## config
 
 The root (or global) config. If workspace feature is enabled, projects will reference this as `globalConfig`.
