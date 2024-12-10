@@ -1129,7 +1129,7 @@ test('spy function returns bananas on a last call', () => {
 
 - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully returned a value with certain parameters on a specific invokation. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully returned a value with certain parameters on a certain call. Requires a spy function to be passed to `expect`.
 
 ```ts
 import { expect, test, vi } from 'vitest'
