@@ -1,4 +1,4 @@
-import type { ChaiPlugin, MatcherState } from './types'
+import type { ChaiPlugin, MatcherState, Tester } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import {
   diff,
@@ -17,7 +17,7 @@ import {
 import { getState } from './state'
 
 export interface AsymmetricMatcherInterface {
-  asymmetricMatch: (other: unknown) => boolean
+  asymmetricMatch: (other: unknown, customTesters?: Array<Tester>) => boolean
   toString: () => string
   getExpectedType?: () => string
   toAsymmetricMatcher?: () => string
@@ -48,7 +48,7 @@ export abstract class AsymmetricMatcher<
     }
   }
 
-  abstract asymmetricMatch(other: unknown): boolean
+  abstract asymmetricMatch(other: unknown, customTesters?: Array<Tester>): boolean
   abstract toString(): string
   getExpectedType?(): string
   toAsymmetricMatcher?(): string;
@@ -134,7 +134,7 @@ export class ObjectContaining extends AsymmetricMatcher<
     return this.hasProperty(this.getPrototype(obj), property)
   }
 
-  asymmetricMatch(other: any) {
+  asymmetricMatch(other: any, customTesters?: Array<Tester>) {
     if (typeof this.sample !== 'object') {
       throw new TypeError(
         `You must provide an object to ${this.toString()}, not '${typeof this
@@ -144,14 +144,13 @@ export class ObjectContaining extends AsymmetricMatcher<
 
     let result = true
 
-    const matcherContext = this.getMatcherContext()
     for (const property in this.sample) {
       if (
         !this.hasProperty(other, property)
         || !equals(
           this.sample[property],
           other[property],
-          matcherContext.customTesters,
+          customTesters,
         )
       ) {
         result = false
@@ -176,7 +175,7 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
     super(sample, inverse)
   }
 
-  asymmetricMatch(other: Array<T>) {
+  asymmetricMatch(other: Array<T>, customTesters?: Array<Tester>) {
     if (!Array.isArray(this.sample)) {
       throw new TypeError(
         `You must provide an array to ${this.toString()}, not '${typeof this
@@ -184,13 +183,12 @@ export class ArrayContaining<T = unknown> extends AsymmetricMatcher<Array<T>> {
       )
     }
 
-    const matcherContext = this.getMatcherContext()
     const result
       = this.sample.length === 0
       || (Array.isArray(other)
         && this.sample.every(item =>
           other.some(another =>
-            equals(item, another, matcherContext.customTesters),
+            equals(item, another, customTesters),
           ),
         ))
 
