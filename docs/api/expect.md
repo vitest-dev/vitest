@@ -309,6 +309,42 @@ test('getApplesCount has some unusual side effects...', () => {
 })
 ```
 
+## toBeOneOf
+
+- **Type:** `(sample: Array<any>) => any`
+
+`toBeOneOf` asserts if a value matches any of the values in the provided array.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('fruit is one of the allowed values', () => {
+  expect(fruit).toBeOneOf(['apple', 'banana', 'orange'])
+})
+```
+
+The asymmetric matcher is particularly useful when testing optional properties that could be either `null` or `undefined`:
+
+```ts
+test('optional properties can be null or undefined', () => {
+  const user = {
+    firstName: 'John',
+    middleName: undefined,
+    lastName: 'Doe'
+  }
+
+  expect(user).toEqual({
+    firstName: expect.any(String),
+    middleName: expect.toBeOneOf([expect.any(String), undefined]),
+    lastName: expect.any(String),
+  })
+})
+```
+
+:::tip
+You can use `expect.not` with this matcher to ensure a value does NOT match any of the provided options.
+:::
+
 ## toBeTypeOf
 
 - **Type:** `(c: 'bigint' | 'boolean' | 'function' | 'number' | 'object' | 'string' | 'symbol' | 'undefined') => Awaitable<void>`
@@ -1444,52 +1480,6 @@ test('"id" is a number', () => {
   expect({ id: generateId() }).toEqual({ id: expect.any(Number) })
 })
 ```
-
-## expect.oneOf
-
-- **Type:** `(sample: Array<any>) => any`
-
-When used with an equality check, this asymmetric matcher will return `true` if the value matches any of the values in the provided array.
-
-```ts
-import { expect, test } from 'vitest'
-
-test('fruit is one of the allowed types', () => {
-  const fruit = {
-    name: 'apple',
-    count: 1
-  }
-
-  expect(fruit).toEqual({
-    name: expect.oneOf(['apple', 'banana', 'orange']),
-    count: 1
-  })
-})
-```
-
-This is particularly useful when testing optional properties that could be either `null` or `undefined`:
-
-```ts
-test('optional properties can be null or undefined', () => {
-  const user = {
-    id: 1,
-    firstName: 'John',
-    middleName: undefined,
-    lastName: 'Doe'
-  }
-
-  expect(user).toEqual({
-    id: expect.any(Number),
-    firstName: expect.any(String),
-    middleName: expect.oneOf([expect.any(String), undefined]),
-    lastName: expect.any(String),
-  })
-})
-```
-
-:::tip
-You can use `expect.not` with this matcher to ensure a value does NOT match any of the provided options.
-:::
 
 ## expect.closeTo {#expect-closeto}
 
