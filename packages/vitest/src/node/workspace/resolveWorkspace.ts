@@ -231,6 +231,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserConfig
     locators,
     viewport,
     testerHtmlPath,
+    headless,
     screenshotDirectory,
     screenshotFailures,
     // @ts-expect-error remove just in case
@@ -252,6 +253,8 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserConfig
       testerHtmlPath: testerHtmlPath ?? currentConfig.testerHtmlPath,
       screenshotDirectory: screenshotDirectory ?? currentConfig.screenshotDirectory,
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
+      // TODO: test that CLI arg is preferred over the local config
+      headless: project.vitest._options?.browser?.headless ?? headless ?? currentConfig.headless,
       name: browser,
       providerOptions: config,
       configs: undefined, // projects cannot spawn more configs

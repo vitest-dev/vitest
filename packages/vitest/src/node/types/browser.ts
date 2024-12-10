@@ -69,7 +69,7 @@ type UnsupportedProperties =
 export interface BrowserConfig
   extends BrowserProviderOptions,
   Omit<ProjectConfig, UnsupportedProperties>,
-  Pick<BrowserConfigOptions, 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
+  Pick<BrowserConfigOptions, 'headless' | 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
   browser: string
 }
 
