@@ -43,7 +43,7 @@ export default defineConfig({
 ```
 
 ::: warning
-Before Vitest 2.2, these options were located on `test.browser.providerOptions` property:
+Before Vitest 3, these options were located on `test.browser.providerOptions` property:
 
 ```ts [vitest.config.ts]
 export default defineConfig({

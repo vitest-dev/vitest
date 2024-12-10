@@ -37,7 +37,7 @@ export default defineConfig({
 ```
 
 ::: warning
-Before Vitest 2.2, these options were located on `test.browser.providerOptions` property:
+Before Vitest 3, these options were located on `test.browser.providerOptions` property:
 
 ```ts [vitest.config.ts]
 export default defineConfig({
@@ -79,9 +79,9 @@ Vitest awlays sets `ignoreHTTPSErrors` to `true` in case your server is served v
 It is also recommended to use [`test.browser.viewport`](/config/#browser-headless) instead of specifying it here as it will be lost when tests are running in headless mode.
 :::
 
-## `actionTimeout` <Version>2.2.0</Version>
+## `actionTimeout` <Version>3.0.0</Version>
 
-- **Default:** no timeout, 1 second before 2.2.0
+- **Default:** no timeout, 1 second before 3.0.0
 
 This value configures the default timeout it takes for Playwright to wait until all accessibility checks pass and [the action](/guide/browser/interactivity-api) is actually done.
 
