@@ -443,12 +443,30 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
       for (const key of THRESHOLD_KEYS) {
         const threshold = thresholds[key] ?? 100
-        const actual = Math.min(
-          ...summaries.map(summary => summary[key].pct),
-        )
+        /**
+         * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
+         * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
+         */
+        if (threshold >= 0) {
+          const actual = Math.min(
+            ...summaries.map(summary => summary[key].pct),
+          )
 
-        if (actual > threshold) {
-          thresholdsToUpdate.push([key, actual])
+          if (actual > threshold) {
+            thresholdsToUpdate.push([key, actual])
+          }
+        }
+        else {
+          const absoluteThreshold = threshold * -1
+          const actual = Math.max(
+            ...summaries.map(summary => summary[key].total - summary[key].covered),
+          )
+
+          if (actual < absoluteThreshold) {
+            // If everything was covered, set new threshold to 100% (since a threshold of 0 would be considered as 0%)
+            const updatedThreshold = actual === 0 ? 100 : actual * -1
+            thresholdsToUpdate.push([key, updatedThreshold])
+          }
         }
       }
 
