@@ -92,7 +92,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
 
   async function startTypechecker(project: TestProject, files: string[]) {
     if (project.typechecker) {
-      return project.typechecker
+      return
     }
     const checker = await createWorkspaceTypechecker(project, files)
     await checker.collectTests()
@@ -142,7 +142,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
       promises.push(promise)
       promisesMap.set(project, promise)
-      startTypechecker(project, files)
+      promises.push(startTypechecker(project, files))
     }
 
     await Promise.all(promises)
