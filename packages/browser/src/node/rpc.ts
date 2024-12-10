@@ -41,11 +41,15 @@ export function setupBrowserRpc(server: BrowserServer) {
     if (type !== 'tester' && type !== 'orchestrator') {
       throw new Error(`[vitest] Type query in ${request.url} is invalid. Type should be either "tester" or "orchestrator".`)
     }
-    if (!sessionId || !rpcId || !projectName) {
-      throw new Error(`[vitest] Invalid URL ${request.url}. "sessionId" and "rpcId" are required.`)
+    if (!sessionId || !rpcId || projectName == null) {
+      throw new Error(`[vitest] Invalid URL ${request.url}. "projectName", "sessionId" and "rpcId" are required.`)
     }
 
-    const project = vitest.getProjectByName(searchParams.get('projectName') || '')
+    const project = vitest.getProjectByName(projectName)
+
+    if (!project) {
+      throw new Error(`[vitest] Project "${projectName}" not found.`)
+    }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
