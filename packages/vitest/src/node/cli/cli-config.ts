@@ -781,6 +781,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   printConsoleTrace: {
     description: 'Always print console stack traces',
   },
+  includeTaskLocation: {
+    description: 'Collect test and suite locations in the `location` property',
+  },
 
   // CLI only options
   run: {
@@ -800,7 +803,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   mergeReports: {
     description:
-      'Paths to blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
+      'Path to a blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {
@@ -840,7 +843,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   poolMatchGlobs: null,
   deps: null,
   name: null,
-  includeTaskLocation: null,
   snapshotEnvironment: null,
   compare: null,
   outputJson: null,

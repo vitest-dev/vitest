@@ -86,6 +86,8 @@ test('merge reports', async () => {
 
     stdout | first.test.ts > test 1-2
     beforeEach
+
+    stdout | first.test.ts > test 1-2
     test 1-2
 
      ❯ first.test.ts (2 tests | 1 failed) <time>

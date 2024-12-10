@@ -1,4 +1,4 @@
-import type { WorkspaceSpec } from 'vitest/node'
+import type { TestSpecification } from 'vitest/node'
 import { expect, test } from 'vitest'
 import { readCoverageMap, runVitest } from '../utils'
 
@@ -54,7 +54,7 @@ for (const isolate of [true, false]) {
 }
 
 class Sorter {
-  sort(files: WorkspaceSpec[]) {
+  sort(files: TestSpecification[]) {
     return files.sort((a) => {
       if (a.moduleId.includes('isolation-1')) {
         return -1
@@ -63,7 +63,7 @@ class Sorter {
     })
   }
 
-  shard(files: WorkspaceSpec[]) {
+  shard(files: TestSpecification[]) {
     return files
   }
 }

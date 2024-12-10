@@ -364,7 +364,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
         const project = browserServer.vitest.getProjectByName(browserServer.config.name)
-        if (!project.isTestFile(id) || !code.includes('import.meta.vitest')) {
+        if (!project.isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
           return
         }
         const s = new MagicString(code, { filename: cleanUrl(id) })

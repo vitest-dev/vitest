@@ -5,8 +5,8 @@ import type {
   InlineConfig as ViteInlineConfig,
 } from 'vite'
 import type { Typechecker } from '../typecheck/typechecker'
-import type { OnTestsRerunHandler, ProvidedContext } from '../types/general'
-import type { Vitest } from './core'
+import type { ProvidedContext } from '../types/general'
+import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
 import type { BrowserServer } from './types/browser'
@@ -62,9 +62,10 @@ export class TestProject {
    */
   public readonly tmpDir = join(tmpdir(), nanoid())
 
-  vitenode!: ViteNodeServer
-  runner!: ViteNodeRunner
-  typechecker?: Typechecker
+  /** @internal */ vitenode!: ViteNodeServer
+  /** @internal */ typechecker?: Typechecker
+
+  private runner!: ViteNodeRunner
 
   private closingPromise: Promise<void> | undefined
 
@@ -121,7 +122,7 @@ export class TestProject {
     // globalSetup can run even if core workspace is not part of the test run
     // so we need to inherit its provided context
     return {
-      ...this.vitest.getRootTestProject().getProvidedContext(),
+      ...this.vitest.getRootProject().getProvidedContext(),
       ...this._provided,
     }
   }
@@ -132,14 +133,15 @@ export class TestProject {
    */
   public createSpecification(
     moduleId: string,
+    locations?: number[] | undefined,
+    /** @internal */
     pool?: string,
-    testLocations?: number[] | undefined,
   ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this, moduleId),
-      testLocations,
+      locations,
     )
   }
 
@@ -206,7 +208,7 @@ export class TestProject {
    * Check if this is the root project. The root project is the one that has the root config.
    */
   public isRootProject(): boolean {
-    return this.vitest.getRootTestProject() === this
+    return this.vitest.getRootProject() === this
   }
 
   /** @deprecated use `isRootProject` instead */
@@ -384,8 +386,7 @@ export class TestProject {
     return isBrowserEnabled(this.config)
   }
 
-  /** @internal */
-  _markTestFile(testPath: string): void {
+  private markTestFile(testPath: string): void {
     this.testFilesList?.push(testPath)
   }
 
@@ -393,7 +394,7 @@ export class TestProject {
    * Returns if the file is a test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isTestFile(testPath: string): boolean {
+  isCachedTestFile(testPath: string): boolean {
     return !!this.testFilesList && this.testFilesList.includes(testPath)
   }
 
@@ -401,7 +402,7 @@ export class TestProject {
    * Returns if the file is a typecheck test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isTypecheckFile(testPath: string): boolean {
+  isCachedTypecheckFile(testPath: string): boolean {
     return !!this.typecheckFilesList && this.typecheckFilesList.includes(testPath)
   }
 
@@ -426,29 +427,36 @@ export class TestProject {
   }
 
   /**
-   * Test if a file matches the test globs. This does the actual glob matching unlike `isTestFile`.
+   * Test if a file matches the test globs. This does the actual glob matching if the test is not cached, unlike `isCachedTestFile`.
    */
-  public matchesTestGlob(filepath: string, source?: string): boolean {
-    const relativeId = relative(this.config.dir || this.config.root, filepath)
+  public matchesTestGlob(moduleId: string, source?: () => string): boolean {
+    if (this.isCachedTestFile(moduleId)) {
+      return true
+    }
+    const relativeId = relative(this.config.dir || this.config.root, moduleId)
     if (mm.isMatch(relativeId, this.config.exclude)) {
       return false
     }
     if (mm.isMatch(relativeId, this.config.include)) {
+      this.markTestFile(moduleId)
       return true
     }
     if (
       this.config.includeSource?.length
       && mm.isMatch(relativeId, this.config.includeSource)
     ) {
-      const code = source || readFileSync(filepath, 'utf-8')
-      return this.isInSourceTestCode(code)
+      const code = source?.() || readFileSync(moduleId, 'utf-8')
+      if (this.isInSourceTestCode(code)) {
+        this.markTestFile(moduleId)
+        return true
+      }
     }
     return false
   }
 
   /** @deprecated use `matchesTestGlob` instead */
   async isTargetFile(id: string, source?: string): Promise<boolean> {
-    return this.matchesTestGlob(id, source)
+    return this.matchesTestGlob(id, source ? () => source : undefined)
   }
 
   private isInSourceTestCode(code: string): boolean {
@@ -530,6 +538,14 @@ export class TestProject {
       })
     }
     return this.closingPromise
+  }
+
+  /**
+   * Import a file using Vite module runner.
+   * @param moduleId The ID of the module in Vite module graph
+   */
+  public import<T>(moduleId: string): Promise<T> {
+    return this.runner.executeId(moduleId)
   }
 
   /** @deprecated use `name` instead */

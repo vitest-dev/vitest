@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
@@ -22,7 +22,7 @@ import { getWorkerState } from './utils'
 
 export async function run(
   method: 'run' | 'collect',
-  files: FileSpec[],
+  files: FileSpecification[],
   config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<void> {

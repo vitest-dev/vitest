@@ -368,3 +368,13 @@ test('throws an error if name conflicts with a workspace name', async () => {
   })
   expect(stderr).toMatch('Cannot redefine the project name for a nameless project. The project name "firefox" was already defined. All projects in a workspace should have unique names. Make sure your configuration is correct.')
 })
+
+test('non existing project name will throw', async () => {
+  const { stderr } = await runVitest({ project: 'non-existing-project' })
+  expect(stderr).toMatch('No projects matched the filter "non-existing-project".')
+})
+
+test('non existing project name array will throw', async () => {
+  const { stderr } = await runVitest({ project: ['non-existing-project', 'also-non-existing'] })
+  expect(stderr).toMatch('No projects matched the filter "non-existing-project", "also-non-existing".')
+})

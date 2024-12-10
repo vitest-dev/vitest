@@ -1,4 +1,4 @@
-import type { FileSpec, VitestRunner } from './types/runner'
+import type { FileSpecification, VitestRunner } from './types/runner'
 import type { File, SuiteHooks } from './types/tasks'
 import { toArray } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
@@ -20,7 +20,7 @@ import {
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
 export async function collectTests(
-  specs: string[] | FileSpec[],
+  specs: string[] | FileSpecification[],
   runner: VitestRunner,
 ): Promise<File[]> {
   const files: File[] = []

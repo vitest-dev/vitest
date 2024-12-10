@@ -134,19 +134,6 @@ describe('location filter with list command', () => {
     expect(stderr).not.toContain('Error: Found "-"')
   })
 
-  test('erorrs if includeTaskLocation is not enabled', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'list',
-      `-r=${fixturePath}`,
-      '--config=no-task-location.config.ts',
-      `${fixturePath}/a/file/that/doesnt/exist:5`,
-    )
-
-    expect(stdout).toEqual('')
-    expect(stderr).toContain('Collect Error')
-    expect(stderr).toContain('IncludeTaskLocationDisabledError')
-  })
-
   test('fails on part of filename with location filter', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
@@ -265,20 +252,6 @@ describe('location filter with run command', () => {
 
     // shouldn't get a range location error
     expect(stderr).not.toContain('Error: Found "-"')
-  })
-
-  test('errors if includeTaskLocation is not enabled', async () => {
-    const { stderr } = await runVitestCli(
-      'run',
-      `-r=${fixturePath}`,
-      `--config=no-task-location.config.ts`,
-      `${fixturePath}/a/file/that/doesnt/exist:5`,
-    )
-
-    expect(stderr).toMatchInlineSnapshot(`
-      "Error: Recieved line number filters while \`includeTaskLocation\` option is disabled
-      "
-    `)
   })
 
   test('fails on part of filename with location filter', async () => {
