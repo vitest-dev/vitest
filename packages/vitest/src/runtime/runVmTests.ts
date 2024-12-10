@@ -1,3 +1,4 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
@@ -21,7 +22,7 @@ import { getWorkerState } from './utils'
 
 export async function run(
   method: 'run' | 'collect',
-  files: string[],
+  files: FileSpecification[],
   config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<void> {
@@ -61,7 +62,7 @@ export async function run(
     getSourceMap: source => workerState.moduleCache.getSourceMap(source),
   })
 
-  await startCoverageInsideWorker(config.coverage, executor)
+  await startCoverageInsideWorker(config.coverage, executor, { isolate: false })
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
@@ -85,7 +86,7 @@ export async function run(
   const { vi } = VitestIndex
 
   for (const file of files) {
-    workerState.filepath = file
+    workerState.filepath = file.filepath
 
     if (method === 'run') {
       await startTests([file], runner)
@@ -100,7 +101,7 @@ export async function run(
     vi.restoreAllMocks()
   }
 
-  await stopCoverageInsideWorker(config.coverage, executor)
+  await stopCoverageInsideWorker(config.coverage, executor, { isolate: false })
 }
 
 function resolveCss(mod: NodeJS.Module) {

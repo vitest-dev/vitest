@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util'
-import { assert, describe, expect, test, vi, vitest } from 'vitest'
 // @ts-expect-error not typed module
 import { value as virtualValue } from 'virtual-module'
+import { assert, describe, expect, test, vi, vitest } from 'vitest'
 import * as globalMock from '../src/global-mock'
 import * as mocked from '../src/mockedA'
 import { mockedB } from '../src/mockedB'
@@ -78,6 +78,9 @@ describe('mocked classes', () => {
 
     expect(MockedC.prototype.doSomething).toHaveBeenCalledOnce()
     expect(MockedC.prototype.doSomething).not.toHaveReturnedWith('A')
+
+    vi.mocked(instance.doSomething).mockRestore()
+    expect(instance.doSomething()).not.toBe('A')
   })
 
   test('should mock getters', () => {

@@ -260,7 +260,7 @@ export class JUnitReporter implements Reporter {
                   const result = capturePrintError(
                     error,
                     this.ctx,
-                    { project: this.ctx.getProjectByTaskId(task.id), task },
+                    { project: this.ctx.getProjectByName(task.file.projectName || ''), task },
                   )
                   await this.baseLog(
                     escapeXML(stripVTControlCharacters(result.output.trim())),
@@ -335,6 +335,7 @@ export class JUnitReporter implements Reporter {
       (stats, file) => {
         stats.tests += file.tasks.length
         stats.failures += file.stats.failures
+        stats.time += file.result?.duration || 0
         return stats
       },
       {
@@ -342,11 +343,11 @@ export class JUnitReporter implements Reporter {
         tests: 0,
         failures: 0,
         errors: 0, // we cannot detect those
-        time: executionTime(new Date().getTime() - this._timeStart.getTime()),
+        time: 0,
       },
     )
 
-    await this.writeElement('testsuites', stats, async () => {
+    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
       for (const file of transformed) {
         const filename = relative(this.ctx.config.root, file.filepath)
         await this.writeElement(

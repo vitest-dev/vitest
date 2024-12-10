@@ -1,4 +1,5 @@
 import type { File, Suite, Test } from '@vitest/runner'
+import type { Node } from 'estree'
 import type { RawSourceMap } from 'vite-node'
 import type { TestProject } from '../node/project'
 import {
@@ -51,8 +52,6 @@ export async function collectTests(
   if (!request) {
     return null
   }
-  // unwrap __vite_ssr_identity__ for Vite 6
-  request.code = request.code.replace(/__vite_ssr_identity__\((\w+\.\w+)\)/g, '(                     $1)')
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
   const projectName = ctx.name
@@ -72,7 +71,7 @@ export async function collectTests(
   }
   file.file = file
   const definitions: LocalCallDefinition[] = []
-  const getName = (callee: any): string | null => {
+  const getName = (callee: Node): string | null => {
     if (!callee) {
       return null
     }
@@ -86,12 +85,20 @@ export async function collectTests(
       return getName(callee.tag)
     }
     if (callee.type === 'MemberExpression') {
+      const object = callee.object as any
       // direct call as `__vite_ssr_exports_0__.test()`
-      if (callee.object?.name?.startsWith('__vite_ssr_')) {
+      if (object?.name?.startsWith('__vite_ssr_')) {
         return getName(callee.property)
       }
       // call as `__vite_ssr__.test.skip()`
-      return getName(callee.object?.property)
+      return getName(object?.property)
+    }
+    // unwrap (0, ...)
+    if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
+      const [e0, e1] = callee.expressions
+      if (e0.type === 'Literal' && e0.value === 0) {
+        return getName(e1)
+      }
     }
     return null
   }
@@ -205,6 +212,7 @@ export async function collectTests(
   interpretTaskModes(
     file,
     ctx.config.testNamePattern,
+    undefined,
     hasOnly,
     false,
     ctx.config.allowOnly,

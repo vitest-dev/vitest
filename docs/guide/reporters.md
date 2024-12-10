@@ -373,7 +373,7 @@ Example of a JSON report:
 ```
 
 ::: info
-Since Vitest 2.2, the JSON reporter includes coverage information in `coverageMap` if coverage is enabled.
+Since Vitest 3, the JSON reporter includes coverage information in `coverageMap` if coverage is enabled.
 :::
 
 ### HTML Reporter

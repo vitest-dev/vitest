@@ -18,6 +18,11 @@ from = "/vscode"
 to = "https://marketplace.visualstudio.com/items?itemName=vitest.explorer"
 status = 302
 
+[[redirects]]
+from = "/config/file"
+to = "/config/"
+status = 301
+
 [[headers]]
 for = "/manifest.webmanifest"
 

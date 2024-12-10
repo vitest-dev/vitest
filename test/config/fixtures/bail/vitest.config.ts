@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitest/config'
-import type { WorkspaceSpec } from 'vitest/node'
+import type { TestSpecification } from 'vitest/node'
 
 class TestNameSequencer {
-  async sort(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
+  async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     return [...files].sort(([, filenameA], [, filenameB]) => {
       if (filenameA > filenameB)
         return 1
@@ -14,7 +14,7 @@ class TestNameSequencer {
     })
   }
 
-  public async shard(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
+  public async shard(files: TestSpecification[]): Promise<TestSpecification[]> {
     return files
   }
 }

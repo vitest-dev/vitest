@@ -106,7 +106,21 @@ export interface ExpectStatic
   not: AsymmetricMatchersContaining
 }
 
-export interface AsymmetricMatchersContaining {
+interface CustomMatcher {
+  /**
+   * Checks that a value satisfies a custom matcher function.
+   *
+   * @param matcher - A function returning a boolean based on the custom condition
+   * @param message - Optional custom error message on failure
+   *
+   * @example
+   * expect(age).toSatisfy(val => val >= 18, 'Age must be at least 18');
+   * expect(age).toEqual(expect.toSatisfy(val => val >= 18, 'Age must be at least 18'));
+   */
+  toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
+}
+
+export interface AsymmetricMatchersContaining extends CustomMatcher {
   /**
    * Matches if the received string contains the expected substring.
    *
@@ -163,7 +177,7 @@ export interface AsymmetricMatchersContaining {
   oneOf: <T>(sample: Array<T>) => any
 }
 
-export interface JestAssertion<T = any> extends jest.Matchers<void, T> {
+export interface JestAssertion<T = any> extends jest.Matchers<void, T>, CustomMatcher {
   /**
    * Used when you want to check that two objects have the same value.
    * This matcher recursively checks the equality of all fields, rather than checking for object identity.
@@ -654,17 +668,6 @@ export interface Assertion<T = any>
    * expect(mockFunc).toHaveBeenCalledExactlyOnceWith('arg1', 42);
    */
   toHaveBeenCalledExactlyOnceWith: <E extends any[]>(...args: E) => void
-
-  /**
-   * Checks that a value satisfies a custom matcher function.
-   *
-   * @param matcher - A function returning a boolean based on the custom condition
-   * @param message - Optional custom error message on failure
-   *
-   * @example
-   * expect(age).toSatisfy(val => val >= 18, 'Age must be at least 18');
-   */
-  toSatisfy: <E>(matcher: (value: E) => boolean, message?: string) => void
 
   /**
    * This assertion checks if a `Mock` was called before another `Mock`.

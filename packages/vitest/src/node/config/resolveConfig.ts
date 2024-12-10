@@ -532,6 +532,15 @@ export function resolveConfig(
   if (!builtinPools.includes(resolved.pool as BuiltinPool)) {
     resolved.pool = resolvePath(resolved.pool, resolved.root)
   }
+  if (resolved.poolMatchGlobs) {
+    logger.warn(
+      c.yellow(
+        `${c.inverse(
+          c.yellow(' Vitest '),
+        )} "poolMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.`,
+      ),
+    )
+  }
   resolved.poolMatchGlobs = (resolved.poolMatchGlobs || []).map(
     ([glob, pool]) => {
       if (!builtinPools.includes(pool as BuiltinPool)) {
@@ -725,6 +734,15 @@ export function resolveConfig(
     ...resolved.typecheck,
   }
 
+  if (resolved.environmentMatchGlobs) {
+    logger.warn(
+      c.yellow(
+        `${c.inverse(
+          c.yellow(' Vitest '),
+        )} "environmentMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.`,
+      ),
+    )
+  }
   resolved.environmentMatchGlobs = (resolved.environmentMatchGlobs || []).map(
     i => [resolve(resolved.root, i[0]), i[1]],
   )

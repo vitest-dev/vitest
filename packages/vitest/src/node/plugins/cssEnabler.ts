@@ -81,7 +81,7 @@ export function CSSEnablerPlugin(ctx: {
           const scopeStrategy
             = (typeof ctx.config.css !== 'boolean'
               && ctx.config.css.modules?.classNameStrategy)
-              || 'stable'
+            || 'stable'
           const proxyReturn = getCSSModuleProxyReturn(
             scopeStrategy,
             relative(ctx.config.root, id),

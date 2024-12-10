@@ -12,7 +12,7 @@ export const fill: UserEventCommand<UserEvent['fill']> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
     const element = iframe.locator(selector)
-    await element.fill(text, { timeout: 1000, ...options })
+    await element.fill(text, options)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser

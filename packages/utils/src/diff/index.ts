@@ -50,6 +50,7 @@ const PLUGINS = [
   DOMCollection,
   Immutable,
   AsymmetricMatcher,
+  prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
   plugins: PLUGINS,
@@ -298,6 +299,19 @@ export function replaceAsymmetricMatcher(
     replacedActual: any
     replacedExpected: any
   } {
+  // handle asymmetric Error.cause diff
+  if (
+    actual instanceof Error
+    && expected instanceof Error
+    && typeof actual.cause !== 'undefined'
+    && typeof expected.cause === 'undefined'
+  ) {
+    delete actual.cause
+    return {
+      replacedActual: actual,
+      replacedExpected: expected,
+    }
+  }
   if (!isReplaceable(actual, expected)) {
     return { replacedActual: actual, replacedExpected: expected }
   }

@@ -160,6 +160,7 @@ export class CommonjsExecutor {
       static constants = _Module.constants
       static enableCompileCache = _Module.enableCompileCache
       static getCompileCacheDir = _Module.getCompileCacheDir
+      static flushCompileCache = _Module.flushCompileCache
 
       static Module = Module
     }

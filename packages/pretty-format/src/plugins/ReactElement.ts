@@ -6,9 +6,9 @@
  */
 
 import type { Config, NewPlugin, Printer, Refs } from '../types'
-import * as ReactIs18 from 'react-is'
+import * as ReactIs19 from 'react-is'
 // @ts-expect-error no type
-import * as ReactIs19 from 'react-is-19'
+import * as ReactIs18 from 'react-is-18'
 import {
   printChildren,
   printElement,
@@ -35,7 +35,7 @@ const reactIsMethods = [
 ] as const
 
 const ReactIs: typeof ReactIs18 = Object.fromEntries(
-  reactIsMethods.map(m => [m, (v: any) => (ReactIs18 as any)[m](v) || ReactIs19[m](v)]),
+  reactIsMethods.map(m => [m, (v: any) => ReactIs18[m](v) || (ReactIs19 as any)[m](v)]),
 ) as any
 
 // Given element.props.children, or subtree during recursive traversal,

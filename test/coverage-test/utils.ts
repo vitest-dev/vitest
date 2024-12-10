@@ -51,6 +51,7 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
       headless: true,
       name: 'chromium',
       provider: 'playwright',
+      ...config.browser,
     },
   })
 

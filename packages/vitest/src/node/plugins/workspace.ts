@@ -91,8 +91,8 @@ export function WorkspaceVitestPlugin(
             middlewareMode: true,
             fs: {
               allow: resolveFsAllow(
-                project.ctx.config.root,
-                project.ctx.server.config.configFile,
+                project.vitest.config.root,
+                project.vitest.server.config.configFile,
               ),
             },
           },
@@ -118,7 +118,7 @@ export function WorkspaceVitestPlugin(
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
             && testConfig.css?.modules?.classNameStrategy)
-            || 'stable'
+          || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
