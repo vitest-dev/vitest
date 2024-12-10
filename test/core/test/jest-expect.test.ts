@@ -4,6 +4,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
+import exp from 'node:constants'
 
 class TestError extends Error {}
 
@@ -194,21 +195,6 @@ describe('jest-expect', () => {
         sum: expect.closeTo(0.4),
       })
     }).toThrowErrorMatchingInlineSnapshot(`[AssertionError: expected { sum: 0.30000000000000004 } to deeply equal { sum: NumberCloseTo 0.4 (2 digits) }]`)
-
-    expect(0).toEqual(expect.oneOf([0, 1, 2]))
-    expect(0).toEqual(expect.oneOf([expect.any(Number), undefined]))
-    expect('string').toEqual(expect.oneOf([expect.any(String), undefined]))
-    expect({ a: 0 }).toEqual(expect.oneOf([expect.objectContaining({ a: 0 }), null]))
-    expect({
-      name: 'apple',
-      count: 1,
-    }).toEqual({
-      name: expect.oneOf(['apple', 'banana', 'orange']),
-      count: 1,
-    })
-    expect(null).toEqual(expect.oneOf([expect.any(Object)]))
-    expect(null).toEqual(expect.oneOf([null]))
-    expect(undefined).toEqual(expect.oneOf([undefined]))
   })
 
   it('asymmetric matchers negate', () => {
@@ -216,11 +202,6 @@ describe('jest-expect', () => {
     expect('bar').toEqual(expect.not.stringMatching(/zoo/))
     expect({ bar: 'zoo' }).toEqual(expect.not.objectContaining({ zoo: 'bar' }))
     expect(['Bob', 'Eve']).toEqual(expect.not.arrayContaining(['Steve']))
-    expect(0).toEqual(expect.not.oneOf([1, 2, 3]))
-    expect('foo').toEqual(expect.not.oneOf([expect.any(Number), undefined]))
-    expect({ a: 0 }).toEqual(expect.not.oneOf([expect.objectContaining({ b: 0 }), null]))
-    expect(null).toEqual(expect.not.oneOf([expect.any(String)]))
-    expect(undefined).toEqual(expect.not.oneOf([expect.any(Object)]))
   })
 
   it('expect.extend', async () => {
@@ -604,6 +585,54 @@ describe('toBeTypeOf()', () => {
     expect('test').not.toBeTypeOf('number')
   })
 })
+
+describe('toBeOneOf()', () => {
+  it('pass with assertion', () => {
+    expect(0).toBeOneOf([0, 1, 2])
+    expect(0).toBeOneOf([expect.any(Number)])
+    expect('apple').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('apple').toBeOneOf([expect.any(String)])
+    expect(true).toBeOneOf([true, false])
+    expect(true).toBeOneOf([expect.any(Boolean)])
+    expect(null).toBeOneOf([expect.any(Object)])
+    expect(undefined).toBeOneOf([undefined])
+  })
+
+  it('pass with negotiation', () => {
+    expect(3).not.toBeOneOf([0, 1, 2])
+    expect(3).not.toBeOneOf([expect.any(String)])
+    expect('mango').not.toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').not.toBeOneOf([expect.any(Number)])
+    expect(null).not.toBeOneOf([undefined])
+  })
+
+  it.fails('fail with missing negotiation', () => {
+    expect(3).toBeOneOf([0, 1, 2])
+    expect(3).toBeOneOf([expect.any(String)])
+    expect('mango').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').toBeOneOf([expect.any(Number)])
+    expect(null).toBeOneOf([undefined])
+  })
+
+  it('asymmetric matcher', () => {
+    expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ a: 0 }), null]))
+    expect({
+      name: 'apple',
+      count: 1,
+    }).toEqual({
+      name: expect.toBeOneOf(['apple', 'banana', 'orange']),
+      count: expect.toBeOneOf([expect.any(Number)]),
+    })
+  })
+
+  it('error message', () => {
+    snapshotError(() => expect(3).toBeOneOf([0, 1, 2]))
+    snapshotError(() => expect(3).toBeOneOf([expect.any(String)]))
+    snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null])))
+    snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
+  })
+})
+
 
 describe('toSatisfy()', () => {
   const isOdd = (value: number) => value % 2 !== 0
@@ -1598,9 +1627,9 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
   snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
   snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
-  snapshotError(() => expect('foo').toEqual(expect.oneOf(['bar', 'baz'])))
-  snapshotError(() => expect(0).toEqual(expect.oneOf([expect.any(String), null, undefined])))
-  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.oneOf([expect.objectContaining({ k: 'v', k3: 'v3' }), null, undefined])))
+  snapshotError(() => expect('foo').toEqual(expect.toBeOneOf(['bar', 'baz'])))
+  snapshotError(() => expect(0).toEqual(expect.toBeOneOf([expect.any(String), null, undefined])))
+  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.toBeOneOf([expect.objectContaining({ k: 'v', k3: 'v3' }), null, undefined])))
 
   // simple truncation if pretty-format is too long
   snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))

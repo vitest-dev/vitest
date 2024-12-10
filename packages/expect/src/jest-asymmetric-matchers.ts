@@ -377,48 +377,10 @@ class CloseTo extends AsymmetricMatcher<number> {
   }
 }
 
-class OneOf<T = unknown> extends AsymmetricMatcher<Array<T>> {
-  constructor(sample: Array<T>, inverse = false) {
-    super(sample, inverse)
-  }
-
-  asymmetricMatch(other: unknown) {
-    if (!Array.isArray(this.sample)) {
-      throw new TypeError(
-        `You must provide an array to ${this.toString()}, not '${typeof this
-          .sample}'.`,
-      )
-    }
-
-    const matcherContext = this.getMatcherContext()
-    const result
-      = this.sample.length === 0
-      || this.sample.some(item =>
-        equals(item, other, matcherContext.customTesters),
-      )
-
-    return this.inverse ? !result : result
-  }
-
-  toString() {
-    return `${this.inverse ? 'Not' : ''}OneOf`
-  }
-
-  getExpectedType() {
-    return this.sample.map(item => stringify(item)).join(' | ')
-  }
-
-  toAsymmetricMatcher() {
-    return `${this.toString()}<${this.getExpectedType()}>`
-  }
-}
-
 export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'anything', () => new Anything())
 
   utils.addMethod(chai.expect, 'any', (expected: unknown) => new Any(expected))
-
-  utils.addMethod(chai.expect, 'oneOf', (expected: Array<unknown>) => new OneOf(expected))
 
   utils.addMethod(
     chai.expect,
@@ -461,7 +423,5 @@ export const JestAsymmetricMatchers: ChaiPlugin = (chai, utils) => {
       new StringMatching(expected, true),
     closeTo: (expected: any, precision?: number) =>
       new CloseTo(expected, precision, true),
-    oneOf: <T = unknown>(expected: Array<T>) =>
-      new OneOf<T>(expected, true),
   }
 }

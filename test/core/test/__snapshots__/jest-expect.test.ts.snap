@@ -223,12 +223,12 @@ exports[`asymmetric matcher error 16`] = `
 {
   "actual": "foo",
   "diff": "- Expected: 
-OneOf<"bar" | "baz">
+toBeOneOf<bar,baz>
 
 + Received: 
 "foo"",
-  "expected": "OneOf<"bar" | "baz">",
-  "message": "expected 'foo' to deeply equal OneOf<"bar" | "baz">",
+  "expected": "toBeOneOf<bar,baz>",
+  "message": "expected 'foo' to deeply equal toBeOneOf<bar,baz>",
 }
 `;
 
@@ -236,12 +236,12 @@ exports[`asymmetric matcher error 17`] = `
 {
   "actual": "0",
   "diff": "- Expected: 
-OneOf<Any<String> | null | undefined>
+toBeOneOf<Any,,>
 
 + Received: 
 0",
-  "expected": "OneOf<Any<String> | null | undefined>",
-  "message": "expected +0 to deeply equal OneOf<Any<String> | null | undefined>",
+  "expected": "toBeOneOf<Any,,>",
+  "message": "expected +0 to deeply equal toBeOneOf<Any,,>",
 }
 `;
 
@@ -252,21 +252,15 @@ exports[`asymmetric matcher error 18`] = `
   "k2": "v2",
 }",
   "diff": "- Expected: 
-OneOf<ObjectContaining {
-  "k": "v",
-  "k3": "v3",
-} | null | undefined>
+toBeOneOf<ObjectContaining,,>
 
 + Received: 
-Object {
+{
   "k": "v",
   "k2": "v2",
 }",
-  "expected": "OneOf<ObjectContaining {
-  "k": "v",
-  "k3": "v3",
-} | null | undefined>",
-  "message": "expected { k: 'v', k2: 'v2' } to deeply equal OneOf{…}",
+  "expected": "toBeOneOf<ObjectContaining,,>",
+  "message": "expected { k: 'v', k2: 'v2' } to deeply equal toBeOneOf<ObjectContaining,,>",
 }
 `;
 
@@ -674,6 +668,78 @@ exports[`error equality 13`] = `
   "message": "world",
 }",
   "message": "expected Error: hello to deeply equal ObjectContaining{…}",
+}
+`;
+
+exports[`toBeOneOf() > error message 1`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expect(received).toBeOneOf()
+
+Expected value to be one of:
+Array [
+  0,
+  1,
+  2,
+]
+
+Received:
+3",
+}
+`;
+
+exports[`toBeOneOf() > error message 2`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expect(received).toBeOneOf()
+
+Expected value to be one of:
+Array [
+  Any<String>,
+]
+
+Received:
+3",
+}
+`;
+
+exports[`toBeOneOf() > error message 3`] = `
+{
+  "actual": "Object {
+  "a": 0,
+}",
+  "diff": "- Expected: 
+toBeOneOf<ObjectContaining,>
+
++ Received: 
+{
+  "a": 0,
+}",
+  "expected": "toBeOneOf<ObjectContaining,>",
+  "message": "expected { a: +0 } to deeply equal toBeOneOf<ObjectContaining,>",
+}
+`;
+
+exports[`toBeOneOf() > error message 4`] = `
+{
+  "actual": "Object {
+  "name": "mango",
+}",
+  "diff": "- Expected
++ Received
+
+  {
+-   "name": toBeOneOf<apple,banana,orange>,
++   "name": "mango",
+  }",
+  "expected": "Object {
+  "name": toBeOneOf<apple,banana,orange>,
+}",
+  "message": "expected { name: 'mango' } to deeply equal { Object (name) }",
 }
 `;
 
