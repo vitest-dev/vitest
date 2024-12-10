@@ -222,14 +222,17 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Browser Config Reference',
                 link: '/guide/browser/config',
+                docFooterText: 'Browser Config Reference | Browser Mode',
               },
               {
                 text: 'Configuring Playwright',
                 link: '/guide/browser/playwright',
+                docFooterText: 'Configuring Playwright | Browser Mode',
               },
               {
                 text: 'Configuring WebdriverIO',
                 link: '/guide/browser/webdriverio',
+                docFooterText: 'Configuring WebdriverIO | Browser Mode',
               },
             ],
           },
@@ -261,6 +264,17 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Commands API',
                 link: '/guide/browser/commands',
                 docFooterText: 'Commands | Browser Mode',
+              },
+            ],
+          },
+          {
+            text: 'Guides',
+            collapsed: false,
+            items: [
+              {
+                text: 'Multiple Setups',
+                link: '/guide/browser/multiple-setups',
+                docFooterText: 'Multiple Setups | Browser Mode',
               },
             ],
           },

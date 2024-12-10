@@ -86,10 +86,15 @@ export default defineConfig({
   },
 })
 ```
+
+During development, Vitest supports only one [non-headless](#browser-headless) configuration. You can limit the headed project yourself by specifying `headless: false` in the config, or by providing the `--browser.headless=false` flag, or by filtering projects with `--project=chromium` flag.
+
+For more examples, refer to the ["Multiple Setups" guide](/guide/browser/multiple-setups).
 :::
 
 List of available `browser` options:
 
+- [`browser.headless`](#browser-headless)
 - [`browser.locators`](#browser-locators)
 - [`browser.viewport`](#browser-viewport)
 - [`browser.testerHtmlPath`](#browser-testerhtmlpath)

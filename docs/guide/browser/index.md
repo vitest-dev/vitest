@@ -329,7 +329,7 @@ npx vitest --browser=chrome
 Or you can provide browser options to CLI with dot notation:
 
 ```sh
-npx vitest --browser.name=chrome --browser.headless
+npx vitest --browser.headless
 ```
 
 By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/#browser-viewport).
@@ -358,7 +358,7 @@ export default defineConfig({
 You can also set headless mode using the `--browser.headless` flag in the CLI, like this:
 
 ```sh
-npx vitest --browser.name=chrome --browser.headless
+npx vitest --browser.headless
 ```
 
 In this case, Vitest will run in headless mode using the Chrome browser.
