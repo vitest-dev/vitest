@@ -31,7 +31,7 @@ test('validation works', () => {
 
 ### `browser.name` and `browser.providerOptions` are Deprecated
 
-Both [`browser.name`](/guide/browser/config/#browser-name) and [`browser.providerOptions`](/guide/browser/config/#browser-provideroptions) will be removed in Vitest 4. Instead of them, use the new [`browser.configs`](/guide/browser/config/#browser-configs) option:
+Both [`browser.name`](/guide/browser/config#browser-name) and [`browser.providerOptions`](/guide/browser/config#browser-provideroptions) will be removed in Vitest 4. Instead of them, use the new [`browser.configs`](/guide/browser/config#browser-configs) option:
 
 ```ts
 export default defineConfig({

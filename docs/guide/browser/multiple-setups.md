@@ -1,6 +1,6 @@
 # Multiple Setups
 
-Since Vitest 3, you can specify several different browser setups using the new [`browser.configs`](/guide/browser/config/#browser-configs) option.
+Since Vitest 3, you can specify several different browser setups using the new [`browser.configs`](/guide/browser/config#browser-configs) option.
 
 The main advatage of using the `browser.configs` over the [workspace](/guide/workspace) is improved caching. Every project will use the same Vite server meaning the file transform and [dependency pre-bundling](https://vite.dev/guide/dep-pre-bundling.html) has to happen only once.
 
