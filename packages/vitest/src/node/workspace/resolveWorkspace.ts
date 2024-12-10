@@ -146,6 +146,10 @@ export async function resolveBrowserWorkspace(
     const [firstConfig, ...restConfigs] = configs
     const originalName = project.config.name
 
+    if (!firstConfig.browser) {
+      throw new Error(`The browser configuration must have a "browser" property. The first item in "browser.configs" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
+    }
+
     const newName = originalName
       ? `${originalName} (${firstConfig.browser})`
       : firstConfig.browser
@@ -160,8 +164,13 @@ export async function resolveBrowserWorkspace(
       )
     }
 
-    restConfigs.forEach((config) => {
+    restConfigs.forEach((config, index) => {
       const browser = config.browser
+      if (!browser) {
+        const nth = index + 1
+        const ending = nth === 2 ? 'nd' : nth === 3 ? 'rd' : 'th'
+        throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.configs" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
+      }
       const name = config.name
       const newName = name || (originalName ? `${originalName} (${browser})` : browser)
       if (names.has(newName)) {

@@ -220,6 +220,10 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
+                text: 'Browser Config Reference',
+                link: '/guide/browser/config',
+              },
+              {
                 text: 'Configuring Playwright',
                 link: '/guide/browser/playwright',
               },

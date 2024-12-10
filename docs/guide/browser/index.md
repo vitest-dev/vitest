@@ -95,7 +95,7 @@ bun add -D vitest @vitest/browser webdriverio
 
 ## Configuration
 
-To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
+To activate browser mode in your Vitest configuration, you can use the `--browser=name` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -104,7 +104,10 @@ export default defineConfig({
     browser: {
       provider: 'playwright', // or 'webdriverio'
       enabled: true,
-      name: 'chromium', // browser name is required
+      // at least one config is required
+      configs: [
+        { browser: 'chromium' },
+      ],
     },
   }
 })
@@ -129,7 +132,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      configs: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -144,7 +149,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      configs: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -159,7 +166,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      configs: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -174,7 +183,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      configs: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -189,7 +200,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      configs: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -227,7 +240,9 @@ export default defineWorkspace([
       name: 'browser',
       browser: {
         enabled: true,
-        name: 'chrome',
+        configs: [
+          { browser: 'chromium' },
+        ],
       },
     },
   },
