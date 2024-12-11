@@ -31,7 +31,7 @@ test('validation works', () => {
 
 ### `browser.name` and `browser.providerOptions` are Deprecated
 
-Both [`browser.name`](/guide/browser/config#browser-name) and [`browser.providerOptions`](/guide/browser/config#browser-provideroptions) will be removed in Vitest 4. Instead of them, use the new [`browser.configs`](/guide/browser/config#browser-configs) option:
+Both [`browser.name`](/guide/browser/config#browser-name) and [`browser.providerOptions`](/guide/browser/config#browser-provideroptions) will be removed in Vitest 4. Instead of them, use the new [`browser.instances`](/guide/browser/config#browser-instances) option:
 
 ```ts
 export default defineConfig({
@@ -41,7 +41,7 @@ export default defineConfig({
       providerOptions: { // [!code --]
         launch: { devtools: true }, // [!code --]
       }, // [!code --]
-      configs: [ // [!code ++]
+      instances: [ // [!code ++]
         { // [!code ++]
           browser: 'chromium', // [!code ++]
           launch: { devtools: true }, // [!code ++]
@@ -52,7 +52,7 @@ export default defineConfig({
 })
 ```
 
-With the new `browser.configs` field you can also specify multiple browser configurations.
+With the new `browser.instances` field you can also specify multiple browser configurations.
 
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 

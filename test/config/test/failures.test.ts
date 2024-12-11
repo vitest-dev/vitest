@@ -289,64 +289,64 @@ test('maxConcurrency 0 prints a warning', async () => {
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
 })
 
-test('browser.name or browser.configs are required', async () => {
+test('browser.name or browser.instances are required', async () => {
   const { stderr, exitCode } = await runVitestCli('--browser.enabled')
   expect(exitCode).toBe(1)
-  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.configs" options, none were set.')
+  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.')
 })
 
-test('browser.configs is empty', async () => {
+test('browser.instances is empty', async () => {
   const { stderr } = await runVitest({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [],
+      instances: [],
     },
   })
-  expect(stderr).toMatch('"browser.configs" was set in the config, but the array is empty. Define at least one browser config.')
+  expect(stderr).toMatch('"browser.instances" was set in the config, but the array is empty. Define at least one browser config.')
 })
 
-test('browser.name filteres all browser.configs are required', async () => {
+test('browser.name filteres all browser.instances are required', async () => {
   const { stderr } = await runVitest({
     browser: {
       enabled: true,
       name: 'chromium',
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'firefox' },
       ],
     },
   })
-  expect(stderr).toMatch('"browser.configs" was set in the config, but the array is empty. Define at least one browser config. The "browser.name" was set to "chromium" which filtered all configs (firefox). Did you mean to use another name?')
+  expect(stderr).toMatch('"browser.instances" was set in the config, but the array is empty. Define at least one browser config. The "browser.name" was set to "chromium" which filtered all configs (firefox). Did you mean to use another name?')
 })
 
-test('browser.configs throws an error if no custom name is provided', async () => {
+test('browser.instances throws an error if no custom name is provided', async () => {
   const { stderr } = await runVitest({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'firefox' },
         { browser: 'firefox' },
       ],
     },
   })
-  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "firefox" was already defined. If you have multiple configs for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "firefox" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
 })
 
-test('browser.configs throws an error if no custom name is provided, but the config name is inherited', async () => {
+test('browser.instances throws an error if no custom name is provided, but the config name is inherited', async () => {
   const { stderr } = await runVitest({
     name: 'custom',
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'firefox' },
         { browser: 'firefox' },
       ],
     },
   })
-  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "custom (firefox)" was already defined. If you have multiple configs for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "custom (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
 })
 
 test('throws an error if name conflicts with a workspace name', async () => {
@@ -358,7 +358,7 @@ test('throws an error if name conflicts with a workspace name', async () => {
           browser: {
             enabled: true,
             provider: 'playwright',
-            configs: [
+            instances: [
               { browser: 'firefox' },
             ],
           },
@@ -375,7 +375,7 @@ test('throws an error if several browsers are headed in nonTTY mode', async () =
       enabled: true,
       provider: 'playwright',
       headless: false,
-      configs: [
+      instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
       ],

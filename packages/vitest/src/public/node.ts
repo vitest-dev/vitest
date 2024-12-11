@@ -60,8 +60,8 @@ export type {
   BrowserBuiltinProvider,
   BrowserCommand,
   BrowserCommandContext,
-  BrowserConfig,
   BrowserConfigOptions,
+  BrowserInstanceOption,
   BrowserOrchestrator,
   BrowserProvider,
   BrowserProviderInitializationOptions,
@@ -70,7 +70,7 @@ export type {
   BrowserScript,
   BrowserServer,
   BrowserServerState,
-  BrowserServerStateSession as BrowserServerStateContext,
+  BrowserServerStateSession,
   CDPSession,
   ResolvedBrowserOptions,
 } from '../node/types/browser'

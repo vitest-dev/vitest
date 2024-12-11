@@ -11,7 +11,7 @@ test('assignes names as browsers', async () => {
   const { projects } = await vitest({
     browser: {
       enabled: true,
-      configs: [
+      instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
         { browser: 'webkit' },
@@ -33,7 +33,7 @@ test('assignes names as browsers in a custom project', async () => {
           name: 'custom',
           browser: {
             enabled: true,
-            configs: [
+            instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },
               { browser: 'webkit' },
@@ -72,7 +72,7 @@ test('inherits browser options', async () => {
       locators: {
         testIdAttribute: 'data-tid',
       },
-      configs: [
+      instances: [
         {
           browser: 'chromium',
           screenshotFailures: true,

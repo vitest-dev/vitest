@@ -16,7 +16,7 @@ Alternatively, you can also add it to `compilerOptions.types` field in your `tsc
 }
 ```
 
-Vitest opens a single page to run all tests in the same file. You can configure the `launch` and `context` properties in `configs`:
+Vitest opens a single page to run all tests in the same file. You can configure the `launch` and `context` properties in `instances`:
 
 ```ts{9-10} [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -24,7 +24,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     browser: {
-      configs: [
+      instances: [
         {
           browser: 'firefox',
           launch: {},
@@ -52,7 +52,7 @@ export default defineConfig({
 })
 ```
 
-`providerOptions` is deprecated in favour of `configs`.
+`providerOptions` is deprecated in favour of `instances`.
 :::
 
 ## launch

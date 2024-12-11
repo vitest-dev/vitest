@@ -198,7 +198,7 @@ export class BrowserServer implements IBrowserServer {
     const browser = project.config.browser.name
     if (!browser) {
       throw new Error(
-        `[${project.name}] Browser name is required. Please, set \`test.browser.configs.browser\` option manually.`,
+        `[${project.name}] Browser name is required. Please, set \`test.browser.instances[].browser\` option manually.`,
       )
     }
     const supportedBrowsers = this.provider.getSupportedBrowsers()

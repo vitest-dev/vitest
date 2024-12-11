@@ -1,12 +1,12 @@
 # Multiple Setups
 
-Since Vitest 3, you can specify several different browser setups using the new [`browser.configs`](/guide/browser/config#browser-configs) option.
+Since Vitest 3, you can specify several different browser setups using the new [`browser.instances`](/guide/browser/config#browser-instances) option.
 
-The main advatage of using the `browser.configs` over the [workspace](/guide/workspace) is improved caching. Every project will use the same Vite server meaning the file transform and [dependency pre-bundling](https://vite.dev/guide/dep-pre-bundling.html) has to happen only once.
+The main advatage of using the `browser.instances` over the [workspace](/guide/workspace) is improved caching. Every project will use the same Vite server meaning the file transform and [dependency pre-bundling](https://vite.dev/guide/dep-pre-bundling.html) has to happen only once.
 
 ## Several Browsers
 
-You can use the `browser.configs` field to specify options for different browsers. For example, if you want to run the same tests in different browsers, the minimal configuration will look like this:
+You can use the `browser.instances` field to specify options for different browsers. For example, if you want to run the same tests in different browsers, the minimal configuration will look like this:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -16,7 +16,7 @@ export default defineConfig({
       enabled: true,
       provider: 'playwright',
       headless: true,
-      configs: [
+      instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
         { browser: 'webkit' },
@@ -28,7 +28,7 @@ export default defineConfig({
 
 ## Different Setups
 
-You can also specify different config options independently from the browser (although, the configs _can_ also have `browser` fields):
+You can also specify different config options independently from the browser (although, the instances _can_ also have `browser` fields):
 
 ::: code-group
 ```ts [vitest.config.ts]
@@ -39,7 +39,7 @@ export default defineConfig({
       enabled: true,
       provider: 'playwright',
       headless: true,
-      configs: [
+      instances: [
         {
           browser: 'chromium',
           name: 'chromium-1',
@@ -89,7 +89,7 @@ $ vitest --project=chromium
 export default defineConfig({
   test: {
     browser: {
-      configs: [
+      instances: [
         // name: chromium
         { browser: 'chromium' },
         // name: custom
@@ -104,7 +104,7 @@ export default defineConfig({
   test: {
     name: 'custom',
     browser: {
-      configs: [
+      instances: [
         // name: custom (chromium)
         { browser: 'chromium' },
         // name: manual
@@ -117,7 +117,7 @@ export default defineConfig({
 :::
 
 ::: warning
-Vitest cannot run multiple configs that have `headless` mode set to `false` (the default behaviour). During development, you can select what project to run in your terminal:
+Vitest cannot run multiple instances that have `headless` mode set to `false` (the default behaviour). During development, you can select what project to run in your terminal:
 
 ```shell
 ? Found multiple projects that run browser tests in headed mode: "chromium", "firefox".
@@ -130,5 +130,5 @@ start tests with --browser=name or --project=name flag. › - Use arrow-keys. Re
 
 If you have several non-headless projects in CI (i.e. the `headless: false` is set manually in the config and not overriden in  CI env), Vitest will fail the run and won't start any tests.
 
-The ability to run tests in headless mode is not affected by this. You can still run all configs in parallel as long as they don't have `headless: false`.
+The ability to run tests in headless mode is not affected by this. You can still run all instances in parallel as long as they don't have `headless: false`.
 :::

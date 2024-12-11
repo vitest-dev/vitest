@@ -20,7 +20,7 @@ Alternatively, you can also add it to `compilerOptions.types` field in your `tsc
 }
 ```
 
-Vitest opens a single page to run all tests in the same file. You can configure any property specified in `RemoteOptions` in `configs`:
+Vitest opens a single page to run all tests in the same file. You can configure any property specified in `RemoteOptions` in `instances`:
 
 ```ts{9-12} [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -28,7 +28,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     browser: {
-      configs: [
+      instances: [
         {
           browser: 'chrome',
           capabilities: {
@@ -57,7 +57,7 @@ export default defineConfig({
 })
 ```
 
-`providerOptions` is deprecated in favour of `configs`.
+`providerOptions` is deprecated in favour of `instances`.
 :::
 
 You can find most available options in the [WebdriverIO documentation](https://webdriver.io/docs/configuration/). Note that Vitest will ignore all test runner options because we only use `webdriverio`'s browser capabilities.
@@ -65,5 +65,5 @@ You can find most available options in the [WebdriverIO documentation](https://w
 ::: tip
 Most useful options are located on `capabilities` object. WebdriverIO allows nested capabilities, but Vitest will ignore those options because we rely on a different mechanism to spawn several browsers.
 
-Note that Vitest will ignore `capabilities.browserName`. Use [`test.browser.configs.name`](/guide/browser/config#browser-capabilities-name) instead.
+Note that Vitest will ignore `capabilities.browserName`. Use [`test.browser.instances.name`](/guide/browser/config#browser-capabilities-name) instead.
 :::

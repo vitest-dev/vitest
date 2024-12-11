@@ -66,10 +66,20 @@ type UnsupportedProperties =
   | 'server'
   | 'benchmark'
 
-export interface BrowserConfig
-  extends BrowserProviderOptions,
+export interface BrowserInstanceOption extends BrowserProviderOptions,
   Omit<ProjectConfig, UnsupportedProperties>,
-  Pick<BrowserConfigOptions, 'headless' | 'locators' | 'viewport' | 'testerHtmlPath' | 'screenshotDirectory' | 'screenshotFailures'> {
+  Pick<
+    BrowserConfigOptions,
+    | 'headless'
+    | 'locators'
+    | 'viewport'
+    | 'testerHtmlPath'
+    | 'screenshotDirectory'
+    | 'screenshotFailures'
+  > {
+  /**
+   * Name of the browser
+   */
   browser: string
 }
 
@@ -90,7 +100,7 @@ export interface BrowserConfigOptions {
   /**
    * Configurations for different browser setups
    */
-  configs?: BrowserConfig[]
+  instances?: BrowserInstanceOption[]
 
   /**
    * Browser provider

@@ -104,8 +104,8 @@ export default defineConfig({
     browser: {
       provider: 'playwright', // or 'webdriverio'
       enabled: true,
-      // at least one config is required
-      configs: [
+      // at least one instance is required
+      instances: [
         { browser: 'chromium' },
       ],
     },
@@ -132,7 +132,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'chromium' },
       ],
     }
@@ -149,7 +149,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'chromium' },
       ],
     }
@@ -166,7 +166,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'chromium' },
       ],
     }
@@ -183,7 +183,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'chromium' },
       ],
     }
@@ -200,7 +200,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         { browser: 'chromium' },
       ],
     }
@@ -240,7 +240,7 @@ export default defineWorkspace([
       name: 'browser',
       browser: {
         enabled: true,
-        configs: [
+        instances: [
           { browser: 'chromium' },
         ],
       },

@@ -10,7 +10,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      configs: [
+      instances: [
         {
           browser: 'chromium',
           setupFile: './chromium-setup.js',
@@ -41,9 +41,9 @@ export default defineConfig({
 - **Default:** `false`
 - **CLI:** `--browser`, `--browser.enabled=false`
 
-Run all tests inside a browser by default. Note that `--browser` only works if you have at least one [`browser.configs`](#browser-configs).
+Run all tests inside a browser by default. Note that `--browser` only works if you have at least one [`browser.instances`](#browser-instances) item.
 
-## browser.configs
+## browser.instances
 
 - **Type:** `BrowserConfig`
 - **Default:** `[{ browser: name }]`
@@ -74,7 +74,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       testerHtmlPath: './custom-path.html',
-      configs: [
+      instances: [
         {
           // will have both setup files: "root" and "browser"
           setupFile: ['./browser-setup-file.js'],
@@ -103,7 +103,7 @@ List of available `browser` options:
 
 By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitets 4.
 
-Under the hood, Vitest transforms these configs into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
+Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
 
 ## browser&#46;name <Badge type="danger">deprecated</Badge> {#browser-name}
 
@@ -111,7 +111,7 @@ Under the hood, Vitest transforms these configs into separate [test projects](/a
 - **CLI:** `--browser=safari`
 
 ::: danger
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.configs`](#browser-configs) field instead.
+This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
 :::
 
 Run all tests in a specific browser. Possible options in different providers:
@@ -157,7 +157,7 @@ Configure options for Vite server that serves code in the browser. Does not affe
 - **CLI:** `--browser.provider=playwright`
 
 ::: danger ADVANCED API
-The provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.configs`](#browser-configs) option.
+The provider API is highly experimental and can change between patches. If you just need to run tests in a browser, use the [`browser.instances`](#browser-instances) option instead.
 :::
 
 Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
@@ -185,7 +185,7 @@ export interface BrowserProvider {
 - **Type:** `BrowserProviderOptions`
 
 ::: danger
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.configs`](#browser-configs) field instead.
+This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
 :::
 
 Options that will be passed down to provider when calling `provider.initialize`.

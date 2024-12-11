@@ -1,5 +1,5 @@
 import type { Vitest } from '../core'
-import type { BrowserConfig, ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
+import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
@@ -139,7 +139,7 @@ export async function resolveBrowserWorkspace(
   const newConfigs: [project: TestProject, config: ResolvedConfig][] = []
 
   resolvedProjects.forEach((project) => {
-    const configs = project.config.browser.configs
+    const configs = project.config.browser.instances
     if (!project.config.browser.enabled || !configs || configs.length === 0) {
       return
     }
@@ -147,7 +147,7 @@ export async function resolveBrowserWorkspace(
     const originalName = project.config.name
 
     if (!firstConfig.browser) {
-      throw new Error(`The browser configuration must have a "browser" property. The first item in "browser.configs" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
+      throw new Error(`The browser configuration must have a "browser" property. The first item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
     }
 
     const newName = originalName
@@ -169,7 +169,7 @@ export async function resolveBrowserWorkspace(
       if (!browser) {
         const nth = index + 1
         const ending = nth === 2 ? 'nd' : nth === 3 ? 'rd' : 'th'
-        throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.configs" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
+        throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
       }
       const name = config.name
       const newName = name || (originalName ? `${originalName} (${browser})` : browser)
@@ -177,7 +177,7 @@ export async function resolveBrowserWorkspace(
         throw new Error(
           [
             `Cannot define a nested project for a ${browser} browser. The project name "${newName}" was already defined. `,
-            'If you have multiple configs for the same browser, make sure to define a custom "name". ',
+            'If you have multiple instances for the same browser, make sure to define a custom "name". ',
             'All projects in a workspace should have unique names. Make sure your configuration is correct.',
           ].join(''),
         )
@@ -226,7 +226,7 @@ export async function resolveBrowserWorkspace(
   return resolvedProjects
 }
 
-function cloneConfig(project: TestProject, { browser, ...config }: BrowserConfig) {
+function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
   const {
     locators,
     viewport,
@@ -257,7 +257,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserConfig
       headless: project.vitest._options?.browser?.headless ?? headless ?? currentConfig.headless,
       name: browser,
       providerOptions: config,
-      configs: undefined, // projects cannot spawn more configs
+      instances: undefined, // projects cannot spawn more configs
     },
     // TODO: should resolve, not merge/override
   } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
