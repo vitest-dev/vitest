@@ -557,6 +557,7 @@ export function resolveConfig(
     }
     // override test config
     resolved.coverage.enabled = false
+    resolved.typecheck.enabled = false
     resolved.include = resolved.benchmark.include
     resolved.exclude = resolved.benchmark.exclude
     resolved.includeSource = resolved.benchmark.includeSource
