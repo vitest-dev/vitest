@@ -9,6 +9,7 @@
     "node": "^18.0.0 || >=20.0.0"
   },
   "scripts": {
+    "node-error-repro": "pnpm -r --filter test-core run node-error-repro",
     "ci": "ni && nr typecheck && nr lint && nr build && nr test:ci",
     "ci:docs": "pnpm run build && pnpm run docs:build",
     "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
