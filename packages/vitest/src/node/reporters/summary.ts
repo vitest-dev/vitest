@@ -320,7 +320,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
         + formatProjectName(testFile.projectName)
         + testFile.filename
         + (!testFile.completed && !testFile.total
-          ? '[queued]'
+          ? ' [queued]'
           : c.dim(` ${testFile.completed}/${testFile.total}`)),
       )
 
