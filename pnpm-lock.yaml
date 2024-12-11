@@ -13391,7 +13391,7 @@ snapshots:
       jsonc-parser: 3.3.1
       prompts: 2.4.2
       semver: 7.6.3
-      tinyexec: 0.3.1
+      tinyexec: 0.3.1(patch_hash=wxmofn3hv47h2en4btefrdre4i)
       tinyglobby: 0.2.10
     transitivePeerDependencies:
       - magicast

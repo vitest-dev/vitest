@@ -10,7 +10,6 @@ import { createBenchmarkJsonReport, flattenFormattedBenchmarkReport } from './js
 import { renderTable } from './tableRender'
 
 export class BenchmarkReporter extends DefaultReporter {
-  protected verbose = true
   compare?: Parameters<typeof renderTable>[0]['compare']
 
   async onInit(ctx: Vitest) {
@@ -41,7 +40,7 @@ export class BenchmarkReporter extends DefaultReporter {
     const duration = task.result.duration
 
     if (benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')) {
-      let title = ` ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`
+      let title = `\n ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`
 
       if (duration != null && duration > this.ctx.config.slowTestThreshold) {
         title += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
