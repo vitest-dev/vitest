@@ -20,14 +20,14 @@ test('thresholds.autoUpdate updates thresholds', async () => {
             // Global ones
             lines: 0.1,
             functions: 0.2,
-            branches: 0.3,
-            statements: 0.4,
+            branches: -1000,
+            statements: -2000,
 
             '**/src/math.ts': {
               branches: 0.1,
               functions: 0.2,
-              lines: 0.3,
-              statements: 0.4
+              lines: -1000,
+              statements: -2000,
             }
           }
         }
@@ -56,13 +56,13 @@ test('thresholds.autoUpdate updates thresholds', async () => {
               lines: 55.55,
               functions: 33.33,
               branches: 100,
-              statements: 55.55,
+              statements: -8,
 
               '**/src/math.ts': {
                 branches: 100,
                 functions: 25,
-                lines: 50,
-                statements: 50
+                lines: -6,
+                statements: -6,
               }
             }
           }
@@ -84,13 +84,13 @@ test('thresholds.autoUpdate updates thresholds', async () => {
               lines: 33.33,
               functions: 33.33,
               branches: 100,
-              statements: 33.33,
+              statements: -4,
 
               '**/src/math.ts': {
                 branches: 100,
                 functions: 25,
-                lines: 25,
-                statements: 25
+                lines: -3,
+                statements: -3,
               }
             }
           }

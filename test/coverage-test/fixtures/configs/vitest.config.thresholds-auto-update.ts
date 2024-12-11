@@ -9,14 +9,14 @@ export default defineConfig({
         // Global ones
         lines: 0.1,
         functions: 0.2,
-        branches: 0.3,
-        statements: 0.4,
+        branches: -1000,
+        statements: -2000,
 
         '**/src/math.ts': {
           branches: 0.1,
           functions: 0.2,
-          lines: 0.3,
-          statements: 0.4
+          lines: -1000,
+          statements: -2000,
         }
       }
     }

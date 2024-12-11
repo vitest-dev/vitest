@@ -2,7 +2,7 @@ import { expect } from 'vitest'
 import { sum } from '../fixtures/src/math'
 import { coverageTest, isV8Provider, normalizeURL, runVitest, test } from '../utils'
 
-test('failing thresholds', async () => {
+test('failing percentage thresholds', async () => {
   const { exitCode, stderr } = await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
