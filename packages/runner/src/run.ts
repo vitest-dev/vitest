@@ -196,7 +196,7 @@ async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
-  if (test.mode !== 'run') {
+  if (test.mode !== 'run' && test.mode !== 'queued') {
     return
   }
 
@@ -458,7 +458,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       failTask(suite.result, e, runner.config.diffOptions)
     }
 
-    if (suite.mode === 'run') {
+    if (suite.mode === 'run' || suite.mode === 'queued') {
       if (!runner.config.passWithNoTests && !hasTests(suite)) {
         suite.result.state = 'fail'
         if (!suite.result.errors?.length) {

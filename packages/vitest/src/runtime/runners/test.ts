@@ -91,7 +91,7 @@ export class VitestTestRunner implements VitestRunner {
       test.mode = 'skip'
     }
 
-    if (test.mode !== 'run') {
+    if (test.mode !== 'run' && test.mode !== 'queued') {
       return
     }
 

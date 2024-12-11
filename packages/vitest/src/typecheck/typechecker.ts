@@ -112,7 +112,7 @@ export class Typechecker {
         if ('tasks' in task) {
           markTasks(task.tasks)
         }
-        if (!task.result?.state && task.mode === 'run') {
+        if (!task.result?.state && (task.mode === 'run' || task.mode === 'queued')) {
           task.result = {
             state: 'pass',
           }

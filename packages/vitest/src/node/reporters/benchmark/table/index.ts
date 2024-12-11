@@ -76,12 +76,13 @@ export class TableReporter extends BaseReporter {
         && task.type === 'suite'
         && task.result?.state
         && task.result?.state !== 'run'
+        && task.result?.state !== 'queued'
       ) {
         // render static table when all benches inside single suite are finished
         const benches = task.tasks.filter(t => t.meta.benchmark)
         if (
           benches.length > 0
-          && benches.every(t => t.result?.state !== 'run')
+          && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')
         ) {
           let title = ` ${getStateSymbol(task)} ${getFullName(
             task,

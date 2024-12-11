@@ -6,6 +6,7 @@ export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
   onUnhandledError: (error: unknown, type: string) => Promise<void>
+  onQueued: (file: RunnerTestFile) => void
   onCollected: (files?: RunnerTestFile[]) => Promise<void>
   onTaskUpdate: (packs: TaskResultPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
