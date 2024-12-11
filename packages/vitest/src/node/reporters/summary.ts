@@ -319,9 +319,9 @@ export class SummaryReporter extends TaskParser implements Reporter {
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName(testFile.projectName)
         + testFile.filename
-        + (!testFile.completed && !testFile.total
+        + c.dim(!testFile.completed && !testFile.total
           ? ' [queued]'
-          : c.dim(` ${testFile.completed}/${testFile.total}`)),
+          : ` ${testFile.completed}/${testFile.total}`),
       )
 
       const slowTasks = [
