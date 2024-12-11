@@ -1,9 +1,9 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from 'vitest/node'
 import { runVitest } from '../../test-utils'
+import { browser } from '../settings'
 
-export const provider = process.env.PROVIDER || 'playwright'
-export const browser = process.env.BROWSER || (provider !== 'playwright' ? 'chromium' : 'chrome')
+export { browser, instances, provider } from '../settings'
 
 export async function runBrowserTests(
   config?: Omit<UserConfig, 'browser'> & { browser?: Partial<UserConfig['browser']> },

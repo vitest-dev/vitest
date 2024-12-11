@@ -13,5 +13,12 @@
       "vitest/import-meta"
     ],
     "esModuleInterop": true
-  }
+  },
+  "include": [
+    "fixtures/**/*.ts",
+    "test/**/*.ts",
+    "specs/**/*.ts",
+    "./vitest.config.*",
+    "./setup.unit.ts"
+  ]
 }

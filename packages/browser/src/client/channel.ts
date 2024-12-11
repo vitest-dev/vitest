@@ -41,7 +41,7 @@ export type IframeChannelEvent =
   | IframeChannelOutgoingEvent
 
 export const channel = new BroadcastChannel(
-  `vitest:${getBrowserState().contextId}`,
+  `vitest:${getBrowserState().sessionId}`,
 )
 export const globalChannel = new BroadcastChannel('vitest:global')
 

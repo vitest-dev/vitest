@@ -1,4 +1,4 @@
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
@@ -19,6 +19,21 @@ const stripVTControlCharacters: BrowserCommand<[text: string]> = (_, text) => {
   return util.stripVTControlCharacters(text)
 }
 
+const devInstances: BrowserInstanceOption[] = [
+  { browser },
+]
+
+const playwrightInstances: BrowserInstanceOption[] = [
+  { browser: 'chromium' },
+  { browser: 'firefox' },
+  { browser: 'webkit' },
+]
+
+const webdriverioInstances: BrowserInstanceOption[] = [
+  { browser: 'chrome' },
+  { browser: 'firefox' },
+]
+
 export default defineConfig({
   server: {
     headers: {
@@ -38,8 +53,12 @@ export default defineConfig({
     snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {
       enabled: true,
-      name: browser,
       headless: false,
+      instances: process.env.BROWSER
+        ? devInstances
+        : provider === 'playwright'
+          ? playwrightInstances
+          : webdriverioInstances,
       provider,
       isolate: false,
       testerScripts: [

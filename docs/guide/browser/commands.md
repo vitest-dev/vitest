@@ -61,7 +61,7 @@ CDP session works only with `playwright` provider and only when using `chromium`
 
 ## Custom Commands
 
-You can also add your own commands via [`browser.commands`](/config/#browser-commands) config option. If you develop a library, you can provide them via a `config` hook inside a plugin:
+You can also add your own commands via [`browser.commands`](/guide/browser/config#browser-commands) config option. If you develop a library, you can provide them via a `config` hook inside a plugin:
 
 ```ts
 import type { Plugin } from 'vitest/config'

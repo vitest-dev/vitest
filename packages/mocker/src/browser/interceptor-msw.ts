@@ -128,10 +128,11 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
   }
 }
 
-const timestampRegexp = /(\?|&)t=\d{13}/
-const versionRegexp = /(\?|&)v=\w{8}/
+const trailingSeparatorRE = /[?&]$/
+const timestampRE = /\bt=\d{13}&?\b/
+const versionRE = /\bv=\w{8}&?\b/
 function cleanQuery(url: string) {
-  return url.replace(timestampRegexp, '').replace(versionRegexp, '')
+  return url.replace(timestampRE, '').replace(versionRE, '').replace(trailingSeparatorRE, '')
 }
 
 function passthrough() {

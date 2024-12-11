@@ -97,11 +97,13 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
           return getModuleGraph(ctx, project, id, browser)
         },
-        updateSnapshot(file?: File) {
+        async updateSnapshot(file?: File) {
           if (!file) {
-            return ctx.updateSnapshot()
+            await ctx.updateSnapshot()
           }
-          return ctx.updateSnapshot([file.filepath])
+          else {
+            await ctx.updateSnapshot([file.filepath])
+          }
         },
         getUnhandledErrors() {
           return ctx.state.getUnhandledErrors()

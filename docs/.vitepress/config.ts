@@ -67,6 +67,7 @@ export default ({ mode }: { mode: string }) => {
         groupIconVitePlugin({
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
+            'vitest.shims': 'vscode-icons:file-type-vitest',
             'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
@@ -215,6 +216,27 @@ export default ({ mode }: { mode: string }) => {
             ],
           },
           {
+            text: 'Configuration',
+            collapsed: false,
+            items: [
+              {
+                text: 'Browser Config Reference',
+                link: '/guide/browser/config',
+                docFooterText: 'Browser Config Reference | Browser Mode',
+              },
+              {
+                text: 'Configuring Playwright',
+                link: '/guide/browser/playwright',
+                docFooterText: 'Configuring Playwright | Browser Mode',
+              },
+              {
+                text: 'Configuring WebdriverIO',
+                link: '/guide/browser/webdriverio',
+                docFooterText: 'Configuring WebdriverIO | Browser Mode',
+              },
+            ],
+          },
+          {
             text: 'API',
             collapsed: false,
             items: [
@@ -242,6 +264,17 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Commands API',
                 link: '/guide/browser/commands',
                 docFooterText: 'Commands | Browser Mode',
+              },
+            ],
+          },
+          {
+            text: 'Guides',
+            collapsed: false,
+            items: [
+              {
+                text: 'Multiple Setups',
+                link: '/guide/browser/multiple-setups',
+                docFooterText: 'Multiple Setups | Browser Mode',
               },
             ],
           },

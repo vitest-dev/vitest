@@ -22,11 +22,11 @@ function filepath() {
   return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
 }
 const rpc = () => getWorkerState().rpc as any as BrowserRPC
-const contextId = getBrowserState().contextId
-const channel = new BroadcastChannel(`vitest:${contextId}`)
+const sessionId = getBrowserState().sessionId
+const channel = new BroadcastChannel(`vitest:${sessionId}`)
 
 function triggerCommand<T>(command: string, ...args: any[]) {
-  return rpc().triggerCommand<T>(contextId, command, filepath(), args)
+  return rpc().triggerCommand<T>(sessionId, command, filepath(), args)
 }
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {

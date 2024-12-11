@@ -6,10 +6,10 @@ import { runVitestCli } from '../../test-utils'
 
 type Message = Partial<InspectorNotification<any>>
 
-const IS_PLAYWRIGHT_CHROMIUM = process.env.BROWSER === 'chromium' && process.env.PROVIDER === 'playwright'
+const IS_PLAYWRIGHT = process.env.PROVIDER === 'playwright'
 const REMOTE_DEBUG_URL = '127.0.0.1:9123'
 
-test.runIf(IS_PLAYWRIGHT_CHROMIUM || !process.env.CI)('--inspect-brk stops at test file', async () => {
+test.runIf(IS_PLAYWRIGHT || !process.env.CI)('--inspect-brk stops at test file', async () => {
   const { vitest, waitForClose } = await runVitestCli(
     '--root',
     'fixtures/inspect',
