@@ -321,6 +321,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/advanced/guide/tests',
               },
               {
+                text: 'Test Lifecycle',
+                link: '/advanced/guide/lifecycle',
+              },
+              {
                 text: 'Extending Reporters',
                 link: '/advanced/reporters',
               },
