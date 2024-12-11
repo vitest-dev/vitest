@@ -189,5 +189,5 @@ describe('collection failed', () => {
 ```
 
 ::: warning
-Note that errors are serialized into simple object: `instanceof Error` will always return `false`.
+Note that errors are serialized into simple objects: `instanceof Error` will always return `false`.
 :::

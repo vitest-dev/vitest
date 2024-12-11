@@ -126,7 +126,17 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public result(): TestResult | undefined {
     const result = this.task.result
-    if (!result || result.state === 'run') {
+    if (!result) {
+      if (this.skipped()) {
+        return {
+          state: 'skipped',
+          errors: undefined,
+          note: undefined,
+        }
+      }
+      return undefined
+    }
+    if (result.state === 'run') {
       return undefined
     }
     const state = result.state === 'fail'
