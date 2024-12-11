@@ -29,7 +29,7 @@ ${printReceived(actual)}`,
 
   toBeOneOf(actual: unknown, expected: Array<unknown>) {
     const { equals, customTesters } = this
-    const { printReceived, printExpected, matcherHint, } = this.utils
+    const { printReceived, printExpected, matcherHint } = this.utils
 
     if (!Array.isArray(expected)) {
       throw new TypeError(
@@ -62,5 +62,5 @@ ${printExpected(expected)}
 Received:
 ${printReceived(actual)}`,
     }
-  }
+  },
 }

@@ -132,7 +132,7 @@ function JestExtendPlugin(
           }
 
           toAsymmetricMatcher() {
-            return `${this.toString()}<${this.sample.map((item) => stringify(item)).join(', ')}>`
+            return `${this.toString()}<${this.sample.map(item => stringify(item)).join(', ')}>`
           }
         }
 

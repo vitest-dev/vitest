@@ -4,7 +4,6 @@ import { stripVTControlCharacters } from 'node:util'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
-import exp from 'node:constants'
 
 class TestError extends Error {}
 
@@ -632,7 +631,6 @@ describe('toBeOneOf()', () => {
     snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
   })
 })
-
 
 describe('toSatisfy()', () => {
   const isOdd = (value: number) => value % 2 !== 0
