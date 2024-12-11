@@ -39,7 +39,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: false,
-      configs: [
+      instances: [
         { browser },
       ],
       provider,
