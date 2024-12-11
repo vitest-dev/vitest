@@ -628,7 +628,7 @@ describe('toBeOneOf()', () => {
   it('error message', () => {
     snapshotError(() => expect(3).toBeOneOf([0, 1, 2]))
     snapshotError(() => expect(3).toBeOneOf([expect.any(String)]))
-    snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null])))
+    snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null, undefined])))
     snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
   })
 })
@@ -685,7 +685,7 @@ describe('toSatisfy()', () => {
         }),
       )
     }).toThrowErrorMatchingInlineSnapshot(
-      `[AssertionError: expected Error: 2 to match object { message: toSatisfy{…} }]`,
+      `[AssertionError: expected Error: 2 to match object { Object (message) }]`,
     )
   })
 
