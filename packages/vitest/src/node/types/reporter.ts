@@ -2,6 +2,7 @@ import type { File, TaskResultPack } from '@vitest/runner'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
 import type { TestModule } from '../reporters/reported-tasks'
 
 export interface Reporter {
@@ -22,4 +23,7 @@ export interface Reporter {
   onServerRestart?: (reason?: string) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onProcessTimeout?: () => Awaitable<void>
+
+  // new API
+  onTestRunStart?: (specifications: TestSpecification[]) => Awaitable<void>
 }
