@@ -11,14 +11,14 @@ it('regex match', () => {
     return \`//# sourceMappingURL=data:application/json;base64,\${src}\`;
   }
   Object.defineProperty(__vite_ssr_exports__, "foo", { enumerable: true, configurable: true, get(){ return foo }});
-  
+
   //# sourceMappingSource=vite-node
   //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udHMifQ==`.match(regex)).deep.eq(['//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udHMifQ=='])
   expect(`function foo(src) {
     return \`//# sourceMappingURL=data:application/json;base64,\${src}\`;
   }
   Object.defineProperty(__vite_ssr_exports__, "foo", { enumerable: true, configurable: true, get(){ return foo }});
-  
+
   //# sourceMappingSource=vite-node
   //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udHMifQ==`.replace(regex, '')).not.include('//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udHMifQ==')
 })
@@ -49,7 +49,7 @@ describe('withInlineSourcemap', () => {
     filepath: '/foo.ts',
   }
 
-  it('Check that the original sourcemap in the string isnot removed', () => {
+  it('Check that the original sourcemap in the string is not removed', () => {
     expect(withInlineSourcemap(input, options).code).contain('return `//# sourceMappingURL=data:application/json;base64,${src}`')
   })
   it('Check that the appended sourcemap is removed', () => {
@@ -57,7 +57,7 @@ describe('withInlineSourcemap', () => {
       return \`//# sourceMappingURL=data:application/json;base64,\${src}\`;
     }
     Object.defineProperty(__vite_ssr_exports__, "foo", { enumerable: true, configurable: true, get(){ return foo }});
-    
+
     //# sourceMappingSource=other
     //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udtest==`
 
@@ -68,7 +68,7 @@ describe('withInlineSourcemap', () => {
       return \`//# sourceMappingURL=data:application/json;base64,\${src}\`;
     }
     Object.defineProperty(__vite_ssr_exports__, "foo", { enumerable: true, configurable: true, get(){ return foo }});
-    
+
     //# sourceMappingSource=vite-node
     //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBQU8sU0FBUyxJQUFJLEtBQXFCO0FBQ3ZDLFNBQU8scURBQXFEO0FBQzlEO2lIQUFBIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIi4uL2Zvby50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZnVuY3Rpb24gZm9vKHNyYzogc3RyaW5nKTogc3RyaW5nIHtcbiAgcmV0dXJuIGAvLyMgc291cmNlTWFwcGluZ1VSTD1kYXRhOmFwcGxpY2F0aW9uL2pzb247YmFzZTY0LCR7c3JjfWBcbn1cbiJdLCJmaWxlIjoiL3NyYy9mb28udHMifQ==`
 
