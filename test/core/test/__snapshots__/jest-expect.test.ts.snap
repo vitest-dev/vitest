@@ -60,12 +60,12 @@ exports[`asymmetric matcher error 5`] = `
 {
   "actual": "hello",
   "diff": "- Expected: 
-stringContainingCustom<xx>
+stringContainingCustom<"xx">
 
 + Received: 
 "hello"",
-  "expected": "stringContainingCustom<xx>",
-  "message": "expected 'hello' to deeply equal stringContainingCustom<xx>",
+  "expected": "stringContainingCustom<"xx">",
+  "message": "expected 'hello' to deeply equal stringContainingCustom<"xx">",
 }
 `;
 
@@ -73,12 +73,12 @@ exports[`asymmetric matcher error 6`] = `
 {
   "actual": "hello",
   "diff": "- Expected: 
-not.stringContainingCustom<ll>
+not.stringContainingCustom<"ll">
 
 + Received: 
 "hello"",
-  "expected": "not.stringContainingCustom<ll>",
-  "message": "expected 'hello' to deeply equal not.stringContainingCustom<ll>",
+  "expected": "not.stringContainingCustom<"ll">",
+  "message": "expected 'hello' to deeply equal not.stringContainingCustom<"ll">",
 }
 `;
 
@@ -91,13 +91,13 @@ exports[`asymmetric matcher error 7`] = `
 + Received
 
   {
--   "foo": stringContainingCustom<xx>,
+-   "foo": stringContainingCustom<"xx">,
 +   "foo": "hello",
   }",
   "expected": "Object {
-  "foo": stringContainingCustom<xx>,
+  "foo": stringContainingCustom<"xx">,
 }",
-  "message": "expected { foo: 'hello' } to deeply equal { foo: stringContainingCustom<xx> }",
+  "message": "expected { foo: 'hello' } to deeply equal { foo: stringContainingCustom<"xx"> }",
 }
 `;
 
@@ -110,13 +110,13 @@ exports[`asymmetric matcher error 8`] = `
 + Received
 
   {
--   "foo": not.stringContainingCustom<ll>,
+-   "foo": not.stringContainingCustom<"ll">,
 +   "foo": "hello",
   }",
   "expected": "Object {
-  "foo": not.stringContainingCustom<ll>,
+  "foo": not.stringContainingCustom<"ll">,
 }",
-  "message": "expected { foo: 'hello' } to deeply equal { foo: not.stringContainingCustom<ll> }",
+  "message": "expected { foo: 'hello' } to deeply equal { foo: not.stringContainingCustom{…} }",
 }
 `;
 
@@ -142,12 +142,16 @@ exports[`asymmetric matcher error 11`] = `
 {
   "actual": "hello",
   "diff": "- Expected: 
-testComplexMatcher<[object Object]>
+testComplexMatcher<Object {
+  "x": "y",
+}>
 
 + Received: 
 "hello"",
-  "expected": "testComplexMatcher<[object Object]>",
-  "message": "expected 'hello' to deeply equal testComplexMatcher<[object Object]>",
+  "expected": "testComplexMatcher<Object {
+  "x": "y",
+}>",
+  "message": "expected 'hello' to deeply equal testComplexMatcher{…}",
 }
 `;
 
@@ -221,6 +225,82 @@ exports[`asymmetric matcher error 15`] = `
 
 exports[`asymmetric matcher error 16`] = `
 {
+  "actual": "foo",
+  "diff": "- Expected: 
+toBeOneOf<Array [
+  "bar",
+  "baz",
+]>
+
++ Received: 
+"foo"",
+  "expected": "toBeOneOf<Array [
+  "bar",
+  "baz",
+]>",
+  "message": "expected 'foo' to deeply equal toBeOneOf<Array [
+  "bar",
+  "baz",
+]>",
+}
+`;
+
+exports[`asymmetric matcher error 17`] = `
+{
+  "actual": "0",
+  "diff": "- Expected: 
+toBeOneOf<Array [
+  Any<String>,
+  null,
+  undefined,
+]>
+
++ Received: 
+0",
+  "expected": "toBeOneOf<Array [
+  Any<String>,
+  null,
+  undefined,
+]>",
+  "message": "expected +0 to deeply equal toBeOneOf{…}",
+}
+`;
+
+exports[`asymmetric matcher error 18`] = `
+{
+  "actual": "Object {
+  "k": "v",
+  "k2": "v2",
+}",
+  "diff": "- Expected: 
+toBeOneOf<Array [
+  ObjectContaining {
+    "k": "v",
+    "k3": "v3",
+  },
+  null,
+  undefined,
+]>
+
++ Received: 
+{
+  "k": "v",
+  "k2": "v2",
+}",
+  "expected": "toBeOneOf<Array [
+  ObjectContaining {
+    "k": "v",
+    "k3": "v3",
+  },
+  null,
+  undefined,
+]>",
+  "message": "expected { k: 'v', k2: 'v2' } to deeply equal toBeOneOf{…}",
+}
+`;
+
+exports[`asymmetric matcher error 19`] = `
+{
   "actual": "hello",
   "diff": undefined,
   "expected": "StringContaining "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"",
@@ -228,7 +308,7 @@ exports[`asymmetric matcher error 16`] = `
 }
 `;
 
-exports[`asymmetric matcher error 17`] = `
+exports[`asymmetric matcher error 20`] = `
 {
   "actual": "hello",
   "diff": undefined,
@@ -237,20 +317,20 @@ exports[`asymmetric matcher error 17`] = `
 }
 `;
 
-exports[`asymmetric matcher error 18`] = `
+exports[`asymmetric matcher error 21`] = `
 {
   "actual": "hello",
   "diff": "- Expected: 
-stringContainingCustom<xx>
+stringContainingCustom<"xx">
 
 + Received: 
 "hello"",
-  "expected": "stringContainingCustom<xx>",
+  "expected": "stringContainingCustom<"xx">",
   "message": "expected error to match asymmetric matcher",
 }
 `;
 
-exports[`asymmetric matcher error 19`] = `
+exports[`asymmetric matcher error 22`] = `
 {
   "actual": "hello",
   "diff": undefined,
@@ -259,20 +339,20 @@ exports[`asymmetric matcher error 19`] = `
 }
 `;
 
-exports[`asymmetric matcher error 20`] = `
+exports[`asymmetric matcher error 23`] = `
 {
   "actual": "hello",
   "diff": "- Expected: 
-stringContainingCustom<ll>
+stringContainingCustom<"ll">
 
 + Received: 
 "hello"",
-  "expected": "stringContainingCustom<ll>",
+  "expected": "stringContainingCustom<"ll">",
   "message": "expected error not to match asymmetric matcher",
 }
 `;
 
-exports[`asymmetric matcher error 21`] = `
+exports[`asymmetric matcher error 24`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected: 
@@ -287,22 +367,22 @@ Error {
 }
 `;
 
-exports[`asymmetric matcher error 22`] = `
+exports[`asymmetric matcher error 25`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected: 
-stringContainingCustom<ll>
+stringContainingCustom<"ll">
 
 + Received: 
 Error {
   "message": "hello",
 }",
-  "expected": "stringContainingCustom<ll>",
+  "expected": "stringContainingCustom<"ll">",
   "message": "expected error to match asymmetric matcher",
 }
 `;
 
-exports[`asymmetric matcher error 23`] = `
+exports[`asymmetric matcher error 26`] = `
 {
   "actual": "[Error: hello]",
   "diff": "- Expected: 
@@ -626,6 +706,98 @@ exports[`error equality 13`] = `
 }
 `;
 
+exports[`toBeOneOf() > error message 1`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expect(received).toBeOneOf()
+
+Expected value to be one of:
+Array [
+  0,
+  1,
+  2,
+]
+
+Received:
+3",
+}
+`;
+
+exports[`toBeOneOf() > error message 2`] = `
+{
+  "actual": "undefined",
+  "diff": undefined,
+  "expected": "undefined",
+  "message": "expect(received).toBeOneOf()
+
+Expected value to be one of:
+Array [
+  Any<String>,
+]
+
+Received:
+3",
+}
+`;
+
+exports[`toBeOneOf() > error message 3`] = `
+{
+  "actual": "Object {
+  "a": 0,
+}",
+  "diff": "- Expected: 
+toBeOneOf<Array [
+  ObjectContaining {
+    "b": 0,
+  },
+  null,
+  undefined,
+]>
+
++ Received: 
+{
+  "a": 0,
+}",
+  "expected": "toBeOneOf<Array [
+  ObjectContaining {
+    "b": 0,
+  },
+  null,
+  undefined,
+]>",
+  "message": "expected { a: +0 } to deeply equal toBeOneOf{…}",
+}
+`;
+
+exports[`toBeOneOf() > error message 4`] = `
+{
+  "actual": "Object {
+  "name": "mango",
+}",
+  "diff": "- Expected
++ Received
+
+  {
+-   "name": toBeOneOf<Array [
+-   "apple",
+-   "banana",
+-   "orange",
+- ]>,
++   "name": "mango",
+  }",
+  "expected": "Object {
+  "name": toBeOneOf<Array [
+  "apple",
+  "banana",
+  "orange",
+]>,
+}",
+  "message": "expected { name: 'mango' } to deeply equal { name: toBeOneOf{…} }",
+}
+`;
+
 exports[`toHaveBeenNthCalledWith error 1`] = `
 {
   "actual": "Array [
@@ -728,13 +900,13 @@ exports[`toSatisfy() > error message 3`] = `
 + Received
 
   {
--   "value": toSatisfy<(value) => value % 2 !== 0>,
+-   "value": toSatisfy<[Function isOdd]>,
 +   "value": 2,
   }",
   "expected": "Object {
-  "value": toSatisfy<(value) => value % 2 !== 0>,
+  "value": toSatisfy<[Function isOdd]>,
 }",
-  "message": "expected { value: 2 } to deeply equal { value: toSatisfy{…} }",
+  "message": "expected { value: 2 } to deeply equal { value: toSatisfy<[Function isOdd]> }",
 }
 `;
 
@@ -747,11 +919,11 @@ exports[`toSatisfy() > error message 4`] = `
 + Received
 
   {
--   "value": toSatisfy<(value) => value % 2 !== 0, ODD>,
+-   "value": toSatisfy<[Function isOdd], "ODD">,
 +   "value": 2,
   }",
   "expected": "Object {
-  "value": toSatisfy<(value) => value % 2 !== 0, ODD>,
+  "value": toSatisfy<[Function isOdd], "ODD">,
 }",
   "message": "expected { value: 2 } to deeply equal { value: toSatisfy{…} }",
 }

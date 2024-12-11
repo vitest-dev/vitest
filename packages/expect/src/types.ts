@@ -118,6 +118,16 @@ interface CustomMatcher {
    * expect(age).toEqual(expect.toSatisfy(val => val >= 18, 'Age must be at least 18'));
    */
   toSatisfy: (matcher: (value: any) => boolean, message?: string) => any
+
+  /**
+   * Matches if the received value is one of the values in the expected array.
+   *
+   * @example
+   * expect(1).toBeOneOf([1, 2, 3])
+   * expect('foo').toBeOneOf([expect.any(String)])
+   * expect({ a: 1 }).toEqual({ a: expect.toBeOneOf(['1', '2', '3']) })
+   */
+  toBeOneOf: <T>(sample: Array<T>) => any
 }
 
 export interface AsymmetricMatchersContaining extends CustomMatcher {
