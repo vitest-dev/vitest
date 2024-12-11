@@ -163,6 +163,24 @@ it('correctly reports failed test', () => {
   expect(diagnostic.repeatCount).toBe(0)
 })
 
+it('correctly reports a skipped test', () => {
+  const optionTestCase = findTest(testModule.children, 'skips an option test')
+  expect(optionTestCase.skipped()).toBe(true)
+  expect(optionTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const modifierTestCase = findTest(testModule.children, 'skips a .modifier test')
+  expect(modifierTestCase.skipped()).toBe(true)
+  expect(modifierTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+})
+
 it('correctly reports multiple failures', () => {
   const testCase = findTest(testModule.children, 'fails multiple times')
   const result = testCase.result()!
