@@ -124,8 +124,8 @@ When using coverage, Vitest automatically adds test files `include` patterns to 
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
-- **CLI:** `vitest --exclude "**/excluded-file"`
+- **Default:** `['**/node_modules/**', '**/.git/**']`
+- **CLI:** `vitest --exclude "**/excluded-file" --exclude "*/other-files/*.js"`
 
 A list of glob patterns that should be excluded from your test files.
 
