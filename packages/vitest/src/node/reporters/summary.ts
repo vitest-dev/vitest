@@ -116,10 +116,6 @@ export class SummaryReporter extends TaskParser implements Reporter {
   }
 
   onTestFilePrepare(file: File) {
-    if (this.allFinishedTests.has(file.id)) {
-      return
-    }
-
     if (this.runningTests.has(file.id)) {
       const stats = this.runningTests.get(file.id)!
       // if there are no tests, it means the test was queued but not collected
@@ -128,6 +124,10 @@ export class SummaryReporter extends TaskParser implements Reporter {
         this.tests.total += total
         stats.total = total
       }
+      return
+    }
+
+    if (this.allFinishedTests.has(file.id)) {
       return
     }
 
