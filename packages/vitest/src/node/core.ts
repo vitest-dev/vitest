@@ -819,7 +819,7 @@ export class Vitest {
   }
 
   /** @internal */
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true, resetTestNamePattern = false): Promise<void> {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true, resetTestNamePattern = false): Promise<TestRunResult> {
     if (resetTestNamePattern) {
       this.configOverride.testNamePattern = undefined
     }
@@ -834,9 +834,10 @@ export class Vitest {
       this.report('onWatcherRerun', files, trigger),
       ...this._onUserTestsRerun.map(fn => fn(specifications)),
     ])
-    await this.runFiles(specifications, allTestsRun)
+    const testResult = await this.runFiles(specifications, allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
+    return testResult
   }
 
   /** @internal */
@@ -902,8 +903,11 @@ export class Vitest {
     await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
   }
 
-  /** @internal */
-  async updateSnapshot(files?: string[]): Promise<void> {
+  /**
+   * Update snapshots in specified files. If no files are provided, it will update files with failed tests and obsolete snapshots.
+   * @param files The list of files on the file system
+   */
+  async updateSnapshot(files?: string[]): Promise<TestRunResult> {
     // default to failed files
     files = files || [
       ...this.state.getFailedFilepaths(),
@@ -913,7 +917,7 @@ export class Vitest {
     this.enableSnapshotUpdate()
 
     try {
-      await this.rerunFiles(files, 'update snapshot', false)
+      return await this.rerunFiles(files, 'update snapshot', false)
     }
     finally {
       this.resetSnapshotUpdate()

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { browser, runBrowserTests } from './utils'
+import { instances, runBrowserTests } from './utils'
 
 test('filter', async () => {
   const { stderr, stdout } = await runBrowserTests({
@@ -8,7 +8,9 @@ test('filter', async () => {
   }, ['test/basic.test.ts'])
 
   expect(stderr).toBe('')
-  expect(stdout).toContain(`✓ |${browser}| test/basic.test.ts > basic 2`)
-  expect(stdout).toContain('Test Files  1 passed')
-  expect(stdout).toContain('Tests  1 passed | 3 skipped')
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('test/basic.test.ts > basic 2', browser)
+  })
+  expect(stdout).toContain(`Test Files  ${instances.length} passed`)
+  expect(stdout).toContain(`Tests  ${instances.length} passed | ${instances.length * 3} skipped`)
 })
