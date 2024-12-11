@@ -1,8 +1,9 @@
 import type { DeferPromise } from '@vitest/utils'
 import type { TypecheckResults } from '../../typecheck/typechecker'
 import type { Vitest } from '../core'
-import type { ProcessPool, WorkspaceSpec } from '../pool'
+import type { ProcessPool } from '../pool'
 import type { TestProject } from '../project'
+import type { TestSpecification } from '../spec'
 import { hasFailed } from '@vitest/runner/utils'
 import { createDefer } from '@vitest/utils'
 import { Typechecker } from '../../typecheck/typechecker'
@@ -99,7 +100,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     await checker.start()
   }
 
-  async function collectTests(specs: WorkspaceSpec[]) {
+  async function collectTests(specs: TestSpecification[]) {
     const specsByProject = groupBy(specs, spec => spec.project.name)
     for (const name in specsByProject) {
       const project = specsByProject[name][0].project
@@ -112,13 +113,13 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     }
   }
 
-  async function runTests(specs: WorkspaceSpec[]) {
+  async function runTests(specs: TestSpecification[]) {
     const specsByProject = groupBy(specs, spec => spec.project.name)
     const promises: Promise<void>[] = []
 
     for (const name in specsByProject) {
-      const project = specsByProject[name][0][0]
-      const files = specsByProject[name].map(([_, file]) => file)
+      const project = specsByProject[name][0].project
+      const files = specsByProject[name].map(spec => spec.moduleId)
       const promise = createDefer<void>()
       // check that watcher actually triggered rerun
       const _p = new Promise<boolean>((resolve) => {

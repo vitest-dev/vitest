@@ -1,4 +1,5 @@
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
+import { transformerNotationWordHighlight } from '@shikijs/transformers'
 import { withPwa } from '@vite-pwa/vitepress'
 import type { DefaultTheme } from 'vitepress'
 import { defineConfig } from 'vitepress'
@@ -87,8 +88,9 @@ export default ({ mode }: { mode: string }) => {
         dark: 'github-dark',
       },
       codeTransformers: mode === 'development'
-        ? []
+        ? [transformerNotationWordHighlight()]
         : [
+            transformerNotationWordHighlight(),
             transformerTwoslash({
               processHoverInfo: (info) => {
                 if (info.includes(process.cwd())) {
@@ -146,7 +148,7 @@ export default ({ mode }: { mode: string }) => {
           items: [
             {
               text: 'Advanced API',
-              link: '/advanced/api',
+              link: '/advanced/api/',
               activeMatch: '^/advanced/',
             },
             {
@@ -243,7 +245,15 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
-          footer(),
+          {
+            items: [
+              ...footer(),
+              {
+                text: 'Node API Reference',
+                link: '/advanced/api/',
+              },
+            ],
+          },
         ],
         '/advanced': [
           {
@@ -251,8 +261,46 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
-                text: 'Vitest Node API',
-                link: '/advanced/api',
+                text: 'Node API',
+                items: [
+                  {
+                    text: 'Getting Started',
+                    link: '/advanced/api/',
+                  },
+                  {
+                    text: 'Vitest',
+                    link: '/advanced/api/vitest',
+                  },
+                  {
+                    text: 'TestProject',
+                    link: '/advanced/api/test-project',
+                  },
+                  {
+                    text: 'TestSpecification',
+                    link: '/advanced/api/test-specification',
+                  },
+                ],
+              },
+              {
+                text: 'Test Task API',
+                items: [
+                  {
+                    text: 'TestCase',
+                    link: '/advanced/api/test-case',
+                  },
+                  {
+                    text: 'TestSuite',
+                    link: '/advanced/api/test-suite',
+                  },
+                  {
+                    text: 'TestModule',
+                    link: '/advanced/api/test-module',
+                  },
+                  {
+                    text: 'TestCollection',
+                    link: '/advanced/api/test-collection',
+                  },
+                ],
               },
               {
                 text: 'Runner API',
@@ -282,7 +330,9 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
-          footer(),
+          {
+            items: footer(),
+          },
         ],
         '/team': [],
         '/': [
@@ -308,7 +358,7 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser',
               },
               {
-                text: 'Advanced API',
+                text: 'Node API Reference',
                 link: '/advanced/api',
               },
               {
@@ -325,19 +375,17 @@ export default ({ mode }: { mode: string }) => {
   }))
 }
 
-function footer(): DefaultTheme.SidebarItem {
-  return {
-    items: [
-      {
-        text: 'Config Reference',
-        link: '/config/',
-      },
-      {
-        text: 'Test API Reference',
-        link: '/api/',
-      },
-    ],
-  }
+function footer(): DefaultTheme.SidebarItem[] {
+  return [
+    {
+      text: 'Config Reference',
+      link: '/config/',
+    },
+    {
+      text: 'Test API Reference',
+      link: '/api/',
+    },
+  ]
 }
 
 function introduction(): DefaultTheme.SidebarItem[] {
@@ -424,12 +472,23 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/debugging',
     },
     {
-      text: 'Migration Guide',
-      link: '/guide/migration',
-    },
-    {
       text: 'Common Errors',
       link: '/guide/common-errors',
+    },
+    {
+      text: 'Migration Guide',
+      link: '/guide/migration',
+      collapsed: false,
+      items: [
+        {
+          text: 'Migrating to Vitest 3.0',
+          link: '/guide/migration#vitest-3',
+        },
+        {
+          text: 'Migrating from Jest',
+          link: '/guide/migration#jest',
+        },
+      ],
     },
     {
       text: 'Performance',

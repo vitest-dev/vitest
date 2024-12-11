@@ -91,8 +91,8 @@ export function WorkspaceVitestPlugin(
             middlewareMode: true,
             fs: {
               allow: resolveFsAllow(
-                project.ctx.config.root,
-                project.ctx.server.config.configFile,
+                project.vitest.config.root,
+                project.vitest.server.config.configFile,
               ),
             },
           },

@@ -104,7 +104,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     },
     onFinished(files) {
       const errors = ctx.state.getUnhandledErrors()
-      ctx.checkUnhandledErrors(errors)
+      ctx._checkUnhandledErrors(errors)
 
       return ctx.report('onFinished', files, errors)
     },

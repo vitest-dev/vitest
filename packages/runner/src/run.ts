@@ -1,8 +1,7 @@
 import type { Awaitable } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { FileSpec, VitestRunner } from './types/runner'
+import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
-  ExtendedContext,
   File,
   HookCleanupCallback,
   HookListener,
@@ -15,6 +14,7 @@ import type {
   TaskResultPack,
   TaskState,
   Test,
+  TestContext,
 } from './types/tasks'
 import { getSafeTimers, shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
@@ -64,7 +64,7 @@ function getSuiteHooks(
 async function callTestHooks(
   runner: VitestRunner,
   test: Test,
-  hooks: ((context: ExtendedContext<Test>) => Awaitable<void>)[],
+  hooks: ((context: TestContext) => Awaitable<void>)[],
   sequence: SequenceHooks,
 ) {
   if (sequence === 'stack') {
@@ -514,7 +514,7 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 }
 
-export async function startTests(specs: string[] | FileSpec[], runner: VitestRunner): Promise<File[]> {
+export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
   await runner.onBeforeCollect?.(paths)
 
@@ -532,7 +532,7 @@ export async function startTests(specs: string[] | FileSpec[], runner: VitestRun
   return files
 }
 
-async function publicCollect(specs: string[] | FileSpec[], runner: VitestRunner): Promise<File[]> {
+async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
 
   await runner.onBeforeCollect?.(paths)

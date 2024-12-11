@@ -1,7 +1,6 @@
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { VitestEnvironment } from '../node/types/config'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
 
@@ -36,7 +35,7 @@ interface InlineSnapshotMatcher<T> {
 
 declare module '@vitest/expect' {
   interface MatcherState {
-    environment: VitestEnvironment
+    environment: string
     snapshotState: SnapshotState
   }
 

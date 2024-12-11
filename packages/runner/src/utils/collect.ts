@@ -169,7 +169,7 @@ export function createFileTask(
 ): File {
   const path = relative(root, filepath)
   const file: File = {
-    id: generateHash(`${path}${projectName || ''}`),
+    id: generateFileHash(path, projectName),
     name: path,
     type: 'suite',
     mode: 'queued',
@@ -182,4 +182,16 @@ export function createFileTask(
   }
   file.file = file
   return file
+}
+
+/**
+ * Generate a unique ID for a file based on its path and project name
+ * @param file File relative to the root of the project to keep ID the same between different machines
+ * @param projectName The name of the test project
+ */
+export function generateFileHash(
+  file: string,
+  projectName: string | undefined,
+): string {
+  return generateHash(`${file}${projectName || ''}`)
 }

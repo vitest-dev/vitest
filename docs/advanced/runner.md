@@ -1,4 +1,4 @@
-# Test Runner
+# Runner API
 
 ::: warning
 This is advanced API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
@@ -64,7 +64,7 @@ export interface VitestRunner {
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
    */
-  onTaskUpdate?: (task: [string, TaskResult | undefined][]) => Promise<void>
+  onTaskUpdate?: (task: [string, TaskResult | undefined, TaskMeta | undefined][]) => Promise<void>
 
   /**
    * Called before running all tests in collected paths.
@@ -77,29 +77,65 @@ export interface VitestRunner {
   /**
    * Called when new context for a test is defined. Useful, if you want to add custom properties to the context.
    * If you only want to define custom context with a runner, consider using "beforeAll" in "setupFiles" instead.
-   *
-   * This method is called for both "test" and "custom" handlers.
-   *
-   * @see https://vitest.dev/advanced/runner.html#your-task-function
    */
-  extendTaskContext?: <T extends Test | Custom>(context: TaskContext<T>) => TaskContext<T>
+  extendTaskContext?: (context: TestContext) => TestContext
   /**
-   * Called, when certain files are imported. Can be called in two situations: when collecting tests and when importing setup files.
+   * Called when certain files are imported. Can be called in two situations: to collect tests and to import setup files.
    */
   importFile: (filepath: string, source: VitestRunnerImportSource) => unknown
+  /**
+   * Function that is called when the runner attempts to get the value when `test.extend` is used with `{ injected: true }`
+   */
+  injectValue?: (key: string) => unknown
   /**
    * Publicly available configuration.
    */
   config: VitestRunnerConfig
+  /**
+   * The name of the current pool. Can affect how stack trace is inferred on the server side.
+   */
+  pool?: string
 }
 ```
 
-When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property.
+When initiating this class, Vitest passes down Vitest config, - you should expose it as a `config` property:
+
+```ts [runner.ts]
+import type { RunnerTestFile } from 'vitest'
+import type { VitestRunner, VitestRunnerConfig } from 'vitest/suite'
+import { VitestTestRunner } from 'vitest/runners'
+
+class CustomRunner extends VitestTestRunner implements VitestRunner {
+  public config: VitestRunnerConfig
+
+  constructor(config: VitestRunnerConfig) {
+    this.config = config
+  }
+
+  onAfterRunFiles(files: RunnerTestFile[]) {
+    console.log('finished running', files)
+  }
+}
+
+export default CustomRunner
+```
 
 ::: warning
 Vitest also injects an instance of `ViteNodeRunner` as `__vitest_executor` property. You can use it to process files in `importFile` method (this is default behavior of `TestRunner` and `BenchmarkRunner`).
 
-`ViteNodeRunner` exposes `executeId` method, which is used to import test files in a Vite-friendly environment. Meaning, it will resolve imports and transform file content at runtime so that Node can understand it.
+`ViteNodeRunner` exposes `executeId` method, which is used to import test files in a Vite-friendly environment. Meaning, it will resolve imports and transform file content at runtime so that Node can understand it:
+
+```ts
+export default class Runner {
+  async importFile(filepath: string) {
+    await this.__vitest_executor.executeId(filepath)
+  }
+}
+```
+:::
+
+::: warning
+If you don't have a custom runner or didn't define `runTest` method, Vitest will try to retrieve a task automatically. If you didn't add a function with `setFn`, it will fail.
 :::
 
 ::: tip
@@ -107,6 +143,12 @@ Snapshot support and some other features depend on the runner. If you don't want
 :::
 
 ## Tasks
+
+::: warning
+The "Runner Tasks API" is experimental and should primarily be used only in the test runtime. Vitest also exposes the ["Reported Tasks API"](/advanced/api/test-module), which should be preferred when working in the main thread (inside the reporter, for example).
+
+The team is currently discussing if "Runner Tasks" should be replaced by "Reported Tasks" in the future.
+:::
 
 Suites and tests are called `tasks` internally. Vitest runner initiates a `File` task before collecting any tests - this is a superset of `Suite` with a few additional properties. It is available on every task (including `File`) as a `file` property.
 
@@ -134,11 +176,6 @@ interface File extends Suite {
    * The time it took to import the setup file.
    */
   setupDuration?: number
-  /**
-   * Whether the file is initiated without running any tests.
-   * This is done to populate state on the server side by Vitest.
-   */
-  local?: boolean
 }
 ```
 
@@ -166,7 +203,7 @@ interface Test<ExtraContext = object> extends TaskBase {
   /**
    * Test context that will be passed to the test function.
    */
-  context: TaskContext<Test> & ExtraContext & TestContext
+  context: TestContext & ExtraContext
   /**
    * File task. It's the root task of the file.
    */
@@ -179,14 +216,6 @@ interface Test<ExtraContext = object> extends TaskBase {
    * Whether the task should succeed if it fails. If the task fails, it will be marked as passed.
    */
   fails?: boolean
-  /**
-   * Hooks that will run if the task fails. The order depends on the `sequence.hooks` option.
-   */
-  onFailed?: OnTestFailedHandler[]
-  /**
-   * Hooks that will run after the task finishes. The order depends on the `sequence.hooks` option.
-   */
-  onFinished?: OnTestFinishedHandler[]
   /**
    * Store promises (from async expects) to wait for them before finishing the test
    */
@@ -242,12 +271,12 @@ export interface TaskResult {
 
 ## Your Task Function
 
-Vitest exposes a `Custom` task type that allows users to reuse built-int reporters. It is virtually the same as `Test`, but has a type of `'custom'`.
+Vitest exposes `createTaskCollector` utility to create your own `test` method. It behaves the same way as a test, but calls a custom method during collection.
 
 A task is an object that is part of a suite. It is automatically added to the current suite with a `suite.task` method:
 
 ```js [custom.js]
-import { createTaskCollector, getCurrentSuite, setFn } from 'vitest/suite'
+import { createTaskCollector, getCurrentSuite } from 'vitest/suite'
 
 export { afterAll, beforeAll, describe } from 'vitest'
 
@@ -270,7 +299,12 @@ export const myCustomTask = createTaskCollector(
 ```
 
 ```js [tasks.test.js]
-import { afterAll, beforeAll, describe, myCustomTask } from './custom.js'
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  myCustomTask
+} from './custom.js'
 import { gardener } from './gardener.js'
 
 describe('take care of the garden', () => {
@@ -297,7 +331,3 @@ describe('take care of the garden', () => {
 ```bash
 vitest ./garden/tasks.test.js
 ```
-
-::: warning
-If you don't have a custom runner or didn't define `runTest` method, Vitest will try to retrieve a task automatically. If you didn't add a function with `setFn`, it will fail.
-:::
