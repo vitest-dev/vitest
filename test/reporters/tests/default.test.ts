@@ -78,7 +78,7 @@ describe('default reporter', async () => {
       watch: true,
     })
 
-    await vitest.waitForStdout('❯ fixtures/long-loading-task.test.ts 0/0')
+    await vitest.waitForStdout('❯ fixtures/long-loading-task.test.ts [queued]')
     await vitest.waitForStdout('Waiting for file changes...')
 
     expect(stdout).toContain('✓ fixtures/long-loading-task.test.ts (1 test)')
