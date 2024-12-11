@@ -5,6 +5,7 @@ import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { client, findById } from '~/composables/client'
+import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
@@ -234,6 +235,7 @@ function refreshExplorer(search: string, filter: Filter, end: boolean) {
   // update only at the end
   if (end) {
     updateRunningTodoTests()
+    testRunState.value = 'idle'
   }
 }
 
