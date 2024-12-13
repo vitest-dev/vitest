@@ -1,7 +1,9 @@
 import type { File, TaskResultPack } from '@vitest/runner'
+import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
+import type { TestModule } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { TestModule } from '../reporters/reported-tasks'
 
@@ -26,4 +28,9 @@ export interface Reporter {
 
   // new API
   onTestRunStart?: (specifications: TestSpecification[]) => Awaitable<void>
+  onTestRunEnd?: (
+    testModules: TestModule[],
+    errors: SerializedError[],
+    reason: 'passed' | 'interrupted' | 'failed'
+  ) => Awaitable<void>
 }
