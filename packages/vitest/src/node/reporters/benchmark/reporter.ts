@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { Task, TaskResultPack } from '@vitest/runner'
 import type { Vitest } from '../../core'
 import fs from 'node:fs'
 import { getFullName } from '@vitest/runner/utils'
@@ -29,6 +29,22 @@ export class BenchmarkReporter extends DefaultReporter {
         this.error(`Failed to read '${compareFile}'`, e)
       }
     }
+  }
+
+  onTaskUpdate(packs: TaskResultPack[]): void {
+    for (const pack of packs) {
+      const task = this.ctx.state.idMap.get(pack[0])
+
+      if (task?.type === 'suite' && task.result?.state !== 'run') {
+        task.tasks.filter(task => task.result?.benchmark)
+          .sort((benchA, benchB) => benchA.result!.benchmark!.mean - benchB.result!.benchmark!.mean)
+          .forEach((bench, idx) => {
+            bench.result!.benchmark!.rank = Number(idx) + 1
+          })
+      }
+    }
+
+    super.onTaskUpdate(packs)
   }
 
   printTask(task: Task) {
