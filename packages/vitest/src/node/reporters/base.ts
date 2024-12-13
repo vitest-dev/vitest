@@ -451,7 +451,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       const groupName = getFullName(group, c.dim(' > '))
-      this.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
+      this.log(`  ${formatProjectName(bench.file.projectName)}${bench.name}${c.dim(` - ${groupName}`)}`)
 
       const siblings = group.tasks
         .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)

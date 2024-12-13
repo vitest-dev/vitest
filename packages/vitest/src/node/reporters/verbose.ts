@@ -14,7 +14,7 @@ export class VerboseReporter extends DefaultReporter {
       return super.printTask(task)
     }
 
-    if (task.type !== 'test' || !task.result?.state || task.result?.state === 'run' || task.result?.state === "queued") {
+    if (task.type !== 'test' || !task.result?.state || task.result?.state === 'run' || task.result?.state === 'queued') {
       return
     }
 

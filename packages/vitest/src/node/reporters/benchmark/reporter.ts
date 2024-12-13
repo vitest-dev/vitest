@@ -5,7 +5,7 @@ import { getFullName } from '@vitest/runner/utils'
 import * as pathe from 'pathe'
 import c from 'tinyrainbow'
 import { DefaultReporter } from '../default'
-import { getStateSymbol } from '../renderers/utils'
+import { formatProjectName, getStateSymbol } from '../renderers/utils'
 import { createBenchmarkJsonReport, flattenFormattedBenchmarkReport } from './json-formatter'
 import { renderTable } from './tableRender'
 
@@ -56,7 +56,7 @@ export class BenchmarkReporter extends DefaultReporter {
     const duration = task.result.duration
 
     if (benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')) {
-      let title = `\n ${getStateSymbol(task)} ${getFullName(task, c.dim(' > '))}`
+      let title = `\n ${getStateSymbol(task)} ${formatProjectName(task.file.projectName)}${getFullName(task, c.dim(' > '))}`
 
       if (duration != null && duration > this.ctx.config.slowTestThreshold) {
         title += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
