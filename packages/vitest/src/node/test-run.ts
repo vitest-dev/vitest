@@ -1,7 +1,5 @@
 import type { TaskResultPack } from '@vitest/runner'
-import type { ArgumentsType } from '../types/general'
 import type { Vitest } from './core'
-import type { Reporter } from './reporters'
 import type { TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 
@@ -15,7 +13,7 @@ export class TestRun {
     this.tests = emptyCounters()
     this.suites = emptyCounters()
     this.suites.total = specifications.length
-    await this.report('onTestRunStart', specifications)
+    await this.vitest.report('onTestRunStart', specifications)
   }
 
   enqueued(module: TestModule) {
@@ -30,12 +28,9 @@ export class TestRun {
     // TODO
   }
 
-  end() {
+  async end() {
     // TODO
-  }
-
-  private report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    return this.vitest.report(name, ...args)
+    await this.vitest.report('onTestRunEnd', [], [], 'passed')
   }
 }
 
