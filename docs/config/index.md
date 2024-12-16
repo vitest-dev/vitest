@@ -1487,6 +1487,21 @@ If a threshold is set to a positive number, it will be interpreted as the minimu
 
 If a threshold is set to a negative number, it will be treated as the maximum number of uncovered items allowed. For example, setting the lines threshold to `-10` means that no more than 10 lines may be uncovered.
 
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Requires 90% function coverage
+      functions: 90,
+
+      // Require that no more than 10 lines are uncovered
+      lines: -10,
+    }
+  }
+}
+```
+
 ##### coverage.thresholds.lines
 
 - **Type:** `number`
