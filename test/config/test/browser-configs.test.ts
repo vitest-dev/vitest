@@ -43,6 +43,23 @@ test('filters projects', async () => {
   ])
 })
 
+test('filters projects with a wildecard', async () => {
+  const { projects } = await vitest({
+    project: 'chrom*',
+    browser: {
+      enabled: true,
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+        { browser: 'webkit' },
+      ],
+    },
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'chromium',
+  ])
+})
+
 test('assignes names as browsers in a custom project', async () => {
   const { projects } = await vitest({
     workspace: [

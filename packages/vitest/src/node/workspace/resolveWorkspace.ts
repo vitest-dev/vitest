@@ -8,6 +8,7 @@ import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { isTTY } from '../../utils/env'
 import { initializeProject, TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
@@ -138,8 +139,7 @@ export async function resolveBrowserWorkspace(
   resolvedProjects: TestProject[],
 ) {
   const newConfigs: [project: TestProject, config: ResolvedConfig][] = []
-  const filter = new Set<string>()
-  toArray(vitest.config.project).forEach(name => filter.add(name))
+  const filters = toArray(vitest.config.project).map(s => wildcardPatternToRegExp(s))
 
   resolvedProjects.forEach((project) => {
     const configs = project.config.browser.instances
@@ -177,7 +177,7 @@ export async function resolveBrowserWorkspace(
       const name = config.name
       const newName = name || (originalName ? `${originalName} (${browser})` : browser)
       // skip the project if it's filtered out
-      if (filter.size && !filter.has(newName)) {
+      if (filters.length && !filters.some(pattern => pattern.test(newName))) {
         return
       }
 
