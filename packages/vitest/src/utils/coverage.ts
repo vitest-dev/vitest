@@ -363,53 +363,55 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         for (const thresholdKey of THRESHOLD_KEYS) {
           const threshold = thresholds[thresholdKey]
 
-          if (threshold !== undefined) {
-            /**
-             * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
-             * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
-             */
-            if (threshold >= 0) {
-              const coverage = summary.data[thresholdKey].pct
+          if (threshold === undefined) {
+            continue
+          }
 
-              if (coverage < threshold) {
-                process.exitCode = 1
+          /**
+           * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
+           * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
+           */
+          if (threshold >= 0) {
+            const coverage = summary.data[thresholdKey].pct
 
-                /**
-                 * Generate error message based on perFile flag:
-                 * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
-                 * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
-                 */
-                let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-                } threshold (${threshold}%)`
+            if (coverage < threshold) {
+              process.exitCode = 1
 
-                if (this.options.thresholds?.perFile && file) {
-                  errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-                }
+              /**
+               * Generate error message based on perFile flag:
+               * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
+               * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
+               */
+              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
+              } threshold (${threshold}%)`
 
-                this.ctx.logger.error(errorMessage)
+              if (this.options.thresholds?.perFile && file) {
+                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
               }
+
+              this.ctx.logger.error(errorMessage)
             }
-            else {
-              const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
-              const absoluteThreshold = threshold * -1
+          }
+          else {
+            const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
+            const absoluteThreshold = threshold * -1
 
-              if (uncovered > absoluteThreshold) {
-                process.exitCode = 1
+            if (uncovered > absoluteThreshold) {
+              process.exitCode = 1
 
-                /**
-                 * Generate error message based on perFile flag:
-                 * - ERROR: Uncovered statements (33) exceed threshold (30) for src/math.ts
-                 * - ERROR: Uncovered statements (33) exceed global threshold (30)
-                 */
-                let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
-                } threshold (${absoluteThreshold})`
+              /**
+               * Generate error message based on perFile flag:
+               * - ERROR: Uncovered statements (33) exceed threshold (30) for src/math.ts
+               * - ERROR: Uncovered statements (33) exceed global threshold (30)
+               */
+              let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
+              } threshold (${absoluteThreshold})`
 
-                if (this.options.thresholds?.perFile && file) {
-                  errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
-                }
-
-                this.ctx.logger.error(errorMessage)
+              if (this.options.thresholds?.perFile && file) {
+                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
               }
+
+              this.ctx.logger.error(errorMessage)
             }
           }
         }
