@@ -7,7 +7,7 @@ import { join } from 'pathe'
 import { replacer } from './utils'
 
 export async function resolveTester(
-  server: BrowserServer,
+  globalServer: BrowserServer,
   url: URL,
   res: ServerResponse<IncomingMessage>,
   next: Connect.NextFunction,
@@ -22,10 +22,10 @@ export async function resolveTester(
     )
   }
 
-  const { sessionId, testFile } = server.resolveTesterUrl(url.pathname)
-  const session = server.vitest._browserSessions.getSession(sessionId)
+  const { sessionId, testFile } = globalServer.resolveTesterUrl(url.pathname)
+  const session = globalServer.vitest._browserSessions.getSession(sessionId)
   // TODO: if no session, 400
-  const project = server.vitest.getProjectByName(session?.project.name ?? '')
+  const project = globalServer.vitest.getProjectByName(session?.project.name ?? '')
   const { testFiles } = await project.globTestFiles()
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
@@ -37,16 +37,18 @@ export async function resolveTester(
   const files = session?.files ?? []
   const method = session?.method ?? 'run'
 
-  const injectorJs = typeof server.injectorJs === 'string'
-    ? server.injectorJs
-    : await server.injectorJs
+  // TODO: test for different configurations in multi-browser instances
+  const browserServer = project.browser as BrowserServer || globalServer
+  const injectorJs: string = typeof browserServer.injectorJs === 'string'
+    ? browserServer.injectorJs
+    : await browserServer.injectorJs
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider.name),
-    __VITEST_CONFIG__: JSON.stringify(server.wrapSerializedConfig(project.name)),
+    __VITEST_CONFIG__: JSON.stringify(browserServer.wrapSerializedConfig(project.name)),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_VITE_CONFIG__: JSON.stringify({
-      root: server.vite.config.root,
+      root: browserServer.vite.config.root,
     }),
     __VITEST_TYPE__: '"tester"',
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
@@ -54,15 +56,15 @@ export async function resolveTester(
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 
-  const testerHtml = typeof server.testerHtml === 'string'
-    ? server.testerHtml
-    : await server.testerHtml
+  const testerHtml = typeof browserServer.testerHtml === 'string'
+    ? browserServer.testerHtml
+    : await browserServer.testerHtml
 
   try {
-    const url = join('/@fs/', server.testerFilepath)
-    const indexhtml = await server.vite.transformIndexHtml(url, testerHtml)
+    const url = join('/@fs/', browserServer.testerFilepath)
+    const indexhtml = await browserServer.vite.transformIndexHtml(url, testerHtml)
     return replacer(indexhtml, {
-      __VITEST_FAVICON__: server.faviconUrl,
+      __VITEST_FAVICON__: globalServer.faviconUrl,
       __VITEST_INJECTOR__: injector,
       __VITEST_APPEND__: `
     __vitest_browser_runner__.runningFiles = ${tests}

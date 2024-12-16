@@ -3,6 +3,7 @@ import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, U
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
+import { toArray } from '@vitest/utils'
 import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
@@ -137,6 +138,8 @@ export async function resolveBrowserWorkspace(
   resolvedProjects: TestProject[],
 ) {
   const newConfigs: [project: TestProject, config: ResolvedConfig][] = []
+  const filter = new Set<string>()
+  toArray(vitest.config.project).forEach(name => filter.add(name))
 
   resolvedProjects.forEach((project) => {
     const configs = project.config.browser.instances
@@ -173,6 +176,11 @@ export async function resolveBrowserWorkspace(
       }
       const name = config.name
       const newName = name || (originalName ? `${originalName} (${browser})` : browser)
+      // skip the project if it's filtered out
+      if (filter.size && !filter.has(newName)) {
+        return
+      }
+
       if (names.has(newName)) {
         throw new Error(
           [

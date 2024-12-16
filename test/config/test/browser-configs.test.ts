@@ -11,6 +11,7 @@ test('assignes names as browsers', async () => {
   const { projects } = await vitest({
     browser: {
       enabled: true,
+      headless: true,
       instances: [
         { browser: 'chromium' },
         { browser: 'firefox' },
@@ -25,6 +26,23 @@ test('assignes names as browsers', async () => {
   ])
 })
 
+test('filters projects', async () => {
+  const { projects } = await vitest({
+    project: 'chromium',
+    browser: {
+      enabled: true,
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+        { browser: 'webkit' },
+      ],
+    },
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'chromium',
+  ])
+})
+
 test('assignes names as browsers in a custom project', async () => {
   const { projects } = await vitest({
     workspace: [
@@ -33,6 +51,7 @@ test('assignes names as browsers in a custom project', async () => {
           name: 'custom',
           browser: {
             enabled: true,
+            headless: true,
             instances: [
               { browser: 'chromium' },
               { browser: 'firefox' },

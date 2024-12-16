@@ -3,30 +3,31 @@ import type { BrowserServer } from './server'
 import { replacer } from './utils'
 
 export async function resolveOrchestrator(
-  server: BrowserServer,
+  globalServer: BrowserServer,
   url: URL,
   res: ServerResponse<IncomingMessage>,
 ) {
   let sessionId = url.searchParams.get('sessionId')
   // it's possible to open the page without a context
   if (!sessionId) {
-    const contexts = [...server.state.orchestrators.keys()]
+    const contexts = [...globalServer.state.orchestrators.keys()]
     sessionId = contexts[contexts.length - 1] ?? 'none'
   }
 
-  const contextState = server.vitest._browserSessions.getSession(sessionId!)
+  const contextState = globalServer.vitest._browserSessions.getSession(sessionId!)
   const files = contextState?.files ?? []
+  const browserServer = contextState?.project.browser as BrowserServer || globalServer
 
-  const injectorJs = typeof server.injectorJs === 'string'
-    ? server.injectorJs
-    : await server.injectorJs
+  const injectorJs = typeof browserServer.injectorJs === 'string'
+    ? browserServer.injectorJs
+    : await browserServer.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(server.config.browser.provider || 'preview'),
+    __VITEST_PROVIDER__: JSON.stringify(browserServer.config.browser.provider || 'preview'),
     // TODO: check when context is not found
-    __VITEST_CONFIG__: JSON.stringify(server.wrapSerializedConfig(contextState?.project.name || '')),
+    __VITEST_CONFIG__: JSON.stringify(browserServer.wrapSerializedConfig(contextState?.project.name || '')),
     __VITEST_VITE_CONFIG__: JSON.stringify({
-      root: server.vite.config.root,
+      root: browserServer.vite.config.root,
     }),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
@@ -38,9 +39,9 @@ export async function resolveOrchestrator(
   // disable CSP for the orchestrator as we are the ones controlling it
   res.removeHeader('Content-Security-Policy')
 
-  if (!server.orchestratorScripts) {
-    server.orchestratorScripts = (await server.formatScripts(
-      server.config.browser.orchestratorScripts,
+  if (!globalServer.orchestratorScripts) {
+    globalServer.orchestratorScripts = (await globalServer.formatScripts(
+      globalServer.config.browser.orchestratorScripts,
     )).map((script) => {
       let html = '<script '
       for (const attr in script.attrs || {}) {
@@ -51,17 +52,17 @@ export async function resolveOrchestrator(
     }).join('\n')
   }
 
-  let baseHtml = typeof server.orchestratorHtml === 'string'
-    ? server.orchestratorHtml
-    : await server.orchestratorHtml
+  let baseHtml = typeof globalServer.orchestratorHtml === 'string'
+    ? globalServer.orchestratorHtml
+    : await globalServer.orchestratorHtml
 
   // if UI is enabled, use UI HTML and inject the orchestrator script
-  if (server.config.browser.ui) {
-    const manifestContent = server.manifest instanceof Promise
-      ? await server.manifest
-      : server.manifest
+  if (globalServer.config.browser.ui) {
+    const manifestContent = globalServer.manifest instanceof Promise
+      ? await globalServer.manifest
+      : globalServer.manifest
     const jsEntry = manifestContent['orchestrator.html'].file
-    const base = server.vite.config.base || '/'
+    const base = browserServer.vite.config.base || '/'
     baseHtml = baseHtml
       .replaceAll('./assets/', `${base}__vitest__/assets/`)
       .replace(
@@ -76,11 +77,11 @@ export async function resolveOrchestrator(
   }
 
   return replacer(baseHtml, {
-    __VITEST_FAVICON__: server.faviconUrl,
+    __VITEST_FAVICON__: globalServer.faviconUrl,
     __VITEST_TITLE__: 'Vitest Browser Runner',
-    __VITEST_SCRIPTS__: server.orchestratorScripts,
+    __VITEST_SCRIPTS__: globalServer.orchestratorScripts,
     __VITEST_INJECTOR__: `<script type="module">${injector}</script>`,
-    __VITEST_ERROR_CATCHER__: `<script type="module" src="${server.errorCatcherUrl}"></script>`,
+    __VITEST_ERROR_CATCHER__: `<script type="module" src="${globalServer.errorCatcherUrl}"></script>`,
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
   })
 }
