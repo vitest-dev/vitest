@@ -3,7 +3,7 @@ import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, U
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
-import { toArray } from '@vitest/utils'
+import { deepClone, toArray } from '@vitest/utils'
 import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
@@ -138,28 +138,28 @@ export async function resolveBrowserWorkspace(
   names: Set<string>,
   resolvedProjects: TestProject[],
 ) {
-  const newConfigs: [project: TestProject, config: ResolvedConfig][] = []
+  // const newConfigs: [project: TestProject, config: ResolvedConfig][] = []
   const filters = toArray(vitest.config.project).map(s => wildcardPatternToRegExp(s))
+  const removeProjects = new Set<TestProject>()
 
   resolvedProjects.forEach((project) => {
     const configs = project.config.browser.instances
     if (!project.config.browser.enabled || !configs || configs.length === 0) {
       return
     }
-    const [firstConfig, ...restConfigs] = configs
     const originalName = project.config.name
+    const filteredConfigs = !filters.length
+      ? configs
+      : configs.filter((config) => {
+        const browser = config.browser
+        const newName = config.name || (originalName ? `${originalName} (${browser})` : browser)
+        return filters.some(pattern => pattern.test(newName))
+      })
 
-    if (!firstConfig.browser) {
-      throw new Error(`The browser configuration must have a "browser" property. The first item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
+    // every project was filtered out
+    if (!filteredConfigs.length) {
+      return
     }
-
-    const newName = originalName
-      ? `${originalName} (${firstConfig.browser})`
-      : firstConfig.browser
-    if (names.has(newName)) {
-      throw new Error(`Cannot redefine the project name for a nameless project. The project name "${firstConfig.browser}" was already defined. All projects in a workspace should have unique names. Make sure your configuration is correct.`)
-    }
-    names.add(newName)
 
     if (project.config.browser.providerOptions) {
       vitest.logger.warn(
@@ -167,7 +167,7 @@ export async function resolveBrowserWorkspace(
       )
     }
 
-    restConfigs.forEach((config, index) => {
+    filteredConfigs.forEach((config, index) => {
       const browser = config.browser
       if (!browser) {
         const nth = index + 1
@@ -176,10 +176,6 @@ export async function resolveBrowserWorkspace(
       }
       const name = config.name
       const newName = name || (originalName ? `${originalName} (${browser})` : browser)
-      // skip the project if it's filtered out
-      if (filters.length && !filters.some(pattern => pattern.test(newName))) {
-        return
-      }
 
       if (names.has(newName)) {
         throw new Error(
@@ -193,16 +189,14 @@ export async function resolveBrowserWorkspace(
       names.add(newName)
       const clonedConfig = cloneConfig(project, config)
       clonedConfig.name = newName
-      newConfigs.push([project, clonedConfig])
+      const clone = TestProject._cloneBrowserProject(project, clonedConfig)
+      resolvedProjects.push(clone)
     })
 
-    Object.assign(project.config, cloneConfig(project, firstConfig))
-    project.config.name = newName
+    removeProjects.add(project)
   })
-  newConfigs.forEach(([project, clonedConfig]) => {
-    const clone = TestProject._cloneBrowserProject(project, clonedConfig)
-    resolvedProjects.push(clone)
-  })
+
+  resolvedProjects = resolvedProjects.filter(project => !removeProjects.has(project))
 
   const headedBrowserProjects = resolvedProjects.filter((project) => {
     return project.config.browser.enabled && !project.config.browser.headless
@@ -249,7 +243,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
   } = config
   const currentConfig = project.config.browser
   return mergeConfig<any, any>({
-    ...project.config,
+    ...deepClone(project.config),
     browser: {
       ...project.config.browser,
       locators: locators

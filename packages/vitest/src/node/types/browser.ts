@@ -256,7 +256,11 @@ export interface BrowserServerState {
   orchestrators: Map<string, BrowserOrchestrator>
 }
 
-export interface BrowserServer {
+export interface ParentProjectBrowser {
+  spawn: (project: TestProject) => ProjectBrowser
+}
+
+export interface ProjectBrowser {
   vite: ViteDevServer
   state: BrowserServerState
   provider: BrowserProvider

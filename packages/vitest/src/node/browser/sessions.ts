@@ -1,4 +1,4 @@
-import type { TestProject } from 'vitest/node'
+import type { TestProject } from '../project'
 import type { BrowserServerStateSession } from '../types/browser'
 import { createDefer } from '@vitest/utils'
 

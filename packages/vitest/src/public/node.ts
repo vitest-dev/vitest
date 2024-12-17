@@ -68,10 +68,11 @@ export type {
   BrowserProviderModule,
   BrowserProviderOptions,
   BrowserScript,
-  BrowserServer,
   BrowserServerState,
   BrowserServerStateSession,
   CDPSession,
+  ParentProjectBrowser,
+  ProjectBrowser,
   ResolvedBrowserOptions,
 } from '../node/types/browser'
 /** @deprecated use `createViteServer` instead */

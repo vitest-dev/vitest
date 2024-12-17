@@ -128,6 +128,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public getPage(sessionId: string) {
     const page = this.pages.get(sessionId)
     if (!page) {
+      console.log({ pages: [...this.pages.keys()] })
       throw new Error(`Page "${sessionId}" not found in ${this.browserName} browser.`)
     }
     return page

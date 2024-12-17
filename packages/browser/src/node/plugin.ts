@@ -1,7 +1,7 @@
 import type { Stats } from 'node:fs'
 import type { HtmlTagDescriptor } from 'vite'
 import type { Vitest } from 'vitest/node'
-import type { BrowserServer } from './server'
+import type { ParentBrowserProject } from './projectParent'
 import { lstatSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
@@ -21,9 +21,9 @@ export type { BrowserCommand } from 'vitest/node'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
 
-export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
+export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
   function isPackageExists(pkg: string, root: string) {
-    return browserServer.vitest.packageInstaller.isPackageExists?.(pkg, {
+    return parentServer.vitest.packageInstaller.isPackageExists?.(pkg, {
       paths: [root],
     })
   }
@@ -33,7 +33,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       enforce: 'pre',
       name: 'vitest:browser',
       async configureServer(server) {
-        browserServer.setServer(server)
+        parentServer.setServer(server)
 
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestHeaders(_req, res, next) {
@@ -45,8 +45,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           }
           next()
         })
-        server.middlewares.use(createOrchestratorMiddleware(browserServer))
-        server.middlewares.use(createTesterMiddleware(browserServer))
+        server.middlewares.use(createOrchestratorMiddleware(parentServer))
+        server.middlewares.use(createTesterMiddleware(parentServer))
 
         server.middlewares.use(
           `${base}favicon.svg`,
@@ -57,7 +57,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           },
         )
 
-        const coverageFolder = resolveCoverageFolder(browserServer.vitest)
+        const coverageFolder = resolveCoverageFolder(parentServer.vitest)
         const coveragePath = coverageFolder ? coverageFolder[1] : undefined
         if (coveragePath && base === coveragePath) {
           throw new Error(
@@ -81,12 +81,12 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           )
         }
 
-        const screenshotFailures = browserServer.config.browser.ui && browserServer.config.browser.screenshotFailures
+        const uiEnabled = parentServer.config.browser.ui
 
-        if (screenshotFailures) {
+        if (uiEnabled) {
         // eslint-disable-next-line prefer-arrow-callback
           server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
-            if (!req.url || !browserServer.provider) {
+            if (!req.url) {
               res.statusCode = 404
               res.end()
               return
@@ -152,17 +152,17 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
-        const project = browserServer.vitest.getProjectByName(browserServer.config.name)
+        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
         const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
         )
-        const setupFiles = toArray(browserServer.config.setupFiles)
+        const setupFiles = toArray(project.config.setupFiles)
 
         // replace env values - cannot be reassign at runtime
         const define: Record<string, string> = {}
-        for (const env in (browserServer.config.env || {})) {
-          const stringValue = JSON.stringify(browserServer.config.env[env])
+        for (const env in (project.config.env || {})) {
+          const stringValue = JSON.stringify(project.config.env[env])
           define[`import.meta.env.${env}`] = stringValue
         }
 
@@ -173,7 +173,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           resolve(vitestDist, 'browser.js'),
           resolve(vitestDist, 'runners.js'),
           resolve(vitestDist, 'utils.js'),
-          ...(browserServer.config.snapshotSerializers || []),
+          ...(project.config.snapshotSerializers || []),
         ]
 
         const exclude = [
@@ -199,22 +199,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           'msw/browser',
         ]
 
-        if (typeof browserServer.config.diff === 'string') {
-          entries.push(browserServer.config.diff)
+        if (typeof project.config.diff === 'string') {
+          entries.push(project.config.diff)
         }
 
-        if (browserServer.vitest.coverageProvider) {
-          const coverage = browserServer.vitest.config.coverage
+        if (parentServer.vitest.coverageProvider) {
+          const coverage = parentServer.vitest.config.coverage
           const provider = coverage.provider
           if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [browserServer.config.root])
+            const path = tryResolve('@vitest/coverage-v8', [parentServer.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [browserServer.config.root])
+            const path = tryResolve('@vitest/coverage-istanbul', [parentServer.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-istanbul')
@@ -235,7 +235,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           '@vitest/browser > @testing-library/dom',
         ]
 
-        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : browserServer.config.root
+        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
 
         const svelte = isPackageExists('vitest-browser-svelte', fileRoot)
         if (svelte) {
@@ -302,14 +302,14 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
       },
       transform(code, id) {
-        if (id.includes(browserServer.vite.config.cacheDir) && id.includes('loupe.js')) {
+        if (id.includes(parentServer.vite.config.cacheDir) && id.includes('loupe.js')) {
           // loupe bundle has a nastry require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
         }
       },
     },
-    BrowserContext(browserServer),
+    BrowserContext(parentServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
       filter(id) {
@@ -329,7 +329,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
-        const defaultPort = browserServer.vitest._browserLastPort++
+        const defaultPort = parentServer.vitest._browserLastPort++
 
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
@@ -347,8 +347,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         viteConfig.server.fs.allow = viteConfig.server.fs.allow || []
         viteConfig.server.fs.allow.push(
           ...resolveFsAllow(
-            browserServer.vitest.config.root,
-            browserServer.vitest.server.config.configFile,
+            parentServer.vitest.config.root,
+            parentServer.vitest.vite.config.configFile,
           ),
           distRoot,
         )
@@ -363,7 +363,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
-        const project = browserServer.vitest.getProjectByName(browserServer.config.name)
+        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
         if (!project.isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
           return
         }
@@ -395,26 +395,30 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       name: 'vitest:browser:transform-tester-html',
       enforce: 'pre',
       async transformIndexHtml(html, ctx) {
-        if (ctx.filename !== browserServer.testerFilepath) {
+        const projectBrowser = [...parentServer.children].find((server) => {
+          return ctx.filename === server.testerFilepath
+        })
+        if (!projectBrowser) {
           return
         }
 
-        if (!browserServer.testerScripts) {
-          const testerScripts = await browserServer.formatScripts(
-            browserServer.config.browser.testerScripts,
+        if (!parentServer.testerScripts) {
+          const testerScripts = await parentServer.formatScripts(
+            parentServer.config.browser.testerScripts,
           )
-          browserServer.testerScripts = testerScripts
+          parentServer.testerScripts = testerScripts
         }
-        const stateJs = typeof browserServer.stateJs === 'string'
-          ? browserServer.stateJs
-          : await browserServer.stateJs
+        const stateJs = typeof parentServer.stateJs === 'string'
+          ? parentServer.stateJs
+          : await parentServer.stateJs
 
         const testerTags: HtmlTagDescriptor[] = []
-        const isDefaultTemplate = resolve(distRoot, 'client/tester/tester.html') === browserServer.testerFilepath
+
+        const isDefaultTemplate = resolve(distRoot, 'client/tester/tester.html') === projectBrowser.testerFilepath
         if (!isDefaultTemplate) {
-          const manifestContent = browserServer.manifest instanceof Promise
-            ? await browserServer.manifest
-            : browserServer.manifest
+          const manifestContent = parentServer.manifest instanceof Promise
+            ? await parentServer.manifest
+            : parentServer.manifest
           const testerEntry = manifestContent['tester/tester.html']
 
           testerTags.push({
@@ -422,7 +426,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             attrs: {
               type: 'module',
               crossorigin: '',
-              src: `${browserServer.base}${testerEntry.file}`,
+              src: `${parentServer.base}${testerEntry.file}`,
             },
             injectTo: 'head',
           })
@@ -434,7 +438,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
                 {
                   tag: 'link',
                   attrs: {
-                    href: `${browserServer.base}${entryManifest.file}`,
+                    href: `${parentServer.base}${entryManifest.file}`,
                     rel: 'modulepreload',
                     crossorigin: '',
                   },
@@ -478,21 +482,21 @@ body {
             tag: 'script',
             attrs: {
               type: 'module',
-              src: browserServer.errorCatcherUrl,
+              src: parentServer.errorCatcherUrl,
             },
             injectTo: 'head' as const,
           },
-          browserServer.locatorsUrl
+          parentServer.locatorsUrl
             ? {
                 tag: 'script',
                 attrs: {
                   type: 'module',
-                  src: browserServer.locatorsUrl,
+                  src: parentServer.locatorsUrl,
                 },
                 injectTo: 'head',
               } as const
             : null,
-          ...browserServer.testerScripts,
+          ...parentServer.testerScripts,
           ...testerTags,
           {
             tag: 'script',

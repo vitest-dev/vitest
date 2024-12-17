@@ -1,7 +1,6 @@
 import type { PluginContext } from 'rollup'
 import type { Plugin } from 'vitest/config'
-import type { BrowserProvider } from 'vitest/node'
-import type { BrowserServer } from '../server'
+import type { ParentBrowserProject } from '../projectParent'
 import { fileURLToPath } from 'node:url'
 import { slash } from '@vitest/utils'
 import { dirname, resolve } from 'pathe'
@@ -11,7 +10,7 @@ const ID_CONTEXT = '@vitest/browser/context'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-export default function BrowserContext(server: BrowserServer): Plugin {
+export default function BrowserContext(globalServer: ParentBrowserProject): Plugin {
   return {
     name: 'vitest:browser:virtual-module:context',
     enforce: 'pre',
@@ -22,7 +21,7 @@ export default function BrowserContext(server: BrowserServer): Plugin {
     },
     load(id) {
       if (id === VIRTUAL_ID_CONTEXT) {
-        return generateContextFile.call(this, server)
+        return generateContextFile.call(this, globalServer)
       }
     },
   }
@@ -30,12 +29,13 @@ export default function BrowserContext(server: BrowserServer): Plugin {
 
 async function generateContextFile(
   this: PluginContext,
-  server: BrowserServer,
+  globalServer: ParentBrowserProject,
 ) {
-  const commands = Object.keys(server.config.browser.commands ?? {})
+  const commands = Object.keys(globalServer.commands)
   const filepathCode
     = '__vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined'
-  const provider = server.provider
+  const provider = [...globalServer.children][0].provider || { name: 'preview' }
+  const providerName = provider.name
 
   const commandsCode = commands
     .filter(command => !command.startsWith('__vitest'))
@@ -45,7 +45,7 @@ async function generateContextFile(
     .join('\n')
 
   const userEventNonProviderImport = await getUserEventImport(
-    provider,
+    providerName,
     this.resolve.bind(this),
   )
   const distContextPath = slash(`/@fs/${resolve(__dirname, 'context.js')}`)
@@ -60,7 +60,7 @@ const sessionId = __vitest_browser_runner__.sessionId
 export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
-  provider: ${JSON.stringify(provider.name)},
+  provider: ${JSON.stringify(provider)},
   browser: __vitest_browser_runner__.config.browser.name,
   commands: {
     ${commandsCode}
@@ -73,8 +73,8 @@ export { page, cdp }
 `
 }
 
-async function getUserEventImport(provider: BrowserProvider, resolve: (id: string, importer: string) => Promise<null | { id: string }>) {
-  if (provider.name !== 'preview') {
+async function getUserEventImport(provider: string, resolve: (id: string, importer: string) => Promise<null | { id: string }>) {
+  if (provider !== 'preview') {
     return 'const _userEventSetup = undefined'
   }
   const resolved = await resolve('@testing-library/user-event', __dirname)

@@ -1,16 +1,17 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { BrowserServer } from './server'
+import type { ProjectBrowser } from './project'
+import type { ParentBrowserProject } from './projectParent'
 import { replacer } from './utils'
 
 export async function resolveOrchestrator(
-  globalServer: BrowserServer,
+  globalServer: ParentBrowserProject,
   url: URL,
   res: ServerResponse<IncomingMessage>,
 ) {
   let sessionId = url.searchParams.get('sessionId')
   // it's possible to open the page without a context
   if (!sessionId) {
-    const contexts = [...globalServer.state.orchestrators.keys()]
+    const contexts = [...globalServer.children].flatMap(p => [...p.state.orchestrators.keys()])
     sessionId = contexts[contexts.length - 1] ?? 'none'
   }
 
@@ -19,17 +20,21 @@ export async function resolveOrchestrator(
 
   const session = globalServer.vitest._browserSessions.getSession(sessionId!)
   const files = session?.files ?? []
-  const browserServer = session?.project.browser as BrowserServer || globalServer
+  const browserProject = (session?.project.browser as ProjectBrowser | undefined) || [...globalServer.children][0]
 
-  const injectorJs = typeof browserServer.injectorJs === 'string'
-    ? browserServer.injectorJs
-    : await browserServer.injectorJs
+  if (!browserProject) {
+    return
+  }
+
+  const injectorJs = typeof globalServer.injectorJs === 'string'
+    ? globalServer.injectorJs
+    : await globalServer.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(browserServer.config.browser.provider || 'preview'),
-    __VITEST_CONFIG__: JSON.stringify(browserServer.wrapSerializedConfig(session?.project.name || '')),
+    __VITEST_PROVIDER__: JSON.stringify(browserProject.config.browser.provider || 'preview'),
+    __VITEST_CONFIG__: JSON.stringify(browserProject.wrapSerializedConfig()),
     __VITEST_VITE_CONFIG__: JSON.stringify({
-      root: browserServer.vite.config.root,
+      root: browserProject.vite.config.root,
     }),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
@@ -64,7 +69,7 @@ export async function resolveOrchestrator(
       ? await globalServer.manifest
       : globalServer.manifest
     const jsEntry = manifestContent['orchestrator.html'].file
-    const base = browserServer.vite.config.base || '/'
+    const base = browserProject.parent.vite.config.base || '/'
     baseHtml = baseHtml
       .replaceAll('./assets/', `${base}__vitest__/assets/`)
       .replace(

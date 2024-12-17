@@ -1,13 +1,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Connect } from 'vite'
-import type { BrowserServer } from './server'
+import type { ProjectBrowser } from './project'
+import type { ParentBrowserProject } from './projectParent'
 import crypto from 'node:crypto'
 import { stringify } from 'flatted'
 import { join } from 'pathe'
 import { replacer } from './utils'
 
 export async function resolveTester(
-  globalServer: BrowserServer,
+  globalServer: ParentBrowserProject,
   url: URL,
   res: ServerResponse<IncomingMessage>,
   next: Connect.NextFunction,
@@ -43,18 +44,24 @@ export async function resolveTester(
   const files = session.files ?? []
   const method = session.method ?? 'run'
 
-  // TODO: test for different configurations in multi-browser instances
-  const browserServer = project.browser as BrowserServer || globalServer
-  const injectorJs: string = typeof browserServer.injectorJs === 'string'
-    ? browserServer.injectorJs
-    : await browserServer.injectorJs
+  const browserProject = (project.browser as ProjectBrowser | undefined) || [...globalServer.children][0]
+
+  if (!browserProject) {
+    res.statusCode = 400
+    res.end('Invalid session ID')
+    return
+  }
+
+  const injectorJs: string = typeof globalServer.injectorJs === 'string'
+    ? globalServer.injectorJs
+    : await globalServer.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider.name),
-    __VITEST_CONFIG__: JSON.stringify(browserServer.wrapSerializedConfig(project.name)),
+    __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider!.name),
+    __VITEST_CONFIG__: JSON.stringify(browserProject.wrapSerializedConfig()),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_VITE_CONFIG__: JSON.stringify({
-      root: browserServer.vite.config.root,
+      root: browserProject.vite.config.root,
     }),
     __VITEST_TYPE__: '"tester"',
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
@@ -62,14 +69,14 @@ export async function resolveTester(
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
   })
 
-  const testerHtml = typeof browserServer.testerHtml === 'string'
-    ? browserServer.testerHtml
-    : await browserServer.testerHtml
+  const testerHtml = typeof browserProject.testerHtml === 'string'
+    ? browserProject.testerHtml
+    : await browserProject.testerHtml
 
   try {
-    const url = join('/@fs/', browserServer.testerFilepath)
-    const indexhtml = await browserServer.vite.transformIndexHtml(url, testerHtml)
-    return replacer(indexhtml, {
+    const url = join('/@fs/', browserProject.testerFilepath)
+    const indexhtml = await browserProject.vite.transformIndexHtml(url, testerHtml)
+    const html = replacer(indexhtml, {
       __VITEST_FAVICON__: globalServer.faviconUrl,
       __VITEST_INJECTOR__: injector,
       __VITEST_APPEND__: `
@@ -79,6 +86,7 @@ export async function resolveTester(
     document.querySelector('script[data-vitest-append]').remove()
     `,
     })
+    return html
   }
   catch (err) {
     session.reject(err)

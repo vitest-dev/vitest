@@ -1,55 +1,48 @@
 import type { HtmlTagDescriptor } from 'vite'
-import type { ErrorWithDiff, SerializedConfig } from 'vitest'
+import type { ErrorWithDiff, ParsedStack } from 'vitest'
 import type {
-  BrowserProvider,
+  BrowserCommand,
   BrowserScript,
   CDPSession,
-  BrowserServer as IBrowserServer,
   ResolvedConfig,
   TestProject,
   Vite,
   Vitest,
 } from 'vitest/node'
-import { existsSync } from 'node:fs'
+import type { BrowserServerState } from './state'
 import { readFile } from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
-import { slash } from '@vitest/utils'
 import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
 import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
-import { BrowserServerState } from './state'
-import { getBrowserProvider } from './utils'
+import { distRoot } from './constants'
+import { ProjectBrowser } from './project'
+import { slash } from './utils'
 
-export class BrowserServer implements IBrowserServer {
-  public faviconUrl: string
-  public prefixTesterUrl: string
-
+export class ParentBrowserProject {
   public orchestratorScripts: string | undefined
   public testerScripts: HtmlTagDescriptor[] | undefined
 
+  public faviconUrl: string
+  public prefixTesterUrl: string
   public manifest: Promise<Vite.Manifest> | Vite.Manifest
-  public testerHtml: Promise<string> | string
-  public testerFilepath: string
+
+  public vite!: Vite.ViteDevServer
+  private stackTraceOptions: StackTraceParserOptions
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
   public errorCatcherUrl: string
   public locatorsUrl: string | undefined
   public stateJs: Promise<string> | string
 
-  public state: BrowserServerState
-  public provider!: BrowserProvider
-
-  public vite!: Vite.ViteDevServer
-
-  private stackTraceOptions: StackTraceParserOptions
+  public commands: Record<string, BrowserCommand<any>> = {}
+  public children = new Set<ProjectBrowser>()
   public vitest: Vitest
+
   public config: ResolvedConfig
 
-  public readonly cdps = new Map<string, BrowserServerCDPHandler>()
-
   constructor(
-    project: TestProject,
+    public project: TestProject,
     public base: string,
   ) {
     this.vitest = project.vitest
@@ -73,9 +66,8 @@ export class BrowserServer implements IBrowserServer {
       },
     }
 
-    project.config.browser.commands ??= {}
     for (const [name, command] of Object.entries(builtinCommands)) {
-      project.config.browser.commands[name] ??= command
+      this.commands[name] ??= command
     }
 
     // validate names because they can't be used as identifiers
@@ -85,12 +77,8 @@ export class BrowserServer implements IBrowserServer {
           `Invalid command name "${command}". Only alphanumeric characters, $ and _ are allowed.`,
         )
       }
+      this.commands[command] = project.config.browser.commands[command]
     }
-
-    this.state = new BrowserServerState()
-
-    const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
-    const distRoot = resolve(pkgRoot, 'dist')
 
     this.prefixTesterUrl = `${base}__vitest_test__/__test__/`
     this.faviconUrl = `${base}__vitest__/favicon.svg`
@@ -101,18 +89,6 @@ export class BrowserServer implements IBrowserServer {
       )
     })().then(manifest => (this.manifest = manifest))
 
-    const testerHtmlPath = project.config.browser.testerHtmlPath
-      ? resolve(project.config.root, project.config.browser.testerHtmlPath)
-      : resolve(distRoot, 'client/tester/tester.html')
-    if (!existsSync(testerHtmlPath)) {
-      throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
-    }
-    this.testerFilepath = testerHtmlPath
-
-    this.testerHtml = readFile(
-      testerHtmlPath,
-      'utf8',
-    ).then(html => (this.testerHtml = html))
     this.orchestratorHtml = (project.config.browser.ui
       ? readFile(resolve(distRoot, 'client/__vitest__/index.html'), 'utf8')
       : readFile(resolve(distRoot, 'client/orchestrator.html'), 'utf8'))
@@ -134,92 +110,27 @@ export class BrowserServer implements IBrowserServer {
     ).then(js => (this.stateJs = js))
   }
 
-  setServer(server: Vite.ViteDevServer) {
-    this.vite = server
+  public setServer(vite: Vite.ViteDevServer) {
+    this.vite = vite
   }
 
-  wrapSerializedConfig(projectName: string) {
-    const project = this.vitest.getProjectByName(projectName)
-    const config = wrapConfig(project.serializedConfig)
-    config.env ??= {}
-    config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
-    return config
-  }
-
-  resolveTesterUrl(pathname: string) {
-    const [sessionId, testFile] = pathname
-      .slice(this.prefixTesterUrl.length)
-      .split('/')
-    const decodedTestFile = decodeURIComponent(testFile)
-    return { sessionId, testFile: decodedTestFile }
-  }
-
-  async formatScripts(
-    scripts: BrowserScript[] | undefined,
-  ) {
-    if (!scripts?.length) {
-      return []
+  public spawn(project: TestProject): ProjectBrowser {
+    if (!this.vite) {
+      throw new Error(`Cannot spawn child server without a parent dev server.`)
     }
-    const server = this.vite
-    const promises = scripts.map(
-      async ({ content, src, async, id, type = 'module' }, index): Promise<HtmlTagDescriptor> => {
-        const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
-        const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
-        await server.moduleGraph.ensureEntryFromUrl(transformId)
-        const contentProcessed
-          = content && type === 'module'
-            ? (await server.pluginContainer.transform(content, transformId)).code
-            : content
-        return {
-          tag: 'script',
-          attrs: {
-            type,
-            ...(async ? { async: '' } : {}),
-            ...(srcLink
-              ? {
-                  src: srcLink.startsWith('http') ? srcLink : slash(`/@fs/${srcLink}`),
-                }
-              : {}),
-          },
-          injectTo: 'head',
-          children: contentProcessed || '',
-        }
-      },
+    const clone = new ProjectBrowser(
+      project,
+      '/',
     )
-    return (await Promise.all(promises))
-  }
-
-  async initBrowserProvider(project: TestProject) {
-    if (this.provider) {
-      return
-    }
-    const Provider = await getBrowserProvider(project.config.browser, project)
-    this.provider = new Provider()
-    const browser = project.config.browser.name
-    if (!browser) {
-      throw new Error(
-        `[${project.name}] Browser name is required. Please, set \`test.browser.instances[].browser\` option manually.`,
-      )
-    }
-    const supportedBrowsers = this.provider.getSupportedBrowsers()
-    if (supportedBrowsers.length && !supportedBrowsers.includes(browser)) {
-      throw new Error(
-        `[${project.name}] Browser "${browser}" is not supported by the browser provider "${
-          this.provider.name
-        }". Supported browsers: ${supportedBrowsers.join(', ')}.`,
-      )
-    }
-    const providerOptions = project.config.browser.providerOptions
-    await this.provider.initialize(project, {
-      browser,
-      options: providerOptions,
-    })
+    clone.parent = this
+    this.children.add(clone)
+    return clone
   }
 
   public parseErrorStacktrace(
     e: ErrorWithDiff,
     options: StackTraceParserOptions = {},
-  ) {
+  ): ParsedStack[] {
     return parseErrorStacktrace(e, {
       ...this.stackTraceOptions,
       ...options,
@@ -229,13 +140,14 @@ export class BrowserServer implements IBrowserServer {
   public parseStacktrace(
     trace: string,
     options: StackTraceParserOptions = {},
-  ) {
+  ): ParsedStack[] {
     return parseStacktrace(trace, {
       ...this.stackTraceOptions,
       ...options,
     })
   }
 
+  public readonly cdps = new Map<string, BrowserServerCDPHandler>()
   private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
   async ensureCDPHandler(sessionId: string, rpcId: string) {
@@ -250,6 +162,9 @@ export class BrowserServer implements IBrowserServer {
 
     const browser = browserSession.project.browser!
     const provider = browser.provider
+    if (!provider) {
+      throw new Error(`Browser provider is not defined for the project "${browserSession.project.name}".`)
+    }
     if (!provider.getCDPSession) {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
@@ -280,17 +195,44 @@ export class BrowserServer implements IBrowserServer {
     this.cdps.delete(sessionId)
   }
 
-  async close() {
-    await this.vite.close()
+  async formatScripts(scripts: BrowserScript[] | undefined) {
+    if (!scripts?.length) {
+      return []
+    }
+    const server = this.vite
+    const promises = scripts.map(
+      async ({ content, src, async, id, type = 'module' }, index): Promise<HtmlTagDescriptor> => {
+        const srcLink = (src ? (await server.pluginContainer.resolveId(src))?.id : undefined) || src
+        const transformId = srcLink || join(server.config.root, `virtual__${id || `injected-${index}.js`}`)
+        await server.moduleGraph.ensureEntryFromUrl(transformId)
+        const contentProcessed
+            = content && type === 'module'
+              ? (await server.pluginContainer.transform(content, transformId)).code
+              : content
+        return {
+          tag: 'script',
+          attrs: {
+            type,
+            ...(async ? { async: '' } : {}),
+            ...(srcLink
+              ? {
+                  src: srcLink.startsWith('http') ? srcLink : slash(`/@fs/${srcLink}`),
+                }
+              : {}),
+          },
+          injectTo: 'head',
+          children: contentProcessed || '',
+        }
+      },
+    )
+    return (await Promise.all(promises))
   }
-}
 
-function wrapConfig(config: SerializedConfig): SerializedConfig {
-  return {
-    ...config,
-    // workaround RegExp serialization
-    testNamePattern: config.testNamePattern
-      ? (config.testNamePattern.toString() as any as RegExp)
-      : undefined,
+  resolveTesterUrl(pathname: string) {
+    const [sessionId, testFile] = pathname
+      .slice(this.prefixTesterUrl.length)
+      .split('/')
+    const decodedTestFile = decodeURIComponent(testFile)
+    return { sessionId, testFile: decodedTestFile }
   }
 }

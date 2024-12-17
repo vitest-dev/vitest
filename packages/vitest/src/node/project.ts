@@ -9,7 +9,7 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
-import type { BrowserServer } from './types/browser'
+import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
   SerializedConfig,
@@ -52,7 +52,7 @@ export class TestProject {
   /**
    * Browser instance if the browser is enabled. This is initialized when the tests run for the first time.
    */
-  public browser?: BrowserServer
+  public browser?: ProjectBrowser
 
   /** @deprecated use `vitest` instead */
   public ctx: Vitest
@@ -64,6 +64,7 @@ export class TestProject {
 
   /** @internal */ vitenode!: ViteNodeServer
   /** @internal */ typechecker?: Typechecker
+  /** @internal */ _config?: ResolvedConfig
 
   private runner!: ViteNodeRunner
 
@@ -74,7 +75,6 @@ export class TestProject {
 
   private _globalSetups?: GlobalSetupFile[]
   private _provided: ProvidedContext = {} as any
-  private _config?: ResolvedConfig
   private _vite?: ViteDevServer
 
   constructor(
@@ -177,11 +177,11 @@ export class TestProject {
       throw new Error('The config was not set. It means that `project.config` was called before the Vite server was established.')
     }
     // checking it once should be enough
-    Object.defineProperty(this, 'config', {
-      configurable: true,
-      writable: true,
-      value: this._config,
-    })
+    // Object.defineProperty(this, 'config', {
+    //   configurable: true,
+    //   writable: true,
+    //   value: this._config,
+    // })
     return this._config
   }
 
@@ -492,11 +492,19 @@ export class TestProject {
   }
 
   /** @internal */
-  _initBrowserServer = deduped(async () => {
-    if (!this.isBrowserEnabled() || this.browser) {
+  _parentBrowser?: ParentProjectBrowser
+  /** @internal */
+  _parent?: TestProject
+  /** @internal */
+  _initParentBrowser = deduped(async () => {
+    if (!this.isBrowserEnabled() || this._parentBrowser) {
       return
     }
-    await this.vitest.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.vitest.version)
+    await this.vitest.packageInstaller.ensureInstalled(
+      '@vitest/browser',
+      this.config.root,
+      this.vitest.version,
+    )
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
     const browser = await createBrowserServer(
       this,
@@ -513,9 +521,18 @@ export class TestProject {
       ],
       [CoverageTransform(this.vitest)],
     )
-    this.browser = browser
+    this._parentBrowser = browser
     if (this.config.browser.ui) {
       setup(this.vitest, browser.vite)
+    }
+  })
+
+  /** @internal */
+  _initBrowserServer = deduped(async () => {
+    await this._parent?._initParentBrowser()
+
+    if (!this.browser && this._parent?._parentBrowser) {
+      this.browser = this._parent._parentBrowser.spawn(this)
     }
   })
 
@@ -636,6 +653,18 @@ export class TestProject {
   })
 
   /** @internal */
+  public _provideObject(context: ProvidedContext): void {
+    for (const _providedKey in context) {
+      const providedKey = _providedKey as keyof ProvidedContext
+      // type is very strict here, so we cast it to any
+      (this.provide as (key: string, value: unknown) => void)(
+        providedKey,
+        context[providedKey],
+      )
+    }
+  }
+
+  /** @internal */
   static _createBasicProject(vitest: Vitest): TestProject {
     const project = new TestProject(
       vitest.config.name || vitest.config.root,
@@ -645,69 +674,36 @@ export class TestProject {
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
-    for (const _providedKey in vitest.config.provide) {
-      const providedKey = _providedKey as keyof ProvidedContext
-      // type is very strict here, so we cast it to any
-      (project.provide as (key: string, value: unknown) => void)(
-        providedKey,
-        vitest.config.provide[providedKey],
-      )
-    }
+    project._provideObject(vitest.config.provide)
     return project
   }
 
   /** @internal */
-  static _cloneBrowserProject(project: TestProject, config: ResolvedConfig): TestProject {
+  static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
     const clone = new TestProject(
-      project.path,
-      project.vitest,
+      parent.path,
+      parent.vitest,
     )
-    clone.vitenode = project.vitenode
-    clone.runner = project.runner
-    clone._vite = project._vite
+    clone.vitenode = parent.vitenode
+    clone.runner = parent.runner
+    clone._vite = parent._vite
     clone._config = config
-    for (const _providedKey in config.provide) {
-      const providedKey = _providedKey as keyof ProvidedContext
-      // type is very strict here, so we cast it to any
-      (clone.provide as (key: string, value: unknown) => void)(
-        providedKey,
-        config.provide[providedKey],
-      )
-    }
-    clone._initBrowserServer = deduped(async () => {
-      if (clone.browser) {
-        return
-      }
-      await project._initBrowserServer()
-      const { cloneBrowserServer } = await import('@vitest/browser')
-      clone.browser = cloneBrowserServer(clone, project.browser!)
-    })
-    clone._initBrowserProvider = deduped(async () => {
-      if (!clone.isBrowserEnabled() || clone.browser?.provider) {
-        return
-      }
-      if (!clone.browser) {
-        await clone._initBrowserServer()
-      }
-      if (!project.browser?.provider) {
-        await project.browser?.initBrowserProvider(project)
-      }
-      await clone.browser?.initBrowserProvider(clone)
-    })
+    clone._parent = parent
+    clone._provideObject(config.provide)
     return clone
   }
 }
 
-function deduped(cb: () => Promise<void>) {
+function deduped<T extends (...args: any[]) => Promise<void>>(cb: T): T {
   let _promise: Promise<void> | undefined
-  return () => {
+  return ((...args: any[]) => {
     if (!_promise) {
-      _promise = cb().finally(() => {
+      _promise = cb(...args).finally(() => {
         _promise = undefined
       })
     }
     return _promise
-  }
+  }) as T
 }
 
 export {

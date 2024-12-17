@@ -1,16 +1,16 @@
 import type { Plugin } from 'vitest/config'
-import type { BrowserServer as IBrowserServer, TestProject } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
 import BrowserPlugin from './plugin'
+import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
-import { BrowserServer } from './server'
 
 export { distRoot } from './constants'
 export { createBrowserPool } from './pool'
 
-export type { BrowserServer } from './server'
+export type { ProjectBrowser } from './project'
 
 export async function createBrowserServer(
   project: TestProject,
@@ -28,7 +28,7 @@ export async function createBrowserServer(
     )
   }
 
-  const server = new BrowserServer(project, '/')
+  const server = new ParentBrowserProject(project, '/')
 
   const configPath = typeof configFile === 'string' ? configFile : false
 
@@ -76,16 +76,4 @@ export async function createBrowserServer(
   setupBrowserRpc(server)
 
   return server
-}
-
-export function cloneBrowserServer(
-  project: TestProject,
-  browserServer: IBrowserServer,
-) {
-  const clone = new BrowserServer(
-    project,
-    '/',
-  )
-  clone.setServer(browserServer.vite)
-  return clone
 }

@@ -2,7 +2,7 @@ import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
-import type { BrowserServer } from './server'
+import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
@@ -17,9 +17,9 @@ const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(server: BrowserServer) {
-  const vite = server.vite
-  const vitest = server.vitest
+export function setupBrowserRpc(globalServer: ParentBrowserProject) {
+  const vite = globalServer.vite
+  const vitest = globalServer.vitest
 
   const wss = new WebSocketServer({ noServer: true })
 
@@ -35,6 +35,7 @@ export function setupBrowserRpc(server: BrowserServer) {
 
     const type = searchParams.get('type')
     const rpcId = searchParams.get('rpcId')
+    const sessionId = searchParams.get('sessionId')
     const projectName = searchParams.get('projectName')
 
     if (type !== 'tester' && type !== 'orchestrator') {
@@ -43,14 +44,14 @@ export function setupBrowserRpc(server: BrowserServer) {
       )
     }
 
-    if (!rpcId || projectName == null) {
+    if (!sessionId || !rpcId || projectName == null) {
       return error(
         new Error(`[vitest] Invalid URL ${request.url}. "projectName", "sessionId" and "rpcId" queries are required.`),
       )
     }
 
     if (type === 'orchestrator') {
-      const session = vitest._browserSessions.getSession(rpcId)
+      const session = vitest._browserSessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
       session?.connected()
     }
@@ -76,7 +77,7 @@ export function setupBrowserRpc(server: BrowserServer) {
       ws.on('close', () => {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
         clients.delete(rpcId)
-        server.removeCDPHandler(rpcId)
+        globalServer.removeCDPHandler(rpcId)
       })
     })
   })
@@ -96,7 +97,7 @@ export function setupBrowserRpc(server: BrowserServer) {
   }
 
   function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
-    const mockResolver = new ServerMockResolver(server.vite, {
+    const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
 
@@ -105,7 +106,7 @@ export function setupBrowserRpc(server: BrowserServer) {
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
             const _error = error as ErrorWithDiff
-            _error.stacks = server.parseErrorStacktrace(_error)
+            _error.stacks = globalServer.parseErrorStacktrace(_error)
           }
           vitest.state.catchError(error, type)
         },
@@ -154,7 +155,7 @@ export function setupBrowserRpc(server: BrowserServer) {
           return fs.unlink(id)
         },
         getBrowserFileSourceMap(id) {
-          const mod = server.vite.moduleGraph.getModuleById(id)
+          const mod = globalServer.vite.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
         onCancel(reason) {
@@ -175,7 +176,7 @@ export function setupBrowserRpc(server: BrowserServer) {
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
-          const commands = project.config.browser?.commands
+          const commands = globalServer.commands
           if (!commands || !commands[command]) {
             throw new Error(`Unknown command "${command}".`)
           }
@@ -212,11 +213,11 @@ export function setupBrowserRpc(server: BrowserServer) {
 
         // CDP
         async sendCdpEvent(sessionId: string, event: string, payload?: Record<string, unknown>) {
-          const cdp = await server.ensureCDPHandler(sessionId, rpcId)
+          const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           return cdp.send(event, payload)
         },
         async trackCdpEvent(sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
-          const cdp = await server.ensureCDPHandler(sessionId, rpcId)
+          const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           cdp[type](event, listenerId)
         },
       },
@@ -237,8 +238,8 @@ export function setupBrowserRpc(server: BrowserServer) {
     return rpc
   }
 }
-// Serialization support utils.
 
+// Serialization support utils.
 function cloneByOwnProperties(value: any) {
   // Clones the value's properties into a new Object. The simpler approach of
   // Object.assign() won't work in the case that properties are not enumerable.
