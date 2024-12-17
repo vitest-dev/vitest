@@ -13,6 +13,9 @@ it('basic', { timeout: 60_000 }, async () => {
     root,
     allowOnly: true,
     outputJson: 'bench.json',
+
+    // Verify that type testing cannot be used with benchmark
+    typecheck: { enabled: true },
   }, [], 'benchmark')
   expect(result.exitCode).toBe(0)
 

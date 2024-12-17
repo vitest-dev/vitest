@@ -1,5 +1,5 @@
 import type { ErrorWithDiff } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestModule } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { BrowserServer } from './server'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
@@ -74,6 +74,11 @@ export function setupBrowserRpc(server: BrowserServer) {
             _error.stacks = server.parseErrorStacktrace(_error)
           }
           ctx.state.catchError(error, type)
+        },
+        async onQueued(file) {
+          ctx.state.collectFiles(project, [file])
+          const testModule = ctx.state.getReportedEntity(file) as TestModule
+          await ctx.report('onTestModuleQueued', testModule)
         },
         async onCollected(files) {
           ctx.state.collectFiles(project, files)
