@@ -653,7 +653,7 @@ export class TestProject {
   })
 
   /** @internal */
-  public _provideObject(context: ProvidedContext): void {
+  public _provideObject(context: Partial<ProvidedContext>): void {
     for (const _providedKey in context) {
       const providedKey = _providedKey as keyof ProvidedContext
       // type is very strict here, so we cast it to any

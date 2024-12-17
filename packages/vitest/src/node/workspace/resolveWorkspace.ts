@@ -143,9 +143,26 @@ export async function resolveBrowserWorkspace(
   const removeProjects = new Set<TestProject>()
 
   resolvedProjects.forEach((project) => {
-    const configs = project.config.browser.instances
-    if (!project.config.browser.enabled || !configs || configs.length === 0) {
+    if (!project.config.browser.enabled) {
       return
+    }
+    const configs = project.config.browser.instances || []
+    if (configs.length === 0) {
+      // browser.name should be defined, otherwise the config fails in "resolveConfig"
+      configs.push({ browser: project.config.browser.name })
+      console.warn(
+        withLabel(
+          'yellow',
+          'Vitest',
+          [
+            `No browser "instances" were defined`,
+            project.name ? ` for the "${project.name}" project. ` : '. ',
+            `Running tests in "${project.config.browser.name}" browser. `,
+            'The "browser.name" field is deprecated since Vitest 3. ',
+            'Read more: https://vitest.dev/guide/browser/config#browser-instances',
+          ].filter(Boolean).join(''),
+        ),
+      )
     }
     const originalName = project.config.name
     const filteredConfigs = !filters.length

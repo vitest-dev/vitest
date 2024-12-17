@@ -408,6 +408,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
       },
+      connectTimeout: {
+        description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
+        argument: '<timeout>',
+      },
       orchestratorScripts: null,
       testerScripts: null,
       commands: null,
