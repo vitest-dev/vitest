@@ -3,6 +3,7 @@ import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import type { BuiltinPool, Pool } from './types/pool-options'
+import { isatty } from 'node:tty'
 import mm from 'micromatch'
 import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
@@ -124,6 +125,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         VITEST: 'true',
         NODE_ENV: process.env.NODE_ENV || 'test',
         VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+        FORCE_TTY: isatty(1) ? 'true' : '',
         ...process.env,
         ...ctx.config.env,
       },

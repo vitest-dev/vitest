@@ -20,6 +20,7 @@ Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
 interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
+  preserveAnsi?: boolean
 }
 
 export async function runVitest(
@@ -58,7 +59,7 @@ export async function runVitest(
   const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
   stdin.isTTY = true
   stdin.setRawMode = () => stdin
-  const cli = new Cli({ stdin, stdout, stderr })
+  const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
 
   let ctx: Vitest | undefined
   let thrown = false
