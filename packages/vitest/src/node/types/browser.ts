@@ -220,6 +220,12 @@ export interface BrowserConfigOptions {
    * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
+
+  /**
+   * Timeout for connecting to the browser
+   * @default 30000
+   */
+  connectTimeout?: number
 }
 
 export interface BrowserCommandContext {
@@ -235,6 +241,7 @@ export interface BrowserServerStateSession {
   files: string[]
   method: 'run' | 'collect'
   project: TestProject
+  connected: () => void
   resolve: () => void
   reject: (v: unknown) => void
 }

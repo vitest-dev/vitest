@@ -34,21 +34,33 @@ export function setupBrowserRpc(server: BrowserServer) {
     }
 
     const type = searchParams.get('type')
-    const sessionId = searchParams.get('sessionId') ?? ''
     const rpcId = searchParams.get('rpcId')
     const projectName = searchParams.get('projectName')
 
     if (type !== 'tester' && type !== 'orchestrator') {
-      throw new Error(`[vitest] Type query in ${request.url} is invalid. Type should be either "tester" or "orchestrator".`)
+      return error(
+        new Error(`[vitest] Type query in ${request.url} is invalid. Type should be either "tester" or "orchestrator".`),
+      )
     }
-    if (!sessionId || !rpcId || projectName == null) {
-      throw new Error(`[vitest] Invalid URL ${request.url}. "projectName", "sessionId" and "rpcId" are required.`)
+
+    if (!rpcId || projectName == null) {
+      return error(
+        new Error(`[vitest] Invalid URL ${request.url}. "projectName", "sessionId" and "rpcId" queries are required.`),
+      )
+    }
+
+    if (type === 'orchestrator') {
+      const session = vitest._browserSessions.getSession(rpcId)
+      // it's possible the session was already resolved by the preview provider
+      session?.connected()
     }
 
     const project = vitest.getProjectByName(projectName)
 
     if (!project) {
-      throw new Error(`[vitest] Project "${projectName}" not found.`)
+      return error(
+        new Error(`[vitest] Project "${projectName}" not found.`),
+      )
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
@@ -68,6 +80,12 @@ export function setupBrowserRpc(server: BrowserServer) {
       })
     })
   })
+
+  // we don't throw an error inside a stream because this can segfault the process
+  function error(err: Error) {
+    console.error(err)
+    vitest.state.catchError(err, 'RPC Error')
+  }
 
   function checkFileAccess(path: string) {
     if (!isFileServingAllowed(path, vite)) {

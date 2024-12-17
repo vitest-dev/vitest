@@ -11,10 +11,18 @@ export class BrowserSessions {
 
   createAsyncSession(method: 'run' | 'collect', sessionId: string, files: string[], project: TestProject): Promise<void> {
     const defer = createDefer<void>()
+
+    const timeout = setTimeout(() => {
+      defer.reject(new Error(`Failed to connect to the browser session "${sessionId}" within the timeout.`))
+    }, project.vitest.config.browser.connectTimeout ?? 60_000).unref()
+
     this.sessions.set(sessionId, {
       files,
       method,
       project,
+      connected: () => {
+        clearTimeout(timeout)
+      },
       resolve: () => {
         defer.resolve()
         this.sessions.delete(sessionId)

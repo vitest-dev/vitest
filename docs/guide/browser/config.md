@@ -120,7 +120,7 @@ Run all tests in a specific browser. Possible options in different providers:
 - `playwright`: `firefox`, `webkit`, `chromium`
 - custom: any string that will be passed to the provider
 
-## browser.headless {#browser-headless}
+## browser.headless
 
 - **Type:** `boolean`
 - **Default:** `process.env.CI`
@@ -128,7 +128,7 @@ Run all tests in a specific browser. Possible options in different providers:
 
 Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
 
-## browser.isolate {#browser-isolate}
+## browser.isolate
 
 - **Type:** `boolean`
 - **Default:** `true`
@@ -136,13 +136,13 @@ Run the browser in a `headless` mode. If you are running Vitest in CI, it will b
 
 Run every test in a separate iframe.
 
-## browser.testerHtmlPath {#browser-testerhtmlpath}
+## browser.testerHtmlPath
 
 - **Type:** `string`
 
 A path to the HTML entry point. Can be relative to the root of the project. This file will be processed with [`transformIndexHtml`](https://vite.dev/guide/api-plugin#transformindexhtml) hook.
 
-## browser.api {#browser-api}
+## browser.api
 
 - **Type:** `number | { port?, strictPort?, host? }`
 - **Default:** `63315`
@@ -215,7 +215,7 @@ To have a better type safety when using built-in providers, you should reference
 ```
 :::
 
-## browser.ui {#browser-ui}
+## browser.ui
 
 - **Type:** `boolean`
 - **Default:** `!isCI`
@@ -223,14 +223,14 @@ To have a better type safety when using built-in providers, you should reference
 
 Should Vitest UI be injected into the page. By default, injects UI iframe during development.
 
-## browser.viewport {#browser-viewport}
+## browser.viewport
 
 - **Type:** `{ width, height }`
 - **Default:** `414x896`
 
 Default iframe's viewport.
 
-## browser.locators {#browser-locators}
+## browser.locators
 
 Options for built-in [browser locators](/guide/browser/locators).
 
@@ -241,21 +241,21 @@ Options for built-in [browser locators](/guide/browser/locators).
 
 Attribute used to find elements with `getByTestId` locator.
 
-## browser.screenshotDirectory {#browser-screenshotdirectory}
+## browser.screenshotDirectory
 
 - **Type:** `string`
 - **Default:** `__snapshots__` in the test file directory
 
 Path to the screenshots directory relative to the `root`.
 
-## browser.screenshotFailures {#browser-screenshotfailures}
+## browser.screenshotFailures
 
 - **Type:** `boolean`
 - **Default:** `!browser.ui`
 
 Should Vitest take screenshots if the test fails.
 
-## browser.orchestratorScripts {#browser-orchestratorscripts}
+## browser.orchestratorScripts
 
 - **Type:** `BrowserScript[]`
 - **Default:** `[]`
@@ -295,7 +295,7 @@ export interface BrowserScript {
 }
 ```
 
-## browser.testerScripts {#browser-testerscripts}
+## browser.testerScripts
 
 - **Type:** `BrowserScript[]`
 - **Default:** `[]`
@@ -308,9 +308,20 @@ Custom scripts that should be injected into the tester HTML before the tests env
 
 The script `src` and `content` will be processed by Vite plugins.
 
-## browser.commands {#browser-commands}
+## browser.commands
 
 - **Type:** `Record<string, BrowserCommand>`
 - **Default:** `{ readFile, writeFile, ... }`
 
 Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
+
+## browser.connectTimeout
+
+- **Type:** `number`
+- **Default:** `60_000`
+
+The timeout in milliseconds. If connection to the browser takes longer, the test suite will fail.
+
+::: info
+This is the time it should take for the browser to establish the WebSocket connection with the Vitest server. In normal circumstances, this timeout should never be reached.
+:::

@@ -276,7 +276,7 @@ export class BrowserServer implements IBrowserServer {
     return handler
   }
 
-  async removeCDPHandler(sessionId: string) {
+  removeCDPHandler(sessionId: string) {
     this.cdps.delete(sessionId)
   }
 
