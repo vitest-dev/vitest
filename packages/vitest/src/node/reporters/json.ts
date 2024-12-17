@@ -26,6 +26,7 @@ const StatusMap: Record<TaskState, Status> = {
   run: 'pending',
   skip: 'skipped',
   todo: 'todo',
+  queued: 'pending',
 }
 
 export interface JsonAssertionResult {
@@ -95,7 +96,7 @@ export class JsonReporter implements Reporter {
 
     const numFailedTestSuites = suites.filter(s => s.result?.state === 'fail').length
     const numPendingTestSuites = suites.filter(
-      s => s.result?.state === 'run' || s.mode === 'todo',
+      s => s.result?.state === 'run' || s.result?.state === 'queued' || s.mode === 'todo',
     ).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
 
@@ -104,7 +105,7 @@ export class JsonReporter implements Reporter {
     ).length
     const numPassedTests = tests.filter(t => t.result?.state === 'pass').length
     const numPendingTests = tests.filter(
-      t => t.result?.state === 'run' || t.mode === 'skip' || t.result?.state === 'skip',
+      t => t.result?.state === 'run' || t.result?.state === 'queued' || t.mode === 'skip' || t.result?.state === 'skip',
     ).length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []
@@ -154,7 +155,7 @@ export class JsonReporter implements Reporter {
         } satisfies JsonAssertionResult
       })
 
-      if (tests.some(t => t.result?.state === 'run')) {
+      if (tests.some(t => t.result?.state === 'run' || t.result?.state === 'queued')) {
         this.ctx.logger.warn(
           'WARNING: Some tests are still running when generating the JSON report.'
           + 'This is likely an internal bug in Vitest.'
