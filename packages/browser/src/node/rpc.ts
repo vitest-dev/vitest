@@ -111,9 +111,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
           vitest.state.catchError(error, type)
         },
         async onQueued(file) {
-          ctx.state.collectFiles(project, [file])
-          const testModule = ctx.state.getReportedEntity(file) as TestModule
-          await ctx.report('onTestModuleQueued', testModule)
+          vitest.state.collectFiles(project, [file])
+          const testModule = vitest.state.getReportedEntity(file) as TestModule
+          await vitest.report('onTestModuleQueued', testModule)
         },
         async onCollected(files) {
           vitest.state.collectFiles(project, files)
