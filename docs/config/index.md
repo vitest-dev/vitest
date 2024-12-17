@@ -1481,7 +1481,26 @@ Do not show files with 100% statement, branch, and function coverage.
 
 #### coverage.thresholds
 
-Options for coverage thresholds
+Options for coverage thresholds.
+
+If a threshold is set to a positive number, it will be interpreted as the minimum percentage of coverage required. For example, setting the lines threshold to `90` means that 90% of lines must be covered.
+
+If a threshold is set to a negative number, it will be treated as the maximum number of uncovered items allowed. For example, setting the lines threshold to `-10` means that no more than 10 lines may be uncovered.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Requires 90% function coverage
+      functions: 90,
+
+      // Require that no more than 10 lines are uncovered
+      lines: -10,
+    }
+  }
+}
+```
 
 ##### coverage.thresholds.lines
 
@@ -1490,7 +1509,6 @@ Options for coverage thresholds
 - **CLI:** `--coverage.thresholds.lines=<number>`
 
 Global threshold for lines.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.functions
 
@@ -1499,7 +1517,6 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 - **CLI:** `--coverage.thresholds.functions=<number>`
 
 Global threshold for functions.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.branches
 
@@ -1508,7 +1525,6 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 - **CLI:** `--coverage.thresholds.branches=<number>`
 
 Global threshold for branches.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.statements
 
@@ -1517,7 +1533,6 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 - **CLI:** `--coverage.thresholds.statements=<number>`
 
 Global threshold for statements.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.perFile
 
@@ -1535,7 +1550,7 @@ Check thresholds per file.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholds.autoUpdate=<boolean>`
 
-Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
+Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is better than the configured thresholds.
 This option helps to maintain thresholds when coverage is improved.
 
 ##### coverage.thresholds.100
