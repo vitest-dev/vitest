@@ -1,7 +1,7 @@
 import { join, resolve } from 'pathe'
 import { createServer, type Plugin, type ViteDevServer } from 'vite'
 import { ViteNodeServer } from 'vite-node/server'
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { extractSourceMap } from '../../../packages/vite-node/src/source-map'
 
 describe('server works correctly', async () => {
@@ -279,5 +279,51 @@ describe('externalize', () => {
       const externalize = await vnServer.shouldExternalize('/node_modules/.vite/cached.js')
       expect(externalize).toBeFalsy()
     })
+  })
+})
+
+describe('includeSourcemap', () => {
+  test('doesn\'t include source maps for deps when not specified', async () => {
+    const server = await createServer()
+    onTestFinished(() => server.close())
+
+    const vnServer = new ViteNodeServer(server, {
+      deps: {
+        inline: true,
+      },
+    })
+
+    const result = await vnServer.fetchResult('/node_modules/vitest/vitest.mjs', 'ssr')
+    expect(result.code).not.toContain('//# sourceMappingURL=')
+  })
+
+  test('doesn\'t include source maps for deps not matching pattern', async () => {
+    const server = await createServer()
+    onTestFinished(() => server.close())
+
+    const vnServer = new ViteNodeServer(server, {
+      deps: {
+        inline: true,
+        includeSourcemap: ['foo'],
+      },
+    })
+
+    const result = await vnServer.fetchResult('/node_modules/vitest/vitest.mjs', 'ssr')
+    expect(result.code).not.toContain('//# sourceMappingURL=')
+  })
+
+  test('includes source maps for deps matching pattern', async () => {
+    const server = await createServer()
+    onTestFinished(() => server.close())
+
+    const vnServer = new ViteNodeServer(server, {
+      deps: {
+        inline: true,
+        includeSourcemap: ['vitest'],
+      },
+    })
+
+    const result = await vnServer.fetchResult('/node_modules/vitest/vitest.mjs', 'ssr')
+    expect(result.code).toContain('//# sourceMappingURL=')
   })
 })

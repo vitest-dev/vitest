@@ -207,6 +207,13 @@ Vite will process inlined modules. This could be helpful to handle packages that
 
 If `true`, every dependency will be inlined. All dependencies, specified in [`ssr.noExternal`](https://vitejs.dev/guide/ssr.html#ssr-externals) will be inlined by default.
 
+#### server.deps.includeSourcemap
+
+- **Type:** `(string | RegExp)[]`
+- **Default:** `[]`
+
+Vitest will include inline source maps for any dependency specified in `inlineSourcemap`.
+
 #### server.deps.fallbackCJS
 
 - **Type** `boolean`

@@ -10,6 +10,7 @@ export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[] | true
   inlineFiles?: string[]
+  includeSourcemap?: (string | RegExp)[]
   /**
    * A list of directories that are considered to hold Node.js modules
    * Have to include "/" at the start and end of the path

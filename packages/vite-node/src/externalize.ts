@@ -118,13 +118,13 @@ async function _shouldExternalize(
 
   const moduleDirectories = options?.moduleDirectories || ['/node_modules/']
 
-  if (matchExternalizePattern(id, moduleDirectories, options?.inline)) {
+  if (matchDependencyPattern(id, moduleDirectories, options?.inline)) {
     return false
   }
   if (options?.inlineFiles && options?.inlineFiles.includes(id)) {
     return false
   }
-  if (matchExternalizePattern(id, moduleDirectories, options?.external)) {
+  if (matchDependencyPattern(id, moduleDirectories, options?.external)) {
     return id
   }
 
@@ -138,10 +138,10 @@ async function _shouldExternalize(
   const guessCJS = isLibraryModule && options?.fallbackCJS
   id = guessCJS ? guessCJSversion(id) || id : id
 
-  if (matchExternalizePattern(id, moduleDirectories, defaultInline)) {
+  if (matchDependencyPattern(id, moduleDirectories, defaultInline)) {
     return false
   }
-  if (matchExternalizePattern(id, moduleDirectories, depsExternal)) {
+  if (matchDependencyPattern(id, moduleDirectories, depsExternal)) {
     return id
   }
 
@@ -152,7 +152,7 @@ async function _shouldExternalize(
   return false
 }
 
-function matchExternalizePattern(
+export function matchDependencyPattern(
   id: string,
   moduleDirectories: string[],
   patterns?: (string | RegExp)[] | true,
@@ -163,14 +163,14 @@ function matchExternalizePattern(
   if (patterns === true) {
     return true
   }
-  for (const ex of patterns) {
-    if (typeof ex === 'string') {
-      if (moduleDirectories.some(dir => id.includes(join(dir, ex)))) {
+  for (const pattern of patterns) {
+    if (typeof pattern === 'string') {
+      if (moduleDirectories.some(dir => id.includes(join(dir, pattern)))) {
         return true
       }
     }
     else {
-      if (ex.test(id)) {
+      if (pattern.test(id)) {
         return true
       }
     }
@@ -178,7 +178,7 @@ function matchExternalizePattern(
   return false
 }
 
-function patchWindowsImportPath(path: string) {
+export function patchWindowsImportPath(path: string) {
   if (path.match(/^\w:\\/)) {
     return `file:///${slash(path)}`
   }

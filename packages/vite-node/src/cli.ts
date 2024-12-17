@@ -194,6 +194,9 @@ function parseServerOptions(
       external: toArray(serverOptions.deps?.external).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/') ? new RegExp(dep) : dep
       }),
+      includeSourcemap: toArray(serverOptions.deps?.includeSourcemap).map((dep) => {
+        return dep.startsWith('/') && dep.endsWith('/') ? new RegExp(dep) : dep
+      }),
       moduleDirectories: serverOptions.deps?.moduleDirectories
         ? toArray(serverOptions.deps?.moduleDirectories)
         : undefined,

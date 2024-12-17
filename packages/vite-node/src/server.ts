@@ -13,7 +13,7 @@ import { pathToFileURL } from 'node:url'
 import createDebug from 'debug'
 import { join, normalize, relative, resolve } from 'pathe'
 import { Debugger } from './debug'
-import { shouldExternalize } from './externalize'
+import { matchDependencyPattern, patchWindowsImportPath, shouldExternalize } from './externalize'
 import { withInlineSourcemap } from './source-map'
 import {
   normalizeModuleId,
@@ -395,6 +395,23 @@ export class ViteNodeServer {
     })
   }
 
+  shouldIncludeSourceMap(id: string) {
+    if (!id.includes('/node_modules/')) {
+      return true
+    }
+
+    const { includeSourcemap, moduleDirectories } = this.options.deps || {}
+    if (!includeSourcemap?.length) {
+      return false
+    }
+
+    return matchDependencyPattern(
+      patchWindowsImportPath(id),
+      moduleDirectories || ['/node_modules/'],
+      includeSourcemap,
+    )
+  }
+
   private async _transformRequest(
     id: string,
     filepath: string,
@@ -424,7 +441,7 @@ export class ViteNodeServer {
     }
 
     const sourcemap = this.options.sourcemap ?? 'inline'
-    if (sourcemap === 'inline' && result && !id.includes('node_modules')) {
+    if (sourcemap === 'inline' && result && this.shouldIncludeSourceMap(id)) {
       result = await this.processTransformResult(filepath, result)
     }
 
