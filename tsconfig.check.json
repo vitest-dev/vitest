@@ -14,6 +14,7 @@
     "./packages/ui/client/**",
     "./examples/**/*.*",
     "./bench/**",
+    "./test/benchmark/fixtures/**",
     "./test/typescript/**",
     "./test/browser/**",
     "**/coverage/fixtures/**",

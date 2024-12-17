@@ -163,7 +163,7 @@ export function getStateSymbol(task: Task) {
     return pending
   }
 
-  if (task.result.state === 'run') {
+  if (task.result.state === 'run' || task.result.state === 'queued') {
     if (task.type === 'suite') {
       return pointer
     }

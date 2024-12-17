@@ -1,6 +1,6 @@
 import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestModule, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
@@ -109,6 +109,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
             _error.stacks = globalServer.parseErrorStacktrace(_error)
           }
           vitest.state.catchError(error, type)
+        },
+        async onQueued(file) {
+          ctx.state.collectFiles(project, [file])
+          const testModule = ctx.state.getReportedEntity(file) as TestModule
+          await ctx.report('onTestModuleQueued', testModule)
         },
         async onCollected(files) {
           vitest.state.collectFiles(project, files)

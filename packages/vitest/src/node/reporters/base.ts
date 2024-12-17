@@ -75,7 +75,8 @@ export abstract class BaseReporter implements Reporter {
     if (
       !('filepath' in task)
       || !task.result?.state
-      || task.result?.state === 'run') {
+      || task.result?.state === 'run'
+      || task.result?.state === 'queued') {
       return
     }
 
@@ -152,7 +153,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${c.dim(getStateSymbol(test))} ${getTestName(test, c.dim(' > '))}${suffix}`)
+        this.log(`   ${getStateSymbol(test)} ${getTestName(test, c.dim(' > '))}${suffix}`)
       }
     }
   }
