@@ -282,7 +282,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
     const file = test.file
     let stats = this.runningTests.get(file.id)
 
-    if (!stats) {
+    if (!stats || stats.total === 0) {
       // It's possible that that test finished before it's preparation was even reported
       this.onTestFilePrepare(test.file)
       stats = this.runningTests.get(file.id)!
