@@ -24,8 +24,14 @@ export async function resolveTester(
 
   const { sessionId, testFile } = globalServer.resolveTesterUrl(url.pathname)
   const session = globalServer.vitest._browserSessions.getSession(sessionId)
-  // TODO: if no session, 400
-  const project = globalServer.vitest.getProjectByName(session?.project.name ?? '')
+
+  if (!session) {
+    res.statusCode = 400
+    res.end('Invalid session ID')
+    return
+  }
+
+  const project = globalServer.vitest.getProjectByName(session.project.name || '')
   const { testFiles } = await project.globTestFiles()
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
@@ -34,8 +40,8 @@ export async function resolveTester(
       ? '__vitest_browser_runner__.files'
       : JSON.stringify([testFile])
   const iframeId = JSON.stringify(testFile)
-  const files = session?.files ?? []
-  const method = session?.method ?? 'run'
+  const files = session.files ?? []
+  const method = session.method ?? 'run'
 
   // TODO: test for different configurations in multi-browser instances
   const browserServer = project.browser as BrowserServer || globalServer
@@ -75,7 +81,7 @@ export async function resolveTester(
     })
   }
   catch (err) {
-    session?.reject(err)
+    session.reject(err)
     next(err)
   }
 }

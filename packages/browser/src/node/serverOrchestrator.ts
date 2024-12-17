@@ -14,9 +14,12 @@ export async function resolveOrchestrator(
     sessionId = contexts[contexts.length - 1] ?? 'none'
   }
 
-  const contextState = globalServer.vitest._browserSessions.getSession(sessionId!)
-  const files = contextState?.files ?? []
-  const browserServer = contextState?.project.browser as BrowserServer || globalServer
+  // it's ok to not have a session here, especially in the preview provider
+  // because the user could refresh the page which would remove the session id from the url
+
+  const session = globalServer.vitest._browserSessions.getSession(sessionId!)
+  const files = session?.files ?? []
+  const browserServer = session?.project.browser as BrowserServer || globalServer
 
   const injectorJs = typeof browserServer.injectorJs === 'string'
     ? browserServer.injectorJs
@@ -24,8 +27,7 @@ export async function resolveOrchestrator(
 
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(browserServer.config.browser.provider || 'preview'),
-    // TODO: check when context is not found
-    __VITEST_CONFIG__: JSON.stringify(browserServer.wrapSerializedConfig(contextState?.project.name || '')),
+    __VITEST_CONFIG__: JSON.stringify(browserServer.wrapSerializedConfig(session?.project.name || '')),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: browserServer.vite.config.root,
     }),
