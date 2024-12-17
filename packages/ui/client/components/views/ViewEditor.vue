@@ -18,13 +18,17 @@ const code = ref('')
 const serverCode = shallowRef<string | undefined>(undefined)
 const draft = ref(false)
 const loading = ref(true)
-// finished.value is true when saving the file, we need it to restore the caret position
-const saving = ref(true)
+const saving = ref(false)
 const currentPosition = ref<CodeMirror.Position | undefined>()
 
 watch(
   () => props.file,
   async () => {
+    // this watcher will be called multiple times when saving the file in the view editor
+    // since we are saving the file and changing the content inside onSave we just return here
+    if (saving.value) {
+      return
+    }
     loading.value = true
     try {
       if (!props.file || !props.file?.filepath) {
@@ -46,21 +50,27 @@ watch(
 
     // fire focusing editor after loading
     loading.value = false
-    saving.value = false
   },
   { immediate: true },
 )
 
-watch(() => [loading.value, props.file, lineNumber.value] as const, ([loadingFile, _, l]) => {
-  if (!loadingFile) {
+watch(() => [loading.value, saving.value, props.file, lineNumber.value] as const, ([loadingFile, s, _, l]) => {
+  if (!loadingFile && !s) {
     if (l != null) {
       nextTick(() => {
-        const line = { line: l ?? 0, ch: 0 }
-        codemirrorRef.value?.scrollIntoView(line, 100)
-        nextTick(() => {
-          codemirrorRef.value?.focus()
-          codemirrorRef.value?.setCursor(line)
-        })
+        const cp = currentPosition.value
+        const line = cp ?? { line: l ?? 0, ch: 0 }
+        // restore caret position: the watchDebounced below will use old value
+        if (cp) {
+          currentPosition.value = undefined
+        }
+        else {
+          codemirrorRef.value?.scrollIntoView(line, 100)
+          nextTick(() => {
+            codemirrorRef.value?.focus()
+            codemirrorRef.value?.setCursor(line)
+          })
+        }
       })
     }
     else {
@@ -147,8 +157,8 @@ function createErrorElement(e: ErrorWithDiff) {
 }
 
 const { pause, resume } = watch(
-  [codemirrorRef, failed, finished, saving] as const,
-  ([cmValue, f, end, s]) => {
+  [codemirrorRef, failed, finished] as const,
+  ([cmValue, f, end]) => {
     if (!cmValue) {
       widgets.length = 0
       handles.length = 0
@@ -156,11 +166,12 @@ const { pause, resume } = watch(
       return
     }
 
-    // if still running or saving return
-    if (!end || s) {
+    // if still running
+    if (!end) {
       return
     }
 
+    // cleanup previous data when not saving just reloading
     cmValue.off('changes', codemirrorChanges)
 
     // cleanup previous data
@@ -170,22 +181,19 @@ const { pause, resume } = watch(
     widgets.length = 0
     handles.length = 0
 
-    // add new data
-    f.forEach((i) => {
-      i.result?.errors?.forEach(createErrorElement)
-    })
+    setTimeout(() => {
+      // add new data
+      f.forEach((i) => {
+        i.result?.errors?.forEach(createErrorElement)
+      })
 
-    // Prevent getting access to initial state
-    if (!hasBeenEdited.value) {
-      cmValue.clearHistory()
-    }
+      // Prevent getting access to initial state
+      if (!hasBeenEdited.value) {
+        cmValue.clearHistory()
+      }
 
-    cmValue.on('changes', codemirrorChanges)
-
-    // restore caret position: the watchDebounced below will use old value
-    if (currentPosition.value) {
-      currentPosition.value = undefined
-    }
+      cmValue.on('changes', codemirrorChanges)
+    }, 100)
   },
   { flush: 'post' },
 )
@@ -203,8 +211,21 @@ async function onSave(content: string) {
   pause()
   saving.value = true
   await nextTick()
+
+  // clear previous state
+  const cmValue = codemirrorRef.value
+  // save cursor position
+  currentPosition.value = cmValue?.getCursor()
+  cmValue?.off('changes', codemirrorChanges)
+
+  // cleanup previous data
+  clearListeners()
+  widgets.forEach(widget => widget.clear())
+  handles.forEach(h => cmValue?.removeLineClass(h, 'wrap'))
+  widgets.length = 0
+  handles.length = 0
+
   try {
-    currentPosition.value = codemirrorRef.value?.getCursor()
     hasBeenEdited.value = true
     // save the file changes
     await client.rpc.saveTestFile(props.file!.filepath, content)
@@ -212,23 +233,38 @@ async function onSave(content: string) {
     serverCode.value = content
     // update draft indicator in the tab title (</> * Code)
     draft.value = false
-    // the server will send 3 events in a row
-    // await first change in the state
-    await until(finished).toBe(false, { flush: 'sync', timeout: 1000, throwOnTimeout: false })
-    // await second change in the state
-    await until(finished).toBe(true, { flush: 'sync', timeout: 1000, throwOnTimeout: false })
-    // await last change in the state
-    await until(finished).toBe(false, { flush: 'sync', timeout: 1000, throwOnTimeout: false })
   }
   catch (e) {
     console.error('error saving file', e)
   }
 
+  // Prevent getting access to initial state
+  if (!hasBeenEdited.value) {
+    cmValue?.clearHistory()
+  }
+
+  try {
+    // the server will send a few events in a row
+    // await to re-run test
+    await until(finished).toBe(false, { flush: 'sync', timeout: 1000, throwOnTimeout: true })
+    // await to finish
+    await until(finished).toBe(true, { flush: 'sync', timeout: 1000, throwOnTimeout: false })
+  }
+  catch {
+    // ignore errors
+  }
+
+  // add new data
+  failed.value.forEach((i) => {
+    i.result?.errors?.forEach(createErrorElement)
+  })
+
+  cmValue?.on('changes', codemirrorChanges)
+
+  saving.value = false
+  await nextTick()
   // activate watcher
   resume()
-  await nextTick()
-  // enable adding the errors if present
-  saving.value = false
 }
 
 // we need to remove listeners before unmounting the component: the watcher will not be called
