@@ -41,7 +41,7 @@ it.for([true, false])('includeSamples %s', async (includeSamples) => {
   assert(result.ctx)
   const allSamples = [...result.ctx.state.idMap.values()]
     .filter(t => t.meta.benchmark)
-    .map(t => t.result?.benchmark?.samples)
+    .map(t => t.result?.benchmark?.latency.samples)
   if (includeSamples) {
     expect(allSamples[0]).not.toEqual([])
   }

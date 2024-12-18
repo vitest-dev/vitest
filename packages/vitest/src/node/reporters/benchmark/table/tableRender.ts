@@ -45,10 +45,10 @@ function formatNumber(number: number) {
 
 const tableHead = [
   'name',
-  'hz',
+  'mean',
   'min',
   'max',
-  'mean',
+  'p50/median',
   'p75',
   'p99',
   'p995',
@@ -58,18 +58,19 @@ const tableHead = [
 ]
 
 function renderBenchmarkItems(result: BenchmarkResult) {
+  console.log('table', result)
   return [
     result.name,
-    formatNumber(result.hz || 0),
-    formatNumber(result.min || 0),
-    formatNumber(result.max || 0),
-    formatNumber(result.mean || 0),
-    formatNumber(result.p75 || 0),
-    formatNumber(result.p99 || 0),
-    formatNumber(result.p995 || 0),
-    formatNumber(result.p999 || 0),
-    `±${(result.rme || 0).toFixed(2)}%`,
-    (result.sampleCount || 0).toString(),
+    formatNumber(result.latency.mean || 0),
+    formatNumber(result.latency.min || 0),
+    formatNumber(result.latency.max || 0),
+    formatNumber(result.latency.p50 || 0),
+    formatNumber(result.latency.p75 || 0),
+    formatNumber(result.latency.p99 || 0),
+    formatNumber(result.latency.p995 || 0),
+    formatNumber(result.latency.p999 || 0),
+    `±${(result.latency.rme || 0).toFixed(2)}%`,
+    (result.numberOfSamples || 0).toString(),
   ]
 }
 
@@ -93,16 +94,16 @@ function renderBenchmark(result: BenchmarkResult, widths: number[]) {
   const padded = padRow(renderBenchmarkItems(result), widths)
   return [
     padded[0], // name
-    c.blue(padded[1]), // hz
+    c.blue(padded[1]), // mean
     c.cyan(padded[2]), // min
     c.cyan(padded[3]), // max
-    c.cyan(padded[4]), // mean
+    c.cyan(padded[4]), // p50/median
     c.cyan(padded[5]), // p75
     c.cyan(padded[6]), // p99
     c.cyan(padded[7]), // p995
     c.cyan(padded[8]), // p999
     c.dim(padded[9]), // rem
-    c.dim(padded[10]), // sample
+    c.dim(padded[10]), // samples
   ].join('  ')
 }
 

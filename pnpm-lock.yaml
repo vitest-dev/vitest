@@ -893,8 +893,8 @@ importers:
         specifier: ^3.8.0
         version: 3.8.0
       tinybench:
-        specifier: ^2.9.0
-        version: 2.9.0
+        specifier: ^3.0.7
+        version: 3.0.7
       tinyexec:
         specifier: ^0.3.1
         version: 0.3.1
@@ -8764,8 +8764,9 @@ packages:
   tiny-glob@0.2.9:
     resolution: {integrity: sha512-g/55ssRPUjShh+xkfx9UPDXqhckHEsHr4Vd9zX55oSdGZc/MD0m3sferOkwWtp98bv+kcVfEHtRJgBVJzelrzg==}
 
-  tinybench@2.9.0:
-    resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
+  tinybench@3.0.7:
+    resolution: {integrity: sha512-soxV7Dp8eDKvPDv3c4qPJbUjLm1cZxFlsTaIH+FqalsazJzFrLG59dpiIN8OfgVcl11Hfj2b7apD73inCB67Mw==}
+    engines: {node: '>=18.0.0'}
 
   tinyexec@0.3.0:
     resolution: {integrity: sha512-tVGE0mVJPGb0chKhqmsoosjsS+qUnJVGJpZgsHYQcGoPlG3B51R3PouqTgEGH2Dc9jjFyOqOpix6ZHNMXp1FZg==}
@@ -18307,7 +18308,7 @@ snapshots:
       globalyzer: 0.1.0
       globrex: 0.1.2
 
-  tinybench@2.9.0: {}
+  tinybench@3.0.7: {}
 
   tinyexec@0.3.0: {}
 
