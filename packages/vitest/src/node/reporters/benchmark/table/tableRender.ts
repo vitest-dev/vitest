@@ -58,7 +58,6 @@ const tableHead = [
 ]
 
 function renderBenchmarkItems(result: BenchmarkResult) {
-  console.log('table', result)
   return [
     result.name,
     formatNumber(result.latency.mean || 0),
