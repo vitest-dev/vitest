@@ -3,6 +3,7 @@ import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
 import timers from 'node:timers'
+import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { getSafeTimers } from '@vitest/utils'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
@@ -61,6 +62,7 @@ export async function setupGlobalEnv(
   globalThis.__vitest_required__ = {
     util,
     timers,
+    timersPromises,
   }
 
   installSourcemapsSupport({

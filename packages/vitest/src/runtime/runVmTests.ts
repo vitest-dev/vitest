@@ -4,6 +4,7 @@ import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
+import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { collectTests, startTests } from '@vitest/runner'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
@@ -56,6 +57,7 @@ export async function run(
   globalThis.__vitest_required__ = {
     util,
     timers,
+    timersPromises,
   }
 
   installSourcemapsSupport({

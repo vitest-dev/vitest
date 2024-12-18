@@ -180,7 +180,7 @@ Repository: git+https://github.com/sinonjs/commons.git
 ## @sinonjs/fake-timers
 License: BSD-3-Clause
 By: Christian Johansen
-Repository: https://github.com/sinonjs/fake-timers.git
+Repository: git+https://github.com/sinonjs/fake-timers.git
 
 > Copyright (c) 2010-2014, Christian Johansen, christian@cjohansen.no. All rights reserved.
 >
