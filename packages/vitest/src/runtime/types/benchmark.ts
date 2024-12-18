@@ -3,7 +3,7 @@ import type { ChainableFunction } from '@vitest/runner/utils'
 import type {
   Bench,
   Fn as BenchFunction,
-  FnOptions as BenchOptions,
+  BenchOptions,
   Task as TinybenchTask,
   TaskResult as TinybenchTaskResult,
 } from 'tinybench'
