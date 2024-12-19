@@ -359,6 +359,9 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
     if (mode === 'skip' || mode === 'todo' || state === 'skip' || state === 'todo') {
       return 'skipped'
     }
+    if (state === 'queued') {
+      return 'queued'
+    }
     if (state == null || state === 'run' || state === 'only') {
       return 'pending'
     }
@@ -518,7 +521,7 @@ function buildOptions(
   }
 }
 
-export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
+export type TestSuiteState = 'skipped' | 'pending' | 'queued' | 'failed' | 'passed'
 
 export type TestResult =
   | TestResultPassed

@@ -1,3 +1,5 @@
+// TODO: Remove once Reporter API implements these life cycles
+
 import type { File, Task, TaskResultPack, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import { getTests } from '@vitest/runner/utils'

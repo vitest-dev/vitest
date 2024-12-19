@@ -3,15 +3,13 @@ import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
-import type { TestModule } from '../reporters/reported-tasks'
+import type { TestCase, TestModule } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
-import type { TestModule } from '../reporters/reported-tasks'
 
 export interface Reporter {
   onInit?: (ctx: Vitest) => void
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
-  onTestModuleQueued?: (file: TestModule) => Awaitable<void>
   onCollected?: (files?: File[]) => Awaitable<void>
   onFinished?: (
     files: File[],
@@ -33,4 +31,11 @@ export interface Reporter {
     errors: SerializedError[],
     reason: 'passed' | 'interrupted' | 'failed'
   ) => Awaitable<void>
+  onTestModuleQueued?: (testModule: TestModule) => Awaitable<void>
+  onTestModulePrepare?: (testModule: TestModule) => Awaitable<void>
+  onTestModuleFinished?: (testModule: TestModule) => Awaitable<void>
+
+  // TODO: This was planned as onTestFinished, but maybe we could use TestCase in name directly?
+  onTestCasePrepare?: (testCase: TestCase) => Awaitable<void>
+  onTestCaseFinished?: (testCase: TestCase) => Awaitable<void>
 }
