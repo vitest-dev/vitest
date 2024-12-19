@@ -1,17 +1,19 @@
-import type { WorkspaceProject } from 'vitest/node'
 import type { Plugin } from 'vitest/config'
-import { createViteLogger, createViteServer } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
 import c from 'tinyrainbow'
+import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
+import BrowserPlugin from './plugin'
 import { setupBrowserRpc } from './rpc'
 import { BrowserServer } from './server'
-import BrowserPlugin from './plugin'
 
-export type { BrowserServer } from './server'
+export { distRoot } from './constants'
 export { createBrowserPool } from './pool'
 
+export type { BrowserServer } from './server'
+
 export async function createBrowserServer(
-  project: WorkspaceProject,
+  project: TestProject,
   configFile: string | undefined,
   prePlugins: Plugin[] = [],
   postPlugins: Plugin[] = [],
@@ -32,7 +34,9 @@ export async function createBrowserServer(
 
   const logLevel = (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info'
 
-  const logger = createViteLogger(logLevel)
+  const logger = createViteLogger(project.logger, logLevel, {
+    allowClearScreen: false,
+  })
 
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config

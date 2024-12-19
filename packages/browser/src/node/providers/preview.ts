@@ -1,9 +1,9 @@
-import type { BrowserProvider, WorkspaceProject } from 'vitest/node'
+import type { BrowserProvider, TestProject } from 'vitest/node'
 
 export class PreviewBrowserProvider implements BrowserProvider {
   public name = 'preview' as const
   public supportsParallelism: boolean = false
-  private ctx!: WorkspaceProject
+  private project!: TestProject
   private open = false
 
   getSupportedBrowsers() {
@@ -19,25 +19,26 @@ export class PreviewBrowserProvider implements BrowserProvider {
     return {}
   }
 
-  async initialize(ctx: WorkspaceProject) {
-    this.ctx = ctx
+  async initialize(project: TestProject) {
+    this.project = project
     this.open = false
-    if (ctx.config.browser.headless) {
+    if (project.config.browser.headless) {
       throw new Error(
         'You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser/#configuration',
       )
     }
+    project.ctx.logger.printBrowserBanner(project)
   }
 
   async openPage(_contextId: string, url: string) {
     this.open = true
-    if (!this.ctx.browser) {
+    if (!this.project.browser) {
       throw new Error('Browser is not initialized')
     }
-    const options = this.ctx.browser.vite.config.server
+    const options = this.project.browser.vite.config.server
     const _open = options.open
     options.open = url
-    this.ctx.browser.vite.openBrowser()
+    this.project.browser.vite.openBrowser()
     options.open = _open
   }
 

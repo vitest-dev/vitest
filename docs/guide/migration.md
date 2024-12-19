@@ -5,7 +5,58 @@ outline: deep
 
 # Migration Guide
 
-## Migrating to Vitest 2.0
+## Migrating to Vitest 3.0 {#vitest-3}
+
+### Test Options as a Third Argument
+
+Vitest 3.0 prints a warning if you pass down an object as a third argument to `test` or `describe` functions:
+
+```ts
+test('validation works', () => {
+  // ...
+}, { retry: 3 }) // [!code --]
+
+test('validation works', { retry: 3 }, () => { // [!code ++]
+  // ...
+})
+```
+
+Vitest 4.0 will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
+
+```ts
+test('validation works', () => {
+  // ...
+}, 1000) // Ok ✅
+```
+
+### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
+
+The `Custom` type is now an alias for the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
+
+```ts
+import {
+  RunnerCustomCase, // [!code --]
+  RunnerTestCase, // [!code ++]
+} from 'vitest'
+```
+
+If you are using `getCurrentSuite().custom()`, the `type` of the returned task is now is equal to `'test'`. The `Custom` type will be removed in Vitest 4.
+
+### The `WorkspaceSpec` Type is No Longer Used <Badge type="danger">API</Badge> {#the-workspacespec-type-is-no-longer-used}
+
+In the public API this type was used in custom [sequencers](/config/#sequence-sequencer) before. Please, migrate to [`TestSpecification`](/advanced/api/test-specification) instead.
+
+### `onTestFinished` and `onTestFailed` Now Receive a Context
+
+The [`onTestFinished`](/api/#ontestfinished) and [`onTestFailed`](/api/#ontestfailed) hooks previously received a test result as the first argument. Now, they receive a test context, like `beforeEach` and `afterEach`.
+
+### Changes to `resolveConfig` Type Signature <Badge type="danger">API</Badge> {#changes-to-resolveconfig-type-signature}
+
+The [`resolveConfig`](/advanced/api/#resolveconfig) is now more useful. Instead of accepting already resolved Vite config, it now accepts a user config and returns resolved config.
+
+This function is not used internally and exposed exclusively as a public API.
+
+## Migrating to Vitest 2.0 {#vitest-2}
 
 ### Default Pool is `forks`
 
@@ -287,7 +338,7 @@ It is still possible to mock `process.nextTick` by explicitly specifying it by u
 
 However, mocking `process.nextTick` is not possible when using `--pool=forks`. Use a different `--pool` option if you need `process.nextTick` mocking.
 
-## Migrating from Jest
+## Migrating from Jest {#jest}
 
 Vitest has been designed with a Jest compatible API, in order to make the migration from Jest as simple as possible. Despite those efforts, you may still run into the following differences:
 
@@ -296,6 +347,14 @@ Vitest has been designed with a Jest compatible API, in order to make the migrat
 Jest has their [globals API](https://jestjs.io/docs/api) enabled by default. Vitest does not. You can either enable globals via [the `globals` configuration setting](/config/#globals) or update your code to use imports from the `vitest` module instead.
 
 If you decide to keep globals disabled, be aware that common libraries like [`testing-library`](https://testing-library.com/) will not run auto DOM [cleanup](https://testing-library.com/docs/svelte-testing-library/api/#cleanup).
+
+### `spy.mockReset`
+
+Jest's [`mockReset`](https://jestjs.io/docs/mock-function-api#mockfnmockreset) replaces the mock implementation with an
+empty function that returns `undefined`.
+
+Vitest's [`mockReset`](/api/mock#mockreset) resets the mock implementation to its original.
+That is, resetting a mock created by `vi.fn(impl)` will reset the mock implementation to `impl`.
 
 ### Module Mocks
 

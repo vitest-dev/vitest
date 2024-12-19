@@ -1,21 +1,21 @@
+export { mockObject } from './automocker'
+export type { GlobalConstructors, MockObjectOptions } from './automocker'
+
 export {
-  MockerRegistry,
-  ManualMockedModule,
-  RedirectedModule,
   AutomockedModule,
   AutospiedModule,
+  ManualMockedModule,
+  MockerRegistry,
+  RedirectedModule,
 } from './registry'
-export { mockObject } from './automocker'
-
-export type { GlobalConstructors, MockObjectOptions } from './automocker'
 export type {
-  MockedModule,
-  MockedModuleType,
-  MockedModuleSerialized,
   AutomockedModuleSerialized,
   AutospiedModuleSerialized,
-  RedirectedModuleSerialized,
   ManualMockedModuleSerialized,
+  MockedModule,
+  MockedModuleSerialized,
+  MockedModuleType,
+  RedirectedModuleSerialized,
 } from './registry'
 
 export type {

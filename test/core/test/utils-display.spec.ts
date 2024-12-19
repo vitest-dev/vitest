@@ -1,6 +1,6 @@
 import util from 'node:util'
-import { describe, expect, test } from 'vitest'
 import { format } from '@vitest/utils'
+import { describe, expect, test } from 'vitest'
 
 describe('format', () => {
   const obj = {} as any

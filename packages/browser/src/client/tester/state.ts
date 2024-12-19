@@ -1,6 +1,6 @@
+import type { BrowserRPC } from '@vitest/browser/client'
 import type { WorkerGlobalState } from 'vitest'
 import { parse } from 'flatted'
-import type { BrowserRPC } from '@vitest/browser/client'
 import { getBrowserState } from '../utils'
 
 const config = getBrowserState().config

@@ -1,7 +1,7 @@
+import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config'
 import { writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config'
 import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config'
 
 const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')

@@ -1,8 +1,8 @@
-import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
-import type { ViteDevServer } from 'vite'
 import type { CancelReason } from '@vitest/runner'
+import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { WorkspaceProject } from '../workspace'
+import type { ViteDevServer } from 'vite'
+import type { TestProject } from '../project'
 import type { ApiConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
@@ -32,7 +32,7 @@ export interface BrowserProvider {
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
-    ctx: WorkspaceProject,
+    ctx: TestProject,
     options: BrowserProviderInitializationOptions
   ): Awaitable<void>
 }
@@ -156,8 +156,13 @@ export interface BrowserConfigOptions {
 
   /**
    * Scripts injected into the tester iframe.
+   * @deprecated Will be removed in the future, use `testerHtmlPath` instead.
    */
   testerScripts?: BrowserScript[]
+  /**
+   * Path to the index.html file that will be used to run tests.
+   */
+  testerHtmlPath?: string
 
   /**
    * Scripts injected into the main window.
@@ -175,7 +180,7 @@ export interface BrowserConfigOptions {
 export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
-  project: WorkspaceProject
+  project: TestProject
   contextId: string
 }
 
@@ -189,6 +194,7 @@ export interface BrowserServerStateContext {
 export interface BrowserOrchestrator {
   createTesters: (files: string[]) => Promise<void>
   onCancel: (reason: CancelReason) => Promise<void>
+  $close: () => void
 }
 
 export interface BrowserServerState {

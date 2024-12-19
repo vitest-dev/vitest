@@ -44,6 +44,13 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Diff LICENSE.md
+        run: |
+          if ! git diff --exit-code packages/vitest/LICENSE.md; then
+            echo "::error::LICENSE.md has changed. Please commit the updated LICENSE.md file after the build."
+            exit 1
+          fi
+
       # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
       - name: Check workflow files
         run: |
@@ -61,7 +68,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@c3a1bb2c992d77180ae65be6ae6c166cf40f857c # v45.0.3
+        uses: tj-actions/changed-files@bab30c2299617f6615ec02a68b9a40d10bd21366 # v45.0.5
         with:
           files: |
             docs/**
@@ -101,7 +108,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps --only-shell
 
       - name: Build
         run: pnpm run build
@@ -150,8 +157,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: needs.changed.outputs.should_skip != 'true'
-        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
+        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps --only-shell
 
       - name: Build
         run: pnpm run build

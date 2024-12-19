@@ -1,27 +1,27 @@
+import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Profiler } from 'node:inspector'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import type { EncodedSourceMap, FetchResult } from 'vite-node'
+import type { AfterSuiteRunMeta } from 'vitest'
+import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
-import v8ToIstanbul from 'v8-to-istanbul'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import remapping from '@ampproject/remapping'
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
-import type { CoverageMap } from 'istanbul-lib-coverage'
+import MagicString from 'magic-string'
+import { parseModule } from 'magicast'
 import { normalize, resolve } from 'pathe'
 import { provider } from 'std-env'
-import c from 'tinyrainbow'
-import createDebug from 'debug'
-import MagicString from 'magic-string'
 import TestExclude from 'test-exclude'
-import remapping from '@ampproject/remapping'
-import { BaseCoverageProvider } from 'vitest/coverage'
+import c from 'tinyrainbow'
+import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
-import type { AfterSuiteRunMeta } from 'vitest'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest, WorkspaceProject } from 'vitest/node'
-import type { EncodedSourceMap, FetchResult } from 'vite-node'
 
-import { parseModule } from 'magicast'
+import { BaseCoverageProvider } from 'vitest/coverage'
 import { version } from '../package.json' with { type: 'json' }
 
 type TransformResults = Map<string, FetchResult>
@@ -288,7 +288,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
   private async convertCoverage(
     coverage: RawCoverage,
-    project: WorkspaceProject = this.ctx.getCoreWorkspaceProject(),
+    project: TestProject = this.ctx.getRootProject(),
     transformMode?: AfterSuiteRunMeta['transformMode'],
   ): Promise<CoverageMap> {
     let fetchCache = project.vitenode.fetchCache

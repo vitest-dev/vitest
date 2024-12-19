@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
+import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 
 export const fill: UserEventCommand<UserEvent['fill']> = async (
   context,
@@ -12,7 +12,7 @@ export const fill: UserEventCommand<UserEvent['fill']> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
     const element = iframe.locator(selector)
-    await element.fill(text, { timeout: 1000, ...options })
+    await element.fill(text, options)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser

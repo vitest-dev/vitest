@@ -1,8 +1,8 @@
-import type { BirpcReturn } from 'birpc'
 import type { File, TaskResultPack } from '@vitest/runner'
-import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { BirpcReturn } from 'birpc'
 import type { SerializedConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
+import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
 
 interface SourceMap {
   file: string
@@ -44,7 +44,8 @@ export interface WebSocketHandlers {
   ) => Promise<TransformResultWithSource | undefined>
   readTestFile: (id: string) => Promise<string | null>
   saveTestFile: (id: string, content: string) => Promise<void>
-  rerun: (files: string[]) => Promise<void>
+  rerun: (files: string[], resetTestNamePattern?: boolean) => Promise<void>
+  rerunTask: (id: string) => Promise<void>
   updateSnapshot: (file?: File) => Promise<void>
   getUnhandledErrors: () => unknown[]
 }

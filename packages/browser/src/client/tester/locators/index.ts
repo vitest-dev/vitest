@@ -1,3 +1,4 @@
+import type { BrowserRPC } from '@vitest/browser/client'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -7,11 +8,10 @@ import type {
   UserEventFillOptions,
   UserEventHoverOptions,
 } from '@vitest/browser/context'
+import type { WorkerGlobalState } from 'vitest'
+import type { BrowserRunnerState } from '../../utils'
 import { page, server } from '@vitest/browser/context'
-import type { BrowserRPC } from '@vitest/browser/client'
 import {
-  Ivya,
-  type ParsedSelector,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -19,10 +19,10 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
+  Ivya,
+  type ParsedSelector,
 } from 'ivya'
-import type { WorkerGlobalState } from 'vitest'
-import type { BrowserRunnerState } from '../../utils'
-import { getBrowserState, getWorkerState } from '../../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
@@ -185,6 +185,14 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
+  public toString(): string {
+    return this.selector
+  }
+
+  public toJSON(): string {
+    return this.selector
+  }
+
   private get state(): BrowserRunnerState {
     return getBrowserState()
   }
@@ -202,11 +210,11 @@ export abstract class Locator {
       || this.worker.current?.file?.filepath
       || undefined
 
-    return this.rpc.triggerCommand<T>(
+    return ensureAwaited(() => this.rpc.triggerCommand<T>(
       this.state.contextId,
       command,
       filepath,
       args,
-    )
+    ))
   }
 }

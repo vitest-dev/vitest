@@ -1,10 +1,14 @@
+import type { FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, isObject } from '@vitest/utils'
 import { getFixture } from './map'
-import type { FixtureOptions, TestContext } from './types/tasks'
 
 export interface FixtureItem extends FixtureOptions {
   prop: string
   value: any
+  /**
+   * Indicated if the injected value should be preferred over the fixture value
+   */
+  injected?: boolean
   /**
    * Indicates whether the fixture is a function
    */
@@ -17,11 +21,12 @@ export interface FixtureItem extends FixtureOptions {
 
 export function mergeContextFixtures(
   fixtures: Record<string, any>,
-  context: { fixtures?: FixtureItem[] } = {},
+  context: { fixtures?: FixtureItem[] },
+  inject: (key: string) => unknown,
 ): {
     fixtures?: FixtureItem[]
   } {
-  const fixtureOptionKeys = ['auto']
+  const fixtureOptionKeys = ['auto', 'injected']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
     ([prop, value]) => {
       const fixtureItem = { value } as FixtureItem
@@ -34,7 +39,10 @@ export function mergeContextFixtures(
       ) {
         // fixture with options
         Object.assign(fixtureItem, value[1])
-        fixtureItem.value = value[0]
+        const userValue = value[0]
+        fixtureItem.value = fixtureItem.injected
+          ? (inject(prop) ?? userValue)
+          : userValue
       }
 
       fixtureItem.prop = prop

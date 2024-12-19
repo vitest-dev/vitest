@@ -1,21 +1,23 @@
+export { type ChainableFunction, createChainable } from './chain'
 export {
-  interpretTaskModes,
-  someTasksAreOnly,
-  generateHash,
   calculateSuiteHash,
   createFileTask,
+  generateFileHash,
+  generateHash,
+  interpretTaskModes,
+  someTasksAreOnly,
 } from './collect'
+export { limitConcurrency } from './limit-concurrency'
 export { partitionSuiteChildren } from './suite'
 export {
-  isAtomTest,
-  getTests,
-  getTasks,
-  getSuites,
-  hasTests,
-  hasFailed,
-  getNames,
   getFullName,
+  getNames,
+  getSuites,
+  getTasks,
   getTestName,
+  getTests,
+  hasFailed,
+  hasTests,
+  isAtomTest,
+  isTestCase,
 } from './tasks'
-export { createChainable, type ChainableFunction } from './chain'
-export { limitConcurrency } from './limit-concurrency'

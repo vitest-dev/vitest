@@ -22,8 +22,7 @@ test('custom', ({ task }) => {
 
 Once a test is completed, Vitest will send a task including the result and `meta` to the Node.js process using RPC. To intercept and process this task, you can utilize the `onTaskUpdate` method available in your reporter implementation:
 
-```ts
-// custom-reporter.js
+```ts [custom-reporter.js]
 export default {
   // you can intercept packs if needed
   onTaskUpdate(packs) {

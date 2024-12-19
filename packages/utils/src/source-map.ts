@@ -1,13 +1,13 @@
-import { resolve } from 'pathe'
 import type { SourceMapInput } from '@jridgewell/trace-mapping'
-import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
 import type { ErrorWithDiff, ParsedStack } from './types'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
+import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
 
 export {
-  TraceMap,
-  originalPositionFor,
   generatedPositionFor,
+  originalPositionFor,
+  TraceMap,
 } from '@jridgewell/trace-mapping'
 export type { SourceMapInput } from '@jridgewell/trace-mapping'
 
@@ -177,6 +177,16 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
     line: Number.parseInt(lineNumber),
     column: Number.parseInt(columnNumber),
   }
+}
+
+export function createStackString(stacks: ParsedStack[]): string {
+  return stacks.map((stack) => {
+    const line = `${stack.file}:${stack.line}:${stack.column}`
+    if (stack.method) {
+      return `    at ${stack.method}(${line})`
+    }
+    return `    at ${line}`
+  }).join('\n')
 }
 
 export function parseStacktrace(

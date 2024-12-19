@@ -1,9 +1,9 @@
+import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
+import type { TestSequencer } from './types'
 import { relative, resolve } from 'pathe'
 import { slash } from 'vite-node/utils'
 import { hash } from '../hash'
-import type { Vitest } from '../core'
-import type { WorkspaceSpec } from '../pool'
-import type { TestSequencer } from './types'
 
 export class BaseSequencer implements TestSequencer {
   protected ctx: Vitest
@@ -13,7 +13,7 @@ export class BaseSequencer implements TestSequencer {
   }
 
   // async so it can be extended by other sequelizers
-  public async shard(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
+  public async shard(files: TestSpecification[]): Promise<TestSpecification[]> {
     const { config } = this.ctx
     const { index, count } = config.shard!
     const shardSize = Math.ceil(files.length / count)
@@ -34,7 +34,7 @@ export class BaseSequencer implements TestSequencer {
   }
 
   // async so it can be extended by other sequelizers
-  public async sort(files: WorkspaceSpec[]): Promise<WorkspaceSpec[]> {
+  public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const cache = this.ctx.cache
     return [...files].sort((a, b) => {
       const keyA = `${a.project.name}:${relative(this.ctx.config.root, a.moduleId)}`

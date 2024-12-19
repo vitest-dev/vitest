@@ -1,8 +1,8 @@
-import { stripVTControlCharacters } from 'node:util'
-import { expect, test, vi } from 'vitest'
 import type { DiffOptions } from '@vitest/utils/diff'
-import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/runner'
+import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
+import { expect, test, vi } from 'vitest'
 import { displayDiff } from '../../../packages/vitest/src/node/error'
 
 test('displays string diff', () => {
@@ -28,7 +28,7 @@ test('displays object diff', () => {
     - Expected
     + Received
 
-      Object {
+      {
         "a": 1,
     -   "b": 2,
     +   "b": 3,
@@ -47,7 +47,7 @@ test('display truncated object diff', () => {
     - Expected
     + Received
 
-      Object {
+      {
         "a": 1,
     -   "b": 2,
     -   "c": 3,
@@ -137,7 +137,7 @@ test('display truncated multiple items array diff', () => {
     - Expected
     + Received
 
-      Array [
+      [
     -   "foo",
     -   "foo",
     +   "bar",
@@ -152,7 +152,7 @@ test('asymmetric matcher in object', () => {
     "- Expected
     + Received
 
-      Object {
+      {
     -   "x": 1,
     +   "x": 0,
         "y": Anything,
@@ -171,7 +171,7 @@ test('asymmetric matcher in object with truncated diff', () => {
     "- Expected
     + Received
 
-      Object {
+      {
         "w": Anything,
     -   "x": 1,
     +   "x": 0,
@@ -184,7 +184,7 @@ test('asymmetric matcher in array', () => {
     "- Expected
     + Received
 
-      Array [
+      [
     -   1,
     +   0,
         Anything,
@@ -203,7 +203,7 @@ test('asymmetric matcher in array  with truncated diff', () => {
     "- Expected
     + Received
 
-      Array [
+      [
     -   1,
     +   0,
     ... Diff result is truncated"
@@ -220,13 +220,13 @@ test('asymmetric matcher in nested', () => {
     "- Expected
     + Received
 
-      Array [
-        Object {
+      [
+        {
     -     "x": 1,
     +     "x": 0,
           "y": Anything,
         },
-        Array [
+        [
     -     1,
     +     0,
           Anything,
@@ -246,8 +246,8 @@ test('asymmetric matcher in nested with truncated diff', () => {
     "- Expected
     + Received
 
-      Array [
-        Object {
+      [
+        {
     -     "x": 1,
     +     "x": 0,
           "y": Anything,
@@ -321,8 +321,8 @@ test('getter only property', () => {
     "- Expected
     + Received
 
-      Object {
-        "getOnlyProp": Object {
+      {
+        "getOnlyProp": {
           "a": "b",
         },
     -   "normalProp": 2,

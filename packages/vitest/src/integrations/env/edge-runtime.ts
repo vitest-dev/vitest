@@ -1,6 +1,6 @@
 import type { Environment } from '../../types/environment'
-import { populateGlobal } from './utils'
 import { KEYS } from './jsdom-keys'
+import { populateGlobal } from './utils'
 
 export default <Environment>{
   name: 'edge-runtime',

@@ -1,16 +1,16 @@
-import fs from 'node:fs'
-import c from 'tinyrainbow'
-import * as pathe from 'pathe'
 import type { File, TaskResultPack } from '@vitest/runner'
-import { getFullName, getTasks } from '@vitest/runner/utils'
+import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
 import type { UserConsoleLog } from '../../../../types/general'
+import fs from 'node:fs'
+import { getFullName, getTasks } from '@vitest/runner/utils'
+import * as pathe from 'pathe'
+import c from 'tinyrainbow'
 import { BaseReporter } from '../../base'
 import { getStateSymbol } from '../../renderers/utils'
-import type { BenchmarkResult } from '../../../../runtime/types/benchmark'
 import {
-  type TableRendererOptions,
   createTableRenderer,
   renderTree,
+  type TableRendererOptions,
 } from './tableRender'
 
 export class TableReporter extends BaseReporter {
@@ -76,12 +76,13 @@ export class TableReporter extends BaseReporter {
         && task.type === 'suite'
         && task.result?.state
         && task.result?.state !== 'run'
+        && task.result?.state !== 'queued'
       ) {
         // render static table when all benches inside single suite are finished
         const benches = task.tasks.filter(t => t.meta.benchmark)
         if (
           benches.length > 0
-          && benches.every(t => t.result?.state !== 'run')
+          && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')
         ) {
           let title = ` ${getStateSymbol(task)} ${getFullName(
             task,

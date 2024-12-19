@@ -1,15 +1,6 @@
-import {
-  format,
-  isNegativeNaN,
-  isObject,
-  objDisplay,
-  objectAttr,
-  toArray,
-} from '@vitest/utils'
-import { parseSingleStack } from '@vitest/utils/source-map'
+import type { FixtureItem } from './fixture'
+import type { VitestRunner } from './types/runner'
 import type {
-  Custom,
-  CustomAPI,
   File,
   Fixtures,
   RunMode,
@@ -26,19 +17,26 @@ import type {
   TestFunction,
   TestOptions,
 } from './types/tasks'
-import type { VitestRunner } from './types/runner'
-import { createChainable } from './utils/chain'
 import {
-  collectTask,
+  format,
+  isNegativeNaN,
+  isObject,
+  objDisplay,
+  objectAttr,
+  toArray,
+} from '@vitest/utils'
+import { parseSingleStack } from '@vitest/utils/source-map'
+import {
   collectorContext,
+  collectTask,
   createTestContext,
   runWithSuite,
   withTimeout,
 } from './context'
-import { getHooks, setFixture, setFn, setHooks } from './map'
-import type { FixtureItem } from './fixture'
 import { mergeContextFixtures, withFixtures } from './fixture'
+import { getHooks, setFixture, setFn, setHooks } from './map'
 import { getCurrentTest } from './test-state'
+import { createChainable } from './utils/chain'
 
 /**
  * Creates a suite of tests, allowing for grouping and hierarchical organization of tests.
@@ -207,8 +205,7 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  const api = config.shuffle ? suite.shuffle : suite
-  return api('', { concurrent: config.concurrent }, () => {})
+  return suite('', { concurrent: config.concurrent }, () => {})
 }
 
 export function clearCollectorContext(
@@ -256,8 +253,9 @@ function parseArguments<T extends (...args: any[]) => any>(
         'Cannot use two objects as arguments. Please provide options and a function callback in that order.',
       )
     }
-    // TODO: more info, add a name
-    // console.warn('The third argument is deprecated. Please use the second argument for options.')
+    console.warn(
+      'Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration',
+    )
     options = optionsOrTest
   }
   // it('', () => {}, 1000)
@@ -292,11 +290,10 @@ function createSuiteCollector(
   name: string,
   factory: SuiteFactory = () => {},
   mode: RunMode,
-  shuffle?: boolean,
   each?: boolean,
   suiteOptions?: TestOptions,
 ) {
-  const tasks: (Test | Custom | Suite | SuiteCollector)[] = []
+  const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -304,14 +301,14 @@ function createSuiteCollector(
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
-    const task: Custom = {
+    const task: Test = {
       id: '',
       name,
       suite: undefined!,
       each: options.each,
       fails: options.fails,
       context: undefined!,
-      type: 'custom',
+      type: 'test',
       file: undefined!,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
@@ -331,9 +328,7 @@ function createSuiteCollector(
     ) {
       task.concurrent = true
     }
-    if (shuffle) {
-      task.shuffle = true
-    }
+    task.shuffle = suiteOptions?.shuffle
 
     const context = createTestContext(task, runner)
     // create test context
@@ -425,7 +420,7 @@ function createSuiteCollector(
       mode,
       each,
       file: undefined!,
-      shuffle,
+      shuffle: suiteOptions?.shuffle,
       tasks: [],
       meta: Object.create(null),
       concurrent: suiteOptions?.concurrent,
@@ -499,12 +494,11 @@ function withAwaitAsyncAssetions<T extends (...args: any[]) => any>(fn: T, task:
 }
 
 function createSuite() {
-  // eslint-disable-next-line unicorn/consistent-function-scoping
   function suiteFn(
     this: Record<string, boolean | undefined>,
     name: string | Function,
     factoryOrOptions?: SuiteFactory | TestOptions,
-    optionsOrFactory: number | TestOptions | SuiteFactory = {},
+    optionsOrFactory?: number | TestOptions | SuiteFactory,
   ) {
     const mode: RunMode = this.only
       ? 'only'
@@ -524,8 +518,10 @@ function createSuite() {
     const isSequentialSpecified = options.sequential || this.sequential || options.concurrent === false
 
     // inherit options from current suite
-    if (currentSuite?.options) {
-      options = { ...currentSuite.options, ...options }
+    options = {
+      ...currentSuite?.options,
+      ...options,
+      shuffle: this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle,
     }
 
     // inherit concurrent / sequential from suite
@@ -538,7 +534,6 @@ function createSuite() {
       formatName(name),
       factory,
       mode,
-      this.shuffle,
       this.each,
       options,
     )
@@ -569,7 +564,7 @@ function createSuite() {
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -613,7 +608,7 @@ function createSuite() {
 export function createTaskCollector(
   fn: (...args: any[]) => any,
   context?: Record<string, unknown>,
-): CustomAPI {
+): TestAPI {
   const taskFn = fn as any
 
   taskFn.each = function <T>(
@@ -641,7 +636,7 @@ export function createTaskCollector(
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -711,7 +706,11 @@ export function createTaskCollector(
   }
 
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
-    const _context = mergeContextFixtures(fixtures, context)
+    const _context = mergeContextFixtures(
+      fixtures,
+      context || {},
+      (key: string) => getRunner().injectValue?.(key),
+    )
 
     return createTest(function fn(
       name: string | Function,
@@ -730,7 +729,7 @@ export function createTaskCollector(
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
     taskFn,
-  ) as CustomAPI
+  ) as TestAPI
 
   if (context) {
     (_test as any).mergeContext(context)

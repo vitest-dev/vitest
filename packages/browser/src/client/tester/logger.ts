@@ -41,10 +41,8 @@ export function setupConsoleLogSpy() {
     trace(...args)
     const content = processLog(args)
     const error = new Error('$$Trace')
-    const stack = (error.stack || '')
-      .split('\n')
-      .slice(error.stack?.includes('$$Trace') ? 2 : 1)
-      .join('\n')
+    const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
+    const stack = processor(error.stack || '')
     sendLog('stderr', `${content}\n${stack}`, true)
   }
 

@@ -1,14 +1,12 @@
 import type { Awaitable } from '@vitest/utils'
-import { getSafeTimers } from '@vitest/utils'
+import type { VitestRunner } from './types/runner'
 import type {
-  Custom,
-  ExtendedContext,
   RuntimeContext,
   SuiteCollector,
-  TaskContext,
   Test,
+  TestContext,
 } from './types/tasks'
-import type { VitestRunner } from './types/runner'
+import { getSafeTimers } from '@vitest/utils'
 import { PendingError } from './errors'
 
 export const collectorContext: RuntimeContext = {
@@ -44,7 +42,6 @@ export function withTimeout<T extends (...args: any[]) => any>(
   // this function name is used to filter error in test/cli/test/fails.test.ts
   return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     return Promise.race([
-      fn(...args),
       new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
           clearTimeout(timer)
@@ -53,36 +50,43 @@ export function withTimeout<T extends (...args: any[]) => any>(
         // `unref` might not exist in browser
         timer.unref?.()
       }),
+      Promise.resolve(fn(...args)).then((result) => {
+        return new Promise(resolve => setTimeout(resolve, 0, result))
+      }),
     ]) as Awaitable<void>
   }) as T
 }
 
-export function createTestContext<T extends Test | Custom>(
-  test: T,
+export function createTestContext(
+  test: Test,
   runner: VitestRunner,
-): ExtendedContext<T> {
+): TestContext {
   const context = function () {
     throw new Error('done() callback is deprecated, use promise instead')
-  } as unknown as TaskContext<T>
+  } as unknown as TestContext
 
   context.task = test
 
-  context.skip = () => {
+  context.skip = (note?: string) => {
     test.pending = true
-    throw new PendingError('test is skipped; abort execution', test)
+    throw new PendingError('test is skipped; abort execution', test, note)
   }
 
-  context.onTestFailed = (fn) => {
+  context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
-    test.onFailed.push(fn)
+    test.onFailed.push(
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+    )
   }
 
-  context.onTestFinished = (fn) => {
+  context.onTestFinished = (handler, timeout) => {
     test.onFinished ||= []
-    test.onFinished.push(fn)
+    test.onFinished.push(
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+    )
   }
 
-  return (runner.extendTaskContext?.(context) as ExtendedContext<T>) || context
+  return runner.extendTaskContext?.(context) || context
 }
 
 function makeTimeoutMsg(isHook: boolean, timeout: number) {

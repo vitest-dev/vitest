@@ -1,7 +1,12 @@
-import vm from 'node:vm'
-import { pathToFileURL } from 'node:url'
-import fs from 'node:fs'
+import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { ModuleCacheMap } from 'vite-node/client'
+import type { WorkerGlobalState } from '../types/worker'
+import type { ExternalModulesExecutor } from './external-executor'
+import fs from 'node:fs'
+import { pathToFileURL } from 'node:url'
+import vm from 'node:vm'
+import { processError } from '@vitest/utils/error'
+import { normalize, relative } from 'pathe'
 import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
 import {
   isInternalRequest,
@@ -9,13 +14,10 @@ import {
   isPrimitive,
   toFilePath,
 } from 'vite-node/utils'
-import type { ViteNodeRunnerOptions } from 'vite-node'
-import { normalize, relative } from 'pathe'
-import { processError } from '@vitest/utils/error'
 import { distDir } from '../paths'
-import type { WorkerGlobalState } from '../types/worker'
 import { VitestMocker } from './mocker'
-import type { ExternalModulesExecutor } from './external-executor'
+
+const normalizedDistDir = normalize(distDir)
 
 const { readFileSync } = fs
 
@@ -112,7 +114,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
       }
       // always externalize Vitest because we import from there before running tests
       // so we already have it cached by Node.js
-      if (id.includes(distDir)) {
+      if (id.includes(distDir) || id.includes(normalizedDistDir)) {
         const { path } = toFilePath(id, state().config.root)
         const externalize = pathToFileURL(path).toString()
         externalizeMap.set(id, externalize)

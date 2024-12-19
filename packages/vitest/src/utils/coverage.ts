@@ -1,12 +1,12 @@
-import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
-import { relative, resolve } from 'pathe'
-import mm from 'micromatch'
-import c from 'tinyrainbow'
 import type { CoverageMap } from 'istanbul-lib-coverage'
-import { coverageConfigDefaults } from '../defaults'
-import type { AfterSuiteRunMeta } from '../types/general'
 import type { Vitest } from '../node/core'
 import type { BaseCoverageOptions, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
+import type { AfterSuiteRunMeta } from '../types/general'
+import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
+import mm from 'micromatch'
+import { relative, resolve } from 'pathe'
+import c from 'tinyrainbow'
+import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
@@ -363,20 +363,49 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         for (const thresholdKey of THRESHOLD_KEYS) {
           const threshold = thresholds[thresholdKey]
 
-          if (threshold !== undefined) {
+          if (threshold === undefined) {
+            continue
+          }
+
+          /**
+           * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
+           * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
+           */
+          if (threshold >= 0) {
             const coverage = summary.data[thresholdKey].pct
 
             if (coverage < threshold) {
               process.exitCode = 1
 
-              /*
+              /**
                * Generate error message based on perFile flag:
                * - ERROR: Coverage for statements (33.33%) does not meet threshold (85%) for src/math.ts
                * - ERROR: Coverage for statements (50%) does not meet global threshold (85%)
                */
-              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${
-                name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
+              let errorMessage = `ERROR: Coverage for ${thresholdKey} (${coverage}%) does not meet ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
               } threshold (${threshold}%)`
+
+              if (this.options.thresholds?.perFile && file) {
+                errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
+              }
+
+              this.ctx.logger.error(errorMessage)
+            }
+          }
+          else {
+            const uncovered = summary.data[thresholdKey].total - summary.data[thresholdKey].covered
+            const absoluteThreshold = threshold * -1
+
+            if (uncovered > absoluteThreshold) {
+              process.exitCode = 1
+
+              /**
+               * Generate error message based on perFile flag:
+               * - ERROR: Uncovered statements (33) exceed threshold (30) for src/math.ts
+               * - ERROR: Uncovered statements (33) exceed global threshold (30)
+               */
+              let errorMessage = `ERROR: Uncovered ${thresholdKey} (${uncovered}) exceed ${name === GLOBAL_THRESHOLDS_KEY ? name : `"${name}"`
+              } threshold (${absoluteThreshold})`
 
               if (this.options.thresholds?.perFile && file) {
                 errorMessage += ` for ${relative('./', file).replace(/\\/g, '/')}`
@@ -416,12 +445,30 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
 
       for (const key of THRESHOLD_KEYS) {
         const threshold = thresholds[key] ?? 100
-        const actual = Math.min(
-          ...summaries.map(summary => summary[key].pct),
-        )
+        /**
+         * Positive thresholds are treated as minimum coverage percentages (X means: X% of lines must be covered),
+         * while negative thresholds are treated as maximum uncovered counts (-X means: X lines may be uncovered).
+         */
+        if (threshold >= 0) {
+          const actual = Math.min(
+            ...summaries.map(summary => summary[key].pct),
+          )
 
-        if (actual > threshold) {
-          thresholdsToUpdate.push([key, actual])
+          if (actual > threshold) {
+            thresholdsToUpdate.push([key, actual])
+          }
+        }
+        else {
+          const absoluteThreshold = threshold * -1
+          const actual = Math.max(
+            ...summaries.map(summary => summary[key].total - summary[key].covered),
+          )
+
+          if (actual < absoluteThreshold) {
+            // If everything was covered, set new threshold to 100% (since a threshold of 0 would be considered as 0%)
+            const updatedThreshold = actual === 0 ? 100 : actual * -1
+            thresholdsToUpdate.push([key, updatedThreshold])
+          }
         }
       }
 

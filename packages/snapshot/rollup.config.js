@@ -1,9 +1,9 @@
 import { builtinModules, createRequire } from 'node:module'
-import esbuild from 'rollup-plugin-esbuild'
-import nodeResolve from '@rollup/plugin-node-resolve'
-import dts from 'rollup-plugin-dts'
 import commonjs from '@rollup/plugin-commonjs'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
+import dts from 'rollup-plugin-dts'
+import esbuild from 'rollup-plugin-esbuild'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')

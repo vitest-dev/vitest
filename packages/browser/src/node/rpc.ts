@@ -1,15 +1,15 @@
+import type { ErrorWithDiff } from 'vitest'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestModule } from 'vitest/node'
+import type { WebSocket } from 'ws'
+import type { BrowserServer } from './server'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
-import { dirname } from 'pathe'
+import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import type { WebSocket } from 'ws'
-import { WebSocketServer } from 'ws'
-import type { BrowserCommandContext } from 'vitest/node'
+import { dirname } from 'pathe'
 import { createDebugger, isFileServingAllowed } from 'vitest/node'
-import type { ErrorWithDiff } from 'vitest'
-import { ServerMockResolver } from '@vitest/mocker/node'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
-import type { BrowserServer } from './server'
+import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
 
@@ -75,6 +75,11 @@ export function setupBrowserRpc(server: BrowserServer) {
           }
           ctx.state.catchError(error, type)
         },
+        async onQueued(file) {
+          ctx.state.collectFiles(project, [file])
+          const testModule = ctx.state.getReportedEntity(file) as TestModule
+          await ctx.report('onTestModuleQueued', testModule)
+        },
         async onCollected(files) {
           ctx.state.collectFiles(project, files)
           await ctx.report('onCollected', files)
@@ -90,7 +95,9 @@ export function setupBrowserRpc(server: BrowserServer) {
           return ctx.report('onUserConsoleLog', log)
         },
         resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath(testPath)
+          return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+            config: project.getSerializableConfig(),
+          })
         },
         resolveSnapshotRawPath(testPath, rawPath) {
           return ctx.snapshot.resolveRawPath(testPath, rawPath)

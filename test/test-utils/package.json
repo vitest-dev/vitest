@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "tinyexec": "^0.3.0",
+    "tinyrainbow": "^1.2.0",
     "vite": "latest",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"

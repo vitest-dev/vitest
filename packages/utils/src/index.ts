@@ -1,56 +1,56 @@
 export {
-  notNullish,
-  assertTypes,
-  isPrimitive,
-  slash,
-  parseRegexp,
-  isObject,
-  getType,
-  getOwnProperties,
-  deepClone,
-  clone,
-  noop,
-  objectAttr,
-  createDefer,
-  getCallLastIndex,
-  isNegativeNaN,
-  createSimpleStackTrace,
-  toArray,
-  deepMerge,
-} from './helpers'
-export type { DeferPromise } from './helpers'
-
-export { getSafeTimers, setSafeTimers } from './timers'
-export type { SafeTimers } from './timers'
-
-export { shuffle } from './random'
-export {
-  stringify,
   format,
   inspect,
   objDisplay,
+  stringify,
 } from './display'
 export type { StringifyOptions } from './display'
+
 export {
-  positionToOffset,
-  offsetToLineNumber,
-  lineSplitRE,
-} from './offset'
+  assertTypes,
+  clone,
+  createDefer,
+  createSimpleStackTrace,
+  deepClone,
+  deepMerge,
+  getCallLastIndex,
+  getOwnProperties,
+  getType,
+  isNegativeNaN,
+  isObject,
+  isPrimitive,
+  noop,
+  notNullish,
+  objectAttr,
+  parseRegexp,
+  slash,
+  toArray,
+} from './helpers'
+export type { DeferPromise } from './helpers'
+
 export { highlight } from './highlight'
+export { nanoid } from './nanoid'
+export {
+  lineSplitRE,
+  offsetToLineNumber,
+  positionToOffset,
+} from './offset'
+export { shuffle } from './random'
+export { getSafeTimers, setSafeTimers } from './timers'
+
+export type { SafeTimers } from './timers'
 
 export type {
-  Awaitable,
-  Nullable,
-  Arrayable,
   ArgumentsType,
-  MergeInsertions,
-  DeepMerge,
-  MutableArray,
+  Arrayable,
+  Awaitable,
   Constructable,
-  ParsedStack,
+  DeepMerge,
   ErrorWithDiff,
+  MergeInsertions,
+  MutableArray,
+  Nullable,
+  ParsedStack,
   SerializedError,
   TestError,
 } from './types'
-
-export { nanoid } from './nanoid'

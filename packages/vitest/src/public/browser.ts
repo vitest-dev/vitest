@@ -1,13 +1,13 @@
-export { startTests, collectTests, processError } from '@vitest/runner'
 export {
-  setupCommonEnv,
-  loadDiffConfig,
-  loadSnapshotSerializers,
-} from '../runtime/setup-common'
-export {
-  takeCoverageInsideWorker,
-  stopCoverageInsideWorker,
   getCoverageProvider,
   startCoverageInsideWorker,
+  stopCoverageInsideWorker,
+  takeCoverageInsideWorker,
 } from '../integrations/coverage'
 export * as SpyModule from '../integrations/spy'
+export {
+  loadDiffConfig,
+  loadSnapshotSerializers,
+  setupCommonEnv,
+} from '../runtime/setup-common'
+export { collectTests, processError, startTests } from '@vitest/runner'

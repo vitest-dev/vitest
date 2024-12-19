@@ -1,4 +1,3 @@
-import { defaultBrowserPort, defaultPort } from '../../constants'
 import type { ApiConfig } from '../types/config'
 import type {
   ForksOptions,
@@ -7,6 +6,7 @@ import type {
   WorkerContextOptions,
 } from '../types/pool-options'
 import type { CliOptions } from './cli-api'
+import { defaultBrowserPort, defaultPort } from '../../constants'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
 | never
@@ -415,11 +415,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
       screenshotDirectory: null,
       screenshotFailures: null,
       locators: null,
+      testerHtmlPath: null,
     },
   },
   pool: {
     description:
-      'Specify pool, if not running in the browser (default: `threads`)',
+      'Specify pool, if not running in the browser (default: `forks`)',
     argument: '<pool>',
     subcommands: null, // don't support custom objects
   },
@@ -598,9 +599,58 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   diff: {
     description:
-      'Path to a diff config that will be used to generate diff interface',
+      'DiffOptions object or a path to a module which exports DiffOptions object',
     argument: '<path>',
-    normalize: true,
+    subcommands: {
+      aAnnotation: {
+        description: 'Annotation for expected lines (default: `Expected`)',
+        argument: '<annotation>',
+      },
+      aIndicator: {
+        description: 'Indicator for expected lines (default: `-`)',
+        argument: '<indicator>',
+      },
+      bAnnotation: {
+        description: 'Annotation for received lines (default: `Received`)',
+        argument: '<annotation>',
+      },
+      bIndicator: {
+        description: 'Indicator for received lines (default: `+`)',
+        argument: '<indicator>',
+      },
+      commonIndicator: {
+        description: 'Indicator for common lines (default: ` `)',
+        argument: '<indicator>',
+      },
+      contextLines: {
+        description: 'Number of lines of context to show around each change (default: `5`)',
+        argument: '<lines>',
+      },
+      emptyFirstOrLastLinePlaceholder: {
+        description: 'Placeholder for an empty first or last line (default: `""`)',
+        argument: '<placeholder>',
+      },
+      expand: {
+        description: 'Expand all common lines (default: `true`)',
+      },
+      includeChangeCounts: {
+        description: 'Include comparison counts in diff output (default: `false`)',
+      },
+      omitAnnotationLines: {
+        description: 'Omit annotation lines from the output (default: `false`)',
+      },
+      printBasicPrototype: {
+        description: 'Print basic prototype Object and Array (default: `true`)',
+      },
+      truncateThreshold: {
+        description: 'Number of lines to show before and after each change (default: `0`)',
+        argument: '<threshold>',
+      },
+      truncateAnnotation: {
+        description: 'Annotation for truncated lines (default: `... Diff result is truncated`)',
+        argument: '<annotation>',
+      },
+    },
   },
   exclude: {
     description: 'Additional file globs to be excluded from test',
@@ -650,7 +700,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   project: {
     description:
-      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`',
+      'The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.',
     argument: '<name>',
     array: true,
   },
@@ -730,6 +780,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   printConsoleTrace: {
     description: 'Always print console stack traces',
   },
+  includeTaskLocation: {
+    description: 'Collect test and suite locations in the `location` property',
+  },
 
   // CLI only options
   run: {
@@ -749,7 +802,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   mergeReports: {
     description:
-      'Paths to blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
+      'Path to a blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {
@@ -789,7 +842,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   poolMatchGlobs: null,
   deps: null,
   name: null,
-  includeTaskLocation: null,
   snapshotEnvironment: null,
   compare: null,
   outputJson: null,

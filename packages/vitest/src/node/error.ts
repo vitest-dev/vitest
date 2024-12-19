@@ -1,23 +1,23 @@
+import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { Vitest } from './core'
+import type { ErrorOptions } from './logger'
+import type { TestProject } from './project'
 /* eslint-disable prefer-template */
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
+import { inspect, isPrimitive } from '@vitest/utils'
+import cliTruncate from 'cli-truncate'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
-import cliTruncate from 'cli-truncate'
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
-import { inspect, isPrimitive } from '@vitest/utils'
+import { TypeCheckError } from '../typecheck/typechecker'
 import {
   lineSplitRE,
   positionToOffset,
 } from '../utils/source-map'
-import { TypeCheckError } from '../typecheck/typechecker'
-import type { Vitest } from './core'
-import { divider } from './reporters/renderers/utils'
-import type { ErrorOptions } from './logger'
 import { Logger } from './logger'
-import type { WorkspaceProject } from './workspace'
 import { F_POINTER } from './reporters/renderers/figures'
+import { divider } from './reporters/renderers/utils'
 
 interface PrintErrorOptions {
   type?: string
@@ -55,7 +55,7 @@ export function capturePrintError(
 
 export function printError(
   error: unknown,
-  project: WorkspaceProject | undefined,
+  project: TestProject | undefined,
   options: PrintErrorOptions,
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
@@ -338,7 +338,7 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
 
 export function printStack(
   logger: Logger,
-  project: WorkspaceProject,
+  project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,

@@ -1,15 +1,13 @@
-import { use, util } from 'chai'
 import type {
   ChaiPlugin,
   ExpectStatic,
-  MatcherState,
   MatchersObject,
+  MatcherState,
   SyncExpectationResult,
 } from './types'
+import { use, util } from 'chai'
 import { ASYMMETRIC_MATCHERS_OBJECT, JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import { getState } from './state'
-
 import {
   diff,
   getCustomEqualityTesters,
@@ -18,6 +16,8 @@ import {
 } from './jest-matcher-utils'
 
 import { equals, iterableEquality, subsetEquality } from './jest-utils'
+
+import { getState } from './state'
 import { wrapAssertion } from './utils'
 
 function getMatcherState(

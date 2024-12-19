@@ -1,6 +1,6 @@
+import type { TestError } from './types'
 import { type DiffOptions, printDiffOrStringify } from './diff'
 import { format, stringify } from './display'
-import type { TestError } from './types'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {

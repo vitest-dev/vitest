@@ -74,8 +74,7 @@ Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you c
 
 For example, we first create `myTest` with two fixtures, `todos` and `archive`.
 
-```ts
-// my-test.ts
+```ts [my-test.ts]
 import { test } from 'vitest'
 
 const todos = []
@@ -98,7 +97,7 @@ export const myTest = test.extend({
 
 Then we can import and use it.
 
-```ts
+```ts [my-test.test.ts]
 import { expect } from 'vitest'
 import { myTest } from './my-test.js'
 
@@ -176,8 +175,60 @@ const test = base.extend({
   ],
 })
 
-test('', () => {})
+test('works correctly')
 ```
+
+#### Default fixture
+
+Since Vitest 3, you can provide different values in different [projects](/guide/workspace). To enable this feature, pass down `{ injected: true }` to the options. If the key is not specified in the [project configuration](/config/#provide), then the default value will be used.
+
+:::code-group
+```ts [fixtures.test.ts]
+import { test as base } from 'vitest'
+
+const test = base.extend({
+  url: [
+    // default value if "url" is not defined in the config
+    'default',
+    // mark the fixure as "injected" to allow the override
+    { injected: true },
+  ],
+})
+
+test('works correctly', ({ url }) => {
+  // url is "/default" in "project-new"
+  // url is "/full" in "project-full"
+  // url is "/empty" in "project-empty"
+})
+```
+```ts [vitest.workspace.ts]
+import { defineWorkspace } from 'vitest/config'
+
+export default defineWorkspace([
+  {
+    test: {
+      name: 'project-new',
+    },
+  },
+  {
+    test: {
+      name: 'project-full',
+      provide: {
+        url: '/full',
+      },
+    },
+  },
+  {
+    test: {
+      name: 'project-empty',
+      provide: {
+        url: '/empty',
+      },
+    },
+  },
+])
+```
+:::
 
 #### TypeScript
 
@@ -194,7 +245,7 @@ const myTest = test.extend<MyFixtures>({
   archive: []
 })
 
-myTest('', (context) => {
+myTest('types are defined correctly', (context) => {
   expectTypeOf(context.todos).toEqualTypeOf<number[]>()
   expectTypeOf(context.archive).toEqualTypeOf<number[]>()
 })

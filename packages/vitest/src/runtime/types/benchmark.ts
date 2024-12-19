@@ -1,4 +1,4 @@
-import type { Custom } from '@vitest/runner'
+import type { Test } from '@vitest/runner'
 import type { ChainableFunction } from '@vitest/runner/utils'
 import type {
   Bench as BenchFactory,
@@ -8,7 +8,7 @@ import type {
   TaskResult as TinybenchResult,
 } from 'tinybench'
 
-export interface Benchmark extends Custom {
+export interface Benchmark extends Test {
   meta: {
     benchmark: true
     result?: BenchTaskResult
@@ -32,4 +32,4 @@ export type BenchmarkAPI = ChainableBenchmarkAPI & {
   runIf: (condition: any) => ChainableBenchmarkAPI
 }
 
-export { BenchTaskResult, BenchOptions, BenchFactory, BenchTask }
+export { BenchFactory, BenchOptions, BenchTask, BenchTaskResult }
