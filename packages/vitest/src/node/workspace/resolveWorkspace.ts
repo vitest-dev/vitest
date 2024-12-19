@@ -138,7 +138,6 @@ export async function resolveBrowserWorkspace(
   names: Set<string>,
   resolvedProjects: TestProject[],
 ) {
-  // const newConfigs: [project: TestProject, config: ResolvedConfig][] = []
   const filters = toArray(vitest.config.project).map(s => wildcardPatternToRegExp(s))
   const removeProjects = new Set<TestProject>()
 
