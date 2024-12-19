@@ -240,7 +240,7 @@ export function resolveConfig(
     const configs = browser.instances
     if (browser.name && browser.instances) {
       // --browser=chromium filters configs to a single one
-      browser.instances = browser.instances.filter(config_ => config_.browser === browser.name)
+      browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
     }
 
     if (browser.instances && !browser.instances.length) {

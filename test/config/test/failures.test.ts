@@ -366,7 +366,7 @@ test('throws an error if name conflicts with a workspace name', async () => {
       },
     ],
   })
-  expect(stderr).toMatch('Cannot redefine the project name for a nameless project. The project name "firefox" was already defined. All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "1 (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
 })
 
 test('throws an error if several browsers are headed in nonTTY mode', async () => {

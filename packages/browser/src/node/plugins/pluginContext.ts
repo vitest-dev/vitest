@@ -60,7 +60,7 @@ const sessionId = __vitest_browser_runner__.sessionId
 export const server = {
   platform: ${JSON.stringify(process.platform)},
   version: ${JSON.stringify(process.version)},
-  provider: ${JSON.stringify(provider)},
+  provider: ${JSON.stringify(providerName)},
   browser: __vitest_browser_runner__.config.browser.name,
   commands: {
     ${commandsCode}
