@@ -143,15 +143,6 @@ export async function prepareVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  // running "vitest --browser.headless"
-  if (typeof options.browser === 'object' && !('enabled' in options.browser)) {
-    options.browser.enabled = true
-  }
-
-  if (typeof options.typecheck?.only === 'boolean') {
-    options.typecheck.enabled ??= true
-  }
-
   const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)

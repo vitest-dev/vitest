@@ -444,6 +444,10 @@ export interface FixtureOptions {
    * Whether to automatically set up current fixture, even though it's not being used in tests.
    */
   auto?: boolean
+  /**
+   * Indicated if the injected value from the config should be preferred over the fixture value
+   */
+  injected?: boolean
 }
 
 export type Use<T> = (value: T) => Promise<void>

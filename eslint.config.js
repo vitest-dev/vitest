@@ -79,7 +79,7 @@ export default antfu(
       'no-restricted-imports': [
         'error',
         {
-          paths: ['vitest', 'path'],
+          paths: ['vitest', 'path', 'vitest/node'],
         },
       ],
     },

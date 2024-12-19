@@ -6,10 +6,6 @@ export interface FixtureItem extends FixtureOptions {
   prop: string
   value: any
   /**
-   * Indicated if the injected value should be preferred over the fixture value
-   */
-  injected?: boolean
-  /**
    * Indicates whether the fixture is a function
    */
   isFn: boolean
