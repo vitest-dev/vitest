@@ -455,7 +455,7 @@ export abstract class BaseReporter implements Reporter {
         .sort((a, b) => a.result!.benchmark!.rank - b.result!.benchmark!.rank)
 
       for (const sibling of siblings) {
-        const number = (sibling.result!.benchmark!.mean / bench.result!.benchmark!.mean).toFixed(2)
+        const number = (sibling.result!.benchmark!.latency.mean / bench.result!.benchmark!.latency.mean).toFixed(2)
         this.log(c.green(`    ${number}x `) + c.gray('faster than ') + sibling.name)
       }
 
