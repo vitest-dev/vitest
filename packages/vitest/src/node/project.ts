@@ -21,7 +21,7 @@ import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
-import fg from 'fast-glob'
+import { glob, GlobOptions } from 'tinyglobby'
 import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
@@ -413,13 +413,13 @@ export class TestProject {
 
   /** @internal */
   async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       dot: true,
       cwd,
       ignore: exclude,
     }
 
-    const files = await fg(include, globOptions)
+    const files = await glob(include, globOptions)
     // keep the slashes consistent with Vite
     // we are not using the pathe here because it normalizes the drive letter on Windows
     // and we want to keep it the same as working dir

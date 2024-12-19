@@ -4,7 +4,7 @@ import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
 import { deepClone, toArray } from '@vitest/utils'
-import fg from 'fast-glob'
+import { type GlobOptions, glob } from 'tinyglobby'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
@@ -357,14 +357,12 @@ async function resolveTestProjectConfigs(
   }
 
   if (workspaceGlobMatches.length) {
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       absolute: true,
       dot: true,
       onlyFiles: false,
       cwd: vitest.config.root,
-      markDirectories: true,
-      // TODO: revert option when we go back to tinyglobby
-      // expandDirectories: false,
+      expandDirectories: false,
       ignore: [
         '**/node_modules/**',
         // temporary vite config file
@@ -374,7 +372,7 @@ async function resolveTestProjectConfigs(
       ],
     }
 
-    const workspacesFs = await fg.glob(workspaceGlobMatches, globOptions)
+    const workspacesFs = await glob(workspaceGlobMatches, globOptions)
 
     await Promise.all(workspacesFs.map(async (path) => {
       // directories are allowed with a glob like `packages/*`
