@@ -96,7 +96,7 @@ class DotSummary extends TaskParser {
   }
 
   onTestFileFinished() {
-    const columns = this.renderer.getColumns()
+    const columns = this.ctx.logger.getColumns()
 
     if (this.tests.size < columns) {
       return

@@ -1,4 +1,4 @@
-import type { FormattedBenchmarkReport } from 'vitest/src/node/reporters/benchmark/table/index.js'
+import type { createBenchmarkJsonReport } from 'vitest/src/node/reporters/benchmark/json-formatter.js'
 import fs from 'node:fs'
 import * as pathe from 'pathe'
 import { expect, it } from 'vitest'
@@ -17,10 +17,11 @@ it('basic', { timeout: 60_000 }, async () => {
     // Verify that type testing cannot be used with benchmark
     typecheck: { enabled: true },
   }, [], 'benchmark')
+  expect(result.stderr).toBe('')
   expect(result.exitCode).toBe(0)
 
   const benchResult = await fs.promises.readFile(benchFile, 'utf-8')
-  const resultJson: FormattedBenchmarkReport = JSON.parse(benchResult)
+  const resultJson: ReturnType<typeof createBenchmarkJsonReport> = JSON.parse(benchResult)
   const names = resultJson.files.map(f => f.groups.map(g => [g.fullName, g.benchmarks.map(b => b.name)]))
   expect(names).toMatchInlineSnapshot(`
     [
