@@ -184,7 +184,11 @@ export class StateManager {
     }
   }
 
-  getReportedEntity(task: Task) {
+  getReportedEntity(task?: Task) {
+    if (!task) {
+      return undefined
+    }
+
     return this.reportedTasksMap.get(task)
   }
 
