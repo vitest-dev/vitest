@@ -134,7 +134,7 @@ interface CodeFrameGenerator {
   (node: Positioned<Node>, id: string, code: string): string
 }
 
-// this is a fork of Vite SSR trandform
+// this is a fork of Vite SSR transform
 export function hoistMocks(
   code: string,
   id: string,

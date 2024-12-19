@@ -263,7 +263,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
 
     const left = this.suites.total - this.suites.completed
 
-    // Keep finished tests visibe in summary for a while if there are more tests left.
+    // Keep finished tests visible in summary for a while if there are more tests left.
     // When a new test starts in onTestFilePrepare it will take this ones place.
     // This reduces flickering by making summary more stable.
     if (left > this.maxParallelTests) {
@@ -273,7 +273,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
     }
     else {
       // Run is about to end as there are less tests left than whole run had parallel at max.
-      // Remove finished test immediatelly.
+      // Remove finished test immediately.
       this.removeTestFile(file.id)
     }
   }

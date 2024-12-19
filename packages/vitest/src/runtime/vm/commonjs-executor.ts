@@ -276,7 +276,7 @@ export class CommonjsExecutor {
       return module.exports
     }
     this.builtinCache[normalized] = _require.cache[normalized]!
-    // TODO: should we wrapp module to rethrow context errors?
+    // TODO: should we wrap module to rethrow context errors?
     return moduleExports
   }
 }

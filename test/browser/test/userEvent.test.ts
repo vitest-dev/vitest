@@ -538,7 +538,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     ])
   })
 
-  // strangly enough, original userEvent doesn't support this,
+  // strangely enough, original userEvent doesn't support this,
   // but we can implement it
   test.skipIf(server.provider === 'preview')('selectall works correctly', async () => {
     const input = document.createElement('input')
