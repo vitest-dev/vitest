@@ -78,12 +78,12 @@ for (const config of configs) {
         },
       })
 
-      const browser = !!config.browser
+      const browser = config.browser?.instances?.[0].browser
 
       expect(exitCode).toBe(1)
       if (browser) {
-        expect(stdout).toMatch('✓ |chromium| test/first.test.ts > 1 - first.test.ts - this should pass')
-        expect(stdout).toMatch('× |chromium| test/first.test.ts > 2 - first.test.ts - this should fail')
+        expect(stdout).toMatch(`✓ |${browser}| test/first.test.ts > 1 - first.test.ts - this should pass`)
+        expect(stdout).toMatch(`× |${browser}| test/first.test.ts > 2 - first.test.ts - this should fail`)
       }
       else {
         expect(stdout).toMatch('✓ test/first.test.ts > 1 - first.test.ts - this should pass')
