@@ -88,7 +88,7 @@ export class JsonReporter implements Reporter {
     this.start = Date.now()
   }
 
-  protected async logTasks(files: File[], coverageMap?: CoverageMap | null): JsonTestResults {
+  protected async logTasks(files: File[], coverageMap?: CoverageMap | null): Promise<JsonTestResults> {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
