@@ -17,7 +17,7 @@ async function startViteNode(options: ContextExecutorOptions) {
   return _viteNode
 }
 
-export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState, executor_?: VitestExecutor) {
   const { ctx } = state
   // state has new context, but we want to reuse existing ones
   state.moduleCache = moduleCache
@@ -35,7 +35,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
   ))
 
   const [executor, { run }] = await Promise.all([
-    startViteNode({ state, requestStubs: getDefaultRequestStubs() }),
+    executor_ || startViteNode({ state, requestStubs: getDefaultRequestStubs() }),
     import('../runBaseTests'),
   ])
   const fileSpecs = ctx.files.map(f =>

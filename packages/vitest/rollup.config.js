@@ -39,6 +39,7 @@ const entries = {
   'workers/threads': 'src/runtime/workers/threads.ts',
   'workers/vmThreads': 'src/runtime/workers/vmThreads.ts',
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
+  'workers/strictNode': 'src/runtime/workers/strictNode.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
 

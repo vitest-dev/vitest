@@ -41,6 +41,8 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   process.env.VITEST_POOL_ID = String(poolId)
 
   try {
+    await Promise.all(ctx.config.preloads?.map(file => import(file)))
+
     // worker is a filepath or URL to a file that exposes a default export with "getRpcOptions" and "runTests" methods
     if (ctx.worker[0] === '.') {
       throw new Error(

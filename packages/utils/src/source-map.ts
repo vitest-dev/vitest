@@ -22,25 +22,25 @@ const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
 const SAFARI_NATIVE_CODE_REGEXP = /^(?:eval@)?(?:\[native code\])?$/
 
 const stackIgnorePatterns = [
-  'node:internal',
-  /\/packages\/\w+\/dist\//,
-  /\/@vitest\/\w+\/dist\//,
-  '/vitest/dist/',
-  '/vitest/src/',
-  '/vite-node/dist/',
-  '/vite-node/src/',
-  '/node_modules/chai/',
-  '/node_modules/tinypool/',
-  '/node_modules/tinyspy/',
-  // browser related deps
-  '/deps/chunk-',
-  '/deps/@vitest',
-  '/deps/loupe',
+  // 'node:internal',
+  // /\/packages\/\w+\/dist\//,
+  // /\/@vitest\/\w+\/dist\//,
+  // '/vitest/dist/',
+  // '/vitest/src/',
+  // '/vite-node/dist/',
+  // '/vite-node/src/',
+  // '/node_modules/chai/',
+  // '/node_modules/tinypool/',
+  // '/node_modules/tinyspy/',
+  // // browser related deps
+  // '/deps/chunk-',
+  // '/deps/@vitest',
+  // '/deps/loupe',
   '/deps/chai',
-  /node:\w+/,
-  /__vitest_test__/,
-  /__vitest_browser__/,
-  /\/deps\/vitest_/,
+  // /node:\w+/,
+  // /__vitest_test__/,
+  // /__vitest_browser__/,
+  // /\/deps\/vitest_/,
 ]
 
 function extractLocation(urlLike: string) {

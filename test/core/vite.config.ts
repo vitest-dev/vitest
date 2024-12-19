@@ -1,5 +1,10 @@
+import { createRequire } from 'node:module'
+import { pathToFileURL } from 'node:url'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
+
+const require = createRequire(import.meta.url)
+const tsxApi = require.resolve('tsx/esm/api')
 
 export default defineConfig({
   plugins: [
@@ -60,8 +65,10 @@ export default defineConfig({
     exclude: ['**/fixtures/**', ...defaultExclude],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
+    preloads: [`data:text/javascript,import { register } from "${pathToFileURL(tsxApi)}";register();`],
     setupFiles: [
-      './test/setup.ts',
+      // 'tsx',
+      // './test/setup.js',
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {

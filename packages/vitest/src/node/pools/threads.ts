@@ -59,7 +59,7 @@ export function createThreadsPool(
   const minThreads
     = poolOptions.minThreads ?? ctx.config.minWorkers ?? threadsCount
 
-  const worker = resolve(ctx.distPath, 'workers/threads.js')
+  const worker = resolve(ctx.distPath, 'workers/strictNode.js')
 
   const options: TinypoolOptions = {
     filename: resolve(ctx.distPath, 'worker.js'),

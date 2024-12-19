@@ -1204,6 +1204,9 @@ importers:
       tinyspy:
         specifier: ^1.0.2
         version: 1.0.2
+      tsx:
+        specifier: ^4.19.2
+        version: 4.19.2
       url:
         specifier: ^0.11.0
         version: 0.11.0

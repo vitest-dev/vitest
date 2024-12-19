@@ -470,6 +470,8 @@ export interface InlineConfig {
    */
   setupFiles?: string | string[]
 
+  preloads?: string[]
+
   /**
    * Path to global setup files
    */

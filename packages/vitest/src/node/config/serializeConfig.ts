@@ -21,6 +21,7 @@ export function serializeConfig(
     logHeapUsage: config.logHeapUsage,
     runner: config.runner,
     bail: config.bail,
+    preloads: config.preloads || [],
     defines: config.defines,
     chaiConfig: config.chaiConfig,
     setupFiles: config.setupFiles,
