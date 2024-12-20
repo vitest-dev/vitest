@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { TestProject } from '../project'
 import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
-import type { WorkspaceProject } from '../workspace'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -26,7 +26,7 @@ interface WorkspaceOptions extends UserWorkspaceConfig {
 }
 
 export function WorkspaceVitestPlugin(
-  project: WorkspaceProject,
+  project: TestProject,
   options: WorkspaceOptions,
 ) {
   return <VitePlugin[]>[
@@ -91,9 +91,21 @@ export function WorkspaceVitestPlugin(
             middlewareMode: true,
             fs: {
               allow: resolveFsAllow(
-                project.ctx.config.root,
-                project.ctx.server.config.configFile,
+                project.vitest.config.root,
+                project.vitest.server.config.configFile,
               ),
+            },
+          },
+          // eslint-disable-next-line ts/ban-ts-comment
+          // @ts-ignore Vite 6 compat
+          environments: {
+            ssr: {
+              resolve: {
+                // by default Vite resolves `module` field, which not always a native ESM module
+                // setting this option can bypass that and fallback to cjs version
+                mainFields: [],
+                conditions: ['node'],
+              },
             },
           },
           test: {
@@ -106,7 +118,7 @@ export function WorkspaceVitestPlugin(
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
             && testConfig.css?.modules?.classNameStrategy)
-            || 'stable'
+          || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -141,7 +153,7 @@ export function WorkspaceVitestPlugin(
       },
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
-        await project.setServer(options, server)
+        await project._configureServer(options, server)
 
         await server.watcher.close()
       },

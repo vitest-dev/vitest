@@ -23,7 +23,7 @@ import { getType } from './getType'
 import { normalizeDiffOptions } from './normalizeDiffOptions'
 import { diffStringsRaw, diffStringsUnified } from './printDiffs'
 
-export type { DiffOptions, DiffOptionsColor } from './types'
+export type { DiffOptions, DiffOptionsColor, SerializedDiffOptions } from './types'
 
 export { diffLinesRaw, diffLinesUnified, diffLinesUnified2 }
 export { diffStringsRaw, diffStringsUnified }
@@ -50,6 +50,7 @@ const PLUGINS = [
   DOMCollection,
   Immutable,
   AsymmetricMatcher,
+  prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
   plugins: PLUGINS,
@@ -180,11 +181,12 @@ function getFormatOptions(
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
 ): PrettyFormatOptions {
-  const { compareKeys } = normalizeDiffOptions(options)
+  const { compareKeys, printBasicPrototype } = normalizeDiffOptions(options)
 
   return {
     ...formatOptions,
     compareKeys,
+    printBasicPrototype,
   }
 }
 
@@ -297,6 +299,19 @@ export function replaceAsymmetricMatcher(
     replacedActual: any
     replacedExpected: any
   } {
+  // handle asymmetric Error.cause diff
+  if (
+    actual instanceof Error
+    && expected instanceof Error
+    && typeof actual.cause !== 'undefined'
+    && typeof expected.cause === 'undefined'
+  ) {
+    delete actual.cause
+    return {
+      replacedActual: actual,
+      replacedExpected: expected,
+    }
+  }
   if (!isReplaceable(actual, expected)) {
     return { replacedActual: actual, replacedExpected: expected }
   }

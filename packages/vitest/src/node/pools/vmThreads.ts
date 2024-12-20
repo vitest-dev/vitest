@@ -1,11 +1,12 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
 import type { Vitest } from '../core'
 import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
 import type { ResolvedConfig, SerializedConfig } from '../types/config'
 import type { WorkerContext } from '../types/worker'
-import type { WorkspaceProject } from '../workspace'
 import * as nodeos from 'node:os'
 import { resolve } from 'node:path'
 import { MessageChannel } from 'node:worker_threads'
@@ -18,7 +19,7 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createWorkerChannel(project: WorkspaceProject) {
+function createWorkerChannel(project: TestProject) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
@@ -98,13 +99,15 @@ export function createVmThreadsPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
+      project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
       const { workerPort, port } = createWorkerChannel(project)
       const workerId = ++id
       const data: WorkerContext = {
@@ -112,11 +115,11 @@ export function createVmThreadsPool(
         worker,
         port: workerPort,
         config,
-        files,
+        files: paths,
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
@@ -129,7 +132,7 @@ export function createVmThreadsPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(
+            `Failed to terminate worker while running ${paths.join(
               ', ',
             )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
           )
@@ -140,7 +143,7 @@ export function createVmThreadsPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error
@@ -156,13 +159,13 @@ export function createVmThreadsPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new Map<WorkspaceProject, SerializedConfig>()
-      const getConfig = (project: WorkspaceProject): SerializedConfig => {
+      const configs = new Map<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }
 
-        const config = project.getSerializableConfig()
+        const config = project.serializedConfig
         configs.set(project, config)
         return config
       }

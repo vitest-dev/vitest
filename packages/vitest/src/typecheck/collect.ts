@@ -1,6 +1,7 @@
-import type { File, Suite, Test } from '@vitest/runner'
+import type { File, RunMode, Suite, Test } from '@vitest/runner'
+import type { Node } from 'estree'
 import type { RawSourceMap } from 'vite-node'
-import type { WorkspaceProject } from '../node/workspace'
+import type { TestProject } from '../node/project'
 import {
   calculateSuiteHash,
   generateHash,
@@ -31,7 +32,7 @@ interface LocalCallDefinition {
   end: number
   name: string
   type: 'suite' | 'test'
-  mode: 'run' | 'skip' | 'only' | 'todo'
+  mode: RunMode
   task: ParsedSuite | ParsedFile | ParsedTest
 }
 
@@ -44,7 +45,7 @@ export interface FileInformation {
 }
 
 export async function collectTests(
-  ctx: WorkspaceProject,
+  ctx: TestProject,
   filepath: string,
 ): Promise<null | FileInformation> {
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
@@ -53,7 +54,7 @@ export async function collectTests(
   }
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
-  const projectName = ctx.getName()
+  const projectName = ctx.name
   const typecheckSubprojectName = projectName ? `${projectName}:__typecheck__` : '__typecheck__'
   const file: ParsedFile = {
     filepath,
@@ -70,7 +71,7 @@ export async function collectTests(
   }
   file.file = file
   const definitions: LocalCallDefinition[] = []
-  const getName = (callee: any): string | null => {
+  const getName = (callee: Node): string | null => {
     if (!callee) {
       return null
     }
@@ -84,12 +85,20 @@ export async function collectTests(
       return getName(callee.tag)
     }
     if (callee.type === 'MemberExpression') {
+      const object = callee.object as any
       // direct call as `__vite_ssr_exports_0__.test()`
-      if (callee.object?.name?.startsWith('__vite_ssr_')) {
+      if (object?.name?.startsWith('__vite_ssr_')) {
         return getName(callee.property)
       }
       // call as `__vite_ssr__.test.skip()`
-      return getName(callee.object?.property)
+      return getName(object?.property)
+    }
+    // unwrap (0, ...)
+    if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
+      const [e0, e1] = callee.expressions
+      if (e0.type === 'Literal' && e0.value === 0) {
+        return getName(e1)
+      }
     }
     return null
   }
@@ -203,6 +212,7 @@ export async function collectTests(
   interpretTaskModes(
     file,
     ctx.config.testNamePattern,
+    undefined,
     hasOnly,
     false,
     ctx.config.allowOnly,

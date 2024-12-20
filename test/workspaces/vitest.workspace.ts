@@ -13,6 +13,9 @@ export default defineWorkspace([
       root: './space_shared',
       environment: 'happy-dom',
       setupFiles: ['./setup.jsdom.ts'],
+      provide: {
+        providedConfigValue: 'actual config value',
+      },
     },
   }),
   Promise.resolve({

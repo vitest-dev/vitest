@@ -28,6 +28,8 @@ export default antfu(
       'packages/browser/**/esm-client-injector.js',
       // contains technically invalid code to display pretty diff
       'docs/guide/snapshot.md',
+      // uses invalid js example
+      'docs/advanced/api/import-example.md',
     ],
   },
   {
@@ -77,7 +79,7 @@ export default antfu(
       'no-restricted-imports': [
         'error',
         {
-          paths: ['vitest', 'path'],
+          paths: ['vitest', 'path', 'vitest/node'],
         },
       ],
     },
@@ -107,6 +109,7 @@ export default antfu(
       'import/first': 'off',
       'unused-imports/no-unused-imports': 'off',
       'ts/method-signature-style': 'off',
+      'no-self-compare': 'off',
     },
   },
   {

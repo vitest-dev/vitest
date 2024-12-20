@@ -1,5 +1,6 @@
 import type { File, Suite, TaskMeta, TaskState } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
+import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import { existsSync, promises as fs } from 'node:fs'
@@ -25,6 +26,7 @@ const StatusMap: Record<TaskState, Status> = {
   run: 'pending',
   skip: 'skipped',
   todo: 'todo',
+  queued: 'pending',
 }
 
 export interface JsonAssertionResult {
@@ -63,7 +65,7 @@ export interface JsonTestResults {
   success: boolean
   testResults: Array<JsonTestResult>
   snapshot: SnapshotSummary
-  // coverageMap?: CoverageMap | null | undefined
+  coverageMap?: CoverageMap | null | undefined
   // numRuntimeErrorTestSuites: number
   // wasInterrupted: boolean
 }
@@ -86,7 +88,7 @@ export class JsonReporter implements Reporter {
     this.start = Date.now()
   }
 
-  protected async logTasks(files: File[]) {
+  protected async logTasks(files: File[], coverageMap?: CoverageMap | null) {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
@@ -94,7 +96,7 @@ export class JsonReporter implements Reporter {
 
     const numFailedTestSuites = suites.filter(s => s.result?.state === 'fail').length
     const numPendingTestSuites = suites.filter(
-      s => s.result?.state === 'run' || s.mode === 'todo',
+      s => s.result?.state === 'run' || s.result?.state === 'queued' || s.mode === 'todo',
     ).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
 
@@ -103,7 +105,7 @@ export class JsonReporter implements Reporter {
     ).length
     const numPassedTests = tests.filter(t => t.result?.state === 'pass').length
     const numPendingTests = tests.filter(
-      t => t.result?.state === 'run' || t.mode === 'skip' || t.result?.state === 'skip',
+      t => t.result?.state === 'run' || t.result?.state === 'queued' || t.mode === 'skip' || t.result?.state === 'skip',
     ).length
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []
@@ -153,7 +155,7 @@ export class JsonReporter implements Reporter {
         } satisfies JsonAssertionResult
       })
 
-      if (tests.some(t => t.result?.state === 'run')) {
+      if (tests.some(t => t.result?.state === 'run' || t.result?.state === 'queued')) {
         this.ctx.logger.warn(
           'WARNING: Some tests are still running when generating the JSON report.'
           + 'This is likely an internal bug in Vitest.'
@@ -188,13 +190,14 @@ export class JsonReporter implements Reporter {
       startTime: this.start,
       success,
       testResults,
+      coverageMap,
     }
 
     await this.writeReport(JSON.stringify(result))
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
-    await this.logTasks(files)
+  async onFinished(files = this.ctx.state.getFiles(), _errors: unknown[] = [], coverageMap?: unknown) {
+    await this.logTasks(files, coverageMap as CoverageMap)
   }
 
   /**

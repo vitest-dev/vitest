@@ -1,7 +1,6 @@
 import type { ExpectStatic, PromisifyAssertion, Tester } from '@vitest/expect'
 import type { Plugin as PrettyFormatPlugin } from '@vitest/pretty-format'
 import type { SnapshotState } from '@vitest/snapshot'
-import type { VitestEnvironment } from '../node/types/config'
 import type { BenchmarkResult } from '../runtime/types/benchmark'
 import type { UserConsoleLog } from './general'
 
@@ -36,7 +35,7 @@ interface InlineSnapshotMatcher<T> {
 
 declare module '@vitest/expect' {
   interface MatcherState {
-    environment: VitestEnvironment
+    environment: string
     snapshotState: SnapshotState
   }
 
@@ -64,11 +63,43 @@ declare module '@vitest/expect' {
     matchSnapshot: SnapshotMatcher<T>
     toMatchSnapshot: SnapshotMatcher<T>
     toMatchInlineSnapshot: InlineSnapshotMatcher<T>
+
+    /**
+     * Checks that an error thrown by a function matches a previously recorded snapshot.
+     *
+     * @param message - Optional custom error message.
+     *
+     * @example
+     * expect(functionWithError).toThrowErrorMatchingSnapshot();
+     */
     toThrowErrorMatchingSnapshot: (message?: string) => void
+
+    /**
+     * Checks that an error thrown by a function matches an inline snapshot within the test file.
+     * Useful for keeping snapshots close to the test code.
+     *
+     * @param snapshot - Optional inline snapshot string to match.
+     * @param message - Optional custom error message.
+     *
+     * @example
+     * const throwError = () => { throw new Error('Error occurred') };
+     * expect(throwError).toThrowErrorMatchingInlineSnapshot(`"Error occurred"`);
+     */
     toThrowErrorMatchingInlineSnapshot: (
       snapshot?: string,
       message?: string
     ) => void
+
+    /**
+     * Compares the received value to a snapshot saved in a specified file.
+     * Useful for cases where snapshot content is large or needs to be shared across tests.
+     *
+     * @param filepath - Path to the snapshot file.
+     * @param message - Optional custom error message.
+     *
+     * @example
+     * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
+     */
     toMatchFileSnapshot: (filepath: string, message?: string) => Promise<void>
   }
 }

@@ -51,7 +51,7 @@ export async function getModuleGraph(
     await get(project.browser.vite.moduleGraph.getModuleById(id))
   }
   else {
-    await get(project.server.moduleGraph.getModuleById(id))
+    await get(project.vite.moduleGraph.getModuleById(id))
   }
 
   return {

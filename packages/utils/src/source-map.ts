@@ -179,6 +179,16 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   }
 }
 
+export function createStackString(stacks: ParsedStack[]): string {
+  return stacks.map((stack) => {
+    const line = `${stack.file}:${stack.line}:${stack.column}`
+    if (stack.method) {
+      return `    at ${stack.method}(${line})`
+    }
+    return `    at ${line}`
+  }).join('\n')
+}
+
 export function parseStacktrace(
   stack: string,
   options: StackTraceParserOptions = {},

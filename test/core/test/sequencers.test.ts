@@ -19,9 +19,7 @@ function buildCtx() {
 
 function buildWorkspace() {
   return {
-    testProject: {
-      name: 'test',
-    },
+    name: 'test',
   } as any as WorkspaceProject
 }
 

@@ -1,4 +1,4 @@
-import type { CancelReason, Task } from '@vitest/runner'
+import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { ModuleCacheMap, ViteNodeResolveId } from 'vite-node'
 import type { SerializedConfig } from '../runtime/config'
@@ -26,7 +26,7 @@ export interface ContextRPC {
   workerId: number
   config: SerializedConfig
   projectName: string
-  files: string[]
+  files: string[] | FileSpecification[]
   environment: ContextTestEnvironment
   providedContext: Record<string, any>
   invalidates?: string[]
@@ -47,4 +47,5 @@ export interface WorkerGlobalState {
     environment: number
     prepare: number
   }
+  onFilterStackTrace?: (trace: string) => string
 }

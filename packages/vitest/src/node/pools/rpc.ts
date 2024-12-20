@@ -1,6 +1,8 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
-import type { WorkspaceProject } from '../workspace'
+import type { TestProject } from '../project'
+import type { TestModule } from '../reporters/reported-tasks'
+import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'pathe'
 import { hash } from '../hash'
@@ -12,7 +14,7 @@ interface MethodsOptions {
   cacheFs?: boolean
 }
 
-export function createMethodsRPC(project: WorkspaceProject, options: MethodsOptions = {}): RuntimeRPC {
+export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
   const ctx = project.ctx
   const cacheFs = options.cacheFs ?? false
   return {
@@ -20,13 +22,15 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       ctx.snapshot.add(snapshot)
     },
     resolveSnapshotPath(testPath: string) {
-      return ctx.snapshot.resolvePath(testPath)
+      return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+        config: project.serializedConfig,
+      })
     },
     async getSourceMap(id, force) {
       if (force) {
-        const mod = project.server.moduleGraph.getModuleById(id)
+        const mod = project.vite.moduleGraph.getModuleById(id)
         if (mod) {
-          project.server.moduleGraph.invalidateModule(mod)
+          project.vite.moduleGraph.invalidateModule(mod)
         }
       }
       const r = await project.vitenode.transformRequest(id)
@@ -75,6 +79,11 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
       ctx.state.collectPaths(paths)
       return ctx.report('onPathsCollected', paths)
     },
+    onQueued(file) {
+      ctx.state.collectFiles(project, [file])
+      const testModule = ctx.state.getReportedEntity(file) as TestModule
+      return ctx.report('onTestModuleQueued', testModule)
+    },
     onCollected(files) {
       ctx.state.collectFiles(project, files)
       return ctx.report('onCollected', files)
@@ -95,7 +104,7 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
     },
     onFinished(files) {
       const errors = ctx.state.getUnhandledErrors()
-      ctx.checkUnhandledErrors(errors)
+      ctx._checkUnhandledErrors(errors)
 
       return ctx.report('onFinished', files, errors)
     },
@@ -110,7 +119,10 @@ export function createMethodsRPC(project: WorkspaceProject, options: MethodsOpti
 
 // serialize rollup error on server to preserve details as a test error
 function handleRollupError(e: unknown): never {
-  if (e instanceof Error && 'plugin' in e) {
+  if (
+    e instanceof Error
+    && ('plugin' in e || 'frame' in e || 'id' in e)
+  ) {
     // eslint-disable-next-line no-throw-literal
     throw {
       name: e.name,

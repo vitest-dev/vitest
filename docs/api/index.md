@@ -32,15 +32,6 @@ interface TestOptions {
 }
 ```
 
-Vitest 1.3.0 deprecates the use of options as the last parameter. You will see a deprecation message until 2.0.0 when this syntax will be removed. If you need to pass down options, use `test` function's second argument:
-
-```ts
-import { test } from 'vitest'
-
-test('flaky test', () => {}, { retry: 3 }) // [!code --]
-test('flaky test', { retry: 3 }, () => {}) // [!code ++]
-```
-
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
 ::: tip
@@ -155,7 +146,7 @@ test.skipIf(isDev)('prod only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.runIf
@@ -175,7 +166,7 @@ test.runIf(isDev)('dev only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.only
@@ -240,7 +231,7 @@ test.concurrent('test 2', async ({ expect }) => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.sequential
@@ -298,7 +289,7 @@ test.fails('fail test', async () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.each
@@ -399,7 +390,7 @@ Vitest processes `$values` with Chai `format` method. If the value is too trunca
 :::
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.for
@@ -809,7 +800,7 @@ describe.runIf(isDev)('dev only test suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.only
@@ -883,7 +874,7 @@ describe.concurrent('suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.sequential
@@ -915,10 +906,23 @@ Vitest provides a way to run all tests in random order via CLI flag [`--sequence
 ```ts
 import { describe, test } from 'vitest'
 
+// or describe('suite', { shuffle: true }, ...)
 describe.shuffle('suite', () => {
   test('random test 1', async () => { /* ... */ })
   test('random test 2', async () => { /* ... */ })
   test('random test 3', async () => { /* ... */ })
+
+  // `shuffle` is inherited
+  describe('still random', () => {
+    test('random 4.1', async () => { /* ... */ })
+    test('random 4.2', async () => { /* ... */ })
+  })
+
+  // disable shuffle inside
+  describe('not random', { shuffle: false }, () => {
+    test('in order 5.1', async () => { /* ... */ })
+    test('in order 5.2', async () => { /* ... */ })
+  })
 })
 // order depends on sequence.seed option in config (Date.now() by default)
 ```
@@ -926,7 +930,7 @@ describe.shuffle('suite', () => {
 `.skip`, `.only`, and `.todo` works with random suites.
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.todo
@@ -991,7 +995,7 @@ describe.each`
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ## Setup and Teardown
@@ -1122,7 +1126,7 @@ These hooks will throw an error if they are called outside of the test body.
 
 ### onTestFinished {#ontestfinished}
 
-This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
+This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`.
 
 ```ts {1,5}
 import { onTestFinished, test } from 'vitest'
@@ -1179,7 +1183,7 @@ This hook is always called in reverse order and is not affected by [`sequence.ho
 
 ### onTestFailed
 
-This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.
+This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`. This hook is useful for debugging.
 
 ```ts {1,5-7}
 import { onTestFailed, test } from 'vitest'

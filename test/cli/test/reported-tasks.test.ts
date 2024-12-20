@@ -35,7 +35,7 @@ beforeAll(async () => {
     logHeapUsage: true,
   })
   state = ctx!.state
-  project = ctx!.getCoreWorkspaceProject()
+  project = ctx!.getRootProject()
   files = state.getFiles()
   expect(files).toHaveLength(1)
   testModule = state.getReportedEntity(files[0])! as TestModule
@@ -55,13 +55,18 @@ it('correctly reports a file', () => {
   expect(testModule.id).toBe(files[0].id)
   expect(testModule.location).toBeUndefined()
   expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
-  expect(testModule.project.workspaceProject).toBe(project)
+  expect(testModule.project).toBe(project)
   expect(testModule.children.size).toBe(14)
 
   const tests = [...testModule.children.tests()]
   expect(tests).toHaveLength(11)
   const deepTests = [...testModule.children.allTests()]
   expect(deepTests).toHaveLength(19)
+
+  expect([...testModule.children.allTests('skipped')]).toHaveLength(5)
+  expect([...testModule.children.allTests('passed')]).toHaveLength(9)
+  expect([...testModule.children.allTests('failed')]).toHaveLength(5)
+  expect([...testModule.children.allTests('running')]).toHaveLength(0)
 
   const suites = [...testModule.children.suites()]
   expect(suites).toHaveLength(3)

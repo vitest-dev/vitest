@@ -95,9 +95,9 @@ export function printDiffLines(
     + (options.expand
       ? joinAlignedDiffsExpand(diffs, options)
       : joinAlignedDiffsNoExpand(diffs, options))
-      + (truncated
-        ? options.truncateAnnotationColor(`\n${options.truncateAnnotation}`)
-        : '')
+    + (truncated
+      ? options.truncateAnnotationColor(`\n${options.truncateAnnotation}`)
+      : '')
   )
 }
 

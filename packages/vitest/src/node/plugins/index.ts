@@ -31,10 +31,8 @@ export async function VitestPlugin(
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
-  const getRoot = () => ctx.config?.root || options.root || process.cwd()
-
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', getRoot(), ctx.version)
+    await ctx.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), ctx.version)
     return (await import('@vitest/ui')).default(ctx)
   }
 
@@ -101,7 +99,7 @@ export async function VitestPlugin(
             ws: testConfig.api?.middlewareMode ? false : undefined,
             preTransformRequests: false,
             fs: {
-              allow: resolveFsAllow(getRoot(), testConfig.config),
+              allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
             },
           },
           build: {
@@ -112,6 +110,18 @@ export async function VitestPlugin(
             // This works for Vite >=5.2.10
             // https://github.com/vitejs/vite/pull/16453
             emptyOutDir: false,
+          },
+          // eslint-disable-next-line ts/ban-ts-comment
+          // @ts-ignore Vite 6 compat
+          environments: {
+            ssr: {
+              resolve: {
+                // by default Vite resolves `module` field, which not always a native ESM module
+                // setting this option can bypass that and fallback to cjs version
+                mainFields: [],
+                conditions: ['node'],
+              },
+            },
           },
           test: {
             poolOptions: {
@@ -130,6 +140,8 @@ export async function VitestPlugin(
                   ?? viteConfig.test?.isolate,
               },
             },
+            root: testConfig.root ?? viteConfig.test?.root,
+            deps: testConfig.deps ?? viteConfig.test?.deps,
           },
         }
 
@@ -179,6 +191,8 @@ export async function VitestPlugin(
         ) {
           const watch = config.server!.watch
           if (watch) {
+            // eslint-disable-next-line ts/ban-ts-comment
+            // @ts-ignore Vite 6 compat
             watch.useFsEvents = false
             watch.usePolling = false
           }
@@ -187,7 +201,7 @@ export async function VitestPlugin(
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
             && testConfig.css?.modules?.classNameStrategy)
-            || 'stable'
+          || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -197,7 +211,7 @@ export async function VitestPlugin(
               name: string,
               filename: string,
             ) => {
-              const root = getRoot()
+              const root = ctx.config.root || options.root || process.cwd()
               return generateScopedClassName(
                 classNameStrategy,
                 name,
@@ -242,6 +256,12 @@ export async function VitestPlugin(
         }
 
         hijackVitePluginInject(viteConfig)
+
+        Object.defineProperty(viteConfig, '_vitest', {
+          value: options,
+          enumerable: false,
+          configurable: true,
+        })
       },
       configureServer: {
         // runs after vite:import-analysis as it relies on `server` instance on Vite 5
@@ -253,7 +273,7 @@ export async function VitestPlugin(
               console.log('[debug] watcher is ready')
             })
           }
-          await ctx.setServer(options, server, userConfig)
+          await ctx._setServer(options, server, userConfig)
           if (options.api && options.watch) {
             (await import('../../api/setup')).setup(ctx)
           }

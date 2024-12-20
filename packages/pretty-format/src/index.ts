@@ -296,6 +296,35 @@ function printComplexValue(
     )}}`
 }
 
+const ErrorPlugin: NewPlugin = {
+  test: val => val && val instanceof Error,
+  serialize(val: Error, config, indentation, depth, refs, printer) {
+    if (refs.includes(val)) {
+      return '[Circular]'
+    }
+    refs = [...refs, val]
+    const hitMaxDepth = ++depth > config.maxDepth
+    const { message, cause, ...rest } = val
+    const entries = {
+      message,
+      ...typeof cause !== 'undefined' ? { cause } : {},
+      ...val instanceof AggregateError ? { errors: val.errors } : {},
+      ...rest,
+    }
+    const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
+    return hitMaxDepth
+      ? `[${name}]`
+      : `${name} {${printIteratorEntries(
+        Object.entries(entries).values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
+  },
+}
+
 function isNewPlugin(plugin: Plugin): plugin is NewPlugin {
   return (plugin as NewPlugin).serialize != null
 }
@@ -535,6 +564,7 @@ export const plugins: {
   Immutable: NewPlugin
   ReactElement: NewPlugin
   ReactTestComponent: NewPlugin
+  Error: NewPlugin
 } = {
   AsymmetricMatcher,
   DOMCollection,
@@ -542,4 +572,5 @@ export const plugins: {
   Immutable,
   ReactElement,
   ReactTestComponent,
+  Error: ErrorPlugin,
 }

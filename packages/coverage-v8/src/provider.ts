@@ -2,7 +2,7 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Profiler } from 'node:inspector'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
 import type { AfterSuiteRunMeta } from 'vitest'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest, WorkspaceProject } from 'vitest/node'
+import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProject, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import remapping from '@ampproject/remapping'
@@ -288,7 +288,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
   private async convertCoverage(
     coverage: RawCoverage,
-    project: WorkspaceProject = this.ctx.getCoreWorkspaceProject(),
+    project: TestProject = this.ctx.getRootProject(),
     transformMode?: AfterSuiteRunMeta['transformMode'],
   ): Promise<CoverageMap> {
     let fetchCache = project.vitenode.fetchCache

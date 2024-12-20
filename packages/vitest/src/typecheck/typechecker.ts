@@ -3,7 +3,7 @@ import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
 import type { ParsedStack } from '@vitest/utils'
 import type { ChildProcess } from 'node:child_process'
 import type { Vitest } from '../node/core'
-import type { WorkspaceProject } from '../node/workspace'
+import type { TestProject } from '../node/project'
 import type { Awaitable } from '../types/general'
 import type { FileInformation } from './collect'
 import type { TscErrorInfo } from './types'
@@ -54,7 +54,7 @@ export class Typechecker {
 
   protected files: string[] = []
 
-  constructor(protected ctx: WorkspaceProject) {}
+  constructor(protected ctx: TestProject) {}
 
   public setFiles(files: string[]) {
     this.files = files
@@ -112,7 +112,7 @@ export class Typechecker {
         if ('tasks' in task) {
           markTasks(task.tasks)
         }
-        if (!task.result?.state && task.mode === 'run') {
+        if (!task.result?.state && (task.mode === 'run' || task.mode === 'queued')) {
           task.result = {
             state: 'pass',
           }

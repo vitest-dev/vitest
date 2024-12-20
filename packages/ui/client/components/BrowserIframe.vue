@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { viewport } from '~/composables/browser'
 import type { ViewportSize } from '~/composables/browser'
+import { viewport } from '~/composables/browser'
 import {
   hideRightPanel,
   panels,

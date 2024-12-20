@@ -1,6 +1,7 @@
 import type { Reporter } from '../types/reporter'
 import type { BaseOptions, BaseReporter } from './base'
 import type { BlobOptions } from './blob'
+import type { DefaultReporterOptions } from './default'
 import type { HTMLOptions } from './html'
 import type { ModuleDiagnostic as _FileDiagnostic } from './reported-tasks'
 import { BasicReporter } from './basic'
@@ -30,7 +31,7 @@ export {
 }
 export type { BaseReporter, Reporter }
 
-export type { TestProject } from '../reported-workspace-project'
+export type { TestProject } from '../project'
 /**
  * @deprecated Use `TestModule` instead
  */
@@ -65,9 +66,9 @@ export const ReportersMap = {
 export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
-  'default': BaseOptions
+  'default': DefaultReporterOptions
   'basic': BaseOptions
-  'verbose': never
+  'verbose': DefaultReporterOptions
   'dot': BaseOptions
   'json': JsonOptions
   'blob': BlobOptions

@@ -17,11 +17,12 @@ export interface FixtureItem extends FixtureOptions {
 
 export function mergeContextFixtures(
   fixtures: Record<string, any>,
-  context: { fixtures?: FixtureItem[] } = {},
+  context: { fixtures?: FixtureItem[] },
+  inject: (key: string) => unknown,
 ): {
     fixtures?: FixtureItem[]
   } {
-  const fixtureOptionKeys = ['auto']
+  const fixtureOptionKeys = ['auto', 'injected']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
     ([prop, value]) => {
       const fixtureItem = { value } as FixtureItem
@@ -34,7 +35,10 @@ export function mergeContextFixtures(
       ) {
         // fixture with options
         Object.assign(fixtureItem, value[1])
-        fixtureItem.value = value[0]
+        const userValue = value[0]
+        fixtureItem.value = fixtureItem.injected
+          ? (inject(prop) ?? userValue)
+          : userValue
       }
 
       fixtureItem.prop = prop
