@@ -1,18 +1,18 @@
-import type { Custom } from '@vitest/runner'
+import type { Test } from '@vitest/runner'
+import type { BenchFunction, BenchmarkAPI, BenchOptions } from './types/benchmark'
 import { getCurrentSuite } from '@vitest/runner'
 import { createChainable } from '@vitest/runner/utils'
 import { noop } from '@vitest/utils'
-import type { BenchFunction, BenchOptions, BenchmarkAPI } from './types/benchmark'
 import { getWorkerState } from './utils'
 
-const benchFns = new WeakMap<Custom, BenchFunction>()
+const benchFns = new WeakMap<Test, BenchFunction>()
 const benchOptsMap = new WeakMap()
 
-export function getBenchOptions(key: Custom): BenchOptions {
+export function getBenchOptions(key: Test): BenchOptions {
   return benchOptsMap.get(key)
 }
 
-export function getBenchFn(key: Custom): BenchFunction {
+export function getBenchFn(key: Test): BenchFunction {
   return benchFns.get(key)!
 }
 

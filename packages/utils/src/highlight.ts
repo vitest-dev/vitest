@@ -1,4 +1,4 @@
-import { type TokenColors, highlight as baseHighlight } from 'tinyhighlight'
+import { highlight as baseHighlight, type TokenColors } from 'tinyhighlight'
 import c, { type Colors } from 'tinyrainbow'
 
 function getDefs(c: Colors): TokenColors {

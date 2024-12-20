@@ -1,7 +1,7 @@
-import type { LogErrorOptions, LogLevel, LogType, Logger, LoggerOptions } from 'vite'
 import type { RollupError } from 'rollup'
-import colors from 'tinyrainbow'
+import type { LogErrorOptions, Logger, LoggerOptions, LogLevel, LogType } from 'vite'
 import type { Logger as VitestLogger } from './logger'
+import colors from 'tinyrainbow'
 
 const LogLevels: Record<LogLevel, number> = {
   silent: 0,
@@ -134,4 +134,17 @@ export function createViteLogger(
   }
 
   return logger
+}
+
+// silence warning by Vite for statically not analysizable dynamimc import
+export function silenceImportViteIgnoreWarning(logger: Logger): Logger {
+  return {
+    ...logger,
+    warn(msg, options) {
+      if (msg.includes('The above dynamic import cannot be analyzed by Vite')) {
+        return
+      }
+      logger.warn(msg, options)
+    },
+  }
 }

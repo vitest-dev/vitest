@@ -22,5 +22,8 @@ export default defineConfig({
       // test that empty reporter does not throw
       reporter: [],
     },
+    typecheck: {
+      ignoreSourceErrors: true,
+    },
   },
 })

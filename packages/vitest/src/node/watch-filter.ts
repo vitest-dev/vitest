@@ -1,8 +1,8 @@
-import readline from 'node:readline'
 import type { Writable } from 'node:stream'
+import readline from 'node:readline'
 import { stripVTControlCharacters } from 'node:util'
-import c from 'tinyrainbow'
 import { createDefer } from '@vitest/utils'
+import c from 'tinyrainbow'
 import { stdout as getStdout } from '../utils/base'
 
 const MAX_RESULT_COUNT = 10
@@ -74,9 +74,9 @@ export class WatchFilter {
           break
         case key?.ctrl && key?.name === 'c':
         case key?.name === 'escape':
-          this.cancel()
+          this.write(`${ESC}1G${ESC}0J`) // clean content
           onSubmit(undefined)
-          break
+          return
         case key?.name === 'enter':
         case key?.name === 'return':
           onSubmit(
@@ -222,10 +222,6 @@ export class WatchFilter {
     const cursortPos
       = this.keywordOffset() + (this.currentKeyword?.length || 0)
     this.write(`${ESC}${cursortPos}G`)
-  }
-
-  private cancel() {
-    this.write(`${ESC}J`) // erase down
   }
 
   private write(data: string) {

@@ -4,17 +4,17 @@ import type {
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { SerializedConfig } from '../config'
+import type { VitestExecutor } from '../execute'
+import type {
+  Benchmark,
+  BenchmarkResult,
+  BenchTask,
+} from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../utils'
-import type {
-  BenchTask,
-  Benchmark,
-  BenchmarkResult,
-} from '../types/benchmark'
-import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
 
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {
@@ -35,7 +35,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
   const benchmarkGroup: Benchmark[] = []
   const benchmarkSuiteGroup = []
   for (const task of suite.tasks) {
-    if (task.mode !== 'run') {
+    if (task.mode !== 'run' && task.mode !== 'queued') {
       continue
     }
 

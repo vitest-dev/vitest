@@ -1,7 +1,7 @@
 import type { WorkerContext } from '../../node/types/worker'
 import type { ContextRPC, WorkerGlobalState } from '../../types/worker'
-import { runBaseTests } from './base'
 import type { VitestWorker } from './types'
+import { runBaseTests } from './base'
 import { createThreadsRpcOptions } from './utils'
 
 class ThreadsBaseWorker implements VitestWorker {

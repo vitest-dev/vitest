@@ -364,7 +364,7 @@ page.getByTitle('Create') // ❌
 function getByTestId(text: string | RegExp): Locator
 ```
 
-Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
+Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/guide/browser/config#browser-locators-testidattribute).
 
 ```tsx
 <div data-testid="custom-element" />
@@ -388,6 +388,8 @@ It is recommended to use this only after the other locators don't work for your 
 - [testing-library's `ByTestId`](https://testing-library.com/docs/queries/bytestid/)
 
 ## Methods
+
+All methods are asynchronous and must be awaited. Since Vitest 3, tests will fail if a method is not awaited.
 
 ### click
 
@@ -567,7 +569,7 @@ function screenshot(options?: LocatorScreenshotOptions & { base64?: false }): Pr
 
 Creates a screenshot of the element matching the locator's selector.
 
-You can specify the save location for the screenshot using the `path` option, which is relative to the current test file. If the `path` option is not set, Vitest will default to using [`browser.screenshotDirectory`](/config/#browser-screenshotdirectory) (`__screenshot__` by default), along with the names of the file and the test to determine the screenshot's filepath.
+You can specify the save location for the screenshot using the `path` option, which is relative to the current test file. If the `path` option is not set, Vitest will default to using [`browser.screenshotDirectory`](/guide/browser/config#browser-screenshotdirectory) (`__screenshot__` by default), along with the names of the file and the test to determine the screenshot's filepath.
 
 If you also need the content of the screenshot, you can specify `base64: true` to return it alongside the filepath where the screenshot is saved.
 
@@ -706,3 +708,35 @@ This method returns an array of new locators that match the selector.
 Internally, this method calls `.elements` and wraps every element using [`page.elementLocator`](/guide/browser/context#page).
 
 - [See `locator.elements()`](#elements)
+
+## Properties
+
+### selector
+
+The `selector` is a string that will be used to locate the element by the browser provider. Playwright will use a `playwright` locator syntax while `preview` and `webdriverio` will use CSS.
+
+::: danger
+You should not use this string in your test code. The `selector` string should only be used when working with the Commands API:
+
+```ts [commands.ts]
+import type { BrowserCommand } from 'vitest/node'
+
+const test: BrowserCommand<string> = function test(context, selector) {
+  // playwright
+  await context.iframe.locator(selector).click()
+  // webdriverio
+  await context.browser.$(selector).click()
+}
+```
+
+```ts [example.test.ts]
+import { test } from 'vitest'
+import { commands, page } from '@vitest/browser/context'
+
+test('works correctly', async () => {
+  await commands.test(page.getByText('Hello').selector) // ✅
+  // vitest will automatically unwrap it to a string
+  await commands.test(page.getByText('Hello')) // ✅
+})
+```
+:::

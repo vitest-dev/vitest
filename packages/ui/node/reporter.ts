@@ -1,11 +1,3 @@
-import { promises as fs } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
-import { gzip, constants as zlibConstants } from 'node:zlib'
-import { basename, dirname, relative, resolve } from 'pathe'
-import { globSync } from 'tinyglobby'
-import c from 'tinyrainbow'
-import { stringify } from 'flatted'
 import type {
   File,
   ModuleGraphData,
@@ -14,6 +6,14 @@ import type {
   Vitest,
 } from 'vitest'
 import type { HTMLOptions } from 'vitest/node'
+import { promises as fs } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
+import { gzip, constants as zlibConstants } from 'node:zlib'
+import { stringify } from 'flatted'
+import { basename, dirname, relative, resolve } from 'pathe'
+import { globSync } from 'tinyglobby'
+import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 
 interface PotentialConfig {
@@ -63,7 +63,7 @@ export default class HTMLReporter implements Reporter {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
-      config: this.ctx.getCoreWorkspaceProject().getSerializableConfig(),
+      config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
       moduleGraph: {},
       sources: {},

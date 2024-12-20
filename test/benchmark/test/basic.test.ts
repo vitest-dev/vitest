@@ -1,7 +1,7 @@
-import fs from 'node:fs'
-import { expect, it } from 'vitest'
-import * as pathe from 'pathe'
 import type { FormattedBenchmarkReport } from 'vitest/src/node/reporters/benchmark/table/index.js'
+import fs from 'node:fs'
+import * as pathe from 'pathe'
+import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it('basic', { timeout: 60_000 }, async () => {
@@ -13,6 +13,9 @@ it('basic', { timeout: 60_000 }, async () => {
     root,
     allowOnly: true,
     outputJson: 'bench.json',
+
+    // Verify that type testing cannot be used with benchmark
+    typecheck: { enabled: true },
   }, [], 'benchmark')
   expect(result.exitCode).toBe(0)
 

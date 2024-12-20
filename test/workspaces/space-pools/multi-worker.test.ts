@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
 import type { UserConfig } from 'vitest/config'
+import { expect, test } from 'vitest'
 
 test('is multi worker', () => {
   // @ts-expect-error -- internal

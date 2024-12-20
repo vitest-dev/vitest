@@ -1,13 +1,13 @@
-import readline from 'node:readline'
 import type { Writable } from 'node:stream'
-import c from 'tinyrainbow'
-import prompt from 'prompts'
-import { relative, resolve } from 'pathe'
-import { toArray } from '@vitest/utils'
-import { getTests } from '@vitest/runner/utils'
-import { isWindows } from '../utils/env'
-import { stdout } from '../utils/base'
 import type { Vitest } from './core'
+import readline from 'node:readline'
+import { getTests } from '@vitest/runner/utils'
+import { toArray } from '@vitest/utils'
+import { relative, resolve } from 'pathe'
+import prompt from 'prompts'
+import c from 'tinyrainbow'
+import { stdout } from '../utils/base'
+import { isWindows } from '../utils/env'
 import { WatchFilter } from './watch-filter'
 
 const keys = [
@@ -18,6 +18,7 @@ const keys = [
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
+  ['b', 'start the browser server if not started yet'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
@@ -97,7 +98,7 @@ export function registerConsoleShortcuts(
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
-      const files = await ctx.getTestFilepaths()
+      const files = await ctx._globTestFilepaths()
       return ctx.changeNamePattern('', files, 'rerun all tests')
     }
     // rerun current pattern tests
@@ -119,6 +120,14 @@ export function registerConsoleShortcuts(
     // change fileNamePattern
     if (name === 'p') {
       return inputFilePattern()
+    }
+    if (name === 'b') {
+      await ctx._initBrowserServers()
+      ctx.projects.forEach((project) => {
+        ctx.logger.log()
+        ctx.logger.printBrowserBanner(project)
+      })
+      return null
     }
   }
 
@@ -149,11 +158,16 @@ export function registerConsoleShortcuts(
     })
 
     on()
+
+    if (typeof filter === 'undefined') {
+      return
+    }
+
     const files = ctx.state.getFilepaths()
     // if running in standalone mode, Vitest instance doesn't know about any test file
     const cliFiles
       = ctx.config.standalone && !files.length
-        ? await ctx.getTestFilepaths()
+        ? await ctx._globTestFilepaths()
         : undefined
 
     await ctx.changeNamePattern(
@@ -192,6 +206,10 @@ export function registerConsoleShortcuts(
     })
 
     on()
+
+    if (typeof filter === 'undefined') {
+      return
+    }
 
     latestFilename = filter?.trim() || ''
     const lastResults = watchFilter.getLastResults()

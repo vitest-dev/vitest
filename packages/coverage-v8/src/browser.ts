@@ -1,13 +1,21 @@
-import { cdp } from '@vitest/browser/context'
+import type { CoverageProviderModule } from 'vitest/node'
 import type { V8CoverageProvider } from './provider'
+import { cdp } from '@vitest/browser/context'
 import { loadProvider } from './load-provider'
 
 const session = cdp()
+let enabled = false
 
 type ScriptCoverage = Awaited<ReturnType<typeof session.send<'Profiler.takePreciseCoverage'>>>
 
 export default {
   async startCoverage() {
+    if (enabled) {
+      return
+    }
+
+    enabled = true
+
     await session.send('Profiler.enable')
     await session.send('Profiler.startPreciseCoverage', {
       callCount: true,
@@ -32,15 +40,14 @@ export default {
     return { result }
   },
 
-  async stopCoverage() {
-    await session.send('Profiler.stopPreciseCoverage')
-    await session.send('Profiler.disable')
+  stopCoverage() {
+    // Browser mode should not stop coverage as same V8 instance is shared between tests
   },
 
   async getProvider(): Promise<V8CoverageProvider> {
     return loadProvider()
   },
-}
+} satisfies CoverageProviderModule
 
 function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
   if (!coverage.url.startsWith(window.location.origin)) {
@@ -56,6 +63,14 @@ function filterResult(coverage: ScriptCoverage['result'][number]): boolean {
   }
 
   if (coverage.url.includes('__vitest__/assets')) {
+    return false
+  }
+
+  if (coverage.url === window.location.href) {
+    return false
+  }
+
+  if (coverage.url.includes('?browserv=') || coverage.url.includes('&browserv=')) {
     return false
   }
 

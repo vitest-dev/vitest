@@ -1,20 +1,20 @@
 import type { CancelReason } from '@vitest/runner'
+import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
 import { type BirpcReturn, createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
 import { getBrowserState } from './utils'
 
 const PAGE_TYPE = getBrowserState().type
 
 export const PORT = location.port
 export const HOST = [location.hostname, PORT].filter(Boolean).join(':')
-export const SESSION_ID
+export const RPC_ID
   = PAGE_TYPE === 'orchestrator'
-    ? getBrowserState().contextId
+    ? getBrowserState().sessionId
     : getBrowserState().testerId
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&sessionId=${SESSION_ID}`
+}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}`
 
 let setCancel = (_: CancelReason) => {}
 export const onCancel = new Promise<CancelReason>((resolve) => {

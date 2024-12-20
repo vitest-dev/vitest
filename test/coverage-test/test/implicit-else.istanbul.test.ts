@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
-import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 import { implicitElse } from '../fixtures/src/implicit-else'
+import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 test('implicit else is included in branch count', async () => {
   await runVitest({

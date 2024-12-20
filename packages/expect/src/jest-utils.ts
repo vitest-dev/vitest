@@ -22,8 +22,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
-import { isObject } from '@vitest/utils'
 import type { Tester, TesterContext } from './types'
+import { isObject } from '@vitest/utils'
 
 // Extracted out of jasmine 2.5.2
 export function equals(
@@ -114,10 +114,6 @@ function eq(
     }
   }
 
-  if (a instanceof Error && b instanceof Error) {
-    return a.message === b.message
-  }
-
   if (typeof URL === 'function' && a instanceof URL && b instanceof URL) {
     return a.href === b.href
   }
@@ -196,6 +192,16 @@ function eq(
     return false
   }
 
+  if (a instanceof Error && b instanceof Error) {
+    try {
+      return isErrorEqual(a, b, aStack, bStack, customTesters, hasKey)
+    }
+    finally {
+      aStack.pop()
+      bStack.pop()
+    }
+  }
+
   // Deep compare objects.
   const aKeys = keys(a, hasKey)
   let key
@@ -222,6 +228,37 @@ function eq(
   aStack.pop()
   bStack.pop()
 
+  return result
+}
+
+function isErrorEqual(
+  a: Error,
+  b: Error,
+  aStack: Array<unknown>,
+  bStack: Array<unknown>,
+  customTesters: Array<Tester>,
+  hasKey: any,
+) {
+  // https://nodejs.org/docs/latest-v22.x/api/assert.html#comparison-details
+  // - [[Prototype]] of objects are compared using the === operator.
+  // - Only enumerable "own" properties are considered.
+  // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
+
+  let result = (
+    Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+    && a.name === b.name
+    && a.message === b.message
+  )
+  // check Error.cause asymmetrically
+  if (typeof b.cause !== 'undefined') {
+    result &&= eq(a.cause, b.cause, aStack, bStack, customTesters, hasKey)
+  }
+  // AggregateError.errors
+  if (a instanceof AggregateError && b instanceof AggregateError) {
+    result &&= eq(a.errors, b.errors, aStack, bStack, customTesters, hasKey)
+  }
+  // spread to compare enumerable properties
+  result &&= eq({ ...a }, { ...b }, aStack, bStack, customTesters, hasKey)
   return result
 }
 

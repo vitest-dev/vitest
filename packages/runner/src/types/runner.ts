@@ -1,15 +1,13 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import type {
-  Custom,
-  ExtendedContext,
   File,
   SequenceHooks,
   SequenceSetupFiles,
   Suite,
   Task,
-  TaskContext,
   TaskResultPack,
   Test,
+  TestContext,
 } from './tasks'
 
 /**
@@ -38,6 +36,14 @@ export interface VitestRunnerConfig {
   retry: number
   includeTaskLocation?: boolean
   diffOptions?: DiffOptions
+}
+
+/**
+ * Possible options to run a single file in a test.
+ */
+export interface FileSpecification {
+  filepath: string
+  testLocations: number[] | undefined
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'
@@ -86,7 +92,7 @@ export interface VitestRunner {
   /**
    * When the task has finished running, but before cleanup hooks are called
    */
-  onTaskFinished?: (test: Test | Custom) => unknown
+  onTaskFinished?: (test: Test) => unknown
   /**
    * Called after result and state are set.
    */
@@ -136,17 +142,17 @@ export interface VitestRunner {
    * Called when new context for a test is defined. Useful if you want to add custom properties to the context.
    * If you only want to define custom context, consider using "beforeAll" in "setupFiles" instead.
    *
-   * This method is called for both "test" and "custom" handlers.
-   *
-   * @see https://vitest.dev/advanced/runner.html#your-task-function
+   * @see https://vitest.dev/advanced/runner#your-task-function
    */
-  extendTaskContext?: <T extends Test | Custom>(
-    context: TaskContext<T>
-  ) => ExtendedContext<T>
+  extendTaskContext?: (context: TestContext) => TestContext
   /**
    * Called when test and setup files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */
   importFile: (filepath: string, source: VitestRunnerImportSource) => unknown
+  /**
+   * Function that is called when the runner attempts to get the value when `test.extend` is used with `{ injected: true }`
+   */
+  injectValue?: (key: string) => unknown
   /**
    * Publicly available configuration.
    */

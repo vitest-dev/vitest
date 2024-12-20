@@ -1,4 +1,4 @@
-export { notNullish, getCallLastIndex, nanoid } from '@vitest/utils'
+export { getCallLastIndex, nanoid, notNullish } from '@vitest/utils'
 
 export function groupBy<T, K extends string | number | symbol>(
   collection: T[],
@@ -24,8 +24,17 @@ export function escapeRegExp(s: string) {
 }
 
 export function wildcardPatternToRegExp(pattern: string): RegExp {
-  return new RegExp(
-    `^${pattern.split('*').map(escapeRegExp).join('.*')}$`,
-    'i',
-  )
+  const negated = pattern.startsWith('!')
+
+  if (negated) {
+    pattern = pattern.slice(1)
+  }
+
+  let regexp = `${pattern.split('*').map(escapeRegExp).join('.*')}$`
+
+  if (negated) {
+    regexp = `(?!${regexp})`
+  }
+
+  return new RegExp(`^${regexp}`, 'i')
 }

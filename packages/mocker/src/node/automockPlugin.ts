@@ -1,15 +1,15 @@
-import MagicString from 'magic-string'
 import type { Plugin } from 'vite'
+import MagicString from 'magic-string'
 import { cleanUrl } from '../utils'
 import {
   type Declaration,
   type ExportDefaultDeclaration,
   type ExportNamedDeclaration,
   type Expression,
+  getArbitraryModuleIdentifier,
   type Pattern,
   type Positioned,
   type Program,
-  getArbitraryModuleIdentifier,
 } from './esmWalker'
 
 export interface AutomockPluginOptions {

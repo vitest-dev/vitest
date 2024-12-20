@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { type Vitest, startVitest } from 'vitest/node'
+import { startVitest, type Vitest } from 'vitest/node'
 
 const port = 9000
 const pageUrl = `http://localhost:${port}/__vitest__/`
@@ -172,7 +172,7 @@ test.describe('standalone', () => {
 
     // run single file
     await page.getByText('fixtures/sample.test.ts').hover()
-    await page.getByRole('button', { name: 'Run current test' }).click()
+    await page.getByRole('button', { name: 'Run current file' }).click()
 
     // check results
     await page.getByText('PASS (1)').click()

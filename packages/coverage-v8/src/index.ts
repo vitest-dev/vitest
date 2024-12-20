@@ -1,12 +1,20 @@
+import type { CoverageProviderModule } from 'vitest/node'
+import type { V8CoverageProvider } from './provider'
 import inspector, { type Profiler } from 'node:inspector'
 import { provider } from 'std-env'
-import type { V8CoverageProvider } from './provider'
 import { loadProvider } from './load-provider'
 
 const session = new inspector.Session()
+let enabled = false
 
 export default {
-  startCoverage(): void {
+  startCoverage({ isolate }) {
+    if (isolate === false && enabled) {
+      return
+    }
+
+    enabled = true
+
     session.connect()
     session.post('Profiler.enable')
     session.post('Profiler.startPreciseCoverage', {
@@ -34,7 +42,11 @@ export default {
     })
   },
 
-  stopCoverage(): void {
+  stopCoverage({ isolate }) {
+    if (isolate === false) {
+      return
+    }
+
     session.post('Profiler.stopPreciseCoverage')
     session.post('Profiler.disable')
     session.disconnect()
@@ -43,7 +55,7 @@ export default {
   async getProvider(): Promise<V8CoverageProvider> {
     return loadProvider()
   },
-}
+} satisfies CoverageProviderModule
 
 function filterResult(coverage: Profiler.ScriptCoverage): boolean {
   if (!coverage.url.startsWith('file://')) {

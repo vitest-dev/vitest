@@ -1,7 +1,7 @@
-import fs from 'node:fs'
 import type { Stats } from 'node:fs'
+import type { TestSpecification } from '../spec'
+import fs from 'node:fs'
 import { relative } from 'pathe'
-import type { WorkspaceSpec } from '../pool'
 
 type FileStatsCache = Pick<Stats, 'size'>
 
@@ -12,10 +12,10 @@ export class FilesStatsCache {
     return this.cache.get(key)
   }
 
-  public async populateStats(root: string, specs: WorkspaceSpec[]) {
+  public async populateStats(root: string, specs: TestSpecification[]) {
     const promises = specs.map((spec) => {
-      const key = `${spec[0].getName()}:${relative(root, spec[1])}`
-      return this.updateStats(spec[1], key)
+      const key = `${spec[0].name}:${relative(root, spec.moduleId)}`
+      return this.updateStats(spec.moduleId, key)
     })
     await Promise.all(promises)
   }

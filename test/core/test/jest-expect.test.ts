@@ -1,9 +1,9 @@
 /* eslint-disable no-sparse-arrays */
-import { AssertionError } from 'node:assert'
+import nodeAssert, { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
-import { describe, expect, it, vi } from 'vitest'
 import { generateToBeMessage } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
+import { assert, beforeAll, describe, expect, it, vi } from 'vitest'
 
 class TestError extends Error {}
 
@@ -606,6 +606,46 @@ describe('toSatisfy()', () => {
     expect(1).toSatisfy(isOddMock)
     expect(isOddMock).toBeCalled()
   })
+
+  it('asymmetric matcher', () => {
+    expect({ value: 1 }).toEqual({ value: expect.toSatisfy(isOdd) })
+    expect(() => {
+      expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'odd') })
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected { value: 2 } to deeply equal { value: toSatisfy{…} }]`,
+    )
+
+    expect(() => {
+      throw new Error('1')
+    }).toThrow(
+      expect.toSatisfy((e) => {
+        assert(e instanceof Error)
+        expect(e).toMatchObject({ message: expect.toSatisfy(isOdd) })
+        return true
+      }),
+    )
+
+    expect(() => {
+      expect(() => {
+        throw new Error('2')
+      }).toThrow(
+        expect.toSatisfy((e) => {
+          assert(e instanceof Error)
+          expect(e).toMatchObject({ message: expect.toSatisfy(isOdd) })
+          return true
+        }),
+      )
+    }).toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: expected Error: 2 to match object { message: toSatisfy{…} }]`,
+    )
+  })
+
+  it('error message', () => {
+    snapshotError(() => expect(2).toSatisfy(isOdd))
+    snapshotError(() => expect(2).toSatisfy(isOdd, 'ODD'))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd) }))
+    snapshotError(() => expect({ value: 2 }).toEqual({ value: expect.toSatisfy(isOdd, 'ODD') }))
+  })
 })
 
 describe('toHaveBeenCalled', () => {
@@ -631,6 +671,222 @@ describe('toHaveBeenCalledWith', () => {
         expect(mock).not.toHaveBeenCalledWith(3)
       }).toThrow(/^expected "spy" to not be called with arguments: \[ 3 \][^e]/)
     })
+  })
+})
+
+describe('toHaveBeenCalledExactlyOnceWith', () => {
+  describe('negated', () => {
+    it('fails if called', () => {
+      const mock = vi.fn()
+      mock(3)
+
+      expect(() => {
+        expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+      }).toThrow(/^expected "spy" to not be called once with arguments: \[ 3 \][^e]/)
+    })
+
+    it('passes if called multiple times with args', () => {
+      const mock = vi.fn()
+      mock(3)
+      mock(3)
+
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+
+    it('passes if not called', () => {
+      const mock = vi.fn()
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+
+    it('passes if called with a different argument', () => {
+      const mock = vi.fn()
+      mock(4)
+
+      expect(mock).not.toHaveBeenCalledExactlyOnceWith(3)
+    })
+  })
+
+  it('fails if not called or called too many times', () => {
+    const mock = vi.fn()
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+
+    mock(3)
+    mock(3)
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+  })
+
+  it('fails if called with wrong args', () => {
+    const mock = vi.fn()
+    mock(4)
+
+    expect(() => {
+      expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+    }).toThrow(/^expected "spy" to be called once with arguments: \[ 3 \][^e]/)
+  })
+
+  it('passes if called exactly once with args', () => {
+    const mock = vi.fn()
+    mock(3)
+
+    expect(mock).toHaveBeenCalledExactlyOnceWith(3)
+  })
+})
+
+describe('toHaveBeenCalledBefore', () => {
+  it('success if expect mock is called before result mock', () => {
+    const expectMock = vi.fn()
+    const resultMock = vi.fn()
+
+    expectMock()
+    resultMock()
+
+    expect(expectMock).toHaveBeenCalledBefore(resultMock)
+  })
+
+  it('throws if expect is not a spy', () => {
+    expect(() => {
+      expect(1).toHaveBeenCalledBefore(vi.fn())
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if result is not a spy', () => {
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledBefore(1 as any)
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if expect mock is called after result mock', () => {
+    const expectMock = vi.fn()
+    const resultMock = vi.fn()
+
+    resultMock()
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledBefore(resultMock)
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+
+  it('throws with correct mock name if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock2()
+    mock1()
+
+    expect(() => {
+      expect(mock1).toHaveBeenCalledBefore(mock2)
+    }).toThrow(/^expected "mock1" to have been called before "mock2"/)
+  })
+
+  it('fails if expect mock is not called', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledBefore(resultMock)
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+
+  it('not fails if expect mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(vi.fn()).toHaveBeenCalledBefore(resultMock, false)
+  })
+
+  it('fails if result mock is not called', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledBefore(vi.fn())
+    }).toThrow(/^expected "spy" to have been called before "spy"/)
+  })
+})
+
+describe('toHaveBeenCalledAfter', () => {
+  it('success if expect mock is called after result mock', () => {
+    const resultMock = vi.fn()
+    const expectMock = vi.fn()
+
+    resultMock()
+    expectMock()
+
+    expect(expectMock).toHaveBeenCalledAfter(resultMock)
+  })
+
+  it('throws if expect is not a spy', () => {
+    expect(() => {
+      expect(1).toHaveBeenCalledAfter(vi.fn())
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if result is not a spy', () => {
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledAfter(1 as any)
+    }).toThrow(/^1 is not a spy or a call to a spy/)
+  })
+
+  it('throws if expect mock is called before result mock', () => {
+    const resultMock = vi.fn()
+    const expectMock = vi.fn()
+
+    expectMock()
+    resultMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledAfter(resultMock)
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+
+  it('throws with correct mock name if failed', () => {
+    const mock1 = vi.fn().mockName('mock1')
+    const mock2 = vi.fn().mockName('mock2')
+
+    mock1()
+    mock2()
+
+    expect(() => {
+      expect(mock1).toHaveBeenCalledAfter(mock2)
+    }).toThrow(/^expected "mock1" to have been called after "mock2"/)
+  })
+
+  it('fails if result mock is not called', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(() => {
+      expect(expectMock).toHaveBeenCalledAfter(vi.fn())
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
+  })
+
+  it('not fails if result mock is not called with option `failIfNoFirstInvocation` set to false', () => {
+    const expectMock = vi.fn()
+
+    expectMock()
+
+    expect(expectMock).toHaveBeenCalledAfter(vi.fn(), false)
+  })
+
+  it('fails if expect mock is not called', () => {
+    const resultMock = vi.fn()
+
+    resultMock()
+
+    expect(() => {
+      expect(vi.fn()).toHaveBeenCalledAfter(resultMock)
+    }).toThrow(/^expected "spy" to have been called after "spy"/)
   })
 })
 
@@ -701,14 +957,14 @@ describe('async expect', () => {
     await expect((async () => {
       throw new Error('err')
     })()).rejects.toThrow('err')
-    expect((async () => {
+    await expect((async () => {
       throw new TestError('error')
     })()).rejects.toThrow(TestError)
     const err = new Error('hello world')
-    expect((async () => {
+    await expect((async () => {
       throw err
     })()).rejects.toThrow(err)
-    expect((async () => {
+    await expect((async () => {
       throw new Error('message')
     })()).rejects.toThrow(expect.objectContaining({
       message: expect.stringContaining('mes'),
@@ -795,6 +1051,12 @@ describe('async expect', () => {
   })
 
   describe('promise auto queuing', () => {
+    // silence warning
+    beforeAll(() => {
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      return () => spy.mockRestore()
+    })
+
     it.fails('fails', () => {
       expect(new Promise((resolve, reject) => setTimeout(reject, 500)))
         .resolves
@@ -852,7 +1114,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise resolved "+0" instead of rejecting'))
+      expect(error).toMatchObject({ message: 'promise resolved "+0" instead of rejecting' })
     }
 
     try {
@@ -860,7 +1122,7 @@ describe('async expect', () => {
       expect.unreachable()
     }
     catch (error) {
-      expect(error).toEqual(new Error('promise rejected "+0" instead of resolving'))
+      expect(error).toMatchObject({ message: 'promise rejected "+0" instead of resolving' })
     }
   })
 })
@@ -917,7 +1179,7 @@ it('correctly prints diff with asymmetric matchers', () => {
       "- Expected
       + Received
 
-        Object {
+        {
           "a": Any<Number>,
       -   "b": Any<Function>,
       +   "b": "string",
@@ -951,7 +1213,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "c": 4,
     +   "c": 3,
       }",
@@ -966,7 +1228,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "b": 3,
     +   "b": 2,
       }",
@@ -981,8 +1243,8 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "c": Object {
+      {
+        "c": {
     -     "d": 5,
     +     "d": 4,
         },
@@ -997,7 +1259,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
         "a": 1,
         "b": 2,
     -   "c": 4,
@@ -1014,9 +1276,9 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
         "a": 1,
-        "c": Object {
+        "c": {
     -     "d": 4,
     +     "d": 3,
         },
@@ -1032,12 +1294,12 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "c": Object {
+      {
+        "c": {
     -     "d": 5,
     +     "d": 4,
         },
-        "foo": Object {
+        "foo": {
     -     "value": "biz",
     +     "value": "bar",
         },
@@ -1054,9 +1316,9 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
-        "children": Array [
-          Object {
+      {
+        "children": [
+          {
     -       "firstName": "Paul",
     +       "firstName": "Jessica",
           },
@@ -1100,7 +1362,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-    - Object {
+    - {
     -   "value": 1,
     + Foo {
     +   "value": 0,
@@ -1116,7 +1378,7 @@ it('toMatchObject error diff', () => {
 
     - Bar {
     -   "value": 1,
-    + Object {
+    + {
     +   "value": 0,
       }",
     ]
@@ -1136,7 +1398,7 @@ it('toMatchObject error diff', () => {
       "- Expected
     + Received
 
-      Object {
+      {
     -   "bad": Bar {
     -     "value": 2,
     +   "bad": Foo {
@@ -1344,6 +1606,174 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(() => {
     throw new MyError2('hello')
   }).toThrow(MyError1))
+})
+
+it('error equality', () => {
+  class MyError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  class YourError extends Error {
+    constructor(message: string, public custom: string) {
+      super(message)
+    }
+  }
+
+  {
+    // different custom property
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'b')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+
+    // toThrowError also compare errors similar to toEqual
+    snapshotError(() =>
+      expect(() => {
+        throw e1
+      }).toThrowError(e2),
+    )
+  }
+
+  {
+    // different message
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2)
+    assert.notDeepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+  }
+
+  {
+    // different class
+    const e1 = new MyError('hello', 'a')
+    const e2 = new YourError('hello', 'a')
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+    expect(e1).not.toStrictEqual(e2) // toStrictEqual checks constructor already
+    assert.deepEqual(e1, e2)
+    nodeAssert.notDeepStrictEqual(e1, e2)
+  }
+
+  {
+    // same
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'a')
+    expect(e1).toEqual(e2)
+    expect(e1).toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.deepStrictEqual(e1, e2)
+
+    expect(() => {
+      throw e1
+    }).toThrowError(e2)
+  }
+
+  {
+    // same
+    const e1 = new MyError('hi', 'a')
+    const e2 = new MyError('hi', 'a')
+    expect(e1).toEqual(e2)
+    expect(e1).toStrictEqual(e2)
+    assert.deepEqual(e1, e2)
+    nodeAssert.deepStrictEqual(e1, e2)
+  }
+
+  {
+    // different cause
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('hello', { cause: 'y' })
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+  }
+
+  {
+    // different cause (asymmetric fail)
+    const e1 = new Error('hello')
+    const e2 = new Error('hello', { cause: 'y' })
+    snapshotError(() => expect(e1).toEqual(e2))
+    expect(e1).not.toEqual(e2)
+  }
+
+  {
+    // different cause (asymmetric pass)
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('hello')
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // different cause (fail by other props)
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = new Error('world')
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // different cause
+    const e1 = new Error('hello', { cause: 'x' })
+    const e2 = { something: 'else' }
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // AggregateError (pass)
+    const e1 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })
+    const e2 = new AggregateError([new Error('inner')], 'outer', { cause: 'x' })
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // AggregateError (fail)
+    const e1 = new AggregateError([new Error('inner', { cause: 'x' })], 'outer', { cause: 'x' })
+    const e2 = new AggregateError([new Error('inner', { cause: 'y' })], 'outer', { cause: 'x' })
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // cyclic (pass)
+    const e1 = new Error('hi')
+    e1.cause = e1
+    const e2 = new Error('hi')
+    e2.cause = e2
+    expect(e1).toEqual(e2)
+  }
+
+  {
+    // cyclic (fail)
+    const e1 = new Error('hello')
+    e1.cause = e1
+    const e2 = new Error('world')
+    e2.cause = e2
+    snapshotError(() => expect(e1).toEqual(e2))
+  }
+
+  {
+    // asymmetric matcher
+    const e1 = new Error('hello', { cause: 'x' })
+    expect(e1).toEqual(expect.objectContaining({
+      message: 'hello',
+      cause: 'x',
+    }))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'hello',
+      cause: 'y',
+    })))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'world',
+      cause: 'x',
+    })))
+    snapshotError(() => expect(e1).toEqual(expect.objectContaining({
+      message: 'world',
+      cause: 'y',
+    })))
+  }
 })
 
 it('toHaveBeenNthCalledWith error', () => {

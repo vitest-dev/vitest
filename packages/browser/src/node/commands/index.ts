@@ -1,20 +1,20 @@
-import { click, dblClick, tripleClick } from './click'
-import { type } from './type'
 import { clear } from './clear'
-import { fill } from './fill'
-import { selectOptions } from './select'
-import { tab } from './tab'
-import { keyboard, keyboardCleanup } from './keyboard'
+import { click, dblClick, tripleClick } from './click'
 import { dragAndDrop } from './dragAndDrop'
-import { hover } from './hover'
-import { upload } from './upload'
+import { fill } from './fill'
 import {
   _fileInfo,
   readFile,
   removeFile,
   writeFile,
 } from './fs'
+import { hover } from './hover'
+import { keyboard, keyboardCleanup } from './keyboard'
 import { screenshot } from './screenshot'
+import { selectOptions } from './select'
+import { tab } from './tab'
+import { type } from './type'
+import { upload } from './upload'
 
 export default {
   readFile,

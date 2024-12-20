@@ -1,6 +1,7 @@
-import { expect, it } from 'vitest'
-import type { File, TaskResultPack, UserConfig } from 'vitest'
+import type { RunnerTaskResultPack, RunnerTestFile } from 'vitest'
+import type { UserConfig } from 'vitest/node'
 import { resolve } from 'pathe'
+import { expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 it.each([
@@ -15,15 +16,15 @@ it.each([
       headless: true,
     },
   },
-] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 3 }, async (config) => {
-  const taskUpdate: TaskResultPack[] = []
-  const finishedFiles: File[] = []
-  const collectedFiles: File[] = []
+] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {
+  const taskUpdate: RunnerTaskResultPack[] = []
+  const finishedFiles: RunnerTestFile[] = []
+  const collectedFiles: RunnerTestFile[] = []
   const { ctx, stdout, stderr } = await runVitest({
     root: resolve(__dirname, '..', 'fixtures', 'public-api'),
     include: ['**/*.spec.ts'],
     reporters: [
-      'verbose',
+      ['verbose', { isTTY: false }],
       {
         onTaskUpdate(packs) {
           taskUpdate.push(...packs.filter(i => i[1]?.state === 'pass'))

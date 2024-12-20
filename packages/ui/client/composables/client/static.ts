@@ -1,5 +1,5 @@
-import type { BirpcReturn } from 'birpc'
 import type { VitestClient } from '@vitest/ws-client'
+import type { BirpcReturn } from 'birpc'
 import type {
   File,
   ModuleGraphData,
@@ -7,8 +7,8 @@ import type {
   WebSocketEvents,
   WebSocketHandlers,
 } from 'vitest'
-import { parse } from 'flatted'
 import { decompressSync, strFromU8 } from 'fflate'
+import { parse } from 'flatted'
 import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {

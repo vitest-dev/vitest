@@ -1,8 +1,8 @@
-import v8 from 'node:v8'
 import type { WorkerGlobalState } from '../../types/worker'
-import { createForksRpcOptions, unwrapSerializableConfig } from './utils'
-import { runBaseTests } from './base'
 import type { VitestWorker } from './types'
+import v8 from 'node:v8'
+import { runBaseTests } from './base'
+import { createForksRpcOptions, unwrapSerializableConfig } from './utils'
 
 class ForksBaseWorker implements VitestWorker {
   getRpcOptions() {

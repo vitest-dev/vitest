@@ -1,8 +1,8 @@
-import { readFileSync as _readFileSync } from 'node:fs'
 import type { WorkerGlobalState } from 'vitest'
+import type { CloneOption } from './types'
+import { readFileSync as _readFileSync } from 'node:fs'
 import ponyfillStructuredClone from '@ungap/structured-clone'
 import createDebug from 'debug'
-import type { CloneOption } from './types'
 
 // keep the reference in case it was mocked
 const readFileSync = _readFileSync

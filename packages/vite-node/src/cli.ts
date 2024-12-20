@@ -1,14 +1,14 @@
+import type { ViteNodeServerOptions } from './types'
 import { resolve } from 'node:path'
 import cac from 'cac'
 import c from 'tinyrainbow'
 import { createServer, loadEnv } from 'vite'
 import { version } from '../package.json'
-import { ViteNodeServer } from './server'
 import { ViteNodeRunner } from './client'
-import type { ViteNodeServerOptions } from './types'
-import { toArray } from './utils'
 import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr'
+import { ViteNodeServer } from './server'
 import { installSourcemapsSupport } from './source-map'
+import { toArray } from './utils'
 
 const cli = cac('vite-node')
 
@@ -164,7 +164,7 @@ async function run(files: string[], options: CliOptions = {}) {
       }
 
       await waitForWatched(files)
-      // eslint-disable-next-line no-console
+
       console.log('[debug] watcher is ready')
     }
   }

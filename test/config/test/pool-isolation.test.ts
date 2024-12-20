@@ -31,7 +31,7 @@ describe.each(['forks', 'threads'] as const)('%s', async (pool) => {
       env: { TESTED_POOL: pool },
     })
 
-    expect(stderr).toBe('')
+    expect(stderr).toBe(deprecatedPoolMatchGlob())
     expect(exitCode).toBe(0)
   })
 
@@ -62,11 +62,15 @@ describe.each(['forks', 'threads'] as const)('%s', async (pool) => {
       env: { TESTED_POOL: pool },
     })
 
-    expect(stderr).toBe('')
+    expect(stderr).toBe(deprecatedPoolMatchGlob())
     expect(exitCode).toBe(0)
   })
 })
 
 function invertPool(pool: 'threads' | 'forks') {
   return pool === 'threads' ? 'forks' : 'threads'
+}
+
+function deprecatedPoolMatchGlob() {
+  return ' Vitest  "poolMatchGlobs" is deprecated. Use "workspace" to define different configurations instead.\n'
 }

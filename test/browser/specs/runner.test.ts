@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
-import { defaultBrowserPort } from 'vitest/config'
-import { browser, provider, runBrowserTests } from './utils'
+import { instances, provider, runBrowserTests } from './utils'
 
 describe('running browser tests', async () => {
   let stderr: string
@@ -29,11 +28,9 @@ describe('running browser tests', async () => {
       console.error(stderr)
     })
 
-    expect(stdout).toContain(`Browser runner started by ${provider} at http://localhost:${defaultBrowserPort}/`)
-
-    expect(browserResultJson.testResults).toHaveLength(19)
-    expect(passedTests).toHaveLength(17)
-    expect(failedTests).toHaveLength(2)
+    expect(browserResultJson.testResults).toHaveLength(19 * instances.length)
+    expect(passedTests).toHaveLength(17 * instances.length)
+    expect(failedTests).toHaveLength(2 * instances.length)
 
     expect(stderr).not.toContain('optimized dependencies changed')
     expect(stderr).not.toContain('has been externalized for browser compatibility')
@@ -92,7 +89,7 @@ describe('running browser tests', async () => {
     expect(stderr).toMatch(/hello from console.trace\s+(\w+|@)/)
   })
 
-  test.runIf(browser !== 'webkit')(`logs have stack traces in non-safari`, () => {
+  test(`logs have stack traces`, () => {
     expect(stdout).toMatch(`
 log with a stack
  ❯ test/logs.test.ts:58:10
@@ -101,30 +98,35 @@ log with a stack
 error with a stack
  ❯ test/logs.test.ts:59:10
     `.trim())
-    // console.trace doens't add additional stack trace
-    expect(stderr).not.toMatch('test/logs.test.ts:60:10')
-  })
+    // console.trace processes the stack trace correctly
+    expect(stderr).toMatch('test/logs.test.ts:60:10')
 
-  test.runIf(browser === 'webkit')(`logs have stack traces in safari`, () => {
+    if (instances.some(({ browser }) => browser === 'webkit')) {
     // safari print stack trace in a different place
-    expect(stdout).toMatch(`
+      expect(stdout).toMatch(`
 log with a stack
  ❯ test/logs.test.ts:58:14
     `.trim())
-    expect(stderr).toMatch(`
+      expect(stderr).toMatch(`
 error with a stack
  ❯ test/logs.test.ts:59:16
     `.trim())
-    // console.trace doens't add additional stack trace
-    expect(stderr).not.toMatch('test/logs.test.ts:60:16')
+      // console.trace processes the stack trace correctly
+      expect(stderr).toMatch('test/logs.test.ts:60:16')
+    }
   })
 
   test(`stack trace points to correct file in every browser`, () => {
     // dependeing on the browser it references either `.toBe()` or `expect()`
-    expect(stderr).toMatch(/test\/failing.test.ts:5:(12|17)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:10:(12|17)/)
 
     // column is 18 in safari, 8 in others
     expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
+
+    expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.')
+    expect(stderr).toMatch(/test\/failing.test.ts:18:(27|36)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|33)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|39)/)
   })
 
   test('popup apis should log a warning', () => {
@@ -139,17 +141,28 @@ error with a stack
 })
 
 test('user-event', async () => {
-  const { ctx, stderr } = await runBrowserTests({
+  const { stdout } = await runBrowserTests({
     root: './fixtures/user-event',
   })
-  onTestFailed(() => console.error(stderr))
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('cleanup-retry.test.ts', browser)
+    expect(stdout).toReportPassedTest('cleanup1.test.ts', browser)
+    expect(stdout).toReportPassedTest('cleanup2.test.ts', browser)
+    expect(stdout).toReportPassedTest('keyboard.test.ts', browser)
+    expect(stdout).toReportPassedTest('clipboard.test.ts', browser)
+  })
+})
 
-  expect(Object.fromEntries(ctx.state.getFiles().map(f => [f.name, f.result.state]))).toMatchInlineSnapshot(`
-    {
-      "cleanup-retry.test.ts": "pass",
-      "cleanup1.test.ts": "pass",
-      "cleanup2.test.ts": "pass",
-      "clipboard.test.ts": "pass",
-    }
-  `)
+test('timeout', async () => {
+  const { stderr } = await runBrowserTests({
+    root: './fixtures/timeout',
+  })
+  expect(stderr).toContain('Matcher did not succeed in 500ms')
+  if (provider === 'playwright') {
+    expect(stderr).toContain('locator.click: Timeout 500ms exceeded.')
+    expect(stderr).toContain('locator.click: Timeout 345ms exceeded.')
+  }
+  if (provider === 'webdriverio') {
+    expect(stderr).toContain('Cannot find element with locator')
+  }
 })

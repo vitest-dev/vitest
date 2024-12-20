@@ -1,7 +1,7 @@
-import { getType, stringify } from '@vitest/utils'
-import c from 'tinyrainbow'
-import { diff, printDiffOrStringify } from '@vitest/utils/diff'
 import type { MatcherHintOptions, Tester } from './types'
+import { getType, stringify } from '@vitest/utils'
+import { diff, printDiffOrStringify } from '@vitest/utils/diff'
+import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 
 export { diff } from '@vitest/utils/diff'

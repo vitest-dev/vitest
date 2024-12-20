@@ -1,7 +1,7 @@
 import type { UserEvent } from '../../../context'
+import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 
 export const clear: UserEventCommand<UserEvent['clear']> = async (
   context,
@@ -10,9 +10,7 @@ export const clear: UserEventCommand<UserEvent['clear']> = async (
   if (context.provider instanceof PlaywrightBrowserProvider) {
     const { iframe } = context
     const element = iframe.locator(selector)
-    await element.clear({
-      timeout: 1000,
-    })
+    await element.clear()
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser

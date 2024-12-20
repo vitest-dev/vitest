@@ -1,6 +1,6 @@
-import { parseModule } from 'magicast'
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import { createCoverageSummary } from 'istanbul-lib-coverage'
+import { parseModule } from 'magicast'
 
 import { expect, test } from 'vitest'
 import { defineConfig } from 'vitest/config'

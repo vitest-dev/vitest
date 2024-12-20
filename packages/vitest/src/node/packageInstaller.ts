@@ -1,8 +1,8 @@
-import url from 'node:url'
 import { createRequire } from 'node:module'
-import c from 'tinyrainbow'
+import url from 'node:url'
 import { isPackageExists } from 'local-pkg'
-import { isCI } from '../utils/env'
+import c from 'tinyrainbow'
+import { isTTY } from '../utils/env'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -31,8 +31,6 @@ export class VitestPackageInstaller {
       return true
     }
 
-    const promptInstall = !isCI && process.stdout.isTTY
-
     process.stderr.write(
       c.red(
         `${c.inverse(
@@ -41,12 +39,12 @@ export class VitestPackageInstaller {
       ),
     )
 
-    if (!promptInstall) {
+    if (!isTTY) {
       return false
     }
 
     const prompts = await import('prompts')
-    const { install } = await prompts.prompt({
+    const { install } = await prompts.default({
       type: 'confirm',
       name: 'install',
       message: c.reset(`Do you want to install ${c.green(dependency)}?`),

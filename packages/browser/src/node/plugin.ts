@@ -1,30 +1,29 @@
-import { fileURLToPath } from 'node:url'
-import { createRequire } from 'node:module'
-import { lstatSync, readFileSync } from 'node:fs'
 import type { Stats } from 'node:fs'
+import type { HtmlTagDescriptor } from 'vite'
+import type { Vitest } from 'vitest/node'
+import type { ParentBrowserProject } from './projectParent'
+import { lstatSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { dynamicImportPlugin } from '@vitest/mocker/node'
+import { toArray } from '@vitest/utils'
+import MagicString from 'magic-string'
 import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
-import type { WorkspaceProject } from 'vitest/node'
+import { coverageConfigDefaults, type Plugin } from 'vitest/config'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
-import { type Plugin, coverageConfigDefaults } from 'vitest/config'
-import { toArray } from '@vitest/utils'
-import { dynamicImportPlugin } from '@vitest/mocker/node'
-import MagicString from 'magic-string'
+import { distRoot } from './constants'
+import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
+import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
-import type { BrowserServer } from './server'
-import { resolveOrchestrator } from './serverOrchestrator'
-import { resolveTester } from './serverTester'
 
-export type { BrowserCommand } from 'vitest/node'
 export { defineBrowserCommand } from './commands/utils'
+export type { BrowserCommand } from 'vitest/node'
 
-export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
-  const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
-  const distRoot = resolve(pkgRoot, 'dist')
-  const project = browserServer.project
+const versionRegexp = /(?:\?|&)v=\w{8}/
 
+export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
   function isPackageExists(pkg: string, root: string) {
-    return browserServer.project.ctx.packageInstaller.isPackageExists?.(pkg, {
+    return parentServer.vitest.packageInstaller.isPackageExists?.(pkg, {
       paths: [root],
     })
   }
@@ -34,7 +33,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
       enforce: 'pre',
       name: 'vitest:browser',
       async configureServer(server) {
-        browserServer.setServer(server)
+        parentServer.setServer(server)
 
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestHeaders(_req, res, next) {
@@ -46,36 +45,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           }
           next()
         })
-        // eslint-disable-next-line prefer-arrow-callback
-        server.middlewares.use(async function vitestBrowserMode(req, res, next) {
-          if (!req.url || !browserServer.provider) {
-            return next()
-          }
-          const url = new URL(req.url, 'http://localhost')
-          if (!url.pathname.startsWith(browserServer.prefixTesterUrl) && url.pathname !== base) {
-            return next()
-          }
-
-          res.setHeader(
-            'Cache-Control',
-            'no-cache, max-age=0, must-revalidate',
-          )
-          res.setHeader('Content-Type', 'text/html; charset=utf-8')
-
-          // remove custom iframe related headers to allow the iframe to load
-          res.removeHeader('X-Frame-Options')
-
-          if (url.pathname === base) {
-            const html = await resolveOrchestrator(browserServer, url, res)
-            res.write(html, 'utf-8')
-            res.end()
-            return
-          }
-
-          const html = await resolveTester(browserServer, url, res)
-          res.write(html, 'utf-8')
-          res.end()
-        })
+        server.middlewares.use(createOrchestratorMiddleware(parentServer))
+        server.middlewares.use(createTesterMiddleware(parentServer))
 
         server.middlewares.use(
           `${base}favicon.svg`,
@@ -86,7 +57,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           },
         )
 
-        const coverageFolder = resolveCoverageFolder(project)
+        const coverageFolder = resolveCoverageFolder(parentServer.vitest)
         const coveragePath = coverageFolder ? coverageFolder[1] : undefined
         if (coveragePath && base === coveragePath) {
           throw new Error(
@@ -110,12 +81,12 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           )
         }
 
-        const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
+        const uiEnabled = parentServer.config.browser.ui
 
-        if (screenshotFailures) {
+        if (uiEnabled) {
         // eslint-disable-next-line prefer-arrow-callback
           server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
-            if (!req.url || !browserServer.provider) {
+            if (!req.url) {
               res.statusCode = 404
               res.end()
               return
@@ -157,12 +128,31 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             res.end(buffer)
           })
         }
+        server.middlewares.use((req, res, next) => {
+          // 9000 mega head move
+          // Vite always caches optimized dependencies, but users might mock
+          // them in _some_ tests, while keeping original modules in others
+          // there is no way to configure that in Vite, so we patch it here
+          // to always ignore the cache-control set by Vite in the next middleware
+          if (req.url && versionRegexp.test(req.url) && !req.url.includes('chunk-')) {
+            res.setHeader('Cache-Control', 'no-cache')
+            const setHeader = res.setHeader.bind(res)
+            res.setHeader = function (name, value) {
+              if (name === 'Cache-Control') {
+                return res
+              }
+              return setHeader(name, value)
+            }
+          }
+          next()
+        })
       },
     },
     {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
+        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
         const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
@@ -209,22 +199,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           'msw/browser',
         ]
 
-        if (project.config.diff) {
+        if (typeof project.config.diff === 'string') {
           entries.push(project.config.diff)
         }
 
-        if (project.ctx.coverageProvider) {
-          const coverage = project.ctx.config.coverage
+        if (parentServer.vitest.coverageProvider) {
+          const coverage = parentServer.vitest.config.coverage
           const provider = coverage.provider
           if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [project.config.root])
+            const path = tryResolve('@vitest/coverage-v8', [parentServer.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-v8/browser')
             }
           }
           else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [project.config.root])
+            const path = tryResolve('@vitest/coverage-istanbul', [parentServer.config.root])
             if (path) {
               entries.push(path)
               exclude.push('@vitest/coverage-istanbul')
@@ -312,16 +302,22 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
       },
       transform(code, id) {
-        if (id.includes(browserServer.vite.config.cacheDir) && id.includes('loupe.js')) {
+        if (id.includes(parentServer.vite.config.cacheDir) && id.includes('loupe.js')) {
           // loupe bundle has a nastry require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
         }
       },
     },
-    BrowserContext(browserServer),
+    BrowserContext(parentServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
+      filter(id) {
+        if (id.includes(distRoot)) {
+          return false
+        }
+        return true
+      },
     }),
     {
       name: 'vitest:browser:config',
@@ -333,7 +329,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           viteConfig.esbuild.legalComments = 'inline'
         }
 
-        const defaultPort = project.ctx._browserLastPort++
+        const defaultPort = parentServer.vitest._browserLastPort++
 
         const api = resolveApiServerConfig(
           viteConfig.test?.browser || {},
@@ -351,8 +347,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         viteConfig.server.fs.allow = viteConfig.server.fs.allow || []
         viteConfig.server.fs.allow.push(
           ...resolveFsAllow(
-            project.ctx.config.root,
-            project.ctx.server.config.configFile,
+            parentServer.vitest.config.root,
+            parentServer.vitest.vite.config.configFile,
           ),
           distRoot,
         )
@@ -367,7 +363,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
-        if (!project.isTestFile(id) || !code.includes('import.meta.vitest')) {
+        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
+        if (!project.isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
           return
         }
         const s = new MagicString(code, { filename: cleanUrl(id) })
@@ -392,6 +389,125 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             map: s.generateMap({ hires: 'boundary' }),
           }
         }
+      },
+    },
+    {
+      name: 'vitest:browser:transform-tester-html',
+      enforce: 'pre',
+      async transformIndexHtml(html, ctx) {
+        const projectBrowser = [...parentServer.children].find((server) => {
+          return ctx.filename === server.testerFilepath
+        })
+        if (!projectBrowser) {
+          return
+        }
+
+        if (!parentServer.testerScripts) {
+          const testerScripts = await parentServer.formatScripts(
+            parentServer.config.browser.testerScripts,
+          )
+          parentServer.testerScripts = testerScripts
+        }
+        const stateJs = typeof parentServer.stateJs === 'string'
+          ? parentServer.stateJs
+          : await parentServer.stateJs
+
+        const testerTags: HtmlTagDescriptor[] = []
+
+        const isDefaultTemplate = resolve(distRoot, 'client/tester/tester.html') === projectBrowser.testerFilepath
+        if (!isDefaultTemplate) {
+          const manifestContent = parentServer.manifest instanceof Promise
+            ? await parentServer.manifest
+            : parentServer.manifest
+          const testerEntry = manifestContent['tester/tester.html']
+
+          testerTags.push({
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              crossorigin: '',
+              src: `${parentServer.base}${testerEntry.file}`,
+            },
+            injectTo: 'head',
+          })
+
+          for (const importName of testerEntry.imports || []) {
+            const entryManifest = manifestContent[importName]
+            if (entryManifest) {
+              testerTags.push(
+                {
+                  tag: 'link',
+                  attrs: {
+                    href: `${parentServer.base}${entryManifest.file}`,
+                    rel: 'modulepreload',
+                    crossorigin: '',
+                  },
+                  injectTo: 'head',
+                },
+              )
+            }
+          }
+        }
+        else {
+          // inject the reset style only in the default template,
+          // allowing users to customize the style in their own template
+          testerTags.push({
+            tag: 'style',
+            children: `
+html {
+  padding: 0;
+  margin: 0;
+}
+body {
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+}`,
+            injectTo: 'head',
+          })
+        }
+
+        return [
+          {
+            tag: 'script',
+            children: '{__VITEST_INJECTOR__}',
+            injectTo: 'head-prepend' as const,
+          },
+          {
+            tag: 'script',
+            children: stateJs,
+            injectTo: 'head-prepend',
+          } as const,
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: parentServer.errorCatcherUrl,
+            },
+            injectTo: 'head' as const,
+          },
+          parentServer.locatorsUrl
+            ? {
+                tag: 'script',
+                attrs: {
+                  type: 'module',
+                  src: parentServer.locatorsUrl,
+                },
+                injectTo: 'head',
+              } as const
+            : null,
+          ...parentServer.testerScripts,
+          ...testerTags,
+          {
+            tag: 'script',
+            attrs: {
+              'type': 'module',
+              'data-vitest-append': '',
+            },
+            children: '{__VITEST_APPEND__}',
+            injectTo: 'body',
+          } as const,
+        ].filter(s => s != null)
       },
     },
     {
@@ -441,8 +557,8 @@ function getRequire() {
   return _require
 }
 
-function resolveCoverageFolder(project: WorkspaceProject) {
-  const options = project.ctx.config
+function resolveCoverageFolder(vitest: Vitest) {
+  const options = vitest.config
   const htmlReporter = options.coverage?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {
       if (typeof reporter === 'string') {

@@ -1,7 +1,7 @@
 import type { File, Task, TaskResultPack } from '@vitest/runner'
-import { createFileTask } from '@vitest/runner/utils'
 import type { UserConsoleLog } from '../types/general'
-import type { WorkspaceProject } from './workspace'
+import type { TestProject } from './project'
+import { createFileTask } from '@vitest/runner/utils'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
 function isAggregateError(err: unknown): err is AggregateError {
@@ -40,6 +40,7 @@ export class StateManager {
         task.mode = 'skip'
         task.result ??= { state: 'skip' }
         task.result.state = 'skip'
+        task.result.note = _err.note
       }
       return
     }
@@ -89,6 +90,10 @@ export class StateManager {
     })
   }
 
+  getTestModules(keys?: string[]): TestModule[] {
+    return this.getFiles(keys).map(file => this.getReportedEntity(file) as TestModule)
+  }
+
   getFilepaths(): string[] {
     return Array.from(this.filesMap.keys())
   }
@@ -105,7 +110,7 @@ export class StateManager {
     })
   }
 
-  collectFiles(project: WorkspaceProject, files: File[] = []) {
+  collectFiles(project: TestProject, files: File[] = []) {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
       const otherFiles = existing.filter(
@@ -126,7 +131,7 @@ export class StateManager {
   }
 
   clearFiles(
-    project: WorkspaceProject,
+    project: TestProject,
     paths: string[] = [],
   ) {
     paths.forEach((path) => {
@@ -156,7 +161,7 @@ export class StateManager {
     })
   }
 
-  updateId(task: Task, project: WorkspaceProject) {
+  updateId(task: Task, project: TestProject) {
     if (this.idMap.get(task.id) === task) {
       return
     }
@@ -213,7 +218,7 @@ export class StateManager {
     ).length
   }
 
-  cancelFiles(files: string[], project: WorkspaceProject) {
+  cancelFiles(files: string[], project: TestProject) {
     this.collectFiles(
       project,
       files.map(filepath =>

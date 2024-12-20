@@ -1,6 +1,6 @@
-import '@vitest/web-worker'
 import { expect, test, vi } from 'vitest'
 import { workerDep } from '../src/web-worker/mock/worker-dep'
+import '@vitest/web-worker'
 
 vi.mock(import('../src/web-worker/mock/worker-dep'), () => ({ workerDep: () => 'mocked' }))
 

@@ -1,12 +1,14 @@
 import type { File, TaskResultPack } from '@vitest/runner'
-import type { Vitest } from '../core'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
+import type { Vitest } from '../core'
+import type { TestModule } from '../reporters/reported-tasks'
 
 export interface Reporter {
   onInit?: (ctx: Vitest) => void
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
+  onTestModuleQueued?: (file: TestModule) => Awaitable<void>
   onCollected?: (files?: File[]) => Awaitable<void>
   onFinished?: (
     files: File[],

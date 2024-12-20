@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { Tooltip as VueTooltip } from 'floating-vue'
 import type { File } from 'vitest'
+import { Tooltip as VueTooltip } from 'floating-vue'
+import { isDark, toggleDark } from '~/composables'
+import { client, isReport, runAll, runFiles } from '~/composables/client'
+import { explorerTree } from '~/composables/explorer'
+import { initialized, shouldShowExpandAll } from '~/composables/explorer/state'
 import {
   coverageConfigured,
   coverageEnabled,
   coverageVisible,
   dashboardVisible,
   disableCoverage,
-  navigateTo,
   showCoverage,
   showDashboard,
+  showReport,
 } from '~/composables/navigation'
-import { client, isReport, runAll, runFiles } from '~/composables/client'
-import { isDark, toggleDark } from '~/composables'
-import { explorerTree } from '~/composables/explorer'
-import { initialized, shouldShowExpandAll } from '~/composables/explorer/state'
 
 function updateSnapshot() {
   return client.rpc.updateSnapshot()
@@ -50,7 +50,7 @@ function expandTests() {
 
 <template>
   <!-- TODO: have test tree so the folders are also nested: test -> filename -> suite -> test -->
-  <Explorer border="r base" :on-item-click="navigateTo" :nested="true" @run="onRunAll">
+  <Explorer border="r base" :on-item-click="showReport" :nested="true" @run="onRunAll">
     <template #header="{ filteredFiles }">
       <img w-6 h-6 src="/favicon.svg" alt="Vitest logo">
       <span font-light text-sm flex-1>Vitest</span>
