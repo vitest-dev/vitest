@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "magic-string": "^0.30.14",
+    "magic-string": "^0.30.17",
     "pathe": "^1.1.2"
   },
   "devDependencies": {

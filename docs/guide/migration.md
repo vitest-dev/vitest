@@ -29,6 +29,31 @@ test('validation works', () => {
 }, 1000) // Ok ✅
 ```
 
+### `browser.name` and `browser.providerOptions` are Deprecated
+
+Both [`browser.name`](/guide/browser/config#browser-name) and [`browser.providerOptions`](/guide/browser/config#browser-provideroptions) will be removed in Vitest 4. Instead of them, use the new [`browser.instances`](/guide/browser/config#browser-instances) option:
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      name: 'chromium', // [!code --]
+      providerOptions: { // [!code --]
+        launch: { devtools: true }, // [!code --]
+      }, // [!code --]
+      instances: [ // [!code ++]
+        { // [!code ++]
+          browser: 'chromium', // [!code ++]
+          launch: { devtools: true }, // [!code ++]
+        }, // [!code ++]
+      ], // [!code ++]
+    },
+  },
+})
+```
+
+With the new `browser.instances` field you can also specify multiple browser configurations.
+
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
 The `Custom` type is now an alias for the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
