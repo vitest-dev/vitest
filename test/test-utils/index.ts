@@ -134,7 +134,11 @@ export async function runVitest(
   }
 }
 
-export async function runCli(command: string, _options?: Partial<Options> | string, ...args: string[]) {
+interface CliOptions extends Partial<Options> {
+  earlyReturn?: boolean
+}
+
+export async function runCli(command: string, _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -172,7 +176,7 @@ export async function runCli(command: string, _options?: Partial<Options> | stri
     await isDone
   })
 
-  if (args.includes('--inspect') || args.includes('--inspect-brk')) {
+  if ((options as CliOptions)?.earlyReturn || args.includes('--inspect') || args.includes('--inspect-brk')) {
     return output()
   }
 
@@ -192,12 +196,12 @@ export async function runCli(command: string, _options?: Partial<Options> | stri
   return output()
 }
 
-export async function runVitestCli(_options?: Partial<Options> | string, ...args: string[]) {
+export async function runVitestCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
 }
 
-export async function runViteNodeCli(_options?: Partial<Options> | string, ...args: string[]) {
+export async function runViteNodeCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
 

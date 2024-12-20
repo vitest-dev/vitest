@@ -35,7 +35,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
   const benchmarkGroup: Benchmark[] = []
   const benchmarkSuiteGroup = []
   for (const task of suite.tasks) {
-    if (task.mode !== 'run') {
+    if (task.mode !== 'run' && task.mode !== 'queued') {
       continue
     }
 

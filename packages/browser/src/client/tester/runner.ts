@@ -61,8 +61,13 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (this.config.browser.screenshotFailures && task.result?.state === 'fail') {
-        task.meta.failScreenshotPath = await page.screenshot()
+      if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
+        const screenshot = await page.screenshot().catch((err) => {
+          console.error('[vitest] Failed to take a screenshot', err)
+        })
+        if (screenshot) {
+          task.meta.failScreenshotPath = screenshot
+        }
       }
     }
 
@@ -102,6 +107,10 @@ export function createBrowserRunner(
           projectName: this.config.name,
         })
       }
+    }
+
+    onCollectStart = (file: File) => {
+      return rpc().onQueued(file)
     }
 
     onCollected = async (files: File[]): Promise<unknown> => {

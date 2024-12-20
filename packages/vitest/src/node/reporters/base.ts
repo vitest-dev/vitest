@@ -8,7 +8,7 @@ import { toArray } from '@vitest/utils'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
-import { isCI, isDeno, isNode } from '../../utils/env'
+import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
 import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
 import { countTestErrors, divider, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
@@ -34,7 +34,7 @@ export abstract class BaseReporter implements Reporter {
   private _timeStart = formatTimeString(new Date())
 
   constructor(options: BaseOptions = {}) {
-    this.isTTY = options.isTTY ?? ((isNode || isDeno) && process.stdout?.isTTY && !isCI)
+    this.isTTY = options.isTTY ?? isTTY
   }
 
   onInit(ctx: Vitest) {
@@ -75,7 +75,8 @@ export abstract class BaseReporter implements Reporter {
     if (
       !('filepath' in task)
       || !task.result?.state
-      || task.result?.state === 'run') {
+      || task.result?.state === 'run'
+      || task.result?.state === 'queued') {
       return
     }
 
@@ -152,7 +153,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${c.dim(getStateSymbol(test))} ${getTestName(test, c.dim(' > '))}${suffix}`)
+        this.log(`   ${getStateSymbol(test)} ${getTestName(test, c.dim(' > '))}${suffix}`)
       }
     }
   }
