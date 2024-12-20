@@ -141,9 +141,10 @@ error with a stack
 })
 
 test('user-event', async () => {
-  const { stdout } = await runBrowserTests({
+  const { stdout, stderr } = await runBrowserTests({
     root: './fixtures/user-event',
   })
+  onTestFailed(() => console.error(stderr))
   instances.forEach(({ browser }) => {
     expect(stdout).toReportPassedTest('cleanup-retry.test.ts', browser)
     expect(stdout).toReportPassedTest('cleanup1.test.ts', browser)

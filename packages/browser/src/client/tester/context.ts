@@ -134,7 +134,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
 
 function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options: TestingLibraryOptions): UserEvent {
   let userEvent = userEventBase.setup(options)
-  let clipboardData: any
+  let clipboardData: DataTransfer | undefined
 
   function toElement(element: Element | Locator) {
     return element instanceof Element ? element : element.element()
@@ -217,7 +217,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     },
 
     async copy() {
-      await userEvent.copy()
+      clipboardData = await userEvent.copy()
     },
     async cut() {
       clipboardData = await userEvent.cut()
