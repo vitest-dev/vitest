@@ -130,14 +130,14 @@ export type {
 } from '../runtime/config'
 
 export type {
-  BenchFactory,
+  Bench as BenchFactory,
   BenchFunction,
   Benchmark,
   BenchmarkAPI,
   BenchmarkResult,
   BenchOptions,
-  BenchTask,
-  BenchTaskResult,
+  TinybenchTask as BenchTask,
+  TinybenchTaskResult as BenchTaskResult,
 } from '../runtime/types/benchmark'
 export { assertType } from '../typecheck/assertType'
 
