@@ -506,7 +506,7 @@ export async function create() {
     })
   }
 
-  // TODO: can we do this ourselved?
+  // TODO: can we do this ourselves?
   if (lang === 'ts') {
     await updateTsConfig(providerPkg?.types)
   }
