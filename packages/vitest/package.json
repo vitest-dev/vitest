@@ -190,7 +190,6 @@
     "cac": "^6.7.14",
     "chai-subset": "^1.6.0",
     "cli-truncate": "^4.0.0",
-    "fast-glob": "3.3.2",
     "find-up": "^6.3.0",
     "flatted": "^3.3.2",
     "get-tsconfig": "^4.8.1",
@@ -202,6 +201,7 @@
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
     "strip-literal": "^2.1.1",
+    "tinyglobby": "^0.2.10",
     "ws": "^8.18.0"
   }
 }

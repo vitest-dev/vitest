@@ -4,12 +4,12 @@ import { fileURLToPath } from 'node:url'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import fg from 'fast-glob'
 import { dirname, join, normalize, resolve } from 'pathe'
 import { defineConfig } from 'rollup'
 import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 import license from 'rollup-plugin-license'
+import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 
 const require = createRequire(import.meta.url)
@@ -198,7 +198,7 @@ function licensePlugin() {
                     preserveSymlinks: false,
                   }),
                 )
-                const [licenseFile] = fg.sync(`${pkgDir}/LICENSE*`, {
+                const [licenseFile] = globSync(`${pkgDir}/LICENSE*`, {
                   caseSensitiveMatch: false,
                 })
                 if (licenseFile) {
