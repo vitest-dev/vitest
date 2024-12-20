@@ -10,9 +10,9 @@ describe('truncateThreshold', () => {
     expect(cleanOutput(result.stdout)).toMatchInlineSnapshot(`
       "TAP version 13
       1..9
-      ok 1 - test-each-title.test.ts > '012345678901234567890123456789' (length = 30)
-      ok 2 - test-each-title.test.ts > '0123456789012345678901234567890123456…' (length = 40)
-      ok 3 - test-each-title.test.ts > '0123456789012345678901234567890123456…' (length = 50)
+      ok 1 - test-each-title.test.ts > 012345678901234567890123456789 (length = 30)
+      ok 2 - test-each-title.test.ts > 0123456789012345678901234567890123456… (length = 40)
+      ok 3 - test-each-title.test.ts > 0123456789012345678901234567890123456… (length = 50)
       ok 4 - test-each-title.test.ts > [ 'one', 'two', 'three' ]
       ok 5 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four' ]
       ok 6 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four', …(1) ]
@@ -34,9 +34,9 @@ describe('truncateThreshold', () => {
     expect(cleanOutput(result.stdout)).toMatchInlineSnapshot(`
       "TAP version 13
       1..9
-      ok 1 - test-each-title.test.ts > '012345678901234567890123456789' (length = 30)
-      ok 2 - test-each-title.test.ts > '0123456789012345678901234567890123456…' (length = 40)
-      ok 3 - test-each-title.test.ts > '0123456789012345678901234567890123456…' (length = 50)
+      ok 1 - test-each-title.test.ts > 012345678901234567890123456789 (length = 30)
+      ok 2 - test-each-title.test.ts > 0123456789012345678901234567890123456… (length = 40)
+      ok 3 - test-each-title.test.ts > 0123456789012345678901234567890123456… (length = 50)
       ok 4 - test-each-title.test.ts > [ 'one', 'two', 'three' ]
       ok 5 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four' ]
       ok 6 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four', …(1) ]
@@ -58,9 +58,9 @@ describe('truncateThreshold', () => {
     expect(cleanOutput(result.stdout)).toMatchInlineSnapshot(`
       "TAP version 13
       1..9
-      ok 1 - test-each-title.test.ts > '012345678901234567890123456789' (length = 30)
-      ok 2 - test-each-title.test.ts > '0123456789012345678901234567890123456789' (length = 40)
-      ok 3 - test-each-title.test.ts > '01234567890123456789012345678901234567890123456789' (length = 50)
+      ok 1 - test-each-title.test.ts > 012345678901234567890123456789 (length = 30)
+      ok 2 - test-each-title.test.ts > 0123456789012345678901234567890123456789 (length = 40)
+      ok 3 - test-each-title.test.ts > 01234567890123456789012345678901234567890123456789 (length = 50)
       ok 4 - test-each-title.test.ts > [ 'one', 'two', 'three' ]
       ok 5 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four' ]
       ok 6 - test-each-title.test.ts > [ 'one', 'two', 'three', 'four', 'five' ]
