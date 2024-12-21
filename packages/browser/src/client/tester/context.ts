@@ -38,7 +38,15 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     unreleased: [] as string[],
   }
 
-  return {
+  // https://playwright.dev/docs/api/class-keyboard
+  // https://webdriver.io/docs/api/browser/keys/
+  const modifier = provider === `playwright`
+    ? 'ControlOrMeta'
+    : provider === 'webdriverio'
+      ? 'Ctrl'
+      : 'Control'
+
+  const userEvent: UserEvent = {
     setup() {
       return createUserEvent()
     },
@@ -111,11 +119,22 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         keyboard.unreleased = unreleased
       })
     },
+    async copy() {
+      await userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
+    },
+    async cut() {
+      await userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
+    },
+    async paste() {
+      await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
+    },
   }
+  return userEvent
 }
 
 function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options: TestingLibraryOptions): UserEvent {
   let userEvent = userEventBase.setup(options)
+  let clipboardData: DataTransfer | undefined
 
   function toElement(element: Element | Locator) {
     return element instanceof Element ? element : element.element()
@@ -195,6 +214,16 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     },
     async keyboard(text: string) {
       await userEvent.keyboard(text)
+    },
+
+    async copy() {
+      clipboardData = await userEvent.copy()
+    },
+    async cut() {
+      clipboardData = await userEvent.cut()
+    },
+    async paste() {
+      await userEvent.paste(clipboardData)
     },
   }
 
