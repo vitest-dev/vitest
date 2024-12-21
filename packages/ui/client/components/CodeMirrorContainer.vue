@@ -39,10 +39,16 @@ onMounted(async () => {
     readOnly: readOnly ? true : undefined,
     extraKeys: {
       'Cmd-S': function (cm) {
-        emit('save', cm.getValue())
+        const isReadonly = cm.getOption('readOnly')
+        if (!isReadonly) {
+          emit('save', cm.getValue())
+        }
       },
       'Ctrl-S': function (cm) {
-        emit('save', cm.getValue())
+        const isReadonly = cm.getOption('readOnly')
+        if (!isReadonly) {
+          emit('save', cm.getValue())
+        }
       },
     },
   })
