@@ -35,6 +35,7 @@ watch(
         code.value = ''
         serverCode.value = code.value
         draft.value = false
+        loading.value = false
         return
       }
 
@@ -214,6 +215,11 @@ async function onSave(content: string) {
 
   // clear previous state
   const cmValue = codemirrorRef.value
+  if (cmValue) {
+    cmValue.setOption('readOnly', true)
+    await nextTick()
+    cmValue.refresh()
+  }
   // save cursor position
   currentPosition.value = cmValue?.getCursor()
   cmValue?.off('changes', codemirrorChanges)
@@ -263,6 +269,11 @@ async function onSave(content: string) {
 
   saving.value = false
   await nextTick()
+  if (cmValue) {
+    cmValue.setOption('readOnly', false)
+    await nextTick()
+    cmValue.refresh()
+  }
   // activate watcher
   resume()
 }
