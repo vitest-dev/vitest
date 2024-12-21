@@ -1851,7 +1851,7 @@ it('diff', () => {
 })
 
 describe('undefined property handling', () => {
-  test('toEqual ignores undefined properties', () => {
+  it('toEqual ignores undefined properties', () => {
     const obj1 = {
       foo: 'bar',
       qux: 'qux'
@@ -1866,7 +1866,7 @@ describe('undefined property handling', () => {
     expect(obj1).toEqual(obj2)
   })
 
-  test('toStrictEqual considers undefined properties', () => {
+  it('toStrictEqual considers undefined properties', () => {
     const obj1 = {
       foo: 'bar',
       qux: 'qux'
