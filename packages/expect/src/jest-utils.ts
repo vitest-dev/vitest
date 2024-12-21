@@ -218,7 +218,8 @@ function eq(
     if (filteredAKeys.length !== bKeys.length) {
       return false
     }
-  } else if (bKeys.length !== size) {
+  }
+  else if (bKeys.length !== size) {
     return false
   }
 
@@ -232,7 +233,7 @@ function eq(
 
     // Deep compare each member
     result = hasKey(b, key)
-      && eq(a[key], b[key], aStack, bStack, customTesters, hasKey, ignoreUndefined)
+    && eq(a[key], b[key], aStack, bStack, customTesters, hasKey, ignoreUndefined)
 
     if (!result) {
       return false
