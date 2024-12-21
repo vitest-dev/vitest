@@ -75,9 +75,13 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
     throw new Error('no tsconfig.json found')
   }
 
+  const tsconfigName = basename(tsconfig.path, '.json')
+  const tempTsConfigName = `${tsconfigName}.vitest-temp.json`
+  const tempTsbuildinfoName = `${tsconfigName}.tmp.tsbuildinfo`
+
   const tempConfigPath = join(
     dirname(tsconfig.path),
-    'tsconfig.vitest-temp.json',
+    tempTsConfigName,
   )
 
   try {
@@ -88,7 +92,7 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
     tmpTsConfig.compilerOptions.incremental = true
     tmpTsConfig.compilerOptions.tsBuildInfoFile = join(
       process.versions.pnp ? join(os.tmpdir(), 'vitest') : __dirname,
-      'tsconfig.tmp.tsbuildinfo',
+      tempTsbuildinfoName,
     )
 
     const tsconfigFinalContent = JSON.stringify(tmpTsConfig, null, 2)
@@ -96,7 +100,7 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
     return { path: tempConfigPath, config: tmpTsConfig }
   }
   catch (err) {
-    throw new Error('failed to write tsconfig.temp.json', { cause: err })
+    throw new Error(`failed to write ${tempTsConfigName}`, { cause: err })
   }
 }
 
