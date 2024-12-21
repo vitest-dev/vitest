@@ -31,9 +31,10 @@ export function equals(
   b: unknown,
   customTesters?: Array<Tester>,
   strictCheck?: boolean,
+  ignoreUndefined = !strictCheck,
 ): boolean {
   customTesters = customTesters || []
-  return eq(a, b, [], [], customTesters, strictCheck ? hasKey : hasDefinedKey)
+  return eq(a, b, [], [], customTesters, strictCheck ? hasKey : hasDefinedKey, ignoreUndefined)
 }
 
 const functionToString = Function.prototype.toString
@@ -93,6 +94,7 @@ function eq(
   bStack: Array<unknown>,
   customTesters: Array<Tester>,
   hasKey: any,
+  ignoreUndefined = true,
 ): boolean {
   let result = true
 
@@ -207,23 +209,34 @@ function eq(
   let key
   let size = aKeys.length
 
+  // Get keys for b, filtering out undefined values if ignoreUndefined is true
+  const bKeys = keys(b, hasKey).filter(k => !ignoreUndefined || b[k] !== undefined)
+
   // Ensure that both objects contain the same number of properties before comparing deep equality.
-  if (keys(b, hasKey).length !== size) {
+  if (ignoreUndefined) {
+    const filteredAKeys = aKeys.filter(k => a[k] !== undefined)
+    if (filteredAKeys.length !== bKeys.length)
+      return false
+  }
+  else if (bKeys.length !== size) {
     return false
   }
 
   while (size--) {
     key = aKeys[size]
 
-    // Deep compare each member
-    result
-      = hasKey(b, key)
-      && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
+    // Skip undefined values when ignoreUndefined is true
+    if (ignoreUndefined && a[key] === undefined)
+      continue
 
-    if (!result) {
+    // Deep compare each member
+    result = hasKey(b, key)
+      && eq(a[key], b[key], aStack, bStack, customTesters, hasKey, ignoreUndefined)
+
+    if (!result)
       return false
-    }
   }
+
   // Remove the first object from the stack of traversed objects.
   aStack.pop()
   bStack.pop()

@@ -1849,3 +1849,35 @@ it('diff', () => {
   snapshotError(() => expect({ hello: 'world' }).toBeUndefined())
   snapshotError(() => expect({ hello: 'world' }).toBeNull())
 })
+
+describe('undefined property handling', () => {
+  test('toEqual ignores undefined properties', () => {
+    const obj1 = {
+      foo: 'bar',
+      qux: 'qux'
+    }
+    
+    const obj2 = {
+      foo: 'bar',
+      extra: undefined,
+      qux: 'qux'
+    }
+
+    expect(obj1).toEqual(obj2)
+  })
+
+  test('toStrictEqual considers undefined properties', () => {
+    const obj1 = {
+      foo: 'bar',
+      qux: 'qux'
+    }
+    
+    const obj2 = {
+      foo: 'bar',
+      extra: undefined,
+      qux: 'qux'
+    }
+
+    expect(() => expect(obj1).toStrictEqual(obj2)).toThrow()
+  })
+})
