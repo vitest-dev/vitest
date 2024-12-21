@@ -45,6 +45,5 @@
     "json",
     "jsonc",
     "yaml"
-  ],
-  "testing.automaticallyOpenTestResults": "neverOpen"
+  ]
 }

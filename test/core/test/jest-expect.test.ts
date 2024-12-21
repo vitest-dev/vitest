@@ -1854,13 +1854,13 @@ describe('undefined property handling', () => {
   it('toEqual ignores undefined properties', () => {
     const obj1 = {
       foo: 'bar',
-      qux: 'qux'
+      qux: 'qux',
     }
-    
+
     const obj2 = {
       foo: 'bar',
       extra: undefined,
-      qux: 'qux'
+      qux: 'qux',
     }
 
     expect(obj1).toEqual(obj2)
@@ -1869,13 +1869,13 @@ describe('undefined property handling', () => {
   it('toStrictEqual considers undefined properties', () => {
     const obj1 = {
       foo: 'bar',
-      qux: 'qux'
+      qux: 'qux',
     }
-    
+
     const obj2 = {
       foo: 'bar',
       extra: undefined,
-      qux: 'qux'
+      qux: 'qux',
     }
 
     expect(() => expect(obj1).toStrictEqual(obj2)).toThrow()

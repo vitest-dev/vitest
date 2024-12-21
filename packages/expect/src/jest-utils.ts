@@ -215,10 +215,10 @@ function eq(
   // Ensure that both objects contain the same number of properties before comparing deep equality.
   if (ignoreUndefined) {
     const filteredAKeys = aKeys.filter(k => a[k] !== undefined)
-    if (filteredAKeys.length !== bKeys.length)
+    if (filteredAKeys.length !== bKeys.length) {
       return false
-  }
-  else if (bKeys.length !== size) {
+    }
+  } else if (bKeys.length !== size) {
     return false
   }
 
@@ -226,15 +226,17 @@ function eq(
     key = aKeys[size]
 
     // Skip undefined values when ignoreUndefined is true
-    if (ignoreUndefined && a[key] === undefined)
+    if (ignoreUndefined && a[key] === undefined) {
       continue
+    }
 
     // Deep compare each member
     result = hasKey(b, key)
       && eq(a[key], b[key], aStack, bStack, customTesters, hasKey, ignoreUndefined)
 
-    if (!result)
+    if (!result) {
       return false
+    }
   }
 
   // Remove the first object from the stack of traversed objects.
