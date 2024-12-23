@@ -1,4 +1,4 @@
-import { expect, test, vi } from 'vitest'
+import { expect, test } from 'vitest'
 import { userEvent, page, server } from '@vitest/browser/context'
 
 test('non US keys', async () => {
