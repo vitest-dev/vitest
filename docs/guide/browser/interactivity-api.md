@@ -518,3 +518,81 @@ References:
 
 - [Playwright `frame.dragAndDrop` API](https://playwright.dev/docs/api/class-frame#frame-drag-and-drop)
 - [WebdriverIO `element.dragAndDrop` API](https://webdriver.io/docs/api/element/dragAndDrop/)
+
+## userEvent.copy
+
+```ts
+function copy(): Promise<void>
+```
+
+Copy the selected text to the clipboard.
+
+```js
+import { page, userEvent } from '@vitest/browser/context'
+
+test('copy and paste', async () => {
+  // write to 'source'
+  await userEvent.click(page.getByPlaceholder('source'))
+  await userEvent.keyboard('hello')
+
+  // select and copy 'source'
+  await userEvent.dblClick(page.getByPlaceholder('source'))
+  await userEvent.copy()
+
+  // paste to 'target'
+  await userEvent.click(page.getByPlaceholder('target'))
+  await userEvent.paste()
+
+  await expect.element(page.getByPlaceholder('source')).toHaveTextContent('hello')
+  await expect.element(page.getByPlaceholder('target')).toHaveTextContent('hello')
+})
+```
+
+References:
+
+- [testing-library `copy` API](https://testing-library.com/docs/user-event/convenience/#copy)
+
+## userEvent.cut
+
+```ts
+function cut(): Promise<void>
+```
+
+Cut the selected text to the clipboard.
+
+```js
+import { page, userEvent } from '@vitest/browser/context'
+
+test('copy and paste', async () => {
+  // write to 'source'
+  await userEvent.click(page.getByPlaceholder('source'))
+  await userEvent.keyboard('hello')
+
+  // select and cut 'source'
+  await userEvent.dblClick(page.getByPlaceholder('source'))
+  await userEvent.cut()
+
+  // paste to 'target'
+  await userEvent.click(page.getByPlaceholder('target'))
+  await userEvent.paste()
+
+  await expect.element(page.getByPlaceholder('source')).toHaveTextContent('')
+  await expect.element(page.getByPlaceholder('target')).toHaveTextContent('hello')
+})
+```
+
+References:
+
+- [testing-library `cut` API](https://testing-library.com/docs/user-event/clipboard#cut)
+
+## userEvent.paste
+
+```ts
+function paste(): Promise<void>
+```
+
+Paste the text from the clipboard. See [`userEvent.copy`](#userevent-copy) and [`userEvent.cut`](#userevent-cut) for usage examples.
+
+References:
+
+- [testing-library `paste` API](https://testing-library.com/docs/user-event/clipboard#paste)
