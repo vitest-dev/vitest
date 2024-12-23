@@ -68,7 +68,7 @@ export const server = {
   config: __vitest_browser_runner__.config,
 }
 export const commands = server.commands
-export const userEvent = createUserEvent(_userEventSetup)
+export const userEvent = createUserEvent(server.platform, _userEventSetup)
 export { page, cdp }
 `
 }

@@ -86,7 +86,7 @@ test('special keys', async () => {
     expect(await testKeyboard('{Shift}')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
     expect(await testKeyboard('{ShiftLeft}')).toMatchInlineSnapshot(`"ERROR"`);
     expect(await testKeyboard('{ShiftRight}')).toMatchInlineSnapshot(`"ERROR"`);
-    expect(await testKeyboard('[Shift]')).toMatchInlineSnapshot(`"ERROR"`);
+    expect(await testKeyboard('[Shift]')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
     expect(await testKeyboard('[ShiftLeft]')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
     expect(await testKeyboard('[ShiftRight]')).toMatchInlineSnapshot(`"Shift|ShiftLeft|1"`);
   }

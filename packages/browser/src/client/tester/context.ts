@@ -4,6 +4,7 @@ import type { RunnerTask } from 'vitest'
 import type {
   BrowserPage,
   Locator,
+  Platform,
   UserEvent,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
@@ -29,7 +30,7 @@ function triggerCommand<T>(command: string, ...args: any[]) {
   return rpc().triggerCommand<T>(sessionId, command, filepath(), args)
 }
 
-export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
+export function createUserEvent(platform: Platform, __tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
   if (__tl_user_event_base__) {
     return createPreviewUserEvent(__tl_user_event_base__, options ?? {})
   }
@@ -38,17 +39,11 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     unreleased: [] as string[],
   }
 
-  // https://playwright.dev/docs/api/class-keyboard
-  // https://webdriver.io/docs/api/browser/keys/
-  const modifier = provider === `playwright`
-    ? 'ControlOrMeta'
-    : provider === 'webdriverio'
-      ? 'Ctrl'
-      : 'Control'
+  const modifier = platform === 'darwin' ? 'Meta' : 'Control'
 
   const userEvent: UserEvent = {
     setup() {
-      return createUserEvent()
+      return createUserEvent(platform)
     },
     async cleanup() {
       return ensureAwaited(async () => {
