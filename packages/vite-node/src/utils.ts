@@ -35,11 +35,14 @@ export function normalizeRequestId(id: string, base?: string): string {
     id = id.replace(driveOppositeRegext, `${drive}$1`)
   }
 
+  if (id.startsWith('file://')) {
+    return fileURLToPath(id)
+  }
+
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
-    .replace(/^file:(\/+)/, isWindows ? '' : '/') // remove file protocol and duplicate leading slashes
     .replace(/\?v=\w+/, '?') // remove ?v= query
     .replace(/&v=\w+/, '') // remove &v= query
     .replace(/\?t=\w+/, '?') // remove ?t= query
@@ -89,10 +92,12 @@ export function normalizeModuleId(id: string) {
   if (prefixedBuiltins.has(id)) {
     return id
   }
+  if (id.startsWith('file://')) {
+    return fileURLToPath(id)
+  }
   return id
     .replace(/\\/g, '/')
     .replace(/^\/@fs\//, isWindows ? '' : '/')
-    .replace(/^file:\//, '/')
     .replace(/^node:/, '')
     .replace(/^\/+/, '/')
 }
