@@ -1,8 +1,8 @@
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { version as viteVersion } from 'vite'
 import { beforeAll, expect } from 'vitest'
 import { isBrowser, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
-import { version as viteVersion } from 'vite'
 
 beforeAll(async () => {
   await runVitest({
