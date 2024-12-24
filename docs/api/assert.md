@@ -1688,10 +1688,10 @@ Asserts that a `modifier` increases a numeric `object`'s `property` or a `modifi
 ```ts
 import { assert, test } from 'vitest'
 
-test('assert.increases', () => {
+test('assert.increasesBy', () => {
   const obj = { val: 10 }
   function fn() { obj.val += 10 };
-  assert.increases(fn, obj, 'val', 10)
+  assert.increasesBy(fn, obj, 'val', 10)
 })
 ```
 
