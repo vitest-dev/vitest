@@ -1,19 +1,14 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
-import { version as viteVersion } from 'vite'
 import { describe, expect, it } from 'vitest'
+
 import { runVitest } from '../../test-utils'
 
 describe('should fail', async () => {
   const root = resolve(import.meta.dirname, '../failing')
   const files = await glob(['*.test-d.*'], { cwd: root, expandDirectories: false })
 
-  it('typecheck files', async (ctx) => {
-    // see https://github.com/vitest-dev/vitest/pull/7124
-    if (viteVersion[0] >= '6') {
-      ctx.skip()
-    }
-
+  it('typecheck files', async () => {
     const { stderr } = await runVitest({
       root,
       dir: './failing',
