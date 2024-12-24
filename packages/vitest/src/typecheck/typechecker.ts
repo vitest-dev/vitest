@@ -380,11 +380,20 @@ function findGeneratePosition(traceMap: TraceMap, { line, column, source }: { li
   // and comments are stripped away in the generated code.
   const mappings: (EachMapping & { originalLine: number })[] = []
   eachMapping(traceMap, (m) => {
-    if (m.source === source && m.originalLine !== null && m.originalColumn !== null && (line < m.originalLine || (line === m.originalLine && column <= m.originalColumn))) {
+    if (
+      m.source === source
+      && m.originalLine !== null
+      && m.originalColumn !== null
+      && (line === m.originalLine ? column < m.originalColumn : line < m.originalLine)
+    ) {
       mappings.push(m)
     }
   })
-  const next = mappings.sort((a, b) => a.originalLine === b.originalLine ? a.originalColumn - b.originalColumn : a.originalLine - b.originalLine).at(0)
+  const next = mappings
+    .sort((a, b) =>
+      a.originalLine === b.originalLine ? a.originalColumn - b.originalColumn : a.originalLine - b.originalLine,
+    )
+    .at(0)
   if (next) {
     return {
       line: next.generatedLine,
