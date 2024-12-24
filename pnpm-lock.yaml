@@ -926,6 +926,9 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 11.1.0
         version: 11.1.0(patch_hash=trok5obk3l5tdlygozv34fknii)
+      '@types/chai':
+        specifier: 5.0.1
+        version: 5.0.1(patch_hash=aht3ncif5udltbyemcrj4fbfwu)
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
