@@ -344,4 +344,13 @@ declare global {
   // @ts-ignore
   export type { Component, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
+  // @ts-ignore
+  export type { ViewportSize } from './composables/browser'
+  import('./composables/browser')
+  // @ts-ignore
+  export type { ModuleType, ModuleNode, ModuleLink, ModuleGraph, ModuleGraphController, ModuleGraphConfig, ModuleLabelItem } from './composables/module-graph'
+  import('./composables/module-graph')
+  // @ts-ignore
+  export type { Params } from './composables/params'
+  import('./composables/params')
 }
