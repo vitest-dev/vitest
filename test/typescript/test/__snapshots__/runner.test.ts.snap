@@ -25,7 +25,7 @@ exports[`should fail > typecheck files 3`] = `
 " FAIL  expect-error.test-d.ts > failing test with expect-error
 TypeCheckError: Unused '@ts-expect-error' directive.
  ❯ expect-error.test-d.ts:5:3
-      3| 
+      3| //
       4| test('failing test with expect-error', () => {
       5|   // @ts-expect-error expect nothing
        |   ^
