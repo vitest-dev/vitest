@@ -6,10 +6,10 @@ import { noop } from '@vitest/utils'
 import { getWorkerState } from './utils'
 
 const benchFns = new WeakMap<Test, BenchFunction>()
-const benchOptsMap = new WeakMap()
+const benchOptsMap = new WeakMap<Test, BenchOptions>()
 
 export function getBenchOptions(key: Test): BenchOptions {
-  return benchOptsMap.get(key)
+  return benchOptsMap.get(key)!
 }
 
 export function getBenchFn(key: Test): BenchFunction {
@@ -17,7 +17,7 @@ export function getBenchFn(key: Test): BenchFunction {
 }
 
 export const bench = createBenchmark(function (
-  name,
+  name: string | Function,
   fn: BenchFunction = noop,
   options: BenchOptions = {},
 ) {
@@ -32,7 +32,7 @@ export const bench = createBenchmark(function (
     },
   })
   benchFns.set(task, fn)
-  benchOptsMap.set(task, options)
+  benchOptsMap.set(task, { ...options, name: formatName(name) })
 })
 
 function createBenchmark(
