@@ -162,7 +162,7 @@ export class Typechecker {
       }
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
-          ? findGeneratePosition(traceMap, {
+          ? findGeneratedPosition(traceMap, {
             line: originalError.line,
             column: originalError.column,
             source: basename(path),
@@ -366,7 +366,7 @@ export class Typechecker {
   }
 }
 
-function findGeneratePosition(traceMap: TraceMap, { line, column, source }: { line: number; column: number; source: string }) {
+function findGeneratedPosition(traceMap: TraceMap, { line, column, source }: { line: number; column: number; source: string }) {
   const found = generatedPositionFor(traceMap, {
     line,
     column,
