@@ -40,10 +40,7 @@ jobs:
 
       # check uncommited LICENSE.md, auto-imports.d.ts, etc...
       - name: Check stale build artifacts
-        run: |
-          if ! git diff --exit-code; then
-            exit 1
-          fi
+        run: git diff --exit-code
 
       - name: Lint
         run: pnpm run lint
