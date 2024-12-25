@@ -1,16 +1,12 @@
 diff --git a/index.d.ts b/index.d.ts
-index 986e0d507d88bc033f0a0f0b4dcc40be0635df94..1e8fd71b1296587df250233b4550a911324a4bf9 100644
+index 986e0d507d88bc033f0a0f0b4dcc40be0635df94..187cbb484c01f041476c247c6cc5701a77e8e031 100644
 --- a/index.d.ts
 +++ b/index.d.ts
-@@ -2116,8 +2116,14 @@ export function Should(): Chai.Should;
+@@ -2116,8 +2116,10 @@ export function Should(): Chai.Should;
  export const assert: Chai.AssertStatic;
  export const expect: Chai.ExpectStatic;
  
 +declare const chai: Chai.ChaiStatic;
-+
-+declare module "chai" {
-+  export = chai;
-+}
 +
  declare global {
 -    interface Object {
