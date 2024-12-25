@@ -585,6 +585,53 @@ describe('toBeTypeOf()', () => {
   })
 })
 
+describe('toBeOneOf()', () => {
+  it('pass with assertion', () => {
+    expect(0).toBeOneOf([0, 1, 2])
+    expect(0).toBeOneOf([expect.any(Number)])
+    expect('apple').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('apple').toBeOneOf([expect.any(String)])
+    expect(true).toBeOneOf([true, false])
+    expect(true).toBeOneOf([expect.any(Boolean)])
+    expect(null).toBeOneOf([expect.any(Object)])
+    expect(undefined).toBeOneOf([undefined])
+  })
+
+  it('pass with negotiation', () => {
+    expect(3).not.toBeOneOf([0, 1, 2])
+    expect(3).not.toBeOneOf([expect.any(String)])
+    expect('mango').not.toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').not.toBeOneOf([expect.any(Number)])
+    expect(null).not.toBeOneOf([undefined])
+  })
+
+  it.fails('fail with missing negotiation', () => {
+    expect(3).toBeOneOf([0, 1, 2])
+    expect(3).toBeOneOf([expect.any(String)])
+    expect('mango').toBeOneOf(['apple', 'banana', 'orange'])
+    expect('mango').toBeOneOf([expect.any(Number)])
+    expect(null).toBeOneOf([undefined])
+  })
+
+  it('asymmetric matcher', () => {
+    expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ a: 0 }), null]))
+    expect({
+      name: 'apple',
+      count: 1,
+    }).toEqual({
+      name: expect.toBeOneOf(['apple', 'banana', 'orange']),
+      count: expect.toBeOneOf([expect.any(Number)]),
+    })
+  })
+
+  it('error message', () => {
+    snapshotError(() => expect(3).toBeOneOf([0, 1, 2]))
+    snapshotError(() => expect(3).toBeOneOf([expect.any(String)]))
+    snapshotError(() => expect({ a: 0 }).toEqual(expect.toBeOneOf([expect.objectContaining({ b: 0 }), null, undefined])))
+    snapshotError(() => expect({ name: 'mango' }).toEqual({ name: expect.toBeOneOf(['apple', 'banana', 'orange']) }))
+  })
+})
+
 describe('toSatisfy()', () => {
   const isOdd = (value: number) => value % 2 !== 0
 
@@ -636,7 +683,7 @@ describe('toSatisfy()', () => {
         }),
       )
     }).toThrowErrorMatchingInlineSnapshot(
-      `[AssertionError: expected Error: 2 to match object { message: toSatisfy{…} }]`,
+      `[AssertionError: expected Error: 2 to match object { Object (message) }]`,
     )
   })
 
@@ -1578,6 +1625,9 @@ it('asymmetric matcher error', () => {
   snapshotError(() => expect(['a', 'b']).toEqual(expect.arrayContaining(['a', 'c'])))
   snapshotError(() => expect('hello').toEqual(expect.stringMatching(/xx/)))
   snapshotError(() => expect(2.5).toEqual(expect.closeTo(2, 1)))
+  snapshotError(() => expect('foo').toEqual(expect.toBeOneOf(['bar', 'baz'])))
+  snapshotError(() => expect(0).toEqual(expect.toBeOneOf([expect.any(String), null, undefined])))
+  snapshotError(() => expect({ k: 'v', k2: 'v2' }).toEqual(expect.toBeOneOf([expect.objectContaining({ k: 'v', k3: 'v3' }), null, undefined])))
 
   // simple truncation if pretty-format is too long
   snapshotError(() => expect('hello').toEqual(expect.stringContaining('a'.repeat(40))))

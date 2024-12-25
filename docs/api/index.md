@@ -146,7 +146,7 @@ test.skipIf(isDev)('prod only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.runIf
@@ -166,7 +166,7 @@ test.runIf(isDev)('dev only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.only
@@ -231,7 +231,7 @@ test.concurrent('test 2', async ({ expect }) => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.sequential
@@ -289,7 +289,7 @@ test.fails('fail test', async () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.each
@@ -390,7 +390,7 @@ Vitest processes `$values` with Chai `format` method. If the value is too trunca
 :::
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.for
@@ -800,7 +800,7 @@ describe.runIf(isDev)('dev only test suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.only
@@ -874,7 +874,7 @@ describe.concurrent('suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.sequential
@@ -930,7 +930,7 @@ describe.shuffle('suite', () => {
 `.skip`, `.only`, and `.todo` works with random suites.
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.todo
@@ -995,7 +995,7 @@ describe.each`
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ## Setup and Teardown
