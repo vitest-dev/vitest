@@ -1881,3 +1881,27 @@ describe('undefined property handling', () => {
     expect(() => expect(obj1).toStrictEqual(obj2)).toThrow()
   })
 })
+
+describe('snapshotError tests', () => {
+  it('should capture error for missing property in expected object', () => {
+    snapshotError(() =>
+      expect({
+        x: 'foo',
+        y: undefined,
+      }).toEqual({
+        x: 'bar',
+      })
+    );
+  });
+
+  it('should capture error for missing property in actual object', () => {
+    snapshotError(() =>
+      expect({
+        x: 'foo',
+      }).toEqual({
+        x: 'bar',
+        y: undefined,
+      })
+    );
+  });
+});
