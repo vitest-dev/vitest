@@ -9,9 +9,10 @@ import type {
 } from 'playwright'
 import { Protocol } from 'playwright-core/types/protocol'
 import '../matchers.js'
+import type {} from "vitest/node"
 
 declare module 'vitest/node' {
-  interface BrowserProviderOptions {
+  export interface BrowserProviderOptions {
     launch?: LaunchOptions
     context?: Omit<
       BrowserContextOptions,

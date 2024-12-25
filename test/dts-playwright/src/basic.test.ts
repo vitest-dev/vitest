@@ -1,4 +1,3 @@
-/// <reference types="@vitest/browser/providers/playwright" />
 import { page, userEvent } from '@vitest/browser/context'
 import { test } from 'vitest'
 
