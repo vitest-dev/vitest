@@ -67,16 +67,16 @@ test('coverage results matches snapshot', async () => {
       expect({ lines, statements }).toMatchInlineSnapshot(`
         {
           "lines": {
-            "covered": 35,
-            "pct": 81.39,
+            "covered": 34,
+            "pct": 80.95,
             "skipped": 0,
-            "total": 43,
+            "total": 42,
           },
           "statements": {
-            "covered": 35,
-            "pct": 81.39,
+            "covered": 34,
+            "pct": 80.95,
             "skipped": 0,
-            "total": 43,
+            "total": 42,
           },
         }
       `)
