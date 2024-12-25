@@ -937,6 +937,7 @@ export class Vitest {
       // environment is resolved inside a worker thread
       snapshotEnvironment: null as any,
     }
+    this.snapshot.options.updateSnapshot = 'all'
   }
 
   /**
@@ -944,6 +945,7 @@ export class Vitest {
    */
   public resetSnapshotUpdate(): void {
     delete this.configOverride.snapshotOptions
+    this.snapshot.options.updateSnapshot = this.config.snapshotOptions.updateSnapshot
   }
 
   /**
