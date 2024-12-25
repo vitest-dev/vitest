@@ -18,7 +18,7 @@ patchedDependencies:
     hash: trok5obk3l5tdlygozv34fknii
     path: patches/@sinonjs__fake-timers@11.1.0.patch
   '@types/chai@5.0.1':
-    hash: a3oeg7ukwwz5dguiudl2jlskqi
+    hash: ijxbo5nbf2tuwncl5fcvh2lu2e
     path: patches/@types__chai@5.0.1.patch
   '@types/sinonjs__fake-timers@8.1.5':
     hash: yuuqouzdhxwdvk3q6qf2uf434a
@@ -55,6 +55,9 @@ importers:
       '@rollup/plugin-node-resolve':
         specifier: ^15.3.1
         version: 15.3.1(rollup@4.29.1)
+      '@types/deep-eql':
+        specifier: ^4.0.2
+        version: 4.0.2
       '@types/node':
         specifier: ^22.10.2
         version: 22.10.2
@@ -582,7 +585,7 @@ importers:
     devDependencies:
       '@types/chai':
         specifier: 5.0.1
-        version: 5.0.1(patch_hash=a3oeg7ukwwz5dguiudl2jlskqi)
+        version: 5.0.1(patch_hash=ijxbo5nbf2tuwncl5fcvh2lu2e)
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -928,7 +931,7 @@ importers:
         version: 11.1.0(patch_hash=trok5obk3l5tdlygozv34fknii)
       '@types/chai':
         specifier: 5.0.1
-        version: 5.0.1(patch_hash=a3oeg7ukwwz5dguiudl2jlskqi)
+        version: 5.0.1(patch_hash=ijxbo5nbf2tuwncl5fcvh2lu2e)
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
@@ -12108,7 +12111,7 @@ snapshots:
 
   '@types/braces@3.0.1': {}
 
-  '@types/chai@5.0.1(patch_hash=a3oeg7ukwwz5dguiudl2jlskqi)':
+  '@types/chai@5.0.1(patch_hash=ijxbo5nbf2tuwncl5fcvh2lu2e)':
     dependencies:
       '@types/deep-eql': 4.0.2
 
