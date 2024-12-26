@@ -17,9 +17,9 @@ patchedDependencies:
   '@sinonjs/fake-timers@11.1.0':
     hash: trok5obk3l5tdlygozv34fknii
     path: patches/@sinonjs__fake-timers@11.1.0.patch
-  '@types/chai@5.0.1':
-    hash: ijxbo5nbf2tuwncl5fcvh2lu2e
-    path: patches/@types__chai@5.0.1.patch
+  '@types/chai':
+    hash: 7aemscswk25eebfiaafqarff4e
+    path: patches/@types__chai.patch
   '@types/sinonjs__fake-timers@8.1.5':
     hash: yuuqouzdhxwdvk3q6qf2uf434a
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
@@ -585,7 +585,7 @@ importers:
     devDependencies:
       '@types/chai':
         specifier: 5.0.1
-        version: 5.0.1(patch_hash=ijxbo5nbf2tuwncl5fcvh2lu2e)
+        version: 5.0.1(patch_hash=7aemscswk25eebfiaafqarff4e)
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -929,9 +929,6 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 11.1.0
         version: 11.1.0(patch_hash=trok5obk3l5tdlygozv34fknii)
-      '@types/chai':
-        specifier: 5.0.1
-        version: 5.0.1(patch_hash=ijxbo5nbf2tuwncl5fcvh2lu2e)
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
@@ -12111,7 +12108,7 @@ snapshots:
 
   '@types/braces@3.0.1': {}
 
-  '@types/chai@5.0.1(patch_hash=ijxbo5nbf2tuwncl5fcvh2lu2e)':
+  '@types/chai@5.0.1(patch_hash=7aemscswk25eebfiaafqarff4e)':
     dependencies:
       '@types/deep-eql': 4.0.2
 

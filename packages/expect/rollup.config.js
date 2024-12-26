@@ -1,5 +1,6 @@
 import { builtinModules, createRequire } from 'node:module'
 import { defineConfig } from 'rollup'
+import copy from 'rollup-plugin-copy'
 import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 
@@ -16,6 +17,15 @@ const external = [
 const plugins = [
   esbuild({
     target: 'node14',
+  }),
+  copy({
+    targets: [
+      {
+        src: 'node_modules/@types/chai/index.d.ts',
+        dest: 'dist',
+        rename: 'chai.d.cts',
+      },
+    ],
   }),
 ]
 
