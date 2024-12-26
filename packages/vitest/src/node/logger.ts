@@ -8,7 +8,6 @@ import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
-import { createLogUpdate } from 'log-update'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './error'
@@ -25,19 +24,22 @@ export interface ErrorOptions {
   showCodeFrame?: boolean
 }
 
+type Listener = () => void
+
 const PAD = '      '
 
 const ESC = '\x1B['
 const ERASE_DOWN = `${ESC}J`
 const ERASE_SCROLLBACK = `${ESC}3J`
 const CURSOR_TO_START = `${ESC}1;1H`
+const HIDE_CURSOR = `${ESC}?25l`
+const SHOW_CURSOR = `${ESC}?25h`
 const CLEAR_SCREEN = '\x1Bc'
 
 export class Logger {
-  logUpdate: ReturnType<typeof createLogUpdate>
-
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
+  private cleanupListeners: Listener[] = []
   public console: Console
 
   constructor(
@@ -46,9 +48,11 @@ export class Logger {
     public errorStream: NodeJS.WriteStream | Writable = process.stderr,
   ) {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
-    this.logUpdate = createLogUpdate(this.outputStream)
     this._highlights.clear()
+    this.addCleanupListeners()
     this.registerUnhandledRejection()
+
+    ;(this.outputStream as Writable).write(HIDE_CURSOR)
   }
 
   log(...args: any[]) {
@@ -301,6 +305,44 @@ export class Logger {
       this.printError(err, { fullStack: true })
     })
     this.log(c.red(divider()))
+  }
+
+  getColumns() {
+    return 'columns' in this.outputStream ? this.outputStream.columns : 80
+  }
+
+  onTerminalCleanup(listener: Listener) {
+    this.cleanupListeners.push(listener)
+  }
+
+  private addCleanupListeners() {
+    const cleanup = () => {
+      this.cleanupListeners.forEach(fn => fn())
+      ;(this.outputStream as Writable).write(SHOW_CURSOR)
+    }
+
+    const onExit = (signal?: string | number, exitCode?: number) => {
+      cleanup()
+
+      // Interrupted signals don't set exit code automatically.
+      // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
+      if (process.exitCode === undefined) {
+        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
+      }
+
+      process.exit()
+    }
+
+    process.once('SIGINT', onExit)
+    process.once('SIGTERM', onExit)
+    process.once('exit', onExit)
+
+    this.ctx.onClose(() => {
+      process.off('SIGINT', onExit)
+      process.off('SIGTERM', onExit)
+      process.off('exit', onExit)
+      cleanup()
+    })
   }
 
   private registerUnhandledRejection() {

@@ -7,7 +7,6 @@ import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
 import { inspect, isPrimitive } from '@vitest/utils'
-import cliTruncate from 'cli-truncate'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
@@ -17,7 +16,7 @@ import {
 } from '../utils/source-map'
 import { Logger } from './logger'
 import { F_POINTER } from './reporters/renderers/figures'
-import { divider } from './reporters/renderers/utils'
+import { divider, truncateString } from './reporters/renderers/utils'
 
 interface PrintErrorOptions {
   type?: string
@@ -413,7 +412,7 @@ export function generateCodeFrame(
 
         res.push(
           lineNo(j + 1)
-          + cliTruncate(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
+          + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
         )
 
         if (j === i) {
