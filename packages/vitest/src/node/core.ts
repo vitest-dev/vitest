@@ -1113,7 +1113,6 @@ export class Vitest {
               this.logger.error('error during close', r.reason)
             }
           })
-          this.logger.logUpdate.done() // restore terminal cursor
         })
       })()
     }
