@@ -1849,3 +1849,21 @@ it('diff', () => {
   snapshotError(() => expect({ hello: 'world' }).toBeUndefined())
   snapshotError(() => expect({ hello: 'world' }).toBeNull())
 })
+
+snapshotError(() =>
+  expect({
+    x: 'foo',
+    y: undefined,
+  }).toEqual({
+    x: 'bar',
+  }),
+)
+
+snapshotError(() =>
+  expect({
+    x: 'foo',
+  }).toEqual({
+    x: 'bar',
+    y: undefined,
+  }),
+)
