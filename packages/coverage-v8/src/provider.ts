@@ -399,7 +399,7 @@ function excludeGeneratedCode(
   }
 
   const trimmed = new MagicString(source)
-  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
+  // trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
   trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match =>
     '\n'.repeat(match.split('\n').length - 1))
 
