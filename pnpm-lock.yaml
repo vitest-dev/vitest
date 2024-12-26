@@ -55,9 +55,6 @@ importers:
       '@rollup/plugin-node-resolve':
         specifier: ^15.3.1
         version: 15.3.1(rollup@4.29.1)
-      '@types/deep-eql':
-        specifier: ^4.0.2
-        version: 4.0.2
       '@types/node':
         specifier: ^22.10.2
         version: 22.10.2
