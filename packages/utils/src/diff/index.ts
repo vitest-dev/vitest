@@ -57,7 +57,7 @@ const FORMAT_OPTIONS = {
 }
 const FALLBACK_FORMAT_OPTIONS = {
   callToJSON: false,
-  maxDepth: 10,
+  maxDepth: 8,
   plugins: PLUGINS,
 }
 
@@ -97,8 +97,18 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
     const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator }
       = normalizeDiffOptions(options)
     const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
-    const aDisplay = prettyFormat(a, formatOptions)
-    const bDisplay = prettyFormat(b, formatOptions)
+    let aDisplay = prettyFormat(a, formatOptions)
+    let bDisplay = prettyFormat(b, formatOptions)
+    // even if prettyFormat prints successfully big objects,
+    // large string can choke later on (concatenation? RPC?),
+    // so truncate it to a reasonable length here.
+    // (For example, playwright's ElementHandle can become about 200_000_000 length string)
+    const MAX_LENGTH = 100_000
+    function truncate(s: string) {
+      return s.length <= MAX_LENGTH ? s : (`${s.slice(0, MAX_LENGTH)}...`)
+    }
+    aDisplay = truncate(aDisplay)
+    bDisplay = truncate(bDisplay)
     const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)} \n${aDisplay}`
     const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)} \n${bDisplay}`
     return `${aDiff}\n\n${bDiff}`
