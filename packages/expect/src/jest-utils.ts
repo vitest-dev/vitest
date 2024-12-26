@@ -41,7 +41,7 @@ export function equals(
     [],
     customTesters,
     strictCheck ? hasKey : hasDefinedKey,
-    ignoreUndefined
+    ignoreUndefined,
   )
 }
 
