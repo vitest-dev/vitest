@@ -39,7 +39,7 @@ export function equals(
     [],
     [],
     customTesters,
-    strictCheck ? hasKey : hasDefinedKey
+    strictCheck ? hasKey : hasDefinedKey,
   )
 }
 
