@@ -1890,9 +1890,9 @@ describe('snapshotError tests', () => {
         y: undefined,
       }).toEqual({
         x: 'bar',
-      })
-    );
-  });
+      }),
+    )
+  })
 
   it('should capture error for missing property in actual object', () => {
     snapshotError(() =>
@@ -1901,7 +1901,7 @@ describe('snapshotError tests', () => {
       }).toEqual({
         x: 'bar',
         y: undefined,
-      })
-    );
-  });
-});
+      }),
+    )
+  })
+})

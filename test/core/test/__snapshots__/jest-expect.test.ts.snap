@@ -706,6 +706,48 @@ exports[`error equality 13`] = `
 }
 `;
 
+exports[`snapshotError tests > should capture error for missing property in actual object 1`] = `
+{
+  "actual": "Object {
+  "x": "foo",
+}",
+  "diff": "- Expected
++ Received
+
+  {
+-   "x": "bar",
+-   "y": undefined,
++   "x": "foo",
+  }",
+  "expected": "Object {
+  "x": "bar",
+  "y": undefined,
+}",
+  "message": "expected { x: 'foo' } to deeply equal { x: 'bar', y: undefined }",
+}
+`;
+
+exports[`snapshotError tests > should capture error for missing property in expected object 1`] = `
+{
+  "actual": "Object {
+  "x": "foo",
+  "y": undefined,
+}",
+  "diff": "- Expected
++ Received
+
+  {
+-   "x": "bar",
++   "x": "foo",
++   "y": undefined,
+  }",
+  "expected": "Object {
+  "x": "bar",
+}",
+  "message": "expected { x: 'foo', y: undefined } to deeply equal { x: 'bar' }",
+}
+`;
+
 exports[`toBeOneOf() > error message 1`] = `
 {
   "actual": "undefined",
