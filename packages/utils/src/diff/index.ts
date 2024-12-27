@@ -233,8 +233,8 @@ function isReplaceable(obj1: any, obj2: any) {
 }
 
 export function printDiffOrStringify(
-  expected: unknown,
   received: unknown,
+  expected: unknown,
   options?: DiffOptions,
 ): string | undefined {
   const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
@@ -249,10 +249,10 @@ export function printDiffOrStringify(
     && expected !== received
   ) {
     if (expected.includes('\n') || received.includes('\n')) {
-      return diffStringsUnified(received, expected, options)
+      return diffStringsUnified(expected, received, options)
     }
 
-    const [diffs] = diffStringsRaw(received, expected, true)
+    const [diffs] = diffStringsRaw(expected, received, true)
     const hasCommonDiff = diffs.some(diff => diff[0] === DIFF_EQUAL)
 
     const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
@@ -273,7 +273,7 @@ export function printDiffOrStringify(
   // if (isLineDiffable(expected, received)) {
   const clonedExpected = deepClone(expected, { forceWritable: true })
   const clonedReceived = deepClone(received, { forceWritable: true })
-  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedExpected, clonedReceived)
+  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedReceived, clonedExpected)
   const difference = diff(replacedExpected, replacedActual, options)
 
   return difference
