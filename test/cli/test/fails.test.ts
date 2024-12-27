@@ -22,7 +22,7 @@ it.each(files)('should fail %s', async (file) => {
     .map(i => i.trim().replace(root, '<rootDir>'),
     )
     .join('\n')
-  expect(msg).toMatchSnapshot(file)
+  expect(msg).toMatchSnapshot()
 }, 30_000)
 
 it('should report coverage when "coverag.reportOnFailure: true" and tests fail', async () => {
