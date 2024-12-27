@@ -709,6 +709,17 @@ Internally, this method calls `.elements` and wraps every element using [`page.e
 
 - [See `locator.elements()`](#elements)
 
+### nth
+
+```ts
+function nth(index: number): Locator
+```
+
+This method returns a new locator that matches only a specific element within a multi-element locator.
+
+Internally, this method calls `.elements`, verifies that the element exists, and wraps it using [`page.elementLocator`](/guide/browser/context#page). It's useful because it will throw a descriptive error
+instead of returning `undefined` and allowing chained methods or matchers to fail mysteriously.
+
 ## Properties
 
 ### selector
