@@ -186,12 +186,7 @@ export abstract class Locator {
   }
 
   public nth(index: number): Locator {
-    const element = this.elements()[index]
-    if (!element) {
-      // TODO: better error message (misleading -- we _did_ find elements, just not enough of them)
-      throw getElementError(this._pwSelector || this.selector, this._container || document.body)
-    }
-    return this.elementLocator(element)
+    return this.locator(`${this.selector} >> nth=${index}`)
   }
 
   public toString(): string {
