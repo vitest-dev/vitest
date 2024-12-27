@@ -16,6 +16,16 @@ test('renders blog posts', async () => {
   expect(firstPost.element()).toHaveTextContent(/molestiae ut ut quas/)
   expect(firstPost.getByRole('heading').element()).toHaveTextContent(/occaecati excepturi/)
 
+  expect(screen.getByRole('listitem').nth(0).element()).toHaveTextContent(/molestiae ut ut quas/)
+  var thrown
+  try {
+    screen.getByRole('listitem').nth(666)
+  } catch(err) {
+    thrown = err
+  }
+  expect(thrown).toBeInstanceOf(Error);
+  expect(thrown.message).toMatch(/^Cannot find element/)
+
   await expect.element(secondPost.getByRole('heading')).toHaveTextContent('qui est esse')
 
   await userEvent.click(secondPost.getByRole('button', { name: 'Delete' }))

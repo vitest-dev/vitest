@@ -185,6 +185,15 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
+  public nth(index: number): Locator {
+    const element = this.elements()[index]
+    if (!element) {
+      // TODO: better error message (misleading -- we _did_ find elements, just not enough of them)
+      throw getElementError(this._pwSelector || this.selector, this._container || document.body)
+    }
+    return this.elementLocator(element)
+  }
+
   public toString(): string {
     return this.selector
   }
