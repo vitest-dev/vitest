@@ -331,7 +331,13 @@ test('getter only property', () => {
   `)
 })
 
-function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions) {
+test('truncate large diff', () => {
+  const diff = getErrorDiff(Array.from({ length: 500_000 }).fill(0), 1234)
+  expect(diff.length).lessThan(200_000)
+  expect(diff.trim()).toMatch(/\.\.\.$/)
+})
+
+function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions): string {
   try {
     expect(actual).toEqual(expected)
   }
@@ -339,5 +345,5 @@ function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions)
     const error = processError(e, options)
     return error.diff
   }
-  expect.unreachable()
+  return expect.unreachable()
 }
