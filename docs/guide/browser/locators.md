@@ -709,16 +709,15 @@ Internally, this method calls `.elements` and wraps every element using [`page.e
 
 - [See `locator.elements()`](#elements)
 
-### nth
+### nth, first, last
 
 ```ts
 function nth(index: number): Locator
 ```
 
-This method returns a new locator that matches only a specific element within a multi-element locator.
+These methods return a new locator that matches only a specific element within a multi-element query.
 
-Internally, this method calls `.elements`, verifies that the element exists, and wraps it using [`page.elementLocator`](/guide/browser/context#page). It's useful because it will throw a descriptive error
-instead of returning `undefined` and allowing chained methods or matchers to fail mysteriously.
+It is similar to calling `.elements()[n]` but more readable, with better failure messages, and can be retried with `expect.element` to reduce flake.
 
 ## Properties
 
