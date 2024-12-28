@@ -186,7 +186,7 @@ export abstract class Locator {
   }
 
   public nth(index: number): Locator {
-    return this.locator(`${this.selector} >> nth=${index}`)
+    return this.locator(`nth=${index}`)
   }
 
   public toString(): string {
