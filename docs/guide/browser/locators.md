@@ -713,11 +713,13 @@ Internally, this method calls `.elements` and wraps every element using [`page.e
 
 ```ts
 function nth(index: number): Locator
+function first(): Locator
+function last(): Locator
 ```
 
 These methods return a new locator that matches only a specific element within a multi-element query.
 
-It is similar to calling `.elements()[n]` but more readable, with better failure messages, and can be retried with `expect.element` to reduce flake.
+It is similar to calling `.elements()[n]` but more readable, with better failure messages, and can be retried more easily with `expect.element`.
 
 ## Properties
 
