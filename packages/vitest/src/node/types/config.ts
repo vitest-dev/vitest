@@ -25,7 +25,7 @@ import type { Reporter } from './reporter'
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
-export type { BrowserConfigOptions, BrowserScript } from './browser'
+export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
@@ -1081,14 +1081,16 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
+  | 'workspace'
 
 export type ProjectConfig = Omit<
-  UserConfig,
+  InlineConfig,
   NonProjectOptions
   | 'sequencer'
   | 'deps'
   | 'poolOptions'
 > & {
+  mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
   poolOptions?: {

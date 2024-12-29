@@ -38,18 +38,15 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # check uncommited LICENSE.md, auto-imports.d.ts, etc...
+      - name: Check stale build artifacts
+        run: git diff --exit-code
+
       - name: Lint
         run: pnpm run lint
 
       - name: Typecheck
         run: pnpm run typecheck
-
-      - name: Diff LICENSE.md
-        run: |
-          if ! git diff --exit-code packages/vitest/LICENSE.md; then
-            echo "::error::LICENSE.md has changed. Please commit the updated LICENSE.md file after the build."
-            exit 1
-          fi
 
       # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
       - name: Check workflow files
@@ -124,7 +121,7 @@ jobs:
 
   test-browser:
     needs: changed
-    name: 'Browser: ${{ matrix.browser[0] }}, ${{ matrix.os }}'
+    name: 'Browsers: node-20, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
@@ -133,10 +130,6 @@ jobs:
         os:
           - macos-latest
           - windows-latest
-        browser:
-          - [chromium, chrome]
-          - [firefox, firefox]
-          - [webkit]
       fail-fast: false
 
     timeout-minutes: 30
@@ -149,26 +142,19 @@ jobs:
           node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
-        if: ${{ matrix.browser[0] == 'chromium' }}
       - uses: browser-actions/setup-firefox@v1
-        if: ${{ matrix.browser[0] == 'firefox' }}
 
       - name: Install
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps --only-shell
+        run: pnpm exec playwright install --with-deps --only-shell
 
       - name: Build
         run: pnpm run build
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        if: ${{ matrix.browser[1] }}
-        env:
-          BROWSER: ${{ matrix.browser[1] }}

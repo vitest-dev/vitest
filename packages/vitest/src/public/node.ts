@@ -13,6 +13,7 @@ export type {
   OnServerRestartHandler,
   OnTestsRerunHandler,
   Vitest,
+  VitestOptions,
 } from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
@@ -60,16 +61,18 @@ export type {
   BrowserCommand,
   BrowserCommandContext,
   BrowserConfigOptions,
+  BrowserInstanceOption,
   BrowserOrchestrator,
   BrowserProvider,
   BrowserProviderInitializationOptions,
   BrowserProviderModule,
   BrowserProviderOptions,
   BrowserScript,
-  BrowserServer,
   BrowserServerState,
-  BrowserServerStateContext,
+  BrowserServerStateSession,
   CDPSession,
+  ParentProjectBrowser,
+  ProjectBrowser,
   ResolvedBrowserOptions,
 } from '../node/types/browser'
 /** @deprecated use `createViteServer` instead */
