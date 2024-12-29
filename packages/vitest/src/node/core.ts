@@ -831,7 +831,7 @@ export class Vitest {
       files = files.filter(file => filteredFiles.some(f => f.moduleId === file))
     }
 
-    const specifications = files.flatMap(file => this.getModuleSpecifications(file))
+    const specifications = files.flatMap(file => this.getModuleSpecifications(file)).filter(spec => spec.project.name === this.configOverride.project)
     await Promise.all([
       this.report('onWatcherRerun', files, trigger),
       ...this._onUserTestsRerun.map(fn => fn(specifications)),
