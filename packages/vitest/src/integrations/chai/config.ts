@@ -1,3 +1,5 @@
+// ensure `@vitest/expect` provides `chai` types
+import type {} from '@vitest/expect'
 import * as chai from 'chai'
 
 export function setupChaiConfig(config: ChaiConfig) {
