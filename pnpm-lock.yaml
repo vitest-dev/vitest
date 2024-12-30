@@ -978,8 +978,8 @@ importers:
         specifier: ^4.8.1
         version: 4.8.1
       happy-dom:
-        specifier: ^15.11.7
-        version: 15.11.7
+        specifier: ^16.0.1
+        version: 16.0.1
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -1245,7 +1245,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 15.11.7
+        version: 16.0.1
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1384,7 +1384,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 15.11.7
+        version: 16.0.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -6264,8 +6264,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@15.11.7:
-    resolution: {integrity: sha512-KyrFvnl+J9US63TEzwoiJOQzZBJY7KgBushJA8X61DMbNsH+2ONkDuLDnCnwUiPTF42tLoEmrPyoqbenVA5zrg==}
+  happy-dom@16.0.1:
+    resolution: {integrity: sha512-cqbqvutE6XAIMe4nM93TkbW5SDFtLkU/6nsQfJBJ2KSlaT+My2kmnYsCFXrvEzvmP7s1xGJ6Xt4D9LNJIJHMbA==}
     engines: {node: '>=18.0.0'}
 
   has-bigints@1.0.2:
@@ -15442,9 +15442,8 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@15.11.7:
+  happy-dom@16.0.1:
     dependencies:
-      entities: 4.5.0
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
 
