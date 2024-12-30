@@ -6,6 +6,7 @@ import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, TestProj
 import { promises as fs } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import remapping from '@ampproject/remapping'
+// @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
 import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
