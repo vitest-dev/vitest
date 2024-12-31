@@ -71,9 +71,6 @@ export class TestRun {
             this.queuedTestModules.add(entity.id)
             queuedTestModules.push(entity)
           }
-
-          // TODO: Check if skipped TestCases of finished module were reported.
-          // If not, get TestCases here and push them to TestCase arrays+sets.
         }
 
         if (state !== 'pending' && state !== 'queued' && !this.finishedTestModules.has(entity.id)) {
@@ -89,6 +86,14 @@ export class TestRun {
           if (!this.runningTestModules.has(entity.id)) {
             this.runningTestModules.add(entity.id)
             runningTestModules.push(entity)
+          }
+
+          // Skipped tests need to be reported manually once test module has finished
+          for (const test of entity.children.tests()) {
+            if (!this.finishedTestCases.has(test.id)) {
+              this.finishedTestCases.add(test.id)
+              finishedTestCases.push(test)
+            }
           }
         }
       }
@@ -118,7 +123,8 @@ export class TestRun {
     await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseFinished', testCase)))
     await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleFinished', module)))
 
-    await Promise.all(queuedTestModules.map(module => this.vitest.report('onTestModuleQueued', module)))
+    // TODO: Not needed as RPC has onQueued already. Do we want to remove that and centralize resolving here instead?
+    // await Promise.all(queuedTestModules.map(module => this.vitest.report('onTestModuleQueued', module)))
     await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModulePrepare', module)))
     await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCasePrepare', testCase)))
   }

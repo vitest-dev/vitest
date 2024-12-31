@@ -19,10 +19,9 @@ test('tasks are reported in correct order', async () => {
   expect(stdout).toBe('')
   expect(stderr).toBe('')
 
-  // TODO: Missing skipped tests, missing hooks, queued is duplicated
+  // TODO: Missing hooks, queued is duplicated
   expect(reporter.calls).toMatchInlineSnapshot(`
     [
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| queued",
       "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| queued",
       "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| start",
       "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| RUN some test",
@@ -33,8 +32,8 @@ test('tasks are reported in correct order', async () => {
       "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| RUN parallel slow tests 1.2",
       "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE parallel slow tests 1.1",
       "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE parallel slow tests 1.2",
+      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE Skipped test 1",
       "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| finish",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| queued",
       "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| queued",
       "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| start",
       "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| RUN some test",
@@ -45,6 +44,7 @@ test('tasks are reported in correct order', async () => {
       "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| RUN parallel slow tests 2.2",
       "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE parallel slow tests 2.1",
       "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE parallel slow tests 2.2",
+      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE Skipped test 1",
       "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| finish",
     ]
   `)
