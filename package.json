@@ -83,7 +83,7 @@
     },
     "patchedDependencies": {
       "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
-      "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch",
+      "@sinonjs/fake-timers@14.0.0": "patches/@sinonjs__fake-timers@14.0.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",

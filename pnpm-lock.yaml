@@ -14,14 +14,14 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@11.1.0':
-    hash: trok5obk3l5tdlygozv34fknii
-    path: patches/@sinonjs__fake-timers@11.1.0.patch
+  '@sinonjs/fake-timers@14.0.0':
+    hash: 2nfgj35ccipklw62qci72snyqi
+    path: patches/@sinonjs__fake-timers@14.0.0.patch
   '@types/chai@4.3.6':
     hash: s5kzatt2y2dzfxfynxzvzt5kbm
     path: patches/@types__chai@4.3.6.patch
   '@types/sinonjs__fake-timers@8.1.5':
-    hash: yuuqouzdhxwdvk3q6qf2uf434a
+    hash: 2mhlvt7le3jrisxefe6ifblg2q
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
   acorn@8.11.3:
     hash: no36qihqjrd3chyjw73dk5xfkm
@@ -924,8 +924,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@sinonjs/fake-timers':
-        specifier: 11.1.0
-        version: 11.1.0(patch_hash=trok5obk3l5tdlygozv34fknii)
+        specifier: 14.0.0
+        version: 14.0.0(patch_hash=2nfgj35ccipklw62qci72snyqi)
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
@@ -952,7 +952,7 @@ importers:
         version: 2.4.9
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.5
-        version: 8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)
+        version: 8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)
       acorn-walk:
         specifier: ^8.3.4
         version: 8.3.4
@@ -3433,11 +3433,11 @@ packages:
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
 
-  '@sinonjs/commons@3.0.0':
-    resolution: {integrity: sha512-jXBtWAF4vmdNmZgD5FoKsVLv3rPgDnLgPbU84LIJ3otV44vJlDRokVng5v8NFJdCf/da9legHcKaRuZs4L7faA==}
+  '@sinonjs/commons@3.0.1':
+    resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@11.1.0':
-    resolution: {integrity: sha512-pUBaWhXoa9N0R/LeYKLqkrN9mqN3jwKBeMfbvlRtHUzLmk55o+0swncIuZBcSH/PpXDttRf/AcPF22pknAzORQ==}
+  '@sinonjs/fake-timers@14.0.0':
+    resolution: {integrity: sha512-QfoXRaUTjMVVn/ZbnD4LS3TPtqOkOdKIYCKldIVPnuClcwRKat6LI2mRZ2s5qiBfO6Fy03An35dSls/2/FEc0Q==}
 
   '@stylistic/eslint-plugin@2.11.0':
     resolution: {integrity: sha512-PNRHbydNG5EH8NK4c+izdJlxajIR6GxcUhzsYNRsn6Myep4dsZt0qFCz3rCPnkvgO5FYibDcMqgNHUT+zvjYZw==}
@@ -11811,13 +11811,13 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@sinonjs/commons@3.0.0':
+  '@sinonjs/commons@3.0.1':
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@11.1.0(patch_hash=trok5obk3l5tdlygozv34fknii)':
+  '@sinonjs/fake-timers@14.0.0(patch_hash=2nfgj35ccipklw62qci72snyqi)':
     dependencies:
-      '@sinonjs/commons': 3.0.0
+      '@sinonjs/commons': 3.0.1
 
   '@stylistic/eslint-plugin@2.11.0(eslint@9.16.0(jiti@2.4.1))(typescript@5.7.2)':
     dependencies:
@@ -12221,7 +12221,7 @@ snapshots:
 
   '@types/resolve@1.20.2': {}
 
-  '@types/sinonjs__fake-timers@8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)': {}
+  '@types/sinonjs__fake-timers@8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)': {}
 
   '@types/stack-utils@2.0.3':
     optional: true
@@ -19144,7 +19144,7 @@ snapshots:
   webdriverio@9.4.5:
     dependencies:
       '@types/node': 20.14.15
-      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)
+      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)
       '@wdio/config': 9.4.4
       '@wdio/logger': 9.4.4
       '@wdio/protocols': 9.4.4
