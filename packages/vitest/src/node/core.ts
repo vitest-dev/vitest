@@ -36,6 +36,7 @@ import { BlobReporter, readBlobs } from './reporters/blob'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
+import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
 import { resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
 
@@ -94,6 +95,7 @@ export class Vitest {
   /** @internal */ reporters: Reporter[] = undefined!
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
+  /** @internal */ testRun: TestRun = undefined!
 
   private isFirstRun = true
   private restartsCount = 0
@@ -213,6 +215,7 @@ export class Vitest {
     this._state = new StateManager()
     this._cache = new VitestCache(this.version)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
+    this.testRun = new TestRun(this)
 
     if (this.config.watch) {
       this.watcher.registerWatcher()
@@ -1159,6 +1162,13 @@ export class Vitest {
 
   /** @internal */
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
+    if (name === 'onTaskUpdate') {
+      this.testRun.updated(
+        // @ts-expect-error let me go
+        ...args,
+      )
+    }
+
     await Promise.all(this.reporters.map(r => r[name]?.(
       // @ts-expect-error let me go
       ...args,
