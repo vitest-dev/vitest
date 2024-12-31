@@ -66,19 +66,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
           const promise = () => new Promise<void>((resolve, reject) => {
             let intervalId: any
+            let timeoutId: any
             let lastError: any
             const { setTimeout, clearTimeout } = getSafeTimers()
-            const timeoutId = setTimeout(() => {
-              clearTimeout(intervalId)
-              reject(
-                copyStackTrace(
-                  new Error(`Matcher did not succeed in ${timeout}ms`, {
-                    cause: lastError,
-                  }),
-                  STACK_TRACE_ERROR,
-                ),
-              )
-            }, timeout)
             const check = async () => {
               try {
                 chai.util.flag(assertion, '_name', key)
@@ -90,9 +80,24 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               }
               catch (err) {
                 lastError = err
-                intervalId = setTimeout(check, interval)
+                if (!chai.util.flag(assertion, '_isLastPollAttempt')) {
+                  intervalId = setTimeout(check, interval)
+                }
               }
             }
+            timeoutId = setTimeout(async () => {
+              clearTimeout(intervalId)
+              chai.util.flag(assertion, '_isLastPollAttempt', true)
+              await check()
+              reject(
+                copyStackTrace(
+                  new Error(`Matcher did not succeed in ${timeout}ms`, {
+                    cause: lastError,
+                  }),
+                  STACK_TRACE_ERROR,
+                ),
+              )
+            }, timeout)
             check()
           })
           let awaited = false

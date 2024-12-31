@@ -1,4 +1,4 @@
-import { expect, test, vi } from 'vitest'
+import { expect, test, vi, chai } from 'vitest'
 
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
@@ -105,4 +105,17 @@ test('toBeDefined', async () => {
       message: 'expected undefined to be defined',
     }),
   }))
+})
+
+test('should set _isLastPollAttempt flag on last call', async () => {
+  const fn = vi.fn(function(this: object) {
+    return chai.util.flag(this, '_isLastPollAttempt')
+  })
+  await expect(async () => {
+    await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(false)
+  }).rejects.toThrowError()
+  fn.mock.results.forEach((result, index) => {
+    const isLastCall = index === fn.mock.results.length - 1
+    expect(result.value).toBe(isLastCall ? true : undefined)
+  })
 })

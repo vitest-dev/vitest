@@ -18,11 +18,23 @@ export async function setupExpectDom() {
 
       const isNot = chai.util.flag(this, 'negate') as boolean
       const name = chai.util.flag(this, '_name') as string
+      const isLastPollAttempt = chai.util.flag(this, "_isLastPollAttempt")
       // special case for `toBeInTheDocument` matcher
       if (isNot && name === 'toBeInTheDocument') {
         return elementOrLocator.query()
       }
-      return elementOrLocator.element()
+
+      if (isLastPollAttempt) {
+        return elementOrLocator.element()
+      }
+  
+      const result = elementOrLocator.query()
+  
+      if (!result) {
+        throw new Error(`Cannot find element with locator: ${JSON.stringify(elementOrLocator)}`)
+      }
+  
+      return result
     }, options)
   }
 }
