@@ -1,5 +1,5 @@
 import { page } from '@vitest/browser/context'
-import { test, expect, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 // element selector uses prettyDOM under the hood, which is an expensive call
 // that should not be called on each failed locator attempt to avoid memory leak:
@@ -18,7 +18,8 @@ test('should only use element selector on last expect.element attempt', async ()
 
   try {
     await expect.element(locator, { timeout: 500, interval: 100 }).toBeInTheDocument()
-  } catch {}
+  }
+  catch {}
 
   expect(locatorElementMock).toBeCalledTimes(1)
   expect(locatorElementMock).toHaveBeenCalledAfter(locatorQueryMock)

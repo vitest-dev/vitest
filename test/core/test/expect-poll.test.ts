@@ -1,4 +1,4 @@
-import { expect, test, vi, chai } from 'vitest'
+import { chai, expect, test, vi } from 'vitest'
 
 test('simple usage', async () => {
   await expect.poll(() => false).toBe(false)
@@ -108,7 +108,7 @@ test('toBeDefined', async () => {
 })
 
 test('should set _isLastPollAttempt flag on last call', async () => {
-  const fn = vi.fn(function(this: object) {
+  const fn = vi.fn(function (this: object) {
     return chai.util.flag(this, '_isLastPollAttempt')
   })
   await expect(async () => {
