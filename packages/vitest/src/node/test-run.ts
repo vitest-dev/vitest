@@ -8,7 +8,6 @@ export class TestRun {
   private suites = emptyCounters()
 
   // Internal state to prevent reporting duplicates and guaranteeing correct order
-  private queuedTestModules = new Set<TestModule['id']>()
   private runningTestModules = new Set<TestModule['id']>()
   private finishedTestModules = new Set<TestModule['id']>()
 
@@ -22,7 +21,6 @@ export class TestRun {
     this.suites = emptyCounters()
     this.suites.total = specifications.length
 
-    this.queuedTestModules.clear()
     this.runningTestModules.clear()
     this.finishedTestModules.clear()
     this.runningTestCases.clear()
@@ -40,7 +38,6 @@ export class TestRun {
   }
 
   async updated(update: TaskResultPack[]) {
-    const queuedTestModules: TestModule[] = []
     const runningTestModules: TestModule[] = []
     const finishedTestModules: TestModule[] = []
 
@@ -57,30 +54,14 @@ export class TestRun {
       if (entity.type === 'module') {
         const state = entity.state()
 
-        if (state === 'queued' && !this.queuedTestModules.has(entity.id)) {
-          this.queuedTestModules.add(entity.id)
-          queuedTestModules.push(entity)
-        }
-
         if (state === 'pending' && !this.runningTestModules.has(entity.id)) {
           this.runningTestModules.add(entity.id)
           runningTestModules.push(entity)
-
-          // If queue phase was fast, it's possible that it was never reported
-          if (!this.queuedTestModules.has(entity.id)) {
-            this.queuedTestModules.add(entity.id)
-            queuedTestModules.push(entity)
-          }
         }
 
         if (state !== 'pending' && state !== 'queued' && !this.finishedTestModules.has(entity.id)) {
           this.finishedTestModules.add(entity.id)
           finishedTestModules.push(entity)
-
-          if (!this.queuedTestModules.has(entity.id)) {
-            this.queuedTestModules.add(entity.id)
-            queuedTestModules.push(entity)
-          }
 
           // If module run was fast, it's possible that it was never reported to be running
           if (!this.runningTestModules.has(entity.id)) {
@@ -123,8 +104,6 @@ export class TestRun {
     await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseFinished', testCase)))
     await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleFinished', module)))
 
-    // TODO: Not needed as RPC has onQueued already. Do we want to remove that and centralize resolving here instead?
-    // await Promise.all(queuedTestModules.map(module => this.vitest.report('onTestModuleQueued', module)))
     await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModulePrepare', module)))
     await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCasePrepare', testCase)))
   }

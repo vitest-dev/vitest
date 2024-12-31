@@ -95,7 +95,7 @@ export class Vitest {
   /** @internal */ reporters: Reporter[] = undefined!
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
-  /** @internal */ testRun: TestRun = undefined!
+  /** @internal */ _testRun: TestRun = undefined!
 
   private isFirstRun = true
   private restartsCount = 0
@@ -215,7 +215,7 @@ export class Vitest {
     this._state = new StateManager()
     this._cache = new VitestCache(this.version)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
-    this.testRun = new TestRun(this)
+    this._testRun = new TestRun(this)
 
     if (this.config.watch) {
       this.watcher.registerWatcher()
@@ -1163,7 +1163,7 @@ export class Vitest {
   /** @internal */
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
     if (name === 'onTaskUpdate') {
-      this.testRun.updated(
+      this._testRun.updated(
         // @ts-expect-error let me go
         ...args,
       )
