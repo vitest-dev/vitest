@@ -24,14 +24,14 @@ describe('FakeTimers', () => {
 
   describe('construction', () => {
     it('installs setTimeout mock', () => {
-      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
       expect(global.setTimeout).not.toBe(undefined)
     })
 
     it('installs clearTimeout mock', () => {
-      const global = { Date: FakeDate, clearTimeout, clearInterval, process, setTimeout, setInterval }
+      const global = { Date: FakeDate, clearTimeout, process, setTimeout }
       const timers = new FakeTimers({ global })
       timers.useFakeTimers()
       expect(global.clearTimeout).not.toBe(undefined)
