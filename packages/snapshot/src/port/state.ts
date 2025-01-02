@@ -391,11 +391,11 @@ export default class SnapshotState {
       if (!pass) {
         this.unmatched.increment(testId)
         return {
-          actual: removeExtraLineBreaks(receivedSerialized),
+          actual: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
           count,
           expected:
             expectedTrimmed !== undefined
-              ? removeExtraLineBreaks(expectedTrimmed)
+              ? rawSnapshot ? expectedTrimmed : removeExtraLineBreaks(expectedTrimmed)
               : undefined,
           key,
           pass: false,
