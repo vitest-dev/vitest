@@ -35,6 +35,7 @@ export interface UITaskTreeNode extends TaskTreeNode {
   indent: number
   state?: TaskState
   duration?: number
+  projectName?: string
 }
 
 export interface TestTreeNode extends UITaskTreeNode {
@@ -69,6 +70,7 @@ export interface Filter {
   success: boolean
   skipped: boolean
   onlyTests: boolean
+  project: string
 }
 
 export interface TreeFilterState extends Filter {
