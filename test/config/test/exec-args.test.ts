@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process'
+import { x } from 'tinyexec'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -35,19 +35,20 @@ test.each([
 })
 
 test('should not pass execArgv to workers when not specified in the config', async () => {
-  const { stdout, stderr } = spawnSync('node', [
+  const { stdout, stderr } = await x('node', [
     '--title',
     'this-works-only-on-main-thread',
     '../../../../node_modules/vitest/vitest.mjs',
     '--run',
   ], {
-    encoding: 'utf-8',
-    cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
-    env: {
-      ...process.env,
-      VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
-      NO_COLOR: '1',
+    nodeOptions: {
+      cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
+      env: {
+        VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+        NO_COLOR: '1',
+      },
     },
+    throwOnError: false,
   })
 
   expect(stderr).not.toContain('Error: Initiated Worker with invalid execArgv flags: --title')
@@ -56,20 +57,21 @@ test('should not pass execArgv to workers when not specified in the config', asy
 })
 
 test('should let allowed args pass to workers', async () => {
-  const { stdout, stderr } = spawnSync('node', [
+  const { stdout, stderr } = await x('node', [
     '--heap-prof',
     '--diagnostic-dir=/tmp/vitest-diagnostics',
     '--heap-prof-name=heap.prof',
     '../../../../node_modules/vitest/vitest.mjs',
     '--run',
   ], {
-    encoding: 'utf-8',
-    cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
-    env: {
-      ...process.env,
-      VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
-      NO_COLOR: '1',
+    nodeOptions: {
+      cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
+      env: {
+        VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+        NO_COLOR: '1',
+      },
     },
+    throwOnError: false,
   })
 
   expect(stderr).toBe('')
