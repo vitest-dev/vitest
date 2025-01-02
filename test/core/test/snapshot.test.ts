@@ -161,3 +161,21 @@ my string
   "
 `)
 })
+
+test('toMatchFileSnapshot preserves white spaces', async () => {
+  await expect(`
+  white space
+`).toMatchFileSnapshot('snapshot-1.txt')
+  await expect(`\
+example: |
+  {
+    echo "hello"
+  }
+some:
+  nesting:
+    - "hello world"
+even:
+  more:
+    nesting: true
+`).toMatchFileSnapshot('snapshot-2.txt')
+})

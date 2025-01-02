@@ -290,8 +290,9 @@ export default class SnapshotState {
       : rawSnapshot
         ? rawSnapshot.content
         : this._snapshotData[key]
-    const expectedTrimmed = prepareExpected(expected)
-    const pass = expectedTrimmed === prepareExpected(receivedSerialized)
+    const expectedTrimmed = rawSnapshot ? expected : prepareExpected(expected)
+    const receivedSerializedTrimmed = rawSnapshot ? receivedSerialized : prepareExpected(receivedSerialized)
+    const pass = expectedTrimmed === receivedSerializedTrimmed
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted
       = isInline
