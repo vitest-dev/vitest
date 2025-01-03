@@ -1,6 +1,6 @@
 import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestModule, TestProject } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
@@ -111,17 +111,13 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
           vitest.state.catchError(error, type)
         },
         async onQueued(file) {
-          vitest.state.collectFiles(project, [file])
-          const testModule = vitest.state.getReportedEntity(file) as TestModule
-          await vitest.report('onTestModuleQueued', testModule)
+          await vitest._testRun.enqueued(project, file)
         },
         async onCollected(files) {
-          vitest.state.collectFiles(project, files)
-          await vitest.report('onCollected', files)
+          await vitest._testRun.collected(project, files)
         },
         async onTaskUpdate(packs) {
-          vitest.state.updateTasks(packs)
-          await vitest.report('onTaskUpdate', packs)
+          await vitest._testRun.updated(packs)
         },
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)

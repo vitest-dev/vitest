@@ -8,14 +8,27 @@ import type { TestSpecification } from '../spec'
 
 export interface Reporter {
   onInit?: (ctx: Vitest) => void
+  /**
+   * @deprecated use `onTestRunStart` instead
+   */
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
+  /**
+   * @deprecated use `onTestRunStart` instead
+   */
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
-  onCollected?: (files?: File[]) => Awaitable<void>
+  // TODO: deprecate instead of what(?)
+  onCollected?: (files: File[]) => Awaitable<void>
+  /**
+   * @deprecated use `onTestRunEnd` instead
+   */
   onFinished?: (
     files: File[],
     errors: unknown[],
     coverage?: unknown
   ) => Awaitable<void>
+  /**
+   * @deprecated use `onTestModuleQueued`, `onTestModulePrepare`, `onTestModuleFinished`, `onTestCasePrepare`, `onTestCaseFinished` instead
+   */
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
   onTestRemoved?: (trigger?: string) => Awaitable<void>
   onWatcherStart?: (files?: File[], errors?: unknown[]) => Awaitable<void>

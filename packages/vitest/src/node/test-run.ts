@@ -1,5 +1,6 @@
-import type { TaskResultPack } from '@vitest/runner'
+import type { File as RunnerTestFile, TaskResultPack } from '@vitest/runner'
 import type { Vitest } from './core'
+import type { TestProject } from './project'
 import type { TestCase, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 
@@ -29,15 +30,20 @@ export class TestRun {
     await this.vitest.report('onTestRunStart', specifications)
   }
 
-  enqueued(_module: TestModule) {
-    // TODO
+  async enqueued(project: TestProject, file: RunnerTestFile) {
+    this.vitest.state.collectFiles(project, [file])
+    const testModule = this.vitest.state.getReportedEntity(file) as TestModule
+    await this.vitest.report('onTestModuleQueued', testModule)
   }
 
-  collected(_modules: TestModule[]) {
-    // TODO
+  async collected(project: TestProject, files: RunnerTestFile[]) {
+    this.vitest.state.collectFiles(project, files)
+    await this.vitest.report('onCollected', files)
   }
 
   async updated(update: TaskResultPack[]) {
+    this.vitest.state.updateTasks(update)
+
     const runningTestModules: TestModule[] = []
     const finishedTestModules: TestModule[] = []
 
@@ -104,6 +110,12 @@ export class TestRun {
         }
       }
     }
+
+    // TODO: error handling
+
+    // TODO: what is the order or reports here?
+    // "onTaskUpdate" in parallel with others or before all or after all?
+    await this.vitest.report('onTaskUpdate', update)
 
     // Order of reporting is important here
     await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseFinished', testCase)))

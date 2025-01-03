@@ -456,6 +456,8 @@ export class Vitest {
       const specs = workspaceSpecs.get(project) || []
       specs.push(file)
       workspaceSpecs.set(project, specs)
+      // TODO: how to integrate queue state with mergeReports?
+      // await this._testRun.enqueued(project, file).catch(noop)
     }
 
     for (const [project, files] of workspaceSpecs) {
@@ -464,10 +466,8 @@ export class Vitest {
       files.forEach((file) => {
         file.logs?.forEach(log => this.state.updateUserLog(log))
       })
-      this.state.collectFiles(project, files)
+      await this._testRun.collected(project, files).catch(noop)
     }
-
-    await this.report('onCollected', files).catch(noop)
 
     for (const file of files) {
       const logs: UserConsoleLog[] = []
@@ -486,7 +486,7 @@ export class Vitest {
         await this.report('onUserConsoleLog', log).catch(noop)
       }
 
-      await this.report('onTaskUpdate', taskPacks).catch(noop)
+      await this._testRun.updated(taskPacks).catch(noop)
     }
 
     if (hasFailed(files)) {
@@ -1162,13 +1162,6 @@ export class Vitest {
 
   /** @internal */
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
-    if (name === 'onTaskUpdate') {
-      this._testRun.updated(
-        // @ts-expect-error let me go
-        ...args,
-      )
-    }
-
     await Promise.all(this.reporters.map(r => r[name]?.(
       // @ts-expect-error let me go
       ...args,
