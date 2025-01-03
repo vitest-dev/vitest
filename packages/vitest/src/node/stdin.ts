@@ -61,7 +61,6 @@ export function registerConsoleShortcuts(
         process.exitCode = 130
 
         await ctx.cancelCurrentRun('keyboard-input')
-        await ctx.runningPromise
       }
       return ctx.exit(true)
     }
