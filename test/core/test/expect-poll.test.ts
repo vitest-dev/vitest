@@ -119,3 +119,32 @@ test('should set _isLastPollAttempt flag on last call', async () => {
     expect(result.value).toBe(isLastCall ? true : undefined)
   })
 })
+
+test('should handle success on last attempt', async () => {
+  const fn = vi.fn(function (this: object) {
+    if (chai.util.flag(this, '_isLastPollAttempt')) {
+      return 1
+    }
+    return undefined
+  })
+  await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(1)
+})
+
+
+test('should handle failure on last attempt', async () => {
+  const fn = vi.fn(function (this: object) {
+    if (chai.util.flag(this, '_isLastPollAttempt')) {
+      return 3
+    }
+    return 2
+  })
+  await expect(async () => {
+    await expect.poll(fn, { interval: 10, timeout: 100 }).toBe(1)
+  }).rejects.toThrowError(expect.objectContaining({
+    message: 'Matcher did not succeed in 100ms',
+    cause: expect.objectContaining({
+      // makes sure cause message reflects the last attempt value
+      message: 'expected 3 to be 1 // Object.is equality',
+    }),
+  }))
+})

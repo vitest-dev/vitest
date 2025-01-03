@@ -11,10 +11,8 @@ test('should only use element selector on last expect.element attempt', async ()
   document.body.append(div)
 
   const locator = page.getByText('non-existent')
-  const locatorElementMock = vi.fn(locator.element)
-  locator.element = locatorElementMock
-  const locatorQueryMock = vi.fn(locator.query)
-  locator.query = locatorQueryMock
+  const locatorElementMock = vi.spyOn(locator, 'element')
+  const locatorQueryMock = vi.spyOn(locator, 'query')
 
   try {
     await expect.element(locator, { timeout: 500, interval: 100 }).toBeInTheDocument()

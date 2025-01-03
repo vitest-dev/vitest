@@ -28,6 +28,9 @@ describe('running browser tests', async () => {
       console.error(stderr)
     })
 
+    // This should match the number of actual tests from browser.json
+    // if you added new tests, these assertion will fail and you should
+    // update the numbers
     expect(browserResultJson.testResults).toHaveLength(20 * instances.length)
     expect(passedTests).toHaveLength(18 * instances.length)
     expect(failedTests).toHaveLength(2 * instances.length)

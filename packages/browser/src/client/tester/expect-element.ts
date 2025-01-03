@@ -18,6 +18,9 @@ export async function setupExpectDom() {
 
       const isNot = chai.util.flag(this, 'negate') as boolean
       const name = chai.util.flag(this, '_name') as string
+      // element selector uses prettyDOM under the hood, which is an expensive call
+      // that should not be called on each failed locator attempt to avoid memory leak:
+      // https://github.com/vitest-dev/vitest/issues/7139
       const isLastPollAttempt = chai.util.flag(this, '_isLastPollAttempt')
       // special case for `toBeInTheDocument` matcher
       if (isNot && name === 'toBeInTheDocument') {
