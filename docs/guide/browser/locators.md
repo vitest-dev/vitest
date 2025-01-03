@@ -393,7 +393,7 @@ It is recommended to use this only after the other locators don't work for your 
 function nth(index: number): Locator
 ```
 
-This method returns a new locator that matches only a specific index within a multi-element query result. This is similar to calling `elements()[n]` but easier to use with asynchronous retry.
+This method returns a new locator that matches only a specific index within a multi-element query result. Unlike `elements()[n]`, the `nth` locator will be retries until the element is present.
 
 ```html
 <div aria-label="one"><input/><input/><input/></div>
