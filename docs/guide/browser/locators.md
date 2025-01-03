@@ -709,17 +709,68 @@ Internally, this method calls `.elements` and wraps every element using [`page.e
 
 - [See `locator.elements()`](#elements)
 
-### nth, first, last
+### nth
 
 ```ts
 function nth(index: number): Locator
+```
+
+This method returns a new locator that matches only a specific index within a multi-element query result. This is similar to calling `elements()[n]` but easier to use with asynchronous retry.
+
+```html
+<div aria-label="one"><input/><input/><input/></div>
+<div aria-label="two"><input/></div>
+```
+
+```tsx
+page.getByRole('textbox').nth(0) // ✅
+page.getByRole('textbox').nth(4) // ❌
+```
+
+::: tip
+Before resorting to `nth`, you may find it useful to use chained locators to narrow down your search.
+Sometimes there is no better way to distinguish than by element position; although this can lead to flake, it's better than nothing.
+:::
+
+```tsx
+page.getByLabel('two').getByRole('input') // ✅ better alternative to nth(2)
+page.getByLabel('one').getByRole('input') // ❌ too ambiguous
+page.getByLabel('one').getByRole('input').nth(1) // ✅ pragmatic compromise
+```
+
+### first
+
+```ts
 function first(): Locator
+```
+
+This method returns a new locator that matches only the first index of a multi-element query result.
+It is sugar for `nth(0)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').first() // ✅
+```
+
+### last
+
+```ts
 function last(): Locator
 ```
 
-These methods return a new locator that matches only a specific element within a multi-element query.
+This method returns a new locator that matches only the last index of a multi-element query result.
+It is sugar for `nth(-1)`.
 
-It is similar to calling `.elements()[n]` but more readable, with better failure messages, and can be retried more easily with `expect.element`.
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').last() // ✅
+```
 
 ## Properties
 
