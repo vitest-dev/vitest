@@ -280,7 +280,7 @@ test('update input', async () => {
 ```
 
 ::: info
-Vitest doesn't expose `.type` method on the locator like `input.type` because it exists only for compatiblity with the `userEvent` library. Consider using `.fill` instead as it is faster.
+Vitest doesn't expose `.type` method on the locator like `input.type` because it exists only for compatibility with the `userEvent` library. Consider using `.fill` instead as it is faster.
 :::
 
 References:

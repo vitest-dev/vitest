@@ -1,4 +1,4 @@
-// CI failes only for this file, but it works locally
+// CI fails only for this file, but it works locally
 
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
 import type { TaskPopulated, Test } from '@vitest/runner'
