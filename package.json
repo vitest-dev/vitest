@@ -3,7 +3,7 @@
   "type": "module",
   "version": "3.0.0-beta.3",
   "private": true,
-  "packageManager": "pnpm@9.15.1",
+  "packageManager": "pnpm@9.15.2",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -42,7 +42,7 @@
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.10.5",
     "@types/ws": "^8.5.13",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
@@ -64,7 +64,7 @@
     "typescript": "^5.7.2",
     "vite": "^5.4.0",
     "vitest": "workspace:*",
-    "zx": "^8.2.4"
+    "zx": "^8.3.0"
   },
   "pnpm": {
     "overrides": {
