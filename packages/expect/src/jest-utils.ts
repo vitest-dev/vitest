@@ -33,7 +33,14 @@ export function equals(
   strictCheck?: boolean,
 ): boolean {
   customTesters = customTesters || []
-  return eq(a, b, [], [], customTesters, strictCheck ? hasKey : hasDefinedKey)
+  return eq(
+    filterUndefined(a),
+    filterUndefined(b),
+    [],
+    [],
+    customTesters,
+    strictCheck ? hasKey : hasDefinedKey,
+  )
 }
 
 const functionToString = Function.prototype.toString
@@ -787,4 +794,22 @@ export function getObjectSubset(
       }
 
   return { subset: getObjectSubsetWithContext()(object, subset), stripped }
+}
+
+function filterUndefined(obj: any): any {
+  if (!isObject(obj)) {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(filterUndefined)
+  }
+
+  const result: any = {}
+  for (const key in obj) {
+    if (obj[key] !== undefined) {
+      result[key] = filterUndefined(obj[key])
+    }
+  }
+  return result
 }
