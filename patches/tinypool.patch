@@ -1,0 +1,67 @@
+diff --git a/dist/index.js b/dist/index.js
+index fe8ed1c104697e0199094b500582e9d1e4ece410..6f59f82ecd22332f2580c3684b444d90853579b2 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -29,7 +29,7 @@ import { join } from "path";
+ import { inspect, types } from "util";
+ import assert from "assert";
+ import { performance } from "perf_hooks";
+-import { readFileSync } from "fs";
++import { readFileSync, writeFileSync } from "fs";
+ 
+ // src/physicalCpuCount.ts
+ import os from "os";
+@@ -123,6 +123,7 @@ import { fileURLToPath as fileURLToPath2 } from "url";
+ var __tinypool_worker_message__ = true;
+ var SIGKILL_TIMEOUT = 1e3;
+ var ProcessWorker = class {
++  buffer = []
+   constructor() {
+     __publicField(this, "name", "ProcessWorker");
+     __publicField(this, "runtime", "child_process");
+@@ -132,7 +133,13 @@ var ProcessWorker = class {
+     __publicField(this, "channel");
+     __publicField(this, "waitForExit");
+     __publicField(this, "isTerminating", false);
+-    __publicField(this, "onUnexpectedExit", () => {
++    __publicField(this, "onUnexpectedExit", (code) => {
++      console.log('exit', code, this.TEST)
++      try {
++        writeFileSync(this.TEST + '-debug', this.buffer.join(''))
++      } catch (err) {
++        console.log('failed to store', this.TEST + '-debug', err)
++      }
+       this.process.emit("error", new Error("Worker exited unexpectedly"));
+     });
+   }
+@@ -142,12 +149,20 @@ var ProcessWorker = class {
+       options.argv,
+       {
+         ...options,
++        stdio: 'overlapped',
+         env: {
+           ...options.env,
++          // NODE_DEBUG: '*',
+           TINYPOOL_WORKER_ID: options.workerData[0].workerId.toString()
+         }
+       }
+     );
++    this.process.stderr.on('data', (data) => {
++      this.buffer.push(String(data))
++    })
++    this.process.stdout.on('data', (data) => {
++      this.buffer.push(String(data))
++    })
+     this.threadId = this.process.pid;
+     this.process.on("exit", this.onUnexpectedExit);
+     this.waitForExit = new Promise((r) => this.process.on("exit", r));
+@@ -171,6 +186,9 @@ var ProcessWorker = class {
+     });
+   }
+   send(message) {
++    if (message.task) {
++      this.TEST = message.task.files[0]
++    }
+     if (!this.isTerminating) {
+       this.process.send(message);
+     }
