@@ -123,7 +123,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
         sendLog(log) {
-          return vitest.report('onUserConsoleLog', log)
+          return vitest._testRun.log(log)
         },
         resolveSnapshotPath(testPath) {
           return vitest.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {

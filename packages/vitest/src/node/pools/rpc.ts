@@ -90,9 +90,8 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     async onTaskUpdate(packs) {
       await ctx._testRun.updated(packs)
     },
-    onUserConsoleLog(log) {
-      ctx.state.updateUserLog(log)
-      ctx.report('onUserConsoleLog', log)
+    async onUserConsoleLog(log) {
+      await ctx._testRun.log(log)
     },
     onUnhandledError(err, type) {
       ctx.state.catchError(err, type)

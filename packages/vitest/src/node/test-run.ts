@@ -1,4 +1,5 @@
 import type { File as RunnerTestFile, TaskResultPack } from '@vitest/runner'
+import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestCase, TestModule } from './reporters/reported-tasks'
@@ -45,6 +46,11 @@ export class TestRun {
         return this.vitest.report('onTestModuleCollected', testModule)
       }),
     ])
+  }
+
+  async log(log: UserConsoleLog) {
+    this.vitest.state.updateUserLog(log)
+    await this.vitest.report('onUserConsoleLog', log)
   }
 
   async updated(update: TaskResultPack[]) {

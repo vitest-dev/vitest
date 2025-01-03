@@ -494,7 +494,7 @@ export class Vitest {
       logs.sort((log1, log2) => log1.time - log2.time)
 
       for (const log of logs) {
-        await this.report('onUserConsoleLog', log).catch(noop)
+        await this._testRun.log(log).catch(noop)
       }
 
       await this._testRun.updated(taskPacks).catch(noop)
