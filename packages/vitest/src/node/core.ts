@@ -450,17 +450,22 @@ export class Vitest {
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
 
-    const workspaceSpecs = new Map<TestProject, File[]>()
+    const filesByProject = new Map<TestProject, File[]>()
+    const specifications: TestSpecification[] = []
     for (const file of files) {
       const project = this.getProjectByName(file.projectName || '')
-      const specs = workspaceSpecs.get(project) || []
+      const specs = filesByProject.get(project) || []
       specs.push(file)
-      workspaceSpecs.set(project, specs)
+      filesByProject.set(project, specs)
+      specifications.push(
+        project.createSpecification(file.filepath, undefined, file.pool),
+      )
       // TODO: how to integrate queue state with mergeReports?
       // await this._testRun.enqueued(project, file).catch(noop)
     }
+    await this._testRun.start(specifications).catch(noop)
 
-    for (const [project, files] of workspaceSpecs) {
+    for (const [project, files] of filesByProject) {
       const filepaths = files.map(f => f.filepath)
       this.state.clearFiles(project, filepaths)
       files.forEach((file) => {
@@ -505,7 +510,7 @@ export class Vitest {
     }
 
     this._checkUnhandledErrors(errors)
-    await this.report('onFinished', files, errors)
+    await this._testRun.end(specifications, errors, coverages).catch(noop)
     await this.initCoverageProvider()
     await this.coverageProvider?.mergeReports?.(coverages)
 
@@ -683,6 +688,7 @@ export class Vitest {
 
     await this.report('onPathsCollected', filepaths)
     await this.report('onSpecsCollected', specs.map(spec => spec.toJSON()))
+    await this._testRun.start(specs)
 
     // previous run
     await this.runningPromise
@@ -729,13 +735,12 @@ export class Vitest {
         }
       }
       finally {
-        // can be duplicate files if different projects are using the same file
-        const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
-        const errors = this.state.getUnhandledErrors()
+        // TODO: wait for coverage only if `onFinished` is defined
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
+        const errors = this.state.getUnhandledErrors()
         this._checkUnhandledErrors(errors)
-        await this.report('onFinished', this.state.getFiles(files), errors, coverage)
+        await this._testRun.end(specs, errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
       }
     })()

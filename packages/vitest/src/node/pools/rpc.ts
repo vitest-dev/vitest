@@ -96,12 +96,6 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     onUnhandledError(err, type) {
       ctx.state.catchError(err, type)
     },
-    onFinished(files) {
-      const errors = ctx.state.getUnhandledErrors()
-      ctx._checkUnhandledErrors(errors)
-
-      return ctx.report('onFinished', files, errors)
-    },
     onCancel(reason) {
       ctx.cancelCurrentRun(reason)
     },

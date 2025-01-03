@@ -35,7 +35,6 @@ export interface RuntimeRPC {
     force?: boolean
   ) => Promise<any>
 
-  onFinished: (files: File[], errors?: unknown[]) => void
   onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void

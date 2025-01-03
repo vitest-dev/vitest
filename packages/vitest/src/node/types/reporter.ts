@@ -71,4 +71,6 @@ export interface Reporter {
    * The `result()` cannot be `pending`.
    */
   onTestCaseFinished?: (testCase: TestCase) => Awaitable<void>
+
+  onCoverage?: (coverage: unknown) => Awaitable<void>
 }

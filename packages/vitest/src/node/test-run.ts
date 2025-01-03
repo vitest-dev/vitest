@@ -1,4 +1,5 @@
 import type { File as RunnerTestFile, TaskResultPack } from '@vitest/runner'
+import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
@@ -137,9 +138,32 @@ export class TestRun {
     await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCasePrepare', testCase)))
   }
 
-  async end() {
-    // TODO
-    await this.vitest.report('onTestRunEnd', [], [], 'passed')
+  async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {
+    const state = this.vitest.isCancelling
+      ? 'interrupted'
+      // by this point, the run will be marked as failed if there are any errors,
+      // should it be done by testRun.end?
+      : process.exitCode
+        ? 'failed'
+        : 'passed'
+
+    const modules = specifications.map((spec) => {
+      if (!spec.module) {
+        const error = new Error(`Module "${spec.moduleId}" was not found when finishing test run. This is a bug in Vitest. Please, open an issue.`)
+        this.vitest.state.catchError(error, 'Unhandled Error')
+        errors.push(error)
+        return null
+      }
+      return spec.module
+    }).filter(s => s != null)
+    const files = modules.map(m => m.task)
+
+    await Promise.all([
+      this.vitest.report('onTestRunEnd', modules, errors as SerializedError[], state),
+      // TODO: in a perfect world, the coverage should be done in parallel to `onFinished`
+      this.vitest.report('onFinished', files, errors, coverage),
+    ])
+    await this.vitest.report('onCoverage', coverage)
   }
 }
 
