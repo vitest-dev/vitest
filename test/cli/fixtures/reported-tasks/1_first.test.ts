@@ -82,3 +82,7 @@ declare module 'vitest' {
     key?: string
   }
 }
+
+it("skipped by testname filter", () => {
+  expect(1).toBe(2)
+})

@@ -20,6 +20,7 @@ beforeAll(async () => {
   const { ctx } = await runVitest({
     root,
     include: ['**/*.test.ts'],
+    testNamePattern: '^((?!skipped by testname filter).)*$',
     reporters: [
       'verbose',
       {
@@ -56,14 +57,14 @@ it('correctly reports a file', () => {
   expect(testModule.location).toBeUndefined()
   expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
   expect(testModule.project).toBe(project)
-  expect(testModule.children.size).toBe(14)
+  expect(testModule.children.size).toBe(15)
 
   const tests = [...testModule.children.tests()]
-  expect(tests).toHaveLength(11)
+  expect(tests).toHaveLength(12)
   const deepTests = [...testModule.children.allTests()]
-  expect(deepTests).toHaveLength(19)
+  expect(deepTests).toHaveLength(20)
 
-  expect([...testModule.children.allTests('skipped')]).toHaveLength(5)
+  expect([...testModule.children.allTests('skipped')]).toHaveLength(6)
   expect([...testModule.children.allTests('passed')]).toHaveLength(9)
   expect([...testModule.children.allTests('failed')]).toHaveLength(5)
   expect([...testModule.children.allTests('running')]).toHaveLength(0)
@@ -161,6 +162,17 @@ it('correctly reports failed test', () => {
   expect(diagnostic.flaky).toBe(false)
   expect(diagnostic.repeatCount).toBe(0)
   expect(diagnostic.repeatCount).toBe(0)
+})
+
+it('correctly reports a skipped test', () => {
+  const skippedByModified = findTest(testModule.children, 'skips a .modifier test')
+  expect(skippedByModified.result()?.state).toBe('skipped')
+
+  const skippedByPattern = findTest(testModule.children, 'skipped by testname filter')
+  expect(skippedByPattern.result()?.state).toBe('skipped')
+
+  const skippedByTodo = findTest(testModule.children, 'todos a .modifier test')
+  expect(skippedByTodo.result()?.state).toBe('skipped')
 })
 
 it('correctly reports multiple failures', () => {
