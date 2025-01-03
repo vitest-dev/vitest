@@ -72,7 +72,7 @@
     "@vueuse/core": "^12.1.0",
     "ansi-to-html": "^0.7.2",
     "birpc": "0.2.19",
-    "codemirror": "^5.65.18",
+    "codemirror": "^6.0.1",
     "codemirror-theme-vars": "^0.1.2",
     "d3-graph-controller": "^3.0.11",
     "floating-vue": "^5.2.2",
