@@ -45,7 +45,12 @@ export class TestRun {
     const finishedTestCases: TestCase[] = []
 
     for (const [id] of update) {
-      const entity = this.vitest.state.getReportedEntity(this.vitest.state.idMap.get(id))
+      const task = this.vitest.state.idMap.get(id)
+      if (!task) {
+        continue
+      }
+
+      const entity = this.vitest.state.getReportedEntity(task)
 
       if (!entity) {
         continue
