@@ -166,10 +166,23 @@ If the test did not finish running yet, the meta will be an empty object.
 ## result
 
 ```ts
-function result(): TestResult | undefined
+function result(): TestResult
 ```
 
-Test results. It will be `undefined` if test is skipped during collection, not finished yet or was just collected.
+Test results. If test is skipped during collection, not finished yet or was just collected, it will be equal to `TestResultPending`:
+
+```ts
+export interface TestResultPending {
+  /**
+   * The test was collected, but didn't finish running yet.
+   */
+  state: 'pending'
+  /**
+   * Pending tests have no errors.
+   */
+  errors: undefined
+}
+```
 
 If the test was skipped, the return value will be `TestResultSkipped`:
 
@@ -210,7 +223,7 @@ interface TestResultFailed {
 }
 ```
 
-If the test passed, the retunr value will be `TestResultPassed`:
+If the test passed, the return value will be `TestResultPassed`:
 
 ```ts
 interface TestResultPassed {
