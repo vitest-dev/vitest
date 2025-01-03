@@ -44,7 +44,9 @@ export type {
   TestResultFailed,
   TestResultPassed,
   TestResultSkipped,
+  TestState,
   TestSuite,
+  TestSuiteState,
   TestSuiteStatistics,
 } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'

@@ -25,7 +25,7 @@ class Reporter {
 
   onFinished(files: RunnerTestFile[]) {
     for (const file of files) {
-      const testModule = this.vitest.getReportedEntity(file) as TestModule
+      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
       for (const test of testModule.children.allTests()) {
         console.log(test) // TestCase
       }
@@ -142,14 +142,6 @@ function ok(): boolean
 ```
 
 Checks if the test did not fail the suite. If the test is not finished yet or was skipped, it will return `true`.
-
-## skipped
-
-```ts
-function skipped(): boolean
-```
-
-Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
 
 ## meta
 

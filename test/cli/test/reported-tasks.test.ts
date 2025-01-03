@@ -66,7 +66,7 @@ it('correctly reports a file', () => {
   expect([...testModule.children.allTests('skipped')]).toHaveLength(5)
   expect([...testModule.children.allTests('passed')]).toHaveLength(9)
   expect([...testModule.children.allTests('failed')]).toHaveLength(5)
-  expect([...testModule.children.allTests('running')]).toHaveLength(0)
+  expect([...testModule.children.allTests('pending')]).toHaveLength(0)
 
   const suites = [...testModule.children.suites()]
   expect(suites).toHaveLength(3)

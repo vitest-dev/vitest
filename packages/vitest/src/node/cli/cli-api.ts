@@ -256,7 +256,7 @@ export function formatCollectedAsJSON(files: TestModule[]) {
 
   files.forEach((file) => {
     for (const test of file.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const result: TestCollectJSONResult = {
@@ -280,7 +280,7 @@ export function formatCollectedAsString(testModules: TestModule[]) {
 
   testModules.forEach((testModule) => {
     for (const test of testModule.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const fullName = `${test.module.task.name} > ${test.fullName}`

@@ -161,14 +161,6 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
-   */
-  public skipped(): boolean {
-    const mode = this.task.result?.state || this.task.mode
-    return mode === 'skip' || mode === 'todo'
-  }
-
-  /**
    * Custom metadata that was attached to the test during its execution.
    */
   public meta(): TaskMeta {
@@ -235,13 +227,13 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  *allTests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
+  *allTests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield * child.children.allTests(state)
       }
       else if (state) {
-        const testState = getTestState(child)
+        const testState = child.result().state
         if (state === testState) {
           yield child
         }
@@ -255,14 +247,14 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  *tests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
+  *tests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
       }
 
       if (state) {
-        const testState = getTestState(child)
+        const testState = child.result().state
         if (state === testState) {
           yield child
         }
@@ -522,6 +514,7 @@ function buildOptions(
 }
 
 export type TestSuiteState = 'skipped' | 'pending' | 'queued' | 'failed' | 'passed'
+export type TestState = TestResult['state']
 
 export type TestResult =
   | TestResultPassed
@@ -635,14 +628,6 @@ export interface ModuleDiagnostic {
    * Accumulated duration of all tests and hooks in the module.
    */
   duration: number
-}
-
-function getTestState(test: TestCase): TestResult['state'] | 'running' {
-  if (test.skipped()) {
-    return 'skipped'
-  }
-  const result = test.result()
-  return result ? result.state : 'running'
 }
 
 function storeTask(
