@@ -63,6 +63,7 @@ export class ExplorerTree {
         success: filter.success,
         skipped: filter.skipped,
         onlyTests: filter.onlyTests,
+        project: filter.project,
       },
     )
   }
@@ -105,6 +106,7 @@ export class ExplorerTree {
             success: filter.success,
             skipped: filter.skipped,
             onlyTests: filter.onlyTests,
+            project: filter.project,
           },
         )
       })
@@ -120,6 +122,7 @@ export class ExplorerTree {
           success: filter.success,
           skipped: filter.skipped,
           onlyTests: filter.onlyTests,
+          project: filter.project,
         },
       )
     }
@@ -136,6 +139,7 @@ export class ExplorerTree {
       success: filter.success,
       skipped: filter.skipped,
       onlyTests: filter.onlyTests,
+      project: filter.project,
     })
   }
 
@@ -152,6 +156,7 @@ export class ExplorerTree {
         success: filter.success,
         skipped: filter.skipped,
         onlyTests: filter.onlyTests,
+        project: filter.project,
       })
     })
   }
@@ -169,6 +174,7 @@ export class ExplorerTree {
         success: filter.success,
         skipped: filter.skipped,
         onlyTests: filter.onlyTests,
+        project: filter.project,
       })
     })
   }
@@ -180,6 +186,7 @@ export class ExplorerTree {
         success: filter.success,
         skipped: filter.skipped,
         onlyTests: filter.onlyTests,
+        project: filter.project,
       })
     })
   }
