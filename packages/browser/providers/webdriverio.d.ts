@@ -1,8 +1,9 @@
 import type { RemoteOptions, ClickOptions, DragAndDropOptions } from 'webdriverio'
 import '../matchers.js'
+import type {} from "vitest/node"
 
 declare module 'vitest/node' {
-  interface BrowserProviderOptions extends RemoteOptions {}
+  export interface BrowserProviderOptions extends Partial<RemoteOptions> {}
 
   export interface UserEventClickOptions extends ClickOptions {}
 

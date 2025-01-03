@@ -26,10 +26,10 @@ test('allows correct custom html', async () => {
   const { stderr, stdout, exitCode } = await runVitest({
     root,
     config: './vitest.config.correct.ts',
-    reporters: ['basic'],
+    reporters: [['default', { summary: false }]],
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('✓ browser-basic.test.ts')
+  expect(stdout).toContain('✓ |chromium| browser-basic.test.ts')
   expect(exitCode).toBe(0)
 })
 
@@ -37,10 +37,10 @@ test('allows custom transformIndexHtml with custom html file', async () => {
   const { stderr, stdout, exitCode } = await runVitest({
     root,
     config: './vitest.config.custom-transformIndexHtml.ts',
-    reporters: ['basic'],
+    reporters: [['default', { summary: false }]],
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('✓ browser-custom.test.ts')
+  expect(stdout).toContain('✓ |chromium| browser-custom.test.ts')
   expect(exitCode).toBe(0)
 })
 
@@ -48,9 +48,9 @@ test('allows custom transformIndexHtml without custom html file', async () => {
   const { stderr, stdout, exitCode } = await runVitest({
     root,
     config: './vitest.config.default-transformIndexHtml.ts',
-    reporters: ['basic'],
+    reporters: [['default', { summary: false }]],
   })
   expect(stderr).toBe('')
-  expect(stdout).toContain('✓ browser-custom.test.ts')
+  expect(stdout).toContain('✓ |chromium| browser-custom.test.ts')
   expect(exitCode).toBe(0)
 })

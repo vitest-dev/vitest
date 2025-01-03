@@ -95,7 +95,7 @@ bun add -D vitest @vitest/browser webdriverio
 
 ## Configuration
 
-To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
+To activate browser mode in your Vitest configuration, you can use the `--browser=name` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -104,7 +104,10 @@ export default defineConfig({
     browser: {
       provider: 'playwright', // or 'webdriverio'
       enabled: true,
-      name: 'chromium', // browser name is required
+      // at least one instance is required
+      instances: [
+        { browser: 'chromium' },
+      ],
     },
   }
 })
@@ -129,7 +132,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -144,7 +149,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -159,7 +166,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -174,7 +183,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -189,7 +200,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -227,59 +240,14 @@ export default defineWorkspace([
       name: 'browser',
       browser: {
         enabled: true,
-        name: 'chrome',
+        instances: [
+          { browser: 'chromium' },
+        ],
       },
     },
   },
 ])
 ```
-
-### Provider Configuration
-
-:::tabs key:provider
-== Playwright
-You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/config/#browser-provideroptions) field:
-
-```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    browser: {
-      providerOptions: {
-        launch: {
-          devtools: true,
-        },
-        context: {
-          geolocation: {
-            latitude: 45,
-            longitude: -30,
-          },
-          reducedMotion: 'reduce',
-        },
-      },
-    },
-  },
-})
-```
-== WebdriverIO
-You can configure what [options](https://webdriver.io/docs/configuration#webdriverio) Vitest should use when starting a browser via [`providerOptions`](/config/#browser-provideroptions) field:
-
-```ts
-export default defineConfig({
-  test: {
-    browser: {
-      browser: 'chrome',
-      providerOptions: {
-        region: 'eu',
-        capabilities: {
-          browserVersion: '27.0',
-          platformName: 'Windows 10',
-        },
-      },
-    },
-  },
-})
-```
-:::
 
 ## Browser Option Types
 
@@ -361,7 +329,7 @@ npx vitest --browser=chrome
 Or you can provide browser options to CLI with dot notation:
 
 ```sh
-npx vitest --browser.name=chrome --browser.headless
+npx vitest --browser.headless
 ```
 
 By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/#browser-viewport).
@@ -390,7 +358,7 @@ export default defineConfig({
 You can also set headless mode using the `--browser.headless` flag in the CLI, like this:
 
 ```sh
-npx vitest --browser.name=chrome --browser.headless
+npx vitest --browser.headless
 ```
 
 In this case, Vitest will run in headless mode using the Chrome browser.

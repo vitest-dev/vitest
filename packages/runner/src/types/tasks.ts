@@ -2,7 +2,7 @@ import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
 import type { ChainableFunction } from '../utils/chain'
 
-export type RunMode = 'run' | 'skip' | 'only' | 'todo'
+export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
 export type TaskState = RunMode | 'pass' | 'fail'
 
 export interface TaskBase {
@@ -23,6 +23,7 @@ export interface TaskBase {
    * - **only**: only this task and other tasks with `only` mode will run
    * - **todo**: task is marked as a todo, alias for `skip`
    * - **run**: task will run or already ran
+   * - **queued**: task will start running next. It can only exist on the File
    */
   mode: RunMode
   /**
@@ -443,6 +444,10 @@ export interface FixtureOptions {
    * Whether to automatically set up current fixture, even though it's not being used in tests.
    */
   auto?: boolean
+  /**
+   * Indicated if the injected value from the config should be preferred over the fixture value
+   */
+  injected?: boolean
 }
 
 export type Use<T> = (value: T) => Promise<void>

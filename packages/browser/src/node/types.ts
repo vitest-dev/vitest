@@ -6,6 +6,7 @@ export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
   onUnhandledError: (error: unknown, type: string) => Promise<void>
+  onQueued: (file: RunnerTestFile) => void
   onCollected: (files?: RunnerTestFile[]) => Promise<void>
   onTaskUpdate: (packs: TaskResultPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
@@ -15,7 +16,7 @@ export interface WebSocketBrowserHandlers {
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
   sendLog: (log: UserConsoleLog) => void
-  finishBrowserTests: (contextId: string) => void
+  finishBrowserTests: (sessionId: string) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
   resolveId: (
@@ -23,7 +24,7 @@ export interface WebSocketBrowserHandlers {
     importer?: string
   ) => Promise<ServerIdResolution | null>
   triggerCommand: <T>(
-    contextId: string,
+    sessionId: string,
     command: string,
     testPath: string | undefined,
     payload: unknown[]
@@ -39,8 +40,8 @@ export interface WebSocketBrowserHandlers {
   ) => SourceMap | null | { mappings: '' } | undefined
 
   // cdp
-  sendCdpEvent: (contextId: string, event: string, payload?: Record<string, unknown>) => unknown
-  trackCdpEvent: (contextId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
+  sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown
+  trackCdpEvent: (sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
 }
 
 export interface WebSocketEvents

@@ -24,6 +24,7 @@ import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../consta
 import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
 import { FilesNotFoundError } from './errors'
@@ -35,8 +36,9 @@ import { BlobReporter, readBlobs } from './reporters/blob'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
+import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
-import { resolveWorkspace } from './workspace/resolveWorkspace'
+import { resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -88,10 +90,12 @@ export class Vitest {
   /** @internal */ coreWorkspaceProject: TestProject | undefined
   /** @internal */ resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
+  /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _options: UserConfig = {}
   /** @internal */ reporters: Reporter[] = undefined!
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
+  /** @internal */ _testRun: TestRun = undefined!
 
   private isFirstRun = true
   private restartsCount = 0
@@ -211,6 +215,7 @@ export class Vitest {
     this._state = new StateManager()
     this._cache = new VitestCache(this.version)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
+    this._testRun = new TestRun(this)
 
     if (this.config.watch) {
       this.watcher.registerWatcher()
@@ -390,7 +395,7 @@ export class Vitest {
     this._workspaceConfigPath = workspaceConfigPath
 
     if (!workspaceConfigPath) {
-      return [this._ensureRootProject()]
+      return resolveBrowserWorkspace(this, new Set(), [this._ensureRootProject()])
     }
 
     const workspaceModule = await this.import<{
@@ -817,7 +822,7 @@ export class Vitest {
   }
 
   /** @internal */
-  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true, resetTestNamePattern = false): Promise<void> {
+  async rerunFiles(files: string[] = this.state.getFilepaths(), trigger?: string, allTestsRun = true, resetTestNamePattern = false): Promise<TestRunResult> {
     if (resetTestNamePattern) {
       this.configOverride.testNamePattern = undefined
     }
@@ -832,9 +837,10 @@ export class Vitest {
       this.report('onWatcherRerun', files, trigger),
       ...this._onUserTestsRerun.map(fn => fn(specifications)),
     ])
-    await this.runFiles(specifications, allTestsRun)
+    const testResult = await this.runFiles(specifications, allTestsRun)
 
     await this.report('onWatcherStart', this.state.getFiles(files))
+    return testResult
   }
 
   /** @internal */
@@ -900,8 +906,11 @@ export class Vitest {
     await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
   }
 
-  /** @internal */
-  async updateSnapshot(files?: string[]): Promise<void> {
+  /**
+   * Update snapshots in specified files. If no files are provided, it will update files with failed tests and obsolete snapshots.
+   * @param files The list of files on the file system
+   */
+  async updateSnapshot(files?: string[]): Promise<TestRunResult> {
     // default to failed files
     files = files || [
       ...this.state.getFailedFilepaths(),
@@ -911,7 +920,7 @@ export class Vitest {
     this.enableSnapshotUpdate()
 
     try {
-      await this.rerunFiles(files, 'update snapshot', false)
+      return await this.rerunFiles(files, 'update snapshot', false)
     }
     finally {
       this.resetSnapshotUpdate()
@@ -931,6 +940,7 @@ export class Vitest {
       // environment is resolved inside a worker thread
       snapshotEnvironment: null as any,
     }
+    this.snapshot.options.updateSnapshot = 'all'
   }
 
   /**
@@ -938,6 +948,7 @@ export class Vitest {
    */
   public resetSnapshotUpdate(): void {
     delete this.configOverride.snapshotOptions
+    this.snapshot.options.updateSnapshot = this.config.snapshotOptions.updateSnapshot
   }
 
   /**
@@ -1107,7 +1118,6 @@ export class Vitest {
               this.logger.error('error during close', r.reason)
             }
           })
-          this.logger.logUpdate.done() // restore terminal cursor
         })
       })()
     }
@@ -1152,6 +1162,13 @@ export class Vitest {
 
   /** @internal */
   async report<T extends keyof Reporter>(name: T, ...args: ArgumentsType<Reporter[T]>) {
+    if (name === 'onTaskUpdate') {
+      this._testRun.updated(
+        // @ts-expect-error let me go
+        ...args,
+      )
+    }
+
     await Promise.all(this.reporters.map(r => r[name]?.(
       // @ts-expect-error let me go
       ...args,
