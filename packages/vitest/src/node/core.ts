@@ -478,7 +478,18 @@ export class Vitest {
         if (task.logs) {
           logs.push(...task.logs)
         }
-        taskPacks.push([task.id, task.result, task.meta])
+        if (task.type === 'test') {
+          taskPacks.push(
+            [task.id, undefined, {}, 'test-prepare'],
+            [task.id, task.result, task.meta, 'test-finished'],
+          )
+        }
+        else if (task.type === 'suite') {
+          taskPacks.push(
+            [task.id, undefined, {}, 'suite-prepare'],
+            [task.id, task.result, task.meta, 'suite-finished'],
+          )
+        }
       }
       logs.sort((log1, log2) => log1.time - log2.time)
 

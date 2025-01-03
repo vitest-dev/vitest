@@ -174,7 +174,7 @@ export type TaskResultPack = [
   /**
    * The name of the event that triggered the update.
    */
-  event: string,
+  event: TaskUpdateEvent,
 ]
 
 export type TaskUpdateEvent =
