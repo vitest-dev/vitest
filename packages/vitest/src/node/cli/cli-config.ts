@@ -585,11 +585,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   inspector: null,
   testTimeout: {
-    description: 'Default timeout of a test in milliseconds (default: `5000`)',
+    description: 'Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   hookTimeout: {
-    description: 'Default hook timeout in milliseconds (default: `10000`)',
+    description: 'Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   bail: {
