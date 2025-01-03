@@ -25,7 +25,7 @@ class Reporter {
 
   onFinished(files: RunnerTestFile[]) {
     for (const file of files) {
-      const testModule = this.vitest.getReportedEntity(file) as TestModule
+      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
       for (const test of testModule.children.allTests()) {
         console.log(test) // TestCase
       }
@@ -143,14 +143,6 @@ function ok(): boolean
 
 Checks if the test did not fail the suite. If the test is not finished yet or was skipped, it will return `true`.
 
-## skipped
-
-```ts
-function skipped(): boolean
-```
-
-Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
-
 ## meta
 
 ```ts
@@ -174,10 +166,23 @@ If the test did not finish running yet, the meta will be an empty object.
 ## result
 
 ```ts
-function result(): TestResult | undefined
+function result(): TestResult
 ```
 
-Test results. It will be `undefined` if test is skipped during collection, not finished yet or was just collected.
+Test results. If test is not finished yet or was just collected, it will be equal to `TestResultPending`:
+
+```ts
+export interface TestResultPending {
+  /**
+   * The test was collected, but didn't finish running yet.
+   */
+  state: 'pending'
+  /**
+   * Pending tests have no errors.
+   */
+  errors: undefined
+}
+```
 
 If the test was skipped, the return value will be `TestResultSkipped`:
 
@@ -218,7 +223,7 @@ interface TestResultFailed {
 }
 ```
 
-If the test passed, the retunr value will be `TestResultPassed`:
+If the test passed, the return value will be `TestResultPassed`:
 
 ```ts
 interface TestResultPassed {
@@ -279,3 +284,7 @@ interface TestDiagnostic {
   flaky: boolean
 }
 ```
+
+::: info
+`diagnostic()` will return `undefined` if the test did not finish running yet.
+:::

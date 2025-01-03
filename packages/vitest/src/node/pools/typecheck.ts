@@ -19,7 +19,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   ) {
     const checker = project.typechecker!
 
-    await ctx.report('onTaskUpdate', checker.getTestPacks())
+    await ctx._testRun.updated(checker.getTestPacks())
 
     if (!project.config.typecheck.ignoreSourceErrors) {
       sourceErrors.forEach(error =>
@@ -62,8 +62,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.setFiles(files)
 
     checker.onParseStart(async () => {
-      ctx.state.collectFiles(project, checker.getTestFiles())
-      await ctx.report('onCollected')
+      await ctx._testRun.collected(project, checker.getTestFiles())
     })
 
     checker.onParseEnd(result => onParseEnd(project, result))
@@ -81,10 +80,9 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
 
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
 
-      await ctx.report('onTaskUpdate', checker.getTestPacks())
-      await ctx.report('onCollected')
+      await ctx._testRun.collected(project, checker.getTestFiles())
+      await ctx._testRun.updated(checker.getTestPacks())
     })
 
     await checker.prepare()
@@ -108,8 +106,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
-      await ctx.report('onCollected')
+      await ctx._testRun.collected(project, checker.getTestFiles())
     }
   }
 
@@ -136,8 +133,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
-        ctx.state.collectFiles(project, project.typechecker.getTestFiles())
-        await ctx.report('onCollected')
+        await ctx._testRun.collected(project, project.typechecker.getTestFiles())
         await onParseEnd(project, project.typechecker.getResult())
         continue
       }

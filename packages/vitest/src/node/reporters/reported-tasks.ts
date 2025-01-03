@@ -5,7 +5,7 @@ import type {
   Suite as RunnerTestSuite,
   TaskMeta,
 } from '@vitest/runner'
-import type { TestError } from '@vitest/utils'
+import type { SerializedError, TestError } from '@vitest/utils'
 import type { TestProject } from '../project'
 
 class ReportedTaskImplementation {
@@ -122,12 +122,29 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Test results. Will be `undefined` if test is skipped, not finished yet or was just collected.
+   * Test results.
+   * - **pending**: Test was collected, but didn't finish running yet.
+   * - **passed**: Test passed successfully
+   * - **failed**: Test failed to execute
+   * - **skipped**: Test was skipped during collection or dynamically with `ctx.skip()`.
    */
-  public result(): TestResult | undefined {
+  public result(): TestResult {
     const result = this.task.result
+    const mode = result?.state || this.task.mode
+
+    if (!result && (mode === 'skip' || mode === 'todo')) {
+      return {
+        state: 'skipped',
+        note: undefined,
+        errors: undefined,
+      }
+    }
+
     if (!result || result.state === 'run' || result.state === 'queued') {
-      return undefined
+      return {
+        state: 'pending',
+        errors: undefined,
+      }
     }
     const state = result.state === 'fail'
       ? 'failed' as const
@@ -151,14 +168,6 @@ export class TestCase extends ReportedTaskImplementation {
       state,
       errors: (result.errors || []) as TestError[],
     } satisfies TestResultFailed
-  }
-
-  /**
-   * Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
-   */
-  public skipped(): boolean {
-    const mode = this.task.result?.state || this.task.mode
-    return mode === 'skip' || mode === 'todo'
   }
 
   /**
@@ -228,13 +237,13 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  *allTests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
+  *allTests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield * child.children.allTests(state)
       }
       else if (state) {
-        const testState = getTestState(child)
+        const testState = child.result().state
         if (state === testState) {
           yield child
         }
@@ -248,14 +257,14 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  *tests(state?: TestResult['state'] | 'running'): Generator<TestCase, undefined, void> {
+  *tests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
       }
 
       if (state) {
-        const testState = getTestState(child)
+        const testState = child.result().state
         if (state === testState) {
           yield child
         }
@@ -298,9 +307,32 @@ class TestCollection {
 
 export type { TestCollection }
 
+export interface TestSuiteStatistics {
+  total: number
+  completed: number
+  passed: number
+  failed: number
+  skipped: number
+  todo: number
+}
+
+function createStatistics() {
+  return {
+    total: 0,
+    completed: 0,
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    todo: 0,
+  }
+}
+
 abstract class SuiteImplementation extends ReportedTaskImplementation {
   /** @internal */
   declare public readonly task: RunnerTestSuite | RunnerTestFile
+
+  /** @internal */
+  public _statistic: TestSuiteStatistics = createStatistics()
 
   /**
    * Collection of suites and tests that are part of this suite.
@@ -314,18 +346,41 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks if the suite was skipped during collection.
+   * The number of tests in this suite with a specific state.
    */
-  public skipped(): boolean {
+  public statistics(): TestSuiteStatistics {
+    return { ...this._statistic }
+  }
+
+  /**
+   * Checks the running state of the suite.
+   */
+  public state(): TestSuiteState {
     const mode = this.task.mode
-    return mode === 'skip' || mode === 'todo'
+    const state = this.task.result?.state
+    if (mode === 'skip' || mode === 'todo' || state === 'skip' || state === 'todo') {
+      return 'skipped'
+    }
+    if (state === 'queued') {
+      return 'queued'
+    }
+    if (state == null || state === 'run' || state === 'only') {
+      return 'pending'
+    }
+    if (state === 'fail') {
+      return 'failed'
+    }
+    if (state === 'pass') {
+      return 'passed'
+    }
+    throw new Error(`Unknown suite state: ${state}`)
   }
 
   /**
    * Errors that happened outside of the test run during collection, like syntax errors.
    */
-  public errors(): TestError[] {
-    return (this.task.result?.errors as TestError[] | undefined) || []
+  public errors(): SerializedError[] {
+    return (this.task.result?.errors as SerializedError[] | undefined) || []
   }
 }
 
@@ -402,8 +457,8 @@ export class TestModule extends SuiteImplementation {
 
   /**
    * This is usually an absolute UNIX file path.
-   * It can be a virtual id if the file is not on the disk.
-   * This value corresponds to Vite's `ModuleGraph` id.
+   * It can be a virtual ID if the file is not on the disk.
+   * This value corresponds to the ID in the Vite's module graph.
    */
   public readonly moduleId: string
 
@@ -420,9 +475,9 @@ export class TestModule extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
-   * Checks if the module was skipped and didn't run.
+   * Checks the running state of the test file.
    */
-  declare public skipped: () => boolean
+  declare public state: () => TestSuiteState
 
   /**
    * Useful information about the module like duration, memory usage, etc.
@@ -446,6 +501,7 @@ export class TestModule extends SuiteImplementation {
 
 export interface TaskOptions {
   each: boolean | undefined
+  fails: boolean | undefined
   concurrent: boolean | undefined
   shuffle: boolean | undefined
   retry: number | undefined
@@ -454,10 +510,11 @@ export interface TaskOptions {
 }
 
 function buildOptions(
-  task: RunnerTestCase | RunnerTestFile | RunnerTestSuite,
+  task: RunnerTestCase | RunnerTestSuite,
 ): TaskOptions {
   return {
     each: task.each,
+    fails: task.type === 'test' && task.fails,
     concurrent: task.concurrent,
     shuffle: task.shuffle,
     retry: task.retry,
@@ -466,7 +523,25 @@ function buildOptions(
   }
 }
 
-export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped
+export type TestSuiteState = 'skipped' | 'pending' | 'queued' | 'failed' | 'passed'
+export type TestState = TestResult['state']
+
+export type TestResult =
+  | TestResultPassed
+  | TestResultFailed
+  | TestResultSkipped
+  | TestResultPending
+
+export interface TestResultPending {
+  /**
+   * The test was collected, but didn't finish running yet.
+   */
+  state: 'pending'
+  /**
+   * Pending tests have no errors.
+   */
+  errors: undefined
+}
 
 export interface TestResultPassed {
   /**
@@ -563,14 +638,6 @@ export interface ModuleDiagnostic {
    * Accumulated duration of all tests and hooks in the module.
    */
   duration: number
-}
-
-function getTestState(test: TestCase): TestResult['state'] | 'running' {
-  if (test.skipped()) {
-    return 'skipped'
-  }
-  const result = test.result()
-  return result ? result.state : 'running'
 }
 
 function storeTask(

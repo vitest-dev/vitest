@@ -1,6 +1,9 @@
 import type { SerializedTestSpecification } from '../runtime/types/utils'
 import type { TestProject } from './project'
+import type { TestModule } from './reporters/reported-tasks'
 import type { Pool } from './types/pool-options'
+import { generateFileHash } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 
 export class TestSpecification {
   /**
@@ -16,6 +19,10 @@ export class TestSpecification {
    */
   public readonly 2: { pool: Pool }
 
+  /**
+   * The task ID associated with the test module.
+   */
+  public readonly taskId: string
   /**
    * The test project that the module belongs to.
    */
@@ -43,10 +50,32 @@ export class TestSpecification {
     this[0] = project
     this[1] = moduleId
     this[2] = { pool }
+    const name = project.name
+    const hashName = pool !== 'typescript'
+      ? name
+      : name
+      // https://github.com/vitest-dev/vitest/blob/main/packages/vitest/src/typecheck/collect.ts#L58
+        ? `${name}:__typecheck__`
+        : '__typecheck__'
+    this.taskId = generateFileHash(
+      relative(project.config.root, moduleId),
+      hashName,
+    )
     this.project = project
     this.moduleId = moduleId
     this.pool = pool
     this.testLines = testLines
+  }
+
+  /**
+   * Test module assosiacted with the specification.
+   */
+  get module(): TestModule | undefined {
+    const task = this.project.vitest.state.idMap.get(this.taskId)
+    if (!task) {
+      return undefined
+    }
+    return this.project.vitest.state.getReportedEntity(task) as TestModule | undefined
   }
 
   toJSON(): SerializedTestSpecification {

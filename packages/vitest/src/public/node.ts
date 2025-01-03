@@ -34,8 +34,8 @@ export type { JUnitOptions } from '../node/reporters/junit'
 
 export type {
   ModuleDiagnostic,
-
   TaskOptions,
+
   TestCase,
   TestCollection,
   TestDiagnostic,
@@ -44,7 +44,10 @@ export type {
   TestResultFailed,
   TestResultPassed,
   TestResultSkipped,
+  TestState,
   TestSuite,
+  TestSuiteState,
+  TestSuiteStatistics,
 } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
