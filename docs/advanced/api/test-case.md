@@ -169,7 +169,7 @@ If the test did not finish running yet, the meta will be an empty object.
 function result(): TestResult
 ```
 
-Test results. If test is skipped during collection, not finished yet or was just collected, it will be equal to `TestResultPending`:
+Test results. If test is not finished yet or was just collected, it will be equal to `TestResultPending`:
 
 ```ts
 export interface TestResultPending {
@@ -284,3 +284,7 @@ interface TestDiagnostic {
   flaky: boolean
 }
 ```
+
+::: info
+`diagnostic()` will return `undefined` if the test did not finish running yet.
+:::
