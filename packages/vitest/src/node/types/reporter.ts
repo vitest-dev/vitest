@@ -37,18 +37,38 @@ export interface Reporter {
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onProcessTimeout?: () => Awaitable<void>
 
-  // new API
+  // new API, TODO: add a lot of documentation for those
+  /**
+   * Called when the new test run starts.
+   */
   onTestRunStart?: (specifications: TestSpecification[]) => Awaitable<void>
+  /**
+   * Called when the test run is finished.
+   */
   onTestRunEnd?: (
     testModules: TestModule[],
     errors: SerializedError[],
     reason: 'passed' | 'interrupted' | 'failed'
   ) => Awaitable<void>
+  /**
+   * Called when the module is enqueued for testing. The file itself is not loaded yet.
+   */
   onTestModuleQueued?: (testModule: TestModule) => Awaitable<void>
+  /**
+   * Called when the test file is loaded and the module is ready to run tests.
+   */
+  onTestModuleCollected?: (testModule: TestModule) => Awaitable<void>
   onTestModulePrepare?: (testModule: TestModule) => Awaitable<void>
   onTestModuleFinished?: (testModule: TestModule) => Awaitable<void>
 
-  // TODO: This was planned as onTestFinished, but maybe we could use TestCase in name directly?
+  /**
+   * Called before the `beforeEach` hooks for the test are run.
+   * The `result()` will return either `pending` or `skipped`.
+   */
   onTestCasePrepare?: (testCase: TestCase) => Awaitable<void>
+  /**
+   * Called after the test and its hooks are finished running.
+   * The `result()` cannot be `pending`.
+   */
   onTestCaseFinished?: (testCase: TestCase) => Awaitable<void>
 }
