@@ -393,7 +393,7 @@ It is recommended to use this only after the other locators don't work for your 
 function nth(index: number): Locator
 ```
 
-This method returns a new locator that matches only a specific index within a multi-element query result. Unlike `elements()[n]`, the `nth` locator will be retries until the element is present.
+This method returns a new locator that matches only a specific index within a multi-element query result. Unlike `elements()[n]`, the `nth` locator will be retried until the element is present.
 
 ```html
 <div aria-label="one"><input/><input/><input/></div>
@@ -411,7 +411,7 @@ Sometimes there is no better way to distinguish than by element position; althou
 :::
 
 ```tsx
-page.getByLabel('two').getByRole('input') // ✅ better alternative to page.nth(3)
+page.getByLabel('two').getByRole('input') // ✅ better alternative to page.getByRole('textbox').nth(3)
 page.getByLabel('one').getByRole('input') // ❌ too ambiguous
 page.getByLabel('one').getByRole('input').nth(1) // ✅ pragmatic compromise
 ```
