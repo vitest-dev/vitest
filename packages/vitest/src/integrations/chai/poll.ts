@@ -85,18 +85,22 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                 }
               }
             }
-            timeoutId = setTimeout(async () => {
+            timeoutId = setTimeout(() => {
               clearTimeout(intervalId)
               chai.util.flag(assertion, '_isLastPollAttempt', true)
-              await check()
-              reject(
-                copyStackTrace(
-                  new Error(`Matcher did not succeed in ${timeout}ms`, {
-                    cause: lastError,
-                  }),
-                  STACK_TRACE_ERROR,
-                ),
-              )
+              check().then(() => {
+                if (!lastError) {
+                  return
+                }
+                reject(
+                  copyStackTrace(
+                    new Error(`Matcher did not succeed in ${timeout}ms`, {
+                      cause: lastError,
+                    }),
+                    STACK_TRACE_ERROR,
+                  ),
+                )
+              })
             }, timeout)
             check()
           })
