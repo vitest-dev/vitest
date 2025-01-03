@@ -4,6 +4,7 @@ import { codemirrorRef } from '~/composables/codemirror'
 const { mode, readOnly } = defineProps<{
   mode?: string
   readOnly?: boolean
+  saving?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -38,10 +39,16 @@ onMounted(async () => {
     readOnly: readOnly ? true : undefined,
     extraKeys: {
       'Cmd-S': function (cm) {
-        emit('save', cm.getValue())
+        const isReadonly = cm.getOption('readOnly')
+        if (!isReadonly) {
+          emit('save', cm.getValue())
+        }
       },
       'Ctrl-S': function (cm) {
-        emit('save', cm.getValue())
+        const isReadonly = cm.getOption('readOnly')
+        if (!isReadonly) {
+          emit('save', cm.getValue())
+        }
       },
     },
   })
@@ -53,7 +60,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div relative font-mono text-sm class="codemirror-scrolls">
+  <div relative font-mono text-sm class="codemirror-scrolls" :class="saving ? 'codemirror-busy' : undefined">
     <textarea ref="el" />
   </div>
 </template>

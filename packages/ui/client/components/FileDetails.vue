@@ -228,7 +228,7 @@ const projectNameTextColor = computed(() => {
       </div>
       <ViewEditor
         v-if="viewMode === 'editor'"
-        :key="current.filepath"
+        :key="current.id"
         :file="current"
         data-testid="editor"
         @draft="onDraft"
