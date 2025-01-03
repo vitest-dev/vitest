@@ -130,7 +130,6 @@ test('should handle success on last attempt', async () => {
   await expect.poll(fn, { interval: 100, timeout: 500 }).toBe(1)
 })
 
-
 test('should handle failure on last attempt', async () => {
   const fn = vi.fn(function (this: object) {
     if (chai.util.flag(this, '_isLastPollAttempt')) {
