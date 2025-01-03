@@ -192,13 +192,14 @@ export function createStackString(stacks: ParsedStack[]): string {
 }
 
 export function parseStacktrace(
-  stack: string,
+  stack: string | Array<string>,
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
-  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
-    ? parseFFOrSafariStackTrace(stack)
-    : parseV8Stacktrace(stack)
+  const stackStr = Array.isArray(stack) ? stack.join('\n') : String(stack)
+  let stacks = !CHROME_IE_STACK_REGEXP.test(stackStr)
+    ? parseFFOrSafariStackTrace(stackStr)
+    : parseV8Stacktrace(stackStr)
   if (ignoreStackEntries.length) {
     stacks = stacks.filter(
       stack => !ignoreStackEntries.some(p => stack.file.match(p)),
