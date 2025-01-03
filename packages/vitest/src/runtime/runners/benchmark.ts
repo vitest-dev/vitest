@@ -157,9 +157,10 @@ export class NodeBenchmarkRunner implements VitestRunner {
     return await import('tinybench')
   }
 
-  importFile(filepath: string, source: VitestRunnerImportSource): unknown {
+  async importFile(filepath: string, source: VitestRunnerImportSource): Promise<unknown> {
     if (source === 'setup') {
-      getWorkerState().moduleCache.delete(filepath)
+      const resolved = await this.__vitest_executor.resolveUrl(filepath)
+      getWorkerState().moduleCache.delete(resolved[1])
     }
     return this.__vitest_executor.executeId(filepath)
   }
