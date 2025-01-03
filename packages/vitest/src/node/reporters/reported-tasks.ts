@@ -130,6 +130,16 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public result(): TestResult {
     const result = this.task.result
+    const mode = result?.state || this.task.mode
+
+    if (!result && (mode === 'skip' || mode === 'todo')) {
+      return {
+        state: 'skipped',
+        note: undefined,
+        errors: undefined,
+      }
+    }
+
     if (!result || result.state === 'run' || result.state === 'queued') {
       return {
         state: 'pending',
