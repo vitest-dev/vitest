@@ -152,7 +152,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
-        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
+        // this plugin can be used in different projects, but all of them
+        // have the same `include` pattern, so it doesn't matter which project we use
+        const project = parentServer.project
         const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
