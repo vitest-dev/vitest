@@ -153,7 +153,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   return callbacks
 }
 
-const packs = new Map<string, [TaskResult | undefined, TaskMeta, string]>()
+const packs = new Map<string, [TaskResult | undefined, TaskMeta, TaskUpdateEvent]>()
 let updateTimer: any
 let previousUpdate: Promise<void> | undefined
 
