@@ -171,7 +171,21 @@ export type TaskResultPack = [
    * Custom metadata from `task.meta`.
    */
   meta: TaskMeta,
+  /**
+   * The name of the event that triggered the update.
+   */
+  event: string,
 ]
+
+export type TaskUpdateEvent =
+  | 'test-failed-early'
+  | 'suite-failed-early'
+  | 'test-prepare'
+  | 'test-finished'
+  | 'test-retried'
+  | 'suite-prepare'
+  | 'suite-finished'
+  | 'suite-hook-update'
 
 export interface Suite extends TaskBase {
   type: 'suite'

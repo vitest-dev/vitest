@@ -13,6 +13,7 @@ import type {
   TaskResult,
   TaskResultPack,
   TaskState,
+  TaskUpdateEvent,
   Test,
   TestContext,
 } from './types/tasks'
@@ -45,7 +46,7 @@ function updateSuiteHookState(
   const suiteHooks = suite.result.hooks
   if (suiteHooks) {
     suiteHooks[name] = state
-    updateTask(suite, runner)
+    updateTask('suite-hook-update', suite, runner)
   }
 }
 
@@ -152,12 +153,12 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   return callbacks
 }
 
-const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
+const packs = new Map<string, [TaskResult | undefined, TaskMeta, string]>()
 let updateTimer: any
 let previousUpdate: Promise<void> | undefined
 
-export function updateTask(task: Task, runner: VitestRunner): void {
-  packs.set(task.id, [task.result, task.meta])
+export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
+  packs.set(task.id, [task.result, task.meta, event])
 
   const { clearTimeout, setTimeout } = getSafeTimers()
 
@@ -174,7 +175,7 @@ async function sendTasksUpdate(runner: VitestRunner) {
 
   if (packs.size) {
     const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
-      return [id, task[0], task[1]]
+      return [id, task[0], task[1], task[2]]
     })
     const p = runner.onTaskUpdate?.(taskPacks)
     packs.clear()
@@ -201,7 +202,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   }
 
   if (test.result?.state === 'fail') {
-    updateTask(test, runner)
+    updateTask('test-failed-early', test, runner)
     return
   }
 
@@ -212,7 +213,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     startTime: unixNow(),
     retryCount: 0,
   }
-  updateTask(test, runner)
+  updateTask('test-prepare', test, runner)
 
   setCurrentTest(test)
 
@@ -274,7 +275,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       if (test.pending || test.result?.state === 'skip') {
         test.mode = 'skip'
         test.result = { state: 'skip', note: test.result?.note }
-        updateTask(test, runner)
+        updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
         return
       }
@@ -323,7 +324,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       // update retry info
-      updateTask(test, runner)
+      updateTask('test-retried', test, runner)
     }
   }
 
@@ -346,7 +347,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
   await runner.onAfterRunTask?.(test)
 
-  updateTask(test, runner)
+  updateTask('test-finished', test, runner)
 }
 
 function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | undefined) {
@@ -369,7 +370,7 @@ function markTasksAsSkipped(suite: Suite, runner: VitestRunner) {
   suite.tasks.forEach((t) => {
     t.mode = 'skip'
     t.result = { ...t.result, state: 'skip' }
-    updateTask(t, runner)
+    updateTask('test-finished', t, runner)
     if (t.type === 'suite') {
       markTasksAsSkipped(t, runner)
     }
@@ -381,7 +382,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
   if (suite.result?.state === 'fail') {
     markTasksAsSkipped(suite, runner)
-    updateTask(suite, runner)
+    updateTask('suite-failed-early', suite, runner)
     return
   }
 
@@ -392,7 +393,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     startTime: unixNow(),
   }
 
-  updateTask(suite, runner)
+  updateTask('suite-prepare', suite, runner)
 
   let beforeAllCleanups: HookCleanupCallback[] = []
 
@@ -476,9 +477,9 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       }
     }
 
-    updateTask(suite, runner)
-
     suite.result.duration = now() - start
+
+    updateTask('suite-finished', suite, runner)
 
     await runner.onAfterRunSuite?.(suite)
   }

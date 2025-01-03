@@ -45,6 +45,7 @@ export type {
   TaskResult,
   TaskResultPack,
   TaskState,
+  TaskUpdateEvent,
   Test,
   TestAPI,
   TestContext,
