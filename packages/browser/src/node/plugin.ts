@@ -244,9 +244,10 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
 
         // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
         // have ?. until Vitest 3.0 for backwards compatibility
-        const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
-        if (vueTestUtils) {
-          include.push('@vue/test-utils')
+        const vue = isPackageExists('vitest-browser-vue', fileRoot)
+        if (vue) {
+          // we override them in the esbuild plugin so optimizer can no longer intercept it
+          include.push('@vue/test-utils', '@vue/compiler-core')
         }
 
         return {
@@ -520,10 +521,10 @@ body {
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    build.onResolve({ filter: /^@vue\/test-utils$/ }, (args) => {
-                      const _require = getRequire()
-                      // resolve to CJS instead of the browser because the browser version expects a global Vue object
-                      const resolved = _require.resolve(args.path, {
+                    // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+                    // compiler-core: only CJS version allows slots as strings
+                    build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args) => {
+                      const resolved = getRequire().resolve(args.path, {
                         paths: [args.importer],
                       })
                       return { path: resolved }
