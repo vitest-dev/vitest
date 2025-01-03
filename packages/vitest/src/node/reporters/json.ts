@@ -88,7 +88,7 @@ export class JsonReporter implements Reporter {
     this.start = Date.now()
   }
 
-  protected async logTasks(files: File[], coverageMap?: CoverageMap | null) {
+  protected async logTasks(files: File[], coverageMap?: CoverageMap | null): Promise<JsonTestResults> {
     const suites = getSuites(files)
     const numTotalTestSuites = suites.length
     const tests = getTests(files)
@@ -176,7 +176,7 @@ export class JsonReporter implements Reporter {
       })
     }
 
-    const result: JsonTestResults = {
+    return {
       numTotalTestSuites,
       numPassedTestSuites,
       numFailedTestSuites,
@@ -192,12 +192,11 @@ export class JsonReporter implements Reporter {
       testResults,
       coverageMap,
     }
-
-    await this.writeReport(JSON.stringify(result))
   }
 
   async onFinished(files = this.ctx.state.getFiles(), _errors: unknown[] = [], coverageMap?: unknown) {
-    await this.logTasks(files, coverageMap as CoverageMap)
+    const results = await this.logTasks(files, coverageMap as CoverageMap)
+    await this.writeReport(JSON.stringify(results))
   }
 
   /**
