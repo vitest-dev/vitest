@@ -29,6 +29,6 @@ test('tests with multiple suites are covered (#3514)', async () => {
 
   // Some valid coverage should be reported
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')
-  expect(fileCoverage.toSummary().functions.covered).toBe(1)
+  expect(fileCoverage.toSummary().functions.covered).toBe(2)
   expect(fileCoverage.toSummary().functions.pct).toBeLessThanOrEqual(25)
 })
