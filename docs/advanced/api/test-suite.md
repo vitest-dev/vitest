@@ -164,6 +164,20 @@ function ok(): boolean
 
 Checks if the suite has any failed tests. This will also return `false` if suite failed during collection. In that case, check the [`errors()`](#errors) for thrown errors.
 
+## state
+
+```ts
+function state(): TestSuiteState
+```
+
+Checks the running state of the suite. Possible return values:
+
+- **queued**: the test module was queued to run. Only [`TestModule`](/advanced/api/test-module) can have this state.
+- **pending**: the tests in this suite did not finish running yet.
+- **failed**: this suite has failed tests or they couldn't be collected. If [`errors()`](#errors) is not empty, it means the suite failed to collect tests.
+- **passed**: every test inside this suite has passed.
+- **skipped**: this suite was skipped during collection.
+
 ## errors
 
 ```ts
