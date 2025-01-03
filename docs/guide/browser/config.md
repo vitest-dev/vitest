@@ -101,7 +101,7 @@ List of available `browser` options:
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
 
-By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitets 4.
+By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitest 4.
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
 
