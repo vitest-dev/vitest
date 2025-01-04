@@ -52,23 +52,23 @@ interface ModuleDiagnostic {
   /**
    * The time it takes to import and initiate an environment.
    */
-  environmentSetupDuration: number
+  readonly environmentSetupDuration: number
   /**
    * The time it takes Vitest to setup test harness (runner, mocks, etc.).
    */
-  prepareDuration: number
+  readonly prepareDuration: number
   /**
    * The time it takes to import the test module.
    * This includes importing everything in the module and executing suite callbacks.
    */
-  collectDuration: number
+  readonly collectDuration: number
   /**
    * The time it takes to import the setup module.
    */
-  setupDuration: number
+  readonly setupDuration: number
   /**
    * Accumulated duration of all tests and hooks in the module.
    */
-  duration: number
+  readonly duration: number
 }
 ```

@@ -500,13 +500,13 @@ export class TestModule extends SuiteImplementation {
 }
 
 export interface TaskOptions {
-  each: boolean | undefined
-  fails: boolean | undefined
-  concurrent: boolean | undefined
-  shuffle: boolean | undefined
-  retry: number | undefined
-  repeats: number | undefined
-  mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
+  readonly each: boolean | undefined
+  readonly fails: boolean | undefined
+  readonly concurrent: boolean | undefined
+  readonly shuffle: boolean | undefined
+  readonly retry: number | undefined
+  readonly repeats: number | undefined
+  readonly mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
 }
 
 function buildOptions(
@@ -536,35 +536,35 @@ export interface TestResultPending {
   /**
    * The test was collected, but didn't finish running yet.
    */
-  state: 'pending'
+  readonly state: 'pending'
   /**
    * Pending tests have no errors.
    */
-  errors: undefined
+  readonly errors: undefined
 }
 
 export interface TestResultPassed {
   /**
    * The test passed successfully.
    */
-  state: 'passed'
+  readonly state: 'passed'
   /**
    * Errors that were thrown during the test execution.
    *
    * **Note**: If test was retried successfully, errors will still be reported.
    */
-  errors: TestError[] | undefined
+  readonly errors: ReadonlyArray<TestError> | undefined
 }
 
 export interface TestResultFailed {
   /**
    * The test failed to execute.
    */
-  state: 'failed'
+  readonly state: 'failed'
   /**
    * Errors that were thrown during the test execution.
    */
-  errors: TestError[]
+  readonly errors: ReadonlyArray<TestError>
 }
 
 export interface TestResultSkipped {
@@ -572,72 +572,72 @@ export interface TestResultSkipped {
    * The test was skipped with `only` (on another test), `skip` or `todo` flag.
    * You can see which one was used in the `options.mode` option.
    */
-  state: 'skipped'
+  readonly state: 'skipped'
   /**
    * Skipped tests have no errors.
    */
-  errors: undefined
+  readonly errors: undefined
   /**
    * A custom note passed down to `ctx.skip(note)`.
    */
-  note: string | undefined
+  readonly note: string | undefined
 }
 
 export interface TestDiagnostic {
   /**
    * If the duration of the test is above `slowTestThreshold`.
    */
-  slow: boolean
+  readonly slow: boolean
   /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
-  heap: number | undefined
+  readonly heap: number | undefined
   /**
    * The time it takes to execute the test in ms.
    */
-  duration: number
+  readonly duration: number
   /**
    * The time in ms when the test started.
    */
-  startTime: number
+  readonly startTime: number
   /**
    * The amount of times the test was retried.
    */
-  retryCount: number
+  readonly retryCount: number
   /**
    * The amount of times the test was repeated as configured by `repeats` option.
    * This value can be lower if the test failed during the repeat and no `retry` is configured.
    */
-  repeatCount: number
+  readonly repeatCount: number
   /**
    * If test passed on a second retry.
    */
-  flaky: boolean
+  readonly flaky: boolean
 }
 
 export interface ModuleDiagnostic {
   /**
    * The time it takes to import and initiate an environment.
    */
-  environmentSetupDuration: number
+  readonly environmentSetupDuration: number
   /**
    * The time it takes Vitest to setup test harness (runner, mocks, etc.).
    */
-  prepareDuration: number
+  readonly prepareDuration: number
   /**
    * The time it takes to import the test module.
    * This includes importing everything in the module and executing suite callbacks.
    */
-  collectDuration: number
+  readonly collectDuration: number
   /**
    * The time it takes to import the setup module.
    */
-  setupDuration: number
+  readonly setupDuration: number
   /**
    * Accumulated duration of all tests and hooks in the module.
    */
-  duration: number
+  readonly duration: number
 }
 
 function storeTask(
