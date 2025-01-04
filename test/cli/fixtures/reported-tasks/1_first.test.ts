@@ -61,6 +61,14 @@ describe('a group', () => {
   })
 })
 
+describe.todo('todo group', () => {
+  it('test inside todo group', () => {})
+})
+
+describe.skip('skipped group', () => {
+  it('test inside skipped group', () => {})
+})
+
 describe.shuffle('shuffled group', () => {
   it('runs a test in a shuffled group', () => {
     expect(1).toBe(1)
