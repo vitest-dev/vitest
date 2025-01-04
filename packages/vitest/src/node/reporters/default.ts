@@ -1,7 +1,7 @@
 import type { File, TaskResultPack } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { BaseOptions } from './base'
-import type { TestModule } from './reported-tasks'
+import type { TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
 import { SummaryReporter } from './summary'
 
@@ -31,6 +31,22 @@ export class DefaultReporter extends BaseReporter {
 
   onTestModuleQueued(file: TestModule) {
     this.summary?.onTestModuleQueued(file)
+  }
+
+  onTestModulePrepare(module: TestModule) {
+    this.summary?.onTestModulePrepare(module)
+  }
+
+  onTestModuleFinished(module: TestModule) {
+    this.summary?.onTestModuleFinished(module)
+  }
+
+  onTestCasePrepare(test: TestCase) {
+    this.summary?.onTestCasePrepare(test)
+  }
+
+  onTestCaseFinished(test: TestCase) {
+    this.summary?.onTestCaseFinished(test)
   }
 
   onInit(ctx: Vitest) {
