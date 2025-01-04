@@ -94,7 +94,7 @@ export class TestRun {
           }
 
           // Skipped tests need to be reported manually once test module has finished
-          for (const test of entity.children.tests()) {
+          for (const test of entity.children.allTests()) {
             if (!this.finishedTestCases.has(test.id)) {
               this.finishedTestCases.add(test.id)
               finishedTestCases.push(test)
