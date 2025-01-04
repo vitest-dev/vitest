@@ -10,34 +10,19 @@ if (task.type === 'module') {
 }
 ```
 
-The `TestModule` inherits all methods and properties from the [`TestSuite`](/advanced/api/test-module). This guide will only list methods and properties unique to the `TestModule`
-
-::: warning
-We are planning to introduce a new Reporter API that will be using this API by default. For now, the Reporter API uses [runner tasks](/advanced/runner#tasks), but you can still access `TestModule` via `vitest.state.getReportedEntity` method:
-
-```ts
-import type { RunnerTestFile, TestModule, Vitest } from 'vitest/node'
-
-class Reporter {
-  private vitest!: Vitest
-
-  onInit(vitest: Vitest) {
-    this.vitest = vitest
-  }
-
-  onFinished(files: RunnerTestFile[]) {
-    for (const file of files) {
-      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
-      console.log(testModule) // TestModule
-    }
-  }
-}
-```
+::: warning Extending Suite Methods
+The `TestModule` class inherits all methods and properties from the [`TestSuite`](/advanced/api/test-module). This guide will only list methods and properties unique to the `TestModule`.
 :::
 
 ## moduleId
 
 This is usually an absolute unix file path (even on Windows). It can be a virtual id if the file is not on the disk. This value corresponds to Vite's `ModuleGraph` id.
+
+```ts
+'C:/Users/Documents/project/example.test.ts' // ✅
+'/Users/mac/project/example.test.ts' // ✅
+'C:\\Users\\Documents\\project\\example.test.ts' // ❌
+```
 
 ## diagnostic
 

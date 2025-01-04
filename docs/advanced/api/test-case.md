@@ -10,31 +10,6 @@ if (task.type === 'test') {
 }
 ```
 
-::: warning
-We are planning to introduce a new Reporter API that will be using this API by default. For now, the Reporter API uses [runner tasks](/advanced/runner#tasks), but you can still access `TestCase` via `vitest.state.getReportedEntity` method:
-
-```ts
-import type { RunnerTestFile, TestModule, Vitest } from 'vitest/node'
-
-class Reporter {
-  private vitest!: Vitest
-
-  onInit(vitest: Vitest) {
-    this.vitest = vitest
-  }
-
-  onFinished(files: RunnerTestFile[]) {
-    for (const file of files) {
-      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
-      for (const test of testModule.children.allTests()) {
-        console.log(test) // TestCase
-      }
-    }
-  }
-}
-```
-:::
-
 ## project
 
 This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
@@ -124,12 +99,13 @@ Parent [suite](/advanced/api/test-suite). If the test was called directly inside
 
 ```ts
 interface TaskOptions {
-  each: boolean | undefined
-  concurrent: boolean | undefined
-  shuffle: boolean | undefined
-  retry: number | undefined
-  repeats: number | undefined
-  mode: 'run' | 'only' | 'skip' | 'todo'
+  readonly each: boolean | undefined
+  readonly fails: boolean | undefined
+  readonly concurrent: boolean | undefined
+  readonly shuffle: boolean | undefined
+  readonly retry: number | undefined
+  readonly repeats: number | undefined
+  readonly mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
 }
 ```
 
