@@ -31,7 +31,7 @@ The ID of the module in Vite's module graph. Usually, it's an absolute file path
 'C:\\Users\\Documents\\project\\example.test.ts' // ❌
 ```
 
-## module
+## testModule
 
 Instance of [`TestModule`](/advanced/api/test-module) assosiated with the specification. If test wasn't queued yet, this will be `undefined`.
 

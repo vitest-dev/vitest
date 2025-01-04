@@ -70,7 +70,7 @@ export class TestSpecification {
   /**
    * Test module assosiacted with the specification.
    */
-  get module(): TestModule | undefined {
+  get testModule(): TestModule | undefined {
     const task = this.project.vitest.state.idMap.get(this.taskId)
     if (!task) {
       return undefined

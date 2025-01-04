@@ -148,13 +148,13 @@ export class TestRun {
         : 'passed'
 
     const modules = specifications.map((spec) => {
-      if (!spec.module) {
+      if (!spec.testModule) {
         const error = new Error(`Module "${spec.moduleId}" was not found when finishing test run. This is a bug in Vitest. Please, open an issue.`)
         this.vitest.state.catchError(error, 'Unhandled Error')
         errors.push(error)
         return null
       }
-      return spec.module
+      return spec.testModule
     }).filter(s => s != null)
     const files = modules.map(m => m.task)
 
