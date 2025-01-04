@@ -390,6 +390,13 @@ Show Vitest UI when running tests (default: `!process.env.CI`)
 
 Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)
 
+### browser.connectTimeout
+
+- **CLI:** `--browser.connectTimeout <timeout>`
+- **Config:** [browser.connectTimeout](/guide/browser/config#browser-connecttimeout)
+
+If connection to the browser takes longer, the test suite will fail (default: `60_000`)
+
 ### pool
 
 - **CLI:** `--pool <pool>`
@@ -654,14 +661,14 @@ Enable Node.js inspector and break before the test starts
 - **CLI:** `--testTimeout <timeout>`
 - **Config:** [testTimeout](/config/#testtimeout)
 
-Default timeout of a test in milliseconds (default: `5000`)
+Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.
 
 ### hookTimeout
 
 - **CLI:** `--hookTimeout <timeout>`
 - **Config:** [hookTimeout](/config/#hooktimeout)
 
-Default hook timeout in milliseconds (default: `10000`)
+Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.
 
 ### bail
 

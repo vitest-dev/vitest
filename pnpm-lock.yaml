@@ -14,14 +14,14 @@ overrides:
   vitest: workspace:*
 
 patchedDependencies:
-  '@sinonjs/fake-timers@11.1.0':
-    hash: trok5obk3l5tdlygozv34fknii
-    path: patches/@sinonjs__fake-timers@11.1.0.patch
+  '@sinonjs/fake-timers@14.0.0':
+    hash: 2nfgj35ccipklw62qci72snyqi
+    path: patches/@sinonjs__fake-timers@14.0.0.patch
   '@types/chai@4.3.6':
     hash: s5kzatt2y2dzfxfynxzvzt5kbm
     path: patches/@types__chai@4.3.6.patch
   '@types/sinonjs__fake-timers@8.1.5':
-    hash: yuuqouzdhxwdvk3q6qf2uf434a
+    hash: 2mhlvt7le3jrisxefe6ifblg2q
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
   acorn@8.11.3:
     hash: no36qihqjrd3chyjw73dk5xfkm
@@ -498,8 +498,8 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0
       '@bcoe/v8-coverage':
-        specifier: ^0.2.3
-        version: 0.2.3
+        specifier: ^1.0.1
+        version: 1.0.1
       debug:
         specifier: ^4.4.0
         version: 4.4.0
@@ -896,8 +896,8 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0
       tinyexec:
-        specifier: ^0.3.1
-        version: 0.3.1
+        specifier: ^0.3.2
+        version: 0.3.2
       tinypool:
         specifier: ^1.0.2
         version: 1.0.2
@@ -924,8 +924,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@sinonjs/fake-timers':
-        specifier: 11.1.0
-        version: 11.1.0(patch_hash=trok5obk3l5tdlygozv34fknii)
+        specifier: 14.0.0
+        version: 14.0.0(patch_hash=2nfgj35ccipklw62qci72snyqi)
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
@@ -952,7 +952,7 @@ importers:
         version: 2.4.9
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.5
-        version: 8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)
+        version: 8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)
       acorn-walk:
         specifier: ^8.3.4
         version: 8.3.4
@@ -978,8 +978,8 @@ importers:
         specifier: ^4.8.1
         version: 4.8.1
       happy-dom:
-        specifier: ^15.11.7
-        version: 15.11.7
+        specifier: ^16.0.1
+        version: 16.0.1
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -1124,8 +1124,8 @@ importers:
   test/config:
     devDependencies:
       tinyexec:
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.3.2
+        version: 0.3.2
       vite:
         specifier: ^5.4.0
         version: 5.4.0(@types/node@22.10.2)(terser@5.36.0)
@@ -1245,7 +1245,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 15.11.7
+        version: 16.0.1
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1273,6 +1273,12 @@ importers:
       webdriverio:
         specifier: latest
         version: 9.4.5
+
+  test/dts-config:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
 
   test/dts-fixture:
     devDependencies:
@@ -1346,8 +1352,8 @@ importers:
   test/test-utils:
     devDependencies:
       tinyexec:
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.3.2
+        version: 0.3.2
       tinyrainbow:
         specifier: ^1.2.0
         version: 1.2.0
@@ -1384,7 +1390,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 15.11.7
+        version: 16.0.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -2281,8 +2287,9 @@ packages:
     resolution: {integrity: sha512-Z/yiTPj+lDVnF7lWeKCIJzaIkI0vYO87dMpZ4bg4TDrFe4XXLFWL1TbXU27gBP3QccxV9mZICCrnjnYlJjXHOA==}
     engines: {node: '>=6.9.0'}
 
-  '@bcoe/v8-coverage@0.2.3':
-    resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
+  '@bcoe/v8-coverage@1.0.1':
+    resolution: {integrity: sha512-W+a0/JpU28AqH4IKtwUPcEUnUyXMDLALcn5/JLczGGT9fHE2sIby/xP/oQnx3nxkForzgzPy201RAKcB4xPAFQ==}
+    engines: {node: '>=18'}
 
   '@bundled-es-modules/cookie@2.0.1':
     resolution: {integrity: sha512-8o+5fRPLNbjbdGRRmJj3h6Hh1AQJf2dk3qQ/5ZFb+PXkRNiSoMGGUKlsgLfrxneb72axVJyIYji64E2+nNfYyw==}
@@ -3432,11 +3439,11 @@ packages:
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
 
-  '@sinonjs/commons@3.0.0':
-    resolution: {integrity: sha512-jXBtWAF4vmdNmZgD5FoKsVLv3rPgDnLgPbU84LIJ3otV44vJlDRokVng5v8NFJdCf/da9legHcKaRuZs4L7faA==}
+  '@sinonjs/commons@3.0.1':
+    resolution: {integrity: sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==}
 
-  '@sinonjs/fake-timers@11.1.0':
-    resolution: {integrity: sha512-pUBaWhXoa9N0R/LeYKLqkrN9mqN3jwKBeMfbvlRtHUzLmk55o+0swncIuZBcSH/PpXDttRf/AcPF22pknAzORQ==}
+  '@sinonjs/fake-timers@14.0.0':
+    resolution: {integrity: sha512-QfoXRaUTjMVVn/ZbnD4LS3TPtqOkOdKIYCKldIVPnuClcwRKat6LI2mRZ2s5qiBfO6Fy03An35dSls/2/FEc0Q==}
 
   '@stylistic/eslint-plugin@2.11.0':
     resolution: {integrity: sha512-PNRHbydNG5EH8NK4c+izdJlxajIR6GxcUhzsYNRsn6Myep4dsZt0qFCz3rCPnkvgO5FYibDcMqgNHUT+zvjYZw==}
@@ -6264,8 +6271,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@15.11.7:
-    resolution: {integrity: sha512-KyrFvnl+J9US63TEzwoiJOQzZBJY7KgBushJA8X61DMbNsH+2ONkDuLDnCnwUiPTF42tLoEmrPyoqbenVA5zrg==}
+  happy-dom@16.0.1:
+    resolution: {integrity: sha512-cqbqvutE6XAIMe4nM93TkbW5SDFtLkU/6nsQfJBJ2KSlaT+My2kmnYsCFXrvEzvmP7s1xGJ6Xt4D9LNJIJHMbA==}
     engines: {node: '>=18.0.0'}
 
   has-bigints@1.0.2:
@@ -8746,11 +8753,8 @@ packages:
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
 
-  tinyexec@0.3.0:
-    resolution: {integrity: sha512-tVGE0mVJPGb0chKhqmsoosjsS+qUnJVGJpZgsHYQcGoPlG3B51R3PouqTgEGH2Dc9jjFyOqOpix6ZHNMXp1FZg==}
-
-  tinyexec@0.3.1:
-    resolution: {integrity: sha512-WiCJLEECkO18gwqIp6+hJg0//p23HXp4S+gGtAKu3mI2F2/sXC4FvHvXvB0zJVVaTPhx1/tOwdbRsa1sOBIKqQ==}
+  tinyexec@0.3.2:
+    resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
 
   tinyglobby@0.2.10:
     resolution: {integrity: sha512-Zc+8eJlFMvgatPZTl6A9L/yht8QqdmUNtURHaKZLmKBE12hNPSrqNkUp2cs3M/UKmNVVAMFQYSjYIVHDjW5zew==}
@@ -9904,12 +9908,12 @@ snapshots:
   '@antfu/install-pkg@0.4.1':
     dependencies:
       package-manager-detector: 0.2.6
-      tinyexec: 0.3.1
+      tinyexec: 0.3.2
 
   '@antfu/install-pkg@0.5.0':
     dependencies:
       package-manager-detector: 0.2.6
-      tinyexec: 0.3.1
+      tinyexec: 0.3.2
 
   '@antfu/ni@0.23.2': {}
 
@@ -10877,7 +10881,7 @@ snapshots:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
 
-  '@bcoe/v8-coverage@0.2.3': {}
+  '@bcoe/v8-coverage@1.0.1': {}
 
   '@bundled-es-modules/cookie@2.0.1':
     dependencies:
@@ -11813,13 +11817,13 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@sinonjs/commons@3.0.0':
+  '@sinonjs/commons@3.0.1':
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@11.1.0(patch_hash=trok5obk3l5tdlygozv34fknii)':
+  '@sinonjs/fake-timers@14.0.0(patch_hash=2nfgj35ccipklw62qci72snyqi)':
     dependencies:
-      '@sinonjs/commons': 3.0.0
+      '@sinonjs/commons': 3.0.1
 
   '@stylistic/eslint-plugin@2.11.0(eslint@9.16.0(jiti@2.4.1))(typescript@5.7.2)':
     dependencies:
@@ -12223,7 +12227,7 @@ snapshots:
 
   '@types/resolve@1.20.2': {}
 
-  '@types/sinonjs__fake-timers@8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)': {}
+  '@types/sinonjs__fake-timers@8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)': {}
 
   '@types/stack-utils@2.0.3':
     optional: true
@@ -13434,7 +13438,7 @@ snapshots:
       jsonc-parser: 3.3.1
       prompts: 2.4.2
       semver: 7.6.3
-      tinyexec: 0.3.1
+      tinyexec: 0.3.2
       tinyglobby: 0.2.10
     transitivePeerDependencies:
       - magicast
@@ -15442,9 +15446,8 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@15.11.7:
+  happy-dom@16.0.1:
     dependencies:
-      entities: 4.5.0
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
 
@@ -18291,9 +18294,7 @@ snapshots:
 
   tinybench@2.9.0: {}
 
-  tinyexec@0.3.0: {}
-
-  tinyexec@0.3.1: {}
+  tinyexec@0.3.2: {}
 
   tinyglobby@0.2.10:
     dependencies:
@@ -19149,7 +19150,7 @@ snapshots:
   webdriverio@9.4.5:
     dependencies:
       '@types/node': 20.14.15
-      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=yuuqouzdhxwdvk3q6qf2uf434a)
+      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)
       '@wdio/config': 9.4.4
       '@wdio/logger': 9.4.4
       '@wdio/protocols': 9.4.4

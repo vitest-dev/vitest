@@ -819,6 +819,7 @@ export class Vitest {
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
+    await this.runningPromise
   }
 
   /** @internal */

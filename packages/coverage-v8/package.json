@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
-    "@bcoe/v8-coverage": "^0.2.3",
+    "@bcoe/v8-coverage": "^1.0.1",
     "debug": "^4.4.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
