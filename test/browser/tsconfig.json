@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "jsx": "react-jsx",
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
@@ -15,9 +17,9 @@
     "esModuleInterop": true
   },
   "include": [
-    "fixtures/**/*.ts",
-    "test/**/*.ts",
-    "specs/**/*.ts",
+    "fixtures",
+    "test",
+    "specs",
     "./vitest.config.*",
     "./setup.unit.ts"
   ]
