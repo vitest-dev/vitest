@@ -37,10 +37,23 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<
     string,
-    { stdoutTime: number; stderrTime: number; timer: any }
+    { stdoutTime: number; stderrTime: number; timer: any; cancel?: () => void }
   >()
 
-  const { setTimeout, clearTimeout } = getSafeTimers()
+  // const { setTimeout, clearTimeout } = getSafeTimers()
+  const { queueMicrotask } = getSafeTimers()
+
+  function queueCancelableMicrotask(callback: () => void) {
+    let canceled = false
+    queueMicrotask(() => {
+      if (!canceled) {
+        callback()
+      }
+    })
+    return () => {
+      canceled = true
+    }
+  }
 
   const state = () => defaultState || getWorkerState()
 
@@ -48,8 +61,8 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   function schedule(taskId: string) {
     const timer = timers.get(taskId)!
     const { stdoutTime, stderrTime } = timer
-    clearTimeout(timer.timer)
-    timer.timer = setTimeout(() => {
+    timer.cancel?.()
+    timer.cancel = queueCancelableMicrotask(() => {
       if (stderrTime < stdoutTime) {
         sendStderr(taskId)
         sendStdout(taskId)
@@ -59,6 +72,17 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         sendStderr(taskId)
       }
     })
+    // clearTimeout(timer.timer)
+    // timer.timer = setTimeout(() => {
+    //   if (stderrTime < stdoutTime) {
+    //     sendStderr(taskId)
+    //     sendStdout(taskId)
+    //   }
+    //   else {
+    //     sendStdout(taskId)
+    //     sendStderr(taskId)
+    //   }
+    // })
   }
   function sendStdout(taskId: string) {
     sendBuffer('stdout', taskId)
