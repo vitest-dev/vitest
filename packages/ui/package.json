@@ -50,7 +50,7 @@
     "@vitest/utils": "workspace:*",
     "fflate": "^0.8.2",
     "flatted": "^3.3.2",
-    "pathe": "^1.1.2",
+    "pathe": "^2.0.0",
     "sirv": "^3.0.0",
     "tinyglobby": "^0.2.10",
     "tinyrainbow": "^1.2.0"
