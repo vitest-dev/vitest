@@ -1,6 +1,7 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
+import type { TestModule } from '../reporters/reported-tasks'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'pathe'
@@ -78,6 +79,11 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       ctx.state.collectPaths(paths)
       return ctx.report('onPathsCollected', paths)
     },
+    onQueued(file) {
+      ctx.state.collectFiles(project, [file])
+      const testModule = ctx.state.getReportedEntity(file) as TestModule
+      return ctx.report('onTestModuleQueued', testModule)
+    },
     onCollected(files) {
       ctx.state.collectFiles(project, files)
       return ctx.report('onCollected', files)
@@ -98,7 +104,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     },
     onFinished(files) {
       const errors = ctx.state.getUnhandledErrors()
-      ctx.checkUnhandledErrors(errors)
+      ctx._checkUnhandledErrors(errors)
 
       return ctx.report('onFinished', files, errors)
     },

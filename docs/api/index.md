@@ -146,7 +146,7 @@ test.skipIf(isDev)('prod only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.runIf
@@ -166,7 +166,7 @@ test.runIf(isDev)('dev only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.only
@@ -231,7 +231,7 @@ test.concurrent('test 2', async ({ expect }) => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.sequential
@@ -289,7 +289,7 @@ test.fails('fail test', async () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.each
@@ -390,7 +390,7 @@ Vitest processes `$values` with Chai `format` method. If the value is too trunca
 :::
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.for
@@ -800,7 +800,7 @@ describe.runIf(isDev)('dev only test suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.only
@@ -874,7 +874,7 @@ describe.concurrent('suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.sequential
@@ -930,7 +930,7 @@ describe.shuffle('suite', () => {
 `.skip`, `.only`, and `.todo` works with random suites.
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.todo
@@ -995,7 +995,7 @@ describe.each`
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ## Setup and Teardown
@@ -1126,7 +1126,7 @@ These hooks will throw an error if they are called outside of the test body.
 
 ### onTestFinished {#ontestfinished}
 
-This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
+This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`.
 
 ```ts {1,5}
 import { onTestFinished, test } from 'vitest'
@@ -1183,7 +1183,7 @@ This hook is always called in reverse order and is not affected by [`sequence.ho
 
 ### onTestFailed
 
-This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.
+This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`. This hook is useful for debugging.
 
 ```ts {1,5-7}
 import { onTestFailed, test } from 'vitest'

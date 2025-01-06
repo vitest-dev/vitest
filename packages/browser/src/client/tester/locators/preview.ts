@@ -1,5 +1,4 @@
-import { userEvent } from '@testing-library/user-event'
-import { page, server } from '@vitest/browser/context'
+import { page, server, userEvent } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -9,7 +8,7 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
-import { convertElementToCssSelector, ensureAwaited } from '../../utils'
+import { convertElementToCssSelector } from '../../utils'
 import { getElementError } from '../public-utils'
 import { Locator, selectorEngine } from './index'
 
@@ -58,71 +57,39 @@ class PreviewLocator extends Locator {
   }
 
   click(): Promise<void> {
-    return ensureAwaited(() => userEvent.click(this.element()))
+    return userEvent.click(this.element())
   }
 
   dblClick(): Promise<void> {
-    return ensureAwaited(() => userEvent.dblClick(this.element()))
+    return userEvent.dblClick(this.element())
   }
 
   tripleClick(): Promise<void> {
-    return ensureAwaited(() => userEvent.tripleClick(this.element()))
+    return userEvent.tripleClick(this.element())
   }
 
   hover(): Promise<void> {
-    return ensureAwaited(() => userEvent.hover(this.element()))
+    return userEvent.hover(this.element())
   }
 
   unhover(): Promise<void> {
-    return ensureAwaited(() => userEvent.unhover(this.element()))
+    return userEvent.unhover(this.element())
   }
 
   async fill(text: string): Promise<void> {
-    await this.clear()
-    return ensureAwaited(() => userEvent.type(this.element(), text))
+    return userEvent.fill(this.element(), text)
   }
 
   async upload(file: string | string[] | File | File[]): Promise<void> {
-    const uploadPromise = (Array.isArray(file) ? file : [file]).map(async (file) => {
-      if (typeof file !== 'string') {
-        return file
-      }
-
-      const { content: base64, basename, mime } = await this.triggerCommand<{
-        content: string
-        basename: string
-        mime: string
-      }>('__vitest_fileInfo', file, 'base64')
-
-      const fileInstance = fetch(`data:${mime};base64,${base64}`)
-        .then(r => r.blob())
-        .then(blob => new File([blob], basename, { type: mime }))
-      return fileInstance
-    })
-    const uploadFiles = await Promise.all(uploadPromise)
-    return ensureAwaited(() => userEvent.upload(this.element() as HTMLElement, uploadFiles))
+    return userEvent.upload(this.element(), file)
   }
 
   selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    const options = (Array.isArray(options_) ? options_ : [options_]).map((option) => {
-      if (typeof option !== 'string' && 'element' in option) {
-        return option.element() as HTMLElement
-      }
-      return option
-    })
-    return ensureAwaited(() => userEvent.selectOptions(this.element(), options as string[] | HTMLElement[]))
-  }
-
-  async dropTo(): Promise<void> {
-    throw new Error('The "preview" provider doesn\'t support `dropTo` method.')
+    return userEvent.selectOptions(this.element(), options_)
   }
 
   clear(): Promise<void> {
-    return ensureAwaited(() => userEvent.clear(this.element()))
-  }
-
-  async screenshot(): Promise<never> {
-    throw new Error('The "preview" provider doesn\'t support `screenshot` method.')
+    return userEvent.clear(this.element())
   }
 
   protected locator(selector: string) {

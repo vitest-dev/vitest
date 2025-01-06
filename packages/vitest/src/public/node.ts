@@ -1,16 +1,26 @@
 import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 import { createServer as _createServer } from 'vite'
+import { Vitest } from '../node/core'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
+export const version = Vitest.version
+
 export { parseCLI } from '../node/cli/cac'
+export type { CliParseOptions } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
-export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'
-export type { Vitest } from '../node/core'
+export { resolveApiServerConfig } from '../node/config/resolveConfig'
+export type {
+  OnServerRestartHandler,
+  OnTestsRerunHandler,
+  Vitest,
+  VitestOptions,
+} from '../node/core'
 export { createVitest } from '../node/create'
 export { GitNotFoundError, FilesNotFoundError as TestsNotFoundError } from '../node/errors'
 export type { GlobalSetupContext } from '../node/globalSetup'
 export { VitestPackageInstaller } from '../node/packageInstaller'
 export { VitestPlugin } from '../node/plugins'
+export { resolveConfig } from '../node/plugins/publicConfig'
 export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool, WorkspaceSpec } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
@@ -22,18 +32,19 @@ export type { JsonOptions } from '../node/reporters/json'
 
 export type { JUnitOptions } from '../node/reporters/junit'
 
-export { TestCase, TestModule, TestSuite } from '../node/reporters/reported-tasks'
-
 export type {
   ModuleDiagnostic,
 
   TaskOptions,
+  TestCase,
   TestCollection,
   TestDiagnostic,
+  TestModule,
   TestResult,
   TestResultFailed,
   TestResultPassed,
   TestResultSkipped,
+  TestSuite,
 } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
@@ -41,7 +52,7 @@ export type {
   TestSequencer,
   TestSequencerConstructor,
 } from '../node/sequencers/types'
-export { TestSpecification } from '../node/spec'
+export type { TestSpecification } from '../node/spec'
 export { registerConsoleShortcuts } from '../node/stdin'
 export type { BenchmarkUserOptions } from '../node/types/benchmark'
 
@@ -50,16 +61,18 @@ export type {
   BrowserCommand,
   BrowserCommandContext,
   BrowserConfigOptions,
+  BrowserInstanceOption,
   BrowserOrchestrator,
   BrowserProvider,
   BrowserProviderInitializationOptions,
   BrowserProviderModule,
   BrowserProviderOptions,
   BrowserScript,
-  BrowserServer,
   BrowserServerState,
-  BrowserServerStateContext,
+  BrowserServerStateSession,
   CDPSession,
+  ParentProjectBrowser,
+  ProjectBrowser,
   ResolvedBrowserOptions,
 } from '../node/types/browser'
 /** @deprecated use `createViteServer` instead */
@@ -91,7 +104,6 @@ export type {
   VitestEnvironment,
   VitestRunMode,
 } from '../node/types/config'
-
 export type {
   BaseCoverageOptions,
   CoverageIstanbulOptions,
@@ -104,6 +116,8 @@ export type {
   ReportContext,
   ResolvedCoverageOptions,
 } from '../node/types/coverage'
+
+export type { TestRunResult } from '../node/types/tests'
 /**
  * @deprecated Use `TestModule` instead
  */
@@ -127,17 +141,17 @@ export type {
   RootAndTarget as TypeCheckRootAndTarget,
 } from '../typecheck/types'
 
-export type {
-  OnServerRestartHandler,
-  OnTestsRerunHandler,
-} from '../types/general'
-
 export { createDebugger } from '../utils/debugger'
 
+export { generateFileHash } from '@vitest/runner/utils'
+
 export {
+  esbuildVersion,
   isFileServingAllowed,
   parseAst,
   parseAstAsync,
+  rollupVersion,
+  version as viteVersion,
 } from 'vite'
 
 export type * as Vite from 'vite'

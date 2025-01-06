@@ -1,5 +1,4 @@
 import type {
-  Custom as RunnerCustomCase,
   Task as RunnerTask,
   Test as RunnerTestCase,
   File as RunnerTestFile,
@@ -12,7 +11,7 @@ import type { TestProject } from '../project'
 class ReportedTaskImplementation {
   /**
    * Task instance.
-   * @experimental Public runner task API is experimental and does not follow semver.
+   * @internal
    */
   public readonly task: RunnerTask
 
@@ -24,7 +23,7 @@ class ReportedTaskImplementation {
   /**
    * Unique identifier.
    * This ID is deterministic and will be the same for the same test across multiple runs.
-   * The ID is based on the project name, module url and test position.
+   * The ID is based on the project name, module url and test order.
    */
   public readonly id: string
 
@@ -33,6 +32,7 @@ class ReportedTaskImplementation {
    */
   public readonly location: { line: number; column: number } | undefined
 
+  /** @internal */
   protected constructor(
     task: RunnerTask,
     project: TestProject,
@@ -44,7 +44,17 @@ class ReportedTaskImplementation {
   }
 
   /**
+   * Checks if the test did not fail the suite.
+   * If the test is not finished yet or was skipped, it will return `true`.
+   */
+  public ok(): boolean {
+    const result = this.task.result
+    return !result || result.state !== 'fail'
+  }
+
+  /**
    * Creates a new reported task instance and stores it in the project's state for future use.
+   * @internal
    */
   static register(task: RunnerTask, project: TestProject) {
     const state = new this(task, project) as TestCase | TestSuite | TestModule
@@ -56,7 +66,8 @@ class ReportedTaskImplementation {
 export class TestCase extends ReportedTaskImplementation {
   #fullName: string | undefined
 
-  declare public readonly task: RunnerTestCase | RunnerCustomCase
+  /** @internal */
+  declare public readonly task: RunnerTestCase
   public readonly type = 'test'
 
   /**
@@ -79,7 +90,8 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public readonly parent: TestSuite | TestModule
 
-  protected constructor(task: RunnerTestCase | RunnerCustomCase, project: TestProject) {
+  /** @internal */
+  protected constructor(task: RunnerTestCase, project: TestProject) {
     super(task, project)
 
     this.name = task.name
@@ -110,11 +122,11 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Test results. Will be `undefined` if test is not finished yet or was just collected.
+   * Test results. Will be `undefined` if test is skipped, not finished yet or was just collected.
    */
   public result(): TestResult | undefined {
     const result = this.task.result
-    if (!result || result.state === 'run') {
+    if (!result || result.state === 'run' || result.state === 'queued') {
       return undefined
     }
     const state = result.state === 'fail'
@@ -142,12 +154,11 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks if the test did not fail the suite.
-   * If the test is not finished yet or was skipped, it will return `true`.
+   * Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
    */
-  public ok(): boolean {
-    const result = this.result()
-    return !result || result.state !== 'failed'
+  public skipped(): boolean {
+    const mode = this.task.result?.state || this.task.mode
+    return mode === 'skip' || mode === 'todo'
   }
 
   /**
@@ -164,7 +175,7 @@ export class TestCase extends ReportedTaskImplementation {
   public diagnostic(): TestDiagnostic | undefined {
     const result = this.task.result
     // startTime should always be available if the test has properly finished
-    if (!result || result.state === 'run' || !result.startTime) {
+    if (!result || result.state === 'run' || result.state === 'queued' || !result.startTime) {
       return undefined
     }
     const duration = result.duration || 0
@@ -191,7 +202,7 @@ class TestCollection {
   }
 
   /**
-   * Returns the test or suite at a specific index in the array.
+   * Returns the test or suite at a specific index.
    */
   at(index: number): TestCase | TestSuite | undefined {
     if (index < 0) {
@@ -288,6 +299,7 @@ class TestCollection {
 export type { TestCollection }
 
 abstract class SuiteImplementation extends ReportedTaskImplementation {
+  /** @internal */
   declare public readonly task: RunnerTestSuite | RunnerTestFile
 
   /**
@@ -295,15 +307,32 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
    */
   public readonly children: TestCollection
 
+  /** @internal */
   protected constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
     super(task, project)
     this.children = new TestCollection(task, project)
+  }
+
+  /**
+   * Checks if the suite was skipped during collection.
+   */
+  public skipped(): boolean {
+    const mode = this.task.mode
+    return mode === 'skip' || mode === 'todo'
+  }
+
+  /**
+   * Errors that happened outside of the test run during collection, like syntax errors.
+   */
+  public errors(): TestError[] {
+    return (this.task.result?.errors as TestError[] | undefined) || []
   }
 }
 
 export class TestSuite extends SuiteImplementation {
   #fullName: string | undefined
 
+  /** @internal */
   declare public readonly task: RunnerTestSuite
   public readonly type = 'suite'
 
@@ -327,6 +356,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public readonly options: TaskOptions
 
+  /** @internal */
   protected constructor(task: RunnerTestSuite, project: TestProject) {
     super(task, project)
 
@@ -341,6 +371,12 @@ export class TestSuite extends SuiteImplementation {
     }
     this.options = buildOptions(task)
   }
+
+  /**
+   * Checks if the suite has any failed tests.
+   * This will also return `false` if suite failed during collection.
+   */
+  declare public ok: () => boolean
 
   /**
    * Full name of the suite including all parent suites separated with `>`.
@@ -359,6 +395,7 @@ export class TestSuite extends SuiteImplementation {
 }
 
 export class TestModule extends SuiteImplementation {
+  /** @internal */
   declare public readonly task: RunnerTestFile
   declare public readonly location: undefined
   public readonly type = 'module'
@@ -370,10 +407,22 @@ export class TestModule extends SuiteImplementation {
    */
   public readonly moduleId: string
 
+  /** @internal */
   protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
   }
+
+  /**
+   * Checks if the module has any failed tests.
+   * This will also return `false` if module failed during collection.
+   */
+  declare public ok: () => boolean
+
+  /**
+   * Checks if the module was skipped and didn't run.
+   */
+  declare public skipped: () => boolean
 
   /**
    * Useful information about the module like duration, memory usage, etc.
@@ -401,11 +450,11 @@ export interface TaskOptions {
   shuffle: boolean | undefined
   retry: number | undefined
   repeats: number | undefined
-  mode: 'run' | 'only' | 'skip' | 'todo'
+  mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
 }
 
 function buildOptions(
-  task: RunnerTestCase | RunnerCustomCase | RunnerTestFile | RunnerTestSuite,
+  task: RunnerTestCase | RunnerTestFile | RunnerTestSuite,
 ): TaskOptions {
   return {
     each: task.each,
@@ -445,8 +494,8 @@ export interface TestResultFailed {
 
 export interface TestResultSkipped {
   /**
-   * The test was skipped with `only`, `skip` or `todo` flag.
-   * You can see which one was used in the `mode` option.
+   * The test was skipped with `only` (on another test), `skip` or `todo` flag.
+   * You can see which one was used in the `options.mode` option.
    */
   state: 'skipped'
   /**
@@ -454,7 +503,7 @@ export interface TestResultSkipped {
    */
   errors: undefined
   /**
-   * A custom note.
+   * A custom note passed down to `ctx.skip(note)`.
    */
   note: string | undefined
 }
@@ -517,6 +566,9 @@ export interface ModuleDiagnostic {
 }
 
 function getTestState(test: TestCase): TestResult['state'] | 'running' {
+  if (test.skipped()) {
+    return 'skipped'
+  }
   const result = test.result()
   return result ? result.state : 'running'
 }

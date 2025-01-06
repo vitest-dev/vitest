@@ -1,4 +1,4 @@
-import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
+import type { File, Task, TaskResultPack, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import { getTests } from '@vitest/runner/utils'
 
@@ -19,8 +19,8 @@ export class TaskParser {
   onHookStart(_options: HookOptions) {}
   onHookEnd(_options: HookOptions) {}
 
-  onTestStart(_test: Test | Custom) {}
-  onTestFinished(_test: Test | Custom) {}
+  onTestStart(_test: Test) {}
+  onTestFinished(_test: Test) {}
 
   onTestFilePrepare(_file: File) {}
   onTestFileFinished(_file: File) {}
@@ -29,8 +29,8 @@ export class TaskParser {
     const startingTestFiles: File[] = []
     const finishedTestFiles: File[] = []
 
-    const startingTests: (Test | Custom)[] = []
-    const finishedTests: (Test | Custom)[] = []
+    const startingTests: Test[] = []
+    const finishedTests: Test[] = []
 
     const startingHooks: HookOptions[] = []
     const endingHooks: HookOptions[] = []
@@ -39,7 +39,7 @@ export class TaskParser {
       const task = this.ctx.state.idMap.get(pack[0])
 
       if (task?.type === 'suite' && 'filepath' in task && task.result?.state) {
-        if (task?.result?.state === 'run') {
+        if (task?.result?.state === 'run' || task?.result?.state === 'queued') {
           startingTestFiles.push(task)
         }
         else {
@@ -54,8 +54,8 @@ export class TaskParser {
         }
       }
 
-      if (task?.type === 'test' || task?.type === 'custom') {
-        if (task.result?.state === 'run') {
+      if (task?.type === 'test') {
+        if (task.result?.state === 'run' || task.result?.state === 'queued') {
           startingTests.push(task)
         }
         else if (task.result?.hooks?.afterEach !== 'run') {
@@ -65,7 +65,7 @@ export class TaskParser {
 
       if (task?.result?.hooks) {
         for (const [hook, state] of Object.entries(task.result.hooks)) {
-          if (state === 'run') {
+          if (state === 'run' || state === 'queued') {
             startingHooks.push({ name: hook, file: task.file, id: task.id, type: task.type })
           }
           else {
@@ -81,7 +81,6 @@ export class TaskParser {
 
     startingTestFiles.forEach(file => this.onTestFilePrepare(file))
     startingTests.forEach(test => this.onTestStart(test))
-    startingHooks.forEach(hook => this.onHookStart(hook),
-    )
+    startingHooks.forEach(hook => this.onHookStart(hook))
   }
 }

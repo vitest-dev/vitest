@@ -1,6 +1,7 @@
-import type { Custom, File, Test } from '@vitest/runner'
+import type { File, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestModule } from './reported-tasks'
 import type { HookOptions } from './task-parser'
 import { getTests } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
@@ -87,6 +88,10 @@ export class SummaryReporter extends TaskParser implements Reporter {
     })
   }
 
+  onTestModuleQueued(module: TestModule) {
+    this.onTestFilePrepare(module.task)
+  }
+
   onPathsCollected(paths?: string[]) {
     this.suites.total = (paths || []).length
   }
@@ -111,7 +116,18 @@ export class SummaryReporter extends TaskParser implements Reporter {
   }
 
   onTestFilePrepare(file: File) {
-    if (this.allFinishedTests.has(file.id) || this.runningTests.has(file.id)) {
+    if (this.runningTests.has(file.id)) {
+      const stats = this.runningTests.get(file.id)!
+      // if there are no tests, it means the test was queued but not collected
+      if (!stats.total) {
+        const total = getTests(file).length
+        this.tests.total += total
+        stats.total = total
+      }
+      return
+    }
+
+    if (this.allFinishedTests.has(file.id)) {
       return
     }
 
@@ -169,7 +185,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
     stats.hook.visible = false
   }
 
-  onTestStart(test: Test | Custom) {
+  onTestStart(test: Test) {
     // Track slow running tests only on verbose mode
     if (!this.options.verbose) {
       return
@@ -200,7 +216,7 @@ export class SummaryReporter extends TaskParser implements Reporter {
     stats.tests.set(test.id, slowTest)
   }
 
-  onTestFinished(test: Test | Custom) {
+  onTestFinished(test: Test) {
     const stats = this.getTestStats(test)
 
     if (!stats) {
@@ -262,11 +278,11 @@ export class SummaryReporter extends TaskParser implements Reporter {
     }
   }
 
-  private getTestStats(test: Test | Custom) {
+  private getTestStats(test: Test) {
     const file = test.file
     let stats = this.runningTests.get(file.id)
 
-    if (!stats) {
+    if (!stats || stats.total === 0) {
       // It's possible that that test finished before it's preparation was even reported
       this.onTestFilePrepare(test.file)
       stats = this.runningTests.get(file.id)!
@@ -303,7 +319,9 @@ export class SummaryReporter extends TaskParser implements Reporter {
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName(testFile.projectName)
         + testFile.filename
-        + c.dim(` ${testFile.completed}/${testFile.total}`),
+        + c.dim(!testFile.completed && !testFile.total
+          ? ' [queued]'
+          : ` ${testFile.completed}/${testFile.total}`),
       )
 
       const slowTasks = [

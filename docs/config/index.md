@@ -26,7 +26,7 @@ export default defineConfig({
 })
 ```
 
-The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
+The `<reference types="vitest" />` will stop working in Vitest 4, but you can already start migrating to `vitest/config`:
 
 ```ts [vite.config.js]
 /// <reference types="vitest/config" />
@@ -143,6 +143,12 @@ This is the only option that doesn't override your configuration if you provide 
 Include globs for in-source test files.
 
 When defined, Vitest will run all matched files with `import.meta.vitest` inside.
+
+### name
+
+- **Type:** `string`
+
+Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
 
 ### server {#server}
 
@@ -579,8 +585,8 @@ These options are passed down to `setup` method of current [`environment`](#envi
 - **Type:** `[string, EnvironmentName][]`
 - **Default:** `[]`
 
-::: warning
-This API was deprecated in Vitest 2.2. Use [workspace](/guide/workspace) to define different configurations instead.
+::: danger DEPRECATED
+This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead.
 
 ```ts
 export default defineConfig({
@@ -626,8 +632,8 @@ export default defineConfig({
 - **Type:** `[string, 'threads' | 'forks' | 'vmThreads' | 'vmForks' | 'typescript'][]`
 - **Default:** `[]`
 
-::: warning
-This API was deprecated in Vitest 2.2. Use [workspace](/guide/workspace) to define different configurations instead:
+::: danger DEPRECATED
+This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead:
 
 ```ts
 export default defineConfig({
@@ -1063,7 +1069,7 @@ Minimum number or percentage of workers to run tests in. `poolOptions.{threads,v
 - **Default:** `5_000` in Node.js, `15_000` if `browser.enabled` is `true`
 - **CLI:** `--test-timeout=5000`, `--testTimeout=5000`
 
-Default timeout of a test in milliseconds
+Default timeout of a test in milliseconds. Use `0` to disable timeout completely.
 
 ### hookTimeout
 
@@ -1071,7 +1077,7 @@ Default timeout of a test in milliseconds
 - **Default:** `10_000` in Node.js, `30_000` if `browser.enabled` is `true`
 - **CLI:** `--hook-timeout=10000`, `--hookTimeout=10000`
 
-Default timeout of a hook in milliseconds
+Default timeout of a hook in milliseconds. Use `0` to disable timeout completely.
 
 ### teardownTimeout<NonProjectOption />
 
@@ -1193,7 +1199,7 @@ import { inject } from 'vitest'
 
 inject('wsPort') === 3000
 ```
-```ts [globalSetup.ts <Version>2.2.0</Version>]
+```ts [globalSetup.ts <Version>3.0.0</Version>]
 import type { TestProject } from 'vitest/node'
 
 export default function setup(project: TestProject) {
@@ -1221,7 +1227,7 @@ declare module 'vitest' {
 ```
 :::
 
-Since Vitest 2.2.0, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
+Since Vitest 3, you can define a custom callback function to be called when Vitest reruns tests. If the function is asynchronous, the runner will wait for it to complete before executing tests. Note that you cannot destruct the `project` like `{ onTestsRerun }` because it relies on the context.
 
 ```ts [globalSetup.ts]
 import type { TestProject } from 'vitest/node'
@@ -1475,7 +1481,26 @@ Do not show files with 100% statement, branch, and function coverage.
 
 #### coverage.thresholds
 
-Options for coverage thresholds
+Options for coverage thresholds.
+
+If a threshold is set to a positive number, it will be interpreted as the minimum percentage of coverage required. For example, setting the lines threshold to `90` means that 90% of lines must be covered.
+
+If a threshold is set to a negative number, it will be treated as the maximum number of uncovered items allowed. For example, setting the lines threshold to `-10` means that no more than 10 lines may be uncovered.
+
+<!-- eslint-skip -->
+```ts
+{
+  coverage: {
+    thresholds: {
+      // Requires 90% function coverage
+      functions: 90,
+
+      // Require that no more than 10 lines are uncovered
+      lines: -10,
+    }
+  }
+}
+```
 
 ##### coverage.thresholds.lines
 
@@ -1484,7 +1509,6 @@ Options for coverage thresholds
 - **CLI:** `--coverage.thresholds.lines=<number>`
 
 Global threshold for lines.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.functions
 
@@ -1493,7 +1517,6 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 - **CLI:** `--coverage.thresholds.functions=<number>`
 
 Global threshold for functions.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.branches
 
@@ -1502,7 +1525,6 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 - **CLI:** `--coverage.thresholds.branches=<number>`
 
 Global threshold for branches.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.statements
 
@@ -1511,7 +1533,6 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-threshol
 - **CLI:** `--coverage.thresholds.statements=<number>`
 
 Global threshold for statements.
-See [istanbul documentation](https://github.com/istanbuljs/nyc#coverage-thresholds) for more information.
 
 ##### coverage.thresholds.perFile
 
@@ -1529,7 +1550,7 @@ Check thresholds per file.
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.thresholds.autoUpdate=<boolean>`
 
-Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is above the configured thresholds.
+Update all threshold values `lines`, `functions`, `branches` and `statements` to configuration file when current coverage is better than the configured thresholds.
 This option helps to maintain thresholds when coverage is improved.
 
 ##### coverage.thresholds.100
@@ -1733,220 +1754,16 @@ Open Vitest UI (WIP)
 
 Listen to port and serve API. When set to true, the default port is 51204
 
-### browser {#browser}
+### browser <Badge type="warning">experimental</Badge> {#browser}
 
-- **Type:** `{ enabled?, name?, provider?, headless?, api? }`
-- **Default:** `{ enabled: false, headless: process.env.CI, api: 63315 }`
-- **CLI:** `--browser`, `--browser=<name>`, `--browser.name=chrome --browser.headless`
+- **Default:** `{ enabled: false }`
+- **CLI:** `--browser=<name>`, `--browser.name=chrome --browser.headless`
 
-Run Vitest tests in a browser. We use [WebdriverIO](https://webdriver.io/) for running tests by default, but it can be configured with [browser.provider](#browser-provider) option.
-
-::: tip NOTE
-Read more about testing in a real browser in the [guide page](/guide/browser/).
-:::
+Configuration for running browser tests. Please, refer to the ["Browser Config Reference"](/guide/browser/config) article.
 
 ::: warning
 This is an experimental feature. Breaking changes might not follow SemVer, please pin Vitest's version when using it.
 :::
-
-#### browser.enabled
-
-- **Type:** `boolean`
-- **Default:** `false`
-- **CLI:** `--browser`, `--browser.enabled=false`
-
-Run all tests inside a browser by default.
-
-#### browser&#46;name
-
-- **Type:** `string`
-- **CLI:** `--browser=safari`
-
-Run all tests in a specific browser. Possible options in different providers:
-
-- `webdriverio`: `firefox`, `chrome`, `edge`, `safari`
-- `playwright`: `firefox`, `webkit`, `chromium`
-- custom: any string that will be passed to the provider
-
-#### browser.headless
-
-- **Type:** `boolean`
-- **Default:** `process.env.CI`
-- **CLI:** `--browser.headless`, `--browser.headless=false`
-
-Run the browser in a `headless` mode. If you are running Vitest in CI, it will be enabled by default.
-
-#### browser.isolate
-
-- **Type:** `boolean`
-- **Default:** `true`
-- **CLI:** `--browser.isolate`, `--browser.isolate=false`
-
-Run every test in a separate iframe.
-
-#### browser.testerHtmlPath <Version>2.1.4</Version> {#browser-testerhtmlpath}
-
-- **Type:** `string`
-- **Default:** `@vitest/browser/tester.html`
-
-A path to the HTML entry point. Can be relative to the root of the project. This file will be processed with [`transformIndexHtml`](https://vite.dev/guide/api-plugin#transformindexhtml) hook.
-
-#### browser.api
-
-- **Type:** `number | { port?, strictPort?, host? }`
-- **Default:** `63315`
-- **CLI:** `--browser.api=63315`, `--browser.api.port=1234, --browser.api.host=example.com`
-
-Configure options for Vite server that serves code in the browser. Does not affect [`test.api`](#api) option. By default, Vitest assigns port `63315` to avoid conflicts with the development server, allowing you to run both in parallel.
-
-#### browser.provider
-
-- **Type:** `'webdriverio' | 'playwright' | 'preview' | string`
-- **Default:** `'preview'`
-- **CLI:** `--browser.provider=playwright`
-
-Path to a provider that will be used when running browser tests. Vitest provides three providers which are `preview` (default), `webdriverio` and `playwright`. Custom providers should be exported using `default` export and have this shape:
-
-```ts
-export interface BrowserProvider {
-  name: string
-  getSupportedBrowsers: () => readonly string[]
-  initialize: (ctx: Vitest, options: { browser: string; options?: BrowserProviderOptions }) => Awaitable<void>
-  openPage: (url: string) => Awaitable<void>
-  close: () => Awaitable<void>
-}
-```
-
-::: warning
-This is an advanced API for library authors. If you just need to run tests in a browser, use the [browser](#browser) option.
-:::
-
-#### browser.providerOptions {#browser-provideroptions}
-
-- **Type:** `BrowserProviderOptions`
-
-Options that will be passed down to provider when calling `provider.initialize`.
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    browser: {
-      providerOptions: {
-        launch: {
-          devtools: true,
-        },
-      },
-    },
-  },
-})
-```
-
-::: tip
-To have a better type safety when using built-in providers, you should reference one of these types (for provider that you are using) in your [config file](/config/):
-
-```ts
-/// <reference types="@vitest/browser/providers/playwright" />
-/// <reference types="@vitest/browser/providers/webdriverio" />
-```
-:::
-
-#### browser.ui {#browser-ui}
-
-- **Type:** `boolean`
-- **Default:** `!isCI`
-- **CLI:** `--browser.ui=false`
-
-Should Vitest UI be injected into the page. By default, injects UI iframe during development.
-
-#### browser.viewport {#browser-viewport}
-
-- **Type:** `{ width, height }`
-- **Default:** `414x896`
-
-Default iframe's viewport.
-
-#### browser.locators {#browser-locators}
-
-Options for built-in [browser locators](/guide/browser/locators).
-
-##### browser.locators.testIdAttribute
-
-- **Type:** `string`
-- **Default:** `data-testid`
-
-Attribute used to find elements with `getByTestId` locator.
-
-#### browser.screenshotDirectory {#browser-screenshotdirectory}
-
-- **Type:** `string`
-- **Default:** `__snapshots__` in the test file directory
-
-Path to the snapshots directory relative to the `root`.
-
-#### browser.screenshotFailures {#browser-screenshotfailures}
-
-- **Type:** `boolean`
-- **Default:** `!browser.ui`
-
-Should Vitest take screenshots if the test fails.
-
-#### browser.orchestratorScripts {#browser-orchestratorscripts}
-
-- **Type:** `BrowserScript[]`
-- **Default:** `[]`
-
-Custom scripts that should be injected into the orchestrator HTML before test iframes are initiated. This HTML document only sets up iframes and doesn't actually import your code.
-
-The script `src` and `content` will be processed by Vite plugins. Script should be provided in the following shape:
-
-```ts
-export interface BrowserScript {
-  /**
-   * If "content" is provided and type is "module", this will be its identifier.
-   *
-   * If you are using TypeScript, you can add `.ts` extension here for example.
-   * @default `injected-${index}.js`
-   */
-  id?: string
-  /**
-   * JavaScript content to be injected. This string is processed by Vite plugins if type is "module".
-   *
-   * You can use `id` to give Vite a hint about the file extension.
-   */
-  content?: string
-  /**
-   * Path to the script. This value is resolved by Vite so it can be a node module or a file path.
-   */
-  src?: string
-  /**
-   * If the script should be loaded asynchronously.
-   */
-  async?: boolean
-  /**
-   * Script type.
-   * @default 'module'
-   */
-  type?: string
-}
-```
-
-#### browser.testerScripts {#browser-testerscripts}
-
-- **Type:** `BrowserScript[]`
-- **Default:** `[]`
-
-Custom scripts that should be injected into the tester HTML before the tests environment is initiated. This is useful to inject polyfills required for Vitest browser implementation. It is recommended to use [`setupFiles`](#setupfiles) in almost all cases instead of this.
-
-The script `src` and `content` will be processed by Vite plugins.
-
-#### browser.commands {#browser-commands}
-
-- **Type:** `Record<string, BrowserCommand>`
-- **Default:** `{ readFile, writeFile, ... }`
-
-Custom [commands](/guide/browser/commands) that can be imported during browser tests from `@vitest/browser/commands`.
 
 ### clearMocks
 
@@ -2507,7 +2324,7 @@ Color of truncate annotation, default is output with no color.
 #### diff.printBasicPrototype
 
 - **Type**: `boolean`
-- **Default**: `true`
+- **Default**: `false`
 
 Print basic prototype `Object` and `Array` in diff output
 
@@ -2571,7 +2388,7 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 
 Path to a [workspace](/guide/workspace) config file relative to [root](#root).
 
-Since Vitest 2.2, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
+Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
 
 ### isolate
 

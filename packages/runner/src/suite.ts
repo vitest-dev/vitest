@@ -1,8 +1,6 @@
 import type { FixtureItem } from './fixture'
 import type { VitestRunner } from './types/runner'
 import type {
-  Custom,
-  CustomAPI,
   File,
   Fixtures,
   RunMode,
@@ -255,8 +253,9 @@ function parseArguments<T extends (...args: any[]) => any>(
         'Cannot use two objects as arguments. Please provide options and a function callback in that order.',
       )
     }
-    // TODO: more info, add a name
-    // console.warn('The third argument is deprecated. Please use the second argument for options.')
+    console.warn(
+      'Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration',
+    )
     options = optionsOrTest
   }
   // it('', () => {}, 1000)
@@ -294,7 +293,7 @@ function createSuiteCollector(
   each?: boolean,
   suiteOptions?: TestOptions,
 ) {
-  const tasks: (Test | Custom | Suite | SuiteCollector)[] = []
+  const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite: Suite
@@ -499,7 +498,7 @@ function createSuite() {
     this: Record<string, boolean | undefined>,
     name: string | Function,
     factoryOrOptions?: SuiteFactory | TestOptions,
-    optionsOrFactory: number | TestOptions | SuiteFactory = {},
+    optionsOrFactory?: number | TestOptions | SuiteFactory,
   ) {
     const mode: RunMode = this.only
       ? 'only'
@@ -565,7 +564,7 @@ function createSuite() {
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -609,7 +608,7 @@ function createSuite() {
 export function createTaskCollector(
   fn: (...args: any[]) => any,
   context?: Record<string, unknown>,
-): CustomAPI {
+): TestAPI {
   const taskFn = fn as any
 
   taskFn.each = function <T>(
@@ -637,7 +636,7 @@ export function createTaskCollector(
 
       const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
 
-      const fnFirst = typeof optionsOrFn === 'function'
+      const fnFirst = typeof optionsOrFn === 'function' && typeof fnOrOptions === 'object'
 
       cases.forEach((i, idx) => {
         const items = Array.isArray(i) ? i : [i]
@@ -730,7 +729,7 @@ export function createTaskCollector(
   const _test = createChainable(
     ['concurrent', 'sequential', 'skip', 'only', 'todo', 'fails'],
     taskFn,
-  ) as CustomAPI
+  ) as TestAPI
 
   if (context) {
     (_test as any).mergeContext(context)

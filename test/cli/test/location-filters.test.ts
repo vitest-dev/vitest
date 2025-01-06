@@ -18,6 +18,54 @@ describe('location filter with list command', () => {
     expect(stderr).toEqual('')
   })
 
+  test('finds "basic suite" at correct line number', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'list',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:3`,
+    )
+
+    expect(stdout).toMatchInlineSnapshot(`
+      "basic.test.ts > basic suite > inner suite > some test
+      basic.test.ts > basic suite > inner suite > another test
+      basic.test.ts > basic suite > basic test
+      "
+    `)
+    expect(stderr).toEqual('')
+  })
+
+  test('finds "inner suite" at correct line number', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'list',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:4`,
+    )
+
+    expect(stdout).toMatchInlineSnapshot(`
+      "basic.test.ts > basic suite > inner suite > some test
+      basic.test.ts > basic suite > inner suite > another test
+      "
+    `)
+    expect(stderr).toEqual('')
+  })
+
+  test('handles matching test inside a suite', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'list',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:3`,
+      `${fixturePath}/basic.test.ts:9`,
+    )
+
+    expect(stdout).toMatchInlineSnapshot(`
+      "basic.test.ts > basic suite > inner suite > some test
+      basic.test.ts > basic suite > inner suite > another test
+      basic.test.ts > basic suite > basic test
+      "
+    `)
+    expect(stderr).toEqual('')
+  })
+
   test('handles file with a dash in the name', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
@@ -86,19 +134,6 @@ describe('location filter with list command', () => {
     expect(stderr).not.toContain('Error: Found "-"')
   })
 
-  test('erorrs if includeTaskLocation is not enabled', async () => {
-    const { stdout, stderr } = await runVitestCli(
-      'list',
-      `-r=${fixturePath}`,
-      '--config=no-task-location.config.ts',
-      `${fixturePath}/a/file/that/doesnt/exist:5`,
-    )
-
-    expect(stdout).toEqual('')
-    expect(stderr).toContain('Collect Error')
-    expect(stderr).toContain('IncludeTaskLocationDisabledError')
-  })
-
   test('fails on part of filename with location filter', async () => {
     const { stdout, stderr } = await runVitestCli(
       'list',
@@ -120,9 +155,44 @@ describe('location filter with run command', () => {
       `${fixturePath}/math.test.ts:3`,
     )
 
-    // expect(`${stdout}\n--------------------\n${stderr}`).toEqual('')
-
     expect(stdout).contain('1 passed')
+    expect(stdout).contain('1 skipped')
+    expect(stderr).toEqual('')
+  })
+
+  test('finds "basic suite" at correct line number', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'run',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:3`,
+    )
+
+    expect(stdout).contain('3 passed')
+    expect(stdout).contain('1 skipped')
+    expect(stderr).toEqual('')
+  })
+
+  test('finds "inner suite" at correct line number', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'run',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:4`,
+    )
+
+    expect(stdout).contain('2 passed')
+    expect(stdout).contain('2 skipped')
+    expect(stderr).toEqual('')
+  })
+
+  test('handles matching test inside a suite', async () => {
+    const { stdout, stderr } = await runVitestCli(
+      'run',
+      `-r=${fixturePath}`,
+      `${fixturePath}/basic.test.ts:3`,
+      `${fixturePath}/basic.test.ts:9`,
+    )
+
+    expect(stdout).contain('3 passed')
     expect(stdout).contain('1 skipped')
     expect(stderr).toEqual('')
   })
@@ -182,20 +252,6 @@ describe('location filter with run command', () => {
 
     // shouldn't get a range location error
     expect(stderr).not.toContain('Error: Found "-"')
-  })
-
-  test('errors if includeTaskLocation is not enabled', async () => {
-    const { stderr } = await runVitestCli(
-      'run',
-      `-r=${fixturePath}`,
-      `--config=no-task-location.config.ts`,
-      `${fixturePath}/a/file/that/doesnt/exist:5`,
-    )
-
-    expect(stderr).toMatchInlineSnapshot(`
-      "Error: Recieved line number filters while \`includeTaskLocation\` option is disabled
-      "
-    `)
   })
 
   test('fails on part of filename with location filter', async () => {

@@ -1,6 +1,6 @@
 export type {
   CancelReason,
-  FileSpec,
+  FileSpecification,
   VitestRunner,
   VitestRunnerConfig,
   VitestRunnerConstructor,
@@ -12,6 +12,7 @@ export type {
   BeforeAllListener,
   BeforeEachListener,
   Custom,
+  /** @deprecated use `TestAPI` instead */
   CustomAPI,
   DoneCallback,
   ExtendedContext,

@@ -35,7 +35,7 @@ beforeAll(async () => {
     logHeapUsage: true,
   })
   state = ctx!.state
-  project = ctx!.getRootTestProject()
+  project = ctx!.getRootProject()
   files = state.getFiles()
   expect(files).toHaveLength(1)
   testModule = state.getReportedEntity(files[0])! as TestModule
@@ -56,17 +56,22 @@ it('correctly reports a file', () => {
   expect(testModule.location).toBeUndefined()
   expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
   expect(testModule.project).toBe(project)
-  expect(testModule.children.size).toBe(14)
+  expect(testModule.children.size).toBe(16)
 
   const tests = [...testModule.children.tests()]
   expect(tests).toHaveLength(11)
   const deepTests = [...testModule.children.allTests()]
-  expect(deepTests).toHaveLength(19)
+  expect(deepTests).toHaveLength(21)
+
+  expect.soft([...testModule.children.allTests('skipped')]).toHaveLength(7)
+  expect.soft([...testModule.children.allTests('passed')]).toHaveLength(9)
+  expect.soft([...testModule.children.allTests('failed')]).toHaveLength(5)
+  expect.soft([...testModule.children.allTests('running')]).toHaveLength(0)
 
   const suites = [...testModule.children.suites()]
-  expect(suites).toHaveLength(3)
+  expect(suites).toHaveLength(5)
   const deepSuites = [...testModule.children.allSuites()]
-  expect(deepSuites).toHaveLength(4)
+  expect(deepSuites).toHaveLength(6)
 
   const diagnostic = testModule.diagnostic()
   expect(diagnostic).toBeDefined()
@@ -182,6 +187,12 @@ it('correctly reports test assigned options', () => {
   expect(testOptionTodo.options.mode).toBe('todo')
   const testModifierTodo = findTest(testModule.children, 'todos a .modifier test')
   expect(testModifierTodo.options.mode).toBe('todo')
+
+  const testInsideTodoDescribe = findTest(testModule.children, 'test inside todo group')
+  expect(testInsideTodoDescribe.options.mode).toBe('todo')
+
+  const testInsideSkippedDescribe = findTest(testModule.children, 'test inside skipped group')
+  expect(testInsideSkippedDescribe.options.mode).toBe('skip')
 })
 
 it('correctly reports retried tests', () => {

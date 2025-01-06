@@ -28,7 +28,7 @@ test('displays object diff', () => {
     - Expected
     + Received
 
-      Object {
+      {
         "a": 1,
     -   "b": 2,
     +   "b": 3,
@@ -47,7 +47,7 @@ test('display truncated object diff', () => {
     - Expected
     + Received
 
-      Object {
+      {
         "a": 1,
     -   "b": 2,
     -   "c": 3,
@@ -137,7 +137,7 @@ test('display truncated multiple items array diff', () => {
     - Expected
     + Received
 
-      Array [
+      [
     -   "foo",
     -   "foo",
     +   "bar",
@@ -152,7 +152,7 @@ test('asymmetric matcher in object', () => {
     "- Expected
     + Received
 
-      Object {
+      {
     -   "x": 1,
     +   "x": 0,
         "y": Anything,
@@ -171,7 +171,7 @@ test('asymmetric matcher in object with truncated diff', () => {
     "- Expected
     + Received
 
-      Object {
+      {
         "w": Anything,
     -   "x": 1,
     +   "x": 0,
@@ -184,7 +184,7 @@ test('asymmetric matcher in array', () => {
     "- Expected
     + Received
 
-      Array [
+      [
     -   1,
     +   0,
         Anything,
@@ -203,7 +203,7 @@ test('asymmetric matcher in array  with truncated diff', () => {
     "- Expected
     + Received
 
-      Array [
+      [
     -   1,
     +   0,
     ... Diff result is truncated"
@@ -220,13 +220,13 @@ test('asymmetric matcher in nested', () => {
     "- Expected
     + Received
 
-      Array [
-        Object {
+      [
+        {
     -     "x": 1,
     +     "x": 0,
           "y": Anything,
         },
-        Array [
+        [
     -     1,
     +     0,
           Anything,
@@ -246,8 +246,8 @@ test('asymmetric matcher in nested with truncated diff', () => {
     "- Expected
     + Received
 
-      Array [
-        Object {
+      [
+        {
     -     "x": 1,
     +     "x": 0,
           "y": Anything,
@@ -321,8 +321,8 @@ test('getter only property', () => {
     "- Expected
     + Received
 
-      Object {
-        "getOnlyProp": Object {
+      {
+        "getOnlyProp": {
           "a": "b",
         },
     -   "normalProp": 2,
@@ -331,7 +331,13 @@ test('getter only property', () => {
   `)
 })
 
-function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions) {
+test('truncate large diff', () => {
+  const diff = getErrorDiff(Array.from({ length: 500_000 }).fill(0), 1234)
+  expect(diff.length).lessThan(200_000)
+  expect(diff.trim()).toMatch(/\.\.\.$/)
+})
+
+function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions): string {
   try {
     expect(actual).toEqual(expected)
   }
@@ -339,5 +345,5 @@ function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions)
     const error = processError(e, options)
     return error.diff
   }
-  expect.unreachable()
+  return expect.unreachable()
 }

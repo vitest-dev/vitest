@@ -1,14 +1,17 @@
 import type { Vitest } from '../core'
-import type { TestProject } from '../project'
-import type { TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
+import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
+import { deepClone, toArray } from '@vitest/utils'
 import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { initializeProject } from '../project'
+import { wildcardPatternToRegExp } from '../../utils/base'
+import { isTTY } from '../../utils/env'
+import { initializeProject, TestProject } from '../project'
+import { withLabel } from '../reporters/renderers/utils'
 import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
@@ -78,8 +81,8 @@ export async function resolveWorkspace(
 
   for (const path of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
-    if (vitest.server.config.configFile === path) {
-      projectPromises.push(Promise.resolve(vitest._createRootProject()))
+    if (vitest.vite.config.configFile === path) {
+      projectPromises.push(Promise.resolve(vitest._ensureRootProject()))
       continue
     }
 
@@ -97,7 +100,7 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return [vitest._createRootProject()]
+    return resolveBrowserWorkspace(vitest, new Set(), [vitest._ensureRootProject()])
   }
 
   const resolvedProjects = await Promise.all(projectPromises)
@@ -127,7 +130,155 @@ export async function resolveWorkspace(
     names.add(name)
   }
 
+  return resolveBrowserWorkspace(vitest, names, resolvedProjects)
+}
+
+export async function resolveBrowserWorkspace(
+  vitest: Vitest,
+  names: Set<string>,
+  resolvedProjects: TestProject[],
+) {
+  const filters = toArray(vitest.config.project).map(s => wildcardPatternToRegExp(s))
+  const removeProjects = new Set<TestProject>()
+
+  resolvedProjects.forEach((project) => {
+    if (!project.config.browser.enabled) {
+      return
+    }
+    const configs = project.config.browser.instances || []
+    if (configs.length === 0) {
+      // browser.name should be defined, otherwise the config fails in "resolveConfig"
+      configs.push({ browser: project.config.browser.name })
+      console.warn(
+        withLabel(
+          'yellow',
+          'Vitest',
+          [
+            `No browser "instances" were defined`,
+            project.name ? ` for the "${project.name}" project. ` : '. ',
+            `Running tests in "${project.config.browser.name}" browser. `,
+            'The "browser.name" field is deprecated since Vitest 3. ',
+            'Read more: https://vitest.dev/guide/browser/config#browser-instances',
+          ].filter(Boolean).join(''),
+        ),
+      )
+    }
+    const originalName = project.config.name
+    const filteredConfigs = !filters.length
+      ? configs
+      : configs.filter((config) => {
+        const browser = config.browser
+        const newName = config.name || (originalName ? `${originalName} (${browser})` : browser)
+        return filters.some(pattern => pattern.test(newName))
+      })
+
+    // every project was filtered out
+    if (!filteredConfigs.length) {
+      return
+    }
+
+    if (project.config.browser.providerOptions) {
+      vitest.logger.warn(
+        withLabel('yellow', 'Vitest', `"providerOptions"${originalName ? ` in "${originalName}" project` : ''} is ignored because it's overriden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
+      )
+    }
+
+    filteredConfigs.forEach((config, index) => {
+      const browser = config.browser
+      if (!browser) {
+        const nth = index + 1
+        const ending = nth === 2 ? 'nd' : nth === 3 ? 'rd' : 'th'
+        throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
+      }
+      const name = config.name
+      const newName = name || (originalName ? `${originalName} (${browser})` : browser)
+
+      if (names.has(newName)) {
+        throw new Error(
+          [
+            `Cannot define a nested project for a ${browser} browser. The project name "${newName}" was already defined. `,
+            'If you have multiple instances for the same browser, make sure to define a custom "name". ',
+            'All projects in a workspace should have unique names. Make sure your configuration is correct.',
+          ].join(''),
+        )
+      }
+      names.add(newName)
+      const clonedConfig = cloneConfig(project, config)
+      clonedConfig.name = newName
+      const clone = TestProject._cloneBrowserProject(project, clonedConfig)
+      resolvedProjects.push(clone)
+    })
+
+    removeProjects.add(project)
+  })
+
+  resolvedProjects = resolvedProjects.filter(project => !removeProjects.has(project))
+
+  const headedBrowserProjects = resolvedProjects.filter((project) => {
+    return project.config.browser.enabled && !project.config.browser.headless
+  })
+  if (headedBrowserProjects.length > 1) {
+    const message = [
+      `Found multiple projects that run browser tests in headed mode: "${headedBrowserProjects.map(p => p.name).join('", "')}".`,
+      ` Vitest cannot run multiple headed browsers at the same time.`,
+    ].join('')
+    if (!isTTY) {
+      throw new Error(`${message} Please, filter projects with --browser=name or --project=name flag or run tests with "headless: true" option.`)
+    }
+    const prompts = await import('prompts')
+    const { projectName } = await prompts.default({
+      type: 'select',
+      name: 'projectName',
+      choices: headedBrowserProjects.map(project => ({
+        title: project.name,
+        value: project.name,
+      })),
+      message: `${message} Select a single project to run or cancel and run tests with "headless: true" option. Note that you can also start tests with --browser=name or --project=name flag.`,
+    })
+    if (!projectName) {
+      throw new Error('The test run was aborted.')
+    }
+    return resolvedProjects.filter(project => project.name === projectName)
+  }
+
   return resolvedProjects
+}
+
+function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstanceOption) {
+  const {
+    locators,
+    viewport,
+    testerHtmlPath,
+    headless,
+    screenshotDirectory,
+    screenshotFailures,
+    // @ts-expect-error remove just in case
+    browser: _browser,
+    name,
+    ...overrideConfig
+  } = config
+  const currentConfig = project.config.browser
+  return mergeConfig<any, any>({
+    ...deepClone(project.config),
+    browser: {
+      ...project.config.browser,
+      locators: locators
+        ? {
+            testIdAttribute: locators.testIdAttribute ?? currentConfig.locators.testIdAttribute,
+          }
+        : project.config.browser.locators,
+      viewport: viewport ?? currentConfig.viewport,
+      testerHtmlPath: testerHtmlPath ?? currentConfig.testerHtmlPath,
+      screenshotDirectory: screenshotDirectory ?? currentConfig.screenshotDirectory,
+      screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
+      // TODO: test that CLI arg is preferred over the local config
+      headless: project.vitest._options?.browser?.headless ?? headless ?? currentConfig.headless,
+      name: browser,
+      providerOptions: config,
+      instances: undefined, // projects cannot spawn more configs
+    },
+    // TODO: should resolve, not merge/override
+  } satisfies ResolvedConfig, overrideConfig) as ResolvedConfig
 }
 
 async function resolveTestProjectConfigs(
@@ -193,8 +344,8 @@ async function resolveTestProjectConfigs(
     // if the config is inlined, we can resolve it immediately
     else if (typeof definition === 'function') {
       projectsOptions.push(await definition({
-        command: vitest.server.config.command,
-        mode: vitest.server.config.mode,
+        command: vitest.vite.config.command,
+        mode: vitest.vite.config.mode,
         isPreview: false,
         isSsrBuild: false,
       }))

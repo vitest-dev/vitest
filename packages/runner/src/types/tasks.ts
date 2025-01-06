@@ -2,7 +2,7 @@ import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
 import type { ChainableFunction } from '../utils/chain'
 
-export type RunMode = 'run' | 'skip' | 'only' | 'todo'
+export type RunMode = 'run' | 'skip' | 'only' | 'todo' | 'queued'
 export type TaskState = RunMode | 'pass' | 'fail'
 
 export interface TaskBase {
@@ -23,6 +23,7 @@ export interface TaskBase {
    * - **only**: only this task and other tasks with `only` mode will run
    * - **todo**: task is marked as a todo, alias for `skip`
    * - **run**: task will run or already ran
+   * - **queued**: task will start running next. It can only exist on the File
    */
   mode: RunMode
   /**
@@ -87,10 +88,12 @@ export interface TaskPopulated extends TaskBase {
   fails?: boolean
   /**
    * Hooks that will run if the task fails. The order depends on the `sequence.hooks` option.
+   * @internal
    */
   onFailed?: OnTestFailedHandler[]
   /**
    * Hooks that will run after the task finishes. The order depends on the `sequence.hooks` option.
+   * @internal
    */
   onFinished?: OnTestFinishedHandler[]
   /**
@@ -117,7 +120,7 @@ export interface TaskResult {
   state: TaskState
   /**
    * Errors that occurred during the task execution. It is possible to have several errors
-   * if `expect.soft()` failed multiple times.
+   * if `expect.soft()` failed multiple times or `retry` was triggered.
    */
   errors?: ErrorWithDiff[]
   /**
@@ -208,6 +211,7 @@ export interface File extends Suite {
   /**
    * Whether the file is initiated without running any tests.
    * This is done to populate state on the server side by Vitest.
+   * @internal
    */
   local?: boolean
 }
@@ -217,31 +221,22 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
   /**
    * Test context that will be passed to the test function.
    */
-  context: TaskContext<Test> & ExtraContext & TestContext
+  context: TestContext & ExtraContext
 }
 
 /**
  * @deprecated Use `Test` instead. `type: 'custom'` is not used since 2.2
  */
-export interface Custom<ExtraContext = object> extends TaskPopulated {
-  /**
-   * @deprecated use `test` instead. `custom` is not used since 2.2
-   */
-  type: 'custom'
-  /**
-   * Task context that will be passed to the test function.
-   */
-  context: TaskContext<Test> & ExtraContext & TestContext
-}
+export type Custom<ExtraContext = object> = Test<ExtraContext>
 
-export type Task = Test | Suite | Custom | File
+export type Task = Test | Suite | File
 
 /**
  * @deprecated Vitest doesn't provide `done()` anymore
  */
 export type DoneCallback = (error?: any) => void
 export type TestFunction<ExtraContext = object> = (
-  context: ExtendedContext<Test> & ExtraContext
+  context: TestContext & ExtraContext
 ) => Awaitable<any> | void
 
 // jest's ExtractEachCallbackArgs
@@ -326,7 +321,7 @@ interface TestForFunction<ExtraContext> {
   // test.for([[1, 2], [3, 4, 5]])
   <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<
     T,
-    ExtendedContext<Test> & ExtraContext
+    TestContext & ExtraContext
   >
 
   // test.for`
@@ -336,7 +331,7 @@ interface TestForFunction<ExtraContext> {
   // `
   (strings: TemplateStringsArray, ...values: any[]): TestForFunctionReturn<
     any,
-    ExtendedContext<Test> & ExtraContext
+    TestContext & ExtraContext
   >
 }
 
@@ -441,6 +436,7 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
     }>
   }
 
+/** @deprecated use `TestAPI` instead */
 export type { TestAPI as CustomAPI }
 
 export interface FixtureOptions {
@@ -448,6 +444,10 @@ export interface FixtureOptions {
    * Whether to automatically set up current fixture, even though it's not being used in tests.
    */
   auto?: boolean
+  /**
+   * Indicated if the injected value from the config should be preferred over the fixture value
+   */
+  injected?: boolean
 }
 
 export type Use<T> = (value: T) => Promise<void>
@@ -468,8 +468,8 @@ export type Fixture<T, K extends keyof T, ExtraContext = object> = ((
       : never)
 export type Fixtures<T extends Record<string, any>, ExtraContext = object> = {
   [K in keyof T]:
-    | Fixture<T, K, ExtraContext & ExtendedContext<Test>>
-    | [Fixture<T, K, ExtraContext & ExtendedContext<Test>>, FixtureOptions?];
+    | Fixture<T, K, ExtraContext & TestContext>
+    | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?];
 }
 
 export type InferFixturesTypes<T> = T extends TestAPI<infer C> ? C : T
@@ -530,14 +530,14 @@ export interface AfterAllListener {
 
 export interface BeforeEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test> & ExtraContext,
+    context: TestContext & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
 
 export interface AfterEachListener<ExtraContext = object> {
   (
-    context: ExtendedContext<Test> & ExtraContext,
+    context: TestContext & ExtraContext,
     suite: Readonly<Suite>
   ): Awaitable<unknown>
 }
@@ -567,7 +567,7 @@ export interface TaskCustomOptions extends TestOptions {
    * If nothing is provided, the runner will try to get the function using `getFn(task)`.
    * If the runner cannot find the function, the task will be marked as failed.
    */
-  handler?: (context: TaskContext<Test>) => Awaitable<void>
+  handler?: (context: TestContext) => Awaitable<void>
 }
 
 export interface SuiteCollector<ExtraContext = object> {
@@ -578,8 +578,6 @@ export interface SuiteCollector<ExtraContext = object> {
   test: TestAPI<ExtraContext>
   tasks: (
     | Suite
-    // TODO: remove in Vitest 3
-    | Custom<ExtraContext>
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
@@ -604,12 +602,7 @@ export interface RuntimeContext {
 /**
  * User's custom test context.
  */
-export interface TestContext {}
-
-/**
- * Context that's always available in the test function.
- */
-export interface TaskContext<Task extends Test = Test> {
+export interface TestContext {
   /**
    * Metadata of the current test
    */
@@ -618,12 +611,12 @@ export interface TaskContext<Task extends Test = Test> {
   /**
    * Extract hooks on test failed
    */
-  onTestFailed: (fn: OnTestFailedHandler) => void
+  onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
    * Extract hooks on test failed
    */
-  onTestFinished: (fn: OnTestFinishedHandler) => void
+  onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
 
   /**
    * Mark tests as skipped. All execution after this call will be skipped.
@@ -632,11 +625,17 @@ export interface TaskContext<Task extends Test = Test> {
   skip: (note?: string) => void
 }
 
-export type ExtendedContext<T extends Test> = TaskContext<T> &
-  TestContext
+/**
+ * Context that's always available in the test function.
+ * @deprecated use `TestContext` instead
+ */
+export interface TaskContext extends TestContext {}
 
-export type OnTestFailedHandler = (result: TaskResult) => Awaitable<void>
-export type OnTestFinishedHandler = (result: TaskResult) => Awaitable<void>
+/** @deprecated use `TestContext` instead */
+export type ExtendedContext = TaskContext & TestContext
+
+export type OnTestFailedHandler = (context: TestContext) => Awaitable<void>
+export type OnTestFinishedHandler = (context: TestContext) => Awaitable<void>
 
 export interface TaskHook<HookListener> {
   (fn: HookListener, timeout?: number): void

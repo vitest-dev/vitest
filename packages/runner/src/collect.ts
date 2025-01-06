@@ -1,4 +1,4 @@
-import type { FileSpec, VitestRunner } from './types/runner'
+import type { FileSpecification, VitestRunner } from './types/runner'
 import type { File, SuiteHooks } from './types/tasks'
 import { toArray } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
@@ -20,7 +20,7 @@ import {
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
 export async function collectTests(
-  specs: string[] | FileSpec[],
+  specs: string[] | FileSpecification[],
   runner: VitestRunner,
 ): Promise<File[]> {
   const files: File[] = []
@@ -60,7 +60,7 @@ export async function collectTests(
       mergeHooks(fileHooks, getHooks(defaultTasks))
 
       for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
-        if (c.type === 'test' || c.type === 'custom' || c.type === 'suite') {
+        if (c.type === 'test' || c.type === 'suite') {
           file.tasks.push(c)
         }
         else if (c.type === 'collector') {
@@ -106,6 +106,10 @@ export async function collectTests(
       false,
       config.allowOnly,
     )
+
+    if (file.mode === 'queued') {
+      file.mode = 'run'
+    }
 
     files.push(file)
   }

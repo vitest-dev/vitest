@@ -1,4 +1,4 @@
-import type { File, Suite, Test } from '@vitest/runner'
+import type { File, RunMode, Suite, Test } from '@vitest/runner'
 import type { Node } from 'estree'
 import type { RawSourceMap } from 'vite-node'
 import type { TestProject } from '../node/project'
@@ -32,7 +32,7 @@ interface LocalCallDefinition {
   end: number
   name: string
   type: 'suite' | 'test'
-  mode: 'run' | 'skip' | 'only' | 'todo'
+  mode: RunMode
   task: ParsedSuite | ParsedFile | ParsedTest
 }
 

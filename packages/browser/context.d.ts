@@ -173,6 +173,27 @@ export interface UserEvent {
    */
   upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
   /**
+   * Copies the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#copy} testing-library API
+   */
+  copy: () => Promise<void>
+  /**
+   * Cuts the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#cut} testing-library API
+   */
+  cut: () => Promise<void>
+  /**
+   * Pastes the copied or cut content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#paste} testing-library API
+   */
+  paste: () => Promise<void>
+  /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
    * This API is faster than using `userEvent.type` or `userEvent.keyboard`, but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`).
@@ -303,6 +324,23 @@ interface LocatorSelectors {
 
 export interface Locator extends LocatorSelectors {
   /**
+   * Selector string that will be used to locate the element by the browser provider.
+   * You can use this string in the commands API:
+   * ```ts
+   * // playwright
+   * function test({ selector, iframe }) {
+   *   await iframe.locator(selector).click()
+   * }
+   * // webdriverio
+   * function test({ selector, browser }) {
+   *   await browser.$(selector).click()
+   * }
+   * ```
+   * @see {@link https://vitest.dev/guide/browser/locators#selector}
+   */
+  readonly selector: string
+
+  /**
    * Click on an element. You can use the options to set the cursor position.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
    */
@@ -397,6 +435,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#all}
    */
   all(): Locator[]
+  /**
+   * Returns a locator for the nth element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#nth}
+   */
+  nth(index: number): Locator
+  /**
+   * Returns a locator for the first element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#first}
+   */
+  first(): Locator
+  /**
+   * Returns a locator for the last element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#last}
+   */
+  last(): Locator
 }
 
 export interface UserEventTabOptions {

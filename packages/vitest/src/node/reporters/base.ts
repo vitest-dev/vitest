@@ -8,7 +8,7 @@ import { toArray } from '@vitest/utils'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
-import { isCI, isDeno, isNode } from '../../utils/env'
+import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
 import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
 import { countTestErrors, divider, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
@@ -34,7 +34,7 @@ export abstract class BaseReporter implements Reporter {
   private _timeStart = formatTimeString(new Date())
 
   constructor(options: BaseOptions = {}) {
-    this.isTTY = options.isTTY ?? ((isNode || isDeno) && process.stdout?.isTTY && !isCI)
+    this.isTTY = options.isTTY ?? isTTY
   }
 
   onInit(ctx: Vitest) {
@@ -71,11 +71,15 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
+  /**
+   * Callback invoked with a single `Task` from `onTaskUpdate`
+   */
   protected printTask(task: Task) {
     if (
       !('filepath' in task)
       || !task.result?.state
-      || task.result?.state === 'run') {
+      || task.result?.state === 'run'
+      || task.result?.state === 'queued') {
       return
     }
 
@@ -152,7 +156,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${c.dim(getStateSymbol(test))} ${getTestName(test, c.dim(' > '))}${suffix}`)
+        this.log(`   ${getStateSymbol(test)} ${getTestName(test, c.dim(' > '))}${suffix}`)
       }
     }
   }
@@ -221,7 +225,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (this.ctx.filenamePattern) {
-      this.log(BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern))
+      this.log(BADGE_PADDING + c.dim(' Filename pattern: ') + c.blue(this.ctx.filenamePattern.join(', ')))
     }
 
     if (this.ctx.configOverride.testNamePattern) {
@@ -268,9 +272,9 @@ export abstract class BaseReporter implements Reporter {
         write('\n')
       }
 
-      const project = log.taskId
-        ? this.ctx.getProjectByTaskId(log.taskId)
-        : this.ctx.getRootTestProject()
+      const project = task
+        ? this.ctx.getProjectByName(task.file.projectName || '')
+        : this.ctx.getRootProject()
 
       const stack = log.browser
         ? (project.browser?.parseStacktrace(log.origin) || [])
@@ -437,7 +441,7 @@ export abstract class BaseReporter implements Reporter {
     const benches = getTests(files)
     const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 
-    this.log(withLabel('cyan', 'BENCH', 'Summary\n'))
+    this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
 
     for (const bench of topBenches) {
       const group = bench.suite || bench.file
@@ -447,7 +451,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       const groupName = getFullName(group, c.dim(' > '))
-      this.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
+      this.log(`  ${formatProjectName(bench.file.projectName)}${bench.name}${c.dim(` - ${groupName}`)}`)
 
       const siblings = group.tasks
         .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
@@ -511,7 +515,7 @@ export abstract class BaseReporter implements Reporter {
       const screenshotPaths = tasks.map(t => t.meta?.failScreenshotPath).filter(screenshot => screenshot != null)
 
       this.ctx.logger.printError(error, {
-        project: this.ctx.getProjectByTaskId(tasks[0].id),
+        project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),
         verbose: this.verbose,
         screenshotPaths,
         task: tasks[0],

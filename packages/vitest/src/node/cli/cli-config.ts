@@ -371,7 +371,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       name: {
         description:
-          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/config/#browser-name) for more information',
+          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information',
         argument: '<name>',
       },
       headless: {
@@ -408,6 +408,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
       },
+      connectTimeout: {
+        description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
+        argument: '<timeout>',
+      },
       orchestratorScripts: null,
       testerScripts: null,
       commands: null,
@@ -416,11 +420,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
       screenshotFailures: null,
       locators: null,
       testerHtmlPath: null,
+      instances: null,
     },
   },
   pool: {
     description:
-      'Specify pool, if not running in the browser (default: `threads`)',
+      'Specify pool, if not running in the browser (default: `forks`)',
     argument: '<pool>',
     subcommands: null, // don't support custom objects
   },
@@ -580,11 +585,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   inspector: null,
   testTimeout: {
-    description: 'Default timeout of a test in milliseconds (default: `5000`)',
+    description: 'Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   hookTimeout: {
-    description: 'Default hook timeout in milliseconds (default: `10000`)',
+    description: 'Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   bail: {
@@ -780,6 +785,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   printConsoleTrace: {
     description: 'Always print console stack traces',
   },
+  includeTaskLocation: {
+    description: 'Collect test and suite locations in the `location` property',
+  },
 
   // CLI only options
   run: {
@@ -799,7 +807,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   mergeReports: {
     description:
-      'Paths to blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
+      'Path to a blob reports directory. If this options is used, Vitest won\'t run any tests, it will only report previously recorded tests',
     argument: '[path]',
     transform(value) {
       if (!value || typeof value === 'boolean') {
@@ -839,7 +847,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
   poolMatchGlobs: null,
   deps: null,
   name: null,
-  includeTaskLocation: null,
   snapshotEnvironment: null,
   compare: null,
   outputJson: null,

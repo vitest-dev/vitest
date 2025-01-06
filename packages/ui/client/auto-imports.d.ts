@@ -118,6 +118,7 @@ declare global {
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
+  const selectedTest: typeof import('./composables/params')['selectedTest']
   const setIframeViewport: typeof import('./composables/api')['setIframeViewport']
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
@@ -127,6 +128,7 @@ declare global {
   const showDashboard: typeof import('./composables/navigation')['showDashboard']
   const showLine: typeof import('./composables/codemirror')['showLine']
   const showNavigationPanel: typeof import('./composables/navigation')['showNavigationPanel']
+  const showReport: typeof import('./composables/navigation')['showReport']
   const showRightPanel: typeof import('./composables/navigation')['showRightPanel']
   const showSource: typeof import('./composables/codemirror')['showSource']
   const syncRef: typeof import('@vueuse/core')['syncRef']
@@ -269,6 +271,7 @@ declare global {
   const useResizing: typeof import("./composables/browser")["useResizing"]
   const useRoute: typeof import('vue-router')['useRoute']
   const useRouter: typeof import('vue-router')['useRouter']
+  const useSSRWidth: typeof import('@vueuse/core')['useSSRWidth']
   const useScreenOrientation: typeof import('@vueuse/core')['useScreenOrientation']
   const useScreenSafeArea: typeof import('@vueuse/core')['useScreenSafeArea']
   const useScriptTag: typeof import('@vueuse/core')['useScriptTag']
@@ -342,4 +345,13 @@ declare global {
   // @ts-ignore
   export type { Component, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
+  // @ts-ignore
+  export type { ViewportSize } from './composables/browser'
+  import('./composables/browser')
+  // @ts-ignore
+  export type { ModuleType, ModuleNode, ModuleLink, ModuleGraph, ModuleGraphController, ModuleGraphConfig, ModuleLabelItem } from './composables/module-graph'
+  import('./composables/module-graph')
+  // @ts-ignore
+  export type { Params } from './composables/params'
+  import('./composables/params')
 }

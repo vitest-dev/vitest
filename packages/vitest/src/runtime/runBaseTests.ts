@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
@@ -18,15 +18,19 @@ import { getWorkerState, resetModules } from './utils'
 // browser shouldn't call this!
 export async function run(
   method: 'run' | 'collect',
-  files: FileSpec[],
+  files: FileSpecification[],
   config: SerializedConfig,
   environment: ResolvedTestEnvironment,
   executor: VitestExecutor,
 ): Promise<void> {
   const workerState = getWorkerState()
 
+  const isIsolatedThreads = config.pool === 'threads' && (config.poolOptions?.threads?.isolate ?? true)
+  const isIsolatedForks = config.pool === 'forks' && (config.poolOptions?.forks?.isolate ?? true)
+  const isolate = isIsolatedThreads || isIsolatedForks
+
   await setupGlobalEnv(config, environment, executor)
-  await startCoverageInsideWorker(config.coverage, executor)
+  await startCoverageInsideWorker(config.coverage, executor, { isolate })
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
@@ -50,14 +54,7 @@ export async function run(
         = performance.now() - workerState.durations.environment
 
       for (const file of files) {
-        const isIsolatedThreads
-          = config.pool === 'threads'
-          && (config.poolOptions?.threads?.isolate ?? true)
-        const isIsolatedForks
-          = config.pool === 'forks'
-          && (config.poolOptions?.forks?.isolate ?? true)
-
-        if (isIsolatedThreads || isIsolatedForks) {
+        if (isolate) {
           executor.mocker.reset()
           resetModules(workerState.moduleCache, true)
         }
@@ -77,7 +74,7 @@ export async function run(
         vi.restoreAllMocks()
       }
 
-      await stopCoverageInsideWorker(config.coverage, executor)
+      await stopCoverageInsideWorker(config.coverage, executor, { isolate })
     },
   )
 

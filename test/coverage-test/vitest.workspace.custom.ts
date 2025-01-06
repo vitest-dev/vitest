@@ -66,6 +66,7 @@ export default defineWorkspace([
         BROWSER_TESTS,
 
         // Other non-provider-specific tests that should be run on browser mode as well
+        '**/isolation.test.ts',
         '**/include-exclude.test.ts',
         '**/allow-external.test.ts',
         '**/ignore-hints.test.ts',
@@ -90,6 +91,7 @@ export default defineWorkspace([
         BROWSER_TESTS,
 
         // Other non-provider-specific tests that should be run on browser mode as well
+        '**/isolation.test.ts',
         '**/include-exclude.test.ts',
         '**/allow-external.test.ts',
         '**/ignore-hints.test.ts',

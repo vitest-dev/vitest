@@ -1,8 +1,11 @@
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  server: {
+    watch: null,
+  },
   test: {
-    reporters: 'basic',
+    reporters: 'verbose',
     isolate: false,
     poolOptions: {
       threads: {

@@ -1,11 +1,10 @@
-import type { File, Suite, Task } from '@vitest/runner'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
-import type { WorkspaceSpec } from '../pool'
+import type { TestModule, TestSuite } from '../reporters'
+import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { getNames, getTests } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { CoverageProviderMap } from '../../integrations/coverage'
 import { createVitest } from '../create'
@@ -144,15 +143,6 @@ export async function prepareVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  // running "vitest --browser.headless"
-  if (typeof options.browser === 'object' && !('enabled' in options.browser)) {
-    options.browser.enabled = true
-  }
-
-  if (typeof options.typecheck?.only === 'boolean') {
-    options.typecheck.enabled ??= true
-  }
-
   const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)
@@ -168,15 +158,14 @@ export async function prepareVitest(
   return ctx
 }
 
-export function processCollected(ctx: Vitest, files: File[], options: CliOptions) {
+export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions) {
   let errorsPrinted = false
 
   forEachSuite(files, (suite) => {
-    const errors = suite.result?.errors || []
-    errors.forEach((error) => {
+    suite.errors().forEach((error) => {
       errorsPrinted = true
       ctx.logger.printError(error, {
-        project: ctx.getProjectByName(suite.file.projectName),
+        project: suite.project,
       })
     })
   })
@@ -192,7 +181,7 @@ export function processCollected(ctx: Vitest, files: File[], options: CliOptions
   return formatCollectedAsString(files).forEach(test => console.log(test))
 }
 
-export function outputFileList(files: WorkspaceSpec[], options: CliOptions) {
+export function outputFileList(files: TestSpecification[], options: CliOptions) {
   if (typeof options.json !== 'undefined') {
     return outputJsonFileList(files, options)
   }
@@ -200,7 +189,7 @@ export function outputFileList(files: WorkspaceSpec[], options: CliOptions) {
   return formatFilesAsString(files, options).map(file => console.log(file))
 }
 
-function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions) {
+function outputJsonFileList(files: TestSpecification[], options: CliOptions) {
   if (typeof options.json === 'boolean') {
     return console.log(JSON.stringify(formatFilesAsJSON(files), null, 2))
   }
@@ -211,7 +200,7 @@ function outputJsonFileList(files: WorkspaceSpec[], options: CliOptions) {
   }
 }
 
-function formatFilesAsJSON(files: WorkspaceSpec[]) {
+function formatFilesAsJSON(files: TestSpecification[]) {
   return files.map((file) => {
     const result: any = {
       file: file.moduleId,
@@ -224,7 +213,7 @@ function formatFilesAsJSON(files: WorkspaceSpec[]) {
   })
 }
 
-function formatFilesAsString(files: WorkspaceSpec[], options: CliOptions) {
+function formatFilesAsString(files: TestSpecification[], options: CliOptions) {
   return files.map((file) => {
     let name = relative(options.root || process.cwd(), file.moduleId)
     if (file.project.name) {
@@ -234,7 +223,7 @@ function formatFilesAsString(files: WorkspaceSpec[], options: CliOptions) {
   })
 }
 
-function processJsonOutput(files: File[], options: CliOptions) {
+function processJsonOutput(files: TestModule[], options: CliOptions) {
   if (typeof options.json === 'boolean') {
     return console.log(JSON.stringify(formatCollectedAsJSON(files), null, 2))
   }
@@ -246,45 +235,62 @@ function processJsonOutput(files: File[], options: CliOptions) {
   }
 }
 
-function forEachSuite(tasks: Task[], callback: (suite: Suite) => void) {
-  tasks.forEach((task) => {
-    if (task.type === 'suite') {
-      callback(task)
-      forEachSuite(task.tasks, callback)
+function forEachSuite(modules: TestModule[], callback: (suite: TestSuite | TestModule) => void) {
+  modules.forEach((testModule) => {
+    callback(testModule)
+    for (const suite of testModule.children.allSuites()) {
+      callback(suite)
     }
   })
 }
 
-export function formatCollectedAsJSON(files: File[]) {
-  return files.map((file) => {
-    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
-    return tests.map((test) => {
-      const result: any = {
-        name: getNames(test).slice(1).join(' > '),
-        file: file.filepath,
+export interface TestCollectJSONResult {
+  name: string
+  file: string
+  projectName?: string
+  location?: { line: number; column: number }
+}
+
+export function formatCollectedAsJSON(files: TestModule[]) {
+  const results: TestCollectJSONResult[] = []
+
+  files.forEach((file) => {
+    for (const test of file.children.allTests()) {
+      if (test.skipped()) {
+        continue
       }
-      if (test.file.projectName) {
-        result.projectName = test.file.projectName
+      const result: TestCollectJSONResult = {
+        name: test.fullName,
+        file: test.module.moduleId,
+      }
+      if (test.project.name) {
+        result.projectName = test.project.name
       }
       if (test.location) {
         result.location = test.location
       }
-      return result
-    })
-  }).flat()
+      results.push(result)
+    }
+  })
+  return results
 }
 
-export function formatCollectedAsString(files: File[]) {
-  return files.map((file) => {
-    const tests = getTests(file).filter(test => test.mode === 'run' || test.mode === 'only')
-    return tests.map((test) => {
-      const name = getNames(test).join(' > ')
-      if (test.file.projectName) {
-        return `[${test.file.projectName}] ${name}`
+export function formatCollectedAsString(testModules: TestModule[]) {
+  const results: string[] = []
+
+  testModules.forEach((testModule) => {
+    for (const test of testModule.children.allTests()) {
+      if (test.skipped()) {
+        continue
       }
-      return name
-    })
-  }).flat()
+      const fullName = `${test.module.task.name} > ${test.fullName}`
+      results.push(
+        (test.project.name ? `[${test.project.name}] ` : '') + fullName,
+      )
+    }
+  })
+
+  return results
 }
 
 const envPackageNames: Record<
