@@ -215,21 +215,13 @@ export interface MockInstance<T extends Procedure = Procedure> {
    */
   mockRestore(): void
   /**
-   * Returns current permanent mock implementation if there is one. Temporary implementations with `mock...Once` are ignored.
+   * Returns current permanent mock implementation if there is one.
    *
    * If mock was created with `vi.fn`, it will consider passed down method as a mock implementation.
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
   getMockImplementation(): NormalizedPrecedure<T> | undefined
-  /**
-   * Returns the mock implementation used for the next mock call if there is one. This includes temporary implementations created with `mock...Once`.
-   *
-   * If mock was created with `vi.fn`, it will consider passed down method as a mock implementation.
-   *
-   * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
-   */
-  getNextMockImplementation(): NormalizedPrecedure<T> | undefined
   /**
    * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
    * @see https://vitest.dev/api/mock#mockimplementation
@@ -557,8 +549,7 @@ function enhanceSpy<T extends Procedure>(
     return stub
   }
 
-  stub.getMockImplementation = () => implementation
-  stub.getNextMockImplementation = () =>  
+  stub.getMockImplementation = () =>  
     implementationChangedTemporarily ? implementation : (onceImplementations.at(0) || implementation)
   stub.mockImplementation = (fn: T) => {
     implementation = fn

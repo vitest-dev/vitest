@@ -30,19 +30,7 @@ The custom function implementation in the types below is marked with a generic `
 function getMockImplementation(): T | undefined
 ```
 
-Returns current mock implementation if there is one. Temporary implementations with `mock...Once` are ignored.
-
-If the mock was created with [`vi.fn`](/api/vi#vi-fn), it will use the provided method as the mock implementation.
-
-If the mock was created with [`vi.spyOn`](/api/vi#vi-spyon), it will return `undefined` unless a custom implementation is provided.
-
-## getNextMockImplementation
-
-```ts
-function getNextMockImplementation(): T | undefined
-```
-
-Returns the mock implementation used for the next mock call if there is one. This includes temporary implementations created with `mock...Once`.
+Returns current mock implementation if there is one.
 
 If the mock was created with [`vi.fn`](/api/vi#vi-fn), it will use the provided method as the mock implementation.
 

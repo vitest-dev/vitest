@@ -494,34 +494,23 @@ describe('jest mock compat layer', () => {
     expect(dogMax.speak()).toBe('woof woof')
   })
 
-  it('returns only permanent implementations from getMockImplementation()', () => {
+  it('returns temporary implementations from getMockImplementation()', () => {
     const fn = vi.fn()
 
-    fn.mockImplementationOnce(() => 'mocked value')
+    const temporaryMockImplementation = () => 'mocked value'
+    fn.mockImplementationOnce(temporaryMockImplementation)
+    expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
+
+    // After calling it, it should be back to undefined
+    fn()
     expect(fn.getMockImplementation()).toBe(undefined)
 
     const mockImplementation = () => 'other mocked value'
     fn.mockImplementation(mockImplementation)
     expect(fn.getMockImplementation()).toBe(mockImplementation)
-  })
-
-  it('returns temporary implementations from getNextMockImplementation()', () => {
-    const fn = vi.fn()
-
-    const temporaryMockImplementation = () => 'mocked value'
-    fn.mockImplementationOnce(temporaryMockImplementation)
-    expect(fn.getNextMockImplementation()).toBe(temporaryMockImplementation)
-
-    // After calling it, it should be back to undefined
-    fn()
-    expect(fn.getNextMockImplementation()).toBe(undefined)
-
-    const mockImplementation = () => 'other mocked value'
-    fn.mockImplementation(mockImplementation)
-    expect(fn.getNextMockImplementation()).toBe(mockImplementation)
 
     // It should also overwrite permanent implementations
     fn.mockImplementationOnce(temporaryMockImplementation)
-    expect(fn.getNextMockImplementation()).toBe(temporaryMockImplementation)
+    expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
   })
 })
