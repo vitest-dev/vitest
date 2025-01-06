@@ -57,7 +57,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
 
   const state = () => defaultState || getWorkerState()
 
-  // group sync console.log calls with macro task
+  // group sync console.log calls with micro task
   function schedule(taskId: string) {
     const timer = timers.get(taskId)!
     const { stdoutTime, stderrTime } = timer

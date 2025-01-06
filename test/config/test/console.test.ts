@@ -1,3 +1,4 @@
+import type { UserConsoleLog } from 'vitest'
 import { expect, test, vi } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -20,4 +21,37 @@ test.each(['threads', 'vmThreads'] as const)(`disable intercept pool=%s`, async 
 
   const call = spy.mock.lastCall![0]
   expect(call.toString()).toBe('__test_console__\n')
+})
+
+test('group synchronous console logs', async () => {
+  const logs: UserConsoleLog[] = []
+  await runVitest({
+    root: './fixtures/console-batch',
+    reporters: [
+      'default',
+      {
+        onUserConsoleLog(log) {
+          logs.push(log)
+        },
+      },
+    ],
+  })
+  expect(logs.map(log => log.content)).toMatchInlineSnapshot(`
+    [
+      "[beforeAll]
+    ",
+      "[beforeEach]
+    ",
+      "a
+    b
+    ",
+      "c
+    d
+    ",
+      "[afterEach]
+    ",
+      "[afterAll]
+    ",
+    ]
+  `)
 })
