@@ -38,19 +38,27 @@ test('group synchronous console logs', async () => {
   })
   expect(logs.map(log => log.content)).toMatchInlineSnapshot(`
     [
-      "[beforeAll]
+      "[beforeAll 1]
     ",
-      "[beforeEach]
+      "[beforeAll 2]
     ",
-      "a
-    b
+      "[beforeEach 1]
     ",
-      "c
-    d
+      "[beforeEach 2]
     ",
-      "[afterEach]
+      "[test 1]
+    [test 2]
     ",
-      "[afterAll]
+      "[test 3]
+    [test 4]
+    ",
+      "[afterEach 2]
+    ",
+      "[afterEach 1]
+    ",
+      "[afterAll 2]
+    ",
+      "[afterAll 1]
     ",
     ]
   `)
