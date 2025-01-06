@@ -73,7 +73,7 @@ const prefixedBuiltins = new Set([
   'node:sea',
   'node:sqlite',
   'node:test',
-  'node:testreporters',
+  'node:test/reporters',
 ])
 
 const builtins = new Set([
