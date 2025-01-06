@@ -37,10 +37,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<
     string,
-    { stdoutTime: number; stderrTime: number; timer: any; cancel?: () => void }
+    { stdoutTime: number; stderrTime: number; cancel?: () => void }
   >()
 
-  // const { setTimeout, clearTimeout } = getSafeTimers()
   const { queueMicrotask } = getSafeTimers()
 
   function queueCancelableMicrotask(callback: () => void) {
@@ -72,17 +71,6 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         sendStderr(taskId)
       }
     })
-    // clearTimeout(timer.timer)
-    // timer.timer = setTimeout(() => {
-    //   if (stderrTime < stdoutTime) {
-    //     sendStderr(taskId)
-    //     sendStdout(taskId)
-    //   }
-    //   else {
-    //     sendStdout(taskId)
-    //     sendStderr(taskId)
-    //   }
-    // })
   }
   function sendStdout(taskId: string) {
     sendBuffer('stdout', taskId)
@@ -152,7 +140,6 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         timer = {
           stdoutTime: RealDate.now(),
           stderrTime: RealDate.now(),
-          timer: 0,
         }
         timers.set(id, timer)
       }
@@ -192,7 +179,6 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         timer = {
           stderrTime: RealDate.now(),
           stdoutTime: RealDate.now(),
-          timer: 0,
         }
         timers.set(id, timer)
       }
