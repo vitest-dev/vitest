@@ -939,13 +939,39 @@ callFunctionWithSideEffect()
 + const { value } = await import('./some/module.js')
 ```
 
-When running `vitest`, you can do this automatically by using `vi.hoisted` method.
+When running `vitest`, you can do this automatically by using `vi.hoisted` method. Under the hood, Vitest will convert static imports into dynamic ones with preserved live-bindings.
 
 ```diff
 - callFunctionWithSideEffect()
 import { value } from './some/module.js'
 + vi.hoisted(() => callFunctionWithSideEffect())
 ```
+
+::: warning IMPORTS ARE NOT AVAILABLE
+Running code before the imports means that you cannot access imported variables because they are not defined yet:
+
+```ts
+import { value } from './some/module.js'
+
+vi.hoisted(() => { value }) // throws an error // [!code warning]
+```
+
+This code will produce an error:
+
+```
+Cannot access '__vi_import_0__' before initialization
+```
+
+If you need to access a variable from another module inside of `vi.hoisted`, use dynamic import:
+
+```ts
+await vi.hoisted(async () => {
+  const { value } = await import('./some/module.js')
+})
+```
+
+However, it is discourage to import anything inside of `vi.hoisted` because imports are already hoisted - if you need to execute something before the tests are running, just execute it in the imported module itself.
+:::
 
 This method returns the value that was returned from the factory. You can use that value in your `vi.mock` factories if you need easy access to locally defined variables:
 
@@ -968,7 +994,7 @@ expect(originalMethod()).toBe(100)
 Note that this method can also be called asynchronously even if your environment doesn't support top-level await:
 
 ```ts
-const promised = await vi.hoisted(async () => {
+const json = await vi.hoisted(async () => {
   const response = await fetch('https://jsonplaceholder.typicode.com/posts')
   return response.json()
 })
