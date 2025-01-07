@@ -3,7 +3,6 @@ import type { DiffOptions } from '@vitest/utils/diff'
 import type { FileSpecification, VitestRunner } from './types/runner'
 import type {
   File,
-  HookCleanupCallback,
   HookListener,
   SequenceHooks,
   Suite,
@@ -32,21 +31,21 @@ const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.
 const unixNow = Date.now
 
 function updateSuiteHookState(
-  suite: Task,
+  task: Task,
   name: keyof SuiteHooks,
   state: TaskState,
   runner: VitestRunner,
 ) {
-  if (!suite.result) {
-    suite.result = { state: 'run' }
+  if (!task.result) {
+    task.result = { state: 'run' }
   }
-  if (!suite.result?.hooks) {
-    suite.result.hooks = {}
+  if (!task.result.hooks) {
+    task.result.hooks = {}
   }
-  const suiteHooks = suite.result.hooks
+  const suiteHooks = task.result.hooks
   if (suiteHooks) {
     suiteHooks[name] = state
-    updateTask('suite-hook-update', suite, runner)
+    updateTask('suite-hook-update', task, runner)
   }
 }
 
@@ -114,10 +113,10 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   name: T,
   runner: VitestRunner,
   args: SuiteHooks[T][0] extends HookListener<infer A, any> ? A : never,
-): Promise<HookCleanupCallback[]> {
+): Promise<unknown[]> {
   const sequence = runner.config.sequence.hooks
 
-  const callbacks: HookCleanupCallback[] = []
+  const callbacks: unknown[] = []
   // stop at file level
   const parentSuite: Suite | null = 'filepath' in suite ? null : suite.suite || suite.file
 
@@ -183,7 +182,7 @@ async function sendTasksUpdate(runner: VitestRunner) {
   }
 }
 
-async function callCleanupHooks(cleanups: HookCleanupCallback[]) {
+async function callCleanupHooks(cleanups: unknown[]) {
   await Promise.all(
     cleanups.map(async (fn) => {
       if (typeof fn !== 'function') {
@@ -202,6 +201,9 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   }
 
   if (test.result?.state === 'fail') {
+    // should not be possible to get here, I think this is just copy pasted from suite
+    // TODO: maybe someone fails tests in `beforeAll` hooks?
+    // https://github.com/vitest-dev/vitest/pull/7069
     updateTask('test-failed-early', test, runner)
     return
   }
@@ -223,7 +225,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     const retry = test.retry ?? 0
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
-      let beforeEachCleanups: HookCleanupCallback[] = []
+      let beforeEachCleanups: unknown[] = []
       try {
         await runner.onBeforeTryTask?.(test, {
           retry: retryCount,
@@ -310,8 +312,8 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         )
       }
 
-      delete test.onFailed
-      delete test.onFinished
+      test.onFailed = undefined
+      test.onFinished = undefined
 
       if (test.result.state === 'pass') {
         break
@@ -382,20 +384,23 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
   if (suite.result?.state === 'fail') {
     markTasksAsSkipped(suite, runner)
+    // failed during collection
     updateTask('suite-failed-early', suite, runner)
     return
   }
 
   const start = now()
 
+  const mode = suite.mode
+
   suite.result = {
-    state: 'run',
+    state: mode === 'skip' || mode === 'todo' ? mode : 'run',
     startTime: unixNow(),
   }
 
   updateTask('suite-prepare', suite, runner)
 
-  let beforeAllCleanups: HookCleanupCallback[] = []
+  let beforeAllCleanups: unknown[] = []
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
