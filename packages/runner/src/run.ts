@@ -135,6 +135,10 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 
   const hooks = getSuiteHooks(suite, name, sequence)
 
+  if (hooks.length === 0) {
+    return callbacks
+  }
+
   if (sequence === 'parallel') {
     callbacks.push(
       ...(await Promise.all(hooks.map(hook => (hook as any)(...args)))),
