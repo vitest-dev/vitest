@@ -228,6 +228,16 @@ describe('server correctly caches data', () => {
     expect(ssrFiles).toHaveLength(1)
     expect(webFiles).toHaveLength(1)
   })
+
+  it('correctly processes path containing git hash', async ({ viteNode, root }) => {
+    const gitPath = '/src/test@git+https+++git@github.com+test+module.git#4d28af3d661d5c8b7b23_bibis5ubruacouaifyvvr7mcey/index.mjs'
+    
+    await viteNode.fetchModule(gitPath, 'web')
+   
+    const fsPath = join(root, gitPath)
+
+    expect(viteNode.fetchCaches.web.has(fsPath)).toBe(true)
+  })
 })
 
 describe('externalize', () => {

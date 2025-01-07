@@ -53,7 +53,7 @@ export function normalizeRequestId(id: string, base?: string): string {
     .replace(/\?+$/, '') // remove end query mark
 }
 
-const postfixRE = /[?#].*$/
+const postfixRE = /(?<!\.git)[?#].*$/
 export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
 }
