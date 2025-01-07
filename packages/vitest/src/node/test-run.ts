@@ -144,11 +144,11 @@ export class TestRun {
 
     // Order of reporting is important here
     await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
-    await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseFinished', testCase)))
-    await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleFinished', module)))
+    await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseEnd', testCase)))
+    await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleEnd', module)))
 
-    await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModulePrepare', module)))
-    await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCasePrepare', testCase)))
+    await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModuleStart', module)))
+    await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCaseStart', testCase)))
     await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
   }
 

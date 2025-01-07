@@ -113,7 +113,7 @@ export class SummaryReporter implements Reporter {
     this.runningModules.set(module.id, initializeStats(module))
   }
 
-  onTestModulePrepare(module: TestModule) {
+  onTestModuleCollected(module: TestModule) {
     let stats = this.runningModules.get(module.id)
 
     if (!stats) {
@@ -162,7 +162,7 @@ export class SummaryReporter implements Reporter {
     stats.hook.visible = false
   }
 
-  onTestCasePrepare(test: TestCase) {
+  onTestCaseStart(test: TestCase) {
     // Track slow running tests only on verbose mode
     if (!this.options.verbose) {
       return
@@ -193,7 +193,7 @@ export class SummaryReporter implements Reporter {
     stats.tests.set(test.id, slowTest)
   }
 
-  onTestCaseFinished(test: TestCase) {
+  onTestCaseEnd(test: TestCase) {
     const stats = this.runningModules.get(test.module.id)
 
     if (!stats) {
@@ -217,7 +217,7 @@ export class SummaryReporter implements Reporter {
     }
   }
 
-  onTestModuleFinished(module: TestModule) {
+  onTestModuleEnd(module: TestModule) {
     const state = module.state()
     this.modules.completed++
 

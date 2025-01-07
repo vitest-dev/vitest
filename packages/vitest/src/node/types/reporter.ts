@@ -27,7 +27,7 @@ export interface Reporter {
     coverage?: unknown
   ) => Awaitable<void>
   /**
-   * @deprecated use `onTestModuleQueued`, `onTestModulePrepare`, `onTestModuleFinished`, `onTestCasePrepare`, `onTestCaseFinished` instead
+   * @deprecated use `onTestModuleQueued`, `onTestModuleStart`, `onTestModuleEnd`, `onTestCaseStart`, `onTestCaseEnd` instead
    */
   onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
   onTestRemoved?: (trigger?: string) => Awaitable<void>
@@ -58,19 +58,19 @@ export interface Reporter {
    * Called when the test file is loaded and the module is ready to run tests.
    */
   onTestModuleCollected?: (testModule: TestModule) => Awaitable<void>
-  onTestModulePrepare?: (testModule: TestModule) => Awaitable<void>
-  onTestModuleFinished?: (testModule: TestModule) => Awaitable<void>
+  onTestModuleStart?: (testModule: TestModule) => Awaitable<void>
+  onTestModuleEnd?: (testModule: TestModule) => Awaitable<void>
 
   /**
    * Called before the `beforeEach` hooks for the test are run.
    * The `result()` will return either `pending` or `skipped`.
    */
-  onTestCasePrepare?: (testCase: TestCase) => Awaitable<void>
+  onTestCaseStart?: (testCase: TestCase) => Awaitable<void>
   /**
    * Called after the test and its hooks are finished running.
    * The `result()` cannot be `pending`.
    */
-  onTestCaseFinished?: (testCase: TestCase) => Awaitable<void>
+  onTestCaseEnd?: (testCase: TestCase) => Awaitable<void>
 
   onHookStart?: (hook: HookOptions) => Awaitable<void>
   onHookEnd?: (hook: HookOptions) => Awaitable<void>

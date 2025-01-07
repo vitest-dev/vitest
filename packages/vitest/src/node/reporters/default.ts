@@ -33,20 +33,20 @@ export class DefaultReporter extends BaseReporter {
     this.summary?.onTestModuleQueued(file)
   }
 
-  onTestModulePrepare(module: TestModule) {
-    this.summary?.onTestModulePrepare(module)
+  onTestModuleCollected(module: TestModule) {
+    this.summary?.onTestModuleCollected(module)
   }
 
-  onTestModuleFinished(module: TestModule) {
-    this.summary?.onTestModuleFinished(module)
+  onTestModuleEnd(module: TestModule) {
+    this.summary?.onTestModuleEnd(module)
   }
 
-  onTestCasePrepare(test: TestCase) {
-    this.summary?.onTestCasePrepare(test)
+  onTestCaseStart(test: TestCase) {
+    this.summary?.onTestCaseStart(test)
   }
 
-  onTestCaseFinished(test: TestCase) {
-    this.summary?.onTestCaseFinished(test)
+  onTestCaseEnd(test: TestCase) {
+    this.summary?.onTestCaseEnd(test)
   }
 
   onHookStart(hook: HookOptions) {

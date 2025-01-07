@@ -80,19 +80,19 @@ class CustomReporter implements Reporter {
     this.calls.push(`|${normalizeFilename(module)}| queued`)
   }
 
-  onTestModulePrepare(module: TestModule) {
+  onTestModuleStart(module: TestModule) {
     this.calls.push(`|${normalizeFilename(module)}| start`)
   }
 
-  onTestModuleFinished(module: TestModule) {
+  onTestModuleEnd(module: TestModule) {
     this.calls.push(`|${normalizeFilename(module)}| finish`)
   }
 
-  onTestCasePrepare(test: TestCase) {
+  onTestCaseStart(test: TestCase) {
     this.calls.push(`|${normalizeFilename(test.module)}| RUN ${test.name}`)
   }
 
-  onTestCaseFinished(test: TestCase) {
+  onTestCaseEnd(test: TestCase) {
     this.calls.push(`|${normalizeFilename(test.module)}| DONE ${test.name}`)
   }
 

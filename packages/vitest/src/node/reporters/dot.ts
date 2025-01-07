@@ -52,26 +52,26 @@ export class DotReporter extends BaseReporter {
     super.onFinished(files, errors)
   }
 
-  onTestModulePrepare(module: TestModule): void {
+  onTestModuleCollected(module: TestModule): void {
     for (const test of module.children.tests()) {
       // Dot reporter marks pending tests as running
-      this.onTestCasePrepare(test)
+      this.onTestCaseStart(test)
     }
   }
 
-  onTestCasePrepare(test: TestCase) {
+  onTestCaseStart(test: TestCase) {
     if (this.finishedTests.has(test.id)) {
       return
     }
     this.tests.set(test.id, test.result().state || 'run')
   }
 
-  onTestCaseFinished(test: TestCase) {
+  onTestCaseEnd(test: TestCase) {
     this.finishedTests.add(test.id)
     this.tests.set(test.id, test.result().state || 'skipped')
   }
 
-  onTestModuleFinished() {
+  onTestModuleEnd() {
     const columns = this.ctx.logger.getColumns()
 
     if (this.tests.size < columns) {
