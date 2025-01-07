@@ -1,7 +1,6 @@
 import type { TestSpecification } from 'vitest/node'
-import type { Reporter, TestCase, TestModule } from 'vitest/reporters'
+import type { HookOptions, Reporter, TestCase, TestModule } from 'vitest/reporters'
 import { sep } from 'node:path'
-import { normalize } from 'pathe'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -10,42 +9,66 @@ test('tasks are reported in correct order', async () => {
 
   const { stdout, stderr } = await runVitest({
     config: false,
-    include: ['./fixtures/task-parser-tests/*.test.ts'],
+    include: ['./fixtures/test-run-tests/*.test.ts'],
     fileParallelism: false,
-    reporters: [reporter],
+    reporters: [
+      // @ts-expect-error -- not sure why
+      reporter,
+    ],
     sequence: { sequencer: Sorter },
   })
 
   expect(stdout).toBe('')
   expect(stderr).toBe('')
 
-  // TODO: Missing hooks, queued is duplicated
   expect(reporter.calls).toMatchInlineSnapshot(`
     [
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| queued",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| start",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| RUN some test",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE some test",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE Fast test 1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| RUN Fast test 1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| RUN parallel slow tests 1.1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| RUN parallel slow tests 1.2",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE parallel slow tests 1.1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE parallel slow tests 1.2",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| DONE Skipped test 1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-1.test.ts| finish",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| queued",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| start",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| RUN some test",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE some test",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE Fast test 1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| RUN Fast test 1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| RUN parallel slow tests 2.1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| RUN parallel slow tests 2.2",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE parallel slow tests 2.1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE parallel slow tests 2.2",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| DONE Skipped test 1",
-      "|<process-cwd>/fixtures/task-parser-tests/example-2.test.ts| finish",
+      "|fixtures/test-run-tests/example-1.test.ts| queued",
+      "|fixtures/test-run-tests/example-1.test.ts| start",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeAll start (module)",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeAll end (module)",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeAll end (suite)",
+      "|fixtures/test-run-tests/example-1.test.ts| RUN some test",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test)",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-1.test.ts| DONE some test",
+      "|fixtures/test-run-tests/example-1.test.ts| afterEach start (test)",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-1.test.ts| DONE Fast test 1",
+      "|fixtures/test-run-tests/example-1.test.ts| RUN Fast test 1",
+      "|fixtures/test-run-tests/example-1.test.ts| RUN parallel slow tests 1.1",
+      "|fixtures/test-run-tests/example-1.test.ts| RUN parallel slow tests 1.2",
+      "|fixtures/test-run-tests/example-1.test.ts| beforeAll end (module)",
+      "|fixtures/test-run-tests/example-1.test.ts| DONE parallel slow tests 1.1",
+      "|fixtures/test-run-tests/example-1.test.ts| DONE parallel slow tests 1.2",
+      "|fixtures/test-run-tests/example-1.test.ts| afterAll start (module)",
+      "|fixtures/test-run-tests/example-1.test.ts| DONE Skipped test 1",
+      "|fixtures/test-run-tests/example-1.test.ts| finish",
+      "|fixtures/test-run-tests/example-2.test.ts| queued",
+      "|fixtures/test-run-tests/example-2.test.ts| start",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeAll start (module)",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeAll end (module)",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeAll end (suite)",
+      "|fixtures/test-run-tests/example-2.test.ts| RUN some test",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test)",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-2.test.ts| DONE some test",
+      "|fixtures/test-run-tests/example-2.test.ts| afterEach start (test)",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeEach end (test)",
+      "|fixtures/test-run-tests/example-2.test.ts| DONE Fast test 1",
+      "|fixtures/test-run-tests/example-2.test.ts| RUN Fast test 1",
+      "|fixtures/test-run-tests/example-2.test.ts| RUN parallel slow tests 2.1",
+      "|fixtures/test-run-tests/example-2.test.ts| RUN parallel slow tests 2.2",
+      "|fixtures/test-run-tests/example-2.test.ts| beforeAll end (module)",
+      "|fixtures/test-run-tests/example-2.test.ts| DONE parallel slow tests 2.1",
+      "|fixtures/test-run-tests/example-2.test.ts| DONE parallel slow tests 2.2",
+      "|fixtures/test-run-tests/example-2.test.ts| afterAll start (module)",
+      "|fixtures/test-run-tests/example-2.test.ts| DONE Skipped test 1",
+      "|fixtures/test-run-tests/example-2.test.ts| finish",
     ]
   `)
 })
@@ -54,23 +77,33 @@ class CustomReporter implements Reporter {
   calls: string[] = []
 
   onTestModuleQueued(module: TestModule) {
-    this.calls.push(`|${normalizeFilename(module.moduleId)}| queued`)
+    this.calls.push(`|${normalizeFilename(module)}| queued`)
   }
 
   onTestModulePrepare(module: TestModule) {
-    this.calls.push(`|${normalizeFilename(module.moduleId)}| start`)
+    this.calls.push(`|${normalizeFilename(module)}| start`)
   }
 
   onTestModuleFinished(module: TestModule) {
-    this.calls.push(`|${normalizeFilename(module.moduleId)}| finish`)
+    this.calls.push(`|${normalizeFilename(module)}| finish`)
   }
 
   onTestCasePrepare(test: TestCase) {
-    this.calls.push(`|${normalizeFilename(test.module.moduleId)}| RUN ${test.name}`)
+    this.calls.push(`|${normalizeFilename(test.module)}| RUN ${test.name}`)
   }
 
   onTestCaseFinished(test: TestCase) {
-    this.calls.push(`|${normalizeFilename(test.module.moduleId)}| DONE ${test.name}`)
+    this.calls.push(`|${normalizeFilename(test.module)}| DONE ${test.name}`)
+  }
+
+  onHookStart(hook: HookOptions) {
+    const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
+    this.calls.push(`|${normalizeFilename(module)}| ${hook.name} start (${hook.entity.type})`)
+  }
+
+  onHookEnd(hook: HookOptions) {
+    const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
+    this.calls.push(`|${normalizeFilename(module)}| ${hook.name} end (${hook.entity.type})`)
   }
 }
 
@@ -99,12 +132,9 @@ class Sorter {
   }
 }
 
-function normalizeFilename(filename: string) {
-  if (!filename.includes(process.cwd())) {
-    throw new Error(`Expected ${filename} to include ${process.cwd()}`)
-  }
-
-  return normalize(filename)
-    .replace(normalize(process.cwd()), '<process-cwd>')
+function normalizeFilename(module: TestModule) {
+  return module.moduleId
+    .replace(module.project.config.root, '')
     .replaceAll(sep, '/')
+    .substring(1)
 }

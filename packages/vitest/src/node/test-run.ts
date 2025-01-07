@@ -3,7 +3,7 @@ import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { TestCase, TestModule } from './reporters/reported-tasks'
+import type { HookOptions, TestCase, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 
 export class TestRun {
@@ -63,13 +63,12 @@ export class TestRun {
     const runningTestCases: TestCase[] = []
     const finishedTestCases: TestCase[] = []
 
-    for (const [id] of update) {
-      const task = this.vitest.state.idMap.get(id)
-      if (!task) {
-        continue
-      }
+    const startingHooks: HookOptions[] = []
+    const endingHooks: HookOptions[] = []
 
-      const entity = this.vitest.state.getReportedEntity(task)
+    for (const [id,,,event] of update) {
+      const task = this.vitest.state.idMap.get(id)
+      const entity = task && this.vitest.state.getReportedEntity(task)
 
       if (!entity) {
         continue
@@ -122,6 +121,19 @@ export class TestRun {
           }
         }
       }
+
+      if (event === 'suite-hook-update' && entity.task.result?.hooks) {
+        for (const entry of Object.entries(entity.task.result.hooks)) {
+          const [name, state] = entry as [keyof (typeof entity.task.result.hooks), (typeof entry[1])]
+
+          if (state === 'run' || state === 'queued') {
+            startingHooks.push({ name, entity })
+          }
+          else {
+            endingHooks.push({ name, entity })
+          }
+        }
+      }
     }
 
     // TODO: error handling
@@ -131,11 +143,13 @@ export class TestRun {
     await this.vitest.report('onTaskUpdate', update)
 
     // Order of reporting is important here
+    await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
     await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseFinished', testCase)))
     await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleFinished', module)))
 
     await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModulePrepare', module)))
     await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCasePrepare', testCase)))
+    await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {

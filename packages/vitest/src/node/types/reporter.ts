@@ -3,7 +3,7 @@ import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
-import type { TestCase, TestModule } from '../reporters/reported-tasks'
+import type { HookOptions, TestCase, TestModule } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 
 export interface Reporter {
@@ -71,6 +71,9 @@ export interface Reporter {
    * The `result()` cannot be `pending`.
    */
   onTestCaseFinished?: (testCase: TestCase) => Awaitable<void>
+
+  onHookStart?: (hook: HookOptions) => Awaitable<void>
+  onHookEnd?: (hook: HookOptions) => Awaitable<void>
 
   onCoverage?: (coverage: unknown) => Awaitable<void>
 }

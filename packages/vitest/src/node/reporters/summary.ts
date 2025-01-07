@@ -1,12 +1,10 @@
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
-import type { TestCase, TestModule } from './reported-tasks'
-import type { HookOptions } from './task-parser'
+import type { HookOptions, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
 import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
 import { formatProjectName, formatTime, formatTimeString, padSummaryTitle } from './renderers/utils'
 import { WindowRenderer } from './renderers/windowedRenderer'
-import { TaskParser } from './task-parser'
 
 const DURATION_UPDATE_INTERVAL_MS = 100
 const FINISHED_TEST_CLEANUP_TIME_MS = 1_000
@@ -43,7 +41,8 @@ interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
  * Reporter extension that renders summary and forwards all other logs above itself.
  * Intended to be used by other reporters, not as a standalone reporter.
  */
-export class SummaryReporter extends TaskParser implements Reporter {
+export class SummaryReporter implements Reporter {
+  private ctx!: Vitest
   private options!: Options
   private renderer!: WindowRenderer
 
@@ -252,19 +251,25 @@ export class SummaryReporter extends TaskParser implements Reporter {
     }
   }
 
-  private getHookStats({ file, id, type }: HookOptions) {
+  private getHookStats({ name, entity }: HookOptions) {
     // Track slow running hooks only on verbose mode
     if (!this.options.verbose) {
       return
     }
 
-    const stats = this.runningModules.get(file.id)
+    const module = entity.type === 'module' ? entity : entity.module
+    const stats = this.runningModules.get(module.id)
 
     if (!stats) {
       return
     }
 
-    return type === 'suite' ? stats : stats?.tests.get(id)
+    // afterEach hook has to be attached to module and test case has already finished
+    if (entity.type !== 'test' || name === 'afterEach') {
+      return stats
+    }
+
+    return stats.tests.get(entity.id)
   }
 
   private createSummary() {

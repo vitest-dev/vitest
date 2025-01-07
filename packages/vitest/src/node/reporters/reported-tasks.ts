@@ -3,6 +3,7 @@ import type {
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
+  SuiteHooks,
   TaskMeta,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
@@ -314,6 +315,11 @@ export interface TestSuiteStatistics {
   failed: number
   skipped: number
   todo: number
+}
+
+export interface HookOptions {
+  name: keyof SuiteHooks
+  entity: TestCase | TestSuite | TestModule
 }
 
 function createStatistics() {

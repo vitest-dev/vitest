@@ -80,6 +80,7 @@ export interface BuiltinReporterOptions {
 }
 
 export type {
+  HookOptions,
   TaskOptions,
 
   TestCollection,

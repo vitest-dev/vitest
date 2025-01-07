@@ -1,7 +1,7 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { File } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { BaseOptions } from './base'
-import type { TestCase, TestModule } from './reported-tasks'
+import type { HookOptions, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
 import { SummaryReporter } from './summary'
 
@@ -49,6 +49,14 @@ export class DefaultReporter extends BaseReporter {
     this.summary?.onTestCaseFinished(test)
   }
 
+  onHookStart(hook: HookOptions) {
+    this.summary?.onHookStart(hook)
+  }
+
+  onHookEnd(hook: HookOptions) {
+    this.summary?.onHookEnd(hook)
+  }
+
   onInit(ctx: Vitest) {
     super.onInit(ctx)
     this.summary?.onInit(ctx, { verbose: this.verbose })
@@ -66,11 +74,6 @@ export class DefaultReporter extends BaseReporter {
     }
 
     this.summary?.onPathsCollected(paths)
-  }
-
-  onTaskUpdate(packs: TaskResultPack[]) {
-    this.summary?.onTaskUpdate(packs)
-    super.onTaskUpdate(packs)
   }
 
   onWatcherRerun(files: string[], trigger?: string) {
