@@ -435,6 +435,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#all}
    */
   all(): Locator[]
+  /**
+   * Returns a locator for the nth element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#nth}
+   */
+  nth(index: number): Locator
+  /**
+   * Returns a locator for the first element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#first}
+   */
+  first(): Locator
+  /**
+   * Returns a locator for the last element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#last}
+   */
+  last(): Locator
 }
 
 export interface UserEventTabOptions {
