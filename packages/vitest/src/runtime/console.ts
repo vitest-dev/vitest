@@ -37,19 +37,31 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<
     string,
-    { stdoutTime: number; stderrTime: number; timer: any }
+    { stdoutTime: number; stderrTime: number; cancel?: () => void }
   >()
 
-  const { setTimeout, clearTimeout } = getSafeTimers()
+  const { queueMicrotask } = getSafeTimers()
+
+  function queueCancelableMicrotask(callback: () => void) {
+    let canceled = false
+    queueMicrotask(() => {
+      if (!canceled) {
+        callback()
+      }
+    })
+    return () => {
+      canceled = true
+    }
+  }
 
   const state = () => defaultState || getWorkerState()
 
-  // group sync console.log calls with macro task
+  // group sync console.log calls with micro task
   function schedule(taskId: string) {
     const timer = timers.get(taskId)!
     const { stdoutTime, stderrTime } = timer
-    clearTimeout(timer.timer)
-    timer.timer = setTimeout(() => {
+    timer.cancel?.()
+    timer.cancel = queueCancelableMicrotask(() => {
       if (stderrTime < stdoutTime) {
         sendStderr(taskId)
         sendStdout(taskId)
@@ -128,7 +140,6 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         timer = {
           stdoutTime: RealDate.now(),
           stderrTime: RealDate.now(),
-          timer: 0,
         }
         timers.set(id, timer)
       }
@@ -168,7 +179,6 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
         timer = {
           stderrTime: RealDate.now(),
           stdoutTime: RealDate.now(),
-          timer: 0,
         }
         timers.set(id, timer)
       }
