@@ -251,7 +251,7 @@ export class SummaryReporter implements Reporter {
     }
   }
 
-  private getHookStats({ name, entity }: HookOptions) {
+  private getHookStats({ entity }: HookOptions) {
     // Track slow running hooks only on verbose mode
     if (!this.options.verbose) {
       return
@@ -264,12 +264,7 @@ export class SummaryReporter implements Reporter {
       return
     }
 
-    // afterEach hook has to be attached to module and test case has already finished
-    if (entity.type !== 'test' || name === 'afterEach') {
-      return stats
-    }
-
-    return stats.tests.get(entity.id)
+    return entity.type === 'test' ? stats.tests.get(entity.id) : stats
   }
 
   private createSummary() {

@@ -485,14 +485,14 @@ export class Vitest {
         }
         if (task.type === 'test') {
           taskPacks.push(
-            [task.id, undefined, {}, 'test-prepare'],
-            [task.id, task.result, task.meta, 'test-finished'],
+            [task.id, undefined, {}, ['test-prepare']],
+            [task.id, task.result, task.meta, ['test-finished']],
           )
         }
         else if (task.type === 'suite') {
           taskPacks.push(
-            [task.id, undefined, {}, 'suite-prepare'],
-            [task.id, task.result, task.meta, 'suite-finished'],
+            [task.id, undefined, {}, ['suite-prepare']],
+            [task.id, task.result, task.meta, ['suite-finished']],
           )
         }
       }

@@ -45,7 +45,12 @@ function updateSuiteHookState(
   const suiteHooks = task.result.hooks
   if (suiteHooks) {
     suiteHooks[name] = state
-    updateTask('suite-hook-update', task, runner)
+
+    updateTask(
+      state === 'run' ? 'suite-hook-start' : 'suite-hook-end',
+      task,
+      runner,
+    )
   }
 }
 
@@ -152,12 +157,14 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   return callbacks
 }
 
-const packs = new Map<string, [TaskResult | undefined, TaskMeta, TaskUpdateEvent]>()
+const packs = new Map<string, [TaskResult | undefined, TaskMeta, TaskUpdateEvent[]]>()
 let updateTimer: any
 let previousUpdate: Promise<void> | undefined
 
 export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
-  packs.set(task.id, [task.result, task.meta, event])
+  const events = packs.get(task.id)?.[2] || []
+  events.push(event)
+  packs.set(task.id, [task.result, task.meta, events])
 
   const { clearTimeout, setTimeout } = getSafeTimers()
 

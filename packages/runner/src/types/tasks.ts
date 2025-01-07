@@ -174,7 +174,7 @@ export type TaskResultPack = [
   /**
    * The name of the event that triggered the update.
    */
-  event: TaskUpdateEvent,
+  event: TaskUpdateEvent[],
 ]
 
 export type TaskUpdateEvent =
@@ -185,7 +185,8 @@ export type TaskUpdateEvent =
   | 'test-retried'
   | 'suite-prepare'
   | 'suite-finished'
-  | 'suite-hook-update'
+  | 'suite-hook-start'
+  | 'suite-hook-end'
 
 export interface Suite extends TaskBase {
   type: 'suite'
