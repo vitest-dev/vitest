@@ -1,6 +1,6 @@
 import type { FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, isObject } from '@vitest/utils'
-import { getFixture } from './map'
+import { getTestFixture } from './map'
 
 export interface FixtureItem extends FixtureOptions {
   prop: string
@@ -15,13 +15,11 @@ export interface FixtureItem extends FixtureOptions {
   deps?: FixtureItem[]
 }
 
-export function mergeContextFixtures(
+export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
   fixtures: Record<string, any>,
-  context: { fixtures?: FixtureItem[] },
+  context: T,
   inject: (key: string) => unknown,
-): {
-    fixtures?: FixtureItem[]
-  } {
+): T {
   const fixtureOptionKeys = ['auto', 'injected']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
     ([prop, value]) => {
@@ -92,7 +90,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       return fn({})
     }
 
-    const fixtures = getFixture(context)
+    const fixtures = getTestFixture(context)
     if (!fixtures?.length) {
       return fn(context)
     }

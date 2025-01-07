@@ -1,10 +1,11 @@
 import type { Awaitable } from '@vitest/utils'
 import type { FixtureItem } from './fixture'
-import type { Custom, Suite, SuiteHooks, Test, TestContext } from './types/tasks'
+import type { Custom, Suite, SuiteCollector, SuiteHooks, Test, TestContext } from './types/tasks'
 
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
-const fixtureMap = new WeakMap()
+const testFixtureMap = new WeakMap()
+const suiteFixtureMap = new WeakMap()
 const hooksMap = new WeakMap()
 
 export function setFn(key: Test | Custom, fn: () => Awaitable<void>): void {
@@ -15,15 +16,26 @@ export function getFn<Task = Test | Custom>(key: Task): () => Awaitable<void> {
   return fnMap.get(key as any)
 }
 
-export function setFixture(
+export function setTestFixture(
   key: TestContext,
   fixture: FixtureItem[] | undefined,
 ): void {
-  fixtureMap.set(key, fixture)
+  testFixtureMap.set(key, fixture)
 }
 
-export function getFixture<Context = TestContext>(key: Context): FixtureItem[] {
-  return fixtureMap.get(key as any)
+export function setCollectorFixture(
+  key: SuiteCollector,
+  fixture: Record<string, unknown>,
+): void {
+  suiteFixtureMap.set(key, fixture)
+}
+
+export function getCollectorFixture(key: SuiteCollector): Record<string, unknown> | undefined {
+  return suiteFixtureMap.get(key)
+}
+
+export function getTestFixture<Context = TestContext>(key: Context): FixtureItem[] {
+  return testFixtureMap.get(key as any)
 }
 
 export function setHooks(key: Suite, hooks: SuiteHooks): void {

@@ -34,7 +34,7 @@ import {
   withTimeout,
 } from './context'
 import { mergeContextFixtures, withFixtures } from './fixture'
-import { getHooks, setFixture, setFn, setHooks } from './map'
+import { getCollectorFixture, getHooks, setCollectorFixture, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { createChainable } from './utils/chain'
 
@@ -336,7 +336,7 @@ function createSuiteCollector(
       value: context,
       enumerable: false,
     })
-    setFixture(context, options.fixtures)
+    setTestFixture(context, options.fixtures)
 
     if (handler) {
       setFn(
@@ -402,6 +402,13 @@ function createSuiteCollector(
     task,
     clear,
     on: addHook,
+    extend(fixtures) {
+      const oldFixtures = getCollectorFixture(collector)
+      setCollectorFixture(collector, {
+        ...oldFixtures,
+        ...fixtures,
+      })
+    },
   }
 
   function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
@@ -703,6 +710,11 @@ export function createTaskCollector(
   }
   taskFn.runIf = function (this: TestAPI, condition: any) {
     return condition ? this : this.skip
+  }
+
+  taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
+    const collector = getCurrentSuite()
+    collector.extend(fixtures)
   }
 
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
