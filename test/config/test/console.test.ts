@@ -1,4 +1,3 @@
-import type { UserConsoleLog } from 'vitest'
 import { expect, test, vi } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -24,42 +23,45 @@ test.each(['threads', 'vmThreads'] as const)(`disable intercept pool=%s`, async 
 })
 
 test('group synchronous console logs', async () => {
-  const logs: UserConsoleLog[] = []
-  await runVitest({
+  const { stdout } = await runVitest({
     root: './fixtures/console-batch',
-    reporters: [
-      'default',
-      {
-        onUserConsoleLog(log) {
-          logs.push(log)
-        },
-      },
-    ],
   })
-  expect(logs.map(log => log.content)).toMatchInlineSnapshot(`
-    [
-      "[beforeAll 1]
-    ",
-      "[beforeAll 2]
-    ",
-      "[beforeEach 1]
-    ",
-      "[beforeEach 2]
-    ",
-      "[test 1]
-    [test 2]
-    ",
-      "[test 3]
-    [test 4]
-    ",
-      "[afterEach 2]
-    ",
-      "[afterEach 1]
-    ",
-      "[afterAll 2]
-    ",
-      "[afterAll 1]
-    ",
-    ]
+  const logs = stdout
+    .split('\n')
+    .filter(row => row.length === 0 || row.startsWith('stdout | ') || row.startsWith('__TEST__'))
+    .join('\n')
+    .trim()
+  expect(logs).toMatchInlineSnapshot(`
+    "stdout | basic.test.ts
+    __TEST__ [beforeAll 1]
+
+    stdout | basic.test.ts
+    __TEST__ [beforeAll 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [beforeEach 1]
+
+    stdout | basic.test.ts > test
+    __TEST__ [beforeEach 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [test 1]
+    __TEST__ [test 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [test 3]
+    __TEST__ [test 4]
+
+    stdout | basic.test.ts > test
+    __TEST__ [afterEach 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [afterEach 1]
+
+    stdout | basic.test.ts
+    __TEST__ [afterAll 2]
+
+    stdout | basic.test.ts
+    __TEST__ [afterAll 1]"
   `)
 })
