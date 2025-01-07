@@ -49,7 +49,12 @@ export default (vitest: Vitest): ProcessPool => {
         }
         taskFile.tasks.push(taskTest)
         await methods.onCollected([taskFile])
-        await methods.onTaskUpdate(getTasks(taskFile).map(task => [task.id, task.result, task.meta]))
+        await methods.onTaskUpdate(getTasks(taskFile).map(task => [
+          task.id,
+          task.result,
+          task.meta,
+          task.type === 'test' ? 'test-finished' : 'suite-finished'
+        ]))
       }
     },
     close() {
