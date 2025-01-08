@@ -343,6 +343,10 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Task Metadata',
                 link: '/advanced/metadata',
               },
+              {
+                text: 'Reporters API',
+                link: '/advanced/api/reporters',
+              },
             ],
           },
           {
@@ -352,10 +356,6 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Running Tests',
                 link: '/advanced/guide/tests',
-              },
-              {
-                text: 'Test Lifecycle',
-                link: '/advanced/guide/lifecycle',
               },
               {
                 text: 'Extending Reporters',

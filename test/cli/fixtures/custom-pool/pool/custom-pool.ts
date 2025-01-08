@@ -53,7 +53,7 @@ export default (vitest: Vitest): ProcessPool => {
           task.id,
           task.result,
           task.meta,
-          task.type === 'test' ? 'test-finished' : 'suite-finished'
+          [task.type === 'test' ? 'test-finished' : 'suite-finished']
         ]))
       }
     },

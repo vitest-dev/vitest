@@ -7,7 +7,7 @@ import type { HookOptions, TestCase, TestModule } from '../reporters/reported-ta
 import type { TestSpecification } from '../spec'
 
 export interface Reporter {
-  onInit?: (ctx: Vitest) => void
+  onInit?: (vitest: Vitest) => void
   /**
    * @deprecated use `onTestRunStart` instead
    */
@@ -41,13 +41,13 @@ export interface Reporter {
   /**
    * Called when the new test run starts.
    */
-  onTestRunStart?: (specifications: TestSpecification[]) => Awaitable<void>
+  onTestRunStart?: (specifications: ReadonlyArray<TestSpecification>) => Awaitable<void>
   /**
    * Called when the test run is finished.
    */
   onTestRunEnd?: (
-    testModules: TestModule[],
-    errors: SerializedError[],
+    testModules: ReadonlyArray<TestModule>,
+    unhandledErrors: ReadonlyArray<SerializedError>,
     reason: 'passed' | 'interrupted' | 'failed'
   ) => Awaitable<void>
   /**

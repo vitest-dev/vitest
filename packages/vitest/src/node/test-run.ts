@@ -17,7 +17,7 @@ export class TestRun {
     this.suites = emptyCounters()
     this.suites.total = specifications.length
 
-    await this.vitest.report('onTestRunStart', specifications)
+    await this.vitest.report('onTestRunStart', [...specifications])
   }
 
   async enqueued(project: TestProject, file: RunnerTestFile) {
@@ -139,7 +139,7 @@ export class TestRun {
     const files = modules.map(m => m.task)
 
     await Promise.all([
-      this.vitest.report('onTestRunEnd', modules, errors as SerializedError[], state),
+      this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state),
       // TODO: in a perfect world, the coverage should be done in parallel to `onFinished`
       this.vitest.report('onFinished', files, errors, coverage),
     ])

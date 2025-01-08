@@ -36,6 +36,7 @@ export type { TestProject } from '../project'
  * @deprecated Use `TestModule` instead
  */
 export const TestFile = _TestFile
+export type { TestSpecification } from '../spec'
 export * from './benchmark'
 export type {
   JsonAssertionResult,
@@ -47,7 +48,7 @@ export type {
  */
 export type FileDiagnostic = _FileDiagnostic
 
-export { TestCase, TestModule, TestSuite } from './reported-tasks'
+export type { TestCase, TestModule, TestSuite } from './reported-tasks'
 
 export const ReportersMap = {
   'default': DefaultReporter,
