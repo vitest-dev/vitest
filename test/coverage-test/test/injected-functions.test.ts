@@ -14,11 +14,6 @@ test('filter out functions injected by plugin', async () => {
 
   const coverageMap = await readCoverageMap()
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/injected-functions.ts')
-  expect(fileCoverage.f).toMatchInlineSnapshot(`
-    {
-      "0": 1,
-    }
-  `)
   if (isV8Provider()) {
     expect(fileCoverage.fnMap).toMatchInlineSnapshot(`
       {
@@ -78,4 +73,9 @@ test('filter out functions injected by plugin', async () => {
       }
     `)
   }
+  expect(fileCoverage.f).toMatchInlineSnapshot(`
+    {
+      "0": 1,
+    }
+  `)
 })
