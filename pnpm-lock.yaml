@@ -262,6 +262,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  examples/repro:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   examples/sveltekit:
     devDependencies:
       '@sveltejs/adapter-auto':
