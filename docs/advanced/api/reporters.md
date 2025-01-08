@@ -21,7 +21,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
     - [`onHookEnd(afterEach)`](#onhookend)
     - [`onHookStart(afterAll)`](#onhookstart)
     - [`onHookEnd(afterAll)`](#onhookend)
-  - [`onTestModuleEnd`](ontestmoduleend)
+  - [`onTestModuleEnd`](#ontestmoduleend)
 - [`onTestRunEnd`](#ontestrunend)
 
 ::: warning
