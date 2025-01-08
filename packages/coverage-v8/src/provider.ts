@@ -369,7 +369,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
                 const endPos = offsetToPosition(sources.source, end)
                 const startSourcePos = originalPositionFor(traceMap, startPos)
                 const endSourcePos = originalPositionFor(traceMap, endPos)
-                if (startSourcePos.line === endSourcePos.line && startSourcePos.column === endSourcePos.column) {
+                if (startSourcePos.line === null && endSourcePos.line === null) {
                   return false
                 }
               }

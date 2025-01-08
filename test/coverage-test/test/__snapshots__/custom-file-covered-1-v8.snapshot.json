@@ -38,10 +38,65 @@
     "2": 0,
     "4": 1
   },
-  "branchMap": {},
-  "b": {},
+  "branchMap": {
+    "0": {
+      "type": "branch",
+      "line": 1,
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 18
+        }
+      },
+      "locations": [
+        {
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 18
+          }
+        }
+      ]
+    }
+  },
+  "b": {
+    "0": [
+      1
+    ]
+  },
   "fnMap": {
     "0": {
+      "name": "covered",
+      "decl": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 18
+        }
+      },
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 18
+        }
+      },
+      "line": 1
+    },
+    "1": {
       "name": "uncovered",
       "decl": {
         "start": {
@@ -67,6 +122,7 @@
     }
   },
   "f": {
-    "0": 0
+    "0": 1,
+    "1": 0
   }
 }
