@@ -30,10 +30,10 @@ test('coverage results matches snapshot', async () => {
     expect({ branches, functions }).toMatchInlineSnapshot(`
       {
         "branches": {
-          "covered": 7,
-          "pct": 87.5,
+          "covered": 5,
+          "pct": 83.33,
           "skipped": 0,
-          "total": 8,
+          "total": 6,
         },
         "functions": {
           "covered": 3,
@@ -67,16 +67,16 @@ test('coverage results matches snapshot', async () => {
       expect({ lines, statements }).toMatchInlineSnapshot(`
         {
           "lines": {
-            "covered": 36,
-            "pct": 81.81,
+            "covered": 35,
+            "pct": 81.39,
             "skipped": 0,
-            "total": 44,
+            "total": 43,
           },
           "statements": {
-            "covered": 36,
-            "pct": 81.81,
+            "covered": 35,
+            "pct": 81.39,
             "skipped": 0,
-            "total": 44,
+            "total": 43,
           },
         }
       `)
