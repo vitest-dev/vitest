@@ -800,6 +800,7 @@ export class Vitest {
   async cancelCurrentRun(reason: CancelReason): Promise<void> {
     this.isCancelling = true
     await Promise.all(this._onCancelListeners.splice(0).map(listener => listener(reason)))
+    await this.runningPromise
   }
 
   /** @internal */
@@ -937,6 +938,7 @@ export class Vitest {
       // environment is resolved inside a worker thread
       snapshotEnvironment: null as any,
     }
+    this.snapshot.options.updateSnapshot = 'all'
   }
 
   /**
@@ -944,6 +946,7 @@ export class Vitest {
    */
   public resetSnapshotUpdate(): void {
     delete this.configOverride.snapshotOptions
+    this.snapshot.options.updateSnapshot = this.config.snapshotOptions.updateSnapshot
   }
 
   /**
@@ -1113,7 +1116,6 @@ export class Vitest {
               this.logger.error('error during close', r.reason)
             }
           })
-          this.logger.logUpdate.done() // restore terminal cursor
         })
       })()
     }

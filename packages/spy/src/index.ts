@@ -215,12 +215,11 @@ export interface MockInstance<T extends Procedure = Procedure> {
    */
   mockRestore(): void
   /**
-   * Performs the same actions as `mockReset` and restores the inner implementation to the original function.
+   * Returns current permanent mock implementation if there is one.
    *
-   * Note that restoring a mock created with `vi.fn()` will set the implementation to an empty function that returns `undefined`. Restoring a mock created with `vi.fn(impl)` will restore the implementation to `impl`.
+   * If mock was created with `vi.fn`, it will consider passed down method as a mock implementation.
    *
-   * To automatically call this method before each test, enable the [`restoreMocks`](https://vitest.dev/config/#restoremocks) setting in the configuration.
-   * @see https://vitest.dev/api/mock#getmockimplementation
+   * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
   getMockImplementation(): NormalizedPrecedure<T> | undefined
   /**
@@ -575,7 +574,8 @@ function enhanceSpy<T extends Procedure>(
     return stub
   }
 
-  stub.getMockImplementation = () => implementation
+  stub.getMockImplementation = () =>
+    implementationChangedTemporarily ? implementation : (onceImplementations.at(0) || implementation)
   stub.mockImplementation = (fn: T) => {
     implementation = fn
     state.willCall(mockCall)

@@ -164,8 +164,8 @@ export class SnapshotClient {
       throw createMismatchError(
         `Snapshot \`${key || 'unknown'}\` mismatched`,
         snapshotState.expand,
-        actual?.trim(),
-        expected?.trim(),
+        rawSnapshot ? actual : actual?.trim(),
+        rawSnapshot ? expected : expected?.trim(),
       )
     }
   }

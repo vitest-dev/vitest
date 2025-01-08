@@ -387,6 +387,69 @@ It is recommended to use this only after the other locators don't work for your 
 
 - [testing-library's `ByTestId`](https://testing-library.com/docs/queries/bytestid/)
 
+## nth
+
+```ts
+function nth(index: number): Locator
+```
+
+This method returns a new locator that matches only a specific index within a multi-element query result. Unlike `elements()[n]`, the `nth` locator will be retried until the element is present.
+
+```html
+<div aria-label="one"><input/><input/><input/></div>
+<div aria-label="two"><input/></div>
+```
+
+```tsx
+page.getByRole('textbox').nth(0) // ✅
+page.getByRole('textbox').nth(4) // ❌
+```
+
+::: tip
+Before resorting to `nth`, you may find it useful to use chained locators to narrow down your search.
+Sometimes there is no better way to distinguish than by element position; although this can lead to flake, it's better than nothing.
+:::
+
+```tsx
+page.getByLabel('two').getByRole('input') // ✅ better alternative to page.getByRole('textbox').nth(3)
+page.getByLabel('one').getByRole('input') // ❌ too ambiguous
+page.getByLabel('one').getByRole('input').nth(1) // ✅ pragmatic compromise
+```
+
+## first
+
+```ts
+function first(): Locator
+```
+
+This method returns a new locator that matches only the first index of a multi-element query result.
+It is sugar for `nth(0)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').first() // ✅
+```
+
+## last
+
+```ts
+function last(): Locator
+```
+
+This method returns a new locator that matches only the last index of a multi-element query result.
+It is sugar for `nth(-1)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').last() // ✅
+```
+
 ## Methods
 
 All methods are asynchronous and must be awaited. Since Vitest 3, tests will fail if a method is not awaited.
