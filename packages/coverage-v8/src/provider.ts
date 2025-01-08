@@ -358,10 +358,10 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             functions = functions.filter((f) => {
               if (f.ranges.length === 1) {
                 const start = f.ranges[0].startOffset - wrapperLength
-                const end = f.ranges[0].endOffset - wrapperLength
+                const end = f.ranges[0].endOffset - wrapperLength - 1
                 if ([start, end].every(offset => offset >= 0 && offset < sources.source.length)) {
                   const startPos = offsetToPosition(sources.source, start)
-                  const endPos = offsetToPosition(sources.source, end - 1)
+                  const endPos = offsetToPosition(sources.source, end)
                   const startSourcePos = originalPositionFor(traceMap, startPos)
                   const endSourcePos = originalPositionFor(traceMap, endPos)
                   if (startSourcePos.line === null && endSourcePos.line === null) {
