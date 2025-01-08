@@ -6,14 +6,14 @@ test('filter out functions injected by plugin', async () => {
     include: ['fixtures/test/injected-functions.test.ts'],
     coverage: {
       reporter: ['json', 'html'],
-      include: ['fixtures/src/injected-functioins.ts'],
+      include: ['fixtures/src/injected-functions.ts'],
     },
     config: 'fixtures/configs/vitest.config.injected-functions.ts',
   })
   expect(stderr).toBe('')
 
   const coverageMap = await readCoverageMap()
-  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/injected-functioins.ts')
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/injected-functions.ts')
   expect(fileCoverage.f).toMatchInlineSnapshot(`
     {
       "0": 1,

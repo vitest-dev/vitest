@@ -1,4 +1,4 @@
 import { test } from 'vitest'
-import "../src/injected-functioins";
+import "../src/injected-functions";
 
 test('basic', () => {})
