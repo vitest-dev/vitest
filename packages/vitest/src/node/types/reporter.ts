@@ -3,6 +3,7 @@ import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
+import type { TestRunEndReason } from '../reporters'
 import type { HookOptions, TestCase, TestModule } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 
@@ -48,7 +49,7 @@ export interface Reporter {
   onTestRunEnd?: (
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
-    reason: 'passed' | 'interrupted' | 'failed'
+    reason: TestRunEndReason
   ) => Awaitable<void>
   /**
    * Called when the module is enqueued for testing. The file itself is not loaded yet.

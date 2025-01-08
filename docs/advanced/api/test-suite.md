@@ -129,7 +129,21 @@ for (const task of suite.children) {
 ```
 
 ::: warning
-Note that `suite.children` will only iterate the first level of nesting, it won't go deeper.
+Note that `suite.children` will only iterate the first level of nesting, it won't go deeper. If you need to iterate over all tests or suites, use [`children.allTests()`](/advanced/api/test-collection#alltests) or [`children.allSuites()`](/advanced/api/test-collection#allsuites). If you need to iterate over everything, use recursive function:
+
+```ts
+function visit(collection: TestCollection) {
+  for (const task of collection) {
+    if (task.type === 'suite') {
+      // report a suite
+      visit(task.children)
+    }
+    else {
+      // report a test
+    }
+  }
+}
+```
 :::
 
 ## ok

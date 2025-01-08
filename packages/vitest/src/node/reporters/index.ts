@@ -92,3 +92,5 @@ export type {
   TestResultPassed,
   TestResultSkipped,
 } from './reported-tasks'
+export type { SerializedError } from '@vitest/utils'
+export type TestRunEndReason = 'passed' | 'interrupted' | 'failed'

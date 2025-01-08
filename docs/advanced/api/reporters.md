@@ -24,12 +24,6 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
   - [`onTestModuleEnd`](#ontestmoduleend)
 - [`onTestRunEnd`](#ontestrunend)
 
-::: warning
-`onHookStart` and `onHookEnd` methods will not be called if these hooks did not run during the test run.
-
-Also notice that it's possible to have [`testCase.result()`](/advanced/api/test-case#result) with `passed` or `failed` state already when [`onTestCaseStart`](#ontestcasestart) is called. This can happen if test was running too fast and both hooks were scheduled to run in the same microtask.
-:::
-
 This guide lists all supported reporter methods. However, don't forget that instead of creating your own reporter, you can [extend existing one](/advanced/reporters) instead:
 
 ```ts [custom-reporter.js]
@@ -134,13 +128,19 @@ The third argument indicated why the test run was finished:
 
 ::: details Example
 ```ts
-import type { Reporter, TestSpecification } from 'vitest/reporters'
+import type {
+  Reporter,
+  SerializedError,
+  TestModule,
+  TestRunEndReason,
+  TestSpecification
+} from 'vitest/reporters'
 
 class MyReporter implements Reporter {
   onTestRunEnd(
     testModules: ReadonlyArray<TestModule>,
     unhandledErrors: ReadonlyArray<SerializedError>,
-    reason: 'passed' | 'interrupted' | 'failed'
+    reason: TestRunEndReason,
   ) {
     if (reason === 'passed') {
       testModules.forEach(module => console.log(module.moduleId, 'succeeded'))
@@ -165,4 +165,78 @@ export default new MyReporter()
 ```
 :::
 
+::: tip
+This method was added in Vitest 3, replacing `onFinished`, which is now deprecated.
+:::
+
 ## onCoverage
+
+```ts
+function onCoverage(coverage: unknown): Awaitable<void>
+```
+
+This hook is called after coverage reports were merged. Vitest doesn't provide coverage type for this method out of the box, but you can import it from `istanbul-lib-coverage` package:
+
+```ts
+import type { CoverageMap } from 'istanbul-lib-coverage'
+
+declare function onCoverage(coverage: CoverageMap): Awaitable<void>
+```
+
+## onTestModuleQueued
+
+```ts
+function onTestModuleQueued(testModule: TestModule): Awaitable<void>
+```
+
+This method is called right before Vitest imports the setup file and the test module itself. This means that `testModule` will have no [`children`](/advanced/api/test-suite#children) yet, but you can start reporting it as the next test to run.
+
+## onTestModuleCollected
+
+```ts
+function onTestModuleCollected(testModule: TestModule): Awaitable<void>
+```
+
+This method is called when all tests inside the file were collected, meaning [`testModule.children`](/advanced/api/test-suite#children) collection is populated, but tests don't have any results yet.
+
+## onTestModuleStart
+
+```ts
+function onTestModuleStart(testModule: TestModule): Awaitable<void>
+```
+
+This method is called right after [`onTestModuleCollected`](#ontestmodulecollected) unless Vitest runs in collection mode ([`vitest.collect()`](/advanced/api/vitest#collect) or `vitest collect` in the CLI), in this case it will not be called at all because there are no tests to run.
+
+## onTestModuleEnd
+
+```ts
+function onTestModuleEnd(testModule: TestModule): Awaitable<void>
+```
+
+This method is called when every test in the module finished running. This means, every test inside [`testModule.children`](/advanced/api/test-suite#children) will have a `test.result()` that is not equal to `pending`.
+
+## onHookStart
+
+::: warning
+`onHookStart` and `onHookEnd` methods will not be called if these hooks did not run during the test run.
+:::
+
+## onHookEnd
+
+::: warning
+`onHookStart` and `onHookEnd` methods will not be called if these hooks did not run during the test run.
+:::
+
+## onTestCaseStart
+
+```ts
+function onTestCaseStart(testCase: TestCase): Awaitable<void>
+```
+
+This method is called when the test starts to run.
+
+::: warning
+Notice that it's possible to have [`testCase.result()`](/advanced/api/test-case#result) with `passed` or `failed` state already when `onTestCaseStart` is called. This can happen if test was running too fast and both `onTestCaseStart` and `onTestCaseEnd` were scheduled to run in the same microtask.
+:::
+
+## onTestCaseEnd
