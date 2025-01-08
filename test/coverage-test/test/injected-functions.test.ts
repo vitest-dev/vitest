@@ -50,6 +50,29 @@ test('filter out functions injected by plugin', async () => {
         "0": {
           "decl": {
             "end": {
+              "column": 9,
+              "line": 1,
+            },
+            "start": {
+              "column": 0,
+              "line": 1,
+            },
+          },
+          "loc": {
+            "end": {
+              "column": 9,
+              "line": 1,
+            },
+            "start": {
+              "column": 0,
+              "line": 1,
+            },
+          },
+          "name": "prepended",
+        },
+        "1": {
+          "decl": {
+            "end": {
               "column": 20,
               "line": 1,
             },
@@ -75,7 +98,8 @@ test('filter out functions injected by plugin', async () => {
   }
   expect(fileCoverage.f).toMatchInlineSnapshot(`
     {
-      "0": 1,
+      "0": 0,
+      "1": 1,
     }
   `)
 })
