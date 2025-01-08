@@ -103,7 +103,7 @@ Error: error TS18003: No inputs were found in config file '<root>/tsconfig.empty
 "
 `;
 
-exports[`should fail > typecheks with custom tsconfig 1`] = `
+exports[`should fail > typechecks with custom tsconfig 1`] = `
 "TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.

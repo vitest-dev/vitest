@@ -590,7 +590,7 @@ IntersectionObserver === undefined
 
 ## Fake Timers
 
-This sections descibes how to work with [fake timers](/guide/mocking#timers).
+This sections describes how to work with [fake timers](/guide/mocking#timers).
 
 ### vi.advanceTimersByTime
 

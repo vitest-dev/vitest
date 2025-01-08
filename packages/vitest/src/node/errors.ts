@@ -27,7 +27,7 @@ export class IncludeTaskLocationDisabledError extends Error {
   code = 'VITEST_INCLUDE_TASK_LOCATION_DISABLED'
 
   constructor() {
-    super('Recieved line number filters while `includeTaskLocation` option is disabled')
+    super('Received line number filters while `includeTaskLocation` option is disabled')
   }
 }
 
