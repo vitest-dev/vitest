@@ -97,7 +97,7 @@ describe('testing vi utils', () => {
   test('vi.fn and Mock type', () => {
     // use case from https://github.com/vitest-dev/vitest/issues/4723#issuecomment-1851034249
 
-    // hypotetical library to be tested
+    // hypothetical library to be tested
     type SomeFn = (v: string) => number
     function acceptSomeFn(f: SomeFn) {
       f('hi')
@@ -107,7 +107,7 @@ describe('testing vi utils', () => {
     // no args are allowed even though it's not type safe
     const someFn1: Mock<SomeFn> = vi.fn()
 
-    // argument types are infered
+    // argument types are inferred
     const someFn2: Mock<SomeFn> = vi.fn((v) => {
       expectTypeOf(v).toEqualTypeOf<string>()
       return 0

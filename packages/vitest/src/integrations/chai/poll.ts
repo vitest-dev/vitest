@@ -7,7 +7,7 @@ import { getWorkerState } from '../../runtime/utils'
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
   // .poll is meant to retry matchers until they succeed, and
-  // snapshots will always succeed as long as the poll method doesn't thow an error
+  // snapshots will always succeed as long as the poll method doesn't throw an error
   // in this case using the `vi.waitFor` method is more appropriate
   'matchSnapshot',
   'toMatchSnapshot',

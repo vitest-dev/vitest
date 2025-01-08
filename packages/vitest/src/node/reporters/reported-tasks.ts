@@ -17,7 +17,7 @@ class ReportedTaskImplementation {
   public readonly task: RunnerTask
 
   /**
-   * The project assosiacted with the test or suite.
+   * The project associated with the test or suite.
    */
   public readonly project: TestProject
 

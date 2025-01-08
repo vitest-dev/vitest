@@ -236,7 +236,7 @@ export class SummaryReporter implements Reporter {
 
     const left = this.modules.total - this.modules.completed
 
-    // Keep finished tests visibe in summary for a while if there are more tests left.
+    // Keep finished tests visible in summary for a while if there are more tests left.
     // When a new test starts in onTestFilePrepare it will take this ones place.
     // This reduces flickering by making summary more stable.
     if (left > this.maxParallelTests) {

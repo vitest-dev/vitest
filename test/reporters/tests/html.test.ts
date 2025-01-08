@@ -16,8 +16,8 @@ describe('html reporter', async () => {
 
     await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root, env: { NO_COLOR: '1' } }, [testFile])
 
-    const metaJsonGzipeed = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
-    const metaJson = zlib.gunzipSync(metaJsonGzipeed).toString('utf-8')
+    const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
+    const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
     resultJson.config = {} // doesn't matter for a test

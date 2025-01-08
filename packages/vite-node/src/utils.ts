@@ -68,7 +68,13 @@ export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)
 }
 
-const prefixedBuiltins = new Set(['node:test'])
+// https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
+const prefixedBuiltins = new Set([
+  'node:sea',
+  'node:sqlite',
+  'node:test',
+  'node:test/reporters',
+])
 
 const builtins = new Set([
   ...builtinModules,
