@@ -5,6 +5,7 @@ export {
   getCurrentTest,
   getFn,
   getHooks,
+  getTestFilepath,
   setFn,
   setHooks,
 } from '@vitest/runner'

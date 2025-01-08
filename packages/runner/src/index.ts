@@ -12,6 +12,7 @@ export {
   createTaskCollector,
   describe,
   getCurrentSuite,
+  getTestFilepath,
   it,
   suite,
   test,
