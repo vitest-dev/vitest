@@ -23,6 +23,7 @@ import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
 
 import { BaseCoverageProvider } from 'vitest/coverage'
+import { offsetToPosition, originalPositionFor, TraceMap } from 'vitest/utils'
 import { version } from '../package.json' with { type: 'json' }
 
 type TransformResults = Map<string, FetchResult>
@@ -277,6 +278,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       originalSource: sourcesContent[0],
       source: code || sourcesContent[0],
       sourceMap: {
+        // sourcemap: map,
         sourcemap: excludeGeneratedCode(code, {
           ...map,
           version: 3,
@@ -348,6 +350,32 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
           // If file was executed by vite-node we'll need to add its wrapper
           const wrapperLength = sources.isExecuted ? WRAPPER_LENGTH : 0
+          // console.log({ sources, wrapperLength, url })
+          // console.log(...functions)
+
+          // filter out functions without mappings,
+          // for example, "export getter" injected by Vite ssr transform.
+          // https://github.com/vitest-dev/vitest/issues/7130
+          if (sources.isExecuted && sources.sourceMap) {
+            const traceMap = new TraceMap(sources.sourceMap.sourcemap)
+            functions = functions.filter((f) => {
+              if (f.ranges.length === 1) {
+                const start = f.ranges[0].startOffset - wrapperLength
+                const end = f.ranges[0].endOffset - wrapperLength
+                if (start < 0) {
+                  return true
+                }
+                const startPos = offsetToPosition(sources.source, start)
+                const endPos = offsetToPosition(sources.source, end)
+                const startSourcePos = originalPositionFor(traceMap, startPos)
+                const endSourcePos = originalPositionFor(traceMap, endPos)
+                if (startSourcePos.line === endSourcePos.line && startSourcePos.column === endSourcePos.column) {
+                  return false
+                }
+              }
+              return true
+            })
+          }
 
           const converter = v8ToIstanbul(
             url,
@@ -365,6 +393,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             this.ctx.logger.error(`Failed to convert coverage for ${url}.\n`, error)
           }
 
+          // const converted = converter.toIstanbul()
+          // console.log(Object.values(converted)[0])
+          // coverageMap.merge(converted)
           coverageMap.merge(converter.toIstanbul())
         }),
       )

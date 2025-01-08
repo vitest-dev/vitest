@@ -1,6 +1,7 @@
 export {
   lineSplitRE,
   offsetToLineNumber,
+  offsetToPosition,
   positionToOffset,
 } from '@vitest/utils'
 export {
