@@ -43,6 +43,11 @@ test('filter out functions injected by plugin', async () => {
         },
       }
     `)
+    expect(fileCoverage.f).toMatchInlineSnapshot(`
+      {
+        "0": 1,
+      }
+    `)
   }
   else {
     expect(fileCoverage.fnMap).toMatchInlineSnapshot(`
@@ -95,11 +100,11 @@ test('filter out functions injected by plugin', async () => {
         },
       }
     `)
+    expect(fileCoverage.f).toMatchInlineSnapshot(`
+      {
+        "0": 0,
+        "1": 1,
+      }
+    `)
   }
-  expect(fileCoverage.f).toMatchInlineSnapshot(`
-    {
-      "0": 0,
-      "1": 1,
-    }
-  `)
 })
