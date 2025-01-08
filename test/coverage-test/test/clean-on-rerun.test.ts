@@ -15,13 +15,11 @@ test('{ cleanOnReRun: false } should invalidate and preserve previous coverage',
   // Initially only "sum" should be covered
   expect(await getFunctionCoverageCounts('math.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "sum": 1,
     }
   `)
   expect(await getFunctionCoverageCounts('even.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "isEven": 1,
     }
   `)
@@ -39,14 +37,12 @@ test('{ cleanOnReRun: false } should invalidate and preserve previous coverage',
   // Sum should not be covered. Multiply should be.
   expect(await getFunctionCoverageCounts('math.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "multiply": 1,
     }
   `)
   // Results of non-changed file should preserve
   expect(await getFunctionCoverageCounts('even.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "isEven": 1,
     }
   `)
@@ -65,14 +61,12 @@ test('{ cleanOnReRun: false } should invalidate and preserve previous coverage',
   // Sum and multiply should not be covered. Subtract should be.
   expect(await getFunctionCoverageCounts('math.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "subtract": 1,
     }
   `)
   // Results of non-changed file should preserve
   expect(await getFunctionCoverageCounts('even.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "isEven": 1,
     }
   `)
@@ -92,7 +86,6 @@ test('{ cleanOnReRun: true } remove previous coverage results', async () => {
   // Initially only "sum" should be covered
   expect(await getFunctionCoverageCounts('math.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "sum": 1,
     }
   `)
@@ -111,7 +104,6 @@ test('{ cleanOnReRun: true } remove previous coverage results', async () => {
   // Sum should not be covered. Multiply should be.
   expect(await getFunctionCoverageCounts('math.ts')).toMatchInlineSnapshot(`
     {
-      "get": 1,
       "multiply": 1,
     }
   `)

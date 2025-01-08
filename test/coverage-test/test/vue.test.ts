@@ -30,16 +30,16 @@ test('coverage results matches snapshot', async () => {
     expect({ branches, functions }).toMatchInlineSnapshot(`
       {
         "branches": {
-          "covered": 6,
-          "pct": 85.71,
+          "covered": 4,
+          "pct": 80,
           "skipped": 0,
-          "total": 7,
+          "total": 5,
         },
         "functions": {
-          "covered": 4,
-          "pct": 66.66,
+          "covered": 2,
+          "pct": 50,
           "skipped": 0,
-          "total": 6,
+          "total": 4,
         },
       }
     `)

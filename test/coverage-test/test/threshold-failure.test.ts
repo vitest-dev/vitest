@@ -49,7 +49,7 @@ test('failing absolute thresholds', async () => {
 
   if (isV8Provider()) {
     expect(stderr).toContain('ERROR: Uncovered lines (6) exceed "**/fixtures/src/math.ts" threshold (5)')
-    expect(stderr).toContain('ERROR: Uncovered functions (6) exceed "**/fixtures/src/math.ts" threshold (2)')
+    expect(stderr).toContain('ERROR: Uncovered functions (3) exceed "**/fixtures/src/math.ts" threshold (2)')
     expect(stderr).toContain('ERROR: Uncovered statements (6) exceed "**/fixtures/src/math.ts" threshold (1)')
   }
   else {
