@@ -40,3 +40,25 @@ export function offsetToLineNumber(source: string, offset: number): number {
   }
   return line + 1
 }
+
+export function offsetToPosition(
+  source: string,
+  offset: number,
+): { line: number; column: number } {
+  const lineLengths = source
+    .split(/(?<=\n)|(?<=\r\n)/)
+    .map(line => line.length)
+  let acc = 0
+  for (let i = 0; i < lineLengths.length; i++) {
+    if (offset <= acc + lineLengths[i]) {
+      return {
+        line: i + 1,
+        column: offset - acc,
+      }
+    }
+    acc += lineLengths[i]
+  }
+  throw new Error(
+    `offset is longer than source length! offset ${offset} > length ${source.length}`,
+  )
+}
