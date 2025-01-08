@@ -3,6 +3,6 @@ import { defineProject } from 'vitest/config'
 export default defineProject({
   test: {
     name: 'node',
-    include: ['src/server/**/*.ts', 'src/shared/**/*.ts'],
+    include: ['fixtures/filterWorkspaces/server/**/*.ts', 'fixtures/filterWorkspaces/shared/**/*.ts'],
   },
 })
