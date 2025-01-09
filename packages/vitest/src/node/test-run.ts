@@ -74,6 +74,7 @@ export class TestRun {
           // Skipped tests need to be reported manually once test module has finished
           for (const test of entity.children.allTests()) {
             if (test.result().state === 'skipped') {
+              runningTestCases.push(test)
               finishedTestCases.push(test)
             }
           }
@@ -109,13 +110,24 @@ export class TestRun {
     await this.vitest.report('onTaskUpdate', update)
 
     await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModuleStart', module)))
-    await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCaseStart', testCase)))
+
+    for (const testCase of runningTestCases) {
+      await this.vitest.report('onTestCaseStart', testCase)
+
+      const index = finishedTestCases.findIndex(t => t.id === testCase.id)
+
+      // Make sure test case is reported as ended before next test case starts
+      if (index >= 0) {
+        finishedTestCases.splice(index, 1)
+        await this.vitest.report('onTestCaseEnd', testCase)
+      }
+    }
 
     await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseEnd', testCase)))
     await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleEnd', module)))
 
-    await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
     await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
+    await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {

@@ -133,7 +133,9 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 
   const hooks = getSuiteHooks(suite, name, sequence)
 
-  updateSuiteHookState(currentTask, name, 'run', runner)
+  if (hooks.length > 0) {
+    updateSuiteHookState(currentTask, name, 'run', runner)
+  }
 
   if (sequence === 'parallel') {
     callbacks.push(
@@ -146,7 +148,9 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     }
   }
 
-  updateSuiteHookState(currentTask, name, 'pass', runner)
+  if (hooks.length > 0) {
+    updateSuiteHookState(currentTask, name, 'pass', runner)
+  }
 
   if (name === 'afterEach' && parentSuite) {
     callbacks.push(
@@ -411,9 +415,13 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
+
+    updateTask('suite-finished', suite, runner)
   }
   else if (suite.mode === 'todo') {
     suite.result.state = 'todo'
+
+    updateTask('suite-finished', suite, runner)
   }
   else {
     try {
