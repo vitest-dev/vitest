@@ -354,7 +354,7 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
   )
 }
 
-function displayDiff(diff: string | undefined, logger: ErrorLogger) {
+export function displayDiff(diff: string | undefined, logger: ErrorLogger) {
   if (diff) {
     logger.error(`\n${diff}\n`)
   }
