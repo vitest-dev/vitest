@@ -1,170 +1,146 @@
-import type { TestSpecification } from 'vitest/node'
+import type { TestSpecification, UserConfig } from 'vitest/node'
 import type { HookOptions, Reporter, TestCase, TestModule } from 'vitest/reporters'
 import { sep } from 'node:path'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, ts } from '../../test-utils'
 
-test('tasks are reported in correct order', async () => {
+test('single test case', async () => {
+  const calls = await run({
+    'single-test.test.ts': ts`
+      import { test } from 'vitest';
+
+      test('example', () => {});
+    `,
+  })
+
+  expect(calls).toMatchInlineSnapshot(`
+    [
+      "onTestModuleQueued (single-test.test.ts)",
+      "onTestModuleStart (single-test.test.ts)",
+      "onTestCaseStart |example| (single-test.test.ts)",
+      "onTestCaseEnd |example| (single-test.test.ts)",
+      "onTestModuleEnd (single-test.test.ts)",
+    ]
+  `)
+})
+
+test('multiple test cases', async () => {
+  const calls = await run({
+    'multiple-test.test.ts': ts`
+      import { test } from 'vitest';
+
+      test('first', () => {});
+      test('second', () => {});
+    `,
+  })
+
+  expect(calls).toMatchInlineSnapshot(`
+    [
+      "onTestModuleQueued (multiple-test.test.ts)",
+      "onTestModuleStart (multiple-test.test.ts)",
+      "onTestCaseStart |first| (multiple-test.test.ts)",
+      "onTestCaseStart |second| (multiple-test.test.ts)",
+      "onTestCaseEnd |first| (multiple-test.test.ts)",
+      "onTestCaseEnd |second| (multiple-test.test.ts)",
+      "onTestModuleEnd (multiple-test.test.ts)",
+    ]
+  `)
+})
+
+test('multiple test modules', async () => {
+  const calls = await run({
+    'first.test.ts': ts`
+      import { test } from 'vitest';
+
+      test('first test case', () => {});
+    `,
+    'second.test.ts': ts`
+      import { test } from 'vitest';
+
+      test('second test case', () => {});
+    `,
+  })
+
+  expect(calls).toMatchInlineSnapshot(`
+    [
+      "onTestModuleQueued (first.test.ts)",
+      "onTestModuleStart (first.test.ts)",
+      "onTestCaseStart |first test case| (first.test.ts)",
+      "onTestCaseEnd |first test case| (first.test.ts)",
+      "onTestModuleEnd (first.test.ts)",
+      "onTestModuleQueued (second.test.ts)",
+      "onTestModuleStart (second.test.ts)",
+      "onTestCaseStart |second test case| (second.test.ts)",
+      "onTestCaseEnd |second test case| (second.test.ts)",
+      "onTestModuleEnd (second.test.ts)",
+    ]
+  `)
+})
+
+async function run(structure: Parameters<typeof runInlineTests>[0]) {
   const reporter = new CustomReporter()
 
-  const { stdout, stderr } = await runVitest({
+  const config: UserConfig = {
     config: false,
-    include: ['./fixtures/test-run-tests/*.test.ts'],
     fileParallelism: false,
     reporters: [
-      // @ts-expect-error -- not sure why
+    // @ts-expect-error -- not sure why
       reporter,
     ],
-    sequence: { sequencer: Sorter },
-  })
+    sequence: {
+      sequencer: class Sorter {
+        sort(files: TestSpecification[]) {
+          return files.sort((a, b) => a.moduleId.localeCompare(b.moduleId))
+        }
+
+        shard(files: TestSpecification[]) {
+          return files
+        }
+      },
+    },
+  }
+
+  const { stdout, stderr } = await runInlineTests(structure, config)
 
   expect(stdout).toBe('')
   expect(stderr).toBe('')
 
-  // TODO: Let's split this into multiple smaller ones. Split the fixtures into smaller files too.
-  expect(reporter.calls).toMatchInlineSnapshot(`
-    [
-      "|fixtures/test-run-tests/example-1.test.ts| queued",
-      "|fixtures/test-run-tests/example-1.test.ts| start",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeAll start (module)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeAll end (module)",
-      "|fixtures/test-run-tests/example-1.test.ts| RUN some test",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeAll start (suite)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach end (test)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach end (test)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterEach end (test)",
-      "|fixtures/test-run-tests/example-1.test.ts| DONE some test",
-      "|fixtures/test-run-tests/example-1.test.ts| DONE Fast test 1",
-      "|fixtures/test-run-tests/example-1.test.ts| RUN Fast test 1",
-      "|fixtures/test-run-tests/example-1.test.ts| RUN parallel slow tests 1.1",
-      "|fixtures/test-run-tests/example-1.test.ts| RUN parallel slow tests 1.2",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeAll start (suite)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterAll start (suite)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (parallel slow tests 1.1)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (parallel slow tests 1.2)",
-      "|fixtures/test-run-tests/example-1.test.ts| DONE parallel slow tests 1.1",
-      "|fixtures/test-run-tests/example-1.test.ts| DONE parallel slow tests 1.2",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (parallel slow tests 1.1)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterEach start (test) (parallel slow tests 1.1)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeEach start (test) (parallel slow tests 1.2)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterEach start (test) (parallel slow tests 1.2)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeAll start (module)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterAll start (module)",
-      "|fixtures/test-run-tests/example-1.test.ts| beforeAll end (module)",
-      "|fixtures/test-run-tests/example-1.test.ts| afterAll end (module)",
-      "|fixtures/test-run-tests/example-1.test.ts| DONE Skipped test 1",
-      "|fixtures/test-run-tests/example-1.test.ts| finish",
-      "|fixtures/test-run-tests/example-2.test.ts| queued",
-      "|fixtures/test-run-tests/example-2.test.ts| start",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeAll start (module)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeAll end (module)",
-      "|fixtures/test-run-tests/example-2.test.ts| RUN some test",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeAll start (suite)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach end (test)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach end (test)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterEach end (test)",
-      "|fixtures/test-run-tests/example-2.test.ts| DONE some test",
-      "|fixtures/test-run-tests/example-2.test.ts| DONE Fast test 1",
-      "|fixtures/test-run-tests/example-2.test.ts| RUN Fast test 1",
-      "|fixtures/test-run-tests/example-2.test.ts| RUN parallel slow tests 2.1",
-      "|fixtures/test-run-tests/example-2.test.ts| RUN parallel slow tests 2.2",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterEach start (test) (some test)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeAll start (suite)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterAll start (suite)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterEach start (test) (Fast test 1)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (parallel slow tests 2.1)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (parallel slow tests 2.2)",
-      "|fixtures/test-run-tests/example-2.test.ts| DONE parallel slow tests 2.1",
-      "|fixtures/test-run-tests/example-2.test.ts| DONE parallel slow tests 2.2",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (parallel slow tests 2.1)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterEach start (test) (parallel slow tests 2.1)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeEach start (test) (parallel slow tests 2.2)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterEach start (test) (parallel slow tests 2.2)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeAll start (module)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterAll start (module)",
-      "|fixtures/test-run-tests/example-2.test.ts| beforeAll end (module)",
-      "|fixtures/test-run-tests/example-2.test.ts| afterAll end (module)",
-      "|fixtures/test-run-tests/example-2.test.ts| DONE Skipped test 1",
-      "|fixtures/test-run-tests/example-2.test.ts| finish",
-    ]
-  `)
-})
+  return reporter.calls
+}
 
 class CustomReporter implements Reporter {
   calls: string[] = []
 
   onTestModuleQueued(module: TestModule) {
-    this.calls.push(`|${normalizeFilename(module)}| queued`)
+    this.calls.push(`onTestModuleQueued (${normalizeFilename(module)})`)
   }
 
   onTestModuleStart(module: TestModule) {
-    this.calls.push(`|${normalizeFilename(module)}| start`)
+    this.calls.push(`onTestModuleStart (${normalizeFilename(module)})`)
   }
 
   onTestModuleEnd(module: TestModule) {
-    this.calls.push(`|${normalizeFilename(module)}| finish`)
+    this.calls.push(`onTestModuleEnd (${normalizeFilename(module)})`)
   }
 
   onTestCaseStart(test: TestCase) {
-    this.calls.push(`|${normalizeFilename(test.module)}| RUN ${test.name}`)
+    this.calls.push(`onTestCaseStart |${test.name}| (${normalizeFilename(test.module)})`)
   }
 
   onTestCaseEnd(test: TestCase) {
-    this.calls.push(`|${normalizeFilename(test.module)}| DONE ${test.name}`)
+    this.calls.push(`onTestCaseEnd |${test.name}| (${normalizeFilename(test.module)})`)
   }
 
-  onHookStart(hook: HookOptions) {
+  __onHookStart(hook: HookOptions) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
-    const name = hook.entity.type === 'test' ? ` (${hook.entity.name})` : ''
-    this.calls.push(`|${normalizeFilename(module)}| ${hook.name} start (${hook.entity.type})${name}`)
+    const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
+    this.calls.push(`onHookStart [${hook.name} / ${hook.entity.type}]${name} (${normalizeFilename(module)})`)
   }
 
-  onHookEnd(hook: HookOptions) {
+  __onHookEnd(hook: HookOptions) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
-    this.calls.push(`|${normalizeFilename(module)}| ${hook.name} end (${hook.entity.type})`)
-  }
-}
-
-class Sorter {
-  sort(files: TestSpecification[]) {
-    return files.sort((a, b) => {
-      const idA = Number.parseInt(
-        a.moduleId.match(/example-(\d*)\.test\.ts/)![1],
-      )
-      const idB = Number.parseInt(
-        b.moduleId.match(/example-(\d*)\.test\.ts/)![1],
-      )
-
-      if (idA > idB) {
-        return 1
-      }
-      if (idA < idB) {
-        return -1
-      }
-      return 0
-    })
-  }
-
-  shard(files: TestSpecification[]) {
-    return files
+    const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
+    this.calls.push(`onHookEnd [${hook.name} / ${hook.entity.type}]${name} (${normalizeFilename(module)})`)
   }
 }
 

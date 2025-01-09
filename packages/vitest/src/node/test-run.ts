@@ -108,13 +108,13 @@ export class TestRun {
     // "onTaskUpdate" in parallel with others or before all or after all?
     await this.vitest.report('onTaskUpdate', update)
 
-    // Order of reporting is important here
-    await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
+    await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModuleStart', module)))
+    await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCaseStart', testCase)))
+
     await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseEnd', testCase)))
     await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleEnd', module)))
 
-    await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModuleStart', module)))
-    await Promise.all(runningTestCases.map(testCase => this.vitest.report('onTestCaseStart', testCase)))
+    await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
     await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
   }
 

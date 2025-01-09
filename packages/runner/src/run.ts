@@ -131,13 +131,9 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     )
   }
 
-  updateSuiteHookState(currentTask, name, 'run', runner)
-
   const hooks = getSuiteHooks(suite, name, sequence)
 
-  if (hooks.length === 0) {
-    return callbacks
-  }
+  updateSuiteHookState(currentTask, name, 'run', runner)
 
   if (sequence === 'parallel') {
     callbacks.push(
