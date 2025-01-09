@@ -184,7 +184,7 @@ export class TestCase extends ReportedTaskImplementation {
   public diagnostic(): TestDiagnostic | undefined {
     const result = this.task.result
     // startTime should always be available if the test has properly finished
-    if (!result || result.state === 'run' || result.state === 'queued' || !result.startTime) {
+    if (!result || !result.startTime) {
       return undefined
     }
     const duration = result.duration || 0
