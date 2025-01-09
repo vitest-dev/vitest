@@ -46,8 +46,14 @@ function updateSuiteHookState(
   if (suiteHooks) {
     suiteHooks[name] = state
 
+    let event: TaskUpdateEvent = state === 'run' ? 'before-hook-start' : 'before-hook-end'
+
+    if (name === 'afterAll' || name === 'afterEach') {
+      event = state === 'run' ? 'after-hook-start' : 'after-hook-end'
+    }
+
     updateTask(
-      state === 'run' ? 'suite-hook-start' : 'suite-hook-end',
+      event,
       task,
       runner,
     )

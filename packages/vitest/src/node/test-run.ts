@@ -88,16 +88,15 @@ export class TestRun {
           finishedTestCases.push(entity)
         }
 
-        if ((event === 'suite-hook-start' || event === 'suite-hook-end') && entity.task.result?.hooks) {
-          for (const hook of Object.keys(entity.task.result.hooks)) {
-            const name = hook as keyof (typeof entity.task.result.hooks)
+        if (event.startsWith('before-hook') || event.startsWith('after-hook')) {
+          const list = event.endsWith('-start') ? startingHooks : endingHooks
+          const isBefore = event.startsWith('before-hook')
 
-            if (event === 'suite-hook-start') {
-              startingHooks.push({ name, entity } as ReportedHookContext)
-            }
-            else {
-              endingHooks.push({ name, entity } as ReportedHookContext)
-            }
+          if (entity.type === 'test') {
+            list.push({ name: isBefore ? 'beforeEach' : 'afterEach', entity })
+          }
+          else {
+            list.push({ name: isBefore ? 'beforeAll' : 'afterAll', entity })
           }
         }
       }
@@ -114,23 +113,28 @@ export class TestRun {
     for (const testCase of runningTestCases) {
       await this.vitest.report('onTestCaseStart', testCase)
 
-      const startIndex = startingHooks.findIndex(hook => hook.entity.id === testCase.id)
-      if (startIndex >= 0) {
-        await this.vitest.report('onHookStart', startingHooks.splice(startIndex, 1)[0])
-      }
+      for (const name of ['beforeEach', 'afterEach'] as const) {
+        const start = startingHooks.filter(hook => hook.name === name && hook.entity.id === testCase.id)
+        const end = endingHooks.filter(hook => hook.name === name && hook.entity.id === testCase.id)
 
-      const endIndex = endingHooks.findIndex(hook => hook.entity.id === testCase.id)
-      if (endIndex >= 0) {
-        await this.vitest.report('onHookEnd', endingHooks.splice(endIndex, 1)[0])
+        for (const hook of start) {
+          const index = startingHooks.findIndex(h => h === hook)
+          await this.vitest.report('onHookStart', startingHooks.splice(index, 1)[0])
+        }
+
+        for (const hook of end) {
+          const index = endingHooks.findIndex(h => h === hook)
+          await this.vitest.report('onHookEnd', endingHooks.splice(index, 1)[0])
+        }
       }
 
       const finishedIndex = finishedTestCases.findIndex(t => t.id === testCase.id)
       if (finishedIndex >= 0) {
-        finishedTestCases.splice(finishedIndex, 1)
-        await this.vitest.report('onTestCaseEnd', testCase)
+        await this.vitest.report('onTestCaseEnd', finishedTestCases.splice(finishedIndex, 1)[0])
       }
     }
 
+    // TODO: Likely not correct atm
     await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
     await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
 

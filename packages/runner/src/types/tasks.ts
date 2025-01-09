@@ -185,8 +185,10 @@ export type TaskUpdateEvent =
   | 'test-retried'
   | 'suite-prepare'
   | 'suite-finished'
-  | 'suite-hook-start'
-  | 'suite-hook-end'
+  | 'before-hook-start'
+  | 'before-hook-end'
+  | 'after-hook-start'
+  | 'after-hook-end'
 
 export interface Suite extends TaskBase {
   type: 'suite'
