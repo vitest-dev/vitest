@@ -169,7 +169,7 @@ function printErrorInner(
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.diff) {
-    displayDiff(e.diff, logger)
+    logger.error(`\n${e.diff}\n`)
   }
 
   // if the error provide the frame
@@ -352,12 +352,6 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
       + 'To fix this issue, change the file extension to .mjs or add "type": "module" in your package.json.',
     ),
   )
-}
-
-export function displayDiff(diff: string | undefined, logger: ErrorLogger) {
-  if (diff) {
-    logger.error(`\n${diff}\n`)
-  }
 }
 
 function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
