@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "test:html": "pnpm vitest --reporter=html",
     "test:threads": "vitest --project threads",
     "test:forks": "vitest --project forks",
     "test:vmThreads": "vitest --project vmThreads",
