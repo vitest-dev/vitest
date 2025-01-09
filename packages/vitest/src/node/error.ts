@@ -53,8 +53,8 @@ export function capturePrintError(
     highlight: ctx.logger.highlight.bind(ctx.logger),
   }
   const result = printError(error, ctx, logger, {
-    ...options,
     showCodeFrame: false,
+    ...options,
   })
   return { nearest: result?.nearest, output }
 }
