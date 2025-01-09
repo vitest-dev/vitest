@@ -1,8 +1,8 @@
+/* eslint-disable prefer-template */
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions, Logger } from './logger'
 import type { TestProject } from './project'
-/* eslint-disable prefer-template */
 import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
