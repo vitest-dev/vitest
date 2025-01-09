@@ -2,7 +2,6 @@ import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions, Logger } from './logger'
 import type { TestProject } from './project'
-/* eslint-disable prefer-template */
 import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
@@ -324,13 +323,13 @@ function printModuleWarningForPackage(
       + `You might want to create an issue to the package ${c.bold(
         `"${name}"`,
       )} asking `
-      + 'them to ship the file in .mjs extension or add "type": "module" in their package.json.'
-      + '\n\n'
-      + 'As a temporary workaround you can try to inline the package by updating your config:'
-      + '\n\n'
-      + c.gray(c.dim('// vitest.config.js'))
-      + '\n'
-      + c.green(`export default {
+      + `them to ship the file in .mjs extension or add "type": "module" in their package.json.`
+      + `\n\n`
+      + `As a temporary workaround you can try to inline the package by updating your config:`
+      + `\n\n${
+        c.gray(c.dim('// vitest.config.js'))
+      }\n${
+        c.green(`export default {
   test: {
     server: {
       deps: {
@@ -340,7 +339,7 @@ function printModuleWarningForPackage(
       }
     }
   }
-}\n`),
+}\n`)}`,
     ),
   )
 }
