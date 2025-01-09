@@ -1,7 +1,7 @@
 import type { File } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { BaseOptions } from './base'
-import type { HookOptions, TestCase, TestModule } from './reported-tasks'
+import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
 import { SummaryReporter } from './summary'
 
@@ -49,11 +49,11 @@ export class DefaultReporter extends BaseReporter {
     this.summary?.onTestCaseEnd(test)
   }
 
-  onHookStart(hook: HookOptions) {
+  onHookStart(hook: ReportedHookContext) {
     this.summary?.onHookStart(hook)
   }
 
-  onHookEnd(hook: HookOptions) {
+  onHookEnd(hook: ReportedHookContext) {
     this.summary?.onHookEnd(hook)
   }
 

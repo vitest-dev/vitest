@@ -1,6 +1,6 @@
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
-import type { HookOptions, TestCase, TestModule } from './reported-tasks'
+import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
 import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
 import { formatProjectName, formatTime, formatTimeString, padSummaryTitle } from './renderers/utils'
@@ -128,7 +128,7 @@ export class SummaryReporter implements Reporter {
     this.maxParallelTests = Math.max(this.maxParallelTests, this.runningModules.size)
   }
 
-  onHookStart(options: HookOptions) {
+  onHookStart(options: ReportedHookContext) {
     const stats = this.getHookStats(options)
 
     if (!stats) {
@@ -151,7 +151,7 @@ export class SummaryReporter implements Reporter {
     hook.onFinish = () => clearTimeout(timeout)
   }
 
-  onHookEnd(options: HookOptions) {
+  onHookEnd(options: ReportedHookContext) {
     const stats = this.getHookStats(options)
 
     if (stats?.hook?.name !== options.name) {
@@ -251,7 +251,7 @@ export class SummaryReporter implements Reporter {
     }
   }
 
-  private getHookStats({ entity }: HookOptions) {
+  private getHookStats({ entity }: ReportedHookContext) {
     // Track slow running hooks only on verbose mode
     if (!this.options.verbose) {
       return

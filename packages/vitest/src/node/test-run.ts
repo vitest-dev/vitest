@@ -3,7 +3,7 @@ import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { HookOptions, TestCase, TestModule } from './reporters/reported-tasks'
+import type { ReportedHookContext, TestCase, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 
 export class TestRun {
@@ -52,8 +52,8 @@ export class TestRun {
     const runningTestCases: TestCase[] = []
     const finishedTestCases: TestCase[] = []
 
-    const startingHooks: HookOptions[] = []
-    const endingHooks: HookOptions[] = []
+    const startingHooks: ReportedHookContext[] = []
+    const endingHooks: ReportedHookContext[] = []
 
     for (const [id,,,events] of update) {
       const task = this.vitest.state.idMap.get(id)
@@ -93,10 +93,10 @@ export class TestRun {
             const name = hook as keyof (typeof entity.task.result.hooks)
 
             if (event === 'suite-hook-start') {
-              startingHooks.push({ name, entity })
+              startingHooks.push({ name, entity } as ReportedHookContext)
             }
             else {
-              endingHooks.push({ name, entity })
+              endingHooks.push({ name, entity } as ReportedHookContext)
             }
           }
         }

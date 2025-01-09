@@ -4,7 +4,7 @@ import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestRunEndReason } from '../reporters'
-import type { HookOptions, TestCase, TestModule } from '../reporters/reported-tasks'
+import type { ReportedHookContext, TestCase, TestModule } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 
 export interface Reporter {
@@ -73,8 +73,8 @@ export interface Reporter {
    */
   onTestCaseEnd?: (testCase: TestCase) => Awaitable<void>
 
-  onHookStart?: (hook: HookOptions) => Awaitable<void>
-  onHookEnd?: (hook: HookOptions) => Awaitable<void>
+  onHookStart?: (hook: ReportedHookContext) => Awaitable<void>
+  onHookEnd?: (hook: ReportedHookContext) => Awaitable<void>
 
   onCoverage?: (coverage: unknown) => Awaitable<void>
 }

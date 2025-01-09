@@ -3,7 +3,6 @@ import type {
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
-  SuiteHooks,
   TaskMeta,
 } from '@vitest/runner'
 import type { SerializedError, TestError } from '@vitest/utils'
@@ -317,9 +316,12 @@ export interface TestSuiteStatistics {
   todo: number
 }
 
-export interface HookOptions {
-  name: keyof SuiteHooks
-  entity: TestCase | TestSuite | TestModule
+export type ReportedHookContext = {
+  readonly name: 'beforeAll' | 'afterAll'
+  readonly entity: TestSuite | TestModule
+} | {
+  readonly name: 'beforeEach' | 'afterEach'
+  readonly entity: TestCase
 }
 
 function createStatistics() {
