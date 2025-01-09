@@ -149,7 +149,7 @@ export interface MockContext<T extends Procedure> {
 
 type Procedure = (...args: any[]) => any
 // pick a single function type from function overloads, unions, etc...
-type NormalizedPrecedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
+type NormalizedProcedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -221,7 +221,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): NormalizedPrecedure<T> | undefined
+  getMockImplementation(): NormalizedProcedure<T> | undefined
   /**
    * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
    * @see https://vitest.dev/api/mock#mockimplementation
@@ -229,7 +229,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: NormalizedPrecedure<T>): this
+  mockImplementation(fn: NormalizedProcedure<T>): this
   /**
    * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function. This method can be chained to produce different results for multiple function calls.
    *
@@ -240,7 +240,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: NormalizedPrecedure<T>): this
+  mockImplementationOnce(fn: NormalizedProcedure<T>): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    *
@@ -255,7 +255,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T2>(fn: NormalizedPrecedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
+  withImplementation<T2>(fn: NormalizedProcedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
 
   /**
    * Use this if you need to return the `this` context from the method without invoking the actual implementation.

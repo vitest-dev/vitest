@@ -1,3 +1,5 @@
+import type { Vitest } from 'vitest/node'
+import type { JsonTestResults } from 'vitest/reporters'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { instances, provider, runBrowserTests } from './utils'
@@ -5,14 +7,16 @@ import { instances, provider, runBrowserTests } from './utils'
 describe('running browser tests', async () => {
   let stderr: string
   let stdout: string
-  let browserResultJson: any
+  let browserResultJson: JsonTestResults
   let passedTests: any[]
   let failedTests: any[]
+  let vitest: Vitest
 
   beforeAll(async () => {
     ({
       stderr,
       stdout,
+      ctx: vitest,
     } = await runBrowserTests())
 
     const browserResult = await readFile('./browser.json', 'utf-8')
@@ -27,6 +31,12 @@ describe('running browser tests', async () => {
     onTestFailed(() => {
       console.error(stderr)
     })
+
+    const testFiles = browserResultJson.testResults.map(t => t.name)
+
+    // test files are optimized automatically
+    expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
+      .toEqual(vitest.projects.map(() => expect.arrayContaining(testFiles)))
 
     // This should match the number of actual tests from browser.json
     // if you added new tests, these assertion will fail and you should
@@ -120,7 +130,7 @@ error with a stack
   })
 
   test(`stack trace points to correct file in every browser`, () => {
-    // dependeing on the browser it references either `.toBe()` or `expect()`
+    // depending on the browser it references either `.toBe()` or `expect()`
     expect(stderr).toMatch(/test\/failing.test.ts:10:(12|17)/)
 
     // column is 18 in safari, 8 in others

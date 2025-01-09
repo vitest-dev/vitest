@@ -739,7 +739,7 @@ export function getObjectSubset(
               subsetEquality,
             ])
           ) {
-            // return "expected" subset to avoid showing irrelavant toMatchObject diff
+            // return "expected" subset to avoid showing irrelevant toMatchObject diff
             return subset
           }
 
