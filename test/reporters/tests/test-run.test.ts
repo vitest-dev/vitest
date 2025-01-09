@@ -107,13 +107,66 @@ test('multiple test modules', async () => {
   `)
 })
 
-test.todo('each hooks', async () => {
+test('beforeEach', async () => {
+  const calls = await run({
+    'single-test.test.ts': ts`
+      beforeEach(() => {});
+
+      test('first', () => {});
+      test('second', () => {});
+    `,
+  })
+
+  expect(calls).toMatchInlineSnapshot(`
+    "
+    onTestModuleQueued  (single-test.test.ts)
+    onTestModuleStart   (single-test.test.ts)
+        onTestCaseStart |first| (single-test.test.ts)
+            onHookStart [beforeEach] |first| (single-test.test.ts)
+            onHookEnd   [beforeEach] |first| (single-test.test.ts)
+        onTestCaseEnd   |first| (single-test.test.ts)
+        onTestCaseStart |second| (single-test.test.ts)
+            onHookStart [beforeEach] |second| (single-test.test.ts)
+            onHookEnd   [beforeEach] |second| (single-test.test.ts)
+        onTestCaseEnd   |second| (single-test.test.ts)
+    onTestModuleEnd     (single-test.test.ts)"
+  `)
+})
+
+test('afterEach', async () => {
+  const calls = await run({
+    'single-test.test.ts': ts`
+      afterEach(() => {});
+
+      test('first', () => {});
+      test('second', () => {});
+    `,
+  })
+
+  expect(calls).toMatchInlineSnapshot(`
+    "
+    onTestModuleQueued  (single-test.test.ts)
+    onTestModuleStart   (single-test.test.ts)
+        onTestCaseStart |first| (single-test.test.ts)
+            onHookStart [afterEach] |first| (single-test.test.ts)
+            onHookEnd   [afterEach] |first| (single-test.test.ts)
+        onTestCaseEnd   |first| (single-test.test.ts)
+        onTestCaseStart |second| (single-test.test.ts)
+            onHookStart [afterEach] |second| (single-test.test.ts)
+            onHookEnd   [afterEach] |second| (single-test.test.ts)
+        onTestCaseEnd   |second| (single-test.test.ts)
+    onTestModuleEnd     (single-test.test.ts)"
+  `)
+})
+
+test.todo('beforeEach and afterEach', async () => {
   const calls = await run({
     'single-test.test.ts': ts`
       beforeEach(() => {});
       afterEach(() => {});
 
-      test('example', () => {});
+      test('first', () => {});
+      test('second', () => {});
     `,
   })
 
@@ -178,15 +231,15 @@ class CustomReporter implements Reporter {
   onHookStart(hook: HookOptions) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
-    const padding = hook.entity.type === 'test' ? '    ' : ''
-    this.calls.push(`${padding}onHookStart [${hook.name} / ${hook.entity.type}]${name} (${normalizeFilename(module)})`)
+    const padding = hook.entity.type === 'test' ? '        ' : '    '
+    this.calls.push(`${`${padding}onHookStart`.padEnd(20)}[${hook.name}]${name} (${normalizeFilename(module)})`)
   }
 
   onHookEnd(hook: HookOptions) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
-    const padding = hook.entity.type === 'test' ? '    ' : ''
-    this.calls.push(`${padding}onHookEnd [${hook.name} / ${hook.entity.type}]${name} (${normalizeFilename(module)})`)
+    const padding = hook.entity.type === 'test' ? '        ' : '    '
+    this.calls.push(`${`${padding}onHookEnd`.padEnd(20)}[${hook.name}]${name} (${normalizeFilename(module)})`)
   }
 }
 

@@ -114,20 +114,28 @@ export class TestRun {
     for (const testCase of runningTestCases) {
       await this.vitest.report('onTestCaseStart', testCase)
 
-      const index = finishedTestCases.findIndex(t => t.id === testCase.id)
+      const startIndex = startingHooks.findIndex(hook => hook.entity.id === testCase.id)
+      if (startIndex >= 0) {
+        await this.vitest.report('onHookStart', startingHooks.splice(startIndex, 1)[0])
+      }
 
-      // Make sure test case is reported as ended before next test case starts
-      if (index >= 0) {
-        finishedTestCases.splice(index, 1)
+      const endIndex = endingHooks.findIndex(hook => hook.entity.id === testCase.id)
+      if (endIndex >= 0) {
+        await this.vitest.report('onHookEnd', endingHooks.splice(endIndex, 1)[0])
+      }
+
+      const finishedIndex = finishedTestCases.findIndex(t => t.id === testCase.id)
+      if (finishedIndex >= 0) {
+        finishedTestCases.splice(finishedIndex, 1)
         await this.vitest.report('onTestCaseEnd', testCase)
       }
     }
 
-    await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseEnd', testCase)))
-    await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleEnd', module)))
-
     await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
     await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
+
+    await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseEnd', testCase)))
+    await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleEnd', module)))
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {
