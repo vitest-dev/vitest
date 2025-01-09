@@ -262,5 +262,5 @@ interface TestDiagnostic {
 ```
 
 ::: info
-`diagnostic()` will return `undefined` if the test did not finish running yet.
+`diagnostic()` will return `undefined` if the test was not scheduled to run yet.
 :::

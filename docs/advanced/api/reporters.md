@@ -13,12 +13,12 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
   - [`onTestModuleStart`](#ontestmodulestart)
     - [`onHookStart(beforeAll)`](#onhookstart)
     - [`onHookEnd(beforeAll)`](#onhookend)
-    - [`onHookStart(beforeEach)`](#onhookstart)
-    - [`onHookEnd(beforeEach)`](#onhookend)
       - [`onTestCaseStart`](#ontestcasestart)
+        - [`onHookStart(beforeEach)`](#onhookstart)
+        - [`onHookEnd(beforeEach)`](#onhookend)
+        - [`onHookStart(afterEach)`](#onhookstart)
+        - [`onHookEnd(afterEach)`](#onhookend)
       - [`onTestCaseEnd`](#ontestcaseend)
-    - [`onHookStart(afterEach)`](#onhookstart)
-    - [`onHookEnd(afterEach)`](#onhookend)
     - [`onHookStart(afterAll)`](#onhookstart)
     - [`onHookEnd(afterAll)`](#onhookend)
   - [`onTestModuleEnd`](#ontestmoduleend)
@@ -110,7 +110,7 @@ This method was added in Vitest 3, replacing `onPathsCollected` and `onSpecsColl
 function onTestRunEnd(
   testModules: ReadonlyArray<TestModule>,
   unhandledErrors: ReadonlyArray<SerializedError>,
-  reason: 'passed' | 'interrupted' | 'failed'
+  reason: TestRunEndReason
 ): Awaitable<void>
 ```
 
@@ -217,14 +217,44 @@ This method is called when every test in the module finished running. This means
 
 ## onHookStart
 
+```ts
+function onHookStart(context: ReportedHookContext): Awaitable<void>
+```
+
+This method is called when any of these hooks have started running:
+
+- `beforeAll`
+- `afterAll`
+- `beforeEach`
+- `afterEach`
+
+If `beforeAll` or `afterAll` are started, the `entity` will be either [`TestSuite`](/advanced/api/test-suite) or [`TestModule`](/advanced/api/test-module).
+
+If `beforeEach` or `afterEach` are started, the `entity` will always be [`TestCase`](/advanced/api/test-case).
+
 ::: warning
-`onHookStart` and `onHookEnd` methods will not be called if these hooks did not run during the test run.
+`onHookStart` method will not be called if the hook did not run during the test run.
 :::
 
 ## onHookEnd
 
+```ts
+function onHookEnd(context: ReportedHookContext): Awaitable<void>
+```
+
+This method is called when any of these hooks have finished running:
+
+- `beforeAll`
+- `afterAll`
+- `beforeEach`
+- `afterEach`
+
+If `beforeAll` or `afterAll` have finished, the `entity` will be either [`TestSuite`](/advanced/api/test-suite) or [`TestModule`](/advanced/api/test-module).
+
+If `beforeEach` or `afterEach` have finished, the `entity` will always be [`TestCase`](/advanced/api/test-case).
+
 ::: warning
-`onHookStart` and `onHookEnd` methods will not be called if these hooks did not run during the test run.
+`onHookEnd` method will not be called if the hook did not run during the test run.
 :::
 
 ## onTestCaseStart
@@ -233,10 +263,18 @@ This method is called when every test in the module finished running. This means
 function onTestCaseStart(testCase: TestCase): Awaitable<void>
 ```
 
-This method is called when the test starts to run.
+This method is called when the test starts to run. Note that `beforeEach` and `afterEach` hooks are considered part of the test because they can influence the result.
 
 ::: warning
 Notice that it's possible to have [`testCase.result()`](/advanced/api/test-case#result) with `passed` or `failed` state already when `onTestCaseStart` is called. This can happen if test was running too fast and both `onTestCaseStart` and `onTestCaseEnd` were scheduled to run in the same microtask.
 :::
 
 ## onTestCaseEnd
+
+```ts
+function onTestCaseEnd(testCase: TestCase): Awaitable<void>
+```
+
+This method is called when the test has finished running. Note that this will be called after the `afterEach` hook is finished, if there are any.
+
+At this point, [`testCase.result()`](/advanced/api/test-case#result) will have non-pending state.
