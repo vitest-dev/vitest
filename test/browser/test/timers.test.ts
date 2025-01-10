@@ -21,11 +21,6 @@ it('only runs a setTimeout callback once (ever)', () => {
 
 it('console.time', async () => {
   vi.useFakeTimers()
-
-  console.time('fake-timers-zero')
-  console.timeEnd('fake-timers-zero')
-
-  console.time('fake-timers-advance')
-  vi.advanceTimersByTime(1234)
-  console.timeEnd('fake-timers-advance')
+  console.time('[console-time-fake]')
+  console.timeEnd('[console-time-fake]')
 })

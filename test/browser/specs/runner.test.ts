@@ -90,8 +90,8 @@ describe('running browser tests', async () => {
     expect(stdout).toContain('count: 3')
     expect(stdout).toMatch(/default: [\d.]+ ms/)
     expect(stdout).toMatch(/time: [\d.]+ ms/)
-    expect(stdout).toContain('fake-timers-zero: 0 ms')
-    expect(stdout).toContain('fake-timers-advance: 1234 ms')
+    expect(stdout).toMatch(/\[console-time-fake\]: [\d.]+ ms/)
+    expect(stdout).not.toContain('[console-time-fake]: 0 ms')
   })
 
   test('logs are redirected to stderr', () => {

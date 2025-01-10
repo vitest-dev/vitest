@@ -2,7 +2,7 @@ import { format, stringify } from 'vitest/utils'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 
-const { Date, console } = globalThis
+const { Date, console, performance } = globalThis
 
 export function setupConsoleLogSpy() {
   const {
