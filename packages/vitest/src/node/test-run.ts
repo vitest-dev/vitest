@@ -111,7 +111,7 @@ export class TestRun {
     await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModuleStart', module)))
 
     for (const testCase of runningTestCases) {
-      await this.vitest.report('onTestCaseStart', testCase)
+      await this.vitest.report('onTestCaseReady', testCase)
 
       for (const name of ['beforeEach', 'afterEach'] as const) {
         const start = startingHooks.filter(hook => hook.name === name && hook.entity.id === testCase.id)
@@ -130,7 +130,7 @@ export class TestRun {
 
       const finishedIndex = finishedTestCases.findIndex(t => t.id === testCase.id)
       if (finishedIndex >= 0) {
-        await this.vitest.report('onTestCaseEnd', finishedTestCases.splice(finishedIndex, 1)[0])
+        await this.vitest.report('onTestCaseResult', finishedTestCases.splice(finishedIndex, 1)[0])
       }
     }
 
@@ -138,7 +138,7 @@ export class TestRun {
     await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
     await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
 
-    await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseEnd', testCase)))
+    await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseResult', testCase)))
     await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleEnd', module)))
   }
 

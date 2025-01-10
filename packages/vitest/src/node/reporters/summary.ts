@@ -162,7 +162,7 @@ export class SummaryReporter implements Reporter {
     stats.hook.visible = false
   }
 
-  onTestCaseStart(test: TestCase) {
+  onTestCaseReady(test: TestCase) {
     // Track slow running tests only on verbose mode
     if (!this.options.verbose) {
       return
@@ -193,7 +193,7 @@ export class SummaryReporter implements Reporter {
     stats.tests.set(test.id, slowTest)
   }
 
-  onTestCaseEnd(test: TestCase) {
+  onTestCaseResult(test: TestCase) {
     const stats = this.runningModules.get(test.module.id)
 
     if (!stats) {

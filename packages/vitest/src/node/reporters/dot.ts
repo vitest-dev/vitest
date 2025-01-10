@@ -55,18 +55,18 @@ export class DotReporter extends BaseReporter {
   onTestModuleCollected(module: TestModule): void {
     for (const test of module.children.tests()) {
       // Dot reporter marks pending tests as running
-      this.onTestCaseStart(test)
+      this.onTestCaseReady(test)
     }
   }
 
-  onTestCaseStart(test: TestCase) {
+  onTestCaseReady(test: TestCase) {
     if (this.finishedTests.has(test.id)) {
       return
     }
     this.tests.set(test.id, test.result().state || 'run')
   }
 
-  onTestCaseEnd(test: TestCase) {
+  onTestCaseResult(test: TestCase) {
     this.finishedTests.add(test.id)
     this.tests.set(test.id, test.result().state || 'skipped')
   }

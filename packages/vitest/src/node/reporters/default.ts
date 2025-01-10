@@ -41,12 +41,12 @@ export class DefaultReporter extends BaseReporter {
     this.summary?.onTestModuleEnd(module)
   }
 
-  onTestCaseStart(test: TestCase) {
-    this.summary?.onTestCaseStart(test)
+  onTestCaseReady(test: TestCase) {
+    this.summary?.onTestCaseReady(test)
   }
 
-  onTestCaseEnd(test: TestCase) {
-    this.summary?.onTestCaseEnd(test)
+  onTestCaseResult(test: TestCase) {
+    this.summary?.onTestCaseResult(test)
   }
 
   onHookStart(hook: ReportedHookContext) {

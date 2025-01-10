@@ -13,12 +13,12 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
   - [`onTestModuleStart`](#ontestmodulestart)
     - [`onHookStart(beforeAll)`](#onhookstart)
     - [`onHookEnd(beforeAll)`](#onhookend)
-      - [`onTestCaseStart`](#ontestcasestart)
+      - [`onTestCaseReady`](#ontestcaseready)
         - [`onHookStart(beforeEach)`](#onhookstart)
         - [`onHookEnd(beforeEach)`](#onhookend)
         - [`onHookStart(afterEach)`](#onhookstart)
         - [`onHookEnd(afterEach)`](#onhookend)
-      - [`onTestCaseEnd`](#ontestcaseend)
+      - [`onTestCaseResult`](#ontestcaseresult)
     - [`onHookStart(afterAll)`](#onhookstart)
     - [`onHookEnd(afterAll)`](#onhookend)
   - [`onTestModuleEnd`](#ontestmoduleend)
@@ -257,24 +257,24 @@ If `beforeEach` or `afterEach` have finished, the `entity` will always be [`Test
 `onHookEnd` method will not be called if the hook did not run during the test run.
 :::
 
-## onTestCaseStart
+## onTestCaseReady
 
 ```ts
-function onTestCaseStart(testCase: TestCase): Awaitable<void>
+function onTestCaseReady(testCase: TestCase): Awaitable<void>
 ```
 
-This method is called when the test starts to run. Note that `beforeEach` and `afterEach` hooks are considered part of the test because they can influence the result.
+This method is called before the test starts to run or it was skipped. Note that `beforeEach` and `afterEach` hooks are considered part of the test because they can influence the result.
 
 ::: warning
-Notice that it's possible to have [`testCase.result()`](/advanced/api/test-case#result) with `passed` or `failed` state already when `onTestCaseStart` is called. This can happen if test was running too fast and both `onTestCaseStart` and `onTestCaseEnd` were scheduled to run in the same microtask.
+Notice that it's possible to have [`testCase.result()`](/advanced/api/test-case#result) with `passed` or `failed` state already when `onTestCaseReady` is called. This can happen if test was running too fast and both `onTestCaseReady` and `onTestCaseResult` were scheduled to run in the same microtask.
 :::
 
-## onTestCaseEnd
+## onTestCaseResult
 
 ```ts
-function onTestCaseEnd(testCase: TestCase): Awaitable<void>
+function onTestCaseResult(testCase: TestCase): Awaitable<void>
 ```
 
-This method is called when the test has finished running. Note that this will be called after the `afterEach` hook is finished, if there are any.
+This method is called when the test has finished running or was just skipped. Note that this will be called after the `afterEach` hook is finished, if there are any.
 
 At this point, [`testCase.result()`](/advanced/api/test-case#result) will have non-pending state.
