@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { afterEach, expect, it, vi } from 'vitest'
 
 afterEach(() => {
@@ -16,4 +17,15 @@ it('only runs a setTimeout callback once (ever)', () => {
 
   vi.runAllTimers()
   expect(fn).toHaveBeenCalledTimes(1)
+})
+
+it('console.time', async () => {
+  vi.useFakeTimers()
+
+  console.time('fake-timers-zero')
+  console.timeEnd('fake-timers-zero')
+
+  console.time('fake-timers-advance')
+  vi.advanceTimersByTime(1234)
+  console.timeEnd('fake-timers-advance')
 })

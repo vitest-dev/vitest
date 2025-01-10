@@ -71,7 +71,7 @@ export function setupConsoleLogSpy() {
     if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
     }
-    else if (start) {
+    else if (typeof start !== 'undefined') {
       const duration = end - start
       sendLog('stdout', `${label}: ${duration} ms`)
     }
