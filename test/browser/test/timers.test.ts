@@ -20,7 +20,10 @@ it('only runs a setTimeout callback once (ever)', () => {
 })
 
 it('console.time', async () => {
-  vi.useFakeTimers()
+  vi.useFakeTimers({
+    toFake: ['Date', 'performance'],
+  })
   console.time('[console-time-fake]')
+  await new Promise(r => setTimeout(r, 500))
   console.timeEnd('[console-time-fake]')
 })
