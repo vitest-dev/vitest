@@ -1,7 +1,7 @@
 import type { RunnerTestFile, RunnerTestCase } from 'vitest'
 import type { ProcessPool, Vitest } from 'vitest/node'
 import { createMethodsRPC } from 'vitest/node'
-import { getTasks } from '@vitest/runner/utils'
+import { getTasks, generateFileHash } from '@vitest/runner/utils'
 import { normalize, relative } from 'pathe'
 
 export default (vitest: Vitest): ProcessPool => {
@@ -20,7 +20,7 @@ export default (vitest: Vitest): ProcessPool => {
         vitest.logger.console.warn('[pool] running tests for', project.name, 'in', normalize(file).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
         const path = relative(project.config.root, file)
         const taskFile: RunnerTestFile = {
-          id: `${path}${project.name}`,
+          id: generateFileHash(path, project.config.name),
           name: path,
           mode: 'run',
           meta: {},
