@@ -66,13 +66,13 @@ export interface Reporter {
    * Called before the `beforeEach` hooks for the test are run.
    */
   onTestCaseReady?: (testCase: TestCase) => Awaitable<void>
-  onTestSuiteReady?: (testCase: TestSuite) => Awaitable<void>
+  onTestSuiteReady?: (testSuite: TestSuite) => Awaitable<void>
   /**
    * Called after the test and its hooks are finished running.
    * The `result()` cannot be `pending`.
    */
   onTestCaseResult?: (testCase: TestCase) => Awaitable<void>
-  onTestSuiteResult?: (testCase: TestSuite) => Awaitable<void>
+  onTestSuiteResult?: (testSuite: TestSuite) => Awaitable<void>
 
   onHookStart?: (hook: ReportedHookContext) => Awaitable<void>
   onHookEnd?: (hook: ReportedHookContext) => Awaitable<void>
