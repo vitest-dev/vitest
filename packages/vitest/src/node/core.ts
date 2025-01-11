@@ -1,4 +1,4 @@
-import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
+import type { CancelReason, File, TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
@@ -479,21 +479,26 @@ export class Vitest {
       const taskPacks: TaskResultPack[] = []
 
       const tasks = getTasks(file)
+      const events: TaskEventPack[] = [
+        [file.id, 'suite-prepare'],
+      ]
       for (const task of tasks) {
         if (task.logs) {
           logs.push(...task.logs)
         }
         if (task.type === 'test') {
-          taskPacks.push(
-            [task.id, undefined, {}, ['test-prepare']],
-            [task.id, task.result, task.meta, ['test-finished']],
-          )
+          taskPacks.push([task.id, task.result, task.meta])
+          // TODO: runner doesn't report skipped states (should it?)
+          if (task.mode !== 'skip') {
+            events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
+          }
         }
         else if (task.type === 'suite') {
-          taskPacks.push(
-            [task.id, undefined, {}, ['suite-prepare']],
-            [task.id, task.result, task.meta, ['suite-finished']],
-          )
+          taskPacks.push([task.id, task.result, task.meta])
+          // TODO: runner doesn't report skipped states (should it?)
+          if (task.mode !== 'skip') {
+            events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
+          }
         }
       }
       logs.sort((log1, log2) => log1.time - log2.time)
@@ -501,8 +506,9 @@ export class Vitest {
       for (const log of logs) {
         await this._testRun.log(log).catch(noop)
       }
+      events.push([file.id, 'suite-finished'])
 
-      await this._testRun.updated(taskPacks).catch(noop)
+      await this._testRun.updated(taskPacks, events).catch(noop)
     }
 
     if (hasFailed(files)) {

@@ -40,6 +40,7 @@ export type {
   TestCollection,
   TestDiagnostic,
   TestModule,
+  TestModuleState,
   TestResult,
   TestResultFailed,
   TestResultPassed,

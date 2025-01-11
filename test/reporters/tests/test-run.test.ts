@@ -104,11 +104,11 @@ describe('TestCase', () => {
       "
       onTestModuleQueued   (example.test.ts)
       onTestModuleStart    (example.test.ts)
-          onTestCaseReady  (example.test.ts) |skipped|
-          onTestCaseResult (example.test.ts) |skipped|
-
           onTestCaseReady  (example.test.ts) |running|
           onTestCaseResult (example.test.ts) |running|
+
+          onTestCaseReady  (example.test.ts) |skipped|
+          onTestCaseResult (example.test.ts) |skipped|
       onTestModuleEnd      (example.test.ts)"
     `)
   })

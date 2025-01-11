@@ -1,4 +1,4 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { File, TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { SerializedConfig } from '../runtime/config'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
@@ -27,7 +27,7 @@ export interface TransformResultWithSource {
 }
 
 export interface WebSocketHandlers {
-  onTaskUpdate: (packs: TaskResultPack[]) => void
+  onTaskUpdate: (packs: TaskResultPack[], events: TaskEventPack[]) => void
   getFiles: () => File[]
   getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]

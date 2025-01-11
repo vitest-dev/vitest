@@ -171,10 +171,17 @@ export type TaskResultPack = [
    * Custom metadata from `task.meta`.
    */
   meta: TaskMeta,
+]
+
+export type TaskEventPack = [
+  /**
+   * Unique task identifier from `task.id`.
+   */
+  id: string,
   /**
    * The name of the event that triggered the update.
    */
-  event: TaskUpdateEvent[],
+  event: TaskUpdateEvent,
 ]
 
 export type TaskUpdateEvent =

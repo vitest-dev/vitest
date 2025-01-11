@@ -4,7 +4,7 @@ import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestRunEndReason } from '../reporters'
-import type { ReportedHookContext, TestCase, TestModule } from '../reporters/reported-tasks'
+import type { ReportedHookContext, TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 
 export interface Reporter {
@@ -66,11 +66,13 @@ export interface Reporter {
    * Called before the `beforeEach` hooks for the test are run.
    */
   onTestCaseReady?: (testCase: TestCase) => Awaitable<void>
+  onTestSuiteReady?: (testCase: TestSuite) => Awaitable<void>
   /**
    * Called after the test and its hooks are finished running.
    * The `result()` cannot be `pending`.
    */
   onTestCaseResult?: (testCase: TestCase) => Awaitable<void>
+  onTestSuiteResult?: (testCase: TestSuite) => Awaitable<void>
 
   onHookStart?: (hook: ReportedHookContext) => Awaitable<void>
   onHookEnd?: (hook: ReportedHookContext) => Awaitable<void>

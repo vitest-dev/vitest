@@ -48,8 +48,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onTaskUpdate(packs) {
-          await ctx._testRun.updated(packs)
+        async onTaskUpdate(packs, events) {
+          await ctx._testRun.updated(packs, events)
         },
         getFiles() {
           return ctx.state.getFiles()

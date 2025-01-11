@@ -39,6 +39,7 @@ export type {
   TaskBase,
   TaskContext,
   TaskCustomOptions,
+  TaskEventPack,
   TaskHook,
   TaskMeta,
   TaskPopulated,

@@ -62,9 +62,9 @@ export async function resolveTestRunner(
 
   // patch some methods, so custom runners don't need to call RPC
   const originalOnTaskUpdate = testRunner.onTaskUpdate
-  testRunner.onTaskUpdate = async (task) => {
-    const p = rpc().onTaskUpdate(task)
-    await originalOnTaskUpdate?.call(testRunner, task)
+  testRunner.onTaskUpdate = async (task, events) => {
+    const p = rpc().onTaskUpdate(task, events)
+    await originalOnTaskUpdate?.call(testRunner, task, events)
     return p
   }
 

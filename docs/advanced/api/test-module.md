@@ -24,6 +24,14 @@ This is usually an absolute unix file path (even on Windows). It can be a virtua
 'C:\\Users\\Documents\\project\\example.test.ts' // ❌
 ```
 
+## state
+
+```ts
+function state(): TestModuleState
+```
+
+Works the same way as [`testSuite.state()`](/advanced/api/test-suite#state), but can also return `queued` if module wasn't executed yet.
+
 ## diagnostic
 
 ```ts

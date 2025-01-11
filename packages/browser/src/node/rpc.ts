@@ -116,8 +116,8 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
         async onCollected(files) {
           await vitest._testRun.collected(project, files)
         },
-        async onTaskUpdate(packs) {
-          await vitest._testRun.updated(packs)
+        async onTaskUpdate(packs, events) {
+          await vitest._testRun.updated(packs, events)
         },
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)

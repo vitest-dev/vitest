@@ -87,8 +87,8 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     onAfterSuiteRun(meta) {
       ctx.coverageProvider?.onAfterSuiteRun(meta)
     },
-    async onTaskUpdate(packs) {
-      await ctx._testRun.updated(packs)
+    async onTaskUpdate(packs, events) {
+      await ctx._testRun.updated(packs, events)
     },
     async onUserConsoleLog(log) {
       await ctx._testRun.log(log)

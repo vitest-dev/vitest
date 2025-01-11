@@ -361,30 +361,6 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
   }
 
   /**
-   * Checks the running state of the suite.
-   */
-  public state(): TestSuiteState {
-    const mode = this.task.mode
-    const state = this.task.result?.state
-    if (mode === 'skip' || mode === 'todo' || state === 'skip' || state === 'todo') {
-      return 'skipped'
-    }
-    if (state === 'queued') {
-      return 'queued'
-    }
-    if (state == null || state === 'run' || state === 'only') {
-      return 'pending'
-    }
-    if (state === 'fail') {
-      return 'failed'
-    }
-    if (state === 'pass') {
-      return 'passed'
-    }
-    throw new Error(`Unknown suite state: ${state}`)
-  }
-
-  /**
    * Errors that happened outside of the test run during collection, like syntax errors.
    */
   public errors(): SerializedError[] {
@@ -442,6 +418,13 @@ export class TestSuite extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
+   * Checks the running state of the suite.
+   */
+  public state(): TestSuiteState {
+    return getSuiteState(this.task)
+  }
+
+  /**
    * Full name of the suite including all parent suites separated with `>`.
    */
   public get fullName(): string {
@@ -477,15 +460,21 @@ export class TestModule extends SuiteImplementation {
   }
 
   /**
+   * Checks the running state of the test file.
+   */
+  public state(): TestModuleState {
+    const state = this.task.result?.state
+    if (state === 'queued') {
+      return 'queued'
+    }
+    return getSuiteState(this.task)
+  }
+
+  /**
    * Checks if the module has any failed tests.
    * This will also return `false` if module failed during collection.
    */
   declare public ok: () => boolean
-
-  /**
-   * Checks the running state of the test file.
-   */
-  declare public state: () => TestSuiteState
 
   /**
    * Useful information about the module like duration, memory usage, etc.
@@ -514,7 +503,7 @@ export interface TaskOptions {
   readonly shuffle: boolean | undefined
   readonly retry: number | undefined
   readonly repeats: number | undefined
-  readonly mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
+  readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 
 function buildOptions(
@@ -527,11 +516,15 @@ function buildOptions(
     shuffle: task.shuffle,
     retry: task.retry,
     repeats: task.repeats,
-    mode: task.mode,
+    // runner types are too broad, but the public API should be more strict
+    // the queued state exists only on Files and this method is called
+    // only for tests and suites
+    mode: task.mode as TaskOptions['mode'],
   }
 }
 
-export type TestSuiteState = 'skipped' | 'pending' | 'queued' | 'failed' | 'passed'
+export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
+export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
 
 export type TestResult =
@@ -667,4 +660,22 @@ function getReportedTask(
     )
   }
   return reportedTask
+}
+
+function getSuiteState(task: RunnerTestSuite | RunnerTestFile): TestSuiteState {
+  const mode = task.mode
+  const state = task.result?.state
+  if (mode === 'skip' || mode === 'todo' || state === 'skip' || state === 'todo') {
+    return 'skipped'
+  }
+  if (state == null || state === 'run' || state === 'only') {
+    return 'pending'
+  }
+  if (state === 'fail') {
+    return 'failed'
+  }
+  if (state === 'pass') {
+    return 'passed'
+  }
+  throw new Error(`Unknown suite state: ${state}`)
 }
