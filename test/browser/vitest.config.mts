@@ -10,6 +10,7 @@ function noop() {}
 
 const provider = process.env.PROVIDER || 'playwright'
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
+const outputFile = process.env.HTML_REPORTER ? undefined : './browser.json'
 
 const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPath }, arg1, arg2) => {
   return { testPath, arg1, arg2 }
@@ -102,8 +103,8 @@ export default defineConfig({
     },
     open: false,
     diff: './custom-diff-config.ts',
-    outputFile: './browser.json',
-    reporters: ['json', {
+    outputFile,
+    reporters: [outputFile ? 'json' : undefined, {
       onInit: noop,
       onPathsCollected: noop,
       onCollected: noop,
@@ -114,7 +115,7 @@ export default defineConfig({
       onWatcherRerun: noop,
       onServerRestart: noop,
       onUserConsoleLog: noop,
-    }, 'default'],
+    }, 'default'].filter(Boolean),
     env: {
       BROWSER: browser,
     },
