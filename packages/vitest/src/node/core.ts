@@ -450,31 +450,21 @@ export class Vitest {
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
 
-    const filesByProject = new Map<TestProject, File[]>()
     const specifications: TestSpecification[] = []
     for (const file of files) {
       const project = this.getProjectByName(file.projectName || '')
-      const specs = filesByProject.get(project) || []
-      specs.push(file)
-      filesByProject.set(project, specs)
-      specifications.push(
-        project.createSpecification(file.filepath, undefined, file.pool),
-      )
-      // TODO: how to integrate queue state with mergeReports?
-      // await this._testRun.enqueued(project, file).catch(noop)
+      const specification = project.createSpecification(file.filepath, undefined, file.pool)
+      specifications.push(specification)
     }
+
+    await this.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
     await this._testRun.start(specifications).catch(noop)
 
-    for (const [project, files] of filesByProject) {
-      const filepaths = files.map(f => f.filepath)
-      this.state.clearFiles(project, filepaths)
-      files.forEach((file) => {
-        file.logs?.forEach(log => this.state.updateUserLog(log))
-      })
-      await this._testRun.collected(project, files).catch(noop)
-    }
-
     for (const file of files) {
+      const project = this.getProjectByName(file.projectName || '')
+      await this._testRun.enqueued(project, file).catch(noop)
+      await this._testRun.collected(project, [file]).catch(noop)
+
       const logs: UserConsoleLog[] = []
       const taskPacks: TaskResultPack[] = []
 
@@ -488,14 +478,12 @@ export class Vitest {
         }
         if (task.type === 'test') {
           taskPacks.push([task.id, task.result, task.meta])
-          // TODO: runner doesn't report skipped states (should it?)
           if (task.mode !== 'skip') {
             events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
           }
         }
         else if (task.type === 'suite') {
           taskPacks.push([task.id, task.result, task.meta])
-          // TODO: runner doesn't report skipped states (should it?)
           if (task.mode !== 'skip') {
             events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
           }

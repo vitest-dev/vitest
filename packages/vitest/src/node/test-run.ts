@@ -6,6 +6,7 @@ import type { TestProject } from './project'
 import type { ReportedHookContext, TestCollection, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import assert from 'node:assert'
+import { serializeError } from '@vitest/utils/error'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -46,12 +47,16 @@ export class TestRun {
 
     for (const [id, event] of events) {
       await this.reportEvent(id, event).catch((error) => {
-        this.vitest.state.catchError(error, 'Unhandled Reporter Error')
+        this.vitest.state.catchError(serializeError(error), 'Unhandled Reporter Error')
       })
     }
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {
+    // specification won't have the File task if they were filtered by the --shard command
+    const modules = specifications.map(spec => spec.testModule).filter(s => s != null)
+    const files = modules.map(m => m.task)
+
     const state = this.vitest.isCancelling
       ? 'interrupted'
       // by this point, the run will be marked as failed if there are any errors,
@@ -59,17 +64,6 @@ export class TestRun {
       : process.exitCode
         ? 'failed'
         : 'passed'
-
-    const modules = specifications.map((spec) => {
-      if (!spec.testModule) {
-        const error = new Error(`Module "${spec.moduleId}" was not found when finishing test run. This is a bug in Vitest. Please, open an issue.`)
-        this.vitest.state.catchError(error, 'Unhandled Error')
-        errors.push(error)
-        return null
-      }
-      return spec.testModule
-    }).filter(s => s != null)
-    const files = modules.map(m => m.task)
 
     try {
       await Promise.all([

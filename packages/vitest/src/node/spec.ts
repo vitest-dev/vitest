@@ -50,7 +50,7 @@ export class TestSpecification {
     this[0] = project
     this[1] = moduleId
     this[2] = { pool }
-    const name = project.name
+    const name = project.config.name
     const hashName = pool !== 'typescript'
       ? name
       : name
