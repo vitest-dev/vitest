@@ -11,18 +11,24 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
   - [`onTestModuleQueued`](#ontestmodulequeud)
   - [`onTestModuleCollected`](#ontestmodulecollected)
   - [`onTestModuleStart`](#ontestmodulestart)
-    - [`onHookStart(beforeAll)`](#onhookstart)
-    - [`onHookEnd(beforeAll)`](#onhookend)
-      - [`onTestCaseReady`](#ontestcaseready)
-        - [`onHookStart(beforeEach)`](#onhookstart)
-        - [`onHookEnd(beforeEach)`](#onhookend)
-        - [`onHookStart(afterEach)`](#onhookstart)
-        - [`onHookEnd(afterEach)`](#onhookend)
-      - [`onTestCaseResult`](#ontestcaseresult)
-    - [`onHookStart(afterAll)`](#onhookstart)
-    - [`onHookEnd(afterAll)`](#onhookend)
+    - [`onTestSuiteReady`](#ontestsuiteready)
+      - [`onHookStart(beforeAll)`](#onhookstart)
+      - [`onHookEnd(beforeAll)`](#onhookend)
+        - [`onTestCaseReady`](#ontestcaseready)
+          - [`onHookStart(beforeEach)`](#onhookstart)
+          - [`onHookEnd(beforeEach)`](#onhookend)
+          - [`onHookStart(afterEach)`](#onhookstart)
+          - [`onHookEnd(afterEach)`](#onhookend)
+        - [`onTestCaseResult`](#ontestcaseresult)
+      - [`onHookStart(afterAll)`](#onhookstart)
+      - [`onHookEnd(afterAll)`](#onhookend)
+    - [`onTestSuiteResult`](#ontestsuiteresult)
   - [`onTestModuleEnd`](#ontestmoduleend)
 - [`onTestRunEnd`](#ontestrunend)
+
+Tests and suites within a single module will be reported in order unless they were skipped. All skipped tests are reported at the end of suite/module.
+
+Note that since test modules can run in parallel, Vitest will report them in parallel.
 
 This guide lists all supported reporter methods. However, don't forget that instead of creating your own reporter, you can [extend existing one](/advanced/reporters) instead:
 
@@ -256,6 +262,26 @@ If `beforeEach` or `afterEach` have finished, the `entity` will always be [`Test
 ::: warning
 `onHookEnd` method will not be called if the hook did not run during the test run.
 :::
+
+## onTestSuiteReady
+
+```ts
+function onTestSuiteReady(testSuite: TestSuite): Awaitable<void>
+```
+
+This method is called before the suite starts to run its tests. This method is also called if the suite was skipped.
+
+If the file doesn't have any suites, this method will not be called. Consider using `onTestModuleStart`.
+
+## onTestSuiteResult
+
+```ts
+function onTestSuiteResult(testSuite: TestSuite): Awaitable<void>
+```
+
+This method is called after the suite has finished running tests. This method is also called if the suite was skipped.
+
+If the file doesn't have any suites, this method will not be called. Consider using `onTestModuleEnd`.
 
 ## onTestCaseReady
 

@@ -6,6 +6,7 @@ import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { ReportedHookContext, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
+import assert from 'node:assert'
 
 export class TestRun {
   private tests = emptyCounters()
@@ -46,6 +47,8 @@ export class TestRun {
   async updated(update: TaskResultPack[], events: TaskEventPack[]) {
     this.vitest.state.updateTasks(update)
 
+    // TODO: error handling - what happens if custom reporter throws an error?
+
     for (const [id, event] of events) {
       const task = this.vitest.state.idMap.get(id)
       const entity = task && this.vitest.state.getReportedEntity(task)
@@ -62,22 +65,21 @@ export class TestRun {
         await this.vitest.report('onTestModuleStart', entity)
       }
 
-      if (event === 'suite-finished' && entity.type === 'suite') {
-        await this.vitest.report('onTestSuiteResult', entity)
-      }
+      if (event === 'suite-finished') {
+        assert(entity.type === 'suite' || entity.type === 'module', 'Entity type must be suite or module')
 
-      if (event === 'suite-finished' && entity.type === 'module') {
-        // Skipped tests need to be reported manually once test module has finished
-        // TODO: this needs to be done per suite, not module
-        // (only if there are no suites it should be a module)
-        for (const test of entity.children.allTests()) {
-          if (test.result().state === 'skipped') {
-            await this.vitest.report('onTestCaseReady', test)
-            await this.vitest.report('onTestCaseResult', test)
-          }
+        // Skipped tests need to be reported manually once test module/suite has finished
+        for (const test of entity.children.tests('skipped')) {
+          await this.vitest.report('onTestCaseReady', test)
+          await this.vitest.report('onTestCaseResult', test)
         }
 
-        await this.vitest.report('onTestModuleEnd', entity)
+        if (entity.type === 'module') {
+          await this.vitest.report('onTestModuleEnd', entity)
+        }
+        else {
+          await this.vitest.report('onTestSuiteResult', entity)
+        }
       }
 
       if (event === 'test-prepare' && entity.type === 'test') {
@@ -109,8 +111,6 @@ export class TestRun {
         }
       }
     }
-
-    // TODO: error handling
 
     // TODO: what is the order or reports here?
     // "onTaskUpdate" in parallel with others or before all or after all?
