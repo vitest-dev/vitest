@@ -121,7 +121,7 @@ export class SummaryReporter implements Reporter {
       this.runningModules.set(module.id, stats)
     }
 
-    const total = module.children.allTests().toArray().length
+    const total = Array.from(module.children.allTests()).length
     this.tests.total += total
     stats.total = total
 

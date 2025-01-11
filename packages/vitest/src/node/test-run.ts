@@ -9,16 +9,9 @@ import type { TestSpecification } from './spec'
 import assert from 'node:assert'
 
 export class TestRun {
-  private tests = emptyCounters()
-  private suites = emptyCounters()
-
   constructor(private vitest: Vitest) {}
 
   async start(specifications: TestSpecification[]) {
-    this.tests = emptyCounters()
-    this.suites = emptyCounters()
-    this.suites.total = specifications.length
-
     await this.vitest.report('onTestRunStart', [...specifications])
   }
 
@@ -47,7 +40,10 @@ export class TestRun {
   async updated(update: TaskResultPack[], events: TaskEventPack[]) {
     this.vitest.state.updateTasks(update)
 
+    // TODO: what is the order or reports here?
+    // "onTaskUpdate" in parallel with others or before all or after all?
     // TODO: error handling - what happens if custom reporter throws an error?
+    await this.vitest.report('onTaskUpdate', update)
 
     for (const [id, event] of events) {
       const task = this.vitest.state.idMap.get(id)
@@ -111,10 +107,6 @@ export class TestRun {
         }
       }
     }
-
-    // TODO: what is the order or reports here?
-    // "onTaskUpdate" in parallel with others or before all or after all?
-    await this.vitest.report('onTaskUpdate', update)
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {
@@ -144,32 +136,4 @@ export class TestRun {
     ])
     await this.vitest.report('onCoverage', coverage)
   }
-
-  private async reportHook(name: ReportedHookContext['name'], entity: ReportedHookContext['entity'], startingHooks: ReportedHookContext[], endingHooks: ReportedHookContext[]) {
-    const start = startingHooks.filter(hook => hook.name === name && hook.entity.id === entity.id)
-    const end = endingHooks.filter(hook => hook.name === name && hook.entity.id === entity.id)
-
-    for (const hook of start) {
-      const index = startingHooks.findIndex(h => h === hook)
-      await this.vitest.report('onHookStart', startingHooks.splice(index, 1)[0])
-    }
-
-    for (const hook of end) {
-      const index = endingHooks.findIndex(h => h === hook)
-      await this.vitest.report('onHookEnd', endingHooks.splice(index, 1)[0])
-    }
-  }
-}
-
-interface Counter {
-  total: number
-  completed: number
-  passed: number
-  failed: number
-  skipped: number
-  todo: number
-}
-
-function emptyCounters(): Counter {
-  return { completed: 0, passed: 0, failed: 0, skipped: 0, todo: 0, total: 0 }
 }
