@@ -478,13 +478,13 @@ export class Vitest {
         }
         if (task.type === 'test') {
           taskPacks.push([task.id, task.result, task.meta])
-          if (task.mode !== 'skip') {
+          if (task.mode !== 'skip' && task.mode !== 'todo') {
             events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
           }
         }
         else if (task.type === 'suite') {
           taskPacks.push([task.id, task.result, task.meta])
-          if (task.mode !== 'skip') {
+          if (task.mode !== 'skip' && task.mode !== 'todo') {
             events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
           }
         }

@@ -105,7 +105,7 @@ interface TaskOptions {
   readonly shuffle: boolean | undefined
   readonly retry: number | undefined
   readonly repeats: number | undefined
-  readonly mode: 'run' | 'only' | 'skip' | 'todo' | 'queued'
+  readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 ```
 

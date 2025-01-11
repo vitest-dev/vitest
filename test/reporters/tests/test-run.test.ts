@@ -543,7 +543,6 @@ async function run(structure: Parameters<typeof runInlineTests>[0]) {
     fileParallelism: false,
     globals: true,
     reporters: [
-    // @ts-expect-error -- not sure why
       reporter,
     ],
     sequence: {
@@ -607,7 +606,6 @@ class CustomReporter implements Reporter {
   onHookEnd(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type !== 'module' ? ` |${hook.entity.name}|` : ''
-    // const padding = hook.entity.type === 'test' ? '        ' : '  '
     this.calls.push(`  ${padded(hook.entity, 'onHookEnd', 18)} (${normalizeFilename(module)})${name} [${hook.name}]`)
   }
 }

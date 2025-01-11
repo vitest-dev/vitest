@@ -17,7 +17,9 @@ export interface Reporter {
    * @deprecated use `onTestRunStart` instead
    */
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>
-  // TODO: deprecate instead of what(?)
+  /**
+   * @deprecated use `onTestModuleCollected` instead
+   */
   onCollected?: (files: File[]) => Awaitable<void>
   /**
    * @deprecated use `onTestRunEnd` instead
