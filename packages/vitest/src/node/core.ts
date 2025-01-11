@@ -329,6 +329,13 @@ export class Vitest {
   }
 
   /**
+   * Get project names.
+   */
+  public getResolvedProjectNames(): string[] {
+    return this.resolvedProjects.map(p => p.name)
+  }
+
+  /**
    * @deprecated use Reported Task API instead
    */
   public getProjectByTaskId(taskId: string): TestProject {

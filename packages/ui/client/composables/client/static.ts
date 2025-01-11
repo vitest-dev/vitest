@@ -15,6 +15,7 @@ interface HTMLReportMetadata {
   paths: string[]
   files: File[]
   config: SerializedConfig
+  projects: string[]
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -46,6 +47,9 @@ export function createStaticClient(): VitestClient {
     },
     getConfig: () => {
       return metadata.config
+    },
+    getResolvedProjectNames: () => {
+      return metadata.projects
     },
     getModuleGraph: async (projectName, id) => {
       return metadata.moduleGraph[projectName]?.[id]

@@ -81,6 +81,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         getConfig() {
           return ctx.getRootProject().serializedConfig
         },
+        getResolvedProjectNames(): string[] {
+          return ctx.getResolvedProjectNames()
+        },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
           const result: TransformResultWithSource | null | undefined = browser
