@@ -516,7 +516,7 @@ export class Vitest {
     }
 
     this._checkUnhandledErrors(errors)
-    await this._testRun.end(specifications, errors, coverages).catch(noop)
+    await this._testRun.end(specifications, errors).catch(noop)
     await this.initCoverageProvider()
     await this.coverageProvider?.mergeReports?.(coverages)
 

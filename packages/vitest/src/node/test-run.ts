@@ -1,5 +1,4 @@
-import type { File as RunnerTestFile, TaskResultPack } from '@vitest/runner'
-import type { TaskEventPack } from '@vitest/runner/types/tasks'
+import type { File as RunnerTestFile, TaskEventPack, TaskResultPack, TaskUpdateEvent } from '@vitest/runner'
 import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
@@ -46,76 +45,9 @@ export class TestRun {
     await this.vitest.report('onTaskUpdate', update)
 
     for (const [id, event] of events) {
-      const task = this.vitest.state.idMap.get(id)
-      const entity = task && this.vitest.state.getReportedEntity(task)
-
-      assert(task && entity, `Entity must be found for task ${task?.name || id}`)
-
-      if (event === 'suite-prepare' && entity.type === 'suite') {
-        await this.vitest.report('onTestSuiteReady', entity)
-      }
-
-      if (event === 'suite-prepare' && entity.type === 'module') {
-        await this.vitest.report('onTestModuleStart', entity)
-      }
-
-      if (event === 'suite-finished') {
-        assert(entity.type === 'suite' || entity.type === 'module', 'Entity type must be suite or module')
-
-        if (entity.state() === 'skipped') {
-          // everything inside suite or a module is skipped,
-          // so we won't get any children events
-          // we need to report everything manually
-          await this.reportChildren(entity.children)
-        }
-        else {
-          // skipped tests need to be reported manually once test module/suite has finished
-          for (const test of entity.children.tests('skipped')) {
-            if (test.task.result?.pending) {
-              // pending error tasks are reported normally
-              continue
-            }
-            await this.vitest.report('onTestCaseReady', test)
-            await this.vitest.report('onTestCaseResult', test)
-          }
-        }
-
-        if (entity.type === 'module') {
-          await this.vitest.report('onTestModuleEnd', entity)
-        }
-        else {
-          await this.vitest.report('onTestSuiteResult', entity)
-        }
-      }
-
-      if (event === 'test-prepare' && entity.type === 'test') {
-        await this.vitest.report('onTestCaseReady', entity)
-      }
-
-      if (event === 'test-finished' && entity.type === 'test') {
-        await this.vitest.report('onTestCaseResult', entity)
-      }
-
-      if (event.startsWith('before-hook') || event.startsWith('after-hook')) {
-        const isBefore = event.startsWith('before-hook')
-
-        const hook: ReportedHookContext = entity.type === 'test'
-          ? {
-              name: isBefore ? 'beforeEach' : 'afterEach',
-              entity,
-            }
-          : {
-              name: isBefore ? 'beforeAll' : 'afterAll',
-              entity,
-            }
-
-        if (event.endsWith('-start')) {
-          await this.vitest.report('onHookStart', hook)
-        }
-        else {
-          await this.vitest.report('onHookEnd', hook)
-        }
-      }
+      await this.reportEvent(id, event).catch((error) => {
+        this.vitest.state.catchError(error, 'Unhandled Reporter Error')
+      })
     }
   }
 
@@ -145,6 +77,79 @@ export class TestRun {
       this.vitest.report('onFinished', files, errors, coverage),
     ])
     await this.vitest.report('onCoverage', coverage)
+  }
+
+  private async reportEvent(id: string, event: TaskUpdateEvent) {
+    const task = this.vitest.state.idMap.get(id)
+    const entity = task && this.vitest.state.getReportedEntity(task)
+
+    assert(task && entity, `Entity must be found for task ${task?.name || id}`)
+
+    if (event === 'suite-prepare' && entity.type === 'suite') {
+      await this.vitest.report('onTestSuiteReady', entity)
+    }
+
+    if (event === 'suite-prepare' && entity.type === 'module') {
+      await this.vitest.report('onTestModuleStart', entity)
+    }
+
+    if (event === 'suite-finished') {
+      assert(entity.type === 'suite' || entity.type === 'module', 'Entity type must be suite or module')
+
+      if (entity.state() === 'skipped') {
+        // everything inside suite or a module is skipped,
+        // so we won't get any children events
+        // we need to report everything manually
+        await this.reportChildren(entity.children)
+      }
+      else {
+        // skipped tests need to be reported manually once test module/suite has finished
+        for (const test of entity.children.tests('skipped')) {
+          if (test.task.result?.pending) {
+            // pending error tasks are reported normally
+            continue
+          }
+          await this.vitest.report('onTestCaseReady', test)
+          await this.vitest.report('onTestCaseResult', test)
+        }
+      }
+
+      if (entity.type === 'module') {
+        await this.vitest.report('onTestModuleEnd', entity)
+      }
+      else {
+        await this.vitest.report('onTestSuiteResult', entity)
+      }
+    }
+
+    if (event === 'test-prepare' && entity.type === 'test') {
+      await this.vitest.report('onTestCaseReady', entity)
+    }
+
+    if (event === 'test-finished' && entity.type === 'test') {
+      await this.vitest.report('onTestCaseResult', entity)
+    }
+
+    if (event.startsWith('before-hook') || event.startsWith('after-hook')) {
+      const isBefore = event.startsWith('before-hook')
+
+      const hook: ReportedHookContext = entity.type === 'test'
+        ? {
+            name: isBefore ? 'beforeEach' : 'afterEach',
+            entity,
+          }
+        : {
+            name: isBefore ? 'beforeAll' : 'afterAll',
+            entity,
+          }
+
+      if (event.endsWith('-start')) {
+        await this.vitest.report('onHookStart', hook)
+      }
+      else {
+        await this.vitest.report('onHookEnd', hook)
+      }
+    }
   }
 
   private async reportChildren(children: TestCollection) {
