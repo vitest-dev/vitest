@@ -366,7 +366,6 @@ export class Typechecker {
         i.id,
         i.result,
         { typecheck: true },
-        [i.type === 'suite' ? 'suite-finished' : 'test-finished'],
       ])
   }
 }
