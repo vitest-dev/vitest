@@ -292,9 +292,9 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       }
 
       // skipped with new PendingError
-      if (test.pending || test.result?.state === 'skip') {
+      if (test.result?.pending || test.result?.state === 'skip') {
         test.mode = 'skip'
-        test.result = { state: 'skip', note: test.result?.note }
+        test.result = { state: 'skip', note: test.result?.note, pending: true }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
         return
@@ -374,6 +374,7 @@ function failTask(result: TaskResult, err: unknown, diffOptions: DiffOptions | u
   if (err instanceof PendingError) {
     result.state = 'skip'
     result.note = err.note
+    result.pending = true
     return
   }
 

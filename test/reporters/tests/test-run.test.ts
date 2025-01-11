@@ -110,6 +110,26 @@ describe('TestCase', () => {
     `)
   })
 
+  test('dynamically skipped test case', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test('running', () => {});
+        test('skipped', (ctx) => { ctx.skip() });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onTestCaseReady    (example.test.ts) |running|
+        onTestCaseResult   (example.test.ts) |running|
+        onTestCaseReady    (example.test.ts) |skipped|
+        onTestCaseResult   (example.test.ts) |skipped|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
   test('skipped all test cases', async () => {
     const report = await run({
       'example.test.ts': ts`
@@ -232,6 +252,39 @@ describe('TestSuite', () => {
       "
       onTestModuleQueued   (example.test.ts)
       onTestModuleStart    (example.test.ts)
+        onTestSuiteReady   (example.test.ts) |skipped suite|
+          onTestCaseReady  (example.test.ts) |first test case|
+          onTestCaseResult (example.test.ts) |first test case|
+        onTestSuiteResult  (example.test.ts) |skipped suite|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
+  test('skipped double nested test suite', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe.skip("skipped suite", () => {
+          describe.skip("nested skipped suite", () => {
+            test('first nested case', () => {});
+          })
+        });
+
+        test('first test case', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onTestSuiteReady   (example.test.ts) |skipped suite|
+          onTestSuiteReady (example.test.ts) |nested skipped suite|
+            onTestCaseReady (example.test.ts) |first nested case|
+            onTestCaseResult (example.test.ts) |first nested case|
+          onTestSuiteResult (example.test.ts) |nested skipped suite|
+        onTestSuiteResult  (example.test.ts) |skipped suite|
+        onTestCaseReady    (example.test.ts) |first test case|
+        onTestCaseResult   (example.test.ts) |first test case|
       onTestModuleEnd      (example.test.ts)"
     `)
   })

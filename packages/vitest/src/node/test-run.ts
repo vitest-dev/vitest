@@ -4,7 +4,7 @@ import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { ReportedHookContext, TestModule } from './reporters/reported-tasks'
+import type { ReportedHookContext, TestCollection, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import assert from 'node:assert'
 
@@ -49,9 +49,7 @@ export class TestRun {
       const task = this.vitest.state.idMap.get(id)
       const entity = task && this.vitest.state.getReportedEntity(task)
 
-      if (!entity) {
-        continue
-      }
+      assert(task && entity, `Entity must be found for task ${task?.name || id}`)
 
       if (event === 'suite-prepare' && entity.type === 'suite') {
         await this.vitest.report('onTestSuiteReady', entity)
@@ -64,10 +62,22 @@ export class TestRun {
       if (event === 'suite-finished') {
         assert(entity.type === 'suite' || entity.type === 'module', 'Entity type must be suite or module')
 
-        // Skipped tests need to be reported manually once test module/suite has finished
-        for (const test of entity.children.tests('skipped')) {
-          await this.vitest.report('onTestCaseReady', test)
-          await this.vitest.report('onTestCaseResult', test)
+        if (entity.state() === 'skipped') {
+          // everything inside suite or a module is skipped,
+          // so we won't get any children events
+          // we need to report everything manually
+          await this.reportChildren(entity.children)
+        }
+        else {
+          // skipped tests need to be reported manually once test module/suite has finished
+          for (const test of entity.children.tests('skipped')) {
+            if (test.task.result?.pending) {
+              // pending error tasks are reported normally
+              continue
+            }
+            await this.vitest.report('onTestCaseReady', test)
+            await this.vitest.report('onTestCaseResult', test)
+          }
         }
 
         if (entity.type === 'module') {
@@ -135,5 +145,19 @@ export class TestRun {
       this.vitest.report('onFinished', files, errors, coverage),
     ])
     await this.vitest.report('onCoverage', coverage)
+  }
+
+  private async reportChildren(children: TestCollection) {
+    for (const child of children) {
+      if (child.type === 'test') {
+        await this.vitest.report('onTestCaseReady', child)
+        await this.vitest.report('onTestCaseResult', child)
+      }
+      else {
+        await this.vitest.report('onTestSuiteReady', child)
+        await this.reportChildren(child.children)
+        await this.vitest.report('onTestSuiteResult', child)
+      }
+    }
   }
 }

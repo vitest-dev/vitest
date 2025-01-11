@@ -79,10 +79,6 @@ export interface TaskPopulated extends TaskBase {
    */
   file: File
   /**
-   * Whether the task was skipped by calling `t.skip()`.
-   */
-  pending?: boolean
-  /**
    * Whether the task should succeed if it fails. If the task fails, it will be marked as passed.
    */
   fails?: boolean
@@ -152,6 +148,11 @@ export interface TaskResult {
   repeatCount?: number
   /** @private */
   note?: string
+  /**
+   * Whether the task was skipped by calling `t.skip()`.
+   * @internal
+   */
+  pending?: boolean
 }
 
 /**
