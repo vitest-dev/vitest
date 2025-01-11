@@ -1,193 +1,374 @@
 import type { TestSpecification, UserConfig } from 'vitest/node'
 import type { ReportedHookContext, Reporter, TestCase, TestModule } from 'vitest/reporters'
 import { sep } from 'node:path'
-import { expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { runInlineTests, ts } from '../../test-utils'
 
-test('single test case', async () => {
-  const calls = await run({
-    'single-test.test.ts': ts`
-      test('example', () => {});
-    `,
+describe('TestModule', () => {
+  test('single test module', async () => {
+    const report = await run({
+      'test-module.test.ts': ts`
+        test('example', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (test-module.test.ts)
+      onTestModuleStart    (test-module.test.ts)
+          onTestCaseReady  (test-module.test.ts) |example|
+          onTestCaseResult (test-module.test.ts) |example|
+      onTestModuleEnd      (test-module.test.ts)"
+    `)
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (single-test.test.ts)
-    onTestModuleStart    (single-test.test.ts)
-        onTestCaseReady  |example| (single-test.test.ts)
-        onTestCaseResult |example| (single-test.test.ts)
-    onTestModuleEnd      (single-test.test.ts)"
-  `)
+  test('multiple test modules', async () => {
+    const report = await run({
+      'first.test.ts': ts`
+        test('first test case', () => {});
+      `,
+      'second.test.ts': ts`
+        test('second test case', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (first.test.ts)
+      onTestModuleStart    (first.test.ts)
+          onTestCaseReady  (first.test.ts) |first test case|
+          onTestCaseResult (first.test.ts) |first test case|
+      onTestModuleEnd      (first.test.ts)
+
+      onTestModuleQueued   (second.test.ts)
+      onTestModuleStart    (second.test.ts)
+          onTestCaseReady  (second.test.ts) |second test case|
+          onTestCaseResult (second.test.ts) |second test case|
+      onTestModuleEnd      (second.test.ts)"
+    `)
+  })
 })
 
-test('skipped test case', async () => {
-  const calls = await run({
-    'example-test.test.ts': ts`
-      test('running', () => {});
-      test.skip('skipped', () => {});
-    `,
+describe('TestCase', () => {
+  test('single test case', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test('single test case', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |single test case|
+          onTestCaseResult (example.test.ts) |single test case|
+      onTestModuleEnd      (example.test.ts)"
+    `)
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (example-test.test.ts)
-    onTestModuleStart    (example-test.test.ts)
-        onTestCaseReady  |skipped| (example-test.test.ts)
-        onTestCaseResult |skipped| (example-test.test.ts)
-        onTestCaseReady  |running| (example-test.test.ts)
-        onTestCaseResult |running| (example-test.test.ts)
-    onTestModuleEnd      (example-test.test.ts)"
-  `)
+  test('multiple test cases', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test('first', () => {});
+        test('second', () => {});
+        test('third', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |first|
+          onTestCaseResult (example.test.ts) |first|
+
+          onTestCaseReady  (example.test.ts) |second|
+          onTestCaseResult (example.test.ts) |second|
+
+          onTestCaseReady  (example.test.ts) |third|
+          onTestCaseResult (example.test.ts) |third|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
+  test('skipped test case', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test('running', () => {});
+        test.skip('skipped', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |skipped|
+          onTestCaseResult (example.test.ts) |skipped|
+
+          onTestCaseReady  (example.test.ts) |running|
+          onTestCaseResult (example.test.ts) |running|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
+  test('skipped all test cases', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test.skip('first', () => {});
+        test.skip('second', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |first|
+          onTestCaseResult (example.test.ts) |first|
+
+          onTestCaseReady  (example.test.ts) |second|
+          onTestCaseResult (example.test.ts) |second|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
 })
 
-test('skipped all test cases', async () => {
-  const calls = await run({
-    'skipped-tests.test.ts': ts`
-      test.skip('first', () => {});
-      test.skip('second', () => {});
-    `,
+describe('TestSuite', () => {
+  test.todo('single test suite', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe("example suite", () => {
+          test('first test case', () => {});
+        });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (skipped-tests.test.ts)
-    onTestModuleStart    (skipped-tests.test.ts)
-        onTestCaseReady  |first| (skipped-tests.test.ts)
-        onTestCaseResult |first| (skipped-tests.test.ts)
-        onTestCaseReady  |second| (skipped-tests.test.ts)
-        onTestCaseResult |second| (skipped-tests.test.ts)
-    onTestModuleEnd      (skipped-tests.test.ts)"
-  `)
+  test.todo('multiple test suites', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe("first suite", () => {
+          test('first test case', () => {});
+        });
+
+        describe("second suite", () => {
+          test('second test case', () => {});
+        });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
+  })
+
+  test.todo('nested test suites', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe("first suite", () => {
+          test('first test case', () => {});
+
+          describe("second suite", () => {
+            test('second test case', () => {});
+
+            describe("third suite", () => {
+              test('third test case', () => {});
+            });
+          });
+        });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
+  })
+
+  test.todo('skipped test suite', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe.skip("skipped suite", () => {
+          test('first test case', () => {});
+        });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
+  })
+
+  test.todo('skipped nested test suite', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe("first suite", () => {
+          test('first test case', () => {});
+
+            describe.skip("skipped suite", () => {
+              test('second test case', () => {});
+            });
+        });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
+  })
 })
 
-test('multiple test cases', async () => {
-  const calls = await run({
-    'multiple-test.test.ts': ts`
-      test('first', () => {});
-      test('second', () => {});
-    `,
+describe('hooks', () => {
+  test('beforeEach', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        beforeEach(() => {});
+
+        test('first', () => {});
+        test('second', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |first|
+              onHookStart  (example.test.ts) |first| [beforeEach]
+              onHookEnd    (example.test.ts) |first| [beforeEach]
+          onTestCaseResult (example.test.ts) |first|
+
+          onTestCaseReady  (example.test.ts) |second|
+              onHookStart  (example.test.ts) |second| [beforeEach]
+              onHookEnd    (example.test.ts) |second| [beforeEach]
+          onTestCaseResult (example.test.ts) |second|
+      onTestModuleEnd      (example.test.ts)"
+    `)
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (multiple-test.test.ts)
-    onTestModuleStart    (multiple-test.test.ts)
-        onTestCaseReady  |first| (multiple-test.test.ts)
-        onTestCaseResult |first| (multiple-test.test.ts)
-        onTestCaseReady  |second| (multiple-test.test.ts)
-        onTestCaseResult |second| (multiple-test.test.ts)
-    onTestModuleEnd      (multiple-test.test.ts)"
-  `)
-})
+  test('afterEach', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        afterEach(() => {});
 
-test('multiple test modules', async () => {
-  const calls = await run({
-    'first.test.ts': ts`
-      test('first test case', () => {});
-    `,
-    'second.test.ts': ts`
-      test('second test case', () => {});
-    `,
+        test('first', () => {});
+        test('second', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |first|
+              onHookStart  (example.test.ts) |first| [afterEach]
+              onHookEnd    (example.test.ts) |first| [afterEach]
+          onTestCaseResult (example.test.ts) |first|
+
+          onTestCaseReady  (example.test.ts) |second|
+              onHookStart  (example.test.ts) |second| [afterEach]
+              onHookEnd    (example.test.ts) |second| [afterEach]
+          onTestCaseResult (example.test.ts) |second|
+      onTestModuleEnd      (example.test.ts)"
+    `)
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (first.test.ts)
-    onTestModuleStart    (first.test.ts)
-        onTestCaseReady  |first test case| (first.test.ts)
-        onTestCaseResult |first test case| (first.test.ts)
-    onTestModuleEnd      (first.test.ts)
+  test('beforeEach and afterEach', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        beforeEach(() => {});
+        afterEach(() => {});
 
-    onTestModuleQueued   (second.test.ts)
-    onTestModuleStart    (second.test.ts)
-        onTestCaseReady  |second test case| (second.test.ts)
-        onTestCaseResult |second test case| (second.test.ts)
-    onTestModuleEnd      (second.test.ts)"
-  `)
-})
+        test('first', () => {});
+        test('second', () => {});
+      `,
+    })
 
-test('beforeEach', async () => {
-  const calls = await run({
-    'single-test.test.ts': ts`
-      beforeEach(() => {});
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |first|
+              onHookStart  (example.test.ts) |first| [beforeEach]
+              onHookEnd    (example.test.ts) |first| [beforeEach]
+              onHookStart  (example.test.ts) |first| [afterEach]
+              onHookEnd    (example.test.ts) |first| [afterEach]
+          onTestCaseResult (example.test.ts) |first|
 
-      test('first', () => {});
-      test('second', () => {});
-    `,
+          onTestCaseReady  (example.test.ts) |second|
+              onHookStart  (example.test.ts) |second| [beforeEach]
+              onHookEnd    (example.test.ts) |second| [beforeEach]
+              onHookStart  (example.test.ts) |second| [afterEach]
+              onHookEnd    (example.test.ts) |second| [afterEach]
+          onTestCaseResult (example.test.ts) |second|
+      onTestModuleEnd      (example.test.ts)"
+    `)
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (single-test.test.ts)
-    onTestModuleStart    (single-test.test.ts)
-        onTestCaseReady  |first| (single-test.test.ts)
-            onHookStart  [beforeEach] |first| (single-test.test.ts)
-            onHookEnd    [beforeEach] |first| (single-test.test.ts)
-        onTestCaseResult |first| (single-test.test.ts)
-        onTestCaseReady  |second| (single-test.test.ts)
-            onHookStart  [beforeEach] |second| (single-test.test.ts)
-            onHookEnd    [beforeEach] |second| (single-test.test.ts)
-        onTestCaseResult |second| (single-test.test.ts)
-    onTestModuleEnd      (single-test.test.ts)"
-  `)
-})
+  test.todo('beforeAll', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        beforeAll(() => {});
 
-test('afterEach', async () => {
-  const calls = await run({
-    'single-test.test.ts': ts`
-      afterEach(() => {});
+        test('first', () => {});
+        test('second', () => {});
+      `,
+    })
 
-      test('first', () => {});
-      test('second', () => {});
-    `,
+    expect(report).toMatchInlineSnapshot()
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (single-test.test.ts)
-    onTestModuleStart    (single-test.test.ts)
-        onTestCaseReady  |first| (single-test.test.ts)
-            onHookStart  [afterEach] |first| (single-test.test.ts)
-            onHookEnd    [afterEach] |first| (single-test.test.ts)
-        onTestCaseResult |first| (single-test.test.ts)
-        onTestCaseReady  |second| (single-test.test.ts)
-            onHookStart  [afterEach] |second| (single-test.test.ts)
-            onHookEnd    [afterEach] |second| (single-test.test.ts)
-        onTestCaseResult |second| (single-test.test.ts)
-    onTestModuleEnd      (single-test.test.ts)"
-  `)
-})
+  test.todo('afterAll', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        afterAll(() => {});
 
-test('beforeEach and afterEach', async () => {
-  const calls = await run({
-    'single-test.test.ts': ts`
-      beforeEach(() => {});
-      afterEach(() => {});
+        test('first', () => {});
+        test('second', () => {});
+      `,
+    })
 
-      test('first', () => {});
-      test('second', () => {});
-    `,
+    expect(report).toMatchInlineSnapshot()
   })
 
-  expect(calls).toMatchInlineSnapshot(`
-    "
-    onTestModuleQueued   (single-test.test.ts)
-    onTestModuleStart    (single-test.test.ts)
-        onTestCaseReady  |first| (single-test.test.ts)
-            onHookStart  [beforeEach] |first| (single-test.test.ts)
-            onHookEnd    [beforeEach] |first| (single-test.test.ts)
-            onHookStart  [afterEach] |first| (single-test.test.ts)
-            onHookEnd    [afterEach] |first| (single-test.test.ts)
-        onTestCaseResult |first| (single-test.test.ts)
-        onTestCaseReady  |second| (single-test.test.ts)
-            onHookStart  [beforeEach] |second| (single-test.test.ts)
-            onHookEnd    [beforeEach] |second| (single-test.test.ts)
-            onHookStart  [afterEach] |second| (single-test.test.ts)
-            onHookEnd    [afterEach] |second| (single-test.test.ts)
-        onTestCaseResult |second| (single-test.test.ts)
-    onTestModuleEnd      (single-test.test.ts)"
-  `)
+  test.todo('beforeAll and afterAll', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        beforeAll(() => {});
+        afterAll(() => {});
+
+        test('first', () => {});
+        test('second', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
+  })
+
+  test.todo('beforeAll on suite', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe("example", () => {
+          beforeAll(() => {});
+
+          test('first', () => {});
+          test('second', () => {});
+        })
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
+  })
+
+  test.todo('afterAll on suite', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe("example", () => {
+          afterAll(() => {});
+
+          test('first', () => {});
+          test('second', () => {});
+        })
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot()
+  })
 })
 
 async function run(structure: Parameters<typeof runInlineTests>[0]) {
@@ -225,11 +406,15 @@ async function run(structure: Parameters<typeof runInlineTests>[0]) {
 class CustomReporter implements Reporter {
   calls: string[] = []
 
+  // Used to add newlines between test cases
+  private callsTestCaseCount = 0
+
   onTestModuleQueued(module: TestModule) {
     this.calls.push(`onTestModuleQueued   (${normalizeFilename(module)})`)
   }
 
   onTestModuleStart(module: TestModule) {
+    this.callsTestCaseCount = 0
     this.calls.push(`onTestModuleStart    (${normalizeFilename(module)})`)
   }
 
@@ -238,25 +423,28 @@ class CustomReporter implements Reporter {
   }
 
   onTestCaseReady(test: TestCase) {
-    this.calls.push(`    onTestCaseReady  |${test.name}| (${normalizeFilename(test.module)})`)
+    const separator = this.callsTestCaseCount > 0 ? '\n' : ''
+    this.callsTestCaseCount++
+
+    this.calls.push(`${separator}    onTestCaseReady  (${normalizeFilename(test.module)}) |${test.name}|`)
   }
 
   onTestCaseResult(test: TestCase) {
-    this.calls.push(`    onTestCaseResult |${test.name}| (${normalizeFilename(test.module)})`)
+    this.calls.push(`    onTestCaseResult (${normalizeFilename(test.module)}) |${test.name}|`)
   }
 
   onHookStart(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
     const padding = hook.entity.type === 'test' ? '        ' : '    '
-    this.calls.push(`${`${padding}onHookStart`.padEnd(21)}[${hook.name}]${name} (${normalizeFilename(module)})`)
+    this.calls.push(`${`${padding}onHookStart`.padEnd(21)}(${normalizeFilename(module)})${name} [${hook.name}]`)
   }
 
   onHookEnd(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
     const padding = hook.entity.type === 'test' ? '        ' : '    '
-    this.calls.push(`${`${padding}onHookEnd`.padEnd(21)}[${hook.name}]${name} (${normalizeFilename(module)})`)
+    this.calls.push(`${`${padding}onHookEnd`.padEnd(21)}(${normalizeFilename(module)})${name} [${hook.name}]`)
   }
 }
 
