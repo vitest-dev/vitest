@@ -71,12 +71,16 @@ export class TestRun {
     }).filter(s => s != null)
     const files = modules.map(m => m.task)
 
-    await Promise.all([
-      this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state),
-      // TODO: in a perfect world, the coverage should be done in parallel to `onFinished`
-      this.vitest.report('onFinished', files, errors, coverage),
-    ])
-    await this.vitest.report('onCoverage', coverage)
+    try {
+      await Promise.all([
+        this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state),
+        // TODO: in a perfect world, the coverage should be done in parallel to `onFinished`
+        this.vitest.report('onFinished', files, errors, coverage),
+      ])
+    }
+    finally {
+      await this.vitest.report('onCoverage', coverage)
+    }
   }
 
   private async reportEvent(id: string, event: TaskUpdateEvent) {
