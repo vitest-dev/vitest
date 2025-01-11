@@ -7,7 +7,7 @@ This is an advanced API. If you just want to configure built-in reporters, read 
 Vitest has its own test run lifecycle. These are represented by reporter's methods:
 
 - [`onInit`](#oninit)
-- [`onTestRunStart`](#ontestrun)
+- [`onTestRunStart`](#ontestrunstart)
   - [`onTestModuleQueued`](#ontestmodulequeud)
   - [`onTestModuleCollected`](#ontestmodulecollected)
   - [`onTestModuleStart`](#ontestmodulestart)
@@ -106,7 +106,7 @@ export default new MyReporter()
 ```
 :::
 
-::: tip
+::: tip DEPRECATION NOTICE
 This method was added in Vitest 3, replacing `onPathsCollected` and `onSpecsCollected`, both of which are now deprecated.
 :::
 
@@ -171,7 +171,7 @@ export default new MyReporter()
 ```
 :::
 
-::: tip
+::: tip DEPRECATION NOTICE
 This method was added in Vitest 3, replacing `onFinished`, which is now deprecated.
 :::
 
@@ -271,7 +271,7 @@ function onTestSuiteReady(testSuite: TestSuite): Awaitable<void>
 
 This method is called before the suite starts to run its tests. This method is also called if the suite was skipped.
 
-If the file doesn't have any suites, this method will not be called. Consider using `onTestModuleStart`.
+If the file doesn't have any suites, this method will not be called. Consider using `onTestModuleStart` to cover this use case.
 
 ## onTestSuiteResult
 
@@ -281,7 +281,7 @@ function onTestSuiteResult(testSuite: TestSuite): Awaitable<void>
 
 This method is called after the suite has finished running tests. This method is also called if the suite was skipped.
 
-If the file doesn't have any suites, this method will not be called. Consider using `onTestModuleEnd`.
+If the file doesn't have any suites, this method will not be called. Consider using `onTestModuleEnd` to cover this use case.
 
 ## onTestCaseReady
 
