@@ -52,6 +52,7 @@ export class TestRun {
     const runningTestCases: TestCase[] = []
     const finishedTestCases: TestCase[] = []
 
+    // TODO: Maybe easier to split these into hook-name specific separate arrays, e.g. beforeAllHooks
     const startingHooks: ReportedHookContext[] = []
     const endingHooks: ReportedHookContext[] = []
 
@@ -108,24 +109,17 @@ export class TestRun {
     // "onTaskUpdate" in parallel with others or before all or after all?
     await this.vitest.report('onTaskUpdate', update)
 
-    await Promise.all(runningTestModules.map(module => this.vitest.report('onTestModuleStart', module)))
+    await Promise.all(runningTestModules.map(async (module) => {
+      await this.vitest.report('onTestModuleStart', module)
+
+      await this.reportHook('beforeAll', module, startingHooks, endingHooks)
+    }))
 
     for (const testCase of runningTestCases) {
       await this.vitest.report('onTestCaseReady', testCase)
 
       for (const name of ['beforeEach', 'afterEach'] as const) {
-        const start = startingHooks.filter(hook => hook.name === name && hook.entity.id === testCase.id)
-        const end = endingHooks.filter(hook => hook.name === name && hook.entity.id === testCase.id)
-
-        for (const hook of start) {
-          const index = startingHooks.findIndex(h => h === hook)
-          await this.vitest.report('onHookStart', startingHooks.splice(index, 1)[0])
-        }
-
-        for (const hook of end) {
-          const index = endingHooks.findIndex(h => h === hook)
-          await this.vitest.report('onHookEnd', endingHooks.splice(index, 1)[0])
-        }
+        await this.reportHook(name, testCase, startingHooks, endingHooks)
       }
 
       const finishedIndex = finishedTestCases.findIndex(t => t.id === testCase.id)
@@ -134,12 +128,15 @@ export class TestRun {
       }
     }
 
-    // TODO: Likely not correct atm
-    await Promise.all(startingHooks.map(hook => this.vitest.report('onHookStart', hook)))
-    await Promise.all(endingHooks.map(hook => this.vitest.report('onHookEnd', hook)))
+    await Promise.all(startingHooks.filter(h => h.entity.type === 'test').map(hook => this.vitest.report('onHookStart', hook)))
+    await Promise.all(endingHooks.filter(h => h.entity.type === 'test').map(hook => this.vitest.report('onHookEnd', hook)))
 
     await Promise.all(finishedTestCases.map(testCase => this.vitest.report('onTestCaseResult', testCase)))
-    await Promise.all(finishedTestModules.map(module => this.vitest.report('onTestModuleEnd', module)))
+    await Promise.all(finishedTestModules.map(async (module) => {
+      await this.reportHook('afterAll', module, startingHooks, endingHooks)
+
+      await this.vitest.report('onTestModuleEnd', module)
+    }))
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {
@@ -168,6 +165,21 @@ export class TestRun {
       this.vitest.report('onFinished', files, errors, coverage),
     ])
     await this.vitest.report('onCoverage', coverage)
+  }
+
+  private async reportHook(name: ReportedHookContext['name'], entity: ReportedHookContext['entity'], startingHooks: ReportedHookContext[], endingHooks: ReportedHookContext[]) {
+    const start = startingHooks.filter(hook => hook.name === name && hook.entity.id === entity.id)
+    const end = endingHooks.filter(hook => hook.name === name && hook.entity.id === entity.id)
+
+    for (const hook of start) {
+      const index = startingHooks.findIndex(h => h === hook)
+      await this.vitest.report('onHookStart', startingHooks.splice(index, 1)[0])
+    }
+
+    for (const hook of end) {
+      const index = endingHooks.findIndex(h => h === hook)
+      await this.vitest.report('onHookEnd', endingHooks.splice(index, 1)[0])
+    }
   }
 }
 

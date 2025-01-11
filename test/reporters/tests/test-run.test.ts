@@ -300,7 +300,7 @@ describe('hooks', () => {
     `)
   })
 
-  test.todo('beforeAll', async () => {
+  test('beforeAll', async () => {
     const report = await run({
       'example.test.ts': ts`
         beforeAll(() => {});
@@ -310,10 +310,22 @@ describe('hooks', () => {
       `,
     })
 
-    expect(report).toMatchInlineSnapshot()
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onHookStart        (example.test.ts) [beforeAll]
+        onHookEnd          (example.test.ts) [beforeAll]
+          onTestCaseReady  (example.test.ts) |first|
+          onTestCaseResult (example.test.ts) |first|
+
+          onTestCaseReady  (example.test.ts) |second|
+          onTestCaseResult (example.test.ts) |second|
+      onTestModuleEnd      (example.test.ts)"
+    `)
   })
 
-  test.todo('afterAll', async () => {
+  test('afterAll', async () => {
     const report = await run({
       'example.test.ts': ts`
         afterAll(() => {});
@@ -323,10 +335,22 @@ describe('hooks', () => {
       `,
     })
 
-    expect(report).toMatchInlineSnapshot()
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+          onTestCaseReady  (example.test.ts) |first|
+          onTestCaseResult (example.test.ts) |first|
+
+          onTestCaseReady  (example.test.ts) |second|
+          onTestCaseResult (example.test.ts) |second|
+        onHookStart        (example.test.ts) [afterAll]
+        onHookEnd          (example.test.ts) [afterAll]
+      onTestModuleEnd      (example.test.ts)"
+    `)
   })
 
-  test.todo('beforeAll and afterAll', async () => {
+  test('beforeAll and afterAll', async () => {
     const report = await run({
       'example.test.ts': ts`
         beforeAll(() => {});
@@ -337,7 +361,21 @@ describe('hooks', () => {
       `,
     })
 
-    expect(report).toMatchInlineSnapshot()
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onHookStart        (example.test.ts) [beforeAll]
+        onHookEnd          (example.test.ts) [beforeAll]
+          onTestCaseReady  (example.test.ts) |first|
+          onTestCaseResult (example.test.ts) |first|
+
+          onTestCaseReady  (example.test.ts) |second|
+          onTestCaseResult (example.test.ts) |second|
+        onHookStart        (example.test.ts) [afterAll]
+        onHookEnd          (example.test.ts) [afterAll]
+      onTestModuleEnd      (example.test.ts)"
+    `)
   })
 
   test.todo('beforeAll on suite', async () => {
@@ -436,14 +474,14 @@ class CustomReporter implements Reporter {
   onHookStart(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
-    const padding = hook.entity.type === 'test' ? '        ' : '    '
+    const padding = hook.entity.type === 'test' ? '        ' : '  '
     this.calls.push(`${`${padding}onHookStart`.padEnd(21)}(${normalizeFilename(module)})${name} [${hook.name}]`)
   }
 
   onHookEnd(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type === 'test' ? ` |${hook.entity.name}|` : ''
-    const padding = hook.entity.type === 'test' ? '        ' : '    '
+    const padding = hook.entity.type === 'test' ? '        ' : '  '
     this.calls.push(`${`${padding}onHookEnd`.padEnd(21)}(${normalizeFilename(module)})${name} [${hook.name}]`)
   }
 }
