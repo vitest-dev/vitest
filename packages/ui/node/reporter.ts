@@ -1,11 +1,10 @@
 import type {
-  File,
   ModuleGraphData,
-  Reporter,
+  RunnerTestFile,
   SerializedConfig,
-  Vitest,
 } from 'vitest'
-import type { HTMLOptions } from 'vitest/node'
+import type { HTMLOptions, Vitest } from 'vitest/node'
+import type { Reporter } from 'vitest/reporters'
 import { promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -34,7 +33,7 @@ function getOutputFile(config: PotentialConfig | undefined) {
 
 interface HTMLReportData {
   paths: string[]
-  files: File[]
+  files: RunnerTestFile[]
   config: SerializedConfig
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
@@ -75,7 +74,7 @@ export default class HTMLReporter implements Reporter {
         const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
         result.moduleGraph[projectName] ??= {}
         result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-          this.ctx as any,
+          this.ctx,
           projectName,
           file.filepath,
           browser,
