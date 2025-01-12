@@ -47,6 +47,34 @@ describe('TestModule', () => {
       onTestModuleEnd      (second.test.ts)"
     `)
   })
+
+  test('test modules with delay', async () => {
+    const report = await run({
+      'first.test.ts': ts`
+        ${delay()}
+        test('first test case', async () => { ${delay()} });
+      `,
+      'second.test.ts': ts`
+      ${delay()}
+      test('second test case', async () => { ${delay()} });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (first.test.ts)
+      onTestModuleStart    (first.test.ts)
+        onTestCaseReady    (first.test.ts) |first test case|
+        onTestCaseResult   (first.test.ts) |first test case|
+      onTestModuleEnd      (first.test.ts)
+
+      onTestModuleQueued   (second.test.ts)
+      onTestModuleStart    (second.test.ts)
+        onTestCaseReady    (second.test.ts) |second test case|
+        onTestCaseResult   (second.test.ts) |second test case|
+      onTestModuleEnd      (second.test.ts)"
+    `)
+  })
 })
 
 describe('TestCase', () => {
@@ -73,6 +101,30 @@ describe('TestCase', () => {
         test('first', () => {});
         test('second', () => {});
         test('third', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onTestCaseReady    (example.test.ts) |first|
+        onTestCaseResult   (example.test.ts) |first|
+        onTestCaseReady    (example.test.ts) |second|
+        onTestCaseResult   (example.test.ts) |second|
+        onTestCaseReady    (example.test.ts) |third|
+        onTestCaseResult   (example.test.ts) |third|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
+  test('multiple test cases with delay', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        ${delay()}
+        test('first', async () => { ${delay()} });
+        test('second', async () => { ${delay()} });
+        test('third', async () => { ${delay()} });
       `,
     })
 
@@ -182,6 +234,38 @@ describe('TestSuite', () => {
 
         describe("second suite", () => {
           test('second test case', () => {});
+        });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onTestSuiteReady   (example.test.ts) |first suite|
+          onTestCaseReady  (example.test.ts) |first test case|
+          onTestCaseResult (example.test.ts) |first test case|
+        onTestSuiteResult  (example.test.ts) |first suite|
+        onTestSuiteReady   (example.test.ts) |second suite|
+          onTestCaseReady  (example.test.ts) |second test case|
+          onTestCaseResult (example.test.ts) |second test case|
+        onTestSuiteResult  (example.test.ts) |second suite|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
+  test('multiple test suites with delay', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        ${delay()}
+        describe("first suite", async () => {
+          ${delay()}
+          test('first test case', async () => { ${delay()} });
+        });
+
+        describe("second suite", async () => {
+          ${delay()}
+          test('second test case', async () => { ${delay()} });
         });
       `,
     })
@@ -478,6 +562,44 @@ describe('hooks', () => {
     `)
   })
 
+  test('all hooks with delay', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        ${delay()}
+        beforeAll(async () => { ${delay()} });
+        afterAll(async () => { ${delay()} });
+        beforeEach(async () => { ${delay()} });
+        afterEach(async () => { ${delay()} });
+
+        test('first', async () => { ${delay()} });
+        test('second', async () => { ${delay()} });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onHookStart        (example.test.ts) [beforeAll]
+        onHookEnd          (example.test.ts) [beforeAll]
+        onTestCaseReady    (example.test.ts) |first|
+          onHookStart      (example.test.ts) |first| [beforeEach]
+          onHookEnd        (example.test.ts) |first| [beforeEach]
+          onHookStart      (example.test.ts) |first| [afterEach]
+          onHookEnd        (example.test.ts) |first| [afterEach]
+        onTestCaseResult   (example.test.ts) |first|
+        onTestCaseReady    (example.test.ts) |second|
+          onHookStart      (example.test.ts) |second| [beforeEach]
+          onHookEnd        (example.test.ts) |second| [beforeEach]
+          onHookStart      (example.test.ts) |second| [afterEach]
+          onHookEnd        (example.test.ts) |second| [afterEach]
+        onTestCaseResult   (example.test.ts) |second|
+        onHookStart        (example.test.ts) [afterAll]
+        onHookEnd          (example.test.ts) [afterAll]
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
   test('beforeAll on suite', async () => {
     const report = await run({
       'example.test.ts': ts`
@@ -640,4 +762,8 @@ function getDepth(entity: TestSuite | TestCase | TestModule) {
   }
 
   return depth
+}
+
+function delay() {
+  return `await new Promise(resolve => setTimeout(resolve, 100));`
 }
