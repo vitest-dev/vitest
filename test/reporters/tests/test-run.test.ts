@@ -664,9 +664,7 @@ async function run(structure: Parameters<typeof runInlineTests>[0]) {
     config: false,
     fileParallelism: false,
     globals: true,
-    reporters: [
-      reporter,
-    ],
+    reporters: [reporter],
     sequence: {
       sequencer: class Sorter {
         sort(files: TestSpecification[]) {

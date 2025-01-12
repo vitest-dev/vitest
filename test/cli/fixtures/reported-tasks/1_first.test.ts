@@ -18,6 +18,7 @@ it('fails multiple times', () => {
 
 it('skips an option test', { skip: true })
 it.skip('skips a .modifier test')
+it('skips an ctx.skip() test', (ctx) => ctx.skip())
 
 it('todos an option test', { todo: true })
 it.todo('todos a .modifier test')

@@ -43,8 +43,10 @@ export class DotReporter extends BaseReporter {
   }
 
   onFinished(files?: File[], errors?: unknown[]) {
-    const finalLog = formatTests(Array.from(this.tests.values()))
-    this.ctx.logger.log(finalLog)
+    if (this.isTTY) {
+      const finalLog = formatTests(Array.from(this.tests.values()))
+      this.ctx.logger.log(finalLog)
+    }
 
     this.tests.clear()
     this.renderer?.finish()
@@ -72,6 +74,10 @@ export class DotReporter extends BaseReporter {
   }
 
   onTestModuleEnd() {
+    if (!this.isTTY) {
+      return
+    }
+
     const columns = this.ctx.logger.getColumns()
 
     if (this.tests.size < columns) {

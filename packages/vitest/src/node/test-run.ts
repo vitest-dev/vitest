@@ -84,11 +84,11 @@ export class TestRun {
     assert(task && entity, `Entity must be found for task ${task?.name || id}`)
 
     if (event === 'suite-prepare' && entity.type === 'suite') {
-      await this.vitest.report('onTestSuiteReady', entity)
+      return await this.vitest.report('onTestSuiteReady', entity)
     }
 
     if (event === 'suite-prepare' && entity.type === 'module') {
-      await this.vitest.report('onTestModuleStart', entity)
+      return await this.vitest.report('onTestModuleStart', entity)
     }
 
     if (event === 'suite-finished') {
@@ -118,14 +118,16 @@ export class TestRun {
       else {
         await this.vitest.report('onTestSuiteResult', entity)
       }
+
+      return
     }
 
     if (event === 'test-prepare' && entity.type === 'test') {
-      await this.vitest.report('onTestCaseReady', entity)
+      return await this.vitest.report('onTestCaseReady', entity)
     }
 
     if (event === 'test-finished' && entity.type === 'test') {
-      await this.vitest.report('onTestCaseResult', entity)
+      return await this.vitest.report('onTestCaseResult', entity)
     }
 
     if (event.startsWith('before-hook') || event.startsWith('after-hook')) {
