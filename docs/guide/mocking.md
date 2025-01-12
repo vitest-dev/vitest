@@ -177,6 +177,7 @@ Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plug
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
 export default defineConfig({
   test: {
     alias: {

@@ -102,7 +102,10 @@ export default defineConfig({
     },
     open: false,
     diff: './custom-diff-config.ts',
-    outputFile: './browser.json',
+    outputFile: {
+      html: './html/index.html',
+      json: './browser.json',
+    },
     reporters: ['json', {
       onInit: noop,
       onPathsCollected: noop,

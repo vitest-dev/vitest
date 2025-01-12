@@ -73,11 +73,14 @@ export default class HTMLReporter implements Reporter {
     await Promise.all(
       result.files.map(async (file) => {
         const projectName = file.projectName || ''
+        const resolvedConfig = this.ctx.getProjectByName(projectName).config
+        const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
         result.moduleGraph[projectName] ??= {}
         result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
           this.ctx as any,
           projectName,
           file.filepath,
+          browser,
         )
         if (!result.sources[file.filepath]) {
           try {
