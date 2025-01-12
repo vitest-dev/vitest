@@ -11,7 +11,7 @@ if (task.type === 'module') {
 ```
 
 ::: warning Extending Suite Methods
-The `TestModule` class inherits all methods and properties from the [`TestSuite`](/advanced/api/test-module). This guide will only list methods and properties unique to the `TestModule`.
+The `TestModule` class inherits all methods and properties from the [`TestSuite`](/advanced/api/test-suite). This guide will only list methods and properties unique to the `TestModule`.
 :::
 
 ## moduleId
