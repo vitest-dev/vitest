@@ -58,6 +58,7 @@ export function createStaticClient(): VitestClient {
     onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,
+    rerunTask: asyncNoop,
     updateSnapshot: asyncNoop,
     resolveSnapshotPath: asyncNoop,
     snapshotSaved: asyncNoop,
@@ -80,7 +81,7 @@ export function createStaticClient(): VitestClient {
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>
 
-  let openPromise: Promise<void>
+  const openPromise = Promise.resolve()
 
   function reconnect() {
     registerMetadata()
