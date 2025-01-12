@@ -8,7 +8,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
 
 - [`onInit`](#oninit)
 - [`onTestRunStart`](#ontestrunstart)
-  - [`onTestModuleQueued`](#ontestmodulequeud)
+  - [`onTestModuleQueued`](#ontestmodulequeued)
   - [`onTestModuleCollected`](#ontestmodulecollected)
   - [`onTestModuleStart`](#ontestmodulestart)
     - [`onTestSuiteReady`](#ontestsuiteready)
