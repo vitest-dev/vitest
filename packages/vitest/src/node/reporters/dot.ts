@@ -53,7 +53,7 @@ export class DotReporter extends BaseReporter {
   }
 
   onTestModuleCollected(module: TestModule): void {
-    for (const test of module.children.tests()) {
+    for (const test of module.children.allTests()) {
       // Dot reporter marks pending tests as running
       this.onTestCaseReady(test)
     }
