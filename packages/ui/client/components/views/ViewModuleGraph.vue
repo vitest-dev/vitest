@@ -21,7 +21,7 @@ const props = defineProps<{
   projectName: string
 }>()
 
-const modelValue = defineModel<boolean>({ default: true })
+const hideNodeModules = defineModel<boolean>({ required: true })
 
 const { graph } = toRefs(props)
 
@@ -64,8 +64,8 @@ function resetGraphController(reset = false) {
 
   // Force reload the module graph only when node_modules are shown.
   // The module graph doesn't contain node_modules entries.
-  if (reset && !modelValue.value) {
-    modelValue.value = true
+  if (reset && !hideNodeModules.value) {
+    hideNodeModules.value = true
     return
   }
 
@@ -170,8 +170,8 @@ function bindOnClick(
           select-none
         >
           <input
-            id="hide-node_modules"
-            v-model="modelValue"
+            id="hide-node-modules"
+            v-model="hideNodeModules"
             type="checkbox"
           >
           <label
@@ -181,7 +181,7 @@ function bindOnClick(
             overflow-hidden
             select-none
             truncate
-            for="hide-node_modules"
+            for="hide-node-modules"
             border-b-2
             border="$cm-namespace"
           >Hide node_modules</label>
