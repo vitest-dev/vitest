@@ -2,6 +2,7 @@
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
 import { hasFailedSnapshot } from '@vitest/ws-client'
+import { toJSON } from 'flatted'
 import {
   browserState,
   client,
@@ -89,13 +90,20 @@ async function loadModuleGraph(force = false) {
       || gd.filepath !== currentFilepath.value
       || (!graph.value.nodes.length && !graph.value.links.length)
     ) {
-      const moduleGraph = await client.rpc.getModuleGraph(
+      let moduleGraph = await client.rpc.getModuleGraph(
         gd.projectName,
         gd.filepath,
         !!browserState,
       )
       // remove node_modules from the graph when enabled
       if (hideNodeModules.value) {
+        // when using static html reporter, we've the meta as global, we need to clone it
+        if (isReport) {
+          moduleGraph
+            = typeof window.structuredClone !== 'undefined'
+              ? window.structuredClone(moduleGraph)
+              : toJSON(moduleGraph)
+        }
         moduleGraph.inlined = moduleGraph.inlined.filter(
           n => !nodeModuleRegex.test(n),
         )
