@@ -21,6 +21,8 @@ const props = defineProps<{
   projectName: string
 }>()
 
+const modelValue = defineModel<boolean>({ default: true })
+
 const { graph } = toRefs(props)
 
 const el = ref<HTMLDivElement>()
@@ -46,7 +48,7 @@ onUnmounted(() => {
   controller.value?.shutdown()
 })
 
-watch(graph, resetGraphController)
+watch(graph, () => resetGraphController())
 
 function setFilter(name: ModuleType, value: boolean) {
   controller.value?.filterNodesByType(value, name)
@@ -57,8 +59,16 @@ function setSelectedModule(id: string) {
   modalShow.value = true
 }
 
-function resetGraphController() {
+function resetGraphController(reset = false) {
   controller.value?.shutdown()
+
+  // Force reload the module graph only when node_modules are shown.
+  // The module graph doesn't contain node_modules entries.
+  if (reset && !modelValue.value) {
+    modelValue.value = true
+    return
+  }
+
   if (!graph.value || !el.value) {
     return
   }
@@ -155,6 +165,28 @@ function bindOnClick(
     <div>
       <div flex items-center gap-4 px-3 py-2>
         <div
+          flex="~ gap-1"
+          items-center
+          select-none
+        >
+          <input
+            id="hide-node_modules"
+            v-model="modelValue"
+            type="checkbox"
+          >
+          <label
+            font-light
+            text-sm
+            ws-nowrap
+            overflow-hidden
+            select-none
+            truncate
+            for="hide-node_modules"
+            border-b-2
+            border="$cm-namespace"
+          >Hide node_modules</label>
+        </div>
+        <div
           v-for="node of controller?.nodeTypes.sort()"
           :key="node"
           flex="~ gap-1"
@@ -173,6 +205,7 @@ function bindOnClick(
             ws-nowrap
             overflow-hidden
             capitalize
+            select-none
             truncate
             :for="`type-${node}`"
             border-b-2
@@ -184,7 +217,7 @@ function bindOnClick(
           <IconButton
             v-tooltip.bottom="'Reset'"
             icon="i-carbon-reset"
-            @click="resetGraphController"
+            @click="resetGraphController(true)"
           />
         </div>
       </div>
