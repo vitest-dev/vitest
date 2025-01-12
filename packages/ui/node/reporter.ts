@@ -66,7 +66,7 @@ export default class HTMLReporter implements Reporter {
       files: this.ctx.state.getFiles(),
       config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
-      projects: this.ctx.getResolvedProjectNames(),
+      projects: (this.ctx as any).resolvedProjects.map((p: { name?: string }) => p.name),
       moduleGraph: {},
       sources: {},
     }
