@@ -181,7 +181,7 @@ This method was added in Vitest 3, replacing `onFinished`, which is now deprecat
 function onCoverage(coverage: unknown): Awaitable<void>
 ```
 
-This hook is called after coverage reports were merged. Vitest doesn't provide coverage type for this method out of the box, but you can import it from `istanbul-lib-coverage` package:
+This hook is called after coverage results have been processed. Coverage provider's reporters are called after this hook. The typings of `coverage` depends on the `coverage.provider`. For Vitest's default built-in providers you can import the types from `istanbul-lib-coverage` package:
 
 ```ts
 import type { CoverageMap } from 'istanbul-lib-coverage'
