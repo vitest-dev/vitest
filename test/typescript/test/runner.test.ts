@@ -43,7 +43,7 @@ describe('should fail', async () => {
     })
   })
 
-  it('typecheks with custom tsconfig', async () => {
+  it('typechecks with custom tsconfig', async () => {
     const { stderr } = await runVitest({
       root,
       dir: resolve(__dirname, '..', './failing'),

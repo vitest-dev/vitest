@@ -435,7 +435,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         // Upon reaching an equality, check for prior redundancies.
         if (count_delete + count_insert > 1) {
           if (count_delete !== 0 && count_insert !== 0) {
-            // Factor out any common prefixies.
+            // Factor out any common prefixes.
             commonlength = diff_commonPrefix(text_insert, text_delete)
             if (commonlength !== 0) {
               if (
@@ -457,7 +457,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
               text_insert = text_insert.substring(commonlength)
               text_delete = text_delete.substring(commonlength)
             }
-            // Factor out any common suffixies.
+            // Factor out any common suffixes.
             commonlength = diff_commonSuffix(text_insert, text_delete)
             if (commonlength !== 0) {
               diffs[pointer][1]

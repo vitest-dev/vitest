@@ -16,7 +16,7 @@ test('default exclude should ignore test files', async () => {
   expect(coverageMap.files()).toMatchInlineSnapshot(`[]`)
 })
 
-test('overriden exclude should not apply defaults', async () => {
+test('overridden exclude should not apply defaults', async () => {
   await runVitest({
     include: ['fixtures/test/math.test.ts'],
     coverage: {

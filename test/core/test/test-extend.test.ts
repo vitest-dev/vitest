@@ -355,7 +355,7 @@ test('teardown should be called once time', () => {
   expect(teardownFn).toBeCalledTimes(1)
 })
 
-describe('asynchonous setup/teardown', () => {
+describe('asynchronous setup/teardown', () => {
   const trackFn = vi.fn()
 
   const myTest = test.extend<{ a: string }>({
