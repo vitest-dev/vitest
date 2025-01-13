@@ -245,11 +245,14 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
-        // have ?. until Vitest 3.0 for backwards compatibility
         const vue = isPackageExists('vitest-browser-vue', fileRoot)
         if (vue) {
           // we override them in the esbuild plugin so optimizer can no longer intercept it
           include.push('@vue/test-utils', '@vue/compiler-core')
+        }
+        const vueTestUtils = !include.includes('@vue/test-utils') && isPackageExists('@vue/test-utils', fileRoot)
+        if (vueTestUtils) {
+          include.push('@vue/test-utils')
         }
 
         return {
