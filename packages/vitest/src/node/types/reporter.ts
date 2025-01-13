@@ -40,7 +40,6 @@ export interface Reporter {
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onProcessTimeout?: () => Awaitable<void>
 
-  // new API, TODO: add a lot of documentation for those
   /**
    * Called when the new test run starts.
    */
@@ -53,6 +52,7 @@ export interface Reporter {
     unhandledErrors: ReadonlyArray<SerializedError>,
     reason: TestRunEndReason
   ) => Awaitable<void>
+
   /**
    * Called when the module is enqueued for testing. The file itself is not loaded yet.
    */
@@ -61,22 +61,44 @@ export interface Reporter {
    * Called when the test file is loaded and the module is ready to run tests.
    */
   onTestModuleCollected?: (testModule: TestModule) => Awaitable<void>
+  /**
+   * Called when starting to run tests of the test file
+   */
   onTestModuleStart?: (testModule: TestModule) => Awaitable<void>
+  /**
+   * Called when all tests of the test file have finished running.
+   */
   onTestModuleEnd?: (testModule: TestModule) => Awaitable<void>
 
   /**
+   * Called when test case is ready to run.
    * Called before the `beforeEach` hooks for the test are run.
    */
   onTestCaseReady?: (testCase: TestCase) => Awaitable<void>
-  onTestSuiteReady?: (testSuite: TestSuite) => Awaitable<void>
   /**
    * Called after the test and its hooks are finished running.
    * The `result()` cannot be `pending`.
    */
   onTestCaseResult?: (testCase: TestCase) => Awaitable<void>
+
+  /**
+   * Called when test suite is ready to run.
+   * Called before the `beforeAll` hooks for the test are run.
+   */
+  onTestSuiteReady?: (testSuite: TestSuite) => Awaitable<void>
+  /**
+   * Called after the test suite and its hooks are finished running.
+   * The `state` cannot be `pending`.
+   */
   onTestSuiteResult?: (testSuite: TestSuite) => Awaitable<void>
 
+  /**
+   * Called before the hook starts to run.
+   */
   onHookStart?: (hook: ReportedHookContext) => Awaitable<void>
+  /**
+   * Called after the hook finished running.
+   */
   onHookEnd?: (hook: ReportedHookContext) => Awaitable<void>
 
   onCoverage?: (coverage: unknown) => Awaitable<void>
