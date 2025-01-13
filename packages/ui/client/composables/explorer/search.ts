@@ -24,6 +24,8 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   const disableClearSearch = computed(() => search.value === '')
   const debouncedSearch = ref(search.value)
 
+  const workspaceProjects = computed(() => [...new Set(uiEntries.value.filter(entry => entry.parentId === 'root').map(entry => entry.projectName))])
+
   debouncedWatch(() => search.value, (value) => {
     debouncedSearch.value = value?.trim() ?? ''
   }, { debounce: 256 })
@@ -104,5 +106,6 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filteredFiles,
     testsTotal,
     uiEntries,
+    workspaceProjects,
   }
 }

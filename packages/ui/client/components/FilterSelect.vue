@@ -1,26 +1,12 @@
-<script lang="ts">
-import type { PropType } from 'vue'
-import { defineComponent } from 'vue'
+<script setup lang="ts">
+defineProps<{ options: string[] }>()
+const emit = defineEmits(['update'])
 
-export default defineComponent({
-  name: 'FilterSelect',
-  props: {
-    options: {
-      type: Array as PropType<string[]>,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      selected: 'All',
-    }
-  },
-  methods: {
-    onChange() {
-      this.$emit('update', this.selected)
-    },
-  },
-})
+const selected = ref('All')
+
+function onChange() {
+  emit('update', selected.value)
+}
 </script>
 
 <template>
