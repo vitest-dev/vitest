@@ -238,7 +238,7 @@ export interface ResolveIdResult {
   optimized: boolean
 }
 
-export interface ResolveMockResul {
+export interface ResolveMockResult {
   mockType: MockedModuleType
   resolvedId: string
   redirectUrl?: string | null
@@ -252,7 +252,7 @@ export interface ModuleMockerRPC {
     id: string,
     importer: string,
     options: { mock: 'spy' | 'factory' | 'auto' }
-  ) => Promise<ResolveMockResul>
+  ) => Promise<ResolveMockResult>
 }
 
 export interface ModuleMockerConfig {

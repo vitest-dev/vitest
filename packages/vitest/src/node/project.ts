@@ -196,7 +196,7 @@ export class TestProject {
    * Serialized project configuration. This is the config that tests receive.
    */
   public get serializedConfig(): SerializedConfig {
-    return this._serializeOverridenConfig()
+    return this._serializeOverriddenConfig()
   }
 
   /** @deprecated use `vite` instead */
@@ -394,7 +394,7 @@ export class TestProject {
    * Returns if the file is a test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isCachedTestFile(testPath: string): boolean {
+  _isCachedTestFile(testPath: string): boolean {
     return !!this.testFilesList && this.testFilesList.includes(testPath)
   }
 
@@ -402,13 +402,13 @@ export class TestProject {
    * Returns if the file is a typecheck test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isCachedTypecheckFile(testPath: string): boolean {
+  _isCachedTypecheckFile(testPath: string): boolean {
     return !!this.typecheckFilesList && this.typecheckFilesList.includes(testPath)
   }
 
   /** @deprecated use `serializedConfig` instead */
   getSerializableConfig(): SerializedConfig {
-    return this._serializeOverridenConfig()
+    return this._serializeOverriddenConfig()
   }
 
   /** @internal */
@@ -430,7 +430,7 @@ export class TestProject {
    * Test if a file matches the test globs. This does the actual glob matching if the test is not cached, unlike `isCachedTestFile`.
    */
   public matchesTestGlob(moduleId: string, source?: () => string): boolean {
-    if (this.isCachedTestFile(moduleId)) {
+    if (this._isCachedTestFile(moduleId)) {
       return true
     }
     const relativeId = relative(this.config.dir || this.config.root, moduleId)
@@ -613,7 +613,7 @@ export class TestProject {
     })
   }
 
-  private _serializeOverridenConfig(): SerializedConfig {
+  private _serializeOverriddenConfig(): SerializedConfig {
     // TODO: serialize the config _once_ or when needed
     const config = serializeConfig(
       this.config,

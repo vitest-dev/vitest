@@ -25,7 +25,7 @@ class Reporter {
 
   onFinished(files: RunnerTestFile[]) {
     for (const file of files) {
-      const testModule = this.vitest.getReportedEntity(file) as TestModule
+      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
       for (const suite of testModule.children.allSuites()) {
         console.log(suite) // TestSuite
       }

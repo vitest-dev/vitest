@@ -5,7 +5,11 @@ title: Debugging | Guide
 # Debugging
 
 :::tip
-When debugging tests you might want to use `--test-timeout` CLI argument to prevent tests from timing out when stopping at breakpoints.
+When debugging tests you might want to use following options:
+
+- [`--test-timeout=0`](/guide/cli#testtimeout) to prevent tests from timing out when stopping at breakpoints
+- [`--no-file-parallelism`](/guide/cli#fileparallelism) to prevent test files from running parallel
+
 :::
 
 ## VS Code

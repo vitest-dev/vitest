@@ -24,12 +24,12 @@ TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has n
 exports[`should fail > typecheck files 3`] = `
 " FAIL  expect-error.test-d.ts > failing test with expect-error
 TypeCheckError: Unused '@ts-expect-error' directive.
- ❯ expect-error.test-d.ts:4:3
-      2| 
-      3| test('failing test with expect-error', () => {
-      4|   // @ts-expect-error expect nothing
+ ❯ expect-error.test-d.ts:5:3
+      3| //
+      4| test('failing test with expect-error', () => {
+      5|   // @ts-expect-error expect nothing
        |   ^
-      5|   expectTypeOf(1).toEqualTypeOf<number>()"
+      6|   expectTypeOf(1).toEqualTypeOf<number>()"
 `;
 
 exports[`should fail > typecheck files 4`] = `
@@ -103,7 +103,7 @@ Error: error TS18003: No inputs were found in config file '<root>/tsconfig.empty
 "
 `;
 
-exports[`should fail > typecheks with custom tsconfig 1`] = `
+exports[`should fail > typechecks with custom tsconfig 1`] = `
 "TypeCheckError: This expression is not callable. Type 'ExpectUndefined<number>' has no call signatures.
 TypeCheckError: This expression is not callable. Type 'ExpectVoid<number>' has no call signatures.
 TypeCheckError: Type 'string' does not satisfy the constraint '"Expected string, Actual number"'.

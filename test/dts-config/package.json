@@ -1,0 +1,11 @@
+{
+  "name": "@vitest/test-dts-config",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "tsc -b"
+  },
+  "devDependencies": {
+    "vitest": "workspace:*"
+  }
+}
