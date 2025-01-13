@@ -90,6 +90,9 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   "paths": [
     "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
   ],
+  "projects": [
+    "",
+  ],
   "sources": {
     "<rootDir>/test/reporters/fixtures/json-fail.test.ts": "import { expect, test } from 'vitest'
 
@@ -178,6 +181,9 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   },
   "paths": [
     "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
+  ],
+  "projects": [
+    "",
   ],
   "sources": {
     "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": "import { expect, test } from 'vitest'

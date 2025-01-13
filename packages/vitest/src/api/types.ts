@@ -32,6 +32,7 @@ export interface WebSocketHandlers {
   getTestFiles: () => Promise<SerializedTestSpecification[]>
   getPaths: () => string[]
   getConfig: () => SerializedConfig
+  getResolvedProjectNames: () => string[]
   getModuleGraph: (
     projectName: string,
     id: string,
