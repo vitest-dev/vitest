@@ -15,6 +15,7 @@ interface HTMLReportMetadata {
   paths: string[]
   files: File[]
   config: SerializedConfig
+  projects: string[]
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -47,6 +48,9 @@ export function createStaticClient(): VitestClient {
     getConfig: () => {
       return metadata.config
     },
+    getResolvedProjectNames: () => {
+      return metadata.projects
+    },
     getModuleGraph: async (projectName, id) => {
       return metadata.moduleGraph[projectName]?.[id]
     },
@@ -58,6 +62,7 @@ export function createStaticClient(): VitestClient {
     onTaskUpdate: noop,
     writeFile: asyncNoop,
     rerun: asyncNoop,
+    rerunTask: asyncNoop,
     updateSnapshot: asyncNoop,
     resolveSnapshotPath: asyncNoop,
     snapshotSaved: asyncNoop,
@@ -80,7 +85,7 @@ export function createStaticClient(): VitestClient {
 
   ctx.rpc = rpc as any as BirpcReturn<WebSocketHandlers, WebSocketEvents>
 
-  let openPromise: Promise<void>
+  const openPromise = Promise.resolve()
 
   function reconnect() {
     registerMetadata()

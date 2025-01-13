@@ -67,7 +67,7 @@ export async function resolveWorkspace(
     const rootOptions = options.extends === true
       ? vitest._options
       : {}
-    // if `root` is configured, resolve it relative to the workespace file or vite root (like other options)
+    // if `root` is configured, resolve it relative to the workspace file or vite root (like other options)
     // if `root` is not specified, inline configs use the same root as the root project
     const root = options.root
       ? resolve(configRoot, options.root)
@@ -307,10 +307,10 @@ async function resolveTestProjectConfigs(
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
-          const relativeWorkpaceConfigPath = workspaceConfigPath
+          const relativeWorkSpaceConfigPath = workspaceConfigPath
             ? relative(vitest.config.root, workspaceConfigPath)
             : undefined
-          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkpaceConfigPath}"` : 'Inline workspace'
+          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkSpaceConfigPath}"` : 'Inline workspace'
           throw new Error(`${note} references a non-existing file or a directory: ${file}`)
         }
 

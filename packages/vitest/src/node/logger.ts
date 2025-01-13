@@ -3,11 +3,9 @@ import type { ErrorWithDiff } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
-import type { PrintErrorResult } from './error'
 import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './error'
@@ -106,33 +104,8 @@ export class Logger {
     this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
-  printError(err: unknown, options: ErrorOptions = {}): PrintErrorResult | undefined {
-    const { fullStack = false, type } = options
-    const project = options.project
-      ?? this.ctx.coreWorkspaceProject
-      ?? this.ctx.projects[0]
-    return printError(err, project, {
-      type,
-      showCodeFrame: options.showCodeFrame ?? true,
-      logger: this,
-      printProperties: options.verbose,
-      screenshotPaths: options.screenshotPaths,
-      parseErrorStacktrace: (error) => {
-        // browser stack trace needs to be processed differently,
-        // so there is a separate method for that
-        if (options.task?.file.pool === 'browser' && project.browser) {
-          return project.browser.parseErrorStacktrace(error, {
-            ignoreStackEntries: fullStack ? [] : undefined,
-          })
-        }
-
-        // node.js stack trace already has correct source map locations
-        return parseErrorStacktrace(error, {
-          frameFilter: project.config.onStackTrace,
-          ignoreStackEntries: fullStack ? [] : undefined,
-        })
-      },
-    })
+  printError(err: unknown, options: ErrorOptions = {}) {
+    printError(err, this.ctx, this, options)
   }
 
   clearHighlightCache(filename?: string) {
