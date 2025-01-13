@@ -248,9 +248,13 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         const vue = isPackageExists('vitest-browser-vue', fileRoot)
         if (vue) {
           // we override them in the esbuild plugin so optimizer can no longer intercept it
-          include.push('@vue/test-utils', '@vue/compiler-core')
+          include.push(
+            'vitest-browser-vue',
+            'vitest-browser-vue > @vue/test-utils',
+            'vitest-browser-vue > @vue/test-utils > @vue/compiler-core',
+          )
         }
-        const vueTestUtils = !include.includes('@vue/test-utils') && isPackageExists('@vue/test-utils', fileRoot)
+        const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
         if (vueTestUtils) {
           include.push('@vue/test-utils')
         }
