@@ -19,7 +19,8 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   ) {
     const checker = project.typechecker!
 
-    await ctx._testRun.updated(checker.getTestPacks(), [])
+    const { packs, events } = checker.getTestPacksAndEvents()
+    await ctx._testRun.updated(packs, events)
 
     if (!project.config.typecheck.ignoreSourceErrors) {
       sourceErrors.forEach(error =>
@@ -82,7 +83,9 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       await checker.collectTests()
 
       await ctx._testRun.collected(project, checker.getTestFiles())
-      await ctx._testRun.updated(checker.getTestPacks(), []) // TODO: events
+
+      const { packs, events } = checker.getTestPacksAndEvents()
+      await ctx._testRun.updated(packs, events)
     })
 
     await checker.prepare()

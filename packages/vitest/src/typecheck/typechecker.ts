@@ -1,5 +1,5 @@
 import type { RawSourceMap } from '@ampproject/remapping'
-import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
+import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
 import type { ParsedStack } from '@vitest/utils'
 import type { EachMapping } from '@vitest/utils/source-map'
 import type { ChildProcess } from 'node:child_process'
@@ -358,11 +358,35 @@ export class Typechecker {
     return Object.values(this._tests || {}).map(i => i.file)
   }
 
-  public getTestPacks() {
-    return Object.values(this._tests || {})
-      .map(({ file }) => getTasks(file))
-      .flat()
-      .map<TaskResultPack>(i => [i.id, i.result, { typecheck: true }])
+  public getTestPacksAndEvents() {
+    const packs: TaskResultPack[] = []
+    const events: TaskEventPack[] = []
+
+    for (const { file } of Object.values(this._tests || {})) {
+      const tasks = getTasks(file)
+      const events: TaskEventPack[] = [
+        [file.id, 'suite-prepare'],
+      ]
+      for (const task of tasks) {
+        task.meta.typecheck = true
+
+        if (task.type === 'test') {
+          packs.push([task.id, task.result, task.meta])
+
+          if (task.mode !== 'skip' && task.mode !== 'todo') {
+            events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
+          }
+        }
+        else if (task.type === 'suite') {
+          packs.push([task.id, task.result, task.meta])
+          events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
+        }
+      }
+
+      events.push([file.id, 'suite-finished'])
+    }
+
+    return { packs, events }
   }
 }
 
