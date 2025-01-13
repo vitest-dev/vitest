@@ -34,7 +34,7 @@
     "dev": "rollup -c --watch"
   },
   "dependencies": {
-    "tinyrainbow": "^1.2.0"
+    "tinyrainbow": "^2.0.0"
   },
   "devDependencies": {
     "@types/react-is": "^19.0.0",

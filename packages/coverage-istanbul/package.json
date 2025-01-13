@@ -53,7 +53,7 @@
     "istanbul-reports": "^3.1.7",
     "magicast": "^0.3.5",
     "test-exclude": "^7.0.1",
-    "tinyrainbow": "^1.2.0"
+    "tinyrainbow": "^2.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
