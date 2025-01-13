@@ -48,7 +48,6 @@ export type {
   TestState,
   TestSuite,
   TestSuiteState,
-  TestSuiteStatistics,
 } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
