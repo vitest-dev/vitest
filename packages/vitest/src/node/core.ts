@@ -484,9 +484,7 @@ export class Vitest {
         }
         else if (task.type === 'suite') {
           taskPacks.push([task.id, task.result, task.meta])
-          if (task.mode !== 'skip' && task.mode !== 'todo') {
-            events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
-          }
+          events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
         }
       }
       logs.sort((log1, log2) => log1.time - log2.time)
