@@ -142,6 +142,25 @@ describe('TestCase', () => {
     `)
   })
 
+  test('failing test case', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test('failing test case', () => {
+          expect(1).toBe(2)
+        });
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued   (example.test.ts)
+      onTestModuleStart    (example.test.ts)
+        onTestCaseReady    (example.test.ts) |failing test case|
+        onTestCaseResult   (example.test.ts) |failing test case|
+      onTestModuleEnd      (example.test.ts)"
+    `)
+  })
+
   test('skipped test case', async () => {
     const report = await run({
       'example.test.ts': ts`

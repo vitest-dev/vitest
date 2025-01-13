@@ -362,11 +362,7 @@ export class Typechecker {
     return Object.values(this._tests || {})
       .map(({ file }) => getTasks(file))
       .flat()
-      .map<TaskResultPack>(i => [
-        i.id,
-        i.result,
-        { typecheck: true },
-      ])
+      .map<TaskResultPack>(i => [i.id, i.result, { typecheck: true }])
   }
 }
 
