@@ -719,7 +719,6 @@ export interface SerializedTestProject {
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   configFile: string | false
-  extends?: string
 }
 
 export async function initializeProject(
@@ -729,7 +728,7 @@ export async function initializeProject(
 ) {
   const project = new TestProject(workspacePath, ctx, options)
 
-  const { extends: extendsConfig, configFile, ...restOptions } = options
+  const { configFile, ...restOptions } = options
 
   const config: ViteInlineConfig = {
     ...restOptions,
