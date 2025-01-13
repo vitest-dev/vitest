@@ -65,9 +65,7 @@ Instead of using the tasks that reporters receive, it is recommended to use the 
 You can get access to this API by calling `vitest.state.getReportedEntity(runnerTask)`:
 
 ```ts twoslash
-import type { Vitest } from 'vitest/node'
-import type { RunnerTestFile } from 'vitest'
-import type { Reporter, TestModule } from 'vitest/reporters'
+import type { Reporter, RunnerTestFile, TestModule, Vitest } from 'vitest/node'
 
 class MyReporter implements Reporter {
   private vitest!: Vitest

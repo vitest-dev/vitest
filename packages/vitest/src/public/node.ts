@@ -143,6 +143,17 @@ export type {
 
 export { createDebugger } from '../utils/debugger'
 
+export type {
+  RunnerTask,
+  RunnerTaskResult,
+  RunnerTaskResultPack,
+  RunnerTestCase,
+  RunnerTestFile,
+  RunnerTestSuite,
+} from './index'
+export type {
+  Reporter,
+} from './reporters'
 export { generateFileHash } from '@vitest/runner/utils'
 
 export {

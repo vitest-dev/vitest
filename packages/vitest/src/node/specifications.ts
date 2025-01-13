@@ -1,5 +1,5 @@
 import type { Vitest } from './core'
-import type { TestProject } from './reporters'
+import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import { existsSync } from 'node:fs'
 import mm from 'micromatch'
