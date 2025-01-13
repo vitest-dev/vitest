@@ -342,7 +342,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssetions(withFixtures(handler, context), task),
+          withAwaitAsyncAssertions(withFixtures(handler, context), task),
           options?.timeout ?? runner.config.testTimeout,
         ),
       )
@@ -484,7 +484,7 @@ function createSuiteCollector(
   return collector
 }
 
-function withAwaitAsyncAssetions<T extends (...args: any[]) => any>(fn: T, task: TaskPopulated): T {
+function withAwaitAsyncAssertions<T extends (...args: any[]) => any>(fn: T, task: TaskPopulated): T {
   return (async (...args: any[]) => {
     await fn(...args)
     // some async expect will be added to this array, in case user forget to await them

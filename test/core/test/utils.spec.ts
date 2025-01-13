@@ -227,7 +227,7 @@ describe('resetModules doesn\'t resets only user modules', () => {
     resetModules(moduleCache)
   })
 
-  test.each(modules)('Cashe for %s is reseted (%s)', (path, reset) => {
+  test.each(modules)('Cache for %s is reset (%s)', (path, reset) => {
     const cached = moduleCache.get(path)
 
     if (reset) {
