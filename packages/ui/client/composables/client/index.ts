@@ -153,10 +153,11 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      let [files, _config, errors] = await Promise.all([
+      let [files, _config, errors, projects] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
+        client.rpc.getResolvedProjectNames(),
       ])
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
@@ -166,7 +167,7 @@ watch(
           return file
         })
       }
-      explorerTree.loadFiles(files)
+      explorerTree.loadFiles(files, projects)
       client.state.collectFiles(files)
       explorerTree.startRun()
       unhandledErrors.value = (errors || []).map(parseError)
