@@ -152,7 +152,11 @@ Use either:
 {
   "browser": {
     "provider": "playwright",
-    "name": "chromium"
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
   }
 }
 
