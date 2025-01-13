@@ -32,9 +32,6 @@ type RawCoverage = Profiler.TakePreciseCoverageReturnType
 // TODO: vite-node should export this
 const WRAPPER_LENGTH = 185
 
-// Note that this needs to match the line ending as well
-const VITE_EXPORTS_LINE_PATTERN
-  = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
 const DECORATOR_METADATA_PATTERN
   = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
 const FILE_PROTOCOL = 'file://'
@@ -416,15 +413,11 @@ function excludeGeneratedCode(
     return map
   }
 
-  if (
-    !source.match(VITE_EXPORTS_LINE_PATTERN)
-    && !source.match(DECORATOR_METADATA_PATTERN)
-  ) {
+  if (!source.match(DECORATOR_METADATA_PATTERN)) {
     return map
   }
 
   const trimmed = new MagicString(source)
-  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
   trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match =>
     '\n'.repeat(match.split('\n').length - 1))
 
