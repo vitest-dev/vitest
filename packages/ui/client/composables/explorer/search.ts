@@ -40,6 +40,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
     filter.success = false
     filter.skipped = false
     filter.onlyTests = false
+    filter.project = 'All'
     if (focus) {
       searchBox.value?.focus()
     }

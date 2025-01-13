@@ -42,6 +42,7 @@ const {
   filteredFiles,
   testsTotal,
   uiEntries,
+  workspaceProjects,
 } = useSearch(searchBox)
 
 const filterClass = ref<string>('grid-cols-2')
@@ -123,6 +124,7 @@ watch(() => windowWidth.value * (panels.navigation / 100), (width) => {
         <FilterStatus v-model="filter.success" label="Pass" />
         <FilterStatus v-model="filter.skipped" label="Skip" />
         <FilterStatus v-model="filter.onlyTests" label="Only Tests" />
+        <FilterSelect v-model="filter.project" :options="(workspaceProjects as string[])" @update="(e) => console.log(e)" />
       </div>
     </div>
     <div class="scrolls" flex-auto py-1 @scroll.passive="hideAllPoppers">
