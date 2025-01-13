@@ -307,15 +307,6 @@ class TestCollection {
 
 export type { TestCollection }
 
-export interface TestSuiteStatistics {
-  total: number
-  completed: number
-  passed: number
-  failed: number
-  skipped: number
-  todo: number
-}
-
 export type ReportedHookContext = {
   readonly name: 'beforeAll' | 'afterAll'
   readonly entity: TestSuite | TestModule
@@ -324,23 +315,9 @@ export type ReportedHookContext = {
   readonly entity: TestCase
 }
 
-function createStatistics() {
-  return {
-    total: 0,
-    completed: 0,
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    todo: 0,
-  }
-}
-
 abstract class SuiteImplementation extends ReportedTaskImplementation {
   /** @internal */
   declare public readonly task: RunnerTestSuite | RunnerTestFile
-
-  /** @internal */
-  public _statistic: TestSuiteStatistics = createStatistics()
 
   /**
    * Collection of suites and tests that are part of this suite.
@@ -351,13 +328,6 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
   protected constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
     super(task, project)
     this.children = new TestCollection(task, project)
-  }
-
-  /**
-   * The number of tests in this suite with a specific state.
-   */
-  public statistics(): TestSuiteStatistics {
-    return { ...this._statistic }
   }
 
   /**
