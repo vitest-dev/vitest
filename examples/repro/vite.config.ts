@@ -11,6 +11,7 @@ export default defineConfig({
     {
       name: 'repro',
       transform(code, id, _options) {
+        if (1) return;
         if (id.endsWith('/basic.ts')) {
           const output = new MagicString(code)
           output.prepend(`function prepended(){};`)
