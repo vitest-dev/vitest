@@ -1,4 +1,4 @@
-import type { Reporter } from '../types/reporter'
+import type { Reporter, TestRunEndReason } from '../types/reporter'
 import type { BaseOptions, BaseReporter } from './base'
 import type { BlobOptions } from './blob'
 import type { DefaultReporterOptions } from './default'
@@ -27,7 +27,7 @@ export {
   TapReporter,
   VerboseReporter,
 }
-export type { BaseReporter, Reporter }
+export type { BaseReporter, Reporter, TestRunEndReason }
 
 export {
   BenchmarkBuiltinReporters,
@@ -70,3 +70,5 @@ export interface BuiltinReporterOptions {
   'hanging-process': never
   'html': HTMLOptions
 }
+
+export type { ReportedHookContext } from './reported-tasks'

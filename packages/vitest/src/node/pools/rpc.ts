@@ -1,7 +1,6 @@
 import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
-import type { TestModule } from '../reporters/reported-tasks'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'pathe'
@@ -15,7 +14,7 @@ interface MethodsOptions {
 }
 
 export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
-  const ctx = project.ctx
+  const ctx = project.vitest
   const cacheFs = options.cacheFs ?? false
   return {
     snapshotSaved(snapshot) {
@@ -79,34 +78,23 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       ctx.state.collectPaths(paths)
       return ctx.report('onPathsCollected', paths)
     },
-    onQueued(file) {
-      ctx.state.collectFiles(project, [file])
-      const testModule = ctx.state.getReportedEntity(file) as TestModule
-      return ctx.report('onTestModuleQueued', testModule)
+    async onQueued(file) {
+      await ctx._testRun.enqueued(project, file)
     },
-    onCollected(files) {
-      ctx.state.collectFiles(project, files)
-      return ctx.report('onCollected', files)
+    async onCollected(files) {
+      await ctx._testRun.collected(project, files)
     },
     onAfterSuiteRun(meta) {
       ctx.coverageProvider?.onAfterSuiteRun(meta)
     },
-    onTaskUpdate(packs) {
-      ctx.state.updateTasks(packs)
-      return ctx.report('onTaskUpdate', packs)
+    async onTaskUpdate(packs, events) {
+      await ctx._testRun.updated(packs, events)
     },
-    onUserConsoleLog(log) {
-      ctx.state.updateUserLog(log)
-      ctx.report('onUserConsoleLog', log)
+    async onUserConsoleLog(log) {
+      await ctx._testRun.log(log)
     },
     onUnhandledError(err, type) {
       ctx.state.catchError(err, type)
-    },
-    onFinished(files) {
-      const errors = ctx.state.getUnhandledErrors()
-      ctx._checkUnhandledErrors(errors)
-
-      return ctx.report('onFinished', files, errors)
     },
     onCancel(reason) {
       ctx.cancelCurrentRun(reason)

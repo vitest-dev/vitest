@@ -22,5 +22,7 @@ export type {
   JsonAssertionResult,
   JsonTestResult,
   JsonTestResults,
+  ReportedHookContext,
   Reporter,
+  TestRunEndReason,
 } from '../node/reporters'

@@ -19,7 +19,8 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   ) {
     const checker = project.typechecker!
 
-    await ctx.report('onTaskUpdate', checker.getTestPacks())
+    const { packs, events } = checker.getTestPacksAndEvents()
+    await ctx._testRun.updated(packs, events)
 
     if (!project.config.typecheck.ignoreSourceErrors) {
       sourceErrors.forEach(error =>
@@ -62,8 +63,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.setFiles(files)
 
     checker.onParseStart(async () => {
-      ctx.state.collectFiles(project, checker.getTestFiles())
-      await ctx.report('onCollected')
+      const files = checker.getTestFiles()
+      for (const file of files) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, files)
     })
 
     checker.onParseEnd(result => onParseEnd(project, result))
@@ -81,10 +85,15 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
 
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
 
-      await ctx.report('onTaskUpdate', checker.getTestPacks())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, testFiles)
+
+      const { packs, events } = checker.getTestPacksAndEvents()
+      await ctx._testRun.updated(packs, events)
     })
 
     await checker.prepare()
@@ -108,8 +117,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, testFiles)
     }
   }
 
@@ -136,8 +148,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
-        ctx.state.collectFiles(project, project.typechecker.getTestFiles())
-        await ctx.report('onCollected')
+        const testFiles = project.typechecker.getTestFiles()
+        for (const file of testFiles) {
+          await ctx._testRun.enqueued(project, file)
+        }
+        await ctx._testRun.collected(project, testFiles)
         await onParseEnd(project, project.typechecker.getResult())
         continue
       }

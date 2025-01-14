@@ -20,25 +20,22 @@ test('custom', ({ task }) => {
 })
 ```
 
-Once a test is completed, Vitest will send a task including the result and `meta` to the Node.js process using RPC. To intercept and process this task, you can utilize the `onTaskUpdate` method available in your reporter implementation:
+Once a test is completed, Vitest will send a task including the result and `meta` to the Node.js process using RPC, and then report it in `onTestCaseResult` and other hooks that have access to tasks. To process this test case, you can utilize the `onTestCaseResult` method available in your reporter implementation:
 
 ```ts [custom-reporter.js]
-export default {
-  // you can intercept packs if needed
-  onTaskUpdate(packs) {
-    const [id, result, meta] = packs[0]
-  },
-  // meta is located on every task inside "onFinished"
-  onFinished(files) {
-    files[0].meta.done === true
-    files[0].tasks[0].meta.custom === 'some-custom-handler'
-  }
-}
-```
+import type { Reporter, TestCase, TestModule } from 'vitest/node'
 
-::: warning
-Vitest can send several tasks at the same time if several tests are completed in a short period of time.
-:::
+export default {
+  onTestCaseResult(testCase: TestCase) {
+    // custom === 'some-custom-handler' ✅
+    const { custom } = testCase.meta()
+  },
+  onTestRunEnd(testModule: TestModule) {
+    testModule.meta().done === true
+    testModule.children.at(0).meta().custom === 'some-custom-handler'
+  }
+} satisfies Reporter
+```
 
 ::: danger BEWARE
 Vitest uses different methods to communicate with the Node.js process.
@@ -56,9 +53,11 @@ You can also get this information from Vitest state when tests finished running:
 
 ```ts
 const vitest = await createVitest('test')
-await vitest.start()
-vitest.state.getFiles()[0].meta.done === true
-vitest.state.getFiles()[0].tasks[0].meta.custom === 'some-custom-handler'
+const { testModules } = await vitest.start()
+
+const testModule = testModules[0]
+testModule.meta().done === true
+testModule.children.at(0).meta().custom === 'some-custom-handler'
 ```
 
 It's also possible to extend type definitions when using TypeScript:

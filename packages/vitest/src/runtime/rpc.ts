@@ -75,7 +75,6 @@ export function createRuntimeRpc(
       {
         eventNames: [
           'onUserConsoleLog',
-          'onFinished',
           'onCollected',
           'onCancel',
         ],

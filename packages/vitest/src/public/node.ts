@@ -34,17 +34,20 @@ export type { JUnitOptions } from '../node/reporters/junit'
 
 export type {
   ModuleDiagnostic,
-
   TaskOptions,
+
   TestCase,
   TestCollection,
   TestDiagnostic,
   TestModule,
+  TestModuleState,
   TestResult,
   TestResultFailed,
   TestResultPassed,
   TestResultSkipped,
+  TestState,
   TestSuite,
+  TestSuiteState,
 } from '../node/reporters/reported-tasks'
 export { BaseSequencer } from '../node/sequencers/BaseSequencer'
 
@@ -152,9 +155,12 @@ export type {
   RunnerTestSuite,
 } from './index'
 export type {
+  ReportedHookContext,
   Reporter,
+  TestRunEndReason,
 } from './reporters'
 export { generateFileHash } from '@vitest/runner/utils'
+export type { SerializedError } from '@vitest/utils'
 
 export {
   esbuildVersion,
