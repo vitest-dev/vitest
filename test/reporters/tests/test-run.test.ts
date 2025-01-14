@@ -1,8 +1,10 @@
 import type {
   ReportedHookContext,
   Reporter,
+  SerializedError,
   TestCase,
   TestModule,
+  TestRunEndReason,
   TestSpecification,
   TestSuite,
   UserConfig,
@@ -10,6 +12,65 @@ import type {
 import { sep } from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests, ts } from '../../test-utils'
+
+describe('TestRun', () => {
+  test('pass test run without files (no-watch)', async () => {
+    const report = await run(
+      {},
+      {
+        passWithNoTests: true,
+        watch: false,
+      },
+      {
+        printTestRunEvents: true,
+      },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestRunStart (0 specifications)
+      onTestRunEnd   (passed, 0 modules, 0 errors)"
+    `)
+  })
+
+  test('pass test run without files (watch)', async () => {
+    const report = await run(
+      {},
+      {
+        passWithNoTests: true,
+        watch: true,
+      },
+      {
+        printTestRunEvents: true,
+      },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestRunStart (0 specifications)
+      onTestRunEnd   (passed, 0 modules, 0 errors)"
+    `)
+  })
+
+  test('fail test run without files (no-watch)', async () => {
+    const report = await run(
+      {},
+      {
+        passWithNoTests: false,
+        watch: false,
+      },
+      {
+        printTestRunEvents: true,
+      },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestRunStart (0 specifications)
+      onTestRunEnd   (failed, 0 modules, 0 errors)"
+    `)
+  })
+})
 
 describe('TestModule', () => {
   test('single test module', async () => {
@@ -683,8 +744,16 @@ describe('hooks', () => {
   })
 })
 
-async function run(structure: Parameters<typeof runInlineTests>[0]) {
-  const reporter = new CustomReporter()
+interface ReporterOptions {
+  printTestRunEvents?: boolean
+}
+
+async function run(
+  structure: Parameters<typeof runInlineTests>[0],
+  customConfig?: UserConfig,
+  reporterOptions?: ReporterOptions,
+) {
+  const reporter = new CustomReporter(reporterOptions)
 
   const config: UserConfig = {
     config: false,
@@ -702,18 +771,43 @@ async function run(structure: Parameters<typeof runInlineTests>[0]) {
         }
       },
     },
+    ...customConfig,
   }
 
   const { stdout, stderr } = await runInlineTests(structure, config)
 
-  expect(stdout).toBe('')
-  expect(stderr).toBe('')
+  if (reporterOptions?.printTestRunEvents) {
+    if (config.passWithNoTests) {
+      expect(stdout).toContain('No test files found, exiting with code 0')
+    }
+    else {
+      expect(stderr).toContain('No test files found, exiting with code 1')
+    }
+  }
+  else {
+    expect(stdout).toBe('')
+    expect(stderr).toBe('')
+  }
 
   return `\n${reporter.calls.join('\n').trim()}`
 }
 
 class CustomReporter implements Reporter {
   calls: string[] = []
+
+  constructor(private options: ReporterOptions = {}) {}
+
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>) {
+    if (this.options.printTestRunEvents) {
+      this.calls.push(`onTestRunStart (${specifications.length} specifications)`)
+    }
+  }
+
+  onTestRunEnd(modules: ReadonlyArray<TestModule>, errors: ReadonlyArray<SerializedError>, state: TestRunEndReason) {
+    if (this.options.printTestRunEvents) {
+      this.calls.push(`onTestRunEnd   (${state}, ${modules.length} modules, ${errors.length} errors)`)
+    }
+  }
 
   onTestModuleQueued(module: TestModule) {
     this.calls.push(`onTestModuleQueued   (${normalizeFilename(module)})`)

@@ -563,15 +563,24 @@ export class Vitest {
 
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      // Report coverage for uncovered files
+      const throwAnError = !this.config.watch || !(this.config.changed || this.config.related?.length)
+
+      await this._testRun.start([])
       const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
+
+      // set exit code before calling `onTestRunEnd` so the lifecycle is consistent
+      if (throwAnError) {
+        const exitCode = this.config.passWithNoTests ? 0 : 1
+        process.exitCode = exitCode
+      }
+
+      await this._testRun.end([], [], coverage)
+      // Report coverage for uncovered files
       await this.reportCoverage(coverage, true)
 
       this.logger.printNoTestFound(filters)
 
-      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
-        const exitCode = this.config.passWithNoTests ? 0 : 1
-        process.exitCode = exitCode
+      if (throwAnError) {
         throw new FilesNotFoundError(this.mode)
       }
     }

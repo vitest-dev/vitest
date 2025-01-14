@@ -91,6 +91,8 @@ function onTestRunStart(
 
 This method is called when a new test run has started. It receives an array of [test specifications](/advanced/api/test-specification) scheduled to run. This array is readonly and available only for information purposes.
 
+If Vitest didn't find any test files to run, this event will be invoked with an empty array, and then [`onTestRunEnd`](#ontestrunend) will be called immediately after.
+
 ::: details Example
 ```ts
 import type { Reporter, TestSpecification } from 'vitest/node'
@@ -130,6 +132,8 @@ The third argument indicated why the test run was finished:
 - `passed`: test run was finished normally and there are no errors
 - `failed`: test run has at least one error (due to a syntax error during collection or an actual error during test execution)
 - `interrupted`: test was interruped by [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) call or `Ctrl+C` was pressed in the terminal (note that it's still possible to have failed tests in this case)
+
+If Vitest didn't find any test files to run, this event will be invoked with empty arrays of modules and errors, and the state will depend on the value of [`config.passWithNoTests`](/config/#passwithnotests).
 
 ::: details Example
 ```ts
