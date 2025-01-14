@@ -30,10 +30,6 @@ test.each([
     },
   })
 
-  if (pool === 'vmThreads') {
-    console.log(vitest.stdout)
-    console.log(fileToTest)
-  }
   expect(vitest.stdout).toContain(`✓ ${fileToTest}`)
   expect(vitest.stderr).toBe('')
 })
