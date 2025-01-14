@@ -35,6 +35,7 @@ interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   projectName: TestModule['project']['name']
   hook?: Omit<SlowTask, 'hook'>
   tests: Map<TestCase['id'], SlowTask>
+  typecheck: boolean
 }
 
 /**
@@ -271,9 +272,11 @@ export class SummaryReporter implements Reporter {
     const summary = ['']
 
     for (const testFile of Array.from(this.runningModules.values()).sort(sortRunningModules)) {
+      const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
         + formatProjectName(testFile.projectName)
+        + typecheck
         + testFile.filename
         + c.dim(!testFile.completed && !testFile.total
           ? ' [queued]'
@@ -370,12 +373,13 @@ function sortRunningModules(a: RunningModule, b: RunningModule) {
   return a.filename.localeCompare(b.filename)
 }
 
-function initializeStats(module: TestModule) {
+function initializeStats(module: TestModule): RunningModule {
   return {
     total: 0,
     completed: 0,
     filename: module.task.name,
     projectName: module.project.name,
     tests: new Map(),
+    typecheck: !!module.task.meta.typecheck,
   }
 }

@@ -10,10 +10,10 @@ import type { FileInformation } from './collect'
 import type { TscErrorInfo } from './types'
 import { rm } from 'node:fs/promises'
 import { performance } from 'node:perf_hooks'
-import { getTasks } from '@vitest/runner/utils'
 import { eachMapping, generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
 import { basename, extname, resolve } from 'pathe'
 import { x } from 'tinyexec'
+import { convertTasksToEvents } from '../utils/tasks'
 import { collectTests } from './collect'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
@@ -363,27 +363,9 @@ export class Typechecker {
     const events: TaskEventPack[] = []
 
     for (const { file } of Object.values(this._tests || {})) {
-      const tasks = getTasks(file)
-      const events: TaskEventPack[] = [
-        [file.id, 'suite-prepare'],
-      ]
-      for (const task of tasks) {
-        task.meta.typecheck = true
-
-        if (task.type === 'test') {
-          packs.push([task.id, task.result, task.meta])
-
-          if (task.mode !== 'skip' && task.mode !== 'todo') {
-            events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
-          }
-        }
-        else if (task.type === 'suite') {
-          packs.push([task.id, task.result, task.meta])
-          events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
-        }
-      }
-
-      events.push([file.id, 'suite-finished'])
+      const result = convertTasksToEvents(file)
+      packs.push(...result.packs)
+      events.push(...result.events)
     }
 
     return { packs, events }

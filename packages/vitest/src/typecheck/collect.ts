@@ -1,5 +1,4 @@
 import type { File, RunMode, Suite, Test } from '@vitest/runner'
-import type { Node } from 'estree'
 import type { RawSourceMap } from 'vite-node'
 import type { TestProject } from '../node/project'
 import {
@@ -71,7 +70,7 @@ export async function collectTests(
   }
   file.file = file
   const definitions: LocalCallDefinition[] = []
-  const getName = (callee: Node): string | null => {
+  const getName = (callee: any): string | null => {
     if (!callee) {
       return null
     }
@@ -85,20 +84,18 @@ export async function collectTests(
       return getName(callee.tag)
     }
     if (callee.type === 'MemberExpression') {
-      const object = callee.object as any
+      if (
+        callee.object?.type === 'Identifier'
+        && ['it', 'test', 'describe', 'suite'].includes(callee.object.name)
+      ) {
+        return callee.object?.name
+      }
       // direct call as `__vite_ssr_exports_0__.test()`
-      if (object?.name?.startsWith('__vite_ssr_')) {
+      if (callee.object?.name?.startsWith('__vite_ssr_')) {
         return getName(callee.property)
       }
       // call as `__vite_ssr__.test.skip()`
-      return getName(object?.property)
-    }
-    // unwrap (0, ...)
-    if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
-      const [e0, e1] = callee.expressions
-      if (e0.type === 'Literal' && e0.value === 0) {
-        return getName(e1)
-      }
+      return getName(callee.object?.property)
     }
     return null
   }
@@ -114,15 +111,15 @@ export async function collectTests(
         return
       }
       const property = callee?.property?.name
-      const mode = !property || property === name ? 'run' : property
-      // the test node for skipIf and runIf will be the next CallExpression
-      if (mode === 'each' || mode === 'skipIf' || mode === 'runIf' || mode === 'for') {
+      let mode = !property || property === name ? 'run' : property
+      // they will be picked up in the next iteration
+      if (['each', 'for', 'skipIf', 'runIf'].includes(mode)) {
         return
       }
 
       let start: number
       const end = node.end
-
+      // .each
       if (callee.type === 'CallExpression') {
         start = callee.end
       }
@@ -137,13 +134,15 @@ export async function collectTests(
         arguments: [messageNode],
       } = node
 
-      if (!messageNode) {
-        // called as "test()"
-        return
+      const isQuoted = messageNode?.type === 'Literal' || messageNode?.type === 'TemplateLiteral'
+      const message = isQuoted
+        ? request.code.slice(messageNode.start + 1, messageNode.end - 1)
+        : request.code.slice(messageNode.start, messageNode.end)
+
+      // cannot statically analyze, so we always skip it
+      if (mode === 'skipIf' || mode === 'runIf') {
+        mode = 'skip'
       }
-
-      const message = getNodeAsString(messageNode, request.code)
-
       definitions.push({
         start,
         end,

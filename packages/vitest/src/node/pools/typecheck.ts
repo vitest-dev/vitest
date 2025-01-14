@@ -63,7 +63,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.setFiles(files)
 
     checker.onParseStart(async () => {
-      await ctx._testRun.collected(project, checker.getTestFiles())
+      const files = checker.getTestFiles()
+      for (const file of files) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, files)
     })
 
     checker.onParseEnd(result => onParseEnd(project, result))
@@ -82,7 +86,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
 
       await checker.collectTests()
 
-      await ctx._testRun.collected(project, checker.getTestFiles())
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, testFiles)
 
       const { packs, events } = checker.getTestPacksAndEvents()
       await ctx._testRun.updated(packs, events)
@@ -109,7 +117,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      await ctx._testRun.collected(project, checker.getTestFiles())
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, testFiles)
     }
   }
 
@@ -136,7 +148,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
-        await ctx._testRun.collected(project, project.typechecker.getTestFiles())
+        const testFiles = project.typechecker.getTestFiles()
+        for (const file of testFiles) {
+          await ctx._testRun.enqueued(project, file)
+        }
+        await ctx._testRun.collected(project, testFiles)
         await onParseEnd(project, project.typechecker.getResult())
         continue
       }

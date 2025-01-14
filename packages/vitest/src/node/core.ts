@@ -1,4 +1,4 @@
-import type { CancelReason, File, Suite, TaskEventPack, TaskResultPack } from '@vitest/runner'
+import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
@@ -24,6 +24,7 @@ import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../consta
 import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { convertTasksToEvents } from '../utils/tasks'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
@@ -467,27 +468,12 @@ export class Vitest {
       await this._testRun.collected(project, [file]).catch(noop)
 
       const logs: UserConsoleLog[] = []
-      const taskPacks: TaskResultPack[] = []
-      const events: TaskEventPack[] = []
 
-      function visit(suite: Suite | File) {
-        taskPacks.push([suite.id, suite.result, suite.meta])
-        events.push([suite.id, 'suite-prepare'])
-        suite.tasks.forEach((task) => {
-          if (task.type === 'suite') {
-            visit(task)
-          }
-          else {
-            taskPacks.push([task.id, task.result, task.meta])
-            if (task.mode !== 'skip' && task.mode !== 'todo') {
-              events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
-            }
-          }
-        })
-        events.push([suite.id, 'suite-finished'])
-      }
-
-      visit(file)
+      const { packs, events } = convertTasksToEvents(file, (task) => {
+        if (task.logs) {
+          logs.push(...task.logs)
+        }
+      })
 
       logs.sort((log1, log2) => log1.time - log2.time)
 
@@ -495,7 +481,7 @@ export class Vitest {
         await this._testRun.log(log).catch(noop)
       }
 
-      await this._testRun.updated(taskPacks, events).catch(noop)
+      await this._testRun.updated(packs, events).catch(noop)
     }
 
     if (hasFailed(files)) {

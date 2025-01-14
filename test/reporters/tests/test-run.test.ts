@@ -24,6 +24,7 @@ describe('TestRun', () => {
       },
       {
         printTestRunEvents: true,
+        failed: true,
       },
     )
 
@@ -43,6 +44,7 @@ describe('TestRun', () => {
       },
       {
         printTestRunEvents: true,
+        failed: true,
       },
     )
 
@@ -62,6 +64,7 @@ describe('TestRun', () => {
       },
       {
         printTestRunEvents: true,
+        failed: true,
       },
     )
 
@@ -893,9 +896,79 @@ describe('merge reports', () => {
   })
 })
 
+describe('type checking', () => {
+  test('typechking is reported correctly', async () => {
+    const report = await run({
+      'example-1.test-d.ts': ts`
+        test('first', () => {});
+        describe('suite', () => {
+          test('second', () => {});
+        });
+      `,
+      'example-2.test-d.ts': ts`
+        test('first', () => {});
+        describe.skip('suite', () => {
+          test('second', () => {});
+          test('third', () => {});
+        });
+        test.skip('fourth', () => {});
+        test('fifth', () => {});
+      `,
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          strict: true,
+        },
+        include: ['./*.test-d.ts'],
+      }),
+    }, {
+      typecheck: {
+        enabled: true,
+      },
+    }, { printTestRunEvents: true })
+
+    // NOTE: typechecker reports test modules in bulk, so the order of queued and collect
+    // is different from the normal test run, this is because the typechecker runs everything together
+    // this _might_ need to be changed in the future
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestRunStart (2 specifications)
+      onTestModuleQueued    (example-1.test-d.ts)
+      onTestModuleQueued    (example-2.test-d.ts)
+      onTestModuleCollected (example-1.test-d.ts)
+      onTestModuleCollected (example-2.test-d.ts)
+      onTestModuleStart     (example-1.test-d.ts)
+        onTestCaseReady     (example-1.test-d.ts) |first|
+        onTestCaseResult    (example-1.test-d.ts) |first|
+        onTestSuiteReady    (example-1.test-d.ts) |suite|
+          onTestCaseReady   (example-1.test-d.ts) |second|
+          onTestCaseResult  (example-1.test-d.ts) |second|
+        onTestSuiteResult   (example-1.test-d.ts) |suite|
+      onTestModuleEnd       (example-1.test-d.ts)
+
+      onTestModuleStart     (example-2.test-d.ts)
+        onTestCaseReady     (example-2.test-d.ts) |first|
+        onTestCaseResult    (example-2.test-d.ts) |first|
+        onTestSuiteReady    (example-2.test-d.ts) |suite|
+          onTestCaseReady   (example-2.test-d.ts) |second|
+          onTestCaseResult  (example-2.test-d.ts) |second|
+          onTestCaseReady   (example-2.test-d.ts) |third|
+          onTestCaseResult  (example-2.test-d.ts) |third|
+        onTestSuiteResult   (example-2.test-d.ts) |suite|
+        onTestCaseReady     (example-2.test-d.ts) |fifth|
+        onTestCaseResult    (example-2.test-d.ts) |fifth|
+        onTestCaseReady     (example-2.test-d.ts) |fourth|
+        onTestCaseResult    (example-2.test-d.ts) |fourth|
+      onTestModuleEnd       (example-2.test-d.ts)
+
+      onTestRunEnd   (failed, 2 modules, 0 errors)"
+    `)
+  })
+})
+
 interface ReporterOptions {
   printTestRunEvents?: boolean
   roots?: string[]
+  failed?: boolean
 }
 
 async function run(
@@ -926,7 +999,7 @@ async function run(
 
   const { stdout, stderr } = await runInlineTests(structure, config)
 
-  if (reporterOptions?.printTestRunEvents) {
+  if (reporterOptions?.printTestRunEvents && reporterOptions?.failed) {
     if (config.passWithNoTests) {
       expect(stdout).toContain('No test files found, exiting with code 0')
     }
@@ -934,7 +1007,7 @@ async function run(
       expect(stderr).toContain('No test files found, exiting with code 1')
     }
   }
-  else {
+  else if (!reporterOptions?.printTestRunEvents) {
     expect(stdout).toBe('')
     expect(stderr).toBe('')
   }
