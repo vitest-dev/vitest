@@ -72,9 +72,11 @@ export function stringify(
       ...options,
     })
   }
-
+  
+  // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
+  const nextMaxDepth = maxDepth === Infinity ? Number.MAX_VALUE : Math.floor(maxDepth / 2)
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(maxDepth / 2))
+    ? stringify(object, nextMaxDepth)
     : result
 }
 
