@@ -36,7 +36,7 @@ export default class CustomReporter extends BaseReporter {
 Or implement the `Reporter` interface:
 
 ```ts [custom-reporter.js]
-import { Reporter } from 'vitest/reporters'
+import type { Reporter } from 'vitest/node'
 
 export default class CustomReporter implements Reporter {
   onCollected() {
