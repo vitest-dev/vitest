@@ -9,8 +9,9 @@ import type {
   TestSuite,
   UserConfig,
 } from 'vitest/node'
-import { sep } from 'node:path'
-import { describe, expect, test } from 'vitest'
+import { rmSync } from 'node:fs'
+import { resolve, sep } from 'node:path'
+import { describe, expect, onTestFinished, test } from 'vitest'
 import { runInlineTests, ts } from '../../test-utils'
 
 describe('TestRun', () => {
@@ -82,11 +83,12 @@ describe('TestModule', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (test-module.test.ts)
-      onTestModuleStart    (test-module.test.ts)
-        onTestCaseReady    (test-module.test.ts) |example|
-        onTestCaseResult   (test-module.test.ts) |example|
-      onTestModuleEnd      (test-module.test.ts)"
+      onTestModuleQueued    (test-module.test.ts)
+      onTestModuleCollected (test-module.test.ts)
+      onTestModuleStart     (test-module.test.ts)
+        onTestCaseReady     (test-module.test.ts) |example|
+        onTestCaseResult    (test-module.test.ts) |example|
+      onTestModuleEnd       (test-module.test.ts)"
     `)
   })
 
@@ -102,17 +104,19 @@ describe('TestModule', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (first.test.ts)
-      onTestModuleStart    (first.test.ts)
-        onTestCaseReady    (first.test.ts) |first test case|
-        onTestCaseResult   (first.test.ts) |first test case|
-      onTestModuleEnd      (first.test.ts)
+      onTestModuleQueued    (first.test.ts)
+      onTestModuleCollected (first.test.ts)
+      onTestModuleStart     (first.test.ts)
+        onTestCaseReady     (first.test.ts) |first test case|
+        onTestCaseResult    (first.test.ts) |first test case|
+      onTestModuleEnd       (first.test.ts)
 
-      onTestModuleQueued   (second.test.ts)
-      onTestModuleStart    (second.test.ts)
-        onTestCaseReady    (second.test.ts) |second test case|
-        onTestCaseResult   (second.test.ts) |second test case|
-      onTestModuleEnd      (second.test.ts)"
+      onTestModuleQueued    (second.test.ts)
+      onTestModuleCollected (second.test.ts)
+      onTestModuleStart     (second.test.ts)
+        onTestCaseReady     (second.test.ts) |second test case|
+        onTestCaseResult    (second.test.ts) |second test case|
+      onTestModuleEnd       (second.test.ts)"
     `)
   })
 
@@ -130,17 +134,19 @@ describe('TestModule', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (first.test.ts)
-      onTestModuleStart    (first.test.ts)
-        onTestCaseReady    (first.test.ts) |first test case|
-        onTestCaseResult   (first.test.ts) |first test case|
-      onTestModuleEnd      (first.test.ts)
+      onTestModuleQueued    (first.test.ts)
+      onTestModuleCollected (first.test.ts)
+      onTestModuleStart     (first.test.ts)
+        onTestCaseReady     (first.test.ts) |first test case|
+        onTestCaseResult    (first.test.ts) |first test case|
+      onTestModuleEnd       (first.test.ts)
 
-      onTestModuleQueued   (second.test.ts)
-      onTestModuleStart    (second.test.ts)
-        onTestCaseReady    (second.test.ts) |second test case|
-        onTestCaseResult   (second.test.ts) |second test case|
-      onTestModuleEnd      (second.test.ts)"
+      onTestModuleQueued    (second.test.ts)
+      onTestModuleCollected (second.test.ts)
+      onTestModuleStart     (second.test.ts)
+        onTestCaseReady     (second.test.ts) |second test case|
+        onTestCaseResult    (second.test.ts) |second test case|
+      onTestModuleEnd       (second.test.ts)"
     `)
   })
 })
@@ -155,11 +161,12 @@ describe('TestCase', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |single test case|
-        onTestCaseResult   (example.test.ts) |single test case|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |single test case|
+        onTestCaseResult    (example.test.ts) |single test case|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -174,15 +181,16 @@ describe('TestCase', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |first|
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-        onTestCaseResult   (example.test.ts) |second|
-        onTestCaseReady    (example.test.ts) |third|
-        onTestCaseResult   (example.test.ts) |third|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+        onTestCaseResult    (example.test.ts) |second|
+        onTestCaseReady     (example.test.ts) |third|
+        onTestCaseResult    (example.test.ts) |third|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -198,15 +206,16 @@ describe('TestCase', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |first|
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-        onTestCaseResult   (example.test.ts) |second|
-        onTestCaseReady    (example.test.ts) |third|
-        onTestCaseResult   (example.test.ts) |third|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+        onTestCaseResult    (example.test.ts) |second|
+        onTestCaseReady     (example.test.ts) |third|
+        onTestCaseResult    (example.test.ts) |third|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -221,11 +230,12 @@ describe('TestCase', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |failing test case|
-        onTestCaseResult   (example.test.ts) |failing test case|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |failing test case|
+        onTestCaseResult    (example.test.ts) |failing test case|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -239,13 +249,14 @@ describe('TestCase', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |running|
-        onTestCaseResult   (example.test.ts) |running|
-        onTestCaseReady    (example.test.ts) |skipped|
-        onTestCaseResult   (example.test.ts) |skipped|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |running|
+        onTestCaseResult    (example.test.ts) |running|
+        onTestCaseReady     (example.test.ts) |skipped|
+        onTestCaseResult    (example.test.ts) |skipped|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -259,13 +270,14 @@ describe('TestCase', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |running|
-        onTestCaseResult   (example.test.ts) |running|
-        onTestCaseReady    (example.test.ts) |skipped|
-        onTestCaseResult   (example.test.ts) |skipped|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |running|
+        onTestCaseResult    (example.test.ts) |running|
+        onTestCaseReady     (example.test.ts) |skipped|
+        onTestCaseResult    (example.test.ts) |skipped|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -279,13 +291,14 @@ describe('TestCase', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |first|
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-        onTestCaseResult   (example.test.ts) |second|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+        onTestCaseResult    (example.test.ts) |second|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 })
@@ -302,13 +315,14 @@ describe('TestSuite', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |example suite|
-          onTestCaseReady  (example.test.ts) |first test case|
-          onTestCaseResult (example.test.ts) |first test case|
-        onTestSuiteResult  (example.test.ts) |example suite|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |example suite|
+          onTestCaseReady   (example.test.ts) |first test case|
+          onTestCaseResult  (example.test.ts) |first test case|
+        onTestSuiteResult   (example.test.ts) |example suite|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -327,17 +341,18 @@ describe('TestSuite', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |first suite|
-          onTestCaseReady  (example.test.ts) |first test case|
-          onTestCaseResult (example.test.ts) |first test case|
-        onTestSuiteResult  (example.test.ts) |first suite|
-        onTestSuiteReady   (example.test.ts) |second suite|
-          onTestCaseReady  (example.test.ts) |second test case|
-          onTestCaseResult (example.test.ts) |second test case|
-        onTestSuiteResult  (example.test.ts) |second suite|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |first suite|
+          onTestCaseReady   (example.test.ts) |first test case|
+          onTestCaseResult  (example.test.ts) |first test case|
+        onTestSuiteResult   (example.test.ts) |first suite|
+        onTestSuiteReady    (example.test.ts) |second suite|
+          onTestCaseReady   (example.test.ts) |second test case|
+          onTestCaseResult  (example.test.ts) |second test case|
+        onTestSuiteResult   (example.test.ts) |second suite|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -359,17 +374,18 @@ describe('TestSuite', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |first suite|
-          onTestCaseReady  (example.test.ts) |first test case|
-          onTestCaseResult (example.test.ts) |first test case|
-        onTestSuiteResult  (example.test.ts) |first suite|
-        onTestSuiteReady   (example.test.ts) |second suite|
-          onTestCaseReady  (example.test.ts) |second test case|
-          onTestCaseResult (example.test.ts) |second test case|
-        onTestSuiteResult  (example.test.ts) |second suite|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |first suite|
+          onTestCaseReady   (example.test.ts) |first test case|
+          onTestCaseResult  (example.test.ts) |first test case|
+        onTestSuiteResult   (example.test.ts) |first suite|
+        onTestSuiteReady    (example.test.ts) |second suite|
+          onTestCaseReady   (example.test.ts) |second test case|
+          onTestCaseResult  (example.test.ts) |second test case|
+        onTestSuiteResult   (example.test.ts) |second suite|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -392,12 +408,13 @@ describe('TestSuite', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |first suite|
-          onTestCaseReady  (example.test.ts) |first test case|
-          onTestCaseResult (example.test.ts) |first test case|
-          onTestSuiteReady (example.test.ts) |second suite|
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |first suite|
+          onTestCaseReady   (example.test.ts) |first test case|
+          onTestCaseResult  (example.test.ts) |first test case|
+          onTestSuiteReady  (example.test.ts) |second suite|
             onTestCaseReady (example.test.ts) |second test case|
             onTestCaseResult (example.test.ts) |second test case|
             onTestSuiteReady (example.test.ts) |third suite|
@@ -405,8 +422,8 @@ describe('TestSuite', () => {
               onTestCaseResult (example.test.ts) |third test case|
             onTestSuiteResult (example.test.ts) |third suite|
           onTestSuiteResult (example.test.ts) |second suite|
-        onTestSuiteResult  (example.test.ts) |first suite|
-      onTestModuleEnd      (example.test.ts)"
+        onTestSuiteResult   (example.test.ts) |first suite|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -421,13 +438,14 @@ describe('TestSuite', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |skipped suite|
-          onTestCaseReady  (example.test.ts) |first test case|
-          onTestCaseResult (example.test.ts) |first test case|
-        onTestSuiteResult  (example.test.ts) |skipped suite|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |skipped suite|
+          onTestCaseReady   (example.test.ts) |first test case|
+          onTestCaseResult  (example.test.ts) |first test case|
+        onTestSuiteResult   (example.test.ts) |skipped suite|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -446,17 +464,18 @@ describe('TestSuite', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |skipped suite|
-          onTestSuiteReady (example.test.ts) |nested skipped suite|
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |skipped suite|
+          onTestSuiteReady  (example.test.ts) |nested skipped suite|
             onTestCaseReady (example.test.ts) |first nested case|
             onTestCaseResult (example.test.ts) |first nested case|
           onTestSuiteResult (example.test.ts) |nested skipped suite|
-        onTestSuiteResult  (example.test.ts) |skipped suite|
-        onTestCaseReady    (example.test.ts) |first test case|
-        onTestCaseResult   (example.test.ts) |first test case|
-      onTestModuleEnd      (example.test.ts)"
+        onTestSuiteResult   (example.test.ts) |skipped suite|
+        onTestCaseReady     (example.test.ts) |first test case|
+        onTestCaseResult    (example.test.ts) |first test case|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -475,17 +494,18 @@ describe('TestSuite', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |first suite|
-          onTestCaseReady  (example.test.ts) |first test case|
-          onTestCaseResult (example.test.ts) |first test case|
-          onTestSuiteReady (example.test.ts) |skipped suite|
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |first suite|
+          onTestCaseReady   (example.test.ts) |first test case|
+          onTestCaseResult  (example.test.ts) |first test case|
+          onTestSuiteReady  (example.test.ts) |skipped suite|
             onTestCaseReady (example.test.ts) |second test case|
             onTestCaseResult (example.test.ts) |second test case|
           onTestSuiteResult (example.test.ts) |skipped suite|
-        onTestSuiteResult  (example.test.ts) |first suite|
-      onTestModuleEnd      (example.test.ts)"
+        onTestSuiteResult   (example.test.ts) |first suite|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 })
@@ -503,17 +523,18 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |first|
-          onHookStart      (example.test.ts) |first| [beforeEach]
-          onHookEnd        (example.test.ts) |first| [beforeEach]
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-          onHookStart      (example.test.ts) |second| [beforeEach]
-          onHookEnd        (example.test.ts) |second| [beforeEach]
-        onTestCaseResult   (example.test.ts) |second|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+          onHookStart       (example.test.ts) |first| [beforeEach]
+          onHookEnd         (example.test.ts) |first| [beforeEach]
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+          onHookStart       (example.test.ts) |second| [beforeEach]
+          onHookEnd         (example.test.ts) |second| [beforeEach]
+        onTestCaseResult    (example.test.ts) |second|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -529,17 +550,18 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |first|
-          onHookStart      (example.test.ts) |first| [afterEach]
-          onHookEnd        (example.test.ts) |first| [afterEach]
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-          onHookStart      (example.test.ts) |second| [afterEach]
-          onHookEnd        (example.test.ts) |second| [afterEach]
-        onTestCaseResult   (example.test.ts) |second|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+          onHookStart       (example.test.ts) |first| [afterEach]
+          onHookEnd         (example.test.ts) |first| [afterEach]
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+          onHookStart       (example.test.ts) |second| [afterEach]
+          onHookEnd         (example.test.ts) |second| [afterEach]
+        onTestCaseResult    (example.test.ts) |second|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -556,21 +578,22 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |first|
-          onHookStart      (example.test.ts) |first| [beforeEach]
-          onHookEnd        (example.test.ts) |first| [beforeEach]
-          onHookStart      (example.test.ts) |first| [afterEach]
-          onHookEnd        (example.test.ts) |first| [afterEach]
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-          onHookStart      (example.test.ts) |second| [beforeEach]
-          onHookEnd        (example.test.ts) |second| [beforeEach]
-          onHookStart      (example.test.ts) |second| [afterEach]
-          onHookEnd        (example.test.ts) |second| [afterEach]
-        onTestCaseResult   (example.test.ts) |second|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+          onHookStart       (example.test.ts) |first| [beforeEach]
+          onHookEnd         (example.test.ts) |first| [beforeEach]
+          onHookStart       (example.test.ts) |first| [afterEach]
+          onHookEnd         (example.test.ts) |first| [afterEach]
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+          onHookStart       (example.test.ts) |second| [beforeEach]
+          onHookEnd         (example.test.ts) |second| [beforeEach]
+          onHookStart       (example.test.ts) |second| [afterEach]
+          onHookEnd         (example.test.ts) |second| [afterEach]
+        onTestCaseResult    (example.test.ts) |second|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -586,15 +609,16 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onHookStart        (example.test.ts) [beforeAll]
-        onHookEnd          (example.test.ts) [beforeAll]
-        onTestCaseReady    (example.test.ts) |first|
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-        onTestCaseResult   (example.test.ts) |second|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onHookStart         (example.test.ts) [beforeAll]
+        onHookEnd           (example.test.ts) [beforeAll]
+        onTestCaseReady     (example.test.ts) |first|
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+        onTestCaseResult    (example.test.ts) |second|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -610,15 +634,16 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestCaseReady    (example.test.ts) |first|
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-        onTestCaseResult   (example.test.ts) |second|
-        onHookStart        (example.test.ts) [afterAll]
-        onHookEnd          (example.test.ts) [afterAll]
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+        onTestCaseResult    (example.test.ts) |second|
+        onHookStart         (example.test.ts) [afterAll]
+        onHookEnd           (example.test.ts) [afterAll]
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -635,17 +660,18 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onHookStart        (example.test.ts) [beforeAll]
-        onHookEnd          (example.test.ts) [beforeAll]
-        onTestCaseReady    (example.test.ts) |first|
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-        onTestCaseResult   (example.test.ts) |second|
-        onHookStart        (example.test.ts) [afterAll]
-        onHookEnd          (example.test.ts) [afterAll]
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onHookStart         (example.test.ts) [beforeAll]
+        onHookEnd           (example.test.ts) [beforeAll]
+        onTestCaseReady     (example.test.ts) |first|
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+        onTestCaseResult    (example.test.ts) |second|
+        onHookStart         (example.test.ts) [afterAll]
+        onHookEnd           (example.test.ts) [afterAll]
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -665,25 +691,26 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onHookStart        (example.test.ts) [beforeAll]
-        onHookEnd          (example.test.ts) [beforeAll]
-        onTestCaseReady    (example.test.ts) |first|
-          onHookStart      (example.test.ts) |first| [beforeEach]
-          onHookEnd        (example.test.ts) |first| [beforeEach]
-          onHookStart      (example.test.ts) |first| [afterEach]
-          onHookEnd        (example.test.ts) |first| [afterEach]
-        onTestCaseResult   (example.test.ts) |first|
-        onTestCaseReady    (example.test.ts) |second|
-          onHookStart      (example.test.ts) |second| [beforeEach]
-          onHookEnd        (example.test.ts) |second| [beforeEach]
-          onHookStart      (example.test.ts) |second| [afterEach]
-          onHookEnd        (example.test.ts) |second| [afterEach]
-        onTestCaseResult   (example.test.ts) |second|
-        onHookStart        (example.test.ts) [afterAll]
-        onHookEnd          (example.test.ts) [afterAll]
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onHookStart         (example.test.ts) [beforeAll]
+        onHookEnd           (example.test.ts) [beforeAll]
+        onTestCaseReady     (example.test.ts) |first|
+          onHookStart       (example.test.ts) |first| [beforeEach]
+          onHookEnd         (example.test.ts) |first| [beforeEach]
+          onHookStart       (example.test.ts) |first| [afterEach]
+          onHookEnd         (example.test.ts) |first| [afterEach]
+        onTestCaseResult    (example.test.ts) |first|
+        onTestCaseReady     (example.test.ts) |second|
+          onHookStart       (example.test.ts) |second| [beforeEach]
+          onHookEnd         (example.test.ts) |second| [beforeEach]
+          onHookStart       (example.test.ts) |second| [afterEach]
+          onHookEnd         (example.test.ts) |second| [afterEach]
+        onTestCaseResult    (example.test.ts) |second|
+        onHookStart         (example.test.ts) [afterAll]
+        onHookEnd           (example.test.ts) [afterAll]
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -701,17 +728,18 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |example|
-          onHookStart      (example.test.ts) |example| [beforeAll]
-          onHookEnd        (example.test.ts) |example| [beforeAll]
-          onTestCaseReady  (example.test.ts) |first|
-          onTestCaseResult (example.test.ts) |first|
-          onTestCaseReady  (example.test.ts) |second|
-          onTestCaseResult (example.test.ts) |second|
-        onTestSuiteResult  (example.test.ts) |example|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |example|
+          onHookStart       (example.test.ts) |example| [beforeAll]
+          onHookEnd         (example.test.ts) |example| [beforeAll]
+          onTestCaseReady   (example.test.ts) |first|
+          onTestCaseResult  (example.test.ts) |first|
+          onTestCaseReady   (example.test.ts) |second|
+          onTestCaseResult  (example.test.ts) |second|
+        onTestSuiteResult   (example.test.ts) |example|
+      onTestModuleEnd       (example.test.ts)"
     `)
   })
 
@@ -729,23 +757,145 @@ describe('hooks', () => {
 
     expect(report).toMatchInlineSnapshot(`
       "
-      onTestModuleQueued   (example.test.ts)
-      onTestModuleStart    (example.test.ts)
-        onTestSuiteReady   (example.test.ts) |example|
-          onTestCaseReady  (example.test.ts) |first|
-          onTestCaseResult (example.test.ts) |first|
-          onTestCaseReady  (example.test.ts) |second|
-          onTestCaseResult (example.test.ts) |second|
-          onHookStart      (example.test.ts) |example| [afterAll]
-          onHookEnd        (example.test.ts) |example| [afterAll]
-        onTestSuiteResult  (example.test.ts) |example|
-      onTestModuleEnd      (example.test.ts)"
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |example|
+          onTestCaseReady   (example.test.ts) |first|
+          onTestCaseResult  (example.test.ts) |first|
+          onTestCaseReady   (example.test.ts) |second|
+          onTestCaseResult  (example.test.ts) |second|
+          onHookStart       (example.test.ts) |example| [afterAll]
+          onHookEnd         (example.test.ts) |example| [afterAll]
+        onTestSuiteResult   (example.test.ts) |example|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+})
+
+describe('merge reports', () => {
+  test('correctly reports events for a single test module', async () => {
+    const blobsOutputDirectory = resolve(import.meta.dirname, 'fixtures-blobs')
+    const blobOutputFile = resolve(blobsOutputDirectory, 'blob.json')
+    onTestFinished(() => {
+      rmSync(blobOutputFile)
+    })
+
+    const { root } = await runInlineTests({
+      'example.test.ts': ts`
+        test('first', () => {});
+        describe('suite', () => {
+          test('second', () => {});
+        });
+      `,
+    }, {
+      globals: true,
+      reporters: [['blob', { outputFile: blobOutputFile }]],
+    })
+
+    const report = await run(
+      {},
+      {
+        mergeReports: blobsOutputDirectory,
+      },
+      {
+        roots: [root],
+      },
+    )
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |first|
+        onTestCaseResult    (example.test.ts) |first|
+        onTestSuiteReady    (example.test.ts) |suite|
+          onTestCaseReady   (example.test.ts) |second|
+          onTestCaseResult  (example.test.ts) |second|
+        onTestSuiteResult   (example.test.ts) |suite|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
+  test('correctly reports multiple test modules', async () => {
+    const blobsOutputDirectory = resolve(import.meta.dirname, 'fixtures-blobs')
+    const blobOutputFile1 = resolve(blobsOutputDirectory, 'blob-1.json')
+    const blobOutputFile2 = resolve(blobsOutputDirectory, 'blob-2.json')
+    onTestFinished(() => {
+      rmSync(blobOutputFile1)
+      rmSync(blobOutputFile2)
+    })
+
+    const { root: root1 } = await runInlineTests({
+      'example-1.test.ts': ts`
+        test('first', () => {});
+        describe('suite', () => {
+          test('second', () => {});
+        });
+      `,
+    }, {
+      globals: true,
+      reporters: [['blob', { outputFile: blobOutputFile1 }]],
+    })
+
+    const { root: root2 } = await runInlineTests({
+      'example-2.test.ts': ts`
+        test('first', () => {});
+        describe.skip('suite', () => {
+          test('second', () => {});
+          test('third', () => {});
+        });
+        test.skip('fourth', () => {});
+        test('fifth', () => {});
+        `,
+    }, {
+      globals: true,
+      reporters: [['blob', { outputFile: blobOutputFile2 }]],
+    })
+
+    const report = await run({}, {
+      mergeReports: blobsOutputDirectory,
+    }, {
+      roots: [root1, root2],
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example-1.test.ts)
+      onTestModuleCollected (example-1.test.ts)
+      onTestModuleStart     (example-1.test.ts)
+        onTestCaseReady     (example-1.test.ts) |first|
+        onTestCaseResult    (example-1.test.ts) |first|
+        onTestSuiteReady    (example-1.test.ts) |suite|
+          onTestCaseReady   (example-1.test.ts) |second|
+          onTestCaseResult  (example-1.test.ts) |second|
+        onTestSuiteResult   (example-1.test.ts) |suite|
+      onTestModuleEnd       (example-1.test.ts)
+
+      onTestModuleQueued    (example-2.test.ts)
+      onTestModuleCollected (example-2.test.ts)
+      onTestModuleStart     (example-2.test.ts)
+        onTestCaseReady     (example-2.test.ts) |first|
+        onTestCaseResult    (example-2.test.ts) |first|
+        onTestSuiteReady    (example-2.test.ts) |suite|
+          onTestCaseReady   (example-2.test.ts) |second|
+          onTestCaseResult  (example-2.test.ts) |second|
+          onTestCaseReady   (example-2.test.ts) |third|
+          onTestCaseResult  (example-2.test.ts) |third|
+        onTestSuiteResult   (example-2.test.ts) |suite|
+        onTestCaseReady     (example-2.test.ts) |fifth|
+        onTestCaseResult    (example-2.test.ts) |fifth|
+        onTestCaseReady     (example-2.test.ts) |fourth|
+        onTestCaseResult    (example-2.test.ts) |fourth|
+      onTestModuleEnd       (example-2.test.ts)"
     `)
   })
 })
 
 interface ReporterOptions {
   printTestRunEvents?: boolean
+  roots?: string[]
 }
 
 async function run(
@@ -810,54 +960,63 @@ class CustomReporter implements Reporter {
   }
 
   onTestModuleQueued(module: TestModule) {
-    this.calls.push(`onTestModuleQueued   (${normalizeFilename(module)})`)
+    this.calls.push(`onTestModuleQueued    (${this.normalizeFilename(module)})`)
+  }
+
+  onTestModuleCollected(module: TestModule) {
+    this.calls.push(`onTestModuleCollected (${this.normalizeFilename(module)})`)
   }
 
   onTestSuiteReady(testSuite: TestSuite) {
-    this.calls.push(`${padded(testSuite, 'onTestSuiteReady')} (${normalizeFilename(testSuite.module)}) |${testSuite.name}|`)
+    this.calls.push(`${padded(testSuite, 'onTestSuiteReady')} (${this.normalizeFilename(testSuite.module)}) |${testSuite.name}|`)
   }
 
   onTestSuiteResult(testSuite: TestSuite) {
-    this.calls.push(`${padded(testSuite, 'onTestSuiteResult')} (${normalizeFilename(testSuite.module)}) |${testSuite.name}|`)
+    this.calls.push(`${padded(testSuite, 'onTestSuiteResult')} (${this.normalizeFilename(testSuite.module)}) |${testSuite.name}|`)
   }
 
   onTestModuleStart(module: TestModule) {
-    this.calls.push(`onTestModuleStart    (${normalizeFilename(module)})`)
+    this.calls.push(`onTestModuleStart     (${this.normalizeFilename(module)})`)
   }
 
   onTestModuleEnd(module: TestModule) {
-    this.calls.push(`onTestModuleEnd      (${normalizeFilename(module)})\n`)
+    this.calls.push(`onTestModuleEnd       (${this.normalizeFilename(module)})\n`)
   }
 
   onTestCaseReady(test: TestCase) {
-    this.calls.push(`${padded(test, 'onTestCaseReady')} (${normalizeFilename(test.module)}) |${test.name}|`)
+    this.calls.push(`${padded(test, 'onTestCaseReady')} (${this.normalizeFilename(test.module)}) |${test.name}|`)
   }
 
   onTestCaseResult(test: TestCase) {
-    this.calls.push(`${padded(test, 'onTestCaseResult')} (${normalizeFilename(test.module)}) |${test.name}|`)
+    this.calls.push(`${padded(test, 'onTestCaseResult')} (${this.normalizeFilename(test.module)}) |${test.name}|`)
   }
 
   onHookStart(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type !== 'module' ? ` |${hook.entity.name}|` : ''
-    this.calls.push(`  ${padded(hook.entity, 'onHookStart', 18)} (${normalizeFilename(module)})${name} [${hook.name}]`)
+    this.calls.push(`  ${padded(hook.entity, 'onHookStart', 19)} (${this.normalizeFilename(module)})${name} [${hook.name}]`)
   }
 
   onHookEnd(hook: ReportedHookContext) {
     const module = hook.entity.type === 'module' ? hook.entity : hook.entity.module
     const name = hook.entity.type !== 'module' ? ` |${hook.entity.name}|` : ''
-    this.calls.push(`  ${padded(hook.entity, 'onHookEnd', 18)} (${normalizeFilename(module)})${name} [${hook.name}]`)
+    this.calls.push(`  ${padded(hook.entity, 'onHookEnd', 19)} (${this.normalizeFilename(module)})${name} [${hook.name}]`)
+  }
+
+  normalizeFilename(module: TestModule) {
+    return normalizeFilename(module, this.options.roots)
   }
 }
 
-function normalizeFilename(module: TestModule) {
-  return module.moduleId
-    .replace(module.project.config.root, '')
-    .replaceAll(sep, '/')
+function normalizeFilename(module: TestModule, roots?: string[]) {
+  const relative = (roots || [module.project.config.root]).reduce((acc, root) => {
+    return acc.replace(root, '')
+  }, module.moduleId)
+  return relative.replaceAll(sep, '/')
     .substring(1)
 }
 
-function padded(entity: TestSuite | TestCase | TestModule, name: string, pad = 20) {
+function padded(entity: TestSuite | TestCase | TestModule, name: string, pad = 21) {
   return (' '.repeat(getDepth(entity)) + name).padEnd(pad)
 }
 

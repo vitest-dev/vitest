@@ -1,4 +1,4 @@
-import type { CancelReason, File, TaskEventPack, TaskResultPack } from '@vitest/runner'
+import type { CancelReason, File, Suite, TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
@@ -468,32 +468,32 @@ export class Vitest {
 
       const logs: UserConsoleLog[] = []
       const taskPacks: TaskResultPack[] = []
+      const events: TaskEventPack[] = []
 
-      const tasks = getTasks(file)
-      const events: TaskEventPack[] = [
-        [file.id, 'suite-prepare'],
-      ]
-      for (const task of tasks) {
-        if (task.logs) {
-          logs.push(...task.logs)
-        }
-        if (task.type === 'test') {
-          taskPacks.push([task.id, task.result, task.meta])
-          if (task.mode !== 'skip' && task.mode !== 'todo') {
-            events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
+      function visit(suite: Suite | File) {
+        taskPacks.push([suite.id, suite.result, suite.meta])
+        events.push([suite.id, 'suite-prepare'])
+        suite.tasks.forEach((task) => {
+          if (task.type === 'suite') {
+            visit(task)
           }
-        }
-        else if (task.type === 'suite') {
-          taskPacks.push([task.id, task.result, task.meta])
-          events.push([task.id, 'suite-prepare'], [task.id, 'suite-finished'])
-        }
+          else {
+            taskPacks.push([task.id, task.result, task.meta])
+            if (task.mode !== 'skip' && task.mode !== 'todo') {
+              events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
+            }
+          }
+        })
+        events.push([suite.id, 'suite-finished'])
       }
+
+      visit(file)
+
       logs.sort((log1, log2) => log1.time - log2.time)
 
       for (const log of logs) {
         await this._testRun.log(log).catch(noop)
       }
-      events.push([file.id, 'suite-finished'])
 
       await this._testRun.updated(taskPacks, events).catch(noop)
     }
