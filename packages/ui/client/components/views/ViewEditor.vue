@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { File } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
-import type { ErrorWithDiff, File } from 'vitest'
+import type { ErrorWithDiff } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
@@ -102,7 +103,7 @@ function clearListeners() {
   listeners.length = 0
 }
 
-useResizeObserver(editor, () => {
+useResizeObserver(() => editor.value, () => {
   codemirrorRef.value?.refresh()
 })
 

@@ -1,4 +1,4 @@
-import type { Suite, Task } from 'vitest'
+import type { Suite, Task } from '@vitest/runner'
 
 export function isSuite(task: Task): task is Suite {
   return Object.hasOwnProperty.call(task, 'tasks')

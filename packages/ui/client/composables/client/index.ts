@@ -1,5 +1,6 @@
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 import type { WebSocketStatus } from '@vueuse/core'
-import type { File, SerializedConfig, Task, TaskResultPack } from 'vitest'
+import type { SerializedConfig } from 'vitest'
 import type { BrowserRunnerState } from '../../../types'
 import { createFileTask } from '@vitest/runner/utils'
 import { createClient, getTasks } from '@vitest/ws-client'

@@ -1,4 +1,4 @@
-import type { File } from 'vitest'
+import type { File } from '@vitest/runner'
 import { faker } from '@faker-js/faker'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { config } from '~/composables/client'
@@ -27,7 +27,7 @@ const textStacks = Array.from({ length: 5 }, makeTextStack)
 const diff = `
   \x1B[32m- Expected\x1B[39m
   \x1B[31m+ Received\x1B[39m
-  
+
   \x1B[2m  Object {\x1B[22m
   \x1B[2m    "a": 1,\x1B[22m
   \x1B[32m-   "b": 2,\x1B[39m

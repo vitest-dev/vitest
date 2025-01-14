@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { File } from 'vitest'
+import type { File } from '@vitest/runner'
 import { Tooltip as VueTooltip } from 'floating-vue'
 import { isDark, toggleDark } from '~/composables'
 import { client, isReport, runAll, runFiles } from '~/composables/client'

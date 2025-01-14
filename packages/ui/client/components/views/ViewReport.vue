@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { File, Suite, Task } from '@vitest/runner'
 import type Convert from 'ansi-to-html'
-import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
+import type { ErrorWithDiff } from 'vitest'
 import { browserState, config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
