@@ -192,6 +192,8 @@ import type { CoverageMap } from 'istanbul-lib-coverage'
 declare function onCoverage(coverage: CoverageMap): Awaitable<void>
 ```
 
+If Vitest didn't perform any coverage, this hook is not called.
+
 ## onTestModuleQueued
 
 ```ts

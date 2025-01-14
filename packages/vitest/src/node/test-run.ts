@@ -73,7 +73,9 @@ export class TestRun {
       ])
     }
     finally {
-      await this.vitest.report('onCoverage', coverage)
+      if (coverage) {
+        await this.vitest.report('onCoverage', coverage)
+      }
     }
   }
 
