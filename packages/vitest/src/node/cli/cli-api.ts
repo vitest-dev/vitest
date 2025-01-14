@@ -1,7 +1,7 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
-import type { TestModule, TestSuite } from '../reporters'
+import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'

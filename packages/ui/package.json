@@ -53,7 +53,7 @@
     "pathe": "^2.0.0",
     "sirv": "^3.0.0",
     "tinyglobby": "^0.2.10",
-    "tinyrainbow": "^1.2.0"
+    "tinyrainbow": "^2.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",

@@ -205,6 +205,7 @@ export class Vitest {
     this._workspaceConfigPath = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
+    this.coreWorkspaceProject = undefined
     this.specifications.clearCache()
     this._onUserTestsRerun = []
 

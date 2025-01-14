@@ -91,6 +91,6 @@
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",
     "@types/debug": "^4.1.12",
-    "tinyrainbow": "^1.2.0"
+    "tinyrainbow": "^2.0.0"
   }
 }
