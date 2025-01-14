@@ -671,11 +671,6 @@ export class Vitest {
   }
 
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
-    const filepaths = specs.map(spec => spec.moduleId)
-    this.state.collectPaths(filepaths)
-
-    await this.report('onPathsCollected', filepaths)
-    await this.report('onSpecsCollected', specs.map(spec => spec.toJSON()))
     await this._testRun.start(specs)
 
     // previous run
