@@ -3,9 +3,10 @@ import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
-import type { TestRunEndReason } from '../reporters'
 import type { ReportedHookContext, TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
+
+export type TestRunEndReason = 'passed' | 'interrupted' | 'failed'
 
 export interface Reporter {
   onInit?: (vitest: Vitest) => void

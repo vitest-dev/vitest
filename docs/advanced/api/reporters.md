@@ -59,8 +59,7 @@ Note that you can also get access to `vitest` instance from test cases, suites a
 
 ::: details Example
 ```ts
-import type { Reporter, TestSpecification } from 'vitest/reporters'
-import type { Vitest } from 'vitest/node'
+import type { Reporter, TestSpecification, Vitest } from 'vitest/node'
 
 class MyReporter implements Reporter {
   private vitest!: Vitest
@@ -94,7 +93,7 @@ This method is called when a new test run has started. It receives an array of [
 
 ::: details Example
 ```ts
-import type { Reporter, TestSpecification } from 'vitest/reporters'
+import type { Reporter, TestSpecification } from 'vitest/node'
 
 class MyReporter implements Reporter {
   onTestRunStart(specifications: TestSpecification[]) {
@@ -140,7 +139,7 @@ import type {
   TestModule,
   TestRunEndReason,
   TestSpecification
-} from 'vitest/reporters'
+} from 'vitest/node'
 
 class MyReporter implements Reporter {
   onTestRunEnd(

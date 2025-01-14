@@ -23,7 +23,7 @@ test('custom', ({ task }) => {
 Once a test is completed, Vitest will send a task including the result and `meta` to the Node.js process using RPC, and then report it in `onTestCaseResult` and other hooks that have access to tasks. To process this test case, you can utilize the `onTestCaseResult` method available in your reporter implementation:
 
 ```ts [custom-reporter.js]
-import type { Reporter, TestCase, TestModule } from 'vitest/reporters'
+import type { Reporter, TestCase, TestModule } from 'vitest/node'
 
 export default {
   onTestCaseResult(testCase: TestCase) {

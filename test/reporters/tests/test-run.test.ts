@@ -1,5 +1,12 @@
-import type { TestSpecification, UserConfig } from 'vitest/node'
-import type { ReportedHookContext, Reporter, TestCase, TestModule, TestSuite } from 'vitest/reporters'
+import type {
+  ReportedHookContext,
+  Reporter,
+  TestCase,
+  TestModule,
+  TestSpecification,
+  TestSuite,
+  UserConfig,
+} from 'vitest/node'
 import { sep } from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests, ts } from '../../test-utils'
