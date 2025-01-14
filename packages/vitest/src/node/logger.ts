@@ -169,6 +169,11 @@ export class Logger {
     if (config.watch && (config.changed || config.related?.length)) {
       this.log(`No affected ${config.mode} files found\n`)
     }
+    else if (config.watch) {
+      this.log(
+        c.red(`\nNo ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+      )
+    }
     else {
       if (config.passWithNoTests) {
         this.log(`No ${config.mode} files found, exiting with code 0\n`)
