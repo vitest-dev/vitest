@@ -110,7 +110,7 @@ export class JsonReporter implements Reporter {
     const numTodoTests = tests.filter(t => t.mode === 'todo').length
     const testResults: Array<JsonTestResult> = []
 
-    const success = numFailedTestSuites === 0 && numFailedTests === 0
+    const success = !!(files.length > 0 || this.ctx.config.passWithNoTests) && numFailedTestSuites === 0 && numFailedTests === 0
 
     for (const file of files) {
       const tests = getTests([file])
