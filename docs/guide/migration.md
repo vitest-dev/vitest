@@ -81,6 +81,10 @@ The [`resolveConfig`](/advanced/api/#resolveconfig) is now more useful. Instead 
 
 This function is not used internally and exposed exclusively as a public API.
 
+### Cleaned up `vitest/reporters` types <Badge type="danger">API</Badge> {#cleaned-up-vitest-reporters-types}
+
+The `vitest/reporters` entrypoint now only exports reporters implementations and options types. If you need access to `TestCase`/`TestSuite` and other task related types, import them additionally from `vitest/node`.
+
 ## Migrating to Vitest 2.0 {#vitest-2}
 
 ### Default Pool is `forks`

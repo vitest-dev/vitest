@@ -1,6 +1,5 @@
 import type { File, Test } from '@vitest/runner'
-import type { TestSpecification } from 'vitest/node'
-import type { Reporter } from 'vitest/reporters'
+import type { Reporter, TestSpecification } from 'vitest/node'
 import type { HookOptions } from '../../../packages/vitest/src/node/reporters/task-parser'
 import { expect, test } from 'vitest'
 import { TaskParser } from '../../../packages/vitest/src/node/reporters/task-parser'
