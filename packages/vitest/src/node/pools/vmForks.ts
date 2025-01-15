@@ -20,7 +20,7 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createChildProcessChannel(project: TestProject) {
+function createChildProcessChannel(project: TestProject, collect: boolean) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -31,7 +31,7 @@ function createChildProcessChannel(project: TestProject) {
   }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
-    createMethodsRPC(project, { cacheFs: true }),
+    createMethodsRPC(project, { cacheFs: true, collect }),
     {
       eventNames: ['onCancel'],
       serialize: v8.serialize,
@@ -117,7 +117,7 @@ export function createVmForksPool(
       const paths = files.map(f => f.filepath)
       ctx.state.clearFiles(project, paths)
 
-      const { channel, cleanup } = createChildProcessChannel(project)
+      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',

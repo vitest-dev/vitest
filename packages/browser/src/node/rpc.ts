@@ -50,6 +50,13 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
       )
     }
 
+    const method = searchParams.get('method') as 'run' | 'collect'
+    if (method !== 'run' && method !== 'collect') {
+      return error(
+        new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
+      )
+    }
+
     if (type === 'orchestrator') {
       const session = vitest._browserSessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
@@ -67,7 +74,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws)
+      const rpc = setupClient(project, rpcId, ws, method)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -96,7 +103,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
     }
   }
 
-  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
+  function setupClient(project: TestProject, rpcId: string, ws: WebSocket, method: 'run' | 'collect') {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
@@ -111,19 +118,39 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
           vitest.state.catchError(error, type)
         },
         async onQueued(file) {
-          await vitest._testRun.enqueued(project, file)
+          if (method === 'collect') {
+            vitest.state.collectFiles(project, [file])
+          }
+          else {
+            await vitest._testRun.enqueued(project, file)
+          }
         },
         async onCollected(files) {
-          await vitest._testRun.collected(project, files)
+          if (method === 'collect') {
+            vitest.state.collectFiles(project, files)
+          }
+          else {
+            await vitest._testRun.collected(project, files)
+          }
         },
         async onTaskUpdate(packs, events) {
-          await vitest._testRun.updated(packs, events)
+          if (method === 'collect') {
+            vitest.state.updateTasks(packs)
+          }
+          else {
+            await vitest._testRun.updated(packs, events)
+          }
         },
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        sendLog(log) {
-          return vitest._testRun.log(log)
+        async sendLog(log) {
+          if (method === 'collect') {
+            vitest.state.updateUserLog(log)
+          }
+          else {
+            await vitest._testRun.log(log)
+          }
         },
         resolveSnapshotPath(testPath) {
           return vitest.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {

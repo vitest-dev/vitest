@@ -57,13 +57,14 @@ export async function resolveTester(
     : await globalServer.injectorJs
 
   const injector = replacer(injectorJs, {
-    __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider!.name),
+    __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider.name),
     __VITEST_CONFIG__: JSON.stringify(browserProject.wrapSerializedConfig()),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: browserProject.vite.config.root,
     }),
     __VITEST_TYPE__: '"tester"',
+    __VITEST_METHOD__: JSON.stringify(method),
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),

@@ -17,7 +17,7 @@ import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
-function createChildProcessChannel(project: TestProject) {
+function createChildProcessChannel(project: TestProject, collect = false) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -27,7 +27,7 @@ function createChildProcessChannel(project: TestProject) {
     postMessage: message => emitter.emit(events.response, message),
   }
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true }), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true, collect }), {
     eventNames: ['onCancel'],
     serialize: v8.serialize,
     deserialize: v => v8.deserialize(Buffer.from(v)),
@@ -109,7 +109,7 @@ export function createForksPool(
       const paths = files.map(f => f.filepath)
       ctx.state.clearFiles(project, paths)
 
-      const { channel, cleanup } = createChildProcessChannel(project)
+      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
