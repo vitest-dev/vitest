@@ -58,8 +58,8 @@ export default defineConfig({
     inspectBrk: true,
     fileParallelism: false,
     browser: {
-      name: 'chromium',
       provider: 'playwright',
+      instances: [{ browser: 'chromium' }]
     },
   },
 })

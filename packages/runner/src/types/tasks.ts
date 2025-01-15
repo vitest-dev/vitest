@@ -360,6 +360,11 @@ interface TestForFunction<ExtraContext> {
   >
 }
 
+interface SuiteForFunction {
+  <T>(cases: ReadonlyArray<T>): EachFunctionReturn<[T]>
+  (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
+}
+
 interface TestCollectorCallable<C = object> {
   /**
    * @deprecated Use options as the second argument instead
@@ -525,6 +530,7 @@ type ChainableSuiteAPI<ExtraContext = object> = ChainableFunction<
   SuiteCollectorCallable<ExtraContext>,
   {
     each: TestEachFunction
+    for: SuiteForFunction
   }
 >
 

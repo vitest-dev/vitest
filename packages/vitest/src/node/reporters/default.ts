@@ -1,5 +1,5 @@
-import type { File } from '@vitest/runner'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
 import type { BaseOptions } from './base'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
@@ -27,6 +27,10 @@ export class DefaultReporter extends BaseReporter {
     if (this.options.summary) {
       this.summary = new SummaryReporter()
     }
+  }
+
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>) {
+    this.summary?.onTestRunStart(specifications)
   }
 
   onTestModuleQueued(file: TestModule) {
@@ -72,17 +76,9 @@ export class DefaultReporter extends BaseReporter {
         this.renderSucceed = paths.length <= 1
       }
     }
-
-    this.summary?.onPathsCollected(paths)
   }
 
-  onWatcherRerun(files: string[], trigger?: string) {
-    this.summary?.onWatcherRerun()
-    super.onWatcherRerun(files, trigger)
-  }
-
-  onFinished(files?: File[], errors?: unknown[]) {
-    this.summary?.onFinished()
-    super.onFinished(files, errors)
+  onTestRunEnd() {
+    this.summary?.onTestRunEnd()
   }
 }

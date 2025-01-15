@@ -128,9 +128,29 @@ export class Logger {
 
   printNoTestFound(filters?: string[]) {
     const config = this.ctx.config
+
+    if (config.watch && (config.changed || config.related?.length)) {
+      this.log(`No affected ${config.mode} files found\n`)
+    }
+    else if (config.watch) {
+      this.log(
+        c.red(`No ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+      )
+    }
+    else {
+      if (config.passWithNoTests) {
+        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+      }
+      else {
+        this.error(
+          c.red(`No ${config.mode} files found, exiting with code 1\n`),
+        )
+      }
+    }
+
     const comma = c.dim(', ')
     if (filters?.length) {
-      this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
+      this.console.error(c.dim('filter: ') + c.yellow(filters.join(comma)))
     }
     const projectsFilter = toArray(config.project)
     if (projectsFilter.length) {
@@ -140,9 +160,9 @@ export class Logger {
     }
     this.ctx.projects.forEach((project) => {
       const config = project.config
-      const output = (project.isRootProject() || !project.name) ? '' : `[${project.name}]`
-      if (output) {
-        this.console.error(c.bgCyan(`${output} Config`))
+      const printConfig = !project.isRootProject() && project.name
+      if (printConfig) {
+        this.console.error(`\n${formatProjectName(project.name)}\n`)
       }
       if (config.include) {
         this.console.error(
@@ -165,20 +185,7 @@ export class Logger {
         )
       }
     })
-
-    if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected ${config.mode} files found\n`)
-    }
-    else {
-      if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
-      }
-      else {
-        this.error(
-          c.red(`\nNo ${config.mode} files found, exiting with code 1`),
-        )
-      }
-    }
+    this.console.error()
   }
 
   printBanner() {
