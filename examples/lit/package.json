@@ -10,6 +10,7 @@
     "coverage": "vitest run --coverage",
     "dev": "vite",
     "test": "vitest",
+    "list": "vitest list",
     "test:ui": "vitest --ui"
   },
   "dependencies": {

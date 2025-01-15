@@ -19,12 +19,12 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createWorkerChannel(project: TestProject) {
+function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { collect }), {
     eventNames: ['onCancel'],
     post(v) {
       port.postMessage(v)
@@ -108,7 +108,7 @@ export function createVmThreadsPool(
       const paths = files.map(f => f.filepath)
       ctx.state.clearFiles(project, paths)
 
-      const { workerPort, port } = createWorkerChannel(project)
+      const { workerPort, port } = createWorkerChannel(project, name === 'collect')
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'vmThreads',

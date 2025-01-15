@@ -11,6 +11,8 @@ const promises = new Map<string, Promise<void>>()
 
 interface MethodsOptions {
   cacheFs?: boolean
+  // do not report files
+  collect?: boolean
 }
 
 export function createMethodsRPC(project: TestProject, options: MethodsOptions = {}): RuntimeRPC {
@@ -74,24 +76,40 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     transform(id, environment) {
       return project.vitenode.transformModule(id, environment).catch(handleRollupError)
     },
-    onPathsCollected(paths) {
-      ctx.state.collectPaths(paths)
-      return ctx.report('onPathsCollected', paths)
-    },
     async onQueued(file) {
-      await ctx._testRun.enqueued(project, file)
+      if (options.collect) {
+        ctx.state.collectFiles(project, [file])
+      }
+      else {
+        await ctx._testRun.enqueued(project, file)
+      }
     },
     async onCollected(files) {
-      await ctx._testRun.collected(project, files)
+      if (options.collect) {
+        ctx.state.collectFiles(project, files)
+      }
+      else {
+        await ctx._testRun.collected(project, files)
+      }
     },
     onAfterSuiteRun(meta) {
       ctx.coverageProvider?.onAfterSuiteRun(meta)
     },
     async onTaskUpdate(packs, events) {
-      await ctx._testRun.updated(packs, events)
+      if (options.collect) {
+        ctx.state.updateTasks(packs)
+      }
+      else {
+        await ctx._testRun.updated(packs, events)
+      }
     },
     async onUserConsoleLog(log) {
-      await ctx._testRun.log(log)
+      if (options.collect) {
+        ctx.state.updateUserLog(log)
+      }
+      else {
+        await ctx._testRun.log(log)
+      }
     },
     onUnhandledError(err, type) {
       ctx.state.catchError(err, type)

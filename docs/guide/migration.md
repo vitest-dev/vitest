@@ -85,6 +85,10 @@ This function is not used internally and exposed exclusively as a public API.
 
 The `vitest/reporters` entrypoint now only exports reporters implementations and options types. If you need access to `TestCase`/`TestSuite` and other task related types, import them additionally from `vitest/node`.
 
+### Coverage ignores test files even when `coverage.excludes` is overwritten.
+
+It is no longer possible to include test files in coverage report by overwriting `coverage.excludes`. Test files are now always excluded.
+
 ## Migrating to Vitest 2.0 {#vitest-2}
 
 ### Default Pool is `forks`

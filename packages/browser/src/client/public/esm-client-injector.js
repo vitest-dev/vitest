@@ -27,6 +27,7 @@
     sessionId: { __VITEST_SESSION_ID__ },
     testerId: { __VITEST_TESTER_ID__ },
     provider: { __VITEST_PROVIDER__ },
+    method: { __VITEST_METHOD__ },
     providedContext: { __VITEST_PROVIDED_CONTEXT__ },
   };
 
