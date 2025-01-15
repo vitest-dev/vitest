@@ -56,7 +56,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     }
   }
 
-  async openBrowser(sessionId: string) {
+  async openBrowser() {
     if (this.browser) {
       return this.browser
     }
@@ -120,8 +120,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(sessionId: string, url: string) {
-    const browserInstance = await this.openBrowser(sessionId)
+  async openPage(_sessionId: string, url: string) {
+    const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
   }
 
