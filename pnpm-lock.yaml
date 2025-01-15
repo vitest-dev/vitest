@@ -1295,18 +1295,6 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
-  test/filterWatchMode:
-    devDependencies:
-      '@vitest/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      vite:
-        specifier: ^5.4.0
-        version: 5.4.0(@types/node@22.10.2)(terser@5.36.0)
-      vitest:
-        specifier: workspace:*
-        version: link:../../packages/vitest
-
   test/global-setup:
     devDependencies:
       vitest:

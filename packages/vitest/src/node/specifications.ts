@@ -14,11 +14,6 @@ export class VitestSpecifications {
   constructor(private vitest: Vitest) {}
 
   public getModuleSpecifications(moduleId: string): TestSpecification[] {
-    const _cached = this.getCachedSpecifications(moduleId)
-    if (_cached) {
-      return _cached
-    }
-
     const specs: TestSpecification[] = []
     for (const project of this.vitest.projects) {
       if (project._isCachedTestFile(moduleId)) {
