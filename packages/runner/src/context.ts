@@ -68,7 +68,8 @@ export function createTestContext(
   context.task = test
 
   context.skip = (note?: string) => {
-    test.pending = true
+    test.result ??= { state: 'skip' }
+    test.result.pending = true
     throw new PendingError('test is skipped; abort execution', test, note)
   }
 

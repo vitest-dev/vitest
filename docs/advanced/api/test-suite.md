@@ -10,31 +10,6 @@ if (task.type === 'suite') {
 }
 ```
 
-::: warning
-We are planning to introduce a new Reporter API that will be using this API by default. For now, the Reporter API uses [runner tasks](/advanced/runner#tasks), but you can still access `TestSuite` via `vitest.state.getReportedEntity` method:
-
-```ts
-import type { RunnerTestFile, TestModule, Vitest } from 'vitest/node'
-
-class Reporter {
-  private vitest!: Vitest
-
-  onInit(vitest: Vitest) {
-    this.vitest = vitest
-  }
-
-  onFinished(files: RunnerTestFile[]) {
-    for (const file of files) {
-      const testModule = this.vitest.state.getReportedEntity(file) as TestModule
-      for (const suite of testModule.children.allSuites()) {
-        console.log(suite) // TestSuite
-      }
-    }
-  }
-}
-```
-:::
-
 ## project
 
 This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
@@ -125,12 +100,13 @@ Parent suite. If the suite was called directly inside the [module](/advanced/api
 
 ```ts
 interface TaskOptions {
-  each: boolean | undefined
-  concurrent: boolean | undefined
-  shuffle: boolean | undefined
-  retry: number | undefined
-  repeats: number | undefined
-  mode: 'run' | 'only' | 'skip' | 'todo'
+  readonly each: boolean | undefined
+  readonly fails: boolean | undefined
+  readonly concurrent: boolean | undefined
+  readonly shuffle: boolean | undefined
+  readonly retry: number | undefined
+  readonly repeats: number | undefined
+  readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 ```
 
@@ -153,7 +129,21 @@ for (const task of suite.children) {
 ```
 
 ::: warning
-Note that `suite.children` will only iterate the first level of nesting, it won't go deeper.
+Note that `suite.children` will only iterate the first level of nesting, it won't go deeper. If you need to iterate over all tests or suites, use [`children.allTests()`](/advanced/api/test-collection#alltests) or [`children.allSuites()`](/advanced/api/test-collection#allsuites). If you need to iterate over everything, use recursive function:
+
+```ts
+function visit(collection: TestCollection) {
+  for (const task of collection) {
+    if (task.type === 'suite') {
+      // report a suite
+      visit(task.children)
+    }
+    else {
+      // report a test
+    }
+  }
+}
+```
 :::
 
 ## ok
@@ -164,13 +154,22 @@ function ok(): boolean
 
 Checks if the suite has any failed tests. This will also return `false` if suite failed during collection. In that case, check the [`errors()`](#errors) for thrown errors.
 
-## skipped
+## state
 
 ```ts
-function skipped(): boolean
+function state(): TestSuiteState
 ```
 
-Checks if the suite was skipped during collection.
+Checks the running state of the suite. Possible return values:
+
+- **pending**: the tests in this suite did not finish running yet.
+- **failed**: this suite has failed tests or they couldn't be collected. If [`errors()`](#errors) is not empty, it means the suite failed to collect tests.
+- **passed**: every test inside this suite has passed.
+- **skipped**: this suite was skipped during collection.
+
+::: warning
+Note that [test module](/advanced/api/test-module) also has a `state` method that returns the same values, but it can also return an additional `queued` state if the module wasn't executed yet.
+:::
 
 ## errors
 
@@ -189,5 +188,5 @@ describe('collection failed', () => {
 ```
 
 ::: warning
-Note that errors are serialized into simple object: `instanceof Error` will always return `false`.
+Note that errors are serialized into simple objects: `instanceof Error` will always return `false`.
 :::

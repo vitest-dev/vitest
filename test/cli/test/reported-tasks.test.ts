@@ -56,17 +56,17 @@ it('correctly reports a file', () => {
   expect(testModule.location).toBeUndefined()
   expect(testModule.moduleId).toBe(resolve(root, './1_first.test.ts'))
   expect(testModule.project).toBe(project)
-  expect(testModule.children.size).toBe(16)
+  expect(testModule.children.size).toBe(17)
 
   const tests = [...testModule.children.tests()]
-  expect(tests).toHaveLength(11)
+  expect(tests).toHaveLength(12)
   const deepTests = [...testModule.children.allTests()]
-  expect(deepTests).toHaveLength(21)
+  expect(deepTests).toHaveLength(22)
 
-  expect.soft([...testModule.children.allTests('skipped')]).toHaveLength(7)
+  expect.soft([...testModule.children.allTests('skipped')]).toHaveLength(8)
   expect.soft([...testModule.children.allTests('passed')]).toHaveLength(9)
   expect.soft([...testModule.children.allTests('failed')]).toHaveLength(5)
-  expect.soft([...testModule.children.allTests('running')]).toHaveLength(0)
+  expect.soft([...testModule.children.allTests('pending')]).toHaveLength(0)
 
   const suites = [...testModule.children.suites()]
   expect(suites).toHaveLength(5)
@@ -161,6 +161,43 @@ it('correctly reports failed test', () => {
   expect(diagnostic.flaky).toBe(false)
   expect(diagnostic.repeatCount).toBe(0)
   expect(diagnostic.repeatCount).toBe(0)
+})
+
+it('correctly reports a skipped test', () => {
+  const optionTestCase = findTest(testModule.children, 'skips an option test')
+  expect(optionTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const modifierTestCase = findTest(testModule.children, 'skips a .modifier test')
+  expect(modifierTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const ctxSkippedTestCase = findTest(testModule.children, 'skips an ctx.skip() test')
+  expect(ctxSkippedTestCase.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const testOptionTodo = findTest(testModule.children, 'todos an option test')
+  expect(testOptionTodo.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
+
+  const testModifierTodo = findTest(testModule.children, 'todos a .modifier test')
+  expect(testModifierTodo.result()).toEqual({
+    state: 'skipped',
+    note: undefined,
+    errors: undefined,
+  })
 })
 
 it('correctly reports multiple failures', () => {
