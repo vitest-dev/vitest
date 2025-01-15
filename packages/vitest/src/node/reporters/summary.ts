@@ -1,4 +1,5 @@
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
 import type { Reporter } from '../types/reporter'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -75,19 +76,13 @@ export class SummaryReporter implements Reporter {
       getWindow: () => this.createSummary(),
     })
 
-    this.startTimers()
-
     this.ctx.onClose(() => {
       clearInterval(this.durationInterval)
       this.renderer.stop()
     })
   }
 
-  onPathsCollected(paths?: string[]) {
-    this.modules.total = (paths || []).length
-  }
-
-  onWatcherRerun() {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>) {
     this.runningModules.clear()
     this.finishedModules.clear()
     this.modules = emptyCounters()
@@ -95,9 +90,11 @@ export class SummaryReporter implements Reporter {
 
     this.startTimers()
     this.renderer.start()
+
+    this.modules.total = specifications.length
   }
 
-  onFinished() {
+  onTestRunEnd() {
     this.runningModules.clear()
     this.finishedModules.clear()
     this.renderer.finish()

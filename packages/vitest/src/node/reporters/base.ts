@@ -58,7 +58,12 @@ export abstract class BaseReporter implements Reporter {
 
   onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.end = performance.now()
-    this.reportSummary(files, errors)
+    if (!files.length && !errors.length) {
+      this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
+    }
+    else {
+      this.reportSummary(files, errors)
+    }
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {

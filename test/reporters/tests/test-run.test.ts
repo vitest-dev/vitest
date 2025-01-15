@@ -999,15 +999,7 @@ async function run(
 
   const { stdout, stderr } = await runInlineTests(structure, config)
 
-  if (reporterOptions?.printTestRunEvents && reporterOptions?.failed) {
-    if (config.passWithNoTests) {
-      expect(stdout).toContain('No test files found, exiting with code 0')
-    }
-    else {
-      expect(stderr).toContain('No test files found, exiting with code 1')
-    }
-  }
-  else if (!reporterOptions?.printTestRunEvents) {
+  if (!reporterOptions?.printTestRunEvents && !reporterOptions?.failed) {
     expect(stdout).toBe('')
     expect(stderr).toBe('')
   }
