@@ -36,6 +36,7 @@ export async function resolveOrchestrator(
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: browserProject.vite.config.root,
     }),
+    __VITEST_METHOD__: JSON.stringify(session?.method || 'run'),
     __VITEST_FILES__: JSON.stringify(files),
     __VITEST_TYPE__: '"orchestrator"',
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
