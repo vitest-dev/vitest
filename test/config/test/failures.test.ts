@@ -111,7 +111,11 @@ Use either:
 {
   "browser": {
     "provider": "playwright",
-    "name": "chromium"
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
   }
 }
 
@@ -122,7 +126,7 @@ Use either:
   }
 })
 
-test('v8 coverage provider throws when not playwright + chromium', async () => {
+test('v8 coverage provider throws when not playwright + chromium (browser.name)', async () => {
   for (const { provider, name } of browsers) {
     if (provider === 'playwright' && name === 'chromium') {
       continue
@@ -171,6 +175,59 @@ Use either:
   }
 })
 
+test('v8 coverage provider throws when not playwright + chromium (browser.instances)', async () => {
+  for (const { provider, name } of browsers) {
+    if (provider === 'playwright' && name === 'chromium') {
+      continue
+    }
+
+    const { stderr } = await runVitest({
+      coverage: {
+        enabled: true,
+      },
+      browser: {
+        enabled: true,
+        provider,
+        instances: [{ browser: name }],
+      },
+    })
+
+    expect(stderr).toMatch(
+      `Error: @vitest/coverage-v8 does not work with
+{
+  "browser": {
+    "provider": "${provider}",
+    "instances": [
+      {
+        "browser": "${name}"
+      }
+    ]
+  }
+}
+
+Use either:
+{
+  "browser": {
+    "provider": "playwright",
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
+  }
+}
+
+...or change your coverage provider to:
+{
+  "coverage": {
+    "provider": "istanbul"
+  }
+}
+`,
+    )
+  }
+})
+
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
   expect(stderr).toMatch(
@@ -178,7 +235,11 @@ test('v8 coverage provider cannot be used in workspace without playwright + chro
 {
   "browser": {
     "provider": "webdriverio",
-    "name": "chrome"
+    "instances": [
+      {
+        "browser": "chrome"
+      }
+    ]
   }
 }`,
   )

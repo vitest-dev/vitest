@@ -253,7 +253,13 @@ export function resolveConfig(
 
   // Browser-mode "Playwright + Chromium" only features:
   if (browser.enabled && !(browser.provider === 'playwright' && (browser.name === 'chromium' || browser.instances?.find(i => i?.browser === 'chromium')))) {
-    const browserConfig = { browser: { provider: browser.provider, name: browser.name } }
+    const browserConfig = {
+      browser: {
+        provider: browser.provider,
+        name: browser.name,
+        instances: browser.instances,
+      },
+    }
 
     if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
       throw new Error(
@@ -268,7 +274,7 @@ export function resolveConfig(
 
       throw new Error(
         `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
         + `\n\n...or disable ${inspectOption}\n`,
       )
     }
