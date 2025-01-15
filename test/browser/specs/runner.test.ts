@@ -1,9 +1,10 @@
 import type { Vitest } from 'vitest/node'
 import type { JsonTestResults } from 'vitest/reporters'
 import { readFile } from 'node:fs/promises'
-import { noop } from '@vitest/utils'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { instances, provider, runBrowserTests } from './utils'
+
+function noop() {}
 
 describe('running browser tests', async () => {
   let stderr: string
