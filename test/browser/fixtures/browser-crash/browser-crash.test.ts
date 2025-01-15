@@ -1,15 +1,12 @@
+import { commands } from '@vitest/browser/context'
 import { it } from 'vitest'
 
-it('fails gracefully when browser crashes', async () => {
-  const parentDiv = document.createElement('div')
-  let currentDiv = parentDiv
-
-  // Simulate crash by adding a large number of nodes
-  for (let i = 0; i < 20000; i++) {
-    const newDiv = document.createElement('div')
-    currentDiv.appendChild(newDiv)
-    currentDiv = newDiv
+declare module '@vitest/browser/context' {
+  interface BrowserCommands {
+    forceCrash: () => Promise<void>
   }
+}
 
-  document.body.appendChild(parentDiv)
+it('fails gracefully when browser crashes', async () => {
+  await commands.forceCrash()
 })
