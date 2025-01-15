@@ -78,14 +78,15 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       ...this.options,
       logLevel: 'error',
       capabilities: this.buildCapabilities(),
-    });
+    })
 
     // closest we can do as for detecting browser crash
     setImmediate(async () => {
-      while(true) {
+      while (true) {
         try {
           await this.browser?.getTitle()
-        } catch {
+        }
+        catch {
           const session = this.project.vitest._browserSessions.getSession(sessionId)
           session?.reject(new Error('Page crashed when executing tests'))
         }
