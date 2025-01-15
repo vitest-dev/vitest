@@ -34,6 +34,7 @@ import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
 import { BlobReporter, readBlobs } from './reporters/blob'
+import { HangingProcessReporter } from './reporters/hanging-process'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
@@ -564,8 +565,6 @@ export class Vitest {
       // Report coverage for uncovered files
       await this.reportCoverage(coverage, true)
 
-      this.logger.printNoTestFound(filters)
-
       if (throwAnError) {
         throw new FilesNotFoundError(this.mode)
       }
@@ -671,11 +670,6 @@ export class Vitest {
   }
 
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
-    const filepaths = specs.map(spec => spec.moduleId)
-    this.state.collectPaths(filepaths)
-
-    await this.report('onPathsCollected', filepaths)
-    await this.report('onSpecsCollected', specs.map(spec => spec.toJSON()))
     await this._testRun.start(specs)
 
     // previous run
@@ -1140,7 +1134,7 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this.vite, ...this.resolvedProjects.map(p => p.vite)].filter(Boolean).length
+          const runningServers = [this._vite, ...this.resolvedProjects.map(p => p._vite)].filter(Boolean).length
 
           if (runningServers === 1) {
             console.warn('Tests closed successfully but something prevents Vite server from exiting')
@@ -1152,7 +1146,9 @@ export class Vitest {
             console.warn('Tests closed successfully but something prevents the main process from exiting')
           }
 
-          console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
+          if (!this.reporters.some(r => r instanceof HangingProcessReporter)) {
+            console.warn('You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/config/#reporters')
+          }
         }
 
         process.exit()
