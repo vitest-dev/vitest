@@ -251,8 +251,10 @@ export function resolveConfig(
     }
   }
 
+  const playwrightChromiumOnly = browser.provider === 'playwright' && (browser.name === 'chromium' || browser.instances?.every(i => i.browser === 'chromium'))
+
   // Browser-mode "Playwright + Chromium" only features:
-  if (browser.enabled && !(browser.provider === 'playwright' && (browser.name === 'chromium' || browser.instances?.find(i => i?.browser === 'chromium')))) {
+  if (browser.enabled && !playwrightChromiumOnly) {
     const browserConfig = {
       browser: {
         provider: browser.provider,

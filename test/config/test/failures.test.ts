@@ -228,6 +228,63 @@ Use either:
   }
 })
 
+test('v8 coverage provider throws when using chromium and other non-chromium browser', async () => {
+  const { stderr } = await runVitest({
+    coverage: {
+      enabled: true,
+    },
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: 'playwright',
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+        { browser: 'webkit' },
+      ],
+    },
+  })
+
+  expect(stderr).toMatch(
+    `Error: @vitest/coverage-v8 does not work with
+{
+  "browser": {
+    "provider": "playwright",
+    "instances": [
+      {
+        "browser": "chromium"
+      },
+      {
+        "browser": "firefox"
+      },
+      {
+        "browser": "webkit"
+      }
+    ]
+  }
+}
+
+Use either:
+{
+  "browser": {
+    "provider": "playwright",
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
+  }
+}
+
+...or change your coverage provider to:
+{
+  "coverage": {
+    "provider": "istanbul"
+  }
+}`,
+  )
+})
+
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
   const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
   expect(stderr).toMatch(
