@@ -344,6 +344,7 @@ export function resolveConfig(
         )}`,
     ),
   )
+  resolved.coverage.exclude.push(...resolved.include)
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
