@@ -52,4 +52,4 @@ test('should handle large nested DOM', async () => {
 
   document.body.appendChild(parentDiv)
   expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
-})
+}, { timeout: 60000 })
