@@ -1351,7 +1351,8 @@ export default defineConfig({
 ```
 
 ::: tip NOTE
-Vitest automatically adds test files `include` patterns to the default value of `coverage.exclude`.
+Vitest automatically adds test files `include` patterns to the `coverage.exclude`.
+It's not possible to show coverage of test files.
 :::
 
 #### coverage.all
