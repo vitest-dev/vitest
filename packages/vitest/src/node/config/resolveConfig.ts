@@ -251,14 +251,22 @@ export function resolveConfig(
     }
   }
 
+  const playwrightChromiumOnly = browser.provider === 'playwright' && (browser.name === 'chromium' || browser.instances?.every(i => i.browser === 'chromium'))
+
   // Browser-mode "Playwright + Chromium" only features:
-  if (browser.enabled && !(browser.provider === 'playwright' && browser.name === 'chromium')) {
-    const browserConfig = { browser: { provider: browser.provider, name: browser.name } }
+  if (browser.enabled && !playwrightChromiumOnly) {
+    const browserConfig = {
+      browser: {
+        provider: browser.provider,
+        name: browser.name,
+        instances: browser.instances,
+      },
+    }
 
     if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
       throw new Error(
         `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
         + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
       )
     }
@@ -268,7 +276,7 @@ export function resolveConfig(
 
       throw new Error(
         `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
         + `\n\n...or disable ${inspectOption}\n`,
       )
     }
