@@ -55,11 +55,12 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    provider: 'playwright',
-    enabled: true,
-    instances: [
-      { browser: 'chromium' },
-    ],
+    inspectBrk: true,
+    fileParallelism: false,
+    browser: {
+      provider: 'playwright',
+      instances: [{ browser: 'chromium' }]
+    },
   },
 })
 ```
