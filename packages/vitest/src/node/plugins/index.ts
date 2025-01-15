@@ -7,7 +7,7 @@ import {
 } from '@vitest/utils'
 import { relative } from 'pathe'
 import { defaultPort } from '../../constants'
-import { configDefaults, coverageConfigDefaults } from '../../defaults'
+import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
@@ -153,13 +153,6 @@ export async function VitestPlugin(
           },
         )
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
-
-        // If "coverage.exclude" is not defined by user, add "test.include" to "coverage.exclude" automatically
-        if (userConfig.coverage?.enabled && !userConfig.coverage.exclude && userConfig.include && config.test) {
-          config.test.coverage = {
-            exclude: [...coverageConfigDefaults.exclude, ...userConfig.include],
-          }
-        }
 
         // we want inline dependencies to be resolved by analyser plugin so module graph is populated correctly
         if (viteConfig.ssr?.noExternal !== true) {
