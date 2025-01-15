@@ -56,7 +56,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     }
   }
 
-  async openBrowser() {
+  async openBrowser(sessionId: string) {
     if (this.browser) {
       return this.browser
     }
@@ -78,6 +78,18 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       ...this.options,
       logLevel: 'error',
       capabilities: this.buildCapabilities(),
+    });
+
+    // closest we can do as for detecting browser crash
+    setImmediate(async () => {
+      while(true) {
+        try {
+          await this.browser?.getTitle()
+        } catch {
+          const session = this.project.vitest._browserSessions.getSession(sessionId)
+          session?.reject(new Error('Page crashed when executing tests'))
+        }
+      }
     })
 
     return this.browser
@@ -120,8 +132,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(_sessionId: string, url: string) {
-    const browserInstance = await this.openBrowser()
+  async openPage(sessionId: string, url: string) {
+    const browserInstance = await this.openBrowser(sessionId)
     await browserInstance.url(url)
   }
 
