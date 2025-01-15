@@ -1,6 +1,6 @@
 import { it } from 'vitest'
 
-it.skip('fails gracefully when browser crashes', async () => {
+it('fails gracefully when browser crashes', async () => {
   const parentDiv = document.createElement('div')
   let currentDiv = parentDiv
 
