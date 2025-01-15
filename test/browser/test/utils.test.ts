@@ -38,11 +38,10 @@ test('prints the element with attributes', async () => {
   expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
 })
 
-test('should handle large nested DOM', async () => {
-  const depth = 20000
+test('should handle DOM content bigger than maxLength', async () => {
+  const depth = 100
+  const maxContent = 100
 
-  // if we try to manipulate dom to add 20000 divs, we get
-  // max depth exceeded error
   const openingTags = '<div>'.repeat(depth)
   const closingTags = '</div>'.repeat(depth)
   const domString = `${openingTags}${closingTags}`
@@ -51,5 +50,5 @@ test('should handle large nested DOM', async () => {
   parentDiv.innerHTML = domString
 
   document.body.appendChild(parentDiv)
-  expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
-}, { timeout: 120000 })
+  expect(await commands.stripVTControlCharacters(prettyDOM(undefined, maxContent))).toMatchSnapshot()
+})

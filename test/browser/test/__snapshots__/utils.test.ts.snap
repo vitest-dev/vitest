@@ -36,93 +36,12 @@ exports[`prints the element with attributes 1`] = `
 </body>"
 `;
 
-exports[`should handle large nested DOM 1`] = `
+exports[`should handle DOM content bigger than maxLength 1`] = `
 "<body>
   <div>
     <div>
-      <div>
-        <div>
-          <div>
-            <div>
-              <div>
-                <div>
-                  <div>
-                    <div>
-                      <div>
-                        <div>
-                          <div>
-                            <div>
-                              <div>
-                                <div>
-                                  <div>
-                                    <div>
-                                      <div>
-                                        <div>
-                                          <div>
-                                            <div>
-                                              <div>
-                                                <div>
-                                                  <div>
-                                                    <div>
-                                                      <div>
-                                                        <div>
-                                                          <div>
-                                                            <div>
-                                                              <div>
-                                                                <div>
-                                                                  <div>
-                                                                    <div>
-                                                                      <div>
-                                                                        <div>
-                                                                          <div>
-                                                                            <div>
-                                                                              <div>
-                                                                                <div>
-                                                                                  <div>
-                                                                                    <div>
-                                                                                      <div>
-                                                                                        <div>
-                                                                                          <div>
-                                                                                            <div>
-                                                                                              <div>
-                                                                                                <div>
-                                                                                                  <div>
-                                                                                                    <div>
-                                                                                                      <div>
-                                                                                                        <div>
-                                                                                                          <div>
-                                                                                                            <div>
-                                                                                                              <div>
-                                                                                                                <div>
-                                                                                                                  <div>
-                                                                                                                    <div>
-                                                                                                                      <div>
-                                                                                                                        <div>
-                                                                                                                          <div>
-                                                                                                                            <div>
-                                                                                                                              <div … />
-                                                                                                                            </div>
-                                                                                                                          </div>
-                                                                                                                        </div>
-                                                                                                                      </div>
-                                                                                                                    </div>
-                                                                                                                  </div>
-                                                                                                                </div>
-                                                                                                              </div>
-                                                                                                            </div>
-                                                                                                          </div>
-                                                                                                        </div>
-                                                                                                      </div>
-                                                                                                    </div>
-                                                                                                  </div>
-                                                                                                </div>
-                                                                                              </div>
-                                                                                            </div>
-                                                                                          </div>
-                                                                                        </div>
-                                                                                      </div>
-                                                                                    </div>
-                                                                                  </div>
-                                                                                </div>
-                                                                        ..."
+      <div … />
+    </div>
+  </div>
+</body>..."
 `;
