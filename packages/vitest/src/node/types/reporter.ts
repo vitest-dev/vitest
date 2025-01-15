@@ -3,6 +3,7 @@ import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
+import type { TestProject } from '../project'
 import type { ReportedHookContext, TestCase, TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 
@@ -10,6 +11,12 @@ export type TestRunEndReason = 'passed' | 'interrupted' | 'failed'
 
 export interface Reporter {
   onInit?: (vitest: Vitest) => void
+  /**
+   * Called when the project initiated the browser instance.
+   * project.browser will always be defined.
+   * @experimental
+   */
+  onBrowserInit?: (project: TestProject) => Awaitable<void>
   /**
    * @deprecated use `onTestRunStart` instead
    */

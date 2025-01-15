@@ -81,6 +81,14 @@ export default new MyReporter()
 ```
 :::
 
+## onBrowserInit <Badge type="warning">experimental</Badge> {#onbrowserinit}
+
+```ts
+function onBrowserInit(project: TestProject): Awaitable<void>
+```
+
+This method is called when the browser instance is initiated. It receives an instance of the project for which the browser is initiated. `project.browser` will always be defined when this method is called.
+
 ## onTestRunStart
 
 ```ts
