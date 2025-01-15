@@ -594,6 +594,31 @@ function createSuite() {
     }
   }
 
+  suiteFn.for = function <T>(
+    this: {
+      withContext: () => SuiteAPI
+      setContext: (key: string, value: boolean | undefined) => SuiteAPI
+    },
+    cases: ReadonlyArray<T>,
+    ...args: any[]
+  ) {
+    if (Array.isArray(cases) && args.length) {
+      cases = formatTemplateString(cases, args)
+    }
+
+    return (
+      name: string | Function,
+      optionsOrFn: ((...args: T[]) => void) | TestOptions,
+      fnOrOptions?: ((...args: T[]) => void) | number | TestOptions,
+    ) => {
+      const name_ = formatName(name)
+      const { options, handler } = parseArguments(optionsOrFn, fnOrOptions)
+      cases.forEach((item, idx) => {
+        suite(formatTitle(name_, toArray(item), idx), options, () => handler(item))
+      })
+    }
+  }
+
   suiteFn.skipIf = (condition: any) =>
     (condition ? suite.skip : suite) as SuiteAPI
   suiteFn.runIf = (condition: any) =>
