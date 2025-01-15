@@ -1,0 +1,12 @@
+{
+  "name": "dependency",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "module": "./module.js",
+      "node": "./node.js",
+      "default": "./default.js"
+    }
+  }
+}
