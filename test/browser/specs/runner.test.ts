@@ -71,8 +71,8 @@ describe('running browser tests', async () => {
     // This should match the number of actual tests from browser.json
     // if you added new tests, these assertion will fail and you should
     // update the numbers
-    expect(browserResultJson.testResults).toHaveLength(22 * instances.length)
-    expect(passedTests).toHaveLength(19 * instances.length)
+    expect(browserResultJson.testResults).toHaveLength(20 * instances.length)
+    expect(passedTests).toHaveLength(18 * instances.length)
     expect(failedTests).toHaveLength(2 * instances.length)
 
     expect(stderr).not.toContain('optimized dependencies changed')
