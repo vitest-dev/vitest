@@ -94,7 +94,7 @@
     "magic-string": "^0.30.17",
     "msw": "^2.7.0",
     "sirv": "^3.0.0",
-    "tinyrainbow": "^1.2.0",
+    "tinyrainbow": "^2.0.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

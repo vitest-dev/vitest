@@ -340,6 +340,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/advanced/runner',
               },
               {
+                text: 'Reporters API',
+                link: '/advanced/api/reporters',
+              },
+              {
                 text: 'Task Metadata',
                 link: '/advanced/metadata',
               },

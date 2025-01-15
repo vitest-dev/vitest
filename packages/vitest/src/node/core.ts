@@ -1,4 +1,4 @@
-import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
+import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
@@ -24,6 +24,7 @@ import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../consta
 import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
+import { convertTasksToEvents } from '../utils/tasks'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
@@ -36,6 +37,7 @@ import { BlobReporter, readBlobs } from './reporters/blob'
 import { createBenchmarkReporters, createReporters } from './reporters/utils'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
+import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
 import { resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
 
@@ -94,6 +96,7 @@ export class Vitest {
   /** @internal */ reporters: Reporter[] = undefined!
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
+  /** @internal */ _testRun: TestRun = undefined!
 
   private isFirstRun = true
   private restartsCount = 0
@@ -203,6 +206,7 @@ export class Vitest {
     this._workspaceConfigPath = undefined
     this.coverageProvider = undefined
     this.runningPromise = undefined
+    this.coreWorkspaceProject = undefined
     this.specifications.clearCache()
     this._onUserTestsRerun = []
 
@@ -213,6 +217,7 @@ export class Vitest {
     this._state = new StateManager()
     this._cache = new VitestCache(this.version)
     this._snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
+    this._testRun = new TestRun(this)
 
     if (this.config.watch) {
       this.watcher.registerWatcher()
@@ -447,43 +452,36 @@ export class Vitest {
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
 
-    const workspaceSpecs = new Map<TestProject, File[]>()
+    const specifications: TestSpecification[] = []
     for (const file of files) {
       const project = this.getProjectByName(file.projectName || '')
-      const specs = workspaceSpecs.get(project) || []
-      specs.push(file)
-      workspaceSpecs.set(project, specs)
+      const specification = project.createSpecification(file.filepath, undefined, file.pool)
+      specifications.push(specification)
     }
 
-    for (const [project, files] of workspaceSpecs) {
-      const filepaths = files.map(f => f.filepath)
-      this.state.clearFiles(project, filepaths)
-      files.forEach((file) => {
-        file.logs?.forEach(log => this.state.updateUserLog(log))
-      })
-      this.state.collectFiles(project, files)
-    }
-
-    await this.report('onCollected', files).catch(noop)
+    await this.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
+    await this._testRun.start(specifications).catch(noop)
 
     for (const file of files) {
-      const logs: UserConsoleLog[] = []
-      const taskPacks: TaskResultPack[] = []
+      const project = this.getProjectByName(file.projectName || '')
+      await this._testRun.enqueued(project, file).catch(noop)
+      await this._testRun.collected(project, [file]).catch(noop)
 
-      const tasks = getTasks(file)
-      for (const task of tasks) {
+      const logs: UserConsoleLog[] = []
+
+      const { packs, events } = convertTasksToEvents(file, (task) => {
         if (task.logs) {
           logs.push(...task.logs)
         }
-        taskPacks.push([task.id, task.result, task.meta])
-      }
+      })
+
       logs.sort((log1, log2) => log1.time - log2.time)
 
       for (const log of logs) {
-        await this.report('onUserConsoleLog', log).catch(noop)
+        await this._testRun.log(log).catch(noop)
       }
 
-      await this.report('onTaskUpdate', taskPacks).catch(noop)
+      await this._testRun.updated(packs, events).catch(noop)
     }
 
     if (hasFailed(files)) {
@@ -491,7 +489,7 @@ export class Vitest {
     }
 
     this._checkUnhandledErrors(errors)
-    await this.report('onFinished', files, errors)
+    await this._testRun.end(specifications, errors).catch(noop)
     await this.initCoverageProvider()
     await this.coverageProvider?.mergeReports?.(coverages)
 
@@ -551,15 +549,24 @@ export class Vitest {
 
     // if run with --changed, don't exit if no tests are found
     if (!files.length) {
-      // Report coverage for uncovered files
+      const throwAnError = !this.config.watch || !(this.config.changed || this.config.related?.length)
+
+      await this._testRun.start([])
       const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
+
+      // set exit code before calling `onTestRunEnd` so the lifecycle is consistent
+      if (throwAnError) {
+        const exitCode = this.config.passWithNoTests ? 0 : 1
+        process.exitCode = exitCode
+      }
+
+      await this._testRun.end([], [], coverage)
+      // Report coverage for uncovered files
       await this.reportCoverage(coverage, true)
 
       this.logger.printNoTestFound(filters)
 
-      if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
-        const exitCode = this.config.passWithNoTests ? 0 : 1
-        process.exitCode = exitCode
+      if (throwAnError) {
         throw new FilesNotFoundError(this.mode)
       }
     }
@@ -669,6 +676,7 @@ export class Vitest {
 
     await this.report('onPathsCollected', filepaths)
     await this.report('onSpecsCollected', specs.map(spec => spec.toJSON()))
+    await this._testRun.start(specs)
 
     // previous run
     await this.runningPromise
@@ -715,13 +723,12 @@ export class Vitest {
         }
       }
       finally {
-        // can be duplicate files if different projects are using the same file
-        const files = Array.from(new Set(specs.map(spec => spec.moduleId)))
-        const errors = this.state.getUnhandledErrors()
+        // TODO: wait for coverage only if `onFinished` is defined
         const coverage = await this.coverageProvider?.generateCoverage({ allTestsRun })
 
+        const errors = this.state.getUnhandledErrors()
         this._checkUnhandledErrors(errors)
-        await this.report('onFinished', this.state.getFiles(files), errors, coverage)
+        await this._testRun.end(specs, errors, coverage)
         await this.reportCoverage(coverage, allTestsRun)
       }
     })()

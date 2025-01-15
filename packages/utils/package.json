@@ -66,7 +66,7 @@
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
     "loupe": "^3.1.2",
-    "tinyrainbow": "^1.2.0"
+    "tinyrainbow": "^2.0.0"
   },
   "devDependencies": {
     "@jridgewell/trace-mapping": "^0.3.25",

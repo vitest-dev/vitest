@@ -1,5 +1,5 @@
 import type { RawSourceMap } from '@ampproject/remapping'
-import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
+import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '@vitest/runner'
 import type { ParsedStack } from '@vitest/utils'
 import type { EachMapping } from '@vitest/utils/source-map'
 import type { ChildProcess } from 'node:child_process'
@@ -10,10 +10,10 @@ import type { FileInformation } from './collect'
 import type { TscErrorInfo } from './types'
 import { rm } from 'node:fs/promises'
 import { performance } from 'node:perf_hooks'
-import { getTasks } from '@vitest/runner/utils'
 import { eachMapping, generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
 import { basename, extname, resolve } from 'pathe'
 import { x } from 'tinyexec'
+import { convertTasksToEvents } from '../utils/tasks'
 import { collectTests } from './collect'
 import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
 import { createIndexMap } from './utils'
@@ -358,11 +358,17 @@ export class Typechecker {
     return Object.values(this._tests || {}).map(i => i.file)
   }
 
-  public getTestPacks() {
-    return Object.values(this._tests || {})
-      .map(({ file }) => getTasks(file))
-      .flat()
-      .map<TaskResultPack>(i => [i.id, i.result, { typecheck: true }])
+  public getTestPacksAndEvents() {
+    const packs: TaskResultPack[] = []
+    const events: TaskEventPack[] = []
+
+    for (const { file } of Object.values(this._tests || {})) {
+      const result = convertTasksToEvents(file)
+      packs.push(...result.packs)
+      events.push(...result.events)
+    }
+
+    return { packs, events }
   }
 }
 

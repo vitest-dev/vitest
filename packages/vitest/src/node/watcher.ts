@@ -1,5 +1,5 @@
 import type { Vitest } from './core'
-import type { TestProject } from './reporters'
+import type { TestProject } from './project'
 import { readFileSync } from 'node:fs'
 import { noop, slash } from '@vitest/utils'
 import mm from 'micromatch'
