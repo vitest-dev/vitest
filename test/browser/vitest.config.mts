@@ -106,18 +106,6 @@ export default defineConfig({
       html: './html/index.html',
       json: './browser.json',
     },
-    reporters: ['json', {
-      onInit: noop,
-      onPathsCollected: noop,
-      onCollected: noop,
-      onFinished: noop,
-      onTaskUpdate: noop,
-      onTestRemoved: noop,
-      onWatcherStart: noop,
-      onWatcherRerun: noop,
-      onServerRestart: noop,
-      onUserConsoleLog: noop,
-    }, 'default'],
     env: {
       BROWSER: browser,
     },

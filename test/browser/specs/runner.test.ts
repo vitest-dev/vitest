@@ -1,6 +1,7 @@
 import type { Vitest } from 'vitest/node'
 import type { JsonTestResults } from 'vitest/reporters'
 import { readFile } from 'node:fs/promises'
+import { noop } from '@vitest/utils'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { instances, provider, runBrowserTests } from './utils'
 
@@ -25,6 +26,20 @@ describe('running browser tests', async () => {
             events.push(`onBrowserInit ${project.name}`)
           },
         },
+        'json',
+        {
+          onInit: noop,
+          onPathsCollected: noop,
+          onCollected: noop,
+          onFinished: noop,
+          onTaskUpdate: noop,
+          onTestRemoved: noop,
+          onWatcherStart: noop,
+          onWatcherRerun: noop,
+          onServerRestart: noop,
+          onUserConsoleLog: noop,
+        },
+        'default',
       ],
     }))
 

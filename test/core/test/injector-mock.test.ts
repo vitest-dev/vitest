@@ -27,6 +27,32 @@ function hoistSimpleCode(code: string) {
   return hoistMocks(code, '/test.js', parse, hoistMocksOptions)?.code.trim()
 }
 
+test.only('ttt', () => {
+  console.log(hoistSimpleCode(`
+vi.hoisted(() => { 
+        if(!globalThis.__NUXT_VITEST_MOCKS){
+          vi.stubGlobal("__NUXT_VITEST_MOCKS", {})
+        }
+      });
+import { vi } from "vitest";vi.mock("/Users/vladimir/Projects/test-utils/examples/app-vitest-full/composables/auto-import-mock.ts", async (importOriginal) => {
+  const mocks = globalThis.__NUXT_VITEST_MOCKS
+  if (!mocks["/Users/vladimir/Projects/test-utils/examples/app-vitest-full/composables/auto-import-mock.ts"]) {
+    mocks["/Users/vladimir/Projects/test-utils/examples/app-vitest-full/composables/auto-import-mock.ts"] = { ...await importOriginal("/Users/vladimir/Projects/test-utils/examples/app-vitest-full/composables/auto-import-mock.ts") }
+  }
+  mocks["/Users/vladimir/Projects/test-utils/examples/app-vitest-full/composables/auto-import-mock.ts"]["useAutoImportSetupMocked"] = await (() => vi.fn(() => {
+    return "mocked in setup";
+  }))();
+  mocks["/Users/vladimir/Projects/test-utils/examples/app-vitest-full/composables/auto-import-mock.ts"]["useAutoImportSetupOverridenMocked"] = await (() => vi.fn(() => {
+    return "mocked in setup";
+  }))();
+  return mocks["/Users/vladimir/Projects/test-utils/examples/app-vitest-full/composables/auto-import-mock.ts"] 
+});
+
+import { mockNuxtImport } from "@nuxt/test-utils/runtime";
+vi.resetModules();
+    `))
+})
+
 test('hoists mock, unmock, hoisted', () => {
   expect(hoistSimpleCode(`
   vi.mock('path', () => {})
