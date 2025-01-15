@@ -531,6 +531,7 @@ export class TestProject {
 
     if (!this.browser && this._parent?._parentBrowser) {
       this.browser = this._parent._parentBrowser.spawn(this)
+      await this.vitest.report('onBrowserInit', this)
     }
   })
 

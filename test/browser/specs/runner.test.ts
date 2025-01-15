@@ -11,13 +11,22 @@ describe('running browser tests', async () => {
   let passedTests: any[]
   let failedTests: any[]
   let vitest: Vitest
+  const events: string[] = []
 
   beforeAll(async () => {
     ({
       stderr,
       stdout,
       ctx: vitest,
-    } = await runBrowserTests())
+    } = await runBrowserTests({
+      reporters: [
+        {
+          onBrowserInit(project) {
+            events.push(`onBrowserInit ${project.name}`)
+          },
+        },
+      ],
+    }))
 
     const browserResult = await readFile('./browser.json', 'utf-8')
     browserResultJson = JSON.parse(browserResult)
@@ -33,6 +42,11 @@ describe('running browser tests', async () => {
     })
 
     const testFiles = browserResultJson.testResults.map(t => t.name)
+
+    vitest.projects.forEach((project) => {
+      // the order is non-deterministic
+      expect(events).toContain(`onBrowserInit ${project.name}`)
+    })
 
     // test files are optimized automatically
     expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
