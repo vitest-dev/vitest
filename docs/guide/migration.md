@@ -81,7 +81,8 @@ Previously, Vitest would always assign a new spy when spying on an object. This 
 vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
 vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
 vi.restoreAllMocks()
-vi.isMockFunction(fooService.foo) // true
+vi.isMockFunction(fooService.foo) // true [!code --]
+vi.isMockFunction(fooService.foo) // false [!code ++]
 ```
 
 ### Fake Timers Defaults
