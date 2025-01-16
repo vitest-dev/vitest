@@ -39,8 +39,8 @@ test('prints the element with attributes', async () => {
 })
 
 test('should handle DOM content bigger than maxLength', async () => {
-  const depth = 100
-  const maxContent = 99
+  const depth = 200
+  const maxContent = 150
 
   const openingTags = '<div>'.repeat(depth)
   const closingTags = '</div>'.repeat(depth)
