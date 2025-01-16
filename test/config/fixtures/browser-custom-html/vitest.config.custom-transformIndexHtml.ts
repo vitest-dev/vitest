@@ -30,7 +30,7 @@ export default defineConfig({
   test: {
     include: ['./browser-custom.test.ts'],
     browser: {
-      name: 'chromium',
+      instances: [{ browser: 'chromium' }],
       enabled: true,
       headless: true,
       provider: 'playwright',

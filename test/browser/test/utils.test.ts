@@ -37,3 +37,18 @@ test('prints the element with attributes', async () => {
 
   expect(await commands.stripVTControlCharacters(prettyDOM())).toMatchSnapshot()
 })
+
+test('should handle DOM content bigger than maxLength', async () => {
+  const depth = 200
+  const maxContent = 150
+
+  const openingTags = '<div>'.repeat(depth)
+  const closingTags = '</div>'.repeat(depth)
+  const domString = `${openingTags}${closingTags}`
+
+  const parentDiv = document.createElement('div')
+  parentDiv.innerHTML = domString
+
+  document.body.appendChild(parentDiv)
+  expect(await commands.stripVTControlCharacters(prettyDOM(undefined, maxContent))).toMatchSnapshot()
+})

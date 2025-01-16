@@ -59,7 +59,7 @@ export class WindowRenderer {
 
   start() {
     this.finished = false
-    this.renderInterval = setInterval(() => this.flushBuffer(), this.options.interval)
+    this.renderInterval = setInterval(() => this.flushBuffer(), this.options.interval).unref()
   }
 
   stop() {

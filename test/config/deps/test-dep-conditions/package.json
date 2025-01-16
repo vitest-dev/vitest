@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-dep-conditions",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "module": "./module.js",
+      "node": "./node.js",
+      "default": "./default.js"
+    }
+  }
+}

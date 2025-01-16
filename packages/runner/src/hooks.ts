@@ -160,6 +160,8 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
  *
  * **Note:** The `onTestFinished` hooks are running in reverse order of their registration. You can configure this by changing the `sequence.hooks` option in the config file.
  *
+ * **Note:** The `onTestFinished` hook is not called if the test is canceled with a dynamic `ctx.skip()` call.
+ *
  * @param {Function} fn - The callback function to be executed after a test finishes. The function can receive parameters providing details about the completed test, including its success or failure status.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @throws {Error} Throws an error if the function is not called within a test.

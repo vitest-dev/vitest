@@ -1,4 +1,4 @@
-import type { CancelReason, File, TaskResultPack } from '@vitest/runner'
+import type { CancelReason, File, TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { SnapshotResult } from '@vitest/snapshot'
 import type { AfterSuiteRunMeta, TransformMode, UserConsoleLog } from './general'
 
@@ -35,14 +35,12 @@ export interface RuntimeRPC {
     force?: boolean
   ) => Promise<any>
 
-  onFinished: (files: File[], errors?: unknown[]) => void
-  onPathsCollected: (paths: string[]) => void
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void
   onQueued: (file: File) => void
   onCollected: (files: File[]) => Promise<void>
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onTaskUpdate: (pack: TaskResultPack[]) => Promise<void>
+  onTaskUpdate: (pack: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
 

@@ -126,3 +126,11 @@ it('can define inline workspace config programmatically', async () => {
   expect(stdout).toContain('project-3')
   expect(stdout).toContain('3 passed')
 })
+
+it('correctly inherits the root config', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/config-extends',
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('repro.test.js > importing a virtual module')
+})

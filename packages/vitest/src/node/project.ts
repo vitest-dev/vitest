@@ -65,6 +65,7 @@ export class TestProject {
   /** @internal */ vitenode!: ViteNodeServer
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
+  /** @internal */ _vite?: ViteDevServer
 
   private runner!: ViteNodeRunner
 
@@ -75,7 +76,6 @@ export class TestProject {
 
   private _globalSetups?: GlobalSetupFile[]
   private _provided: ProvidedContext = {} as any
-  private _vite?: ViteDevServer
 
   constructor(
     /** @deprecated */
@@ -491,10 +491,8 @@ export class TestProject {
     return testFiles
   }
 
-  /** @internal */
-  _parentBrowser?: ParentProjectBrowser
-  /** @internal */
-  _parent?: TestProject
+  private _parentBrowser?: ParentProjectBrowser
+  private _parent?: TestProject
   /** @internal */
   _initParentBrowser = deduped(async () => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
@@ -533,6 +531,7 @@ export class TestProject {
 
     if (!this.browser && this._parent?._parentBrowser) {
       this.browser = this._parent._parentBrowser.spawn(this)
+      await this.vitest.report('onBrowserInit', this)
     }
   })
 
@@ -719,7 +718,6 @@ export interface SerializedTestProject {
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   configFile: string | false
-  extends?: string
 }
 
 export async function initializeProject(
@@ -729,7 +727,7 @@ export async function initializeProject(
 ) {
   const project = new TestProject(workspacePath, ctx, options)
 
-  const { extends: extendsConfig, configFile, ...restOptions } = options
+  const { configFile, ...restOptions } = options
 
   const config: ViteInlineConfig = {
     ...restOptions,
