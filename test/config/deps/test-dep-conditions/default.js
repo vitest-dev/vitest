@@ -1,1 +1,1 @@
-throw new Error('Should not be imported')
+export default 'default'
