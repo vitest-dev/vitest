@@ -376,6 +376,7 @@ export default ({ mode }: { mode: string }) => {
           },
         ],
         '/team': [],
+        '/blog': [],
         '/': [
           {
             text: 'Introduction',
