@@ -5,6 +5,7 @@ import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
 export const version = Vitest.version
 
+export { isWebsocketRequestAllowed } from '../api/hostCheck'
 export { parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'

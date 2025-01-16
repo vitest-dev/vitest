@@ -71,6 +71,17 @@ Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
 
+### api.allowedHosts
+
+- **Type:** `string[] | true`
+- **Default:** `[]`
+
+The hostnames that Vitest API is allowed to respond to. `localhost` and domains under `.localhost` and all IP addresses are allowed by default. When using HTTPS, this check is skipped.
+
+If a string starts with `.`, it will allow that hostname without the `.` and all subdomains under the hostname. For example, `.example.com` will allow `example.com`, `foo.example.com`, and `foo.bar.example.com`.
+
+If set to `true`, the server is allowed to respond to requests for any hosts. This is not recommended as it will be vulnerable to DNS rebinding attacks.
+
 ### silent
 
 - **CLI:** `--silent`
