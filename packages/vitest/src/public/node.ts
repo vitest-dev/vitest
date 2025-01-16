@@ -2,6 +2,7 @@ import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/repo
 import { createServer as _createServer } from 'vite'
 import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
+export { isWebsocketRequestAllowed } from '../api/hostCheck'
 export { parseCLI } from '../node/cli/cac'
 export { startVitest } from '../node/cli/cli-api'
 export { resolveApiServerConfig, resolveConfig } from '../node/config/resolveConfig'

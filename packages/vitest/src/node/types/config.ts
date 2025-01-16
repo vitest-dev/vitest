@@ -42,7 +42,9 @@ export type CSSModuleScopeStrategy = 'stable' | 'scoped' | 'non-scoped'
 export type ApiConfig = Pick<
   ServerOptions,
   'port' | 'strictPort' | 'host' | 'middlewareMode'
->
+> & {
+  allowedHosts?: string[] | true
+}
 
 export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
 
@@ -1001,7 +1003,7 @@ export interface ResolvedConfig
 
   defines: Record<string, any>
 
-  api?: ApiConfig
+  api: ApiConfig & { token: string }
   cliExclude?: string[]
 
   benchmark?: Required<

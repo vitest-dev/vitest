@@ -9,6 +9,7 @@ import type {
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
+import crypto from 'node:crypto'
 import { toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
@@ -584,7 +585,8 @@ export function resolveConfig(
   }
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiServerConfig(options, defaultPort)
+  const api = resolveApiServerConfig(options, defaultPort)
+  resolved.api = { ...api, token: crypto.randomUUID() }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
