@@ -43,6 +43,6 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "pathe": "^2.0.0"
+    "pathe": "^2.0.1"
   }
 }

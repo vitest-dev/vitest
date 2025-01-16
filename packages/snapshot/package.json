@@ -44,7 +44,7 @@
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
     "magic-string": "^0.30.17",
-    "pathe": "^2.0.0"
+    "pathe": "^2.0.1"
   },
   "devDependencies": {
     "@types/natural-compare": "^1.4.3",
