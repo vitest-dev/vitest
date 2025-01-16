@@ -54,6 +54,81 @@ export default defineConfig({
 
 With the new `browser.instances` field you can also specify multiple browser configurations.
 
+### `spy.mockReset` Now Restores the Original Implementation
+
+There was no good way to reset the spy to the original implementation without reaplying the spy. Now, `spy.mockReset` will reset the implementation function to the original one instead of a fake noop.
+
+```ts
+const foo = {
+  bar: () => 'Hello, world!'
+}
+
+vi.spyOn(foo, 'bar').mockImplementation(() => 'Hello, mock!')
+
+foo.bar() // 'Hello, mock!'
+
+foo.bar.mockReset()
+
+foo.bar() // undefined // [!code --]
+foo.bar() // 'Hello, world!' // [!code ++]
+```
+
+### `vi.spyOn` Reuses Mock if Method is Already Mocked
+
+Previously, Vitest would always assign a new spy when spying on an object. This caused errors with `mockRestore` because it would restore the spy to the previous spy instead of the original function:
+
+```ts
+vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
+vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
+vi.restoreAllMocks()
+vi.isMockFunction(fooService.foo) // true // [!code --]
+vi.isMockFunction(fooService.foo) // false // [!code ++]
+```
+
+### Fake Timers Defaults
+
+Vitest no longer provides default `fakeTimers.toFake` options. Now, Vitest will mock any timer-related API if it is available (except `nextTick`). Namely, `performance.now()` is now mocked when `vi.useFakeTimers` is called.
+
+```ts
+vi.useFakeTimers()
+
+performance.now() // original // [!code --]
+performance.now() // fake // [!code ++]
+```
+
+You can revert to the previous behaviour by specifying timers when calling `vi.useFakeTimers` or globally in the config:
+
+```ts
+export default defineConfig({
+  test: {
+    fakeTimers: {
+      toFake: ['setTimeout', 'clearTimeout', 'Date'], // [!code ++]
+    },
+  },
+})
+```
+
+### More Strict Error Equality
+
+Vitest now checks more properties when comparing errors via `toEqual` or `toThrowError`. Vitest now compares `name`, `message`, `cause` and `AggregateError.errors`. For `Error.cause`, the comparison is done asymmetrically:
+
+```ts
+expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi')) // ✅
+expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' })) // ❌
+```
+
+In addition to more properties check, Vitest now compares error prototypes. For example, if `TypeError` was thrown, the equality check should reference `TypeError`, not `Error`:
+
+```ts
+expect(() => {
+  throw new TypeError('type error')
+})
+  .toThrowError(new Error('type error')) // [!code --]
+  .toThrowError(new TypeError('type error')) // [!code ++]
+```
+
+See PR for more details: [#5876](https://github.com/vitest-dev/vitest/pull/5876).
+
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
 The `Custom` type is now an alias for the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
@@ -74,6 +149,12 @@ In the public API this type was used in custom [sequencers](/config/#sequence-se
 ### `onTestFinished` and `onTestFailed` Now Receive a Context
 
 The [`onTestFinished`](/api/#ontestfinished) and [`onTestFailed`](/api/#ontestfailed) hooks previously received a test result as the first argument. Now, they receive a test context, like `beforeEach` and `afterEach`.
+
+### Changes to the Snapshot API <Badge type="danger">API</Badge> {#changes-to-the-snapshot-api}
+
+The public Snapshot API in `@vitest/snapshot` was changed to support multiple states within a single run. See PR for more details: [#6817](https://github.com/vitest-dev/vitest/pull/6817)
+
+Note that this changes only affect developers using the Snapshot API directly. There were no changes to `.toMatchSnapshot` API.
 
 ### Changes to `resolveConfig` Type Signature <Badge type="danger">API</Badge> {#changes-to-resolveconfig-type-signature}
 
