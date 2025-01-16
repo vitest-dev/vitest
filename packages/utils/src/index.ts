@@ -33,6 +33,7 @@ export { nanoid } from './nanoid'
 export {
   lineSplitRE,
   offsetToLineNumber,
+  offsetToPosition,
   positionToOffset,
 } from './offset'
 export { shuffle } from './random'

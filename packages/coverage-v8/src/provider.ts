@@ -23,6 +23,7 @@ import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
 
 import { BaseCoverageProvider } from 'vitest/coverage'
+import { offsetToPosition, originalPositionFor, TraceMap } from 'vitest/utils'
 import { version } from '../package.json' with { type: 'json' }
 
 type TransformResults = Map<string, FetchResult>
@@ -31,9 +32,6 @@ type RawCoverage = Profiler.TakePreciseCoverageReturnType
 // TODO: vite-node should export this
 const WRAPPER_LENGTH = 185
 
-// Note that this needs to match the line ending as well
-const VITE_EXPORTS_LINE_PATTERN
-  = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
 const DECORATOR_METADATA_PATTERN
   = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
 const FILE_PROTOCOL = 'file://'
@@ -349,6 +347,29 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           // If file was executed by vite-node we'll need to add its wrapper
           const wrapperLength = sources.isExecuted ? WRAPPER_LENGTH : 0
 
+          // filter out functions without mappings,
+          // for example, "export getter" injected by Vite ssr transform.
+          // https://github.com/vitest-dev/vitest/issues/7130
+          if (sources.isExecuted && sources.sourceMap) {
+            const traceMap = new TraceMap(sources.sourceMap.sourcemap)
+            functions = functions.filter((f) => {
+              if (f.ranges.length === 1) {
+                const start = f.ranges[0].startOffset - wrapperLength
+                const end = f.ranges[0].endOffset - wrapperLength - 1
+                if ([start, end].every(offset => offset >= 0 && offset < sources.source.length)) {
+                  const startPos = offsetToPosition(sources.source, start)
+                  const endPos = offsetToPosition(sources.source, end)
+                  const startSourcePos = originalPositionFor(traceMap, startPos)
+                  const endSourcePos = originalPositionFor(traceMap, endPos)
+                  if (startSourcePos.line === null && endSourcePos.line === null) {
+                    return false
+                  }
+                }
+              }
+              return true
+            })
+          }
+
           const converter = v8ToIstanbul(
             url,
             wrapperLength,
@@ -392,15 +413,11 @@ function excludeGeneratedCode(
     return map
   }
 
-  if (
-    !source.match(VITE_EXPORTS_LINE_PATTERN)
-    && !source.match(DECORATOR_METADATA_PATTERN)
-  ) {
+  if (!source.match(DECORATOR_METADATA_PATTERN)) {
     return map
   }
 
   const trimmed = new MagicString(source)
-  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
   trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match =>
     '\n'.repeat(match.split('\n').length - 1))
 
