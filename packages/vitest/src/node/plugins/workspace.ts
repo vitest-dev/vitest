@@ -7,7 +7,6 @@ import { basename, dirname, relative, resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
-import { getDefaultServerConditions } from './conditions'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
@@ -63,8 +62,6 @@ export function WorkspaceVitestPlugin(
           }
         }
 
-        const conditions = getDefaultServerConditions()
-
         const config: ViteConfig = {
           root,
           resolve: {
@@ -72,7 +69,7 @@ export function WorkspaceVitestPlugin(
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
             alias: testConfig.alias,
-            conditions,
+            conditions: ['node'],
           },
           esbuild: viteConfig.esbuild === false
             ? false
@@ -107,7 +104,7 @@ export function WorkspaceVitestPlugin(
                 // by default Vite resolves `module` field, which not always a native ESM module
                 // setting this option can bypass that and fallback to cjs version
                 mainFields: [],
-                conditions,
+                conditions: ['node'],
               },
             },
           },
