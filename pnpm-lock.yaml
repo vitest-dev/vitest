@@ -1123,6 +1123,9 @@ importers:
 
   test/config:
     devDependencies:
+      '@vitest/test-dep-conditions':
+        specifier: file:./deps/test-dep-conditions
+        version: file:test/config/deps/test-dep-conditions
       tinyexec:
         specifier: ^0.3.2
         version: 0.3.2
@@ -4100,6 +4103,9 @@ packages:
 
   '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs':
     resolution: {directory: test/core/deps/dep-cjs, type: directory}
+
+  '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
+    resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
 
   '@vitest/test-dep1@file:test/core/deps/dep1':
     resolution: {directory: test/core/deps/dep1, type: directory}
@@ -12720,6 +12726,8 @@ snapshots:
       vitest: link:packages/vitest
 
   '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs': {}
+
+  '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 

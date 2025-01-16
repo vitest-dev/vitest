@@ -12,6 +12,7 @@ import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { resolveApiServerConfig } from '../config/resolveConfig'
 import { Vitest } from '../core'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
+import { getDefaultServerConditions } from './conditions'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
 import { MocksPlugins } from './mocks'
@@ -73,6 +74,8 @@ export async function VitestPlugin(
           open = testConfig.uiBase ?? '/__vitest__/'
         }
 
+        const conditions = getDefaultServerConditions()
+
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
           esbuild:
@@ -90,7 +93,7 @@ export async function VitestPlugin(
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
             alias: testConfig.alias,
-            conditions: ['node'],
+            conditions,
           },
           server: {
             ...testConfig.api,
@@ -119,7 +122,7 @@ export async function VitestPlugin(
                 // by default Vite resolves `module` field, which not always a native ESM module
                 // setting this option can bypass that and fallback to cjs version
                 mainFields: [],
-                conditions: ['node'],
+                conditions,
               },
             },
           },
