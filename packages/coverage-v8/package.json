@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@ampproject/remapping": "^2.3.0",
-    "@bcoe/v8-coverage": "^1.0.1",
+    "@bcoe/v8-coverage": "^1.0.2",
     "debug": "^4.4.0",
     "istanbul-lib-coverage": "^3.2.2",
     "istanbul-lib-report": "^3.0.1",
@@ -75,7 +75,7 @@
     "@types/istanbul-reports": "^3.0.4",
     "@types/test-exclude": "^6.0.2",
     "@vitest/browser": "workspace:*",
-    "pathe": "^2.0.0",
+    "pathe": "^2.0.1",
     "v8-to-istanbul": "^9.3.0",
     "vite-node": "workspace:*",
     "vitest": "workspace:*"

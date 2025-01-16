@@ -76,7 +76,7 @@
     "@vitest/utils": "workspace:*",
     "acorn-walk": "^8.3.4",
     "msw": "^2.7.0",
-    "pathe": "^2.0.0",
+    "pathe": "^2.0.1",
     "vite": "^5.4.0"
   }
 }

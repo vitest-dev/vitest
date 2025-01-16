@@ -84,8 +84,8 @@
   "dependencies": {
     "cac": "^6.7.14",
     "debug": "^4.4.0",
-    "es-module-lexer": "^1.5.4",
-    "pathe": "^2.0.0",
+    "es-module-lexer": "^1.6.0",
+    "pathe": "^2.0.1",
     "vite": "^5.0.0 || ^6.0.0"
   },
   "devDependencies": {
