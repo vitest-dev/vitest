@@ -1,7 +1,7 @@
 {
-  "name": "dependency",
-  "private": true,
+  "name": "@vitest/test-dep-conditions",
   "type": "module",
+  "private": true,
   "exports": {
     ".": {
       "module": "./module.js",
