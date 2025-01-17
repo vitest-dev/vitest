@@ -1,9 +1,8 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import type { ContextExecutorOptions, VitestExecutor } from '../execute'
-import { resolve } from 'node:path'
 import { ModuleCacheMap } from 'vite-node/client'
 import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
-import { VitestMocker } from '../mocker'
+import { NativeExecutor } from '../native-executor'
 import { provideWorkerState } from '../utils'
 
 let _viteNode: VitestExecutor
@@ -57,15 +56,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
 
 async function resolveExecutor(state: WorkerGlobalState): Promise<VitestExecutor> {
   if (state.config.experimentalNativeImport) {
-    const executor = {
-      executeId: (id: string) => import(resolve(state.config.root, id)),
-      executeFile: (id: string) => import(resolve(state.config.root, id)),
-      options: {
-        context: undefined,
-      },
-    } as any // TODO: this is a hack for now, build an actual executor
-    executor.mocker = new VitestMocker(executor)
-    return executor
+    return new NativeExecutor(state) as VitestExecutor
   }
   return startViteNode({ state, requestStubs: getDefaultRequestStubs() })
 }

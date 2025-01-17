@@ -66,8 +66,7 @@ export default defineConfig({
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
-      // 'tsx',
-      // './test/setup.js',
+      './test/setup.ts',
     ],
     reporters: [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
