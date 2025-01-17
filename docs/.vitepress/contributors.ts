@@ -58,6 +58,8 @@ const plainTeamMembers: CoreTeam[] = [
     sponsor: 'https://github.com/sponsors/sheremet-va',
     title: 'An open source fullstack developer',
     desc: 'Core team member of Vitest & Vite',
+    org: 'VoidZero',
+    orgLink: 'https://voidzero.dev/',
   },
   {
     avatar: contributorsAvatars.antfu,
@@ -93,6 +95,8 @@ const plainTeamMembers: CoreTeam[] = [
     sponsor: 'https://github.com/sponsors/hi-ogawa',
     title: 'Open source enthusiast',
     desc: 'Team member of Vitest',
+    org: 'VoidZero',
+    orgLink: 'https://voidzero.dev/',
   },
   {
     avatar: contributorsAvatars['patak-dev'],
