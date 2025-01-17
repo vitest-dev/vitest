@@ -31,9 +31,26 @@ _January 17, 2025_
 
 ![Vitest 3 Announcement Cover Image](/og-vitest-3.jpg)
 
-We released Vitest 2 half a year ago. We have seen huge adoption, from 4,8M to 7,7M weekly npm downloads. Our ecosystem is growing rapidly too. Among others, [Storybook new testing capabilities powered by our vscode extension and browser mode](https://storybook.js.org/docs/writing-tests/test-addon) and Matt Pocock is building [evalite](https://www.evalite.dev/), the first GenAI-powered test tool, on top of Vitest.
+We released Vitest 2 half a year ago. We have seen huge adoption, from 4,8M to 7,7M weekly npm downloads. Our ecosystem is growing rapidly too. Among others, [Storybook new testing capabilities powered by our vscode extension and browser mode](https://storybook.js.org/docs/writing-tests/test-addon) and Matt Pocock is building [Evalite](https://www.evalite.dev/), a tool for evaluating AI-powered apps, on top of Vitest.
+
+## The next Vitest major is here
 
 Today, we are thrilled to announce Vitest 3! This is a big one!
+
+Quick links:
+
+- [Docs](/)
+- Translations: [简体中文](https://cn.vitest.dev/)
+- [Migration Guide](/guide/migration)
+- [GitHub Changelog](https://github.com/vitest-dev/vitest/releases/tag/v3.0.0)
+
+If you've not used Vitest before, we suggest reading the [Getting Started](/guide/) and [Features](/guide/features) guides first.
+
+We extend our gratitude to the over [550 contributors to Vitest Core](https://github.com/vitest-dev/vitest/graphs/contributors) and to the maintainers and contributors of Vitest integrations, tools, and translations who have helped us develop this new major release. We encourage you to get involved and help us improve Vitest for the entire ecosystem. Learn more at our [Contributing Guide](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md).
+
+To get started, we suggest helping [triage issues](https://github.com/vitest-dev/vitest/issues), [review PRs](https://github.com/vitest-dev/vitest/pulls), send failing tests PRs based on open issues, and support others in [Discussions](https://github.com/vitest-dev/vitest/discussions) and Vitest Land's [help forum](https://discord.com/channels/917386801235247114/1057959614160851024). If you'd like to talk to us, join our [Discord community](http://chat.vitest.dev/) and say hi on the [#contributing channel](https://discord.com/channels/917386801235247114/1057959614160851024).
+
+For the latest news about the Vitest ecosystem and Vitest core, follow us on [Bluesky](https://bsky.app/profile/vitest.dev) or [Mastodon](https://webtoo.ls/@vitest).
 
 ## Reporter Updates
 
@@ -122,6 +139,8 @@ We have redesigned the public API available from `vitest/node` and are planning 
 
 Vitest 3 has a few small breaking changes that should not affect most users, but we advise reviewing the detailed [Migration Guide](/guide/migration.html#vitest-3) before upgrading.
 
+The complete list of changes is at the [Vitest 3 Changelog](https://github.com/vitest-dev/vitest/releases/tag/v3.0.0).
+
 ## Acknowledgments
 
-Vitest 3 is the result of uncountable hours by the Vitest team (especial shoutout to the work of [Vladimir](https://github.com/sheremet-va), [Ari](https://github.com/ariperkkio), and [Hiroshi](https://github.com/hi-ogawa)) and contributors. We also want to thank our main sponsors: <!-- list sponsors -->
+Vitest 3 is the result of countless hours by the [Vitest team](/team) and our contributors. We appreciate the individuals and companies sponsoring Vitest development. [Vladimir](https://github.com/sheremet-va) and [Hiroshi](https://github.com/hi-ogawa) joined [VoidZero](https://voidzero.dev) to work on Vite and Vitest full-time, and [StackBlitz](https://stackblitz.com/) hired [Ari](https://github.com/ariperkkio) to invest more time in Vitest development. A shout-out to [NuxtLabs](https://nuxtlabs.com), [Zammad](https://zammad.com), and sponsors on [Vitest's GitHub Sponsors](https://github.com/sponsors/vitest-dev) and [Vitest's Open Collective](https://opencollective.com/vitest).
