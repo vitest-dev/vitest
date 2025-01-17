@@ -56,7 +56,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
 
 async function resolveExecutor(state: WorkerGlobalState): Promise<VitestExecutor> {
   if (state.config.experimentalNativeImport) {
-    return new NativeExecutor(state) as VitestExecutor
+    return new NativeExecutor(state) as unknown as VitestExecutor
   }
   return startViteNode({ state, requestStubs: getDefaultRequestStubs() })
 }

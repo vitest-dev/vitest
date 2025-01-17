@@ -269,7 +269,6 @@ export interface InlineConfig {
 
   /**
    * Handling for dependencies inlining or externalizing
-   *
    */
   deps?: DepsOptions
 

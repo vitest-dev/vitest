@@ -1,10 +1,13 @@
 import type { WorkerGlobalState } from '../types/worker'
 import type { ExecuteOptions } from './execute'
 import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { ModuleCacheMap } from 'vite-node/client'
 import { VitestMocker } from './mocker'
 
 export class NativeExecutor {
   public mocker: VitestMocker
+  public moduleCache = new ModuleCacheMap()
 
   public options: ExecuteOptions
 
@@ -17,10 +20,11 @@ export class NativeExecutor {
       },
     }
     this.mocker = new VitestMocker(this as any)
-    Object.defineProperty(globalThis, '__vitest_mocker__', {
-      value: this.mocker,
-      configurable: true,
-    })
+    // TODO: don't support mocker for now
+    // Object.defineProperty(globalThis, '__vitest_mocker__', {
+    //   value: this.mocker,
+    //   configurable: true,
+    // })
   }
 
   executeId(id: string) {
@@ -29,6 +33,26 @@ export class NativeExecutor {
 
   executeFile(id: string) {
     return import(resolve(this.state.config.root, id))
+  }
+
+  cachedRequest(id: string) {
+    return import(id)
+  }
+
+  // used by vi.importActual
+  async originalResolveUrl(id: string, importer?: string) {
+    try {
+      const path = import.meta.resolve(id, importer ? pathToFileURL(importer) : undefined)
+      return [path, path]
+    }
+    catch (error: any) {
+      if (error.code === 'ERR_MODULE_NOT_FOUND') {
+        Object.defineProperty(error, Symbol.for('vitest.error.not_found.data'), {
+          value: { id },
+        })
+      }
+      throw error
+    }
   }
 
   get state(): WorkerGlobalState {

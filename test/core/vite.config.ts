@@ -140,8 +140,5 @@ export default defineConfig({
         return false
       }
     },
-    experimental: {
-      nativeImport: true,
-    },
   },
 })
