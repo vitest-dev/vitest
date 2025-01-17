@@ -45,7 +45,7 @@ Today, we are thrilled to announce Vitest 3! This is a big one!
   </video>
 </div>
 
-Alongside this change, we also redesign the public reporter API (the `reporters` field) making the [lifecycle](/advanced/api/reporter) easier to understand.
+Alongside this change, we also redesign the public reporter API (the `reporters` field) making the [lifecycle](/advanced/api/reporters) easier to understand.
 
 You can follow the design process in [#7069](https://github.com/vitest-dev/vitest/pull/7069) PR. It was a hard fight trying to reverse-engineer the previous `onTaskUpdate` API to make this new elegant lifecycle possible.
 
