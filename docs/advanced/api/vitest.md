@@ -317,7 +317,7 @@ This method doesn't trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun
 ## rerunTestSpecifications
 
 ```ts
-function runTestSpecifications(
+function rerunTestSpecifications(
   specifications: TestSpecification[],
   allTestsRun = false
 ): Promise<TestRunResult>

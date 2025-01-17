@@ -18,6 +18,7 @@ export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   constructor(
+    public projects: string[] = [],
     private onTaskUpdateCalled: boolean = false,
     private resumeEndTimeout = 500,
     public root = <RootTreeNode>{
@@ -53,7 +54,8 @@ export class ExplorerTree {
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
   }
 
-  loadFiles(remoteFiles: File[]) {
+  loadFiles(remoteFiles: File[], projects: string[]) {
+    this.projects.splice(0, this.projects.length, ...projects)
     runLoadFiles(
       remoteFiles,
       true,

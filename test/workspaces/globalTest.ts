@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises'
 declare module 'vitest' {
   interface ProvidedContext {
     globalSetup: boolean
-    globalSetupOverriden: boolean
+    globalSetupOverridden: boolean
     invalidValue: unknown
     projectConfigValue: boolean
     globalConfigValue: boolean
@@ -16,7 +16,7 @@ declare module 'vitest' {
 
 export function setup({ provide }: GlobalSetupContext) {
   provide('globalSetup', true)
-  provide('globalSetupOverriden', false)
+  provide('globalSetupOverridden', false)
   try {
     provide('invalidValue', () => {})
     throw new Error('Should throw')

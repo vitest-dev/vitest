@@ -152,7 +152,9 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
-        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
+        // this plugin can be used in different projects, but all of them
+        // have the same `include` pattern, so it doesn't matter which project we use
+        const project = parentServer.project
         const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
@@ -243,7 +245,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
         }
 
         // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
-        // have ?. until Vitest 3.0 for backwards compatibility
+        const vue = isPackageExists('vitest-browser-vue', fileRoot)
+        if (vue) {
+          // we override them in the esbuild plugin so optimizer can no longer intercept it
+          include.push(
+            'vitest-browser-vue',
+            'vitest-browser-vue > @vue/test-utils',
+            'vitest-browser-vue > @vue/test-utils > @vue/compiler-core',
+          )
+        }
         const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
         if (vueTestUtils) {
           include.push('@vue/test-utils')
@@ -364,7 +374,7 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
       name: 'vitest:browser:in-source-tests',
       transform(code, id) {
         const project = parentServer.vitest.getProjectByName(parentServer.config.name)
-        if (!project.isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
+        if (!project._isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
           return
         }
         const s = new MagicString(code, { filename: cleanUrl(id) })
@@ -520,10 +530,10 @@ body {
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    build.onResolve({ filter: /^@vue\/test-utils$/ }, (args) => {
-                      const _require = getRequire()
-                      // resolve to CJS instead of the browser because the browser version expects a global Vue object
-                      const resolved = _require.resolve(args.path, {
+                    // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+                    // compiler-core: only CJS version allows slots as strings
+                    build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args) => {
+                      const resolved = getRequire().resolve(args.path, {
                         paths: [args.importer],
                       })
                       return { path: resolved }

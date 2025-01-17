@@ -5,6 +5,7 @@ import type {
   SequenceSetupFiles,
   Suite,
   Task,
+  TaskEventPack,
   TaskResultPack,
   Test,
   TestContext,
@@ -128,7 +129,7 @@ export interface VitestRunner {
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
    */
-  onTaskUpdate?: (task: TaskResultPack[]) => Promise<void>
+  onTaskUpdate?: (task: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
 
   /**
    * Called before running all tests in collected paths.

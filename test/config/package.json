@@ -6,7 +6,7 @@
     "test": "vitest --typecheck.enabled"
   },
   "devDependencies": {
-    "tinyexec": "^0.3.0",
+    "tinyexec": "^0.3.2",
     "vite": "latest",
     "vitest": "workspace:*"
   }

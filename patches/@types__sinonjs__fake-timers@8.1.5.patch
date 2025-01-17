@@ -1,5 +1,5 @@
 diff --git a/index.d.ts b/index.d.ts
-index 5aa018cde4336aca4dadefb8338549c378792e14..2e0c38efc15e793dc37e401e2513016247058f37 100644
+index 5aa018cde4336aca4dadefb8338549c378792e14..1b8136e5fb4c6666a46dbef765c9624d62fdb3a5 100644
 --- a/index.d.ts
 +++ b/index.d.ts
 @@ -329,13 +329,15 @@ export interface FakeTimerInstallOpts {
@@ -21,7 +21,7 @@ index 5aa018cde4336aca4dadefb8338549c378792e14..2e0c38efc15e793dc37e401e25130162
       */
      loopLimit?: number | undefined;
  
-@@ -352,8 +354,8 @@ export interface FakeTimerInstallOpts {
+@@ -352,10 +354,16 @@ export interface FakeTimerInstallOpts {
      advanceTimeDelta?: number | undefined;
  
      /**
@@ -31,4 +31,12 @@ index 5aa018cde4336aca4dadefb8338549c378792e14..2e0c38efc15e793dc37e401e25130162
 +     * @default true
       */
      shouldClearNativeTimers?: boolean | undefined;
++
++    /**
++     * Don't throw error when asked to fake timers that are not present.
++     * @default false
++     */
++    ignoreMissingTimers?: boolean | undefined;
  }
+ 
+ /**

@@ -48,9 +48,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onTaskUpdate(packs) {
-          ctx.state.updateTasks(packs)
-          await ctx.report('onTaskUpdate', packs)
+        async onTaskUpdate(packs, events) {
+          await ctx._testRun.updated(packs, events)
         },
         getFiles() {
           return ctx.state.getFiles()
@@ -80,6 +79,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         },
         getConfig() {
           return ctx.getRootProject().serializedConfig
+        },
+        getResolvedProjectNames(): string[] {
+          return ctx.resolvedProjects.map(p => p.name)
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)

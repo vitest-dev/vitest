@@ -1,5 +1,5 @@
 import type { Vitest } from './core'
-import type { TestProject } from './reporters'
+import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import { existsSync } from 'node:fs'
 import mm from 'micromatch'
@@ -21,10 +21,10 @@ export class VitestSpecifications {
 
     const specs: TestSpecification[] = []
     for (const project of this.vitest.projects) {
-      if (project.isCachedTestFile(moduleId)) {
+      if (project._isCachedTestFile(moduleId)) {
         specs.push(project.createSpecification(moduleId))
       }
-      if (project.isCachedTypecheckFile(moduleId)) {
+      if (project._isCachedTypecheckFile(moduleId)) {
         specs.push(project.createSpecification(moduleId, [], 'typescript'))
       }
     }

@@ -185,6 +185,18 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
+  public nth(index: number): Locator {
+    return this.locator(`nth=${index}`)
+  }
+
+  public first(): Locator {
+    return this.nth(0)
+  }
+
+  public last(): Locator {
+    return this.nth(-1)
+  }
+
   public toString(): string {
     return this.selector
   }

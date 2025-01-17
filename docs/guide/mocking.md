@@ -10,7 +10,7 @@ When writing tests it's only a matter of time before you need to create a "fake"
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/mock#mockreset) docs for more info.
 :::
 
-If you are not familliar with `vi.fn`, `vi.mock` or `vi.spyOn` methods, check the [API section](/api/vi) first.
+If you are not familiar with `vi.fn`, `vi.mock` or `vi.spyOn` methods, check the [API section](/api/vi) first.
 
 ## Dates
 
@@ -177,6 +177,7 @@ Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plug
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
 export default defineConfig({
   test: {
     alias: {
@@ -384,7 +385,7 @@ module.exports = fs.promises
 import { readFileSync } from 'node:fs'
 
 export function readHelloWorld(path) {
-  return readFileSync(path)
+  return readFileSync(path, 'utf-8')
 }
 ```
 
@@ -479,7 +480,7 @@ afterAll(() => server.close())
 afterEach(() => server.resetHandlers())
 ```
 
-> Configuring the server with `onUnhandleRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
+> Configuring the server with `onUnhandledRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
 
 ### More
 There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs).

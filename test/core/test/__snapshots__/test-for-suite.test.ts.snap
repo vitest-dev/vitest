@@ -1,0 +1,45 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`add(1, 1) > test 1`] = `2`;
+
+exports[`add(1, 2) > test 1`] = `3`;
+
+exports[`add(2, 1) > test 1`] = `3`;
+
+exports[`basic case1 > test 1`] = `
+{
+  "args": [
+    "case1",
+  ],
+}
+`;
+
+exports[`basic case2 > test 1`] = `
+{
+  "args": [
+    "case2",
+  ],
+}
+`;
+
+exports[`template 'x' true > test 1`] = `
+{
+  "args": [
+    {
+      "a": "x",
+      "b": true,
+    },
+  ],
+}
+`;
+
+exports[`template 'y' false > test 1`] = `
+{
+  "args": [
+    {
+      "a": "y",
+      "b": false,
+    },
+  ],
+}
+`;

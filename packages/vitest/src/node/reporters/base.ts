@@ -58,7 +58,12 @@ export abstract class BaseReporter implements Reporter {
 
   onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
     this.end = performance.now()
-    this.reportSummary(files, errors)
+    if (!files.length && !errors.length) {
+      this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
+    }
+    else {
+      this.reportSummary(files, errors)
+    }
   }
 
   onTaskUpdate(packs: TaskResultPack[]) {
@@ -71,6 +76,9 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
+  /**
+   * Callback invoked with a single `Task` from `onTaskUpdate`
+   */
   protected printTask(task: Task) {
     if (
       !('filepath' in task)
@@ -438,7 +446,7 @@ export abstract class BaseReporter implements Reporter {
     const benches = getTests(files)
     const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 
-    this.log(withLabel('cyan', 'BENCH', 'Summary\n'))
+    this.log(`\n${withLabel('cyan', 'BENCH', 'Summary\n')}`)
 
     for (const bench of topBenches) {
       const group = bench.suite || bench.file
@@ -448,7 +456,7 @@ export abstract class BaseReporter implements Reporter {
       }
 
       const groupName = getFullName(group, c.dim(' > '))
-      this.log(`  ${bench.name}${c.dim(` - ${groupName}`)}`)
+      this.log(`  ${formatProjectName(bench.file.projectName)}${bench.name}${c.dim(` - ${groupName}`)}`)
 
       const siblings = group.tasks
         .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)

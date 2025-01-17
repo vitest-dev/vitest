@@ -55,14 +55,12 @@ export function registerConsoleShortcuts(
       || (key && key.ctrl && key.name === 'c')
     ) {
       if (!ctx.isCancelling) {
-        ctx.logger.logUpdate.clear()
         ctx.logger.log(
           c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
         )
         process.exitCode = 130
 
         await ctx.cancelCurrentRun('keyboard-input')
-        await ctx.runningPromise
       }
       return ctx.exit(true)
     }

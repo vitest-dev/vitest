@@ -74,6 +74,7 @@ export interface BrowserRunnerState {
   iframeId?: string
   sessionId: string
   testerId: string
+  method: 'run' | 'collect'
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
   cdp?: {

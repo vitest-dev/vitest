@@ -1,7 +1,7 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
-import type { TestModule, TestSuite } from '../reporters'
+import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -256,7 +256,7 @@ export function formatCollectedAsJSON(files: TestModule[]) {
 
   files.forEach((file) => {
     for (const test of file.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const result: TestCollectJSONResult = {
@@ -280,7 +280,7 @@ export function formatCollectedAsString(testModules: TestModule[]) {
 
   testModules.forEach((testModule) => {
     for (const test of testModule.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const fullName = `${test.module.task.name} > ${test.fullName}`

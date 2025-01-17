@@ -70,6 +70,7 @@ export default defineConfig({
       // 'tsx',
       // './test/setup.js',
     ],
+    reporters: [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',
