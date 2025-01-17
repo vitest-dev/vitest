@@ -28,7 +28,7 @@ export default defineConfig({
 })
 ```
 
-This flag disables all custom file transforms and removes polyfills that Vitest injects in the sandbox environment. Tests are still scheduled to run either in a worker thread or a child process, depending on your [`pool`](/config/#pool) option. This mode is recommended for tools using these environments natively. However, we still recommend running `jsdom`/`happy-dom` tests in a sandbox environment or in [the browser](/guide/browser) as it doesn't reauire any configuration.
+This flag disables all custom file transforms and removes polyfills that Vitest injects in the sandbox environment. Tests are still scheduled to run either in a worker thread or a child process, depending on your [`pool`](/config/#pool) option. This mode is recommended for tools using these environments natively. However, we still recommend running `jsdom`/`happy-dom` tests in a sandbox environment or in [the browser](/guide/browser/) as it doesn't reauire any configuration.
 
 This flag disables _all_ file transforms:
 
@@ -58,7 +58,7 @@ export default defineConfig({
 ```
 <!-- TODO: example with tsx - just adding "tsx" is not enough -->
 
-::: warning TypeScript with Node 22
+::: warning TypeScript with Node.js 22
 If you are using Node.js 22.6, you can also enable native TypeScript support via `--experimental-strip-types` flag:
 
 ```shell
