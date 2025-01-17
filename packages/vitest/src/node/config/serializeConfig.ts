@@ -21,7 +21,6 @@ export function serializeConfig(
     logHeapUsage: config.logHeapUsage,
     runner: config.runner,
     bail: config.bail,
-    preloads: config.preloads || [],
     defines: config.defines,
     chaiConfig: config.chaiConfig,
     setupFiles: config.setupFiles,
@@ -165,5 +164,7 @@ export function serializeConfig(
     benchmark: config.benchmark && {
       includeSamples: config.benchmark.includeSamples,
     },
+    experimentalNativeImport: config.experimental?.nativeImport ?? false,
+    experimentalPreload: config.experimental?.preload ?? [],
   }
 }

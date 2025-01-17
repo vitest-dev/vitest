@@ -863,6 +863,16 @@ export function resolveConfig(
   resolved.testTimeout ??= resolved.browser.enabled ? 15000 : 5000
   resolved.hookTimeout ??= resolved.browser.enabled ? 30000 : 10000
 
+  resolved.experimental ??= {}
+  if (resolved.experimental.preload) {
+    resolved.experimental.preload = toArray(resolved.experimental.preload).map((preload) => {
+      if (preload[0] === '.') {
+        return resolve(resolved.root, preload)
+      }
+      return preload
+    })
+  }
+
   return resolved
 }
 

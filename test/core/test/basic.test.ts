@@ -1,6 +1,6 @@
 import { assert, expect, it, suite, test } from 'vitest'
-import { two } from '../src/submodule'
-import { timeout } from '../src/timeout'
+import { two } from '../src/submodule.ts'
+import { timeout } from '../src/timeout.ts'
 
 const testPath = expect.getState().testPath
 if (!testPath || !testPath.includes('basic.test.ts')) {

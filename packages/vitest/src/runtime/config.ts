@@ -18,7 +18,6 @@ export interface SerializedConfig {
   isolate: boolean
   mode: 'test' | 'benchmark'
   bail: number | undefined
-  preloads: string[]
   environmentOptions?: Record<string, any>
   root: string
   setupFiles: string[]
@@ -134,6 +133,8 @@ export interface SerializedConfig {
   benchmark?: {
     includeSamples: boolean
   }
+  experimentalNativeImport: boolean
+  experimentalPreload: string[]
 }
 
 export interface SerializedCoverageConfig {

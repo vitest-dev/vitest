@@ -470,8 +470,6 @@ export interface InlineConfig {
    */
   setupFiles?: string | string[]
 
-  preloads?: string[]
-
   /**
    * Path to global setup files
    */
@@ -838,6 +836,23 @@ export interface InlineConfig {
    * @default false
    */
   includeTaskLocation?: boolean
+
+  experimental?: {
+    /**
+     * Should Vitest use the native "import" instead of Vite Node.
+     * This can break certain functionality, like `import.meta`
+     * @experimental
+     */
+    nativeImport?: boolean
+    /**
+     * Natively import files before Vitest resolves the environment.
+     * This is the first import of the test file, you can define loaders here.
+     * The file is resoled relative to the root of the project.
+     * `data:*` modules are left as is.
+     * @experimental
+     */
+    preload?: string[]
+  }
 }
 
 export interface TypecheckConfig {
