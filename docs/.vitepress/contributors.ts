@@ -86,6 +86,15 @@ const plainTeamMembers: CoreTeam[] = [
     orgLink: 'https://stackblitz.com/',
   },
   {
+    avatar: contributorsAvatars['hi-ogawa'],
+    name: 'Hiroshi Ogawa',
+    github: 'hi-ogawa',
+    bluesky: 'https://bsky.app/profile/hiogawa.bsky.social',
+    sponsor: 'https://github.com/sponsors/hi-ogawa',
+    title: 'Open source enthusiast',
+    desc: 'Team member of Vitest',
+  },
+  {
     avatar: contributorsAvatars['patak-dev'],
     name: 'Patak',
     github: 'patak-dev',
@@ -105,14 +114,6 @@ const plainTeamMembers: CoreTeam[] = [
     mastodon: 'https://elk.zone/m.webtoo.ls/@userquin',
     title: 'A fullstack and android developer',
     desc: 'Vite\'s fanatical follower',
-  },
-  {
-    avatar: contributorsAvatars['hi-ogawa'],
-    name: 'Hiroshi Ogawa',
-    github: 'hi-ogawa',
-    bluesky: 'https://bsky.app/profile/hiogawa.bsky.social',
-    title: 'Open source enthusiast',
-    desc: 'Team member of Vitest',
   },
 ]
 
