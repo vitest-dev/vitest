@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "native": "vitest -r ./fixtures/native"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

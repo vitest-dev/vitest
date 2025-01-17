@@ -85,7 +85,7 @@ Some Vitest features rely on files being transformed in some way. Since native m
 - no `vi.mock` support: mocking modules is not supported because it relies on code transformations
 - no `plugins`: plugins are not applied because there is no transformation phase
 - no `alias`: aliases are not applied because there is no transformation/resolution phase
-- no watch mode yet (watch mode relies on the Vite module graph)
+<!-- - no watch mode yet (watch mode relies on the Vite module graph) -->
 
 ::: warning Support is Coming
 We are planning to support some of these features by using the [Node.js Loaders API](https://nodejs.org/api/module.html#customization-hooks) in the future.

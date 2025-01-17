@@ -46,6 +46,8 @@ export interface RuntimeRPC {
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string
+
+  ensureModuleGraphEntry: (specifier: string, importer: string) => Promise<void>
 }
 
 export interface RunnerRPC {

@@ -3,6 +3,7 @@ import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 import { join } from 'pathe'
 import { hash } from '../hash'
 
@@ -119,6 +120,21 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     },
     getCountOfFailedTests() {
       return ctx.state.getCountOfFailedTests()
+    },
+
+    // TODO: make sure watcher works
+    async ensureModuleGraphEntry(id, importer) {
+      id = id.startsWith('file') ? fileURLToPath(id) : id
+      importer = importer.startsWith('file') ? fileURLToPath(importer) : importer
+
+      let importerNode = project.vite.moduleGraph.getModuleById(importer)
+      if (!importerNode) {
+        importerNode = project.vite.moduleGraph.createFileOnlyEntry(importer)
+      }
+
+      const moduleNode = project.vite.moduleGraph.getModuleById(id) || project.vite.moduleGraph.createFileOnlyEntry(id)
+      importerNode.ssrImportedModules.add(moduleNode)
+      moduleNode.importers.add(importerNode)
     },
   }
 }

@@ -3,10 +3,10 @@ import type { ExecuteOptions } from './execute'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { ModuleCacheMap } from 'vite-node/client'
-import { VitestMocker } from './mocker'
+import { NativeMocker } from './native-mocker'
 
 export class NativeExecutor {
-  public mocker: VitestMocker
+  public mocker: NativeMocker
   public moduleCache = new ModuleCacheMap()
 
   public options: ExecuteOptions
@@ -19,7 +19,7 @@ export class NativeExecutor {
         throw new Error(`fetchModule is not implemented in native executor`)
       },
     }
-    this.mocker = new VitestMocker(this as any)
+    this.mocker = new NativeMocker(state)
     // TODO: don't support mocker for now
     // Object.defineProperty(globalThis, '__vitest_mocker__', {
     //   value: this.mocker,
