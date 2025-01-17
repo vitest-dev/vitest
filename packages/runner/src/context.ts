@@ -52,7 +52,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
       // `unref` might not exist in browser
       timer.unref?.()
 
-      /// sync fn will be caught by try/catch
+      // sync fn will be caught by try/catch
       try {
         Promise.resolve(fn(...args))
           .then((result) => {
