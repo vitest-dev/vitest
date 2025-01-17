@@ -31,7 +31,7 @@ _January 17, 2025_
 
 ![Vitest 3 Announcement Cover Image](/og-vitest-3.jpg)
 
-We released Vitest 2 half a year ago. We have seen huge adoption, from 4,8M to 7,7M weekly npm downloads. Our ecosystem is growing too, with [Storybook doing cool stuff with our vscode extension and browser mode](https://storybook.js.org/docs/writing-tests/test-addon) and Matt Pocock building [evalite](https://www.evalite.dev/), the first GenAI-powered test tool, on top of Vitest.
+We released Vitest 2 half a year ago. We have seen huge adoption, from 4,8M to 7,7M weekly npm downloads. Our ecosystem is growing rapidly too. Among others, [Storybook new testing capabilities powered by our vscode extension and browser mode](https://storybook.js.org/docs/writing-tests/test-addon) and Matt Pocock is building [evalite](https://www.evalite.dev/), the first GenAI-powered test tool, on top of Vitest.
 
 Today, we are thrilled to announce Vitest 3! This is a big one!
 
@@ -96,7 +96,7 @@ export default defineConfig({
 })
 ```
 
-The main advantage of `instances` over `workspace` is a better caching strategy - Vitest creates only a single Vite server to serve files, - they are processed only onece independently from how many browsers you test.
+The main advantage of `instances` over `workspace` is a better caching strategy - Vitest creates only a single Vite server to serve files, which are processed only once, independent of how many browsers you test.
 
 This release also improves the documentation of Browser Mode features and introduces separate guides for [Playwright](/guide/browser/playwright) and [WebdriverIO](/guide/browser/webdriverio) hopefully making it easier to configure.
 
@@ -124,4 +124,4 @@ Vitest 3 has a few small breaking changes that should not affect most users, but
 
 ## Acknowledgments
 
-Vitest 3 is the result of uncountable hours by the Vitest team (especial shutout to the work of [Vladimir](https://github.com/sheremet-va), [Ari](https://github.com/ariperkkio), and [Hiroshi](https://github.com/ariperkkio)) and contributors. We also want to thank our main sponsors: <!-- list sponsors -->
+Vitest 3 is the result of uncountable hours by the Vitest team (especial shoutout to the work of [Vladimir](https://github.com/sheremet-va), [Ari](https://github.com/ariperkkio), and [Hiroshi](https://github.com/hi-ogawa)) and contributors. We also want to thank our main sponsors: <!-- list sponsors -->
