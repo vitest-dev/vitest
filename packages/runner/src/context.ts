@@ -44,7 +44,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
   // this function name is used to filter error in test/cli/test/fails.test.ts
   return (function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     const startTime = now()
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve_, reject_) => {
       const timer = setTimeout(() => {
         clearTimeout(timer)
         reject(new Error(makeTimeoutMsg(isHook, timeout)))
@@ -52,27 +52,43 @@ export function withTimeout<T extends (...args: any[]) => any>(
       // `unref` might not exist in browser
       timer.unref?.()
 
-      // sync fn will be caught by try/catch
-      try {
-        Promise.resolve(fn(...args))
-          .then((result) => {
-            clearTimeout(timer)
-
-            // if sync task took too long, async timer won't be triggered
-            if (now() - startTime >= timeout) {
-              reject(new Error(makeTimeoutMsg(isHook, timeout)))
-            }
-            else {
-              resolve(result)
-            }
-          })
-          .catch((error) => {
-            clearTimeout(timer)
-            reject(error)
-          })
-      }
-      catch (error) {
+      function resolve(result: unknown) {
         clearTimeout(timer)
+        resolve_(result)
+      }
+
+      function reject(error: unknown) {
+        clearTimeout(timer)
+        reject_(error)
+      }
+
+      // sync test/hook will be caught by try/catch
+      try {
+        const result = fn(...args) as PromiseLike<unknown>
+        // the result is a thenable, we don't wrap this in Promise.resolve
+        // to avoid creating new promises
+        if (typeof result === 'object' && result != null && typeof result.then === 'function') {
+          result.then(
+            (result) => {
+              // if sync test/hook took too long, setTimeout won't be triggered,
+              // but we still need to fail the test, see
+              // https://github.com/vitest-dev/vitest/issues/2920
+              if (now() - startTime >= timeout) {
+                reject(new Error(makeTimeoutMsg(isHook, timeout)))
+              }
+              else {
+                resolve(result)
+              }
+            },
+            reject,
+          )
+        }
+        else {
+          resolve(result)
+        }
+      }
+      // user sync test/hook throws an error
+      catch (error) {
         reject(error)
       }
     })
