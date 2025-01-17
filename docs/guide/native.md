@@ -58,15 +58,21 @@ export default defineConfig({
 ```
 <!-- TODO: example with tsx - just adding "tsx" is not enough -->
 
+If you are using Node.js 23.6 or higher, then TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js.
+
 ::: warning TypeScript with Node.js 22
 If you are using Node.js 22.6, you can also enable native TypeScript support via `--experimental-strip-types` flag:
 
 ```shell
-NODE_OPTIONS=--experimental-strip-types vitest
+NODE_OPTIONS="--experimental-strip-types" vitest
+```
+
+Note that Node.js will print an experimental warning for every test file; you can silence the warning by providing `--no-warnings` flag:
+
+```shell
+NODE_OPTIONS="--experimental-strip-types --no-warnings" vitest
 ```
 :::
-
-If you are using Node.js 23.6 or higher, then TypeScript will be [transformed natively](https://nodejs.org/en/learn/typescript/run-natively) by Node.js. Note that Node.js will print an experimental warning for every test file.
 
 If you are using Deno, TypeScript files should be processed as they usually are without any additional configurations.
 
