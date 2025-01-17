@@ -3,7 +3,7 @@ import { runVitest } from '../../test-utils'
 
 // TODO run only in Node >23
 // TODO: add a test with a loader
-test.runIf(process.version.split('.')[0] === '23')('can run custom pools with Vitest', async () => {
+test.runIf(process.version.split('.')[0] === 'v23')('can run custom pools with Vitest', async () => {
   const { stderr, stdout } = await runVitest({
     root: './fixtures/native',
   })
