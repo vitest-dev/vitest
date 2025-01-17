@@ -2,6 +2,7 @@ import type { CancelReason, File } from '@vitest/runner'
 import type { Awaitable } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { ViteDevServer } from 'vite'
+import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { defineWorkspace } from 'vitest/config'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
@@ -30,6 +31,7 @@ import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
+import { NativeRunner } from './nativeRunner'
 import { VitestPackageInstaller } from './packageInstaller'
 import { createPool } from './pool'
 import { TestProject } from './project'
@@ -227,7 +229,7 @@ export class Vitest {
     this.vitenode = new ViteNodeServer(server, this.config.server)
 
     const node = this.vitenode
-    this.runner = new ViteNodeRunner({
+    const viteNodeOptions: ViteNodeRunnerOptions = {
       root: server.config.root,
       base: server.config.base,
       fetchModule(id: string) {
@@ -236,7 +238,10 @@ export class Vitest {
       resolveId(id: string, importer?: string) {
         return node.resolveId(id, importer)
       },
-    })
+    }
+    this.runner = resolved.experimental.nativeImport
+      ? new NativeRunner(viteNodeOptions)
+      : new ViteNodeRunner(viteNodeOptions)
 
     if (this.config.watch) {
       // hijack server restart

@@ -4,6 +4,7 @@ import type {
   ViteDevServer,
   InlineConfig as ViteInlineConfig,
 } from 'vite'
+import type { ViteNodeRunnerOptions } from 'vite-node'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
@@ -30,6 +31,7 @@ import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
 import { loadGlobalSetupFiles } from './globalSetup'
+import { NativeRunner } from './nativeRunner'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
@@ -600,7 +602,7 @@ export class TestProject {
 
     this.vitenode = new ViteNodeServer(server, this.config.server)
     const node = this.vitenode
-    this.runner = new ViteNodeRunner({
+    const viteNodeOptions: ViteNodeRunnerOptions = {
       root: server.config.root,
       base: server.config.base,
       fetchModule(id: string) {
@@ -609,7 +611,10 @@ export class TestProject {
       resolveId(id: string, importer?: string) {
         return node.resolveId(id, importer)
       },
-    })
+    }
+    this.runner = this._config.experimental.nativeImport
+      ? new NativeRunner(viteNodeOptions)
+      : new ViteNodeRunner(viteNodeOptions)
   }
 
   private _serializeOverriddenConfig(): SerializedConfig {
