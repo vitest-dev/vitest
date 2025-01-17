@@ -72,6 +72,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
           })
       }
       catch (error) {
+        clearTimeout(timer)
         reject(error)
       }
     })
