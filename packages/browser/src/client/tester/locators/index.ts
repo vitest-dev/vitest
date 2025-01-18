@@ -198,11 +198,11 @@ export abstract class Locator {
   }
 
   public and(other: Locator): Locator {
-    return this.locator(`internal:and=${other.selector}`)
+    return this.locator(`internal:and=${JSON.stringify(other.selector)}`)
   }
 
   public or(other: Locator): Locator {
-    return this.locator(`internal:or=${other.selector}`)
+    return this.locator(`internal:or=${JSON.stringify(other.selector)}`)
   }
 
   public toString(): string {

@@ -27,10 +27,9 @@ test('renders blog posts', async () => {
   expect(screen.getByRole('listitem').first().element()).toHaveTextContent(/molestiae ut ut quas/)
   expect(screen.getByRole('listitem').last().element()).toHaveTextContent(/eum et est/)
 
-  await expect.element(firstPost.getByRole('button', {name: 'Delete'})).toBeInTheDocument();
   await expect.poll(() => firstPost.getByTestId('delete-post').elements()).toHaveLength(2)
   await expect.poll(() => firstPost.getByTestId('delete-post').and(page.getByText('Archive')).elements()).toHaveLength(1)
-  await expect.poll(() => firstPost.getByRole('button', {name: 'Delete'}).or(page.getByRole('button', {name: 'Archive'})).elements()).toHaveLength(2)
+  await expect.poll(() => firstPost.getByRole('button', {name: 'Delete'}).or(firstPost.getByRole('button', {name: 'Archive'})).elements()).toHaveLength(2)
 
   expect(screen.getByPlaceholder('non-existing').query()).not.toBeInTheDocument()
 })
