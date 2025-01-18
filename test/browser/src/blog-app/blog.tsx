@@ -1,7 +1,14 @@
 import React from 'react'
 
+interface Post {
+  userId: number
+  id: number
+  title: string
+  body: string
+}
+
 export default function App() {
-  const [posts, setPosts] = React.useState(() => [
+  const [posts, setPosts] = React.useState<Post[]>(() => [
     {
       userId: 1,
       id: 1,
@@ -28,8 +35,15 @@ export default function App() {
     },
   ])
 
+  const [archive, setArchive] = React.useState<Post[]>(() => [])
+
   function removePost(index: number) {
     setPosts(posts => posts.filter((_, i) => i !== index))
+  }
+
+  function archivePost(index: number) {
+    setArchive(archive => [...archive, posts[index]])
+    removePost(index)
   }
 
   return (
@@ -40,7 +54,17 @@ export default function App() {
           <li key={post.id}>
             <h2>{post.title}</h2>
             <p>{post.body}</p>
-            <button onClick={() => removePost(index)}>Delete</button>
+            {/* Violation of best practices: non-unique and ambiguous test id; we will work around it with extra selectors */}
+            <div>
+              <button data-testid="delete-post" onClick={() => removePost(index)}>Delete</button>
+              <button data-testid="delete-post" onClick={() => archivePost(index)}>Archive</button>
+            </div>
+          </li>
+        ))}
+        {archive.map(post => (
+          <li key={post.id}>
+            <h2>{post.title}</h2>
+            <p>{post.body}</p>
           </li>
         ))}
       </ul>
