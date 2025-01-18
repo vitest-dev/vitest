@@ -197,6 +197,14 @@ export abstract class Locator {
     return this.nth(-1)
   }
 
+  public and(other: Locator): Locator {
+    return this.locator(`internal:and=${other.selector}`)
+  }
+
+  public or(other: Locator): Locator {
+    return this.locator(`internal:or=${other.selector}`)
+  }
+
   public toString(): string {
     return this.selector
   }
