@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "test:dev": "vitest --watch"
   },
   "devDependencies": {
     "@vitest/browser": "workspace:*",
