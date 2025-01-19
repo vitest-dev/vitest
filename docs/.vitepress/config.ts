@@ -52,9 +52,6 @@ export default ({ mode }: { mode: string }) => {
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
       ['meta', { property: 'og:image', content: ogImage }],
-      ['meta', { name: 'twitter:title', content: vitestName }],
-      ['meta', { name: 'twitter:description', content: vitestDescription }],
-      ['meta', { name: 'twitter:image', content: ogImage }],
       ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
       ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
       ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
@@ -153,8 +150,16 @@ export default ({ mode }: { mode: string }) => {
               activeMatch: '^/advanced/',
             },
             {
-              text: 'Team',
-              link: '/team',
+              items: [
+                {
+                  text: 'Blog',
+                  link: '/blog',
+                },
+                {
+                  text: 'Team',
+                  link: '/team',
+                },
+              ],
             },
           ],
         },
@@ -376,6 +381,7 @@ export default ({ mode }: { mode: string }) => {
           },
         ],
         '/team': [],
+        '/blog': [],
         '/': [
           {
             text: 'Introduction',
