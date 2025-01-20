@@ -703,6 +703,7 @@ function createVitest(): VitestUtils {
       if (!_config) {
         _config = { ...workerState.config }
       }
+      // TODO: deep merge for `config.sequence`
       Object.assign(workerState.config, config)
     },
 
