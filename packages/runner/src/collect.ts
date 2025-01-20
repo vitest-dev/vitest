@@ -32,7 +32,7 @@ export async function collectTests(
     const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
 
     const file = createFileTask(filepath, config.root, config.name, runner.pool)
-    file.shuffle = config.sequence.shuffle
+    // file.shuffle = config.sequence.shuffle
 
     runner.onCollectStart?.(file)
 

@@ -522,7 +522,7 @@ function createSuite() {
     options = {
       ...currentSuite?.options,
       ...options,
-      shuffle: this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle ?? runner?.config.sequence.shuffle,
+      shuffle: this.shuffle ?? options.shuffle ?? currentSuite?.options?.shuffle,
     }
 
     // inherit concurrent / sequential from suite
