@@ -20,6 +20,7 @@ import {
   extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { VitestCache } from '../cache'
@@ -251,7 +252,7 @@ export function resolveConfig(
     }
   }
 
-  const playwrightChromiumOnly = browser.provider === 'playwright' && (browser.name === 'chromium' || browser.instances?.every(i => i.browser === 'chromium'))
+  const playwrightChromiumOnly = isPlaywrightChromiumOnly(resolved)
 
   // Browser-mode "Playwright + Chromium" only features:
   if (browser.enabled && !playwrightChromiumOnly) {
@@ -890,4 +891,29 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
   }
 
   return resolvedReporters
+}
+
+function isPlaywrightChromiumOnly(config: ResolvedConfig) {
+  const browser = config.browser
+  if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
+    return false
+  }
+  if (browser.name && browser.name !== 'chromium') {
+    return false
+  }
+  if (!browser.instances) {
+    return false
+  }
+  const filteredProjects = toArray(config.project).map(p => wildcardPatternToRegExp(p))
+  for (const instance of browser.instances) {
+    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
+    // browser config is filtered out
+    if (filteredProjects.length && !filteredProjects.every(p => p.test(name))) {
+      continue
+    }
+    if (instance.browser !== 'chromium') {
+      return false
+    }
+  }
+  return true
 }
