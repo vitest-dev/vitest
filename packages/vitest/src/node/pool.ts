@@ -5,6 +5,7 @@ import type { TestSpecification } from './spec'
 import type { BuiltinPool, Pool } from './types/pool-options'
 import { isatty } from 'node:tty'
 import mm from 'micromatch'
+import { version as viteVersion } from 'vite'
 import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
@@ -91,9 +92,9 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   // in addition to resolve.conditions Vite also adds production/development,
   // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
+  const viteMajor = Number(viteVersion.split('.')[0])
   const potentialConditions = new Set([
-    'production',
-    'development',
+    ...viteMajor >= 6 ? [] : ['production', 'development'],
     ...ctx.vite.config.resolve.conditions,
   ])
   const conditions = [...potentialConditions]
@@ -105,6 +106,12 @@ export function createPool(ctx: Vitest): ProcessPool {
         return !ctx.vite.config.isProduction
       }
       return true
+    })
+    .map((condition) => {
+      if (viteMajor >= 6 && condition === 'development|production') {
+        return ctx.vite.config.isProduction ? 'production' : 'development'
+      }
+      return condition
     })
     .flatMap(c => ['--conditions', c])
 
