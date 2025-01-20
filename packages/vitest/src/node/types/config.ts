@@ -965,6 +965,7 @@ export interface UserConfig extends InlineConfig {
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
+    | 'project'
     | 'config'
     | 'filters'
     | 'browser'
@@ -1015,6 +1016,8 @@ export interface ResolvedConfig
 
   api?: ApiConfig
   cliExclude?: string[]
+
+  project: RegExp[]
 
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>

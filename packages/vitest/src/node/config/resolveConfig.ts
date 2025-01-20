@@ -231,6 +231,8 @@ export function resolveConfig(
     }
   }
 
+  resolved.project = toArray(options.project || []).map(project => wildcardPatternToRegExp(project))
+
   const browser = resolved.browser
 
   if (browser.enabled) {
@@ -469,7 +471,7 @@ export function resolveConfig(
   resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
 
   if (options.resolveSnapshotPath) {
-    delete (resolved as UserConfig).resolveSnapshotPath
+    delete (resolved as any).resolveSnapshotPath
   }
 
   resolved.pool ??= 'threads'
@@ -908,11 +910,10 @@ function isPlaywrightChromiumOnly(config: ResolvedConfig) {
   if (!browser.instances) {
     return false
   }
-  const filteredProjects = toArray(config.project).map(p => wildcardPatternToRegExp(p))
   for (const instance of browser.instances) {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
-    if (filteredProjects.length && !filteredProjects.every(p => p.test(name))) {
+    if (config.project.length && !config.project.every(p => p.test(name))) {
       continue
     }
     if (instance.browser !== 'chromium') {

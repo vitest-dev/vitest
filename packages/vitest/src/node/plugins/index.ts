@@ -63,14 +63,23 @@ export async function VitestPlugin(
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig);
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
-        (options as ResolvedConfig).defines = defines
+        ;(options as unknown as ResolvedConfig).defines = defines
 
         let open: string | boolean | undefined = false
 
         if (testConfig.ui && testConfig.open) {
           open = testConfig.uiBase ?? '/__vitest__/'
+        }
+
+        const originalName = testConfig.name
+        const workspaceNames = originalName ? [originalName] : []
+        if (testConfig.browser?.enabled && testConfig.browser?.instances) {
+          testConfig.browser.instances.forEach((instance) => {
+            instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
+            workspaceNames.push(instance.name)
+          })
         }
 
         const config: ViteConfig = {

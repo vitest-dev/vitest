@@ -6,6 +6,7 @@ import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -62,6 +63,24 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        const workspaceNames = [name]
+        if (viteConfig.test?.browser?.enabled && viteConfig.test?.browser?.instances) {
+          viteConfig.test.browser.instances.forEach((instance) => {
+            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
+            workspaceNames.push(instance.name)
+          })
+        }
+
+        const filters = project.vitest.config.project
+        if (filters.length) {
+          const filteredNames = workspaceNames.filter((name) => {
+            return filters.some(n => n.test(name))
+          })
+          if (!filteredNames.length) {
+            throw new VitestFilteredOutProjectError()
+          }
+        }
+
         const config: ViteConfig = {
           root,
           resolve: {
@@ -92,7 +111,7 @@ export function WorkspaceVitestPlugin(
             fs: {
               allow: resolveFsAllow(
                 project.vitest.config.root,
-                project.vitest.server.config.configFile,
+                project.vitest.vite.config.configFile,
               ),
             },
           },
@@ -138,7 +157,7 @@ export function WorkspaceVitestPlugin(
           }
         }
         config.customLogger = createViteLogger(
-          project.logger,
+          project.vitest.logger,
           viteConfig.logLevel || 'warn',
           {
             allowClearScreen: false,

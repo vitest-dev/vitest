@@ -23,7 +23,6 @@ import { WebSocketReporter } from '../api/setup'
 import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
 import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
-import { wildcardPatternToRegExp } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
@@ -90,7 +89,11 @@ export class Vitest {
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ isCancelling = false
   /** @internal */ coreWorkspaceProject: TestProject | undefined
-  /** @internal */ resolvedProjects: TestProject[] = []
+  /**
+   * @internal
+   * @deprecated
+   */
+  resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _options: UserConfig = {}
@@ -98,6 +101,7 @@ export class Vitest {
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
   /** @internal */ _testRun: TestRun = undefined!
+  /** @internal */ _projectFilter: string | undefined
 
   private isFirstRun = true
   private restartsCount = 0
@@ -272,15 +276,15 @@ export class Vitest {
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
-    const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
-    if (filters.length > 0) {
-      this.projects = this.projects.filter(p =>
-        filters.some(pattern => pattern.test(p.name)),
-      )
-      if (!this.projects.length) {
-        throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
-      }
+    // const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
+    // if (filters.length > 0) {
+    //   this.projects = this.projects.filter(p =>
+    //     filters.some(pattern => pattern.test(p.name)),
+    //   )
+    if (!this.projects.length) {
+      throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
     }
+    // }
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
     }
@@ -858,12 +862,13 @@ export class Vitest {
   /** @internal */
   async changeProjectName(pattern: string): Promise<void> {
     if (pattern === '') {
-      delete this.configOverride.project
+      delete this._projectFilter
     }
     else {
-      this.configOverride.project = pattern
+      this._projectFilter = pattern
     }
 
+    // TODO: restart the whole vitest server, not just filter projects
     this.projects = this.resolvedProjects.filter(p => p.name === pattern)
     const files = (await this.globTestSpecifications()).map(spec => spec.moduleId)
     await this.rerunFiles(files, 'change project filter', pattern === '')

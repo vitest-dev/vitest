@@ -3,13 +3,13 @@ import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, U
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
-import { deepClone, toArray } from '@vitest/utils'
+import { deepClone } from '@vitest/utils'
 import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { wildcardPatternToRegExp } from '../../utils/base'
 import { isTTY } from '../../utils/env'
+import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
 import { isDynamicPattern } from './fast-glob-pattern'
@@ -80,7 +80,13 @@ export async function resolveWorkspace(
   for (const path of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
     if (vitest.vite.config.configFile === path) {
-      projectPromises.push(Promise.resolve(vitest._ensureRootProject()))
+      if (
+        !vitest.config.project.length
+        // only include the root project if it wasn't filtered out
+        || vitest.config.project.some(pattern => pattern.test(vitest.config.name || ''))
+      ) {
+        projectPromises.push(Promise.resolve(vitest._ensureRootProject()))
+      }
       continue
     }
 
@@ -101,8 +107,28 @@ export async function resolveWorkspace(
     return resolveBrowserWorkspace(vitest, new Set(), [vitest._ensureRootProject()])
   }
 
-  const resolvedProjects = await Promise.all(projectPromises)
+  const resolvedProjectsPromises = await Promise.allSettled(projectPromises)
   const names = new Set<string>()
+
+  const errors: Error[] = []
+  const resolvedProjects: TestProject[] = []
+
+  for (const result of resolvedProjectsPromises) {
+    if (result.status === 'rejected') {
+      if (result.reason instanceof VitestFilteredOutProjectError) {
+        // filter out filtered out projects
+        continue
+      }
+      errors.push(result.reason)
+    }
+    else {
+      resolvedProjects.push(result.value)
+    }
+  }
+
+  if (errors.length) {
+    throw new AggregateError(errors, 'Failed to initialize projects')
+  }
 
   // project names are guaranteed to be unique
   for (const project of resolvedProjects) {
@@ -136,7 +162,7 @@ export async function resolveBrowserWorkspace(
   names: Set<string>,
   resolvedProjects: TestProject[],
 ) {
-  const filters = toArray(vitest.config.project).map(s => wildcardPatternToRegExp(s))
+  const filters = vitest.config.project
   const removeProjects = new Set<TestProject>()
 
   resolvedProjects.forEach((project) => {
@@ -162,16 +188,17 @@ export async function resolveBrowserWorkspace(
       )
     }
     const originalName = project.config.name
-    const filteredConfigs = !filters.length
+    // if original name is in the --project=name filter, keep all instances
+    const filteredConfigs = !filters.length || filters.some(pattern => pattern.test(originalName))
       ? configs
       : configs.filter((config) => {
-        const browser = config.browser
-        const newName = config.name || (originalName ? `${originalName} (${browser})` : browser)
+        const newName = config.name! // name is set in "workspace" plugin
         return filters.some(pattern => pattern.test(newName))
       })
 
     // every project was filtered out
     if (!filteredConfigs.length) {
+      removeProjects.add(project)
       return
     }
 
@@ -188,21 +215,20 @@ export async function resolveBrowserWorkspace(
         const ending = nth === 2 ? 'nd' : nth === 3 ? 'rd' : 'th'
         throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
       }
-      const name = config.name
-      const newName = name || (originalName ? `${originalName} (${browser})` : browser)
+      const name = config.name!
 
-      if (names.has(newName)) {
+      if (names.has(name)) {
         throw new Error(
           [
-            `Cannot define a nested project for a ${browser} browser. The project name "${newName}" was already defined. `,
+            `Cannot define a nested project for a ${browser} browser. The project name "${name}" was already defined. `,
             'If you have multiple instances for the same browser, make sure to define a custom "name". ',
             'All projects in a workspace should have unique names. Make sure your configuration is correct.',
           ].join(''),
         )
       }
-      names.add(newName)
+      names.add(name)
       const clonedConfig = cloneConfig(project, config)
-      clonedConfig.name = newName
+      clonedConfig.name = name
       const clone = TestProject._cloneBrowserProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })
