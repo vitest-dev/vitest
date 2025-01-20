@@ -160,6 +160,7 @@ export type RuntimeConfig = Pick<
 > & {
   sequence?: {
     hooks?: SequenceHooks
+    shuffle?: boolean
   }
 }
 
