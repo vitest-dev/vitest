@@ -149,7 +149,16 @@ export function resolveFsAllow(
   ]
 }
 
-export function getDefaultServerConditions(): string[] {
+export function getDefaultResolveOptions(): vite.ResolveOptions {
+  return {
+    // by default Vite resolves `module` field, which not always a native ESM module
+    // setting this option can bypass that and fallback to cjs version
+    mainFields: [],
+    conditions: getDefaultServerConditions(),
+  }
+}
+
+function getDefaultServerConditions(): string[] {
   const viteMajor = Number(viteVersion.split('.')[0])
   if (viteMajor >= 6) {
     const conditions: string[] = (vite as any).defaultServerConditions
