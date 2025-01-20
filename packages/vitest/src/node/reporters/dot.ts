@@ -66,11 +66,13 @@ export class DotReporter extends BaseReporter {
       return
     }
     this.tests.set(test.id, test.result().state || 'run')
+    this.renderer?.schedule()
   }
 
   onTestCaseResult(test: TestCase) {
     this.finishedTests.add(test.id)
     this.tests.set(test.id, test.result().state || 'skipped')
+    this.renderer?.schedule()
   }
 
   onTestModuleEnd() {
@@ -104,6 +106,7 @@ export class DotReporter extends BaseReporter {
     }
 
     this.ctx.logger.log(formatTests(states))
+    this.renderer?.schedule()
   }
 
   private createSummary() {
