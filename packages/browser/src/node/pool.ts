@@ -133,6 +133,9 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       }
       await project._initBrowserProvider()
 
+      if (!project.browser) {
+        throw new TypeError(`The browser server was not initialized for the ${project.name} project. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+      }
       await executeTests(method, project, files)
     }
   }

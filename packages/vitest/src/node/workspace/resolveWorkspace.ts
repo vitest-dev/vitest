@@ -173,8 +173,12 @@ export async function resolveBrowserWorkspace(
     }
     const configs = project.config.browser.instances || []
     if (configs.length === 0) {
+      const name = project.config.browser.name
       // browser.name should be defined, otherwise the config fails in "resolveConfig"
-      configs.push({ browser: project.config.browser.name })
+      configs.push({
+        browser: name,
+        name: project.name ? `${project.name} (${name})` : name,
+      })
       console.warn(
         withLabel(
           'yellow',

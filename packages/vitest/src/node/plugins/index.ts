@@ -73,15 +73,6 @@ export async function VitestPlugin(
           open = testConfig.uiBase ?? '/__vitest__/'
         }
 
-        const originalName = testConfig.name
-        const workspaceNames = originalName ? [originalName] : []
-        if (testConfig.browser?.enabled && testConfig.browser?.instances) {
-          testConfig.browser.instances.forEach((instance) => {
-            instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
-            workspaceNames.push(instance.name)
-          })
-        }
-
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
           esbuild:
@@ -226,9 +217,9 @@ export async function VitestPlugin(
         return config
       },
       async configResolved(viteConfig) {
-        const viteConfigTest = (viteConfig.test as any) || {}
+        const viteConfigTest = (viteConfig.test as UserConfig) || {}
         if (viteConfigTest.watch === false) {
-          viteConfigTest.run = true
+          ;(viteConfigTest as any).run = true
         }
 
         if ('alias' in viteConfigTest) {
@@ -264,6 +255,13 @@ export async function VitestPlugin(
           enumerable: false,
           configurable: true,
         })
+
+        const originalName = viteConfigTest.name
+        if (viteConfigTest.browser?.enabled && viteConfigTest.browser?.instances) {
+          viteConfigTest.browser.instances.forEach((instance) => {
+            instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
+          })
+        }
       },
       configureServer: {
         // runs after vite:import-analysis as it relies on `server` instance on Vite 5

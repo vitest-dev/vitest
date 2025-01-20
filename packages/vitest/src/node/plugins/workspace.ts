@@ -64,8 +64,13 @@ export function WorkspaceVitestPlugin(
         }
 
         const workspaceNames = [name]
-        if (viteConfig.test?.browser?.enabled && viteConfig.test?.browser?.instances) {
-          viteConfig.test.browser.instances.forEach((instance) => {
+        if (viteConfig.test?.browser?.enabled) {
+          if (viteConfig.test.browser.name) {
+            const browser = viteConfig.test.browser.name
+            workspaceNames.push(name ? `${name} (${browser})` : browser)
+          }
+
+          viteConfig.test.browser.instances?.forEach((instance) => {
             instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
             workspaceNames.push(instance.name)
           })
