@@ -175,3 +175,25 @@ test('inherits browser options', async () => {
     },
   ])
 })
+
+test('coverage provider v8 works correctly in browser mode if instances are filtered', async () => {
+  const { projects } = await vitest({
+    project: 'chromium',
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+    },
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+        { browser: 'webkit' },
+      ],
+    },
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'chromium',
+  ])
+})
