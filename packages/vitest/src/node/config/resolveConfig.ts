@@ -898,8 +898,8 @@ function isPlaywrightChromiumOnly(config: ResolvedConfig) {
   if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
     return false
   }
-  if (browser.name && browser.name !== 'chromium') {
-    return false
+  if (browser.name) {
+    return browser.name === 'chromium'
   }
   if (!browser.instances) {
     return false
