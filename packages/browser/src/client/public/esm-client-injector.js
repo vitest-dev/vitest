@@ -38,6 +38,7 @@ window.__vitest_browser_runner__ = {
   config: { __VITEST_CONFIG__ },
   files: { __VITEST_FILES__ },
 }
+window.VITEST_API_TOKEN = { __VITEST_API_TOKEN__ }
 
 const config = __vitest_browser_runner__.config
 

@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
@@ -25,6 +26,26 @@ export default (ctx: Vitest): Plugin => {
         },
       }))
       const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
+      const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
+
+      // serve index.html with api token
+      server.middlewares.use((req, res, next) => {
+        if (req.url) {
+          const url = new URL(req.url, 'http://localhost')
+          if (url.pathname === base) {
+            const html = clientIndexHtml.replace(
+              '<!-- !LOAD_METADATA! -->',
+              `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
+            )
+            res.setHeader('content-type', 'text/html')
+            res.write(html)
+            res.end()
+            return
+          }
+        }
+        next()
+      })
+
       server.middlewares.use(base, sirv(clientDist, {
         single: true,
         dev: true,

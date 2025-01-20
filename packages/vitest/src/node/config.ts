@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'picocolors'
@@ -408,7 +409,8 @@ export function resolveConfig(
   }
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiServerConfig(options)
+  const api = resolveApiServerConfig(options)
+  resolved.api = { ...api, token: crypto.randomUUID() }
 
   if (options.related)
     resolved.related = toArray(options.related).map(file => resolve(resolved.root, file))

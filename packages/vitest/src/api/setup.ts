@@ -16,6 +16,7 @@ import { getModuleGraph, isPrimitive, noop, stringifyReplace } from '../utils'
 import type { WorkspaceProject } from '../node/workspace'
 import { parseErrorStacktrace } from '../utils/source-map'
 import type { TransformResultWithSource, WebSocketEvents, WebSocketHandlers } from './types'
+import { isWebsocketRequestAllowed } from './hostCheck'
 
 export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: ViteDevServer) {
   const ctx = 'ctx' in vitestOrWorkspace ? vitestOrWorkspace.ctx : vitestOrWorkspace
@@ -33,6 +34,11 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
     const { pathname } = new URL(request.url, 'http://localhost')
     if (pathname !== API_PATH)
       return
+
+    if (!isWebsocketRequestAllowed(ctx.config, server.config, request)) {
+      socket.destroy()
+      return
+    }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)

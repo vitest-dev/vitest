@@ -40,6 +40,7 @@ const apiConfig: (port: number) => CLIOptions<ApiConfig> = (port: number) => ({
     description: 'Set to true to exit if port is already in use, instead of automatically trying the next available port',
   },
   middlewareMode: null,
+  allowedHosts: null,
 })
 
 const poolThreadsCommands: CLIOptions<ThreadsOptions & WorkerContextOptions> = {
