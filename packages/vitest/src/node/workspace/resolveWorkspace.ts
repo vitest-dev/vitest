@@ -83,6 +83,8 @@ export async function resolveWorkspace(
       if (
         !vitest.config.project.length
         // only include the root project if it wasn't filtered out
+        // TODO: browser.instances might not be filtered out -- test it out
+        // workspaces: [{ extends: true }]
         || vitest.config.project.some(pattern => pattern.test(vitest.config.name || ''))
       ) {
         projectPromises.push(Promise.resolve(vitest._ensureRootProject()))

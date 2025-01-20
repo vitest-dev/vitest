@@ -198,7 +198,7 @@ test('coverage provider v8 works correctly in browser mode if instances are filt
   ])
 })
 
-test.only('filter for the global browser project includes all browser instances', async () => {
+test('filter for the global browser project includes all browser instances', async () => {
   const { projects } = await vitest({
     project: 'myproject',
     workspace: [
