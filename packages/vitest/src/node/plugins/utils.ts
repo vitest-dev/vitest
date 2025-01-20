@@ -6,6 +6,7 @@ import type {
 import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
+import * as vite from 'vite'
 import { rootDir } from '../../paths'
 import { VitestCache } from '../cache'
 
@@ -146,4 +147,13 @@ export function resolveFsAllow(
     searchForWorkspaceRoot(projectRoot),
     rootDir,
   ]
+}
+
+export function getDefaultServerConditions(): string[] {
+  const viteMajor = Number(viteVersion.split('.')[0])
+  if (viteMajor >= 6) {
+    const conditions: string[] = (vite as any).defaultServerConditions
+    return conditions.filter(c => c !== 'module')
+  }
+  return ['node']
 }

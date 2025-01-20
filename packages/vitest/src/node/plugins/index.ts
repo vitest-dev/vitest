@@ -20,6 +20,7 @@ import { VitestOptimizer } from './optimizer'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
+  getDefaultServerConditions,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
@@ -73,6 +74,8 @@ export async function VitestPlugin(
           open = testConfig.uiBase ?? '/__vitest__/'
         }
 
+        const conditions = getDefaultServerConditions()
+
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
           esbuild:
@@ -90,7 +93,7 @@ export async function VitestPlugin(
             // setting this option can bypass that and fallback to cjs version
             mainFields: [],
             alias: testConfig.alias,
-            conditions: ['node'],
+            conditions,
           },
           server: {
             ...testConfig.api,
@@ -119,7 +122,7 @@ export async function VitestPlugin(
                 // by default Vite resolves `module` field, which not always a native ESM module
                 // setting this option can bypass that and fallback to cjs version
                 mainFields: [],
-                conditions: ['node'],
+                conditions,
               },
             },
           },
