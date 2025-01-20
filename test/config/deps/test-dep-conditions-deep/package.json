@@ -1,5 +1,5 @@
 {
-  "name": "@vitest/test-dep-conditions",
+  "name": "@vitest/test-dep-conditions-deep",
   "type": "module",
   "private": true,
   "exports": {
@@ -8,8 +8,5 @@
       "node": "./node.js",
       "default": "./default.js"
     }
-  },
-  "dependencies": {
-    "@vitest/test-dep-conditions-deep": "file:../test-dep-conditions-deep"
   }
 }
