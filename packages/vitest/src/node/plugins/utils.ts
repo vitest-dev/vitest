@@ -151,9 +151,11 @@ export function resolveFsAllow(
 
 export function getDefaultResolveOptions(): vite.ResolveOptions {
   return {
-    // by default Vite resolves `module` field, which not always a native ESM module
+    // by default Vite resolves `module` field, which is not always a native ESM module
     // setting this option can bypass that and fallback to cjs version
     mainFields: [],
+    // same for `module` condition and, before Vite 6, it was not even possible
+    // to exclude `module` condition.
     conditions: getDefaultServerConditions(),
   }
 }
