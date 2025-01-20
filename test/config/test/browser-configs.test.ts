@@ -197,3 +197,45 @@ test('coverage provider v8 works correctly in browser mode if instances are filt
     'chromium',
   ])
 })
+
+test('can enable browser-cli options for multi-project workspace', async () => {
+  const { projects } = await vitest(
+    {
+      browser: {
+        enabled: true,
+        headless: true,
+      },
+    },
+    {
+      workspace: [
+        {
+          test: {
+            name: 'unit',
+          },
+        },
+        {
+          test: {
+            browser: {
+              enabled: true,
+              provider: 'playwright',
+              instances: [
+                { browser: 'chromium', name: 'browser' },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  )
+  expect(projects.map(p => p.name)).toEqual([
+    'unit',
+    'browser',
+  ])
+
+  // unit config
+  expect(projects[0].config.browser.enabled).toBe(false)
+
+  // browser config
+  expect(projects[1].config.browser.enabled).toBe(true)
+  expect(projects[1].config.browser.headless).toBe(true)
+})
