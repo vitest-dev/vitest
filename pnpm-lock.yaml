@@ -4122,8 +4122,8 @@ packages:
   '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs':
     resolution: {directory: test/core/deps/dep-cjs, type: directory}
 
-  '@vitest/test-dep-conditions-deep@file:test/config/deps/test-dep-conditions-deep':
-    resolution: {directory: test/config/deps/test-dep-conditions-deep, type: directory}
+  '@vitest/test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect':
+    resolution: {directory: test/config/deps/test-dep-conditions-indirect, type: directory}
 
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
@@ -12773,11 +12773,11 @@ snapshots:
 
   '@vitest/test-dep-cjs@file:test/core/deps/dep-cjs': {}
 
-  '@vitest/test-dep-conditions-deep@file:test/config/deps/test-dep-conditions-deep': {}
+  '@vitest/test-dep-conditions-indirect@file:test/config/deps/test-dep-conditions-indirect': {}
 
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     dependencies:
-      '@vitest/test-dep-conditions-deep': file:test/config/deps/test-dep-conditions-deep
+      '@vitest/test-dep-conditions-indirect': file:test/config/deps/test-dep-conditions-indirect
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 

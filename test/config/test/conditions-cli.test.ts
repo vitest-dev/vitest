@@ -61,30 +61,35 @@ test('correctly imports external dependencies with a custom condition', async ()
   expect(stderr).toBe('')
 })
 
-test('module or node (inline)', async () => {
+test('conditions (external)', async () => {
   const { stderr } = await runVitest({
-    root: 'fixtures/default-conditions',
-    server: {
-      deps: {
-        inline: ['@vitest/test-dep-conditions'],
-      },
-    },
+    root: 'fixtures/conditions',
   })
 
   expect(stderr).toBe('')
 })
 
-test('module or node (external)', async () => {
-  const { stderr } = await runVitest({
-    root: 'fixtures/default-conditions',
-  })
-
-  expect(stderr).toBe('')
-})
-
-// test('module or node (external transitive)', async () => {
+// test('conditions (inline direct)', async () => {
 //   const { stderr } = await runVitest({
-//     root: 'fixtures/default-conditions',
+//     root: 'fixtures/conditions',
+//     server: {
+//       deps: {
+//         inline: ['@vitest/test-dep-conditions'],
+//       },
+//     },
+//   })
+
+//   expect(stderr).toBe('')
+// })
+
+// test('conditions (inline indirect)', async () => {
+//   const { stderr } = await runVitest({
+//     root: 'fixtures/conditions',
+//     server: {
+//       deps: {
+//         inline: ['@vitest/test-dep-conditions', '@vitest/test-dep-conditions-indirect'],
+//       },
+//     },
 //   })
 
 //   expect(stderr).toBe('')
