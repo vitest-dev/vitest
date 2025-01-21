@@ -54,6 +54,13 @@ export function withTimeout<T extends (...args: any[]) => any>(
 
       function resolve(result: unknown) {
         clearTimeout(timer)
+        // if test/hook took too long in microtask, setTimeout won't be triggered,
+        // but we still need to fail the test, see
+        // https://github.com/vitest-dev/vitest/issues/2920
+        if (now() - startTime >= timeout) {
+          reject_(new Error(makeTimeoutMsg(isHook, timeout)))
+          return
+        }
         resolve_(result)
       }
 
@@ -68,20 +75,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
         // the result is a thenable, we don't wrap this in Promise.resolve
         // to avoid creating new promises
         if (typeof result === 'object' && result != null && typeof result.then === 'function') {
-          result.then(
-            (result) => {
-              // if sync test/hook took too long, setTimeout won't be triggered,
-              // but we still need to fail the test, see
-              // https://github.com/vitest-dev/vitest/issues/2920
-              if (now() - startTime >= timeout) {
-                reject(new Error(makeTimeoutMsg(isHook, timeout)))
-              }
-              else {
-                resolve(result)
-              }
-            },
-            reject,
-          )
+          result.then(resolve, reject)
         }
         else {
           resolve(result)
