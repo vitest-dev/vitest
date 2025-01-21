@@ -39,7 +39,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
-import { resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
+import { getDefaultTestProject, resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -401,8 +401,15 @@ export class Vitest {
 
     this._workspaceConfigPath = workspaceConfigPath
 
+    // user doesn't have a workspace config, return default project
     if (!workspaceConfigPath) {
-      return resolveBrowserWorkspace(this, new Set(), [this._ensureRootProject()])
+      // user can filter projects with --project flag, `getDefaultTestProject`
+      // return the project only if it matches the filter
+      const project = getDefaultTestProject(this)
+      if (!project) {
+        return []
+      }
+      return resolveBrowserWorkspace(this, new Set(), [project])
     }
 
     const workspaceModule = await this.import<{

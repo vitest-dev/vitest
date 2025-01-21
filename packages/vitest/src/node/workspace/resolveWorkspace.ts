@@ -80,14 +80,9 @@ export async function resolveWorkspace(
   for (const path of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
     if (vitest.vite.config.configFile === path) {
-      if (
-        !vitest.config.project.length
-        // only include the root project if it wasn't filtered out
-        // TODO: browser.instances might not be filtered out -- test it out
-        // workspaces: [{ extends: true }]
-        || vitest.config.project.some(pattern => pattern.test(vitest.config.name || ''))
-      ) {
-        projectPromises.push(Promise.resolve(vitest._ensureRootProject()))
+      const project = getDefaultTestProject(vitest)
+      if (project) {
+        projectPromises.push(Promise.resolve(project))
       }
       continue
     }
@@ -106,7 +101,7 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return resolveBrowserWorkspace(vitest, new Set(), [vitest._ensureRootProject()])
+    throw new Error(`No projects were found. Make sure your configuration is correct. The workspace: ${JSON.stringify(workspaceDefinition)}`)
   }
 
   const resolvedProjectsPromises = await Promise.allSettled(projectPromises)
@@ -442,4 +437,28 @@ async function resolveDirectoryConfig(directory: string) {
     return resolve(directory, configFile)
   }
   return null
+}
+
+export function getDefaultTestProject(vitest: Vitest): TestProject | null {
+  const filter = vitest.config.project
+  const project = vitest._ensureRootProject()
+  if (!filter.length) {
+    return project
+  }
+  const hasProjects = getPotentialProjectNames(project).some(p => filter.some(pattern => pattern.test(p)))
+  if (hasProjects) {
+    return project
+  }
+  return null
+}
+
+function getPotentialProjectNames(project: TestProject) {
+  const names = [project.name]
+  if (project.config.browser.instances) {
+    names.push(...project.config.browser.instances.map(i => i.name!))
+  }
+  else if (project.config.browser.name) {
+    names.push(project.config.browser.name)
+  }
+  return names
 }
