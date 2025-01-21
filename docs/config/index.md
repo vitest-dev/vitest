@@ -1755,7 +1755,7 @@ Open Vitest UI (WIP)
 
 Listen to port and serve API. When set to true, the default port is 51204
 
-### api.allowedHosts
+#### api.allowedHosts
 
 - **Type:** `string[] | true`
 - **Default:** `[]`
