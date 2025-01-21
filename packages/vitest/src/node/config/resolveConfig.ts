@@ -21,6 +21,7 @@ import {
   extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { wildcardPatternToRegExp } from '../../utils/base'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { VitestCache } from '../cache'
@@ -235,24 +236,28 @@ export function resolveConfig(
 
   if (browser.enabled) {
     if (!browser.name && !browser.instances) {
-      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
+      // CLI can enable `--browser.*` flag to change config of workspace projects
+      // the same flag will be applied to the root config that doesn't have to have "name" or "instances"
+      // in this case we just disable the browser mode
+      browser.enabled = false
     }
+    else {
+      const instances = browser.instances
+      if (browser.name && browser.instances) {
+        // --browser=chromium filters configs to a single one
+        browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
+      }
 
-    const configs = browser.instances
-    if (browser.name && browser.instances) {
-      // --browser=chromium filters configs to a single one
-      browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
-    }
-
-    if (browser.instances && !browser.instances.length) {
-      throw new Error([
-        `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
-        browser.name && configs?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${configs.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
-      ].join(''))
+      if (browser.instances && !browser.instances.length) {
+        throw new Error([
+          `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+          browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
+        ].join(''))
+      }
     }
   }
 
-  const playwrightChromiumOnly = browser.provider === 'playwright' && (browser.name === 'chromium' || browser.instances?.every(i => i.browser === 'chromium'))
+  const playwrightChromiumOnly = isPlaywrightChromiumOnly(resolved)
 
   // Browser-mode "Playwright + Chromium" only features:
   if (browser.enabled && !playwrightChromiumOnly) {
@@ -892,4 +897,29 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
   }
 
   return resolvedReporters
+}
+
+function isPlaywrightChromiumOnly(config: ResolvedConfig) {
+  const browser = config.browser
+  if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
+    return false
+  }
+  if (browser.name) {
+    return browser.name === 'chromium'
+  }
+  if (!browser.instances) {
+    return false
+  }
+  const filteredProjects = toArray(config.project).map(p => wildcardPatternToRegExp(p))
+  for (const instance of browser.instances) {
+    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
+    // browser config is filtered out
+    if (filteredProjects.length && !filteredProjects.every(p => p.test(name))) {
+      continue
+    }
+    if (instance.browser !== 'chromium') {
+      return false
+    }
+  }
+  return true
 }
