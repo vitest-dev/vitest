@@ -1,6 +1,7 @@
 import type { IncomingMessage } from 'node:http'
 import type { ResolvedConfig } from 'vite'
 import type { ResolvedConfig as VitestResolvedConfig } from '../node/types/config'
+import crypto from 'node:crypto'
 import net from 'node:net'
 
 // based on
@@ -38,8 +39,11 @@ function getAdditionalAllowedHosts(
   // allow server origin by default as that indicates that the user is
   // expecting Vite to respond on that host
   if (resolvedServerOptions.origin) {
-    const serverOriginUrl = new URL(resolvedServerOptions.origin)
-    list.push(serverOriginUrl.hostname)
+    try {
+      const serverOriginUrl = new URL(resolvedServerOptions.origin)
+      list.push(serverOriginUrl.hostname)
+    }
+    catch {}
   }
 
   return list
@@ -135,11 +139,22 @@ export function isWebsocketRequestAllowed(vitestConfig: VitestResolvedConfig, vi
   const url = new URL(req.url ?? '', 'http://localhost')
 
   // validate token. token is injected in ui/tester/orchestrator html, which is cross origin proteced.
-  if (url.searchParams.get('token') !== vitestConfig.api.token) {
+  try {
+    const token = url.searchParams.get('token')
+    if (!token || !crypto.timingSafeEqual(
+      Buffer.from(token),
+      Buffer.from(vitestConfig.api.token),
+    )) {
+      return false
+    }
+  }
+  catch {
+    // an error is thrown when the length is incorrect
     return false
   }
 
   // host check to prevent DNS rebinding attacks
+  // (websocket upgrade request cannot be http2 even on `wss`, so `host` header is guaranteed.)
   if (!req.headers.host || !isHostAllowed(vitestConfig, viteConfig, req.headers.host)) {
     return false
   }
