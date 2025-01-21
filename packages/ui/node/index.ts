@@ -64,7 +64,8 @@ export default (ctx: Vitest): Plugin => {
                 '<!-- !LOAD_METADATA! -->',
                 `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
               )
-              res.setHeader('content-type', 'text/html')
+              res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+              res.setHeader('Content-Type', 'text/html; charset=utf-8')
               res.write(html)
               res.end()
               return
