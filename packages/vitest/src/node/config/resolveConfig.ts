@@ -266,7 +266,7 @@ export function resolveConfig(
       browser: {
         provider: browser.provider,
         name: browser.name,
-        instances: browser.instances,
+        instances: browser.instances?.map(i => ({ browser: i.browser })),
       },
     }
 
