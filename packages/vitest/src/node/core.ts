@@ -276,15 +276,9 @@ export class Vitest {
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
-    // const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
-    // if (filters.length > 0) {
-    //   this.projects = this.projects.filter(p =>
-    //     filters.some(pattern => pattern.test(p.name)),
-    //   )
     if (!this.projects.length) {
       throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
     }
-    // }
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
     }
@@ -404,7 +398,7 @@ export class Vitest {
     // user doesn't have a workspace config, return default project
     if (!workspaceConfigPath) {
       // user can filter projects with --project flag, `getDefaultTestProject`
-      // return the project only if it matches the filter
+      // returns the project only if it matches the filter
       const project = getDefaultTestProject(this)
       if (!project) {
         return []

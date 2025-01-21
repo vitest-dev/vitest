@@ -101,7 +101,13 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    throw new Error(`No projects were found. Make sure your configuration is correct. The workspace: ${JSON.stringify(workspaceDefinition)}`)
+    throw new Error(
+      [
+        'No projects were found. Make sure your configuration is correct. ',
+        vitest.config.project.length ? `The filter matched no projects: ${vitest.config.project.map(p => p.toString()).join(', ')}. ` : '',
+        `The workspace: ${JSON.stringify(workspaceDefinition, null, 4)}.`,
+      ].join(''),
+    )
   }
 
   const resolvedProjectsPromises = await Promise.allSettled(projectPromises)
@@ -445,7 +451,10 @@ export function getDefaultTestProject(vitest: Vitest): TestProject | null {
   if (!filter.length) {
     return project
   }
-  const hasProjects = getPotentialProjectNames(project).some(p => filter.some(pattern => pattern.test(p)))
+  // check for the project name and browser names
+  const hasProjects = getPotentialProjectNames(project).some(p =>
+    filter.some(pattern => pattern.test(p)),
+  )
   if (hasProjects) {
     return project
   }
