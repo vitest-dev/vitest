@@ -129,9 +129,10 @@ expect(() => {
 
 See PR for more details: [#5876](https://github.com/vitest-dev/vitest/pull/5876).
 
-### `module` export condition is not included by default on Vite 6
+### `module` condition export is not resolved by default on Vite 6
 
-TODO
+Vite 6 allows more flexible [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) options
+and Vitest configures it to exclude `module` conditional export to be resolved by default.
 
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
