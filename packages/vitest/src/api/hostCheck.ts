@@ -4,7 +4,7 @@ import type { ResolvedConfig as VitestResolvedConfig } from '../node/types/confi
 import net from 'node:net'
 
 // based on
-// https://github.com/vitejs/vite-ghsa-vg6x-rcgg-rjx6/pull/1
+// https://github.com/vitejs/vite/blob/9654348258eaa0883171533a2b74b4e2825f5fb6/packages/vite/src/node/server/middlewares/hostCheck.ts
 
 const isFileOrExtensionProtocolRE = /^(?:file|.+-extension):/i
 
