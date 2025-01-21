@@ -69,28 +69,28 @@ test('conditions (external)', async () => {
   expect(stderr).toBe('')
 })
 
-// test('conditions (inline direct)', async () => {
-//   const { stderr } = await runVitest({
-//     root: 'fixtures/conditions',
-//     server: {
-//       deps: {
-//         inline: ['@vitest/test-dep-conditions'],
-//       },
-//     },
-//   })
+test('conditions (inline direct)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+    server: {
+      deps: {
+        inline: ['@vitest/test-dep-conditions'],
+      },
+    },
+  })
 
-//   expect(stderr).toBe('')
-// })
+  expect(stderr).toBe('')
+})
 
-// test('conditions (inline indirect)', async () => {
-//   const { stderr } = await runVitest({
-//     root: 'fixtures/conditions',
-//     server: {
-//       deps: {
-//         inline: ['@vitest/test-dep-conditions', '@vitest/test-dep-conditions-indirect'],
-//       },
-//     },
-//   })
+test('conditions (inline indirect)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+    server: {
+      deps: {
+        inline: ['@vitest/test-dep-conditions', '@vitest/test-dep-conditions-indirect'],
+      },
+    },
+  })
 
-//   expect(stderr).toBe('')
-// })
+  expect(stderr).toBe('')
+})

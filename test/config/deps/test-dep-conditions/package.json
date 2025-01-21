@@ -19,6 +19,7 @@
       "production": "./true.js",
       "default": "./false.js"
     },
+    "./inline": "./inline.js",
     "./indirect": "./indirect.js"
   },
   "dependencies": {

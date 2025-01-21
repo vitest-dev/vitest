@@ -3,11 +3,11 @@ import conditionModule from '@vitest/test-dep-conditions/module';
 import conditionNode from '@vitest/test-dep-conditions/node';
 import conditionDevelopment from '@vitest/test-dep-conditions/development';
 import conditionProduction from '@vitest/test-dep-conditions/production';
+import inline from '@vitest/test-dep-conditions/inline';
 import indirect from '@vitest/test-dep-conditions/indirect';
 
-// TODO: test on Vite 6
-// import { viteVersion } from 'vitest/node'
-// const viteMajor = Number(viteVersion.split('.')[0])
+import { viteVersion } from 'vitest/node'
+const viteMajor = Number(viteVersion.split('.')[0])
 
 test('conditions', () => {
   expect({
@@ -19,12 +19,12 @@ test('conditions', () => {
   }).toEqual(
     {
       "conditionDevelopment": true,
-      "conditionModule": true,
+      "conditionModule": viteMajor <= 5,
       "conditionNode": true,
       "conditionProduction": false,
       "indirect": {
         "conditionDevelopment": true,
-        "conditionModule": false,
+        "conditionModule": viteMajor <= 5 && inline,
         "conditionNode": true,
         "conditionProductioin": false,
       },
