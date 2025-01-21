@@ -3,6 +3,10 @@
   "type": "module",
   "private": true,
   "exports": {
+    "./custom": {
+      "custom": "./true.js",
+      "default": "./false.js"
+    },
     "./module": {
       "module": "./true.js",
       "default": "./false.js"
