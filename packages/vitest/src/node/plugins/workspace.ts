@@ -63,20 +63,26 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        // keep project names to potentially filter it out
         const workspaceNames = [name]
         if (viteConfig.test?.browser?.enabled) {
           if (viteConfig.test.browser.name) {
             const browser = viteConfig.test.browser.name
+            // vitest injects `instances` in this case later on
             workspaceNames.push(name ? `${name} (${browser})` : browser)
           }
 
           viteConfig.test.browser.instances?.forEach((instance) => {
+            // every instance is a potential project
             instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
             workspaceNames.push(instance.name)
           })
         }
 
         const filters = project.vitest.config.project
+        // if there is `--project=...` filter, check if any of the potential projects match
+        // if projects don't match, we ignore the test project altogether
+        // if some of them match, they will later be filtered again by `resolveWorkspace`
         if (filters.length) {
           const filteredNames = workspaceNames.filter((name) => {
             return filters.some(n => n.test(name))
