@@ -175,7 +175,7 @@ Use either:
   }
 })
 
-test.only('v8 coverage provider throws when not playwright + chromium (browser.instances)', async () => {
+test('v8 coverage provider throws when not playwright + chromium (browser.instances)', async () => {
   for (const { provider, name } of browsers) {
     if (provider === 'playwright' && name === 'chromium') {
       continue
