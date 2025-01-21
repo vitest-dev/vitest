@@ -1,8 +1,8 @@
 import type { IncomingMessage } from 'node:http'
-import type { ResolvedConfig } from 'vite'
-import type { ResolvedConfig as VitestResolvedConfig } from '../node/types/config'
 import crypto from 'node:crypto'
 import net from 'node:net'
+import type { ResolvedConfig } from 'vite'
+import type { ResolvedConfig as VitestResolvedConfig } from '../node/types/config'
 
 // based on
 // https://github.com/vitejs/vite/blob/9654348258eaa0883171533a2b74b4e2825f5fb6/packages/vite/src/node/server/middlewares/hostCheck.ts
@@ -20,21 +20,20 @@ function getAdditionalAllowedHosts(
   if (
     typeof resolvedServerOptions.host === 'string'
     && resolvedServerOptions.host
-  ) {
+  )
     list.push(resolvedServerOptions.host)
-  }
+
   if (
     typeof resolvedServerOptions.hmr === 'object'
     && resolvedServerOptions.hmr.host
-  ) {
+  )
     list.push(resolvedServerOptions.hmr.host)
-  }
+
   if (
     typeof resolvedPreviewOptions.host === 'string'
     && resolvedPreviewOptions.host
-  ) {
+  )
     list.push(resolvedPreviewOptions.host)
-  }
 
   // allow server origin by default as that indicates that the user is
   // expecting Vite to respond on that host
@@ -56,9 +55,8 @@ function isHostAllowedWithoutCache(
   additionalAllowedHosts: string[],
   host: string,
 ): boolean {
-  if (isFileOrExtensionProtocolRE.test(host)) {
+  if (isFileOrExtensionProtocolRE.test(host))
     return true
-  }
 
   // We don't care about malformed Host headers,
   // because we only need to consider browser requests.
@@ -70,9 +68,9 @@ function isHostAllowedWithoutCache(
   // IPv6
   if (trimmedHost[0] === '[') {
     const endIpv6 = trimmedHost.indexOf(']')
-    if (endIpv6 < 0) {
+    if (endIpv6 < 0)
       return false
-    }
+
     // DNS rebinding attacks does not happen with IP addresses
     return net.isIP(trimmedHost.slice(1, endIpv6)) === 6
   }
@@ -83,35 +81,30 @@ function isHostAllowedWithoutCache(
     = colonPos === -1 ? trimmedHost : trimmedHost.slice(0, colonPos)
 
   // DNS rebinding attacks does not happen with IP addresses
-  if (net.isIP(hostname) === 4) {
+  if (net.isIP(hostname) === 4)
     return true
-  }
 
   // allow localhost and .localhost by default as they always resolve to the loopback address
   // https://datatracker.ietf.org/doc/html/rfc6761#section-6.3
-  if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
+  if (hostname === 'localhost' || hostname.endsWith('.localhost'))
     return true
-  }
 
   for (const additionalAllowedHost of additionalAllowedHosts) {
-    if (additionalAllowedHost === hostname) {
+    if (additionalAllowedHost === hostname)
       return true
-    }
   }
 
   for (const allowedHost of allowedHosts) {
-    if (allowedHost === hostname) {
+    if (allowedHost === hostname)
       return true
-    }
 
     // allow all subdomains of it
     // e.g. `.foo.example` will allow `foo.example`, `*.foo.example`, `*.*.foo.example`, etc
     if (
       allowedHost[0] === '.'
       && (allowedHost.slice(1) === hostname || hostname.endsWith(allowedHost))
-    ) {
+    )
       return true
-    }
   }
 
   return false
@@ -124,9 +117,9 @@ function isHostAllowedWithoutCache(
  */
 function isHostAllowed(vitestConfig: VitestResolvedConfig, viteConfig: ResolvedConfig, host: string): boolean {
   const apiAllowedHosts = vitestConfig.api.allowedHosts ?? []
-  if (apiAllowedHosts === true) {
+  if (apiAllowedHosts === true)
     return true
-  }
+
   // Vitest only validates websocket upgrade request, so caching won't probably matter.
   return isHostAllowedWithoutCache(
     apiAllowedHosts,
@@ -144,9 +137,8 @@ export function isWebsocketRequestAllowed(vitestConfig: VitestResolvedConfig, vi
     if (!token || !crypto.timingSafeEqual(
       Buffer.from(token),
       Buffer.from(vitestConfig.api.token),
-    )) {
+    ))
       return false
-    }
   }
   catch {
     // an error is thrown when the length is incorrect
@@ -155,9 +147,8 @@ export function isWebsocketRequestAllowed(vitestConfig: VitestResolvedConfig, vi
 
   // host check to prevent DNS rebinding attacks
   // (websocket upgrade request cannot be http2 even on `wss`, so `host` header is guaranteed.)
-  if (!req.headers.host || !isHostAllowed(vitestConfig, viteConfig, req.headers.host)) {
+  if (!req.headers.host || !isHostAllowed(vitestConfig, viteConfig, req.headers.host))
     return false
-  }
 
   return true
 }
