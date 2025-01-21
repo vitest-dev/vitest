@@ -53,14 +53,14 @@ export function withTimeout<T extends (...args: any[]) => any>(
       timer.unref?.()
 
       function resolve(result: unknown) {
+        clearTimeout(timer)
         // if test/hook took too long in microtask, setTimeout won't be triggered,
         // but we still need to fail the test, see
         // https://github.com/vitest-dev/vitest/issues/2920
         if (now() - startTime >= timeout) {
-          reject(new Error(makeTimeoutMsg(isHook, timeout)))
+          reject_(new Error(makeTimeoutMsg(isHook, timeout)))
           return
         }
-        clearTimeout(timer)
         resolve_(result)
       }
 
