@@ -174,11 +174,11 @@ export async function resolveBrowserWorkspace(
     }
     const instances = project.config.browser.instances || []
     if (instances.length === 0) {
-      const name = project.config.browser.name
+      const browser = project.config.browser.name
       // browser.name should be defined, otherwise the config fails in "resolveConfig"
       instances.push({
-        browser: name,
-        name: project.name ? `${project.name} (${name})` : name,
+        browser,
+        name: project.name ? `${project.name} (${browser})` : browser,
       })
       console.warn(
         withLabel(
@@ -196,15 +196,15 @@ export async function resolveBrowserWorkspace(
     }
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances
-    const filteredConfigs = !filters.length || filters.some(pattern => pattern.test(originalName))
+    const filteredInstances = !filters.length || filters.some(pattern => pattern.test(originalName))
       ? instances
-      : instances.filter((config) => {
-        const newName = config.name! // name is set in "workspace" plugin
+      : instances.filter((instance) => {
+        const newName = instance.name! // name is set in "workspace" plugin
         return filters.some(pattern => pattern.test(newName))
       })
 
     // every project was filtered out
-    if (!filteredConfigs.length) {
+    if (!filteredInstances.length) {
       removeProjects.add(project)
       return
     }
@@ -215,7 +215,7 @@ export async function resolveBrowserWorkspace(
       )
     }
 
-    filteredConfigs.forEach((config, index) => {
+    filteredInstances.forEach((config, index) => {
       const browser = config.browser
       if (!browser) {
         const nth = index + 1
@@ -239,6 +239,7 @@ export async function resolveBrowserWorkspace(
       }
       names.add(name)
       const clonedConfig = cloneConfig(project, config)
+      clonedConfig.name = name
       const clone = TestProject._cloneBrowserProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })

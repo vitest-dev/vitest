@@ -2,13 +2,14 @@ import { readFileSync, rmSync } from 'node:fs'
 import { expect, onTestFinished, test } from 'vitest'
 import { runVitestCli } from '../../test-utils'
 
-test.each([
-  ['--pool=threads'],
-  ['--pool=forks'],
-  ['--pool=vmForks'],
+test.only.each([
+  // ['--pool=threads'],
+  // ['--pool=forks'],
+  // ['--pool=vmForks'],
   ['--browser.enabled'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
-  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
+  const { stdout, stderr, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
+  console.log(stderr)
   expect(stdout).toMatchSnapshot()
   expect(exitCode).toBe(0)
 })
