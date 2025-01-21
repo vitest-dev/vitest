@@ -53,6 +53,11 @@ test('correctly imports external dependencies with a custom condition', async ()
     resolve: {
       conditions: ['custom'],
     },
+    ssr: {
+      resolve: {
+        conditions: ['custom'],
+      },
+    },
     define: {
       TEST_CONDITION: '"custom"',
     },

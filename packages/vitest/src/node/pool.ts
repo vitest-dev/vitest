@@ -93,10 +93,13 @@ export function createPool(ctx: Vitest): ProcessPool {
   // in addition to resolve.conditions Vite also adds production/development,
   // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
   const viteMajor = Number(viteVersion.split('.')[0])
-  const potentialConditions = new Set([
-    ...viteMajor >= 6 ? [] : ['production', 'development'],
-    ...ctx.vite.config.resolve.conditions,
-  ])
+  const potentialConditions = new Set(viteMajor >= 6
+    ? (ctx.vite.config.ssr.resolve?.conditions ?? [])
+    : [
+        'production',
+        'development',
+        ...ctx.vite.config.resolve.conditions,
+      ])
   const conditions = [...potentialConditions]
     .filter((condition) => {
       if (condition === 'production') {
