@@ -13,5 +13,5 @@ test.runIf(provider === 'playwright')('fails gracefully when browser crashes', a
     },
   })
 
-  expect(stderr).contains('Page crashed when executing tests')
+  expect(stderr).toContain('Page crashed when executing tests')
 })

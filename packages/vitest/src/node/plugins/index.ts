@@ -262,8 +262,8 @@ export async function VitestPlugin(
         })
 
         const originalName = viteConfigTest.name
-        if (viteConfigTest.browser?.enabled && viteConfigTest.browser?.instances) {
-          viteConfigTest.browser.instances.forEach((instance) => {
+        if (options.browser?.enabled && options.browser?.instances) {
+          options.browser.instances.forEach((instance) => {
             instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
           })
         }

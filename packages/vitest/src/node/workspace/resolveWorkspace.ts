@@ -172,11 +172,11 @@ export async function resolveBrowserWorkspace(
     if (!project.config.browser.enabled) {
       return
     }
-    const configs = project.config.browser.instances || []
-    if (configs.length === 0) {
+    const instances = project.config.browser.instances || []
+    if (instances.length === 0) {
       const name = project.config.browser.name
       // browser.name should be defined, otherwise the config fails in "resolveConfig"
-      configs.push({
+      instances.push({
         browser: name,
         name: project.name ? `${project.name} (${name})` : name,
       })
@@ -197,8 +197,8 @@ export async function resolveBrowserWorkspace(
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances
     const filteredConfigs = !filters.length || filters.some(pattern => pattern.test(originalName))
-      ? configs
-      : configs.filter((config) => {
+      ? instances
+      : instances.filter((config) => {
         const newName = config.name! // name is set in "workspace" plugin
         return filters.some(pattern => pattern.test(newName))
       })
@@ -224,6 +224,10 @@ export async function resolveBrowserWorkspace(
       }
       const name = config.name!
 
+      if (name == null) {
+        throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
+      }
+
       if (names.has(name)) {
         throw new Error(
           [
@@ -235,7 +239,6 @@ export async function resolveBrowserWorkspace(
       }
       names.add(name)
       const clonedConfig = cloneConfig(project, config)
-      clonedConfig.name = name
       const clone = TestProject._cloneBrowserProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })
