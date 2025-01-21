@@ -8,8 +8,7 @@ test.each([
   ['--pool=vmForks'],
   ['--browser.enabled'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
-  const { stdout, stderr, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
-  console.log(stderr)
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
   expect(stdout).toMatchSnapshot()
   expect(exitCode).toBe(0)
 })
