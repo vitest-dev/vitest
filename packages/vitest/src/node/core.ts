@@ -869,10 +869,7 @@ export class Vitest {
       this._projectFilter = pattern
     }
 
-    // TODO: restart the whole vitest server, not just filter projects
-    this.projects = this.resolvedProjects.filter(p => p.name === pattern)
-    const files = (await this.globTestSpecifications()).map(spec => spec.moduleId)
-    await this.rerunFiles(files, 'change project filter', pattern === '')
+    await this.vite.restart()
   }
 
   /** @internal */

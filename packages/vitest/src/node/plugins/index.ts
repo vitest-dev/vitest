@@ -145,6 +145,11 @@ export async function VitestPlugin(
           },
         }
 
+        if (ctx._projectFilter) {
+          // project filter was set by the user, so we need to filter the project
+          options.project = ctx._projectFilter
+        }
+
         config.customLogger = createViteLogger(
           ctx.logger,
           viteConfig.logLevel || 'warn',
