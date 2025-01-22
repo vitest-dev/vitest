@@ -56,7 +56,8 @@ export default (ctx: Vitest): Plugin => {
         const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
 
         // serve index.html with api token
-        server.middlewares.use((req, res, next) => {
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
           if (req.url) {
             const url = new URL(req.url, 'http://localhost')
             if (url.pathname === base) {
