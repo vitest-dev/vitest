@@ -181,7 +181,7 @@ export function registerConsoleShortcuts(
         name: 'filter',
         type: 'text',
         message: 'Input a single project name',
-        initial: ctx._projectFilter || '',
+        initial: ctx.config.project[0] || '',
       },
     ])
     on()

@@ -1017,8 +1017,7 @@ export interface ResolvedConfig
   api?: ApiConfig
   cliExclude?: string[]
 
-  project: RegExp[]
-
+  project: string[]
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   > &

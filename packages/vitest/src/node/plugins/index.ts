@@ -145,9 +145,9 @@ export async function VitestPlugin(
           },
         }
 
-        if (ctx._projectFilter) {
+        if (ctx.configOverride.project) {
           // project filter was set by the user, so we need to filter the project
-          options.project = ctx._projectFilter
+          options.project = ctx.configOverride.project
         }
 
         config.customLogger = createViteLogger(
@@ -261,7 +261,7 @@ export async function VitestPlugin(
           configurable: true,
         })
 
-        const originalName = viteConfigTest.name
+        const originalName = options.name
         if (options.browser?.enabled && options.browser?.instances) {
           options.browser.instances.forEach((instance) => {
             instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser

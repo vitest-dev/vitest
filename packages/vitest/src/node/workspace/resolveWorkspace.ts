@@ -104,7 +104,7 @@ export async function resolveWorkspace(
     throw new Error(
       [
         'No projects were found. Make sure your configuration is correct. ',
-        vitest.config.project.length ? `The filter matched no projects: ${vitest.config.project.map(p => p.toString()).join(', ')}. ` : '',
+        vitest.config.project.length ? `The filter matched no projects: ${vitest.config.project.join(', ')}. ` : '',
         `The workspace: ${JSON.stringify(workspaceDefinition, null, 4)}.`,
       ].join(''),
     )
@@ -130,7 +130,10 @@ export async function resolveWorkspace(
   }
 
   if (errors.length) {
-    throw new AggregateError(errors, 'Failed to initialize projects')
+    throw new AggregateError(
+      errors,
+      'Failed to initialize projects. There were errors during workspace setup. See below for more details.',
+    )
   }
 
   // project names are guaranteed to be unique
@@ -165,7 +168,6 @@ export async function resolveBrowserWorkspace(
   names: Set<string>,
   resolvedProjects: TestProject[],
 ) {
-  const filters = vitest.config.project
   const removeProjects = new Set<TestProject>()
 
   resolvedProjects.forEach((project) => {
@@ -196,12 +198,12 @@ export async function resolveBrowserWorkspace(
     }
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances
-    const filteredInstances = !filters.length || filters.some(pattern => pattern.test(originalName))
+    const filteredInstances = !vitest._projectFilters.length || vitest._matchesProjectFilter(originalName)
       ? instances
       : instances.filter((instance) => {
-        const newName = instance.name! // name is set in "workspace" plugin
-        return filters.some(pattern => pattern.test(newName))
-      })
+          const newName = instance.name! // name is set in "workspace" plugin
+          return vitest._matchesProjectFilter(newName)
+        })
 
     // every project was filtered out
     if (!filteredInstances.length) {
@@ -457,7 +459,7 @@ export function getDefaultTestProject(vitest: Vitest): TestProject | null {
   }
   // check for the project name and browser names
   const hasProjects = getPotentialProjectNames(project).some(p =>
-    filter.some(pattern => pattern.test(p)),
+    vitest._matchesProjectFilter(p),
   )
   if (hasProjects) {
     return project

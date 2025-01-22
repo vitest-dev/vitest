@@ -23,6 +23,7 @@ import { WebSocketReporter } from '../api/setup'
 import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
 import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
+import { wildcardPatternToRegExp } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
@@ -101,7 +102,7 @@ export class Vitest {
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
   /** @internal */ _testRun: TestRun = undefined!
-  /** @internal */ _projectFilter: string | undefined
+  /** @internal */ _projectFilters: RegExp[] = []
 
   private isFirstRun = true
   private restartsCount = 0
@@ -215,9 +216,11 @@ export class Vitest {
     this.specifications.clearCache()
     this._onUserTestsRerun = []
 
-    const resolved = resolveConfig(this.mode, options, server.config, this.logger)
-
+    this._projectFilters = toArray(options.project || []).map(project => wildcardPatternToRegExp(project))
     this._vite = server
+
+    const resolved = resolveConfig(this, options, server.config)
+
     this._config = resolved
     this._state = new StateManager()
     this._cache = new VitestCache(this.version)
@@ -863,10 +866,12 @@ export class Vitest {
   /** @internal */
   async changeProjectName(pattern: string): Promise<void> {
     if (pattern === '') {
-      delete this._projectFilter
+      this.configOverride.project = undefined
+      this._projectFilters = []
     }
     else {
-      this._projectFilter = pattern
+      this.configOverride.project = [pattern]
+      this._projectFilters = [wildcardPatternToRegExp(pattern)]
     }
 
     await this.vite.restart()
@@ -1249,6 +1254,18 @@ export class Vitest {
   /** @internal */
   onAfterSetServer(fn: OnServerRestartHandler): void {
     this._onSetServer.push(fn)
+  }
+
+  /**
+   * Check if the project with a given name should be included.
+   * @internal
+   */
+  _matchesProjectFilter(name: string): boolean {
+    // no filters applied, any project can be included
+    if (!this._projectFilters.length) {
+      return true
+    }
+    return this._projectFilters.some(filter => filter.test(name))
   }
 }
 
