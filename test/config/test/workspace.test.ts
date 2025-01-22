@@ -151,7 +151,7 @@ it('fails if workspace is filtered by the project', async () => {
       './vitest.config.js',
     ],
   })
-  expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: /^non-existing$/i. The workspace: [
+  expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The workspace: [
     "./vitest.config.js"
 ].`)
 })
