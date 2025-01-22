@@ -33,7 +33,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
       return
     }
 
-    if (!isWebsocketRequestAllowed(vitest.config, vite.config, request)) {
+    if (!isWebsocketRequestAllowed(vitest.config, request)) {
       socket.destroy()
       return
     }

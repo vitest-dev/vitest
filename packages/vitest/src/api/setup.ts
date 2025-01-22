@@ -41,7 +41,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
       return
     }
 
-    if (!isWebsocketRequestAllowed(ctx.config, server.config, request)) {
+    if (!isWebsocketRequestAllowed(ctx.config, request)) {
       socket.destroy()
       return
     }
