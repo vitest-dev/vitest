@@ -55,6 +55,14 @@ export default (ctx: Vitest): Plugin => {
         const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
         const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
 
+        server.middlewares.use(
+          base,
+          sirv(clientDist, {
+            dev: true,
+            extensions: [], // don't serve index.html
+          }),
+        )
+
         // serve index.html with api token
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
@@ -75,13 +83,15 @@ export default (ctx: Vitest): Plugin => {
           next()
         })
 
-        server.middlewares.use(
-          base,
-          sirv(clientDist, {
-            single: true,
-            dev: true,
-          }),
-        )
+        return () => {
+          // move vitestUiHtmlMiddleware after viteHostCheckMiddleware if exists
+          const i1 = server.middlewares.stack.findIndex(h => 'name' in h.handle && h.handle.name === 'vitestUiHtmlMiddleware')
+          const i2 = server.middlewares.stack.findIndex(h => 'name' in h.handle && h.handle.name === 'viteHostCheckMiddleware')
+          if (i1 !== -1 && i2 !== -1 && i1 < i2) {
+            const [item] = server.middlewares.stack.splice(i1, 1)
+            server.middlewares.stack.splice(i2, 0, item)
+          }
+        }
       },
     },
   }
