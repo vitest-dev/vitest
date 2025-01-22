@@ -85,7 +85,7 @@ export function WorkspaceVitestPlugin(
         // if some of them match, they will later be filtered again by `resolveWorkspace`
         if (filters.length) {
           const filteredNames = workspaceNames.filter((name) => {
-            return filters.some(n => n.test(name))
+            return project.vitest._matchesProjectFilter(name)
           })
           if (!filteredNames.length) {
             throw new VitestFilteredOutProjectError()
