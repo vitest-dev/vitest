@@ -99,8 +99,8 @@ export default class HTMLReporter implements Reporter {
   async writeReport(report: string) {
     const htmlFile
       = this.options.outputFile
-      || getOutputFile(this.ctx.config)
-      || 'html/index.html'
+        || getOutputFile(this.ctx.config)
+        || 'html/index.html'
     const htmlFileName = basename(htmlFile)
     const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 
