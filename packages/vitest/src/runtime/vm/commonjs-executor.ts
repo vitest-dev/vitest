@@ -183,12 +183,7 @@ export class CommonjsExecutor {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
-      const ext = extname(resolved)
-      if (ext === '.node' || isNodeBuiltin(resolved)) {
-        return this.requireCoreModule(resolved)
-      }
-      const module = new this.Module(resolved)
-      return this.loadCommonJSModule(module, resolved)
+      return this.require(resolved)
     }) as NodeRequire
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {

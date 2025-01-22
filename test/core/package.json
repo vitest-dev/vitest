@@ -8,6 +8,8 @@
     "test:threads": "vitest --project threads",
     "test:forks": "vitest --project forks",
     "test:vmThreads": "vitest --project vmThreads",
+    "test:vmForks": "vitest --project vmForks",
+    "node-error-repro": "vitest --project vmForks --run --reporter=basic",
     "dev": "vite",
     "coverage": "vitest run --coverage",
     "collect": "vitest list"

@@ -34,7 +34,9 @@ function createChildProcessChannel(project: TestProject, collect: boolean) {
     createMethodsRPC(project, { cacheFs: true, collect }),
     {
       eventNames: ['onCancel'],
-      serialize: v8.serialize,
+      serialize: (data) => {
+        return v8.serialize(data)
+      },
       deserialize: v => v8.deserialize(Buffer.from(v)),
       post(v) {
         emitter.emit(events.message, v)
