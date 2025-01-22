@@ -353,9 +353,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       // Construct list of coverage summaries where thresholds are compared against
       const summaries = this.options.thresholds?.perFile
         ? coverageMap.files().map((file: string) => ({
-          file,
-          summary: coverageMap.fileCoverageFor(file).toSummary(),
-        }))
+            file,
+            summary: coverageMap.fileCoverageFor(file).toSummary(),
+          }))
         : [{ file: null, summary: coverageMap.getCoverageSummary() }]
 
       // Check thresholds of each summary
@@ -435,10 +435,10 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     for (const { coverageMap, thresholds, name } of allThresholds) {
       const summaries = this.options.thresholds?.perFile
         ? coverageMap
-          .files()
-          .map((file: string) =>
-            coverageMap.fileCoverageFor(file).toSummary(),
-          )
+            .files()
+            .map((file: string) =>
+              coverageMap.fileCoverageFor(file).toSummary(),
+            )
         : [coverageMap.getCoverageSummary()]
 
       const thresholdsToUpdate: [Threshold, number][] = []

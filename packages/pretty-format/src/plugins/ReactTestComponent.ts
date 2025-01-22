@@ -33,8 +33,8 @@ function getPropKeys(object: ReactTestObject) {
 
   return props
     ? Object.keys(props)
-      .filter(key => props[key] !== undefined)
-      .sort()
+        .filter(key => props[key] !== undefined)
+        .sort()
     : []
 }
 
@@ -49,31 +49,31 @@ export const serialize: NewPlugin['serialize'] = (
   ++depth > config.maxDepth
     ? printElementAsLeaf(object.type, config)
     : printElement(
-      object.type,
-      object.props
-        ? printProps(
-          getPropKeys(object),
-          object.props,
-          config,
-          indentation + config.indent,
-          depth,
-          refs,
-          printer,
-        )
-        : '',
-      object.children
-        ? printChildren(
-          object.children,
-          config,
-          indentation + config.indent,
-          depth,
-          refs,
-          printer,
-        )
-        : '',
-      config,
-      indentation,
-    )
+        object.type,
+        object.props
+          ? printProps(
+              getPropKeys(object),
+              object.props,
+              config,
+              indentation + config.indent,
+              depth,
+              refs,
+              printer,
+            )
+          : '',
+        object.children
+          ? printChildren(
+              object.children,
+              config,
+              indentation + config.indent,
+              depth,
+              refs,
+              printer,
+            )
+          : '',
+        config,
+        indentation,
+      )
 
 export const test: NewPlugin['test'] = val =>
   val && val.$$typeof === testSymbol

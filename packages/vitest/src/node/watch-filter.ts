@@ -158,11 +158,11 @@ export class WatchFilter {
         if (remainingResultCount > 0) {
           resultBody
             += '\n'
-            + `${c.dim(
-              `   ...and ${remainingResultCount} more ${
-                remainingResultCount === 1 ? 'result' : 'results'
-              }`,
-            )}`
+              + `${c.dim(
+                `   ...and ${remainingResultCount} more ${
+                  remainingResultCount === 1 ? 'result' : 'results'
+                }`,
+              )}`
         }
       }
       else {
