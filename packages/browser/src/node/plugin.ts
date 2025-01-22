@@ -93,7 +93,15 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
             }
 
             const url = new URL(req.url, 'http://localhost')
-            const file = url.searchParams.get('file')
+            const id = url.searchParams.get('id')
+            if (!id) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            const task = parentServer.vitest.state.idMap.get(id)
+            const file = task?.meta.failScreenshotPath
             if (!file) {
               res.statusCode = 404
               res.end()
