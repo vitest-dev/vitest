@@ -280,7 +280,7 @@ export class TestProject {
   getModulesByFilepath(file: string): Set<ModuleNode> {
     const set
       = this.server.moduleGraph.getModulesByFile(file)
-      || this.browser?.vite.moduleGraph.getModulesByFile(file)
+        || this.browser?.vite.moduleGraph.getModulesByFile(file)
     return set || new Set()
   }
 

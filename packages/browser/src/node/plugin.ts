@@ -571,12 +571,12 @@ function resolveCoverageFolder(vitest: Vitest) {
   const options = vitest.config
   const htmlReporter = options.coverage?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {
-      if (typeof reporter === 'string') {
-        return reporter === 'html'
-      }
+        if (typeof reporter === 'string') {
+          return reporter === 'html'
+        }
 
-      return reporter[0] === 'html'
-    })
+        return reporter[0] === 'html'
+      })
     : undefined
 
   if (!htmlReporter) {
@@ -591,8 +591,8 @@ function resolveCoverageFolder(vitest: Vitest) {
 
   const subdir
     = Array.isArray(htmlReporter)
-    && htmlReporter.length > 1
-    && 'subdir' in htmlReporter[1]
+      && htmlReporter.length > 1
+      && 'subdir' in htmlReporter[1]
       ? htmlReporter[1].subdir
       : undefined
 

@@ -120,7 +120,7 @@ export class ViteNodeServer {
 
     const envValue
       = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES
-      || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
+        || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
     const customModuleDirectories = envValue?.split(',')
     if (customModuleDirectories) {
       options.deps.moduleDirectories.push(...customModuleDirectories)
@@ -265,7 +265,7 @@ export class ViteNodeServer {
     const mod = this.server.moduleGraph.getModuleById(normalizedId)
     const result
       = mod?.transformResult
-      || (await this.server.transformRequest(normalizedId))
+        || (await this.server.transformRequest(normalizedId))
 
     return {
       code: result?.code,
@@ -291,7 +291,7 @@ export class ViteNodeServer {
   private getChangedModule(id: string, file: string) {
     const module
       = this.server.moduleGraph.getModuleById(id)
-      || this.server.moduleGraph.getModuleById(file)
+        || this.server.moduleGraph.getModuleById(file)
     if (module) {
       return module
     }
@@ -347,9 +347,9 @@ export class ViteNodeServer {
     // we test "timestamp === 0" for expressiveness, but it's not necessary
     const timestamp = moduleNode
       ? Math.max(
-        moduleNode.lastHMRTimestamp,
-        moduleNode.lastInvalidationTimestamp,
-      )
+          moduleNode.lastHMRTimestamp,
+          moduleNode.lastInvalidationTimestamp,
+        )
       : 0
     if (cache && (timestamp === 0 || cache.timestamp >= timestamp)) {
       return cache.result
