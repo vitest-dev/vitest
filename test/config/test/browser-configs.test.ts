@@ -198,6 +198,35 @@ test('coverage provider v8 works correctly in browser mode if instances are filt
   ])
 })
 
+test('coverage provider v8 works correctly in workspaced browser mode if instances are filtered', async () => {
+  const { projects } = await vitest({
+    project: 'browser (chromium)',
+    workspace: [
+      {
+        test: {
+          name: 'browser',
+          browser: {
+            enabled: true,
+            provider: 'playwright',
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+              { browser: 'webkit' },
+            ],
+          },
+        },
+      },
+    ],
+    coverage: {
+      enabled: true,
+      provider: 'v8',
+    },
+  })
+  expect(projects.map(p => p.name)).toEqual([
+    'browser (chromium)',
+  ])
+})
+
 test('filter for the global browser project includes all browser instances', async () => {
   const { projects } = await vitest({
     project: 'myproject',
