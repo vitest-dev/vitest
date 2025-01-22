@@ -294,13 +294,14 @@ export function useFS(root: string, structure: Record<string, string | ViteUserC
 export async function runInlineTests(
   structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
   config?: UserConfig,
+  options?: VitestRunnerCLIOptions,
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
     ...config,
-  })
+  }, [], 'test', {}, options)
   return {
     fs,
     root,
