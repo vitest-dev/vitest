@@ -43,7 +43,7 @@ export function withInlineSourcemap(
       if (isAbsolute(source)) {
         const actualPath
           = !source.startsWith(withTrailingSlash(options.root))
-          && source.startsWith('/')
+            && source.startsWith('/')
             ? resolve(options.root, source.slice(1))
             : source
         return relative(dirname(options.filepath), actualPath)

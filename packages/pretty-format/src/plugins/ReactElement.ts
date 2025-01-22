@@ -115,27 +115,27 @@ export const serialize: NewPlugin['serialize'] = (
   ++depth > config.maxDepth
     ? printElementAsLeaf(getType(element), config)
     : printElement(
-      getType(element),
-      printProps(
-        getPropKeys(element),
-        element.props,
+        getType(element),
+        printProps(
+          getPropKeys(element),
+          element.props,
+          config,
+          indentation + config.indent,
+          depth,
+          refs,
+          printer,
+        ),
+        printChildren(
+          getChildren(element.props.children),
+          config,
+          indentation + config.indent,
+          depth,
+          refs,
+          printer,
+        ),
         config,
-        indentation + config.indent,
-        depth,
-        refs,
-        printer,
-      ),
-      printChildren(
-        getChildren(element.props.children),
-        config,
-        indentation + config.indent,
-        depth,
-        refs,
-        printer,
-      ),
-      config,
-      indentation,
-    )
+        indentation,
+      )
 
 export const test: NewPlugin['test'] = (val: unknown) =>
   val != null && ReactIs.isElement(val)

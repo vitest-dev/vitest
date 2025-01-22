@@ -298,8 +298,8 @@ export default class SnapshotState {
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted
       = isInline
-      || this._fileExists
-      || (rawSnapshot && rawSnapshot.content != null)
+        || this._fileExists
+        || (rawSnapshot && rawSnapshot.content != null)
 
     if (pass && !isInline && !rawSnapshot) {
       // Executing a snapshot file as JavaScript and writing the strings back
