@@ -501,8 +501,6 @@ export class Vitest {
   }
 
   async collect(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     const files = await this.specifications.getRelevantTestSpecifications(filters)
 
     // if run with --changed, don't exit if no tests are found
@@ -535,8 +533,6 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -594,8 +590,6 @@ export class Vitest {
    * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
   async init(): Promise<void> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)

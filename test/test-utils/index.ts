@@ -21,6 +21,7 @@ interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
   preserveAnsi?: boolean
+  tty?: boolean
 }
 
 export async function runVitest(
@@ -46,6 +47,11 @@ export async function runVitest(
       callback()
     },
   })
+
+  if (runnerOptions?.tty) {
+    (stdout as typeof process.stdout).isTTY = true
+  }
+
   const stderr = new Writable({
     write(chunk, __, callback) {
       if (runnerOptions.std === 'inherit') {
