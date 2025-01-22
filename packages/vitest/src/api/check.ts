@@ -2,7 +2,7 @@ import type { IncomingMessage } from 'node:http'
 import type { ResolvedConfig } from '../node/types/config'
 import crypto from 'node:crypto'
 
-export function isWebsocketRequestAllowed(config: ResolvedConfig, req: IncomingMessage): boolean {
+export function isValidApiRequest(config: ResolvedConfig, req: IncomingMessage): boolean {
   const url = new URL(req.url ?? '', 'http://localhost')
 
   // validate token. token is injected in ui/tester/orchestrator html, which is cross origin proteced.

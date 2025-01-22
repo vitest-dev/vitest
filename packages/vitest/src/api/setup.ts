@@ -22,7 +22,7 @@ import { API_PATH } from '../constants'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
 import { parseErrorStacktrace } from '../utils/source-map'
-import { isWebsocketRequestAllowed } from './hostCheck'
+import { isValidApiRequest } from './check'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer) {
   const wss = new WebSocketServer({ noServer: true })
@@ -41,7 +41,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
       return
     }
 
-    if (!isWebsocketRequestAllowed(ctx.config, request)) {
+    if (!isValidApiRequest(ctx.config, request)) {
       socket.destroy()
       return
     }
