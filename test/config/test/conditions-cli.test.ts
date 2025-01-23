@@ -53,8 +53,47 @@ test('correctly imports external dependencies with a custom condition', async ()
     resolve: {
       conditions: ['custom'],
     },
+    ssr: {
+      resolve: {
+        conditions: ['custom'],
+      },
+    },
     define: {
       TEST_CONDITION: '"custom"',
+    },
+  })
+
+  expect(stderr).toBe('')
+})
+
+test('conditions (external)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+  })
+
+  expect(stderr).toBe('')
+})
+
+test('conditions (inline direct)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+    server: {
+      deps: {
+        inline: ['@vitest/test-dep-conditions'],
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+})
+
+test('conditions (inline indirect)', async () => {
+  const { stderr } = await runVitest({
+    root: 'fixtures/conditions',
+    server: {
+      deps: {
+        inline: ['@vitest/test-dep-conditions', '@vitest/test-dep-conditions-indirect'],
+      },
     },
   })
 

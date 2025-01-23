@@ -20,6 +20,7 @@ import { VitestOptimizer } from './optimizer'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
+  getDefaultResolveOptions,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
@@ -73,6 +74,8 @@ export async function VitestPlugin(
           open = testConfig.uiBase ?? '/__vitest__/'
         }
 
+        const resolveOptions = getDefaultResolveOptions()
+
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
           esbuild:
@@ -86,11 +89,8 @@ export async function VitestPlugin(
                   legalComments: 'inline',
                 },
           resolve: {
-            // by default Vite resolves `module` field, which not always a native ESM module
-            // setting this option can bypass that and fallback to cjs version
-            mainFields: [],
+            ...resolveOptions,
             alias: testConfig.alias,
-            conditions: ['node'],
           },
           server: {
             ...testConfig.api,
@@ -115,12 +115,7 @@ export async function VitestPlugin(
           // @ts-ignore Vite 6 compat
           environments: {
             ssr: {
-              resolve: {
-                // by default Vite resolves `module` field, which not always a native ESM module
-                // setting this option can bypass that and fallback to cjs version
-                mainFields: [],
-                conditions: ['node'],
-              },
+              resolve: resolveOptions,
             },
           },
           test: {
