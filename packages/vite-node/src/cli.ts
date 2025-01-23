@@ -186,10 +186,10 @@ function parseServerOptions(
       inline:
         inlineOptions !== true
           ? inlineOptions.map((dep) => {
-            return dep.startsWith('/') && dep.endsWith('/')
-              ? new RegExp(dep)
-              : dep
-          })
+              return dep.startsWith('/') && dep.endsWith('/')
+                ? new RegExp(dep)
+                : dep
+            })
           : true,
       external: toArray(serverOptions.deps?.external).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/') ? new RegExp(dep) : dep

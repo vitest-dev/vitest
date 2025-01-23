@@ -165,10 +165,10 @@ export async function resolveBrowserWorkspace(
     const filteredConfigs = !filters.length
       ? configs
       : configs.filter((config) => {
-        const browser = config.browser
-        const newName = config.name || (originalName ? `${originalName} (${browser})` : browser)
-        return filters.some(pattern => pattern.test(newName))
-      })
+          const browser = config.browser
+          const newName = config.name || (originalName ? `${originalName} (${browser})` : browser)
+          return filters.some(pattern => pattern.test(newName))
+        })
 
     // every project was filtered out
     if (!filteredConfigs.length) {
