@@ -2,7 +2,7 @@ import type { IncomingMessage } from 'node:http'
 import crypto from 'node:crypto'
 import net from 'node:net'
 import type { ResolvedConfig } from 'vite'
-import type { ResolvedConfig as VitestResolvedConfig } from '../node/types/config'
+import type { ResolvedConfig as VitestResolvedConfig } from '../types/config'
 
 // based on
 // https://github.com/vitejs/vite/blob/9654348258eaa0883171533a2b74b4e2825f5fb6/packages/vite/src/node/server/middlewares/hostCheck.ts
