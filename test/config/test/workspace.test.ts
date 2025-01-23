@@ -134,3 +134,24 @@ it('correctly inherits the root config', async () => {
   expect(stderr).toBe('')
   expect(stdout).toContain('repro.test.js > importing a virtual module')
 })
+
+it('fails if workspace is empty', async () => {
+  const { stderr } = await runVitest({
+    workspace: [],
+  })
+  expect(stderr).toContain('No projects were found. Make sure your configuration is correct. The workspace: [].')
+})
+
+it('fails if workspace is filtered by the project', async () => {
+  const { stderr } = await runVitest({
+    project: 'non-existing',
+    root: 'fixtures/workspace/config-empty',
+    config: './vitest.config.js',
+    workspace: [
+      './vitest.config.js',
+    ],
+  })
+  expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The workspace: [
+    "./vitest.config.js"
+].`)
+})

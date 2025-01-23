@@ -6,6 +6,7 @@ import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
+import { inspect } from 'node:util'
 import { dirname, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
@@ -17,7 +18,7 @@ import { Cli } from './cli'
 // override default colors to disable them in tests
 Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
 
-interface VitestRunnerCLIOptions {
+export interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
   preserveAnsi?: boolean
@@ -101,7 +102,7 @@ export async function runVitest(
       console.error(e)
     }
     thrown = true
-    cli.stderr += e.stack
+    cli.stderr += inspect(e)
   }
   finally {
     exitCode = process.exitCode
@@ -293,13 +294,14 @@ export function useFS(root: string, structure: Record<string, string | ViteUserC
 export async function runInlineTests(
   structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
   config?: UserConfig,
+  options?: VitestRunnerCLIOptions,
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
     ...config,
-  })
+  }, [], 'test', {}, options)
   return {
     fs,
     root,
