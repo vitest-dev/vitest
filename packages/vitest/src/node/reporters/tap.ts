@@ -61,8 +61,8 @@ export class TapReporter implements Reporter {
 
       const ok
         = task.result?.state === 'pass'
-        || task.mode === 'skip'
-        || task.mode === 'todo'
+          || task.mode === 'skip'
+          || task.mode === 'todo'
           ? 'ok'
           : 'not ok'
 
@@ -89,8 +89,8 @@ export class TapReporter implements Reporter {
             const stacks = task.file.pool === 'browser'
               ? (project.browser?.parseErrorStacktrace(error) || [])
               : parseErrorStacktrace(error, {
-                frameFilter: this.ctx.config.onStackTrace,
-              })
+                  frameFilter: this.ctx.config.onStackTrace,
+                })
             const stack = stacks[0]
 
             this.logger.log('---')

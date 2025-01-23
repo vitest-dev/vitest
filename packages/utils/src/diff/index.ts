@@ -268,14 +268,14 @@ export function printDiffOrStringify(
     const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
     const expectedLine
       = printLabel(aAnnotation)
-      + printExpected(
-        getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff),
-      )
+        + printExpected(
+          getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff),
+        )
     const receivedLine
       = printLabel(bAnnotation)
-      + printReceived(
-        getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff),
-      )
+        + printReceived(
+          getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff),
+        )
 
     return `${expectedLine}\n${receivedLine}`
   }

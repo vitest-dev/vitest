@@ -129,9 +129,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       const s = state()
       const id
         = s?.current?.id
-        || s?.current?.suite?.id
-        || s.current?.file.id
-        || getTaskIdByStack(s.config.root)
+          || s?.current?.suite?.id
+          || s.current?.file.id
+          || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -168,9 +168,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       const s = state()
       const id
         = s?.current?.id
-        || s?.current?.suite?.id
-        || s.current?.file.id
-        || getTaskIdByStack(s.config.root)
+          || s?.current?.suite?.id
+          || s.current?.file.id
+          || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
