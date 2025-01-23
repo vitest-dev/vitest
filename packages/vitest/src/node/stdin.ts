@@ -2,7 +2,6 @@ import type { Writable } from 'node:stream'
 import type { Vitest } from './core'
 import readline from 'node:readline'
 import { getTests } from '@vitest/runner/utils'
-import { toArray } from '@vitest/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -182,7 +181,7 @@ export function registerConsoleShortcuts(
         name: 'filter',
         type: 'text',
         message: 'Input a single project name',
-        initial: toArray(ctx.configOverride.project)[0] || '',
+        initial: ctx.config.project[0] || '',
       },
     ])
     on()

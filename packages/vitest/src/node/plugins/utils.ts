@@ -22,8 +22,8 @@ export function resolveOptimizerConfig(
   const [major, minor, fix] = viteVersion.split('.').map(Number)
   const allowed
     = major >= 5
-    || (major === 4 && minor >= 4)
-    || (major === 4 && minor === 3 && fix >= 2)
+      || (major === 4 && minor >= 4)
+      || (major === 4 && minor === 3 && fix >= 2)
   if (!allowed && testOptions?.enabled === true) {
     console.warn(
       `Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`,

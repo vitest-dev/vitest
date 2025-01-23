@@ -65,16 +65,16 @@ const error: ErrorWithDiff = {
 }
 error.showDiff = true
 error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
-+ '    at /vitest/test/core/test/basic.test.ts:8:32\n'
-+ '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
-+ '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
-+ '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'
-+ '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n'
-+ '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n'
-+ '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n'
-+ '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n'
-+ '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
-+ '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
+  + '    at /vitest/test/core/test/basic.test.ts:8:32\n'
+  + '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
+  + '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
+  + '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'
+  + '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n'
+  + '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n'
+  + '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n'
+  + '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n'
+  + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
+  + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
 const tasks: Task[] = [
   {

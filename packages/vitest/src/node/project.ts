@@ -280,7 +280,7 @@ export class TestProject {
   getModulesByFilepath(file: string): Set<ModuleNode> {
     const set
       = this.server.moduleGraph.getModulesByFile(file)
-      || this.browser?.vite.moduleGraph.getModulesByFile(file)
+        || this.browser?.vite.moduleGraph.getModulesByFile(file)
     return set || new Set()
   }
 
@@ -577,13 +577,12 @@ export class TestProject {
   /** @internal */
   async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     this._config = resolveConfig(
-      this.vitest.mode,
+      this.vitest,
       {
         ...options,
         coverage: this.vitest.config.coverage,
       },
       server.config,
-      this.vitest.logger,
     )
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
