@@ -191,9 +191,9 @@ export class ViteNodeRunner {
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
     this.debug
       = options.debug
-      ?? (typeof process !== 'undefined'
-        ? !!process.env.VITE_NODE_DEBUG_RUNNER
-        : false)
+        ?? (typeof process !== 'undefined'
+          ? !!process.env.VITE_NODE_DEBUG_RUNNER
+          : false)
   }
 
   async executeFile(file: string) {

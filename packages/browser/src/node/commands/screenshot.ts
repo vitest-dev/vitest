@@ -18,10 +18,10 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   const path = options.path
     ? resolve(dirname(context.testPath), options.path)
     : resolveScreenshotPath(
-      context.testPath,
-      name,
-      context.project.config,
-    )
+        context.testPath,
+        name,
+        context.project.config,
+      )
   const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 

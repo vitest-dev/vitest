@@ -223,10 +223,10 @@ function licensePlugin() {
         .join('\n---------------------------------------\n\n')
       const licenseText
         = '# Vitest core license\n'
-        + `Vitest is released under the MIT license:\n\n${coreLicense}\n# Licenses of bundled dependencies\n`
-        + 'The published Vitest artifact additionally contains code with the following licenses:\n'
-        + `${sortLicenses(licenses).join(', ')}\n\n`
-        + `# Bundled dependencies:\n${dependencyLicenseTexts}`
+          + `Vitest is released under the MIT license:\n\n${coreLicense}\n# Licenses of bundled dependencies\n`
+          + 'The published Vitest artifact additionally contains code with the following licenses:\n'
+          + `${sortLicenses(licenses).join(', ')}\n\n`
+          + `# Bundled dependencies:\n${dependencyLicenseTexts}`
       const existingLicenseText = fs.readFileSync('LICENSE.md', 'utf8')
       if (existingLicenseText !== licenseText) {
         fs.writeFileSync('LICENSE.md', licenseText)

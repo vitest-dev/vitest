@@ -63,8 +63,8 @@ for (const config of configs) {
     async () => {
       const isParallel
         = (config.pool === 'threads' && config.poolOptions?.threads?.singleThread !== true)
-        || (config.pool === 'forks' && config.poolOptions?.forks?.singleFork !== true)
-        || (config.browser?.enabled && config.browser.fileParallelism)
+          || (config.pool === 'forks' && config.poolOptions?.forks?.singleFork !== true)
+          || (config.browser?.enabled && config.browser.fileParallelism)
 
       // THREADS here means that multiple tests are run parallel
       process.env.THREADS = isParallel ? 'true' : 'false'

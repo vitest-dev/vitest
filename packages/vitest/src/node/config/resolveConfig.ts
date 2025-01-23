@@ -220,7 +220,7 @@ export function resolveConfig(
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread
       = resolved.pool === 'threads'
-      && resolved.poolOptions?.threads?.singleThread
+        && resolved.poolOptions?.threads?.singleThread
     const isSingleFork
       = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
 

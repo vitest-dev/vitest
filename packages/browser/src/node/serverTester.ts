@@ -37,7 +37,7 @@ export async function resolveTester(
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
     = testFile === '__vitest_all__'
-    || !testFiles.includes(testFile)
+      || !testFiles.includes(testFile)
       ? '__vitest_browser_runner__.files'
       : JSON.stringify([testFile])
   const iframeId = JSON.stringify(testFile)
