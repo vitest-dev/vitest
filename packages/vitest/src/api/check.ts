@@ -128,7 +128,7 @@ function isHostAllowed(vitestConfig: VitestResolvedConfig, viteConfig: ResolvedC
   )
 }
 
-export function isWebsocketRequestAllowed(vitestConfig: VitestResolvedConfig, viteConfig: ResolvedConfig, req: IncomingMessage): boolean {
+export function isValidApiRequest(vitestConfig: VitestResolvedConfig, viteConfig: ResolvedConfig, req: IncomingMessage): boolean {
   const url = new URL(req.url ?? '', 'http://localhost')
 
   // validate token. token is injected in ui/tester/orchestrator html, which is cross origin proteced.
