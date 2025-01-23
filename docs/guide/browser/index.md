@@ -558,7 +558,7 @@ test('renders a message', async () => {
   const { baseElement } = await render(Greeting, { name: 'Marko' })
   const screen = page.elementLocator(baseElement)
   await expect.element(screen.getByText(/Marko/)).toBeInTheDocument()
-  await expect.element(container.firstChild).toMatchInlineSnapshot(`
+  expect(container.firstChild).toMatchInlineSnapshot(`
     <h1>Hello, Marko!</h1>
   `)
 })

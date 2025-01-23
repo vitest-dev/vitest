@@ -218,7 +218,7 @@ function eq(
     // Deep compare each member
     result
       = hasKey(b, key)
-      && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
+        && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
 
     if (!result) {
       return false
@@ -603,11 +603,11 @@ export function subsetEquality(
           }
           const result
           = object != null
-          && hasPropertyInObject(object, key)
-          && equals(object[key], subset[key], [
-            ...filteredCustomTesters,
-            subsetEqualityWithContext(seenReferences),
-          ])
+            && hasPropertyInObject(object, key)
+            && equals(object[key], subset[key], [
+              ...filteredCustomTesters,
+              subsetEqualityWithContext(seenReferences),
+            ])
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only
@@ -759,9 +759,9 @@ export function getObjectSubset(
               trimmed[key] = seenReferences.has(object[key])
                 ? seenReferences.get(object[key])
                 : getObjectSubsetWithContext(seenReferences)(
-                  object[key],
-                  subset[key],
-                )
+                    object[key],
+                    subset[key],
+                  )
             }
             else {
               if (!seenReferences.has(object[key])) {

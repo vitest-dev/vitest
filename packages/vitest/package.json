@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -123,6 +123,7 @@
   },
   "peerDependencies": {
     "@edge-runtime/vm": "*",
+    "@types/debug": "^4.1.12",
     "@types/node": "^18.0.0 || ^20.0.0 || >=22.0.0",
     "@vitest/browser": "workspace:*",
     "@vitest/ui": "workspace:*",
@@ -131,6 +132,9 @@
   },
   "peerDependenciesMeta": {
     "@edge-runtime/vm": {
+      "optional": true
+    },
+    "@types/debug": {
       "optional": true
     },
     "@types/node": {
