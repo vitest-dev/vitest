@@ -8,7 +8,7 @@ import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname } from 'pathe'
-import { createDebugger, isFileServingAllowed, isWebsocketRequestAllowed } from 'vitest/node'
+import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
@@ -32,7 +32,7 @@ export function setupBrowserRpc(server: BrowserServer) {
       return
     }
 
-    if (!isWebsocketRequestAllowed(ctx.config, vite.config, request)) {
+    if (!isValidApiRequest(ctx.config, request)) {
       socket.destroy()
       return
     }
