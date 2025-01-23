@@ -132,7 +132,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
               return
             }
 
-            const task = parentServer.vitest.state.idMap.get(id)
+            const task = project.ctx.state.idMap.get(id)
             const file = task?.meta.failScreenshotPath
             if (!file) {
               res.statusCode = 404
