@@ -1,6 +1,6 @@
 import type { IncomingMessage } from 'node:http'
-import type { ResolvedConfig } from '../types/config'
 import crypto from 'node:crypto'
+import type { ResolvedConfig } from '../types/config'
 
 export function isValidApiRequest(config: ResolvedConfig, req: IncomingMessage): boolean {
   const url = new URL(req.url ?? '', 'http://localhost')
@@ -11,9 +11,8 @@ export function isValidApiRequest(config: ResolvedConfig, req: IncomingMessage):
     if (token && crypto.timingSafeEqual(
       Buffer.from(token),
       Buffer.from(config.api.token),
-    )) {
+    ))
       return true
-    }
   }
   // an error is thrown when the length is incorrect
   catch {}
