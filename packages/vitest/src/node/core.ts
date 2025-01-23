@@ -279,6 +279,12 @@ export class Vitest {
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
+
+    await Promise.all(projects.flatMap((project) => {
+      const hooks = project.vite.pluginContainer.getSortedPluginHooks('configureVitest')
+      return hooks.map(hook => hook({ project }))
+    }))
+
     if (!this.projects.length) {
       throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
     }
