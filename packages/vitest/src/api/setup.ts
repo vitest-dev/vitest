@@ -35,7 +35,7 @@ export function setup(vitestOrWorkspace: Vitest | WorkspaceProject, _server?: Vi
     if (pathname !== API_PATH)
       return
 
-    if (!isValidApiRequest(ctx.config, server.config, request)) {
+    if (!isValidApiRequest(ctx.config, request)) {
       socket.destroy()
       return
     }
