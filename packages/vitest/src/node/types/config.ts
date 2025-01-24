@@ -256,7 +256,7 @@ export interface InlineConfig {
 
   /**
    * Exclude globs for test files
-   * @default ['**\/node_modules/**', '**\/dist/**', '**\/cypress/**', '**\/.{idea,git,cache,output,temp}/**', '**\/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']
+   * @default ['**\/node_modules/**', '**\/.git/**']
    */
   exclude?: string[]
 
