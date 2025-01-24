@@ -193,7 +193,7 @@ export class SnapshotClient {
       )
       rawSnapshot.content
         = (await snapshotState.environment.readSnapshotFile(rawSnapshot.file))
-        ?? undefined
+          ?? undefined
     }
 
     return this.assert(options)

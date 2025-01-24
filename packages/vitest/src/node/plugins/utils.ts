@@ -6,6 +6,7 @@ import type {
 import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
+import * as vite from 'vite'
 import { rootDir } from '../../paths'
 import { VitestCache } from '../cache'
 
@@ -21,8 +22,8 @@ export function resolveOptimizerConfig(
   const [major, minor, fix] = viteVersion.split('.').map(Number)
   const allowed
     = major >= 5
-    || (major === 4 && minor >= 4)
-    || (major === 4 && minor === 3 && fix >= 2)
+      || (major === 4 && minor >= 4)
+      || (major === 4 && minor === 3 && fix >= 2)
   if (!allowed && testOptions?.enabled === true) {
     console.warn(
       `Vitest: "deps.optimizer" is only available in Vite >= 4.3.2, current Vite version: ${viteVersion}`,
@@ -146,4 +147,24 @@ export function resolveFsAllow(
     searchForWorkspaceRoot(projectRoot),
     rootDir,
   ]
+}
+
+export function getDefaultResolveOptions(): vite.ResolveOptions {
+  return {
+    // by default Vite resolves `module` field, which is not always a native ESM module
+    // setting this option can bypass that and fallback to cjs version
+    mainFields: [],
+    // same for `module` condition and Vite 5 doesn't even allow excluding it,
+    // but now it's possible since Vite 6.
+    conditions: getDefaultServerConditions(),
+  }
+}
+
+function getDefaultServerConditions(): string[] {
+  const viteMajor = Number(viteVersion.split('.')[0])
+  if (viteMajor >= 6) {
+    const conditions: string[] = (vite as any).defaultServerConditions
+    return conditions.filter(c => c !== 'module')
+  }
+  return ['node']
 }

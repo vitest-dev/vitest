@@ -129,6 +129,10 @@ expect(() => {
 
 See PR for more details: [#5876](https://github.com/vitest-dev/vitest/pull/5876).
 
+### `module` condition export is not resolved by default on Vite 6
+
+Vite 6 allows more flexible [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) options and Vitest configures it to exclude `module` conditional export by default.
+
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
 The `Custom` type is now an alias for the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:

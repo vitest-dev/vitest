@@ -52,9 +52,9 @@ export function populateGlobal(
   for (const key of keys) {
     const boundFunction
       = bindFunctions
-      && typeof win[key] === 'function'
-      && !isClassLikeName(key)
-      && win[key].bind(win)
+        && typeof win[key] === 'function'
+        && !isClassLikeName(key)
+        && win[key].bind(win)
 
     if (KEYS.includes(key) && key in global) {
       originals.set(key, global[key])

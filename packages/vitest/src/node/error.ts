@@ -128,17 +128,17 @@ function printErrorInner(
     = error instanceof TypeCheckError
       ? error.stacks[0]
       : stacks.find((stack) => {
-        try {
-          return (
-            project.server
-            && project.getModuleById(stack.file)
-            && existsSync(stack.file)
-          )
-        }
-        catch {
-          return false
-        }
-      })
+          try {
+            return (
+              project.server
+              && project.getModuleById(stack.file)
+              && existsSync(stack.file)
+            )
+          }
+          catch {
+            return false
+          }
+        })
 
   if (type) {
     printErrorType(type, project.ctx)
