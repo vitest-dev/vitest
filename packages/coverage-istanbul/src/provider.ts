@@ -1,9 +1,12 @@
+import type { CoverageMap, CoverageMapData } from 'istanbul-lib-coverage'
+import type { SourceMap } from 'rollup'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
+import { createRequire } from 'node:module'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
 import createDebug from 'debug'
-import libCoverage, { type CoverageMap } from 'istanbul-lib-coverage'
+import libCoverage from 'istanbul-lib-coverage'
 import { createInstrumenter, type Instrumenter } from 'istanbul-lib-instrument'
 import libReport from 'istanbul-lib-report'
 import libSourceMaps from 'istanbul-lib-source-maps'
@@ -13,11 +16,18 @@ import { resolve } from 'pathe'
 import TestExclude from 'test-exclude'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
-
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'
 
 const debug = createDebug('vitest:coverage')
+
+let pnp: any | undefined
+if (process.versions.pnp) {
+  try {
+    pnp = createRequire(import.meta.url)('pnpapi')
+  }
+  catch {}
+}
 
 export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'istanbul'>> implements CoverageProvider {
   name = 'istanbul' as const
@@ -89,8 +99,12 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     const coverageMap = this.createCoverageMap()
     let coverageMapByTransformMode = this.createCoverageMap()
 
-    await this.readCoverageFiles<CoverageMap>({
+    await this.readCoverageFiles<CoverageMapData>({
       onFileRead(coverage) {
+        if (pnp) {
+          resolveYarnPnpPaths(coverage)
+        }
+
         coverageMapByTransformMode.merge(coverage)
       },
       onFinished: async () => {
@@ -203,4 +217,25 @@ async function transformCoverage(coverageMap: CoverageMap) {
  */
 function removeQueryParameters(filename: string) {
   return filename.split('?')[0]
+}
+
+function resolveYarnPnpPaths(coverage: CoverageMapData) {
+  if (!pnp) {
+    return
+  }
+
+  for (const file of Object.keys(coverage) as (keyof typeof coverage)[]) {
+    const fileCoverage = coverage[file]
+
+    const filename = pnp.resolveVirtual(file)
+    fileCoverage.path = filename
+    coverage[fileCoverage.path] = fileCoverage
+
+    if ('inputSourceMap' in fileCoverage) {
+      const inputSourceMap = fileCoverage.inputSourceMap as SourceMap
+      inputSourceMap.sources = [filename]
+    }
+
+    delete coverage[file]
+  }
 }
