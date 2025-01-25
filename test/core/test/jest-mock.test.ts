@@ -363,7 +363,7 @@ describe('jest mock compat layer', () => {
     expect(obj.property).toBe(true)
   })
 
-  it('spyOn returns the same spy twice', () => {
+  it('spyOn multiple times', () => {
     const obj = {
       method() {
         return 'original'
@@ -371,21 +371,55 @@ describe('jest mock compat layer', () => {
     }
 
     const spy1 = vi.spyOn(obj, 'method').mockImplementation(() => 'mocked')
-    const spy2 = vi.spyOn(obj, 'method')
 
     expect(vi.isMockFunction(obj.method)).toBe(true)
     expect(obj.method()).toBe('mocked')
-    expect(spy1).toBe(spy2)
+    expect(spy1.mock.results).toMatchInlineSnapshot(`
+      [
+        {
+          "type": "return",
+          "value": "mocked",
+        },
+      ]
+    `)
+
+    const spy2 = vi.spyOn(obj, 'method') // this calls `spy1.mockRestore()`
+    expect(vi.isMockFunction(obj.method)).toBe(true)
+    expect(obj.method()).toBe('original')
+    expect(spy1).not.toBe(spy2)
+    expect(spy1.mock.results).toMatchInlineSnapshot(`[]`)
+    expect(spy2.mock.results).toMatchInlineSnapshot(`
+      [
+        {
+          "type": "return",
+          "value": "original",
+        },
+      ]
+    `)
 
     spy2.mockImplementation(() => 'mocked2')
-
     expect(obj.method()).toBe('mocked2')
+    expect(spy1.mock.results).toMatchInlineSnapshot(`[]`)
+    expect(spy2.mock.results).toMatchInlineSnapshot(`
+      [
+        {
+          "type": "return",
+          "value": "original",
+        },
+        {
+          "type": "return",
+          "value": "mocked2",
+        },
+      ]
+    `)
 
     spy2.mockRestore()
 
     expect(obj.method()).toBe('original')
     expect(vi.isMockFunction(obj.method)).toBe(false)
     expect(obj.method).not.toBe(spy1)
+    expect(spy1.mock.results).toMatchInlineSnapshot(`[]`)
+    expect(spy2.mock.results).toMatchInlineSnapshot(`[]`)
   })
 
   it('should spy on property setter (2), and mockReset should not restore original descriptor', () => {
