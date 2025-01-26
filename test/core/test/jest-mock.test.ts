@@ -386,8 +386,15 @@ describe('jest mock compat layer', () => {
     const spy2 = vi.spyOn(obj, 'method') // this calls `spy1.mockRestore()`
     expect(vi.isMockFunction(obj.method)).toBe(true)
     expect(obj.method()).toBe('original')
-    expect(spy1).not.toBe(spy2)
-    expect(spy1.mock.results).toMatchInlineSnapshot(`[]`)
+    expect(spy1).toBe(spy2)
+    expect(spy1.mock.results).toMatchInlineSnapshot(`
+      [
+        {
+          "type": "return",
+          "value": "original",
+        },
+      ]
+    `)
     expect(spy2.mock.results).toMatchInlineSnapshot(`
       [
         {
@@ -399,7 +406,18 @@ describe('jest mock compat layer', () => {
 
     spy2.mockImplementation(() => 'mocked2')
     expect(obj.method()).toBe('mocked2')
-    expect(spy1.mock.results).toMatchInlineSnapshot(`[]`)
+    expect(spy1.mock.results).toMatchInlineSnapshot(`
+      [
+        {
+          "type": "return",
+          "value": "original",
+        },
+        {
+          "type": "return",
+          "value": "mocked2",
+        },
+      ]
+    `)
     expect(spy2.mock.results).toMatchInlineSnapshot(`
       [
         {
