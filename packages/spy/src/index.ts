@@ -466,7 +466,7 @@ export function spyOn<T, K extends keyof T>(
 
   const currentStub = getSpy(obj, method, accessType)
   if (currentStub) {
-    currentStub.mockRestore()
+    currentStub.mockReset()
   }
 
   const stub = tinyspy.internalSpyOn(obj, objMethod as any)
