@@ -4,8 +4,8 @@ import { explorerTree } from '~/composables/explorer'
 
 const { width } = useWindowSize()
 const classes = computed(() => {
-  // if there are no files, then in progress and gray
-  if (explorerTree.summary.files === 0) {
+  // if there are no files and not finished, then in progress and gray
+  if (explorerTree.summary.files === 0 && !finished.value) {
     return '!bg-gray-4 !dark:bg-gray-7 in-progress'
   }
   else if (!finished.value) {
