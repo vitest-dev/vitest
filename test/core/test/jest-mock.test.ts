@@ -518,4 +518,24 @@ describe('jest mock compat layer', () => {
     vi.mocked(dogMax.speak).mockReturnValue('woof woof')
     expect(dogMax.speak()).toBe('woof woof')
   })
+
+  it('returns temporary implementations from getMockImplementation()', () => {
+    const fn = vi.fn()
+
+    const temporaryMockImplementation = () => 'mocked value'
+    fn.mockImplementationOnce(temporaryMockImplementation)
+    expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
+
+    // After calling it, it should be back to undefined
+    fn()
+    expect(fn.getMockImplementation()).toBe(undefined)
+
+    const mockImplementation = () => 'other mocked value'
+    fn.mockImplementation(mockImplementation)
+    expect(fn.getMockImplementation()).toBe(mockImplementation)
+
+    // It should also overwrite permanent implementations
+    fn.mockImplementationOnce(temporaryMockImplementation)
+    expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
+  })
 })

@@ -1,11 +1,10 @@
 import type {
-  File,
   ModuleGraphData,
-  Reporter,
+  RunnerTestFile,
   SerializedConfig,
-  Vitest,
 } from 'vitest'
-import type { HTMLOptions } from 'vitest/node'
+import type { HTMLOptions, Vitest } from 'vitest/node'
+import type { Reporter } from 'vitest/reporters'
 import { promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -34,8 +33,9 @@ function getOutputFile(config: PotentialConfig | undefined) {
 
 interface HTMLReportData {
   paths: string[]
-  files: File[]
+  files: RunnerTestFile[]
   config: SerializedConfig
+  projects: string[]
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -65,17 +65,21 @@ export default class HTMLReporter implements Reporter {
       files: this.ctx.state.getFiles(),
       config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
+      projects: this.ctx.resolvedProjects.map(p => p.name),
       moduleGraph: {},
       sources: {},
     }
     await Promise.all(
       result.files.map(async (file) => {
         const projectName = file.projectName || ''
+        const resolvedConfig = this.ctx.getProjectByName(projectName).config
+        const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
         result.moduleGraph[projectName] ??= {}
         result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-          this.ctx as any,
+          this.ctx,
           projectName,
           file.filepath,
+          browser,
         )
         if (!result.sources[file.filepath]) {
           try {
@@ -95,8 +99,8 @@ export default class HTMLReporter implements Reporter {
   async writeReport(report: string) {
     const htmlFile
       = this.options.outputFile
-      || getOutputFile(this.ctx.config)
-      || 'html/index.html'
+        || getOutputFile(this.ctx.config)
+        || 'html/index.html'
     const htmlFileName = basename(htmlFile)
     const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 

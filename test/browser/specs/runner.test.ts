@@ -1,19 +1,48 @@
+import type { Vitest } from 'vitest/node'
+import type { JsonTestResults } from 'vitest/reporters'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { instances, provider, runBrowserTests } from './utils'
 
+function noop() {}
+
 describe('running browser tests', async () => {
   let stderr: string
   let stdout: string
-  let browserResultJson: any
+  let browserResultJson: JsonTestResults
   let passedTests: any[]
   let failedTests: any[]
+  let vitest: Vitest
+  const events: string[] = []
 
   beforeAll(async () => {
     ({
       stderr,
       stdout,
-    } = await runBrowserTests())
+      ctx: vitest,
+    } = await runBrowserTests({
+      reporters: [
+        {
+          onBrowserInit(project) {
+            events.push(`onBrowserInit ${project.name}`)
+          },
+        },
+        'json',
+        {
+          onInit: noop,
+          onPathsCollected: noop,
+          onCollected: noop,
+          onFinished: noop,
+          onTaskUpdate: noop,
+          onTestRemoved: noop,
+          onWatcherStart: noop,
+          onWatcherRerun: noop,
+          onServerRestart: noop,
+          onUserConsoleLog: noop,
+        },
+        'default',
+      ],
+    }))
 
     const browserResult = await readFile('./browser.json', 'utf-8')
     browserResultJson = JSON.parse(browserResult)
@@ -28,8 +57,22 @@ describe('running browser tests', async () => {
       console.error(stderr)
     })
 
-    expect(browserResultJson.testResults).toHaveLength(19 * instances.length)
-    expect(passedTests).toHaveLength(17 * instances.length)
+    const testFiles = browserResultJson.testResults.map(t => t.name)
+
+    vitest.projects.forEach((project) => {
+      // the order is non-deterministic
+      expect(events).toContain(`onBrowserInit ${project.name}`)
+    })
+
+    // test files are optimized automatically
+    expect(vitest.projects.map(p => p.browser?.vite.config.optimizeDeps.entries))
+      .toEqual(vitest.projects.map(() => expect.arrayContaining(testFiles)))
+
+    // This should match the number of actual tests from browser.json
+    // if you added new tests, these assertion will fail and you should
+    // update the numbers
+    expect(browserResultJson.testResults).toHaveLength(20 * instances.length)
+    expect(passedTests).toHaveLength(18 * instances.length)
     expect(failedTests).toHaveLength(2 * instances.length)
 
     expect(stderr).not.toContain('optimized dependencies changed')
@@ -77,6 +120,8 @@ describe('running browser tests', async () => {
     expect(stdout).toContain('count: 3')
     expect(stdout).toMatch(/default: [\d.]+ ms/)
     expect(stdout).toMatch(/time: [\d.]+ ms/)
+    expect(stdout).toMatch(/\[console-time-fake\]: [\d.]+ ms/)
+    expect(stdout).not.toContain('[console-time-fake]: 0 ms')
   })
 
   test('logs are redirected to stderr', () => {
@@ -117,7 +162,7 @@ error with a stack
   })
 
   test(`stack trace points to correct file in every browser`, () => {
-    // dependeing on the browser it references either `.toBe()` or `expect()`
+    // depending on the browser it references either `.toBe()` or `expect()`
     expect(stderr).toMatch(/test\/failing.test.ts:10:(12|17)/)
 
     // column is 18 in safari, 8 in others

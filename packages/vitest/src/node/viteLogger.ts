@@ -136,7 +136,7 @@ export function createViteLogger(
   return logger
 }
 
-// silence warning by Vite for statically not analysizable dynamimc import
+// silence warning by Vite for statically not analyzable dynamic import
 export function silenceImportViteIgnoreWarning(logger: Logger): Logger {
   return {
     ...logger,

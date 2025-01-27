@@ -57,7 +57,7 @@ const FORMAT_OPTIONS = {
 }
 const FALLBACK_FORMAT_OPTIONS = {
   callToJSON: false,
-  maxDepth: 10,
+  maxDepth: 8,
   plugins: PLUGINS,
 }
 
@@ -97,8 +97,18 @@ export function diff(a: any, b: any, options?: DiffOptions): string | undefined 
     const { aAnnotation, aColor, aIndicator, bAnnotation, bColor, bIndicator }
       = normalizeDiffOptions(options)
     const formatOptions = getFormatOptions(FALLBACK_FORMAT_OPTIONS, options)
-    const aDisplay = prettyFormat(a, formatOptions)
-    const bDisplay = prettyFormat(b, formatOptions)
+    let aDisplay = prettyFormat(a, formatOptions)
+    let bDisplay = prettyFormat(b, formatOptions)
+    // even if prettyFormat prints successfully big objects,
+    // large string can choke later on (concatenation? RPC?),
+    // so truncate it to a reasonable length here.
+    // (For example, playwright's ElementHandle can become about 200_000_000 length string)
+    const MAX_LENGTH = 100_000
+    function truncate(s: string) {
+      return s.length <= MAX_LENGTH ? s : (`${s.slice(0, MAX_LENGTH)}...`)
+    }
+    aDisplay = truncate(aDisplay)
+    bDisplay = truncate(bDisplay)
     const aDiff = `${aColor(`${aIndicator} ${aAnnotation}:`)} \n${aDisplay}`
     const bDiff = `${bColor(`${bIndicator} ${bAnnotation}:`)} \n${bDisplay}`
     return `${aDiff}\n\n${bDiff}`
@@ -233,8 +243,8 @@ function isReplaceable(obj1: any, obj2: any) {
 }
 
 export function printDiffOrStringify(
-  expected: unknown,
   received: unknown,
+  expected: unknown,
   options?: DiffOptions,
 ): string | undefined {
   const { aAnnotation, bAnnotation } = normalizeDiffOptions(options)
@@ -249,23 +259,23 @@ export function printDiffOrStringify(
     && expected !== received
   ) {
     if (expected.includes('\n') || received.includes('\n')) {
-      return diffStringsUnified(received, expected, options)
+      return diffStringsUnified(expected, received, options)
     }
 
-    const [diffs] = diffStringsRaw(received, expected, true)
+    const [diffs] = diffStringsRaw(expected, received, true)
     const hasCommonDiff = diffs.some(diff => diff[0] === DIFF_EQUAL)
 
     const printLabel = getLabelPrinter(aAnnotation, bAnnotation)
     const expectedLine
       = printLabel(aAnnotation)
-      + printExpected(
-        getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff),
-      )
+        + printExpected(
+          getCommonAndChangedSubstrings(diffs, DIFF_DELETE, hasCommonDiff),
+        )
     const receivedLine
       = printLabel(bAnnotation)
-      + printReceived(
-        getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff),
-      )
+        + printReceived(
+          getCommonAndChangedSubstrings(diffs, DIFF_INSERT, hasCommonDiff),
+        )
 
     return `${expectedLine}\n${receivedLine}`
   }
@@ -273,7 +283,7 @@ export function printDiffOrStringify(
   // if (isLineDiffable(expected, received)) {
   const clonedExpected = deepClone(expected, { forceWritable: true })
   const clonedReceived = deepClone(received, { forceWritable: true })
-  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedExpected, clonedReceived)
+  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(clonedReceived, clonedExpected)
   const difference = diff(replacedExpected, replacedActual, options)
 
   return difference

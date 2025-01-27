@@ -2,7 +2,6 @@ import type { Writable } from 'node:stream'
 import type { Vitest } from './core'
 import readline from 'node:readline'
 import { getTests } from '@vitest/runner/utils'
-import { toArray } from '@vitest/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -55,14 +54,12 @@ export function registerConsoleShortcuts(
       || (key && key.ctrl && key.name === 'c')
     ) {
       if (!ctx.isCancelling) {
-        ctx.logger.logUpdate.clear()
         ctx.logger.log(
           c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
         )
         process.exitCode = 130
 
         await ctx.cancelCurrentRun('keyboard-input')
-        await ctx.runningPromise
       }
       return ctx.exit(true)
     }
@@ -184,7 +181,7 @@ export function registerConsoleShortcuts(
         name: 'filter',
         type: 'text',
         message: 'Input a single project name',
-        initial: toArray(ctx.configOverride.project)[0] || '',
+        initial: ctx.config.project[0] || '',
       },
     ])
     on()

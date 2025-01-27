@@ -124,7 +124,7 @@ When using coverage, Vitest automatically adds test files `include` patterns to 
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']`
 - **CLI:** `vitest --exclude "**/excluded-file"`
 
 A list of glob patterns that should be excluded from your test files.
@@ -1069,7 +1069,7 @@ Minimum number or percentage of workers to run tests in. `poolOptions.{threads,v
 - **Default:** `5_000` in Node.js, `15_000` if `browser.enabled` is `true`
 - **CLI:** `--test-timeout=5000`, `--testTimeout=5000`
 
-Default timeout of a test in milliseconds
+Default timeout of a test in milliseconds. Use `0` to disable timeout completely.
 
 ### hookTimeout
 
@@ -1077,7 +1077,7 @@ Default timeout of a test in milliseconds
 - **Default:** `10_000` in Node.js, `30_000` if `browser.enabled` is `true`
 - **CLI:** `--hook-timeout=10000`, `--hookTimeout=10000`
 
-Default timeout of a hook in milliseconds
+Default timeout of a hook in milliseconds. Use `0` to disable timeout completely.
 
 ### teardownTimeout<NonProjectOption />
 
@@ -1351,7 +1351,8 @@ export default defineConfig({
 ```
 
 ::: tip NOTE
-Vitest automatically adds test files `include` patterns to the default value of `coverage.exclude`.
+Vitest automatically adds test files `include` patterns to the `coverage.exclude`.
+It's not possible to show coverage of test files.
 :::
 
 #### coverage.all

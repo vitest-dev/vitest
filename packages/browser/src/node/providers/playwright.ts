@@ -185,6 +185,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       })
     }
 
+    // unhandled page crashes will hang vitest process
+    page.on('crash', () => {
+      const session = this.project.vitest._browserSessions.getSession(sessionId)
+      session?.reject(new Error('Page crashed when executing tests'))
+    })
+
     return page
   }
 

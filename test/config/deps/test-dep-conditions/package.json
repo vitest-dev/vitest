@@ -1,0 +1,32 @@
+{
+  "name": "@vitest/test-dep-conditions",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./custom": {
+      "custom": "./true.js",
+      "default": "./false.js"
+    },
+    "./module": {
+      "module": "./true.js",
+      "default": "./false.js"
+    },
+    "./node": {
+      "node": "./true.js",
+      "default": "./false.js"
+    },
+    "./development": {
+      "development": "./true.js",
+      "default": "./false.js"
+    },
+    "./production": {
+      "production": "./true.js",
+      "default": "./false.js"
+    },
+    "./inline": "./inline.js",
+    "./indirect": "./indirect.js"
+  },
+  "dependencies": {
+    "@vitest/test-dep-conditions-indirect": "file:../test-dep-conditions-indirect"
+  }
+}

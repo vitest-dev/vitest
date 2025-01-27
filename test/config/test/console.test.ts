@@ -21,3 +21,47 @@ test.each(['threads', 'vmThreads'] as const)(`disable intercept pool=%s`, async 
   const call = spy.mock.lastCall![0]
   expect(call.toString()).toBe('__test_console__\n')
 })
+
+test('group synchronous console logs', async () => {
+  const { stdout } = await runVitest({
+    root: './fixtures/console-batch',
+  })
+  const logs = stdout
+    .split('\n')
+    .filter(row => row.length === 0 || row.startsWith('stdout | ') || row.startsWith('__TEST__'))
+    .join('\n')
+    .trim()
+  expect(logs).toMatchInlineSnapshot(`
+    "stdout | basic.test.ts
+    __TEST__ [beforeAll 1]
+
+    stdout | basic.test.ts
+    __TEST__ [beforeAll 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [beforeEach 1]
+
+    stdout | basic.test.ts > test
+    __TEST__ [beforeEach 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [test 1]
+    __TEST__ [test 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [test 3]
+    __TEST__ [test 4]
+
+    stdout | basic.test.ts > test
+    __TEST__ [afterEach 2]
+
+    stdout | basic.test.ts > test
+    __TEST__ [afterEach 1]
+
+    stdout | basic.test.ts
+    __TEST__ [afterAll 2]
+
+    stdout | basic.test.ts
+    __TEST__ [afterAll 1]"
+  `)
+})

@@ -6,8 +6,6 @@ import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
-function noop() {}
-
 const provider = process.env.PROVIDER || 'playwright'
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
 
@@ -102,19 +100,10 @@ export default defineConfig({
     },
     open: false,
     diff: './custom-diff-config.ts',
-    outputFile: './browser.json',
-    reporters: ['json', {
-      onInit: noop,
-      onPathsCollected: noop,
-      onCollected: noop,
-      onFinished: noop,
-      onTaskUpdate: noop,
-      onTestRemoved: noop,
-      onWatcherStart: noop,
-      onWatcherRerun: noop,
-      onServerRestart: noop,
-      onUserConsoleLog: noop,
-    }, 'default'],
+    outputFile: {
+      html: './html/index.html',
+      json: './browser.json',
+    },
     env: {
       BROWSER: browser,
     },

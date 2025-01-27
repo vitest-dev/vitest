@@ -116,11 +116,11 @@ const showScreenshot = ref(false)
 const timestamp = ref(Date.now())
 const currentTask = ref<Task | undefined>()
 const currentScreenshotUrl = computed(() => {
-  const file = currentTask.value?.meta.failScreenshotPath
+  const id = currentTask.value?.id
   // force refresh
   const t = timestamp.value
   // browser plugin using /, change this if base can be modified
-  return file ? `/__screenshot-error?file=${encodeURIComponent(file)}&t=${t}` : undefined
+  return id ? `/__screenshot-error?id=${encodeURIComponent(id)}&t=${t}` : undefined
 })
 
 function showScreenshotModal(task: Task) {

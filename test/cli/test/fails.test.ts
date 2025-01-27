@@ -18,14 +18,14 @@ it.each(files)('should fail %s', async (file) => {
   const msg = String(stderr)
     .split(/\n/g)
     .reverse()
-    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest') && !i.includes('at runWithTimeout'))
+    .filter(i => i.includes('Error: ') && !i.includes('Command failed') && !i.includes('stackStr') && !i.includes('at runTest') && !i.includes('at runWithTimeout') && !i.includes('file:'))
     .map(i => i.trim().replace(root, '<rootDir>'),
     )
     .join('\n')
-  expect(msg).toMatchSnapshot(file)
+  expect(msg).toMatchSnapshot()
 }, 30_000)
 
-it('should report coverage when "coverag.reportOnFailure: true" and tests fail', async () => {
+it('should report coverage when "coverage.reportOnFailure: true" and tests fail', async () => {
   const { stdout } = await runVitest({
     root,
     coverage: {
@@ -39,7 +39,7 @@ it('should report coverage when "coverag.reportOnFailure: true" and tests fail',
   expect(stdout).toMatch('Coverage report from istanbul')
 })
 
-it('should not report coverage when "coverag.reportOnFailure" has default value and tests fail', async () => {
+it('should not report coverage when "coverage.reportOnFailure" has default value and tests fail', async () => {
   const { stdout } = await runVitest({
     root,
     coverage: {

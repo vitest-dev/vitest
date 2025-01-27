@@ -365,14 +365,14 @@ function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
       let bestEquality2 = equality2
       let bestScore
         = diff_cleanupSemanticScore_(equality1, edit)
-        + diff_cleanupSemanticScore_(edit, equality2)
+          + diff_cleanupSemanticScore_(edit, equality2)
       while (edit.charAt(0) === equality2.charAt(0)) {
         equality1 += edit.charAt(0)
         edit = edit.substring(1) + equality2.charAt(0)
         equality2 = equality2.substring(1)
         const score
           = diff_cleanupSemanticScore_(equality1, edit)
-          + diff_cleanupSemanticScore_(edit, equality2)
+            + diff_cleanupSemanticScore_(edit, equality2)
         // The >= encourages trailing rather than leading whitespace on edits.
         if (score >= bestScore) {
           bestScore = score
@@ -435,7 +435,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         // Upon reaching an equality, check for prior redundancies.
         if (count_delete + count_insert > 1) {
           if (count_delete !== 0 && count_insert !== 0) {
-            // Factor out any common prefixies.
+            // Factor out any common prefixes.
             commonlength = diff_commonPrefix(text_insert, text_delete)
             if (commonlength !== 0) {
               if (
@@ -457,12 +457,12 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
               text_insert = text_insert.substring(commonlength)
               text_delete = text_delete.substring(commonlength)
             }
-            // Factor out any common suffixies.
+            // Factor out any common suffixes.
             commonlength = diff_commonSuffix(text_insert, text_delete)
             if (commonlength !== 0) {
               diffs[pointer][1]
                 = text_insert.substring(text_insert.length - commonlength)
-                + diffs[pointer][1]
+                  + diffs[pointer][1]
               text_insert = text_insert.substring(
                 0,
                 text_insert.length - commonlength,
@@ -525,10 +525,10 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         // Shift the edit over the previous equality.
         diffs[pointer][1]
           = diffs[pointer - 1][1]
-          + diffs[pointer][1].substring(
-            0,
-            diffs[pointer][1].length - diffs[pointer - 1][1].length,
-          )
+            + diffs[pointer][1].substring(
+              0,
+              diffs[pointer][1].length - diffs[pointer - 1][1].length,
+            )
         diffs[pointer + 1][1] = diffs[pointer - 1][1] + diffs[pointer + 1][1]
         diffs.splice(pointer - 1, 1)
         changes = true
@@ -541,7 +541,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         diffs[pointer - 1][1] += diffs[pointer + 1][1]
         diffs[pointer][1]
           = diffs[pointer][1].substring(diffs[pointer + 1][1].length)
-          + diffs[pointer + 1][1]
+            + diffs[pointer + 1][1]
         diffs.splice(pointer + 1, 1)
         changes = true
       }

@@ -12,9 +12,10 @@ export const RPC_ID
   = PAGE_TYPE === 'orchestrator'
     ? getBrowserState().sessionId
     : getBrowserState().testerId
+const METHOD = getBrowserState().method
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}`
+}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&rpcId=${RPC_ID}&sessionId=${getBrowserState().sessionId}&projectName=${getBrowserState().config.name || ''}&method=${METHOD}`
 
 let setCancel = (_: CancelReason) => {}
 export const onCancel = new Promise<CancelReason>((resolve) => {
