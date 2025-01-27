@@ -1,7 +1,6 @@
 import type { RawSourceMap } from '@ampproject/remapping'
 import type { File, Task, TaskResultPack, TaskState } from '@vitest/runner'
 import type { ParsedStack } from '@vitest/utils'
-import type { EachMapping } from '@vitest/utils/source-map'
 import type { ChildProcess } from 'node:child_process'
 import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
@@ -11,7 +10,7 @@ import type { TscErrorInfo } from './types'
 import { rm } from 'node:fs/promises'
 import { performance } from 'node:perf_hooks'
 import { getTasks } from '@vitest/runner/utils'
-import { eachMapping, generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
+import { generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
 import { basename, extname, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import { collectTests } from './collect'
@@ -162,7 +161,7 @@ export class Typechecker {
       }
       errors.forEach(({ error, originalError }) => {
         const processedPos = traceMap
-          ? findGeneratePosition(traceMap, {
+          ? generatedPositionFor(traceMap, {
             line: originalError.line,
             column: originalError.column,
             source: basename(path),
@@ -364,32 +363,4 @@ export class Typechecker {
       .flat()
       .map<TaskResultPack>(i => [i.id, i.result, { typecheck: true }])
   }
-}
-
-function findGeneratePosition(traceMap: TraceMap, { line, column, source }: { line: number; column: number; source: string }) {
-  const found = generatedPositionFor(traceMap, {
-    line,
-    column,
-    source,
-  })
-  if (found.line !== null) {
-    return found
-  }
-  // find the next source token position when the exact error position doesn't exist in source map.
-  // this can happen, for example, when the type error is in the comment "// @ts-expect-error"
-  // and comments are stripped away in the generated code.
-  const mappings: (EachMapping & { originalLine: number })[] = []
-  eachMapping(traceMap, (m) => {
-    if (m.source === source && m.originalLine !== null && m.originalColumn !== null && (line < m.originalLine || (line === m.originalLine && column <= m.originalColumn))) {
-      mappings.push(m)
-    }
-  })
-  const next = mappings.sort((a, b) => a.originalLine === b.originalLine ? a.originalColumn - b.originalColumn : a.originalLine - b.originalLine).at(0)
-  if (next) {
-    return {
-      line: next.generatedLine,
-      column: next.generatedColumn,
-    }
-  }
-  return { line: null, column: null }
 }

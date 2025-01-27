@@ -5,8 +5,6 @@ import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
 
 export {
-  eachMapping,
-  type EachMapping,
   generatedPositionFor,
   originalPositionFor,
   TraceMap,
