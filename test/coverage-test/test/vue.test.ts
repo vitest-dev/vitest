@@ -1,6 +1,5 @@
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { version as viteVersion } from 'vite'
 import { beforeAll, expect } from 'vitest'
 import { isBrowser, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
@@ -26,12 +25,6 @@ test('coverage results matches snapshot', async (ctx) => {
   const summary = coverageMap.getCoverageSummary()
 
   if (isV8Provider()) {
-    // vue coverage tends to fluctuate with Vite 6's several changes.
-    // this might be also related to how empty first line mapping is faked by vite-node
-    if (viteVersion[0] >= '6') {
-      ctx.skip()
-    }
-
     const { branches, functions, lines, statements } = summary
 
     expect({ branches, functions }).toMatchInlineSnapshot(`
@@ -74,16 +67,16 @@ test('coverage results matches snapshot', async (ctx) => {
       expect({ lines, statements }).toMatchInlineSnapshot(`
         {
           "lines": {
-            "covered": 36,
-            "pct": 81.81,
+            "covered": 35,
+            "pct": 81.39,
             "skipped": 0,
-            "total": 44,
+            "total": 43,
           },
           "statements": {
-            "covered": 36,
-            "pct": 81.81,
+            "covered": 35,
+            "pct": 81.39,
             "skipped": 0,
-            "total": 44,
+            "total": 43,
           },
         }
       `)
