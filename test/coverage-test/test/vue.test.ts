@@ -20,7 +20,7 @@ test('files should not contain query parameters', () => {
   expect(files).not.toContain('Counter.component.ts?vue&type=script&src=true&lang.ts.html')
 })
 
-test('coverage results matches snapshot', async (ctx) => {
+test('coverage results matches snapshot', async () => {
   const coverageMap = await readCoverageMap()
   const summary = coverageMap.getCoverageSummary()
 
