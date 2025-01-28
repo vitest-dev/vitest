@@ -132,6 +132,7 @@ See PR for more details: [#5876](https://github.com/vitest-dev/vitest/pull/5876)
 ### `module` condition export is not resolved by default on Vite 6
 
 Vite 6 allows more flexible [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) options and Vitest configures it to exclude `module` conditional export by default.
+See also [Vite 6 migration guide](https://v6.vite.dev/guide/migration.html#default-value-for-resolve-conditions) for the detail of Vite side changes.
 
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
