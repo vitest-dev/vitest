@@ -701,6 +701,8 @@ You can provide an optional argument to test that a specific error is thrown:
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
+
+> _This only applies to the synchronous usage !_
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
