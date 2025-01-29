@@ -167,7 +167,7 @@
     "magic-string": "^0.30.17",
     "pathe": "^2.0.2",
     "std-env": "^3.8.0",
-    "tinybench": "^2.9.0",
+    "tinybench": "^3.1.1",
     "tinyexec": "^0.3.2",
     "tinypool": "^1.0.2",
     "tinyrainbow": "^2.0.0",
