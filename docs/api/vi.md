@@ -409,7 +409,7 @@ This will clear mock history and reset each mock's implementation to its origina
 ### vi.restoreAllMocks
 
 Calls [`.mockRestore()`](/api/mock#mockrestore) on all spies.
-This will clear mock history, restore all original mock implementations, , and restore original descriptors of spied-on objects.
+This will clear mock history, restore all original mock implementations, and restore original descriptors of spied-on objects.
 
 ### vi.spyOn
 
