@@ -62,11 +62,65 @@ export default class SnapshotState {
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
   private _fileExists: boolean
-  private added = new CounterMap<string>()
-  private matched = new CounterMap<string>()
-  private unmatched = new CounterMap<string>()
-  private updated = new CounterMap<string>()
   expand: boolean
+
+  // getter/setter for jest-image-snapshot compat
+  // https://github.com/vitest-dev/vitest/issues/7322
+  private _added = new CounterMap<string>()
+  private _matched = new CounterMap<string>()
+  private _unmatched = new CounterMap<string>()
+  private _updated = new CounterMap<string>()
+  get added(): CounterMap<string> {
+    return this._added
+  }
+
+  set added(value: CounterMap<string> | number) {
+    if (typeof value === 'number') {
+      this._added.total_ = value
+    }
+    else {
+      this._added = value
+    }
+  }
+
+  get matched(): CounterMap<string> {
+    return this._matched
+  }
+
+  set matched(value: CounterMap<string> | number) {
+    if (typeof value === 'number') {
+      this._matched.total_ = value
+    }
+    else {
+      this._matched = value
+    }
+  }
+
+  get unmatched(): CounterMap<string> {
+    return this._unmatched
+  }
+
+  set unmatched(value: CounterMap<string> | number) {
+    if (typeof value === 'number') {
+      this._unmatched.total_ = value
+    }
+    else {
+      this._unmatched = value
+    }
+  }
+
+  get updated(): CounterMap<string> {
+    return this._updated
+  }
+
+  set updated(value: CounterMap<string> | number) {
+    if (typeof value === 'number') {
+      this._updated.total_ = value
+    }
+    else {
+      this._updated = value
+    }
+  }
 
   private constructor(
     public testFilePath: string,

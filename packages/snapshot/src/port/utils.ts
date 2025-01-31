@@ -288,14 +288,32 @@ export class CounterMap<K> extends DefaultMap<K, number> {
   }
 
   increment(key: K): void {
+    if (typeof this.total_ !== 'undefined') {
+      this.total_++
+    }
     this.set(key, this.get(key) + 1)
   }
 
   total(): number {
+    if (typeof this.total_ !== 'undefined') {
+      return this.total_
+    }
     let total = 0
     for (const x of this.values()) {
       total += x
     }
     return total
+  }
+
+  // compat for jest-image-snapshot
+  // https://github.com/vitest-dev/vitest/issues/7322
+  total_: number | undefined;
+
+  [Symbol.toPrimitive](hint: string): number | string {
+    if (hint === 'number') {
+      this.total_ = this.total()
+      return this.total_
+    }
+    return `[object CounterMap]`
   }
 }
