@@ -287,6 +287,17 @@ export class CounterMap<K> extends DefaultMap<K, number> {
     super(() => 0)
   }
 
+  // compat for jest-image-snapshot https://github.com/vitest-dev/vitest/issues/7322
+  // `valueOf` and `Snapshot.added` setter allows
+  //   snapshotState.added = snapshotState.added + 1
+  // to function as
+  //   snapshotState.added.total_ = snapshotState.added.total() + 1
+  total_: number | undefined
+
+  valueOf(): number {
+    return this.total_ = this.total()
+  }
+
   increment(key: K): void {
     if (typeof this.total_ !== 'undefined') {
       this.total_++
@@ -303,13 +314,5 @@ export class CounterMap<K> extends DefaultMap<K, number> {
       total += x
     }
     return total
-  }
-
-  // compat for jest-image-snapshot
-  // https://github.com/vitest-dev/vitest/issues/7322
-  total_: number | undefined
-
-  valueOf(): number {
-    return this.total_ = this.total()
   }
 }
