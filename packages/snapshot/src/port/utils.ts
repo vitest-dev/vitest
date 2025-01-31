@@ -307,13 +307,9 @@ export class CounterMap<K> extends DefaultMap<K, number> {
 
   // compat for jest-image-snapshot
   // https://github.com/vitest-dev/vitest/issues/7322
-  total_: number | undefined;
+  total_: number | undefined
 
-  [Symbol.toPrimitive](hint: string): number | string {
-    if (hint === 'number') {
-      this.total_ = this.total()
-      return this.total_
-    }
-    return `[object CounterMap]`
+  valueOf(): number {
+    return this.total_ = this.total()
   }
 }
