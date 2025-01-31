@@ -72,6 +72,7 @@ const external = [
   'node:os',
   'node:stream',
   'node:vm',
+  'node:http',
   'inspector',
   'vite-node/source-map',
   'vite-node/client',

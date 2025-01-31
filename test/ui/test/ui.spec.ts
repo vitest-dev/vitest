@@ -30,6 +30,36 @@ test.describe('ui', () => {
     await vitest?.close()
   })
 
+  test('security', async ({ page }) => {
+    await page.goto('https://example.com/')
+
+    // request html
+    const htmlResult = await page.evaluate(async (pageUrl) => {
+      try {
+        const res = await fetch(pageUrl)
+        return res.status
+      }
+      catch (e) {
+        return e instanceof Error ? e.message : e
+      }
+    }, pageUrl)
+    expect(htmlResult).toBe('Failed to fetch')
+
+    // request websocket
+    const wsResult = await page.evaluate(async (pageUrl) => {
+      const ws = new WebSocket(new URL('/__vitest_api__', pageUrl))
+      return new Promise((resolve) => {
+        ws.addEventListener('open', () => {
+          resolve('open')
+        })
+        ws.addEventListener('error', () => {
+          resolve('error')
+        })
+      })
+    }, pageUrl)
+    expect(wsResult).toBe('error')
+  })
+
   test('basic', async ({ page }) => {
     const pageErrors: unknown[] = []
     page.on('pageerror', error => pageErrors.push(error))
