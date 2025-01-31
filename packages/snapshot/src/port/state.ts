@@ -70,57 +70,14 @@ export default class SnapshotState {
   private _matched = new CounterMap<string>()
   private _unmatched = new CounterMap<string>()
   private _updated = new CounterMap<string>()
-  get added(): CounterMap<string> {
-    return this._added
-  }
-
-  set added(value: CounterMap<string> | number) {
-    if (typeof value === 'number') {
-      this._added.total_ = value
-    }
-    else {
-      this._added = value
-    }
-  }
-
-  get matched(): CounterMap<string> {
-    return this._matched
-  }
-
-  set matched(value: CounterMap<string> | number) {
-    if (typeof value === 'number') {
-      this._matched.total_ = value
-    }
-    else {
-      this._matched = value
-    }
-  }
-
-  get unmatched(): CounterMap<string> {
-    return this._unmatched
-  }
-
-  set unmatched(value: CounterMap<string> | number) {
-    if (typeof value === 'number') {
-      this._unmatched.total_ = value
-    }
-    else {
-      this._unmatched = value
-    }
-  }
-
-  get updated(): CounterMap<string> {
-    return this._updated
-  }
-
-  set updated(value: CounterMap<string> | number) {
-    if (typeof value === 'number') {
-      this._updated.total_ = value
-    }
-    else {
-      this._updated = value
-    }
-  }
+  get added(): CounterMap<string> { return this._added }
+  set added(value: number) { this._added.total_ = value }
+  get matched(): CounterMap<string> { return this._matched }
+  set matched(value: number) { this._matched.total_ = value }
+  get unmatched(): CounterMap<string> { return this._unmatched }
+  set unmatched(value: number) { this._unmatched.total_ = value }
+  get updated(): CounterMap<string> { return this._updated }
+  set updated(value: number) { this._updated.total_ = value }
 
   private constructor(
     public testFilePath: string,
