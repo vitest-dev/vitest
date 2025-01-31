@@ -1,5 +1,6 @@
 import type { Plugin } from 'vite'
 import type { Vitest } from 'vitest/node'
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { toArray } from '@vitest/utils'
 import { basename, resolve } from 'pathe'
@@ -52,13 +53,45 @@ export default (ctx: Vitest): Plugin => {
         }
 
         const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
+        const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
+
         server.middlewares.use(
           base,
           sirv(clientDist, {
-            single: true,
             dev: true,
+            extensions: [], // don't serve index.html
           }),
         )
+
+        // serve index.html with api token
+        // eslint-disable-next-line prefer-arrow-callback
+        server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
+          if (req.url) {
+            const url = new URL(req.url, 'http://localhost')
+            if (url.pathname === base) {
+              const html = clientIndexHtml.replace(
+                '<!-- !LOAD_METADATA! -->',
+                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
+              )
+              res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+              res.setHeader('Content-Type', 'text/html; charset=utf-8')
+              res.write(html)
+              res.end()
+              return
+            }
+          }
+          next()
+        })
+
+        return () => {
+          // move vitestUiHtmlMiddleware after viteHostCheckMiddleware if exists
+          const i1 = server.middlewares.stack.findIndex(h => 'name' in h.handle && h.handle.name === 'vitestUiHtmlMiddleware')
+          const i2 = server.middlewares.stack.findIndex(h => 'name' in h.handle && h.handle.name === 'viteHostCheckMiddleware')
+          if (i1 !== -1 && i2 !== -1 && i1 < i2) {
+            const [item] = server.middlewares.stack.splice(i1, 1)
+            server.middlewares.stack.splice(i2, 0, item)
+          }
+        }
       },
     },
   }
