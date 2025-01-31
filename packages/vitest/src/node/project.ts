@@ -26,6 +26,7 @@ import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
+import { installSourcemapsSupport } from 'vite-node/source-map'
 import { setup } from '../api/setup'
 import { isBrowserEnabled, resolveConfig } from './config/resolveConfig'
 import { serializeConfig } from './config/serializeConfig'
@@ -231,6 +232,12 @@ export class TestProject {
     if (this._globalSetups) {
       return
     }
+
+    // Since globalSetup files are executed with vm.runInContext, and Node.js doesn't read VM
+    // sourcemaps, we need source-map-support to ensure useful stack traces.
+    installSourcemapsSupport({
+      getSourceMap: source => this.runner.moduleCache.getSourceMap(source),
+    })
 
     this._globalSetups = await loadGlobalSetupFiles(
       this.runner,
