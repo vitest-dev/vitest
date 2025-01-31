@@ -292,22 +292,22 @@ export class CounterMap<K> extends DefaultMap<K, number> {
   //   snapshotState.added = snapshotState.added + 1
   // to function as
   //   snapshotState.added.total_ = snapshotState.added.total() + 1
-  total_: number | undefined
+  _total: number | undefined
 
   valueOf(): number {
-    return this.total_ = this.total()
+    return this._total = this.total()
   }
 
   increment(key: K): void {
-    if (typeof this.total_ !== 'undefined') {
-      this.total_++
+    if (typeof this._total !== 'undefined') {
+      this._total++
     }
     this.set(key, this.get(key) + 1)
   }
 
   total(): number {
-    if (typeof this.total_ !== 'undefined') {
-      return this.total_
+    if (typeof this._total !== 'undefined') {
+      return this._total
     }
     let total = 0
     for (const x of this.values()) {

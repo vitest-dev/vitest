@@ -71,13 +71,13 @@ export default class SnapshotState {
   private _unmatched = new CounterMap<string>()
   private _updated = new CounterMap<string>()
   get added(): CounterMap<string> { return this._added }
-  set added(value: number) { this._added.total_ = value }
+  set added(value: number) { this._added._total = value }
   get matched(): CounterMap<string> { return this._matched }
-  set matched(value: number) { this._matched.total_ = value }
+  set matched(value: number) { this._matched._total = value }
   get unmatched(): CounterMap<string> { return this._unmatched }
-  set unmatched(value: number) { this._unmatched.total_ = value }
+  set unmatched(value: number) { this._unmatched._total = value }
   get updated(): CounterMap<string> { return this._updated }
-  set updated(value: number) { this._updated.total_ = value }
+  set updated(value: number) { this._updated._total = value }
 
   private constructor(
     public testFilePath: string,
