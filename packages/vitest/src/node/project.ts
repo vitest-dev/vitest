@@ -390,7 +390,8 @@ export class TestProject {
     this.testFilesList?.push(testPath)
   }
 
-  removeCachedTestFile(testPath: string): void {
+  /** @internal */
+  _removeCachedTestFile(testPath: string): void {
     if (this.testFilesList) {
       this.testFilesList = this.testFilesList.filter(file => file !== testPath)
     }
