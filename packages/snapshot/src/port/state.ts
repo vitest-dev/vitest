@@ -28,7 +28,6 @@ import {
   getSnapshotData,
   keyToTestName,
   normalizeNewlines,
-  prepareExpected,
   removeExtraLineBreaks,
   saveSnapshotFile,
   serialize,
@@ -293,8 +292,10 @@ export default class SnapshotState {
       : rawSnapshot
         ? rawSnapshot.content
         : this._snapshotData[key]
-    const expectedTrimmed = rawSnapshot ? expected : prepareExpected(expected)
-    const pass = expectedTrimmed === (rawSnapshot ? receivedSerialized : prepareExpected(receivedSerialized))
+    // const expectedTrimmed = rawSnapshot ? expected : prepareExpected(expected)
+    // const pass = expectedTrimmed === (rawSnapshot ? receivedSerialized : prepareExpected(receivedSerialized))
+    const expectedTrimmed = rawSnapshot ? expected : expected?.trim()
+    const pass = expectedTrimmed === (rawSnapshot ? receivedSerialized : receivedSerialized.trim())
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted
       = isInline
