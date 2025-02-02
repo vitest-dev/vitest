@@ -59,6 +59,7 @@ export default (project: WorkspaceProject, base = '/'): Plugin[] => {
           const injector = replacer(await injectorJs, {
             __VITEST_CONFIG__: JSON.stringify(config),
             __VITEST_FILES__: JSON.stringify(files),
+            __VITEST_API_TOKEN__: JSON.stringify(project.ctx.config.api.token),
           })
 
           if (url.pathname === base) {

@@ -894,7 +894,7 @@ export interface ResolvedConfig extends Omit<Required<UserConfig>, 'config' | 'f
 
   defines: Record<string, any>
 
-  api?: ApiConfig
+  api: ApiConfig & { token: string }
   cliExclude?: string[]
 
   benchmark?: Required<Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>> & Pick<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>

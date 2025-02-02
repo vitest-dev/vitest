@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-globals */
-
 /**
  * @vitest-environment happy-dom
  */

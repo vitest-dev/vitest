@@ -76,7 +76,7 @@
     "@vitest/ws-client": "workspace:*",
     "@wdio/protocols": "^8.29.7",
     "periscopic": "^4.0.2",
-    "playwright": "^1.41.0",
+    "playwright": "^1.49.1",
     "playwright-core": "^1.41.0",
     "safaridriver": "^0.1.2",
     "vitest": "workspace:*",

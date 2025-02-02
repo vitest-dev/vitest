@@ -70,6 +70,7 @@ const external = [
   'node:fs',
   'node:stream',
   'node:vm',
+  'node:http',
   'inspector',
   'vite-node/source-map',
   'vite-node/client',
