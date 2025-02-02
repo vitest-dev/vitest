@@ -20,6 +20,7 @@ import { VitestOptimizer } from './optimizer'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
+  getDefaultResolveOptions,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
@@ -63,15 +64,17 @@ export async function VitestPlugin(
 
         // store defines for globalThis to make them
         // reassignable when running in worker in src/runtime/setup.ts
-        const defines: Record<string, any> = deleteDefineConfig(viteConfig);
+        const defines: Record<string, any> = deleteDefineConfig(viteConfig)
 
-        (options as ResolvedConfig).defines = defines
+        ;(options as unknown as ResolvedConfig).defines = defines
 
         let open: string | boolean | undefined = false
 
         if (testConfig.ui && testConfig.open) {
           open = testConfig.uiBase ?? '/__vitest__/'
         }
+
+        const resolveOptions = getDefaultResolveOptions()
 
         const config: ViteConfig = {
           root: viteConfig.test?.root || options.root,
@@ -86,11 +89,8 @@ export async function VitestPlugin(
                   legalComments: 'inline',
                 },
           resolve: {
-            // by default Vite resolves `module` field, which not always a native ESM module
-            // setting this option can bypass that and fallback to cjs version
-            mainFields: [],
+            ...resolveOptions,
             alias: testConfig.alias,
-            conditions: ['node'],
           },
           server: {
             ...testConfig.api,
@@ -115,12 +115,7 @@ export async function VitestPlugin(
           // @ts-ignore Vite 6 compat
           environments: {
             ssr: {
-              resolve: {
-                // by default Vite resolves `module` field, which not always a native ESM module
-                // setting this option can bypass that and fallback to cjs version
-                mainFields: [],
-                conditions: ['node'],
-              },
+              resolve: resolveOptions,
             },
           },
           test: {
@@ -143,6 +138,11 @@ export async function VitestPlugin(
             root: testConfig.root ?? viteConfig.test?.root,
             deps: testConfig.deps ?? viteConfig.test?.deps,
           },
+        }
+
+        if (ctx.configOverride.project) {
+          // project filter was set by the user, so we need to filter the project
+          options.project = ctx.configOverride.project
         }
 
         config.customLogger = createViteLogger(
@@ -217,9 +217,9 @@ export async function VitestPlugin(
         return config
       },
       async configResolved(viteConfig) {
-        const viteConfigTest = (viteConfig.test as any) || {}
+        const viteConfigTest = (viteConfig.test as UserConfig) || {}
         if (viteConfigTest.watch === false) {
-          viteConfigTest.run = true
+          ;(viteConfigTest as any).run = true
         }
 
         if ('alias' in viteConfigTest) {
@@ -255,6 +255,13 @@ export async function VitestPlugin(
           enumerable: false,
           configurable: true,
         })
+
+        const originalName = options.name
+        if (options.browser?.enabled && options.browser?.instances) {
+          options.browser.instances.forEach((instance) => {
+            instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
+          })
+        }
       },
       configureServer: {
         // runs after vite:import-analysis as it relies on `server` instance on Vite 5

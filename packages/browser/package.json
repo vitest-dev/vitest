@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -88,7 +88,7 @@
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/user-event": "^14.6.0",
+    "@testing-library/user-event": "^14.6.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.17",
@@ -108,7 +108,7 @@
     "flatted": "^3.3.2",
     "ivya": "^1.1.1",
     "mime": "^4.0.6",
-    "pathe": "^2.0.1",
+    "pathe": "^2.0.2",
     "periscopic": "^4.0.2",
     "playwright": "^1.49.1",
     "playwright-core": "^1.49.1",

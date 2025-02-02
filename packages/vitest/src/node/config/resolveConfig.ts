@@ -1,11 +1,10 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { Logger } from '../logger'
+import type { Vitest } from '../core'
 import type { BenchmarkBuiltinReporters } from '../reporters'
 import type {
   ApiConfig,
   ResolvedConfig,
   UserConfig,
-  VitestRunMode,
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
@@ -21,7 +20,6 @@ import {
   extraInlineDeps,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
-import { wildcardPatternToRegExp } from '../../utils/base'
 import { isCI, stdProvider } from '../../utils/env'
 import { getWorkersCountByPercentage } from '../../utils/workers'
 import { VitestCache } from '../cache'
@@ -112,11 +110,12 @@ function resolveInlineWorkerOption(value: string | number): number {
 }
 
 export function resolveConfig(
-  mode: VitestRunMode,
+  vitest: Vitest,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
-  logger: Logger,
 ): ResolvedConfig {
+  const mode = vitest.mode
+  const logger = vitest.logger
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
@@ -143,6 +142,7 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
 
   const inspector = resolved.inspect || resolved.inspectBrk
@@ -257,7 +257,7 @@ export function resolveConfig(
     }
   }
 
-  const playwrightChromiumOnly = isPlaywrightChromiumOnly(resolved)
+  const playwrightChromiumOnly = isPlaywrightChromiumOnly(vitest, resolved)
 
   // Browser-mode "Playwright + Chromium" only features:
   if (browser.enabled && !playwrightChromiumOnly) {
@@ -265,7 +265,7 @@ export function resolveConfig(
       browser: {
         provider: browser.provider,
         name: browser.name,
-        instances: browser.instances,
+        instances: browser.instances?.map(i => ({ browser: i.browser })),
       },
     }
 
@@ -470,7 +470,7 @@ export function resolveConfig(
   resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
 
   if (options.resolveSnapshotPath) {
-    delete (resolved as UserConfig).resolveSnapshotPath
+    delete (resolved as any).resolveSnapshotPath
   }
 
   resolved.pool ??= 'threads'
@@ -899,7 +899,7 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
   return resolvedReporters
 }
 
-function isPlaywrightChromiumOnly(config: ResolvedConfig) {
+function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
   const browser = config.browser
   if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
     return false
@@ -910,11 +910,10 @@ function isPlaywrightChromiumOnly(config: ResolvedConfig) {
   if (!browser.instances) {
     return false
   }
-  const filteredProjects = toArray(config.project).map(p => wildcardPatternToRegExp(p))
   for (const instance of browser.instances) {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
-    if (filteredProjects.length && !filteredProjects.every(p => p.test(name))) {
+    if (!vitest._matchesProjectFilter(name)) {
       continue
     }
     if (instance.browser !== 'chromium') {

@@ -6,6 +6,7 @@ import type {
 import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
 import { dirname } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
+import * as vite from 'vite'
 import { rootDir } from '../../paths'
 import { VitestCache } from '../cache'
 
@@ -146,4 +147,24 @@ export function resolveFsAllow(
     searchForWorkspaceRoot(projectRoot),
     rootDir,
   ]
+}
+
+export function getDefaultResolveOptions(): vite.ResolveOptions {
+  return {
+    // by default Vite resolves `module` field, which is not always a native ESM module
+    // setting this option can bypass that and fallback to cjs version
+    mainFields: [],
+    // same for `module` condition and Vite 5 doesn't even allow excluding it,
+    // but now it's possible since Vite 6.
+    conditions: getDefaultServerConditions(),
+  }
+}
+
+function getDefaultServerConditions(): string[] {
+  const viteMajor = Number(viteVersion.split('.')[0])
+  if (viteMajor >= 6) {
+    const conditions: string[] = (vite as any).defaultServerConditions
+    return conditions.filter(c => c !== 'module')
+  }
+  return ['node']
 }
