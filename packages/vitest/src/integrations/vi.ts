@@ -502,14 +502,12 @@ function createVitest(): VitestUtils {
     },
 
     setSystemTime(time: number | string | Date) {
-      const date = time instanceof Date ? time : new Date(time)
-      _mockedDate = date
-      timers().setSystemTime(date)
+      timers().setSystemTime(time)
       return utils
     },
 
     getMockedSystemTime() {
-      return _mockedDate
+      return timers().getMockedSystemTime()
     },
 
     getRealSystemTime() {

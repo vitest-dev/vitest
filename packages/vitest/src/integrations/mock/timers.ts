@@ -19,12 +19,12 @@ export class FakeTimers {
   private _clock!: InstalledClock
   // | _fakingDate | _fakingTime |
   // +-------------+-------------+
-  // | false       | false       | initial
-  // | true        | false       | vi.setSystemTime called without vi.useFakeTimers
-  // | false       | true        | vi.useFakeTimers called
-  // | true        | true        | unreachable
+  // | falsy       | false       | initial
+  // | truethy     | false       | vi.setSystemTime called without vi.useFakeTimers (this allows mocking only Date without fake timers)
+  // | falsy       | true        | vi.useFakeTimers called
+  // | truethy     | true        | unreachable
   private _fakingTime: boolean
-  private _fakingDate: boolean
+  private _fakingDate: Date | null
   private _fakeTimers: FakeTimerWithContext
   private _userConfig?: FakeTimerInstallOpts
   private _now = RealDate.now
@@ -38,7 +38,7 @@ export class FakeTimers {
   }) {
     this._userConfig = config
 
-    this._fakingDate = false
+    this._fakingDate = null
 
     this._fakingTime = false
     this._fakeTimers = withGlobal(global)
@@ -135,7 +135,7 @@ export class FakeTimers {
   useRealTimers(): void {
     if (this._fakingDate) {
       resetDate()
-      this._fakingDate = false
+      this._fakingDate = null
     }
 
     if (this._fakingTime) {
@@ -183,18 +183,19 @@ export class FakeTimers {
     }
   }
 
-  setSystemTime(now?: number | Date): void {
+  setSystemTime(now?: string | number | Date): void {
+    const date = (typeof now === 'undefined' || now instanceof Date) ? now : new Date(now)
     if (this._fakingTime) {
-      this._clock.setSystemTime(now)
+      this._clock.setSystemTime(date)
     }
     else {
-      mockDate(now ?? this.getRealSystemTime())
-      this._fakingDate = true
+      this._fakingDate = date ?? new Date(this.getRealSystemTime())
+      mockDate(this._fakingDate)
     }
   }
 
-  getMockedSystemTime(): number | null {
-    return this._fakingTime ? this._clock.now : null
+  getMockedSystemTime(): Date | null {
+    return this._fakingTime ? new Date(this._clock.now) : this._fakingDate
   }
 
   getRealSystemTime(): number {
