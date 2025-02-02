@@ -1,5 +1,6 @@
 import type { File, TaskResultPack } from '@vitest/runner'
 
+import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
@@ -21,6 +22,7 @@ import { API_PATH } from '../constants'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
 import { parseErrorStacktrace } from '../utils/source-map'
+import { isValidApiRequest } from './check'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer) {
   const wss = new WebSocketServer({ noServer: true })
@@ -29,13 +31,18 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
 
   const server = _server || ctx.server
 
-  server.httpServer?.on('upgrade', (request, socket, head) => {
+  server.httpServer?.on('upgrade', (request: IncomingMessage, socket, head) => {
     if (!request.url) {
       return
     }
 
     const { pathname } = new URL(request.url, 'http://localhost')
     if (pathname !== API_PATH) {
+      return
+    }
+
+    if (!isValidApiRequest(ctx.config, request)) {
+      socket.destroy()
       return
     }
 
