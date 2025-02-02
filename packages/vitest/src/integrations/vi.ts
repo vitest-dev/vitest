@@ -85,7 +85,7 @@ export interface VitestUtils {
    */
   setSystemTime: (time: number | string | Date) => VitestUtils
   /**
-   * Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
+   * Returns mocked current date. If date is not mocked the method will return `null`.
    */
   getMockedSystemTime: () => Date | null
   /**
