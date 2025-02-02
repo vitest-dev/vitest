@@ -14,7 +14,7 @@ export const SESSION_ID
     : getBrowserState().testerId
 export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
-}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&sessionId=${SESSION_ID}`
+}//${HOST}/__vitest_browser_api__?type=${PAGE_TYPE}&sessionId=${SESSION_ID}&token=${(window as any).VITEST_API_TOKEN}`
 
 let setCancel = (_: CancelReason) => {}
 export const onCancel = new Promise<CancelReason>((resolve) => {

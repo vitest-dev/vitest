@@ -32,6 +32,7 @@ export async function resolveOrchestrator(
     __VITEST_CONTEXT_ID__: JSON.stringify(contextId),
     __VITEST_TESTER_ID__: '"none"',
     __VITEST_PROVIDED_CONTEXT__: '{}',
+    __VITEST_API_TOKEN__: JSON.stringify(project.ctx.config.api.token),
   })
 
   // disable CSP for the orchestrator as we are the ones controlling it
