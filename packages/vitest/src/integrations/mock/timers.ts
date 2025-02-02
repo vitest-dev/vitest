@@ -17,12 +17,12 @@ import { mockDate, RealDate, resetDate } from './date'
 export class FakeTimers {
   private _global: typeof globalThis
   private _clock!: InstalledClock
-  // | _fakingDate | _fakingTime |
+  // | _fakingTime | _fakingDate |
   // +-------------+-------------+
-  // | falsy       | false       | initial
-  // | truethy     | false       | vi.setSystemTime called without vi.useFakeTimers (this allows mocking only Date without fake timers)
-  // | falsy       | true        | vi.useFakeTimers called
-  // | truethy     | true        | unreachable
+  // | false       | falsy       | initial
+  // | false       | truethy     | vi.setSystemTime called first (for mocking only Date without fake timers)
+  // | true        | falsy       | vi.useFakeTimers called first
+  // | true        | truethy     | unreachable
   private _fakingTime: boolean
   private _fakingDate: Date | null
   private _fakeTimers: FakeTimerWithContext
