@@ -304,7 +304,9 @@ function createSuiteCollector(
     const task: Test = {
       id: '',
       name,
-      suite: undefined!,
+      // no parent suite for top-level tests
+      // eslint-disable-next-line ts/no-use-before-define
+      suite: collector === defaultSuite ? undefined : suite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
@@ -417,6 +419,8 @@ function createSuiteCollector(
       id: '',
       type: 'suite',
       name,
+      // TODO: how to reference parent suite?
+      suite: collector === defaultSuite ? undefined : undefined,
       mode,
       each,
       file: undefined!,
@@ -466,7 +470,7 @@ function createSuiteCollector(
     suite.tasks = allChildren
 
     allChildren.forEach((task) => {
-      task.suite = suite
+      // task.suite = suite
       task.file = file
     })
 
