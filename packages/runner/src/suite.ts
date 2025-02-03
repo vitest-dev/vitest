@@ -296,7 +296,7 @@ function createSuiteCollector(
   const tasks: (Test | Suite | SuiteCollector)[] = []
   const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
-  let suite: Suite
+  let suite!: Suite
 
   initSuite(true)
 
@@ -397,6 +397,7 @@ function createSuiteCollector(
     type: 'collector',
     name,
     mode,
+    suite,
     options: suiteOptions,
     test,
     tasks,
@@ -419,8 +420,10 @@ function createSuiteCollector(
       id: '',
       type: 'suite',
       name,
-      // TODO: how to reference parent suite?
-      suite: collector === defaultSuite ? undefined : undefined,
+      suite:
+        collectorContext.currentSuite === defaultSuite
+          ? undefined
+          : collectorContext.currentSuite?.suite,
       mode,
       each,
       file: undefined!,
