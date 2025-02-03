@@ -50,7 +50,9 @@ export class Logger {
     this.addCleanupListeners()
     this.registerUnhandledRejection()
 
-    ;(this.outputStream as Writable).write(HIDE_CURSOR)
+    if ((this.outputStream as typeof process.stdout).isTTY) {
+      (this.outputStream as Writable).write(HIDE_CURSOR)
+    }
   }
 
   log(...args: any[]) {
@@ -298,7 +300,10 @@ export class Logger {
   private addCleanupListeners() {
     const cleanup = () => {
       this.cleanupListeners.forEach(fn => fn())
-      ;(this.outputStream as Writable).write(SHOW_CURSOR)
+
+      if ((this.outputStream as typeof process.stdout).isTTY) {
+        (this.outputStream as Writable).write(SHOW_CURSOR)
+      }
     }
 
     const onExit = (signal?: string | number, exitCode?: number) => {
