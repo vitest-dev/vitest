@@ -305,8 +305,10 @@ function createSuiteCollector(
       id: '',
       name,
       // no parent suite for top-level tests
-      // eslint-disable-next-line ts/no-use-before-define
-      suite: collector === defaultSuite ? undefined : suite,
+      suite:
+        collectorContext.currentSuite === defaultSuite
+          ? undefined
+          : collectorContext.currentSuite?.suite,
       each: options.each,
       fails: options.fails,
       context: undefined!,

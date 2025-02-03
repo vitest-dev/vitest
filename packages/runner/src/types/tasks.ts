@@ -612,7 +612,7 @@ export interface SuiteCollector<ExtraContext = object> {
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
-  suite: Suite,
+  suite: Suite
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
   clear: () => void
