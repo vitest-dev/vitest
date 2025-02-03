@@ -36,7 +36,9 @@ export function normalizeRequestId(id: string, base?: string): string {
   }
 
   if (id.startsWith('file://')) {
-    return fileURLToPath(id)
+    // preserve hash/query
+    const { file, postfix } = splitFileAndPostfix(id)
+    return fileURLToPath(file) + postfix
   }
 
   return id
@@ -56,6 +58,14 @@ export function normalizeRequestId(id: string, base?: string): string {
 const postfixRE = /[?#].*$/
 export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
+}
+
+function splitFileAndPostfix(path: string): {
+  file: string
+  postfix: string
+} {
+  const file = cleanUrl(path)
+  return { file, postfix: path.slice(file.length) }
 }
 
 const internalRequests = ['@vite/client', '@vite/env']
