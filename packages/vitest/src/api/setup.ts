@@ -29,7 +29,70 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
 
   const clients = new Map<WebSocket, WebSocketRPC>()
 
-  const server = _server || ctx.server
+  import { IncomingMessage, ServerResponse } from 'http';
+
+export function setup(ctx: Vitest, _server?: ViteDevServer) {
+  const wss = new WebSocketServer({ noServer: true });
+  const clients = new Map<WebSocket, WebSocketRPC>();
+  const server = _server || ctx.server;
+
+  server.httpServer?.on('upgrade', handleUpgrade);
+
+  function handleUpgrade(request: IncomingMessage, socket: any, head: any) { 
+    if (!request.url) return;
+
+    const { pathname } = new URL(request.url, 'http://localhost');
+    if (pathname !== API_PATH) return;
+
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+      setupClient(ws);
+    });
+  }
+
+  function setupClient(ws: WebSocket) {
+    const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
+      {
+        async onTaskUpdate(packs, events) {
+          await ctx._testRun.updated(packs, events);
+        },
+        getFiles() {
+          return ctx.state.getFiles();
+        },
+        // ... other event handlers ...
+      },
+      {
+        post: msg => ws.send(msg),
+        on: fn => ws.on('message', fn),
+        eventNames: [
+          'onUserConsoleLog',
+          'onFinished',
+          'onFinishedReportCoverage',
+          'onCollected',
+          'onTaskUpdate',
+        ],
+        serialize: (data: any) => stringify(data, stringifyReplace),
+        deserialize: parse,
+        onTimeoutError(functionName) {
+          throw new Error(`[vitest-api]: Timeout calling "${functionName}"`);
+        },
+      },
+    );
+
+    clients.set(ws, rpc);
+
+    ws.on('close', () => {
+      clients.delete(ws);
+    });
+
+    ws.on('error', (err) => {
+      console.error('WebSocket error:', err);
+      clients.delete(ws);
+    });
+  }
+
+  ctx.reporters.push(new WebSocketReporter(ctx, wss, clients));
+}const server = _server || ctx.server
 
   server.httpServer?.on('upgrade', (request: IncomingMessage, socket, head) => {
     if (!request.url) {
