@@ -12,13 +12,15 @@ import type {
 } from '@sinonjs/fake-timers'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
-import { mockDate, RealDate, resetDate } from './date'
+// import { mockDate, RealDate, resetDate } from './date'
+
+const RealDate = Date
 
 export class FakeTimers {
   private _global: typeof globalThis
   private _clock!: InstalledClock
   private _fakingTime: boolean
-  private _fakingDate: boolean
+  // private _fakingDate: boolean
   private _fakeTimers: FakeTimerWithContext
   private _userConfig?: FakeTimerInstallOpts
   private _now = RealDate.now
@@ -32,7 +34,7 @@ export class FakeTimers {
   }) {
     this._userConfig = config
 
-    this._fakingDate = false
+    // this._fakingDate = false
 
     this._fakingTime = false
     this._fakeTimers = withGlobal(global)
@@ -127,10 +129,10 @@ export class FakeTimers {
   }
 
   useRealTimers(): void {
-    if (this._fakingDate) {
-      resetDate()
-      this._fakingDate = false
-    }
+    // if (this._fakingDate) {
+    //   resetDate()
+    //   this._fakingDate = false
+    // }
 
     if (this._fakingTime) {
       this._clock.uninstall()
@@ -139,11 +141,11 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
-    if (this._fakingDate) {
-      throw new Error(
-        '"setSystemTime" was called already and date was mocked. Reset timers using `vi.useRealTimers()` if you want to use fake timers again.',
-      )
-    }
+    // if (this._fakingDate) {
+    //   throw new Error(
+    //     '"setSystemTime" was called already and date was mocked. Reset timers using `vi.useRealTimers()` if you want to use fake timers again.',
+    //   )
+    // }
 
     if (!this._fakingTime) {
       const toFake = Object.keys(this._fakeTimers.timers)
@@ -178,17 +180,20 @@ export class FakeTimers {
   }
 
   setSystemTime(now?: number | Date): void {
-    if (this._fakingTime) {
-      this._clock.setSystemTime(now)
-    }
-    else {
-      mockDate(now ?? this.getRealSystemTime())
-      this._fakingDate = true
-    }
+    this._checkFakeTimers()
+    this._clock.setSystemTime(now)
+    // if (this._fakingTime) {
+    //   this._clock.setSystemTime(now)
+    // }
+    // else {
+    //   mockDate(now ?? this.getRealSystemTime())
+    //   this._fakingDate = true
+    // }
   }
 
   getRealSystemTime(): number {
-    return this._now()
+    return RealDate.now()
+    // return this._now()
   }
 
   getTimerCount(): number {
