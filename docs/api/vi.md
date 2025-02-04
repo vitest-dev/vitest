@@ -690,7 +690,7 @@ Removes all timers that are scheduled to run. These timers will never run in the
 
 - **Type**: `() => Date | null`
 
-Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
+Returns mocked current date. If date is not mocked the method will return `null`.
 
 ### vi.getRealSystemTime
 
