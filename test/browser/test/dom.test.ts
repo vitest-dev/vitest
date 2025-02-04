@@ -31,6 +31,20 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(
       /__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/,
     )
+
+    // test typing
+    if (0) {
+      await expect.element(div).toHaveClass('x', { exact: true })
+      await expect.element(div).toHaveClass('x', 'y')
+      await expect.element(div).toHaveClass('x', /y/)
+      await expect.element(div).toHaveClass(/x/, 'y')
+      await expect.element(div).toHaveClass('x', /y/, 'z')
+      await expect.element(div).toHaveClass(/x/, 'y', /z/)
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', { exact: 1234 })
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', 1234)
+    }
   })
 
   test('resolves base64 screenshot', async () => {
