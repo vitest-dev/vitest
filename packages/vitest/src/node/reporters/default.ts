@@ -1,17 +1,21 @@
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../spec'
 import type { BaseOptions } from './base'
+import type { ReporterColors } from './renderers/utils'
 import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
 import { SummaryReporter } from './summary'
 
 export interface DefaultReporterOptions extends BaseOptions {
+  colors?: ReporterColors
   summary?: boolean
 }
 
 export class DefaultReporter extends BaseReporter {
   private options: DefaultReporterOptions
   private summary?: SummaryReporter
+
+  protected colors: DefaultReporterOptions['colors']
 
   constructor(options: DefaultReporterOptions = {}) {
     super(options)
@@ -26,6 +30,10 @@ export class DefaultReporter extends BaseReporter {
 
     if (this.options.summary) {
       this.summary = new SummaryReporter()
+    }
+
+    if (this.options.colors) {
+      this.colors = this.options.colors
     }
   }
 

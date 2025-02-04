@@ -22,7 +22,7 @@ export class VerboseReporter extends DefaultReporter {
     let title = ` ${getStateSymbol(task)} `
 
     if (task.file.projectName) {
-      title += formatProjectName(task.file.projectName)
+      title += formatProjectName(task.file.projectName, { colors: this.colors })
     }
 
     title += getFullName(task, c.dim(' > '))

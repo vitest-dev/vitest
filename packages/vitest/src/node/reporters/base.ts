@@ -115,7 +115,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (task.projectName) {
-      title += ` ${formatProjectName(task.projectName, '')}`
+      title += ` ${formatProjectName(task.projectName, { suffix: '' })}`
     }
 
     this.log(` ${title} ${task.name} ${suffix}`)

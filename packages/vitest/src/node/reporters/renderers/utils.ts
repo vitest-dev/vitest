@@ -1,5 +1,6 @@
 import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
+import type { Colors, Formatter } from 'tinyrainbow'
 import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
@@ -13,6 +14,8 @@ import {
   F_LONG_DASH,
   F_POINTER,
 } from './figures'
+
+export type ReporterColors = ((c: Colors) => Formatter[]) | Formatter[]
 
 export const pointer = c.yellow(F_POINTER)
 export const skipped = c.dim(c.gray(F_DOWN))
@@ -212,7 +215,13 @@ export function formatTime(time: number) {
   return `${Math.round(time)}ms`
 }
 
-export function formatProjectName(name: string | undefined, suffix = ' ') {
+export function formatProjectName(name: string | undefined, {
+  colors = [c.black, c.yellow, c.cyan, c.green, c.magenta],
+  suffix = ' ',
+}: {
+  colors?: ReporterColors
+  suffix?: string
+} = {}) {
   if (!name) {
     return ''
   }
@@ -223,7 +232,7 @@ export function formatProjectName(name: string | undefined, suffix = ' ') {
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
 
-  const colors = [c.black, c.yellow, c.cyan, c.green, c.magenta]
+  colors = typeof colors === 'function' ? colors(c) : colors
 
   return c.inverse(colors[index % colors.length](` ${name} `)) + suffix
 }
