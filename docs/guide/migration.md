@@ -21,7 +21,7 @@ test('validation works', { retry: 3 }, () => { // [!code ++]
 })
 ```
 
-Vitest 4.0 will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
+The next major version will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
 
 ```ts
 test('validation works', () => {
