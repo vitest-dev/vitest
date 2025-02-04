@@ -100,6 +100,7 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
       const worker = setupWorker(
         http.get(/.+/, async ({ request }) => {
           const path = cleanQuery(request.url.slice(location.origin.length))
+          // path = /@fs/abs-path/out-side-of-root/index.js
           if (!this.mocks.has(path)) {
             return passthrough()
           }
