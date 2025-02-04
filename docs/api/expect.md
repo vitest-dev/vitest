@@ -705,9 +705,9 @@ You must wrap the code in a function, otherwise the error will not be caught, an
 This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
 ```ts
 test('expect rejects toThrow', async ({ expect }) => {
-  const promise = Promise.reject(new Error('Test'));
-  await expect(promise).rejects.toThrowError();
-});
+  const promise = Promise.reject(new Error('Test'))
+  await expect(promise).rejects.toThrowError()
+})
 ```
 :::
 
