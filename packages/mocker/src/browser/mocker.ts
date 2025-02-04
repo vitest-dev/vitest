@@ -134,6 +134,7 @@ export class ModuleMocker {
 
   public queueMock(rawId: string, importer: string, factoryOrOptions?: ModuleMockOptions | (() => any)): void {
     // rawId = /@fs/abs-path/out-side-of-root/index.js
+    // console.log('[queueMock]', { rawId })
     const promise = this.rpc
       .resolveMock(rawId, importer, {
         mock: typeof factoryOrOptions === 'function'
@@ -145,6 +146,7 @@ export class ModuleMocker {
         // resolvedId = /abs-path/out-side-of-root/index.js
         // mockUrl = /abs-path/out-side-of-root/index.js
         const mockUrl = this.resolveMockPath(cleanVersion(resolvedId))
+        // console.log('[queueMock]', { resolvedId, mockUrl })
         this.mockedIds.add(resolvedId)
         const factory = typeof factoryOrOptions === 'function'
           ? async () => {

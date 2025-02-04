@@ -6,5 +6,5 @@ vi.mock("../project2/index.js", () => ({
 }))
 
 test("basic", () => {
-  expect(project2).toMatchInlineSnapshot(`"project2"`)
+  expect(project2).toMatchInlineSnapshot(`"project2-mocked"`)
 })
