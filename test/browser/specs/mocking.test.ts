@@ -63,3 +63,16 @@ test('mocking dependency correctly invalidates it on rerun', async () => {
     expect(vitest.stdout).not.toReportPassedTest('2_not-mocked-import.test.ts', browser)
   })
 })
+
+test('mocking out of root', async () => {
+  const { vitest, ctx } = await runVitest({
+    root: 'fixtures/mocking-out-of-root/project1',
+  })
+  onTestFinished(async () => {
+    await ctx.close()
+  })
+  expect(vitest.stderr).toReportNoErrors()
+  instances.forEach(({ browser }) => {
+    expect(vitest.stdout).toReportPassedTest('basic.test.js', browser)
+  })
+})
