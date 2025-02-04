@@ -82,13 +82,13 @@ export class ModuleMocker {
 
   public async importMock<T>(rawId: string, importer: string): Promise<T> {
     await this.prepare()
-    const { resolvedId, redirectUrl } = await this.rpc.resolveMock(
+    const { resolvedId, resolvedUrl, redirectUrl } = await this.rpc.resolveMock(
       rawId,
       importer,
       { mock: 'auto' },
     )
 
-    const mockUrl = this.resolveMockPath(cleanVersion(resolvedId))
+    const mockUrl = this.resolveMockPath(cleanVersion(resolvedUrl))
     let mock = this.registry.get(mockUrl)
 
     if (!mock) {
@@ -133,8 +133,6 @@ export class ModuleMocker {
   }
 
   public queueMock(rawId: string, importer: string, factoryOrOptions?: ModuleMockOptions | (() => any)): void {
-    // rawId = /@fs/abs-path/out-side-of-root/index.js
-    // console.log('[queueMock]', { rawId })
     const promise = this.rpc
       .resolveMock(rawId, importer, {
         mock: typeof factoryOrOptions === 'function'
@@ -142,12 +140,7 @@ export class ModuleMocker {
           : factoryOrOptions?.spy ? 'spy' : 'auto',
       })
       .then(async ({ redirectUrl, resolvedId, resolvedUrl, needsInterop, mockType }) => {
-        // TODO: does this have /@fs prefixed?
-        // resolvedId = /abs-path/out-side-of-root/index.js
-        // mockUrl = /abs-path/out-side-of-root/index.js
-        // const mockUrl = this.resolveMockPath(cleanVersion(resolvedId))
-        // console.log('[queueMock]', { resolvedId, mockUrl })
-        const mockUrl = cleanVersion(resolvedUrl)
+        const mockUrl = this.resolveMockPath(cleanVersion(resolvedUrl))
         this.mockedIds.add(resolvedId)
         const factory = typeof factoryOrOptions === 'function'
           ? async () => {
@@ -192,7 +185,7 @@ export class ModuleMocker {
         if (!resolved) {
           return
         }
-        const mockUrl = this.resolveMockPath(cleanVersion(resolved.id))
+        const mockUrl = this.resolveMockPath(cleanVersion(resolved.url))
         this.mockedIds.add(resolved.id)
         this.registry.delete(mockUrl)
         await this.interceptor.delete(mockUrl)

@@ -70,34 +70,6 @@ export class ServerMockResolver {
       return null
     }
     return this.normalizeResolveIdToUrl(resolved)
-    // const isOptimized = resolved.id.startsWith(withTrailingSlash(this.server.config.cacheDir))
-    // let url: string
-    // // normalise the URL to be acceptable by the browser
-    // // https://github.com/vitejs/vite/blob/e833edf026d495609558fd4fb471cf46809dc369/packages/vite/src/node/plugins/importAnalysis.ts#L335
-    // const root = this.server.config.root
-    // if (resolved.id.startsWith(withTrailingSlash(root))) {
-    //   url = resolved.id.slice(root.length)
-    // }
-    // else if (
-    //   resolved.id !== '/@react-refresh'
-    //   && isAbsolute(resolved.id)
-    //   && existsSync(cleanUrl(resolved.id))
-    // ) {
-    //   url = join('/@fs/', resolved.id)
-    // }
-    // else {
-    //   url = resolved.id
-    // }
-    // if (url[0] !== '.' && url[0] !== '/') {
-    //   url = id.startsWith(VALID_ID_PREFIX)
-    //     ? id
-    //     : VALID_ID_PREFIX + id.replace('\0', '__x00__')
-    // }
-    // return {
-    //   id: resolved.id,
-    //   url,
-    //   optimized: isOptimized,
-    // }
   }
 
   private normalizeResolveIdToUrl(resolved: { id: string }) {
