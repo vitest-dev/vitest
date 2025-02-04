@@ -141,12 +141,13 @@ export class ModuleMocker {
           ? 'factory'
           : factoryOrOptions?.spy ? 'spy' : 'auto',
       })
-      .then(async ({ redirectUrl, resolvedId, needsInterop, mockType }) => {
+      .then(async ({ redirectUrl, resolvedId, resolvedUrl, needsInterop, mockType }) => {
         // TODO: does this have /@fs prefixed?
         // resolvedId = /abs-path/out-side-of-root/index.js
         // mockUrl = /abs-path/out-side-of-root/index.js
-        const mockUrl = this.resolveMockPath(cleanVersion(resolvedId))
+        // const mockUrl = this.resolveMockPath(cleanVersion(resolvedId))
         // console.log('[queueMock]', { resolvedId, mockUrl })
+        const mockUrl = cleanVersion(resolvedUrl)
         this.mockedIds.add(resolvedId)
         const factory = typeof factoryOrOptions === 'function'
           ? async () => {
@@ -247,6 +248,7 @@ export interface ResolveIdResult {
 export interface ResolveMockResult {
   mockType: MockedModuleType
   resolvedId: string
+  resolvedUrl: string
   redirectUrl?: string | null
   needsInterop?: boolean
 }
