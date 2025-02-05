@@ -1019,8 +1019,9 @@ vi.setConfig({
   },
   maxConcurrency: 10,
   sequence: {
-    hooks: 'stack'
-    // supports only "sequence.hooks"
+    hooks: 'stack',
+    shuffle: true,
+    // supports only "sequence.hooks" and "sequence.suffle"
   }
 })
 ```

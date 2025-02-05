@@ -457,7 +457,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
           }
           else {
             const { sequence } = runner.config
-            if (suite.shuffle) {
+            if (suite.shuffle ?? sequence.shuffle) {
               // run describe block independently from tests
               const suites = tasksGroup.filter(
                 group => group.type === 'suite',
