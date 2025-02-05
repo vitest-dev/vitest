@@ -122,7 +122,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       return ctx.state.getCountOfFailedTests()
     },
 
-    // TODO: make sure watcher works
+    // creating fake entries in the module graph to make watch mode possible
     async ensureModuleGraphEntry(id, importer) {
       id = id.startsWith('file') ? fileURLToPath(id) : id
       importer = importer.startsWith('file') ? fileURLToPath(importer) : importer
