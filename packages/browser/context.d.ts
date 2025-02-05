@@ -450,6 +450,14 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#last}
    */
   last(): Locator
+  /**
+   * Returns a locator that matches both locators.
+   */
+  and(other: Locator): Locator
+  /**
+   * Returns a locator that matches either locator.
+   */
+  or(other: Locator): Locator
 }
 
 export interface UserEventTabOptions {
