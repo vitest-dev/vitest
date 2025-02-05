@@ -466,6 +466,7 @@ export function spyOn<T, K extends keyof T>(
 
   const currentStub = getSpy(obj, method, accessType)
   if (currentStub) {
+    currentStub.mockReset()
     return currentStub
   }
 
