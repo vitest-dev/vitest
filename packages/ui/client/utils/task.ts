@@ -25,6 +25,6 @@ export function getProjectNameColor(name: string | undefined) {
   const index = name
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
-  const colors = ['blue', 'yellow', 'cyan', 'green', 'magenta']
+  const colors = ['yellow', 'cyan', 'green', 'magenta']
   return colors[index % colors.length]
 }
