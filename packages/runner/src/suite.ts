@@ -295,7 +295,7 @@ function createSuiteCollector(
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
 
-  let suite: Suite
+  let suite!: Suite
 
   initSuite(true)
 
@@ -303,7 +303,11 @@ function createSuiteCollector(
     const task: Test = {
       id: '',
       name,
-      suite: undefined!,
+      // no parent suite for top-level tests
+      suite:
+        collectorContext.currentSuite === defaultSuite
+          ? undefined
+          : collectorContext.currentSuite?.suite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
@@ -394,6 +398,7 @@ function createSuiteCollector(
     type: 'collector',
     name,
     mode,
+    suite,
     options: suiteOptions,
     test,
     tasks,
@@ -416,6 +421,10 @@ function createSuiteCollector(
       id: '',
       type: 'suite',
       name,
+      suite:
+        collectorContext.currentSuite === defaultSuite
+          ? undefined
+          : collectorContext.currentSuite?.suite,
       mode,
       each,
       file: undefined!,
@@ -463,7 +472,7 @@ function createSuiteCollector(
     suite.tasks = allChildren
 
     allChildren.forEach((task) => {
-      task.suite = suite
+      // task.suite = suite
       task.file = file
     })
 
