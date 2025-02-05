@@ -1,5 +1,10 @@
+// import { createRequire } from 'node:module'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
+
+// const require = createRequire(import.meta.url)
+// const tsxApi = require.resolve('tsx/esm/api')
+// preloads: [`data:text/javascript,import { register } from "${pathToFileURL(tsxApi)}";register();`],
 
 export default defineConfig({
   plugins: [

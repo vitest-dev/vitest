@@ -135,7 +135,12 @@ export function WorkspaceVitestPlugin(
           test: {
             name,
           },
-        };
+        }
+
+        // TODO: inherit one by one, not all of it
+        if (project.vitest.config.experimental && !config.test?.experimental) {
+          config.test!.experimental = project.vitest.config.experimental
+        }
 
         (config.test as ResolvedConfig).defines = defines
 

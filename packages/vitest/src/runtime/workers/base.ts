@@ -2,6 +2,7 @@ import type { WorkerGlobalState } from '../../types/worker'
 import type { ContextExecutorOptions, VitestExecutor } from '../execute'
 import { ModuleCacheMap } from 'vite-node/client'
 import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
+import { NativeExecutor } from '../native-executor'
 import { provideWorkerState } from '../utils'
 
 let _viteNode: VitestExecutor
@@ -35,7 +36,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
   ))
 
   const [executor, { run }] = await Promise.all([
-    startViteNode({ state, requestStubs: getDefaultRequestStubs() }),
+    resolveExecutor(state),
     import('../runBaseTests'),
   ])
   const fileSpecs = ctx.files.map(f =>
@@ -51,4 +52,11 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
     { environment: state.environment, options: ctx.environment.options },
     executor,
   )
+}
+
+async function resolveExecutor(state: WorkerGlobalState): Promise<VitestExecutor> {
+  if (state.config.experimentalNativeImport) {
+    return new NativeExecutor(state) as unknown as VitestExecutor
+  }
+  return startViteNode({ state, requestStubs: getDefaultRequestStubs() })
 }
