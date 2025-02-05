@@ -246,9 +246,9 @@ export function esmWalker(
       const grandparent = stack[1]
       const hasBindingShortcut
         = isStaticProperty(parent)
-        && parent.shorthand
-        && (!isNodeInPattern(parent)
-          || isInDestructuringAssignment(parent, parentStack))
+          && parent.shorthand
+          && (!isNodeInPattern(parent)
+            || isInDestructuringAssignment(parent, parentStack))
 
       const classDeclaration
         = (parent.type === 'PropertyDefinition'

@@ -260,8 +260,7 @@ declare namespace matchers {
      * @see
      * [testing-library/jest-dom#tohaveclass](https://github.com/testing-library/jest-dom#tohaveclass)
      */
-    toHaveClass(...classNames: Array<string | RegExp>): R
-    toHaveClass(classNames: string, options?: {exact: boolean}): R
+    toHaveClass(...classNames: (string | RegExp)[] | [string, options?: {exact: boolean}]): R
     /**
      * @description
      * This allows you to check whether the given form element has the specified displayed value (the one the

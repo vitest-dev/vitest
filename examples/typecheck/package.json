@@ -12,7 +12,7 @@
   "devDependencies": {
     "@types/node": "^20.11.5",
     "@vitest/ui": "latest",
-    "typescript": "^5.2.2",
+    "typescript": "^5.7.3",
     "vite": "latest",
     "vitest": "latest"
   },

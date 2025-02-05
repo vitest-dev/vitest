@@ -6,6 +6,7 @@ import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -15,6 +16,7 @@ import { VitestOptimizer } from './optimizer'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
+  getDefaultResolveOptions,
   hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
@@ -62,14 +64,41 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        // keep project names to potentially filter it out
+        const workspaceNames = [name]
+        if (viteConfig.test?.browser?.enabled) {
+          if (viteConfig.test.browser.name) {
+            const browser = viteConfig.test.browser.name
+            // vitest injects `instances` in this case later on
+            workspaceNames.push(name ? `${name} (${browser})` : browser)
+          }
+
+          viteConfig.test.browser.instances?.forEach((instance) => {
+            // every instance is a potential project
+            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
+            workspaceNames.push(instance.name)
+          })
+        }
+
+        const filters = project.vitest.config.project
+        // if there is `--project=...` filter, check if any of the potential projects match
+        // if projects don't match, we ignore the test project altogether
+        // if some of them match, they will later be filtered again by `resolveWorkspace`
+        if (filters.length) {
+          const hasProject = workspaceNames.some((name) => {
+            return project.vitest._matchesProjectFilter(name)
+          })
+          if (!hasProject) {
+            throw new VitestFilteredOutProjectError()
+          }
+        }
+
+        const resolveOptions = getDefaultResolveOptions()
         const config: ViteConfig = {
           root,
           resolve: {
-            // by default Vite resolves `module` field, which not always a native ESM module
-            // setting this option can bypass that and fallback to cjs version
-            mainFields: [],
+            ...resolveOptions,
             alias: testConfig.alias,
-            conditions: ['node'],
           },
           esbuild: viteConfig.esbuild === false
             ? false
@@ -92,7 +121,7 @@ export function WorkspaceVitestPlugin(
             fs: {
               allow: resolveFsAllow(
                 project.vitest.config.root,
-                project.vitest.server.config.configFile,
+                project.vitest.vite.config.configFile,
               ),
             },
           },
@@ -100,12 +129,7 @@ export function WorkspaceVitestPlugin(
           // @ts-ignore Vite 6 compat
           environments: {
             ssr: {
-              resolve: {
-                // by default Vite resolves `module` field, which not always a native ESM module
-                // setting this option can bypass that and fallback to cjs version
-                mainFields: [],
-                conditions: ['node'],
-              },
+              resolve: resolveOptions,
             },
           },
           test: {
@@ -143,7 +167,7 @@ export function WorkspaceVitestPlugin(
           }
         }
         config.customLogger = createViteLogger(
-          project.logger,
+          project.vitest.logger,
           viteConfig.logLevel || 'warn',
           {
             allowClearScreen: false,

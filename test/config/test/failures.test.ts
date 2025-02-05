@@ -1,7 +1,8 @@
 import type { UserConfig } from 'vitest/node'
+import type { VitestRunnerCLIOptions } from '../../test-utils'
 import { normalize, resolve } from 'pathe'
-import { beforeEach, expect, test } from 'vitest'
 
+import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
 
@@ -9,8 +10,8 @@ const providers = ['playwright', 'webdriverio', 'preview'] as const
 const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
-function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
-  return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
+function runVitest(config: NonNullable<UserConfig> & { shard?: any }, runnerOptions?: VitestRunnerCLIOptions) {
+  return testUtils.runVitest({ root: './fixtures/test', ...config }, [], undefined, {}, runnerOptions)
 }
 
 function runVitestCli(...cliArgs: string[]) {
@@ -286,19 +287,22 @@ Use either:
 })
 
 test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
-  const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
+  const { stderr } = await runVitest({
+    coverage: { enabled: true },
+    workspace: './fixtures/workspace/browser/workspace-with-browser.ts',
+  }, { fails: true })
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
-{
-  "browser": {
-    "provider": "webdriverio",
-    "instances": [
-      {
-        "browser": "chrome"
+    {
+      "browser": {
+        "provider": "webdriverio",
+        "instances": [
+          {
+            "browser": "chrome"
+          }
+        ]
       }
-    ]
-  }
-}`,
+    }`,
   )
 })
 
@@ -409,12 +413,6 @@ test('maxConcurrency 0 prints a warning', async () => {
 
   expect(ctx?.config.maxConcurrency).toBe(5)
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
-})
-
-test('browser.name or browser.instances are required', async () => {
-  const { stderr, exitCode } = await runVitestCli('--browser.enabled')
-  expect(exitCode).toBe(1)
-  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.')
 })
 
 test('browser.instances is empty', async () => {

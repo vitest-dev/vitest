@@ -42,7 +42,7 @@ import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { TestRun } from './test-run'
 import { VitestWatcher } from './watcher'
-import { resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
+import { getDefaultTestProject, resolveBrowserWorkspace, resolveWorkspace } from './workspace/resolveWorkspace'
 
 const WATCHER_DEBOUNCE = 100
 
@@ -92,7 +92,11 @@ export class Vitest {
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ isCancelling = false
   /** @internal */ coreWorkspaceProject: TestProject | undefined
-  /** @internal */ resolvedProjects: TestProject[] = []
+  /**
+   * @internal
+   * @deprecated
+   */
+  resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _options: UserConfig = {}
@@ -100,6 +104,7 @@ export class Vitest {
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
   /** @internal */ _testRun: TestRun = undefined!
+  /** @internal */ _projectFilters: RegExp[] = []
 
   private isFirstRun = true
   private restartsCount = 0
@@ -213,9 +218,11 @@ export class Vitest {
     this.specifications.clearCache()
     this._onUserTestsRerun = []
 
-    const resolved = resolveConfig(this.mode, options, server.config, this.logger)
-
+    this._projectFilters = toArray(options.project || []).map(project => wildcardPatternToRegExp(project))
     this._vite = server
+
+    const resolved = resolveConfig(this, options, server.config)
+
     this._config = resolved
     this._state = new StateManager()
     this._cache = new VitestCache(this.version)
@@ -277,14 +284,8 @@ export class Vitest {
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
-    const filters = toArray(resolved.project).map(s => wildcardPatternToRegExp(s))
-    if (filters.length > 0) {
-      this.projects = this.projects.filter(p =>
-        filters.some(pattern => pattern.test(p.name)),
-      )
-      if (!this.projects.length) {
-        throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
-      }
+    if (!this.projects.length) {
+      throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
     }
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
@@ -402,8 +403,15 @@ export class Vitest {
 
     this._workspaceConfigPath = workspaceConfigPath
 
+    // user doesn't have a workspace config, return default project
     if (!workspaceConfigPath) {
-      return resolveBrowserWorkspace(this, new Set(), [this._ensureRootProject()])
+      // user can filter projects with --project flag, `getDefaultTestProject`
+      // returns the project only if it matches the filter
+      const project = getDefaultTestProject(this)
+      if (!project) {
+        return []
+      }
+      return resolveBrowserWorkspace(this, new Set(), [project])
     }
 
     const workspaceModule = await this.import<{
@@ -506,8 +514,6 @@ export class Vitest {
   }
 
   async collect(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     const files = await this.specifications.getRelevantTestSpecifications(filters)
 
     // if run with --changed, don't exit if no tests are found
@@ -540,8 +546,6 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -599,8 +603,6 @@ export class Vitest {
    * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
   async init(): Promise<void> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -863,15 +865,15 @@ export class Vitest {
   /** @internal */
   async changeProjectName(pattern: string): Promise<void> {
     if (pattern === '') {
-      delete this.configOverride.project
+      this.configOverride.project = undefined
+      this._projectFilters = []
     }
     else {
-      this.configOverride.project = pattern
+      this.configOverride.project = [pattern]
+      this._projectFilters = [wildcardPatternToRegExp(pattern)]
     }
 
-    this.projects = this.resolvedProjects.filter(p => p.name === pattern)
-    const files = (await this.globTestSpecifications()).map(spec => spec.moduleId)
-    await this.rerunFiles(files, 'change project filter', pattern === '')
+    await this.vite.restart()
   }
 
   /** @internal */
@@ -1251,6 +1253,18 @@ export class Vitest {
   /** @internal */
   onAfterSetServer(fn: OnServerRestartHandler): void {
     this._onSetServer.push(fn)
+  }
+
+  /**
+   * Check if the project with a given name should be included.
+   * @internal
+   */
+  _matchesProjectFilter(name: string): boolean {
+    // no filters applied, any project can be included
+    if (!this._projectFilters.length) {
+      return true
+    }
+    return this._projectFilters.some(filter => filter.test(name))
   }
 }
 

@@ -109,6 +109,7 @@ export class SummaryReporter implements Reporter {
     }
 
     this.runningModules.set(module.id, initializeStats(module))
+    this.renderer.schedule()
   }
 
   onTestModuleCollected(module: TestModule) {
@@ -124,6 +125,7 @@ export class SummaryReporter implements Reporter {
     stats.total = total
 
     this.maxParallelTests = Math.max(this.maxParallelTests, this.runningModules.size)
+    this.renderer.schedule()
   }
 
   onHookStart(options: ReportedHookContext) {
@@ -213,6 +215,8 @@ export class SummaryReporter implements Reporter {
     else if (!result?.state || result?.state === 'skipped') {
       this.tests.skipped++
     }
+
+    this.renderer.schedule()
   }
 
   onTestModuleEnd(module: TestModule) {
@@ -247,6 +251,8 @@ export class SummaryReporter implements Reporter {
       // Remove finished test immediatelly.
       this.removeTestModule(module.id)
     }
+
+    this.renderer.schedule()
   }
 
   private getHookStats({ entity }: ReportedHookContext) {

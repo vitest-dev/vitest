@@ -981,6 +981,7 @@ export interface UserConfig extends InlineConfig {
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
+    | 'project'
     | 'config'
     | 'filters'
     | 'browser'
@@ -1029,9 +1030,10 @@ export interface ResolvedConfig
 
   defines: Record<string, any>
 
-  api?: ApiConfig
+  api: ApiConfig & { token: string }
   cliExclude?: string[]
 
+  project: string[]
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   > &

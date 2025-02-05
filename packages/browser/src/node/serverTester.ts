@@ -37,7 +37,7 @@ export async function resolveTester(
   // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
   const tests
     = testFile === '__vitest_all__'
-    || !testFiles.includes(testFile)
+      || !testFiles.includes(testFile)
       ? '__vitest_browser_runner__.files'
       : JSON.stringify([testFile])
   const iframeId = JSON.stringify(testFile)
@@ -68,6 +68,7 @@ export async function resolveTester(
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
+    __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
   const testerHtml = typeof browserProject.testerHtml === 'string'

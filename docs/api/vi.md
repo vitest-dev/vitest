@@ -409,7 +409,7 @@ This will clear mock history and reset each mock's implementation to its origina
 ### vi.restoreAllMocks
 
 Calls [`.mockRestore()`](/api/mock#mockrestore) on all spies.
-This will clear mock history, restore all original mock implementations, , and restore original descriptors of spied-on objects.
+This will clear mock history, restore all original mock implementations, and restore original descriptors of spied-on objects.
 
 ### vi.spyOn
 
@@ -690,7 +690,7 @@ Removes all timers that are scheduled to run. These timers will never run in the
 
 - **Type**: `() => Date | null`
 
-Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
+Returns mocked current date. If date is not mocked the method will return `null`.
 
 ### vi.getRealSystemTime
 
