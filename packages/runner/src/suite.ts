@@ -303,7 +303,7 @@ function createSuiteCollector(
     const task: Test = {
       id: '',
       name,
-      suite: undefined!,
+      suite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
