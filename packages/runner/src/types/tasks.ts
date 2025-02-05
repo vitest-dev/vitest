@@ -464,6 +464,9 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
           ? ExtraContext[K]
           : never;
     }>
+    scoped: <T extends Record<string, any> = object>(
+      fixtures: Fixtures<T, ExtraContext>
+    ) => void
   }
 
 /** @deprecated use `TestAPI` instead */
@@ -612,6 +615,7 @@ export interface SuiteCollector<ExtraContext = object> {
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
+  extend: (fixtures: Fixtures<any, ExtraContext>) => void
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
   clear: () => void
