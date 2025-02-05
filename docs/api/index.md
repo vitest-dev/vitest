@@ -311,6 +311,7 @@ You can inject parameters with [printf formatting](https://nodejs.org/api/util.h
 - `%j`: json
 - `%o`: object
 - `%#`: index of the test case
+- `%$`: number of the test case
 - `%%`: single percent sign ('%')
 
 ```ts
