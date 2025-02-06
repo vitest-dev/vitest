@@ -131,4 +131,20 @@ describe('default reporter', async () => {
     expect(stdout).toContain('1 passed')
     expect(stdout).toContain('✓ repeat couple of times (repeat x3)')
   })
+
+  test('prints 0-based index and 1-based index of the test case', async () => {
+    const { stdout } = await runVitest({
+      include: ['print-index.test.ts'],
+      root: 'fixtures/default',
+      reporters: 'none',
+    })
+
+    expect(stdout).toContain('✓ passed > 0-based index of the test case is 0')
+    expect(stdout).toContain('✓ passed > 0-based index of the test case is 1')
+    expect(stdout).toContain('✓ passed > 0-based index of the test case is 2')
+
+    expect(stdout).toContain('✓ passed > 1-based index of the test case is 1')
+    expect(stdout).toContain('✓ passed > 1-based index of the test case is 2')
+    expect(stdout).toContain('✓ passed > 1-based index of the test case is 3')
+  })
 }, 120000)
