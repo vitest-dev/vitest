@@ -8,7 +8,6 @@
   "devDependencies": {
     "@vitest/browser": "workspace:*",
     "vite": "latest",
-    "vitest": "workspace:*",
-    "webdriverio": "latest"
+    "vitest": "workspace:*"
   }
 }
