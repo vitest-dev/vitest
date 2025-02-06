@@ -12,6 +12,7 @@ import { performance } from 'node:perf_hooks'
 import { pathToFileURL } from 'node:url'
 import createDebug from 'debug'
 import { join, normalize, relative, resolve } from 'pathe'
+import { version as viteVersion } from 'vite'
 import { Debugger } from './debug'
 import { shouldExternalize } from './externalize'
 import { withInlineSourcemap } from './source-map'
@@ -392,6 +393,7 @@ export class ViteNodeServer {
     return withInlineSourcemap(result, {
       filepath: mod?.file || filepath,
       root: this.server.config.root,
+      noFirstLineMapping: Number(viteVersion.split('.')[0]) >= 6,
     })
   }
 

@@ -44,6 +44,9 @@ export async function resolveWorkspace(
     'bail',
     'isolate',
     'printConsoleTrace',
+    'inspect',
+    'inspectBrk',
+    'fileParallelism',
   ] as const
 
   const cliOverrides = overridesOptions.reduce((acc, name) => {
@@ -73,7 +76,7 @@ export async function resolveWorkspace(
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      { ...options, root, configFile },
+      { ...options, root, configFile, test: { ...options.test, ...cliOverrides } },
     )))
   })
 
