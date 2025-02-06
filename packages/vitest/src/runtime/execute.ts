@@ -138,6 +138,9 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     get moduleCache() {
       return state().moduleCache
     },
+    get moduleExecutionInfo() {
+      return state().moduleExecutionInfo
+    },
     get interopDefault() {
       return state().config.deps.interopDefault
     },
@@ -255,6 +258,10 @@ export class VitestExecutor extends ViteNodeRunner {
     return globalThis.__vitest_worker__ || this.options.state
   }
 
+  get moduleExecutionInfo() {
+    return this.options.moduleExecutionInfo
+  }
+
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
     if (isInternalRequest(id) || id.startsWith('data:')) {
       return false
@@ -312,6 +319,8 @@ export class VitestExecutor extends ViteNodeRunner {
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
+
+    this.options.moduleExecutionInfo?.set(options.filename, { startOffset: codeDefinition.length })
 
     const fn = vm.runInContext(code, vmContext, {
       ...options,
