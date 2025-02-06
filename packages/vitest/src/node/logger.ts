@@ -3,39 +3,41 @@ import type { ErrorWithDiff } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
-import type { PrintErrorResult } from './error'
-import type { WorkspaceProject } from './workspace'
+import type { TestProject } from './project'
 import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
-import { createLogUpdate } from 'log-update'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './error'
-import { divider } from './reporters/renderers/utils'
+import { divider, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
   type?: string
   fullStack?: boolean
-  project?: WorkspaceProject
+  project?: TestProject
   verbose?: boolean
   screenshotPaths?: string[]
   task?: Task
   showCodeFrame?: boolean
 }
 
+type Listener = () => void
+
+const PAD = '      '
+
 const ESC = '\x1B['
 const ERASE_DOWN = `${ESC}J`
 const ERASE_SCROLLBACK = `${ESC}3J`
 const CURSOR_TO_START = `${ESC}1;1H`
+const HIDE_CURSOR = `${ESC}?25l`
+const SHOW_CURSOR = `${ESC}?25h`
 const CLEAR_SCREEN = '\x1Bc'
 
 export class Logger {
-  logUpdate: ReturnType<typeof createLogUpdate>
-
   private _clearScreenPending: string | undefined
   private _highlights = new Map<string, string>()
+  private cleanupListeners: Listener[] = []
   public console: Console
 
   constructor(
@@ -44,8 +46,13 @@ export class Logger {
     public errorStream: NodeJS.WriteStream | Writable = process.stderr,
   ) {
     this.console = new Console({ stdout: outputStream, stderr: errorStream })
-    this.logUpdate = createLogUpdate(this.outputStream)
     this._highlights.clear()
+    this.addCleanupListeners()
+    this.registerUnhandledRejection()
+
+    if ((this.outputStream as typeof process.stdout).isTTY) {
+      (this.outputStream as Writable).write(HIDE_CURSOR)
+    }
   }
 
   log(...args: any[]) {
@@ -63,13 +70,18 @@ export class Logger {
     this.console.warn(...args)
   }
 
-  clearFullScreen(message: string) {
+  clearFullScreen(message = '') {
     if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
     }
 
-    this.console.log(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}${message}`)
+    if (message) {
+      this.console.log(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}${message}`)
+    }
+    else {
+      (this.outputStream as Writable).write(`${CLEAR_SCREEN}${ERASE_SCROLLBACK}`)
+    }
   }
 
   clearScreen(message: string, force = false) {
@@ -94,33 +106,8 @@ export class Logger {
     this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
-  printError(err: unknown, options: ErrorOptions = {}): PrintErrorResult | undefined {
-    const { fullStack = false, type } = options
-    const project = options.project
-      ?? this.ctx.getCoreWorkspaceProject()
-      ?? this.ctx.projects[0]
-    return printError(err, project, {
-      type,
-      showCodeFrame: options.showCodeFrame ?? true,
-      logger: this,
-      printProperties: options.verbose,
-      screenshotPaths: options.screenshotPaths,
-      parseErrorStacktrace: (error) => {
-        // browser stack trace needs to be processed differently,
-        // so there is a separate method for that
-        if (options.task?.file.pool === 'browser' && project.browser) {
-          return project.browser.parseErrorStacktrace(error, {
-            ignoreStackEntries: fullStack ? [] : undefined,
-          })
-        }
-
-        // node.js stack trace already has correct source map locations
-        return parseErrorStacktrace(error, {
-          frameFilter: project.config.onStackTrace,
-          ignoreStackEntries: fullStack ? [] : undefined,
-        })
-      },
-    })
+  printError(err: unknown, options: ErrorOptions = {}) {
+    printError(err, this.ctx, this, options)
   }
 
   clearHighlightCache(filename?: string) {
@@ -143,9 +130,29 @@ export class Logger {
 
   printNoTestFound(filters?: string[]) {
     const config = this.ctx.config
+
+    if (config.watch && (config.changed || config.related?.length)) {
+      this.log(`No affected ${config.mode} files found\n`)
+    }
+    else if (config.watch) {
+      this.log(
+        c.red(`No ${config.mode} files found. You can change the file name pattern by pressing "p"\n`),
+      )
+    }
+    else {
+      if (config.passWithNoTests) {
+        this.log(`No ${config.mode} files found, exiting with code 0\n`)
+      }
+      else {
+        this.error(
+          c.red(`No ${config.mode} files found, exiting with code 1\n`),
+        )
+      }
+    }
+
     const comma = c.dim(', ')
     if (filters?.length) {
-      this.console.error(c.dim('filter:  ') + c.yellow(filters.join(comma)))
+      this.console.error(c.dim('filter: ') + c.yellow(filters.join(comma)))
     }
     const projectsFilter = toArray(config.project)
     if (projectsFilter.length) {
@@ -155,10 +162,9 @@ export class Logger {
     }
     this.ctx.projects.forEach((project) => {
       const config = project.config
-      const name = project.getName()
-      const output = project.isCore() || !name ? '' : `[${name}]`
-      if (output) {
-        this.console.error(c.bgCyan(`${output} Config`))
+      const printConfig = !project.isRootProject() && project.name
+      if (printConfig) {
+        this.console.error(`\n${formatProjectName(project.name)}\n`)
       }
       if (config.include) {
         this.console.error(
@@ -181,105 +187,70 @@ export class Logger {
         )
       }
     })
-
-    if (config.watch && (config.changed || config.related?.length)) {
-      this.log(`No affected ${config.mode} files found\n`)
-    }
-    else {
-      if (config.passWithNoTests) {
-        this.log(`No ${config.mode} files found, exiting with code 0\n`)
-      }
-      else {
-        this.error(
-          c.red(`\nNo ${config.mode} files found, exiting with code 1`),
-        )
-      }
-    }
+    this.console.error()
   }
 
   printBanner() {
     this.log()
 
-    const versionTest = this.ctx.config.watch
-      ? c.blue(`v${this.ctx.version}`)
-      : c.cyan(`v${this.ctx.version}`)
-    const mode = this.ctx.config.watch ? c.blue(' DEV ') : c.cyan(' RUN ')
+    const color = this.ctx.config.watch ? 'blue' : 'cyan'
+    const mode = this.ctx.config.watch ? 'DEV' : 'RUN'
 
-    this.log(
-      `${c.inverse(c.bold(mode))} ${versionTest} ${c.gray(
-        this.ctx.config.root,
-      )}`,
-    )
+    this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
     if (this.ctx.config.sequence.sequencer === RandomSequencer) {
-      this.log(
-        c.gray(
-          `      Running tests with seed "${this.ctx.config.sequence.seed}"`,
-        ),
-      )
+      this.log(PAD + c.gray(`Running tests with seed "${this.ctx.config.sequence.seed}"`))
     }
 
-    this.ctx.projects.forEach((project) => {
-      if (!project.browser) {
-        return
-      }
-      const name = project.getName()
-      const output = project.isCore() ? '' : ` [${name}]`
-
-      const resolvedUrls = project.browser.vite.resolvedUrls
-      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-      const provider = project.browser.provider.name
-      const providerString = provider === 'preview' ? '' : ` by ${provider}`
-      this.log(
-        c.dim(
-          c.green(
-            `     ${output} Browser runner started${providerString} at ${new URL('/', origin)}`,
-          ),
-        ),
-      )
-    })
-
     if (this.ctx.config.ui) {
-      this.log(
-        c.dim(
-          c.green(
-            `      UI started at http://${
-              this.ctx.config.api?.host || 'localhost'
-            }:${c.bold(`${this.ctx.server.config.server.port}`)}${
-              this.ctx.config.uiBase
-            }`,
-          ),
-        ),
-      )
+      const host = this.ctx.config.api?.host || 'localhost'
+      const port = this.ctx.server.config.server.port
+      const base = this.ctx.config.uiBase
+
+      this.log(PAD + c.dim(c.green(`UI started at http://${host}:${c.bold(port)}${base}`)))
     }
     else if (this.ctx.config.api?.port) {
       const resolvedUrls = this.ctx.server.resolvedUrls
       // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
-      const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${
-        this.ctx.config.api.port
-      }`
-      const origin
-        = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
-      this.log(c.dim(c.green(`      API started at ${new URL('/', origin)}`)))
+      const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
+      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
+
+      this.log(PAD + c.dim(c.green(`API started at ${new URL('/', origin)}`)))
     }
 
     if (this.ctx.coverageProvider) {
-      this.log(
-        c.dim('      Coverage enabled with ')
-        + c.yellow(this.ctx.coverageProvider.name),
-      )
+      this.log(PAD + c.dim('Coverage enabled with ') + c.yellow(this.ctx.coverageProvider.name))
     }
 
     if (this.ctx.config.standalone) {
-      this.log(
-        c.yellow(
-          `\nVitest is running in standalone mode. Edit a test file to rerun tests.`,
-        ),
-      )
+      this.log(c.yellow(`\nVitest is running in standalone mode. Edit a test file to rerun tests.`))
     }
     else {
       this.log()
     }
+  }
+
+  printBrowserBanner(project: TestProject) {
+    if (!project.browser) {
+      return
+    }
+
+    const resolvedUrls = project.browser.vite.resolvedUrls
+    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+    if (!origin) {
+      return
+    }
+
+    const output = project.isRootProject()
+      ? ''
+      : formatProjectName(project.name)
+    const provider = project.browser.provider.name
+    const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
+    this.log(
+      c.dim(
+        `${output}Browser runner started${providerString} ${c.dim('at')} ${c.blue(new URL('/', origin))}\n`,
+      ),
+    )
   }
 
   printUnhandledErrors(errors: unknown[]) {
@@ -291,15 +262,15 @@ export class Logger {
         + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
       ),
     )
-    this.log(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
-    this.log(errorMessage)
+    this.error(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
+    this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
         fullStack: true,
         type: (err as ErrorWithDiff).type || 'Unhandled Error',
       })
     })
-    this.log(c.red(divider()))
+    this.error(c.red(divider()))
   }
 
   printSourceTypeErrors(errors: TypeCheckError[]) {
@@ -316,5 +287,66 @@ export class Logger {
       this.printError(err, { fullStack: true })
     })
     this.log(c.red(divider()))
+  }
+
+  getColumns() {
+    return 'columns' in this.outputStream ? this.outputStream.columns : 80
+  }
+
+  onTerminalCleanup(listener: Listener) {
+    this.cleanupListeners.push(listener)
+  }
+
+  private addCleanupListeners() {
+    const cleanup = () => {
+      this.cleanupListeners.forEach(fn => fn())
+
+      if ((this.outputStream as typeof process.stdout).isTTY) {
+        (this.outputStream as Writable).write(SHOW_CURSOR)
+      }
+    }
+
+    const onExit = (signal?: string | number, exitCode?: number) => {
+      cleanup()
+
+      // Interrupted signals don't set exit code automatically.
+      // Use same exit code as node: https://nodejs.org/api/process.html#signal-events
+      if (process.exitCode === undefined) {
+        process.exitCode = exitCode !== undefined ? (128 + exitCode) : Number(signal)
+      }
+
+      process.exit()
+    }
+
+    process.once('SIGINT', onExit)
+    process.once('SIGTERM', onExit)
+    process.once('exit', onExit)
+
+    this.ctx.onClose(() => {
+      process.off('SIGINT', onExit)
+      process.off('SIGTERM', onExit)
+      process.off('exit', onExit)
+      cleanup()
+    })
+  }
+
+  private registerUnhandledRejection() {
+    const onUnhandledRejection = (err: unknown) => {
+      process.exitCode = 1
+
+      this.printError(err, {
+        fullStack: true,
+        type: 'Unhandled Rejection',
+      })
+
+      this.error('\n\n')
+      process.exit()
+    }
+
+    process.on('unhandledRejection', onUnhandledRejection)
+
+    this.ctx.onClose(() => {
+      process.off('unhandledRejection', onUnhandledRejection)
+    })
   }
 }

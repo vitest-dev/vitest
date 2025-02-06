@@ -32,15 +32,6 @@ interface TestOptions {
 }
 ```
 
-Vitest 1.3.0 deprecates the use of options as the last parameter. You will see a deprecation message until 2.0.0 when this syntax will be removed. If you need to pass down options, use `test` function's second argument:
-
-```ts
-import { test } from 'vitest'
-
-test('flaky test', () => {}, { retry: 3 }) // [!code --]
-test('flaky test', { retry: 3 }, () => {}) // [!code ++]
-```
-
 When a test function returns a promise, the runner will wait until it is resolved to collect async expectations. If the promise is rejected, the test will fail.
 
 ::: tip
@@ -155,7 +146,7 @@ test.skipIf(isDev)('prod only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.runIf
@@ -175,7 +166,7 @@ test.runIf(isDev)('dev only test', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.only
@@ -240,7 +231,7 @@ test.concurrent('test 2', async ({ expect }) => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.sequential
@@ -298,7 +289,7 @@ test.fails('fail test', async () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.each
@@ -399,7 +390,7 @@ Vitest processes `$values` with Chai `format` method. If the value is too trunca
 :::
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### test.for
@@ -512,6 +503,119 @@ export interface Options {
    * teardown function to run after each benchmark task (cycle)
    */
   teardown?: Hook
+}
+```
+After the test case is run, the output structure information is as follows:
+
+```
+  name                      hz     min     max    mean     p75     p99    p995    p999     rme  samples
+· normal sorting  6,526,368.12  0.0001  0.3638  0.0002  0.0002  0.0002  0.0002  0.0004  ±1.41%   652638
+```
+```ts
+export interface TaskResult {
+  /*
+   * the last error that was thrown while running the task
+   */
+  error?: unknown
+
+  /**
+   * The amount of time in milliseconds to run the benchmark task (cycle).
+   */
+  totalTime: number
+
+  /**
+   * the minimum value in the samples
+   */
+  min: number
+  /**
+   * the maximum value in the samples
+   */
+  max: number
+
+  /**
+   * the number of operations per second
+   */
+  hz: number
+
+  /**
+   * how long each operation takes (ms)
+   */
+  period: number
+
+  /**
+   * task samples of each task iteration time (ms)
+   */
+  samples: number[]
+
+  /**
+   * samples mean/average (estimate of the population mean)
+   */
+  mean: number
+
+  /**
+   * samples variance (estimate of the population variance)
+   */
+  variance: number
+
+  /**
+   * samples standard deviation (estimate of the population standard deviation)
+   */
+  sd: number
+
+  /**
+   * standard error of the mean (a.k.a. the standard deviation of the sampling distribution of the sample mean)
+   */
+  sem: number
+
+  /**
+   * degrees of freedom
+   */
+  df: number
+
+  /**
+   * critical value of the samples
+   */
+  critical: number
+
+  /**
+   * margin of error
+   */
+  moe: number
+
+  /**
+   * relative margin of error
+   */
+  rme: number
+
+  /**
+   * median absolute deviation
+   */
+  mad: number
+
+  /**
+   * p50/median percentile
+   */
+  p50: number
+
+  /**
+   * p75 percentile
+   */
+  p75: number
+
+  /**
+   * p99 percentile
+   */
+  p99: number
+
+  /**
+   * p995 percentile
+   */
+  p995: number
+
+  /**
+   * p999 percentile
+   */
+  p999: number
 }
 ```
 
@@ -696,7 +800,7 @@ describe.runIf(isDev)('dev only test suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.only
@@ -770,7 +874,7 @@ describe.concurrent('suite', () => {
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.sequential
@@ -802,10 +906,23 @@ Vitest provides a way to run all tests in random order via CLI flag [`--sequence
 ```ts
 import { describe, test } from 'vitest'
 
+// or describe('suite', { shuffle: true }, ...)
 describe.shuffle('suite', () => {
   test('random test 1', async () => { /* ... */ })
   test('random test 2', async () => { /* ... */ })
   test('random test 3', async () => { /* ... */ })
+
+  // `shuffle` is inherited
+  describe('still random', () => {
+    test('random 4.1', async () => { /* ... */ })
+    test('random 4.2', async () => { /* ... */ })
+  })
+
+  // disable shuffle inside
+  describe('not random', { shuffle: false }, () => {
+    test('in order 5.1', async () => { /* ... */ })
+    test('in order 5.2', async () => { /* ... */ })
+  })
 })
 // order depends on sequence.seed option in config (Date.now() by default)
 ```
@@ -813,7 +930,7 @@ describe.shuffle('suite', () => {
 `.skip`, `.only`, and `.todo` works with random suites.
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
 
 ### describe.todo
@@ -830,6 +947,11 @@ describe.todo('unimplemented suite')
 ### describe.each
 
 - **Alias:** `suite.each`
+
+::: tip
+While `describe.each` is provided for Jest compatibility,
+Vitest also has [`describe.for`](#describe-for) which simplifies argument types and aligns with [`test.for`](#test-for).
+:::
 
 Use `describe.each` if you have more than one test that depends on the same data.
 
@@ -878,8 +1000,39 @@ describe.each`
 ```
 
 ::: warning
-You cannot use this syntax, when using Vitest as [type checker](/guide/testing-types).
+You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
+
+### describe.for
+
+- **Alias:** `suite.for`
+
+The difference from `describe.each` is how array case is provided in the arguments.
+Other non array case (including template string usage) works exactly same.
+
+```ts
+// `each` spreads array case
+describe.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', (a, b, expected) => { // [!code --]
+  test('test', () => {
+    expect(a + b).toBe(expected)
+  })
+})
+
+// `for` doesn't spread array case
+describe.for([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', ([a, b, expected]) => { // [!code ++]
+  test('test', () => {
+    expect(a + b).toBe(expected)
+  })
+})
+```
 
 ## Setup and Teardown
 
@@ -1001,7 +1154,7 @@ Here the `afterAll` ensures that `stopMocking` method is called after all tests 
 
 ## Test Hooks
 
-Vitest provides a few hooks that you can call _during_ the test execution to cleanup the state when the test has finished runnning.
+Vitest provides a few hooks that you can call _during_ the test execution to cleanup the state when the test has finished running.
 
 ::: warning
 These hooks will throw an error if they are called outside of the test body.
@@ -1009,7 +1162,7 @@ These hooks will throw an error if they are called outside of the test body.
 
 ### onTestFinished {#ontestfinished}
 
-This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result.
+This hook is always called after the test has finished running. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`.
 
 ```ts {1,5}
 import { onTestFinished, test } from 'vitest'
@@ -1062,11 +1215,21 @@ test('performs an organization query', async () => {
 
 ::: tip
 This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
+
+<!-- TODO: should it be called? https://github.com/vitest-dev/vitest/pull/7069 -->
+Note that this hook is not called if test was skipped with a dynamic `ctx.skip()` call:
+
+```ts{2}
+test('skipped dynamically', (t) => {
+  onTestFinished(() => {}) // not called
+  t.skip()
+})
+```
 :::
 
 ### onTestFailed
 
-This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives a `TaskResult` object with the current test result. This hook is useful for debugging.
+This hook is called only after the test has failed. It is called after `afterEach` hooks since they can influence the test result. It receives an `ExtendedContext` object like `beforeEach` and `afterEach`. This hook is useful for debugging.
 
 ```ts {1,5-7}
 import { onTestFailed, test } from 'vitest'

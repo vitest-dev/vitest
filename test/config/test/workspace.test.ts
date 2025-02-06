@@ -90,3 +90,68 @@ it('vite import analysis is applied when loading workspace config', async () => 
   expect(stderr).toBe('')
   expect(stdout).toContain('test - a')
 })
+
+it('can define inline workspace config programmatically', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/api',
+    env: {
+      TEST_ROOT: '1',
+    },
+    workspace: [
+      {
+        extends: true,
+        test: {
+          name: 'project-1',
+        },
+      },
+      {
+        test: {
+          name: 'project-2',
+          env: {
+            TEST_ROOT: '2',
+          },
+        },
+      },
+      {
+        extends: './vite.custom.config.js',
+        test: {
+          name: 'project-3',
+        },
+      },
+    ],
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('project-1')
+  expect(stdout).toContain('project-2')
+  expect(stdout).toContain('project-3')
+  expect(stdout).toContain('3 passed')
+})
+
+it('correctly inherits the root config', async () => {
+  const { stderr, stdout } = await runVitest({
+    root: 'fixtures/workspace/config-extends',
+  })
+  expect(stderr).toBe('')
+  expect(stdout).toContain('repro.test.js > importing a virtual module')
+})
+
+it('fails if workspace is empty', async () => {
+  const { stderr } = await runVitest({
+    workspace: [],
+  })
+  expect(stderr).toContain('No projects were found. Make sure your configuration is correct. The workspace: [].')
+})
+
+it('fails if workspace is filtered by the project', async () => {
+  const { stderr } = await runVitest({
+    project: 'non-existing',
+    root: 'fixtures/workspace/config-empty',
+    config: './vitest.config.js',
+    workspace: [
+      './vitest.config.js',
+    ],
+  })
+  expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The workspace: [
+    "./vitest.config.js"
+].`)
+})

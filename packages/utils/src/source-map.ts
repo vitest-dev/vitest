@@ -5,6 +5,8 @@ import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
 
 export {
+  eachMapping,
+  type EachMapping,
   generatedPositionFor,
   originalPositionFor,
   TraceMap,
@@ -165,7 +167,9 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   }
 
   // normalize Windows path (\ -> /)
-  file = resolve(file)
+  file = file.startsWith('node:') || file.startsWith('internal:')
+    ? file
+    : resolve(file)
 
   if (method) {
     method = method.replace(/__vite_ssr_import_\d+__\./g, '')
@@ -177,6 +181,16 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
     line: Number.parseInt(lineNumber),
     column: Number.parseInt(columnNumber),
   }
+}
+
+export function createStackString(stacks: ParsedStack[]): string {
+  return stacks.map((stack) => {
+    const line = `${stack.file}:${stack.line}:${stack.column}`
+    if (stack.method) {
+      return `    at ${stack.method}(${line})`
+    }
+    return `    at ${line}`
+  }).join('\n')
 }
 
 export function parseStacktrace(

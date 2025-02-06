@@ -24,7 +24,7 @@ test('bundled code with source maps to originals', async () => {
   expect(files.find(file => file.includes('bundle.ts'))).toBeFalsy()
   expect(files.find(file => file.includes('bundle.d.ts'))).toBeFalsy()
 
-  expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/bundled-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
+  await expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/bundled-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
 })
 
 coverageTest('run bundled sources', () => {

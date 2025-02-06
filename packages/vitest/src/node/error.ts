@@ -1,34 +1,36 @@
+/* eslint-disable prefer-template */
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from './core'
-import type { ErrorOptions } from './logger'
-import type { WorkspaceProject } from './workspace'
-/* eslint-disable prefer-template */
+import type { ErrorOptions, Logger } from './logger'
+import type { TestProject } from './project'
+import { Console } from 'node:console'
 import { existsSync, readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
 import { stripVTControlCharacters } from 'node:util'
 import { inspect, isPrimitive } from '@vitest/utils'
-import cliTruncate from 'cli-truncate'
 import { normalize, relative } from 'pathe'
 import c from 'tinyrainbow'
 import { TypeCheckError } from '../typecheck/typechecker'
 import {
   lineSplitRE,
+  parseErrorStacktrace,
   positionToOffset,
 } from '../utils/source-map'
-import { Logger } from './logger'
 import { F_POINTER } from './reporters/renderers/figures'
-import { divider } from './reporters/renderers/utils'
+import { divider, truncateString } from './reporters/renderers/utils'
+
+type ErrorLogger = Pick<Logger, 'error' | 'highlight'>
 
 interface PrintErrorOptions {
+  logger: ErrorLogger
   type?: string
-  logger: Logger
   showCodeFrame?: boolean
   printProperties?: boolean
   screenshotPaths?: string[]
   parseErrorStacktrace: (error: ErrorWithDiff) => ParsedStack[]
 }
 
-export interface PrintErrorResult {
+interface PrintErrorResult {
   nearest?: ParsedStack
 }
 
@@ -45,8 +47,12 @@ export function capturePrintError(
       callback()
     },
   })
-  const logger = new Logger(ctx, writable, writable)
-  const result = logger.printError(error, {
+  const console = new Console(writable)
+  const logger: ErrorLogger = {
+    error: console.error.bind(console),
+    highlight: ctx.logger.highlight.bind(ctx.logger),
+  }
+  const result = printError(error, ctx, logger, {
     showCodeFrame: false,
     ...options,
   })
@@ -55,7 +61,40 @@ export function capturePrintError(
 
 export function printError(
   error: unknown,
-  project: WorkspaceProject | undefined,
+  ctx: Vitest,
+  logger: ErrorLogger,
+  options: ErrorOptions,
+) {
+  const project = options.project
+    ?? ctx.coreWorkspaceProject
+    ?? ctx.projects[0]
+  return printErrorInner(error, project, {
+    logger,
+    type: options.type,
+    showCodeFrame: options.showCodeFrame,
+    screenshotPaths: options.screenshotPaths,
+    printProperties: options.verbose,
+    parseErrorStacktrace(error) {
+      // browser stack trace needs to be processed differently,
+      // so there is a separate method for that
+      if (options.task?.file.pool === 'browser' && project.browser) {
+        return project.browser.parseErrorStacktrace(error, {
+          ignoreStackEntries: options.fullStack ? [] : undefined,
+        })
+      }
+
+      // node.js stack trace already has correct source map locations
+      return parseErrorStacktrace(error, {
+        frameFilter: project.config.onStackTrace,
+        ignoreStackEntries: options.fullStack ? [] : undefined,
+      })
+    },
+  })
+}
+
+function printErrorInner(
+  error: unknown,
+  project: TestProject | undefined,
   options: PrintErrorOptions,
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
@@ -89,17 +128,17 @@ export function printError(
     = error instanceof TypeCheckError
       ? error.stacks[0]
       : stacks.find((stack) => {
-        try {
-          return (
-            project.server
-            && project.getModuleById(stack.file)
-            && existsSync(stack.file)
-          )
-        }
-        catch {
-          return false
-        }
-      })
+          try {
+            return (
+              project.server
+              && project.getModuleById(stack.file)
+              && existsSync(stack.file)
+            )
+          }
+          catch {
+            return false
+          }
+        })
 
   if (type) {
     printErrorType(type, project.ctx)
@@ -130,7 +169,7 @@ export function printError(
 
   // E.g. AssertionError from assert does not set showDiff but has both actual and expected properties
   if (e.diff) {
-    displayDiff(e.diff, logger.console)
+    logger.error(`\n${e.diff}\n`)
   }
 
   // if the error provide the frame
@@ -194,7 +233,7 @@ export function printError(
 
   if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
     (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    printError(e.cause, project, {
+    printErrorInner(e.cause, project, {
       showCodeFrame: false,
       logger: options.logger,
       parseErrorStacktrace: options.parseErrorStacktrace,
@@ -252,7 +291,7 @@ const esmErrors = [
   'Unexpected token \'export\'',
 ]
 
-function handleImportOutsideModuleError(stack: string, logger: Logger) {
+function handleImportOutsideModuleError(stack: string, logger: ErrorLogger) {
   if (!esmErrors.some(e => stack.includes(e))) {
     return
   }
@@ -275,7 +314,7 @@ function handleImportOutsideModuleError(stack: string, logger: Logger) {
 }
 
 function printModuleWarningForPackage(
-  logger: Logger,
+  logger: ErrorLogger,
   path: string,
   name: string,
 ) {
@@ -306,7 +345,7 @@ function printModuleWarningForPackage(
   )
 }
 
-function printModuleWarningForSourceCode(logger: Logger, path: string) {
+function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
   logger.error(
     c.yellow(
       `Module ${path} seems to be an ES Module but shipped in a CommonJS package. `
@@ -315,13 +354,7 @@ function printModuleWarningForSourceCode(logger: Logger, path: string) {
   )
 }
 
-export function displayDiff(diff: string | undefined, console: Console) {
-  if (diff) {
-    console.error(`\n${diff}\n`)
-  }
-}
-
-function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
+function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
   if (!error.message) {
     logger.error(error)
@@ -336,9 +369,9 @@ function printErrorMessage(error: ErrorWithDiff, logger: Logger) {
   }
 }
 
-export function printStack(
-  logger: Logger,
-  project: WorkspaceProject,
+function printStack(
+  logger: ErrorLogger,
+  project: TestProject,
   stack: ParsedStack[],
   highlight: ParsedStack | undefined,
   errorProperties: Record<string, unknown>,
@@ -413,7 +446,7 @@ export function generateCodeFrame(
 
         res.push(
           lineNo(j + 1)
-          + cliTruncate(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
+          + truncateString(lines[j].replace(/\t/g, ' '), columns - 5 - indent),
         )
 
         if (j === i) {

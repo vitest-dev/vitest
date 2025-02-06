@@ -1,18 +1,14 @@
 import type { DepsHandlingOptions } from './types'
 import { existsSync, promises as fsp } from 'node:fs'
+import * as esModuleLexer from 'es-module-lexer'
 import { dirname, extname, join } from 'pathe'
 import { KNOWN_ASSET_RE } from './constants'
 import { findNearestPackageData, isNodeBuiltin, slash } from './utils'
 
 const BUILTIN_EXTENSIONS = new Set(['.mjs', '.cjs', '.node', '.wasm'])
 
-const ESM_SYNTAX_RE
-  = /(?:[\s;]|^)(?:import[\s\w*,{}]*from|import\s*["'*{]|export\b\s*(?:[*{]|default|class|type|function|const|var|let|async function)|import\.meta\b)/m
 const ESM_EXT_RE = /\.(es|esm|esm-browser|esm-bundler|es6|module)\.js$/
 const ESM_FOLDER_RE = /\/(es|esm)\/(.*\.js)$/
-
-// https://stackoverflow.com/a/15123777
-const COMMENT_RE = /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm
 
 const defaultInline = [
   /virtual:/,
@@ -80,9 +76,15 @@ async function isValidNodeImport(id: string) {
     return false
   }
 
-  const code = await fsp.readFile(id, 'utf8').catch(() => '')
-
-  return !ESM_SYNTAX_RE.test(code.replace(COMMENT_RE, ''))
+  try {
+    await esModuleLexer.init
+    const code = await fsp.readFile(id, 'utf8')
+    const [, , , hasModuleSyntax] = esModuleLexer.parse(code)
+    return !hasModuleSyntax
+  }
+  catch {
+    return false
+  }
 }
 
 const _defaultExternalizeCache = new Map<string, Promise<string | false>>()

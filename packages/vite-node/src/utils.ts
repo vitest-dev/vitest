@@ -35,11 +35,16 @@ export function normalizeRequestId(id: string, base?: string): string {
     id = id.replace(driveOppositeRegext, `${drive}$1`)
   }
 
+  if (id.startsWith('file://')) {
+    // preserve hash/query
+    const { file, postfix } = splitFileAndPostfix(id)
+    return fileURLToPath(file) + postfix
+  }
+
   return id
     .replace(/^\/@id\/__x00__/, '\0') // virtual modules start with `\0`
     .replace(/^\/@id\//, '')
     .replace(/^__vite-browser-external:/, '')
-    .replace(/^file:(\/+)/, isWindows ? '' : '/') // remove file protocol and duplicate leading slashes
     .replace(/\?v=\w+/, '?') // remove ?v= query
     .replace(/&v=\w+/, '') // remove &v= query
     .replace(/\?t=\w+/, '?') // remove ?t= query
@@ -55,6 +60,14 @@ export function cleanUrl(url: string): string {
   return url.replace(postfixRE, '')
 }
 
+function splitFileAndPostfix(path: string): {
+  file: string
+  postfix: string
+} {
+  const file = cleanUrl(path)
+  return { file, postfix: path.slice(file.length) }
+}
+
 const internalRequests = ['@vite/client', '@vite/env']
 
 const internalRequestRegexp = new RegExp(
@@ -65,7 +78,13 @@ export function isInternalRequest(id: string): boolean {
   return internalRequestRegexp.test(id)
 }
 
-const prefixedBuiltins = new Set(['node:test'])
+// https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
+const prefixedBuiltins = new Set([
+  'node:sea',
+  'node:sqlite',
+  'node:test',
+  'node:test/reporters',
+])
 
 const builtins = new Set([
   ...builtinModules,
@@ -89,10 +108,12 @@ export function normalizeModuleId(id: string) {
   if (prefixedBuiltins.has(id)) {
     return id
   }
+  if (id.startsWith('file://')) {
+    return fileURLToPath(id)
+  }
   return id
     .replace(/\\/g, '/')
     .replace(/^\/@fs\//, isWindows ? '' : '/')
-    .replace(/^file:\//, '/')
     .replace(/^node:/, '')
     .replace(/^\/+/, '/')
 }

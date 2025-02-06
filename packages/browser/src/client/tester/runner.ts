@@ -1,4 +1,4 @@
-import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
@@ -7,7 +7,8 @@ import { page, userEvent } from '@vitest/browser/context'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { originalPositionFor, TraceMap } from 'vitest/utils'
-import { executor } from '../utils'
+import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
+import { executor, getWorkerState } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
@@ -29,7 +30,7 @@ export function createBrowserRunner(
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
-): { new (options: BrowserRunnerOptions): VitestRunner } {
+): { new (options: BrowserRunnerOptions): VitestRunner & { sourceMapCache: Map<string, any> } } {
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: SerializedConfig
     hashMap = browserHashMap
@@ -60,8 +61,13 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (this.config.browser.screenshotFailures && task.result?.state === 'fail') {
-        task.meta.failScreenshotPath = await page.screenshot()
+      if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
+        const screenshot = await page.screenshot().catch((err) => {
+          console.error('[vitest] Failed to take a screenshot', err)
+        })
+        if (screenshot) {
+          task.meta.failScreenshotPath = screenshot
+        }
       }
     }
 
@@ -103,6 +109,10 @@ export function createBrowserRunner(
       }
     }
 
+    onCollectStart = (file: File) => {
+      return rpc().onQueued(file)
+    }
+
     onCollected = async (files: File[]): Promise<unknown> => {
       files.forEach((file) => {
         file.prepareDuration = state.durations.prepare
@@ -121,8 +131,8 @@ export function createBrowserRunner(
       return rpc().onCollected(files)
     }
 
-    onTaskUpdate = (task: TaskResultPack[]): Promise<void> => {
-      return rpc().onTaskUpdate(task)
+    onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
+      return rpc().onTaskUpdate(task, events)
     }
 
     importFile = async (filepath: string) => {
@@ -171,6 +181,14 @@ export async function initiateRunner(
   ])
   runner.config.diffOptions = diffOptions
   cachedRunner = runner
+  getWorkerState().onFilterStackTrace = (stack: string) => {
+    const stacks = parseStacktrace(stack, {
+      getSourceMap(file) {
+        return runner.sourceMapCache.get(file)
+      },
+    })
+    return createStackString(stacks)
+  }
   return runner
 }
 

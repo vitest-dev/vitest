@@ -58,7 +58,7 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
   }
 }
 
-interface CLIOptions {
+export interface CliParseOptions {
   allowUnknownOptions?: boolean
 }
 
@@ -70,7 +70,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export function createCLI(options: CLIOptions = {}) {
+export function createCLI(options: CliParseOptions = {}) {
   const cli = cac('vitest')
 
   cli.version(version)
@@ -196,7 +196,7 @@ export function createCLI(options: CLIOptions = {}) {
   return cli
 }
 
-export function parseCLI(argv: string | string[], config: CLIOptions = {}): {
+export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
   filter: string[]
   options: CliOptions
 } {
@@ -247,10 +247,21 @@ async function benchmark(cliFilters: string[], options: CliOptions): Promise<voi
   await start('benchmark', cliFilters, options)
 }
 
-function normalizeCliOptions(argv: CliOptions): CliOptions {
+function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions {
   if (argv.exclude) {
     argv.cliExclude = toArray(argv.exclude)
     delete argv.exclude
+  }
+  if (cliFilters.some(filter => filter.includes(':'))) {
+    argv.includeTaskLocation ??= true
+  }
+
+  // running "vitest --browser.headless"
+  if (typeof argv.browser === 'object' && !('enabled' in argv.browser)) {
+    argv.browser.enabled = true
+  }
+  if (typeof argv.typecheck?.only === 'boolean') {
+    argv.typecheck.enabled ??= true
   }
 
   return argv
@@ -264,9 +275,9 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
 
   try {
     const { startVitest } = await import('./cli-api')
-    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(options))
-    if (!ctx?.shouldKeepServer()) {
-      await ctx?.exit()
+    const ctx = await startVitest(mode, cliFilters.map(normalize), normalizeCliOptions(cliFilters, options))
+    if (!ctx.shouldKeepServer()) {
+      await ctx.exit()
     }
   }
   catch (e) {
@@ -302,12 +313,12 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
   try {
     const { prepareVitest, processCollected, outputFileList } = await import('./cli-api')
     const ctx = await prepareVitest(mode, {
-      ...normalizeCliOptions(options),
+      ...normalizeCliOptions(cliFilters, options),
       watch: false,
       run: true,
     })
     if (!options.filesOnly) {
-      const { tests, errors } = await ctx.collect(cliFilters.map(normalize))
+      const { testModules: tests, unhandledErrors: errors } = await ctx.collect(cliFilters.map(normalize))
 
       if (errors.length) {
         console.error('\nThere were unhandled errors during test collection')
@@ -320,7 +331,7 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
       processCollected(ctx, tests, options)
     }
     else {
-      const files = await ctx.listFiles(cliFilters.map(normalize))
+      const files = await ctx.getRelevantTestSpecifications(cliFilters.map(normalize))
       outputFileList(files, options)
     }
 

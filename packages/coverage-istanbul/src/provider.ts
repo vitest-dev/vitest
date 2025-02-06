@@ -1,5 +1,7 @@
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
+// @ts-expect-error missing types
+import { defaults as istanbulDefaults } from '@istanbuljs/schema'
 import createDebug from 'debug'
 import libCoverage, { type CoverageMap } from 'istanbul-lib-coverage'
 import { createInstrumenter, type Instrumenter } from 'istanbul-lib-instrument'
@@ -11,8 +13,6 @@ import { resolve } from 'pathe'
 import TestExclude from 'test-exclude'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
-// @ts-expect-error missing types
-import { defaults as istanbulDefaults } from '@istanbuljs/schema'
 
 import { version } from '../package.json' with { type: 'json' }
 import { COVERAGE_STORE_KEY } from './constants'

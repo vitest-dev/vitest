@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, onTestFailed, onTestFinished, test } from 'vitest'
 import { createFile, editFile } from '../../test-utils'
-import { runBrowserTests } from './utils'
+import { instances, runBrowserTests } from './utils'
 
 test('update snapshot', async () => {
   // setup wrong snapshot value
@@ -15,6 +15,7 @@ test('update snapshot', async () => {
   const ctx = await runBrowserTests({
     watch: true,
     root: './fixtures/update-snapshot',
+    project: [instances[0].browser], // TODO 2024-12-11 Sheremet V.A. test with multiple browsers
     reporters: ['default'], // use simple reporter to not pollute stdout
     browser: { headless: true },
   }, [], {
@@ -37,7 +38,7 @@ test('update snapshot', async () => {
   expect(files).toHaveLength(1)
   expect(files[0].result.state).toBe('fail')
 
-  // updateSnapshot API to simulate "u" commmand
+  // updateSnapshot API to simulate "u" command
   await vitest.updateSnapshot()
 
   // verify snapshot value is updated

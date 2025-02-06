@@ -9,7 +9,7 @@ import type {
 import type {
   BrowserProvider,
   BrowserProviderInitializationOptions,
-  WorkspaceProject,
+  TestProject,
 } from 'vitest/node'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
@@ -27,11 +27,11 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public browser: Browser | null = null
 
   private browserName!: PlaywrightBrowser
-  private ctx!: WorkspaceProject
+  private project!: TestProject
 
   private options?: {
     launch?: LaunchOptions
-    context?: BrowserContextOptions
+    context?: BrowserContextOptions & { actionTimeout?: number }
   }
 
   public contexts = new Map<string, BrowserContext>()
@@ -44,10 +44,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   initialize(
-    project: WorkspaceProject,
+    project: TestProject,
     { browser, options }: PlaywrightProviderOptions,
   ) {
-    this.ctx = project
+    this.project = project
     this.browserName = browser
     this.options = options as any
   }
@@ -62,7 +62,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
 
     this.browserPromise = (async () => {
-      const options = this.ctx.config.browser
+      const options = this.project.config.browser
 
       const playwright = await import('playwright')
 
@@ -71,20 +71,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         headless: options.headless,
       } satisfies LaunchOptions
 
-      if (this.ctx.config.inspector.enabled) {
+      if (this.project.config.inspector.enabled) {
         // NodeJS equivalent defaults: https://nodejs.org/en/learn/getting-started/debugging#enable-inspector
-        const port = this.ctx.config.inspector.port || 9229
-        const host = this.ctx.config.inspector.host || '127.0.0.1'
+        const port = this.project.config.inspector.port || 9229
+        const host = this.project.config.inspector.host || '127.0.0.1'
 
         launchOptions.args ||= []
         launchOptions.args.push(`--remote-debugging-port=${port}`)
         launchOptions.args.push(`--remote-debugging-address=${host}`)
 
-        this.ctx.logger.log(`Debugger listening on ws://${host}:${port}`)
+        this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
       }
 
       // start Vitest UI maximized only on supported browsers
-      if (this.ctx.config.browser.ui && this.browserName === 'chromium') {
+      if (this.project.config.browser.ui && this.browserName === 'chromium') {
         if (!launchOptions.args) {
           launchOptions.args = []
         }
@@ -102,38 +102,42 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
-  private async createContext(contextId: string) {
-    if (this.contexts.has(contextId)) {
-      return this.contexts.get(contextId)!
+  private async createContext(sessionId: string) {
+    if (this.contexts.has(sessionId)) {
+      return this.contexts.get(sessionId)!
     }
 
     const browser = await this.openBrowser()
+    const { actionTimeout, ...contextOptions } = this.options?.context ?? {}
     const options = {
-      ...this.options?.context,
+      ...contextOptions,
       ignoreHTTPSErrors: true,
       serviceWorkers: 'allow',
     } satisfies BrowserContextOptions
-    if (this.ctx.config.browser.ui) {
+    if (this.project.config.browser.ui) {
       options.viewport = null
     }
     const context = await browser.newContext(options)
-    this.contexts.set(contextId, context)
+    if (actionTimeout) {
+      context.setDefaultTimeout(actionTimeout)
+    }
+    this.contexts.set(sessionId, context)
     return context
   }
 
-  public getPage(contextId: string) {
-    const page = this.pages.get(contextId)
+  public getPage(sessionId: string) {
+    const page = this.pages.get(sessionId)
     if (!page) {
-      throw new Error(`Page "${contextId}" not found`)
+      throw new Error(`Page "${sessionId}" not found in ${this.browserName} browser.`)
     }
     return page
   }
 
-  public getCommandsContext(contextId: string) {
-    const page = this.getPage(contextId)
+  public getCommandsContext(sessionId: string) {
+    const page = this.getPage(sessionId)
     return {
       page,
-      context: this.contexts.get(contextId)!,
+      context: this.contexts.get(sessionId)!,
       frame() {
         return new Promise<Frame>((resolve, reject) => {
           const frame = page.frame('vitest-iframe')
@@ -157,16 +161,16 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
   }
 
-  private async openBrowserPage(contextId: string) {
-    if (this.pages.has(contextId)) {
-      const page = this.pages.get(contextId)!
+  private async openBrowserPage(sessionId: string) {
+    if (this.pages.has(sessionId)) {
+      const page = this.pages.get(sessionId)!
       await page.close()
-      this.pages.delete(contextId)
+      this.pages.delete(sessionId)
     }
 
-    const context = await this.createContext(contextId)
+    const context = await this.createContext(sessionId)
     const page = await context.newPage()
-    this.pages.set(contextId, page)
+    this.pages.set(sessionId, page)
 
     if (process.env.VITEST_PW_DEBUG) {
       page.on('requestfailed', (request) => {
@@ -181,17 +185,23 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       })
     }
 
+    // unhandled page crashes will hang vitest process
+    page.on('crash', () => {
+      const session = this.project.vitest._browserSessions.getSession(sessionId)
+      session?.reject(new Error('Page crashed when executing tests'))
+    })
+
     return page
   }
 
-  async openPage(contextId: string, url: string, beforeNavigate?: () => Promise<void>) {
-    const browserPage = await this.openBrowserPage(contextId)
+  async openPage(sessionId: string, url: string, beforeNavigate?: () => Promise<void>) {
+    const browserPage = await this.openBrowserPage(sessionId)
     await beforeNavigate?.()
-    await browserPage.goto(url)
+    await browserPage.goto(url, { timeout: 0 })
   }
 
-  async getCDPSession(contextId: string) {
-    const page = this.getPage(contextId)
+  async getCDPSession(sessionid: string) {
+    const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
       async send(method: string, params: any) {

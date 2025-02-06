@@ -74,9 +74,9 @@ export class WatchFilter {
           break
         case key?.ctrl && key?.name === 'c':
         case key?.name === 'escape':
-          this.cancel()
+          this.write(`${ESC}1G${ESC}0J`) // clean content
           onSubmit(undefined)
-          break
+          return
         case key?.name === 'enter':
         case key?.name === 'return':
           onSubmit(
@@ -158,11 +158,11 @@ export class WatchFilter {
         if (remainingResultCount > 0) {
           resultBody
             += '\n'
-            + `${c.dim(
-              `   ...and ${remainingResultCount} more ${
-                remainingResultCount === 1 ? 'result' : 'results'
-              }`,
-            )}`
+              + `${c.dim(
+                `   ...and ${remainingResultCount} more ${
+                  remainingResultCount === 1 ? 'result' : 'results'
+                }`,
+              )}`
         }
       }
       else {
@@ -222,10 +222,6 @@ export class WatchFilter {
     const cursortPos
       = this.keywordOffset() + (this.currentKeyword?.length || 0)
     this.write(`${ESC}${cursortPos}G`)
-  }
-
-  private cancel() {
-    this.write(`${ESC}J`) // erase down
   }
 
   private write(data: string) {

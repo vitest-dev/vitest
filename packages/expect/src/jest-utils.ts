@@ -114,10 +114,6 @@ function eq(
     }
   }
 
-  if (a instanceof Error && b instanceof Error) {
-    return a.message === b.message
-  }
-
   if (typeof URL === 'function' && a instanceof URL && b instanceof URL) {
     return a.href === b.href
   }
@@ -196,6 +192,16 @@ function eq(
     return false
   }
 
+  if (a instanceof Error && b instanceof Error) {
+    try {
+      return isErrorEqual(a, b, aStack, bStack, customTesters, hasKey)
+    }
+    finally {
+      aStack.pop()
+      bStack.pop()
+    }
+  }
+
   // Deep compare objects.
   const aKeys = keys(a, hasKey)
   let key
@@ -212,7 +218,7 @@ function eq(
     // Deep compare each member
     result
       = hasKey(b, key)
-      && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
+        && eq(a[key], b[key], aStack, bStack, customTesters, hasKey)
 
     if (!result) {
       return false
@@ -222,6 +228,37 @@ function eq(
   aStack.pop()
   bStack.pop()
 
+  return result
+}
+
+function isErrorEqual(
+  a: Error,
+  b: Error,
+  aStack: Array<unknown>,
+  bStack: Array<unknown>,
+  customTesters: Array<Tester>,
+  hasKey: any,
+) {
+  // https://nodejs.org/docs/latest-v22.x/api/assert.html#comparison-details
+  // - [[Prototype]] of objects are compared using the === operator.
+  // - Only enumerable "own" properties are considered.
+  // - Error names, messages, causes, and errors are always compared, even if these are not enumerable properties. errors is also compared.
+
+  let result = (
+    Object.getPrototypeOf(a) === Object.getPrototypeOf(b)
+    && a.name === b.name
+    && a.message === b.message
+  )
+  // check Error.cause asymmetrically
+  if (typeof b.cause !== 'undefined') {
+    result &&= eq(a.cause, b.cause, aStack, bStack, customTesters, hasKey)
+  }
+  // AggregateError.errors
+  if (a instanceof AggregateError && b instanceof AggregateError) {
+    result &&= eq(a.errors, b.errors, aStack, bStack, customTesters, hasKey)
+  }
+  // spread to compare enumerable properties
+  result &&= eq({ ...a }, { ...b }, aStack, bStack, customTesters, hasKey)
   return result
 }
 
@@ -566,11 +603,11 @@ export function subsetEquality(
           }
           const result
           = object != null
-          && hasPropertyInObject(object, key)
-          && equals(object[key], subset[key], [
-            ...filteredCustomTesters,
-            subsetEqualityWithContext(seenReferences),
-          ])
+            && hasPropertyInObject(object, key)
+            && equals(object[key], subset[key], [
+              ...filteredCustomTesters,
+              subsetEqualityWithContext(seenReferences),
+            ])
           // The main goal of using seenReference is to avoid circular node on tree.
           // It will only happen within a parent and its child, not a node and nodes next to it (same level)
           // We should keep the reference for a parent and its child only
@@ -702,7 +739,7 @@ export function getObjectSubset(
               subsetEquality,
             ])
           ) {
-            // return "expected" subset to avoid showing irrelavant toMatchObject diff
+            // return "expected" subset to avoid showing irrelevant toMatchObject diff
             return subset
           }
 
@@ -722,9 +759,9 @@ export function getObjectSubset(
               trimmed[key] = seenReferences.has(object[key])
                 ? seenReferences.get(object[key])
                 : getObjectSubsetWithContext(seenReferences)(
-                  object[key],
-                  subset[key],
-                )
+                    object[key],
+                    subset[key],
+                  )
             }
             else {
               if (!seenReferences.has(object[key])) {

@@ -16,5 +16,5 @@ test('coverage results matches snapshot', async () => {
 
   const coverageJson = await readCoverageJson()
 
-  expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/results-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
+  await expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/results-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
 })

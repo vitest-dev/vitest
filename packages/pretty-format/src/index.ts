@@ -296,6 +296,35 @@ function printComplexValue(
     )}}`
 }
 
+const ErrorPlugin: NewPlugin = {
+  test: val => val && val instanceof Error,
+  serialize(val: Error, config, indentation, depth, refs, printer) {
+    if (refs.includes(val)) {
+      return '[Circular]'
+    }
+    refs = [...refs, val]
+    const hitMaxDepth = ++depth > config.maxDepth
+    const { message, cause, ...rest } = val
+    const entries = {
+      message,
+      ...typeof cause !== 'undefined' ? { cause } : {},
+      ...val instanceof AggregateError ? { errors: val.errors } : {},
+      ...rest,
+    }
+    const name = val.name !== 'Error' ? val.name : getConstructorName(val as any)
+    return hitMaxDepth
+      ? `[${name}]`
+      : `${name} {${printIteratorEntries(
+        Object.entries(entries).values(),
+        config,
+        indentation,
+        depth,
+        refs,
+        printer,
+      )}}`
+  },
+}
+
 function isNewPlugin(plugin: Plugin): plugin is NewPlugin {
   return (plugin as NewPlugin).serialize != null
 }
@@ -314,22 +343,22 @@ function printPlugin(
     printed = isNewPlugin(plugin)
       ? plugin.serialize(val, config, indentation, depth, refs, printer)
       : plugin.print(
-        val,
-        valChild => printer(valChild, config, indentation, depth, refs),
-        (str) => {
-          const indentationNext = indentation + config.indent
-          return (
-            indentationNext
-            + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
-          )
-        },
-        {
-          edgeSpacing: config.spacingOuter,
-          min: config.min,
-          spacing: config.spacingInner,
-        },
-        config.colors,
-      )
+          val,
+          valChild => printer(valChild, config, indentation, depth, refs),
+          (str) => {
+            const indentationNext = indentation + config.indent
+            return (
+              indentationNext
+              + str.replaceAll(NEWLINE_REGEXP, `\n${indentationNext}`)
+            )
+          },
+          {
+            edgeSpacing: config.spacingOuter,
+            min: config.min,
+            spacing: config.spacingInner,
+          },
+          config.colors,
+        )
   }
   catch (error: any) {
     throw new PrettyFormatPluginError(error.message, error.stack)
@@ -535,6 +564,7 @@ export const plugins: {
   Immutable: NewPlugin
   ReactElement: NewPlugin
   ReactTestComponent: NewPlugin
+  Error: NewPlugin
 } = {
   AsymmetricMatcher,
   DOMCollection,
@@ -542,4 +572,5 @@ export const plugins: {
   Immutable,
   ReactElement,
   ReactTestComponent,
+  Error: ErrorPlugin,
 }

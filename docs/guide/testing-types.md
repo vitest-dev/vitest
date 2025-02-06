@@ -24,7 +24,7 @@ Since Vitest 2.1, if your `include` and `typecheck.include` overlap, Vitest will
 
 Using CLI flags, like `--allowOnly` and `-t` are also supported for type checking.
 
-```ts
+```ts [mount.test-d.ts]
 import { assertType, expectTypeOf } from 'vitest'
 import { mount } from './mount.js'
 
@@ -117,7 +117,7 @@ This will pass, because it expects an error, but the word “answer” has a typ
 
 ```ts
 // @ts-expect-error answer is not a string
-assertType<string>(answr) //
+assertType<string>(answr)
 ```
 :::
 
@@ -125,7 +125,7 @@ assertType<string>(answr) //
 
 To enable typechecking, just add [`--typecheck`](/config/#typecheck) flag to your Vitest command in `package.json`:
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest --typecheck"

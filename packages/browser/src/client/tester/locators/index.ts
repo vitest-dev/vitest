@@ -22,7 +22,7 @@ import {
   Ivya,
   type ParsedSelector,
 } from 'ivya'
-import { getBrowserState, getWorkerState } from '../../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
@@ -185,6 +185,26 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
+  public nth(index: number): Locator {
+    return this.locator(`nth=${index}`)
+  }
+
+  public first(): Locator {
+    return this.nth(0)
+  }
+
+  public last(): Locator {
+    return this.nth(-1)
+  }
+
+  public toString(): string {
+    return this.selector
+  }
+
+  public toJSON(): string {
+    return this.selector
+  }
+
   private get state(): BrowserRunnerState {
     return getBrowserState()
   }
@@ -202,11 +222,11 @@ export abstract class Locator {
       || this.worker.current?.file?.filepath
       || undefined
 
-    return this.rpc.triggerCommand<T>(
-      this.state.contextId,
+    return ensureAwaited(() => this.rpc.triggerCommand<T>(
+      this.state.sessionId,
       command,
       filepath,
       args,
-    )
+    ))
   }
 }

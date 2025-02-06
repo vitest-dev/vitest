@@ -61,8 +61,8 @@ export class TapReporter implements Reporter {
 
       const ok
         = task.result?.state === 'pass'
-        || task.mode === 'skip'
-        || task.mode === 'todo'
+          || task.mode === 'skip'
+          || task.mode === 'todo'
           ? 'ok'
           : 'not ok'
 
@@ -80,7 +80,7 @@ export class TapReporter implements Reporter {
       else {
         this.logger.log(`${ok} ${id} - ${tapString(task.name)}${comment}`)
 
-        const project = this.ctx.getProjectByTaskId(task.id)
+        const project = this.ctx.getProjectByName(task.file.projectName || '')
 
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
@@ -89,8 +89,8 @@ export class TapReporter implements Reporter {
             const stacks = task.file.pool === 'browser'
               ? (project.browser?.parseErrorStacktrace(error) || [])
               : parseErrorStacktrace(error, {
-                frameFilter: this.ctx.config.onStackTrace,
-              })
+                  frameFilter: this.ctx.config.onStackTrace,
+                })
             const stack = stacks[0]
 
             this.logger.log('---')

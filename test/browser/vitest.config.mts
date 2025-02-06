@@ -1,12 +1,10 @@
-import type { BrowserCommand } from 'vitest/node'
+import type { BrowserCommand, BrowserInstanceOption } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
 import { defineConfig } from 'vitest/config'
 
 const dir = dirname(fileURLToPath(import.meta.url))
-
-function noop() {}
 
 const provider = process.env.PROVIDER || 'playwright'
 const browser = process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
@@ -18,6 +16,21 @@ const myCustomCommand: BrowserCommand<[arg1: string, arg2: string]> = ({ testPat
 const stripVTControlCharacters: BrowserCommand<[text: string]> = (_, text) => {
   return util.stripVTControlCharacters(text)
 }
+
+const devInstances: BrowserInstanceOption[] = [
+  { browser },
+]
+
+const playwrightInstances: BrowserInstanceOption[] = [
+  { browser: 'chromium' },
+  { browser: 'firefox' },
+  { browser: 'webkit' },
+]
+
+const webdriverioInstances: BrowserInstanceOption[] = [
+  { browser: 'chrome' },
+  { browser: 'firefox' },
+]
 
 export default defineConfig({
   server: {
@@ -38,8 +51,12 @@ export default defineConfig({
     snapshotEnvironment: './custom-snapshot-env.ts',
     browser: {
       enabled: true,
-      name: browser,
       headless: false,
+      instances: process.env.BROWSER
+        ? devInstances
+        : provider === 'playwright'
+          ? playwrightInstances
+          : webdriverioInstances,
       provider,
       isolate: false,
       testerScripts: [
@@ -83,19 +100,10 @@ export default defineConfig({
     },
     open: false,
     diff: './custom-diff-config.ts',
-    outputFile: './browser.json',
-    reporters: ['json', {
-      onInit: noop,
-      onPathsCollected: noop,
-      onCollected: noop,
-      onFinished: noop,
-      onTaskUpdate: noop,
-      onTestRemoved: noop,
-      onWatcherStart: noop,
-      onWatcherRerun: noop,
-      onServerRestart: noop,
-      onUserConsoleLog: noop,
-    }, 'default'],
+    outputFile: {
+      html: './html/index.html',
+      json: './browser.json',
+    },
     env: {
       BROWSER: browser,
     },

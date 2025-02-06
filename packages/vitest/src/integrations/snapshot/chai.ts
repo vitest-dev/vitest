@@ -1,4 +1,4 @@
-import type { ChaiPlugin } from '@vitest/expect'
+import type { Assertion, ChaiPlugin } from '@vitest/expect'
 import type { Test } from '@vitest/runner'
 import { equals, iterableEquality, subsetEquality } from '@vitest/expect'
 import { getNames } from '@vitest/runner/utils'
@@ -7,7 +7,7 @@ import {
   SnapshotClient,
   stripSnapshotIndentation,
 } from '@vitest/snapshot'
-import { recordAsyncExpect } from '../../../../expect/src/utils'
+import { createAssertionMessage, recordAsyncExpect } from '../../../../expect/src/utils'
 
 let _client: SnapshotClient
 
@@ -44,17 +44,23 @@ function getError(expected: () => void | Error, promise: string | undefined) {
   throw new Error('snapshot function didn\'t throw')
 }
 
-function getTestNames(test?: Test) {
-  if (!test) {
-    return {}
-  }
+function getTestNames(test: Test) {
   return {
     filepath: test.file.filepath,
     name: getNames(test).slice(1).join(' > '),
+    testId: test.id,
   }
 }
 
 export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
+  function getTest(assertionName: string, obj: object) {
+    const test = utils.flag(obj, 'vitest-test')
+    if (!test) {
+      throw new Error(`'${assertionName}' cannot be used without test context`)
+    }
+    return test as Test
+  }
+
   for (const key of ['matchSnapshot', 'toMatchSnapshot']) {
     utils.addMethod(
       chai.Assertion.prototype,
@@ -64,12 +70,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         properties?: object,
         message?: string,
       ) {
+        utils.flag(this, '_name', key)
         const isNot = utils.flag(this, 'negate')
         if (isNot) {
           throw new Error(`${key} cannot be used with "not"`)
         }
         const expected = utils.flag(this, 'object')
-        const test = utils.flag(this, 'vitest-test')
+        const test = getTest(key, this)
         if (typeof properties === 'string' && typeof message === 'undefined') {
           message = properties
           properties = undefined
@@ -90,13 +97,15 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
   utils.addMethod(
     chai.Assertion.prototype,
     'toMatchFileSnapshot',
-    function (this: Record<string, unknown>, file: string, message?: string) {
+    function (this: Assertion, file: string, message?: string) {
+      utils.flag(this, '_name', 'toMatchFileSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
         throw new Error('toMatchFileSnapshot cannot be used with "not"')
       }
+      const error = new Error('resolves')
       const expected = utils.flag(this, 'object')
-      const test = utils.flag(this, 'vitest-test') as Test
+      const test = getTest('toMatchFileSnapshot', this)
       const errorMessage = utils.flag(this, 'message')
 
       const promise = getSnapshotClient().assertRaw({
@@ -110,7 +119,12 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         ...getTestNames(test),
       })
 
-      return recordAsyncExpect(test, promise)
+      return recordAsyncExpect(
+        test,
+        promise,
+        createAssertionMessage(utils, this, true),
+        error,
+      )
     },
   )
 
@@ -123,12 +137,13 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       inlineSnapshot?: string,
       message?: string,
     ) {
+      utils.flag(this, '_name', 'toMatchInlineSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
         throw new Error('toMatchInlineSnapshot cannot be used with "not"')
       }
-      const test = utils.flag(this, 'vitest-test')
-      const isInsideEach = test && (test.each || test.suite?.each)
+      const test = getTest('toMatchInlineSnapshot', this)
+      const isInsideEach = test.each || test.suite?.each
       if (isInsideEach) {
         throw new Error(
           'InlineSnapshot cannot be used inside of test.each or describe.each',
@@ -162,6 +177,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
     chai.Assertion.prototype,
     'toThrowErrorMatchingSnapshot',
     function (this: Record<string, unknown>, message?: string) {
+      utils.flag(this, '_name', 'toThrowErrorMatchingSnapshot')
       const isNot = utils.flag(this, 'negate')
       if (isNot) {
         throw new Error(
@@ -169,7 +185,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         )
       }
       const expected = utils.flag(this, 'object')
-      const test = utils.flag(this, 'vitest-test')
+      const test = getTest('toThrowErrorMatchingSnapshot', this)
       const promise = utils.flag(this, 'promise') as string | undefined
       const errorMessage = utils.flag(this, 'message')
       getSnapshotClient().assert({
@@ -194,8 +210,8 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           'toThrowErrorMatchingInlineSnapshot cannot be used with "not"',
         )
       }
-      const test = utils.flag(this, 'vitest-test')
-      const isInsideEach = test && (test.each || test.suite?.each)
+      const test = getTest('toThrowErrorMatchingInlineSnapshot', this)
+      const isInsideEach = test.each || test.suite?.each
       if (isInsideEach) {
         throw new Error(
           'InlineSnapshot cannot be used inside of test.each or describe.each',

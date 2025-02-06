@@ -75,7 +75,7 @@ export function mockObject(
       const isFunction
         = type.includes('Function') && typeof value === 'function'
       if (
-        (!isFunction || value.__isMockFunction)
+        (!isFunction || value._isMockFunction)
         && type !== 'Object'
         && type !== 'Module'
       ) {
@@ -120,8 +120,9 @@ export function mockObject(
                 const original = this[key]
                 const mock = spyOn(this, key as string)
                   .mockImplementation(original)
-                mock.mockRestore = () => {
-                  mock.mockReset()
+                const origMockReset = mock.mockReset
+                mock.mockRestore = mock.mockReset = () => {
+                  origMockReset.call(mock)
                   mock.mockImplementation(original)
                   return mock
                 }
@@ -132,8 +133,9 @@ export function mockObject(
         const mock = spyOn(newContainer, property)
         if (options.type === 'automock') {
           mock.mockImplementation(mockFunction)
-          mock.mockRestore = () => {
-            mock.mockReset()
+          const origMockReset = mock.mockReset
+          mock.mockRestore = mock.mockReset = () => {
+            origMockReset.call(mock)
             mock.mockImplementation(mockFunction)
             return mock
           }
