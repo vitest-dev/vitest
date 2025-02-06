@@ -1,8 +1,7 @@
 export async function sumInBackground(a: number, b: number) {
-  const worker = new Worker(new URL('./worker', import.meta.url), {
-    type: 'module',
+  const worker = new Worker(new URL("./worker?with-some-query=123", import.meta.url), {
+    type: "module",
   });
-
 
   const promise = new Promise<MessageEvent>(resolve => {
     worker.onmessage = resolve;
@@ -20,7 +19,6 @@ export async function sumInBackground(a: number, b: number) {
 
   return result.data;
 }
-
 
 function covered() {
   return "This is covered"
