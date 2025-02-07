@@ -28,11 +28,17 @@ export class NativeExecutor {
   }
 
   executeId(id: string) {
-    return import(resolve(this.state.config.root, id))
+    if (id[0] === '.') {
+      return import(resolve(this.state.config.root, id))
+    }
+    return import(id)
   }
 
   executeFile(id: string) {
-    return import(resolve(this.state.config.root, id))
+    if (id[0] === '.') {
+      return import(resolve(this.state.config.root, id))
+    }
+    return import(id)
   }
 
   cachedRequest(id: string) {
