@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { Connect, Plugin } from 'vite'
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -8,6 +8,65 @@ import sirv from 'sirv'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from 'vitest/config'
 import { version } from '../package.json'
+
+export function middlewares(ctx: Vitest, connect: Connect.Server): void {
+  const uiOptions = ctx.config
+  const base = uiOptions.uiBase
+  const coverageFolder = resolveCoverageFolder(ctx)
+  const coveragePath = coverageFolder ? coverageFolder[1] : undefined
+  if (coveragePath && base === coveragePath) {
+    throw new Error(
+      `The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`,
+    )
+  }
+
+  if (coverageFolder) {
+    connect.use(
+      coveragePath!,
+      sirv(coverageFolder[0], {
+        single: true,
+        dev: true,
+        setHeaders: (res) => {
+          res.setHeader(
+            'Cache-Control',
+            'public,max-age=0,must-revalidate',
+          )
+        },
+      }),
+    )
+  }
+
+  const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
+  const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
+
+  // serve index.html with api token
+  // eslint-disable-next-line prefer-arrow-callback
+  connect.use(function vitestUiHtmlMiddleware(req, res, next) {
+    if (req.url) {
+      const url = new URL(req.url, 'http://localhost')
+      if (url.pathname === base) {
+        const html = clientIndexHtml.replace(
+          '<!-- !LOAD_METADATA! -->',
+          `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
+        )
+        res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
+        res.write(html)
+        res.end()
+        return
+      }
+    }
+    next()
+  })
+
+  connect.use(
+    base,
+    sirv(clientDist, {
+      single: true,
+      dev: true,
+    }),
+  )
+}
 
 export default (ctx: Vitest): Plugin => {
   if (ctx.version !== version) {
@@ -26,62 +85,7 @@ export default (ctx: Vitest): Plugin => {
     configureServer: {
       order: 'post',
       handler(server) {
-        const uiOptions = ctx.config
-        const base = uiOptions.uiBase
-        const coverageFolder = resolveCoverageFolder(ctx)
-        const coveragePath = coverageFolder ? coverageFolder[1] : undefined
-        if (coveragePath && base === coveragePath) {
-          throw new Error(
-            `The ui base path and the coverage path cannot be the same: ${base}, change coverage.reportsDirectory`,
-          )
-        }
-
-        if (coverageFolder) {
-          server.middlewares.use(
-            coveragePath!,
-            sirv(coverageFolder[0], {
-              single: true,
-              dev: true,
-              setHeaders: (res) => {
-                res.setHeader(
-                  'Cache-Control',
-                  'public,max-age=0,must-revalidate',
-                )
-              },
-            }),
-          )
-        }
-
-        const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
-        const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
-
-        // serve index.html with api token
-        // eslint-disable-next-line prefer-arrow-callback
-        server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
-          if (req.url) {
-            const url = new URL(req.url, 'http://localhost')
-            if (url.pathname === base) {
-              const html = clientIndexHtml.replace(
-                '<!-- !LOAD_METADATA! -->',
-                `<script>window.VITEST_API_TOKEN = ${JSON.stringify(ctx.config.api.token)}</script>`,
-              )
-              res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate')
-              res.setHeader('Content-Type', 'text/html; charset=utf-8')
-              res.write(html)
-              res.end()
-              return
-            }
-          }
-          next()
-        })
-
-        server.middlewares.use(
-          base,
-          sirv(clientDist, {
-            single: true,
-            dev: true,
-          }),
-        )
+        middlewares(ctx, server.middlewares)
       },
     },
   }

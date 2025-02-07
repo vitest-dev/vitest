@@ -1,7 +1,7 @@
 import type { File, TaskResultPack } from '@vitest/runner'
 
 import type { IncomingMessage } from 'node:http'
-import type { ViteDevServer } from 'vite'
+import type { HttpServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
 import type { Reporter } from '../node/types/reporter'
@@ -24,14 +24,12 @@ import { stringifyReplace } from '../utils/serialization'
 import { parseErrorStacktrace } from '../utils/source-map'
 import { isValidApiRequest } from './check'
 
-export function setup(ctx: Vitest, _server?: ViteDevServer) {
+export function setup(ctx: Vitest, server: HttpServer) {
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, WebSocketRPC>()
 
-  const server = _server || ctx.server
-
-  server.httpServer?.on('upgrade', (request: IncomingMessage, socket, head) => {
+  server.on('upgrade', (request: IncomingMessage, socket, head) => {
     if (!request.url) {
       return
     }

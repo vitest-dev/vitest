@@ -1,10 +1,12 @@
-import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
+import type { Connect, UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
+import http from 'node:http'
 import {
   deepMerge,
   notNullish,
   toArray,
 } from '@vitest/utils'
+import createServer from 'connect'
 import { relative } from 'pathe'
 import { defaultPort } from '../../constants'
 import { configDefaults } from '../../defaults'
@@ -32,9 +34,9 @@ export async function VitestPlugin(
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
-  async function UIPlugin() {
+  async function UIPlugin(server: Connect.Server) {
     await ctx.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), ctx.version)
-    return (await import('@vitest/ui')).default(ctx)
+    return (await import('@vitest/ui')).middlewares(ctx, server)
   }
 
   return [
@@ -68,11 +70,11 @@ export async function VitestPlugin(
 
         ;(options as unknown as ResolvedConfig).defines = defines
 
-        let open: string | boolean | undefined = false
+        // let open: string | boolean | undefined = false
 
-        if (testConfig.ui && testConfig.open) {
-          open = testConfig.uiBase ?? '/__vitest__/'
-        }
+        // if (testConfig.ui && testConfig.open) {
+        //   open = testConfig.uiBase ?? '/__vitest__/'
+        // }
 
         const resolveOptions = getDefaultResolveOptions()
 
@@ -92,11 +94,12 @@ export async function VitestPlugin(
             ...resolveOptions,
             alias: testConfig.alias,
           },
+          // don't start the server to avoid serving the source code
           server: {
-            ...testConfig.api,
-            open,
+            open: false,
+            middlewareMode: true,
             hmr: false,
-            ws: testConfig.api?.middlewareMode ? false : undefined,
+            ws: false,
             preTransformRequests: false,
             fs: {
               allow: resolveFsAllow(options.root || process.cwd(), testConfig.config),
@@ -273,9 +276,19 @@ export async function VitestPlugin(
               console.log('[debug] watcher is ready')
             })
           }
+
           await ctx._setServer(options, server, userConfig)
-          if (options.api && options.watch) {
-            (await import('../../api/setup')).setup(ctx)
+          const app = options.api && options.watch
+            ? createServer()
+            : null
+          const httpServer = app && http
+            .createServer(app)
+            .listen(typeof options.api === 'object' && options.api.port) // TODO
+          if (httpServer) {
+            (await import('../../api/setup')).setup(ctx, httpServer)
+            if (options.ui) {
+              await UIPlugin(app)
+            }
           }
 
           // #415, in run mode we don't need the watcher, close it would improve the performance
@@ -289,7 +302,7 @@ export async function VitestPlugin(
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
     VitestCoreResolver(ctx),
-    options.ui ? await UIPlugin() : null,
+    // options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),

@@ -520,8 +520,8 @@ export class TestProject {
       [CoverageTransform(this.vitest)],
     )
     this._parentBrowser = browser
-    if (this.config.browser.ui) {
-      setup(this.vitest, browser.vite)
+    if (this.config.browser.ui && browser.vite.httpServer) {
+      setup(this.vitest, browser.vite.httpServer)
     }
   })
 

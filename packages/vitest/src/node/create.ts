@@ -38,13 +38,13 @@ export async function createVitest(
     plugins: await VitestPlugin(options, ctx),
   }
 
-  const server = await createViteServer(
+  await createViteServer(
     mergeConfig(config, mergeConfig(viteOverrides, { root: options.root })),
   )
 
-  if (ctx.config.api?.port) {
-    await server.listen()
-  }
+  // if (ctx.config.api?.port) {
+  //   await server.listen()
+  // }
 
   return ctx
 }
