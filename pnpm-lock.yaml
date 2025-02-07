@@ -74,8 +74,8 @@ importers:
         specifier: workspace:*
         version: link:packages/ui
       bumpp:
-        specifier: ^9.10.2
-        version: 9.10.2(magicast@0.3.5)
+        specifier: ^10.0.2
+        version: 10.0.2(magicast@0.3.5)
       changelogithub:
         specifier: ^13.12.1
         version: 13.12.1(magicast@0.3.5)
@@ -4338,6 +4338,9 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
+  args-tokenizer@0.3.0:
+    resolution: {integrity: sha512-xXAd7G2Mll5W8uo37GETpQ2VrE84M181Z7ugHFGQnJZ50M2mbOv0osSZ9VsSgPfJQ+LVG0prSi0th+ELMsno7Q==}
+
   aria-query@5.1.3:
     resolution: {integrity: sha512-R5iJ5lkuHybztUfuOAznmboyjWq8O6sqNqtK7CLOqdydi54VNbORp49mb14KbWgG1QD3JFO9hJdZ+y4KutfdOQ==}
 
@@ -4535,9 +4538,9 @@ packages:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
 
-  bumpp@9.10.2:
-    resolution: {integrity: sha512-QX1JdswFLLVgrA+I/t+926/jsuJ92BTKKxGvMYC6fg+1lFpCl9RbILQJg0thc5UirIjQ6/jY1Sj+b4tz3evA5g==}
-    engines: {node: '>=10'}
+  bumpp@10.0.2:
+    resolution: {integrity: sha512-17ztVdFfdoSStJyauUjhi+fWJ9wWmMloOhqwimLHnM3Pfd5+o/BJFwy3TDcK11bMVP5phari5/C4FxFgxXZHhw==}
+    engines: {node: '>=18'}
     hasBin: true
 
   bundle-name@4.1.0:
@@ -7344,6 +7347,9 @@ packages:
   package-manager-detector@0.2.8:
     resolution: {integrity: sha512-ts9KSdroZisdvKMWVAVCXiKqnqNfXz4+IbrBG8/BWx/TR5le+jfenvoBuIZ6UWM9nz47W7AbD9qYfAwfWMIwzA==}
 
+  package-manager-detector@0.2.9:
+    resolution: {integrity: sha512-+vYvA/Y31l8Zk8dwxHhL3JfTuHPm6tlxM2A3GeQyl7ovYnSp1+mzAxClxaOr0qO1TtPxbQxetI7v5XqKLJZk7Q==}
+
   package-name-regex@2.0.6:
     resolution: {integrity: sha512-gFL35q7kbE/zBaPA3UKhp2vSzcPYx2ecbYuwv1ucE9Il6IIgBDweBlH8D68UFGZic2MkllKa2KHCfC1IQBQUYA==}
     engines: {node: '>=12'}
@@ -7995,6 +8001,11 @@ packages:
 
   semver@7.6.3:
     resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  semver@7.7.1:
+    resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -12670,6 +12681,8 @@ snapshots:
 
   argparse@2.0.1: {}
 
+  args-tokenizer@0.3.0: {}
+
   aria-query@5.1.3:
     dependencies:
       deep-equal: 2.2.3
@@ -12894,16 +12907,17 @@ snapshots:
 
   builtin-modules@3.3.0: {}
 
-  bumpp@9.10.2(magicast@0.3.5):
+  bumpp@10.0.2(magicast@0.3.5):
     dependencies:
+      args-tokenizer: 0.3.0
       c12: 2.0.1(magicast@0.3.5)
       cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       escalade: 3.2.0
       js-yaml: 4.1.0
       jsonc-parser: 3.3.1
-      package-manager-detector: 0.2.8
+      package-manager-detector: 0.2.9
       prompts: 2.4.2
-      semver: 7.6.3
+      semver: 7.7.1
       tinyexec: 0.3.2
       tinyglobby: 0.2.10
     transitivePeerDependencies:
@@ -16282,6 +16296,8 @@ snapshots:
 
   package-manager-detector@0.2.8: {}
 
+  package-manager-detector@0.2.9: {}
+
   package-name-regex@2.0.6: {}
 
   pako@1.0.11: {}
@@ -16959,6 +16975,8 @@ snapshots:
   semver@7.6.2: {}
 
   semver@7.6.3: {}
+
+  semver@7.7.1: {}
 
   send@0.18.0:
     dependencies:
