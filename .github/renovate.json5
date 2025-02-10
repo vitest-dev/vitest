@@ -9,6 +9,10 @@
       "matchPackageNames": ["/eslint/"]
     },
     {
+      "groupName": "Playwright packages",
+      "matchPackageNames": ["/playwright/"]
+    },
+    {
       "depTypeList": ["peerDependencies"],
       "enabled": false
     },
