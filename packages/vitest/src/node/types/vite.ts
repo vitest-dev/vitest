@@ -1,12 +1,10 @@
+/* eslint-disable unused-imports/no-unused-vars */
+
 import type { HookHandler } from 'vite'
-import type { TestProject } from '../project'
 import type { InlineConfig } from './config'
+import type { VitestPluginContext } from './plugin'
 
 type VitestInlineConfig = InlineConfig
-
-interface VitestPluginContext {
-  project: TestProject
-}
 
 declare module 'vite' {
   interface UserConfig {
@@ -16,7 +14,6 @@ declare module 'vite' {
     test?: VitestInlineConfig
   }
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
   interface Plugin<A = any> {
     configureVitest: HookHandler<(context: VitestPluginContext) => void>
   }

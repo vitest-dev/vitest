@@ -19,6 +19,7 @@ export async function resolveWorkspace(
   cliOptions: UserConfig,
   workspaceConfigPath: string | undefined,
   workspaceDefinition: TestProjectConfiguration[],
+  names: Set<string>,
 ): Promise<TestProject[]> {
   const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
     vitest,
@@ -114,7 +115,6 @@ export async function resolveWorkspace(
   }
 
   const resolvedProjectsPromises = await Promise.allSettled(projectPromises)
-  const names = new Set<string>()
 
   const errors: Error[] = []
   const resolvedProjects: TestProject[] = []
@@ -201,11 +201,11 @@ export async function resolveBrowserWorkspace(
     }
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances
-    const filteredInstances = !vitest._projectFilters.length || vitest._matchesProjectFilter(originalName)
+    const filteredInstances = !vitest._projectFilters.length || vitest.matchesProjectFilter(originalName)
       ? instances
       : instances.filter((instance) => {
           const newName = instance.name! // name is set in "workspace" plugin
-          return vitest._matchesProjectFilter(newName)
+          return vitest.matchesProjectFilter(newName)
         })
 
     // every project was filtered out
@@ -462,7 +462,7 @@ export function getDefaultTestProject(vitest: Vitest): TestProject | null {
   }
   // check for the project name and browser names
   const hasProjects = getPotentialProjectNames(project).some(p =>
-    vitest._matchesProjectFilter(p),
+    vitest.matchesProjectFilter(p),
   )
   if (hasProjects) {
     return project
