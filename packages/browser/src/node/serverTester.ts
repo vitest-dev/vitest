@@ -68,6 +68,7 @@ export async function resolveTester(
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
     __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
+    __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
   const testerHtml = typeof browserProject.testerHtml === 'string'
