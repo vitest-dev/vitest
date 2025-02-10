@@ -15,7 +15,7 @@ declare module 'vite' {
   }
 
   interface Plugin<A = any> {
-    configureVitest: HookHandler<(context: VitestPluginContext) => void>
+    configureVitest?: HookHandler<(context: VitestPluginContext) => void>
   }
 }
 
