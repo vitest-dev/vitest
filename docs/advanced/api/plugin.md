@@ -1,5 +1,5 @@
 ---
-title: Advanced API
+title: Plugin API
 outline: deep
 ---
 
