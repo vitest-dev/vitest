@@ -197,7 +197,7 @@
     "find-up": "^6.3.0",
     "flatted": "^3.3.2",
     "get-tsconfig": "^4.10.0",
-    "happy-dom": "^16.7.2",
+    "happy-dom": "^17.0.2",
     "jsdom": "^25.0.1",
     "local-pkg": "^0.5.1",
     "micromatch": "^4.0.8",
