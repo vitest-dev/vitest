@@ -984,8 +984,8 @@ importers:
         specifier: ^25.0.1
         version: 25.0.1
       local-pkg:
-        specifier: ^0.5.1
-        version: 0.5.1
+        specifier: ^1.0.0
+        version: 1.0.0
       micromatch:
         specifier: ^4.0.8
         version: 4.0.8
