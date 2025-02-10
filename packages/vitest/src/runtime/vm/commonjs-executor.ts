@@ -161,6 +161,7 @@ export class CommonjsExecutor {
       static enableCompileCache = _Module.enableCompileCache
       static getCompileCacheDir = _Module.getCompileCacheDir
       static flushCompileCache = _Module.flushCompileCache
+      static stripTypeScriptTypes = _Module.stripTypeScriptTypes
 
       static Module = Module
     }
