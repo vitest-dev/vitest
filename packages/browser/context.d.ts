@@ -450,6 +450,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#last}
    */
   last(): Locator
+  /**
+   * Returns a locator that matches both the current locator and the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   */
+  and(locator: Locator): Locator
+  /**
+   * Returns a locator that matches either the current locator or the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   */
+  or(locator: Locator): Locator
+  /**
+   * Narrows existing locator according to the options.
+   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   */
+  filter(options: LocatorOptions): Locator
 }
 
 export interface UserEventTabOptions {
@@ -503,6 +518,13 @@ export const server: {
    */
   config: SerializedConfig
 }
+
+export interface LocatorOptions {
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
+};
 
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
