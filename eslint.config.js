@@ -30,6 +30,7 @@ export default antfu(
       'docs/guide/snapshot.md',
       // uses invalid js example
       'docs/advanced/api/import-example.md',
+      'docs/guide/examples/*.md',
     ],
   },
   {

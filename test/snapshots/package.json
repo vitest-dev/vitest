@@ -14,5 +14,8 @@
   },
   "dependencies": {
     "vitest": "workspace:*"
+  },
+  "devDependencies": {
+    "jest-image-snapshot": "^6.4.0"
   }
 }
