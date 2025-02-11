@@ -178,11 +178,14 @@ export default class SnapshotState {
   ): void {
     this._dirty = true
     if (options.stack) {
-      this._inlineSnapshots.push({
-        snapshot: receivedSerialized,
-        testId: options.testId,
-        ...options.stack,
-      })
+      // In a clean state, we don't want to set the inlineSnapshots 2 times with the same testId
+      if(this._inlineSnapshots.findIndex(s => s.testId === options.testId) === -1) {
+        this._inlineSnapshots.push({
+          snapshot: receivedSerialized,
+          testId: options.testId,
+          ...options.stack,
+        })
+      }
     }
     else if (options.rawSnapshot) {
       this._rawSnapshots.push({
@@ -343,12 +346,6 @@ export default class SnapshotState {
       // https://github.com/vitejs/vite/issues/8657
       stack.column--
 
-      // reject multiple inline snapshots at the same location
-      if (this._inlineSnapshotStacks.some(s => s.file === stack!.file && s.line === stack!.line && s.column === stack!.column)) {
-        // remove already succeeded snapshot
-        this._inlineSnapshots = this._inlineSnapshots.filter(s => !(s.file === stack!.file && s.line === stack!.line && s.column === stack!.column))
-        throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location.')
-      }
       this._inlineSnapshotStacks.push({ ...stack, testId })
     }
 
