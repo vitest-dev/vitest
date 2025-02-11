@@ -524,7 +524,7 @@ export interface LocatorOptions {
   hasNotText?: string | RegExp
   has?: Locator
   hasNot?: Locator
-};
+}
 
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
