@@ -179,7 +179,7 @@ export default class SnapshotState {
     this._dirty = true
     if (options.stack) {
       // In a clean state, we don't want to set the inlineSnapshots 2 times with the same testId
-      if(this._inlineSnapshots.findIndex(s => s.testId === options.testId) === -1) {
+      if (this._inlineSnapshots.findIndex(s => s.testId === options.testId) === -1) {
         this._inlineSnapshots.push({
           snapshot: receivedSerialized,
           testId: options.testId,
