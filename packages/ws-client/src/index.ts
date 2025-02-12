@@ -28,7 +28,7 @@ export interface VitestClient {
   reconnect: () => Promise<void>
 }
 
-export function createClient(url: string, options: VitestClientOptions = {}) {
+export function createClient(url: string, options: VitestClientOptions = {}): VitestClient {
   const {
     handlers = {},
     autoReconnect = true,

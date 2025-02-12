@@ -9,8 +9,8 @@ import { isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
 
-export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude = [
+export const defaultInclude: string[] = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
+export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/dist/**',
   '**/cypress/**',
@@ -85,12 +85,12 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   ),
 }
 
-export const fakeTimersDefaults = {
+export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
-} satisfies NonNullable<UserConfig['fakeTimers']>
+}
 
-const config = {
+const config: UserConfig = {
   allowOnly: !isCI,
   isolate: true,
   watch: !isCI,
@@ -128,6 +128,6 @@ const config = {
   },
   slowTestThreshold: 300,
   disableConsoleIntercept: false,
-} satisfies UserConfig
+}
 
-export const configDefaults = Object.freeze(config)
+export const configDefaults: UserConfig = Object.freeze(config)

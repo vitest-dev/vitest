@@ -18,7 +18,7 @@ expect(${name}).toHaveBeenCalledWith(${formattedParams})
   }
 }
 
-export function setupDialogsSpy() {
+export function setupDialogsSpy(): void {
   globalThis.alert = showPopupWarning('alert', undefined)
   globalThis.confirm = showPopupWarning('confirm', false, true)
   globalThis.prompt = showPopupWarning('prompt', null, 'your value')

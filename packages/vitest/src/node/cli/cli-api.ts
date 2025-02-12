@@ -158,7 +158,7 @@ export async function prepareVitest(
   return ctx
 }
 
-export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions) {
+export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions): void {
   let errorsPrinted = false
 
   forEachSuite(files, (suite) => {
@@ -181,7 +181,7 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
   return formatCollectedAsString(files).forEach(test => console.log(test))
 }
 
-export function outputFileList(files: TestSpecification[], options: CliOptions) {
+export function outputFileList(files: TestSpecification[], options: CliOptions): void | void[] {
   if (typeof options.json !== 'undefined') {
     return outputJsonFileList(files, options)
   }
@@ -251,7 +251,7 @@ export interface TestCollectJSONResult {
   location?: { line: number; column: number }
 }
 
-export function formatCollectedAsJSON(files: TestModule[]) {
+export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
   const results: TestCollectJSONResult[] = []
 
   files.forEach((file) => {
@@ -275,7 +275,7 @@ export function formatCollectedAsJSON(files: TestModule[]) {
   return results
 }
 
-export function formatCollectedAsString(testModules: TestModule[]) {
+export function formatCollectedAsString(testModules: TestModule[]): string[] {
   const results: string[] = []
 
   testModules.forEach((testModule) => {

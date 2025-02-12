@@ -51,14 +51,14 @@ export class ViteNodeServer {
 
   private existingOptimizedDeps = new Set<string>()
 
-  fetchCaches = {
-    ssr: new Map<string, FetchCache>(),
-    web: new Map<string, FetchCache>(),
+  fetchCaches: Record<'ssr' | 'web', Map<string, FetchCache>> = {
+    ssr: new Map(),
+    web: new Map(),
   }
 
-  fetchCache = new Map<string, FetchCache>()
+  fetchCache: Map<string, FetchCache> = new Map()
 
-  externalizeCache = new Map<string, Promise<string | false>>()
+  externalizeCache: Map<string, Promise<string | false>> = new Map()
 
   debugger?: Debugger
 
@@ -145,11 +145,11 @@ export class ViteNodeServer {
     }
   }
 
-  shouldExternalize(id: string) {
+  shouldExternalize(id: string): Promise<string | false> {
     return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
-  public getTotalDuration() {
+  public getTotalDuration(): number {
     const ssrDurations = [...this.durations.ssr.values()].flat()
     const webDurations = [...this.durations.web.values()].flat()
     return [...ssrDurations, ...webDurations].reduce((a, b) => a + b, 0)
@@ -190,7 +190,7 @@ export class ViteNodeServer {
     })
   }
 
-  getSourceMap(source: string) {
+  getSourceMap(source: string): EncodedSourceMap | null {
     source = normalizeModuleId(source)
     const fetchResult = this.fetchCache.get(source)?.result
     if (fetchResult?.map) {
@@ -219,7 +219,7 @@ export class ViteNodeServer {
     })
   }
 
-  async fetchResult(id: string, mode: 'web' | 'ssr') {
+  async fetchResult(id: string, mode: 'web' | 'ssr'): Promise<FetchResult> {
     const moduleId = normalizeModuleId(id)
     this.assertMode(mode)
     const promiseMap = this.fetchPromiseMap[mode]
@@ -237,9 +237,9 @@ export class ViteNodeServer {
 
   async transformRequest(
     id: string,
-    filepath = id,
+    filepath: string = id,
     transformMode?: 'web' | 'ssr',
-  ) {
+  ): Promise<TransformResult | null | undefined> {
     const mode = transformMode || this.getTransformMode(id)
     this.assertMode(mode)
     const promiseMap = this.transformPromiseMap[mode]
@@ -255,7 +255,9 @@ export class ViteNodeServer {
     return promiseMap.get(id)!
   }
 
-  async transformModule(id: string, transformMode?: 'web' | 'ssr') {
+  async transformModule(id: string, transformMode?: 'web' | 'ssr'): Promise<{
+    code: string | undefined
+  }> {
     if (transformMode !== 'web') {
       throw new Error(
         '`transformModule` only supports `transformMode: "web"`.',
@@ -273,7 +275,7 @@ export class ViteNodeServer {
     }
   }
 
-  getTransformMode(id: string) {
+  getTransformMode(id: string): 'ssr' | 'web' {
     const withoutQuery = id.split('?')[0]
 
     if (this.options.transformMode?.web?.some(r => withoutQuery.match(r))) {
@@ -388,7 +390,7 @@ export class ViteNodeServer {
   protected async processTransformResult(
     filepath: string,
     result: TransformResult,
-  ) {
+  ): Promise<TransformResult> {
     const mod = this.server.moduleGraph.getModuleById(filepath)
     return withInlineSourcemap(result, {
       filepath: mod?.file || filepath,

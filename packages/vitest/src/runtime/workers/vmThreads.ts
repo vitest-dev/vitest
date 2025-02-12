@@ -18,4 +18,5 @@ class ThreadsVmWorker implements VitestWorker {
   }
 }
 
-export default new ThreadsVmWorker()
+const worker: ThreadsVmWorker = new ThreadsVmWorker()
+export default worker

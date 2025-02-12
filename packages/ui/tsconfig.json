@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
+    "isolatedDeclarations": false,
     "skipLibCheck": true
   },
   "include": ["./client/**/*"],

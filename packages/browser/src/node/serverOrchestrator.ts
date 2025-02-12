@@ -7,7 +7,7 @@ export async function resolveOrchestrator(
   globalServer: ParentBrowserProject,
   url: URL,
   res: ServerResponse<IncomingMessage>,
-) {
+): Promise<string | undefined> {
   let sessionId = url.searchParams.get('sessionId')
   // it's possible to open the page without a context
   if (!sessionId) {

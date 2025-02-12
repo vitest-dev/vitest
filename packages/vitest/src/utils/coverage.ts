@@ -62,7 +62,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
   pendingPromises: Promise<void>[] = []
   coverageFilesDirectory!: string
 
-  _initialize(ctx: Vitest) {
+  _initialize(ctx: Vitest): void {
     this.ctx = ctx
 
     if (ctx.version !== this.version) {
@@ -116,7 +116,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     throw new Error('BaseReporter\'s createCoverageMap was not overwritten')
   }
 
-  async generateReports(_: CoverageMap, __: boolean | undefined) {
+  async generateReports(_: CoverageMap, __: boolean | undefined): Promise<void> {
     throw new Error('BaseReporter\'s generateReports was not overwritten')
   }
 
@@ -124,7 +124,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     throw new Error('BaseReporter\'s parseConfigModule was not overwritten')
   }
 
-  resolveOptions() {
+  resolveOptions(): Options {
     return this.options
   }
 
@@ -186,7 +186,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     /** Callback invoked once all results of a project for specific transform mode are read */
     onFinished: (project: Vitest['projects'][number], transformMode: AfterSuiteRunMeta['transformMode']) => Promise<void>
     onDebug: ((...logs: any[]) => void) & { enabled: boolean }
-  }) {
+  }): Promise<void> {
     let index = 0
     const total = this.pendingPromises.length
 
@@ -218,7 +218,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }
   }
 
-  async cleanAfterRun() {
+  async cleanAfterRun(): Promise<void> {
     this.coverageFiles = new Map()
     await fs.rm(this.coverageFilesDirectory, { recursive: true })
 
@@ -228,7 +228,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }
   }
 
-  async onTestFailure() {
+  async onTestFailure(): Promise<void> {
     if (!this.options.reportOnFailure) {
       await this.cleanAfterRun()
     }
@@ -248,7 +248,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     }
   }
 
-  async reportThresholds(coverageMap: CoverageMap, allTestsRun: boolean | undefined) {
+  async reportThresholds(coverageMap: CoverageMap, allTestsRun: boolean | undefined): Promise<void> {
     const resolvedThresholds = this.resolveThresholds(coverageMap)
     this.checkThresholds(resolvedThresholds)
 
@@ -426,7 +426,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     thresholds: ResolvedThreshold[]
     configurationFile: unknown // ProxifiedModule from magicast
     onUpdate: () => void
-  }) {
+  }): Promise<void> {
     let updatedThresholds = false
 
     const config = resolveConfig(configurationFile)
@@ -505,7 +505,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     await this.generateReports(coverageMap, true)
   }
 
-  hasTerminalReporter(reporters: ResolvedCoverageOptions['reporter']) {
+  hasTerminalReporter(reporters: ResolvedCoverageOptions['reporter']): boolean {
     return reporters.some(
       ([reporter]) =>
         reporter === 'text'
@@ -542,7 +542,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       { root: ctx.config.root, vitenode: ctx.vitenode },
     ]
 
-    return async function transformFile(filename: string) {
+    return async function transformFile(filename: string): Promise<import('vite').TransformResult | null | undefined> {
       let lastError
 
       for (const { root, vitenode } of servers) {

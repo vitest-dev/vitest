@@ -60,7 +60,7 @@ export class TestProject {
   /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
-  public readonly tmpDir = join(tmpdir(), nanoid())
+  public readonly tmpDir: string = join(tmpdir(), nanoid())
 
   /** @internal */ vitenode!: ViteNodeServer
   /** @internal */ typechecker?: Typechecker
@@ -81,7 +81,7 @@ export class TestProject {
     /** @deprecated */
     public path: string | number,
     vitest: Vitest,
-    public options?: InitializeProjectOptions,
+    public options?: InitializeProjectOptions | undefined,
   ) {
     this.vitest = vitest
     this.ctx = vitest
@@ -222,7 +222,7 @@ export class TestProject {
   }
 
   /** @deprecated */
-  initializeGlobalSetup() {
+  initializeGlobalSetup(): Promise<void> {
     return this._initializeGlobalSetup()
   }
 
@@ -299,7 +299,7 @@ export class TestProject {
   }
 
   /** @deprecated use `vitest.reporters` instead */
-  get reporters() {
+  get reporters(): import('./reporters').Reporter[] {
     return this.ctx.reporters
   }
 
@@ -577,7 +577,7 @@ export class TestProject {
   }
 
   /** @deprecated internal */
-  public setServer(options: UserConfig, server: ViteDevServer) {
+  public setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     return this._configureServer(options, server)
   }
 
@@ -730,7 +730,7 @@ export async function initializeProject(
   workspacePath: string | number,
   ctx: Vitest,
   options: InitializeProjectOptions,
-) {
+): Promise<TestProject> {
   const project = new TestProject(workspacePath, ctx, options)
 
   const { configFile, ...restOptions } = options

@@ -24,7 +24,7 @@ import { stringifyReplace } from '../utils/serialization'
 import { parseErrorStacktrace } from '../utils/source-map'
 import { isValidApiRequest } from './check'
 
-export function setup(ctx: Vitest, _server?: ViteDevServer) {
+export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, WebSocketRPC>()
@@ -164,7 +164,7 @@ export class WebSocketReporter implements Reporter {
     public clients: Map<WebSocket, WebSocketRPC>,
   ) {}
 
-  onCollected(files?: File[]) {
+  onCollected(files?: File[]): void {
     if (this.clients.size === 0) {
       return
     }
@@ -182,7 +182,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  async onTaskUpdate(packs: TaskResultPack[]) {
+  async onTaskUpdate(packs: TaskResultPack[]): Promise<void> {
     if (this.clients.size === 0) {
       return
     }
@@ -211,19 +211,19 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onFinished(files: File[], errors: unknown[]) {
+  onFinished(files: File[], errors: unknown[]): void {
     this.clients.forEach((client) => {
       client.onFinished?.(files, errors)?.catch?.(noop)
     })
   }
 
-  onFinishedReportCoverage() {
+  onFinishedReportCoverage(): void {
     this.clients.forEach((client) => {
       client.onFinishedReportCoverage?.()?.catch?.(noop)
     })
   }
 
-  onUserConsoleLog(log: UserConsoleLog) {
+  onUserConsoleLog(log: UserConsoleLog): void {
     this.clients.forEach((client) => {
       client.onUserConsoleLog?.(log)?.catch?.(noop)
     })

@@ -53,7 +53,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  protected logTasks(tasks: Task[]) {
+  protected logTasks(tasks: Task[]): void {
     this.logger.log(`1..${tasks.length}`)
 
     for (const [i, task] of tasks.entries()) {
@@ -121,7 +121,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  onFinished(files = this.ctx.state.getFiles()) {
+  onFinished(files: import('@vitest/runner').File[] = this.ctx.state.getFiles()): void {
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

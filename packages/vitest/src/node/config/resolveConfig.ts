@@ -214,7 +214,7 @@ export function resolveConfig(
     logger.console.warn(
       c.yellow(`The option "maxConcurrency" cannot be set to 0. Using default value ${configDefaults.maxConcurrency} instead.`),
     )
-    resolved.maxConcurrency = configDefaults.maxConcurrency
+    resolved.maxConcurrency = configDefaults.maxConcurrency!
   }
 
   if (resolved.inspect || resolved.inspectBrk) {

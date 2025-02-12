@@ -1,4 +1,5 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
 import type { AfterSuiteRunMeta } from 'vitest'
@@ -42,7 +43,7 @@ const debug = createDebug('vitest:coverage')
 
 export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
   name = 'v8' as const
-  version = version
+  version: string = version
   testExclude!: InstanceType<typeof TestExclude>
 
   initialize(ctx: Vitest): void {
@@ -58,7 +59,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     })
   }
 
-  createCoverageMap() {
+  createCoverageMap(): CoverageMap {
     return libCoverage.createCoverageMap({})
   }
 
@@ -142,7 +143,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     }
   }
 
-  async parseConfigModule(configFilePath: string) {
+  async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
     return parseModule(
       await fs.readFile(configFilePath, 'utf8'),
     )

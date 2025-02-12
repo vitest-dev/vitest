@@ -17,7 +17,7 @@ async function startViteNode(options: ContextExecutorOptions) {
   return _viteNode
 }
 
-export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
   const { ctx } = state
   // state has new context, but we want to reuse existing ones
   state.moduleCache = moduleCache
