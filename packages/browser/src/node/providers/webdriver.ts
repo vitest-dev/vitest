@@ -24,7 +24,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   private options?: RemoteOptions
 
-  getSupportedBrowsers(): readonly ['firefox', 'chrome', 'edge', 'safari'] {
+  getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
   }
 

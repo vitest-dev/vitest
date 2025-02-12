@@ -40,7 +40,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private browserPromise: Promise<Browser> | null = null
 
-  getSupportedBrowsers(): readonly ['firefox', 'webkit', 'chromium'] {
+  getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
   }
 
