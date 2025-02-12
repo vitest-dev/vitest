@@ -175,11 +175,13 @@ export abstract class Locator {
     }
 
     if (filter?.has) {
-      selectors.push(`internal:has=${JSON.stringify(filter.has.selector)}`)
+      const locator = filter.has as Locator
+      selectors.push(`internal:has=${JSON.stringify(locator._pwSelector || locator.selector)}`)
     }
 
     if (filter?.hasNot) {
-      selectors.push(`internal:has-not=${JSON.stringify(filter.hasNot.selector)}`)
+      const locator = filter.hasNot as Locator
+      selectors.push(`internal:has-not=${JSON.stringify(locator._pwSelector || locator.selector)}`)
     }
 
     if (!selectors.length) {
@@ -190,11 +192,11 @@ export abstract class Locator {
   }
 
   public and(locator: Locator): Locator {
-    return this.locator(`internal:and=${JSON.stringify(locator.selector)}`)
+    return this.locator(`internal:and=${JSON.stringify(locator._pwSelector || locator.selector)}`)
   }
 
   public or(locator: Locator): Locator {
-    return this.locator(`internal:or=${JSON.stringify(locator.selector)}`)
+    return this.locator(`internal:or=${JSON.stringify(locator._pwSelector || locator.selector)}`)
   }
 
   public query(): Element | null {
