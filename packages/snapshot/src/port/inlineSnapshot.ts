@@ -29,7 +29,9 @@ export async function saveInlineSnapshots(
 
       const uniqueSnaps = snaps.reduce((acc: InlineSnapshot[], snap) => {
         const exists = acc.some(s => s.line === snap.line && s.column === snap.column)
-        if (!exists) acc.push(snap)
+        if (!exists) {
+          acc.push(snap)
+        }
         return acc
       }, [])
 
