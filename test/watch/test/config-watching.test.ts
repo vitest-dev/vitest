@@ -56,7 +56,7 @@ test('rerun stops the previous browser server and restarts multiple times withou
       test: {
         browser: {
           enabled: true,
-          name: 'chromium',
+          instances: [{ browser: 'chromium' }],
           provider: 'playwright',
           headless: true,
         },
