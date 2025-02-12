@@ -14,7 +14,6 @@ test('b', () => {
   myTest3()
 })
 
-
 function myTest1() {
   expect(7 + 7).toMatchInlineSnapshot(`14`)
 }
