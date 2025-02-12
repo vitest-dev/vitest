@@ -181,12 +181,12 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
   return formatCollectedAsString(files).forEach(test => console.log(test))
 }
 
-export function outputFileList(files: TestSpecification[], options: CliOptions): void | void[] {
+export function outputFileList(files: TestSpecification[], options: CliOptions): void {
   if (typeof options.json !== 'undefined') {
     return outputJsonFileList(files, options)
   }
 
-  return formatFilesAsString(files, options).map(file => console.log(file))
+  formatFilesAsString(files, options).map(file => console.log(file))
 }
 
 function outputJsonFileList(files: TestSpecification[], options: CliOptions) {

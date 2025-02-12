@@ -1,4 +1,4 @@
-import type { Task, TaskResultPack } from '@vitest/runner'
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 import type { Vitest } from '../../core'
 import fs from 'node:fs'
 import { getFullName } from '@vitest/runner/utils'
@@ -75,7 +75,7 @@ export class BenchmarkReporter extends DefaultReporter {
     }
   }
 
-  async onFinished(files: import('@vitest/runner').File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): Promise<void> {
+  async onFinished(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): Promise<void> {
     super.onFinished(files, errors)
 
     // write output for future comparison

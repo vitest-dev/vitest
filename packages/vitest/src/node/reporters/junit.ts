@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { File, Task } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import { existsSync, promises as fs } from 'node:fs'
@@ -274,7 +274,7 @@ export class JUnitReporter implements Reporter {
     }
   }
 
-  async onFinished(files: import('@vitest/runner').File[] = this.ctx.state.getFiles()): Promise<void> {
+  async onFinished(files: File[] = this.ctx.state.getFiles()): Promise<void> {
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
     const transformed = files.map((file) => {

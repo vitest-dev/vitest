@@ -1,5 +1,6 @@
 import type { DiffOptions } from '@vitest/expect'
 import type { SnapshotSerializer } from '@vitest/snapshot'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { addSerializer } from '@vitest/snapshot'
@@ -46,7 +47,7 @@ function setupEnv(env: Record<string, any>) {
 export async function loadDiffConfig(
   config: SerializedConfig,
   executor: VitestExecutor,
-): Promise<import('@vitest/utils/diff').SerializedDiffOptions | undefined> {
+): Promise<SerializedDiffOptions | undefined> {
   if (typeof config.diff === 'object') {
     return config.diff
   }

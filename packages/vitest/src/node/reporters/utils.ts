@@ -3,7 +3,7 @@ import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import type { Reporter } from '../types/reporter'
 import type { BlobReporter } from './blob'
-import type { BasicReporter, BenchmarkBuiltinReporters, BuiltinReporters, DefaultReporter, DotReporter, GithubActionsReporter, HangingProcessReporter, JsonReporter, JUnitReporter, TapReporter } from './index'
+import type { BasicReporter, BenchmarkBuiltinReporters, BenchmarkReporter, BuiltinReporters, DefaultReporter, DotReporter, GithubActionsReporter, HangingProcessReporter, JsonReporter, JUnitReporter, TapReporter } from './index'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 
 async function loadCustomReporterModule<C extends Reporter>(
@@ -73,7 +73,7 @@ function createReporters(
 function createBenchmarkReporters(
   reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>,
   runner: ViteNodeRunner,
-): Promise<(Reporter | import('./benchmark').BenchmarkReporter)[]> {
+): Promise<(Reporter | BenchmarkReporter)[]> {
   const promisedReporters = reporterReferences.map(
     async (referenceOrInstance) => {
       if (typeof referenceOrInstance === 'string') {

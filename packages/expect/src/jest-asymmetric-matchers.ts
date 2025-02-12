@@ -92,7 +92,7 @@ export class StringContaining extends AsymmetricMatcher<string> {
 }
 
 export class Anything extends AsymmetricMatcher<void> {
-  asymmetricMatch(other: unknown): other is Exclude<typeof other, null | undefined> {
+  asymmetricMatch(other: unknown): boolean {
     return other != null
   }
 

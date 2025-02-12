@@ -1,4 +1,4 @@
-import type { ManualMockedModule, MockedModuleType } from '@vitest/mocker'
+import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 import { isAbsolute, resolve } from 'node:path'
@@ -241,7 +241,7 @@ export class VitestMocker {
     return `mock:${dep}`
   }
 
-  public getDependencyMock(id: string): import('@vitest/mocker').MockedModule | undefined {
+  public getDependencyMock(id: string): MockedModule | undefined {
     const registry = this.getMockerRegistry()
     return registry.get(id)
   }

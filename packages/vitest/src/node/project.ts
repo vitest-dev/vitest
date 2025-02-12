@@ -9,6 +9,7 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
+import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
@@ -299,7 +300,7 @@ export class TestProject {
   }
 
   /** @deprecated use `vitest.reporters` instead */
-  get reporters(): import('./reporters').Reporter[] {
+  get reporters(): Reporter[] {
     return this.ctx.reporters
   }
 

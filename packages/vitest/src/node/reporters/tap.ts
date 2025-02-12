@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { File, Task } from '@vitest/runner'
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
@@ -121,7 +121,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  onFinished(files: import('@vitest/runner').File[] = this.ctx.state.getFiles()): void {
+  onFinished(files: File[] = this.ctx.state.getFiles()): void {
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

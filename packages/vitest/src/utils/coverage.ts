@@ -1,4 +1,5 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { TransformResult } from 'vite'
 import type { Vitest } from '../node/core'
 import type { BaseCoverageOptions, ReportContext, ResolvedCoverageOptions } from '../node/types/coverage'
 import type { AfterSuiteRunMeta } from '../types/general'
@@ -542,7 +543,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       { root: ctx.config.root, vitenode: ctx.vitenode },
     ]
 
-    return async function transformFile(filename: string): Promise<import('vite').TransformResult | null | undefined> {
+    return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
       for (const { root, vitenode } of servers) {

@@ -6,7 +6,7 @@ export class PreviewBrowserProvider implements BrowserProvider {
   private project!: TestProject
   private open = false
 
-  getSupportedBrowsers(): never[] {
+  getSupportedBrowsers(): string[] {
     // `none` is not restricted to certain browsers.
     return []
   }
