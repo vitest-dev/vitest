@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "isolatedDeclarations": true
   },
   "include": ["src/**/*"],
   "exclude": ["**/dist/**"]

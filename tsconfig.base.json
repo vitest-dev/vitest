@@ -41,7 +41,6 @@
     "noEmit": true,
     "stripInternal": true,
     "esModuleInterop": true,
-    "isolatedDeclarations": true,
     "skipLibCheck": true
   }
 }

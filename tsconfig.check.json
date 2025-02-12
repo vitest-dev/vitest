@@ -4,8 +4,7 @@
     "types": [
       "node",
       "vite/client"
-    ],
-    "isolatedDeclarations": false
+    ]
   },
   "exclude": [
     "**/dist/**",
