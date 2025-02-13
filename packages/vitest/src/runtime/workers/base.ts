@@ -7,6 +7,7 @@ import { provideWorkerState } from '../utils'
 let _viteNode: VitestExecutor
 
 const moduleCache = new ModuleCacheMap()
+const moduleExecutionInfo = new Map()
 
 async function startViteNode(options: ContextExecutorOptions) {
   if (_viteNode) {
@@ -21,6 +22,7 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
   const { ctx } = state
   // state has new context, but we want to reuse existing ones
   state.moduleCache = moduleCache
+  state.moduleExecutionInfo = moduleExecutionInfo
 
   provideWorkerState(globalThis, state)
 
