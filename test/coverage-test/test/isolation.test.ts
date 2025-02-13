@@ -48,9 +48,8 @@ for (const isolate of [true, false]) {
       if (isV8Provider()) {
         expect(summary).toStrictEqual({
           '<process-cwd>/fixtures/src/branch.ts': {
-            // FIXME: this should specify exact numbers
-            branches: expect.any(String),
-            functions: expect.any(String),
+            branches: '3/3 (100%)',
+            functions: '1/1 (100%)',
             lines: '6/6 (100%)',
             statements: '6/6 (100%)',
           },
