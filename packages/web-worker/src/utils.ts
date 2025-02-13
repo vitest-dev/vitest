@@ -81,7 +81,7 @@ export function createMessageEvent(
 
 export function getRunnerOptions(): any {
   const state = getWorkerState()
-  const { config, rpc, moduleCache } = state
+  const { config, rpc, moduleCache, moduleExecutionInfo } = state
 
   return {
     async fetchModule(id: string) {
@@ -96,6 +96,7 @@ export function getRunnerOptions(): any {
       return rpc.resolveId(id, importer, 'web')
     },
     moduleCache,
+    moduleExecutionInfo,
     interopDefault: config.deps.interopDefault ?? true,
     moduleDirectories: config.deps.moduleDirectories,
     root: config.root,

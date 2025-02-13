@@ -115,7 +115,7 @@ it('prints a warning if the assertion is not awaited in the browser mode', async
       test: {
         browser: {
           enabled: true,
-          name: 'chromium',
+          instances: [{ browser: 'chromium' }],
           provider: 'playwright',
           headless: true,
         },

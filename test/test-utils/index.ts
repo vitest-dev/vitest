@@ -188,6 +188,10 @@ export async function runCli(command: string, _options?: CliOptions | string, ..
     return output()
   }
 
+  if (args[0] === 'init') {
+    return output()
+  }
+
   if (args[0] !== 'list' && args.includes('--watch')) {
     if (command === 'vitest') {
       // Wait for initial test run to complete

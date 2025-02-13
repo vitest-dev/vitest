@@ -1,6 +1,7 @@
 import type { CoverageProviderModule } from 'vitest/node'
-import type { V8CoverageProvider } from './provider'
+import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
 import inspector, { type Profiler } from 'node:inspector'
+import { fileURLToPath } from 'node:url'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'
 
@@ -23,15 +24,19 @@ const mod: CoverageProviderModule = {
     })
   },
 
-  takeCoverage(): Promise<{ result: Profiler.ScriptCoverage[] }> {
+  takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
     return new Promise((resolve, reject) => {
       session.post('Profiler.takePreciseCoverage', async (error, coverage) => {
         if (error) {
           return reject(error)
         }
 
-        // Reduce amount of data sent over rpc by doing some early result filtering
-        const result = coverage.result.filter(filterResult)
+        const result = coverage.result
+          .filter(filterResult)
+          .map(res => ({
+            ...res,
+            startOffset: options?.moduleExecutionInfo?.get(fileURLToPath(res.url))?.startOffset || 0,
+          }))
 
         resolve({ result })
       })
