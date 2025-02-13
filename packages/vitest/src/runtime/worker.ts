@@ -82,6 +82,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
       moduleCache: new ModuleCacheMap(),
+      moduleExecutionInfo: new Map(),
       config: ctx.config,
       onCancel,
       environment,
