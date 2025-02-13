@@ -75,7 +75,7 @@ export async function startCoverageInsideWorker(
   options: SerializedCoverageConfig | undefined,
   loader: CoverageModuleLoader,
   runtimeOptions: { isolate: boolean },
-) {
+): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
@@ -88,7 +88,7 @@ export async function startCoverageInsideWorker(
 export async function takeCoverageInsideWorker(
   options: SerializedCoverageConfig | undefined,
   loader: CoverageModuleLoader,
-) {
+): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
@@ -102,7 +102,7 @@ export async function stopCoverageInsideWorker(
   options: SerializedCoverageConfig | undefined,
   loader: CoverageModuleLoader,
   runtimeOptions: { isolate: boolean },
-) {
+): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {

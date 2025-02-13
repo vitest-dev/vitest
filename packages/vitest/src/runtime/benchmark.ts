@@ -16,7 +16,7 @@ export function getBenchFn(key: Test): BenchFunction {
   return benchFns.get(key)!
 }
 
-export const bench = createBenchmark(function (
+export const bench: BenchmarkAPI = createBenchmark(function (
   name,
   fn: BenchFunction = noop,
   options: BenchOptions = {},

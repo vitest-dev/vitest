@@ -113,10 +113,10 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   }
 }
 
-export function run(ctx: ContextRPC) {
+export function run(ctx: ContextRPC): Promise<void> {
   return execute('run', ctx)
 }
 
-export function collect(ctx: ContextRPC) {
+export function collect(ctx: ContextRPC): Promise<void> {
   return execute('collect', ctx)
 }

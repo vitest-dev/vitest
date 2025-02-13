@@ -1,5 +1,5 @@
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import type { ModuleCacheMap } from 'vite-node/client'
+import type { ModuleCacheMap, ModuleExecutionInfo } from 'vite-node/client'
 import type { WorkerGlobalState } from '../types/worker'
 import type { ExternalModulesExecutor } from './external-executor'
 import fs from 'node:fs'
@@ -28,7 +28,7 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
   externalModulesExecutor?: ExternalModulesExecutor
 }
 
-export async function createVitestExecutor(options: ExecuteOptions) {
+export async function createVitestExecutor(options: ExecuteOptions): Promise<VitestExecutor> {
   const runner = new VitestExecutor(options)
 
   await runner.executeId('/@vite/env')
@@ -91,7 +91,7 @@ function listenForErrors(state: () => WorkerGlobalState) {
   })
 }
 
-export async function startVitestExecutor(options: ContextExecutorOptions) {
+export async function startVitestExecutor(options: ContextExecutorOptions): Promise<VitestExecutor> {
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
     globalThis.__vitest_worker__ || options.state
@@ -186,7 +186,10 @@ function removeStyle(id: string) {
   }
 }
 
-export function getDefaultRequestStubs(context?: vm.Context) {
+export function getDefaultRequestStubs(context?: vm.Context): {
+  '/@vite/client': any
+  '@vite/client': any
+} {
   if (!context) {
     const clientStub = {
       ...DEFAULT_REQUEST_STUBS['@vite/client'],
@@ -249,7 +252,11 @@ export class VitestExecutor extends ViteNodeRunner {
     }
   }
 
-  protected getContextPrimitives() {
+  protected getContextPrimitives(): {
+    Object: typeof Object
+    Reflect: typeof Reflect
+    Symbol: typeof Symbol
+  } {
     return this.primitives
   }
 
@@ -258,7 +265,7 @@ export class VitestExecutor extends ViteNodeRunner {
     return globalThis.__vitest_worker__ || this.options.state
   }
 
-  get moduleExecutionInfo() {
+  get moduleExecutionInfo(): ModuleExecutionInfo | undefined {
     return this.options.moduleExecutionInfo
   }
 
@@ -274,11 +281,11 @@ export class VitestExecutor extends ViteNodeRunner {
       : !id.startsWith('node:')
   }
 
-  async originalResolveUrl(id: string, importer?: string) {
+  async originalResolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     return super.resolveUrl(id, importer)
   }
 
-  async resolveUrl(id: string, importer?: string) {
+  async resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     if (VitestMocker.pendingIds.length) {
       await this.mocker.resolveMocks()
     }
@@ -302,7 +309,7 @@ export class VitestExecutor extends ViteNodeRunner {
     }
   }
 
-  protected async runModule(context: Record<string, any>, transformed: string) {
+  protected async runModule(context: Record<string, any>, transformed: string): Promise<void> {
     const vmContext = this.options.context
 
     if (!vmContext || !this.externalModules) {
@@ -354,7 +361,7 @@ export class VitestExecutor extends ViteNodeRunner {
     return super.dependencyRequest(id, fsPath, callstack)
   }
 
-  prepareContext(context: Record<string, any>) {
+  prepareContext(context: Record<string, any>): Record<string, any> {
     // support `import.meta.vitest` for test entry
     if (
       this.state.filepath

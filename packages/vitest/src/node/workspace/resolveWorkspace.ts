@@ -170,7 +170,7 @@ export async function resolveBrowserWorkspace(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
-) {
+): Promise<TestProject[]> {
   const removeProjects = new Set<TestProject>()
 
   resolvedProjects.forEach((project) => {

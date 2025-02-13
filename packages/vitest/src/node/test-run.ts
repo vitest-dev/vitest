@@ -11,7 +11,7 @@ import { serializeError } from '@vitest/utils/error'
 export class TestRun {
   constructor(private vitest: Vitest) {}
 
-  async start(specifications: TestSpecification[]) {
+  async start(specifications: TestSpecification[]): Promise<void> {
     const filepaths = specifications.map(spec => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
@@ -20,13 +20,13 @@ export class TestRun {
     await this.vitest.report('onTestRunStart', [...specifications])
   }
 
-  async enqueued(project: TestProject, file: RunnerTestFile) {
+  async enqueued(project: TestProject, file: RunnerTestFile): Promise<void> {
     this.vitest.state.collectFiles(project, [file])
     const testModule = this.vitest.state.getReportedEntity(file) as TestModule
     await this.vitest.report('onTestModuleQueued', testModule)
   }
 
-  async collected(project: TestProject, files: RunnerTestFile[]) {
+  async collected(project: TestProject, files: RunnerTestFile[]): Promise<void> {
     this.vitest.state.collectFiles(project, files)
     await Promise.all([
       this.vitest.report('onCollected', files),
@@ -37,12 +37,12 @@ export class TestRun {
     ])
   }
 
-  async log(log: UserConsoleLog) {
+  async log(log: UserConsoleLog): Promise<void> {
     this.vitest.state.updateUserLog(log)
     await this.vitest.report('onUserConsoleLog', log)
   }
 
-  async updated(update: TaskResultPack[], events: TaskEventPack[]) {
+  async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
     this.vitest.state.updateTasks(update)
 
     // TODO: what is the order or reports here?
@@ -57,7 +57,7 @@ export class TestRun {
     }
   }
 
-  async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown) {
+  async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {
     // specification won't have the File task if they were filtered by the --shard command
     const modules = specifications.map(spec => spec.testModule).filter(s => s != null)
     const files = modules.map(m => m.task)

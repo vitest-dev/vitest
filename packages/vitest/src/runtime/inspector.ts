@@ -49,7 +49,7 @@ export function setupInspect(ctx: ContextRPC) {
 
   const keepOpen = shouldKeepOpen(config)
 
-  return function cleanup() {
+  return function cleanup(): void {
     if (isEnabled && !keepOpen && inspector) {
       inspector.close()
       session?.disconnect()
@@ -57,7 +57,7 @@ export function setupInspect(ctx: ContextRPC) {
   }
 }
 
-export function closeInspector(config: SerializedConfig) {
+export function closeInspector(config: SerializedConfig): void {
   const keepOpen = shouldKeepOpen(config)
 
   if (inspector && !keepOpen) {

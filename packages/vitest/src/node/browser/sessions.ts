@@ -5,7 +5,7 @@ import { createDefer } from '@vitest/utils'
 export class BrowserSessions {
   private sessions = new Map<string, BrowserServerStateSession>()
 
-  getSession(sessionId: string) {
+  getSession(sessionId: string): BrowserServerStateSession | undefined {
     return this.sessions.get(sessionId)
   }
 

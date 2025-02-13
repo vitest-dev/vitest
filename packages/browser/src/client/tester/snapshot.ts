@@ -6,7 +6,7 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   private sourceMaps = new Map<string, any>()
   private traceMaps = new Map<string, TraceMap>()
 
-  public addSourceMap(filepath: string, map: any) {
+  public addSourceMap(filepath: string, map: any): void {
     this.sourceMaps.set(filepath, map)
   }
 
