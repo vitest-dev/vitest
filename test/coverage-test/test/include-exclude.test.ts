@@ -13,7 +13,7 @@ test('default exclude should ignore test files', async () => {
   })
 
   const coverageMap = await readCoverageMap()
-  expect(coverageMap.files()).toMatchInlineSnapshot(`[]`)
+  expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
 test('overridden exclude should still apply defaults', async () => {
@@ -28,7 +28,7 @@ test('overridden exclude should still apply defaults', async () => {
   })
 
   const coverageMap = await readCoverageMap()
-  expect(coverageMap.files()).toMatchInlineSnapshot(`[]`)
+  expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
 test('test file is excluded from report when excludes is not set', async () => {
