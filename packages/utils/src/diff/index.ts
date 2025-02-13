@@ -53,13 +53,14 @@ const PLUGINS = [
   prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
+  maxDepth: 50,
   plugins: PLUGINS,
-}
+} satisfies PrettyFormatOptions
 const FALLBACK_FORMAT_OPTIONS = {
   callToJSON: false,
   maxDepth: 8,
   plugins: PLUGINS,
-}
+} satisfies PrettyFormatOptions
 
 // Generate a string that will highlight the difference between two values
 // with green and red. (similar to how github does code diffing)

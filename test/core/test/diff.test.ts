@@ -324,6 +324,25 @@ test('truncate large diff', () => {
   expect(diff.trim()).toMatch(/\.\.\.$/)
 })
 
+function generateCycle(n: number) {
+  const nodes = Array.from({ length: n }, (_, i) => ({ i, next: null as any }))
+  nodes.forEach((node, i) => {
+    node.next = nodes[(i + 1) % n]
+  })
+  return nodes
+}
+
+test('diff default maxDepth', () => {
+  // diff only appears deeper than maxDepth
+  const xs = generateCycle(200)
+  const ys = generateCycle(200)
+  ys[150].i = -1
+  const diff = getErrorDiff(xs[0], ys[0])
+  expect(stripVTControlCharacters(diff)).toMatchInlineSnapshot(
+    `"Compared values have no visual difference."`,
+  )
+})
+
 function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions): string {
   try {
     expect(actual).toEqual(expected)
