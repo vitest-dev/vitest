@@ -189,6 +189,7 @@ test('user-event', async () => {
   const { stdout, stderr } = await runBrowserTests({
     root: './fixtures/user-event',
   })
+  expect(stderr).toBe('')
   onTestFailed(() => console.error(stderr))
   instances.forEach(({ browser }) => {
     expect(stdout).toReportPassedTest('cleanup-retry.test.ts', browser)
