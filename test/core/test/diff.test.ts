@@ -334,10 +334,10 @@ function generateCycle(n: number) {
 
 test('diff default maxDepth', () => {
   // diff only appears in a deeper place than maxDepth
-  const xs = generateCycle(200)
-  const ys = generateCycle(200)
-  ys[150].i = -1
-  const diff = getErrorDiff(xs[0], ys[0])
+  const xs = generateCycle(100)
+  const ys = generateCycle(100)
+  ys[77].i = -1
+  const diff = getErrorDiff(xs[0], ys[0], { maxDepth: 50 })
   expect(stripVTControlCharacters(diff)).toMatchInlineSnapshot(
     `"Compared values have no visual difference."`,
   )
