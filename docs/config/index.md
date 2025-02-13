@@ -2332,7 +2332,7 @@ Print basic prototype `Object` and `Array` in diff output
 #### diff.maxDepth
 
 - **Type**: `number`
-- **Default**: `50` (or `8` when comparing different types)
+- **Default**: `25` (or `8` when comparing different types)
 
 Limit the depth to recurse when printing nested objects
 
