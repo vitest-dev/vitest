@@ -49,7 +49,7 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
     browser: {
       enabled: process.env.COVERAGE_BROWSER === 'true',
       headless: true,
-      name: 'chromium',
+      instances: [{ browser: 'chromium' }],
       provider: 'playwright',
       ...config.browser,
     },
