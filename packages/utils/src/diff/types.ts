@@ -26,9 +26,9 @@ export interface DiffOptions {
   includeChangeCounts?: boolean
   omitAnnotationLines?: boolean
   patchColor?: DiffOptionsColor
-  printBasicPrototype?: boolean // pretty-format option
-  maxDepth?: number // pretty-format option
-  compareKeys?: CompareKeys // pretty-format option
+  printBasicPrototype?: boolean
+  maxDepth?: number
+  compareKeys?: CompareKeys
   truncateThreshold?: number
   truncateAnnotation?: string
   truncateAnnotationColor?: DiffOptionsColor
@@ -45,8 +45,8 @@ export interface SerializedDiffOptions {
   expand?: boolean
   includeChangeCounts?: boolean
   omitAnnotationLines?: boolean
-  printBasicPrototype?: boolean // pretty-format option
-  maxDepth?: number // pretty-format option
+  printBasicPrototype?: boolean
+  maxDepth?: number
   truncateThreshold?: number
   truncateAnnotation?: string
 }
@@ -63,15 +63,15 @@ export interface DiffOptionsNormalized {
   commonColor: DiffOptionsColor
   commonIndicator: string
   commonLineTrailingSpaceColor: DiffOptionsColor
-  compareKeys: CompareKeys // pretty-format option
+  compareKeys: CompareKeys
   contextLines: number
   emptyFirstOrLastLinePlaceholder: string
   expand: boolean
   includeChangeCounts: boolean
   omitAnnotationLines: boolean
   patchColor: DiffOptionsColor
-  printBasicPrototype: boolean // pretty-format option
-  maxDepth?: number // pretty-format option
+  printBasicPrototype: boolean
+  maxDepth?: number
   truncateThreshold: number
   truncateAnnotation: string
   truncateAnnotationColor: DiffOptionsColor
