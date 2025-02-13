@@ -164,5 +164,7 @@ export function serializeConfig(
     benchmark: config.benchmark && {
       includeSamples: config.benchmark.includeSamples,
     },
+    experimentalNativeImport: config.experimental?.nativeImport ?? false,
+    experimentalPreload: config.experimental?.preload ?? [],
   }
 }

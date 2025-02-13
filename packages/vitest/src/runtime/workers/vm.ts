@@ -16,6 +16,11 @@ const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
 export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+  // TODO: support?
+  if (state.config.experimentalNativeImport) {
+    throw new Error(`"experimental.nativeImport" is not supported in VM environments.`)
+  }
+
   const { environment, ctx, rpc } = state
 
   if (!environment.setupVM) {

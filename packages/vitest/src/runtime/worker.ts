@@ -48,6 +48,10 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
       )
     }
 
+    if (ctx.config.experimentalPreload) {
+      await Promise.all(ctx.config.experimentalPreload.map(file => import(file)))
+    }
+
     const file = ctx.worker.startsWith('file:')
       ? ctx.worker
       : pathToFileURL(ctx.worker).toString()

@@ -41,6 +41,7 @@ const entries = {
   'workers/vmForks': 'src/runtime/workers/vmForks.ts',
 
   'workers/runVmTests': 'src/runtime/runVmTests.ts',
+  'runtime/nodejsLoader': 'src/runtime/nodejs-loader.ts',
 
   'snapshot': 'src/public/snapshot.ts',
 }

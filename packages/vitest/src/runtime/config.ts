@@ -133,6 +133,8 @@ export interface SerializedConfig {
   benchmark?: {
     includeSamples: boolean
   }
+  experimentalNativeImport: boolean
+  experimentalPreload: string[]
 }
 
 export interface SerializedCoverageConfig {
