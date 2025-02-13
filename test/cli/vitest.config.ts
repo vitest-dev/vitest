@@ -18,6 +18,7 @@ export default defineConfig({
     watch: {
       ignored: [
         '**/fixtures/browser-multiple/**/*',
+        '**/fixtures/browser-init/**/*',
       ],
     },
   },
