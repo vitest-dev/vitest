@@ -192,12 +192,13 @@ function getFormatOptions(
   formatOptions: PrettyFormatOptions,
   options?: DiffOptions,
 ): PrettyFormatOptions {
-  const { compareKeys, printBasicPrototype } = normalizeDiffOptions(options)
+  const { compareKeys, printBasicPrototype, maxDepth } = normalizeDiffOptions(options)
 
   return {
     ...formatOptions,
     compareKeys,
     printBasicPrototype,
+    maxDepth: maxDepth ?? formatOptions.maxDepth,
   }
 }
 
