@@ -1,5 +1,5 @@
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import type { ModuleCacheMap } from 'vite-node/client'
+import type { ModuleCacheMap, ModuleExecutionInfo } from 'vite-node/client'
 import type { WorkerGlobalState } from '../types/worker'
 import type { ExternalModulesExecutor } from './external-executor'
 import fs from 'node:fs'
@@ -265,7 +265,7 @@ export class VitestExecutor extends ViteNodeRunner {
     return globalThis.__vitest_worker__ || this.options.state
   }
 
-  get moduleExecutionInfo() {
+  get moduleExecutionInfo(): ModuleExecutionInfo | undefined {
     return this.options.moduleExecutionInfo
   }
 
