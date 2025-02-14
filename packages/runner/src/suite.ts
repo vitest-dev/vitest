@@ -33,7 +33,7 @@ import {
   runWithSuite,
   withTimeout,
 } from './context'
-import { mergeContextFixtures, withFixtures } from './fixture'
+import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
 import { getCollectorFixture, getHooks, setCollectorFixture, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { createChainable } from './utils/chain'
@@ -401,12 +401,19 @@ function createSuiteCollector(
     task,
     clear,
     on: addHook,
+    fixtures() {
+      return getCollectorFixture(suite)
+    },
     scope(fixtures) {
-      const oldFixtures = getCollectorFixture(collector)
-      setCollectorFixture(collector, {
-        ...oldFixtures,
-        ...fixtures,
-      })
+      const oldFixtures = getCollectorFixture(suite)
+      const parsed = mergeContextFixtures(
+        fixtures,
+        { fixtures: oldFixtures },
+        (key: string) => getRunner().injectValue?.(key),
+      )
+      if (parsed.fixtures) {
+        setCollectorFixture(suite, parsed.fixtures)
+      }
     },
   }
 
@@ -752,7 +759,15 @@ export function createTaskCollector(
       optionsOrFn?: TestOptions | TestFunction,
       optionsOrTest?: number | TestOptions | TestFunction,
     ) {
-      getCurrentSuite().test.fn.call(
+      const collector = getCurrentSuite()
+      const scopedFixtures = collector.fixtures()
+      if (scopedFixtures) {
+        this.fixtures = mergeScopedFixtures(
+          this.fixtures || [],
+          scopedFixtures,
+        )
+      }
+      collector.test.fn.call(
         this,
         formatName(name),
         optionsOrFn as TestOptions,

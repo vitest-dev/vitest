@@ -15,6 +15,31 @@ export interface FixtureItem extends FixtureOptions {
   deps?: FixtureItem[]
 }
 
+export function mergeScopedFixtures(
+  testFixtures: FixtureItem[],
+  scopedFixtures: FixtureItem[],
+): FixtureItem[] {
+  const scopedFixturesMap = scopedFixtures.reduce<Record<string, FixtureItem>>((map, fixture) => {
+    map[fixture.prop] = fixture
+    return map
+  }, {})
+  const newFixtures: Record<string, FixtureItem> = {}
+  testFixtures.forEach((fixture) => {
+    const useFixture = scopedFixturesMap[fixture.prop] || {
+      // we need to clone the fixture because we override its values
+      ...fixture,
+    }
+    newFixtures[useFixture.prop] = useFixture
+  })
+  for (const fixtureKep in newFixtures) {
+    const fixture = newFixtures[fixtureKep]
+    // if the fixture was define before the scope, then its dep
+    // will reference the original fixture instead of the scope
+    fixture.deps = fixture.deps?.map(dep => newFixtures[dep.prop])
+  }
+  return Object.values(newFixtures)
+}
+
 export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
   fixtures: Record<string, any>,
   context: T,
