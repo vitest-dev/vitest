@@ -2041,7 +2041,7 @@ Sets the randomization seed, if tests are running in random order.
 #### sequence.hooks
 
 - **Type**: `'stack' | 'list' | 'parallel'`
-- **Default**: `'parallel'`
+- **Default**: `'stack'`
 - **CLI**: `--sequence.hooks=<value>`
 
 Changes the order in which hooks are executed.
