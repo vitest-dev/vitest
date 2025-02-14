@@ -615,7 +615,7 @@ export interface SuiteCollector<ExtraContext = object> {
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
-  extend: (fixtures: Fixtures<any, ExtraContext>) => void
+  scope: (fixtures: Fixtures<any, ExtraContext>) => void
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
   clear: () => void

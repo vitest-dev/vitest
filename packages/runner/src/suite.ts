@@ -401,7 +401,7 @@ function createSuiteCollector(
     task,
     clear,
     on: addHook,
-    extend(fixtures) {
+    scope(fixtures) {
       const oldFixtures = getCollectorFixture(collector)
       setCollectorFixture(collector, {
         ...oldFixtures,
@@ -737,7 +737,7 @@ export function createTaskCollector(
 
   taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
     const collector = getCurrentSuite()
-    collector.extend(fixtures)
+    collector.scope(fixtures)
   }
 
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
