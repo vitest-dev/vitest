@@ -58,7 +58,7 @@ export default defineConfig({
           ? playwrightInstances
           : webdriverioInstances,
       provider,
-      // isolate: false,
+      isolate: false,
       testerScripts: [
         {
           content: 'globalThis.__injected = []',

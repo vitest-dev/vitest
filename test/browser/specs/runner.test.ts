@@ -16,7 +16,7 @@ describe('running browser tests', async () => {
   const events: string[] = []
 
   beforeAll(() => {
-    const id = setInterval(() => console.log('[debug]', new Date().toISOString()), 2000)
+    const id = setInterval(() => console.error('[debug]', new Date().toISOString()), 2000)
     return () => clearInterval(id)
   })
 
