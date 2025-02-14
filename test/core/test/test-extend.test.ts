@@ -385,7 +385,7 @@ describe('asynchronous setup/teardown', () => {
   })
 })
 
-describe.only('scoping variables to suite', () => {
+describe('scoping variables to suite', () => {
   const testAPI = test.extend<{
     dependency: string
     pkg: { dependency: string }

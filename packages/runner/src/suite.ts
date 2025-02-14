@@ -404,7 +404,7 @@ function createSuiteCollector(
     fixtures() {
       return getCollectorFixture(suite)
     },
-    scope(fixtures) {
+    scoped(fixtures) {
       const oldFixtures = getCollectorFixture(suite)
       const parsed = mergeContextFixtures(
         fixtures,
@@ -744,7 +744,7 @@ export function createTaskCollector(
 
   taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
     const collector = getCurrentSuite()
-    collector.scope(fixtures)
+    collector.scoped(fixtures)
   }
 
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
