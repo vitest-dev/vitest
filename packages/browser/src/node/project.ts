@@ -1,5 +1,6 @@
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
-import type { ErrorWithDiff, SerializedConfig } from 'vitest'
+import type { ViteDevServer } from 'vite'
+import type { ErrorWithDiff, ParsedStack, SerializedConfig } from 'vitest'
 import type {
   BrowserProvider,
   ProjectBrowser as IProjectBrowser,
@@ -23,11 +24,11 @@ export class ProjectBrowser implements IProjectBrowser {
   public provider!: BrowserProvider
   public vitest: Vitest
   public config: ResolvedConfig
-  public children = new Set<ProjectBrowser>()
+  public children: Set<ProjectBrowser> = new Set<ProjectBrowser>()
 
   public parent!: ParentBrowserProject
 
-  public state = new BrowserServerState()
+  public state: BrowserServerState = new BrowserServerState()
 
   constructor(
     public project: TestProject,
@@ -53,18 +54,18 @@ export class ProjectBrowser implements IProjectBrowser {
     ).then(html => (this.testerHtml = html))
   }
 
-  get vite() {
+  get vite(): ViteDevServer {
     return this.parent.vite
   }
 
-  wrapSerializedConfig() {
+  wrapSerializedConfig(): SerializedConfig {
     const config = wrapConfig(this.project.serializedConfig)
     config.env ??= {}
     config.env.VITEST_BROWSER_DEBUG = process.env.VITEST_BROWSER_DEBUG || ''
     return config
   }
 
-  async initBrowserProvider(project: TestProject) {
+  async initBrowserProvider(project: TestProject): Promise<void> {
     if (this.provider) {
       return
     }
@@ -95,18 +96,18 @@ export class ProjectBrowser implements IProjectBrowser {
   public parseErrorStacktrace(
     e: ErrorWithDiff,
     options: StackTraceParserOptions = {},
-  ) {
+  ): ParsedStack[] {
     return this.parent.parseErrorStacktrace(e, options)
   }
 
   public parseStacktrace(
     trace: string,
     options: StackTraceParserOptions = {},
-  ) {
+  ): ParsedStack[] {
     return this.parent.parseStacktrace(trace, options)
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this.parent.vite.close()
   }
 }

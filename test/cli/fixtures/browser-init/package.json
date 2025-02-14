@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test:browser": "vitest --workspace=vitest.workspace.ts"
+  },
+  "dependencies": {
+    "vitest": "latest"
+  },
+  "devDependencies": {
+    "@vitest/browser": "latest"
+  }
+}

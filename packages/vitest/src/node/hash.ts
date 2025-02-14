@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 
-export const hash = crypto.hash ?? ((
+export const hash: typeof crypto.hash = crypto.hash ?? ((
   algorithm: string,
   data: crypto.BinaryLike,
   outputEncoding: crypto.BinaryToTextEncoding,

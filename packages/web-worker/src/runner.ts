@@ -8,7 +8,7 @@ export class InlineWorkerRunner extends VitestExecutor {
     this.mocker = (globalThis as any).__vitest_mocker__ = mocker
   }
 
-  prepareContext(context: Record<string, any>) {
+  prepareContext(context: Record<string, any>): any {
     const ctx = super.prepareContext(context)
     // not supported for now, we can't synchronously load modules
     return Object.assign(ctx, this.context, {

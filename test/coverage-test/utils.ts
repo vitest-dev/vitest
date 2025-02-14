@@ -1,4 +1,4 @@
-import type { FileCoverageData } from 'istanbul-lib-coverage'
+import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction } from 'vitest'
 import type { UserConfig } from 'vitest/node'
 import { readFileSync } from 'node:fs'
@@ -49,7 +49,7 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
     browser: {
       enabled: process.env.COVERAGE_BROWSER === 'true',
       headless: true,
-      name: 'chromium',
+      instances: [{ browser: 'chromium' }],
       provider: 'playwright',
       ...config.browser,
     },
@@ -87,6 +87,13 @@ export async function readCoverageJson(name = './coverage/coverage-final.json') 
 export async function readCoverageMap(name = './coverage/coverage-final.json') {
   const coverageJson = await readCoverageJson(name)
   return libCoverage.createCoverageMap(coverageJson)
+}
+
+export function formatSummary(summary: CoverageSummary) {
+  return (['branches', 'functions', 'lines', 'statements'] as const).reduce((all, current) => ({
+    ...all,
+    [current]: `${summary[current].covered}/${summary[current].total} (${summary[current].pct}%)`,
+  }), {})
 }
 
 export function normalizeFilename(filename: string) {

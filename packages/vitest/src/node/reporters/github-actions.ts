@@ -9,11 +9,11 @@ import { capturePrintError } from '../error'
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest): void {
     this.ctx = ctx
   }
 
-  onFinished(files: File[] = [], errors: unknown[] = []) {
+  onFinished(files: File[] = [], errors: unknown[] = []): void {
     // collect all errors and associate them with projects
     const projectErrors = new Array<{
       project: TestProject

@@ -1,3 +1,4 @@
+import type { TestProject } from '../node/project'
 import type { TestSpecification } from '../node/spec'
 import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
@@ -5,7 +6,7 @@ import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
 import { groupBy } from './base'
 
-export const envsOrder = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
+export const envsOrder: string[] = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
 
 export interface FileByEnv {
   file: string
@@ -28,7 +29,11 @@ function getTransformMode(
 
 export async function groupFilesByEnv(
   files: Array<TestSpecification>,
-) {
+): Promise<Record<string, {
+    file: { filepath: string; testLocations: number[] | undefined }
+    project: TestProject
+    environment: ContextTestEnvironment
+  }[]>> {
   const filesWithEnv = await Promise.all(
     files.map(async ({ moduleId: filepath, project, testLines }) => {
       const code = await fs.readFile(filepath, 'utf-8')

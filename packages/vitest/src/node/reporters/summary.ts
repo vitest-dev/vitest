@@ -63,7 +63,7 @@ export class SummaryReporter implements Reporter {
   private duration = 0
   private durationInterval: NodeJS.Timeout | undefined = undefined
 
-  onInit(ctx: Vitest, options: Options = {}) {
+  onInit(ctx: Vitest, options: Options = {}): void {
     this.ctx = ctx
 
     this.options = {
@@ -82,7 +82,7 @@ export class SummaryReporter implements Reporter {
     })
   }
 
-  onTestRunStart(specifications: ReadonlyArray<TestSpecification>) {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
     this.runningModules.clear()
     this.finishedModules.clear()
     this.modules = emptyCounters()
@@ -94,14 +94,14 @@ export class SummaryReporter implements Reporter {
     this.modules.total = specifications.length
   }
 
-  onTestRunEnd() {
+  onTestRunEnd(): void {
     this.runningModules.clear()
     this.finishedModules.clear()
     this.renderer.finish()
     clearInterval(this.durationInterval)
   }
 
-  onTestModuleQueued(module: TestModule) {
+  onTestModuleQueued(module: TestModule): void {
     // When new test module starts, take the place of previously finished test module, if any
     if (this.finishedModules.size) {
       const finished = this.finishedModules.keys().next().value
@@ -112,7 +112,7 @@ export class SummaryReporter implements Reporter {
     this.renderer.schedule()
   }
 
-  onTestModuleCollected(module: TestModule) {
+  onTestModuleCollected(module: TestModule): void {
     let stats = this.runningModules.get(module.id)
 
     if (!stats) {
@@ -128,7 +128,7 @@ export class SummaryReporter implements Reporter {
     this.renderer.schedule()
   }
 
-  onHookStart(options: ReportedHookContext) {
+  onHookStart(options: ReportedHookContext): void {
     const stats = this.getHookStats(options)
 
     if (!stats) {
@@ -151,7 +151,7 @@ export class SummaryReporter implements Reporter {
     hook.onFinish = () => clearTimeout(timeout)
   }
 
-  onHookEnd(options: ReportedHookContext) {
+  onHookEnd(options: ReportedHookContext): void {
     const stats = this.getHookStats(options)
 
     if (stats?.hook?.name !== options.name) {
@@ -162,7 +162,7 @@ export class SummaryReporter implements Reporter {
     stats.hook.visible = false
   }
 
-  onTestCaseReady(test: TestCase) {
+  onTestCaseReady(test: TestCase): void {
     // Track slow running tests only on verbose mode
     if (!this.options.verbose) {
       return
@@ -193,7 +193,7 @@ export class SummaryReporter implements Reporter {
     stats.tests.set(test.id, slowTest)
   }
 
-  onTestCaseResult(test: TestCase) {
+  onTestCaseResult(test: TestCase): void {
     const stats = this.runningModules.get(test.module.id)
 
     if (!stats) {
@@ -219,7 +219,7 @@ export class SummaryReporter implements Reporter {
     this.renderer.schedule()
   }
 
-  onTestModuleEnd(module: TestModule) {
+  onTestModuleEnd(module: TestModule): void {
     const state = module.state()
     this.modules.completed++
 

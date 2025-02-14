@@ -1,6 +1,6 @@
 import os from 'node:os'
 
-export function getWorkersCountByPercentage(percent: string) {
+export function getWorkersCountByPercentage(percent: string): number {
   const maxWorkersCount = os.availableParallelism?.() ?? os.cpus().length
   const workersCountByPercentage = Math.round((Number.parseInt(percent) / 100) * maxWorkersCount)
 

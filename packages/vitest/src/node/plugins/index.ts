@@ -28,7 +28,7 @@ import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
   options: UserConfig = {},
-  ctx = new Vitest('test'),
+  ctx: Vitest = new Vitest('test'),
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 

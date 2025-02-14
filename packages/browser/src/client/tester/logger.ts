@@ -4,7 +4,7 @@ import { rpc } from './rpc'
 
 const { Date, console, performance } = globalThis
 
-export function setupConsoleLogSpy() {
+export function setupConsoleLogSpy(): void {
   const {
     log,
     info,

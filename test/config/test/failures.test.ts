@@ -63,7 +63,7 @@ test('inspect cannot be used with multi-threading', async () => {
 })
 
 test('inspect in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
+  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: 'playwright' } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
@@ -75,7 +75,7 @@ test('inspect-brk cannot be used with multi processing', async () => {
 })
 
 test('inspect-brk in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
+  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: 'playwright' } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })

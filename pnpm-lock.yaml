@@ -1237,6 +1237,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: workspace:*
         version: link:../../packages/coverage-v8
+      '@vitest/web-worker':
+        specifier: workspace:*
+        version: link:../../packages/web-worker
       '@vue/test-utils':
         specifier: latest
         version: 2.4.6
