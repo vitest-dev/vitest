@@ -99,7 +99,7 @@ interface SequenceOptions {
    * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
    * - `list` will order hooks in the order they are defined
    * - `parallel` will run hooks in a single group in parallel
-   * @default 'parallel'
+   * @default 'stack'
    */
   hooks?: SequenceHooks
 }
