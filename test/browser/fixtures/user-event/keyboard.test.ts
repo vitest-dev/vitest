@@ -19,10 +19,10 @@ test('non US keys', async () => {
   // preview: ok
   if (server.provider === 'playwright') {
     await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
-    if (server.browser === 'firefox') {
-      await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
-    } else {
+    if (server.browser === 'chromium') {
       await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('����')
+    } else {
+      await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
     }
   } else if (server.provider === 'webdriverio') {
     await expect(() =>
