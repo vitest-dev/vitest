@@ -1172,6 +1172,19 @@ describe('async expect', () => {
       expect(error).toMatchObject({ message: 'promise rejected "+0" instead of resolving' })
     }
   })
+
+  it('chainable types', async () => {
+    /* eslint-disable prefer-promise-reject-errors */
+    await expect(Promise.resolve(1)).resolves.toBeOneOf([1])
+    await expect(Promise.resolve(1)).resolves.not.toBeOneOf([2])
+    await expect(Promise.reject(1)).rejects.toBeOneOf([1])
+    await expect(Promise.reject(1)).rejects.not.toBeOneOf([2])
+    await expect(Promise.resolve(1)).resolves.toSatisfy(v => v === 1)
+    await expect(Promise.reject(2)).rejects.toSatisfy(v => v === 2)
+    await (expect(Promise.resolve(1)).resolves.to.equal(1) satisfies Promise<any>)
+    await (expect(Promise.resolve(1)).resolves.not.to.equal(2) satisfies Promise<any>)
+    /* eslint-enable prefer-promise-reject-errors */
+  })
 })
 
 it('compatible with jest', () => {

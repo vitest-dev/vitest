@@ -1,6 +1,6 @@
 import type { TestSpecification } from 'vitest/node'
 import { expect, test } from 'vitest'
-import { readCoverageMap, runVitest } from '../utils'
+import { formatSummary, isV8Provider, readCoverageMap, runVitest } from '../utils'
 
 const pools = ['forks']
 
@@ -28,7 +28,7 @@ for (const isolate of [true, false]) {
 
         coverage: {
           all: false,
-          reporter: ['json', 'html'],
+          reporter: 'json',
         },
 
         browser: {
@@ -37,18 +37,47 @@ for (const isolate of [true, false]) {
       })
 
       const coverageMap = await readCoverageMap()
-
       const branches = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/branch.ts')
-      expect(branches.toSummary().lines.pct).toBe(100)
-      expect(branches.toSummary().statements.pct).toBe(100)
-      expect(branches.toSummary().functions.pct).toBe(100)
-      expect(branches.toSummary().branches.pct).toBe(100)
-
       const math = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/math.ts')
-      expect(math.toSummary().lines.pct).toBe(100)
-      expect(math.toSummary().statements.pct).toBe(100)
-      expect(math.toSummary().functions.pct).toBe(100)
-      expect(math.toSummary().branches.pct).toBe(100)
+
+      const summary = {
+        [branches.path]: formatSummary(branches.toSummary()),
+        [math.path]: formatSummary(math.toSummary()),
+      }
+
+      if (isV8Provider()) {
+        expect(summary).toStrictEqual({
+          '<process-cwd>/fixtures/src/branch.ts': {
+            branches: '3/3 (100%)',
+            functions: '1/1 (100%)',
+            lines: '6/6 (100%)',
+            statements: '6/6 (100%)',
+          },
+          '<process-cwd>/fixtures/src/math.ts': {
+            branches: '4/4 (100%)',
+            functions: '4/4 (100%)',
+            lines: '12/12 (100%)',
+            statements: '12/12 (100%)',
+          },
+        })
+      }
+      else {
+        expect(summary).toStrictEqual({
+          '<process-cwd>/fixtures/src/branch.ts': {
+            branches: '2/2 (100%)',
+            functions: '1/1 (100%)',
+            lines: '4/4 (100%)',
+            statements: '4/4 (100%)',
+          },
+          '<process-cwd>/fixtures/src/math.ts': {
+            branches: '0/0 (100%)',
+            functions: '4/4 (100%)',
+            lines: '4/4 (100%)',
+            statements: '4/4 (100%)',
+          },
+        },
+        )
+      }
     })
   }
 }

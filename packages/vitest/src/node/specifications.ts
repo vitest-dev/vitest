@@ -1,5 +1,5 @@
 import type { Vitest } from './core'
-import type { TestProject } from './reporters'
+import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import { existsSync } from 'node:fs'
 import mm from 'micromatch'
@@ -38,7 +38,7 @@ export class VitestSpecifications {
     )
   }
 
-  public async globTestSpecifications(filters: string[] = []) {
+  public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     const files: TestSpecification[] = []
     const dir = process.cwd()
     const parsedFilters = filters.map(f => parseFilter(f))

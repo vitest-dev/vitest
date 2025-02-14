@@ -27,8 +27,10 @@
     sessionId: { __VITEST_SESSION_ID__ },
     testerId: { __VITEST_TESTER_ID__ },
     provider: { __VITEST_PROVIDER__ },
+    method: { __VITEST_METHOD__ },
     providedContext: { __VITEST_PROVIDED_CONTEXT__ },
   };
+  window.VITEST_API_TOKEN = { __VITEST_API_TOKEN__ };
 
   const config = __vitest_browser_runner__.config;
 

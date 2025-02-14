@@ -124,7 +124,7 @@ When using coverage, Vitest automatically adds test files `include` patterns to 
 ### exclude
 
 - **Type:** `string[]`
-- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*']`
+- **Default:** `['**/node_modules/**', '**/dist/**', '**/cypress/**', '**/.{idea,git,cache,output,temp}/**', '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*']`
 - **CLI:** `vitest --exclude "**/excluded-file"`
 
 A list of glob patterns that should be excluded from your test files.
@@ -1351,7 +1351,8 @@ export default defineConfig({
 ```
 
 ::: tip NOTE
-Vitest automatically adds test files `include` patterns to the default value of `coverage.exclude`.
+Vitest automatically adds test files `include` patterns to the `coverage.exclude`.
+It's not possible to show coverage of test files.
 :::
 
 #### coverage.all
@@ -2040,7 +2041,7 @@ Sets the randomization seed, if tests are running in random order.
 #### sequence.hooks
 
 - **Type**: `'stack' | 'list' | 'parallel'`
-- **Default**: `'parallel'`
+- **Default**: `'stack'`
 - **CLI**: `--sequence.hooks=<value>`
 
 Changes the order in which hooks are executed.

@@ -3,7 +3,7 @@ import type { CoverageProviderModule } from 'vitest/node'
 import type { IstanbulCoverageProvider } from './provider'
 import { COVERAGE_STORE_KEY } from './constants'
 
-export default {
+const mod: CoverageProviderModule = {
   takeCoverage() {
     // @ts-expect-error -- untyped global
     return globalThis[COVERAGE_STORE_KEY]
@@ -46,4 +46,5 @@ export default {
 
     return new IstanbulCoverageProvider()
   },
-} satisfies CoverageProviderModule
+}
+export default mod

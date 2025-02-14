@@ -1,6 +1,7 @@
 import type {
   Suite,
   Task,
+  TaskUpdateEvent,
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
@@ -59,7 +60,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       startTime: start,
       benchmark: createBenchmarkResult(suite.name),
     }
-    updateTask(suite)
+    updateTask('suite-prepare', suite)
 
     const addBenchTaskListener = (
       task: InstanceType<typeof Task>,
@@ -82,7 +83,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           if (!runner.config.benchmark?.includeSamples) {
             result.samples.length = 0
           }
-          updateTask(benchmark)
+          updateTask('test-finished', benchmark)
         },
         {
           once: true,
@@ -122,7 +123,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 
     for (const benchmark of benchmarkGroup) {
       const task = benchmarkTasks.get(benchmark)!
-      updateTask(benchmark)
+      updateTask('test-prepare', benchmark)
       await task.warmup()
       tasks.push([
         await new Promise<BenchTask>(resolve =>
@@ -137,14 +138,14 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     suite.result!.duration = performance.now() - start
     suite.result!.state = 'pass'
 
-    updateTask(suite)
+    updateTask('suite-finished', suite)
     defer.resolve(null)
 
     await defer
   }
 
-  function updateTask(task: Task) {
-    updateRunnerTask(task, runner)
+  function updateTask(event: TaskUpdateEvent, task: Task) {
+    updateRunnerTask(event, task, runner)
   }
 }
 
@@ -153,7 +154,7 @@ export class NodeBenchmarkRunner implements VitestRunner {
 
   constructor(public config: SerializedConfig) {}
 
-  async importTinybench() {
+  async importTinybench(): Promise<typeof import('tinybench')> {
     return await import('tinybench')
   }
 

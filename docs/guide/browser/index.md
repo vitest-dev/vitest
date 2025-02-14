@@ -265,7 +265,7 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
 
 ## TypeScript
 
-By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfile) or a [config file](/config/) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
+By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfiles) or a [config file](/config/) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
 
 ::: code-group
 ```ts [default]
@@ -558,7 +558,7 @@ test('renders a message', async () => {
   const { baseElement } = await render(Greeting, { name: 'Marko' })
   const screen = page.elementLocator(baseElement)
   await expect.element(screen.getByText(/Marko/)).toBeInTheDocument()
-  await expect.element(container.firstChild).toMatchInlineSnapshot(`
+  expect(container.firstChild).toMatchInlineSnapshot(`
     <h1>Hello, Marko!</h1>
   `)
 })

@@ -1,7 +1,5 @@
-import type { RunnerTestCase } from 'vitest'
 import * as pathe from 'pathe'
 import { assert, expect, it } from 'vitest'
-import { TaskParser } from 'vitest/src/node/reporters/task-parser.js'
 import { runVitest } from '../../test-utils'
 
 it('summary', async () => {
@@ -33,30 +31,6 @@ it('non-tty', async () => {
   for (const [index, line] of expected.trim().split('\n').entries()) {
     expect(lines[index]).toMatch(line)
   }
-})
-
-it('reports passed tasks just once', async () => {
-  const passed: string[] = []
-
-  class CustomReporter extends TaskParser {
-    onTestFinished(_test: RunnerTestCase): void {
-      passed.push(_test.name)
-    }
-  }
-
-  await runVitest({
-    root: pathe.join(import.meta.dirname, '../fixtures/reporter'),
-    benchmark: {
-      reporters: new CustomReporter(),
-    },
-  }, ['multiple.bench.ts'], 'benchmark')
-
-  expect(passed).toMatchInlineSnapshot(`
-    [
-      "first",
-      "second",
-    ]
-  `)
 })
 
 it.for([true, false])('includeSamples %s', async (includeSamples) => {

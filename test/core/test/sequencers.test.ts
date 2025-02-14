@@ -20,6 +20,9 @@ function buildCtx() {
 function buildWorkspace() {
   return {
     name: 'test',
+    config: {
+      root: import.meta.dirname,
+    },
   } as any as WorkspaceProject
 }
 

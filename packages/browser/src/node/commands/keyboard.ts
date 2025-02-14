@@ -83,7 +83,7 @@ export async function keyboardImplementation(
   text: string,
   selectAll: () => Promise<void>,
   skipRelease: boolean,
-) {
+): Promise<{ pressed: Set<string> }> {
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(sessionId)
     const actions = parseKeyDef(defaultKeyMap, text)

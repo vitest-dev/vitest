@@ -13,22 +13,22 @@ interface CommonjsExecutorOptions {
 
 const _require = createRequire(import.meta.url)
 
-interface PrivateNodeModule extends NodeModule {
+interface PrivateNodeModule extends NodeJS.Module {
   _compile: (code: string, filename: string) => void
 }
 
-const requiresCache = new WeakMap<NodeModule, NodeRequire>()
+const requiresCache = new WeakMap<NodeJS.Module, NodeJS.Require>()
 
 export class CommonjsExecutor {
   private context: vm.Context
-  private requireCache = new Map<string, NodeModule>()
+  private requireCache = new Map<string, NodeJS.Module>()
   private publicRequireCache = this.createProxyCache()
 
   private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
-  private builtinCache: Record<string, NodeModule> = Object.create(null)
+  private builtinCache: Record<string, NodeJS.Module> = Object.create(null)
   private extensions: Record<
     string,
-    (m: NodeModule, filename: string) => unknown
+    (m: NodeJS.Module, filename: string) => unknown
   > = Object.create(null)
 
   private fs: FileMap
@@ -135,7 +135,7 @@ export class CommonjsExecutor {
       static _cache = executor.moduleCache
       static _extensions = executor.extensions
 
-      static createRequire = (filename: string) => {
+      static createRequire = (filename: string | URL) => {
         return executor.createRequire(filename)
       }
 
@@ -161,6 +161,7 @@ export class CommonjsExecutor {
       static enableCompileCache = _Module.enableCompileCache
       static getCompileCacheDir = _Module.getCompileCacheDir
       static flushCompileCache = _Module.flushCompileCache
+      static stripTypeScriptTypes = _Module.stripTypeScriptTypes
 
       static Module = Module
     }
@@ -169,17 +170,17 @@ export class CommonjsExecutor {
     this.extensions['.json'] = this.requireJson
   }
 
-  private requireJs = (m: NodeModule, filename: string) => {
+  private requireJs = (m: NodeJS.Module, filename: string) => {
     const content = this.fs.readFile(filename);
     (m as PrivateNodeModule)._compile(content, filename)
   }
 
-  private requireJson = (m: NodeModule, filename: string) => {
+  private requireJson = (m: NodeJS.Module, filename: string) => {
     const code = this.fs.readFile(filename)
     m.exports = JSON.parse(code)
   }
 
-  public createRequire = (filename: string) => {
+  public createRequire = (filename: string | URL): NodeJS.Require => {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
@@ -189,7 +190,7 @@ export class CommonjsExecutor {
       }
       const module = new this.Module(resolved)
       return this.loadCommonJSModule(module, resolved)
-    }) as NodeRequire
+    }) as NodeJS.Require
     require.resolve = _require.resolve
     Object.defineProperty(require, 'extensions', {
       get: () => this.extensions,
@@ -220,7 +221,7 @@ export class CommonjsExecutor {
 
   // very naive implementation for Node.js require
   private loadCommonJSModule(
-    module: NodeModule,
+    module: NodeJS.Module,
     filename: string,
   ): Record<string, unknown> {
     const cached = this.requireCache.get(filename)
@@ -254,7 +255,7 @@ export class CommonjsExecutor {
     return '.js'
   }
 
-  public require(identifier: string) {
+  public require(identifier: string): any {
     const ext = extname(identifier)
     if (ext === '.node' || isNodeBuiltin(identifier)) {
       return this.requireCoreModule(identifier)

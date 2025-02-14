@@ -1,5 +1,5 @@
 import type { Vitest } from './core'
-import type { TestProject } from './reporters'
+import type { TestProject } from './project'
 import { readFileSync } from 'node:fs'
 import { noop, slash } from '@vitest/utils'
 import mm from 'micromatch'
@@ -70,6 +70,7 @@ export class VitestWatcher {
     this.invalidates.add(id)
 
     if (this.vitest.state.filesMap.has(id)) {
+      this.vitest.projects.forEach(project => project._removeCachedTestFile(id))
       this.vitest.state.filesMap.delete(id)
       this.vitest.cache.results.removeFromCache(id)
       this.vitest.cache.stats.removeStats(id)

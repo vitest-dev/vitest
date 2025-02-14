@@ -1,115 +1,99 @@
-import type { File, TaskResultPack, TaskState, Test } from '@vitest/runner'
+import type { File, Task, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
-import { getTests } from '@vitest/runner/utils'
+import type { TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
 import { BaseReporter } from './base'
 import { WindowRenderer } from './renderers/windowedRenderer'
-import { TaskParser } from './task-parser'
 
 interface Icon {
   char: string
   color: (char: string) => string
 }
 
-export class DotReporter extends BaseReporter {
-  private summary?: DotSummary
+type TestCaseState = ReturnType<TestCase['result']>['state']
 
-  onInit(ctx: Vitest) {
+export class DotReporter extends BaseReporter {
+  private renderer?: WindowRenderer
+  private tests = new Map<Test['id'], TestCaseState>()
+  private finishedTests = new Set<TestCase['id']>()
+
+  onInit(ctx: Vitest): void {
     super.onInit(ctx)
 
     if (this.isTTY) {
-      this.summary = new DotSummary()
-      this.summary.onInit(ctx)
+      this.renderer = new WindowRenderer({
+        logger: ctx.logger,
+        getWindow: () => this.createSummary(),
+      })
+
+      this.ctx.onClose(() => this.renderer?.stop())
     }
   }
 
-  onTaskUpdate(packs: TaskResultPack[]) {
-    this.summary?.onTaskUpdate(packs)
-
+  printTask(task: Task): void {
     if (!this.isTTY) {
-      super.onTaskUpdate(packs)
+      super.printTask(task)
     }
   }
 
-  onWatcherRerun(files: string[], trigger?: string) {
-    this.summary?.onWatcherRerun()
+  onWatcherRerun(files: string[], trigger?: string): void {
+    this.tests.clear()
+    this.renderer?.start()
     super.onWatcherRerun(files, trigger)
   }
 
-  onFinished(files?: File[], errors?: unknown[]) {
-    this.summary?.onFinished()
+  onFinished(files?: File[], errors?: unknown[]): void {
+    if (this.isTTY) {
+      const finalLog = formatTests(Array.from(this.tests.values()))
+      this.ctx.logger.log(finalLog)
+    }
+
+    this.tests.clear()
+    this.renderer?.finish()
+
     super.onFinished(files, errors)
   }
-}
 
-class DotSummary extends TaskParser {
-  private renderer!: WindowRenderer
-  private tests = new Map<Test['id'], TaskState>()
-  private finishedTests = new Set<Test['id']>()
-
-  onInit(ctx: Vitest): void {
-    this.ctx = ctx
-
-    this.renderer = new WindowRenderer({
-      logger: ctx.logger,
-      getWindow: () => this.createSummary(),
-    })
-
-    this.ctx.onClose(() => this.renderer.stop())
-  }
-
-  onWatcherRerun() {
-    this.tests.clear()
-    this.renderer.start()
-  }
-
-  onFinished() {
-    const finalLog = formatTests(Array.from(this.tests.values()))
-    this.ctx.logger.log(finalLog)
-
-    this.tests.clear()
-    this.renderer.finish()
-  }
-
-  onTestFilePrepare(file: File): void {
-    for (const test of getTests(file)) {
+  onTestModuleCollected(module: TestModule): void {
+    for (const test of module.children.allTests()) {
       // Dot reporter marks pending tests as running
-      this.onTestStart(test)
+      this.onTestCaseReady(test)
     }
   }
 
-  onTestStart(test: Test) {
+  onTestCaseReady(test: TestCase): void {
     if (this.finishedTests.has(test.id)) {
       return
     }
-
-    this.tests.set(test.id, test.mode || 'run')
+    this.tests.set(test.id, test.result().state || 'run')
+    this.renderer?.schedule()
   }
 
-  onTestFinished(test: Test) {
-    if (this.finishedTests.has(test.id)) {
-      return
-    }
-
+  onTestCaseResult(test: TestCase): void {
     this.finishedTests.add(test.id)
-    this.tests.set(test.id, test.result?.state || 'skip')
+    this.tests.set(test.id, test.result().state || 'skipped')
+    this.renderer?.schedule()
   }
 
-  onTestFileFinished() {
+  onTestModuleEnd(): void {
+    if (!this.isTTY) {
+      return
+    }
+
     const columns = this.ctx.logger.getColumns()
 
     if (this.tests.size < columns) {
       return
     }
 
-    const finishedTests = Array.from(this.tests).filter(entry => entry[1] !== 'run')
+    const finishedTests = Array.from(this.tests).filter(entry => entry[1] !== 'pending')
 
     if (finishedTests.length < columns) {
       return
     }
 
     // Remove finished tests from state and render them in static output
-    const states: TaskState[] = []
+    const states: TestCaseState[] = []
     let count = 0
 
     for (const [id, state] of finishedTests) {
@@ -122,6 +106,7 @@ class DotSummary extends TaskParser {
     }
 
     this.ctx.logger.log(formatTests(states))
+    this.renderer?.schedule()
   }
 
   private createSummary() {
@@ -138,14 +123,13 @@ const fail: Icon = { char: 'x', color: c.red }
 const pending: Icon = { char: '*', color: c.yellow }
 const skip: Icon = { char: '-', color: (char: string) => c.dim(c.gray(char)) }
 
-function getIcon(state: TaskState): Icon {
+function getIcon(state: TestCaseState): Icon {
   switch (state) {
-    case 'pass':
+    case 'passed':
       return pass
-    case 'fail':
+    case 'failed':
       return fail
-    case 'skip':
-    case 'todo':
+    case 'skipped':
       return skip
     default:
       return pending
@@ -156,7 +140,7 @@ function getIcon(state: TaskState): Icon {
  * Format test states into string while keeping ANSI escapes at minimal.
  * Sibling icons with same color are merged into a single c.color() call.
  */
-function formatTests(states: TaskState[]): string {
+function formatTests(states: TestCaseState[]): string {
   let currentIcon = pending
   let count = 0
   let output = ''

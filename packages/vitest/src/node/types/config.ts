@@ -99,7 +99,7 @@ interface SequenceOptions {
    * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
    * - `list` will order hooks in the order they are defined
    * - `parallel` will run hooks in a single group in parallel
-   * @default 'parallel'
+   * @default 'stack'
    */
   hooks?: SequenceHooks
 }
@@ -965,6 +965,7 @@ export interface UserConfig extends InlineConfig {
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
+    | 'project'
     | 'config'
     | 'filters'
     | 'browser'
@@ -1013,9 +1014,10 @@ export interface ResolvedConfig
 
   defines: Record<string, any>
 
-  api?: ApiConfig
+  api: ApiConfig & { token: string }
   cliExclude?: string[]
 
+  project: string[]
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   > &

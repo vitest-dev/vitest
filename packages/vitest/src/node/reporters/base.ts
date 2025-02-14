@@ -37,31 +37,36 @@ export abstract class BaseReporter implements Reporter {
     this.isTTY = options.isTTY ?? isTTY
   }
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest): void {
     this.ctx = ctx
 
     this.ctx.logger.printBanner()
     this.start = performance.now()
   }
 
-  log(...messages: any) {
+  log(...messages: any): void {
     this.ctx.logger.log(...messages)
   }
 
-  error(...messages: any) {
+  error(...messages: any): void {
     this.ctx.logger.error(...messages)
   }
 
-  relative(path: string) {
+  relative(path: string): string {
     return relative(this.ctx.config.root, path)
   }
 
-  onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  onFinished(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
     this.end = performance.now()
-    this.reportSummary(files, errors)
+    if (!files.length && !errors.length) {
+      this.ctx.logger.printNoTestFound(this.ctx.filenamePattern)
+    }
+    else {
+      this.reportSummary(files, errors)
+    }
   }
 
-  onTaskUpdate(packs: TaskResultPack[]) {
+  onTaskUpdate(packs: TaskResultPack[]): void {
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
 
@@ -74,7 +79,7 @@ export abstract class BaseReporter implements Reporter {
   /**
    * Callback invoked with a single `Task` from `onTaskUpdate`
    */
-  protected printTask(task: Task) {
+  protected printTask(task: Task): void {
     if (
       !('filepath' in task)
       || !task.result?.state
@@ -173,7 +178,7 @@ export abstract class BaseReporter implements Reporter {
     return color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
   }
 
-  onWatcherStart(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  onWatcherStart(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): void {
     const failed = errors.length > 0 || hasFailed(files)
 
     if (failed) {
@@ -198,7 +203,7 @@ export abstract class BaseReporter implements Reporter {
     this.log(BADGE_PADDING + hints.join(c.dim(', ')))
   }
 
-  onWatcherRerun(files: string[], trigger?: string) {
+  onWatcherRerun(files: string[], trigger?: string): void {
     this.watchFilters = files
     this.failedUnwatchedFiles = this.ctx.state.getFiles().filter(file =>
       !files.includes(file.filepath) && hasFailed(file),
@@ -242,7 +247,7 @@ export abstract class BaseReporter implements Reporter {
     this.start = performance.now()
   }
 
-  onUserConsoleLog(log: UserConsoleLog) {
+  onUserConsoleLog(log: UserConsoleLog): void {
     if (!this.shouldLog(log)) {
       return
     }
@@ -300,11 +305,11 @@ export abstract class BaseReporter implements Reporter {
     write('\n')
   }
 
-  onTestRemoved(trigger?: string) {
+  onTestRemoved(trigger?: string): void {
     this.log(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
   }
 
-  shouldLog(log: UserConsoleLog) {
+  shouldLog(log: UserConsoleLog): boolean {
     if (this.ctx.config.silent) {
       return false
     }
@@ -315,7 +320,7 @@ export abstract class BaseReporter implements Reporter {
     return true
   }
 
-  onServerRestart(reason?: string) {
+  onServerRestart(reason?: string): void {
     this.log(c.bold(c.magenta(
       reason === 'config'
         ? '\nRestarting due to config changes...'
@@ -323,7 +328,7 @@ export abstract class BaseReporter implements Reporter {
     )))
   }
 
-  reportSummary(files: File[], errors: unknown[]) {
+  reportSummary(files: File[], errors: unknown[]): void {
     this.printErrorsSummary(files, errors)
 
     if (this.ctx.config.mode === 'benchmark') {
@@ -334,7 +339,7 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  reportTestSummary(files: File[], errors: unknown[]) {
+  reportTestSummary(files: File[], errors: unknown[]): void {
     this.log()
 
     const affectedFiles = [
@@ -437,7 +442,7 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  reportBenchmarkSummary(files: File[]) {
+  reportBenchmarkSummary(files: File[]): void {
     const benches = getTests(files)
     const topBenches = benches.filter(i => i.result?.benchmark?.rank === 1)
 

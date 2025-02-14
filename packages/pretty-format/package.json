@@ -1,7 +1,7 @@
 {
   "name": "@vitest/pretty-format",
   "type": "module",
-  "version": "3.0.0-beta.4",
+  "version": "3.0.5",
   "description": "Fork of pretty-format with support for ESM",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -34,7 +34,7 @@
     "dev": "rollup -c --watch"
   },
   "dependencies": {
-    "tinyrainbow": "^1.2.0"
+    "tinyrainbow": "^2.0.0"
   },
   "devDependencies": {
     "@types/react-is": "^19.0.0",

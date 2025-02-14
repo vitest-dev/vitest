@@ -2,7 +2,7 @@ import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
 
-const DEFAULT_RENDER_INTERVAL = 16
+const DEFAULT_RENDER_INTERVAL_MS = 1_000
 
 const ESC = '\x1B['
 const CLEAR_LINE = `${ESC}K`
@@ -27,6 +27,7 @@ export class WindowRenderer {
   private streams!: Record<StreamType, Vitest['logger']['outputStream' | 'errorStream']['write']>
   private buffer: { type: StreamType; message: string }[] = []
   private renderInterval: NodeJS.Timeout | undefined = undefined
+  private renderScheduled = false
 
   private windowHeight = 0
   private finished = false
@@ -34,7 +35,7 @@ export class WindowRenderer {
 
   constructor(options: Options) {
     this.options = {
-      interval: DEFAULT_RENDER_INTERVAL,
+      interval: DEFAULT_RENDER_INTERVAL_MS,
       ...options,
     }
 
@@ -57,12 +58,12 @@ export class WindowRenderer {
     this.start()
   }
 
-  start() {
+  start(): void {
     this.finished = false
-    this.renderInterval = setInterval(() => this.flushBuffer(), this.options.interval)
+    this.renderInterval = setInterval(() => this.schedule(), this.options.interval).unref()
   }
 
-  stop() {
+  stop(): void {
     this.cleanups.splice(0).map(fn => fn())
     clearInterval(this.renderInterval)
   }
@@ -71,10 +72,24 @@ export class WindowRenderer {
    * Write all buffered output and stop buffering.
    * All intercepted writes are forwarded to actual write after this.
    */
-  finish() {
+  finish(): void {
     this.finished = true
     this.flushBuffer()
     clearInterval(this.renderInterval)
+  }
+
+  /**
+   * Queue new render update
+   */
+  schedule(): void {
+    if (!this.renderScheduled) {
+      this.renderScheduled = true
+      this.flushBuffer()
+
+      setTimeout(() => {
+        this.renderScheduled = false
+      }, 100).unref()
+    }
   }
 
   private flushBuffer() {

@@ -9,6 +9,7 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
+import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
@@ -60,11 +61,12 @@ export class TestProject {
   /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
-  public readonly tmpDir = join(tmpdir(), nanoid())
+  public readonly tmpDir: string = join(tmpdir(), nanoid())
 
   /** @internal */ vitenode!: ViteNodeServer
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
+  /** @internal */ _vite?: ViteDevServer
 
   private runner!: ViteNodeRunner
 
@@ -75,13 +77,12 @@ export class TestProject {
 
   private _globalSetups?: GlobalSetupFile[]
   private _provided: ProvidedContext = {} as any
-  private _vite?: ViteDevServer
 
   constructor(
     /** @deprecated */
     public path: string | number,
     vitest: Vitest,
-    public options?: InitializeProjectOptions,
+    public options?: InitializeProjectOptions | undefined,
   ) {
     this.vitest = vitest
     this.ctx = vitest
@@ -222,7 +223,7 @@ export class TestProject {
   }
 
   /** @deprecated */
-  initializeGlobalSetup() {
+  initializeGlobalSetup(): Promise<void> {
     return this._initializeGlobalSetup()
   }
 
@@ -280,7 +281,7 @@ export class TestProject {
   getModulesByFilepath(file: string): Set<ModuleNode> {
     const set
       = this.server.moduleGraph.getModulesByFile(file)
-      || this.browser?.vite.moduleGraph.getModulesByFile(file)
+        || this.browser?.vite.moduleGraph.getModulesByFile(file)
     return set || new Set()
   }
 
@@ -299,7 +300,7 @@ export class TestProject {
   }
 
   /** @deprecated use `vitest.reporters` instead */
-  get reporters() {
+  get reporters(): Reporter[] {
     return this.ctx.reporters
   }
 
@@ -388,6 +389,13 @@ export class TestProject {
 
   private markTestFile(testPath: string): void {
     this.testFilesList?.push(testPath)
+  }
+
+  /** @internal */
+  _removeCachedTestFile(testPath: string): void {
+    if (this.testFilesList) {
+      this.testFilesList = this.testFilesList.filter(file => file !== testPath)
+    }
   }
 
   /**
@@ -491,10 +499,8 @@ export class TestProject {
     return testFiles
   }
 
-  /** @internal */
-  _parentBrowser?: ParentProjectBrowser
-  /** @internal */
-  _parent?: TestProject
+  private _parentBrowser?: ParentProjectBrowser
+  private _parent?: TestProject
   /** @internal */
   _initParentBrowser = deduped(async () => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
@@ -533,6 +539,7 @@ export class TestProject {
 
     if (!this.browser && this._parent?._parentBrowser) {
       this.browser = this._parent._parentBrowser.spawn(this)
+      await this.vitest.report('onBrowserInit', this)
     }
   })
 
@@ -571,20 +578,19 @@ export class TestProject {
   }
 
   /** @deprecated internal */
-  public setServer(options: UserConfig, server: ViteDevServer) {
+  public setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     return this._configureServer(options, server)
   }
 
   /** @internal */
   async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     this._config = resolveConfig(
-      this.vitest.mode,
+      this.vitest,
       {
         ...options,
         coverage: this.vitest.config.coverage,
       },
       server.config,
-      this.vitest.logger,
     )
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
@@ -719,17 +725,16 @@ export interface SerializedTestProject {
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   configFile: string | false
-  extends?: string
 }
 
 export async function initializeProject(
   workspacePath: string | number,
   ctx: Vitest,
   options: InitializeProjectOptions,
-) {
+): Promise<TestProject> {
   const project = new TestProject(workspacePath, ctx, options)
 
-  const { extends: extendsConfig, configFile, ...restOptions } = options
+  const { configFile, ...restOptions } = options
 
   const config: ViteInlineConfig = {
     ...restOptions,

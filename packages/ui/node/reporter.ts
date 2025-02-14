@@ -54,12 +54,12 @@ export default class HTMLReporter implements Reporter {
     this.options = options
   }
 
-  async onInit(ctx: Vitest) {
+  async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
     this.start = Date.now()
   }
 
-  async onFinished() {
+  async onFinished(): Promise<void> {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
@@ -96,11 +96,11 @@ export default class HTMLReporter implements Reporter {
     await this.writeReport(stringify(result))
   }
 
-  async writeReport(report: string) {
+  async writeReport(report: string): Promise<void> {
     const htmlFile
       = this.options.outputFile
-      || getOutputFile(this.ctx.config)
-      || 'html/index.html'
+        || getOutputFile(this.ctx.config)
+        || 'html/index.html'
     const htmlFileName = basename(htmlFile)
     const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 

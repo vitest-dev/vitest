@@ -1,4 +1,4 @@
-import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
@@ -16,10 +16,7 @@ interface BrowserRunnerOptions {
   config: SerializedConfig
 }
 
-export const browserHashMap = new Map<
-  string,
-  string
->()
+export const browserHashMap: Map<string, string> = new Map()
 
 interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
@@ -131,8 +128,8 @@ export function createBrowserRunner(
       return rpc().onCollected(files)
     }
 
-    onTaskUpdate = (task: TaskResultPack[]): Promise<void> => {
-      return rpc().onTaskUpdate(task)
+    onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
+      return rpc().onTaskUpdate(task, events)
     }
 
     importFile = async (filepath: string) => {
@@ -157,7 +154,7 @@ export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
   config: SerializedConfig,
-) {
+): Promise<VitestRunner> {
   if (cachedRunner) {
     return cachedRunner
   }

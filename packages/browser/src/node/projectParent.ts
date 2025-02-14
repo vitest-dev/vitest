@@ -36,7 +36,7 @@ export class ParentBrowserProject {
   public stateJs: Promise<string> | string
 
   public commands: Record<string, BrowserCommand<any>> = {}
-  public children = new Set<ProjectBrowser>()
+  public children: Set<ProjectBrowser> = new Set()
   public vitest: Vitest
 
   public config: ResolvedConfig
@@ -110,7 +110,7 @@ export class ParentBrowserProject {
     ).then(js => (this.stateJs = js))
   }
 
-  public setServer(vite: Vite.ViteDevServer) {
+  public setServer(vite: Vite.ViteDevServer): void {
     this.vite = vite
   }
 
@@ -147,10 +147,10 @@ export class ParentBrowserProject {
     })
   }
 
-  public readonly cdps = new Map<string, BrowserServerCDPHandler>()
+  public readonly cdps: Map<string, BrowserServerCDPHandler> = new Map()
   private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
-  async ensureCDPHandler(sessionId: string, rpcId: string) {
+  async ensureCDPHandler(sessionId: string, rpcId: string): Promise<BrowserServerCDPHandler> {
     const cachedHandler = this.cdps.get(rpcId)
     if (cachedHandler) {
       return cachedHandler
@@ -191,11 +191,11 @@ export class ParentBrowserProject {
     return handler
   }
 
-  removeCDPHandler(sessionId: string) {
+  removeCDPHandler(sessionId: string): void {
     this.cdps.delete(sessionId)
   }
 
-  async formatScripts(scripts: BrowserScript[] | undefined) {
+  async formatScripts(scripts: BrowserScript[] | undefined): Promise<HtmlTagDescriptor[]> {
     if (!scripts?.length) {
       return []
     }
@@ -228,7 +228,7 @@ export class ParentBrowserProject {
     return (await Promise.all(promises))
   }
 
-  resolveTesterUrl(pathname: string) {
+  resolveTesterUrl(pathname: string): { sessionId: string; testFile: string } {
     const [sessionId, testFile] = pathname
       .slice(this.prefixTesterUrl.length)
       .split('/')

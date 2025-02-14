@@ -48,14 +48,14 @@ export const DEFAULT_REQUEST_STUBS: Record<string, Record<string, unknown>> = {
 }
 
 export class ModuleCacheMap extends Map<string, ModuleCache> {
-  normalizePath(fsPath: string) {
+  normalizePath(fsPath: string): string {
     return normalizeModuleId(fsPath)
   }
 
   /**
    * Assign partial data to the map
    */
-  update(fsPath: string, mod: ModuleCache) {
+  update(fsPath: string, mod: ModuleCache): this {
     fsPath = this.normalizePath(fsPath)
     if (!super.has(fsPath)) {
       this.setByModuleId(fsPath, mod)
@@ -66,11 +66,11 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return this
   }
 
-  setByModuleId(modulePath: string, mod: ModuleCache) {
+  setByModuleId(modulePath: string, mod: ModuleCache): this {
     return super.set(modulePath, mod)
   }
 
-  set(fsPath: string, mod: ModuleCache) {
+  set(fsPath: string, mod: ModuleCache): this {
     return this.setByModuleId(this.normalizePath(fsPath), mod)
   }
 
@@ -90,7 +90,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
       Required<Pick<ModuleCache, 'imports' | 'importers'>>
   }
 
-  get(fsPath: string) {
+  get(fsPath: string): ModuleCache & Required<Pick<ModuleCache, 'importers' | 'imports'>> {
     return this.getByModuleId(this.normalizePath(fsPath))
   }
 
@@ -98,7 +98,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return super.delete(modulePath)
   }
 
-  delete(fsPath: string) {
+  delete(fsPath: string): boolean {
     return this.deleteByModuleId(this.normalizePath(fsPath))
   }
 
@@ -117,8 +117,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
    */
   invalidateDepTree(
     ids: string[] | Set<string>,
-    invalidated = new Set<string>(),
-  ) {
+    invalidated: Set<string> = new Set<string>(),
+  ): Set<string> {
     for (const _id of ids) {
       const id = this.normalizePath(_id)
       if (invalidated.has(id)) {
@@ -139,8 +139,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
    */
   invalidateSubDepTree(
     ids: string[] | Set<string>,
-    invalidated = new Set<string>(),
-  ) {
+    invalidated: Set<string> = new Set<string>(),
+  ): Set<string> {
     for (const _id of ids) {
       const id = this.normalizePath(_id)
       if (invalidated.has(id)) {
@@ -161,7 +161,7 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
   /**
    * Return parsed source map based on inlined source map of the module
    */
-  getSourceMap(id: string) {
+  getSourceMap(id: string): import('@jridgewell/trace-mapping').EncodedSourceMap | null {
     const cache = this.get(id)
     if (cache.map) {
       return cache.map
@@ -174,6 +174,8 @@ export class ModuleCacheMap extends Map<string, ModuleCache> {
     return null
   }
 }
+
+export type ModuleExecutionInfo = Map<string, { startOffset: number }>
 
 export class ViteNodeRunner {
   root: string
@@ -191,17 +193,17 @@ export class ViteNodeRunner {
     this.moduleCache = options.moduleCache ?? new ModuleCacheMap()
     this.debug
       = options.debug
-      ?? (typeof process !== 'undefined'
-        ? !!process.env.VITE_NODE_DEBUG_RUNNER
-        : false)
+        ?? (typeof process !== 'undefined'
+          ? !!process.env.VITE_NODE_DEBUG_RUNNER
+          : false)
   }
 
-  async executeFile(file: string) {
+  async executeFile(file: string): Promise<any> {
     const url = `/@fs/${slash(resolve(file))}`
     return await this.cachedRequest(url, url, [])
   }
 
-  async executeId(rawId: string) {
+  async executeId(rawId: string): Promise<any> {
     const [id, url] = await this.resolveUrl(rawId)
     return await this.cachedRequest(id, url, [])
   }
@@ -262,7 +264,7 @@ export class ViteNodeRunner {
     }
   }
 
-  shouldResolveId(id: string, _importee?: string) {
+  shouldResolveId(id: string, _importee?: string): boolean {
     return (
       !isInternalRequest(id) && !isNodeBuiltin(id) && !id.startsWith('data:')
     )
@@ -306,7 +308,7 @@ export class ViteNodeRunner {
     return [resolvedId, resolvedId]
   }
 
-  async resolveUrl(id: string, importee?: string) {
+  async resolveUrl(id: string, importee?: string): Promise<[url: string, fsPath: string]> {
     const resolveKey = `resolve:${id}`
     // put info about new import as soon as possible, so we can start tracking it
     this.moduleCache.setByModuleId(resolveKey, { resolving: true })
@@ -489,11 +491,15 @@ export class ViteNodeRunner {
     return exports
   }
 
-  protected getContextPrimitives() {
+  protected getContextPrimitives(): {
+    Object: ObjectConstructor
+    Reflect: typeof Reflect
+    Symbol: SymbolConstructor
+  } {
     return { Object, Reflect, Symbol }
   }
 
-  protected async runModule(context: Record<string, any>, transformed: string) {
+  protected async runModule(context: Record<string, any>, transformed: string): Promise<void> {
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${Object.keys(context).join(
       ',',
@@ -505,11 +511,13 @@ export class ViteNodeRunner {
       columnOffset: -codeDefinition.length,
     }
 
+    this.options.moduleExecutionInfo?.set(options.filename, { startOffset: codeDefinition.length })
+
     const fn = vm.runInThisContext(code, options)
     await fn(...Object.values(context))
   }
 
-  prepareContext(context: Record<string, any>) {
+  prepareContext(context: Record<string, any>): Record<string, any> {
     return context
   }
 
@@ -517,7 +525,7 @@ export class ViteNodeRunner {
    * Define if a module should be interop-ed
    * This function mostly for the ability to override by subclass
    */
-  shouldInterop(path: string, mod: any) {
+  shouldInterop(path: string, mod: any): boolean {
     if (this.options.interopDefault === false) {
       return false
     }
@@ -526,14 +534,14 @@ export class ViteNodeRunner {
     return !path.endsWith('.mjs') && 'default' in mod
   }
 
-  protected importExternalModule(path: string) {
+  protected importExternalModule(path: string): Promise<any> {
     return import(path)
   }
 
   /**
    * Import a module and interop it
    */
-  async interopedImport(path: string) {
+  async interopedImport(path: string): Promise<any> {
     const importedModule = await this.importExternalModule(path)
 
     if (!this.shouldInterop(path, importedModule)) {

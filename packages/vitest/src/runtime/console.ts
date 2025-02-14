@@ -32,7 +32,7 @@ function getTaskIdByStack(root: string) {
   return UNKNOWN_TEST_ID
 }
 
-export function createCustomConsole(defaultState?: WorkerGlobalState) {
+export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<
@@ -129,9 +129,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       const s = state()
       const id
         = s?.current?.id
-        || s?.current?.suite?.id
-        || s.current?.file.id
-        || getTaskIdByStack(s.config.root)
+          || s?.current?.suite?.id
+          || s.current?.file.id
+          || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -168,9 +168,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState) {
       const s = state()
       const id
         = s?.current?.id
-        || s?.current?.suite?.id
-        || s.current?.file.id
-        || getTaskIdByStack(s.config.root)
+          || s?.current?.suite?.id
+          || s.current?.file.id
+          || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()

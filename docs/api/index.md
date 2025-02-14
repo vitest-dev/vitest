@@ -948,6 +948,11 @@ describe.todo('unimplemented suite')
 
 - **Alias:** `suite.each`
 
+::: tip
+While `describe.each` is provided for Jest compatibility,
+Vitest also has [`describe.for`](#describe-for) which simplifies argument types and aligns with [`test.for`](#test-for).
+:::
+
 Use `describe.each` if you have more than one test that depends on the same data.
 
 ```ts
@@ -997,6 +1002,37 @@ describe.each`
 ::: warning
 You cannot use this syntax when using Vitest as [type checker](/guide/testing-types).
 :::
+
+### describe.for
+
+- **Alias:** `suite.for`
+
+The difference from `describe.each` is how array case is provided in the arguments.
+Other non array case (including template string usage) works exactly same.
+
+```ts
+// `each` spreads array case
+describe.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', (a, b, expected) => { // [!code --]
+  test('test', () => {
+    expect(a + b).toBe(expected)
+  })
+})
+
+// `for` doesn't spread array case
+describe.for([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add(%i, %i) -> %i', ([a, b, expected]) => { // [!code ++]
+  test('test', () => {
+    expect(a + b).toBe(expected)
+  })
+})
+```
 
 ## Setup and Teardown
 
@@ -1179,6 +1215,16 @@ test('performs an organization query', async () => {
 
 ::: tip
 This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
+
+<!-- TODO: should it be called? https://github.com/vitest-dev/vitest/pull/7069 -->
+Note that this hook is not called if test was skipped with a dynamic `ctx.skip()` call:
+
+```ts{2}
+test('skipped dynamically', (t) => {
+  onTestFinished(() => {}) // not called
+  t.skip()
+})
+```
 :::
 
 ### onTestFailed

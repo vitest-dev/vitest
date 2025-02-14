@@ -5,30 +5,30 @@ export const defaultInspectPort = 9229
 
 export const API_PATH = '/__vitest_api__'
 
-export const extraInlineDeps = [
+export const extraInlineDeps: RegExp[] = [
   /^(?!.*node_modules).*\.mjs$/,
   /^(?!.*node_modules).*\.cjs\.js$/,
   // Vite client
   /vite\w*\/dist\/client\/env.mjs/,
 ]
 
-export const CONFIG_NAMES = ['vitest.config', 'vite.config']
+export const CONFIG_NAMES: string[] = ['vitest.config', 'vite.config']
 
 const WORKSPACES_NAMES = ['vitest.workspace', 'vitest.projects']
 
-export const CONFIG_EXTENSIONS = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
+export const CONFIG_EXTENSIONS: string[] = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
 
-export const configFiles = CONFIG_NAMES.flatMap(name =>
+export const configFiles: string[] = CONFIG_NAMES.flatMap(name =>
   CONFIG_EXTENSIONS.map(ext => name + ext),
 )
 
 const WORKSPACES_EXTENSIONS = [...CONFIG_EXTENSIONS, '.json']
 
-export const workspacesFiles = WORKSPACES_NAMES.flatMap(name =>
+export const workspacesFiles: string[] = WORKSPACES_NAMES.flatMap(name =>
   WORKSPACES_EXTENSIONS.map(ext => name + ext),
 )
 
-export const globalApis = [
+export const globalApis: string[] = [
   // suite
   'suite',
   'test',

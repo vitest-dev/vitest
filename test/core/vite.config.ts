@@ -63,6 +63,7 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
+    reporters: [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',

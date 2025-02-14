@@ -10,7 +10,7 @@ export default defineWorkspace([
       include: ['./basic.test.js'],
       browser: {
         enabled: true,
-        name: 'chromium',
+        instances: [{ browser: 'chromium' }],
         provider: 'playwright',
         headless: true,
       }
@@ -24,7 +24,7 @@ export default defineWorkspace([
       include: ['./basic.test.js'],
       browser: {
         enabled: true,
-        name: 'chromium',
+        instances: [{ browser: 'chromium' }],
         provider: 'playwright',
         headless: true,
       }
