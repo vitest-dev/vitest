@@ -333,7 +333,7 @@ function generateCycle(n: number) {
 }
 
 test('diff default maxDepth', () => {
-  // diff only appears in a deeper place than maxDepth
+  // diff only appears in a deeper depth than maxDepth
   const xs = generateCycle(20)
   const ys = generateCycle(20)
   ys[10].i = -1
