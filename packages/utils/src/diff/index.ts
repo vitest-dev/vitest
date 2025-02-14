@@ -53,7 +53,7 @@ const PLUGINS = [
   prettyFormatPlugins.Error,
 ]
 const FORMAT_OPTIONS = {
-  maxDepth: 25,
+  maxDepth: 20,
   plugins: PLUGINS,
 } satisfies PrettyFormatOptions
 const FALLBACK_FORMAT_OPTIONS = {
