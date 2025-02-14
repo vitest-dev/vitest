@@ -1,9 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-
-const provider = process.env.PROVIDER || 'playwright'
-const name =
-  process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
+import { instances, provider } from '../../settings'
 
 export default defineConfig({
   optimizeDeps: {
@@ -15,7 +12,8 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider,
-      name,
+      headless: true,
+      instances,
     },
     onConsoleLog(log) {
       if (log.includes('ReactDOMTestUtils.act')) {

@@ -24,20 +24,20 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   private options?: RemoteOptions
 
-  getSupportedBrowsers() {
+  getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
   }
 
   async initialize(
     ctx: TestProject,
     { browser, options }: WebdriverProviderOptions,
-  ) {
+  ): Promise<void> {
     this.project = ctx
     this.browserName = browser
     this.options = options as RemoteOptions
   }
 
-  async beforeCommand() {
+  async beforeCommand(): Promise<void> {
     const page = this.browser!
     const iframe = await page.findElement(
       'css selector',
@@ -46,17 +46,19 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     await page.switchToFrame(iframe)
   }
 
-  async afterCommand() {
+  async afterCommand(): Promise<void> {
     await this.browser!.switchToParentFrame()
   }
 
-  getCommandsContext() {
+  getCommandsContext(): {
+    browser: WebdriverIO.Browser | null
+  } {
     return {
       browser: this.browser,
     }
   }
 
-  async openBrowser() {
+  async openBrowser(): Promise<WebdriverIO.Browser> {
     if (this.browser) {
       return this.browser
     }
@@ -120,12 +122,12 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(_contextId: string, url: string) {
+  async openPage(_sessionId: string, url: string): Promise<void> {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
   }
 
-  async close() {
+  async close(): Promise<void> {
     await Promise.all([
       this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
     ])

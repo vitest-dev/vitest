@@ -9,11 +9,16 @@
       "matchPackageNames": ["/eslint/"]
     },
     {
+      "groupName": "Playwright packages",
+      "matchPackageNames": ["/playwright/"]
+    },
+    {
       "depTypeList": ["peerDependencies"],
       "enabled": false
     },
     {
       "matchPaths": [
+        "test/**",
         "examples/**"
       ],
       "matchUpdateTypes": [
@@ -35,12 +40,12 @@
     "@types/chai",
     "@sinonjs/fake-timers",
     "cac",
-    // Pinned due to https://github.com/vitest-dev/vitest/issues/4710
-    "log-update",
     // Pinned because it requires "node" condition in the new version
     // But we intentionally build Vitest ambiguously
     "find-up",
     // Transitive dependency that we patch
-    "acorn"
+    "acorn",
+    // Keep using codemirror 5
+    "codemirror"
   ]
 }

@@ -32,7 +32,7 @@ export class BlobReporter implements Reporter {
     files: File[] = [],
     errors: unknown[] = [],
     coverage: unknown,
-  ) {
+  ): Promise<void> {
     let outputFile
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'blob')
     if (!outputFile) {
@@ -80,7 +80,7 @@ export async function readBlobs(
   currentVersion: string,
   blobsDirectory: string,
   projectsArray: TestProject[],
-) {
+): Promise<{ files: File[]; errors: unknown[]; coverages: unknown[] }> {
   // using process.cwd() because --merge-reports can only be used in CLI
   const resolvedDir = resolve(process.cwd(), blobsDirectory)
   const blobsFiles = await readdir(resolvedDir)

@@ -2,9 +2,9 @@ import { format, stringify } from 'vitest/utils'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 
-const { Date, console } = globalThis
+const { Date, console, performance } = globalThis
 
-export function setupConsoleLogSpy() {
+export function setupConsoleLogSpy(): void {
   const {
     log,
     info,
@@ -71,7 +71,7 @@ export function setupConsoleLogSpy() {
     if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
     }
-    else if (start) {
+    else if (typeof start !== 'undefined') {
       const duration = end - start
       sendLog('stdout', `${label}: ${duration} ms`)
     }

@@ -3,6 +3,7 @@ import type {
   BrowserContext,
   BrowserContextOptions,
   Frame,
+  FrameLocator,
   LaunchOptions,
   Page,
 } from 'playwright'
@@ -34,19 +35,19 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     context?: BrowserContextOptions & { actionTimeout?: number }
   }
 
-  public contexts = new Map<string, BrowserContext>()
-  public pages = new Map<string, Page>()
+  public contexts: Map<string, BrowserContext> = new Map()
+  public pages: Map<string, Page> = new Map()
 
   private browserPromise: Promise<Browser> | null = null
 
-  getSupportedBrowsers() {
+  getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
   }
 
   initialize(
     project: TestProject,
     { browser, options }: PlaywrightProviderOptions,
-  ) {
+  ): void {
     this.project = project
     this.browserName = browser
     this.options = options as any
@@ -80,7 +81,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         launchOptions.args.push(`--remote-debugging-port=${port}`)
         launchOptions.args.push(`--remote-debugging-address=${host}`)
 
-        this.project.logger.log(`Debugger listening on ws://${host}:${port}`)
+        this.project.vitest.logger.log(`Debugger listening on ws://${host}:${port}`)
       }
 
       // start Vitest UI maximized only on supported browsers
@@ -102,9 +103,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
-  private async createContext(contextId: string) {
-    if (this.contexts.has(contextId)) {
-      return this.contexts.get(contextId)!
+  private async createContext(sessionId: string) {
+    if (this.contexts.has(sessionId)) {
+      return this.contexts.get(sessionId)!
     }
 
     const browser = await this.openBrowser()
@@ -121,24 +122,29 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (actionTimeout) {
       context.setDefaultTimeout(actionTimeout)
     }
-    this.contexts.set(contextId, context)
+    this.contexts.set(sessionId, context)
     return context
   }
 
-  public getPage(contextId: string) {
-    const page = this.pages.get(contextId)
+  public getPage(sessionId: string): Page {
+    const page = this.pages.get(sessionId)
     if (!page) {
-      throw new Error(`Page "${contextId}" not found`)
+      throw new Error(`Page "${sessionId}" not found in ${this.browserName} browser.`)
     }
     return page
   }
 
-  public getCommandsContext(contextId: string) {
-    const page = this.getPage(contextId)
+  public getCommandsContext(sessionId: string): {
+    page: Page
+    context: BrowserContext
+    frame: () => Promise<Frame>
+    readonly iframe: FrameLocator
+  } {
+    const page = this.getPage(sessionId)
     return {
       page,
-      context: this.contexts.get(contextId)!,
-      frame() {
+      context: this.contexts.get(sessionId)!,
+      frame(): Promise<Frame> {
         return new Promise<Frame>((resolve, reject) => {
           const frame = page.frame('vitest-iframe')
           if (frame) {
@@ -155,22 +161,22 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           })
         })
       },
-      get iframe() {
+      get iframe(): FrameLocator {
         return page.frameLocator('[data-vitest="true"]')!
       },
     }
   }
 
-  private async openBrowserPage(contextId: string) {
-    if (this.pages.has(contextId)) {
-      const page = this.pages.get(contextId)!
+  private async openBrowserPage(sessionId: string) {
+    if (this.pages.has(sessionId)) {
+      const page = this.pages.get(sessionId)!
       await page.close()
-      this.pages.delete(contextId)
+      this.pages.delete(sessionId)
     }
 
-    const context = await this.createContext(contextId)
+    const context = await this.createContext(sessionId)
     const page = await context.newPage()
-    this.pages.set(contextId, page)
+    this.pages.set(sessionId, page)
 
     if (process.env.VITEST_PW_DEBUG) {
       page.on('requestfailed', (request) => {
@@ -185,17 +191,28 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       })
     }
 
+    // unhandled page crashes will hang vitest process
+    page.on('crash', () => {
+      const session = this.project.vitest._browserSessions.getSession(sessionId)
+      session?.reject(new Error('Page crashed when executing tests'))
+    })
+
     return page
   }
 
-  async openPage(contextId: string, url: string, beforeNavigate?: () => Promise<void>) {
-    const browserPage = await this.openBrowserPage(contextId)
+  async openPage(sessionId: string, url: string, beforeNavigate?: () => Promise<void>): Promise<void> {
+    const browserPage = await this.openBrowserPage(sessionId)
     await beforeNavigate?.()
     await browserPage.goto(url, { timeout: 0 })
   }
 
-  async getCDPSession(contextId: string) {
-    const page = this.getPage(contextId)
+  async getCDPSession(sessionid: string): Promise<{
+    send: (method: string, params: any) => Promise<unknown>
+    on: (event: string, listener: (...args: any[]) => void) => void
+    off: (event: string, listener: (...args: any[]) => void) => void
+    once: (event: string, listener: (...args: any[]) => void) => void
+  }> {
+    const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
       async send(method: string, params: any) {
@@ -214,7 +231,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
   }
 
-  async close() {
+  async close(): Promise<void> {
     const browser = this.browser
     this.browser = null
     await Promise.all([...this.pages.values()].map(p => p.close()))

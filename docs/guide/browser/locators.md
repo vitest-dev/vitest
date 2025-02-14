@@ -7,7 +7,7 @@ outline: [2, 3]
 
 A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate those selectors behind the scenes.
 
-The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/guide/browser/#provider-configuration).
+The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/guide/browser/config.html#browser-provider).
 
 ## getByRole
 
@@ -65,7 +65,7 @@ Providing roles via `role` or `aria-*` attributes to built-in elements that alre
 
 - `exact: boolean`
 
-  Whether the `name` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `name` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
 
   ```tsx
   <button>Hello World</button>
@@ -213,7 +213,7 @@ page.getByAltText('non existing alt text') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -228,7 +228,7 @@ function getByLabelText(
 ): Locator
 ```
 
-Creates a locator capable of finding an element that has an assosiated label.
+Creates a locator capable of finding an element that has an associated label.
 
 The `page.getByLabelText('Username')` locator will find every input in the example bellow:
 
@@ -260,7 +260,7 @@ The `page.getByLabelText('Username')` locator will find every input in the examp
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -292,7 +292,7 @@ It is generally better to rely on a label using [`getByLabelText`](#getbylabelte
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -324,7 +324,7 @@ This locator is useful for locating non-interactive elements. If you need to loc
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -352,7 +352,7 @@ page.getByTitle('Create') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -364,7 +364,7 @@ page.getByTitle('Create') // ❌
 function getByTestId(text: string | RegExp): Locator
 ```
 
-Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
+Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/guide/browser/config#browser-locators-testidattribute).
 
 ```tsx
 <div data-testid="custom-element" />
@@ -386,6 +386,69 @@ It is recommended to use this only after the other locators don't work for your 
 #### See also
 
 - [testing-library's `ByTestId`](https://testing-library.com/docs/queries/bytestid/)
+
+## nth
+
+```ts
+function nth(index: number): Locator
+```
+
+This method returns a new locator that matches only a specific index within a multi-element query result. It's zero based, `nth(0)` selects the first element. Unlike `elements()[n]`, the `nth` locator will be retried until the element is present.
+
+```html
+<div aria-label="one"><input/><input/><input/></div>
+<div aria-label="two"><input/></div>
+```
+
+```tsx
+page.getByRole('textbox').nth(0) // ✅
+page.getByRole('textbox').nth(4) // ❌
+```
+
+::: tip
+Before resorting to `nth`, you may find it useful to use chained locators to narrow down your search.
+Sometimes there is no better way to distinguish than by element position; although this can lead to flake, it's better than nothing.
+:::
+
+```tsx
+page.getByLabel('two').getByRole('input') // ✅ better alternative to page.getByRole('textbox').nth(3)
+page.getByLabel('one').getByRole('input') // ❌ too ambiguous
+page.getByLabel('one').getByRole('input').nth(1) // ✅ pragmatic compromise
+```
+
+## first
+
+```ts
+function first(): Locator
+```
+
+This method returns a new locator that matches only the first index of a multi-element query result.
+It is sugar for `nth(0)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').first() // ✅
+```
+
+## last
+
+```ts
+function last(): Locator
+```
+
+This method returns a new locator that matches only the last index of a multi-element query result.
+It is sugar for `nth(-1)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').last() // ✅
+```
 
 ## Methods
 
@@ -569,7 +632,7 @@ function screenshot(options?: LocatorScreenshotOptions & { base64?: false }): Pr
 
 Creates a screenshot of the element matching the locator's selector.
 
-You can specify the save location for the screenshot using the `path` option, which is relative to the current test file. If the `path` option is not set, Vitest will default to using [`browser.screenshotDirectory`](/config/#browser-screenshotdirectory) (`__screenshot__` by default), along with the names of the file and the test to determine the screenshot's filepath.
+You can specify the save location for the screenshot using the `path` option, which is relative to the current test file. If the `path` option is not set, Vitest will default to using [`browser.screenshotDirectory`](/guide/browser/config#browser-screenshotdirectory) (`__screenshot__` by default), along with the names of the file and the test to determine the screenshot's filepath.
 
 If you also need the content of the screenshot, you can specify `base64: true` to return it alongside the filepath where the screenshot is saved.
 
@@ -596,7 +659,7 @@ function query(): Element | null
 
 This method returns a single element matching the locator's selector or `null` if no element is found.
 
-If multilple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
+If multiple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
 Consider the following DOM structure:
 

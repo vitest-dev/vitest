@@ -7,14 +7,14 @@ import createDebug from 'debug'
 // keep the reference in case it was mocked
 const readFileSync = _readFileSync
 
-export const debug = createDebug('vitest:web-worker')
+export const debug: createDebug.Debugger = createDebug('vitest:web-worker')
 
 export function getWorkerState(): WorkerGlobalState {
   // @ts-expect-error untyped global
   return globalThis.__vitest_worker__
 }
 
-export function assertGlobalExists(name: string) {
+export function assertGlobalExists(name: string): void {
   if (!(name in globalThis)) {
     throw new Error(
       `[@vitest/web-worker] Cannot initiate a custom Web Worker. "${name}" is not supported in this environment. Please, consider using jsdom or happy-dom environment.`,
@@ -67,7 +67,7 @@ export function createMessageEvent(
   data: any,
   transferOrOptions: StructuredSerializeOptions | Transferable[] | undefined,
   clone: CloneOption,
-) {
+): MessageEvent {
   try {
     return createClonedMessageEvent(data, transferOrOptions, clone)
   }
@@ -81,7 +81,7 @@ export function createMessageEvent(
 
 export function getRunnerOptions(): any {
   const state = getWorkerState()
-  const { config, rpc, moduleCache } = state
+  const { config, rpc, moduleCache, moduleExecutionInfo } = state
 
   return {
     async fetchModule(id: string) {
@@ -96,6 +96,7 @@ export function getRunnerOptions(): any {
       return rpc.resolveId(id, importer, 'web')
     },
     moduleCache,
+    moduleExecutionInfo,
     interopDefault: config.deps.interopDefault ?? true,
     moduleDirectories: config.deps.moduleDirectories,
     root: config.root,
@@ -108,7 +109,7 @@ function stripProtocol(url: string | URL) {
   return url.toString().replace(/^file:\/+/, '/')
 }
 
-export function getFileIdFromUrl(url: URL | string) {
+export function getFileIdFromUrl(url: URL | string): string {
   if (typeof self === 'undefined') {
     return stripProtocol(url)
   }

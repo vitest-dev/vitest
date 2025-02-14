@@ -62,11 +62,22 @@ export default class SnapshotState {
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
   private _fileExists: boolean
-  private added = new CounterMap<string>()
-  private matched = new CounterMap<string>()
-  private unmatched = new CounterMap<string>()
-  private updated = new CounterMap<string>()
   expand: boolean
+
+  // getter/setter for jest-image-snapshot compat
+  // https://github.com/vitest-dev/vitest/issues/7322
+  private _added = new CounterMap<string>()
+  private _matched = new CounterMap<string>()
+  private _unmatched = new CounterMap<string>()
+  private _updated = new CounterMap<string>()
+  get added(): CounterMap<string> { return this._added }
+  set added(value: number) { this._added._total = value }
+  get matched(): CounterMap<string> { return this._matched }
+  set matched(value: number) { this._matched._total = value }
+  get unmatched(): CounterMap<string> { return this._unmatched }
+  set unmatched(value: number) { this._unmatched._total = value }
+  get updated(): CounterMap<string> { return this._updated }
+  set updated(value: number) { this._updated._total = value }
 
   private constructor(
     public testFilePath: string,
@@ -109,7 +120,10 @@ export default class SnapshotState {
 
   markSnapshotsAsCheckedForTest(testName: string): void {
     this._uncheckedKeys.forEach((uncheckedKey) => {
-      if (keyToTestName(uncheckedKey) === testName) {
+      // skip snapshots with following keys
+      //   testName n
+      //   testName > xxx n (this is for toMatchSnapshot("xxx") API)
+      if (/ \d+$| > /.test(uncheckedKey.slice(testName.length))) {
         this._uncheckedKeys.delete(uncheckedKey)
       }
     })
@@ -290,13 +304,13 @@ export default class SnapshotState {
       : rawSnapshot
         ? rawSnapshot.content
         : this._snapshotData[key]
-    const expectedTrimmed = prepareExpected(expected)
-    const pass = expectedTrimmed === prepareExpected(receivedSerialized)
+    const expectedTrimmed = rawSnapshot ? expected : prepareExpected(expected)
+    const pass = expectedTrimmed === (rawSnapshot ? receivedSerialized : prepareExpected(receivedSerialized))
     const hasSnapshot = expected !== undefined
     const snapshotIsPersisted
       = isInline
-      || this._fileExists
-      || (rawSnapshot && rawSnapshot.content != null)
+        || this._fileExists
+        || (rawSnapshot && rawSnapshot.content != null)
 
     if (pass && !isInline && !rawSnapshot) {
       // Executing a snapshot file as JavaScript and writing the strings back
@@ -390,11 +404,11 @@ export default class SnapshotState {
       if (!pass) {
         this.unmatched.increment(testId)
         return {
-          actual: removeExtraLineBreaks(receivedSerialized),
+          actual: rawSnapshot ? receivedSerialized : removeExtraLineBreaks(receivedSerialized),
           count,
           expected:
             expectedTrimmed !== undefined
-              ? removeExtraLineBreaks(expectedTrimmed)
+              ? rawSnapshot ? expectedTrimmed : removeExtraLineBreaks(expectedTrimmed)
               : undefined,
           key,
           pass: false,

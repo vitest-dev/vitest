@@ -1,28 +1,29 @@
+import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestModule } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
-import type { BrowserServer } from './server'
+import type { ParentBrowserProject } from './projectParent'
+import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname } from 'pathe'
-import { createDebugger, isFileServingAllowed } from 'vitest/node'
+import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(server: BrowserServer) {
-  const project = server.project
-  const vite = server.vite
-  const ctx = project.ctx
+export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
+  const vite = globalServer.vite
+  const vitest = globalServer.vitest
 
   const wss = new WebSocketServer({ noServer: true })
 
-  vite.httpServer?.on('upgrade', (request, socket, head) => {
+  vite.httpServer?.on('upgrade', (request, socket: Duplex, head: Buffer) => {
     if (!request.url) {
       return
     }
@@ -32,26 +33,72 @@ export function setupBrowserRpc(server: BrowserServer) {
       return
     }
 
-    const type = searchParams.get('type') ?? 'tester'
-    const sessionId = searchParams.get('sessionId') ?? '0'
+    if (!isValidApiRequest(vitest.config, request)) {
+      socket.destroy()
+      return
+    }
+
+    const type = searchParams.get('type')
+    const rpcId = searchParams.get('rpcId')
+    const sessionId = searchParams.get('sessionId')
+    const projectName = searchParams.get('projectName')
+
+    if (type !== 'tester' && type !== 'orchestrator') {
+      return error(
+        new Error(`[vitest] Type query in ${request.url} is invalid. Type should be either "tester" or "orchestrator".`),
+      )
+    }
+
+    if (!sessionId || !rpcId || projectName == null) {
+      return error(
+        new Error(`[vitest] Invalid URL ${request.url}. "projectName", "sessionId" and "rpcId" queries are required.`),
+      )
+    }
+
+    const method = searchParams.get('method') as 'run' | 'collect'
+    if (method !== 'run' && method !== 'collect') {
+      return error(
+        new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
+      )
+    }
+
+    if (type === 'orchestrator') {
+      const session = vitest._browserSessions.getSession(sessionId)
+      // it's possible the session was already resolved by the preview provider
+      session?.connected()
+    }
+
+    const project = vitest.getProjectByName(projectName)
+
+    if (!project) {
+      return error(
+        new Error(`[vitest] Project "${projectName}" not found.`),
+      )
+    }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(sessionId, ws)
-      const state = server.state
+      const rpc = setupClient(project, rpcId, ws, method)
+      const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
-      clients.set(sessionId, rpc)
+      clients.set(rpcId, rpc)
 
-      debug?.('[%s] Browser API connected to %s', sessionId, type)
+      debug?.('[%s] Browser API connected to %s', rpcId, type)
 
       ws.on('close', () => {
-        debug?.('[%s] Browser API disconnected from %s', sessionId, type)
-        clients.delete(sessionId)
-        server.state.removeCDPHandler(sessionId)
+        debug?.('[%s] Browser API disconnected from %s', rpcId, type)
+        clients.delete(rpcId)
+        globalServer.removeCDPHandler(rpcId)
       })
     })
   })
+
+  // we don't throw an error inside a stream because this can segfault the process
+  function error(err: Error) {
+    console.error(err)
+    vitest.state.catchError(err, 'RPC Error')
+  }
 
   function checkFileAccess(path: string) {
     if (!isFileServingAllowed(path, vite)) {
@@ -61,8 +108,8 @@ export function setupBrowserRpc(server: BrowserServer) {
     }
   }
 
-  function setupClient(sessionId: string, ws: WebSocket) {
-    const mockResolver = new ServerMockResolver(server.vite, {
+  function setupClient(project: TestProject, rpcId: string, ws: WebSocket, method: 'run' | 'collect') {
+    const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
 
@@ -71,39 +118,55 @@ export function setupBrowserRpc(server: BrowserServer) {
         async onUnhandledError(error, type) {
           if (error && typeof error === 'object') {
             const _error = error as ErrorWithDiff
-            _error.stacks = server.parseErrorStacktrace(_error)
+            _error.stacks = globalServer.parseErrorStacktrace(_error)
           }
-          ctx.state.catchError(error, type)
+          vitest.state.catchError(error, type)
         },
         async onQueued(file) {
-          ctx.state.collectFiles(project, [file])
-          const testModule = ctx.state.getReportedEntity(file) as TestModule
-          await ctx.report('onTestModuleQueued', testModule)
+          if (method === 'collect') {
+            vitest.state.collectFiles(project, [file])
+          }
+          else {
+            await vitest._testRun.enqueued(project, file)
+          }
         },
         async onCollected(files) {
-          ctx.state.collectFiles(project, files)
-          await ctx.report('onCollected', files)
+          if (method === 'collect') {
+            vitest.state.collectFiles(project, files)
+          }
+          else {
+            await vitest._testRun.collected(project, files)
+          }
         },
-        async onTaskUpdate(packs) {
-          ctx.state.updateTasks(packs)
-          await ctx.report('onTaskUpdate', packs)
+        async onTaskUpdate(packs, events) {
+          if (method === 'collect') {
+            vitest.state.updateTasks(packs)
+          }
+          else {
+            await vitest._testRun.updated(packs, events)
+          }
         },
         onAfterSuiteRun(meta) {
-          ctx.coverageProvider?.onAfterSuiteRun(meta)
+          vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        sendLog(log) {
-          return ctx.report('onUserConsoleLog', log)
+        async sendLog(log) {
+          if (method === 'collect') {
+            vitest.state.updateUserLog(log)
+          }
+          else {
+            await vitest._testRun.log(log)
+          }
         },
         resolveSnapshotPath(testPath) {
-          return ctx.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
-            config: project.getSerializableConfig(),
+          return vitest.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
+            config: project.serializedConfig,
           })
         },
         resolveSnapshotRawPath(testPath, rawPath) {
-          return ctx.snapshot.resolveRawPath(testPath, rawPath)
+          return vitest.snapshot.resolveRawPath(testPath, rawPath)
         },
         snapshotSaved(snapshot) {
-          ctx.snapshot.add(snapshot)
+          vitest.snapshot.add(snapshot)
         },
         async readSnapshotFile(snapshotPath) {
           checkFileAccess(snapshotPath)
@@ -125,57 +188,54 @@ export function setupBrowserRpc(server: BrowserServer) {
           return fs.unlink(id)
         },
         getBrowserFileSourceMap(id) {
-          const mod = server.vite.moduleGraph.getModuleById(id)
+          const mod = globalServer.vite.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
         onCancel(reason) {
-          ctx.cancelCurrentRun(reason)
+          vitest.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {
           return mockResolver.resolveId(id, importer)
         },
         debug(...args) {
-          ctx.logger.console.debug(...args)
+          vitest.logger.console.debug(...args)
         },
         getCountOfFailedTests() {
-          return ctx.state.getCountOfFailedTests()
+          return vitest.state.getCountOfFailedTests()
         },
-        async triggerCommand(contextId, command, testPath, payload) {
-          debug?.('[%s] Triggering command "%s"', contextId, command)
-          const provider = server.provider
+        async triggerCommand(sessionId, command, testPath, payload) {
+          debug?.('[%s] Triggering command "%s"', sessionId, command)
+          const provider = project.browser!.provider
           if (!provider) {
             throw new Error('Commands are only available for browser tests.')
           }
-          const commands = project.config.browser?.commands
+          const commands = globalServer.commands
           if (!commands || !commands[command]) {
             throw new Error(`Unknown command "${command}".`)
           }
-          if (provider.beforeCommand) {
-            await provider.beforeCommand(command, payload)
-          }
+          await provider.beforeCommand?.(command, payload)
           const context = Object.assign(
             {
               testPath,
               project,
               provider,
-              contextId,
+              contextId: sessionId,
+              sessionId,
             },
-            provider.getCommandsContext(contextId),
+            provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
           let result
           try {
             result = await commands[command](context, ...payload)
           }
           finally {
-            if (provider.afterCommand) {
-              await provider.afterCommand(command, payload)
-            }
+            await provider.afterCommand?.(command, payload)
           }
           return result
         },
-        finishBrowserTests(contextId: string) {
-          debug?.('[%s] Finishing browser tests for context', contextId)
-          return server.state.getContext(contextId)?.resolve()
+        finishBrowserTests(sessionId: string) {
+          debug?.('[%s] Finishing browser tests for session', sessionId)
+          return vitest._browserSessions.getSession(sessionId)?.resolve()
         },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
@@ -185,12 +245,12 @@ export function setupBrowserRpc(server: BrowserServer) {
         },
 
         // CDP
-        async sendCdpEvent(contextId: string, event: string, payload?: Record<string, unknown>) {
-          const cdp = await server.ensureCDPHandler(contextId, sessionId)
+        async sendCdpEvent(sessionId: string, event: string, payload?: Record<string, unknown>) {
+          const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           return cdp.send(event, payload)
         },
-        async trackCdpEvent(contextId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
-          const cdp = await server.ensureCDPHandler(contextId, sessionId)
+        async trackCdpEvent(sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) {
+          const cdp = await globalServer.ensureCDPHandler(sessionId, rpcId)
           cdp[type](event, listenerId)
         },
       },
@@ -206,13 +266,13 @@ export function setupBrowserRpc(server: BrowserServer) {
       },
     )
 
-    ctx.onCancel(reason => rpc.onCancel(reason))
+    vitest.onCancel(reason => rpc.onCancel(reason))
 
     return rpc
   }
 }
-// Serialization support utils.
 
+// Serialization support utils.
 function cloneByOwnProperties(value: any) {
   // Clones the value's properties into a new Object. The simpler approach of
   // Object.assign() won't work in the case that properties are not enumerable.
@@ -229,7 +289,7 @@ function cloneByOwnProperties(value: any) {
  * Replacer function for serialization methods such as JS.stringify() or
  * flatted.stringify().
  */
-export function stringifyReplace(key: string, value: any) {
+export function stringifyReplace(key: string, value: any): any {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {

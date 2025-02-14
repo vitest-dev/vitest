@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "test": "pnpm run test:generate && pnpm run test:update && pnpm test:update-new && pnpm test:update-none && pnpm run test:snaps",
-    "test:generate": "rm -rf ./test-update && cp -r ./test/fixtures/test-update ./test-update",
+    "test:generate": "node ./generate.mjs",
     "test:snaps": "vitest run --dir test",
     "test:update": "vitest run -u --dir test-update",
     "test:update-none": "CI=true vitest run --dir test-update",
@@ -14,5 +14,8 @@
   },
   "dependencies": {
     "vitest": "workspace:*"
+  },
+  "devDependencies": {
+    "jest-image-snapshot": "^6.4.0"
   }
 }

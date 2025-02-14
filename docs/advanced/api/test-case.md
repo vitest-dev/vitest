@@ -10,31 +10,6 @@ if (task.type === 'test') {
 }
 ```
 
-::: warning
-We are planning to introduce a new Reporter API that will be using this API by default. For now, the Reporter API uses [runner tasks](/advanced/runner#tasks), but you can still access `TestCase` via `vitest.state.getReportedEntity` method:
-
-```ts
-import type { RunnerTestFile, TestModule, Vitest } from 'vitest/node'
-
-class Reporter {
-  private vitest!: Vitest
-
-  onInit(vitest: Vitest) {
-    this.vitest = vitest
-  }
-
-  onFinished(files: RunnerTestFile[]) {
-    for (const file of files) {
-      const testModule = this.vitest.getReportedEntity(file) as TestModule
-      for (const test of testModule.children.allTests()) {
-        console.log(test) // TestCase
-      }
-    }
-  }
-}
-```
-:::
-
 ## project
 
 This references the [`TestProject`](/advanced/api/test-project) that the test belongs to.
@@ -124,12 +99,13 @@ Parent [suite](/advanced/api/test-suite). If the test was called directly inside
 
 ```ts
 interface TaskOptions {
-  each: boolean | undefined
-  concurrent: boolean | undefined
-  shuffle: boolean | undefined
-  retry: number | undefined
-  repeats: number | undefined
-  mode: 'run' | 'only' | 'skip' | 'todo'
+  readonly each: boolean | undefined
+  readonly fails: boolean | undefined
+  readonly concurrent: boolean | undefined
+  readonly shuffle: boolean | undefined
+  readonly retry: number | undefined
+  readonly repeats: number | undefined
+  readonly mode: 'run' | 'only' | 'skip' | 'todo'
 }
 ```
 
@@ -142,14 +118,6 @@ function ok(): boolean
 ```
 
 Checks if the test did not fail the suite. If the test is not finished yet or was skipped, it will return `true`.
-
-## skipped
-
-```ts
-function skipped(): boolean
-```
-
-Checks if the test was skipped during collection or dynamically with `ctx.skip()`.
 
 ## meta
 
@@ -174,10 +142,23 @@ If the test did not finish running yet, the meta will be an empty object.
 ## result
 
 ```ts
-function result(): TestResult | undefined
+function result(): TestResult
 ```
 
-Test results. It will be `undefined` if test is skipped during collection, not finished yet or was just collected.
+Test results. If test is not finished yet or was just collected, it will be equal to `TestResultPending`:
+
+```ts
+export interface TestResultPending {
+  /**
+   * The test was collected, but didn't finish running yet.
+   */
+  readonly state: 'pending'
+  /**
+   * Pending tests have no errors.
+   */
+  readonly errors: undefined
+}
+```
 
 If the test was skipped, the return value will be `TestResultSkipped`:
 
@@ -187,15 +168,15 @@ interface TestResultSkipped {
    * The test was skipped with `skip` or `todo` flag.
    * You can see which one was used in the `options.mode` option.
    */
-  state: 'skipped'
+  readonly state: 'skipped'
   /**
    * Skipped tests have no errors.
    */
-  errors: undefined
+  readonly errors: undefined
   /**
    * A custom note passed down to `ctx.skip(note)`.
    */
-  note: string | undefined
+  readonly note: string | undefined
 }
 ```
 
@@ -210,26 +191,26 @@ interface TestResultFailed {
   /**
    * The test failed to execute.
    */
-  state: 'failed'
+  readonly state: 'failed'
   /**
    * Errors that were thrown during the test execution.
    */
-  errors: TestError[]
+  readonly errors: ReadonlyArray<TestError>
 }
 ```
 
-If the test passed, the retunr value will be `TestResultPassed`:
+If the test passed, the return value will be `TestResultPassed`:
 
 ```ts
 interface TestResultPassed {
   /**
    * The test passed successfully.
    */
-  state: 'passed'
+  readonly state: 'passed'
   /**
    * Errors that were thrown during the test execution.
    */
-  errors: TestError[] | undefined
+  readonly errors: ReadonlyArray<TestError> | undefined
 }
 ```
 
@@ -250,32 +231,36 @@ interface TestDiagnostic {
   /**
    * If the duration of the test is above `slowTestThreshold`.
    */
-  slow: boolean
+  readonly slow: boolean
   /**
    * The amount of memory used by the test in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
-  heap: number | undefined
+  readonly heap: number | undefined
   /**
    * The time it takes to execute the test in ms.
    */
-  duration: number
+  readonly duration: number
   /**
    * The time in ms when the test started.
    */
-  startTime: number
+  readonly startTime: number
   /**
    * The amount of times the test was retried.
    */
-  retryCount: number
+  readonly retryCount: number
   /**
    * The amount of times the test was repeated as configured by `repeats` option.
    * This value can be lower if the test failed during the repeat and no `retry` is configured.
    */
-  repeatCount: number
+  readonly repeatCount: number
   /**
    * If test passed on a second retry.
    */
-  flaky: boolean
+  readonly flaky: boolean
 }
 ```
+
+::: info
+`diagnostic()` will return `undefined` if the test was not scheduled to run yet.
+:::

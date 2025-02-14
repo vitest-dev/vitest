@@ -6,12 +6,12 @@ export class PreviewBrowserProvider implements BrowserProvider {
   private project!: TestProject
   private open = false
 
-  getSupportedBrowsers() {
+  getSupportedBrowsers(): string[] {
     // `none` is not restricted to certain browsers.
     return []
   }
 
-  isOpen() {
+  isOpen(): boolean {
     return this.open
   }
 
@@ -19,7 +19,7 @@ export class PreviewBrowserProvider implements BrowserProvider {
     return {}
   }
 
-  async initialize(project: TestProject) {
+  async initialize(project: TestProject): Promise<void> {
     this.project = project
     this.open = false
     if (project.config.browser.headless) {
@@ -27,10 +27,10 @@ export class PreviewBrowserProvider implements BrowserProvider {
         'You\'ve enabled headless mode for "preview" provider but it doesn\'t support it. Use "playwright" or "webdriverio" instead: https://vitest.dev/guide/browser/#configuration',
       )
     }
-    project.ctx.logger.printBrowserBanner(project)
+    project.vitest.logger.printBrowserBanner(project)
   }
 
-  async openPage(_contextId: string, url: string) {
+  async openPage(_sessionId: string, url: string): Promise<void> {
     this.open = true
     if (!this.project.browser) {
       throw new Error('Browser is not initialized')
@@ -42,5 +42,5 @@ export class PreviewBrowserProvider implements BrowserProvider {
     options.open = _open
   }
 
-  async close() {}
+  async close(): Promise<void> {}
 }

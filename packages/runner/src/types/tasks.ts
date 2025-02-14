@@ -79,10 +79,6 @@ export interface TaskPopulated extends TaskBase {
    */
   file: File
   /**
-   * Whether the task was skipped by calling `t.skip()`.
-   */
-  pending?: boolean
-  /**
    * Whether the task should succeed if it fails. If the task fails, it will be marked as passed.
    */
   fails?: boolean
@@ -152,6 +148,11 @@ export interface TaskResult {
   repeatCount?: number
   /** @private */
   note?: string
+  /**
+   * Whether the task was skipped by calling `t.skip()`.
+   * @internal
+   */
+  pending?: boolean
 }
 
 /**
@@ -172,6 +173,30 @@ export type TaskResultPack = [
    */
   meta: TaskMeta,
 ]
+
+export type TaskEventPack = [
+  /**
+   * Unique task identifier from `task.id`.
+   */
+  id: string,
+  /**
+   * The name of the event that triggered the update.
+   */
+  event: TaskUpdateEvent,
+]
+
+export type TaskUpdateEvent =
+  | 'test-failed-early'
+  | 'suite-failed-early'
+  | 'test-prepare'
+  | 'test-finished'
+  | 'test-retried'
+  | 'suite-prepare'
+  | 'suite-finished'
+  | 'before-hook-start'
+  | 'before-hook-end'
+  | 'after-hook-start'
+  | 'after-hook-end'
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -335,6 +360,11 @@ interface TestForFunction<ExtraContext> {
   >
 }
 
+interface SuiteForFunction {
+  <T>(cases: ReadonlyArray<T>): EachFunctionReturn<[T]>
+  (...args: [TemplateStringsArray, ...any]): EachFunctionReturn<any[]>
+}
+
 interface TestCollectorCallable<C = object> {
   /**
    * @deprecated Use options as the second argument instead
@@ -444,6 +474,10 @@ export interface FixtureOptions {
    * Whether to automatically set up current fixture, even though it's not being used in tests.
    */
   auto?: boolean
+  /**
+   * Indicated if the injected value from the config should be preferred over the fixture value
+   */
+  injected?: boolean
 }
 
 export type Use<T> = (value: T) => Promise<void>
@@ -496,6 +530,7 @@ type ChainableSuiteAPI<ExtraContext = object> = ChainableFunction<
   SuiteCollectorCallable<ExtraContext>,
   {
     each: TestEachFunction
+    for: SuiteForFunction
   }
 >
 

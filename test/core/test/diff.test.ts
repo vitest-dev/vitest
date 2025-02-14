@@ -2,15 +2,16 @@ import type { DiffOptions } from '@vitest/utils/diff'
 import { stripVTControlCharacters } from 'node:util'
 import { processError } from '@vitest/runner'
 import { diff, diffStringsUnified, printDiffOrStringify } from '@vitest/utils/diff'
-import { expect, test, vi } from 'vitest'
-import { displayDiff } from '../../../packages/vitest/src/node/error'
+import { expect, test } from 'vitest'
+
+function wrapDiff(diff?: string) {
+  return diff && stripVTControlCharacters(`\n${diff}\n`)
+}
 
 test('displays string diff', () => {
   const stringA = 'Hello AWorld'
   const stringB = 'Hello BWorld'
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(printDiffOrStringify(stringA, stringB), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(printDiffOrStringify(stringA, stringB))).toMatchInlineSnapshot(`
     "
     Expected: "Hello BWorld"
     Received: "Hello AWorld"
@@ -21,9 +22,7 @@ test('displays string diff', () => {
 test('displays object diff', () => {
   const objectA = { a: 1, b: 2 }
   const objectB = { a: 1, b: 3 }
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(diff(objectA, objectB), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(diff(objectA, objectB))).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -40,9 +39,7 @@ test('displays object diff', () => {
 test('display truncated object diff', () => {
   const objectA = { a: 1, b: 2, c: 3, d: 4, e: 5 }
   const objectB = { a: 1, b: 3, c: 4, d: 5, e: 6 }
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(diff(objectA, objectB, { truncateThreshold: 4 }), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(diff(objectA, objectB, { truncateThreshold: 4 }))).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -61,9 +58,7 @@ test('display truncated object diff', () => {
 test('display one line string diff', () => {
   const string1 = 'string1'
   const string2 = 'string2'
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(diff(string1, string2), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(diff(string1, string2))).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -77,9 +72,7 @@ test('display one line string diff', () => {
 test('display one line string diff should not be affected by truncateThreshold', () => {
   const string1 = 'string1'
   const string2 = 'string2'
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(diff(string1, string2, { truncateThreshold: 3 }), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(diff(string1, string2, { truncateThreshold: 3 }))).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -93,9 +86,7 @@ test('display one line string diff should not be affected by truncateThreshold',
 test('display multiline string diff', () => {
   const string1 = 'string1\nstring2\nstring3'
   const string2 = 'string2\nstring2\nstring1'
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(diff(string1, string2), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(diff(string1, string2))).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -112,9 +103,7 @@ test('display multiline string diff', () => {
 test('display truncated multiline string diff', () => {
   const string1 = 'string1\nstring2\nstring3'
   const string2 = 'string2\nstring2\nstring1'
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(diff(string1, string2, { truncateThreshold: 2 }), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(diff(string1, string2, { truncateThreshold: 2 }))).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -130,9 +119,7 @@ test('display truncated multiline string diff', () => {
 test('display truncated multiple items array diff', () => {
   const array1 = Array.from({ length: 45000 }).fill('foo')
   const array2 = Array.from({ length: 45000 }).fill('bar')
-  const console = { log: vi.fn(), error: vi.fn() }
-  displayDiff(diff(array1, array2, { truncateThreshold: 3 }), console as any)
-  expect(stripVTControlCharacters(console.error.mock.calls[0][0])).toMatchInlineSnapshot(`
+  expect(wrapDiff(diff(array1, array2, { truncateThreshold: 3 }))).toMatchInlineSnapshot(`
     "
     - Expected
     + Received
@@ -331,7 +318,13 @@ test('getter only property', () => {
   `)
 })
 
-function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions) {
+test('truncate large diff', () => {
+  const diff = getErrorDiff(Array.from({ length: 500_000 }).fill(0), 1234)
+  expect(diff.length).lessThan(200_000)
+  expect(diff.trim()).toMatch(/\.\.\.$/)
+})
+
+function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions): string {
   try {
     expect(actual).toEqual(expected)
   }
@@ -339,5 +332,5 @@ function getErrorDiff(actual: unknown, expected: unknown, options?: DiffOptions)
     const error = processError(e, options)
     return error.diff
   }
-  expect.unreachable()
+  return expect.unreachable()
 }

@@ -1,3 +1,4 @@
+import type { ProxifiedModule } from 'magicast'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 // @ts-expect-error missing types
@@ -21,7 +22,7 @@ const debug = createDebug('vitest:coverage')
 
 export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'istanbul'>> implements CoverageProvider {
   name = 'istanbul' as const
-  version = version
+  version: string = version
   instrumenter!: Instrumenter
   testExclude!: InstanceType<typeof TestExclude>
 
@@ -81,7 +82,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     return { code, map }
   }
 
-  createCoverageMap() {
+  createCoverageMap(): libCoverage.CoverageMap {
     return libCoverage.createCoverageMap({})
   }
 
@@ -149,7 +150,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     }
   }
 
-  async parseConfigModule(configFilePath: string) {
+  async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
     return parseModule(
       await fs.readFile(configFilePath, 'utf8'),
     )

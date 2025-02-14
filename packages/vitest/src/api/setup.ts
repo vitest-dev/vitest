@@ -1,5 +1,6 @@
 import type { File, TaskResultPack } from '@vitest/runner'
 
+import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
 import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
@@ -21,21 +22,27 @@ import { API_PATH } from '../constants'
 import { getModuleGraph } from '../utils/graph'
 import { stringifyReplace } from '../utils/serialization'
 import { parseErrorStacktrace } from '../utils/source-map'
+import { isValidApiRequest } from './check'
 
-export function setup(ctx: Vitest, _server?: ViteDevServer) {
+export function setup(ctx: Vitest, _server?: ViteDevServer): void {
   const wss = new WebSocketServer({ noServer: true })
 
   const clients = new Map<WebSocket, WebSocketRPC>()
 
   const server = _server || ctx.server
 
-  server.httpServer?.on('upgrade', (request, socket, head) => {
+  server.httpServer?.on('upgrade', (request: IncomingMessage, socket, head) => {
     if (!request.url) {
       return
     }
 
     const { pathname } = new URL(request.url, 'http://localhost')
     if (pathname !== API_PATH) {
+      return
+    }
+
+    if (!isValidApiRequest(ctx.config, request)) {
+      socket.destroy()
       return
     }
 
@@ -48,9 +55,8 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
   function setupClient(ws: WebSocket) {
     const rpc = createBirpc<WebSocketEvents, WebSocketHandlers>(
       {
-        async onTaskUpdate(packs) {
-          ctx.state.updateTasks(packs)
-          await ctx.report('onTaskUpdate', packs)
+        async onTaskUpdate(packs, events) {
+          await ctx._testRun.updated(packs, events)
         },
         getFiles() {
           return ctx.state.getFiles()
@@ -81,6 +87,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         getConfig() {
           return ctx.getRootProject().serializedConfig
         },
+        getResolvedProjectNames(): string[] {
+          return ctx.resolvedProjects.map(p => p.name)
+        },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)
           const result: TransformResultWithSource | null | undefined = browser
@@ -97,11 +106,13 @@ export function setup(ctx: Vitest, _server?: ViteDevServer) {
         async getModuleGraph(project, id, browser): Promise<ModuleGraphData> {
           return getModuleGraph(ctx, project, id, browser)
         },
-        updateSnapshot(file?: File) {
+        async updateSnapshot(file?: File) {
           if (!file) {
-            return ctx.updateSnapshot()
+            await ctx.updateSnapshot()
           }
-          return ctx.updateSnapshot([file.filepath])
+          else {
+            await ctx.updateSnapshot([file.filepath])
+          }
         },
         getUnhandledErrors() {
           return ctx.state.getUnhandledErrors()
@@ -153,7 +164,7 @@ export class WebSocketReporter implements Reporter {
     public clients: Map<WebSocket, WebSocketRPC>,
   ) {}
 
-  onCollected(files?: File[]) {
+  onCollected(files?: File[]): void {
     if (this.clients.size === 0) {
       return
     }
@@ -171,7 +182,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  async onTaskUpdate(packs: TaskResultPack[]) {
+  async onTaskUpdate(packs: TaskResultPack[]): Promise<void> {
     if (this.clients.size === 0) {
       return
     }
@@ -200,19 +211,19 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  onFinished(files: File[], errors: unknown[]) {
+  onFinished(files: File[], errors: unknown[]): void {
     this.clients.forEach((client) => {
       client.onFinished?.(files, errors)?.catch?.(noop)
     })
   }
 
-  onFinishedReportCoverage() {
+  onFinishedReportCoverage(): void {
     this.clients.forEach((client) => {
       client.onFinishedReportCoverage?.()?.catch?.(noop)
     })
   }
 
-  onUserConsoleLog(log: UserConsoleLog) {
+  onUserConsoleLog(log: UserConsoleLog): void {
     this.clients.forEach((client) => {
       client.onUserConsoleLog?.(log)?.catch?.(noop)
     })

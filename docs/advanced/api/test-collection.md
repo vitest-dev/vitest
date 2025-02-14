@@ -57,16 +57,14 @@ for (const suite of module.children.allSuites()) {
 ## allTests
 
 ```ts
-function allTests(
-  state?: TestResult['state'] | 'running'
-): Generator<TestCase, undefined, void>
+function allTests(state?: TestState): Generator<TestCase, undefined, void>
 ```
 
 Filters all tests that are part of this collection and its children.
 
 ```ts
 for (const test of module.children.allTests()) {
-  if (!test.result()) {
+  if (test.result().state === 'pending') {
     console.log('test', test.fullName, 'did not finish')
   }
 }
@@ -77,9 +75,7 @@ You can pass down a `state` value to filter tests by the state.
 ## tests
 
 ```ts
-function tests(
-  state?: TestResult['state'] | 'running'
-): Generator<TestCase, undefined, void>
+function tests(state?: TestState): Generator<TestCase, undefined, void>
 ```
 
 Filters only the tests that are part of this collection. You can pass down a `state` value to filter tests by the state.

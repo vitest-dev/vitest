@@ -26,7 +26,7 @@ import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
-export const selectorEngine = Ivya.create({
+export const selectorEngine: Ivya = Ivya.create({
   browser: ((name: string) => {
     switch (name) {
       case 'edge':
@@ -185,6 +185,18 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
+  public nth(index: number): Locator {
+    return this.locator(`nth=${index}`)
+  }
+
+  public first(): Locator {
+    return this.nth(0)
+  }
+
+  public last(): Locator {
+    return this.nth(-1)
+  }
+
   public toString(): string {
     return this.selector
   }
@@ -205,13 +217,13 @@ export abstract class Locator {
     return this.worker.rpc as any as BrowserRPC
   }
 
-  protected triggerCommand<T>(command: string, ...args: any[]) {
+  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
     const filepath = this.worker.filepath
       || this.worker.current?.file?.filepath
       || undefined
 
     return ensureAwaited(() => this.rpc.triggerCommand<T>(
-      this.state.contextId,
+      this.state.sessionId,
       command,
       filepath,
       args,

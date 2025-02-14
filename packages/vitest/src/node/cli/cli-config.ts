@@ -9,9 +9,9 @@ import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
-| never
-| RegExp
-| unknown[]
+  | never
+  | RegExp
+  | unknown[]
   ? never
   : V
 
@@ -371,7 +371,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       name: {
         description:
-          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/config/#browser-name) for more information',
+          'Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information',
         argument: '<name>',
       },
       headless: {
@@ -408,6 +408,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)',
       },
+      connectTimeout: {
+        description: 'If connection to the browser takes longer, the test suite will fail (default: `60_000`)',
+        argument: '<timeout>',
+      },
       orchestratorScripts: null,
       testerScripts: null,
       commands: null,
@@ -416,6 +420,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       screenshotFailures: null,
       locators: null,
       testerHtmlPath: null,
+      instances: null,
     },
   },
   pool: {
@@ -580,11 +585,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   inspector: null,
   testTimeout: {
-    description: 'Default timeout of a test in milliseconds (default: `5000`)',
+    description: 'Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   hookTimeout: {
-    description: 'Default hook timeout in milliseconds (default: `10000`)',
+    description: 'Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.',
     argument: '<timeout>',
   },
   bail: {

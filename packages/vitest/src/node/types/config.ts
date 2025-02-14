@@ -25,7 +25,7 @@ import type { Reporter } from './reporter'
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
-export type { BrowserConfigOptions, BrowserScript } from './browser'
+export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
@@ -815,7 +815,7 @@ export interface InlineConfig {
   /**
    * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
    * This is also required for console log preview on Vitest UI.
-   * However, disabling such interception might help when you want to debug a code with normal synchronus terminal console logging.
+   * However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
    *
    * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
    *
@@ -840,7 +840,7 @@ export interface InlineConfig {
 
 export interface TypecheckConfig {
   /**
-   * Run typechecking tests alongisde regular tests.
+   * Run typechecking tests alongside regular tests.
    */
   enabled?: boolean
   /**
@@ -965,6 +965,7 @@ export interface UserConfig extends InlineConfig {
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
+    | 'project'
     | 'config'
     | 'filters'
     | 'browser'
@@ -1013,9 +1014,10 @@ export interface ResolvedConfig
 
   defines: Record<string, any>
 
-  api?: ApiConfig
+  api: ApiConfig & { token: string }
   cliExclude?: string[]
 
+  project: string[]
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   > &
@@ -1081,14 +1083,16 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
+  | 'workspace'
 
 export type ProjectConfig = Omit<
-  UserConfig,
+  InlineConfig,
   NonProjectOptions
   | 'sequencer'
   | 'deps'
   | 'poolOptions'
 > & {
+  mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
   poolOptions?: {

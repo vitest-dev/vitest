@@ -3,7 +3,7 @@ import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
 import type { TestProject } from '../project'
-import type { ApiConfig } from './config'
+import type { ApiConfig, ProjectConfig } from './config'
 
 export interface BrowserProviderInitializationOptions {
   browser: string
@@ -26,9 +26,9 @@ export interface BrowserProvider {
   getSupportedBrowsers: () => readonly string[]
   beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
   afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  getCommandsContext: (contextId: string) => Record<string, unknown>
-  openPage: (contextId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
-  getCDPSession?: (contextId: string) => Promise<CDPSession>
+  getCommandsContext: (sessionId: string) => Record<string, unknown>
+  openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
+  getCDPSession?: (sessionId: string) => Promise<CDPSession>
   close: () => Awaitable<void>
   // eslint-disable-next-line ts/method-signature-style -- we want to allow extended options
   initialize(
@@ -45,6 +45,44 @@ export interface BrowserProviderOptions {}
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
 
+type UnsupportedProperties =
+  | 'browser'
+  | 'typecheck'
+  | 'alias'
+  | 'sequence'
+  | 'root'
+  | 'pool'
+  | 'poolOptions'
+  // browser mode doesn't support a custom runner
+  | 'runner'
+  // non-browser options
+  | 'api'
+  | 'deps'
+  | 'testTransformMode'
+  | 'poolMatchGlobs'
+  | 'environmentMatchGlobs'
+  | 'environment'
+  | 'environmentOptions'
+  | 'server'
+  | 'benchmark'
+
+export interface BrowserInstanceOption extends BrowserProviderOptions,
+  Omit<ProjectConfig, UnsupportedProperties>,
+  Pick<
+    BrowserConfigOptions,
+    | 'headless'
+    | 'locators'
+    | 'viewport'
+    | 'testerHtmlPath'
+    | 'screenshotDirectory'
+    | 'screenshotFailures'
+  > {
+  /**
+   * Name of the browser
+   */
+  browser: string
+}
+
 export interface BrowserConfigOptions {
   /**
    * if running tests in the browser should be the default
@@ -55,8 +93,14 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
+   * @deprecated use `instances` instead. if both are defined, this will filter `instances` by name.
    */
-  name: string
+  name?: string
+
+  /**
+   * Configurations for different browser setups
+   */
+  instances?: BrowserInstanceOption[]
 
   /**
    * Browser provider
@@ -74,6 +118,7 @@ export interface BrowserConfigOptions {
    *
    * @example
    * { playwright: { launch: { devtools: true } }
+   * @deprecated use `instances` instead
    */
   providerOptions?: BrowserProviderOptions
 
@@ -175,18 +220,28 @@ export interface BrowserConfigOptions {
    * @see {@link https://vitest.dev/guide/browser/commands}
    */
   commands?: Record<string, BrowserCommand<any>>
+
+  /**
+   * Timeout for connecting to the browser
+   * @default 30000
+   */
+  connectTimeout?: number
 }
 
 export interface BrowserCommandContext {
   testPath: string | undefined
   provider: BrowserProvider
   project: TestProject
+  /** @deprecated use `sessionId` instead */
   contextId: string
+  sessionId: string
 }
 
-export interface BrowserServerStateContext {
+export interface BrowserServerStateSession {
   files: string[]
   method: 'run' | 'collect'
+  project: TestProject
+  connected: () => void
   resolve: () => void
   reject: (v: unknown) => void
 }
@@ -199,16 +254,18 @@ export interface BrowserOrchestrator {
 
 export interface BrowserServerState {
   orchestrators: Map<string, BrowserOrchestrator>
-  getContext: (contextId: string) => BrowserServerStateContext | undefined
-  createAsyncContext: (method: 'collect' | 'run', contextId: string, files: string[]) => Promise<void>
 }
 
-export interface BrowserServer {
+export interface ParentProjectBrowser {
+  spawn: (project: TestProject) => ProjectBrowser
+}
+
+export interface ProjectBrowser {
   vite: ViteDevServer
   state: BrowserServerState
   provider: BrowserProvider
   close: () => Promise<void>
-  initBrowserProvider: () => Promise<void>
+  initBrowserProvider: (project: TestProject) => Promise<void>
   parseStacktrace: (stack: string) => ParsedStack[]
   parseErrorStacktrace: (error: ErrorWithDiff, options?: StackTraceParserOptions) => ParsedStack[]
 }
@@ -247,6 +304,8 @@ export interface BrowserScript {
 }
 
 export interface ResolvedBrowserOptions extends BrowserConfigOptions {
+  name: string
+  providerOptions?: BrowserProviderOptions
   enabled: boolean
   headless: boolean
   isolate: boolean

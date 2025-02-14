@@ -34,7 +34,6 @@ Vitest 3 is one step closer to stabilising the public API. To achieve that, we d
 - `changeNamePattern`
 - `changeFilenamePattern`
 - `rerunFailed`
-- `updateSnapshot`
 - `_createRootProject` (renamed to `_ensureRootProject`, but still private)
 - `filterTestsBySource` (this was moved to the new internal `vitest.specifications` instance)
 - `runFiles` (use [`runTestSpecifications`](#runtestspecifications) instead)
@@ -318,13 +317,21 @@ This method doesn't trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun
 ## rerunTestSpecifications
 
 ```ts
-function runTestSpecifications(
+function rerunTestSpecifications(
   specifications: TestSpecification[],
   allTestsRun = false
 ): Promise<TestRunResult>
 ```
 
 This method emits `reporter.onWatcherRerun` and `onTestsRerun` events, then it runs tests with [`runTestSpecifications`](#runtestspecifications). If there were no errors in the main process, it will emit `reporter.onWatcherStart` event.
+
+## updateSnapshot
+
+```ts
+function updateSnapshot(files?: string[]): Promise<TestRunResult>
+```
+
+Update snapshots in specified files. If no files are provided, it will update files with failed tests and obsolete snapshots.
 
 ## collectTests
 

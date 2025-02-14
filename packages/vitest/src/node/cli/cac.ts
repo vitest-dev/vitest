@@ -70,7 +70,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export function createCLI(options: CliParseOptions = {}) {
+export function createCLI(options: CliParseOptions = {}): CAC {
   const cli = cac('vitest')
 
   cli.version(version)
@@ -254,6 +254,14 @@ function normalizeCliOptions(cliFilters: string[], argv: CliOptions): CliOptions
   }
   if (cliFilters.some(filter => filter.includes(':'))) {
     argv.includeTaskLocation ??= true
+  }
+
+  // running "vitest --browser.headless"
+  if (typeof argv.browser === 'object' && !('enabled' in argv.browser)) {
+    argv.browser.enabled = true
+  }
+  if (typeof argv.typecheck?.only === 'boolean') {
+    argv.typecheck.enabled ??= true
   }
 
   return argv

@@ -1,7 +1,7 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
-import type { TestModule, TestSuite } from '../reporters'
+import type { TestModule, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -143,15 +143,6 @@ export async function prepareVitest(
   // this shouldn't affect _application root_ that can be changed inside config
   const root = resolve(options.root || process.cwd())
 
-  // running "vitest --browser.headless"
-  if (typeof options.browser === 'object' && !('enabled' in options.browser)) {
-    options.browser.enabled = true
-  }
-
-  if (typeof options.typecheck?.only === 'boolean') {
-    options.typecheck.enabled ??= true
-  }
-
   const ctx = await createVitest(mode, options, viteOverrides, vitestOptions)
 
   const environmentPackage = getEnvPackageName(ctx.config.environment)
@@ -167,7 +158,7 @@ export async function prepareVitest(
   return ctx
 }
 
-export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions) {
+export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions): void {
   let errorsPrinted = false
 
   forEachSuite(files, (suite) => {
@@ -190,12 +181,12 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
   return formatCollectedAsString(files).forEach(test => console.log(test))
 }
 
-export function outputFileList(files: TestSpecification[], options: CliOptions) {
+export function outputFileList(files: TestSpecification[], options: CliOptions): void {
   if (typeof options.json !== 'undefined') {
     return outputJsonFileList(files, options)
   }
 
-  return formatFilesAsString(files, options).map(file => console.log(file))
+  formatFilesAsString(files, options).map(file => console.log(file))
 }
 
 function outputJsonFileList(files: TestSpecification[], options: CliOptions) {
@@ -260,12 +251,12 @@ export interface TestCollectJSONResult {
   location?: { line: number; column: number }
 }
 
-export function formatCollectedAsJSON(files: TestModule[]) {
+export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
   const results: TestCollectJSONResult[] = []
 
   files.forEach((file) => {
     for (const test of file.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const result: TestCollectJSONResult = {
@@ -284,12 +275,12 @@ export function formatCollectedAsJSON(files: TestModule[]) {
   return results
 }
 
-export function formatCollectedAsString(testModules: TestModule[]) {
+export function formatCollectedAsString(testModules: TestModule[]): string[] {
   const results: string[] = []
 
   testModules.forEach((testModule) => {
     for (const test of testModule.children.allTests()) {
-      if (test.skipped()) {
+      if (test.result().state === 'skipped') {
         continue
       }
       const fullName = `${test.module.task.name} > ${test.fullName}`

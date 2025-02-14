@@ -11,6 +11,7 @@ import type {
   UserEventTabOptions,
   UserEventTypeOptions,
 } from '../../../context'
+import type { BrowserRunnerState } from '../utils'
 import { convertElementToCssSelector, ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 
 // this file should not import anything directly, only types and utils
@@ -21,11 +22,11 @@ function filepath() {
   return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
 }
 const rpc = () => getWorkerState().rpc as any as BrowserRPC
-const contextId = getBrowserState().contextId
-const channel = new BroadcastChannel(`vitest:${contextId}`)
+const sessionId = getBrowserState().sessionId
+const channel = new BroadcastChannel(`vitest:${sessionId}`)
 
 function triggerCommand<T>(command: string, ...args: any[]) {
-  return rpc().triggerCommand<T>(contextId, command, filepath(), args)
+  return rpc().triggerCommand<T>(sessionId, command, filepath(), args)
 }
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
@@ -37,7 +38,15 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
     unreleased: [] as string[],
   }
 
-  return {
+  // https://playwright.dev/docs/api/class-keyboard
+  // https://webdriver.io/docs/api/browser/keys/
+  const modifier = provider === `playwright`
+    ? 'ControlOrMeta'
+    : provider === 'webdriverio'
+      ? 'Ctrl'
+      : 'Control'
+
+  const userEvent: UserEvent = {
     setup() {
       return createUserEvent()
     },
@@ -110,11 +119,22 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
         keyboard.unreleased = unreleased
       })
     },
+    async copy() {
+      await userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
+    },
+    async cut() {
+      await userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
+    },
+    async paste() {
+      await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
+    },
   }
+  return userEvent
 }
 
 function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options: TestingLibraryOptions): UserEvent {
   let userEvent = userEventBase.setup(options)
+  let clipboardData: DataTransfer | undefined
 
   function toElement(element: Element | Locator) {
     return element instanceof Element ? element : element.element()
@@ -195,6 +215,16 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
     async keyboard(text: string) {
       await userEvent.keyboard(text)
     },
+
+    async copy() {
+      clipboardData = await userEvent.copy()
+    },
+    async cut() {
+      clipboardData = await userEvent.cut()
+    },
+    async paste() {
+      await userEvent.paste(clipboardData)
+    },
   }
 
   for (const [name, fn] of Object.entries(vitestUserEvent)) {
@@ -208,7 +238,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
   return vitestUserEvent
 }
 
-export function cdp() {
+export function cdp(): BrowserRunnerState['cdp'] {
   return getBrowserState().cdp!
 }
 

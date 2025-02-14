@@ -2,7 +2,7 @@ import type { File, Suite, Task, TaskResult } from 'vitest'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
-import { runVitest } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures')
 
@@ -168,4 +168,14 @@ test.each([true, false])('addFileAttribute %s', async (t) => {
     include: ['ok.test.ts'],
   })
   expect(stabilizeReport(stdout)).matchSnapshot()
+})
+
+test('many errors without warning', async () => {
+  const { stderr } = await runVitestCli(
+    'run',
+    '--reporter=junit',
+    '--root',
+    resolve(import.meta.dirname, '../fixtures/many-errors'),
+  )
+  expect(stderr).not.toContain('MaxListenersExceededWarning')
 })

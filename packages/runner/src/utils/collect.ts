@@ -65,6 +65,9 @@ export function interpretTaskModes(
         if (t.mode === 'skip') {
           skipAllTasks(t)
         }
+        else if (t.mode === 'todo') {
+          todoAllTasks(t)
+        }
         else {
           traverseSuite(t, includeTask, hasLocationMatch)
         }
@@ -119,6 +122,16 @@ function skipAllTasks(suite: Suite) {
       t.mode = 'skip'
       if (t.type === 'suite') {
         skipAllTasks(t)
+      }
+    }
+  })
+}
+function todoAllTasks(suite: Suite) {
+  suite.tasks.forEach((t) => {
+    if (t.mode === 'run' || t.mode === 'queued') {
+      t.mode = 'todo'
+      if (t.type === 'suite') {
+        todoAllTasks(t)
       }
     }
   })

@@ -31,6 +31,10 @@ export default ({ mode }: { mode: string }) => {
     lang: 'en-US',
     title: vitestName,
     description: vitestDescription,
+    srcExclude: [
+      '**/guide/examples/*',
+      '**/guide/cli-generated.md',
+    ],
     locales: {
       root: {
         label: 'English',
@@ -52,9 +56,6 @@ export default ({ mode }: { mode: string }) => {
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
       ['meta', { property: 'og:image', content: ogImage }],
-      ['meta', { name: 'twitter:title', content: vitestName }],
-      ['meta', { name: 'twitter:description', content: vitestDescription }],
-      ['meta', { name: 'twitter:image', content: ogImage }],
       ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
       ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
       ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
@@ -67,6 +68,7 @@ export default ({ mode }: { mode: string }) => {
         groupIconVitePlugin({
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
+            'vitest.shims': 'vscode-icons:file-type-vitest',
             'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
@@ -152,8 +154,16 @@ export default ({ mode }: { mode: string }) => {
               activeMatch: '^/advanced/',
             },
             {
-              text: 'Team',
-              link: '/team',
+              items: [
+                {
+                  text: 'Blog',
+                  link: '/blog',
+                },
+                {
+                  text: 'Team',
+                  link: '/team',
+                },
+              ],
             },
           ],
         },
@@ -190,6 +200,10 @@ export default ({ mode }: { mode: string }) => {
                   text: 'v1.x',
                   link: 'https://v1.vitest.dev/',
                 },
+                {
+                  text: 'v2.x',
+                  link: 'https://v2.vitest.dev/',
+                },
               ],
             },
           ],
@@ -211,6 +225,27 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Getting Started',
                 link: '/guide/browser/',
                 docFooterText: 'Getting Started | Browser Mode',
+              },
+            ],
+          },
+          {
+            text: 'Configuration',
+            collapsed: false,
+            items: [
+              {
+                text: 'Browser Config Reference',
+                link: '/guide/browser/config',
+                docFooterText: 'Browser Config Reference | Browser Mode',
+              },
+              {
+                text: 'Configuring Playwright',
+                link: '/guide/browser/playwright',
+                docFooterText: 'Configuring Playwright | Browser Mode',
+              },
+              {
+                text: 'Configuring WebdriverIO',
+                link: '/guide/browser/webdriverio',
+                docFooterText: 'Configuring WebdriverIO | Browser Mode',
               },
             ],
           },
@@ -242,6 +277,17 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Commands API',
                 link: '/guide/browser/commands',
                 docFooterText: 'Commands | Browser Mode',
+              },
+            ],
+          },
+          {
+            text: 'Guides',
+            collapsed: false,
+            items: [
+              {
+                text: 'Multiple Setups',
+                link: '/guide/browser/multiple-setups',
+                docFooterText: 'Multiple Setups | Browser Mode',
               },
             ],
           },
@@ -307,6 +353,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/advanced/runner',
               },
               {
+                text: 'Reporters API',
+                link: '/advanced/api/reporters',
+              },
+              {
                 text: 'Task Metadata',
                 link: '/advanced/metadata',
               },
@@ -335,6 +385,7 @@ export default ({ mode }: { mode: string }) => {
           },
         ],
         '/team': [],
+        '/blog': [],
         '/': [
           {
             text: 'Introduction',
