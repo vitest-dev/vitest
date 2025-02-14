@@ -37,9 +37,14 @@ test('non US keys', async () => {
   // webdriverio: error: ChromeDriver only supports characters in the BMP
   // preview: ok
   if (server.provider === 'webdriverio') {
-    await expect(() =>
-      userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
-    ).rejects.toThrowError()
+    if (server.browser === 'firefox') {
+      await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
+      await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
+    } else {
+      await expect(() =>
+        userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
+      ).rejects.toThrowError()
+    }
   } else {
     await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
