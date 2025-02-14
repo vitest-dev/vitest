@@ -324,15 +324,15 @@ test('truncate large diff', () => {
   expect(diff.trim()).toMatch(/\.\.\.$/)
 })
 
-function generateCycle(n: number) {
-  const nodes = Array.from({ length: n }, (_, i) => ({ i, next: null as any }))
-  nodes.forEach((node, i) => {
-    node.next = nodes[(i + 1) % n]
-  })
-  return nodes
-}
-
 test('diff default maxDepth', () => {
+  function generateCycle(n: number) {
+    const nodes = Array.from({ length: n }, (_, i) => ({ i, next: null as any }))
+    nodes.forEach((node, i) => {
+      node.next = nodes[(i + 1) % n]
+    })
+    return nodes
+  }
+
   // diff only appears in a deeper depth than maxDepth
   const xs = generateCycle(20)
   const ys = generateCycle(20)
