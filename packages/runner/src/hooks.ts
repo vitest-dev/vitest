@@ -14,7 +14,7 @@ import { withFixtures } from './fixture'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
 
-function getDefaultHookTimeout(): number {
+function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout
 }
 
