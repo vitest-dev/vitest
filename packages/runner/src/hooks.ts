@@ -39,7 +39,7 @@ export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
   assertTypes(fn, '"beforeAll" callback', ['function'])
   return getCurrentSuite().on(
     'beforeAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
   )
 }
 
@@ -64,7 +64,7 @@ export function afterAll(fn: AfterAllListener, timeout?: number): void {
   assertTypes(fn, '"afterAll" callback', ['function'])
   return getCurrentSuite().on(
     'afterAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
   )
 }
 
@@ -92,7 +92,7 @@ export function beforeEach<ExtraContext = object>(
   assertTypes(fn, '"beforeEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
   )
 }
 
@@ -120,7 +120,7 @@ export function afterEach<ExtraContext = object>(
   assertTypes(fn, '"afterEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
   )
 }
 
@@ -147,7 +147,7 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFailed ||= []
     test.onFailed.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
     )
   },
 )
@@ -180,7 +180,7 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFinished ||= []
     test.onFinished.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
     )
   },
 )
