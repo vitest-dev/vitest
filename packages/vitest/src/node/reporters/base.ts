@@ -144,9 +144,13 @@ export abstract class BaseReporter implements Reporter {
         if (test.result?.state === 'fail') {
           this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
 
-          test.result?.errors?.forEach((e) => {
           // print short errors, full errors will be at the end in summary
-            this.log(c.red(`   ${padding}${F_RIGHT} ${e?.message}`))
+          test.result?.errors?.forEach((error) => {
+            const message = this.formatShortError(error)
+
+            if (message) {
+              this.log(c.red(`   ${padding}${message}`))
+            }
           })
         }
 
@@ -180,6 +184,10 @@ export abstract class BaseReporter implements Reporter {
 
   protected getTestName(test: Task, separator?: string): string {
     return getTestName(test, separator)
+  }
+
+  protected formatShortError(error: ErrorWithDiff): string {
+    return `${F_RIGHT} ${error.message}`
   }
 
   protected getTestIndentation(_test: Task) {

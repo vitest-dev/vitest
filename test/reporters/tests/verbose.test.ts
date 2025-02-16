@@ -104,7 +104,6 @@ test('renders tree when in TTY', async () => {
            ✓ test pass in nested suite #2
            ❯ suite in nested suite (1)
              × test failure in 2x nested suite [...]ms
-               → expected 'should fail' to be 'as expected' // Object.is equality
        ↓ suite skip in root (3)
          ↓ test 1.3
          ↓ suite in suite (2)

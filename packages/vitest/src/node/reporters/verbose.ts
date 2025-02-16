@@ -61,6 +61,11 @@ export class VerboseReporter extends DefaultReporter {
   protected getTestIndentation(test: Task): string {
     return '  '.repeat(getIndentation(test))
   }
+
+  protected formatShortError(): string {
+    // Short errors are not shown in tree-view
+    return ''
+  }
 }
 
 function getIndentation(suite: Task, level = 1): number {
