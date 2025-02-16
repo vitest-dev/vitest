@@ -38,7 +38,7 @@ export class VitestSpecifications {
     )
   }
 
-  public async globTestSpecifications(filters: string[] = []) {
+  public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     const files: TestSpecification[] = []
     const dir = process.cwd()
     const parsedFilters = filters.map(f => parseFilter(f))

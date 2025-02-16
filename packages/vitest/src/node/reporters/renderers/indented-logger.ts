@@ -3,11 +3,11 @@ export class IndentedLogger<T = any> {
 
   constructor(private baseLog: (text: string) => T) {}
 
-  indent() {
+  indent(): void {
     this.currentIndent += '    '
   }
 
-  unindent() {
+  unindent(): void {
     this.currentIndent = this.currentIndent.substring(
       0,
       this.currentIndent.length - 4,

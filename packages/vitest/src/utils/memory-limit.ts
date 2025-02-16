@@ -19,7 +19,7 @@ function getDefaultThreadsCount(config: ResolvedConfig) {
     : Math.max(numCpus - 1, 1)
 }
 
-export function getWorkerMemoryLimit(config: ResolvedConfig) {
+export function getWorkerMemoryLimit(config: ResolvedConfig): string | number {
   const memoryLimit = config.poolOptions?.vmThreads?.memoryLimit
 
   if (memoryLimit) {

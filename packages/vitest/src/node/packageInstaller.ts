@@ -7,11 +7,11 @@ import { isTTY } from '../utils/env'
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 export class VitestPackageInstaller {
-  isPackageExists(name: string, options?: { paths?: string[] }) {
+  isPackageExists(name: string, options?: { paths?: string[] }): boolean {
     return isPackageExists(name, options)
   }
 
-  async ensureInstalled(dependency: string, root: string, version?: string) {
+  async ensureInstalled(dependency: string, root: string, version?: string): Promise<boolean> {
     if (process.env.VITEST_SKIP_INSTALL_CHECKS) {
       return true
     }

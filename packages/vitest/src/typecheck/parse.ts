@@ -63,7 +63,10 @@ export async function makeTscErrorInfo(
   ]
 }
 
-export async function getTsconfig(root: string, config: TypecheckConfig) {
+export async function getTsconfig(root: string, config: TypecheckConfig): Promise<{
+  path: string
+  config: Record<string, any>
+}> {
   const configName = config.tsconfig ? basename(config.tsconfig) : undefined
   const configSearchPath = config.tsconfig
     ? dirname(resolve(root, config.tsconfig))
@@ -104,7 +107,7 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
   }
 }
 
-export async function getRawErrsMapFromTsCompile(tscErrorStdout: string) {
+export async function getRawErrsMapFromTsCompile(tscErrorStdout: string): Promise<RawErrsMap> {
   const rawErrsMap: RawErrsMap = new Map()
 
   // Merge details line with main line (i.e. which contains file path)

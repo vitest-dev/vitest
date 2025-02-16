@@ -714,8 +714,8 @@ function createVitest(): VitestUtils {
   return utils
 }
 
-export const vitest = createVitest()
-export const vi = vitest
+export const vitest: VitestUtils = createVitest()
+export const vi: VitestUtils = vitest
 
 function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide

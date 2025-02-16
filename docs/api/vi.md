@@ -844,6 +844,8 @@ A set of useful helper functions that Vitest provides.
 
 Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
 
+If options is set to a number, the effect is equivalent to setting `{ timeout: options }`.
+
 This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
 
 ```ts

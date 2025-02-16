@@ -180,7 +180,7 @@ export class CommonjsExecutor {
     m.exports = JSON.parse(code)
   }
 
-  public createRequire = (filename: string | URL) => {
+  public createRequire = (filename: string | URL): NodeJS.Require => {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
@@ -255,7 +255,7 @@ export class CommonjsExecutor {
     return '.js'
   }
 
-  public require(identifier: string) {
+  public require(identifier: string): any {
     const ext = extname(identifier)
     if (ext === '.node' || isNodeBuiltin(identifier)) {
       return this.requireCoreModule(identifier)

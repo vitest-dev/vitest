@@ -17,7 +17,7 @@ export class DotReporter extends BaseReporter {
   private tests = new Map<Test['id'], TestCaseState>()
   private finishedTests = new Set<TestCase['id']>()
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest): void {
     super.onInit(ctx)
 
     if (this.isTTY) {
@@ -30,19 +30,19 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  printTask(task: Task) {
+  printTask(task: Task): void {
     if (!this.isTTY) {
       super.printTask(task)
     }
   }
 
-  onWatcherRerun(files: string[], trigger?: string) {
+  onWatcherRerun(files: string[], trigger?: string): void {
     this.tests.clear()
     this.renderer?.start()
     super.onWatcherRerun(files, trigger)
   }
 
-  onFinished(files?: File[], errors?: unknown[]) {
+  onFinished(files?: File[], errors?: unknown[]): void {
     if (this.isTTY) {
       const finalLog = formatTests(Array.from(this.tests.values()))
       this.ctx.logger.log(finalLog)
@@ -61,7 +61,7 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  onTestCaseReady(test: TestCase) {
+  onTestCaseReady(test: TestCase): void {
     if (this.finishedTests.has(test.id)) {
       return
     }
@@ -69,13 +69,13 @@ export class DotReporter extends BaseReporter {
     this.renderer?.schedule()
   }
 
-  onTestCaseResult(test: TestCase) {
+  onTestCaseResult(test: TestCase): void {
     this.finishedTests.add(test.id)
     this.tests.set(test.id, test.result().state || 'skipped')
     this.renderer?.schedule()
   }
 
-  onTestModuleEnd() {
+  onTestModuleEnd(): void {
     if (!this.isTTY) {
       return
     }

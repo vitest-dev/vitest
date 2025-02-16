@@ -1,7 +1,7 @@
 import { ModuleMockerMSWInterceptor } from '@vitest/mocker/browser'
 import { getConfig } from '../utils'
 
-export function createModuleMockerInterceptor() {
+export function createModuleMockerInterceptor(): ModuleMockerMSWInterceptor {
   const debug = getConfig().env.VITEST_BROWSER_DEBUG
   return new ModuleMockerMSWInterceptor({
     globalThisAccessor: '"__vitest_mocker__"',

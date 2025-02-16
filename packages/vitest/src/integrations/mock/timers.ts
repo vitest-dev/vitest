@@ -214,7 +214,7 @@ export class FakeTimers {
     this._userConfig = config
   }
 
-  isFakeTimers() {
+  isFakeTimers(): boolean {
     return this._fakingTime
   }
 

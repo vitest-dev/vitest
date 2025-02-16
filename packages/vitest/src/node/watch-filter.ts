@@ -229,7 +229,7 @@ export class WatchFilter {
     this.stdout.write(data)
   }
 
-  public getLastResults() {
+  public getLastResults(): string[] {
     return this.results
   }
 }
