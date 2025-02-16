@@ -45,4 +45,27 @@ export class VerboseReporter extends DefaultReporter {
       task.result.errors?.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error?.message}`)))
     }
   }
+
+  protected printSuite(task: Task): void {
+    const indentation = '  '.repeat(getIndentation(task))
+    const state = getStateSymbol(task)
+
+    this.log(` ${indentation}${state} ${task.name}`)
+  }
+
+  protected getTestName(test: Task): string {
+    return test.name
+  }
+
+  protected getTestIndentation(test: Task): string {
+    return '  '.repeat(getIndentation(test))
+  }
+}
+
+function getIndentation(suite: Task, level = 1): number {
+  if (suite.suite) {
+    return getIndentation(suite.suite, level + 1)
+  }
+
+  return level
 }

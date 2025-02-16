@@ -88,11 +88,12 @@ export abstract class BaseReporter implements Reporter {
       return
     }
 
-    const tests = getTests(task)
-    const failed = tests.filter(t => t.result?.state === 'fail')
-    const skipped = tests.filter(t => t.mode === 'skip' || t.mode === 'todo')
+    const suites = getSuites(task)
+    const allTests = getTests(task)
+    const failed = allTests.filter(t => t.result?.state === 'fail')
+    const skipped = allTests.filter(t => t.mode === 'skip' || t.mode === 'todo')
 
-    let state = c.dim(`${tests.length} test${tests.length > 1 ? 's' : ''}`)
+    let state = c.dim(`${allTests.length} test${allTests.length > 1 ? 's' : ''}`)
 
     if (failed.length) {
       state += c.dim(' | ') + c.red(`${failed.length} failed`)
@@ -120,50 +121,69 @@ export abstract class BaseReporter implements Reporter {
 
     this.log(` ${title} ${task.name} ${suffix}`)
 
-    const anyFailed = tests.some(test => test.result?.state === 'fail')
+    for (const suite of suites) {
+      const tests = suite.tasks.filter(task => task.type === 'test')
 
-    for (const test of tests) {
-      const { duration, retryCount, repeatCount } = test.result || {}
-      let suffix = ''
-
-      if (retryCount != null && retryCount > 0) {
-        suffix += c.yellow(` (retry x${retryCount})`)
+      if (!('filepath' in suite)) {
+        this.printSuite(suite)
       }
 
-      if (repeatCount != null && repeatCount > 0) {
-        suffix += c.yellow(` (repeat x${repeatCount})`)
-      }
+      for (const test of tests) {
+        const { duration, retryCount, repeatCount } = test.result || {}
+        const padding = this.getTestIndentation(test)
+        let suffix = ''
 
-      if (test.result?.state === 'fail') {
-        this.log(c.red(`   ${taskFail} ${getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
+        if (retryCount != null && retryCount > 0) {
+          suffix += c.yellow(` (retry x${retryCount})`)
+        }
 
-        test.result?.errors?.forEach((e) => {
+        if (repeatCount != null && repeatCount > 0) {
+          suffix += c.yellow(` (repeat x${repeatCount})`)
+        }
+
+        if (test.result?.state === 'fail') {
+          this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
+
+          test.result?.errors?.forEach((e) => {
           // print short errors, full errors will be at the end in summary
-          this.log(c.red(`     ${F_RIGHT} ${e?.message}`))
-        })
-      }
+            this.log(c.red(`   ${padding}${F_RIGHT} ${e?.message}`))
+          })
+        }
 
-      // also print slow tests
-      else if (duration && duration > this.ctx.config.slowTestThreshold) {
-        this.log(
-          `   ${c.yellow(c.dim(F_CHECK))} ${getTestName(test, c.dim(' > '))}`
-          + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}${suffix}`,
-        )
-      }
+        // also print slow tests
+        else if (duration && duration > this.ctx.config.slowTestThreshold) {
+          this.log(
+            ` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test, c.dim(' > '))}`
+            + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}${suffix}`,
+          )
+        }
 
-      else if (this.ctx.config.hideSkippedTests && (test.mode === 'skip' || test.result?.state === 'skip')) {
-        // Skipped tests are hidden when --hideSkippedTests
-      }
+        else if (this.ctx.config.hideSkippedTests && (test.mode === 'skip' || test.result?.state === 'skip')) {
+          // Skipped tests are hidden when --hideSkippedTests
+        }
 
-      // also print skipped tests that have notes
-      else if (test.result?.state === 'skip' && test.result.note) {
-        this.log(`   ${getStateSymbol(test)} ${getTestName(test)}${c.dim(c.gray(` [${test.result.note}]`))}`)
-      }
+        // also print skipped tests that have notes
+        else if (test.result?.state === 'skip' && test.result.note) {
+          this.log(` ${padding}${getStateSymbol(test)} ${this.getTestName(test)}${c.dim(c.gray(` [${test.result.note}]`))}`)
+        }
 
-      else if (this.renderSucceed || anyFailed) {
-        this.log(`   ${getStateSymbol(test)} ${getTestName(test, c.dim(' > '))}${suffix}`)
+        else if (this.renderSucceed || failed.length > 0) {
+          this.log(` ${padding}${getStateSymbol(test)} ${this.getTestName(test, c.dim(' > '))}${suffix}`)
+        }
       }
     }
+  }
+
+  protected printSuite(_task: Task): void {
+    // Suite name is included in getTestName by default
+  }
+
+  protected getTestName(test: Task, separator?: string): string {
+    return getTestName(test, separator)
+  }
+
+  protected getTestIndentation(_test: Task) {
+    return '  '
   }
 
   private getDurationPrefix(task: Task) {
