@@ -96,24 +96,24 @@ test('renders tree when in TTY', async () => {
     "❯ fixtures/verbose/example-1.test.ts (10 tests | 1 failed | 4 skipped) [...]ms
        ✓ test pass in root
        ↓ test skip in root
-       ❯ suite in root
-         ✓ test pass in 1. suite (1)
-         ✓ test pass in 1. suite (2)
-         ❯ suite in suite
-           ✓ test pass in nested suite (1)
-           ✓ test pass in nested suite (2)
-           ❯ suite in nested suite
+       ❯ suite in root (5)
+         ✓ test pass in 1. suite #1
+         ✓ test pass in 1. suite #2
+         ❯ suite in suite (3)
+           ✓ test pass in nested suite #1
+           ✓ test pass in nested suite #2
+           ❯ suite in nested suite (1)
              × test failure in 2x nested suite [...]ms
                → expected 'should fail' to be 'as expected' // Object.is equality
-       ↓ suite skip in root
+       ↓ suite skip in root (3)
          ↓ test 1.3
-         ↓ suite in suite
+         ↓ suite in suite (2)
            ↓ test in nested suite
            ↓ test failure in nested suite of skipped suite
      ✓ fixtures/verbose/example-2.test.ts (3 tests | 1 skipped) [...]ms
        ✓ test 0.1
        ↓ test 0.2
-       ✓ suite 1.1
+       ✓ suite 1.1 (1)
          ✓ test 1.1"
   `)
 })
@@ -139,10 +139,10 @@ test('does not render tree when in non-TTY', async () => {
 
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
     "✓ fixtures/verbose/example-1.test.ts > test pass in root
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite (1)
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite (2)
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite (1)
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite (2)
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite #1
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite #2
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite #1
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite #2
      × fixtures/verbose/example-1.test.ts > suite in root > suite in suite > suite in nested suite > test failure in 2x nested suite
        → expected 'should fail' to be 'as expected' // Object.is equality
      ✓ fixtures/verbose/example-2.test.ts > test 0.1
