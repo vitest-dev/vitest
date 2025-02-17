@@ -123,12 +123,19 @@ Received: ""test2""
     include: [testFile],
     update: false,
   })
-  expect(vitest.stderr).toContain(`
+  if (process.env.CI) {
+    expect(vitest.stderr).toContain(`
+Error: Snapshot \`test1 1\` mismatched
+`)
+  }
+  else {
+    expect(vitest.stderr).toContain(`
 Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
 
 Expected: ""test1""
 Received: ""test2""
 `)
+  }
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot()')
 
   // current snapshot is "test1"
