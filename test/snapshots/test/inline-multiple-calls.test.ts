@@ -20,7 +20,6 @@ test('same', async () => {
     update: true,
   })
   expect(vitest.stderr).toBe('')
-  // TODO: should summary have `added: 1`?
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
     Object {
       "added": 2,
@@ -109,8 +108,9 @@ test('different', async () => {
     include: [testFile],
     update: true,
   })
-  expect.soft(vitest.exitCode).not.toBe(0)
+  expect(vitest.stderr).toContain('toMatchInlineSnapshot cannot be called multiple times at the same location with a different snapshot')
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot()')
+  expect(vitest.exitCode).not.toBe(0)
 
   // no-update run should fail
   vitest = await runVitest({
@@ -140,7 +140,7 @@ test('different', async () => {
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test1"`)')
 
   // current snapshot is "test2"
-  editFile(testFile, s => s.replace('expect(test1).toMatchInlineSnapshot()', 'expect(test1).toMatchInlineSnapshot(`"test1"`)'))
+  editFile(testFile, s => s.replace('expect(test1).toMatchInlineSnapshot(`"test1"`)', 'expect(test1).toMatchInlineSnapshot(`"test2"`)'))
   vitest = await runVitest({
     root,
     include: [testFile],

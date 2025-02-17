@@ -27,15 +27,20 @@ export async function saveInlineSnapshots(
       const code = await environment.readSnapshotFile(file) as string
       const s = new MagicString(code)
 
-      const uniqueSnaps = snaps.reduce((acc: InlineSnapshot[], snap) => {
-        const exists = acc.some(s => s.line === snap.line && s.column === snap.column)
-        if (!exists) {
-          acc.push(snap)
-        }
-        return acc
-      }, [])
+      // const uniqueSnaps = snaps.reduce((acc: InlineSnapshot[], snap) => {
+      //   const exists = acc.some(s => s.line === snap.line && s.column === snap.column)
+      //   if (!exists) {
+      //     acc.push(snap)
+      //   }
+      //   return acc
+      // }, [])
 
-      for (const snap of uniqueSnaps) {
+      // for (const snap of uniqueSnaps) {
+      //   const index = positionToOffset(code, snap.line, snap.column)
+      //   replaceInlineSnap(code, s, index, snap.snapshot)
+      // }
+
+      for (const snap of snaps) {
         const index = positionToOffset(code, snap.line, snap.column)
         replaceInlineSnap(code, s, index, snap.snapshot)
       }

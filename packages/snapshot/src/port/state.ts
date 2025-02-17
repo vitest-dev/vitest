@@ -48,6 +48,12 @@ interface SaveStatus {
   saved: boolean
 }
 
+type ParsedStackPosition = Pick<ParsedStack, 'file' | 'line' | 'column'>
+
+function isSameStackPosition(x: ParsedStackPosition, y: ParsedStackPosition) {
+  return x.file === y.file && x.column === y.column && x.line === y.line
+}
+
 export default class SnapshotState {
   private _counters = new CounterMap<string>()
   private _dirty: boolean
@@ -55,7 +61,7 @@ export default class SnapshotState {
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
-  private _inlineSnapshotStacks: Array<ParsedStack & { testId: string }>
+  private _inlineSnapshotStacks: Array<ParsedStack & { testId: string; snapshot: string }>
   private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
   private _rawSnapshots: Array<RawSnapshot>
   private _uncheckedKeys: Set<string>
@@ -343,7 +349,15 @@ export default class SnapshotState {
       // https://github.com/vitejs/vite/issues/8657
       stack.column--
 
-      this._inlineSnapshotStacks.push({ ...stack, testId })
+      // ensure only one snapshot will be written at the same location
+      this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack!))
+
+      // reject multiple inline snapshots at the same location when snapshot is different
+      if (this._inlineSnapshotStacks.some(s => isSameStackPosition(s, stack!) && receivedSerialized !== s.snapshot)) {
+        // TODO: include diff in error
+        throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location with a different snapshot')
+      }
+      this._inlineSnapshotStacks.push({ ...stack, testId, snapshot: receivedSerialized })
     }
 
     // These are the conditions on when to write snapshots:
