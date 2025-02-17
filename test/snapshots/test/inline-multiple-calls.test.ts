@@ -3,18 +3,20 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
-// pnpm -C test/snapshots test:fixtures --root test/fixtures/inline-multiple-calls
 // pnpm -C test/snapshots test:snaps inline-multiple-calls
 
-test('workflow', async () => {
+test('same', async () => {
+  // pnpm -C test/snapshots test:fixtures --root test/fixtures/inline-multiple-calls same
+
   // reset snapshot
   const root = join(import.meta.dirname, 'fixtures/inline-multiple-calls')
-  const testFile = join(root, 'basic.test.ts')
+  const testFile = join(root, 'same.test.ts')
   editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
 
   // iniital run (create snapshot)
   let vitest = await runVitest({
     root,
+    include: [testFile],
     update: true,
   })
   expect(vitest.stderr).toBe('')
@@ -42,6 +44,7 @@ test('workflow', async () => {
   // no-update run
   vitest = await runVitest({
     root,
+    include: [testFile],
     update: false,
   })
   expect(vitest.stderr).toBe('')
@@ -68,6 +71,7 @@ test('workflow', async () => {
   // update run
   vitest = await runVitest({
     root,
+    include: [testFile],
     update: true,
   })
   expect(vitest.ctx?.snapshot.summary).toMatchInlineSnapshot(`
@@ -89,4 +93,58 @@ test('workflow', async () => {
     }
   `)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test1"`)')
+})
+
+test('different', async () => {
+  // pnpm -C test/snapshots test:fixtures --root test/fixtures/inline-multiple-calls different
+
+  // reset snapshot
+  const root = join(import.meta.dirname, 'fixtures/inline-multiple-calls')
+  const testFile = join(root, 'different.test.ts')
+  editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
+
+  // update run should fail
+  let vitest = await runVitest({
+    root,
+    include: [testFile],
+    update: true,
+  })
+  expect.soft(vitest.exitCode).not.toBe(0)
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot()')
+
+  // no-update run should fail
+  vitest = await runVitest({
+    root,
+    include: [testFile],
+    update: false,
+  })
+  expect(vitest.exitCode).not.toBe(0)
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot()')
+
+  // current snapshot is "test1"
+  editFile(testFile, s => s.replace('expect(test1).toMatchInlineSnapshot()', 'expect(test1).toMatchInlineSnapshot(`"test1"`)'))
+  vitest = await runVitest({
+    root,
+    include: [testFile],
+    update: true,
+  })
+  expect(vitest.exitCode).not.toBe(0)
+
+  // current snapshot is "test2"
+  editFile(testFile, s => s.replace('expect(test1).toMatchInlineSnapshot()', 'expect(test1).toMatchInlineSnapshot(`"test1"`)'))
+  vitest = await runVitest({
+    root,
+    include: [testFile],
+    update: true,
+  })
+  expect(vitest.exitCode).not.toBe(0)
+
+  // current snapshot is "test3"
+  editFile(testFile, s => s.replace('expect(test1).toMatchInlineSnapshot()', 'expect(test1).toMatchInlineSnapshot(`"test1"`)'))
+  vitest = await runVitest({
+    root,
+    include: [testFile],
+    update: true,
+  })
+  expect(vitest.exitCode).not.toBe(0)
 })
