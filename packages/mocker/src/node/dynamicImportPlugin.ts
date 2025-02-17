@@ -32,7 +32,6 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
 }
 
 export interface DynamicImportInjectorResult {
-  ast: Rollup.ProgramNode
   code: string
   map: SourceMap
 }
@@ -75,7 +74,6 @@ export function injectDynamicImport(
   })
 
   return {
-    ast,
     code: s.toString(),
     map: s.generateMap({ hires: 'boundary', source: id }),
   }

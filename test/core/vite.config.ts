@@ -57,7 +57,12 @@ export default defineConfig({
     includeSource: [
       'src/in-source/*.ts',
     ],
-    exclude: ['**/fixtures/**', ...defaultExclude],
+    exclude: [
+      '**/fixtures/**',
+      ...defaultExclude,
+      // TODO: wait for support in rolldown
+      '**/esnext.test.ts',
+    ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: [
