@@ -108,7 +108,12 @@ test('different', async () => {
     include: [testFile],
     update: true,
   })
-  expect(vitest.stderr).toContain('toMatchInlineSnapshot cannot be called multiple times at the same location with a different snapshot')
+  expect(vitest.stderr).toContain(`
+Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+
+Expected: ""test1""
+Received: ""test2""
+`)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot()')
   expect(vitest.exitCode).not.toBe(0)
 
@@ -118,7 +123,12 @@ test('different', async () => {
     include: [testFile],
     update: false,
   })
-  expect(vitest.exitCode).not.toBe(0)
+  expect(vitest.stderr).toContain(`
+Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+
+Expected: ""test1""
+Received: ""test2""
+`)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot()')
 
   // current snapshot is "test1"
@@ -128,7 +138,12 @@ test('different', async () => {
     include: [testFile],
     update: true,
   })
-  expect(vitest.exitCode).not.toBe(0)
+  expect(vitest.stderr).toContain(`
+Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+
+Expected: ""test1""
+Received: ""test2""
+`)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test1"`)')
 
   vitest = await runVitest({
@@ -136,7 +151,12 @@ test('different', async () => {
     include: [testFile],
     update: false,
   })
-  expect(vitest.exitCode).not.toBe(0)
+  expect(vitest.stderr).toContain(`
+Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+
+Expected: ""test1""
+Received: ""test2""
+`)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test1"`)')
 
   // current snapshot is "test2"
@@ -146,7 +166,12 @@ test('different', async () => {
     include: [testFile],
     update: true,
   })
-  expect(vitest.exitCode).not.toBe(0)
+  expect(vitest.stderr).toContain(`
+Error: toMatchInlineSnapshot with different snapshots cannot be called at the same location
+
+Expected: ""test1""
+Received: ""test2""
+`)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test2"`)')
 
   vitest = await runVitest({
@@ -154,6 +179,11 @@ test('different', async () => {
     include: [testFile],
     update: false,
   })
-  expect(vitest.exitCode).not.toBe(0)
+  expect(vitest.stderr).toContain(`
+Error: Snapshot \`test1 1\` mismatched
+
+Expected: ""test2""
+Received: ""test1""
+`)
   expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test2"`)')
 })

@@ -349,13 +349,24 @@ export default class SnapshotState {
       // https://github.com/vitejs/vite/issues/8657
       stack.column--
 
-      // ensure only one snapshot will be written at the same location
-      this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack!))
+      // reject multiple inline snapshots at the same location if snapshot is different
+      const snapshotsWithSameStack = this._inlineSnapshotStacks.filter(s => isSameStackPosition(s, stack!))
+      if (snapshotsWithSameStack.length > 0) {
+        // ensure only one snapshot will be written at the same location
+        this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack!))
 
-      // reject multiple inline snapshots at the same location when snapshot is different
-      if (this._inlineSnapshotStacks.some(s => isSameStackPosition(s, stack!) && receivedSerialized !== s.snapshot)) {
-        // TODO: include diff in error
-        throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location with a different snapshot')
+        const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== receivedSerialized)
+        if (differentSnapshot) {
+          throw Object.assign(
+            new Error(
+              'toMatchInlineSnapshot with different snapshots cannot be called at the same location',
+            ),
+            {
+              actual: receivedSerialized,
+              expected: differentSnapshot.snapshot,
+            },
+          )
+        }
       }
       this._inlineSnapshotStacks.push({ ...stack, testId, snapshot: receivedSerialized })
     }
