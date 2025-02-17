@@ -129,6 +129,15 @@ test('different', async () => {
     update: true,
   })
   expect(vitest.exitCode).not.toBe(0)
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test1"`)')
+
+  vitest = await runVitest({
+    root,
+    include: [testFile],
+    update: false,
+  })
+  expect(vitest.exitCode).not.toBe(0)
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test1"`)')
 
   // current snapshot is "test2"
   editFile(testFile, s => s.replace('expect(test1).toMatchInlineSnapshot()', 'expect(test1).toMatchInlineSnapshot(`"test1"`)'))
@@ -138,13 +147,13 @@ test('different', async () => {
     update: true,
   })
   expect(vitest.exitCode).not.toBe(0)
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test2"`)')
 
-  // current snapshot is "test3"
-  editFile(testFile, s => s.replace('expect(test1).toMatchInlineSnapshot()', 'expect(test1).toMatchInlineSnapshot(`"test1"`)'))
   vitest = await runVitest({
     root,
     include: [testFile],
-    update: true,
+    update: false,
   })
   expect(vitest.exitCode).not.toBe(0)
+  expect(fs.readFileSync(testFile, 'utf-8')).toContain('expect(test1).toMatchInlineSnapshot(`"test2"`)')
 })
