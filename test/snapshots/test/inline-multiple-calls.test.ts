@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { join } from 'node:path'
+import { join } from 'pathe'
 import { expect, test } from 'vitest'
 import { editFile, runVitest } from '../../test-utils'
 
