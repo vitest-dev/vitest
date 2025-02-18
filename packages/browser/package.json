@@ -93,7 +93,7 @@
     "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.17",
     "msw": "^2.7.0",
-    "sirv": "^3.0.0",
+    "sirv": "^3.0.1",
     "tinyrainbow": "^2.0.0",
     "ws": "^8.18.0"
   },
@@ -108,12 +108,12 @@
     "flatted": "^3.3.2",
     "ivya": "^1.1.1",
     "mime": "^4.0.6",
-    "pathe": "^2.0.2",
+    "pathe": "^2.0.3",
     "periscopic": "^4.0.2",
     "playwright": "^1.50.1",
     "playwright-core": "^1.50.1",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.41.0"
+    "webdriverio": "^8.42.0"
   }
 }
