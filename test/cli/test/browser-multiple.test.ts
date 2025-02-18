@@ -11,6 +11,9 @@ it('automatically assigns the port', async () => {
   onTestFinished(() => spy.mockRestore())
   let ctx: Vitest
   let urls: (string | undefined)[] = []
+  // override default port since it can conflicts with
+  // other browser mode tests in test/cli suite
+  process.env.__VITEST_TEST_BROWSER_DEFAULT_PORT__ = '63210'
   const { stderr } = await runVitest({
     root,
     workspace,
@@ -30,6 +33,6 @@ it('automatically assigns the port', async () => {
 
   expect(spy).not.toHaveBeenCalled()
   expect(stderr).not.toContain('is in use, trying another one...')
-  expect(urls).toContain('http://localhost:63315/')
-  expect(urls).toContain('http://localhost:63316/')
+  expect(urls).toContain('http://localhost:63210/')
+  expect(urls).toContain('http://localhost:63211/')
 })
