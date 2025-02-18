@@ -162,6 +162,7 @@ export class CommonjsExecutor {
       static getCompileCacheDir = _Module.getCompileCacheDir
       static flushCompileCache = _Module.flushCompileCache
       static stripTypeScriptTypes = _Module.stripTypeScriptTypes
+      static findPackageJSON = _Module.findPackageJSON
 
       static Module = Module
     }
