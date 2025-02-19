@@ -459,7 +459,7 @@ function and(locator: Locator): Locator
 This method creates a new locator that matches both the parent and provided locator. The following example finds a button with a specific title:
 
 ```ts
-ge.getByRole('button').and(page.getByTitle('Subscribe'))
+page.getByRole('button').and(page.getByTitle('Subscribe'))
 ```
 
 ## or
