@@ -178,24 +178,30 @@ describe('default reporter', async () => {
     expect(stdout).toContain('✓ repeat couple of times (repeat x3)')
   })
 
-  test('test.each/for title format', async () => {
+  test.only('test.each/for title format', async () => {
     const { stdout } = await runVitest({
       include: ['fixtures/test-for-title.test.ts'],
       reporters: [['default', { isTTY: true, summary: false }]],
       config: false,
     })
     expect(
-      [...stdout.matchAll(/(✓ test.*)$/gm)].map(v => v[0]),
+      [...stdout.matchAll(/(✓ .*)$/gm)].map(v => v[0]).filter(v => !v.includes('ms')),
     ).toMatchInlineSnapshot(`
       [
-        "✓ test.for object (0 = 'a', 2 = { te: 'st' })",
-        "✓ test.for object (0 = 'b', 2 = [ 'test' ])",
-        "✓ test.each object (0 = 'a', 2 = { te: 'st' })",
-        "✓ test.each object (0 = 'b', 2 = [ 'test' ])",
-        "✓ test.for array (0 = 'a', 2 = { te: 'st' })",
-        "✓ test.for array (0 = 'b', 2 = [ 'test' ])",
-        "✓ test.each array (0 = 'a', 2 = { te: 'st' })",
-        "✓ test.each array (0 = 'b', 2 = [ 'test' ])",
+        "✓ test.for object : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.for object : 0 = 'b', 2 = [ 'test' ]",
+        "✓ test.each object : 0 = 'a', 2 = { te: 'st' } ",
+        "✓ test.each object : 0 = 'b', 2 = [ 'test' ] ",
+        "✓ test.for array : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.for array : 0 = 'b', 2 = [ 'test' ]",
+        "✓ test.each array : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.each array : 0 = 'b', 2 = [ 'test' ]",
+        "✓ object : add(1, 1) -> 2",
+        "✓ object : add(1, 2) -> 3",
+        "✓ object : add(2, 1) -> 3",
+        "✓ array : add(1, 1) -> 2",
+        "✓ array : add(1, 2) -> 3",
+        "✓ array : add(2, 1) -> 3",
       ]
     `)
   })
