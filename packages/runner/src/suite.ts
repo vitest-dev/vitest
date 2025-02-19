@@ -819,6 +819,13 @@ function formatTitle(template: string, items: any[], idx: number) {
         }) as unknown as string,
     )
   }
+  formatted = formatted.replace(
+    /\$(\d+)/g,
+    (_, key) =>
+      objDisplay(objectAttr(items, key), {
+        truncate: runner?.config?.chaiConfig?.truncateThreshold,
+      }) as unknown as string,
+  )
   return formatted
 }
 

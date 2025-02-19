@@ -177,4 +177,26 @@ describe('default reporter', async () => {
     expect(stdout).toContain('1 passed')
     expect(stdout).toContain('✓ repeat couple of times (repeat x3)')
   })
+
+  test('test.each/for title format', async () => {
+    const { stdout } = await runVitest({
+      include: ['fixtures/test-for-title.test.ts'],
+      reporters: [['default', { isTTY: true, summary: false }]],
+      config: false,
+    })
+    expect(
+      [...stdout.matchAll(/(✓ test.*)$/gm)].map(v => v[0])
+    ).toMatchInlineSnapshot(`
+      [
+        "✓ test.for object (0 = 'a', 2 = { te: 'st' })",
+        "✓ test.for object (0 = 'b', 2 = [ 'test' ])",
+        "✓ test.each object (0 = 'a', 2 = { te: 'st' })",
+        "✓ test.each object (0 = 'b', 2 = [ 'test' ])",
+        "✓ test.for array (0 = 'a', 2 = { te: 'st' })",
+        "✓ test.for array (0 = 'b', 2 = [ 'test' ])",
+        "✓ test.each array (0 = 'a', 2 = { te: 'st' })",
+        "✓ test.each array (0 = 'b', 2 = [ 'test' ])",
+      ]
+    `)
+  })
 }, 120000)
