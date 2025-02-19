@@ -89,7 +89,7 @@
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
     },
-    "ignoredBuiltDependencies": [
+    "onlyBuiltDependencies": [
       "@sveltejs/kit",
       "@swc/core",
       "edgedriver",
