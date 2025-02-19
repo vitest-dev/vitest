@@ -1,10 +1,10 @@
 import { builtinModules, createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
+import isolatedDecl from 'unplugin-isolated-decl/rollup'
+import oxc from 'unplugin-oxc/rollup'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -20,12 +20,11 @@ const external = [
 ]
 
 const plugins = [
-  resolve({
-    preferBuiltins: true,
-  }),
+  isolatedDecl({ transformer: 'oxc', extraOutdir: '.types' }),
   json(),
-  esbuild({
-    target: 'node14',
+  oxc({
+    transform: { target: 'node14' },
+    resolveNodeModules: true,
   }),
   commonjs(),
 ]
@@ -44,10 +43,10 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: entries,
+    input: 'dist/.types/index.d.ts',
     output: {
       dir: 'dist',
-      entryFileNames: '[name].d.ts',
+      entryFileNames: '[name].ts',
       format: 'esm',
     },
     external,
