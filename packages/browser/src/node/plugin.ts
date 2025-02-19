@@ -534,31 +534,23 @@ body {
         return {
           optimizeDeps: {
             rollupOptions: {
-              resolve: {
-                alias: {
-                  // FIXME: this doesn't seem to work
-                  '@vue/test-utils': '@vue/test-utils/dist/vue-test-utils.cjs.js',
-                  '@vue/compiler-core': '@vue/compiler-core/dist/compiler-core.cjs.js',
+              plugins: [
+                {
+                  name: 'vue-test-utils-rewrite',
+                  resolveId: {
+                    // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+                    // compiler-core: only CJS version allows slots as strings
+                    filter: { id: /^@vue\/(test-utils|compiler-core)$/ },
+                    handler(source, importer) {
+                      const resolved = getRequire().resolve(source, {
+                        paths: [importer!],
+                      })
+                      return resolved
+                    },
+                  },
                 },
-              },
+              ],
             },
-            // esbuildOptions: {
-            //   plugins: [
-            //     {
-            //       name: 'test-utils-rewrite',
-            //       setup(build) {
-            //         // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
-            //         // compiler-core: only CJS version allows slots as strings
-            //         build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args) => {
-            //           const resolved = getRequire().resolve(args.path, {
-            //             paths: [args.importer],
-            //           })
-            //           return { path: resolved }
-            //         })
-            //       },
-            //     },
-            // ],
-            // },
           },
         }
       },
