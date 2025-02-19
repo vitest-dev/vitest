@@ -1,13 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`basic output shows error 1`] = `
-"Error: top level error
- ❯ top-level-error.test.ts:1:7
-      1| throw new Error('top level error')
-       |       ^
-      2| 
-
-Error: describe error
+"Error: describe error
  ❯ describe-error.test.ts:4:9
       2| 
       3| describe('describe error', () => {
@@ -15,6 +9,12 @@ Error: describe error
        |         ^
       5| 
       6|   it('wont run', () => {
+
+Error: top level error
+ ❯ top-level-error.test.ts:1:7
+      1| throw new Error('top level error')
+       |       ^
+      2| 
 
 "
 `;
@@ -60,13 +60,7 @@ math.test.ts > failing test
 `;
 
 exports[`json output shows error 1`] = `
-"Error: top level error
- ❯ top-level-error.test.ts:1:7
-      1| throw new Error('top level error')
-       |       ^
-      2| 
-
-Error: describe error
+"Error: describe error
  ❯ describe-error.test.ts:4:9
       2| 
       3| describe('describe error', () => {
@@ -74,18 +68,18 @@ Error: describe error
        |         ^
       5| 
       6|   it('wont run', () => {
+
+Error: top level error
+ ❯ top-level-error.test.ts:1:7
+      1| throw new Error('top level error')
+       |       ^
+      2| 
 
 "
 `;
 
 exports[`json with a file output shows error 1`] = `
-"Error: top level error
- ❯ top-level-error.test.ts:1:7
-      1| throw new Error('top level error')
-       |       ^
-      2| 
-
-Error: describe error
+"Error: describe error
  ❯ describe-error.test.ts:4:9
       2| 
       3| describe('describe error', () => {
@@ -93,6 +87,12 @@ Error: describe error
        |         ^
       5| 
       6|   it('wont run', () => {
+
+Error: top level error
+ ❯ top-level-error.test.ts:1:7
+      1| throw new Error('top level error')
+       |       ^
+      2| 
 
 "
 `;
