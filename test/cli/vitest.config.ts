@@ -8,7 +8,7 @@ export default defineConfig({
     poolOptions: {
       forks: {
         singleFork: true,
-      }
+      },
     },
     chaiConfig: {
       truncateThreshold: 999,
