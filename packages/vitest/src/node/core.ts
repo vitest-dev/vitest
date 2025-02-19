@@ -203,9 +203,7 @@ export class Vitest {
     this.watcher.unregisterWatcher()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
-    this._browserLastPort = process.env.__VITEST_TEST_BROWSER_DEFAULT_PORT__
-      ? Number(process.env.__VITEST_TEST_BROWSER_DEFAULT_PORT__)
-      : defaultBrowserPort
+    this._browserLastPort = defaultBrowserPort
     this.pool?.close?.()
     this.pool = undefined
     this.closingPromise = undefined
