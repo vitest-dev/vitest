@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
+import { page, userEvent } from '@vitest/browser/context'
 import Blog from '../../src/blog-app/blog'
 
 test('renders blog posts', async () => {
@@ -18,9 +18,14 @@ test('renders blog posts', async () => {
 
   await expect.element(secondPost.getByRole('heading')).toHaveTextContent('qui est esse')
 
-  await secondPost.getByRole('button', { name: 'Delete' }).click()
+  await userEvent.click(secondPost.getByRole('button', { name: 'Delete' }))
 
   expect(screen.getByRole('listitem').all()).toHaveLength(3)
+
+  expect(screen.getByRole('listitem').nth(0).element()).toHaveTextContent(/molestiae ut ut quas/)
+  await expect.element(screen.getByRole('listitem').nth(666)).not.toBeInTheDocument()
+  expect(screen.getByRole('listitem').first().element()).toHaveTextContent(/molestiae ut ut quas/)
+  expect(screen.getByRole('listitem').last().element()).toHaveTextContent(/eum et est/)
 
   expect(screen.getByPlaceholder('non-existing').query()).not.toBeInTheDocument()
 })

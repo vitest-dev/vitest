@@ -1,4 +1,4 @@
-import type { InlineConfig } from 'vitest'
+import type { InlineConfig } from 'vitest/node'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -46,4 +46,19 @@ test.each([
 ])('should always use CustomSequencer if passed', async (shuffle) => {
   const { ctx } = await run({ shuffle, sequencer: CustomSequencer })
   expect(ctx?.config.sequence.sequencer.name).toBe('CustomSequencer')
+})
+
+test('shuffle', async () => {
+  const { stderr, ctx } = await runVitest({
+    root: './fixtures/shuffle',
+  })
+  expect(stderr).toBe('')
+  expect(ctx?.state.getFiles().map(f => [f.name, f.result?.state])).toMatchInlineSnapshot(`
+    [
+      [
+        "basic.test.ts",
+        "pass",
+      ],
+    ]
+  `)
 })

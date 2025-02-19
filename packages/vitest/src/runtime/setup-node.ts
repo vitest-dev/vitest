@@ -1,16 +1,18 @@
+import type { ResolvedTestEnvironment } from '../types/environment'
+import type { SerializedConfig } from './config'
+import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
-import util from 'node:util'
 import timers from 'node:timers'
-import { installSourcemapsSupport } from 'vite-node/source-map'
+import timersPromises from 'node:timers/promises'
+import util from 'node:util'
+import { getSafeTimers } from '@vitest/utils'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
-import { getSafeTimers, getWorkerState } from '../utils'
-import * as VitestIndex from '../public/index'
+import { installSourcemapsSupport } from 'vite-node/source-map'
 import { expect } from '../integrations/chai'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
-import type { ResolvedTestEnvironment } from '../types/environment'
+import * as VitestIndex from '../public/index'
 import { setupCommonEnv } from './setup-common'
-import type { VitestExecutor } from './execute'
-import type { SerializedConfig } from './config'
+import { getWorkerState } from './utils'
 
 // this should only be used in Node
 let globalSetup = false
@@ -18,7 +20,7 @@ export async function setupGlobalEnv(
   config: SerializedConfig,
   { environment }: ResolvedTestEnvironment,
   executor: VitestExecutor,
-) {
+): Promise<void> {
   await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
@@ -60,6 +62,7 @@ export async function setupGlobalEnv(
   globalThis.__vitest_required__ = {
     util,
     timers,
+    timersPromises,
   }
 
   installSourcemapsSupport({
@@ -79,7 +82,7 @@ function resolveAsset(mod: NodeJS.Module, url: string) {
   mod.exports = url
 }
 
-export async function setupConsoleLogSpy() {
+export async function setupConsoleLogSpy(): Promise<void> {
   const { createCustomConsole } = await import('./console')
 
   globalThis.console = createCustomConsole()
@@ -89,7 +92,7 @@ export async function withEnv(
   { environment }: ResolvedTestEnvironment,
   options: Record<string, any>,
   fn: () => Promise<void>,
-) {
+): Promise<void> {
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = environment.name
   expect.setState({

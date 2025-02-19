@@ -1,10 +1,10 @@
-// since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
-import * as loupe from 'loupe'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import {
   format as prettyFormat,
   plugins as prettyFormatPlugins,
 } from '@vitest/pretty-format'
+// since this is already part of Vitest via Chai, we can just reuse it without increasing the size of bundle
+import * as loupe from 'loupe'
 
 type Inspect = (value: unknown, options: Options) => string
 interface Options {
@@ -73,8 +73,9 @@ export function stringify(
     })
   }
 
+  // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(maxDepth / 2))
+    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, ...options })
     : result
 }
 

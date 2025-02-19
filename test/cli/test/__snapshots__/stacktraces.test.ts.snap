@@ -1,7 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`stacktrace filtering > filters stacktraces > stacktrace-filtering 1`] = `
-"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+"
+⎯⎯ Failed Tests 1 ⎯⎯
 
  FAIL  error-with-stack.test.js > error in deps
 Error: Something truly horrible has happened!
@@ -16,13 +17,14 @@ Error: Something truly horrible has happened!
  ❯ a error-with-stack.test.js:8:3
  ❯ error-with-stack.test.js:4:3
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+⎯⎯[1/1]⎯
 
 "
 `;
 
 exports[`stacktrace in vmThreads 1`] = `
-"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+"
+⎯⎯ Failed Tests 1 ⎯⎯
 
  FAIL  error-with-stack.test.js > error in deps
 Error: Something truly horrible has happened!
@@ -38,13 +40,14 @@ Error: Something truly horrible has happened!
  ❯ a error-with-stack.test.js:8:3
  ❯ error-with-stack.test.js:4:3
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+⎯⎯[1/1]⎯
 
 "
 `;
 
 exports[`stacktrace should print error frame source file correctly > error-in-deps > error-in-deps 1`] = `
-"⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+"
+⎯⎯ Failed Tests 1 ⎯⎯
 
  FAIL  error-in-deps.test.js > error in deps
 ReferenceError: bar is not defined
@@ -57,7 +60,7 @@ ReferenceError: bar is not defined
       5| 
  ❯ error-in-deps.test.js:5:3
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+⎯⎯[1/1]⎯
 
 "
 `;
@@ -109,7 +112,7 @@ exports[`stacktraces should respect sourcemaps > add-in-js.test.js > add-in-js.t
 exports[`stacktraces should respect sourcemaps > error-in-deps.test.js > error-in-deps.test.js 1`] = `
 " ❯ error-in-deps.test.js:5:3
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+⎯⎯[1/1]⎯
 
 "
 `;

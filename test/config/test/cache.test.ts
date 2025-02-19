@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'vitest'
 import { resolve } from 'pathe'
+import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures/cache')
@@ -15,7 +15,7 @@ test('default', async () => {
   expect(stderr).toBe('')
 
   const cachePath = ctx!.cache.results.getCachePath()
-  const path = resolve(project, 'node_modules/.vite/vitest/results.json')
+  const path = resolve(project, 'node_modules/.vite/results.json')
   expect(cachePath).toMatch(path)
 })
 
@@ -53,7 +53,7 @@ test('use cacheDir', async () => {
   expect(stderr).toBe('')
 
   const cachePath = ctx!.cache.results.getCachePath()
-  const path = resolve(root, 'node_modules/.vite-custom/vitest/results.json')
+  const path = resolve(root, 'node_modules/.vite-custom/results.json')
   expect(cachePath).toMatch(path)
 })
 
@@ -77,7 +77,7 @@ describe('with optimizer enabled', () => {
     expect(stderr).toBe('')
 
     const cachePath = ctx!.cache.results.getCachePath()
-    const path = resolve(project, 'node_modules/.vite/vitest/results.json')
+    const path = resolve(root, 'node_modules/.vite/vitest/results.json')
     expect(cachePath).toBe(path)
   })
 
@@ -117,7 +117,7 @@ describe('with optimizer enabled', () => {
     expect(stderr).toBe('')
 
     const cachePath = ctx!.cache.results.getCachePath()
-    const path = resolve(root, 'node_modules/.vite-custom/vitest/results.json')
+    const path = resolve(root, 'node_modules/.vite-custom/results.json')
     expect(cachePath).toBe(path)
   })
 })

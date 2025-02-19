@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { expect, test } from 'vitest'
 import { resolve } from 'pathe'
+import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test('should print correct indicator position', async () => {
@@ -11,7 +11,8 @@ test('should print correct indicator position', async () => {
   expect(code).toMatch(/\r\n/)
   expect(stderr).toBeTruthy()
   expect(stderr).toMatchInlineSnapshot(`
-    "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  indicator-position.test.js > 
     AssertionError: expected 2 to be 3 // Object.is equality

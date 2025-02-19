@@ -1,5 +1,5 @@
+import { x } from 'tinyexec'
 import { expect, test } from 'vitest'
-import { execa } from 'execa'
 import { runVitest } from '../../test-utils'
 
 const [nodeMajor, nodeMinor] = process.version.slice(1).split('.').map(Number)
@@ -13,8 +13,10 @@ test.each([
   const fileToTest = `${pool}.test.ts`
 
   // TODO: node.js has a bug that makes --inspect-brk not work on worker threads
-  if (nodeMajor === 20 && nodeMinor > 14 && pool !== 'forks') {
-    return
+  if (pool !== 'forks') {
+    if ((nodeMajor === 20 && nodeMinor > 14) || (nodeMajor > 20)) {
+      return
+    }
   }
 
   const vitest = await runVitest({
@@ -33,18 +35,20 @@ test.each([
 })
 
 test('should not pass execArgv to workers when not specified in the config', async () => {
-  const { stdout, stderr } = await execa('node', [
+  const { stdout, stderr } = await x('node', [
     '--title',
     'this-works-only-on-main-thread',
     '../../../../node_modules/vitest/vitest.mjs',
     '--run',
   ], {
-    cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
-    reject: false,
-    env: {
-      VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
-      NO_COLOR: '1',
+    nodeOptions: {
+      cwd: `${process.cwd()}/fixtures/no-exec-args-fixtures`,
+      env: {
+        VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+        NO_COLOR: '1',
+      },
     },
+    throwOnError: false,
   })
 
   expect(stderr).not.toContain('Error: Initiated Worker with invalid execArgv flags: --title')
@@ -53,19 +57,21 @@ test('should not pass execArgv to workers when not specified in the config', asy
 })
 
 test('should let allowed args pass to workers', async () => {
-  const { stdout, stderr } = await execa('node', [
+  const { stdout, stderr } = await x('node', [
     '--heap-prof',
     '--diagnostic-dir=/tmp/vitest-diagnostics',
     '--heap-prof-name=heap.prof',
     '../../../../node_modules/vitest/vitest.mjs',
     '--run',
   ], {
-    cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
-    reject: false,
-    env: {
-      VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
-      NO_COLOR: '1',
+    nodeOptions: {
+      cwd: `${process.cwd()}/fixtures/allowed-exec-args-fixtures`,
+      env: {
+        VITE_NODE_DEPS_MODULE_DIRECTORIES: '/node_modules/,/packages/',
+        NO_COLOR: '1',
+      },
     },
+    throwOnError: false,
   })
 
   expect(stderr).toBe('')

@@ -1,5 +1,5 @@
 import type { Readable, Writable } from 'node:stream'
-import stripAnsi from 'strip-ansi'
+import { stripVTControlCharacters } from 'node:util'
 
 type Listener = (() => void)
 type ReadableOrWritable = Readable | Writable
@@ -12,9 +12,12 @@ export class Cli {
   private stdoutListeners: Listener[] = []
   private stderrListeners: Listener[] = []
   private stdin: ReadableOrWritable
+  private preserveAnsi?: boolean
 
-  constructor(options: { stdin: ReadableOrWritable; stdout: ReadableOrWritable; stderr: ReadableOrWritable }) {
+  constructor(options: { stdin: ReadableOrWritable; stdout: ReadableOrWritable; stderr: ReadableOrWritable; preserveAnsi?: boolean }) {
     this.stdin = options.stdin
+    this.stdin = options.stdin
+    this.preserveAnsi = options.preserveAnsi
 
     for (const source of (['stdout', 'stderr'] as const)) {
       const stream = options[source]
@@ -37,7 +40,7 @@ export class Cli {
   }
 
   private capture(source: Source, data: any) {
-    const msg = stripAnsi(data.toString())
+    const msg = this.preserveAnsi ? data.toString() : stripVTControlCharacters(data.toString())
     this[source] += msg
     this[`${source}Listeners`].forEach(fn => fn())
   }

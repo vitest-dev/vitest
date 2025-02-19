@@ -1,0 +1,8 @@
+{
+  "name": "@vitest/test-dep-cjs",
+  "type": "commonjs",
+  "exports": {
+    "./esm-comment": "./esm-comment.js",
+    "./esm-string": "./esm-string.js"
+  }
+}

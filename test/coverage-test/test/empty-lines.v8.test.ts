@@ -1,6 +1,6 @@
 import { beforeAll, expect } from 'vitest'
-import { coverageTest, describe, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 import { add } from '../fixtures/src/empty-lines'
+import { coverageTest, describe, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 type CoveredLine = 1
 type UncoveredLine = 0
@@ -180,5 +180,5 @@ async function readCoverage() {
 }
 
 function range(count: number, options: { base: number } = { base: 1 }) {
-  return Array(count).fill(0).map((_, i) => options.base + i)
+  return Array.from({ length: count }).fill(0).map((_, i) => options.base + i)
 }

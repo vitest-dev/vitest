@@ -1,57 +1,40 @@
-import type { Reporter } from '../types/reporter'
+import type { Reporter, TestRunEndReason } from '../types/reporter'
+import type { BaseOptions, BaseReporter } from './base'
+import type { BlobOptions } from './blob'
+import type { DefaultReporterOptions } from './default'
+import type { HTMLOptions } from './html'
 import { BasicReporter } from './basic'
+import { BlobReporter } from './blob'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
-import { type JsonOptions, JsonReporter } from './json'
-import { VerboseReporter } from './verbose'
-import { TapReporter } from './tap'
-import { type JUnitOptions, JUnitReporter } from './junit'
-import { TapFlatReporter } from './tap-flat'
-import { HangingProcessReporter } from './hanging-process'
 import { GithubActionsReporter } from './github-actions'
-import type { BaseOptions, BaseReporter } from './base'
-import type { HTMLOptions } from './html'
-import type { BlobOptions } from './blob'
-import { BlobReporter } from './blob'
-import { TestModule as _TestFile } from './reported-tasks'
-import type { ModuleDiagnostic as _FileDiagnostic } from './reported-tasks'
+import { HangingProcessReporter } from './hanging-process'
+import { type JsonOptions, JsonReporter } from './json'
+import { type JUnitOptions, JUnitReporter } from './junit'
+import { TapReporter } from './tap'
+import { TapFlatReporter } from './tap-flat'
+import { VerboseReporter } from './verbose'
 
 export {
-  DefaultReporter,
   BasicReporter,
+  DefaultReporter,
   DotReporter,
+  GithubActionsReporter,
+  HangingProcessReporter,
   JsonReporter,
-  VerboseReporter,
-  TapReporter,
   JUnitReporter,
   TapFlatReporter,
-  HangingProcessReporter,
-  GithubActionsReporter,
+  TapReporter,
+  VerboseReporter,
 }
-export type { BaseReporter, Reporter }
+export type { BaseReporter, Reporter, TestRunEndReason }
 
-export { TestCase, TestModule, TestSuite } from './reported-tasks'
-/**
- * @deprecated Use `TestModule` instead
- */
-export const TestFile = _TestFile
-export type { TestProject } from '../reported-workspace-project'
-export type {
-  TestCollection,
-
-  TaskOptions,
-  TestDiagnostic,
-
-  TestResult,
-  TestResultFailed,
-  TestResultPassed,
-  TestResultSkipped,
-} from './reported-tasks'
-/**
- * @deprecated Use `ModuleDiagnostic` instead
- */
-export type FileDiagnostic = _FileDiagnostic
-
+export {
+  BenchmarkBuiltinReporters,
+  BenchmarkReporter,
+  BenchmarkReportsMap,
+  VerboseBenchmarkReporter,
+} from './benchmark'
 export type {
   JsonAssertionResult,
   JsonTestResult,
@@ -59,25 +42,25 @@ export type {
 } from './json'
 
 export const ReportersMap = {
-  'default': DefaultReporter,
-  'basic': BasicReporter,
-  'blob': BlobReporter,
-  'verbose': VerboseReporter,
-  'dot': DotReporter,
-  'json': JsonReporter,
-  'tap': TapReporter,
-  'tap-flat': TapFlatReporter,
-  'junit': JUnitReporter,
-  'hanging-process': HangingProcessReporter,
-  'github-actions': GithubActionsReporter,
+  'default': DefaultReporter as typeof DefaultReporter,
+  'basic': BasicReporter as typeof BasicReporter,
+  'blob': BlobReporter as typeof BlobReporter,
+  'verbose': VerboseReporter as typeof VerboseReporter,
+  'dot': DotReporter as typeof DotReporter,
+  'json': JsonReporter as typeof JsonReporter,
+  'tap': TapReporter as typeof TapReporter,
+  'tap-flat': TapFlatReporter as typeof TapFlatReporter,
+  'junit': JUnitReporter as typeof JUnitReporter,
+  'hanging-process': HangingProcessReporter as typeof HangingProcessReporter,
+  'github-actions': GithubActionsReporter as typeof GithubActionsReporter,
 }
 
 export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
-  'default': BaseOptions
+  'default': DefaultReporterOptions
   'basic': BaseOptions
-  'verbose': never
+  'verbose': DefaultReporterOptions
   'dot': BaseOptions
   'json': JsonOptions
   'blob': BlobOptions
@@ -88,4 +71,4 @@ export interface BuiltinReporterOptions {
   'html': HTMLOptions
 }
 
-export * from './benchmark'
+export type { ReportedHookContext } from './reported-tasks'

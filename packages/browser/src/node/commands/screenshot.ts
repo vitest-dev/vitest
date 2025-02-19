@@ -1,8 +1,8 @@
+import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
+import type { ScreenshotOptions } from '../../../context'
 import { mkdir } from 'node:fs/promises'
 import { normalize } from 'node:path'
-import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
 import { basename, dirname, relative, resolve } from 'pathe'
-import type { ScreenshotOptions } from '../../../context'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
 
@@ -16,12 +16,12 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
   }
 
   const path = options.path
-    ? resolve(context.testPath, options.path)
+    ? resolve(dirname(context.testPath), options.path)
     : resolveScreenshotPath(
-      context.testPath,
-      name,
-      context.project.config,
-    )
+        context.testPath,
+        name,
+        context.project.config,
+      )
   const savePath = normalize(path)
   await mkdir(dirname(path), { recursive: true })
 
@@ -30,7 +30,6 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
       const { element: selector, ...config } = options
       const element = context.iframe.locator(`${selector}`)
       const buffer = await element.screenshot({
-        timeout: 1000,
         ...config,
         path: savePath,
       })

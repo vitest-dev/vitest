@@ -1,10 +1,10 @@
-import url from 'node:url'
-import os from 'node:os'
-import { writeFile } from 'node:fs/promises'
-import { basename, dirname, join, resolve } from 'pathe'
-import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
 import type { TypecheckConfig } from '../node/types/config'
 import type { RawErrsMap, TscErrorInfo } from './types'
+import { writeFile } from 'node:fs/promises'
+import os from 'node:os'
+import url from 'node:url'
+import { getTsconfig as getTsconfigContent } from 'get-tsconfig'
+import { basename, dirname, join, resolve } from 'pathe'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const newLineRegExp = /\r?\n/
@@ -63,7 +63,10 @@ export async function makeTscErrorInfo(
   ]
 }
 
-export async function getTsconfig(root: string, config: TypecheckConfig) {
+export async function getTsconfig(root: string, config: TypecheckConfig): Promise<{
+  path: string
+  config: Record<string, any>
+}> {
   const configName = config.tsconfig ? basename(config.tsconfig) : undefined
   const configSearchPath = config.tsconfig
     ? dirname(resolve(root, config.tsconfig))
@@ -75,9 +78,13 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
     throw new Error('no tsconfig.json found')
   }
 
+  const tsconfigName = basename(tsconfig.path, '.json')
+  const tempTsConfigName = `${tsconfigName}.vitest-temp.json`
+  const tempTsbuildinfoName = `${tsconfigName}.tmp.tsbuildinfo`
+
   const tempConfigPath = join(
     dirname(tsconfig.path),
-    'tsconfig.vitest-temp.json',
+    tempTsConfigName,
   )
 
   try {
@@ -88,7 +95,7 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
     tmpTsConfig.compilerOptions.incremental = true
     tmpTsConfig.compilerOptions.tsBuildInfoFile = join(
       process.versions.pnp ? join(os.tmpdir(), 'vitest') : __dirname,
-      'tsconfig.tmp.tsbuildinfo',
+      tempTsbuildinfoName,
     )
 
     const tsconfigFinalContent = JSON.stringify(tmpTsConfig, null, 2)
@@ -96,11 +103,11 @@ export async function getTsconfig(root: string, config: TypecheckConfig) {
     return { path: tempConfigPath, config: tmpTsConfig }
   }
   catch (err) {
-    throw new Error('failed to write tsconfig.temp.json', { cause: err })
+    throw new Error(`failed to write ${tempTsConfigName}`, { cause: err })
   }
 }
 
-export async function getRawErrsMapFromTsCompile(tscErrorStdout: string) {
+export async function getRawErrsMapFromTsCompile(tscErrorStdout: string): Promise<RawErrsMap> {
   const rawErrsMap: RawErrsMap = new Map()
 
   // Merge details line with main line (i.e. which contains file path)

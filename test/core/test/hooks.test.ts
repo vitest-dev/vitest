@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, expect, it, suite } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, expect, it, suite } from 'vitest'
 
 let count = -1
 
@@ -75,6 +75,28 @@ suite('hooks cleanup', () => {
     })
     it('two', () => {
       expect(cleanUpCount).toBe(11)
+    })
+  })
+  it('end', () => {
+    expect(cleanUpCount).toBe(0)
+  })
+
+  suite('do nothing when given a non-function value as cleanupCallback', () => {
+    beforeAll(() => {
+      return 1
+    })
+    beforeEach(() => {
+      return null
+    })
+    afterAll(() => {
+      return '1'
+    })
+    afterEach(() => {
+      return {}
+    })
+
+    it('one', () => {
+      expect(cleanUpCount).toBe(0)
     })
   })
   it('end', () => {

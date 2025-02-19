@@ -3,6 +3,7 @@ import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotUpdateState } from '@vitest/snapshot'
 import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
 /**
  * Config that tests have access to.
@@ -98,7 +99,7 @@ export interface SerializedConfig {
     showDiff?: boolean
     truncateThreshold?: number
   } | undefined
-  diff: string | undefined
+  diff: string | SerializedDiffOptions | undefined
   retry: number
   includeTaskLocation: boolean | undefined
   inspect: boolean | string | undefined
@@ -129,6 +130,9 @@ export interface SerializedConfig {
   standalone: boolean
   logHeapUsage: boolean | undefined
   coverage: SerializedCoverageConfig
+  benchmark?: {
+    includeSamples: boolean
+  }
 }
 
 export interface SerializedCoverageConfig {
@@ -155,7 +159,6 @@ export type RuntimeConfig = Pick<
   | 'printConsoleTrace'
 > & {
   sequence?: {
-    concurrent?: boolean
     hooks?: SequenceHooks
   }
 }

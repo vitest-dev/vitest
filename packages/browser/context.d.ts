@@ -1,5 +1,5 @@
 import type { SerializedConfig } from 'vitest'
-import { ARIARole } from './aria-role'
+import { ARIARole } from './aria-role.js'
 
 export type BufferEncoding =
   | 'ascii'
@@ -59,6 +59,12 @@ export interface UserEvent {
    * @see {@link https://vitest.dev/guide/browser/interactivity-api.html#userevent-setup}
    */
   setup: () => UserEvent
+  /**
+   * Cleans up the user event instance, releasing any resources or state it holds,
+   * such as keyboard press state. For the default `userEvent` instance, this method
+   * is automatically called after each test case.
+   */
+  cleanup: () => Promise<void>
   /**
    * Click on an element. Uses provider's API under the hood and supports all its options.
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-click} Playwright API
@@ -161,6 +167,33 @@ export interface UserEvent {
    */
   unhover: (element: Element | Locator, options?: UserEventHoverOptions) => Promise<void>
   /**
+   * Change a file input element to have the specified files. Uses provider's API under the hood.
+   * @see {@link https://playwright.dev/docs/api/class-locator#locator-set-input-files} Playwright API
+   * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
+   */
+  upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
+  /**
+   * Copies the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#copy} testing-library API
+   */
+  copy: () => Promise<void>
+  /**
+   * Cuts the selected content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#cut} testing-library API
+   */
+  cut: () => Promise<void>
+  /**
+   * Pastes the copied or cut content.
+   * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
+   * @see {@link https://webdriver.io/docs/api/browser/keys//} WebdriverIO API
+   * @see {@link https://testing-library.com/docs/user-event/clipboard#paste} testing-library API
+   */
+  paste: () => Promise<void>
+  /**
    * Fills an input element with text. This will remove any existing text in the input before typing the new text.
    * Uses provider's API under the hood.
    * This API is faster than using `userEvent.type` or `userEvent.keyboard`, but it **doesn't support** [user-event `keyboard` syntax](https://testing-library.com/docs/user-event/keyboard) (e.g., `{Shift}`).
@@ -255,41 +288,58 @@ interface LocatorSelectors {
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
    * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
    */
-  getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
+  getByRole: (role: ARIARole | ({} & string), options?: LocatorByRoleOptions) => Locator
   /**
    * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
    */
-  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByLabelText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has an `alt` attribute.
    * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
    */
-  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByAltText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified placeholder text. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
    * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
    */
-  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  getByPlaceholder: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`.
    * Matching by text always normalizes whitespace, even with exact match.
    * For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
    * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
    */
-  getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
    * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
    */
-  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
    * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
    */
-  getByTestId(text: string | RegExp): Locator
+  getByTestId: (text: string | RegExp) => Locator
 }
 
 export interface Locator extends LocatorSelectors {
+  /**
+   * Selector string that will be used to locate the element by the browser provider.
+   * You can use this string in the commands API:
+   * ```ts
+   * // playwright
+   * function test({ selector, iframe }) {
+   *   await iframe.locator(selector).click()
+   * }
+   * // webdriverio
+   * function test({ selector, browser }) {
+   *   await browser.$(selector).click()
+   * }
+   * ```
+   * @see {@link https://vitest.dev/guide/browser/locators#selector}
+   */
+  readonly selector: string
+
   /**
    * Click on an element. You can use the options to set the cursor position.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-click}
@@ -337,6 +387,11 @@ export interface Locator extends LocatorSelectors {
     values: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
     options?: UserEventSelectOptions,
   ): Promise<void>
+  /**
+   * Change a file input element to have the specified files. Uses provider's API under the hood.
+   * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
+   */
+  upload(files: File | File[] | string | string[]): Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.
@@ -380,6 +435,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#all}
    */
   all(): Locator[]
+  /**
+   * Returns a locator for the nth element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#nth}
+   */
+  nth(index: number): Locator
+  /**
+   * Returns a locator for the first element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#first}
+   */
+  first(): Locator
+  /**
+   * Returns a locator for the last element matching the selector.
+   * @see {@link https://vitest.dev/guide/browser/locators#last}
+   */
+  last(): Locator
 }
 
 export interface UserEventTabOptions {

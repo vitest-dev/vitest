@@ -1,34 +1,39 @@
-import { fileURLToPath } from 'node:url'
-import { createRequire } from 'node:module'
-import { lstatSync, readFileSync } from 'node:fs'
 import type { Stats } from 'node:fs'
-import { basename, extname, resolve } from 'pathe'
-import sirv from 'sirv'
-import type { WorkspaceProject } from 'vitest/node'
-import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
-import { type Plugin, coverageConfigDefaults } from 'vitest/config'
-import { toArray } from '@vitest/utils'
-import { defaultBrowserPort } from 'vitest/config'
+import type { HtmlTagDescriptor } from 'vite'
+import type { Vitest } from 'vitest/node'
+import type { ParentBrowserProject } from './projectParent'
+import { lstatSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { dynamicImportPlugin } from '@vitest/mocker/node'
+import { toArray } from '@vitest/utils'
+import MagicString from 'magic-string'
+import { basename, dirname, extname, resolve } from 'pathe'
+import sirv from 'sirv'
+import { coverageConfigDefaults, type Plugin } from 'vitest/config'
+import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
+import { distRoot } from './constants'
+import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
+import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserContext from './plugins/pluginContext'
-import type { BrowserServer } from './server'
-import { resolveOrchestrator } from './serverOrchestrator'
-import { resolveTester } from './serverTester'
 
-export type { BrowserCommand } from 'vitest/node'
 export { defineBrowserCommand } from './commands/utils'
+export type { BrowserCommand } from 'vitest/node'
 
-export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
-  const pkgRoot = resolve(fileURLToPath(import.meta.url), '../..')
-  const distRoot = resolve(pkgRoot, 'dist')
-  const project = browserServer.project
+const versionRegexp = /(?:\?|&)v=\w{8}/
+
+export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
+  function isPackageExists(pkg: string, root: string) {
+    return parentServer.vitest.packageInstaller.isPackageExists?.(pkg, {
+      paths: [root],
+    })
+  }
 
   return [
     {
       enforce: 'pre',
       name: 'vitest:browser',
       async configureServer(server) {
-        browserServer.setServer(server)
+        parentServer.setServer(server)
 
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestHeaders(_req, res, next) {
@@ -40,36 +45,8 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           }
           next()
         })
-        // eslint-disable-next-line prefer-arrow-callback
-        server.middlewares.use(async function vitestBrowserMode(req, res, next) {
-          if (!req.url || !browserServer.provider) {
-            return next()
-          }
-          const url = new URL(req.url, 'http://localhost')
-          if (!url.pathname.startsWith(browserServer.prefixTesterUrl) && url.pathname !== base) {
-            return next()
-          }
-
-          res.setHeader(
-            'Cache-Control',
-            'no-cache, max-age=0, must-revalidate',
-          )
-          res.setHeader('Content-Type', 'text/html; charset=utf-8')
-
-          // remove custom iframe related headers to allow the iframe to load
-          res.removeHeader('X-Frame-Options')
-
-          if (url.pathname === base) {
-            const html = await resolveOrchestrator(browserServer, url, res)
-            res.write(html, 'utf-8')
-            res.end()
-            return
-          }
-
-          const html = await resolveTester(browserServer, url, res)
-          res.write(html, 'utf-8')
-          res.end()
-        })
+        server.middlewares.use(createOrchestratorMiddleware(parentServer))
+        server.middlewares.use(createTesterMiddleware(parentServer))
 
         server.middlewares.use(
           `${base}favicon.svg`,
@@ -80,7 +57,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           },
         )
 
-        const coverageFolder = resolveCoverageFolder(project)
+        const coverageFolder = resolveCoverageFolder(parentServer.vitest)
         const coveragePath = coverageFolder ? coverageFolder[1] : undefined
         if (coveragePath && base === coveragePath) {
           throw new Error(
@@ -104,19 +81,27 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           )
         }
 
-        const screenshotFailures = project.config.browser.ui && project.config.browser.screenshotFailures
+        const uiEnabled = parentServer.config.browser.ui
 
-        if (screenshotFailures) {
+        if (uiEnabled) {
         // eslint-disable-next-line prefer-arrow-callback
           server.middlewares.use(`${base}__screenshot-error`, function vitestBrowserScreenshotError(req, res) {
-            if (!req.url || !browserServer.provider) {
+            if (!req.url) {
               res.statusCode = 404
               res.end()
               return
             }
 
             const url = new URL(req.url, 'http://localhost')
-            const file = url.searchParams.get('file')
+            const id = url.searchParams.get('id')
+            if (!id) {
+              res.statusCode = 404
+              res.end()
+              return
+            }
+
+            const task = parentServer.vitest.state.idMap.get(id)
+            const file = task?.meta.failScreenshotPath
             if (!file) {
               res.statusCode = 404
               res.end()
@@ -151,12 +136,33 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
             res.end(buffer)
           })
         }
+        server.middlewares.use((req, res, next) => {
+          // 9000 mega head move
+          // Vite always caches optimized dependencies, but users might mock
+          // them in _some_ tests, while keeping original modules in others
+          // there is no way to configure that in Vite, so we patch it here
+          // to always ignore the cache-control set by Vite in the next middleware
+          if (req.url && versionRegexp.test(req.url) && !req.url.includes('chunk-')) {
+            res.setHeader('Cache-Control', 'no-cache')
+            const setHeader = res.setHeader.bind(res)
+            res.setHeader = function (name, value) {
+              if (name === 'Cache-Control') {
+                return res
+              }
+              return setHeader(name, value)
+            }
+          }
+          next()
+        })
       },
     },
     {
       name: 'vitest:browser:tests',
       enforce: 'pre',
       async config() {
+        // this plugin can be used in different projects, but all of them
+        // have the same `include` pattern, so it doesn't matter which project we use
+        const project = parentServer.project
         const { testFiles: allTestFiles } = await project.globTestFiles()
         const browserTestFiles = allTestFiles.filter(
           file => getFilePoolName(project, file) === 'browser',
@@ -167,7 +173,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         const define: Record<string, string> = {}
         for (const env in (project.config.env || {})) {
           const stringValue = JSON.stringify(project.config.env[env])
-          define[`process.env.${env}`] = stringValue
           define[`import.meta.env.${env}`] = stringValue
         }
 
@@ -180,48 +185,6 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           resolve(vitestDist, 'utils.js'),
           ...(project.config.snapshotSerializers || []),
         ]
-
-        if (project.config.diff) {
-          entries.push(project.config.diff)
-        }
-
-        if (project.ctx.coverageProvider) {
-          const coverage = project.ctx.config.coverage
-          const provider = coverage.provider
-          if (provider === 'v8') {
-            const path = tryResolve('@vitest/coverage-v8', [project.ctx.config.root])
-            if (path) {
-              entries.push(path)
-            }
-          }
-          else if (provider === 'istanbul') {
-            const path = tryResolve('@vitest/coverage-istanbul', [project.ctx.config.root])
-            if (path) {
-              entries.push(path)
-            }
-          }
-          else if (provider === 'custom' && coverage.customProviderModule) {
-            entries.push(coverage.customProviderModule)
-          }
-        }
-
-        const include = [
-          'vitest > @vitest/snapshot > magic-string',
-          'vitest > chai',
-          'vitest > chai > loupe',
-          'vitest > @vitest/utils > loupe',
-          '@vitest/browser > @testing-library/user-event',
-          '@vitest/browser > @testing-library/dom',
-        ]
-
-        const react = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (react) {
-          include.push(react)
-        }
-        const vue = tryResolve('vitest-browser-react', [project.ctx.config.root])
-        if (vue) {
-          include.push(vue)
-        }
 
         const exclude = [
           'vitest',
@@ -246,9 +209,62 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
           'msw/browser',
         ]
 
-        const svelte = tryResolve('vitest-browser-svelte', [project.ctx.config.root])
+        if (typeof project.config.diff === 'string') {
+          entries.push(project.config.diff)
+        }
+
+        if (parentServer.vitest.coverageProvider) {
+          const coverage = parentServer.vitest.config.coverage
+          const provider = coverage.provider
+          if (provider === 'v8') {
+            const path = tryResolve('@vitest/coverage-v8', [parentServer.config.root])
+            if (path) {
+              entries.push(path)
+              exclude.push('@vitest/coverage-v8/browser')
+            }
+          }
+          else if (provider === 'istanbul') {
+            const path = tryResolve('@vitest/coverage-istanbul', [parentServer.config.root])
+            if (path) {
+              entries.push(path)
+              exclude.push('@vitest/coverage-istanbul')
+            }
+          }
+          else if (provider === 'custom' && coverage.customProviderModule) {
+            entries.push(coverage.customProviderModule)
+          }
+        }
+
+        const include = [
+          'vitest > expect-type',
+          'vitest > @vitest/snapshot > magic-string',
+          'vitest > chai',
+          'vitest > chai > loupe',
+          'vitest > @vitest/utils > loupe',
+          '@vitest/browser > @testing-library/user-event',
+          '@vitest/browser > @testing-library/dom',
+        ]
+
+        const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root
+
+        const svelte = isPackageExists('vitest-browser-svelte', fileRoot)
         if (svelte) {
-          exclude.push(svelte)
+          exclude.push('vitest-browser-svelte')
+        }
+
+        // since we override the resolution in the esbuild plugin, Vite can no longer optimizer it
+        const vue = isPackageExists('vitest-browser-vue', fileRoot)
+        if (vue) {
+          // we override them in the esbuild plugin so optimizer can no longer intercept it
+          include.push(
+            'vitest-browser-vue',
+            'vitest-browser-vue > @vue/test-utils',
+            'vitest-browser-vue > @vue/test-utils > @vue/compiler-core',
+          )
+        }
+        const vueTestUtils = isPackageExists('@vue/test-utils', fileRoot)
+        if (vueTestUtils) {
+          include.push('@vue/test-utils')
         }
 
         return {
@@ -283,7 +299,7 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     {
       name: 'vitest:browser:resolve-virtual',
       async resolveId(rawId) {
-        if (rawId === '/__vitest_msw__') {
+        if (rawId === '/mockServiceWorker.js') {
           return this.resolve('msw/mockServiceWorker.js', distRoot, {
             skipSelf: true,
           })
@@ -292,52 +308,65 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
     },
     {
       name: 'vitest:browser:assets',
+      configureServer(server) {
+        server.middlewares.use(
+          '/__vitest__',
+          sirv(resolve(distRoot, 'client/__vitest__')),
+        )
+      },
       resolveId(id) {
-        if (id.startsWith('/__vitest_browser__/') || id.startsWith('/__vitest__/')) {
+        if (id.startsWith('/__vitest_browser__/')) {
           return resolve(distRoot, 'client', id.slice(1))
         }
       },
       transform(code, id) {
-        if (id.includes(browserServer.vite.config.cacheDir) && id.includes('loupe.js')) {
+        if (id.includes(parentServer.vite.config.cacheDir) && id.includes('loupe.js')) {
           // loupe bundle has a nastry require('util') call that leaves a warning in the console
           const utilRequire = 'nodeUtil = require_util();'
           return code.replace(utilRequire, ' '.repeat(utilRequire.length))
         }
       },
     },
-    BrowserContext(browserServer),
+    BrowserContext(parentServer),
     dynamicImportPlugin({
       globalThisAccessor: '"__vitest_browser_runner__"',
+      filter(id) {
+        if (id.includes(distRoot)) {
+          return false
+        }
+        return true
+      },
     }),
     {
       name: 'vitest:browser:config',
       enforce: 'post',
       async config(viteConfig) {
         // Enables using ignore hint for coverage providers with @preserve keyword
-        viteConfig.esbuild ||= {}
-        viteConfig.esbuild.legalComments = 'inline'
-
-        const server = resolveApiServerConfig(
-          viteConfig.test?.browser || {},
-          defaultBrowserPort,
-        ) || {
-          port: defaultBrowserPort,
+        if (viteConfig.esbuild !== false) {
+          viteConfig.esbuild ||= {}
+          viteConfig.esbuild.legalComments = 'inline'
         }
 
-        // browser never runs in middleware mode
-        server.middlewareMode = false
+        const defaultPort = parentServer.vitest._browserLastPort++
+
+        const api = resolveApiServerConfig(
+          viteConfig.test?.browser || {},
+          defaultPort,
+        )
 
         viteConfig.server = {
           ...viteConfig.server,
-          ...server,
+          port: defaultPort,
+          ...api,
+          middlewareMode: false,
           open: false,
         }
         viteConfig.server.fs ??= {}
         viteConfig.server.fs.allow = viteConfig.server.fs.allow || []
         viteConfig.server.fs.allow.push(
           ...resolveFsAllow(
-            project.ctx.config.root,
-            project.ctx.server.config.configFile,
+            parentServer.vitest.config.root,
+            parentServer.vitest.vite.config.configFile,
           ),
           distRoot,
         )
@@ -349,34 +378,170 @@ export default (browserServer: BrowserServer, base = '/'): Plugin[] => {
         }
       },
     },
-    // TODO: remove this when @testing-library/vue supports ESM
+    {
+      name: 'vitest:browser:in-source-tests',
+      transform(code, id) {
+        const project = parentServer.vitest.getProjectByName(parentServer.config.name)
+        if (!project._isCachedTestFile(id) || !code.includes('import.meta.vitest')) {
+          return
+        }
+        const s = new MagicString(code, { filename: cleanUrl(id) })
+        s.prepend(
+          `import.meta.vitest = __vitest_index__;\n`,
+        )
+        return {
+          code: s.toString(),
+          map: s.generateMap({ hires: true }),
+        }
+      },
+    },
+    {
+      name: 'vitest:browser:worker',
+      transform(code, id, _options) {
+        // https://github.com/vitejs/vite/blob/ba56cf43b5480f8519349f7d7fe60718e9af5f1a/packages/vite/src/node/plugins/worker.ts#L46
+        if (/(?:\?|&)worker_file&type=\w+(?:&|$)/.test(id)) {
+          const s = new MagicString(code)
+          s.prepend('globalThis.__vitest_browser_runner__ = { wrapDynamicImport: f => f() };\n')
+          return {
+            code: s.toString(),
+            map: s.generateMap({ hires: 'boundary' }),
+          }
+        }
+      },
+    },
+    {
+      name: 'vitest:browser:transform-tester-html',
+      enforce: 'pre',
+      async transformIndexHtml(html, ctx) {
+        const projectBrowser = [...parentServer.children].find((server) => {
+          return ctx.filename === server.testerFilepath
+        })
+        if (!projectBrowser) {
+          return
+        }
+
+        if (!parentServer.testerScripts) {
+          const testerScripts = await parentServer.formatScripts(
+            parentServer.config.browser.testerScripts,
+          )
+          parentServer.testerScripts = testerScripts
+        }
+        const stateJs = typeof parentServer.stateJs === 'string'
+          ? parentServer.stateJs
+          : await parentServer.stateJs
+
+        const testerTags: HtmlTagDescriptor[] = []
+
+        const isDefaultTemplate = resolve(distRoot, 'client/tester/tester.html') === projectBrowser.testerFilepath
+        if (!isDefaultTemplate) {
+          const manifestContent = parentServer.manifest instanceof Promise
+            ? await parentServer.manifest
+            : parentServer.manifest
+          const testerEntry = manifestContent['tester/tester.html']
+
+          testerTags.push({
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              crossorigin: '',
+              src: `${parentServer.base}${testerEntry.file}`,
+            },
+            injectTo: 'head',
+          })
+
+          for (const importName of testerEntry.imports || []) {
+            const entryManifest = manifestContent[importName]
+            if (entryManifest) {
+              testerTags.push(
+                {
+                  tag: 'link',
+                  attrs: {
+                    href: `${parentServer.base}${entryManifest.file}`,
+                    rel: 'modulepreload',
+                    crossorigin: '',
+                  },
+                  injectTo: 'head',
+                },
+              )
+            }
+          }
+        }
+        else {
+          // inject the reset style only in the default template,
+          // allowing users to customize the style in their own template
+          testerTags.push({
+            tag: 'style',
+            children: `
+html {
+  padding: 0;
+  margin: 0;
+}
+body {
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+}`,
+            injectTo: 'head',
+          })
+        }
+
+        return [
+          {
+            tag: 'script',
+            children: '{__VITEST_INJECTOR__}',
+            injectTo: 'head-prepend' as const,
+          },
+          {
+            tag: 'script',
+            children: stateJs,
+            injectTo: 'head-prepend',
+          } as const,
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: parentServer.errorCatcherUrl,
+            },
+            injectTo: 'head' as const,
+          },
+          parentServer.locatorsUrl
+            ? {
+                tag: 'script',
+                attrs: {
+                  type: 'module',
+                  src: parentServer.locatorsUrl,
+                },
+                injectTo: 'head',
+              } as const
+            : null,
+          ...parentServer.testerScripts,
+          ...testerTags,
+          {
+            tag: 'script',
+            attrs: {
+              'type': 'module',
+              'data-vitest-append': '',
+            },
+            children: '{__VITEST_APPEND__}',
+            injectTo: 'body',
+          } as const,
+        ].filter(s => s != null)
+      },
+    },
     {
       name: 'vitest:browser:support-testing-library',
       config() {
         return {
-          define: {
-            // testing-library/preact
-            'process.env.PTL_SKIP_AUTO_CLEANUP': !!process.env.PTL_SKIP_AUTO_CLEANUP,
-            // testing-library/react
-            'process.env.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            'process.env?.RTL_SKIP_AUTO_CLEANUP': !!process.env.RTL_SKIP_AUTO_CLEANUP,
-            // testing-library/svelte, testing-library/solid
-            'process.env.STL_SKIP_AUTO_CLEANUP': !!process.env.STL_SKIP_AUTO_CLEANUP,
-            // testing-library/vue
-            'process.env.VTL_SKIP_AUTO_CLEANUP': !!process.env.VTL_SKIP_AUTO_CLEANUP,
-            // dom.debug()
-            'process.env.DEBUG_PRINT_LIMIT': process.env.DEBUG_PRINT_LIMIT || 7000,
-          },
           optimizeDeps: {
             esbuildOptions: {
               plugins: [
                 {
                   name: 'test-utils-rewrite',
                   setup(build) {
-                    build.onResolve({ filter: /@vue\/test-utils/ }, (args) => {
-                      const _require = getRequire()
-                      // resolve to CJS instead of the browser because the browser version expects a global Vue object
-                      const resolved = _require.resolve(args.path, {
+                    // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+                    // compiler-core: only CJS version allows slots as strings
+                    build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args) => {
+                      const resolved = getRequire().resolve(args.path, {
                         paths: [args.importer],
                       })
                       return { path: resolved }
@@ -410,16 +575,16 @@ function getRequire() {
   return _require
 }
 
-function resolveCoverageFolder(project: WorkspaceProject) {
-  const options = project.ctx.config
+function resolveCoverageFolder(vitest: Vitest) {
+  const options = vitest.config
   const htmlReporter = options.coverage?.enabled
     ? toArray(options.coverage.reporter).find((reporter) => {
-      if (typeof reporter === 'string') {
-        return reporter === 'html'
-      }
+        if (typeof reporter === 'string') {
+          return reporter === 'html'
+        }
 
-      return reporter[0] === 'html'
-    })
+        return reporter[0] === 'html'
+      })
     : undefined
 
   if (!htmlReporter) {
@@ -434,8 +599,8 @@ function resolveCoverageFolder(project: WorkspaceProject) {
 
   const subdir
     = Array.isArray(htmlReporter)
-    && htmlReporter.length > 1
-    && 'subdir' in htmlReporter[1]
+      && htmlReporter.length > 1
+      && 'subdir' in htmlReporter[1]
       ? htmlReporter[1].subdir
       : undefined
 
@@ -444,4 +609,9 @@ function resolveCoverageFolder(project: WorkspaceProject) {
   }
 
   return [resolve(root, subdir), `/${basename(root)}/${subdir}/`]
+}
+
+const postfixRE = /[?#].*$/
+function cleanUrl(url: string): string {
+  return url.replace(postfixRE, '')
 }

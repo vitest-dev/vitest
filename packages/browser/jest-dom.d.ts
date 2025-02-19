@@ -192,10 +192,10 @@ declare namespace matchers {
      *
      * const ancestor = getByTestId('ancestor')
      * const descendant = getByTestId('descendant')
-     * const nonExistantElement = getByTestId('does-not-exist')
+     * const nonExistentElement = getByTestId('does-not-exist')
      * expect(ancestor).toContainElement(descendant)
      * expect(descendant).not.toContainElement(ancestor)
-     * expect(ancestor).not.toContainElement(nonExistantElement)
+     * expect(ancestor).not.toContainElement(nonExistentElement)
      * @see
      * [testing-library/jest-dom#tocontainelement](https://github.com/testing-library/jest-dom#tocontainelement)
      */
@@ -260,8 +260,7 @@ declare namespace matchers {
      * @see
      * [testing-library/jest-dom#tohaveclass](https://github.com/testing-library/jest-dom#tohaveclass)
      */
-    toHaveClass(...classNames: Array<string | RegExp>): R
-    toHaveClass(classNames: string, options?: {exact: boolean}): R
+    toHaveClass(...classNames: (string | RegExp)[] | [string, options?: {exact: boolean}]): R
     /**
      * @description
      * This allows you to check whether the given form element has the specified displayed value (the one the
@@ -282,7 +281,7 @@ declare namespace matchers {
      *   <option value="avocado">Avocado</option>
      * </select>
      *
-     * <label for="mutiple-select-example">Fruits</label>
+     * <label for="multiple-select-example">Fruits</label>
      * <select id="multiple-select-example" multiple>
      *   <option value="">Select a fruit...</option>
      *   <option value="banana" selected>Banana</option>
@@ -382,7 +381,7 @@ declare namespace matchers {
      * expect(element).toHaveTextContent('Content')
      * // to match the whole content
      * expect(element).toHaveTextContent(/^Text Content$/)
-     * // to use case-insentive match
+     * // to use case-insensitive match
      * expect(element).toHaveTextContent(/content$/i)
      * expect(element).not.toHaveTextContent('content')
      * @see

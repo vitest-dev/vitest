@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, effectScope, onMounted, ref } from 'vue'
 import { until, useElementVisibility } from '@vueuse/core'
+import { computed, effectScope, onMounted, ref } from 'vue'
 
 const el = ref<HTMLDivElement>()
 const state = ref(0)

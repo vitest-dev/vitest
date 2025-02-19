@@ -1,7 +1,7 @@
 import { join, resolve } from 'pathe'
+import { createServer, type Plugin, type ViteDevServer } from 'vite'
 import { ViteNodeServer } from 'vite-node/server'
 import { describe, expect, test, vi } from 'vitest'
-import { type Plugin, type ViteDevServer, createServer } from 'vite'
 import { extractSourceMap } from '../../../packages/vite-node/src/source-map'
 
 describe('server works correctly', async () => {
@@ -143,12 +143,12 @@ describe('server correctly caches data', () => {
 
     await viteNode.fetchModule('/src/foo.js', 'ssr')
 
-    expect(ssrFiles).toHaveLength(3)
+    await expect.poll(() => ssrFiles).toHaveLength(3)
 
     // another fetch after invalidation returns cached result
     await viteNode.fetchModule('/src/foo.js', 'ssr')
 
-    expect(ssrFiles).toHaveLength(3)
+    await expect.poll(() => ssrFiles).toHaveLength(3)
     expect(webFiles).toHaveLength(0)
   })
 
@@ -200,13 +200,13 @@ describe('server correctly caches data', () => {
 
     await viteNode.fetchModule('/src/foo.js', 'web')
 
-    expect(webFiles).toHaveLength(3)
+    await expect.poll(() => webFiles).toHaveLength(3)
 
     // another fetch after invalidation returns cached result
     await viteNode.fetchModule('/src/foo.js', 'web')
 
-    expect(webFiles).toHaveLength(3)
-    expect(ssrFiles).toHaveLength(0)
+    await expect.poll(() => webFiles).toHaveLength(3)
+    await expect.poll(() => ssrFiles).toHaveLength(0)
   })
 
   it('correctly processes the same file with both transform modes', async ({ viteNode, ssrFiles, webFiles, root }) => {
@@ -227,5 +227,57 @@ describe('server correctly caches data', () => {
 
     expect(ssrFiles).toHaveLength(1)
     expect(webFiles).toHaveLength(1)
+  })
+})
+
+describe('externalize', () => {
+  describe('by default', () => {
+    test('should externalize vite\'s cached dependencies', async () => {
+      const vnServer = new ViteNodeServer({
+        config: {
+          root: '/',
+          cacheDir: '/node_modules/.vite',
+        },
+      } as any, {})
+
+      const externalize = await vnServer.shouldExternalize('/node_modules/.vite/cached.js')
+      expect(externalize).toBeTruthy()
+    })
+  })
+
+  describe('with server.deps.inline: true', () => {
+    test('should not externalize vite\'s cached dependencies', async () => {
+      const vnServer = new ViteNodeServer({
+        config: {
+          root: '/',
+          cacheDir: '/node_modules/.vite',
+        },
+      } as any, {
+        deps: {
+          inline: true,
+        },
+      })
+
+      const externalize = await vnServer.shouldExternalize('/node_modules/.vite/cached.js')
+      expect(externalize).toBeFalsy()
+    })
+  })
+
+  describe('with server.deps.inline including the cache dir', () => {
+    test('should not externalize vite\'s cached dependencies', async () => {
+      const vnServer = new ViteNodeServer({
+        config: {
+          root: '/',
+          cacheDir: '/node_modules/.vite',
+        },
+      } as any, {
+        deps: {
+          inline: [/node_modules\/\.vite/],
+        },
+      })
+
+      const externalize = await vnServer.shouldExternalize('/node_modules/.vite/cached.js')
+      expect(externalize).toBeFalsy()
+    })
   })
 })

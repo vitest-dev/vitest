@@ -1,34 +1,38 @@
-import { processError } from '@vitest/utils/error'
-import { toArray } from '@vitest/utils'
+import type { FileSpecification, VitestRunner } from './types/runner'
 import type { File, SuiteHooks } from './types/tasks'
-import type { VitestRunner } from './types/runner'
+import { toArray } from '@vitest/utils'
+import { processError } from '@vitest/utils/error'
+import { collectorContext } from './context'
+import { getHooks, setHooks } from './map'
+import { runSetupFiles } from './setup'
+import {
+  clearCollectorContext,
+  createSuiteHooks,
+  getDefaultSuite,
+} from './suite'
 import {
   calculateSuiteHash,
   createFileTask,
   interpretTaskModes,
   someTasksAreOnly,
 } from './utils/collect'
-import {
-  clearCollectorContext,
-  createSuiteHooks,
-  getDefaultSuite,
-} from './suite'
-import { getHooks, setHooks } from './map'
-import { collectorContext } from './context'
-import { runSetupFiles } from './setup'
 
-const now = Date.now
+const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 
 export async function collectTests(
-  paths: string[],
+  specs: string[] | FileSpecification[],
   runner: VitestRunner,
 ): Promise<File[]> {
   const files: File[] = []
 
   const config = runner.config
 
-  for (const filepath of paths) {
+  for (const spec of specs) {
+    const filepath = typeof spec === 'string' ? spec : spec.filepath
+    const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
+
     const file = createFileTask(filepath, config.root, config.name, runner.pool)
+    file.shuffle = config.sequence.shuffle
 
     runner.onCollectStart?.(file)
 
@@ -56,7 +60,7 @@ export async function collectTests(
       mergeHooks(fileHooks, getHooks(defaultTasks))
 
       for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
-        if (c.type === 'test' || c.type === 'custom' || c.type === 'suite') {
+        if (c.type === 'test' || c.type === 'suite') {
           file.tasks.push(c)
         }
         else if (c.type === 'collector') {
@@ -97,10 +101,15 @@ export async function collectTests(
     interpretTaskModes(
       file,
       config.testNamePattern,
+      testLocations,
       hasOnlyTasks,
       false,
       config.allowOnly,
     )
+
+    if (file.mode === 'queued') {
+      file.mode = 'run'
+    }
 
     files.push(file)
   }

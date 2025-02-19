@@ -25,10 +25,12 @@ exports[`addFileAttribute true 1`] = `
 exports[`emits <failure> when beforeAll/afterAll failed 1`] = `
 "<?xml version="1.0" encoding="UTF-8" ?>
 <testsuites name="vitest tests" tests="8" failures="2" errors="0" time="...">
-    <testsuite name="basic.test.ts" timestamp="..." hostname="..." tests="8" failures="2" errors="0" skipped="2" time="...">
+    <testsuite name="basic.test.ts" timestamp="..." hostname="..." tests="8" failures="2" errors="0" skipped="4" time="...">
         <testcase classname="basic.test.ts" name="suite with beforeAll &gt; ok 1" time="...">
+            <skipped/>
         </testcase>
         <testcase classname="basic.test.ts" name="suite with beforeAll &gt; ok 2" time="...">
+            <skipped/>
         </testcase>
         <testcase classname="basic.test.ts" name="suite with beforeAll &gt; skip 1" time="...">
             <skipped/>
@@ -76,7 +78,7 @@ AssertionError: expected { hello: &apos;x&apos; } to deeply equal { hello: &apos
 - Expected
 + Received
 
-  Object {
+  {
 -   &quot;hello&quot;: &quot;y&quot;,
 +   &quot;hello&quot;: &quot;x&quot;,
   }

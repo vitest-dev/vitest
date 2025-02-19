@@ -1,14 +1,14 @@
-import { SpyModule, collectTests, setupCommonEnv, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
-import { page } from '@vitest/browser/context'
-import type { IframeMockEvent, IframeMockInvalidateEvent, IframeUnmockEvent } from '@vitest/browser/client'
-import { channel, client, onCancel, waitForChannel } from '@vitest/browser/client'
+import { channel, client, onCancel } from '@vitest/browser/client'
+import { page, userEvent } from '@vitest/browser/context'
+import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
+import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
+import { VitestBrowserClientMocker } from './mocker'
+import { createModuleMockerInterceptor } from './msw'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
-import { VitestBrowserClientMocker } from './mocker'
-import { setupExpectDom } from './expect-element'
 
 const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 
@@ -34,28 +34,10 @@ async function prepareTestEnvironment(files: string[]) {
   state.onCancel = onCancel
   state.rpc = rpc as any
 
+  // TODO: expose `worker`
+  const interceptor = createModuleMockerInterceptor()
   const mocker = new VitestBrowserClientMocker(
-    {
-      async delete(url: string) {
-        channel.postMessage({
-          type: 'unmock',
-          url,
-        } satisfies IframeUnmockEvent)
-        await waitForChannel('unmock:done')
-      },
-      async register(module) {
-        channel.postMessage({
-          type: 'mock',
-          module: module.toJSON(),
-        } satisfies IframeMockEvent)
-        await waitForChannel('mock:done')
-      },
-      invalidate() {
-        channel.postMessage({
-          type: 'mock:invalidate',
-        } satisfies IframeMockInvalidateEvent)
-      },
-    },
+    interceptor,
     rpc,
     SpyModule.spyOn,
     {
@@ -75,11 +57,9 @@ async function prepareTestEnvironment(files: string[]) {
   files.forEach((filename) => {
     const currentVersion = browserHashMap.get(filename)
     if (!currentVersion || currentVersion[1] !== version) {
-      browserHashMap.set(filename, [true, version])
+      browserHashMap.set(filename, version)
     }
   })
-
-  mocker.setupWorker()
 
   onCancel.then((reason) => {
     runner.onCancel?.(reason)
@@ -140,8 +120,17 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   debug('prepare time', state.durations.prepare, 'ms')
 
   try {
-    await setupCommonEnv(config)
-    await startCoverageInsideWorker(config.coverage, executor)
+    await Promise.all([
+      setupCommonEnv(config),
+      startCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }),
+      (async () => {
+        const VitestIndex = await import('vitest')
+        Object.defineProperty(window, '__vitest_index__', {
+          value: VitestIndex,
+          enumerable: false,
+        })
+      })(),
+    ])
 
     for (const file of files) {
       state.filepath = file
@@ -159,6 +148,9 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       if (cleanupSymbol in page) {
         (page[cleanupSymbol] as any)()
       }
+      // need to cleanup for each tester
+      // since playwright keyboard API is stateful on page instance level
+      await userEvent.cleanup()
     }
     catch (error: any) {
       await client.rpc.onUnhandledError({
@@ -168,7 +160,13 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       }, 'Cleanup Error')
     }
     state.environmentTeardownRun = true
-    await stopCoverageInsideWorker(config.coverage, executor)
+    await stopCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }).catch((error) => {
+      client.rpc.onUnhandledError({
+        name: error.name,
+        message: error.message,
+        stack: String(error.stack),
+      }, 'Coverage Error').catch(() => {})
+    })
 
     debug('finished running tests')
     done(files)

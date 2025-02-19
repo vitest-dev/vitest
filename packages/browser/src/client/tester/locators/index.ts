@@ -1,3 +1,4 @@
+import type { BrowserRPC } from '@vitest/browser/client'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -7,11 +8,10 @@ import type {
   UserEventFillOptions,
   UserEventHoverOptions,
 } from '@vitest/browser/context'
+import type { WorkerGlobalState } from 'vitest'
+import type { BrowserRunnerState } from '../../utils'
 import { page, server } from '@vitest/browser/context'
-import type { BrowserRPC } from '@vitest/browser/client'
 import {
-  Ivya,
-  type ParsedSelector,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -19,14 +19,14 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
+  Ivya,
+  type ParsedSelector,
 } from 'ivya'
-import type { WorkerGlobalState } from 'vitest'
-import type { BrowserRunnerState } from '../../utils'
-import { getBrowserState, getWorkerState } from '../../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
 import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
-export const selectorEngine = Ivya.create({
+export const selectorEngine: Ivya = Ivya.create({
   browser: ((name: string) => {
     switch (name) {
       case 'edge':
@@ -74,6 +74,27 @@ export abstract class Locator {
 
   public fill(text: string, options?: UserEventFillOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
+  }
+
+  public async upload(files: string | string[] | File | File[]): Promise<void> {
+    const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
+      if (typeof file === 'string') {
+        return file
+      }
+      const bas64String = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`))
+        reader.readAsDataURL(file)
+      })
+
+      return {
+        name: file.name,
+        mimeType: file.type,
+        base64: bas64String,
+      }
+    })
+    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise))
   }
 
   public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {
@@ -164,6 +185,26 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
+  public nth(index: number): Locator {
+    return this.locator(`nth=${index}`)
+  }
+
+  public first(): Locator {
+    return this.nth(0)
+  }
+
+  public last(): Locator {
+    return this.nth(-1)
+  }
+
+  public toString(): string {
+    return this.selector
+  }
+
+  public toJSON(): string {
+    return this.selector
+  }
+
   private get state(): BrowserRunnerState {
     return getBrowserState()
   }
@@ -176,16 +217,16 @@ export abstract class Locator {
     return this.worker.rpc as any as BrowserRPC
   }
 
-  protected triggerCommand<T>(command: string, ...args: any[]) {
+  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
     const filepath = this.worker.filepath
       || this.worker.current?.file?.filepath
       || undefined
 
-    return this.rpc.triggerCommand<T>(
-      this.state.contextId,
+    return ensureAwaited(() => this.rpc.triggerCommand<T>(
+      this.state.sessionId,
       command,
       filepath,
       args,
-    )
+    ))
   }
 }

@@ -22,5 +22,5 @@ test('pre-transpiled code with source maps to original (#5341)', async () => {
   expect(files.find(file => file.includes('transpiled.ts'))).toBeFalsy()
   expect(files.find(file => file.includes('transpiled.d.ts'))).toBeFalsy()
 
-  expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/pre-transpiled-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
+  await expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/pre-transpiled-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
 })

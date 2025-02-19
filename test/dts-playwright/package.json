@@ -1,0 +1,12 @@
+{
+  "name": "@vitest/test-dts-playwright",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "tsc -b"
+  },
+  "devDependencies": {
+    "@vitest/browser": "workspace:*",
+    "vitest": "workspace:*"
+  }
+}

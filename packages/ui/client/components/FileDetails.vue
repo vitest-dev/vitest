@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import type { ModuleGraph } from '~/composables/module-graph'
+import type { Params } from '~/composables/params'
 import { hasFailedSnapshot } from '@vitest/ws-client'
+import { toJSON } from 'flatted'
 import {
   browserState,
   client,
@@ -7,10 +10,8 @@ import {
   currentLogs,
   isReport,
 } from '~/composables/client'
-import type { Params } from '~/composables/params'
-import { viewMode } from '~/composables/params'
-import type { ModuleGraph } from '~/composables/module-graph'
 import { getModuleGraph } from '~/composables/module-graph'
+import { viewMode } from '~/composables/params'
 import { getProjectNameColor } from '~/utils/task'
 
 const graph = ref<ModuleGraph>({ nodes: [], links: [] })
@@ -18,6 +19,7 @@ const draft = ref(false)
 const hasGraphBeenDisplayed = ref(false)
 const loadingModuleGraph = ref(false)
 const currentFilepath = ref<string | undefined>(undefined)
+const hideNodeModules = ref(true)
 
 const graphData = computed(() => {
   const c = current.value
@@ -61,10 +63,12 @@ function onDraft(value: boolean) {
   draft.value = value
 }
 
-async function loadModuleGraph() {
+const nodeModuleRegex = /[/\\]node_modules[/\\]/
+
+async function loadModuleGraph(force = false) {
   if (
     loadingModuleGraph.value
-    || graphData.value?.filepath === currentFilepath.value
+    || (graphData.value?.filepath === currentFilepath.value && !force)
   ) {
     return
   }
@@ -76,20 +80,39 @@ async function loadModuleGraph() {
   try {
     const gd = graphData.value
     if (!gd) {
+      loadingModuleGraph.value = false
       return
     }
 
     if (
-      !currentFilepath.value
+      force
+      || !currentFilepath.value
       || gd.filepath !== currentFilepath.value
       || (!graph.value.nodes.length && !graph.value.links.length)
     ) {
+      let moduleGraph = await client.rpc.getModuleGraph(
+        gd.projectName,
+        gd.filepath,
+        !!browserState,
+      )
+      // remove node_modules from the graph when enabled
+      if (hideNodeModules.value) {
+        // when using static html reporter, we've the meta as global, we need to clone it
+        if (isReport) {
+          moduleGraph
+            = typeof window.structuredClone !== 'undefined'
+              ? window.structuredClone(moduleGraph)
+              : toJSON(moduleGraph)
+        }
+        moduleGraph.inlined = moduleGraph.inlined.filter(
+          n => !nodeModuleRegex.test(n),
+        )
+        moduleGraph.externalized = moduleGraph.externalized.filter(
+          n => !nodeModuleRegex.test(n),
+        )
+      }
       graph.value = getModuleGraph(
-        await client.rpc.getModuleGraph(
-          gd.projectName,
-          gd.filepath,
-          !!browserState,
-        ),
+        moduleGraph,
         gd.filepath,
       )
       currentFilepath.value = gd.filepath
@@ -103,14 +126,30 @@ async function loadModuleGraph() {
 }
 
 debouncedWatch(
-  () => [graphData.value, viewMode.value] as const,
-  ([, vm]) => {
+  () => [graphData.value, viewMode.value, hideNodeModules.value] as const,
+  ([, vm, hide], old) => {
     if (vm === 'graph') {
-      loadModuleGraph()
+      // only force reload when hide is changed
+      loadModuleGraph(old && hide !== old[2])
     }
   },
   { debounce: 100, immediate: true },
 )
+
+const projectNameColor = computed(() => {
+  return getProjectNameColor(current.value?.file.projectName)
+})
+
+const projectNameTextColor = computed(() => {
+  switch (projectNameColor.value) {
+    case 'blue':
+    case 'green':
+    case 'magenta':
+      return 'white'
+    default:
+      return 'black'
+  }
+})
 </script>
 
 <template>
@@ -127,15 +166,13 @@ debouncedWatch(
       <div p="2" h-10 flex="~ gap-2" items-center bg-header border="b base">
         <StatusIcon :state="current.result?.state" :mode="current.mode" :failed-snapshot="failedSnapshot" />
         <div v-if="isTypecheck" v-tooltip.bottom="'This is a typecheck test. It won\'t report results of the runtime tests'" class="i-logos:typescript-icon" flex-shrink-0 />
-        <div
+        <span
           v-if="current?.file.projectName"
-          font-light
-          op-50
-          text-sm
-          :style="{ color: getProjectNameColor(current?.file.projectName) }"
+          class="rounded-full py-0.5 px-1 text-xs font-light"
+          :style="{ backgroundColor: projectNameColor, color: projectNameTextColor }"
         >
-          [{{ current?.file.projectName || "" }}]
-        </div>
+          {{ current.file.projectName }}
+        </span>
         <div flex-1 font-light op-50 ws-nowrap truncate text-sm>
           {{ current?.name }}
         </div>
@@ -208,6 +245,7 @@ debouncedWatch(
       <div v-if="hasGraphBeenDisplayed" :flex-1="viewMode === 'graph' && ''">
         <ViewModuleGraph
           v-show="viewMode === 'graph' && !loadingModuleGraph"
+          v-model="hideNodeModules"
           :graph="graph"
           data-testid="graph"
           :project-name="current.file.projectName || ''"
@@ -215,7 +253,7 @@ debouncedWatch(
       </div>
       <ViewEditor
         v-if="viewMode === 'editor'"
-        :key="current.filepath"
+        :key="current.id"
         :file="current"
         data-testid="editor"
         @draft="onDraft"

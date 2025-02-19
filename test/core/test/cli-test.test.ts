@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest'
 import { resolveConfig as viteResolveConfig } from 'vite'
-import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
+import { expect, test } from 'vitest'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
+import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
 const vitestCli = createCLI()
 
@@ -292,7 +292,7 @@ test('clearScreen', async () => {
       clearScreen: viteClearScreen,
     }
     const vitestConfig = getCLIOptions(vitestClearScreen)
-    const config = resolveConfig('test', vitestConfig, viteConfig, undefined as any)
+    const config = resolveConfig({ logger: undefined, mode: 'test' } as any, vitestConfig, viteConfig)
     return config.clearScreen
   })
   expect(results).toMatchInlineSnapshot(`

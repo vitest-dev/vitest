@@ -6,9 +6,9 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "@vitest/runner": "workspace:*",
     "flatted": "^3.2.9",
     "pkg-reporter": "./reportPkg/",
-    "strip-ansi": "^7.0.1",
     "vitest": "workspace:*",
     "vitest-sonar-reporter": "0.4.1"
   }

@@ -29,10 +29,10 @@ export function printProps(
         if (printed.includes('\n')) {
           printed
             = config.spacingOuter
-            + indentationNext
-            + printed
-            + config.spacingOuter
-            + indentation
+              + indentationNext
+              + printed
+              + config.spacingOuter
+              + indentation
         }
         printed = `{${printed}}`
       }

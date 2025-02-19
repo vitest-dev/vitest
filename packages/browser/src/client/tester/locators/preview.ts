@@ -1,5 +1,4 @@
-import { page, server } from '@vitest/browser/context'
-import { userEvent } from '@testing-library/user-event'
+import { page, server, userEvent } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
   getByLabelSelector,
@@ -77,30 +76,20 @@ class PreviewLocator extends Locator {
     return userEvent.unhover(this.element())
   }
 
-  fill(text: string): Promise<void> {
-    return userEvent.type(this.element(), text)
+  async fill(text: string): Promise<void> {
+    return userEvent.fill(this.element(), text)
+  }
+
+  async upload(file: string | string[] | File | File[]): Promise<void> {
+    return userEvent.upload(this.element(), file)
   }
 
   selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    const options = (Array.isArray(options_) ? options_ : [options_]).map((option) => {
-      if (typeof option !== 'string' && 'element' in option) {
-        return option.element() as HTMLElement
-      }
-      return option
-    })
-    return userEvent.selectOptions(this.element(), options as string[] | HTMLElement[])
-  }
-
-  async dropTo(): Promise<void> {
-    throw new Error('The "preview" provider doesn\'t support `dropTo` method.')
+    return userEvent.selectOptions(this.element(), options_)
   }
 
   clear(): Promise<void> {
     return userEvent.clear(this.element())
-  }
-
-  async screenshot(): Promise<never> {
-    throw new Error('The "preview" provider doesn\'t support `screenshot` method.')
   }
 
   protected locator(selector: string) {

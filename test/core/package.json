@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "vitest",
+    "test:html": "vitest --reporter=html",
     "test:threads": "vitest --project threads",
     "test:forks": "vitest --project forks",
     "test:vmThreads": "vitest --project vmThreads",
@@ -16,6 +17,7 @@
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
+    "@vitest/test-dep-cjs": "file:./deps/dep-cjs",
     "@vitest/test-dep1": "file:./deps/dep1",
     "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/utils": "workspace:*",
@@ -25,15 +27,16 @@
     "debug": "^4.3.4",
     "immutable": "5.0.0-beta.5",
     "memfs": "^4.8.2",
-    "strip-ansi": "^7.1.0",
+    "react": "^18.3.1",
+    "react-19": "npm:react@19.0.0-rc-b01722d5-20241114",
     "sweetalert2": "^11.6.16",
-    "tinyrainbow": "^1.2.0",
+    "tinyrainbow": "^2.0.0",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
     "vite-node": "workspace:*",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
-    "vue": "^3.4.37",
+    "vue": "^3.5.12",
     "zustand": "^4.1.1"
   }
 }

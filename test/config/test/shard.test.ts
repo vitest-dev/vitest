@@ -1,6 +1,7 @@
-import { type UserConfig, expect, test } from 'vitest'
+import type { UserConfig } from 'vitest/node'
 import { basename } from 'pathe'
 
+import { expect, test } from 'vitest'
 import * as testUtils from '../../test-utils'
 
 function runVitest(config: UserConfig) {

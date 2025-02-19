@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
 import type Convert from 'ansi-to-html'
+import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
+import { browserState, config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
-import { browserState, config } from '~/composables/client'
+import { selectedTest } from '~/composables/params'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
@@ -19,7 +20,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
     return []
   }
 
-  if (task.type === 'test' || task.type === 'custom') {
+  if (task.type === 'test') {
     return [{ ...task, level }]
   }
   else {
@@ -115,11 +116,11 @@ const showScreenshot = ref(false)
 const timestamp = ref(Date.now())
 const currentTask = ref<Task | undefined>()
 const currentScreenshotUrl = computed(() => {
-  const file = currentTask.value?.meta.failScreenshotPath
+  const id = currentTask.value?.id
   // force refresh
   const t = timestamp.value
   // browser plugin using /, change this if base can be modified
-  return file ? `/__screenshot-error?file=${encodeURIComponent(file)}&t=${t}` : undefined
+  return id ? `/__screenshot-error?id=${encodeURIComponent(id)}&t=${t}` : undefined
 })
 
 function showScreenshotModal(task: Task) {
@@ -127,12 +128,24 @@ function showScreenshotModal(task: Task) {
   timestamp.value = Date.now()
   showScreenshot.value = true
 }
+
+watch(() => [selectedTest.value] as const, ([test]) => {
+  if (test != null) {
+    // Have to wrap the selector in [id=''] since #{test} will produce an invalid selector because the test ID is a number
+    const testElement = document.querySelector(`[id='${test}'`)
+    if (testElement != null) {
+      nextTick(() => {
+        testElement.scrollIntoView()
+      })
+    }
+  }
+}, { flush: 'post' })
 </script>
 
 <template>
   <div h-full class="scrolls">
     <template v-if="failed.length">
-      <div v-for="task of failed" :key="task.id">
+      <div v-for="task of failed" :id="task.id" :key="task.id">
         <div
           bg="red-500/10"
           text="red-500 sm"

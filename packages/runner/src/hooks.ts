@@ -8,10 +8,11 @@ import type {
   TaskHook,
   TaskPopulated,
 } from './types/tasks'
-import { getCurrentSuite, getRunner } from './suite'
-import { getCurrentTest } from './test-state'
+import { assertTypes } from '@vitest/utils'
 import { withTimeout } from './context'
 import { withFixtures } from './fixture'
+import { getCurrentSuite, getRunner } from './suite'
+import { getCurrentTest } from './test-state'
 
 function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout
@@ -35,6 +36,7 @@ function getDefaultHookTimeout() {
  * ```
  */
 export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
+  assertTypes(fn, '"beforeAll" callback', ['function'])
   return getCurrentSuite().on(
     'beforeAll',
     withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
@@ -59,6 +61,7 @@ export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
  * ```
  */
 export function afterAll(fn: AfterAllListener, timeout?: number): void {
+  assertTypes(fn, '"afterAll" callback', ['function'])
   return getCurrentSuite().on(
     'afterAll',
     withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
@@ -86,6 +89,7 @@ export function beforeEach<ExtraContext = object>(
   fn: BeforeEachListener<ExtraContext>,
   timeout?: number,
 ): void {
+  assertTypes(fn, '"beforeEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
@@ -113,6 +117,7 @@ export function afterEach<ExtraContext = object>(
   fn: AfterEachListener<ExtraContext>,
   timeout?: number,
 ): void {
+  assertTypes(fn, '"afterEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
     withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
@@ -155,6 +160,8 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
  *
  * **Note:** The `onTestFinished` hooks are running in reverse order of their registration. You can configure this by changing the `sequence.hooks` option in the config file.
  *
+ * **Note:** The `onTestFinished` hook is not called if the test is canceled with a dynamic `ctx.skip()` call.
+ *
  * @param {Function} fn - The callback function to be executed after a test finishes. The function can receive parameters providing details about the completed test, including its success or failure status.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
  * @throws {Error} Throws an error if the function is not called within a test.
@@ -183,6 +190,8 @@ function createTestHook<T>(
   handler: (test: TaskPopulated, handler: T, timeout?: number) => void,
 ): TaskHook<T> {
   return (fn: T, timeout?: number) => {
+    assertTypes(fn, `"${name}" callback`, ['function'])
+
     const current = getCurrentTest()
 
     if (!current) {

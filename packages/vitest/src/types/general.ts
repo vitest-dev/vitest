@@ -24,6 +24,7 @@ export interface ModuleCache {
 
 export interface AfterSuiteRunMeta {
   coverage?: unknown
+  testFiles: string[]
   transformMode: TransformMode | 'browser'
   projectName?: string
 }
@@ -43,7 +44,5 @@ export interface ModuleGraphData {
   externalized: string[]
   inlined: string[]
 }
-
-export type OnServerRestartHandler = (reason?: string) => Promise<void> | void
 
 export interface ProvidedContext {}

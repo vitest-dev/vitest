@@ -37,6 +37,7 @@ export function serializeConfig(
     pool: config.pool,
     expect: config.expect,
     snapshotSerializers: config.snapshotSerializers,
+    // TODO: non serializable function?
     diff: config.diff,
     retry: config.retry,
     disableConsoleIntercept: config.disableConsoleIntercept,
@@ -160,5 +161,8 @@ export function serializeConfig(
     standalone: config.standalone,
     printConsoleTrace:
       config.printConsoleTrace ?? coreConfig.printConsoleTrace,
+    benchmark: config.benchmark && {
+      includeSamples: config.benchmark.includeSamples,
+    },
   }
 }

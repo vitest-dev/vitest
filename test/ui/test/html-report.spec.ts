@@ -1,5 +1,6 @@
-import { expect, test } from '@playwright/test'
 import type { PreviewServer } from 'vite'
+import { Writable } from 'node:stream'
+import { expect, test } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
@@ -10,15 +11,43 @@ test.describe('html report', () => {
   let previewServer: PreviewServer
 
   test.beforeAll(async () => {
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
     // generate vitest html report
-    await startVitest('test', [], { run: true, reporters: 'html', coverage: { enabled: true, reportsDirectory: 'html/coverage' } })
+    await startVitest(
+      'test',
+      [],
+      {
+        run: true,
+        reporters: 'html',
+        coverage: {
+          enabled: true,
+          reportsDirectory: 'html/coverage',
+          reporter: ['html'],
+        },
+      },
+      {},
+      {
+        stdout,
+        stderr,
+      },
+    )
 
     // run vite preview server
-    previewServer = await preview({ build: { outDir: 'html' }, preview: { port, strictPort: true } })
+    previewServer = await preview({
+      build: { outDir: 'html' },
+      preview: { port, strictPort: true },
+    })
   })
 
   test.afterAll(async () => {
     await new Promise<void>((resolve, reject) => {
+      // if there is no preview server, `startVitest` failed already
+      if (!previewServer) {
+        resolve()
+        return
+      }
       previewServer.httpServer.close((err) => {
         if (err) {
           reject(err)
@@ -51,7 +80,7 @@ test.describe('html report', () => {
     // report
     const sample = page.getByTestId('details-panel').getByLabel('sample.test.ts')
     await sample.hover()
-    await sample.getByTestId('btn-open-details').click()
+    await sample.getByTestId('btn-open-details').click({ force: true })
     await page.getByText('All tests passed in this file').click()
 
     // graph tab
@@ -75,7 +104,7 @@ test.describe('html report', () => {
     await page.goto(pageUrl)
     const sample = page.getByTestId('details-panel').getByLabel('fixtures/error.test.ts')
     await sample.hover()
-    await sample.getByTestId('btn-open-details').click()
+    await sample.getByTestId('btn-open-details').click({ force: true })
     await expect(page.getByTestId('diff')).toContainText('- Expected + Received + <style>* {border: 2px solid green};</style>')
   })
 })

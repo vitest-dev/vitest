@@ -17,8 +17,8 @@ test.each([
   ['basic'],
   ['json', '--json'],
   ['json with a file', '--json=./list.json'],
-])('%s output shows error', async () => {
-  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts')
+])('%s output shows error', async (_, ...args) => {
+  const { stderr, stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '-c=fail.config.ts', ...args)
   expect(stdout).toBe('')
   expect(stderr).toMatchSnapshot()
   expect(exitCode).toBe(1)
@@ -50,6 +50,22 @@ test('correctly outputs json', async () => {
       },
       {
         "name": "failing test",
+        "file": "<root>/fixtures/list/math.test.ts"
+      }
+    ]
+    "
+  `)
+  expect(exitCode).toBe(0)
+})
+
+test('correctly outputs files only json', async () => {
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json', '--filesOnly')
+  expect(relative(stdout)).toMatchInlineSnapshot(`
+    "[
+      {
+        "file": "<root>/fixtures/list/basic.test.ts"
+      },
+      {
         "file": "<root>/fixtures/list/math.test.ts"
       }
     ]
@@ -96,11 +112,40 @@ test('correctly saves json', async () => {
   expect(exitCode).toBe(0)
 })
 
+test('correctly saves files only json', async () => {
+  const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', '--json=./list.json', '--filesOnly')
+  onTestFinished(() => {
+    rmSync('./fixtures/list/list.json')
+  })
+  const json = readFileSync('./fixtures/list/list.json', 'utf-8')
+  expect(stdout).toBe('')
+  expect(relative(json)).toMatchInlineSnapshot(`
+    "[
+      {
+        "file": "<root>/fixtures/list/basic.test.ts"
+      },
+      {
+        "file": "<root>/fixtures/list/math.test.ts"
+      }
+    ]"
+  `)
+  expect(exitCode).toBe(0)
+})
+
 test('correctly filters by file', async () => {
   const { stdout, exitCode } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list')
   expect(stdout).toMatchInlineSnapshot(`
     "math.test.ts > 1 plus 1
     math.test.ts > failing test
+    "
+  `)
+  expect(exitCode).toBe(0)
+})
+
+test('correctly filters by file when using --filesOnly', async () => {
+  const { stdout, exitCode } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--filesOnly')
+  expect(stdout).toMatchInlineSnapshot(`
+    "math.test.ts
     "
   `)
   expect(exitCode).toBe(0)
@@ -115,6 +160,14 @@ test('correctly prints project name in basic report', async () => {
   `)
 })
 
+test('correctly prints project name in basic report when using --filesOnly', async () => {
+  const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--config=./custom.config.ts', '--filesOnly')
+  expect(stdout).toMatchInlineSnapshot(`
+    "[custom] math.test.ts
+    "
+  `)
+})
+
 test('correctly prints project name and locations in json report', async () => {
   const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--json', '--config=./custom.config.ts')
   expect(relative(stdout)).toMatchInlineSnapshot(`
@@ -124,7 +177,7 @@ test('correctly prints project name and locations in json report', async () => {
         "file": "<root>/fixtures/list/math.test.ts",
         "projectName": "custom",
         "location": {
-          "line": 3,
+          "line": 5,
           "column": 1
         }
       },
@@ -133,9 +186,22 @@ test('correctly prints project name and locations in json report', async () => {
         "file": "<root>/fixtures/list/math.test.ts",
         "projectName": "custom",
         "location": {
-          "line": 7,
+          "line": 9,
           "column": 1
         }
+      }
+    ]
+    "
+  `)
+})
+
+test('correctly prints project name in json report when using --filesOnly', async () => {
+  const { stdout } = await runVitestCli('list', 'math.test.ts', '-r=./fixtures/list', '--json', '--config=./custom.config.ts', '--filesOnly')
+  expect(relative(stdout)).toMatchInlineSnapshot(`
+    "[
+      {
+        "file": "<root>/fixtures/list/math.test.ts",
+        "projectName": "custom"
       }
     ]
     "

@@ -126,4 +126,13 @@ describe('stubbing envs', () => {
     vi.stubEnv('MY_TEST_ENV', true)
     expect(import.meta.env.MY_TEST_ENV).toBe('true')
   })
+
+  it('stubs to undefined and restores env', () => {
+    vi.stubEnv('VITE_TEST_UPDATE_ENV', undefined)
+    expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBeUndefined()
+    expect(process.env.VITE_TEST_UPDATE_ENV).toBeUndefined()
+    vi.unstubAllEnvs()
+    expect(import.meta.env.VITE_TEST_UPDATE_ENV).toBe('development')
+    expect(process.env.VITE_TEST_UPDATE_ENV).toBe('development')
+  })
 })

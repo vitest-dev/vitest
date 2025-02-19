@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, test } from 'vitest'
-import { page } from '@vitest/browser/context'
 import { createNode } from '#src/createNode'
+import { page } from '@vitest/browser/context'
+import { beforeEach, describe, expect, test } from 'vitest'
 import '../src/button.css'
 
 describe('dom related activity', () => {
@@ -15,6 +15,10 @@ describe('dom related activity', () => {
     expect(window.innerHeight).toBe(600)
   })
 
+  test('element doesn\'t exist', async () => {
+    await expect.element(page.getByText('empty')).not.toBeInTheDocument()
+  })
+
   test('renders div', async () => {
     const wrapper = createWrapper()
     const div = createNode()
@@ -27,6 +31,20 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(
       /__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/,
     )
+
+    // test typing
+    if (0) {
+      await expect.element(div).toHaveClass('x', { exact: true })
+      await expect.element(div).toHaveClass('x', 'y')
+      await expect.element(div).toHaveClass('x', /y/)
+      await expect.element(div).toHaveClass(/x/, 'y')
+      await expect.element(div).toHaveClass('x', /y/, 'z')
+      await expect.element(div).toHaveClass(/x/, 'y', /z/)
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', { exact: 1234 })
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', 1234)
+    }
   })
 
   test('resolves base64 screenshot', async () => {

@@ -1,16 +1,16 @@
-import os from 'node:os'
 import type {
   BenchmarkUserOptions,
   CoverageV8Options,
   ResolvedCoverageOptions,
   UserConfig,
 } from './node/types/config'
+import os from 'node:os'
 import { isCI } from './utils/env'
 
 export { defaultBrowserPort } from './constants'
 
-export const defaultInclude = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
-export const defaultExclude = [
+export const defaultInclude: string[] = ['**/*.{test,spec}.?(c|m)[jt]s?(x)']
+export const defaultExclude: string[] = [
   '**/node_modules/**',
   '**/dist/**',
   '**/cypress/**',
@@ -24,6 +24,7 @@ export const benchmarkConfigDefaults: Required<
   exclude: defaultExclude,
   includeSource: [],
   reporters: ['default'],
+  includeSamples: false,
 }
 
 const defaultCoverageExcludes = [
@@ -73,6 +74,7 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
     '.vue',
     '.svelte',
     '.marko',
+    '.astro',
   ],
   allowExternal: false,
   excludeAfterRemap: false,
@@ -83,21 +85,50 @@ export const coverageConfigDefaults: ResolvedCoverageOptions = {
   ),
 }
 
-export const fakeTimersDefaults = {
+export const fakeTimersDefaults: NonNullable<UserConfig['fakeTimers']> = {
   loopLimit: 10_000,
   shouldClearNativeTimers: true,
-  toFake: [
-    'setTimeout',
-    'clearTimeout',
-    'setInterval',
-    'clearInterval',
-    'setImmediate',
-    'clearImmediate',
-    'Date',
-  ],
-} satisfies NonNullable<UserConfig['fakeTimers']>
+}
 
-const config = {
+export const configDefaults: Readonly<{
+  allowOnly: boolean
+  isolate: boolean
+  watch: boolean
+  globals: boolean
+  environment: 'node'
+  pool: 'forks'
+  clearMocks: boolean
+  restoreMocks: boolean
+  mockReset: boolean
+  unstubGlobals: boolean
+  unstubEnvs: boolean
+  include: string[]
+  exclude: string[]
+  teardownTimeout: number
+  forceRerunTriggers: string[]
+  update: boolean
+  reporters: never[]
+  silent: boolean
+  hideSkippedTests: boolean
+  api: boolean
+  ui: boolean
+  uiBase: string
+  open: boolean
+  css: {
+    include: never[]
+  }
+  coverage: CoverageV8Options
+  fakeTimers: import('@sinonjs/fake-timers').FakeTimerInstallOpts
+  maxConcurrency: number
+  dangerouslyIgnoreUnhandledErrors: boolean
+  typecheck: {
+    checker: 'tsc'
+    include: string[]
+    exclude: string[]
+  }
+  slowTestThreshold: number
+  disableConsoleIntercept: boolean
+}> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
   watch: !isCI,
@@ -135,6 +166,4 @@ const config = {
   },
   slowTestThreshold: 300,
   disableConsoleIntercept: false,
-} satisfies UserConfig
-
-export const configDefaults = Object.freeze(config)
+})

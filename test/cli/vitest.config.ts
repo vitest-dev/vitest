@@ -14,4 +14,12 @@ export default defineConfig({
       truncateThreshold: 999,
     },
   },
+  server: {
+    watch: {
+      ignored: [
+        '**/fixtures/browser-multiple/**/*',
+        '**/fixtures/browser-init/**/*',
+      ],
+    },
+  },
 })

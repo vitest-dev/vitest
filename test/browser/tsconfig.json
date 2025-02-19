@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
     "jsx": "react-jsx",
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -9,8 +10,17 @@
     "types": [
       "vite/client",
       "@vitest/browser/providers/playwright",
-      "vitest-browser-react"
+      "vitest-browser-react",
+      "vitest/import-meta"
     ],
+    "noEmit": true,
     "esModuleInterop": true
-  }
+  },
+  "include": [
+    "fixtures",
+    "test",
+    "specs",
+    "./vitest.config.*",
+    "./setup.unit.ts"
+  ]
 }

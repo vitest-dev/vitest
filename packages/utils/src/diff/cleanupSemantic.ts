@@ -338,61 +338,6 @@ const blanklineStartRegex_ = /^\r?\n\r?\n/
  * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
  */
 function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
-  /**
-   * Given two strings, compute a score representing whether the internal
-   * boundary falls on logical boundaries.
-   * Scores range from 6 (best) to 0 (worst).
-   * Closure, but does not reference any external variables.
-   * @param {string} one First string.
-   * @param {string} two Second string.
-   * @return {number} The score.
-   * @private
-   */
-  function diff_cleanupSemanticScore_(one: string, two: string): number {
-    if (!one || !two) {
-      // Edges are the best.
-      return 6
-    }
-
-    // Each port of this function behaves slightly differently due to
-    // subtle differences in each language's definition of things like
-    // 'whitespace'.  Since this function's purpose is largely cosmetic,
-    // the choice has been made to use each language's native features
-    // rather than force total conformity.
-    const char1 = one.charAt(one.length - 1)
-    const char2 = two.charAt(0)
-    const nonAlphaNumeric1 = char1.match(nonAlphaNumericRegex_)
-    const nonAlphaNumeric2 = char2.match(nonAlphaNumericRegex_)
-    const whitespace1 = nonAlphaNumeric1 && char1.match(whitespaceRegex_)
-    const whitespace2 = nonAlphaNumeric2 && char2.match(whitespaceRegex_)
-    const lineBreak1 = whitespace1 && char1.match(linebreakRegex_)
-    const lineBreak2 = whitespace2 && char2.match(linebreakRegex_)
-    const blankLine1 = lineBreak1 && one.match(blanklineEndRegex_)
-    const blankLine2 = lineBreak2 && two.match(blanklineStartRegex_)
-
-    if (blankLine1 || blankLine2) {
-      // Five points for blank lines.
-      return 5
-    }
-    else if (lineBreak1 || lineBreak2) {
-      // Four points for line breaks.
-      return 4
-    }
-    else if (nonAlphaNumeric1 && !whitespace1 && whitespace2) {
-      // Three points for end of sentences.
-      return 3
-    }
-    else if (whitespace1 || whitespace2) {
-      // Two points for whitespace.
-      return 2
-    }
-    else if (nonAlphaNumeric1 || nonAlphaNumeric2) {
-      // One point for non-alphanumeric.
-      return 1
-    }
-    return 0
-  }
-
   let pointer = 1
   // Intentionally ignore the first and last element (don't need checking).
   while (pointer < diffs.length - 1) {
@@ -420,14 +365,14 @@ function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
       let bestEquality2 = equality2
       let bestScore
         = diff_cleanupSemanticScore_(equality1, edit)
-        + diff_cleanupSemanticScore_(edit, equality2)
+          + diff_cleanupSemanticScore_(edit, equality2)
       while (edit.charAt(0) === equality2.charAt(0)) {
         equality1 += edit.charAt(0)
         edit = edit.substring(1) + equality2.charAt(0)
         equality2 = equality2.substring(1)
         const score
           = diff_cleanupSemanticScore_(equality1, edit)
-          + diff_cleanupSemanticScore_(edit, equality2)
+            + diff_cleanupSemanticScore_(edit, equality2)
         // The >= encourages trailing rather than leading whitespace on edits.
         if (score >= bestScore) {
           bestScore = score
@@ -490,7 +435,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         // Upon reaching an equality, check for prior redundancies.
         if (count_delete + count_insert > 1) {
           if (count_delete !== 0 && count_insert !== 0) {
-            // Factor out any common prefixies.
+            // Factor out any common prefixes.
             commonlength = diff_commonPrefix(text_insert, text_delete)
             if (commonlength !== 0) {
               if (
@@ -512,12 +457,12 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
               text_insert = text_insert.substring(commonlength)
               text_delete = text_delete.substring(commonlength)
             }
-            // Factor out any common suffixies.
+            // Factor out any common suffixes.
             commonlength = diff_commonSuffix(text_insert, text_delete)
             if (commonlength !== 0) {
               diffs[pointer][1]
                 = text_insert.substring(text_insert.length - commonlength)
-                + diffs[pointer][1]
+                  + diffs[pointer][1]
               text_insert = text_insert.substring(
                 0,
                 text_insert.length - commonlength,
@@ -580,10 +525,10 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         // Shift the edit over the previous equality.
         diffs[pointer][1]
           = diffs[pointer - 1][1]
-          + diffs[pointer][1].substring(
-            0,
-            diffs[pointer][1].length - diffs[pointer - 1][1].length,
-          )
+            + diffs[pointer][1].substring(
+              0,
+              diffs[pointer][1].length - diffs[pointer - 1][1].length,
+            )
         diffs[pointer + 1][1] = diffs[pointer - 1][1] + diffs[pointer + 1][1]
         diffs.splice(pointer - 1, 1)
         changes = true
@@ -596,7 +541,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         diffs[pointer - 1][1] += diffs[pointer + 1][1]
         diffs[pointer][1]
           = diffs[pointer][1].substring(diffs[pointer + 1][1].length)
-          + diffs[pointer + 1][1]
+            + diffs[pointer + 1][1]
         diffs.splice(pointer + 1, 1)
         changes = true
       }
@@ -609,10 +554,65 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
   }
 }
 
+/**
+ * Given two strings, compute a score representing whether the internal
+ * boundary falls on logical boundaries.
+ * Scores range from 6 (best) to 0 (worst).
+ * Closure, but does not reference any external variables.
+ * @param {string} one First string.
+ * @param {string} two Second string.
+ * @return {number} The score.
+ * @private
+ */
+function diff_cleanupSemanticScore_(one: string, two: string): number {
+  if (!one || !two) {
+    // Edges are the best.
+    return 6
+  }
+
+  // Each port of this function behaves slightly differently due to
+  // subtle differences in each language's definition of things like
+  // 'whitespace'.  Since this function's purpose is largely cosmetic,
+  // the choice has been made to use each language's native features
+  // rather than force total conformity.
+  const char1 = one.charAt(one.length - 1)
+  const char2 = two.charAt(0)
+  const nonAlphaNumeric1 = char1.match(nonAlphaNumericRegex_)
+  const nonAlphaNumeric2 = char2.match(nonAlphaNumericRegex_)
+  const whitespace1 = nonAlphaNumeric1 && char1.match(whitespaceRegex_)
+  const whitespace2 = nonAlphaNumeric2 && char2.match(whitespaceRegex_)
+  const lineBreak1 = whitespace1 && char1.match(linebreakRegex_)
+  const lineBreak2 = whitespace2 && char2.match(linebreakRegex_)
+  const blankLine1 = lineBreak1 && one.match(blanklineEndRegex_)
+  const blankLine2 = lineBreak2 && two.match(blanklineStartRegex_)
+
+  if (blankLine1 || blankLine2) {
+    // Five points for blank lines.
+    return 5
+  }
+  else if (lineBreak1 || lineBreak2) {
+    // Four points for line breaks.
+    return 4
+  }
+  else if (nonAlphaNumeric1 && !whitespace1 && whitespace2) {
+    // Three points for end of sentences.
+    return 3
+  }
+  else if (whitespace1 || whitespace2) {
+    // Two points for whitespace.
+    return 2
+  }
+  else if (nonAlphaNumeric1 || nonAlphaNumeric2) {
+    // One point for non-alphanumeric.
+    return 1
+  }
+  return 0
+}
+
 export {
-  Diff,
-  DIFF_EQUAL,
-  DIFF_DELETE,
-  DIFF_INSERT,
   diff_cleanupSemantic as cleanupSemantic,
+  Diff,
+  DIFF_DELETE,
+  DIFF_EQUAL,
+  DIFF_INSERT,
 }

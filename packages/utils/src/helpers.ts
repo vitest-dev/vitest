@@ -70,7 +70,7 @@ export function parseRegexp(input: string): RegExp {
   // Invalid flags
   // eslint-disable-next-line regexp/optimal-quantifier-concatenation
   if (m[3] && !/^(?!.*?(.).*?\1)[gmixXsuUAJ]+$/.test(m[3])) {
-    return RegExp(input)
+    return new RegExp(input)
   }
 
   // Create the regular expression
@@ -146,7 +146,7 @@ export function clone<T>(
     return seen.get(val)
   }
   if (Array.isArray(val)) {
-    out = Array((k = val.length))
+    out = Array.from({ length: (k = val.length) })
     seen.set(val, out)
     while (k--) {
       out[k] = clone(val[k], seen, options)
@@ -205,7 +205,7 @@ export function objectAttr(
   const paths = path.replace(/\[(\d+)\]/g, '.$1').split('.')
   let result = source
   for (const p of paths) {
-    result = Object(result)[p]
+    result = (new Object(result) as any)[p]
     if (result === undefined) {
       return defaultValue
     }
@@ -289,4 +289,58 @@ export function isNegativeNaN(val: number): boolean {
   const isNegative = u32[1] >>> 31 === 1
 
   return isNegative
+}
+
+function toString(v: any) {
+  return Object.prototype.toString.call(v)
+}
+
+function isPlainObject(val: any): val is object {
+  return (
+    toString(val) === '[object Object]'
+    && (!val.constructor || val.constructor.name === 'Object')
+  )
+}
+
+function isMergeableObject(item: any): item is object {
+  return isPlainObject(item) && !Array.isArray(item)
+}
+
+/**
+ * Deep merge :P
+ *
+ * Will merge objects only if they are plain
+ *
+ * Do not merge types - it is very expensive and usually it's better to case a type here
+ */
+export function deepMerge<T extends object = object>(
+  target: T,
+  ...sources: any[]
+): T {
+  if (!sources.length) {
+    return target as any
+  }
+
+  const source = sources.shift()
+  if (source === undefined) {
+    return target as any
+  }
+
+  if (isMergeableObject(target) && isMergeableObject(source)) {
+    (Object.keys(source) as (keyof T)[]).forEach((key) => {
+      const _source = source as T
+      if (isMergeableObject(_source[key])) {
+        if (!target[key]) {
+          target[key] = {} as any
+        }
+
+        deepMerge(target[key] as any, _source[key])
+      }
+      else {
+        target[key] = _source[key] as any
+      }
+    })
+  }
+
+  return deepMerge(target, ...sources)
 }

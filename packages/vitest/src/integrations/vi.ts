@@ -1,13 +1,7 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
-import { parseSingleStack } from '../utils/source-map'
-import type { VitestMocker } from '../runtime/mocker'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
+import type { VitestMocker } from '../runtime/mocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
-import { getWorkerState } from '../runtime/utils'
-import { resetModules, waitForImportsToResolve } from '../utils/modules'
-import { isChildProcess } from '../utils/base'
-import { FakeTimers } from './mock/timers'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
@@ -15,6 +9,10 @@ import type {
   MaybePartiallyMockedDeep,
   MockInstance,
 } from './spy'
+import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
+import { getWorkerState, isChildProcess, resetModules, waitForImportsToResolve } from '../runtime/utils'
+import { parseSingleStack } from '../utils/source-map'
+import { FakeTimers } from './mock/timers'
 import { fn, isMockFunction, mocks, spyOn } from './spy'
 import { waitFor, waitUntil } from './wait'
 
@@ -87,7 +85,7 @@ export interface VitestUtils {
    */
   setSystemTime: (time: number | string | Date) => VitestUtils
   /**
-   * Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
+   * Returns mocked current date. If date is not mocked the method will return `null`.
    */
   getMockedSystemTime: () => Date | null
   /**
@@ -290,24 +288,24 @@ export interface VitestUtils {
    * @param options If the object is partially or deeply mocked
    */
   mocked: (<T>(item: T, deep?: false) => MaybeMocked<T>) &
-  (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
-  (<T>(
-    item: T,
-    options: { partial?: false; deep?: false }
-  ) => MaybeMocked<T>) &
-  (<T>(
-    item: T,
-    options: { partial?: false; deep: true }
-  ) => MaybeMockedDeep<T>) &
-  (<T>(
-    item: T,
-    options: { partial: true; deep?: false }
-  ) => MaybePartiallyMocked<T>) &
-  (<T>(
-    item: T,
-    options: { partial: true; deep: true }
-  ) => MaybePartiallyMockedDeep<T>) &
-  (<T>(item: T) => MaybeMocked<T>)
+    (<T>(item: T, deep: true) => MaybeMockedDeep<T>) &
+    (<T>(
+      item: T,
+      options: { partial?: false; deep?: false }
+    ) => MaybeMocked<T>) &
+    (<T>(
+      item: T,
+      options: { partial?: false; deep: true }
+    ) => MaybeMockedDeep<T>) &
+    (<T>(
+      item: T,
+      options: { partial: true; deep?: false }
+    ) => MaybePartiallyMocked<T>) &
+    (<T>(
+      item: T,
+      options: { partial: true; deep: true }
+    ) => MaybePartiallyMockedDeep<T>) &
+    (<T>(item: T) => MaybeMocked<T>)
 
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.
@@ -315,21 +313,29 @@ export interface VitestUtils {
   isMockFunction: (fn: any) => fn is MockInstance
 
   /**
-   * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function. This will only empty `.mock` state, it will not reset implementation.
+   * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function.
    *
-   * It is useful if you need to clean up mock between different assertions.
+   * This will only empty `.mock` state, it will not affect mock implementations.
+   *
+   * This is useful if you need to clean up mocks between different assertions within a test.
    */
   clearAllMocks: () => VitestUtils
 
   /**
-   * Calls [`.mockReset()`](https://vitest.dev/api/mock#mockreset) on every mocked function. This will empty `.mock` state, reset "once" implementations and force the base implementation to return `undefined` when invoked.
+   * Calls [`.mockReset()`](https://vitest.dev/api/mock#mockreset) on every mocked function.
    *
-   * This is useful when you want to completely reset a mock to the default state.
+   * This will empty `.mock` state, reset "once" implementations, and reset each mock's base implementation to its original.
+   *
+   * This is useful when you want to reset all mocks to their original states.
    */
   resetAllMocks: () => VitestUtils
 
   /**
-   * Calls [`.mockRestore()`](https://vitest.dev/api/mock#mockrestore) on every mocked function. This will restore all original implementations.
+   * Calls [`.mockRestore()`](https://vitest.dev/api/mock#mockrestore) on every mocked function.
+   *
+   * This will empty `.mock` state, restore all original mock implementations, and restore original descriptors of spied-on objects.
+   *
+   * This is useful for inter-test cleanup and/or removing mocks created by [`vi.spyOn(...)`](https://vitest.dev/api/vi#vi-spyon).
    */
   restoreAllMocks: () => VitestUtils
 
@@ -346,7 +352,7 @@ export interface VitestUtils {
    */
   stubEnv: <T extends string>(
     name: T,
-    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string
+    value: T extends 'PROD' | 'DEV' | 'SSR' ? boolean : string | undefined
   ) => VitestUtils
 
   /**
@@ -389,24 +395,6 @@ function createVitest(): VitestUtils {
   let _mockedDate: Date | null = null
   let _config: null | SerializedConfig = null
 
-  function _mocker(): VitestMocker {
-    // @ts-expect-error injected by vite-nide
-    return typeof __vitest_mocker__ !== 'undefined'
-    // @ts-expect-error injected by vite-nide
-      ? __vitest_mocker__
-      : new Proxy(
-        {},
-        {
-          get(_, name) {
-            throw new Error(
-              'Vitest mocker was not initialized in this environment. '
-              + `vi.${String(name)}() is forbidden.`,
-            )
-          },
-        },
-      )
-  }
-
   const workerState = getWorkerState()
 
   let _timers: FakeTimers
@@ -424,17 +412,6 @@ function createVitest(): VitestUtils {
   const _stubsEnv = new Map()
 
   const _envBooleans = ['PROD', 'DEV', 'SSR']
-
-  const getImporter = (name: string) => {
-    const stackTrace = createSimpleStackTrace({ stackTraceLimit: 5 })
-    const stackArray = stackTrace.split('\n')
-    // if there is no message in a stack trace, use the item - 1
-    const importerStackIndex = stackArray.findIndex((stack) => {
-      return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
-    })
-    const stack = parseSingleStack(stackArray[importerStackIndex + 1])
-    return stack?.file || ''
-  }
 
   const utils: VitestUtils = {
     useFakeTimers(config?: FakeTimerInstallOpts) {
@@ -525,14 +502,12 @@ function createVitest(): VitestUtils {
     },
 
     setSystemTime(time: number | string | Date) {
-      const date = time instanceof Date ? time : new Date(time)
-      _mockedDate = date
-      timers().setSystemTime(date)
+      timers().setSystemTime(time)
       return utils
     },
 
     getMockedSystemTime() {
-      return _mockedDate
+      return timers().getMockedSystemTime()
     },
 
     getRealSystemTime() {
@@ -641,17 +616,17 @@ function createVitest(): VitestUtils {
     },
 
     clearAllMocks() {
-      mocks.forEach(spy => spy.mockClear())
+      [...mocks].reverse().forEach(spy => spy.mockClear())
       return utils
     },
 
     resetAllMocks() {
-      mocks.forEach(spy => spy.mockReset())
+      [...mocks].reverse().forEach(spy => spy.mockReset())
       return utils
     },
 
     restoreAllMocks() {
-      mocks.forEach(spy => spy.mockRestore())
+      [...mocks].reverse().forEach(spy => spy.mockRestore())
       return utils
     },
 
@@ -671,12 +646,15 @@ function createVitest(): VitestUtils {
       return utils
     },
 
-    stubEnv(name: string, value: string | boolean) {
+    stubEnv(name: string, value: string | boolean | undefined) {
       if (!_stubsEnv.has(name)) {
         _stubsEnv.set(name, process.env[name])
       }
       if (_envBooleans.includes(name)) {
         process.env[name] = value ? '1' : ''
+      }
+      else if (value === undefined) {
+        delete process.env[name]
       }
       else {
         process.env[name] = String(value)
@@ -736,5 +714,34 @@ function createVitest(): VitestUtils {
   return utils
 }
 
-export const vitest = createVitest()
-export const vi = vitest
+export const vitest: VitestUtils = createVitest()
+export const vi: VitestUtils = vitest
+
+function _mocker(): VitestMocker {
+  // @ts-expect-error injected by vite-nide
+  return typeof __vitest_mocker__ !== 'undefined'
+  // @ts-expect-error injected by vite-nide
+    ? __vitest_mocker__
+    : new Proxy(
+      {},
+      {
+        get(_, name) {
+          throw new Error(
+            'Vitest mocker was not initialized in this environment. '
+            + `vi.${String(name)}() is forbidden.`,
+          )
+        },
+      },
+    )
+}
+
+function getImporter(name: string) {
+  const stackTrace = createSimpleStackTrace({ stackTraceLimit: 5 })
+  const stackArray = stackTrace.split('\n')
+  // if there is no message in a stack trace, use the item - 1
+  const importerStackIndex = stackArray.findIndex((stack) => {
+    return stack.includes(` at Object.${name}`) || stack.includes(`${name}@`)
+  })
+  const stack = parseSingleStack(stackArray[importerStackIndex + 1])
+  return stack?.file || ''
+}

@@ -1,4 +1,5 @@
-import { type UserConfig, expect, test } from 'vitest'
+import type { UserConfig } from 'vitest/node'
+import { expect, test } from 'vitest'
 
 import { runVitest } from '../../test-utils'
 

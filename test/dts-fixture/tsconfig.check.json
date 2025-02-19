@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": [],
+    "strict": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["dist"]
+}

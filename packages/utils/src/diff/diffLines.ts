@@ -5,14 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { DiffOptions, DiffOptionsNormalized } from './types'
 import diffSequences from 'diff-sequences'
-import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, Diff } from './cleanupSemantic'
+import { Diff, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import {
   joinAlignedDiffsExpand,
   joinAlignedDiffsNoExpand,
 } from './joinAlignedDiffs'
 import { normalizeDiffOptions } from './normalizeDiffOptions'
-import type { DiffOptions, DiffOptionsNormalized } from './types'
 
 function isEmptyString(lines: Array<string>) {
   return lines.length === 1 && lines[0].length === 0
@@ -95,9 +95,9 @@ export function printDiffLines(
     + (options.expand
       ? joinAlignedDiffsExpand(diffs, options)
       : joinAlignedDiffsNoExpand(diffs, options))
-      + (truncated
-        ? options.truncateAnnotationColor(`\n${options.truncateAnnotation}`)
-        : '')
+    + (truncated
+      ? options.truncateAnnotationColor(`\n${options.truncateAnnotation}`)
+      : '')
   )
 }
 

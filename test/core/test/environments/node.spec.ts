@@ -9,3 +9,7 @@ test.runIf(nodeMajor > 16)('url correctly creates an object', () => {
     URL.createObjectURL(new Blob([]))
   }).not.toThrow()
 })
+
+test('ssr is enabled', () => {
+  expect(import.meta.env.SSR).toBe(true)
+})

@@ -1,9 +1,9 @@
 import fs from 'node:fs'
+import { stripVTControlCharacters } from 'node:util'
 import zlib from 'node:zlib'
+import { parse } from 'flatted'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { parse } from 'flatted'
-import stripAnsi from 'strip-ansi'
 
 import { runVitest } from '../../test-utils'
 
@@ -16,8 +16,8 @@ describe('html reporter', async () => {
 
     await runVitest({ reporters: 'html', outputFile: `${basePath}/index.html`, root, env: { NO_COLOR: '1' } }, [testFile])
 
-    const metaJsonGzipeed = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
-    const metaJson = zlib.gunzipSync(metaJsonGzipeed).toString('utf-8')
+    const metaJsonGzipped = fs.readFileSync(resolve(root, `${basePath}/html.meta.json.gz`))
+    const metaJson = zlib.gunzipSync(metaJsonGzipped).toString('utf-8')
     const indexHtml = fs.readFileSync(resolve(root, `${basePath}/index.html`), { encoding: 'utf-8' })
     const resultJson = parse(metaJson.replace(new RegExp(vitestRoot, 'g'), '<rootDir>'))
     resultJson.config = {} // doesn't matter for a test
@@ -68,7 +68,7 @@ describe('html reporter', async () => {
     expect(task.logs).toHaveLength(1)
     task.logs[0].taskId = 0
     task.logs[0].time = 0
-    expect(resultJson).toMatchSnapshot(`tests are ${stripAnsi(expected)}`)
+    expect(resultJson).toMatchSnapshot(`tests are ${stripVTControlCharacters(expected)}`)
     expect(indexHtml).toMatch('window.METADATA_PATH="html.meta.json.gz"')
   }, 120000)
 })

@@ -1,9 +1,9 @@
-import { beforeAll, describe, expect, test } from 'vitest'
-import { assertTypes, deepClone, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
-import { deepMerge, resetModules } from '../../../packages/vitest/src/utils'
-import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import type { EncodedSourceMap } from '../../../packages/vite-node/src/types'
+import { assertTypes, deepClone, deepMerge, isNegativeNaN, objDisplay, objectAttr, toArray } from '@vitest/utils'
+import { beforeAll, describe, expect, test } from 'vitest'
+import { deepMergeSnapshot } from '../../../packages/snapshot/src/port/utils'
 import { ModuleCacheMap } from '../../../packages/vite-node/src/client'
+import { resetModules } from '../../../packages/vitest/src/runtime/utils'
 
 describe('assertTypes', () => {
   test('the type of value should be number', () => {
@@ -227,7 +227,7 @@ describe('resetModules doesn\'t resets only user modules', () => {
     resetModules(moduleCache)
   })
 
-  test.each(modules)('Cashe for %s is reseted (%s)', (path, reset) => {
+  test.each(modules)('Cache for %s is reset (%s)', (path, reset) => {
     const cached = moduleCache.get(path)
 
     if (reset) {

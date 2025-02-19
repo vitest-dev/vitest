@@ -1,6 +1,6 @@
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { type Vitest, startVitest } from 'vitest/node'
+import { startVitest, type Vitest } from 'vitest/node'
 
 const port = 9000
 const pageUrl = `http://localhost:${port}/__vitest__/`
@@ -17,7 +17,7 @@ test.describe('ui', () => {
       ui: true,
       open: false,
       api: { port },
-      coverage: { enabled: true },
+      coverage: { enabled: true, reporter: ['html'] },
       reporters: [],
     }, {}, {
       stdout,
@@ -28,6 +28,36 @@ test.describe('ui', () => {
 
   test.afterAll(async () => {
     await vitest?.close()
+  })
+
+  test('security', async ({ page }) => {
+    await page.goto('https://example.com/')
+
+    // request html
+    const htmlResult = await page.evaluate(async (pageUrl) => {
+      try {
+        const res = await fetch(pageUrl)
+        return res.status
+      }
+      catch (e) {
+        return e instanceof Error ? e.message : e
+      }
+    }, pageUrl)
+    expect(htmlResult).toBe('Failed to fetch')
+
+    // request websocket
+    const wsResult = await page.evaluate(async (pageUrl) => {
+      const ws = new WebSocket(new URL('/__vitest_api__', pageUrl))
+      return new Promise((resolve) => {
+        ws.addEventListener('open', () => {
+          resolve('open')
+        })
+        ws.addEventListener('error', () => {
+          resolve('error')
+        })
+      })
+    }, pageUrl)
+    expect(wsResult).toBe('error')
   })
 
   test('basic', async ({ page }) => {
@@ -136,5 +166,48 @@ test.describe('ui', () => {
     await page.getByPlaceholder('Search...').fill('<>\'"')
     await expect(page.getByText('<>\'"')).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+  })
+})
+
+test.describe('standalone', () => {
+  let vitest: Vitest | undefined
+
+  test.beforeAll(async () => {
+    // silence Vitest logs
+    const stdout = new Writable({ write: (_, __, callback) => callback() })
+    const stderr = new Writable({ write: (_, __, callback) => callback() })
+    vitest = await startVitest('test', [], {
+      watch: true,
+      ui: true,
+      standalone: true,
+      open: false,
+      api: { port },
+      reporters: [],
+    }, {}, {
+      stdout,
+      stderr,
+    })
+    expect(vitest).toBeDefined()
+  })
+
+  test.afterAll(async () => {
+    await vitest?.close()
+  })
+
+  test('basic', async ({ page }) => {
+    await page.goto(pageUrl)
+
+    // initially no stats
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('0 Pass 0 Fail 0 Total')
+
+    // run single file
+    await page.getByText('fixtures/sample.test.ts').hover()
+    await page.getByRole('button', { name: 'Run current file' }).click()
+
+    // check results
+    await page.getByText('PASS (1)').click()
+    expect(vitest?.state.getFiles().map(f => [f.name, f.result?.state])).toEqual([
+      ['fixtures/sample.test.ts', 'pass'],
+    ])
   })
 })

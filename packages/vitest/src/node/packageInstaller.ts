@@ -1,13 +1,17 @@
-import url from 'node:url'
 import { createRequire } from 'node:module'
-import c from 'tinyrainbow'
+import url from 'node:url'
 import { isPackageExists } from 'local-pkg'
-import { isCI } from '../utils/env'
+import c from 'tinyrainbow'
+import { isTTY } from '../utils/env'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 export class VitestPackageInstaller {
-  async ensureInstalled(dependency: string, root: string) {
+  isPackageExists(name: string, options?: { paths?: string[] }): boolean {
+    return isPackageExists(name, options)
+  }
+
+  async ensureInstalled(dependency: string, root: string, version?: string): Promise<boolean> {
     if (process.env.VITEST_SKIP_INSTALL_CHECKS) {
       return true
     }
@@ -27,8 +31,6 @@ export class VitestPackageInstaller {
       return true
     }
 
-    const promptInstall = !isCI && process.stdout.isTTY
-
     process.stderr.write(
       c.red(
         `${c.inverse(
@@ -37,25 +39,26 @@ export class VitestPackageInstaller {
       ),
     )
 
-    if (!promptInstall) {
+    if (!isTTY) {
       return false
     }
 
     const prompts = await import('prompts')
-    const { install } = await prompts.prompt({
+    const { install } = await prompts.default({
       type: 'confirm',
       name: 'install',
       message: c.reset(`Do you want to install ${c.green(dependency)}?`),
     })
 
     if (install) {
+      const packageName = version ? `${dependency}@${version}` : dependency
       await (
         await import('@antfu/install-pkg')
-      ).installPackage(dependency, { dev: true })
+      ).installPackage(packageName, { dev: true })
       // TODO: somehow it fails to load the package after installation, remove this when it's fixed
       process.stderr.write(
         c.yellow(
-          `\nPackage ${dependency} installed, re-run the command to start.\n`,
+          `\nPackage ${packageName} installed, re-run the command to start.\n`,
         ),
       )
       process.exit()

@@ -1,20 +1,21 @@
 import type {
   Suite,
   Task,
+  TaskUpdateEvent,
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
+import type { SerializedConfig } from '../config'
+import type { VitestExecutor } from '../execute'
+import type {
+  Benchmark,
+  BenchmarkResult,
+  BenchTask,
+} from '../types/benchmark'
 import { updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
-import { getWorkerState } from '../../utils'
-import type {
-  BenchTask,
-  Benchmark,
-  BenchmarkResult,
-} from '../types/benchmark'
-import type { SerializedConfig } from '../config'
-import type { VitestExecutor } from '../execute'
+import { getWorkerState } from '../utils'
 
 function createBenchmarkResult(name: string): BenchmarkResult {
   return {
@@ -35,7 +36,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
   const benchmarkGroup: Benchmark[] = []
   const benchmarkSuiteGroup = []
   for (const task of suite.tasks) {
-    if (task.mode !== 'run') {
+    if (task.mode !== 'run' && task.mode !== 'queued') {
       continue
     }
 
@@ -59,7 +60,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       startTime: start,
       benchmark: createBenchmarkResult(suite.name),
     }
-    updateTask(suite)
+    updateTask('suite-prepare', suite)
 
     const addBenchTaskListener = (
       task: InstanceType<typeof Task>,
@@ -71,8 +72,18 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           const task = e.task
           const taskRes = task.result!
           const result = benchmark.result!.benchmark!
+          benchmark.result!.state = 'pass'
           Object.assign(result, taskRes)
-          updateTask(benchmark)
+          // compute extra stats and free raw samples as early as possible
+          const samples = result.samples
+          result.sampleCount = samples.length
+          result.median = samples.length % 2
+            ? samples[Math.floor(samples.length / 2)]
+            : (samples[samples.length / 2] + samples[samples.length / 2 - 1]) / 2
+          if (!runner.config.benchmark?.includeSamples) {
+            result.samples.length = 0
+          }
+          updateTask('test-finished', benchmark)
         },
         {
           once: true,
@@ -105,13 +116,14 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       const task = new Task(benchmarkInstance, benchmark.name, benchmarkFn)
       benchmarkTasks.set(benchmark, task)
       addBenchTaskListener(task, benchmark)
-      updateTask(benchmark)
     })
 
     const { setTimeout } = getSafeTimers()
     const tasks: [BenchTask, Benchmark][] = []
+
     for (const benchmark of benchmarkGroup) {
       const task = benchmarkTasks.get(benchmark)!
+      updateTask('test-prepare', benchmark)
       await task.warmup()
       tasks.push([
         await new Promise<BenchTask>(resolve =>
@@ -126,24 +138,14 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     suite.result!.duration = performance.now() - start
     suite.result!.state = 'pass'
 
-    tasks
-      .sort(([taskA], [taskB]) => taskA.result!.mean - taskB.result!.mean)
-      .forEach(([, benchmark], idx) => {
-        benchmark.result!.state = 'pass'
-        if (benchmark) {
-          const result = benchmark.result!.benchmark!
-          result.rank = Number(idx) + 1
-          updateTask(benchmark)
-        }
-      })
-    updateTask(suite)
+    updateTask('suite-finished', suite)
     defer.resolve(null)
 
     await defer
   }
 
-  function updateTask(task: Task) {
-    updateRunnerTask(task, runner)
+  function updateTask(event: TaskUpdateEvent, task: Task) {
+    updateRunnerTask(event, task, runner)
   }
 }
 
@@ -152,7 +154,7 @@ export class NodeBenchmarkRunner implements VitestRunner {
 
   constructor(public config: SerializedConfig) {}
 
-  async importTinybench() {
+  async importTinybench(): Promise<typeof import('tinybench')> {
     return await import('tinybench')
   }
 

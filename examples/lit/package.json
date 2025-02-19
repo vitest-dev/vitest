@@ -10,6 +10,7 @@
     "coverage": "vitest run --coverage",
     "dev": "vite",
     "test": "vitest",
+    "list": "vitest list",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
@@ -17,11 +18,10 @@
   },
   "devDependencies": {
     "@vitest/browser": "latest",
-    "@vitest/ui": "latest",
     "jsdom": "latest",
+    "playwright": "^1.50.1",
     "vite": "latest",
-    "vitest": "latest",
-    "webdriverio": "^8.32.2"
+    "vitest": "latest"
   },
   "stackblitz": {
     "startCommand": "npm run test:ui"

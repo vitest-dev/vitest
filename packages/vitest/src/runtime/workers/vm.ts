@@ -1,21 +1,21 @@
 import type { Context } from 'node:vm'
-import { isContext } from 'node:vm'
-import { pathToFileURL } from 'node:url'
-import { resolve } from 'pathe'
 import type { WorkerGlobalState } from '../../types/worker'
+import { pathToFileURL } from 'node:url'
+import { isContext } from 'node:vm'
+import { resolve } from 'pathe'
+import { distDir } from '../../paths'
 import { createCustomConsole } from '../console'
 import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
-import { distDir } from '../../paths'
 import { ExternalModulesExecutor } from '../external-executor'
+import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
-import { provideWorkerState } from '../../utils'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
 const fileMap = new FileMap()
 const packageCache = new Map<string, string>()
 
-export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
   const { environment, ctx, rpc } = state
 
   if (!environment.setupVM) {
@@ -87,9 +87,19 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
   const { run } = (await executor.importExternalModule(
     entryFile,
   )) as typeof import('../runVmTests')
+  const fileSpecs = ctx.files.map(f =>
+    typeof f === 'string'
+      ? { filepath: f, testLocations: undefined }
+      : f,
+  )
 
   try {
-    await run(method, ctx.files, ctx.config, executor)
+    await run(
+      method,
+      fileSpecs,
+      ctx.config,
+      executor,
+    )
   }
   finally {
     await vm.teardown?.()

@@ -30,6 +30,9 @@
   //   { "rule": "*semi", "severity": "off" }
   // ],
 
+  "vitest.workspaceConfig": "./vitest.workspace.vscode.ts",
+  "testing.openTesting": "neverOpen",
+
   // Enable eslint for all supported languages
   "eslint.validate": [
     "javascript",
@@ -42,5 +45,6 @@
     "json",
     "jsonc",
     "yaml"
-  ]
+  ],
+  "testing.automaticallyOpenTestResults": "neverOpen"
 }

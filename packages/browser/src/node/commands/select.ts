@@ -1,8 +1,8 @@
 import type { ElementHandle } from 'playwright'
 import type { UserEvent } from '../../../context'
+import type { UserEventCommand } from './utils'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 
 export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async (
   context,
@@ -26,10 +26,7 @@ export const selectOptions: UserEventCommand<UserEvent['selectOptions']> = async
       return elementHandler
     })) as (readonly string[]) | (readonly ElementHandle[])
 
-    await selectElement.selectOption(values, {
-      timeout: 1000,
-      ...options,
-    })
+    await selectElement.selectOption(values, options)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     const values = userValues as any as [({ index: number })]

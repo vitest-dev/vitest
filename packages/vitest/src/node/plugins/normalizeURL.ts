@@ -1,5 +1,5 @@
-import { stripLiteral } from 'strip-literal'
 import type { Plugin } from 'vite'
+import { stripLiteral } from 'strip-literal'
 
 const metaUrlLength = 'import.meta.url'.length
 const locationString = 'self.location'.padEnd(metaUrlLength, ' ')
@@ -34,8 +34,8 @@ export function NormalizeURLPlugin(): Plugin {
         const metaUrlIndex = index + exp.indexOf('import.meta.url')
         updatedCode
           = updatedCode.slice(0, metaUrlIndex)
-          + locationString
-          + updatedCode.slice(metaUrlIndex + metaUrlLength)
+            + locationString
+            + updatedCode.slice(metaUrlIndex + metaUrlLength)
       }
 
       return {

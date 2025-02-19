@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "2.1.0-beta.6",
+  "version": "3.0.6",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -32,13 +32,16 @@
       "default": "./dist/client.js"
     },
     "./matchers": {
-      "types": "./matchers.d.ts"
+      "types": "./matchers.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts"
+      "types": "./providers/webdriverio.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/playwright": {
-      "types": "./providers/playwright.d.ts"
+      "types": "./providers/playwright.d.ts",
+      "default": "./dummy.js"
     },
     "./locator": {
       "types": "./dist/locators/index.d.ts",
@@ -64,7 +67,7 @@
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
     "dev:client": "vite build src/client --watch",
-    "dev:node": "rollup -c --watch --watch.include 'src/node/**'",
+    "dev:node": "rollup -c --watch --watch.include 'src/**'",
     "dev": "rimraf dist && pnpm run --stream '/^dev:/'"
   },
   "peerDependencies": {
@@ -85,30 +88,32 @@
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/user-event": "^14.5.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "magic-string": "^0.30.11",
-    "msw": "^2.3.5",
-    "sirv": "^2.0.4",
+    "magic-string": "^0.30.17",
+    "msw": "^2.7.0",
+    "sirv": "^3.0.1",
+    "tinyrainbow": "^2.0.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.4.8",
-    "@types/ws": "^8.5.12",
-    "@vitest/mocker": "workspace:*",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/ws": "^8.5.14",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.38.0",
-    "birpc": "0.2.17",
-    "flatted": "^3.3.1",
+    "@wdio/protocols": "^8.40.3",
+    "birpc": "0.2.19",
+    "flatted": "^3.3.2",
     "ivya": "^1.1.1",
-    "pathe": "^1.1.2",
+    "mime": "^4.0.6",
+    "pathe": "^2.0.3",
     "periscopic": "^4.0.2",
-    "playwright": "^1.46.0",
-    "playwright-core": "^1.46.0",
-    "safaridriver": "^0.1.2",
+    "playwright": "^1.50.1",
+    "playwright-core": "^1.50.1",
+    "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.40.2"
+    "webdriverio": "^8.42.0"
   }
 }

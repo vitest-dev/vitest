@@ -8,4 +8,6 @@ export default defineConfig({
       use: devices['Desktop Chrome'],
     },
   ],
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
 })

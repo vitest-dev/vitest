@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 
 let teardownCalled = false
 

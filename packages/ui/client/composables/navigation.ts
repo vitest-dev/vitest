@@ -1,7 +1,8 @@
 import type { File, Task } from '@vitest/runner'
+import type { Params } from './params'
 import { client, config, findById } from './client'
 import { testRunState } from './client/state'
-import { activeFileId, lineNumber, viewMode } from './params'
+import { activeFileId, lineNumber, selectedTest, viewMode } from './params'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
@@ -50,8 +51,8 @@ export const coverageUrl = computed(() => {
     const htmlReporterSubdir = coverage.value!.htmlReporter?.subdir
     return htmlReporterSubdir
       ? `/${coverage.value!.reportsDirectory.slice(idx + 1)}/${
-          htmlReporterSubdir
-        }/index.html`
+        htmlReporterSubdir
+      }/index.html`
       : `/${coverage.value!.reportsDirectory.slice(idx + 1)}/index.html`
   }
 
@@ -99,18 +100,22 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo(task: Task, line: number | null = null) {
-  activeFileId.value = task.file.id
-  // reset line number
-  lineNumber.value = null
-  if (line != null) {
-    nextTick(() => {
-      lineNumber.value = line
-    })
-    viewMode.value = 'editor'
-  }
-  currentModule.value = findById(task.file.id)
+export function navigateTo({ file, line, view, test }: Params) {
+  activeFileId.value = file
+  lineNumber.value = line
+  viewMode.value = view
+  selectedTest.value = test
+  currentModule.value = findById(file)
   showDashboard(false)
+}
+
+export function showReport(task: Task) {
+  navigateTo({
+    file: task.file.id,
+    test: task.type === 'test' ? task.id : null,
+    line: null,
+    view: null,
+  })
 }
 
 export function showCoverage() {

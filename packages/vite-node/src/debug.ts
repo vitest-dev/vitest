@@ -1,9 +1,9 @@
+import type { TransformResult } from 'vite'
+import type { DebuggerOptions } from './types'
 /* eslint-disable no-console */
 import { existsSync, promises as fs } from 'node:fs'
 import { join, resolve } from 'pathe'
-import type { TransformResult } from 'vite'
 import c from 'tinyrainbow'
-import type { DebuggerOptions } from './types'
 
 function hashCode(s: string) {
   return s.split('').reduce((a, b) => {
@@ -15,7 +15,7 @@ function hashCode(s: string) {
 export class Debugger {
   dumpDir: string | undefined
   initPromise: Promise<void> | undefined
-  externalizeMap = new Map<string, string>()
+  externalizeMap: Map<string, string> = new Map()
 
   constructor(root: string, public options: DebuggerOptions) {
     if (options.dumpModules) {
@@ -39,7 +39,7 @@ export class Debugger {
     this.initPromise = this.clearDump()
   }
 
-  async clearDump() {
+  async clearDump(): Promise<void> {
     if (!this.dumpDir) {
       return
     }
@@ -55,7 +55,7 @@ export class Debugger {
     )}.js`
   }
 
-  async recordExternalize(id: string, path: string) {
+  async recordExternalize(id: string, path: string): Promise<void> {
     if (!this.dumpDir) {
       return
     }
@@ -63,7 +63,7 @@ export class Debugger {
     await this.writeInfo()
   }
 
-  async dumpFile(id: string, result: TransformResult | null) {
+  async dumpFile(id: string, result: TransformResult | null): Promise<void> {
     if (!result || !this.dumpDir) {
       return
     }
@@ -93,7 +93,7 @@ export class Debugger {
     }
   }
 
-  async writeInfo() {
+  async writeInfo(): Promise<void> {
     if (!this.dumpDir) {
       return
     }

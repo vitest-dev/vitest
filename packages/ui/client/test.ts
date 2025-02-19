@@ -1,17 +1,17 @@
 import {
-  type RenderOptions,
   render as _render,
   cleanup,
+  type RenderOptions,
 } from '@testing-library/vue'
-import { VTooltip } from 'floating-vue'
+import { vTooltip } from 'floating-vue'
 import { afterEach } from 'vitest'
 
-export function render(component: any, options?: RenderOptions) {
+export function render<C>(component: C, options?: RenderOptions<C>) {
   return _render(component, {
     ...options,
     global: {
       directives: {
-        tooltip: VTooltip,
+        tooltip: vTooltip,
       },
     },
   })
@@ -21,4 +21,4 @@ afterEach(() => {
   cleanup()
 })
 
-export { within, screen } from '@testing-library/vue'
+export { screen, within } from '@testing-library/vue'

@@ -1,11 +1,13 @@
+import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
+import type { TestFunction } from 'vitest'
+import type { UserConfig } from 'vitest/node'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { normalize } from 'pathe'
+import { stripVTControlCharacters } from 'node:util'
 import libCoverage from 'istanbul-lib-coverage'
-import type { FileCoverageData } from 'istanbul-lib-coverage'
-import type { TestFunction, UserConfig } from 'vitest'
-import { describe as vitestDescribe, test as vitestTest } from 'vitest'
+import { normalize } from 'pathe'
+import { vi, describe as vitestDescribe, test as vitestTest } from 'vitest'
 import * as testUtils from '../test-utils'
 
 export function test(name: string, fn: TestFunction, skip = false) {
@@ -47,14 +49,15 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
     browser: {
       enabled: process.env.COVERAGE_BROWSER === 'true',
       headless: true,
-      name: 'chromium',
+      instances: [{ browser: 'chromium' }],
       provider: 'playwright',
+      ...config.browser,
     },
   })
 
   if (options.throwOnError) {
     if (result.stderr !== '') {
-      throw new Error(result.stderr)
+      throw new Error(`stderr:\n${result.stderr}\n\nstdout:\n${result.stdout}`)
     }
   }
 
@@ -86,6 +89,13 @@ export async function readCoverageMap(name = './coverage/coverage-final.json') {
   return libCoverage.createCoverageMap(coverageJson)
 }
 
+export function formatSummary(summary: CoverageSummary) {
+  return (['branches', 'functions', 'lines', 'statements'] as const).reduce((all, current) => ({
+    ...all,
+    [current]: `${summary[current].covered}/${summary[current].total} (${summary[current].pct}%)`,
+  }), {})
+}
+
 export function normalizeFilename(filename: string) {
   return normalize(filename)
     .replace(normalize(process.cwd()), '<process-cwd>')
@@ -102,4 +112,15 @@ export function isBrowser() {
 
 export function normalizeURL(importMetaURL: string) {
   return normalize(fileURLToPath(importMetaURL))
+}
+
+export function captureStdout() {
+  const spy = vi.fn()
+  const original = process.stdout.write
+  process.stdout.write = spy
+
+  return function collect() {
+    process.stdout.write = original
+    return stripVTControlCharacters(spy.mock.calls.map(call => call[0]).join(''))
+  }
 }

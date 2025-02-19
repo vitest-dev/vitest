@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { userEvent as _uE, server } from '@vitest/browser/context'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import '../src/button.css'
 
 beforeEach(() => {
@@ -11,9 +11,14 @@ const userEvent = _uE.setup()
 
 describe('userEvent.click', () => {
   test('correctly clicks a button', async () => {
+    const wrapper = document.createElement('div')
+    wrapper.style.height = '100px'
+    wrapper.style.width = '200px'
+    wrapper.style.backgroundColor = 'red'
+    wrapper.style.display = 'flex'
+    wrapper.style.justifyContent = 'center'
+    wrapper.style.alignItems = 'center'
     const button = document.createElement('button')
-    button.style.height = '100px'
-    button.style.width = '200px'
     button.textContent = 'Click me'
     document.body.appendChild(button)
     const onClick = vi.fn()
@@ -533,7 +538,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     ])
   })
 
-  // strangly enough, original userEvent doesn't support this,
+  // strangely enough, original userEvent doesn't support this,
   // but we can implement it
   test.skipIf(server.provider === 'preview')('selectall works correctly', async () => {
     const input = document.createElement('input')
@@ -862,6 +867,73 @@ describe.each([
       expect(selected[0]).toBe(options[0])
       expect(selected[1]).toBe(options[1])
     })
+  })
+})
+
+describe('uploading files', async () => {
+  test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
+    const file = new File(['hello'], 'hello.png', { type: 'image/png' })
+    const input = document.createElement('input')
+    input.type = 'file'
+    document.body.appendChild(input)
+    await userEvent.upload(input, file)
+    await expect.poll(() => input.files.length).toBe(1)
+
+    const uploadedFile = input.files[0]
+    expect(uploadedFile.name).toBe('hello.png')
+    expect(uploadedFile.type).toBe('image/png')
+  })
+
+  test.skipIf(server.provider === 'webdriverio')('can upload several instances of File', async () => {
+    const file1 = new File(['hello1'], 'hello1.png', { type: 'image/png' })
+    const file2 = new File(['hello2'], 'hello2.png', { type: 'image/png' })
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    document.body.appendChild(input)
+    await userEvent.upload(input, [file1, file2])
+    await expect.poll(() => input.files.length).toBe(2)
+
+    const uploadedFile1 = input.files[0]
+    expect(uploadedFile1.name).toBe('hello1.png')
+    expect(uploadedFile1.type).toBe('image/png')
+
+    const uploadedFile2 = input.files[1]
+    expect(uploadedFile2.name).toBe('hello2.png')
+    expect(uploadedFile2.type).toBe('image/png')
+  })
+
+  test.skipIf(
+    server.provider === 'webdriverio' && server.browser === 'firefox',
+  )('can upload a file by filepath relative to test file', async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    document.body.appendChild(input)
+    await userEvent.upload(input, '../src/button.css')
+    await expect.poll(() => input.files.length).toBe(1)
+
+    const uploadedFile = input.files[0]
+    expect(uploadedFile.name).toBe('button.css')
+    expect(uploadedFile.type).toBe('text/css')
+  })
+
+  test.skipIf(
+    server.provider === 'webdriverio' && server.browser === 'firefox',
+  )('can upload several files by filepath relative to test file', async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    document.body.appendChild(input)
+    await userEvent.upload(input, ['../src/button.css', '../package.json'])
+    await expect.poll(() => input.files.length).toBe(2)
+
+    const uploadedFile1 = input.files[0]
+    expect(uploadedFile1.name).toBe('button.css')
+    expect(uploadedFile1.type).toBe('text/css')
+
+    const uploadedFile2 = input.files[1]
+    expect(uploadedFile2.name).toBe('package.json')
+    expect(uploadedFile2.type).toBe('application/json')
   })
 })
 

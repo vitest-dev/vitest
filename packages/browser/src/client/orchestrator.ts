@@ -1,11 +1,10 @@
-import { channel, client } from '@vitest/browser/client'
-import { generateHash } from '@vitest/runner/utils'
-import { type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent, globalChannel } from '@vitest/browser/client'
-import { relative } from 'pathe'
 import type { SerializedConfig } from 'vitest'
-import { getBrowserState, getConfig } from './utils'
+import { channel, client } from '@vitest/browser/client'
+import { globalChannel, type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent } from '@vitest/browser/client'
+import { generateHash } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 import { getUiAPI } from './ui'
-import { createModuleMockerInterceptor } from './tester/msw'
+import { getBrowserState, getConfig } from './utils'
 
 const url = new URL(location.href)
 const ID_ALL = '__vitest_all__'
@@ -13,12 +12,9 @@ const ID_ALL = '__vitest_all__'
 class IframeOrchestrator {
   private cancelled = false
   private runningFiles = new Set<string>()
-  private interceptor = createModuleMockerInterceptor()
   private iframes = new Map<string, HTMLIFrameElement>()
 
-  public async init() {
-    const testFiles = getBrowserState().files
-
+  public async init(testFiles: string[]) {
     debug('test files', testFiles.join(', '))
 
     this.runningFiles.clear()
@@ -40,6 +36,7 @@ class IframeOrchestrator {
     testFiles.forEach(file => this.runningFiles.add(file))
 
     const config = getConfig()
+    debug('create testers', testFiles.join(', '))
     const container = await getContainer(config)
 
     if (config.browser.ui) {
@@ -53,6 +50,7 @@ class IframeOrchestrator {
     this.iframes.clear()
 
     if (config.isolate === false) {
+      debug('create iframe', ID_ALL)
       const iframe = this.createIframe(container, ID_ALL)
 
       await setIframeViewport(iframe, width, height)
@@ -65,6 +63,7 @@ class IframeOrchestrator {
         return
       }
 
+      debug('create iframe', file)
       const iframe = this.createIframe(container, file)
 
       await setIframeViewport(iframe, width, height)
@@ -95,7 +94,7 @@ class IframeOrchestrator {
     iframe.setAttribute(
       'src',
       `${url.pathname}__vitest_test__/__test__/${
-        getBrowserState().contextId
+        getBrowserState().sessionId
       }/${encodeURIComponent(file)}`,
     )
     iframe.setAttribute('data-vitest', 'true')
@@ -186,19 +185,6 @@ class IframeOrchestrator {
         }
         break
       }
-      case 'mock:invalidate':
-        this.interceptor.invalidate()
-        break
-      case 'unmock':
-        await this.interceptor.delete(e.data.url)
-        break
-      case 'mock':
-        await this.interceptor.register(e.data.module)
-        break
-      case 'mock-factory:error':
-      case 'mock-factory:response':
-        // handled manually
-        break
       default: {
           e.data satisfies never
 
@@ -227,7 +213,7 @@ getBrowserState().createTesters = async (files) => {
 }
 
 async function done() {
-  await client.rpc.finishBrowserTests(getBrowserState().contextId)
+  await client.rpc.finishBrowserTests(getBrowserState().sessionId)
 }
 
 async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
@@ -248,7 +234,7 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 client.waitForConnection().then(async () => {
   const testFiles = getBrowserState().files
 
-  await orchestrator.init()
+  await orchestrator.init(testFiles)
 
   // if page was refreshed, there will be no test files
   // createTesters will be called again when tests are running in the UI
