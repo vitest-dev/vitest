@@ -353,6 +353,7 @@ test.each([
 ])('add($0, $1) -> $2', (a, b, expected) => {
   expect(a + b).toBe(expected)
 })
+
 // this will return
 // ✓ add(1, 1) -> 2
 // ✓ add(1, 2) -> 3
