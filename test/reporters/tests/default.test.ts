@@ -178,7 +178,7 @@ describe('default reporter', async () => {
     expect(stdout).toContain('✓ repeat couple of times (repeat x3)')
   })
 
-  test.only('test.each/for title format', async () => {
+  test('test.each/for title format', async () => {
     const { stdout } = await runVitest({
       include: ['fixtures/test-for-title.test.ts'],
       reporters: [['default', { isTTY: true, summary: false }]],
