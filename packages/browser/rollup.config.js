@@ -1,3 +1,4 @@
+// @ts-check
 import { rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
@@ -49,6 +50,7 @@ export default () =>
       plugins: [
         {
           name: 'no-side-effects',
+          /** @returns {Promise<*>} ignore return type */
           async resolveId(id, importer) {
             // Clipboard injects "afterEach" callbacks
             // We mark it as having no side effects to prevent it from being included in the bundle
