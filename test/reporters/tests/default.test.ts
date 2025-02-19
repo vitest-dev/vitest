@@ -185,7 +185,7 @@ describe('default reporter', async () => {
       config: false,
     })
     expect(
-      [...stdout.matchAll(/(✓ test.*)$/gm)].map(v => v[0])
+      [...stdout.matchAll(/(✓ test.*)$/gm)].map(v => v[0]),
     ).toMatchInlineSnapshot(`
       [
         "✓ test.for object (0 = 'a', 2 = { te: 'st' })",
