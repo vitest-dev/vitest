@@ -161,6 +161,6 @@ async function atomicWriteFile(realFilePath: string, data: string): Promise<void
         await unlink(tmpFilePath)
       }
     }
-    catch () {}
+    catch {}
   }
 }
