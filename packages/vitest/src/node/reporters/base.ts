@@ -131,7 +131,7 @@ export abstract class BaseReporter implements Reporter {
       for (const test of tests) {
         const { duration, retryCount, repeatCount } = test.result || {}
         const padding = this.getTestIndentation(test)
-        let suffix = ''
+        let suffix = this.getDurationPrefix(test)
 
         if (retryCount != null && retryCount > 0) {
           suffix += c.yellow(` (retry x${retryCount})`)
@@ -142,7 +142,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (test.result?.state === 'fail') {
-          this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
+          this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test, c.dim(' > '))}`) + suffix)
 
           // print short errors, full errors will be at the end in summary
           test.result?.errors?.forEach((error) => {
@@ -156,10 +156,7 @@ export abstract class BaseReporter implements Reporter {
 
         // also print slow tests
         else if (duration && duration > this.ctx.config.slowTestThreshold) {
-          this.log(
-            ` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test, c.dim(' > '))}`
-            + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}${suffix}`,
-          )
+          this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test, c.dim(' > '))} ${suffix}`)
         }
 
         else if (this.ctx.config.hideSkippedTests && (test.mode === 'skip' || test.result?.state === 'skip')) {
@@ -194,7 +191,7 @@ export abstract class BaseReporter implements Reporter {
     return '  '
   }
 
-  private getDurationPrefix(task: Task) {
+  protected getDurationPrefix(task: Task): string {
     if (!task.result?.duration) {
       return ''
     }
