@@ -202,7 +202,7 @@ describe('default reporter', async () => {
         "✓ array : add(1, 1) -> 2",
         "✓ array : add(1, 2) -> 3",
         "✓ array : add(2, 1) -> 3",
-        "✓ first array element is object: 0 = undefined, 1 = undefined, k1 = 'v1', k2 = undefined",
+        "✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined",
       ]
     `)
   })
