@@ -2,7 +2,7 @@ import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import { mkdir, rename, writeFile, stat, unlink } from 'node:fs/promises'
+import { mkdir, rename, stat, unlink, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'pathe'
 import { hash } from '../hash'
 
@@ -146,18 +146,20 @@ function handleRollupError(e: unknown): never {
   throw e
 }
 
-async function atomicWriteFile(realFilePath:string, data:string): Promise<void> {
-  const dir = dirname(realFilePath);
-  const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
+  const dir = dirname(realFilePath)
+  const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
 
   try {
-    await writeFile(tmpFilePath, data, 'utf-8');
-    await rename(tmpFilePath, realFilePath);
-  } finally {
+    await writeFile(tmpFilePath, data, 'utf-8')
+    await rename(tmpFilePath, realFilePath)
+  }
+  finally {
     try {
       if (await stat(tmpFilePath)) {
-        await unlink(tmpFilePath);
+        await unlink(tmpFilePath)
       }
-    } catch (ignore) {}
+    }
+    catch {}
   }
 }
