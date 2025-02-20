@@ -153,6 +153,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   silent: {
     description: 'Silent console output from tests',
+    argument: '[value]',
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
