@@ -69,14 +69,14 @@
   },
   "pnpm": {
     "overrides": {
-      "esbuild": "$esbuild",
-      "tsx": "$tsx",
       "@types/node": "$@types/node",
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
+      "esbuild": "$esbuild",
       "mlly": "^1.7.4",
       "rollup": "$rollup",
+      "tsx": "$tsx",
       "vite": "$vite",
       "vitest": "workspace:*"
     },
