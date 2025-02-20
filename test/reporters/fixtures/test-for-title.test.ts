@@ -35,3 +35,7 @@ test.each([
 ])('array : add($0, $1) -> $2', (a, b, expected) => {
   expect(a + b).toBe(expected)
 })
+
+test.for([
+  [{ k1: "v1" }, { k2: "v2" }],
+])('first array element is object: 0 = $0, 1 = $1, k1 = $k1, k2 = $k2', () => {})
