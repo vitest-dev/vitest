@@ -55,6 +55,7 @@
     "magic-string": "^0.30.17",
     "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
+    "rolldown": "1.0.0-beta.3-commit.b546e53",
     "rollup": "^4.34.8",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-esbuild": "^6.2.0",
@@ -68,6 +69,9 @@
   },
   "pnpm": {
     "overrides": {
+      "esbuild": "$esbuild",
+      "tsx": "$tsx",
+      "@types/node": "$@types/node",
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
