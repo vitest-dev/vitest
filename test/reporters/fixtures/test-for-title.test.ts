@@ -39,3 +39,12 @@ test.each([
 test.for([
   [{ k1: "v1" }, { k2: "v2" }],
 ])('first array element is object: 0 = $0, 1 = $1, k1 = $k1, k2 = $k2', () => {})
+
+test.for([
+  ["foo", "bar"],
+])('first array element is not object: 0 = $0, 1 = $1, k = $k', () => {})
+
+test.for([
+  { k: "v1" },
+  { k: "v2" },
+])('not array: 0 = $0, 1 = $1, k = $k', () => {})

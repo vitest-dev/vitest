@@ -203,6 +203,9 @@ describe('default reporter', async () => {
         "✓ array : add(1, 2) -> 3",
         "✓ array : add(2, 1) -> 3",
         "✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined",
+        "✓ first array element is not object: 0 = 'foo', 1 = 'bar', k = $k",
+        "✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1'",
+        "✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2'",
       ]
     `)
   })
