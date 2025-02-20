@@ -3,8 +3,8 @@ import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
 import { mkdirSync } from 'node:fs'
-import { writeFile } from 'node:fs/promises'
-import { join } from 'pathe'
+import { rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'pathe'
 import { hash } from '../hash'
 
 const created = new Set()
@@ -65,7 +65,7 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
       promises.set(
         tmp,
-        writeFile(tmp, code, 'utf-8').finally(() => promises.delete(tmp)),
+        atomicWriteFile(tmp, code).finally(() => promises.delete(tmp)),
       )
       await promises.get(tmp)
       Object.assign(result, { id: tmp })
@@ -145,4 +145,22 @@ function handleRollupError(e: unknown): never {
     }
   }
   throw e
+}
+
+async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
+  const dir = dirname(realFilePath)
+  const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+
+  try {
+    await writeFile(tmpFilePath, data, 'utf-8')
+    await rename(tmpFilePath, realFilePath)
+  }
+  finally {
+    try {
+      if (await stat(tmpFilePath)) {
+        await unlink(tmpFilePath)
+      }
+    }
+    catch () {}
+  }
 }
