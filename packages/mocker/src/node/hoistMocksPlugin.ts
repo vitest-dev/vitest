@@ -148,8 +148,7 @@ export function hoistMocks(
 
   const s = new MagicString(code)
 
-  // TODO: rolldown doesn't expose Rollup.Program, but exposes Rollup.PluginContext['parse'] that uses it
-  let ast: any
+  let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
   }

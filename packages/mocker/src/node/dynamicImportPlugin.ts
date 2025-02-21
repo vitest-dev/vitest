@@ -44,7 +44,7 @@ export function injectDynamicImport(
 ): DynamicImportInjectorResult | undefined {
   const s = new MagicString(code)
 
-  let ast: any
+  let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
   }

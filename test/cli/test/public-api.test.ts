@@ -94,7 +94,6 @@ it.each([
     expect(files[0].tasks[index + 1].name).toBe(`custom ${name}`)
     expect(files[0].tasks[index + 1].location).toEqual({
       line: 18,
-      // FIXME: rolldown (possibly) gives incorrect location
       column: 18,
     })
   })
