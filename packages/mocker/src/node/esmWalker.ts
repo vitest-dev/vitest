@@ -10,7 +10,7 @@ import type {
   VariableDeclaration,
 } from 'estree'
 import { walk as eswalk } from 'estree-walker'
-import { Rollup } from 'vite'
+import type { Rollup } from 'vite'
 
 export type * from 'estree'
 
