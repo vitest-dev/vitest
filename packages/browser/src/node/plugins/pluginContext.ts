@@ -1,4 +1,4 @@
-import type { PluginContext } from 'rollup'
+import type { Rollup } from 'vite'
 import type { Plugin } from 'vitest/config'
 import type { ParentBrowserProject } from '../projectParent'
 import { fileURLToPath } from 'node:url'
@@ -28,7 +28,7 @@ export default function BrowserContext(globalServer: ParentBrowserProject): Plug
 }
 
 async function generateContextFile(
-  this: PluginContext,
+  this: Rollup.PluginContext,
   globalServer: ParentBrowserProject,
 ) {
   const commands = Object.keys(globalServer.commands)
