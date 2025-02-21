@@ -16,7 +16,7 @@ export type { SourceMapInput } from '@jridgewell/trace-mapping'
 export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
   getSourceMap?: (file: string) => unknown
-  getFileName?: (id: string) => string
+  getUrlId?: (id: string) => string
   frameFilter?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
 }
 
@@ -62,7 +62,9 @@ function extractLocation(urlLike: string) {
   }
   if (url.startsWith('http:') || url.startsWith('https:')) {
     const urlObj = new URL(url)
-    url = urlObj.pathname
+    urlObj.searchParams.delete('import')
+    urlObj.searchParams.delete('browserv')
+    url = urlObj.pathname + urlObj.hash + urlObj.search
   }
   if (url.startsWith('/@fs/')) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
@@ -195,20 +197,16 @@ export function createStackString(stacks: ParsedStack[]): string {
 
 export function parseStacktrace(
   stack: string,
-  options: StackTraceParserOptions = {},
+  options: StackTraceParserOptions,
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
-  let stacks = !CHROME_IE_STACK_REGEXP.test(stack)
+  const stacks = !CHROME_IE_STACK_REGEXP.test(stack)
     ? parseFFOrSafariStackTrace(stack)
     : parseV8Stacktrace(stack)
-  if (ignoreStackEntries.length) {
-    stacks = stacks.filter(
-      stack => !ignoreStackEntries.some(p => stack.file.match(p)),
-    )
-  }
+
   return stacks.map((stack) => {
-    if (options.getFileName) {
-      stack.file = options.getFileName(stack.file)
+    if (options.getUrlId) {
+      stack.file = options.getUrlId(stack.file)
     }
 
     const map = options.getSourceMap?.(stack.file) as
@@ -216,15 +214,39 @@ export function parseStacktrace(
       | null
       | undefined
     if (!map || typeof map !== 'object' || !map.version) {
-      return stack
+      return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
     }
+
     const traceMap = new TraceMap(map)
-    const { line, column } = originalPositionFor(traceMap, stack)
+    const { line, column, source, name } = originalPositionFor(traceMap, stack)
+
+    let file: string = stack.file
+    // TODO: respect map.sourceRoot
+    if (source) {
+      const fileUrl = stack.file.startsWith('file://')
+        ? stack.file
+        : `file://${stack.file}`
+      file = new URL(source, fileUrl).pathname
+    }
+
+    if (shouldFilter(ignoreStackEntries, file)) {
+      return null
+    }
+
     if (line != null && column != null) {
-      return { ...stack, line, column }
+      return {
+        line,
+        column,
+        file,
+        method: name || stack.method,
+      }
     }
     return stack
-  })
+  }).filter(s => s != null)
+}
+
+function shouldFilter(ignoreStackEntries: (string | RegExp)[], file: string): boolean {
+  return ignoreStackEntries.some(p => file.match(p))
 }
 
 function parseFFOrSafariStackTrace(stack: string): ParsedStack[] {
@@ -243,7 +265,7 @@ function parseV8Stacktrace(stack: string): ParsedStack[] {
 
 export function parseErrorStacktrace(
   e: ErrorWithDiff,
-  options: StackTraceParserOptions = {},
+  options: StackTraceParserOptions,
 ): ParsedStack[] {
   if (!e || isPrimitive(e)) {
     return []
