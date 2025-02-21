@@ -3,7 +3,7 @@
   "type": "module",
   "version": "3.0.6",
   "private": true,
-  "packageManager": "pnpm@9.15.5",
+  "packageManager": "pnpm@10.4.1",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -88,6 +88,17 @@
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@sveltejs/kit",
+      "@swc/core",
+      "edgedriver",
+      "esbuild",
+      "geckodriver",
+      "msw",
+      "sharp",
+      "svelte-preprocess",
+      "vue-demi"
+    ]
   }
 }

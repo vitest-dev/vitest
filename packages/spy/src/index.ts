@@ -412,27 +412,12 @@ export type Mocked<T> = {
       : T[P];
 } & T
 
-const vitestSpy = Symbol.for('vitest.spy')
 export const mocks: Set<MockInstance> = new Set()
 
 export function isMockFunction(fn: any): fn is MockInstance {
   return (
     typeof fn === 'function' && '_isMockFunction' in fn && fn._isMockFunction
   )
-}
-
-function getSpy(
-  obj: unknown,
-  method: keyof any,
-  accessType?: 'get' | 'set',
-): MockInstance | undefined {
-  const desc = Object.getOwnPropertyDescriptor(obj, method)
-  if (desc) {
-    const fn = desc[accessType ?? 'value']
-    if (typeof fn === 'function' && vitestSpy in fn) {
-      return fn
-    }
-  }
 }
 
 export function spyOn<T, S extends Properties<Required<T>>>(
@@ -463,11 +448,6 @@ export function spyOn<T, K extends keyof T>(
     set: 'setter',
   } as const
   const objMethod = accessType ? { [dictionary[accessType]]: method } : method
-
-  const currentStub = getSpy(obj, method, accessType)
-  if (currentStub) {
-    return currentStub
-  }
 
   const stub = tinyspy.internalSpyOn(obj, objMethod as any)
 
@@ -541,11 +521,6 @@ function enhanceSpy<T extends Procedure>(
   }
 
   let name: string = (stub as any).name
-
-  Object.defineProperty(stub, vitestSpy, {
-    value: true,
-    enumerable: false,
-  })
 
   stub.getMockName = () => name || 'vi.fn()'
   stub.mockName = (n) => {
