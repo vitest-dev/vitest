@@ -42,6 +42,11 @@ exports[`should fail hooks-fail-beforeAll.test.ts 1`] = `"TypeError: "beforeAll"
 
 exports[`should fail hooks-fail-beforeEach.test.ts 1`] = `"TypeError: "beforeEach" callback value must be function, received "string""`;
 
+exports[`should fail hooks-timeout-before-hook-cleanup-callback.test.ts 1`] = `
+"Error: Hook timed out in 101ms.
+Error: Hook timed out in 102ms."
+`;
+
 exports[`should fail inline-snapshop-inside-each.test.ts 1`] = `
 "Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
