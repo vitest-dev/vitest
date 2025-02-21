@@ -963,6 +963,444 @@ describe('type checking', () => {
       onTestRunEnd   (failed, 2 modules, 0 errors)"
     `)
   })
+
+  describe('variable shadowing', () => {
+    test('FunctionDeclaration - none args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            function test() {}
+            test();
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            function it() {}
+            it();
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            function describe() {}
+            describe();
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            function suite() {}
+            suite();
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('FunctionDeclaration - with args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            function test(x) { return x }
+            test('foo');
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            function it(x) { return x }
+            it('foo');
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            function describe(x) { return x }
+            describe('foo');
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            function suite(x) { return x }
+            suite('foo');
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('FunctionExpression - none args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            const test = function() {};
+            test();
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            const it = function() {};
+            it();
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            const describe = function() {};
+            describe();
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            const suite = function() {};
+            suite();
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('FunctionExpression - with args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            const test = function(x) { return x };
+            test('foo');
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            const it = function(x) { return x };
+            it('foo');
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            const describe = function(x) { return x };
+            describe('foo');
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            const suite = function(x) { return x };
+            suite('foo');
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('ArrowFunctionExpression - none args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            const test = () => {};
+            test();
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            const it = () => {};
+            it();
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            const describe = () => {};
+            describe();
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            const suite = () => {};
+            suite();
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('ArrowFunctionExpression - with args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            const test = (x) => x;
+            test('foo');
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            const it = (x) => x;
+            it('foo');
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            const describe = (x) => x;
+            describe('foo');
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            const suite = (x) => x;
+            suite('foo');
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('Identifier - none args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            const test = 'shadowed';
+            test;
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            const it = 'shadowed';
+            it;
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            const describe = 'shadowed';
+            describe;
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            const suite = 'shadowed';
+            suite;
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('Identifier - with args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            const test = (x) => x;
+            test('foo');
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            const it = (x) => x;
+            it('foo');
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            const describe = (x) => x;
+            describe('foo');
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            const suite = (x) => x;
+            suite('foo');
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('BlockStatement - none args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            {
+              const test = 'shadowed in block';
+              console.log(test);
+            }
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            {
+              const it = 'shadowed in block';
+              console.log(it);
+            }
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            {
+              const describe = 'shadowed in block';
+              console.log(describe);
+            }
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            {
+              const suite = 'shadowed in block';
+              console.log(suite);
+            }
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+
+    test('BlockStatement - with args', async () => {
+      const report = await run({
+        'shadow-test.test-d.ts': ts`
+          import { it } from 'vitest'
+          it('shadow test', () => {
+            {
+              function test(x) { return x }
+              test('foo');
+            }
+          });
+        `,
+        'shadow-it.test-d.ts': ts`
+          import { test } from 'vitest'
+          test('shadow it', () => {
+            {
+              function it(x) { return x }
+              it('foo');
+            }
+          });
+        `,
+        'shadow-describe.test-d.ts': ts`
+          import { suite } from 'vitest'
+          suite('shadow describe', () => {
+            {
+              function describe(x) { return x }
+              describe('foo');
+            }
+          });
+        `,
+        'shadow-suite.test-d.ts': ts`
+          import { describe } from 'vitest'
+          describe('shadow suite', () => {
+            {
+              function suite(x) { return x }
+              suite('foo');
+            }
+          });
+        `,
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            module: 'NodeNext',
+          },
+          include: ['./*.test-d.ts'],
+        }),
+      }, { typecheck: { enabled: true } }, { printTestRunEvents: true })
+
+      expect(report).toContain('0 errors')
+    })
+  })
 })
 
 interface ReporterOptions {
@@ -997,14 +1435,41 @@ async function run(
     ...customConfig,
   }
 
-  const { stdout, stderr } = await runInlineTests(structure, config)
+  return new Promise<string>((resolve, reject) => {
+    function onError(err: Error) {
+      cleanup()
+      reject(err)
+    }
 
-  if (!reporterOptions?.printTestRunEvents && !reporterOptions?.failed) {
-    expect(stdout).toBe('')
-    expect(stderr).toBe('')
-  }
+    function onRejection(reason: any) {
+      cleanup()
+      reject(reason)
+    }
 
-  return `\n${reporter.calls.join('\n').trim()}`
+    function cleanup() {
+      process.off('uncaughtException', onError)
+      process.off('unhandledRejection', onRejection)
+    }
+
+    process.on('uncaughtException', onError)
+    process.on('unhandledRejection', onError)
+
+    runInlineTests(structure, config)
+      .then(({ stdout, stderr }) => {
+        cleanup()
+
+        if (!reporterOptions?.printTestRunEvents && !reporterOptions?.failed) {
+          expect(stdout).toBe('')
+          expect(stderr).toBe('')
+        }
+
+        resolve(`\n${reporter.calls.join('\n').trim()}`)
+      })
+      .catch((e) => {
+        cleanup()
+        reject(e)
+      })
+  })
 }
 
 class CustomReporter implements Reporter {
