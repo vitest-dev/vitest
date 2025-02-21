@@ -349,6 +349,10 @@ export default ({ mode }: { mode: string }) => {
                 ],
               },
               {
+                text: 'Plugin API',
+                link: '/advanced/api/plugin',
+              },
+              {
                 text: 'Runner API',
                 link: '/advanced/runner',
               },
