@@ -33,8 +33,8 @@ import {
   runWithSuite,
   withTimeout,
 } from './context'
-import { mergeContextFixtures, withFixtures } from './fixture'
-import { getHooks, setFixture, setFn, setHooks } from './map'
+import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
+import { getCollectorFixture, getHooks, setCollectorFixture, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { createChainable } from './utils/chain'
 
@@ -335,7 +335,7 @@ function createSuiteCollector(
       value: context,
       enumerable: false,
     })
-    setFixture(context, options.fixtures)
+    setTestFixture(context, options.fixtures)
 
     if (handler) {
       setFn(
@@ -401,6 +401,20 @@ function createSuiteCollector(
     task,
     clear,
     on: addHook,
+    fixtures() {
+      return getCollectorFixture(suite)
+    },
+    scoped(fixtures) {
+      const oldFixtures = getCollectorFixture(suite)
+      const parsed = mergeContextFixtures(
+        fixtures,
+        { fixtures: oldFixtures },
+        (key: string) => getRunner().injectValue?.(key),
+      )
+      if (parsed.fixtures) {
+        setCollectorFixture(suite, parsed.fixtures)
+      }
+    },
   }
 
   function addHook<T extends keyof SuiteHooks>(name: T, ...fn: SuiteHooks[T]) {
@@ -728,6 +742,11 @@ export function createTaskCollector(
     return condition ? this : this.skip
   }
 
+  taskFn.scoped = function (fixtures: Fixtures<Record<string, any>>) {
+    const collector = getCurrentSuite()
+    collector.scoped(fixtures)
+  }
+
   taskFn.extend = function (fixtures: Fixtures<Record<string, any>>) {
     const _context = mergeContextFixtures(
       fixtures,
@@ -740,7 +759,15 @@ export function createTaskCollector(
       optionsOrFn?: TestOptions | TestFunction,
       optionsOrTest?: number | TestOptions | TestFunction,
     ) {
-      getCurrentSuite().test.fn.call(
+      const collector = getCurrentSuite()
+      const scopedFixtures = collector.fixtures()
+      if (scopedFixtures) {
+        this.fixtures = mergeScopedFixtures(
+          this.fixtures || [],
+          scopedFixtures,
+        )
+      }
+      collector.test.fn.call(
         this,
         formatName(name),
         optionsOrFn as TestOptions,
