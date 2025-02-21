@@ -189,6 +189,9 @@ test('user-event', async () => {
   const { stdout, stderr } = await runBrowserTests({
     root: './fixtures/user-event',
   })
+  if (provider !== 'webdriverio') {
+    expect(stderr).toBe('')
+  }
   onTestFailed(() => console.error(stderr))
   instances.forEach(({ browser }) => {
     expect(stdout).toReportPassedTest('cleanup-retry.test.ts', browser)
