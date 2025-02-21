@@ -57,8 +57,8 @@ export class ParentBrowserProject {
         if (this.sourceMapCache.has(id)) {
           return this.sourceMapCache.get(id)
         }
-
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
+        // this can happen for bundled dependencies in node_modules/.vite
         if (result && !result.map) {
           const sourceMapUrl = this.retrieveSourceMapURL(result.code)
           if (!sourceMapUrl) {
