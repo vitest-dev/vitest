@@ -196,11 +196,26 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   return cli
 }
 
+function splitArgv(argv: string): string[] {
+  const reg = /(['"])(?:(?!\1).)+\1/g
+  argv = argv.replace(reg, match => match.replace(/\s/g, '\x00'))
+  return argv.split(' ').map((arg: string) => {
+    arg = arg.replace(/\0/g, ' ')
+    if (arg.startsWith('"') && arg.endsWith('"')) {
+      return arg.slice(1, -1)
+    }
+    if (arg.startsWith(`'`) && arg.endsWith(`'`)) {
+      return arg.slice(1, -1)
+    }
+    return arg
+  })
+}
+
 export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
   filter: string[]
   options: CliOptions
 } {
-  const arrayArgs = typeof argv === 'string' ? argv.split(' ') : argv
+  const arrayArgs = typeof argv === 'string' ? splitArgv(argv) : argv
   if (arrayArgs[0] !== 'vitest') {
     throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
   }
