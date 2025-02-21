@@ -15,6 +15,11 @@ describe('running browser tests', async () => {
   let vitest: Vitest
   const events: string[] = []
 
+  beforeAll(() => {
+    const id = setInterval(() => console.error('[debug]', new Date().toISOString()), 2000)
+    return () => clearInterval(id)
+  })
+
   beforeAll(async () => {
     ({
       stderr,
