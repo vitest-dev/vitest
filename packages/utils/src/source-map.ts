@@ -197,7 +197,7 @@ export function createStackString(stacks: ParsedStack[]): string {
 
 export function parseStacktrace(
   stack: string,
-  options: StackTraceParserOptions,
+  options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   const { ignoreStackEntries = stackIgnorePatterns } = options
   const stacks = !CHROME_IE_STACK_REGEXP.test(stack)
@@ -265,7 +265,7 @@ function parseV8Stacktrace(stack: string): ParsedStack[] {
 
 export function parseErrorStacktrace(
   e: ErrorWithDiff,
-  options: StackTraceParserOptions,
+  options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   if (!e || isPrimitive(e)) {
     return []
