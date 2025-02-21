@@ -70,12 +70,16 @@ export class DotReporter extends BaseReporter {
   }
 
   onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
+
     this.finishedTests.add(test.id)
     this.tests.set(test.id, test.result().state || 'skipped')
     this.renderer?.schedule()
   }
 
-  onTestModuleEnd(): void {
+  onTestModuleEnd(testModule: TestModule): void {
+    super.onTestModuleEnd(testModule)
+
     if (!this.isTTY) {
       return
     }

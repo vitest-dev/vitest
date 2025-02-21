@@ -456,7 +456,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  silent?: boolean
+  silent?: boolean | 'silent-passed-tests'
 
   /**
    * Hide logs for skipped tests
