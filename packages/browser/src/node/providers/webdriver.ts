@@ -43,7 +43,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       'css selector',
       'iframe[data-vitest]',
     )
-    await page.switchToFrame(iframe)
+    await page.switchFrame(iframe)
   }
 
   async afterCommand(): Promise<void> {
