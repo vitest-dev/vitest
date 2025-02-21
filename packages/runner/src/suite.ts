@@ -840,7 +840,7 @@ function formatTemplateString(cases: any[], args: any[]): any[] {
   return res
 }
 
-function findTestFileStackTrace(error: string, each: boolean) {
+function findTestFileStackTrace(error: string, _each: boolean) {
   // first line is the error message
   const lines = error.split('\n').slice(1)
   for (const line of lines) {
@@ -854,7 +854,9 @@ function findTestFileStackTrace(error: string, each: boolean) {
          *                  ^ lead here
          * in source maps it's the same boundary, so it just points to the start of it
          */
-        column: each ? stack.column + 1 : stack.column,
+        // esbuild source map workaround not needed for oxc
+        // column: each ? stack.column + 1 : stack.column,
+        column: stack.column,
       }
     }
   }
