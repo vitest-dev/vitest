@@ -55,6 +55,7 @@
     "magic-string": "^0.30.17",
     "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
+    "rolldown": "1.0.0-beta.3-commit.b546e53",
     "rollup": "^4.34.8",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-esbuild": "^6.2.0",
@@ -62,17 +63,20 @@
     "tinyglobby": "^0.2.11",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vite": "^6.0.11",
+    "vite": "https://pkg.pr.new/rolldown/vite@7e5a8b6",
     "vitest": "workspace:*",
     "zx": "^8.3.2"
   },
   "pnpm": {
     "overrides": {
+      "@types/node": "$@types/node",
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
+      "esbuild": "$esbuild",
       "mlly": "^1.7.4",
       "rollup": "$rollup",
+      "tsx": "$tsx",
       "vite": "$vite",
       "vitest": "workspace:*"
     },
