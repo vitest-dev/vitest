@@ -31,7 +31,7 @@ function withSafeTimers(getTimers: typeof getSafeTimers, fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export async function rpcDone() {
+export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
     return
   }

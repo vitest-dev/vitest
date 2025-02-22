@@ -153,9 +153,9 @@ export class FakeTimers {
 
     if (!this._fakingTime) {
       const toFake = Object.keys(this._fakeTimers.timers)
-        // Do not mock nextTick by default. It can still be mocked through userConfig.
+        // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
         .filter(
-          timer => timer !== 'nextTick',
+          timer => timer !== 'nextTick' && timer !== 'queueMicrotask',
         ) as (keyof FakeTimerWithContext['timers'])[]
 
       if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {
@@ -214,7 +214,7 @@ export class FakeTimers {
     this._userConfig = config
   }
 
-  isFakeTimers() {
+  isFakeTimers(): boolean {
     return this._fakingTime
   }
 

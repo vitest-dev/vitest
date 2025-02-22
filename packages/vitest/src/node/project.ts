@@ -9,6 +9,7 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
+import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
@@ -21,9 +22,9 @@ import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
-import fg from 'fast-glob'
 import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
+import { glob, type GlobOptions } from 'tinyglobby'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { setup } from '../api/setup'
@@ -60,7 +61,7 @@ export class TestProject {
   /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
-  public readonly tmpDir = join(tmpdir(), nanoid())
+  public readonly tmpDir: string = join(tmpdir(), nanoid())
 
   /** @internal */ vitenode!: ViteNodeServer
   /** @internal */ typechecker?: Typechecker
@@ -81,7 +82,7 @@ export class TestProject {
     /** @deprecated */
     public path: string | number,
     vitest: Vitest,
-    public options?: InitializeProjectOptions,
+    public options?: InitializeProjectOptions | undefined,
   ) {
     this.vitest = vitest
     this.ctx = vitest
@@ -222,7 +223,7 @@ export class TestProject {
   }
 
   /** @deprecated */
-  initializeGlobalSetup() {
+  initializeGlobalSetup(): Promise<void> {
     return this._initializeGlobalSetup()
   }
 
@@ -299,7 +300,7 @@ export class TestProject {
   }
 
   /** @deprecated use `vitest.reporters` instead */
-  get reporters() {
+  get reporters(): Reporter[] {
     return this.ctx.reporters
   }
 
@@ -420,13 +421,14 @@ export class TestProject {
 
   /** @internal */
   async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       dot: true,
       cwd,
       ignore: exclude,
+      expandDirectories: false,
     }
 
-    const files = await fg(include, globOptions)
+    const files = await glob(include, globOptions)
     // keep the slashes consistent with Vite
     // we are not using the pathe here because it normalizes the drive letter on Windows
     // and we want to keep it the same as working dir
@@ -577,7 +579,7 @@ export class TestProject {
   }
 
   /** @deprecated internal */
-  public setServer(options: UserConfig, server: ViteDevServer) {
+  public setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     return this._configureServer(options, server)
   }
 
@@ -730,7 +732,7 @@ export async function initializeProject(
   workspacePath: string | number,
   ctx: Vitest,
   options: InitializeProjectOptions,
-) {
+): Promise<TestProject> {
   const project = new TestProject(workspacePath, ctx, options)
 
   const { configFile, ...restOptions } = options

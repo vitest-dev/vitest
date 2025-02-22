@@ -49,7 +49,7 @@ export class EsmExecutor {
   public async createEsModule(
     fileURL: string,
     getCode: () => Promise<string> | string,
-  ) {
+  ): Promise<VMModule> {
     const cached = this.moduleCache.get(fileURL)
     if (cached) {
       return cached
@@ -96,7 +96,7 @@ export class EsmExecutor {
     return m
   }
 
-  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer) {
+  public async createWebAssemblyModule(fileUrl: string, getCode: () => Buffer): Promise<VMModule> {
     const cached = this.moduleCache.get(fileUrl)
     if (cached) {
       return cached
@@ -106,7 +106,7 @@ export class EsmExecutor {
     return m
   }
 
-  public async createNetworkModule(fileUrl: string) {
+  public async createNetworkModule(fileUrl: string): Promise<VMModule> {
     // https://nodejs.org/api/esm.html#https-and-http-imports
     if (fileUrl.startsWith('http:')) {
       const url = new URL(fileUrl)
@@ -127,7 +127,7 @@ export class EsmExecutor {
       fetch(fileUrl).then(r => r.text()))
   }
 
-  public async loadWebAssemblyModule(source: Buffer, identifier: string) {
+  public async loadWebAssemblyModule(source: Buffer, identifier: string): Promise<VMModule> {
     const cached = this.moduleCache.get(identifier)
     if (cached) {
       return cached
@@ -175,11 +175,11 @@ export class EsmExecutor {
     return syntheticModule
   }
 
-  public cacheModule(identifier: string, module: VMModule) {
+  public cacheModule(identifier: string, module: VMModule): void {
     this.moduleCache.set(identifier, module)
   }
 
-  public resolveCachedModule(identifier: string) {
+  public resolveCachedModule(identifier: string): VMModule | Promise<VMModule> | undefined {
     return this.moduleCache.get(identifier)
   }
 

@@ -55,22 +55,22 @@ export class Logger {
     }
   }
 
-  log(...args: any[]) {
+  log(...args: any[]): void {
     this._clearScreen()
     this.console.log(...args)
   }
 
-  error(...args: any[]) {
+  error(...args: any[]): void {
     this._clearScreen()
     this.console.error(...args)
   }
 
-  warn(...args: any[]) {
+  warn(...args: any[]): void {
     this._clearScreen()
     this.console.warn(...args)
   }
 
-  clearFullScreen(message = '') {
+  clearFullScreen(message = ''): void {
     if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
@@ -84,7 +84,7 @@ export class Logger {
     }
   }
 
-  clearScreen(message: string, force = false) {
+  clearScreen(message: string, force = false): void {
     if (!this.ctx.config.clearScreen) {
       this.console.log(message)
       return
@@ -106,11 +106,11 @@ export class Logger {
     this.console.log(`${CURSOR_TO_START}${ERASE_DOWN}${log}`)
   }
 
-  printError(err: unknown, options: ErrorOptions = {}) {
+  printError(err: unknown, options: ErrorOptions = {}): void {
     printError(err, this.ctx, this, options)
   }
 
-  clearHighlightCache(filename?: string) {
+  clearHighlightCache(filename?: string): void {
     if (filename) {
       this._highlights.delete(filename)
     }
@@ -119,7 +119,7 @@ export class Logger {
     }
   }
 
-  highlight(filename: string, source: string) {
+  highlight(filename: string, source: string): string {
     if (this._highlights.has(filename)) {
       return this._highlights.get(filename)!
     }
@@ -128,7 +128,7 @@ export class Logger {
     return code
   }
 
-  printNoTestFound(filters?: string[]) {
+  printNoTestFound(filters?: string[]): void {
     const config = this.ctx.config
 
     if (config.watch && (config.changed || config.related?.length)) {
@@ -190,7 +190,7 @@ export class Logger {
     this.console.error()
   }
 
-  printBanner() {
+  printBanner(): void {
     this.log()
 
     const color = this.ctx.config.watch ? 'blue' : 'cyan'
@@ -230,7 +230,7 @@ export class Logger {
     }
   }
 
-  printBrowserBanner(project: TestProject) {
+  printBrowserBanner(project: TestProject): void {
     if (!project.browser) {
       return
     }
@@ -253,7 +253,7 @@ export class Logger {
     )
   }
 
-  printUnhandledErrors(errors: unknown[]) {
+  printUnhandledErrors(errors: unknown[]): void {
     const errorMessage = c.red(
       c.bold(
         `\nVitest caught ${errors.length} unhandled error${
@@ -273,7 +273,7 @@ export class Logger {
     this.error(c.red(divider()))
   }
 
-  printSourceTypeErrors(errors: TypeCheckError[]) {
+  printSourceTypeErrors(errors: TypeCheckError[]): void {
     const errorMessage = c.red(
       c.bold(
         `\nVitest found ${errors.length} error${
@@ -289,11 +289,11 @@ export class Logger {
     this.log(c.red(divider()))
   }
 
-  getColumns() {
+  getColumns(): number {
     return 'columns' in this.outputStream ? this.outputStream.columns : 80
   }
 
-  onTerminalCleanup(listener: Listener) {
+  onTerminalCleanup(listener: Listener): void {
     this.cleanupListeners.push(listener)
   }
 

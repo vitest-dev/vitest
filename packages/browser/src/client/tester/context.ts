@@ -11,6 +11,7 @@ import type {
   UserEventTabOptions,
   UserEventTypeOptions,
 } from '../../../context'
+import type { BrowserRunnerState } from '../utils'
 import { convertElementToCssSelector, ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 
 // this file should not import anything directly, only types and utils
@@ -238,7 +239,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
   return vitestUserEvent
 }
 
-export function cdp() {
+export function cdp(): BrowserRunnerState['cdp'] {
   return getBrowserState().cdp!
 }
 

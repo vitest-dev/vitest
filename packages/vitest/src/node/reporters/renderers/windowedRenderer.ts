@@ -58,12 +58,12 @@ export class WindowRenderer {
     this.start()
   }
 
-  start() {
+  start(): void {
     this.finished = false
     this.renderInterval = setInterval(() => this.schedule(), this.options.interval).unref()
   }
 
-  stop() {
+  stop(): void {
     this.cleanups.splice(0).map(fn => fn())
     clearInterval(this.renderInterval)
   }
@@ -72,7 +72,7 @@ export class WindowRenderer {
    * Write all buffered output and stop buffering.
    * All intercepted writes are forwarded to actual write after this.
    */
-  finish() {
+  finish(): void {
     this.finished = true
     this.flushBuffer()
     clearInterval(this.renderInterval)
@@ -81,7 +81,7 @@ export class WindowRenderer {
   /**
    * Queue new render update
    */
-  schedule() {
+  schedule(): void {
     if (!this.renderScheduled) {
       this.renderScheduled = true
       this.flushBuffer()

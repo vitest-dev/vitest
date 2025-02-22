@@ -20,7 +20,7 @@ export async function setupGlobalEnv(
   config: SerializedConfig,
   { environment }: ResolvedTestEnvironment,
   executor: VitestExecutor,
-) {
+): Promise<void> {
   await setupCommonEnv(config)
 
   Object.defineProperty(globalThis, '__vitest_index__', {
@@ -82,7 +82,7 @@ function resolveAsset(mod: NodeJS.Module, url: string) {
   mod.exports = url
 }
 
-export async function setupConsoleLogSpy() {
+export async function setupConsoleLogSpy(): Promise<void> {
   const { createCustomConsole } = await import('./console')
 
   globalThis.console = createCustomConsole()
@@ -92,7 +92,7 @@ export async function withEnv(
   { environment }: ResolvedTestEnvironment,
   options: Record<string, any>,
   fn: () => Promise<void>,
-) {
+): Promise<void> {
   // @ts-expect-error untyped global
   globalThis.__vitest_environment__ = environment.name
   expect.setState({

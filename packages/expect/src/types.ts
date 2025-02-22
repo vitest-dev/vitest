@@ -92,7 +92,7 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState> {
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
->
+> & ThisType<T>
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,

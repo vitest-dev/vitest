@@ -616,17 +616,17 @@ function createVitest(): VitestUtils {
     },
 
     clearAllMocks() {
-      mocks.forEach(spy => spy.mockClear())
+      [...mocks].reverse().forEach(spy => spy.mockClear())
       return utils
     },
 
     resetAllMocks() {
-      mocks.forEach(spy => spy.mockReset())
+      [...mocks].reverse().forEach(spy => spy.mockReset())
       return utils
     },
 
     restoreAllMocks() {
-      mocks.forEach(spy => spy.mockRestore())
+      [...mocks].reverse().forEach(spy => spy.mockRestore())
       return utils
     },
 
@@ -714,8 +714,8 @@ function createVitest(): VitestUtils {
   return utils
 }
 
-export const vitest = createVitest()
-export const vi = vitest
+export const vitest: VitestUtils = createVitest()
+export const vi: VitestUtils = vitest
 
 function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide

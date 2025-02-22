@@ -38,7 +38,7 @@ export function equals(
 
 const functionToString = Function.prototype.toString
 
-export function isAsymmetric(obj: any) {
+export function isAsymmetric(obj: any): boolean {
   return (
     !!obj
     && typeof obj === 'object'
@@ -47,7 +47,7 @@ export function isAsymmetric(obj: any) {
   )
 }
 
-export function hasAsymmetric(obj: any, seen = new Set()): boolean {
+export function hasAsymmetric(obj: any, seen: Set<any> = new Set()): boolean {
   if (seen.has(obj)) {
     return false
   }
@@ -287,7 +287,7 @@ function hasKey(obj: any, key: string) {
   return Object.prototype.hasOwnProperty.call(obj, key)
 }
 
-export function isA(typeName: string, value: unknown) {
+export function isA(typeName: string, value: unknown): boolean {
   return Object.prototype.toString.apply(value) === `[object ${typeName}]`
 }
 
@@ -304,7 +304,7 @@ function isDomNode(obj: any): boolean {
   )
 }
 
-export function fnNameFor(func: Function) {
+export function fnNameFor(func: Function): string {
   if (func.name) {
     return func.name
   }
@@ -346,7 +346,7 @@ const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'
 const IS_ORDERED_SENTINEL = '@@__IMMUTABLE_ORDERED__@@'
 const IS_RECORD_SYMBOL = '@@__IMMUTABLE_RECORD__@@'
 
-export function isImmutableUnorderedKeyed(maybeKeyed: any) {
+export function isImmutableUnorderedKeyed(maybeKeyed: any): boolean {
   return !!(
     maybeKeyed
     && maybeKeyed[IS_KEYED_SENTINEL]
@@ -354,7 +354,7 @@ export function isImmutableUnorderedKeyed(maybeKeyed: any) {
   )
 }
 
-export function isImmutableUnorderedSet(maybeSet: any) {
+export function isImmutableUnorderedSet(maybeSet: any): boolean {
   return !!(
     maybeSet
     && maybeSet[IS_SET_SENTINEL]
@@ -687,7 +687,7 @@ export function generateToBeMessage(
   deepEqualityName: string,
   expected = '#{this}',
   actual = '#{exp}',
-) {
+): string {
   const toBeMessage = `expected ${expected} to be ${actual} // Object.is equality`
 
   if (['toStrictEqual', 'toEqual'].includes(deepEqualityName)) {

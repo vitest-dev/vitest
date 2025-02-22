@@ -24,7 +24,7 @@ export function withInlineSourcemap(
     filepath: string
     noFirstLineMapping?: boolean
   },
-) {
+): TransformResult {
   const map = result.map
   let code = result.code
 
@@ -88,7 +88,7 @@ export function extractSourceMap(code: string): EncodedSourceMap | null {
 
 export function installSourcemapsSupport(
   options: InstallSourceMapSupportOptions,
-) {
+): void {
   install({
     retrieveSourceMap(source) {
       const map = options.getSourceMap(source)

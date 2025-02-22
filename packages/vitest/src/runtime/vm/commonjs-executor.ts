@@ -162,6 +162,7 @@ export class CommonjsExecutor {
       static getCompileCacheDir = _Module.getCompileCacheDir
       static flushCompileCache = _Module.flushCompileCache
       static stripTypeScriptTypes = _Module.stripTypeScriptTypes
+      static findPackageJSON = _Module.findPackageJSON
 
       static Module = Module
     }
@@ -180,7 +181,7 @@ export class CommonjsExecutor {
     m.exports = JSON.parse(code)
   }
 
-  public createRequire = (filename: string | URL) => {
+  public createRequire = (filename: string | URL): NodeJS.Require => {
     const _require = createRequire(filename)
     const require = ((id: string) => {
       const resolved = _require.resolve(id)
@@ -255,7 +256,7 @@ export class CommonjsExecutor {
     return '.js'
   }
 
-  public require(identifier: string) {
+  public require(identifier: string): any {
     const ext = extname(identifier)
     if (ext === '.node' || isNodeBuiltin(identifier)) {
       return this.requireCoreModule(identifier)

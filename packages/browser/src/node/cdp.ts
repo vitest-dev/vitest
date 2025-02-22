@@ -11,11 +11,11 @@ export class BrowserServerCDPHandler {
     private tester: WebSocketBrowserRPC,
   ) {}
 
-  send(method: string, params?: Record<string, unknown>) {
+  send(method: string, params?: Record<string, unknown>): Promise<unknown> {
     return this.session.send(method, params)
   }
 
-  on(event: string, id: string, once = false) {
+  on(event: string, id: string, once = false): void {
     if (!this.listenerIds[event]) {
       this.listenerIds[event] = []
     }
@@ -36,7 +36,7 @@ export class BrowserServerCDPHandler {
     }
   }
 
-  off(event: string, id: string) {
+  off(event: string, id: string): void {
     if (!this.listenerIds[event]) {
       this.listenerIds[event] = []
     }
@@ -48,7 +48,7 @@ export class BrowserServerCDPHandler {
     }
   }
 
-  once(event: string, listener: string) {
+  once(event: string, listener: string): void {
     this.on(event, listener, true)
   }
 }

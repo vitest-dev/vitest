@@ -17,7 +17,7 @@ const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(globalServer: ParentBrowserProject) {
+export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
 
@@ -289,7 +289,7 @@ function cloneByOwnProperties(value: any) {
  * Replacer function for serialization methods such as JS.stringify() or
  * flatted.stringify().
  */
-export function stringifyReplace(key: string, value: any) {
+export function stringifyReplace(key: string, value: any): any {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {

@@ -70,7 +70,7 @@ function addCliOptions(cli: CAC | Command, options: CLIOptionsConfig<any>) {
   }
 }
 
-export function createCLI(options: CliParseOptions = {}) {
+export function createCLI(options: CliParseOptions = {}): CAC {
   const cli = cac('vitest')
 
   cli.version(version)

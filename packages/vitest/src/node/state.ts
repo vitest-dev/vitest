@@ -13,13 +13,13 @@ function isAggregateError(err: unknown): err is AggregateError {
 }
 
 export class StateManager {
-  filesMap = new Map<string, File[]>()
+  filesMap: Map<string, File[]> = new Map()
   pathsSet: Set<string> = new Set()
-  idMap = new Map<string, Task>()
-  taskFileMap = new WeakMap<Task, File>()
-  errorsSet = new Set<unknown>()
-  processTimeoutCauses = new Set<string>()
-  reportedTasksMap = new WeakMap<Task, TestCase | TestSuite | TestModule>()
+  idMap: Map<string, Task> = new Map()
+  taskFileMap: WeakMap<Task, File> = new WeakMap()
+  errorsSet: Set<unknown> = new Set()
+  processTimeoutCauses: Set<string> = new Set()
+  reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err)) {
@@ -48,23 +48,23 @@ export class StateManager {
     this.errorsSet.add(err)
   }
 
-  clearErrors() {
+  clearErrors(): void {
     this.errorsSet.clear()
   }
 
-  getUnhandledErrors() {
+  getUnhandledErrors(): unknown[] {
     return Array.from(this.errorsSet.values())
   }
 
-  addProcessTimeoutCause(cause: string) {
+  addProcessTimeoutCause(cause: string): void {
     this.processTimeoutCauses.add(cause)
   }
 
-  getProcessTimeoutCauses() {
+  getProcessTimeoutCauses(): string[] {
     return Array.from(this.processTimeoutCauses.values())
   }
 
-  getPaths() {
+  getPaths(): string[] {
     return Array.from(this.pathsSet)
   }
 
@@ -98,19 +98,19 @@ export class StateManager {
     return Array.from(this.filesMap.keys())
   }
 
-  getFailedFilepaths() {
+  getFailedFilepaths(): string[] {
     return this.getFiles()
       .filter(i => i.result?.state === 'fail')
       .map(i => i.filepath)
   }
 
-  collectPaths(paths: string[] = []) {
+  collectPaths(paths: string[] = []): void {
     paths.forEach((path) => {
       this.pathsSet.add(path)
     })
   }
 
-  collectFiles(project: TestProject, files: File[] = []) {
+  collectFiles(project: TestProject, files: File[] = []): void {
     files.forEach((file) => {
       const existing = this.filesMap.get(file.filepath) || []
       const otherFiles = existing.filter(
@@ -133,7 +133,7 @@ export class StateManager {
   clearFiles(
     project: TestProject,
     paths: string[] = [],
-  ) {
+  ): void {
     paths.forEach((path) => {
       const files = this.filesMap.get(path)
       const fileTask = createFileTask(
@@ -161,7 +161,7 @@ export class StateManager {
     })
   }
 
-  updateId(task: Task, project: TestProject) {
+  updateId(task: Task, project: TestProject): void {
     if (this.idMap.get(task.id) === task) {
       return
     }
@@ -184,11 +184,11 @@ export class StateManager {
     }
   }
 
-  getReportedEntity(task: Task) {
+  getReportedEntity(task: Task): TestModule | TestCase | TestSuite | undefined {
     return this.reportedTasksMap.get(task)
   }
 
-  updateTasks(packs: TaskResultPack[]) {
+  updateTasks(packs: TaskResultPack[]): void {
     for (const [id, result, meta] of packs) {
       const task = this.idMap.get(id)
       if (task) {
@@ -202,7 +202,7 @@ export class StateManager {
     }
   }
 
-  updateUserLog(log: UserConsoleLog) {
+  updateUserLog(log: UserConsoleLog): void {
     const task = log.taskId && this.idMap.get(log.taskId)
     if (task) {
       if (!task.logs) {
@@ -212,13 +212,13 @@ export class StateManager {
     }
   }
 
-  getCountOfFailedTests() {
+  getCountOfFailedTests(): number {
     return Array.from(this.idMap.values()).filter(
       t => t.result?.state === 'fail',
     ).length
   }
 
-  cancelFiles(files: string[], project: TestProject) {
+  cancelFiles(files: string[], project: TestProject): void {
     this.collectFiles(
       project,
       files.map(filepath =>

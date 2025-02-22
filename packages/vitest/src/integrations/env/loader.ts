@@ -15,7 +15,7 @@ function isBuiltinEnvironment(
 
 const _loaders = new Map<string, ViteNodeRunner>()
 
-export async function createEnvironmentLoader(options: ViteNodeRunnerOptions) {
+export async function createEnvironmentLoader(options: ViteNodeRunnerOptions): Promise<ViteNodeRunner> {
   if (!_loaders.has(options.root)) {
     const loader = new ViteNodeRunner(options)
     await loader.executeId('/@vite/env')
