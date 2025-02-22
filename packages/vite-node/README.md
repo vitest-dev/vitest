@@ -82,7 +82,7 @@ Note that when using the `--script` option, Vite Node forwards every argument an
 In Vite Node, the server and runner (client) are separated, so you can integrate them in different contexts (workers, cross-process, or remote) if needed. The demo below shows a simple example of having both (server and runner) running in the same context
 
 ```ts
-import { createServer } from 'vite'
+import { createServer, version as viteVersion } from 'vite'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { installSourcemapsSupport } from 'vite-node/source-map'
@@ -94,8 +94,10 @@ const server = await createServer({
     disabled: true,
   },
 })
-// this is need to initialize the plugins
-await server.pluginContainer.buildStart({})
+// For old Vite, this is need to initialize the plugins.
+if (Number(viteVersion.split('.')[0]) < 6) {
+  await server.pluginContainer.buildStart({})
+}
 
 // create vite-node server
 const node = new ViteNodeServer(server)
