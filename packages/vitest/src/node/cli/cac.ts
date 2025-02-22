@@ -22,6 +22,7 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
         `Expected a single value for option "${command}", received [${received}]`,
       )
     }
+    value = removeQuotes(value)
     if (option.transform) {
       return option.transform(value)
     }
@@ -196,11 +197,36 @@ export function createCLI(options: CliParseOptions = {}): CAC {
   return cli
 }
 
+function removeQuotes<T>(str: T): T {
+  if (typeof str !== 'string') {
+    if (Array.isArray(str)) {
+      return str.map(removeQuotes) as unknown as T
+    }
+    return str
+  }
+  if (str.startsWith('"') && str.endsWith('"')) {
+    return str.slice(1, -1) as unknown as T
+  }
+  if (str.startsWith(`'`) && str.endsWith(`'`)) {
+    return str.slice(1, -1) as unknown as T
+  }
+  return str
+}
+
+function splitArgv(argv: string): string[] {
+  const reg = /(['"])(?:(?!\1).)+\1/g
+  argv = argv.replace(reg, match => match.replace(/\s/g, '\x00'))
+  return argv.split(' ').map((arg: string) => {
+    arg = arg.replace(/\0/g, ' ')
+    return removeQuotes(arg)
+  })
+}
+
 export function parseCLI(argv: string | string[], config: CliParseOptions = {}): {
   filter: string[]
   options: CliOptions
 } {
-  const arrayArgs = typeof argv === 'string' ? argv.split(' ') : argv
+  const arrayArgs = typeof argv === 'string' ? splitArgv(argv) : argv
   if (arrayArgs[0] !== 'vitest') {
     throw new Error(`Expected "vitest" as the first argument, received "${arrayArgs[0]}"`)
   }
