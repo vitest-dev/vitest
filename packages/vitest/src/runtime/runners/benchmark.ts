@@ -127,21 +127,15 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       addBenchTaskListener(task, benchmark)
     })
 
-    const { setTimeout } = getSafeTimers()
     const tasks: [BenchTask, Benchmark][] = []
 
     for (const benchmark of benchmarkGroup) {
       const task = benchmarkTasks.get(benchmark)!
       updateTask('test-prepare', benchmark)
       await task.warmup()
-      tasks.push([
-        await new Promise<BenchTask>(resolve =>
-          setTimeout(async () => {
-            resolve(await task.run())
-          }),
-        ),
-        benchmark,
-      ])
+      await macro()
+      await task.run()
+      tasks.push([task, benchmark])
     }
 
     suite.result!.duration = performance.now() - start
@@ -159,6 +153,11 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
   function updateTask(event: TaskUpdateEvent, task: Task) {
     updateRunnerTask(event, task, runner)
   }
+}
+
+async function macro(): Promise<void> {
+  const { setTimeout } = getSafeTimers()
+  return new Promise(resolve => setTimeout(async () => resolve(await Promise.resolve())))
 }
 
 export class NodeBenchmarkRunner implements VitestRunner {
