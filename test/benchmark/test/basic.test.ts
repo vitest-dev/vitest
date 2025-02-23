@@ -43,6 +43,28 @@ it('basic', { timeout: 60_000 }, async () => {
           ],
         ],
       ],
+      [
+        [
+          "hooks.bench.ts > hooks",
+          [
+            "end",
+          ],
+        ],
+        [
+          "hooks.bench.ts > hooks > run",
+          [
+            "one",
+            "two",
+          ],
+        ],
+        [
+          "hooks.bench.ts > hooks-cleanup",
+          [
+            "one",
+            "two",
+          ],
+        ],
+      ],
       [],
       [
         [
