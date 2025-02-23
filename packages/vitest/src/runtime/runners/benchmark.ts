@@ -26,10 +26,10 @@ function createBenchmarkResult(name: string): BenchmarkResult {
   } as BenchmarkResult
 }
 
-const benchmarkTasks = new WeakMap<Benchmark, import('tinybench').Task>()
+const benchmarkTasks = new WeakMap<Benchmark, BenchTask>()
 
 async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
-  const { Task, Bench } = await runner.importTinybench()
+  const { Task: BenchTask, Bench: BenchFactory } = await runner.importTinybench()
 
   const start = performance.now()
 
@@ -63,7 +63,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     updateTask('suite-prepare', suite)
 
     const addBenchTaskListener = (
-      task: InstanceType<typeof Task>,
+      task: BenchTask,
       benchmark: Benchmark,
     ) => {
       task.addEventListener(
@@ -103,7 +103,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 
     benchmarkGroup.forEach((benchmark) => {
       const options = getBenchOptions(benchmark)
-      const benchmarkInstance = new Bench(options)
+      const benchmarkInstance = new BenchFactory(options)
 
       const benchmarkFn = getBenchFn(benchmark)
 
@@ -113,7 +113,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
         benchmark: createBenchmarkResult(benchmark.name),
       }
 
-      const task = new Task(benchmarkInstance, benchmark.name, benchmarkFn)
+      const task = new BenchTask(benchmarkInstance, benchmark.name, benchmarkFn)
       benchmarkTasks.set(benchmark, task)
       addBenchTaskListener(task, benchmark)
     })
@@ -152,7 +152,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 export class NodeBenchmarkRunner implements VitestRunner {
   private __vitest_executor!: VitestExecutor
 
-  constructor(public config: SerializedConfig) {}
+  constructor(public config: SerializedConfig) { }
 
   async importTinybench(): Promise<typeof import('tinybench')> {
     return await import('tinybench')
