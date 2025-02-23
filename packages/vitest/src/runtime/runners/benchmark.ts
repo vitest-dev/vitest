@@ -12,7 +12,7 @@ import type {
   BenchmarkResult,
   BenchTask,
 } from '../types/benchmark'
-import { updateTask as updateRunnerTask } from '@vitest/runner'
+import { callCleanupHooks, callSuiteHook, updateTask as updateRunnerTask } from '@vitest/runner'
 import { createDefer, getSafeTimers } from '@vitest/utils'
 import { getBenchFn, getBenchOptions } from '../benchmark'
 import { getWorkerState } from '../utils'
@@ -54,6 +54,8 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
   const start = performance.now()
 
   const [benchmarkGroup, benchmarkSuiteGroup] = partitionTasksIntoBenchmarksAndSubSuites(suite.tasks)
+
+  const beforeAllCleanups = await callSuiteHook(suite, suite, 'beforeAll', runner, [suite])
 
   // run sub suites sequentially
   for (const subSuite of benchmarkSuiteGroup) {
@@ -150,6 +152,9 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 
     await defer
   }
+
+  await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
+  await callCleanupHooks(beforeAllCleanups)
 
   function updateTask(event: TaskUpdateEvent, task: Task) {
     updateRunnerTask(event, task, runner)
