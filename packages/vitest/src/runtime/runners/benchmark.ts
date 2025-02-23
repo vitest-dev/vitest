@@ -132,9 +132,22 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     for (const benchmark of benchmarkGroup) {
       const task = benchmarkTasks.get(benchmark)!
       updateTask('test-prepare', benchmark)
+
+      let beforeEachCleanups = [] as unknown[]
+
+      if (benchmark.suite) {
+        beforeEachCleanups = await callSuiteHook(benchmark.suite, benchmark, 'beforeEach', runner, [benchmark.context, benchmark.suite])
+      }
+
       await task.warmup()
       await macro()
       await task.run()
+
+      if (benchmark.suite) {
+        await callSuiteHook(benchmark.suite, benchmark, 'afterEach', runner, [benchmark.context, benchmark.suite])
+        await callCleanupHooks(beforeEachCleanups)
+      }
+
       tasks.push([task, benchmark])
     }
 
