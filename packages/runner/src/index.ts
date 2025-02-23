@@ -7,7 +7,7 @@ export {
   onTestFinished,
 } from './hooks'
 export { getFn, getHooks, setFn, setHooks } from './map'
-export { collectTests, startTests, updateTask } from './run'
+export { collectTests, startTests, updateTask, callCleanupHooks, callSuiteHook } from './run'
 export {
   createTaskCollector,
   describe,
