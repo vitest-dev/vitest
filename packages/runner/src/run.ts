@@ -200,7 +200,7 @@ async function sendTasksUpdate(runner: VitestRunner) {
   }
 }
 
-async function callCleanupHooks(cleanups: unknown[]) {
+export async function callCleanupHooks(cleanups: unknown[]): Promise<void> {
   await Promise.all(
     cleanups.map(async (fn) => {
       if (typeof fn !== 'function') {
