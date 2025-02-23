@@ -5,7 +5,6 @@ import type {
   Options as BenchOptions,
   Task as BenchTask,
   TaskResult as BenchTaskResult,
-  TaskResult as TinybenchResult,
 } from 'tinybench'
 
 export interface Benchmark extends Test {
@@ -15,7 +14,7 @@ export interface Benchmark extends Test {
   }
 }
 
-export interface BenchmarkResult extends TinybenchResult {
+export interface BenchmarkResult extends BenchTaskResult {
   name: string
   rank: number
   sampleCount: number
