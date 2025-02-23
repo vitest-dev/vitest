@@ -26,16 +26,11 @@ function createBenchmarkResult(name: string): BenchmarkResult {
   } as BenchmarkResult
 }
 
-const benchmarkTasks = new WeakMap<Benchmark, BenchTask>()
-
-async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
-  const { Task: BenchTask, Bench: BenchFactory } = await runner.importTinybench()
-
-  const start = performance.now()
-
+function partitionTasksIntoBenchmarksAndSubSuites(tasks: Task[]) {
   const benchmarkGroup: Benchmark[] = []
   const benchmarkSuiteGroup = []
-  for (const task of suite.tasks) {
+
+  for (const task of tasks) {
     if (task.mode !== 'run' && task.mode !== 'queued') {
       continue
     }
@@ -47,6 +42,18 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       benchmarkSuiteGroup.push(task)
     }
   }
+
+  return [benchmarkGroup, benchmarkSuiteGroup] as const
+}
+
+const benchmarkTasks = new WeakMap<Benchmark, BenchTask>()
+
+async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
+  const { Task: BenchTask, Bench: BenchFactory } = await runner.importTinybench()
+
+  const start = performance.now()
+
+  const [benchmarkGroup, benchmarkSuiteGroup] = partitionTasksIntoBenchmarksAndSubSuites(suite.tasks)
 
   // run sub suites sequentially
   for (const subSuite of benchmarkSuiteGroup) {
