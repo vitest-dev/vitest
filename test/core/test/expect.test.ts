@@ -155,6 +155,28 @@ describe('expect.addEqualityTesters', () => {
   })
 })
 
+describe('recursive custom equality tester for numeric values', () => {
+  const areNumbersEqual: Tester = (a, b) => typeof b === 'number' ? a === b : undefined
+
+  expect.addEqualityTesters([areNumbersEqual])
+
+  test('within objects', () => {
+    expect({ foo: -0, bar: 0, baz: 0 }).toStrictEqual({ foo: 0, bar: -0, baz: 0 })
+  })
+
+  test('within arrays', () => {
+    expect([-0, 0, 0]).toStrictEqual([0, -0, 0])
+  })
+
+  test('within typed arrays', () => {
+    expect(Float64Array.of(-0, 0, 0)).toStrictEqual(Float64Array.of(0, -0, 0))
+  })
+
+  test('within deeply nested structures', () => {
+    expect({ foo: { bar: [1, [2, 0, [3, -0, 4]]] }, baz: 0 }).toStrictEqual({ foo: { bar: [1, [2, -0, [3, 0, 4]]] }, baz: -0 })
+  })
+})
+
 describe('recursive custom equality tester', () => {
   let personId = 0
 
