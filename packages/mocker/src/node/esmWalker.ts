@@ -9,8 +9,8 @@ import type {
   Property,
   VariableDeclaration,
 } from 'estree'
-import { walk as eswalk } from 'estree-walker'
 import type { Rollup } from 'vite'
+import { walk as eswalk } from 'estree-walker'
 
 export type * from 'estree'
 
