@@ -1,9 +1,9 @@
+import type { Capabilities } from '@wdio/types'
 import type {
   BrowserProvider,
   BrowserProviderInitializationOptions,
   TestProject,
 } from 'vitest/node'
-import type { RemoteOptions } from 'webdriverio'
 
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = (typeof webdriverBrowsers)[number]
@@ -22,7 +22,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private browserName!: WebdriverBrowser
   private project!: TestProject
 
-  private options?: RemoteOptions
+  private options?: Capabilities.WebdriverIOConfig
 
   getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
@@ -34,20 +34,32 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   ): Promise<void> {
     this.project = ctx
     this.browserName = browser
-    this.options = options as RemoteOptions
+    this.options = options as Capabilities.WebdriverIOConfig
   }
 
   async switchToTestFrame(): Promise<void> {
     const page = this.browser!
-    const iframe = await page.findElement(
-      'css selector',
-      'iframe[data-vitest]',
-    )
-    await page.switchToFrame(iframe)
+    // support wdio@9
+    if (page.switchFrame) {
+      await page.switchFrame(page.$('iframe[data-vitest]'))
+    }
+    else {
+      const iframe = await page.findElement(
+        'css selector',
+        'iframe[data-vitest]',
+      )
+      await page.switchToFrame(iframe)
+    }
   }
 
   async switchToMainFrame(): Promise<void> {
-    await this.browser!.switchToParentFrame()
+    const page = this.browser!
+    if (page.switchFrame) {
+      await page.switchFrame(null)
+    }
+    else {
+      await page.switchToParentFrame()
+    }
   }
 
   getCommandsContext(): {
@@ -86,7 +98,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 
   private buildCapabilities() {
-    const capabilities: RemoteOptions['capabilities'] = {
+    const capabilities: Capabilities.WebdriverIOConfig['capabilities'] = {
       ...this.options?.capabilities,
       browserName: this.browserName,
     }
