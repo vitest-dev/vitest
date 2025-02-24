@@ -332,11 +332,14 @@ function printModuleWarningForPackage(
       + '\n'
       + c.green(`export default {
   test: {
-    server: {
-      deps: {
-        inline: [
-          ${c.yellow(c.bold(`"${name}"`))}
-        ]
+    deps: {
+      optimizer: {
+        web : {
+          include: [
+            ${c.yellow(c.bold(`"${name}"`))}
+          ],
+          enabled: true
+        }
       }
     }
   }
