@@ -33,8 +33,6 @@ export function createBrowserRunner(
     hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
 
-    private contextSwitched = false
-
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
@@ -91,7 +89,6 @@ export function createBrowserRunner(
       ])
     }
 
-    // this always has a single test file in Vitest
     onAfterRunFiles = async (files: File[]) => {
       const [coverage] = await Promise.all([
         coverageModule?.takeCoverage?.(),
