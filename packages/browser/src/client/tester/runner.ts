@@ -111,6 +111,8 @@ export function createBrowserRunner(
 
     // this always has a single test file in Vitest
     onAfterRunFiles = async (files: File[]) => {
+      this.commands.reset()
+
       const [coverage] = await Promise.all([
         coverageModule?.takeCoverage?.(),
         mocker.invalidate(),
