@@ -117,8 +117,9 @@ export function createBrowserRunner(
         super.onAfterRunFiles?.(files),
         (async () => {
           if (this.contextSwitched) {
-            this.contextSwitched = false
+            this.firstCommand = true
             await rpc().wdioSwitchContext('parent')
+            this.contextSwitched = false
           }
         })(),
       ])
