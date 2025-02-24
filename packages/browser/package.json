@@ -60,6 +60,7 @@
     "*.d.ts",
     "context.js",
     "dist",
+    "dummy.js",
     "providers"
   ],
   "scripts": {
@@ -73,7 +74,7 @@
   "peerDependencies": {
     "playwright": "*",
     "vitest": "workspace:*",
-    "webdriverio": "*"
+    "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0"
   },
   "peerDependenciesMeta": {
     "playwright": {
@@ -91,6 +92,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
+    "@wdio/types": "9",
     "magic-string": "^0.30.17",
     "msw": "^2.7.3",
     "sirv": "^3.0.1",
@@ -103,7 +105,7 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.40.3",
+    "@wdio/protocols": "^9.7.0",
     "birpc": "0.2.19",
     "flatted": "^3.3.3",
     "ivya": "^1.1.1",
@@ -114,6 +116,6 @@
     "playwright-core": "^1.50.1",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.42.0"
+    "webdriverio": "^9.10.0"
   }
 }
