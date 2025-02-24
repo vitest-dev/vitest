@@ -22,7 +22,7 @@ import {
   Ivya,
   type ParsedSelector,
 } from 'ivya'
-import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
+import { ensureAwaited, escapeForTextSelector, getBrowserState, getWorkerState } from '../../utils'
 import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
@@ -161,6 +161,42 @@ export abstract class Locator {
 
   public getByTitle(title: string | RegExp, options?: LocatorOptions): Locator {
     return this.locator(getByTitleSelector(title, options))
+  }
+
+  public filter(filter: LocatorOptions): Locator {
+    const selectors = []
+
+    if (filter?.hasText) {
+      selectors.push(`internal:has-text=${escapeForTextSelector(filter.hasText, false)}`)
+    }
+
+    if (filter?.hasNotText) {
+      selectors.push(`internal:has-not-text=${escapeForTextSelector(filter.hasNotText, false)}`)
+    }
+
+    if (filter?.has) {
+      const locator = filter.has as Locator
+      selectors.push(`internal:has=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+    }
+
+    if (filter?.hasNot) {
+      const locator = filter.hasNot as Locator
+      selectors.push(`internal:has-not=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+    }
+
+    if (!selectors.length) {
+      throw new Error(`Locator.filter expects at least one filter. None provided.`)
+    }
+
+    return this.locator(selectors.join(' >> '))
+  }
+
+  public and(locator: Locator): Locator {
+    return this.locator(`internal:and=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+  }
+
+  public or(locator: Locator): Locator {
+    return this.locator(`internal:or=${JSON.stringify(locator._pwSelector || locator.selector)}`)
   }
 
   public query(): Element | null {
