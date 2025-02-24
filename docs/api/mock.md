@@ -70,6 +70,8 @@ function mockImplementation(fn: T): MockInstance<T>
 
 Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
 
+**vi.fn(implementation) is a shorthand for vi.fn().mockImplementation(implementation)**
+
 ```ts
 const mockFn = vi.fn().mockImplementation((apples: number) => apples + 1)
 // or: vi.fn(apples => apples + 1);
