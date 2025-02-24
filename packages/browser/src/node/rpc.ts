@@ -3,6 +3,7 @@ import type { ErrorWithDiff } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { ParentBrowserProject } from './projectParent'
+import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
@@ -12,7 +13,6 @@ import { parse, stringify } from 'flatted'
 import { dirname } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
-import { WebdriverBrowserProvider } from './providers/webdriver'
 
 const debug = createDebugger('vitest:browser:api')
 
@@ -214,7 +214,8 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           }
           if (direction === 'iframe') {
             await provider.switchToTestFrame()
-          } else {
+          }
+          else {
             await provider.switchToMainFrame()
           }
         },
