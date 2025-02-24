@@ -1,21 +1,19 @@
 import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
-import type { CommandsManager } from '../utils'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel } from '@vitest/browser/client'
-import { page, server, userEvent } from '@vitest/browser/context'
+import { page, userEvent } from '@vitest/browser/context'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { originalPositionFor, TraceMap } from 'vitest/utils'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { executor, getBrowserState, getWorkerState } from '../utils'
+import { executor, getWorkerState } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
-  commands: CommandsManager
 }
 
 export const browserHashMap: Map<string, string> = new Map()
@@ -34,28 +32,12 @@ export function createBrowserRunner(
     public config: SerializedConfig
     hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
-    private commands: CommandsManager
 
-    private firstCommand = true
     private contextSwitched = false
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
-      this.commands = options.commands
-
-      // webdiverio context depends on the iframe state, so we need to switch the context
-      // for every test file
-      if (server.provider === 'webdriverio') {
-        this.commands.onCommand(async () => {
-          // if this is the first command, make sure we switched the command context to an iframe
-          if (this.firstCommand) {
-            this.firstCommand = false
-            await rpc().wdioSwitchContext('iframe')
-            this.contextSwitched = true
-          }
-        })
-      }
     }
 
     onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
@@ -111,19 +93,10 @@ export function createBrowserRunner(
 
     // this always has a single test file in Vitest
     onAfterRunFiles = async (files: File[]) => {
-      this.commands.reset()
-
       const [coverage] = await Promise.all([
         coverageModule?.takeCoverage?.(),
         mocker.invalidate(),
         super.onAfterRunFiles?.(files),
-        (async () => {
-          if (this.contextSwitched) {
-            this.firstCommand = true
-            await rpc().wdioSwitchContext('parent')
-            this.contextSwitched = false
-          }
-        })(),
       ])
 
       if (coverage) {
@@ -200,7 +173,6 @@ export async function initiateRunner(
   }
   const runner = new BrowserRunner({
     config,
-    commands: getBrowserState().commands,
   })
 
   const [diffOptions] = await Promise.all([

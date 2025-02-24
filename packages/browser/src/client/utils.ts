@@ -198,7 +198,6 @@ function getParent(el: Element) {
 }
 
 export class CommandsManager {
-  public history: string[] = []
   private _listeners: ((command: string, args: any[]) => void)[] = []
 
   public onCommand(listener: (command: string, args: any[]) => void): void {
@@ -206,7 +205,6 @@ export class CommandsManager {
   }
 
   public async triggerCommand<T>(command: string, args: any[]): Promise<T> {
-    this.history.push(command)
     const state = getWorkerState()
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId } = getBrowserState()
@@ -215,9 +213,5 @@ export class CommandsManager {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
     }
     return rpc.triggerCommand<T>(sessionId, command, filepath, args)
-  }
-
-  public reset(): void {
-    this.history = []
   }
 }
