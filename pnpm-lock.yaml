@@ -363,9 +363,6 @@ importers:
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
-      '@wdio/types':
-        specifier: '9'
-        version: 9.9.0
       magic-string:
         specifier: ^0.30.17
         version: 0.30.17
@@ -400,6 +397,9 @@ importers:
       '@wdio/protocols':
         specifier: ^9.7.0
         version: 9.7.0
+      '@wdio/types':
+        specifier: ^9.9.0
+        version: 9.9.0
       birpc:
         specifier: 0.2.19
         version: 0.2.19
