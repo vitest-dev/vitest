@@ -1,7 +1,7 @@
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
 import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
-import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
+import { CommandsManager, executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
@@ -33,6 +33,8 @@ async function prepareTestEnvironment(files: string[]) {
   state.ctx.files = files
   state.onCancel = onCancel
   state.rpc = rpc as any
+
+  getBrowserState().commands = new CommandsManager()
 
   // TODO: expose `worker`
   const interceptor = createModuleMockerInterceptor()

@@ -1,4 +1,5 @@
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { BrowserRPC } from './client'
 
 export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
@@ -77,6 +78,7 @@ export interface BrowserRunnerState {
   method: 'run' | 'collect'
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
+  commands: CommandsManager
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
     once: (event: string, listener: (payload: any) => void) => void
@@ -193,4 +195,29 @@ function getParent(el: Element) {
     return parent.host
   }
   return parent
+}
+
+export class CommandsManager {
+  public history: string[] = []
+  private _listeners: ((command: string, args: any[]) => void)[] = []
+
+  public onCommand(listener: (command: string, args: any[]) => void): void {
+    this._listeners.push(listener)
+  }
+
+  public async triggerCommand<T>(command: string, args: any[]): Promise<T> {
+    this.history.push(command)
+    const state = getWorkerState()
+    const rpc = state.rpc as any as BrowserRPC
+    const { sessionId } = getBrowserState()
+    const filepath = state.filepath || state.current?.file?.filepath
+    if (this._listeners.length) {
+      await Promise.all(this._listeners.map(listener => listener(command, args)))
+    }
+    return rpc.triggerCommand<T>(sessionId, command, filepath, args)
+  }
+
+  public reset(): void {
+    this.history = []
+  }
 }

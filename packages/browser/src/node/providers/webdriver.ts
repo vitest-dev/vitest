@@ -37,7 +37,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     this.options = options as RemoteOptions
   }
 
-  async beforeCommand(): Promise<void> {
+  async switchToTestFrame(): Promise<void> {
     const page = this.browser!
     const iframe = await page.findElement(
       'css selector',
@@ -46,7 +46,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     await page.switchToFrame(iframe)
   }
 
-  async afterCommand(): Promise<void> {
+  async switchToMainFrame(): Promise<void> {
     await this.browser!.switchToParentFrame()
   }
 
