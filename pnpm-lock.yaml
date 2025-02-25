@@ -1057,6 +1057,9 @@ importers:
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
+      '@vitest/bundled-lib':
+        specifier: link:./bundled-lib
+        version: link:bundled-lib
       '@vitest/cjs-lib':
         specifier: link:./cjs-lib
         version: link:cjs-lib

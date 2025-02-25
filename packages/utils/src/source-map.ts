@@ -221,12 +221,14 @@ export function parseStacktrace(
     const { line, column, source, name } = originalPositionFor(traceMap, stack)
 
     let file: string = stack.file
-    // TODO: respect map.sourceRoot
     if (source) {
       const fileUrl = stack.file.startsWith('file://')
         ? stack.file
         : `file://${stack.file}`
-      file = new URL(source, fileUrl).pathname
+      const sourceRootUrl = map.sourceRoot
+        ? new URL(map.sourceRoot, fileUrl)
+        : fileUrl
+      file = new URL(source, sourceRootUrl).pathname
     }
 
     if (shouldFilter(ignoreStackEntries, file)) {

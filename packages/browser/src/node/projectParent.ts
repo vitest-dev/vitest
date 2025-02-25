@@ -77,10 +77,16 @@ export class ParentBrowserProject {
         if (mod) {
           return id
         }
-        const resolvedId = resolve(project.config.root, id.slice(1))
-        const modUrl = this.vite.moduleGraph.getModuleById(resolvedId)
+        const resolvedPath = resolve(project.config.root, id.slice(1))
+        const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
         if (modUrl) {
-          return resolvedId
+          return resolvedPath
+        }
+        // some browsers (looking at you, safari) don't report queries in stack traces
+        // the next best thing is to try the first id that this file resolves to
+        const files = this.vite.moduleGraph.getModulesByFile(resolvedPath)
+        if (files && files.size) {
+          return files.values().next().value!.id!
         }
         return id
       },
