@@ -22,6 +22,48 @@ Error: Something truly horrible has happened!
 "
 `;
 
+exports[`stacktrace in dependency package > external 1`] = `
+"
+⎯⎯ Failed Tests 1 ⎯⎯
+
+ FAIL  error-in-package.test.js > error in package
+Error: __TEST_STACK__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
+ ❯ error-in-package.test.js:5:12
+      3| 
+      4| test('error in package', () => {
+      5|   testStack()
+       |            ^
+      6| })
+      7| 
+
+⎯⎯[1/1]⎯
+
+"
+`;
+
+exports[`stacktrace in dependency package > inline 1`] = `
+"
+⎯⎯ Failed Tests 1 ⎯⎯
+
+ FAIL  error-in-package.test.js > error in package
+Error: __TEST_STACK__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
+      8| 
+      9| function innerTestStack() {
+     10|   throw new Error('__TEST_STACK__')
+       |         ^
+     11| }
+     12| 
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
+ ❯ error-in-package.test.js:5:12
+
+⎯⎯[1/1]⎯
+
+"
+`;
+
 exports[`stacktrace in vmThreads 1`] = `
 "
 ⎯⎯ Failed Tests 1 ⎯⎯

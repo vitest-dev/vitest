@@ -79,8 +79,7 @@ describe('stacktrace in dependency package', () => {
     const { stderr } = await runVitest({
       root,
     }, [testFile])
-    expect(stderr).toMatch(/innerTestStack(.*)\/@vitest\/test-dep-error\/index\.js:10:9/)
-    expect(stderr).toMatch(/testStack(.*)\/@vitest\/test-dep-error\/index\.js:4:3/)
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
   })
 
   it('inline', async () => {
@@ -92,8 +91,7 @@ describe('stacktrace in dependency package', () => {
         },
       },
     }, [testFile])
-    expect(stderr).toMatch(/innerTestStack(.*)\/@vitest\/test-dep-error\/index\.js:10:9/)
-    expect(stderr).toMatch(/testStack(.*)\/@vitest\/test-dep-error\/index\.js:4:3/)
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
   })
 })
 
@@ -110,4 +108,8 @@ it.runIf(major < 22)('stacktrace in vmThreads', async () => {
 
 function removeLines(log: string) {
   return log.replace(/⎯{2,}/g, '⎯⎯')
+}
+
+function removeNodeModules(log: string) {
+  return log.replace(/[^ ]*\/node_modules\//g, '(NODE_MODULES)/')
 }
