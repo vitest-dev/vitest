@@ -101,20 +101,114 @@ export async function collectTests(
     if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
       const [e0, e1] = callee.expressions
       if (e0.type === 'Literal' && e0.value === 0) {
+        if (e1.type === 'MemberExpression' && e1.object?.type === 'Identifier') {
+          return e1.object.name
+        }
         return getName(e1)
       }
     }
     return null
   }
 
+  const isShadowed = (callee: any, ancestors: any[]): boolean => {
+    const targetName = getName(callee)
+    if (!targetName) {
+      return false
+    }
+
+    for (const ancestor of ancestors) {
+      if (ancestor.type === 'ImportSpecifier') {
+        continue
+      }
+
+      if (ancestor.type === 'VariableDeclarator' && ancestor.id) {
+        if (ancestor.id.type === 'Identifier' && ancestor.id.name === targetName) {
+          return true
+        }
+        if (isShadowedInPattern(ancestor.id, targetName)) {
+          return true
+        }
+      }
+    }
+
+    for (const ancestor of ancestors) {
+      if (
+        ancestor.type === 'FunctionDeclaration'
+        || ancestor.type === 'FunctionExpression'
+        || ancestor.type === 'ArrowFunctionExpression'
+      ) {
+        if (Array.isArray(ancestor.params)) {
+          for (const param of ancestor.params) {
+            if (param.type === 'Identifier' && param.name === targetName) {
+              return true
+            }
+            if (isShadowedInPattern(param, targetName)) {
+              return true
+            }
+          }
+        }
+      }
+    }
+
+    if (callee.type === 'MemberExpression' && callee.object && callee.object.type === 'Identifier') {
+      const idName = callee.object.name
+      for (const ancestor of ancestors) {
+        if (ancestor.type === 'BlockStatement' && Array.isArray(ancestor.body)) {
+          for (const stmt of ancestor.body) {
+            if (stmt.type === 'VariableDeclaration') {
+              for (const decl of stmt.declarations) {
+                if (decl.id && decl.id.type === 'Identifier' && decl.id.name === idName) {
+                  return true
+                }
+                if (decl.id && isShadowedInPattern(decl.id, idName)) {
+                  return true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    let nearestBlock: any = null
+    for (let i = ancestors.length - 1; i >= 0; i--) {
+      if (ancestors[i].type === 'BlockStatement') {
+        nearestBlock = ancestors[i]
+        break
+      }
+    }
+    if (nearestBlock && Array.isArray(nearestBlock.body)) {
+      for (const stmt of nearestBlock.body) {
+        if (stmt.type === 'FunctionDeclaration' && stmt.id && stmt.id.name === targetName) {
+          return true
+        }
+        if (stmt.type === 'VariableDeclaration') {
+          for (const decl of stmt.declarations) {
+            if (decl.id && decl.id.type === 'Identifier' && decl.id.name === targetName) {
+              return true
+            }
+            if (decl.id && isShadowedInPattern(decl.id, targetName)) {
+              return true
+            }
+          }
+        }
+      }
+    }
+
+    return false
+  }
+
   walkAst(ast as any, {
-    CallExpression(node) {
+    CallExpression(node, _state, ancestors) {
       const { callee } = node as any
       const name = getName(callee)
       if (!name) {
         return
       }
       if (!['it', 'test', 'describe', 'suite'].includes(name)) {
+        return
+      }
+      if (isShadowed(callee, ancestors)) {
         return
       }
       const property = callee?.property?.name
@@ -266,4 +360,31 @@ function mergeTemplateLiteral(node: any, code: string): string {
     }
   }
   return result
+}
+
+function isShadowedInPattern(pattern: any, targetName: string): boolean {
+  if (!pattern) {
+    return false
+  }
+  if (pattern.type === 'Identifier') {
+    return pattern.name === targetName
+  }
+  if (pattern.type === 'ObjectPattern' && Array.isArray(pattern.properties)) {
+    return pattern.properties.some((property: any) => {
+      if (property.type === 'Property') {
+        return isShadowedInPattern(property.value, targetName)
+      }
+      if (property.type === 'RestElement') {
+        return isShadowedInPattern(property.argument, targetName)
+      }
+      return false
+    })
+  }
+  if (pattern.type === 'ArrayPattern' && Array.isArray(pattern.elements)) {
+    return pattern.elements.some((elem: any) => elem && isShadowedInPattern(elem, targetName))
+  }
+  if (pattern.type === 'AssignmentPattern') {
+    return isShadowedInPattern(pattern.left, targetName)
+  }
+  return false
 }
