@@ -4,7 +4,7 @@ import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import '../src/button.css'
 
 afterAll(() => {
-  document.body.style.background = ''
+  delete document.body.style.background
 })
 
 describe('dom related activity', () => {
