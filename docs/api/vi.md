@@ -818,8 +818,8 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ::: tip
-`vi.useFakeTimers()` does not automatically mock `process.nextTick`.
-But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+`vi.useFakeTimers()` does not automatically mock `process.nextTick` and `queueMicrotask`.
+But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick', 'queueMicrotask'] })`.
 :::
 
 ### vi.isFakeTimers {#vi-isfaketimers}

@@ -3,6 +3,7 @@ import type { ErrorWithDiff } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { ParentBrowserProject } from './projectParent'
+import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
@@ -203,6 +204,21 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         getCountOfFailedTests() {
           return vitest.state.getCountOfFailedTests()
         },
+        async wdioSwitchContext(direction) {
+          const provider = project.browser!.provider as WebdriverBrowserProvider
+          if (!provider) {
+            throw new Error('Commands are only available for browser tests.')
+          }
+          if (provider.name !== 'webdriverio') {
+            throw new Error('Switch context is only available for WebDriverIO provider.')
+          }
+          if (direction === 'iframe') {
+            await provider.switchToTestFrame()
+          }
+          else {
+            await provider.switchToMainFrame()
+          }
+        },
         async triggerCommand(sessionId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', sessionId, command)
           const provider = project.browser!.provider
@@ -213,7 +229,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           if (!commands || !commands[command]) {
             throw new Error(`Unknown command "${command}".`)
           }
-          await provider.beforeCommand?.(command, payload)
           const context = Object.assign(
             {
               testPath,
@@ -224,14 +239,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          let result
-          try {
-            result = await commands[command](context, ...payload)
-          }
-          finally {
-            await provider.afterCommand?.(command, payload)
-          }
-          return result
+          return await commands[command](context, ...payload)
         },
         finishBrowserTests(sessionId: string) {
           debug?.('[%s] Finishing browser tests for session', sessionId)

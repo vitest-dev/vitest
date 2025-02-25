@@ -17,21 +17,37 @@ test('non US keys', async () => {
   // playwright: garbled characters
   // webdriverio: error: invalid argument: missing command parameters
   // preview: ok
-  try {
+  if (server.provider === 'playwright') {
+    await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
+    if (server.browser === 'chromium') {
+      await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('����')
+    } else {
+      await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
+    }
+  } else if (server.provider === 'webdriverio') {
+    await expect(() =>
+      userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
+    ).rejects.toThrowError()
+  } else {
     await userEvent.type(page.getByPlaceholder("type-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("type-emoji")).toHaveValue('😊😍')
-  } catch (e) {
-    console.error(e)
   }
 
   // playwright: ok
   // webdriverio: error: ChromeDriver only supports characters in the BMP
   // preview: ok
-  try {
+  if (server.provider === 'webdriverio') {
+    if (server.browser === 'firefox') {
+      await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
+      await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
+    } else {
+      await expect(() =>
+        userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
+      ).rejects.toThrowError()
+    }
+  } else {
     await userEvent.fill(page.getByPlaceholder("fill-emoji"), '😊😍')
     await expect.element(page.getByPlaceholder("fill-emoji")).toHaveValue('😊😍')
-  } catch (e) {
-    console.error(e)
   }
 })
 
