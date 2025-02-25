@@ -65,7 +65,11 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       }
       promises.set(
         tmp,
-        atomicWriteFile(tmp, code).finally(() => promises.delete(tmp)),
+
+        atomicWriteFile(tmp, code)
+        // Fallback to non-atomic write for windows case where file already exists:
+          .catch(() => writeFile(tmp, code, 'utf-8'))
+          .finally(() => promises.delete(tmp)),
       )
       await promises.get(tmp)
       Object.assign(result, { id: tmp })
