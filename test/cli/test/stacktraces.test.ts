@@ -71,6 +71,32 @@ describe('stacktrace filtering', async () => {
   })
 })
 
+describe('stacktrace in dependency package', () => {
+  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const testFile = resolve(root, './error-in-package.test.js')
+
+  it('external', async () => {
+    const { stderr } = await runVitest({
+      root,
+    }, [testFile])
+    expect(stderr).toMatch(/innerTestStack(.*)\/@vitest\/test-dep-error\/index\.js:10:9/)
+    expect(stderr).toMatch(/testStack(.*)\/@vitest\/test-dep-error\/index\.js:4:3/)
+  })
+
+  it.only('inline', async () => {
+    const { stderr } = await runVitest({
+      root,
+      server: {
+        deps: {
+          inline: ['@vitest/test-dep-error'],
+        },
+      },
+    }, [testFile])
+    expect(stderr).toMatch(/innerTestStack(.*)\/@vitest\/test-dep-error\/index\.js:10:9/)
+    expect(stderr).toMatch(/testStack(.*)\/@vitest\/test-dep-error\/index\.js:4:3/)
+  })
+})
+
 it.runIf(major < 22)('stacktrace in vmThreads', async () => {
   const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')

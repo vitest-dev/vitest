@@ -1099,6 +1099,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:^
         version: link:../../packages/runner
+      '@vitest/test-dep-error':
+        specifier: file:./deps/error
+        version: file:test/cli/deps/error
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -3976,6 +3979,9 @@ packages:
 
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     resolution: {directory: test/config/deps/test-dep-conditions, type: directory}
+
+  '@vitest/test-dep-error@file:test/cli/deps/error':
+    resolution: {directory: test/cli/deps/error, type: directory}
 
   '@vitest/test-dep1@file:test/core/deps/dep1':
     resolution: {directory: test/core/deps/dep1, type: directory}
@@ -12227,6 +12233,8 @@ snapshots:
   '@vitest/test-dep-conditions@file:test/config/deps/test-dep-conditions':
     dependencies:
       '@vitest/test-dep-conditions-indirect': file:test/config/deps/test-dep-conditions-indirect
+
+  '@vitest/test-dep-error@file:test/cli/deps/error': {}
 
   '@vitest/test-dep1@file:test/core/deps/dep1': {}
 
