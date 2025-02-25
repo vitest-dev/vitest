@@ -14,6 +14,7 @@ async function getTestRunnerConstructor(
   config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<VitestRunnerConstructor> {
+  console.log('getTestRunnerConstructor')
   if (!config.runner) {
     const { VitestTestRunner, NodeBenchmarkRunner }
       = await executor.executeFile(runnersFile)
@@ -36,6 +37,7 @@ export async function resolveTestRunner(
   config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<VitestRunner> {
+  console.log('resolveTestRunner')
   const TestRunner = await getTestRunnerConstructor(config, executor)
   const testRunner = new TestRunner(config)
 
