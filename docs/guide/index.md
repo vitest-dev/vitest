@@ -234,7 +234,7 @@ Vitest will prompt you to install certain dependencies if they are not already i
 
 ## IDE Integrations
 
-We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
+We also provided an official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 

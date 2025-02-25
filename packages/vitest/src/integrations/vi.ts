@@ -616,17 +616,17 @@ function createVitest(): VitestUtils {
     },
 
     clearAllMocks() {
-      mocks.forEach(spy => spy.mockClear())
+      [...mocks].reverse().forEach(spy => spy.mockClear())
       return utils
     },
 
     resetAllMocks() {
-      mocks.forEach(spy => spy.mockReset())
+      [...mocks].reverse().forEach(spy => spy.mockReset())
       return utils
     },
 
     restoreAllMocks() {
-      mocks.forEach(spy => spy.mockRestore())
+      [...mocks].reverse().forEach(spy => spy.mockRestore())
       return utils
     },
 

@@ -1,7 +1,7 @@
 {
   "name": "vite-node",
   "type": "module",
-  "version": "3.0.5",
+  "version": "3.0.7",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -85,7 +85,7 @@
     "cac": "^6.7.14",
     "debug": "^4.4.0",
     "es-module-lexer": "^1.6.0",
-    "pathe": "^2.0.2",
+    "pathe": "^2.0.3",
     "vite": "^5.0.0 || ^6.0.0"
   },
   "devDependencies": {
