@@ -5,7 +5,7 @@ describe.skipIf(
   // preview cannot control viewport
   server.provider === 'preview'
   // other tests affect the viewport if they run in a different order
-  || server.config.browser.isolate,
+  || server.config.browser.isolate === false,
 )('viewport window has been properly initialized', () => {
   it.skipIf(!server.config.browser.headless)('viewport has proper size', () => {
     const { width, height } = server.config.browser.viewport
