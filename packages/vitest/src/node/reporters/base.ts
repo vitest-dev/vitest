@@ -2,6 +2,7 @@ import type { File, Task, TaskResultPack } from '@vitest/runner'
 import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestCase, TestModule, TestSuite } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
 import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
@@ -63,6 +64,32 @@ export abstract class BaseReporter implements Reporter {
     }
     else {
       this.reportSummary(files, errors)
+    }
+  }
+
+  onTestCaseResult(testCase: TestCase): void {
+    if (testCase.result().state === 'failed') {
+      this.logFailedTask(testCase.task)
+    }
+  }
+
+  onTestSuiteResult(testSuite: TestSuite): void {
+    if (testSuite.state() === 'failed') {
+      this.logFailedTask(testSuite.task)
+    }
+  }
+
+  onTestModuleEnd(testModule: TestModule): void {
+    if (testModule.state() === 'failed') {
+      this.logFailedTask(testModule.task)
+    }
+  }
+
+  private logFailedTask(task: Task) {
+    if (this.ctx.config.silent === 'passed-only') {
+      for (const log of task.logs || []) {
+        this.onUserConsoleLog(log, true)
+      }
     }
   }
 
@@ -275,8 +302,8 @@ export abstract class BaseReporter implements Reporter {
     this.start = performance.now()
   }
 
-  onUserConsoleLog(log: UserConsoleLog): void {
-    if (!this.shouldLog(log)) {
+  onUserConsoleLog(log: UserConsoleLog, force = false): void {
+    if (!force && !this.shouldLog(log)) {
       return
     }
 
