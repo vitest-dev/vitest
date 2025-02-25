@@ -83,7 +83,7 @@ describe('stacktrace in dependency package', () => {
     expect(stderr).toMatch(/testStack(.*)\/@vitest\/test-dep-error\/index\.js:4:3/)
   })
 
-  it.only('inline', async () => {
+  it('inline', async () => {
     const { stderr } = await runVitest({
       root,
       server: {

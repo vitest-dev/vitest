@@ -23,6 +23,7 @@ export default antfu(
       'test/network-imports/public/slash@3.0.0.js',
       'test/coverage-test/src/transpiled.js',
       'test/coverage-test/src/original.ts',
+      'test/cli/deps/error/index.js',
       'examples/**/mockServiceWorker.js',
       'examples/sveltekit/.svelte-kit',
       'packages/browser/**/esm-client-injector.js',

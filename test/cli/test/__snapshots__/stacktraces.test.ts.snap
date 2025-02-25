@@ -117,17 +117,6 @@ exports[`stacktraces should respect sourcemaps > error-in-deps.test.js > error-i
 "
 `;
 
-exports[`stacktraces should respect sourcemaps > error-in-package.test.js > error-in-package.test.js 1`] = `
-" ❯ error-in-package.test.js:5:12
-      3| 
-      4| test('error in package', () => {
-      5|   testStack()
-       |            ^
-      6| })
-      7| 
-"
-`;
-
 exports[`stacktraces should respect sourcemaps > error-with-stack.test.js > error-with-stack.test.js 1`] = `
 " ❯ d error-with-stack.test.js:20:9
      18| 
