@@ -22,7 +22,28 @@ Error: Something truly horrible has happened!
 "
 `;
 
-exports[`stacktrace in inlined dependency 1`] = `
+exports[`stacktrace in dependency package > external 1`] = `
+"
+⎯⎯ Failed Tests 1 ⎯⎯
+
+ FAIL  error-in-package.test.js > error in package
+Error: __TEST_STACK__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
+ ❯ error-in-package.test.js:5:12
+      3| 
+      4| test('error in package', () => {
+      5|   testStack()
+       |            ^
+      6| })
+      7| 
+
+⎯⎯[1/1]⎯
+
+"
+`;
+
+exports[`stacktrace in dependency package > inline 1`] = `
 "
 ⎯⎯ Failed Tests 1 ⎯⎯
 
@@ -135,17 +156,6 @@ exports[`stacktraces should respect sourcemaps > error-in-deps.test.js 1`] = `
 
 ⎯⎯[1/1]⎯
 
-"
-`;
-
-exports[`stacktraces should respect sourcemaps > error-in-package.test.js 1`] = `
-" ❯ error-in-package.test.js:5:12
-      3| 
-      4| test('error in package', () => {
-      5|   testStack()
-       |            ^
-      6| })
-      7| 
 "
 `;
 

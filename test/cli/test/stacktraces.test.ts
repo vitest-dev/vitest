@@ -68,19 +68,28 @@ describe('stacktrace filtering', async () => {
   })
 })
 
-// external scenario is included in glob tests above
-it('stacktrace in inlined dependency', async () => {
+describe('stacktrace in dependency package', () => {
   const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-package.test.js')
-  const { stderr } = await runVitest({
-    root,
-    server: {
-      deps: {
-        inline: ['@vitest/test-dep-error'],
+
+  it('external', async () => {
+    const { stderr } = await runVitest({
+      root,
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+
+  it('inline', async () => {
+    const { stderr } = await runVitest({
+      root,
+      server: {
+        deps: {
+          inline: ['@vitest/test-dep-error'],
+        },
       },
-    },
-  }, [testFile])
-  expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
 })
 
 it.runIf(major < 22)('stacktrace in vmThreads', async () => {
