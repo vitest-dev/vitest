@@ -1,7 +1,11 @@
 import { createNode } from '#src/createNode'
 import { page } from '@vitest/browser/context'
-import { beforeEach, describe, expect, test } from 'vitest'
+import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import '../src/button.css'
+
+afterAll(() => {
+  delete document.body.style.background
+})
 
 describe('dom related activity', () => {
   beforeEach(() => {
