@@ -1,11 +1,14 @@
 import { createNode } from '#src/createNode'
 import { page } from '@vitest/browser/context'
-import { beforeEach, describe, expect, test } from 'vitest'
+import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import '../src/button.css'
+
+afterAll(() => {
+  document.body.removeAttribute('style')
+})
 
 describe('dom related activity', () => {
   beforeEach(() => {
-    document.body.style.background = '#f3f3f3'
     document.body.replaceChildren()
   })
 
@@ -101,7 +104,6 @@ describe('dom related activity', () => {
 })
 
 function createWrapper() {
-  document.body.style.background = '#f3f3f3'
   const wrapper = document.createElement('div')
   wrapper.className = 'wrapper'
   document.body.appendChild(wrapper)
