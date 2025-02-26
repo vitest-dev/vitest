@@ -2,10 +2,12 @@ import type {
   LocatorByRoleOptions,
   LocatorOptions,
   LocatorScreenshotOptions,
+  UserEventClearOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
   UserEventFillOptions,
   UserEventHoverOptions,
+  UserEventUploadOptions,
 } from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
 import {
@@ -57,8 +59,8 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
-  public clear(): Promise<void> {
-    return this.triggerCommand<void>('__vitest_clear', this.selector)
+  public clear(options?: UserEventClearOptions): Promise<void> {
+    return this.triggerCommand<void>('__vitest_clear', this.selector, options)
   }
 
   public hover(options: UserEventHoverOptions): Promise<void> {
@@ -73,7 +75,7 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
   }
 
-  public async upload(files: string | string[] | File | File[]): Promise<void> {
+  public async upload(files: string | string[] | File | File[], options: UserEventUploadOptions): Promise<void> {
     const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
       if (typeof file === 'string') {
         return file
@@ -91,7 +93,7 @@ export abstract class Locator {
         base64: bas64String,
       }
     })
-    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise))
+    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)
   }
 
   public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {

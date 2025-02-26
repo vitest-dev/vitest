@@ -11,7 +11,8 @@ import type {
   UserEventTypeOptions,
 } from '../../../context'
 import type { BrowserRunnerState } from '../utils'
-import { convertElementToCssSelector, ensureAwaited, getBrowserState, getWorkerState } from '../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
+import { convertElementToCssSelector, processTimeoutOptions } from './utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -57,38 +58,50 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
       })
     },
     click(element: Element | Locator, options: UserEventClickOptions = {}) {
-      return convertToLocator(element).click(processClickOptions(options))
+      return convertToLocator(element).click(processTimeoutOptions(
+        processClickOptions(options),
+      ))
     },
     dblClick(element: Element | Locator, options: UserEventClickOptions = {}) {
-      return convertToLocator(element).dblClick(processClickOptions(options))
+      return convertToLocator(element).dblClick(processTimeoutOptions(
+        processClickOptions(options),
+      ))
     },
     tripleClick(element: Element | Locator, options: UserEventClickOptions = {}) {
-      return convertToLocator(element).tripleClick(processClickOptions(options))
+      return convertToLocator(element).tripleClick(processTimeoutOptions(
+        processClickOptions(options),
+      ))
     },
-    selectOptions(element, value) {
-      return convertToLocator(element).selectOptions(value)
+    selectOptions(element, value, options) {
+      return convertToLocator(element).selectOptions(value, processTimeoutOptions(
+        options,
+      ))
     },
-    clear(element: Element | Locator) {
-      return convertToLocator(element).clear()
+    clear(element, options) {
+      return convertToLocator(element).clear(options)
     },
-    hover(element: Element | Locator, options: UserEventHoverOptions = {}) {
-      return convertToLocator(element).hover(processHoverOptions(options))
+    hover(element, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).hover(processTimeoutOptions(
+        processHoverOptions(options),
+      ))
     },
-    unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
-      return convertToLocator(element).unhover(options)
+    unhover(element, options: UserEventHoverOptions = {}) {
+      return convertToLocator(element).unhover(processTimeoutOptions(options))
     },
-    upload(element: Element | Locator, files: string | string[] | File | File[]) {
-      return convertToLocator(element).upload(files)
+    upload(element, files: string | string[] | File | File[], options) {
+      return convertToLocator(element).upload(files, processTimeoutOptions(options))
     },
 
     // non userEvent events, but still useful
-    fill(element: Element | Locator, text: string, options) {
-      return convertToLocator(element).fill(text, options)
+    fill(element, text, options) {
+      return convertToLocator(element).fill(text, processTimeoutOptions(options))
     },
-    dragAndDrop(source: Element | Locator, target: Element | Locator, options = {}) {
+    dragAndDrop(source, target, options = {}) {
       const sourceLocator = convertToLocator(source)
       const targetLocator = convertToLocator(target)
-      return sourceLocator.dropTo(targetLocator, processDragAndDropOptions(options))
+      return sourceLocator.dropTo(targetLocator, processTimeoutOptions(
+        processDragAndDropOptions(options),
+      ))
     },
 
     // testing-library user-event
@@ -290,28 +303,28 @@ export const page: BrowserPage = {
     }))
   },
   getByRole() {
-    throw new Error('Method "getByRole" is not implemented in the current provider.')
+    throw new Error(`Method "getByRole" is not implemented in the "${provider}" provider.`)
   },
   getByLabelText() {
-    throw new Error('Method "getByLabelText" is not implemented in the current provider.')
+    throw new Error(`Method "getByLabelText" is not implemented in the "${provider}" provider.`)
   },
   getByTestId() {
-    throw new Error('Method "getByTestId" is not implemented in the current provider.')
+    throw new Error(`Method "getByTestId" is not implemented in the "${provider}" provider.`)
   },
   getByAltText() {
-    throw new Error('Method "getByAltText" is not implemented in the current provider.')
+    throw new Error(`Method "getByAltText" is not implemented in the "${provider}" provider.`)
   },
   getByPlaceholder() {
-    throw new Error('Method "getByPlaceholder" is not implemented in the current provider.')
+    throw new Error(`Method "getByPlaceholder" is not implemented in the "${provider}" provider.`)
   },
   getByText() {
-    throw new Error('Method "getByText" is not implemented in the current provider.')
+    throw new Error(`Method "getByText" is not implemented in the "${provider}" provider.`)
   },
   getByTitle() {
-    throw new Error('Method "getByTitle" is not implemented in the current provider.')
+    throw new Error(`Method "getByTitle" is not implemented in the "${provider}" provider.`)
   },
   elementLocator() {
-    throw new Error('Method "elementLocator" is not implemented in the current provider.')
+    throw new Error(`Method "elementLocator" is not implemented in the "${provider}" provider.`)
   },
   extend(methods) {
     for (const key in methods) {

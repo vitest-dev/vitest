@@ -247,6 +247,10 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
    * Test context that will be passed to the test function.
    */
   context: TestContext & ExtraContext
+  /**
+   * The test timeout in milliseconds.
+   */
+  timeout: number
 }
 
 /**

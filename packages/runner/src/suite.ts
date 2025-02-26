@@ -300,6 +300,7 @@ function createSuiteCollector(
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
+    const timeout = options?.timeout ?? runner.config.testTimeout
     const task: Test = {
       id: '',
       name,
@@ -309,6 +310,7 @@ function createSuiteCollector(
       context: undefined!,
       type: 'test',
       file: undefined!,
+      timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
       mode: options.only
@@ -342,7 +344,7 @@ function createSuiteCollector(
         task,
         withTimeout(
           withAwaitAsyncAssertions(withFixtures(handler, context), task),
-          options?.timeout ?? runner.config.testTimeout,
+          timeout,
         ),
       )
     }
