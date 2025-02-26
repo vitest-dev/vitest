@@ -49,7 +49,7 @@ Log from passed test`,
   )
 })
 
-test('{ silent: "silent-passed-tests" } shows all console logs from failed tests only', async () => {
+test('{ silent: "passed-only" } shows all console logs from failed tests only', async () => {
   const { stdout } = await runVitest({
     include: ['./fixtures/console-some-failing.test.ts'],
     silent: 'passed-only',
@@ -72,6 +72,31 @@ Log from failed file`,
 
   expect(stdout).not.toContain('Log from passed')
   expect(stdout.match(/stdout/g)).toHaveLength(4)
+})
+
+test('{ silent: "passed-only" } logs are filtered by custom onConsoleLog', async () => {
+  const { stdout } = await runVitest({
+    include: ['./fixtures/console-some-failing.test.ts'],
+    silent: 'passed-only',
+    onConsoleLog(log) {
+      if (log.includes('suite')) {
+        return true
+      }
+
+      return false
+    },
+    reporters: [new LogReporter()],
+  })
+
+  expect(stdout).toContain(`\
+stdout | fixtures/console-some-failing.test.ts > failed suite #1
+Log from failed suite`,
+  )
+
+  expect(stdout).not.toContain('Log from passed')
+  expect(stdout).not.toContain('Log from failed test')
+  expect(stdout).not.toContain('Log from failed file')
+  expect(stdout.match(/stdout/g)).toHaveLength(1)
 })
 
 class LogReporter extends DefaultReporter {
