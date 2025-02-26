@@ -206,7 +206,7 @@ test('timeout', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/timeout',
   })
-  expect(stderr).toContain('Matcher did not succeed in 500ms')
+  expect(stderr).toContain('Matcher did not succeed in time.')
   if (provider === 'playwright') {
     expect(stderr).toContain('locator.click: Timeout 500ms exceeded.')
     expect(stderr).toContain('locator.click: Timeout 345ms exceeded.')
