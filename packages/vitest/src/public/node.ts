@@ -66,6 +66,7 @@ export type {
   BrowserCommandContext,
   BrowserConfigOptions,
   BrowserInstanceOption,
+  BrowserModuleMocker,
   BrowserOrchestrator,
   BrowserProvider,
   BrowserProviderInitializationOptions,

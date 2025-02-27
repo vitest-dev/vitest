@@ -49,11 +49,18 @@ export class ServerMockResolver {
   }
 
   public invalidate(ids: string[]): void {
+    return
     ids.forEach((id) => {
       const moduleGraph = this.server.moduleGraph
       const module = moduleGraph.getModuleById(id)
       if (module) {
-        moduleGraph.invalidateModule(module, new Set(), Date.now(), true)
+        moduleGraph.invalidateModule(
+          module,
+          // TODO: add test file as modules to not invalidate them
+          new Set(),
+          Date.now(),
+          true,
+        )
       }
     })
   }

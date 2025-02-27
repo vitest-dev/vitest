@@ -7,6 +7,7 @@ import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
+import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -113,6 +114,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
+    const mocker = project.browser?.provider.mocker
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
@@ -249,7 +251,44 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           return mockResolver.resolveMock(rawId, importer, options)
         },
         invalidate(ids) {
+          return
           return mockResolver.invalidate(ids)
+        },
+
+        async registerMock(sessionId, module) {
+          if (!mocker) {
+            throw new Error(`Provider "${project.browser!.provider.name}" does not support module mocking.`)
+          }
+          const serverUrl = module.url
+
+          if (module.type === 'manual') {
+            const manualModule = ManualMockedModule.fromJSON(module, async () => {
+              const { keys } = await rpc.resolveManualMock(serverUrl)
+              return Object.fromEntries(keys.map(key => [key, null]))
+            })
+            await mocker.register(sessionId, manualModule)
+          }
+          else if (module.type === 'redirect') {
+            await mocker.register(sessionId, RedirectedModule.fromJSON(module))
+          }
+          else if (module.type === 'automock') {
+            await mocker.register(sessionId, AutomockedModule.fromJSON(module))
+          }
+          else if (module.type === 'autospy') {
+            await mocker.register(sessionId, AutospiedModule.fromJSON(module))
+          }
+        },
+        clearMocks(sessionId) {
+          if (!mocker) {
+            throw new Error(`Provider "${project.browser!.provider.name}" does not support module mocking.`)
+          }
+          return mocker.clear(sessionId)
+        },
+        unregisterMock(sessionId, id) {
+          if (!mocker) {
+            throw new Error(`Provider "${project.browser!.provider.name}" does not support module mocking.`)
+          }
+          return mocker.delete(sessionId, id)
         },
 
         // CDP

@@ -88,11 +88,11 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
       })
       server.ws.on('vitest:interceptor:delete', (id: string) => {
         registry.delete(id)
-        server.ws.send('vitest:interceptor:register:delete')
+        server.ws.send('vitest:interceptor:delete:result')
       })
       server.ws.on('vitest:interceptor:invalidate', () => {
         registry.clear()
-        server.ws.send('vitest:interceptor:register:invalidate')
+        server.ws.send('vitest:interceptor:invalidate:result')
       })
 
       function getFactoryExports(url: string) {

@@ -1,4 +1,4 @@
-import { MockedModule, MockedModuleSerialized, MockerRegistry } from '@vitest/mocker'
+import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
   BrowserContext,
@@ -9,6 +9,7 @@ import type {
   Page,
 } from 'playwright'
 import type {
+  BrowserModuleMocker,
   BrowserProvider,
   BrowserProviderInitializationOptions,
   TestProject,
@@ -31,8 +32,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   private browserName!: PlaywrightBrowser
   private project!: TestProject
 
-  private mockRegistries = new Map<string, MockerRegistry>()
-
   private options?: {
     launch?: LaunchOptions
     context?: BrowserContextOptions & { actionTimeout?: number }
@@ -42,6 +41,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public pages: Map<string, Page> = new Map()
 
   private browserPromise: Promise<Browser> | null = null
+
+  public mocker: BrowserModuleMocker = this.createMocker()
 
   getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
@@ -106,58 +107,89 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
-  private createMocker() {
+  private createMocker(): BrowserModuleMocker {
     return {
-      onRegister: async (sessionId: string, module: MockedModule): Promise<void> => {
+      register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
-        await page.route(module.url, async (route) => {
-          if (module.type === 'redirect') {
-            return route.fulfill({
-              status: 302,
-              headers: {
-                'Location': module.redirect,
-              },
-            })
-          }
-          if (module.type === 'automock' || module.type === 'autospy') {
-            const url = new URL(route.request().url())
-            url.searchParams.set('mock', module.type)
-            return route.fulfill({
-              status: 302,
-              headers: {
-                'Location': url.href,
-              },
-            })
-          }
-          if (module.type === 'manual') {
-            const exports = Object.keys(await module.resolve())
-            const source = `const module = __vitest_mocker__.getFactoryModule("${module.url}");`
-            const keys = exports
-              .map((name) => {
-                if (name === 'default') {
-                  return `export default module["default"];`
-                }
-                return `export const ${name} = module["${name}"];`
+        const moduleUrl = new URL(module.url, 'http://localhost')
+        await page.route(
+          (url) => {
+            if (url.searchParams.has('_vitest_original')) {
+              return false
+            }
+
+            // different modules, ignore request
+            if (url.pathname !== moduleUrl.pathname) {
+              return false
+            }
+
+            url.searchParams.delete('t')
+            url.searchParams.delete('v')
+            url.searchParams.delete('import')
+
+            // different search params, ignore request
+            if (url.searchParams.size !== moduleUrl.searchParams.size) {
+              return false
+            }
+
+            // check that all search params are the same
+            for (const [param, value] of url.searchParams.entries()) {
+              if (moduleUrl.searchParams.get(param) !== value) {
+                return false
+              }
+            }
+
+            return true
+          },
+          async (route) => {
+            if (module.type === 'redirect') {
+              return route.fulfill({
+                status: 302,
+                headers: {
+                  Location: module.redirect,
+                },
               })
-              .join('\n')
-            const text = `${source}\n${keys}`
-            return route.fulfill({
-              body: text,
-              headers: {
-                'Content-Type': 'application/javascript',
-              },
-            })
-          }
-        })
+            }
+            if (module.type === 'automock' || module.type === 'autospy') {
+              const url = new URL(route.request().url())
+              url.searchParams.set('mock', module.type)
+              return route.fulfill({
+                status: 302,
+                headers: {
+                  Location: url.href,
+                },
+              })
+            }
+            if (module.type === 'manual') {
+              const exports = Object.keys(await module.resolve())
+              const source = `const module = __vitest_mocker__.getFactoryModule("${module.url}");`
+              const keys = exports
+                .map((name) => {
+                  if (name === 'default') {
+                    return `export default module["default"];`
+                  }
+                  return `export const ${name} = module["${name}"];`
+                })
+                .join('\n')
+              const text = `${source}\n${keys}`
+              return route.fulfill({
+                body: text,
+                headers: {
+                  'Content-Type': 'application/javascript',
+                },
+              })
+            }
+          },
+        )
       },
-      onDelete: async (sessionId: string, id: string): Promise<void> => {
+      delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
         page.unroute(id)
       },
-      onClear: async (sessionId: string): Promise<void> => {
+      clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
         await page.unrouteAll()
-      }
+      },
     }
   }
 
@@ -182,14 +214,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     }
     this.contexts.set(sessionId, context)
     return context
-  }
-
-  private getMockerRegistry(sessionId: string): MockerRegistry {
-    const registry = this.mockRegistries.get(sessionId)
-    if (!registry) {
-      throw new TypeError(`Mock registry for session "${sessionId}" not found.`)
-    }
-    return registry
   }
 
   public getPage(sessionId: string): Page {
@@ -243,7 +267,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const context = await this.createContext(sessionId)
     const page = await context.newPage()
     this.pages.set(sessionId, page)
-    this.mockRegistries.set(sessionId, new MockerRegistry())
 
     if (process.env.VITEST_PW_DEBUG) {
       page.on('requestfailed', (request) => {
@@ -257,10 +280,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         )
       })
     }
-
-    page.on('close', () => {
-      this.mockRegistries.delete(sessionId)
-    })
 
     // unhandled page crashes will hang vitest process
     page.on('crash', () => {
