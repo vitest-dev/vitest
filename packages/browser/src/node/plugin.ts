@@ -242,7 +242,6 @@ export default (parentServer: ParentBrowserProject, base = '/'): Plugin[] => {
           'vitest > chai > loupe',
           'vitest > @vitest/utils > loupe',
           '@vitest/browser > @testing-library/user-event',
-          '@vitest/browser > @testing-library/dom',
         ]
 
         const fileRoot = browserTestFiles[0] ? dirname(browserTestFiles[0]) : project.config.root

@@ -1,0 +1,6 @@
+{
+  "name": "@vitest/bundled-lib",
+  "type": "module",
+  "private": true,
+  "main": "./src/index.js"
+}
