@@ -1,4 +1,5 @@
 import type { BrowserRPC } from '../client'
+import { server } from '@vitest/browser/context'
 import { getBrowserState, getWorkerState } from '../utils'
 
 const provider = getBrowserState().provider
@@ -103,7 +104,13 @@ export class CommandsManager {
     this._listeners.push(listener)
   }
 
-  public async triggerCommand<T>(command: string, args: any[]): Promise<T> {
+  public async triggerCommand<T>(
+    command: string,
+    args: any[],
+    // error makes sure the stack trace is correct on webkit,
+    // if we make the error here, it looses the context there
+    clientError: Error = new Error('empty'),
+  ): Promise<T> {
     const state = getWorkerState()
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId } = getBrowserState()
@@ -111,7 +118,15 @@ export class CommandsManager {
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
     }
-    return rpc.triggerCommand<T>(sessionId, command, filepath, args)
+    // const clientError = new Error('empty')
+    return rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
+      // rethrow an error to keep the stack trace in browser
+      // const clientError = new Error(err.message)
+      clientError.message = err.message
+      clientError.name = err.name
+      clientError.stack = clientError.stack?.replace(clientError.message, err.message)
+      throw clientError
+    })
   }
 }
 
@@ -124,6 +139,10 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
     // timeout can only be set for playwright commands
     || provider !== 'playwright'
   ) {
+    return options_
+  }
+  // if there is a default action timeout, use it
+  if (server.config.browser.providerOptions.actionTimeout != null) {
     return options_
   }
   const currentTest = getWorkerState().current
@@ -146,4 +165,17 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
   // give us some time to process the timeout
   options_.timeout = remainingTime - 100
   return options_
+}
+
+export function getIframeScale(): number {
+  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  if (!testerUi) {
+    throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  const scaleAttribute = testerUi.getAttribute('data-scale')
+  const scale = Number(scaleAttribute)
+  if (Number.isNaN(scale)) {
+    throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+  return scale
 }

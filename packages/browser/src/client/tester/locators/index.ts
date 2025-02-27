@@ -7,6 +7,7 @@ import type {
   UserEventDragAndDropOptions,
   UserEventFillOptions,
   UserEventHoverOptions,
+  UserEventSelectOptions,
   UserEventUploadOptions,
 } from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
@@ -63,11 +64,11 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_clear', this.selector, options)
   }
 
-  public hover(options: UserEventHoverOptions): Promise<void> {
+  public hover(options?: UserEventHoverOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_hover', this.selector, options)
   }
 
-  public unhover(options: UserEventHoverOptions): Promise<void> {
+  public unhover(options?: UserEventHoverOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_hover', 'html > body', options)
   }
 
@@ -75,7 +76,7 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
   }
 
-  public async upload(files: string | string[] | File | File[], options: UserEventUploadOptions): Promise<void> {
+  public async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
     const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
       if (typeof file === 'string') {
         return file
@@ -105,7 +106,10 @@ export abstract class Locator {
     )
   }
 
-  public selectOptions(value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[]): Promise<void> {
+  public selectOptions(
+    value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
+    options?: UserEventSelectOptions,
+  ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
         const selector = 'element' in v ? v.selector : selectorEngine.generateSelectorSimple(v)
@@ -113,7 +117,7 @@ export abstract class Locator {
       }
       return v
     })
-    return this.triggerCommand('__vitest_selectOptions', this.selector, values)
+    return this.triggerCommand('__vitest_selectOptions', this.selector, values, options)
   }
 
   public screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
@@ -206,9 +210,10 @@ export abstract class Locator {
 
   protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
     const commands = getBrowserState().commands
-    return ensureAwaited(() => commands.triggerCommand<T>(
+    return ensureAwaited(error => commands.triggerCommand<T>(
       command,
       args,
+      error,
     ))
   }
 }

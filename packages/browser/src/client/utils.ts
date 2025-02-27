@@ -26,7 +26,7 @@ export function getConfig(): SerializedConfig {
   return getBrowserState().config
 }
 
-export function ensureAwaited<T>(promise: () => Promise<T>): Promise<T> {
+export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promise<T> {
   const test = getWorkerState().current
   if (!test || test.type !== 'test') {
     return promise()
@@ -48,13 +48,13 @@ export function ensureAwaited<T>(promise: () => Promise<T>): Promise<T> {
   return {
     then(onFulfilled, onRejected) {
       awaited = true
-      return (promiseResult ||= promise()).then(onFulfilled, onRejected)
+      return (promiseResult ||= promise(sourceError)).then(onFulfilled, onRejected)
     },
     catch(onRejected) {
-      return (promiseResult ||= promise()).catch(onRejected)
+      return (promiseResult ||= promise(sourceError)).catch(onRejected)
     },
     finally(onFinally) {
-      return (promiseResult ||= promise()).finally(onFinally)
+      return (promiseResult ||= promise(sourceError)).finally(onFinally)
     },
     [Symbol.toStringTag]: 'Promise',
   } satisfies Promise<T>
