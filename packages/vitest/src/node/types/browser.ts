@@ -24,8 +24,6 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getSupportedBrowsers: () => readonly string[]
-  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (sessionId: string) => Record<string, unknown>
   openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>

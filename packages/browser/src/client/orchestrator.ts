@@ -49,7 +49,7 @@ class IframeOrchestrator {
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
 
-    if (config.isolate === false) {
+    if (config.browser.isolate === false) {
       debug('create iframe', ID_ALL)
       const iframe = this.createIframe(container, ID_ALL)
 

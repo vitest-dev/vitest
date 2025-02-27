@@ -163,15 +163,19 @@ error with a stack
 
   test(`stack trace points to correct file in every browser`, () => {
     // depending on the browser it references either `.toBe()` or `expect()`
-    expect(stderr).toMatch(/test\/failing.test.ts:10:(12|17)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:11:(12|17)/)
 
     // column is 18 in safari, 8 in others
     expect(stderr).toMatch(/throwError src\/error.ts:8:(18|8)/)
 
     expect(stderr).toContain('The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.')
-    expect(stderr).toMatch(/test\/failing.test.ts:18:(27|36)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|33)/)
-    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|39)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:19:(27|36)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:20:(27|33)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:21:(27|39)/)
+
+    expect(stderr).toMatch(/bundled-lib\/src\/b.js:2:(8|18)/)
+    expect(stderr).toMatch(/bundled-lib\/src\/index.js:5:(15|17)/)
+    expect(stderr).toMatch(/test\/failing.test.ts:25:(2|8)/)
   })
 
   test('popup apis should log a warning', () => {
