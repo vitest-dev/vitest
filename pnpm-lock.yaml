@@ -595,9 +595,6 @@ importers:
       '@vitest/spy':
         specifier: workspace:*
         version: link:../spy
-      '@vitest/utils':
-        specifier: workspace:*
-        version: link:../utils
       estree-walker:
         specifier: ^3.0.3
         version: 3.0.3
@@ -608,6 +605,9 @@ importers:
       '@types/estree':
         specifier: ^1.0.6
         version: 1.0.6
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       acorn-walk:
         specifier: ^8.3.4
         version: 8.3.4
@@ -651,9 +651,6 @@ importers:
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
-      '@vitest/utils':
-        specifier: workspace:*
-        version: link:../utils
       magic-string:
         specifier: ^0.30.17
         version: 0.30.17
@@ -664,6 +661,9 @@ importers:
       '@types/natural-compare':
         specifier: ^1.4.3
         version: 1.4.3
+      '@vitest/utils':
+        specifier: workspace:*
+        version: link:../utils
       natural-compare:
         specifier: ^1.4.0
         version: 1.4.0
