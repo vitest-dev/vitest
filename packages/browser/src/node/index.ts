@@ -57,6 +57,7 @@ export async function createBrowserServer(
       },
     },
     mode: project.config.mode,
+    configLoader: project.config.configLoader,
     configFile: configPath,
     // watch is handled by Vitest
     server: {
