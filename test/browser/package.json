@@ -27,6 +27,7 @@
     "@types/react": "^18.2.79",
     "@vitejs/plugin-basic-ssl": "^1.0.2",
     "@vitest/browser": "workspace:*",
+    "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/injected-lib": "link:./injected-lib",
     "react": "^18.3.1",

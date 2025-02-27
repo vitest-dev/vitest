@@ -1,4 +1,5 @@
 import { page } from '@vitest/browser/context'
+import { index } from '@vitest/bundled-lib'
 import { describe, expect, it } from 'vitest'
 import { throwError } from '../src/error'
 
@@ -28,4 +29,8 @@ describe('timeouts are failing correctly', () => {
   it('expect.element on non-existing element fails', async () => {
     await expect.element(page.getByRole('code')).toBeVisible()
   }, 1000)
+})
+
+it('correctly prints error from a bundled file', () => {
+  index()
 })
