@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { processError } from '@vitest/utils/error'
-import { normalize, relative } from 'pathe'
+import { normalize } from 'pathe'
 import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
 import {
   isInternalRequest,
@@ -59,7 +59,7 @@ function listenForErrors(state: () => WorkerGlobalState) {
     const worker = state()
 
     // if error happens during a test
-    if (worker.current) {
+    if (worker.current?.type === 'test') {
       const listeners = process.listeners(event as 'uncaughtException')
       // if there is another listener, assume that it's handled by user code
       // one is Vitest's own listener
@@ -70,9 +70,9 @@ function listenForErrors(state: () => WorkerGlobalState) {
 
     const error = processError(err)
     if (!isPrimitive(error)) {
-      error.VITEST_TEST_NAME = worker.current?.name
+      error.VITEST_TEST_NAME = worker.current?.type === 'test' ? worker.current.name : undefined
       if (worker.filepath) {
-        error.VITEST_TEST_PATH = relative(state().config.root, worker.filepath)
+        error.VITEST_TEST_PATH = worker.filepath
       }
       error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
