@@ -43,12 +43,12 @@
   },
   "dependencies": {
     "@vitest/pretty-format": "workspace:*",
-    "@vitest/utils": "workspace:*",
     "magic-string": "^0.30.17",
     "pathe": "^2.0.3"
   },
   "devDependencies": {
     "@types/natural-compare": "^1.4.3",
+    "@vitest/utils": "workspace:*",
     "natural-compare": "^1.4.0"
   }
 }
