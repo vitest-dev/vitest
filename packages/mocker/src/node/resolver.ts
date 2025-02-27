@@ -49,7 +49,6 @@ export class ServerMockResolver {
   }
 
   public invalidate(ids: string[]): void {
-    return
     ids.forEach((id) => {
       const moduleGraph = this.server.moduleGraph
       const module = moduleGraph.getModuleById(id)

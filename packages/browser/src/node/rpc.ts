@@ -251,7 +251,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           return mockResolver.resolveMock(rawId, importer, options)
         },
         invalidate(ids) {
-          return
           return mockResolver.invalidate(ids)
         },
 
