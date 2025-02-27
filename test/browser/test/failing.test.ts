@@ -1,5 +1,5 @@
 import { page } from '@vitest/browser/context'
-import { expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { throwError } from '../src/error'
 
 document.body.innerHTML = `
@@ -18,4 +18,14 @@ it('several locator methods are not awaited', () => {
   page.getByRole('button').dblClick()
   page.getByRole('button').click()
   page.getByRole('button').tripleClick()
+})
+
+describe('timeouts are failing correctly', () => {
+  it('click on non-existing element fails', async () => {
+    await page.getByRole('code').click()
+  }, 1000)
+
+  it('expect.element on non-existing element fails', async () => {
+    await expect.element(page.getByRole('code')).toBeVisible()
+  }, 1000)
 })

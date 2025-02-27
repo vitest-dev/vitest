@@ -10,6 +10,7 @@
     "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari pnpm run test:unit",
     "test-fixtures": "vitest",
     "test-mocking": "vitest --root ./fixtures/mocking",
+    "test-timeout": "vitest --root ./fixtures/timeout",
     "test-mocking-watch": "vitest --root ./fixtures/mocking-watch",
     "test-locators": "vitest --root ./fixtures/locators",
     "test-different-configs": "vitest --root ./fixtures/multiple-different-configs",

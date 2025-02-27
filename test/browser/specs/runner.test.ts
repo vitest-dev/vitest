@@ -172,6 +172,15 @@ error with a stack
     expect(stderr).toMatch(/test\/failing.test.ts:18:(27|36)/)
     expect(stderr).toMatch(/test\/failing.test.ts:19:(27|33)/)
     expect(stderr).toMatch(/test\/failing.test.ts:20:(27|39)/)
+
+    // page.getByRole('code').click()
+    expect(stderr).toContain('locator.click: Timeout')
+    // playwright error is proxied from the server to the client and back correctly
+    expect(stderr).toContain('waiting for locator(\'[data-vitest="true"]\').contentFrame().getByRole(\'code\')')
+    expect(stderr).toMatch(/test\/failing.test.ts:25:(33|39)/)
+    // await expect.element().toBeVisible()
+    expect(stderr).toContain('Cannot find element with locator: getByRole(\'code\')')
+    expect(stderr).toMatch(/test\/failing.test.ts:29:(49|61)/)
   })
 
   test('popup apis should log a warning', () => {
