@@ -9,8 +9,8 @@ import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-form
 import type { SnapshotData, SnapshotStateOptions } from '../types'
 import type { SnapshotEnvironment } from '../types/environment'
 import { format as prettyFormat } from '@vitest/pretty-format'
-import naturalCompare from 'natural-compare'
 import { isObject } from '@vitest/utils'
+import naturalCompare from 'natural-compare'
 import { getSerializers } from './plugins'
 
 // TODO: rewrite and clean up
