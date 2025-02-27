@@ -22,6 +22,7 @@ export interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
   preserveAnsi?: boolean
+  tty?: boolean
 }
 
 export async function runVitest(
@@ -47,6 +48,11 @@ export async function runVitest(
       callback()
     },
   })
+
+  if (runnerOptions?.tty) {
+    (stdout as typeof process.stdout).isTTY = true
+  }
+
   const stderr = new Writable({
     write(chunk, __, callback) {
       if (runnerOptions.std === 'inherit') {
@@ -179,6 +185,10 @@ export async function runCli(command: string, _options?: CliOptions | string, ..
   })
 
   if ((options as CliOptions)?.earlyReturn || args.includes('--inspect') || args.includes('--inspect-brk')) {
+    return output()
+  }
+
+  if (args[0] === 'init') {
     return output()
   }
 

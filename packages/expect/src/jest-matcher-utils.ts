@@ -1,3 +1,4 @@
+import type { Formatter } from 'tinyrainbow'
 import type { MatcherHintOptions, Tester } from './types'
 import { getType, stringify } from '@vitest/utils'
 import { diff, printDiffOrStringify } from '@vitest/utils/diff'
@@ -18,7 +19,7 @@ function matcherHint(
   received = 'received',
   expected = 'expected',
   options: MatcherHintOptions = {},
-) {
+): string {
   const {
     comment = '',
     isDirectExpectCall = false, // seems redundant with received === ''
@@ -95,7 +96,18 @@ function printExpected(value: unknown): string {
   return EXPECTED_COLOR(replaceTrailingSpaces(stringify(value)))
 }
 
-export function getMatcherUtils() {
+export function getMatcherUtils(): {
+  EXPECTED_COLOR: Formatter
+  RECEIVED_COLOR: Formatter
+  INVERTED_COLOR: Formatter
+  BOLD_WEIGHT: Formatter
+  DIM_COLOR: Formatter
+  diff: typeof diff
+  matcherHint: typeof matcherHint
+  printReceived: typeof printReceived
+  printExpected: typeof printExpected
+  printDiffOrStringify: typeof printDiffOrStringify
+} {
   return {
     EXPECTED_COLOR,
     RECEIVED_COLOR,

@@ -6,13 +6,13 @@ import { relative } from 'pathe'
 type FileStatsCache = Pick<Stats, 'size'>
 
 export class FilesStatsCache {
-  public cache = new Map<string, FileStatsCache>()
+  public cache: Map<string, FileStatsCache> = new Map()
 
   public getStats(key: string): FileStatsCache | undefined {
     return this.cache.get(key)
   }
 
-  public async populateStats(root: string, specs: TestSpecification[]) {
+  public async populateStats(root: string, specs: TestSpecification[]): Promise<void> {
     const promises = specs.map((spec) => {
       const key = `${spec[0].name}:${relative(root, spec.moduleId)}`
       return this.updateStats(spec.moduleId, key)
@@ -20,7 +20,7 @@ export class FilesStatsCache {
     await Promise.all(promises)
   }
 
-  public async updateStats(fsPath: string, key: string) {
+  public async updateStats(fsPath: string, key: string): Promise<void> {
     if (!fs.existsSync(fsPath)) {
       return
     }
@@ -28,7 +28,7 @@ export class FilesStatsCache {
     this.cache.set(key, { size: stats.size })
   }
 
-  public removeStats(fsPath: string) {
+  public removeStats(fsPath: string): void {
     this.cache.forEach((_, key) => {
       if (key.endsWith(fsPath)) {
         this.cache.delete(key)

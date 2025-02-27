@@ -1,7 +1,7 @@
-import type { InlineConfig } from 'vite'
+import type { InlineConfig, ViteDevServer } from 'vite'
 import { createServer } from 'vite'
 
-export async function createViteServer(inlineConfig: InlineConfig) {
+export async function createViteServer(inlineConfig: InlineConfig): Promise<ViteDevServer> {
   // Vite prints an error (https://github.com/vitejs/vite/issues/14328)
   // But Vitest works correctly either way
   const error = console.error

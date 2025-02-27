@@ -32,7 +32,7 @@ function getTaskIdByStack(root: string) {
   return UNKNOWN_TEST_ID
 }
 
-export function createCustomConsole(defaultState?: WorkerGlobalState) {
+export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stdoutBuffer = new Map<string, any[]>()
   const stderrBuffer = new Map<string, any[]>()
   const timers = new Map<

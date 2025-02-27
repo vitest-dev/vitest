@@ -22,7 +22,7 @@ const keys = [
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
 
-export function printShortcutsHelp() {
+export function printShortcutsHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
@@ -40,7 +40,7 @@ ${keys
 
 export function registerConsoleShortcuts(
   ctx: Vitest,
-  stdin: NodeJS.ReadStream = process.stdin,
+  stdin: NodeJS.ReadStream | undefined = process.stdin,
   stdout: NodeJS.WriteStream | Writable,
 ) {
   let latestFilename = ''
@@ -241,7 +241,7 @@ export function registerConsoleShortcuts(
 
   on()
 
-  return function cleanup() {
+  return function cleanup(): void {
     off()
   }
 }

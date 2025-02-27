@@ -409,7 +409,7 @@ This will clear mock history and reset each mock's implementation to its origina
 ### vi.restoreAllMocks
 
 Calls [`.mockRestore()`](/api/mock#mockrestore) on all spies.
-This will clear mock history, restore all original mock implementations, , and restore original descriptors of spied-on objects.
+This will clear mock history, restore all original mock implementations, and restore original descriptors of spied-on objects.
 
 ### vi.spyOn
 
@@ -690,7 +690,7 @@ Removes all timers that are scheduled to run. These timers will never run in the
 
 - **Type**: `() => Date | null`
 
-Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
+Returns mocked current date. If date is not mocked the method will return `null`.
 
 ### vi.getRealSystemTime
 
@@ -818,8 +818,8 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ::: tip
-`vi.useFakeTimers()` does not automatically mock `process.nextTick`.
-But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick'] })`.
+`vi.useFakeTimers()` does not automatically mock `process.nextTick` and `queueMicrotask`.
+But you can enable it by specifying the option in `toFake` argument: `vi.useFakeTimers({ toFake: ['nextTick', 'queueMicrotask'] })`.
 :::
 
 ### vi.isFakeTimers {#vi-isfaketimers}
@@ -843,6 +843,8 @@ A set of useful helper functions that Vitest provides.
 - **Type:** `<T>(callback: WaitForCallback<T>, options?: number | WaitForOptions) => Promise<T>`
 
 Wait for the callback to execute successfully. If the callback throws an error or returns a rejected promise it will continue to wait until it succeeds or times out.
+
+If options is set to a number, the effect is equivalent to setting `{ timeout: options }`.
 
 This is very useful when you need to wait for some asynchronous action to complete, for example, when you start a server and need to wait for it to start.
 

@@ -9,7 +9,7 @@ export class HangingProcessReporter implements Reporter {
     this.whyRunning = _require('why-is-node-running')
   }
 
-  onProcessTimeout() {
+  onProcessTimeout(): void {
     this.whyRunning?.()
   }
 }

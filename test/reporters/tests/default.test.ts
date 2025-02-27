@@ -1,3 +1,4 @@
+import type { TestSpecification } from 'vitest/node'
 import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -7,11 +8,56 @@ describe('default reporter', async () => {
       include: ['b1.test.ts', 'b2.test.ts'],
       root: 'fixtures/default',
       reporters: 'none',
+      fileParallelism: false,
+      sequence: {
+        sequencer: class StableTestFileOrderSorter {
+          sort(files: TestSpecification[]) {
+            return files.sort((a, b) => a.moduleId.localeCompare(b.moduleId))
+          }
+
+          shard(files: TestSpecification[]) {
+            return files
+          }
+        },
+      },
     })
 
-    expect(stdout).contain('✓ b2 passed > b2 test')
-    expect(stdout).not.contain('✓ nested b1 test')
-    expect(stdout).contain('× b1 failed > b failed test')
+    const rows = stdout.replace(/\d+ms/g, '[...]ms').split('\n')
+    rows.splice(0, rows.findIndex(row => row.includes('b1.test.ts')))
+    rows.splice(rows.findIndex(row => row.includes('Test Files')))
+
+    expect(rows.join('\n').trim()).toMatchInlineSnapshot(`
+      "❯ b1.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b1 passed > b1 test
+         ✓ b1 passed > b2 test
+         ✓ b1 passed > b3 test
+         ✓ b1 passed > nested b > nested b1 test
+         ✓ b1 passed > nested b > nested b2 test
+         ✓ b1 passed > nested b > nested b3 test
+         ✓ b1 failed > b1 test
+         ✓ b1 failed > b2 test
+         ✓ b1 failed > b3 test
+         × b1 failed > b failed test [...]ms
+           → expected 1 to be 2 // Object.is equality
+         ✓ b1 failed > nested b > nested b1 test
+         ✓ b1 failed > nested b > nested b2 test
+         ✓ b1 failed > nested b > nested b3 test
+       ❯ b2.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b2 passed > b1 test
+         ✓ b2 passed > b2 test
+         ✓ b2 passed > b3 test
+         ✓ b2 passed > nested b > nested b1 test
+         ✓ b2 passed > nested b > nested b2 test
+         ✓ b2 passed > nested b > nested b3 test
+         ✓ b2 failed > b1 test
+         ✓ b2 failed > b2 test
+         ✓ b2 failed > b3 test
+         × b2 failed > b failed test [...]ms
+           → expected 1 to be 2 // Object.is equality
+         ✓ b2 failed > nested b > nested b1 test
+         ✓ b2 failed > nested b > nested b2 test
+         ✓ b2 failed > nested b > nested b3 test"
+    `)
   })
 
   test('show full test suite when only one file', async () => {

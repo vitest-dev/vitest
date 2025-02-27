@@ -22,8 +22,9 @@ export function withInlineSourcemap(
   options: {
     root: string // project root path of this resource
     filepath: string
+    noFirstLineMapping?: boolean
   },
-) {
+): TransformResult {
   const map = result.map
   let code = result.code
 
@@ -63,7 +64,9 @@ export function withInlineSourcemap(
 
   // If the first line is not present on source maps, add simple 1:1 mapping ([0,0,0,0], [1,0,0,0])
   // so that debuggers can be set to break on first line
-  if (map.mappings.startsWith(';')) {
+  // Since Vite 6, import statements at the top of the file are preserved correctly,
+  // so we don't need to add this mapping anymore.
+  if (!options.noFirstLineMapping && map.mappings.startsWith(';')) {
     map.mappings = `AAAA,CAAA${map.mappings}`
   }
 
@@ -85,7 +88,7 @@ export function extractSourceMap(code: string): EncodedSourceMap | null {
 
 export function installSourcemapsSupport(
   options: InstallSourceMapSupportOptions,
-) {
+): void {
   install({
     retrieveSourceMap(source) {
       const map = options.getSourceMap(source)

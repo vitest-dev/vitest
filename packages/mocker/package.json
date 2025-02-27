@@ -1,7 +1,7 @@
 {
   "name": "@vitest/mocker",
   "type": "module",
-  "version": "3.0.4",
+  "version": "3.0.7",
   "description": "Vitest module mocker implementation",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -75,8 +75,8 @@
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "acorn-walk": "^8.3.4",
-    "msw": "^2.7.0",
-    "pathe": "^2.0.2",
+    "msw": "^2.7.3",
+    "pathe": "^2.0.3",
     "vite": "^5.4.0"
   }
 }

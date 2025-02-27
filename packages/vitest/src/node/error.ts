@@ -39,7 +39,7 @@ export function capturePrintError(
   error: unknown,
   ctx: Vitest,
   options: ErrorOptions,
-) {
+): { nearest: ParsedStack | undefined; output: string } {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
@@ -64,7 +64,7 @@ export function printError(
   ctx: Vitest,
   logger: ErrorLogger,
   options: ErrorOptions,
-) {
+): PrintErrorResult | undefined {
   const project = options.project
     ?? ctx.coreWorkspaceProject
     ?? ctx.projects[0]

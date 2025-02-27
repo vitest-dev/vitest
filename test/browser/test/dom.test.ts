@@ -1,11 +1,14 @@
 import { createNode } from '#src/createNode'
 import { page } from '@vitest/browser/context'
-import { beforeEach, describe, expect, test } from 'vitest'
+import { afterAll, beforeEach, describe, expect, test } from 'vitest'
 import '../src/button.css'
+
+afterAll(() => {
+  document.body.removeAttribute('style')
+})
 
 describe('dom related activity', () => {
   beforeEach(() => {
-    document.body.style.background = '#f3f3f3'
     document.body.replaceChildren()
   })
 
@@ -31,6 +34,20 @@ describe('dom related activity', () => {
     expect(screenshotPath).toMatch(
       /__screenshots__\/dom.test.ts\/dom-related-activity-renders-div-1.png/,
     )
+
+    // test typing
+    if (0) {
+      await expect.element(div).toHaveClass('x', { exact: true })
+      await expect.element(div).toHaveClass('x', 'y')
+      await expect.element(div).toHaveClass('x', /y/)
+      await expect.element(div).toHaveClass(/x/, 'y')
+      await expect.element(div).toHaveClass('x', /y/, 'z')
+      await expect.element(div).toHaveClass(/x/, 'y', /z/)
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', { exact: 1234 })
+      // @ts-expect-error error
+      await expect.element(div).toHaveClass('x', 1234)
+    }
   })
 
   test('resolves base64 screenshot', async () => {
@@ -87,7 +104,6 @@ describe('dom related activity', () => {
 })
 
 function createWrapper() {
-  document.body.style.background = '#f3f3f3'
   const wrapper = document.createElement('div')
   wrapper.className = 'wrapper'
   document.body.appendChild(wrapper)

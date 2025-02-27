@@ -1,4 +1,5 @@
 import { page } from '@vitest/browser/context'
+import { index } from '@vitest/bundled-lib'
 import { expect, it } from 'vitest'
 import { throwError } from '../src/error'
 
@@ -18,4 +19,8 @@ it('several locator methods are not awaited', () => {
   page.getByRole('button').dblClick()
   page.getByRole('button').click()
   page.getByRole('button').tripleClick()
+})
+
+it('correctly prints error from a bundled file', () => {
+  index()
 })

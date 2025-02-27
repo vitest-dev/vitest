@@ -26,15 +26,14 @@
     "@types/react": "^18.2.79",
     "@vitejs/plugin-basic-ssl": "^1.0.2",
     "@vitest/browser": "workspace:*",
+    "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/injected-lib": "link:./injected-lib",
-    "playwright": "^1.49.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "url": "^0.11.3",
     "vitest": "workspace:*",
     "vitest-browser-react": "^0.0.1",
-    "webdriverio": "^8.32.2",
     "ws": "^8.18.0"
   }
 }

@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { File, Task } from '@vitest/runner'
 import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
@@ -53,7 +53,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  protected logTasks(tasks: Task[]) {
+  protected logTasks(tasks: Task[]): void {
     this.logger.log(`1..${tasks.length}`)
 
     for (const [i, task] of tasks.entries()) {
@@ -121,7 +121,7 @@ export class TapReporter implements Reporter {
     }
   }
 
-  onFinished(files = this.ctx.state.getFiles()) {
+  onFinished(files: File[] = this.ctx.state.getFiles()): void {
     this.logger.log('TAP version 13')
 
     this.logTasks(files)

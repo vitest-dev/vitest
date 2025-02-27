@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 const provider = process.env.PROVIDER || 'playwright'
-const name =
+const browser =
   process.env.BROWSER || (provider === 'playwright' ? 'chromium' : 'chrome')
 
 export default defineConfig({
@@ -11,7 +11,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider,
-      name,
+      instances: [{ browser }],
     },
   },
 })

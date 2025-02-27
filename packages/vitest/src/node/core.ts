@@ -56,8 +56,8 @@ export class Vitest {
    * Current Vitest version.
    * @example '2.0.0'
    */
-  public readonly version = version
-  static readonly version = version
+  public readonly version: string = version
+  static readonly version: string = version
   /**
    * The logger instance used to log messages. It's recommended to use this logger instead of `console`.
    * It's possible to override stdout and stderr streams when initiating Vitest.
@@ -76,7 +76,7 @@ export class Vitest {
   /**
    * A path to the built Vitest directory. This is usually a folder in `node_modules`.
    */
-  public readonly distPath = distDir
+  public readonly distPath: string = distDir
   /**
    * A list of projects that are currently running.
    * If projects were filtered with `--project` flag, they won't appear here.
@@ -137,12 +137,12 @@ export class Vitest {
   private _onFilterWatchedSpecification: ((spec: TestSpecification) => boolean)[] = []
 
   /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get invalidates() {
+  public get invalidates(): Set<string> {
     return this.watcher.invalidates
   }
 
   /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get changedTests() {
+  public get changedTests(): Set<string> {
     return this.watcher.changedTests
   }
 
@@ -193,7 +193,7 @@ export class Vitest {
   }
 
   /** @deprecated internal */
-  setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+  setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig): Promise<void> {
     return this._setServer(options, server, cliOptions)
   }
 
@@ -300,7 +300,7 @@ export class Vitest {
   /**
    * Provide a value to the test context. This value will be available to all tests with `inject`.
    */
-  public provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) => {
+  public provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]): void => {
     this.getRootProject().provide(key, value)
   }
 
@@ -509,8 +509,6 @@ export class Vitest {
   }
 
   async collect(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     const files = await this.specifications.getRelevantTestSpecifications(filters)
 
     // if run with --changed, don't exit if no tests are found
@@ -543,8 +541,6 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -602,8 +598,6 @@ export class Vitest {
    * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
   async init(): Promise<void> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -645,7 +639,7 @@ export class Vitest {
   /**
    * Vitest automatically caches test specifications for each file. This method clears the cache for the given file or the whole cache altogether.
    */
-  public clearSpecificationsCache(moduleId?: string) {
+  public clearSpecificationsCache(moduleId?: string): void {
     this.specifications.clearCache(moduleId)
   }
 
@@ -1186,19 +1180,19 @@ export class Vitest {
   /**
    * @deprecated use `globTestSpecifications` instead
    */
-  public async globTestSpecs(filters: string[] = []) {
+  public async globTestSpecs(filters: string[] = []): Promise<TestSpecification[]> {
     return this.globTestSpecifications(filters)
   }
 
   /**
    * @deprecated use `globTestSpecifications` instead
    */
-  public async globTestFiles(filters: string[] = []) {
+  public async globTestFiles(filters: string[] = []): Promise<TestSpecification[]> {
     return this.globTestSpecifications(filters)
   }
 
   /** @deprecated filter by `this.projects` yourself */
-  public getModuleProjects(filepath: string) {
+  public getModuleProjects(filepath: string): TestProject[] {
     return this.projects.filter((project) => {
       return project.getModulesByFilepath(filepath).size
       // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size

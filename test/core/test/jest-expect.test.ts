@@ -246,6 +246,15 @@ describe('jest-expect', () => {
           message: () => '',
         }
       },
+      toBeTestedMatcherContext<T>(received: unknown, expected: T) {
+        if (typeof this.utils?.stringify !== 'function') {
+          throw new TypeError('this.utils.stringify is not available.')
+        }
+        return {
+          pass: received === expected,
+          message: () => 'toBeTestedMatcherContext',
+        }
+      },
     })
 
     expect(5).toBeDividedBy(5)

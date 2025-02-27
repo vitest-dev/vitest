@@ -1,4 +1,3 @@
-import type { BrowserRPC } from '@vitest/browser/client'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
@@ -8,8 +7,6 @@ import type {
   UserEventFillOptions,
   UserEventHoverOptions,
 } from '@vitest/browser/context'
-import type { WorkerGlobalState } from 'vitest'
-import type { BrowserRunnerState } from '../../utils'
 import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
@@ -22,11 +19,11 @@ import {
   Ivya,
   type ParsedSelector,
 } from 'ivya'
-import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
+import { ensureAwaited, getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
-export const selectorEngine = Ivya.create({
+export const selectorEngine: Ivya = Ivya.create({
   browser: ((name: string) => {
     switch (name) {
       case 'edge':
@@ -205,27 +202,10 @@ export abstract class Locator {
     return this.selector
   }
 
-  private get state(): BrowserRunnerState {
-    return getBrowserState()
-  }
-
-  private get worker(): WorkerGlobalState {
-    return getWorkerState()
-  }
-
-  private get rpc(): BrowserRPC {
-    return this.worker.rpc as any as BrowserRPC
-  }
-
-  protected triggerCommand<T>(command: string, ...args: any[]) {
-    const filepath = this.worker.filepath
-      || this.worker.current?.file?.filepath
-      || undefined
-
-    return ensureAwaited(() => this.rpc.triggerCommand<T>(
-      this.state.sessionId,
+  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
+    const commands = getBrowserState().commands
+    return ensureAwaited(() => commands.triggerCommand<T>(
       command,
-      filepath,
       args,
     ))
   }
