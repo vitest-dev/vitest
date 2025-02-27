@@ -1,19 +1,19 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
-import type { VitestMocker } from '../runtime/mocker'
-import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
   MaybePartiallyMocked,
   MaybePartiallyMockedDeep,
   MockInstance,
-} from './spy'
+} from '@vitest/spy'
+import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
+import type { VitestMocker } from '../runtime/mocker'
+import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
+import { fn, isMockFunction, mocks, spyOn } from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { getWorkerState, isChildProcess, resetModules, waitForImportsToResolve } from '../runtime/utils'
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
-import { fn, isMockFunction, mocks, spyOn } from './spy'
 import { waitFor, waitUntil } from './wait'
 
 type ESModuleExports = Record<string, unknown>
