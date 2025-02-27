@@ -7,13 +7,74 @@ exports[`json reporter > generates correct report 1`] = `
     "AssertionError: expected 2 to deeply equal 1
     at <root>/test/reporters/fixtures/json-fail.test.ts:8:13",
   ],
+  "flaky": false,
   "fullName": "should fail",
   "location": {
     "column": 1,
     "line": 5,
   },
   "meta": {},
+  "retryCount": 0,
   "status": "failed",
   "title": "should fail",
 }
+`;
+
+exports[`json reporter > should retry 1`] = `
+[
+  {
+    "assertionResults": [
+      {
+        "ancestorTitles": [],
+        "duration": 3.545792000000006,
+        "failureMessages": [
+          "AssertionError: expected +0 to be 3 // Object.is equality
+    at /Users/saitonakamura/code/oss/vitest/test/reporters/fixtures/retry.test.ts:6:20
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:174:14
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:558:28
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:61:24
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:41:12)
+    at runTest (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1137:17)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runSuite (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1291:15)
+    at runFiles (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1348:5)",
+          "AssertionError: expected 1 to be 3 // Object.is equality
+    at /Users/saitonakamura/code/oss/vitest/test/reporters/fixtures/retry.test.ts:6:20
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:174:14
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:558:28
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:61:24
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:41:12)
+    at runTest (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1137:17)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runSuite (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1291:15)
+    at runFiles (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1348:5)",
+          "AssertionError: expected 2 to be 3 // Object.is equality
+    at /Users/saitonakamura/code/oss/vitest/test/reporters/fixtures/retry.test.ts:6:20
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:174:14
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:558:28
+    at file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:61:24
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:41:12)
+    at runTest (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1137:17)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runSuite (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1291:15)
+    at runFiles (file:///Users/saitonakamura/code/oss/vitest/packages/runner/dist/index.js:1348:5)",
+        ],
+        "flaky": true,
+        "fullName": "pass after retries",
+        "meta": {},
+        "retryCount": 3,
+        "status": "passed",
+        "title": "pass after retries",
+      },
+    ],
+    "endTime": 1740674931110.546,
+    "message": "",
+    "name": "/Users/saitonakamura/code/oss/vitest/test/reporters/fixtures/retry.test.ts",
+    "startTime": 1740674931107,
+    "status": "passed",
+  },
+]
 `;

@@ -38,6 +38,14 @@ export interface JsonAssertionResult {
   duration?: Milliseconds | null
   failureMessages: Array<string> | null
   location?: Callsite | null
+  /**
+   * The amount of times the test was retried.
+   */
+  readonly retryCount: number
+  /**
+   * If test passed on a second or later retry.
+   */
+  readonly flaky: boolean
 }
 
 export interface JsonTestResult {
@@ -152,6 +160,8 @@ export class JsonReporter implements Reporter {
             t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
           meta: t.meta,
+          retryCount: t.result?.retryCount ?? 0,
+          flaky: !!t.result?.retryCount && t.result?.state === 'pass' && t.result?.retryCount > 0,
         } satisfies JsonAssertionResult
       })
 
