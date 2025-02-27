@@ -96,8 +96,8 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
             selector,
             text,
             { ...options, unreleased: keyboard.unreleased },
-            error,
           ],
+          error,
         )
         keyboard.unreleased = unreleased
       })
