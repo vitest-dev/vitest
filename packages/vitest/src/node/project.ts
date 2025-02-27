@@ -740,6 +740,7 @@ export async function initializeProject(
   const config: ViteInlineConfig = {
     ...restOptions,
     configFile,
+    configLoader: options.test?.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [

@@ -33,6 +33,7 @@ export async function createVitest(
 
   const config: ViteInlineConfig = {
     configFile: configPath,
+    configLoader: options.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.mode || mode,
     plugins: await VitestPlugin(options, ctx),

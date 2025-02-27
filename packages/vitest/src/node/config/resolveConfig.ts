@@ -160,6 +160,7 @@ export function resolveConfig(
   }
 
   resolved.clearScreen = resolved.clearScreen ?? viteConfig.clearScreen ?? true
+  resolved.configLoader = resolved.configLoader ?? viteConfig.inlineConfig.configLoader ?? 'bundle'
 
   if (options.shard) {
     if (resolved.watch) {
