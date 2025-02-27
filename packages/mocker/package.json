@@ -67,13 +67,13 @@
   },
   "dependencies": {
     "@vitest/spy": "workspace:*",
+    "@vitest/utils": "workspace:*",
     "estree-walker": "^3.0.3",
     "magic-string": "^0.30.17"
   },
   "devDependencies": {
     "@types/estree": "^1.0.6",
     "@vitest/spy": "workspace:*",
-    "@vitest/utils": "workspace:*",
     "acorn-walk": "^8.3.4",
     "msw": "^2.7.3",
     "pathe": "^2.0.3",
