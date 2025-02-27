@@ -93,6 +93,11 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       logLevel: 'error',
       capabilities: this.buildCapabilities(),
     })
+    // const mock = await this.browser.mock('s')
+    // mock.respond(() => {
+    //   // TODO: implement
+    //   return []
+    // })
 
     return this.browser
   }
