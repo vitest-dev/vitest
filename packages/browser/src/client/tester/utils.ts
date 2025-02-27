@@ -1,5 +1,4 @@
 import type { BrowserRPC } from '../client'
-import { server } from '@vitest/browser/context'
 import { getBrowserState, getWorkerState } from '../utils'
 
 const provider = getBrowserState().provider
@@ -108,17 +107,17 @@ export class CommandsManager {
     command: string,
     args: any[],
     // error makes sure the stack trace is correct on webkit,
-    // if we make the error here, it looses the context there
+    // if we make the error here, it looses the context
     clientError: Error = new Error('empty'),
   ): Promise<T> {
     const state = getWorkerState()
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
+    args = args.filter(arg => arg !== undefined) // remove optional fields
     if (this._listeners.length) {
       await Promise.all(this._listeners.map(listener => listener(command, args)))
     }
-    // const clientError = new Error('empty')
     return rpc.triggerCommand<T>(sessionId, command, filepath, args).catch((err) => {
       // rethrow an error to keep the stack trace in browser
       // const clientError = new Error(err.message)
@@ -142,7 +141,7 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
     return options_
   }
   // if there is a default action timeout, use it
-  if (server.config.browser.providerOptions.actionTimeout != null) {
+  if (getWorkerState().config.browser.providerOptions.actionTimeout != null) {
     return options_
   }
   const currentTest = getWorkerState().current
