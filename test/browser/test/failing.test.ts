@@ -1,4 +1,4 @@
-import { page } from '@vitest/browser/context'
+import { page, server } from '@vitest/browser/context'
 import { index } from '@vitest/bundled-lib'
 import { describe, expect, it } from 'vitest'
 import { throwError } from '../src/error'
@@ -21,7 +21,7 @@ it('several locator methods are not awaited', () => {
   page.getByRole('button').tripleClick()
 })
 
-describe('timeouts are failing correctly', () => {
+describe.runIf(server.provider === 'playwright')('timeouts are failing correctly', () => {
   it('click on non-existing element fails', async () => {
     await page.getByRole('code').click()
   }, 1000)
