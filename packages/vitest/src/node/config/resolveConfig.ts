@@ -142,6 +142,8 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  console.log('resolved', resolved)
+
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
 

@@ -128,6 +128,7 @@ export const configDefaults: Readonly<{
   }
   slowTestThreshold: number
   disableConsoleIntercept: boolean
+  repeats: number
 }> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
@@ -166,4 +167,5 @@ export const configDefaults: Readonly<{
   },
   slowTestThreshold: 300,
   disableConsoleIntercept: false,
+  repeats: 0,
 })
