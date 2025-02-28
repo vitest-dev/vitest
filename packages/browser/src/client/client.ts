@@ -67,13 +67,17 @@ function createClient() {
       },
       async resolveManualMock(url: string) {
         // @ts-expect-error not typed global API
-        const mocker = globalThis.__vitest_mocker__ as ModuleMocker
+        const mocker = globalThis.__vitest_mocker__ as ModuleMocker | undefined
+        const responseId = getBrowserState().sessionId
+        if (!mocker) {
+          return { url, keys: [], responseId }
+        }
         const exports = await mocker.resolveFactoryModule(url)
         const keys = Object.keys(exports)
         return {
           url,
           keys,
-          responseId: getBrowserState().sessionId,
+          responseId,
         }
       },
     },

@@ -3,7 +3,7 @@ import type { MockedModuleSerialized } from '../registry'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path/posix'
 import { ManualMockedModule, MockerRegistry } from '../registry'
-import { cleanUrl } from '../utils'
+import { cleanUrl, createManualModuleSource } from '../utils'
 import { automockModule } from './automockPlugin'
 
 export interface InterceptorPluginOptions {
@@ -30,16 +30,7 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
           const exports = Object.keys(await mock.resolve())
           const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
           const serverUrl = (mock as any).serverUrl as string
-          const module = `const module = globalThis[${accessor}].getFactoryModule("${serverUrl}");`
-          const keys = exports
-            .map((name) => {
-              if (name === 'default') {
-                return `export default module["default"];`
-              }
-              return `export const ${name} = module["${name}"];`
-            })
-            .join('\n')
-          return `${module}\n${keys}`
+          return createManualModuleSource(serverUrl, exports, accessor)
         }
         if (mock.type === 'redirect') {
           return readFile(mock.redirect, 'utf-8')

@@ -14,6 +14,7 @@ import type {
   BrowserProviderInitializationOptions,
   TestProject,
 } from 'vitest/node'
+import { createManualModuleSource } from '@vitest/mocker/node'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
@@ -162,18 +163,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
             }
             if (module.type === 'manual') {
               const exports = Object.keys(await module.resolve())
-              const source = `const module = __vitest_mocker__.getFactoryModule("${module.url}");`
-              const keys = exports
-                .map((name) => {
-                  if (name === 'default') {
-                    return `export default module["default"];`
-                  }
-                  return `export const ${name} = module["${name}"];`
-                })
-                .join('\n')
-              const text = `${source}\n${keys}`
+              const body = createManualModuleSource(module.url, exports)
               return route.fulfill({
-                body: text,
+                body,
                 headers: {
                   'Content-Type': 'application/javascript',
                 },
