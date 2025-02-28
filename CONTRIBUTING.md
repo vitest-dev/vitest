@@ -102,7 +102,7 @@ flowchart TD
     start --YES--> dupe{Is duplicate?}
     dupe --YES--> close2[Close and point<br/>to duplicate]
     dupe --NO--> repro{Has proper<br/>reproduction?}
-    repro --NO--> close3[Label: 'needs reproduction'<br/>bot will auto close if no update<br/>has been made in 3 days]
+    repro --NO--> close3[Label: 'needs reproduction'<br/>bot will auto close if no update has been made in 3 days]
     repro --YES--> real{Is actually a bug?}
     real --NO--> intended{Is the intended<br/>behaviour?}
     intended --YES--> explain[Explain and close<br/>point to docs if needed]
@@ -130,7 +130,7 @@ flowchart TD
     non_strict --> label["Add priority labels<br/>(see issue triaging workflow)"]
     strict --> label
     label --> approve
-    approve --> merge["Merge if approved by 2 or<br/>more team members<br/>- Use 'Squash and Merge'<br/>- Edit commit message to follow<br/>convention<br/>- In commit message body, list<br/>relevant issues being fixed<br/>e.g. 'fix #1234, fix #1235'"]
+    approve --> merge["Merge if approved by 2 or<br/>more team members<br/>- Use 'Squash and Merge'<br/>- Edit commit message to follow convention<br/>- In commit message body, list relevant issues being fixed<br/>e.g. 'fix #1234, fix #1235'"]
 ```
 
 ## Notes on Dependencies
