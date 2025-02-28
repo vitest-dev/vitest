@@ -5,7 +5,185 @@ outline: deep
 
 # Migration Guide
 
-## Migrating to Vitest 2.0
+## Migrating to Vitest 3.0 {#vitest-3}
+
+### Test Options as a Third Argument
+
+Vitest 3.0 prints a warning if you pass down an object as a third argument to `test` or `describe` functions:
+
+```ts
+test('validation works', () => {
+  // ...
+}, { retry: 3 }) // [!code --]
+
+test('validation works', { retry: 3 }, () => { // [!code ++]
+  // ...
+})
+```
+
+The next major version will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
+
+```ts
+test('validation works', () => {
+  // ...
+}, 1000) // Ok ✅
+```
+
+### `browser.name` and `browser.providerOptions` are Deprecated
+
+Both [`browser.name`](/guide/browser/config#browser-name) and [`browser.providerOptions`](/guide/browser/config#browser-provideroptions) will be removed in Vitest 4. Instead of them, use the new [`browser.instances`](/guide/browser/config#browser-instances) option:
+
+```ts
+export default defineConfig({
+  test: {
+    browser: {
+      name: 'chromium', // [!code --]
+      providerOptions: { // [!code --]
+        launch: { devtools: true }, // [!code --]
+      }, // [!code --]
+      instances: [ // [!code ++]
+        { // [!code ++]
+          browser: 'chromium', // [!code ++]
+          launch: { devtools: true }, // [!code ++]
+        }, // [!code ++]
+      ], // [!code ++]
+    },
+  },
+})
+```
+
+With the new `browser.instances` field you can also specify multiple browser configurations.
+
+### `spy.mockReset` Now Restores the Original Implementation
+
+There was no good way to reset the spy to the original implementation without reaplying the spy. Now, `spy.mockReset` will reset the implementation function to the original one instead of a fake noop.
+
+```ts
+const foo = {
+  bar: () => 'Hello, world!'
+}
+
+vi.spyOn(foo, 'bar').mockImplementation(() => 'Hello, mock!')
+
+foo.bar() // 'Hello, mock!'
+
+foo.bar.mockReset()
+
+foo.bar() // undefined [!code --]
+foo.bar() // 'Hello, world!' [!code ++]
+```
+
+### `vi.spyOn` Reuses Mock if Method is Already Mocked
+
+Previously, Vitest would always assign a new spy when spying on an object. This caused errors with `mockRestore` because it would restore the spy to the previous spy instead of the original function:
+
+```ts
+vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
+vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
+vi.restoreAllMocks()
+vi.isMockFunction(fooService.foo) // true [!code --]
+vi.isMockFunction(fooService.foo) // false [!code ++]
+```
+
+### Fake Timers Defaults
+
+Vitest no longer provides default `fakeTimers.toFake` options. Now, Vitest will mock any timer-related API if it is available (except `nextTick`). Namely, `performance.now()` is now mocked when `vi.useFakeTimers` is called.
+
+```ts
+vi.useFakeTimers()
+
+performance.now() // original [!code --]
+performance.now() // fake [!code ++]
+```
+
+You can revert to the previous behaviour by specifying timers when calling `vi.useFakeTimers` or globally in the config:
+
+```ts
+export default defineConfig({
+  test: {
+    fakeTimers: {
+      toFake: [ // [!code ++]
+        'setTimeout', // [!code ++]
+        'clearTimeout', // [!code ++]
+        'setInterval', // [!code ++]
+        'clearInterval', // [!code ++]
+        'setImmediate', // [!code ++]
+        'clearImmediate', // [!code ++]
+        'Date', // [!code ++]
+      ] // [!code ++]
+    },
+  },
+})
+```
+
+### More Strict Error Equality
+
+Vitest now checks more properties when comparing errors via `toEqual` or `toThrowError`. Vitest now compares `name`, `message`, `cause` and `AggregateError.errors`. For `Error.cause`, the comparison is done asymmetrically:
+
+```ts
+expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi')) // ✅
+expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' })) // ❌
+```
+
+In addition to more properties check, Vitest now compares error prototypes. For example, if `TypeError` was thrown, the equality check should reference `TypeError`, not `Error`:
+
+```ts
+expect(() => {
+  throw new TypeError('type error')
+})
+  .toThrowError(new Error('type error')) // [!code --]
+  .toThrowError(new TypeError('type error')) // [!code ++]
+```
+
+See PR for more details: [#5876](https://github.com/vitest-dev/vitest/pull/5876).
+
+### `module` condition export is not resolved by default on Vite 6
+
+Vite 6 allows more flexible [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) options and Vitest configures it to exclude `module` conditional export by default.
+See also [Vite 6 migration guide](https://v6.vite.dev/guide/migration.html#default-value-for-resolve-conditions) for the detail of Vite side changes.
+
+### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
+
+The `Custom` type is now an alias for the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
+
+```ts
+import {
+  RunnerCustomCase, // [!code --]
+  RunnerTestCase, // [!code ++]
+} from 'vitest'
+```
+
+If you are using `getCurrentSuite().custom()`, the `type` of the returned task is now is equal to `'test'`. The `Custom` type will be removed in Vitest 4.
+
+### The `WorkspaceSpec` Type is No Longer Used <Badge type="danger">API</Badge> {#the-workspacespec-type-is-no-longer-used}
+
+In the public API this type was used in custom [sequencers](/config/#sequence-sequencer) before. Please, migrate to [`TestSpecification`](/advanced/api/test-specification) instead.
+
+### `onTestFinished` and `onTestFailed` Now Receive a Context
+
+The [`onTestFinished`](/api/#ontestfinished) and [`onTestFailed`](/api/#ontestfailed) hooks previously received a test result as the first argument. Now, they receive a test context, like `beforeEach` and `afterEach`.
+
+### Changes to the Snapshot API <Badge type="danger">API</Badge> {#changes-to-the-snapshot-api}
+
+The public Snapshot API in `@vitest/snapshot` was changed to support multiple states within a single run. See PR for more details: [#6817](https://github.com/vitest-dev/vitest/pull/6817)
+
+Note that this changes only affect developers using the Snapshot API directly. There were no changes to `.toMatchSnapshot` API.
+
+### Changes to `resolveConfig` Type Signature <Badge type="danger">API</Badge> {#changes-to-resolveconfig-type-signature}
+
+The [`resolveConfig`](/advanced/api/#resolveconfig) is now more useful. Instead of accepting already resolved Vite config, it now accepts a user config and returns resolved config.
+
+This function is not used internally and exposed exclusively as a public API.
+
+### Cleaned up `vitest/reporters` types <Badge type="danger">API</Badge> {#cleaned-up-vitest-reporters-types}
+
+The `vitest/reporters` entrypoint now only exports reporters implementations and options types. If you need access to `TestCase`/`TestSuite` and other task related types, import them additionally from `vitest/node`.
+
+### Coverage ignores test files even when `coverage.excludes` is overwritten.
+
+It is no longer possible to include test files in coverage report by overwriting `coverage.excludes`. Test files are now always excluded.
+
+## Migrating to Vitest 2.0 {#vitest-2}
 
 ### Default Pool is `forks`
 
@@ -108,8 +286,8 @@ Previously Vitest resolved `mock.results` values if the function returned a Prom
 const fn = vi.fn().mockResolvedValueOnce('result')
 await fn()
 
-const result = fn.mock.results[0] // 'result' // [!code --]
-const result = fn.mock.results[0] // 'Promise<result>' // [!code ++]
+const result = fn.mock.results[0] // 'result' [!code --]
+const result = fn.mock.results[0] // 'Promise<result>' [!code ++]
 
 const settledResult = fn.mock.settledResults[0] // 'result'
 ```
@@ -287,7 +465,7 @@ It is still possible to mock `process.nextTick` by explicitly specifying it by u
 
 However, mocking `process.nextTick` is not possible when using `--pool=forks`. Use a different `--pool` option if you need `process.nextTick` mocking.
 
-## Migrating from Jest
+## Migrating from Jest {#jest}
 
 Vitest has been designed with a Jest compatible API, in order to make the migration from Jest as simple as possible. Despite those efforts, you may still run into the following differences:
 
@@ -296,6 +474,14 @@ Vitest has been designed with a Jest compatible API, in order to make the migrat
 Jest has their [globals API](https://jestjs.io/docs/api) enabled by default. Vitest does not. You can either enable globals via [the `globals` configuration setting](/config/#globals) or update your code to use imports from the `vitest` module instead.
 
 If you decide to keep globals disabled, be aware that common libraries like [`testing-library`](https://testing-library.com/) will not run auto DOM [cleanup](https://testing-library.com/docs/svelte-testing-library/api/#cleanup).
+
+### `spy.mockReset`
+
+Jest's [`mockReset`](https://jestjs.io/docs/mock-function-api#mockfnmockreset) replaces the mock implementation with an
+empty function that returns `undefined`.
+
+Vitest's [`mockReset`](/api/mock#mockreset) resets the mock implementation to its original.
+That is, resetting a mock created by `vi.fn(impl)` will reset the mock implementation to `impl`.
 
 ### Module Mocks
 
@@ -352,14 +538,7 @@ If you want to modify the object, you will use [replaceProperty API](https://jes
 
 From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
 
-```
-it('should work', (done) => {  // [!code --]
-it('should work', () => new Promise(done => { // [!code ++]
-  // ...
-  done()
-}) // [!code --]
-})) // [!code ++]
-```
+<!--@include: ./examples/promise-done.md-->
 
 ### Hooks
 

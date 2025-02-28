@@ -24,6 +24,31 @@ basic/foo.test.ts
 
 You can also use the `-t, --testNamePattern <pattern>` option to filter tests by full name. This can be helpful when you want to filter by the name defined within a file rather than the filename itself.
 
+Since Vitest 3, you can also specify the test by filename and line number:
+
+```bash
+$ vitest basic/foo.test.ts:10
+```
+
+::: warning
+Note that Vitest requires the full filename for this feature to work. It can be relative to the current working directory or an absolute file path.
+
+```bash
+$ vitest basic/foo.js:10 # ✅
+$ vitest ./basic/foo.js:10 # ✅
+$ vitest /users/project/basic/foo.js:10 # ✅
+$ vitest foo:10 # ❌
+$ vitest ./basic/foo:10 # ❌
+```
+
+At the moment Vitest also doesn't support ranges:
+
+```bash
+$ vitest basic/foo.test.ts:10, basic/foo.test.ts:25 # ✅
+$ vitest basic/foo.test.ts:10-25 # ❌
+```
+:::
+
 ## Specifying a Timeout
 
 You can optionally pass a timeout in milliseconds as a third argument to tests. The default is [5 seconds](/config/#testtimeout).

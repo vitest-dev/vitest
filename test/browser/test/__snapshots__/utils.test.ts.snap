@@ -35,3 +35,13 @@ exports[`prints the element with attributes 1`] = `
   </div>
 </body>"
 `;
+
+exports[`should handle DOM content bigger than maxLength 1`] = `
+"<body>
+  <div>
+    <div>
+      <div … />
+    </div>
+  </div>
+</body>..."
+`;

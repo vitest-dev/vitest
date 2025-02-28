@@ -20,12 +20,12 @@ Error: top level error
 `;
 
 exports[`correctly outputs all tests with args: "--browser.enabled" 1`] = `
-"basic.test.ts > basic suite > inner suite > some test
-basic.test.ts > basic suite > inner suite > another test
-basic.test.ts > basic suite > basic test
-basic.test.ts > outside test
-math.test.ts > 1 plus 1
-math.test.ts > failing test
+"[chromium] basic.test.ts > basic suite > inner suite > some test
+[chromium] basic.test.ts > basic suite > inner suite > another test
+[chromium] basic.test.ts > basic suite > basic test
+[chromium] basic.test.ts > outside test
+[chromium] math.test.ts > 1 plus 1
+[chromium] math.test.ts > failing test
 "
 `;
 

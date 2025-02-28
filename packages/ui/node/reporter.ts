@@ -1,19 +1,18 @@
+import type {
+  ModuleGraphData,
+  RunnerTestFile,
+  SerializedConfig,
+} from 'vitest'
+import type { HTMLOptions, Vitest } from 'vitest/node'
+import type { Reporter } from 'vitest/reporters'
 import { promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
+import { stringify } from 'flatted'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { stringify } from 'flatted'
-import type {
-  File,
-  ModuleGraphData,
-  Reporter,
-  SerializedConfig,
-  Vitest,
-} from 'vitest'
-import type { HTMLOptions } from 'vitest/node'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
 
 interface PotentialConfig {
@@ -34,8 +33,9 @@ function getOutputFile(config: PotentialConfig | undefined) {
 
 interface HTMLReportData {
   paths: string[]
-  files: File[]
+  files: RunnerTestFile[]
   config: SerializedConfig
+  projects: string[]
   moduleGraph: Record<string, Record<string, ModuleGraphData>>
   unhandledErrors: unknown[]
   // filename -> source
@@ -54,28 +54,32 @@ export default class HTMLReporter implements Reporter {
     this.options = options
   }
 
-  async onInit(ctx: Vitest) {
+  async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
     this.start = Date.now()
   }
 
-  async onFinished() {
+  async onFinished(): Promise<void> {
     const result: HTMLReportData = {
       paths: this.ctx.state.getPaths(),
       files: this.ctx.state.getFiles(),
-      config: this.ctx.getCoreWorkspaceProject().getSerializableConfig(),
+      config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
+      projects: this.ctx.resolvedProjects.map(p => p.name),
       moduleGraph: {},
       sources: {},
     }
     await Promise.all(
       result.files.map(async (file) => {
         const projectName = file.projectName || ''
+        const resolvedConfig = this.ctx.getProjectByName(projectName).config
+        const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
         result.moduleGraph[projectName] ??= {}
         result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-          this.ctx as any,
+          this.ctx,
           projectName,
           file.filepath,
+          browser,
         )
         if (!result.sources[file.filepath]) {
           try {
@@ -92,11 +96,11 @@ export default class HTMLReporter implements Reporter {
     await this.writeReport(stringify(result))
   }
 
-  async writeReport(report: string) {
+  async writeReport(report: string): Promise<void> {
     const htmlFile
       = this.options.outputFile
-      || getOutputFile(this.ctx.config)
-      || 'html/index.html'
+        || getOutputFile(this.ctx.config)
+        || 'html/index.html'
     const htmlFileName = basename(htmlFile)
     const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
 

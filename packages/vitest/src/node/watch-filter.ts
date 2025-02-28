@@ -1,9 +1,9 @@
-import readline from 'node:readline'
 import type { Writable } from 'node:stream'
+import readline from 'node:readline'
 import { stripVTControlCharacters } from 'node:util'
-import c from 'tinyrainbow'
 import { createDefer } from '@vitest/utils'
-import { stdout as getStdout } from '../utils'
+import c from 'tinyrainbow'
+import { stdout as getStdout } from '../utils/base'
 
 const MAX_RESULT_COUNT = 10
 const SELECTION_MAX_INDEX = 7
@@ -74,9 +74,9 @@ export class WatchFilter {
           break
         case key?.ctrl && key?.name === 'c':
         case key?.name === 'escape':
-          this.cancel()
+          this.write(`${ESC}1G${ESC}0J`) // clean content
           onSubmit(undefined)
-          break
+          return
         case key?.name === 'enter':
         case key?.name === 'return':
           onSubmit(
@@ -158,11 +158,11 @@ export class WatchFilter {
         if (remainingResultCount > 0) {
           resultBody
             += '\n'
-            + `${c.dim(
-              `   ...and ${remainingResultCount} more ${
-                remainingResultCount === 1 ? 'result' : 'results'
-              }`,
-            )}`
+              + `${c.dim(
+                `   ...and ${remainingResultCount} more ${
+                  remainingResultCount === 1 ? 'result' : 'results'
+                }`,
+              )}`
         }
       }
       else {
@@ -224,16 +224,12 @@ export class WatchFilter {
     this.write(`${ESC}${cursortPos}G`)
   }
 
-  private cancel() {
-    this.write(`${ESC}J`) // erase down
-  }
-
   private write(data: string) {
     // @ts-expect-error -- write() method has different signature on the union type
     this.stdout.write(data)
   }
 
-  public getLastResults() {
+  public getLastResults(): string[] {
     return this.results
   }
 }

@@ -17,8 +17,8 @@ export function createWorkerConstructor(
   const runnerOptions = getRunnerOptions()
   const cloneType = () =>
     (options?.clone
-    ?? process.env.VITEST_WEB_WORKER_CLONE
-    ?? 'native') as CloneOption
+      ?? process.env.VITEST_WEB_WORKER_CLONE
+      ?? 'native') as CloneOption
 
   return class Worker extends EventTarget {
     static __VITEST_WEB_WORKER__ = true

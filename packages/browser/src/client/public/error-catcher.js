@@ -1,9 +1,17 @@
 import { channel, client } from '@vitest/browser/client'
 
 function serializeError(unhandledError) {
+  const state = globalThis.__vitest_worker__
+  const VITEST_TEST_NAME = state && state.current && state.current.type === 'test'
+    ? state.current.name
+    : undefined
+  const VITEST_TEST_PATH = state && state.filepath ? state.filepath : undefined
+
   if (typeof unhandledError !== 'object' || !unhandledError) {
     return {
       message: String(unhandledError),
+      VITEST_TEST_NAME,
+      VITEST_TEST_PATH,
     }
   }
 
@@ -11,6 +19,8 @@ function serializeError(unhandledError) {
     name: unhandledError.name,
     message: unhandledError.message,
     stack: String(unhandledError.stack),
+    VITEST_TEST_NAME,
+    VITEST_TEST_PATH,
   }
 }
 
@@ -56,7 +66,9 @@ async function reportUnexpectedError(
   error,
 ) {
   const processedError = serializeError(error)
-  await client.rpc.onUnhandledError(processedError, type)
+  await client.waitForConnection().then(() => {
+    return client.rpc.onUnhandledError(processedError, type)
+  }).catch(console.error)
   const state = __vitest_browser_runner__
 
   if (state.type === 'orchestrator') {

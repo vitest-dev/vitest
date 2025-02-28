@@ -6,12 +6,20 @@ export default defineConfig({
     reporters: ['verbose'],
     testTimeout: 60_000,
     poolOptions: {
-      threads: {
-        singleThread: true,
+      forks: {
+        singleFork: true,
       },
     },
     chaiConfig: {
       truncateThreshold: 999,
+    },
+  },
+  server: {
+    watch: {
+      ignored: [
+        '**/fixtures/browser-multiple/**/*',
+        '**/fixtures/browser-init/**/*',
+      ],
     },
   },
 })

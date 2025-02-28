@@ -1,6 +1,6 @@
+import type { TestError } from './types'
 import { type DiffOptions, printDiffOrStringify } from './diff'
 import { format, stringify } from './display'
-import type { TestError } from './types'
 
 // utils is bundled for any environment and might not support `Element`
 declare class Element {
@@ -65,7 +65,7 @@ export function serializeValue(val: any, seen: WeakMap<WeakKey, any> = new WeakM
   }
 
   if (Array.isArray(val)) {
-    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparce arrays ([1,,3])
+    // eslint-disable-next-line unicorn/no-new-array -- we need to keep sparse arrays ([1,,3])
     const clone: any[] = new Array(val.length)
     seen.set(val, clone)
     val.forEach((e, i) => {
@@ -133,8 +133,8 @@ export function processError(
   if (
     err.showDiff
     || (err.showDiff === undefined
-    && err.expected !== undefined
-    && err.actual !== undefined)
+      && err.expected !== undefined
+      && err.actual !== undefined)
   ) {
     err.diff = printDiffOrStringify(err.actual, err.expected, {
       ...diffOptions,

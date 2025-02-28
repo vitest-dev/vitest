@@ -1,9 +1,9 @@
-import type { SetupWorker, StartOptions } from 'msw/browser'
 import type { HttpHandler } from 'msw'
+import type { SetupWorker, StartOptions } from 'msw/browser'
 import type { ManualMockedModule, MockedModule } from '../registry'
+import type { ModuleMockerInterceptor } from './interceptor'
 import { MockerRegistry } from '../registry'
 import { cleanUrl } from '../utils'
-import type { ModuleMockerInterceptor } from './interceptor'
 
 export interface ModuleMockerMSWInterceptorOptions {
   /**
@@ -34,8 +34,8 @@ export interface ModuleMockerMSWInterceptorOptions {
 export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
   protected readonly mocks: MockerRegistry = new MockerRegistry()
 
-  private started = false
-  private startPromise: undefined | Promise<unknown>
+  private startPromise: undefined | Promise<SetupWorker>
+  private worker: undefined | SetupWorker
 
   constructor(
     private readonly options: ModuleMockerMSWInterceptorOptions = {},
@@ -78,9 +78,9 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
     })
   }
 
-  protected async init(): Promise<unknown> {
-    if (this.started) {
-      return
+  protected async init(): Promise<SetupWorker> {
+    if (this.worker) {
+      return this.worker
     }
     if (this.startPromise) {
       return this.startPromise
@@ -101,13 +101,6 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
         http.get(/.+/, async ({ request }) => {
           const path = cleanQuery(request.url.slice(location.origin.length))
           if (!this.mocks.has(path)) {
-            // do not cache deps like Vite does for performance
-            // because we want to be able to update mocks without restarting the server
-            // TODO: check if it's still neded - we invalidate modules after each test
-            if (path.includes('/deps/')) {
-              return fetch(bypass(request))
-            }
-
             return passthrough()
           }
 
@@ -126,20 +119,20 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
           }
         }),
       )
-      return worker.start(this.options.mswOptions)
+      return worker.start(this.options.mswOptions).then(() => worker)
+    }).finally(() => {
+      this.worker = worker
+      this.startPromise = undefined
     })
-      .finally(() => {
-        this.started = true
-        this.startPromise = undefined
-      })
-    await this.startPromise
+    return await this.startPromise
   }
 }
 
-const timestampRegexp = /(\?|&)t=\d{13}/
-const versionRegexp = /(\?|&)v=\w{8}/
+const trailingSeparatorRE = /[?&]$/
+const timestampRE = /\bt=\d{13}&?\b/
+const versionRE = /\bv=\w{8}&?\b/
 function cleanQuery(url: string) {
-  return url.replace(timestampRegexp, '').replace(versionRegexp, '')
+  return url.replace(timestampRE, '').replace(versionRE, '').replace(trailingSeparatorRE, '')
 }
 
 function passthrough() {
@@ -150,20 +143,6 @@ function passthrough() {
       'x-msw-intention': 'passthrough',
     },
   })
-}
-
-function bypass(request: Request) {
-  const clonedRequest = request.clone()
-  clonedRequest.headers.set('x-msw-intention', 'bypass')
-  const cacheControl = clonedRequest.headers.get('cache-control')
-  if (cacheControl) {
-    clonedRequest.headers.set(
-      'cache-control',
-      // allow reinvalidation of the cache so mocks can be updated
-      cacheControl.replace(', immutable', ''),
-    )
-  }
-  return clonedRequest
 }
 
 const replacePercentageRE = /%/g

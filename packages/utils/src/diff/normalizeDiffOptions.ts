@@ -6,8 +6,8 @@
  */
 
 import type { CompareKeys } from '@vitest/pretty-format'
-import c from 'tinyrainbow'
 import type { DiffOptions, DiffOptionsNormalized } from './types'
+import c from 'tinyrainbow'
 
 export const noColor = (string: string): string => string
 
@@ -34,6 +34,7 @@ function getDefaultOptions(): DiffOptionsNormalized {
     includeChangeCounts: false,
     omitAnnotationLines: false,
     patchColor: c.yellow,
+    printBasicPrototype: false,
     truncateThreshold: DIFF_TRUNCATE_THRESHOLD_DEFAULT,
     truncateAnnotation: '... Diff result is truncated',
     truncateAnnotationColor: noColor,

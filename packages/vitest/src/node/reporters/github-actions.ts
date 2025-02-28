@@ -1,37 +1,36 @@
-import { stripVTControlCharacters } from 'node:util'
-import { getTasks } from '@vitest/runner/utils'
 import type { File } from '@vitest/runner'
-import { getFullName } from '../../utils'
-import { capturePrintError } from '../error'
-import type { WorkspaceProject } from '../workspace'
-import type { Reporter } from '../types/reporter'
 import type { Vitest } from '../core'
+import type { TestProject } from '../project'
+import type { Reporter } from '../types/reporter'
+import { stripVTControlCharacters } from 'node:util'
+import { getFullName, getTasks } from '@vitest/runner/utils'
+import { capturePrintError } from '../error'
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest): void {
     this.ctx = ctx
   }
 
-  onFinished(files: File[] = [], errors: unknown[] = []) {
+  onFinished(files: File[] = [], errors: unknown[] = []): void {
     // collect all errors and associate them with projects
     const projectErrors = new Array<{
-      project: WorkspaceProject
+      project: TestProject
       title: string
       error: unknown
       file?: File
     }>()
     for (const error of errors) {
       projectErrors.push({
-        project: this.ctx.getCoreWorkspaceProject(),
+        project: this.ctx.getRootProject(),
         title: 'Unhandled error',
         error,
       })
     }
     for (const file of files) {
       const tasks = getTasks(file)
-      const project = this.ctx.getProjectByTaskId(file.id)
+      const project = this.ctx.getProjectByName(file.projectName || '')
       for (const task of tasks) {
         if (task.result?.state !== 'fail') {
           continue

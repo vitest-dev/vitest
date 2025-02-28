@@ -6,8 +6,8 @@
  */
 
 import type { Diff } from './cleanupSemantic'
-import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 import type { DiffOptionsColor, DiffOptionsNormalized } from './types'
+import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from './cleanupSemantic'
 
 function formatTrailingSpaces(
   line: string,
@@ -26,8 +26,8 @@ function printDiffLine(
 ): string {
   return line.length !== 0
     ? color(
-      `${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`,
-    )
+        `${indicator} ${formatTrailingSpaces(line, trailingSpaceFormatter)}`,
+      )
     : indicator !== ' '
       ? color(indicator)
       : isFirstOrLast && emptyFirstOrLastLinePlaceholder.length !== 0

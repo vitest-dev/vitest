@@ -1,13 +1,8 @@
-import type { SerializedCoverageConfig } from '../runtime/config'
 import type {
+  CoverageModuleLoader,
   CoverageProvider,
-  CoverageProviderModule,
 } from '../node/types/coverage'
-
-interface Loader {
-  executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
-  isBrowser?: boolean
-}
+import type { SerializedCoverageConfig } from '../runtime/config'
 
 export const CoverageProviderMap: Record<string, string> = {
   v8: '@vitest/coverage-v8',
@@ -16,7 +11,7 @@ export const CoverageProviderMap: Record<string, string> = {
 
 async function resolveCoverageProviderModule(
   options: SerializedCoverageConfig | undefined,
-  loader: Loader,
+  loader: CoverageModuleLoader,
 ) {
   if (!options?.enabled || !options.provider) {
     return null
@@ -65,7 +60,7 @@ async function resolveCoverageProviderModule(
 
 export async function getCoverageProvider(
   options: SerializedCoverageConfig | undefined,
-  loader: Loader,
+  loader: CoverageModuleLoader,
 ): Promise<CoverageProvider | null> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
@@ -78,12 +73,13 @@ export async function getCoverageProvider(
 
 export async function startCoverageInsideWorker(
   options: SerializedCoverageConfig | undefined,
-  loader: Loader,
-) {
+  loader: CoverageModuleLoader,
+  runtimeOptions: { isolate: boolean },
+): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
-    return coverageModule.startCoverage?.()
+    return coverageModule.startCoverage?.(runtimeOptions)
   }
 
   return null
@@ -91,12 +87,12 @@ export async function startCoverageInsideWorker(
 
 export async function takeCoverageInsideWorker(
   options: SerializedCoverageConfig | undefined,
-  loader: Loader,
-) {
+  loader: CoverageModuleLoader,
+): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
-    return coverageModule.takeCoverage?.()
+    return coverageModule.takeCoverage?.({ moduleExecutionInfo: loader.moduleExecutionInfo })
   }
 
   return null
@@ -104,12 +100,13 @@ export async function takeCoverageInsideWorker(
 
 export async function stopCoverageInsideWorker(
   options: SerializedCoverageConfig | undefined,
-  loader: Loader,
-) {
+  loader: CoverageModuleLoader,
+  runtimeOptions: { isolate: boolean },
+): Promise<unknown> {
   const coverageModule = await resolveCoverageProviderModule(options, loader)
 
   if (coverageModule) {
-    return coverageModule.stopCoverage?.()
+    return coverageModule.stopCoverage?.(runtimeOptions)
   }
 
   return null

@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest'
 import { resolveConfig as viteResolveConfig } from 'vite'
-import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
+import { expect, test } from 'vitest'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
+import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
 const vitestCli = createCLI()
 
@@ -292,7 +292,7 @@ test('clearScreen', async () => {
       clearScreen: viteClearScreen,
     }
     const vitestConfig = getCLIOptions(vitestClearScreen)
-    const config = resolveConfig('test', vitestConfig, viteConfig, undefined as any)
+    const config = resolveConfig({ logger: undefined, mode: 'test' } as any, vitestConfig, viteConfig)
     return config.clearScreen
   })
   expect(results).toMatchInlineSnapshot(`
@@ -406,6 +406,51 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'project': ['space_1', 'space_2'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest --project="space 1"')).toEqual({
+    filter: [],
+    options: {
+      'project': ['space 1'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest "--project=space 1"')).toEqual({
+    filter: [],
+    options: {
+      'project': ['space 1'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest --project "space 1"')).toEqual({
+    filter: [],
+    options: {
+      'project': ['space 1'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest --project="space 1" --project="space 2"')).toEqual({
+    filter: [],
+    options: {
+      'project': ['space 1', 'space 2'],
+      '--': [],
+      'color': true,
+    },
+  })
+
+  expect(parseCLI('vitest ./test-1.js ./test-2.js --project="space 1" --project="space 2" --project="space 3"')).toEqual({
+    filter: ['./test-1.js', './test-2.js'],
+    options: {
+      'project': ['space 1', 'space 2', 'space 3'],
       '--': [],
       'color': true,
     },

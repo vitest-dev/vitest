@@ -8,10 +8,7 @@ import type {
   UserEventHoverOptions,
 } from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
-import type { BrowserRPC } from '@vitest/browser/client'
 import {
-  Ivya,
-  type ParsedSelector,
   getByAltTextSelector,
   getByLabelSelector,
   getByPlaceholderSelector,
@@ -19,14 +16,14 @@ import {
   getByTestIdSelector,
   getByTextSelector,
   getByTitleSelector,
+  Ivya,
+  type ParsedSelector,
 } from 'ivya'
-import type { WorkerGlobalState } from 'vitest'
-import type { BrowserRunnerState } from '../../utils'
-import { getBrowserState, getWorkerState } from '../../utils'
+import { ensureAwaited, getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
-export const selectorEngine = Ivya.create({
+export const selectorEngine: Ivya = Ivya.create({
   browser: ((name: string) => {
     switch (name) {
       case 'edge':
@@ -185,28 +182,31 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
-  private get state(): BrowserRunnerState {
-    return getBrowserState()
+  public nth(index: number): Locator {
+    return this.locator(`nth=${index}`)
   }
 
-  private get worker(): WorkerGlobalState {
-    return getWorkerState()
+  public first(): Locator {
+    return this.nth(0)
   }
 
-  private get rpc(): BrowserRPC {
-    return this.worker.rpc as any as BrowserRPC
+  public last(): Locator {
+    return this.nth(-1)
   }
 
-  protected triggerCommand<T>(command: string, ...args: any[]) {
-    const filepath = this.worker.filepath
-      || this.worker.current?.file?.filepath
-      || undefined
+  public toString(): string {
+    return this.selector
+  }
 
-    return this.rpc.triggerCommand<T>(
-      this.state.contextId,
+  public toJSON(): string {
+    return this.selector
+  }
+
+  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
+    const commands = getBrowserState().commands
+    return ensureAwaited(() => commands.triggerCommand<T>(
       command,
-      filepath,
       args,
-    )
+    ))
   }
 }

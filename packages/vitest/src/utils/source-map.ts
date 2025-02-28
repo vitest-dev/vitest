@@ -1,10 +1,10 @@
 export {
   lineSplitRE,
-  positionToOffset,
   offsetToLineNumber,
+  positionToOffset,
 } from '@vitest/utils'
 export {
+  parseErrorStacktrace,
   parseSingleStack,
   parseStacktrace,
-  parseErrorStacktrace,
 } from '@vitest/utils/source-map'

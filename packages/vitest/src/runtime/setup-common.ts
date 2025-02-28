@@ -1,13 +1,14 @@
-import { setSafeTimers } from '@vitest/utils'
-import { addSerializer } from '@vitest/snapshot'
-import type { SnapshotSerializer } from '@vitest/snapshot'
 import type { DiffOptions } from '@vitest/expect'
-import { resetRunOnceCounter } from '../integrations/run-once'
-import type { VitestExecutor } from './execute'
+import type { SnapshotSerializer } from '@vitest/snapshot'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { SerializedConfig } from './config'
+import type { VitestExecutor } from './execute'
+import { addSerializer } from '@vitest/snapshot'
+import { setSafeTimers } from '@vitest/utils'
+import { resetRunOnceCounter } from '../integrations/run-once'
 
 let globalSetup = false
-export async function setupCommonEnv(config: SerializedConfig) {
+export async function setupCommonEnv(config: SerializedConfig): Promise<void> {
   resetRunOnceCounter()
   setupDefines(config.defines)
   setupEnv(config.env)
@@ -46,7 +47,10 @@ function setupEnv(env: Record<string, any>) {
 export async function loadDiffConfig(
   config: SerializedConfig,
   executor: VitestExecutor,
-) {
+): Promise<SerializedDiffOptions | undefined> {
+  if (typeof config.diff === 'object') {
+    return config.diff
+  }
   if (typeof config.diff !== 'string') {
     return
   }
@@ -70,7 +74,7 @@ export async function loadDiffConfig(
 export async function loadSnapshotSerializers(
   config: SerializedConfig,
   executor: VitestExecutor,
-) {
+): Promise<void> {
   const files = config.snapshotSerializers
 
   const snapshotSerializers = await Promise.all(
@@ -86,7 +90,7 @@ export async function loadSnapshotSerializers(
       if (
         typeof config.test !== 'function'
         || (typeof config.serialize !== 'function'
-        && typeof config.print !== 'function')
+          && typeof config.print !== 'function')
       ) {
         throw new TypeError(
           `invalid snapshot serializer in ${file}. Must have a 'test' method along with either a 'serialize' or 'print' method.`,

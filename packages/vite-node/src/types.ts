@@ -1,6 +1,6 @@
-import type { ViteHotContext } from 'vite/types/hot.js'
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
-import type { ModuleCacheMap, ViteNodeRunner } from './client'
+import type { ViteHotContext } from 'vite/types/hot.js'
+import type { ModuleCacheMap, ModuleExecutionInfo, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
@@ -9,6 +9,7 @@ export type Awaitable<T> = T | PromiseLike<T>
 export interface DepsHandlingOptions {
   external?: (string | RegExp)[]
   inline?: (string | RegExp)[] | true
+  inlineFiles?: string[]
   /**
    * A list of directories that are considered to hold Node.js modules
    * Have to include "/" at the start and end of the path
@@ -32,8 +33,8 @@ export interface StartOfSourceMap {
 }
 
 export type {
-  EncodedSourceMap,
   DecodedSourceMap,
+  EncodedSourceMap,
   SourceMapInput,
 } from '@jridgewell/trace-mapping'
 
@@ -86,6 +87,7 @@ export interface ViteNodeRunnerOptions {
   createHotContext?: CreateHotContextFunction
   base?: string
   moduleCache?: ModuleCacheMap
+  moduleExecutionInfo?: ModuleExecutionInfo
   interopDefault?: boolean
   requestStubs?: Record<string, any>
   debug?: boolean
@@ -139,4 +141,4 @@ export interface DebuggerOptions {
   loadDumppedModules?: boolean
 }
 
-export type { ModuleCacheMap }
+export type { ModuleCacheMap, ModuleExecutionInfo }

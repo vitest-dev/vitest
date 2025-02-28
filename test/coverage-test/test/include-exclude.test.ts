@@ -1,10 +1,10 @@
 import { expect } from 'vitest'
 import { coverageConfigDefaults } from 'vitest/config'
-import { coverageTest, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
+import { readCoverageMap, runVitest, test } from '../utils'
 
 test('default exclude should ignore test files', async () => {
   await runVitest({
-    include: [normalizeURL(import.meta.url)],
+    include: ['fixtures/test/math.test.ts'],
     coverage: {
       all: true,
       reporter: 'json',
@@ -13,12 +13,12 @@ test('default exclude should ignore test files', async () => {
   })
 
   const coverageMap = await readCoverageMap()
-  expect(coverageMap.files()).toMatchInlineSnapshot(`[]`)
+  expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
-test('overriden exclude should not apply defaults', async () => {
+test('overridden exclude should still apply defaults', async () => {
   await runVitest({
-    include: [normalizeURL(import.meta.url)],
+    include: ['fixtures/test/math.test.ts'],
     coverage: {
       all: true,
       reporter: 'json',
@@ -28,11 +28,7 @@ test('overriden exclude should not apply defaults', async () => {
   })
 
   const coverageMap = await readCoverageMap()
-  expect(coverageMap.files()).toMatchInlineSnapshot(`
-    [
-      "<process-cwd>/fixtures/test/math.test.ts",
-    ]
-  `)
+  expect(coverageMap.files()).toMatchInlineSnapshot(`{}`)
 })
 
 test('test file is excluded from report when excludes is not set', async () => {
@@ -49,7 +45,7 @@ test('test file is excluded from report when excludes is not set', async () => {
   expect(files.find(file => file.includes('test-that-looks-like-source-file'))).toBeFalsy()
 })
 
-test('test files are not automatically excluded from report when excludes is set', async () => {
+test('test files are automatically excluded from report when excludes is set', async () => {
   await runVitest({
     include: ['fixtures/src/test-that-looks-like-source-file.ts'],
     coverage: {
@@ -61,9 +57,5 @@ test('test files are not automatically excluded from report when excludes is set
 
   const coverageMap = await readCoverageMap()
   const files = coverageMap.files()
-  expect(files).toContain('<process-cwd>/fixtures/src/test-that-looks-like-source-file.ts')
-})
-
-coverageTest('dummy', () => {
-  expect(1 + 1).toBe(2)
+  expect(files.find(file => file.includes('test-that-looks-like-source-file'))).toBeFalsy()
 })

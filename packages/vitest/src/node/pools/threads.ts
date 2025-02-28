@@ -1,26 +1,27 @@
-import { MessageChannel } from 'node:worker_threads'
-import * as nodeos from 'node:os'
-import { createBirpc } from 'birpc'
+import type { FileSpecification } from '@vitest/runner/types/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
-import Tinypool from 'tinypool'
-import { resolve } from 'pathe'
-import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
-import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
-import { AggregateError, groupBy } from '../../utils/base'
-import type { WorkspaceProject } from '../workspace'
-import type { SerializedConfig } from '../types/config'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
 import type { Vitest } from '../core'
+import type { PoolProcessOptions, ProcessPool, RunWithFiles } from '../pool'
+import type { TestProject } from '../project'
+import type { SerializedConfig } from '../types/config'
 import type { WorkerContext } from '../types/worker'
+import * as nodeos from 'node:os'
+import { resolve } from 'node:path'
+import { MessageChannel } from 'node:worker_threads'
+import { createBirpc } from 'birpc'
+import Tinypool from 'tinypool'
+import { groupBy } from '../../utils/base'
+import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
-function createWorkerChannel(project: WorkspaceProject) {
+function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { collect }), {
     eventNames: ['onCancel'],
     post(v) {
       port.postMessage(v)
@@ -93,14 +94,16 @@ export function createThreadsPool(
     let id = 0
 
     async function runFiles(
-      project: WorkspaceProject,
+      project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
-      const { workerPort, port } = createWorkerChannel(project)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
+      const { workerPort, port } = createWorkerChannel(project, name === 'collect')
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'threads',
@@ -111,7 +114,7 @@ export function createThreadsPool(
         invalidates,
         environment,
         workerId,
-        projectName: project.getName(),
+        projectName: project.name,
         providedContext: project.getProvidedContext(),
       }
       try {
@@ -124,7 +127,7 @@ export function createThreadsPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(
+            `Failed to terminate worker while running ${paths.join(
               ', ',
             )}. \nSee https://vitest.dev/guide/common-errors.html#failed-to-terminate-worker for troubleshooting.`,
           )
@@ -135,7 +138,7 @@ export function createThreadsPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error
@@ -151,8 +154,8 @@ export function createThreadsPool(
       // Cancel pending tasks from pool when possible
       ctx.onCancel(() => pool.cancelPendingTasks())
 
-      const configs = new WeakMap<WorkspaceProject, SerializedConfig>()
-      const getConfig = (project: WorkspaceProject): SerializedConfig => {
+      const configs = new WeakMap<TestProject, SerializedConfig>()
+      const getConfig = (project: TestProject): SerializedConfig => {
         if (configs.has(project)) {
           return configs.get(project)!
         }
@@ -195,7 +198,7 @@ export function createThreadsPool(
           const grouped = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName()
+              project.name
               + environment.name
               + JSON.stringify(environment.options),
           )
@@ -252,7 +255,7 @@ export function createThreadsPool(
           const filesByOptions = groupBy(
             files,
             ({ project, environment }) =>
-              project.getName() + JSON.stringify(environment.options),
+              project.name + JSON.stringify(environment.options),
           )
 
           for (const files of Object.values(filesByOptions)) {

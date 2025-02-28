@@ -1,7 +1,7 @@
 import type { Plugin as VitePlugin } from 'vite'
-import { normalizeRequestId } from 'vite-node/utils'
-
 import type { Vitest } from '../core'
+
+import { normalizeRequestId } from 'vite-node/utils'
 
 export function CoverageTransform(ctx: Vitest): VitePlugin {
   return {

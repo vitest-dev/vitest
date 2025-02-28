@@ -1,6 +1,6 @@
+import type { PreviewServer } from 'vite'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import type { PreviewServer } from 'vite'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 

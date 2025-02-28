@@ -1,8 +1,9 @@
 import type { ViteNodeRunner } from 'vite-node/client'
-import type { Reporter } from '../types/reporter'
-import type { ResolvedConfig } from '../types/config'
 import type { Vitest } from '../core'
-import type { BenchmarkBuiltinReporters, BuiltinReporters } from './index'
+import type { ResolvedConfig } from '../types/config'
+import type { Reporter } from '../types/reporter'
+import type { BlobReporter } from './blob'
+import type { BasicReporter, BenchmarkBuiltinReporters, BenchmarkReporter, BuiltinReporters, DefaultReporter, DotReporter, GithubActionsReporter, HangingProcessReporter, JsonReporter, JUnitReporter, TapReporter } from './index'
 import { BenchmarkReportsMap, ReportersMap } from './index'
 
 async function loadCustomReporterModule<C extends Reporter>(
@@ -34,7 +35,7 @@ async function loadCustomReporterModule<C extends Reporter>(
 function createReporters(
   reporterReferences: ResolvedConfig['reporters'],
   ctx: Vitest,
-) {
+): Promise<Array<Reporter | DefaultReporter | BasicReporter | BlobReporter | DotReporter | JsonReporter | TapReporter | JUnitReporter | HangingProcessReporter | GithubActionsReporter>> {
   const runner = ctx.runner
   const promisedReporters = reporterReferences.map(
     async (referenceOrInstance) => {
@@ -72,7 +73,7 @@ function createReporters(
 function createBenchmarkReporters(
   reporterReferences: Array<string | Reporter | BenchmarkBuiltinReporters>,
   runner: ViteNodeRunner,
-) {
+): Promise<(Reporter | BenchmarkReporter)[]> {
   const promisedReporters = reporterReferences.map(
     async (referenceOrInstance) => {
       if (typeof referenceOrInstance === 'string') {
@@ -97,4 +98,4 @@ function createBenchmarkReporters(
   return Promise.all(promisedReporters)
 }
 
-export { createReporters, createBenchmarkReporters }
+export { createBenchmarkReporters, createReporters }

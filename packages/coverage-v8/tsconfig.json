@@ -2,7 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "moduleResolution": "Bundler",
-    "types": ["@vitest/browser/providers/playwright"]
+    "types": ["@vitest/browser/providers/playwright"],
+    "isolatedDeclarations": true
   },
   "include": ["./src/**/*.ts"],
   "exclude": ["./dist"]

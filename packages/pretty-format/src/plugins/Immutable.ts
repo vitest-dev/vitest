@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { printIteratorEntries, printIteratorValues } from '../collections'
 import type { Config, NewPlugin, Printer, Refs } from '../types'
+import { printIteratorEntries, printIteratorValues } from '../collections'
 
 // SENTINEL constants are from https://github.com/facebook/immutable-js
 const IS_ITERABLE_SENTINEL = '@@__IMMUTABLE_ITERABLE__@@'
@@ -88,13 +88,13 @@ function printImmutableSeq(val: any, config: Config, indentation: string, depth:
       // from Immutable collection of entries or from ECMAScript object
       val._iter || val._object
         ? printIteratorEntries(
-          val.entries(),
-          config,
-          indentation,
-          depth,
-          refs,
-          printer,
-        )
+            val.entries(),
+            config,
+            indentation,
+            depth,
+            refs,
+            printer,
+          )
         : LAZY
     }}`
   }
@@ -105,13 +105,13 @@ function printImmutableSeq(val: any, config: Config, indentation: string, depth:
     || val._collection // from ECMAScript collection in immutable v4
     || val._iterable // from ECMAScript collection in immutable v3
       ? printIteratorValues(
-        val.values(),
-        config,
-        indentation,
-        depth,
-        refs,
-        printer,
-      )
+          val.values(),
+          config,
+          indentation,
+          depth,
+          refs,
+          printer,
+        )
       : LAZY
   }]`
 }

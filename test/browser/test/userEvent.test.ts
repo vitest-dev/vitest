@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { userEvent as _uE, server } from '@vitest/browser/context'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import '../src/button.css'
 
 beforeEach(() => {
@@ -11,9 +11,14 @@ const userEvent = _uE.setup()
 
 describe('userEvent.click', () => {
   test('correctly clicks a button', async () => {
+    const wrapper = document.createElement('div')
+    wrapper.style.height = '100px'
+    wrapper.style.width = '200px'
+    wrapper.style.backgroundColor = 'red'
+    wrapper.style.display = 'flex'
+    wrapper.style.justifyContent = 'center'
+    wrapper.style.alignItems = 'center'
     const button = document.createElement('button')
-    button.style.height = '100px'
-    button.style.width = '200px'
     button.textContent = 'Click me'
     document.body.appendChild(button)
     const onClick = vi.fn()
@@ -533,7 +538,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     ])
   })
 
-  // strangly enough, original userEvent doesn't support this,
+  // strangely enough, original userEvent doesn't support this,
   // but we can implement it
   test.skipIf(server.provider === 'preview')('selectall works correctly', async () => {
     const input = document.createElement('input')

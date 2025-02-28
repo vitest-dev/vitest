@@ -10,8 +10,6 @@ on:
       - main
 
   pull_request:
-    branches:
-      - main
 
   workflow_dispatch:
 
@@ -38,6 +36,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # check uncommited LICENSE.md, auto-imports.d.ts, etc...
+      - name: Check stale build artifacts
+        run: git diff --exit-code
+
       - name: Lint
         run: pnpm run lint
 
@@ -61,7 +63,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275 # v45.0.1
+        uses: tj-actions/changed-files@dcc7a0cba800f454d79fff4b993e8c3555bcc0a8 # v45.0.7
         with:
           files: |
             docs/**
@@ -101,7 +103,7 @@ jobs:
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm exec playwright install chromium --with-deps --only-shell
 
       - name: Build
         run: pnpm run build
@@ -117,7 +119,7 @@ jobs:
 
   test-browser:
     needs: changed
-    name: 'Browser: ${{ matrix.browser[0] }}, ${{ matrix.os }}'
+    name: 'Browsers: node-20, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
@@ -126,10 +128,6 @@ jobs:
         os:
           - macos-latest
           - windows-latest
-        browser:
-          - [chromium, chrome]
-          - [firefox, firefox]
-          - [webkit]
       fail-fast: false
 
     timeout-minutes: 30
@@ -142,27 +140,19 @@ jobs:
           node-version: 20
 
       - uses: browser-actions/setup-chrome@v1
-        if: ${{ matrix.browser[0] == 'chromium' }}
       - uses: browser-actions/setup-firefox@v1
-        if: ${{ matrix.browser[0] == 'firefox' }}
 
       - name: Install
         run: pnpm i
 
       - name: Install Playwright Dependencies
-        if: needs.changed.outputs.should_skip != 'true'
-        run: pnpm exec playwright install ${{ matrix.browser[0] }} --with-deps
+        run: pnpm exec playwright install --with-deps --only-shell
 
       - name: Build
         run: pnpm run build
 
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
-        env:
-          BROWSER: ${{ matrix.browser[0] }}
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
-        if: ${{ matrix.browser[1] }}
-        env:
-          BROWSER: ${{ matrix.browser[1] }}

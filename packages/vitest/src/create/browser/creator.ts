@@ -1,13 +1,13 @@
-import { dirname, relative, resolve } from 'node:path'
+import type { Agent } from '@antfu/install-pkg'
+import type { BrowserBuiltinProvider } from '../../node/types/browser'
 import { existsSync, readFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
-import prompt from 'prompts'
-import c from 'tinyrainbow'
-import type { Agent } from '@antfu/install-pkg'
+import { dirname, relative, resolve } from 'node:path'
 import { detectPackageManager, installPackage } from '@antfu/install-pkg'
 import { findUp } from 'find-up'
+import prompt from 'prompts'
 import { x } from 'tinyexec'
-import type { BrowserBuiltinProvider } from '../../node/types/browser'
+import c from 'tinyrainbow'
 import { configFiles } from '../../constants'
 import { generateExampleFiles } from './examples'
 
@@ -228,9 +228,9 @@ function getPossibleProvider(dependencies: Record<string, string>) {
 function getProviderDocsLink(provider: string) {
   switch (provider) {
     case 'playwright':
-      return 'https://playwright.dev'
+      return 'https://vitest.dev/guide/browser/playwright'
     case 'webdriverio':
-      return 'https://webdriver.io'
+      return 'https://vitest.dev/guide/browser/webdriverio'
   }
 }
 
@@ -251,7 +251,7 @@ async function generateWorkspaceFile(options: {
   configPath: string
   rootConfig: string
   provider: string
-  browser: string
+  browsers: string[]
 }) {
   const relativeRoot = relative(dirname(options.configPath), options.rootConfig)
   const workspaceContent = [
@@ -265,10 +265,11 @@ async function generateWorkspaceFile(options: {
     `    test: {`,
     `      browser: {`,
     `        enabled: true,`,
-    `        name: '${options.browser}',`,
     `        provider: '${options.provider}',`,
     options.provider !== 'preview' && `        // ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `        providerOptions: {},`,
+    `        instances: [`,
+    ...options.browsers.map(browser => `        { browser: '${browser}' },`),
+    `        ],`,
     `      },`,
     `    },`,
     `  },`,
@@ -283,7 +284,7 @@ async function generateFrameworkConfigFile(options: {
   framework: string
   frameworkPlugin: string | null
   provider: string
-  browser: string
+  browsers: string[]
 }) {
   const frameworkImport = options.framework === 'svelte'
     ? `import { svelte } from '${options.frameworkPlugin}'`
@@ -297,10 +298,11 @@ async function generateFrameworkConfigFile(options: {
     `  test: {`,
     `    browser: {`,
     `      enabled: true,`,
-    `      name: '${options.browser}',`,
     `      provider: '${options.provider}',`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
-    options.provider !== 'preview' && `      providerOptions: {},`,
+    `      instances: [`,
+    ...options.browsers.map(browser => `      { browser: '${browser}' },`),
+    `      ],`,
     `    },`,
     `  },`,
     `})`,
@@ -358,7 +360,7 @@ function getPlaywrightRunArgs(pkgManager: Agent | null) {
   }
 }
 
-export async function create() {
+export async function create(): Promise<void> {
   log(c.cyan('◼'), 'This utility will help you set up a browser testing environment.\n')
 
   const pkgJsonPath = resolve(process.cwd(), 'package.json')
@@ -391,9 +393,10 @@ export async function create() {
     return fail()
   }
 
-  const { browser } = await prompt({
-    type: 'select',
-    name: 'browser',
+  // TODO: allow multiselect
+  const { browsers } = await prompt({
+    type: 'multiselect',
+    name: 'browsers',
     message: 'Choose a browser',
     choices: getBrowserNames(provider).map(browser => ({
       title: browser,
@@ -471,7 +474,7 @@ export async function create() {
       configPath: browserWorkspaceFile,
       rootConfig,
       provider,
-      browser,
+      browsers,
     })
     log(c.green('✔'), 'Created a workspace file for browser tests:', c.bold(relative(process.cwd(), browserWorkspaceFile)))
   }
@@ -482,7 +485,7 @@ export async function create() {
       framework,
       frameworkPlugin,
       provider,
-      browser,
+      browsers,
     })
     log(c.green('✔'), 'Created a config file for browser tests', c.bold(relative(process.cwd(), configPath)))
   }
@@ -503,7 +506,7 @@ export async function create() {
     })
   }
 
-  // TODO: can we do this ourselved?
+  // TODO: can we do this ourselves?
   if (lang === 'ts') {
     await updateTsConfig(providerPkg?.types)
   }

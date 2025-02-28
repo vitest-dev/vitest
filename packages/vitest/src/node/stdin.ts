@@ -1,11 +1,12 @@
-import readline from 'node:readline'
 import type { Writable } from 'node:stream'
-import c from 'tinyrainbow'
-import prompt from 'prompts'
-import { relative, resolve } from 'pathe'
-import { getTests, isWindows, stdout } from '../utils'
-import { toArray } from '../utils/base'
 import type { Vitest } from './core'
+import readline from 'node:readline'
+import { getTests } from '@vitest/runner/utils'
+import { relative, resolve } from 'pathe'
+import prompt from 'prompts'
+import c from 'tinyrainbow'
+import { stdout } from '../utils/base'
+import { isWindows } from '../utils/env'
 import { WatchFilter } from './watch-filter'
 
 const keys = [
@@ -16,29 +17,30 @@ const keys = [
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
+  ['b', 'start the browser server if not started yet'],
   ['q', 'quit'],
 ]
 const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
 
-export function printShortcutsHelp() {
+export function printShortcutsHelp(): void {
   stdout().write(
     `
 ${c.bold('  Watch Usage')}
 ${keys
-    .map(
-      i =>
-        c.dim('  press ')
-        + c.reset([i[0]].flat().map(c.bold).join(', '))
-        + c.dim(` to ${i[1]}`),
-    )
-    .join('\n')}
+  .map(
+    i =>
+      c.dim('  press ')
+      + c.reset([i[0]].flat().map(c.bold).join(', '))
+      + c.dim(` to ${i[1]}`),
+  )
+  .join('\n')}
 `,
   )
 }
 
 export function registerConsoleShortcuts(
   ctx: Vitest,
-  stdin: NodeJS.ReadStream = process.stdin,
+  stdin: NodeJS.ReadStream | undefined = process.stdin,
   stdout: NodeJS.WriteStream | Writable,
 ) {
   let latestFilename = ''
@@ -52,14 +54,12 @@ export function registerConsoleShortcuts(
       || (key && key.ctrl && key.name === 'c')
     ) {
       if (!ctx.isCancelling) {
-        ctx.logger.logUpdate.clear()
         ctx.logger.log(
           c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'),
         )
         process.exitCode = 130
 
         await ctx.cancelCurrentRun('keyboard-input')
-        await ctx.runningPromise
       }
       return ctx.exit(true)
     }
@@ -95,7 +95,7 @@ export function registerConsoleShortcuts(
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
-      const files = await ctx.getTestFilepaths()
+      const files = await ctx._globTestFilepaths()
       return ctx.changeNamePattern('', files, 'rerun all tests')
     }
     // rerun current pattern tests
@@ -117,6 +117,14 @@ export function registerConsoleShortcuts(
     // change fileNamePattern
     if (name === 'p') {
       return inputFilePattern()
+    }
+    if (name === 'b') {
+      await ctx._initBrowserServers()
+      ctx.projects.forEach((project) => {
+        ctx.logger.log()
+        ctx.logger.printBrowserBanner(project)
+      })
+      return null
     }
   }
 
@@ -147,11 +155,16 @@ export function registerConsoleShortcuts(
     })
 
     on()
+
+    if (typeof filter === 'undefined') {
+      return
+    }
+
     const files = ctx.state.getFilepaths()
     // if running in standalone mode, Vitest instance doesn't know about any test file
     const cliFiles
       = ctx.config.standalone && !files.length
-        ? await ctx.getTestFilepaths()
+        ? await ctx._globTestFilepaths()
         : undefined
 
     await ctx.changeNamePattern(
@@ -168,7 +181,7 @@ export function registerConsoleShortcuts(
         name: 'filter',
         type: 'text',
         message: 'Input a single project name',
-        initial: toArray(ctx.configOverride.project)[0] || '',
+        initial: ctx.config.project[0] || '',
       },
     ])
     on()
@@ -190,6 +203,10 @@ export function registerConsoleShortcuts(
     })
 
     on()
+
+    if (typeof filter === 'undefined') {
+      return
+    }
 
     latestFilename = filter?.trim() || ''
     const lastResults = watchFilter.getLastResults()
@@ -224,7 +241,7 @@ export function registerConsoleShortcuts(
 
   on()
 
-  return function cleanup() {
+  return function cleanup(): void {
     off()
   }
 }

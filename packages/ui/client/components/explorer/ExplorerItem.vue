@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import type { Task, TaskState } from '@vitest/runner'
-import { nextTick } from 'vue'
+import type { TaskTreeNodeType } from '~/composables/explorer/types'
 import { hasFailedSnapshot } from '@vitest/ws-client'
 import { Tooltip as VueTooltip } from 'floating-vue'
-import { client, isReport, runFiles } from '~/composables/client'
-import { coverageEnabled } from '~/composables/navigation'
-import type { TaskTreeNodeType } from '~/composables/explorer/types'
+import { nextTick } from 'vue'
+import { client, isReport, runFiles, runTask } from '~/composables/client'
+import { showSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
-import { showSource } from '~/composables/codemirror'
+import { coverageEnabled } from '~/composables/navigation'
 
 // TODO: better handling of "opened" - it means to forcefully open the tree item and set in TasksList right now
 const {
@@ -24,6 +24,7 @@ const {
   disableTaskLocation,
   onItemClick,
   projectNameColor,
+  state,
 } = defineProps<{
   taskId: string
   name: string
@@ -56,6 +57,7 @@ const failedSnapshot = computed(() => {
 
 function toggleOpen() {
   if (!expandable) {
+    onItemClick?.(task.value!)
     return
   }
 
@@ -73,7 +75,13 @@ async function onRun(task: Task) {
     disableCoverage.value = true
     await nextTick()
   }
-  await runFiles([task.file])
+
+  if (type === 'file') {
+    await runFiles([task.file])
+  }
+  else {
+    await runTask(task)
+  }
 }
 
 function updateSnapshot(task: Task) {
@@ -106,6 +114,14 @@ const gridStyles = computed(() => {
   return `grid-template-columns: ${
     entries.map(() => '1rem').join(' ')
   } ${gridColumns.join(' ')};`
+})
+
+const runButtonTitle = computed(() => {
+  return type === 'file'
+    ? 'Run current file'
+    : type === 'suite'
+      ? 'Run all tests in this suite'
+      : 'Run current test'
 })
 
 const escapedName = computed(() => escapeHtml(name))
@@ -219,12 +235,11 @@ const projectNameTextColor = computed(() => {
       </VueTooltip>
       <IconButton
         v-if="!isReport"
-        v-tooltip.bottom="'Run current test'"
+        v-tooltip.bottom="runButtonTitle"
         data-testid="btn-run-test"
-        title="Run current test"
+        :title="runButtonTitle"
         icon="i-carbon:play-filled-alt"
         text-green5
-        :disabled="type !== 'file'"
         @click.prevent.stop="onRun(task)"
       />
     </div>

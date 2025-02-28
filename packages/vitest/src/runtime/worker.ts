@@ -1,12 +1,13 @@
+import type { ContextRPC, WorkerGlobalState } from '../types/worker'
+import type { VitestWorker } from './workers/types'
 import { pathToFileURL } from 'node:url'
+import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
 import { workerId as poolId } from 'tinypool'
 import { ModuleCacheMap } from 'vite-node/client'
 import { loadEnvironment } from '../integrations/env/loader'
-import { isChildProcess, setProcessTitle } from '../utils/base'
-import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import { setupInspect } from './inspector'
 import { createRuntimeRpc, rpcDone } from './rpc'
-import type { VitestWorker } from './workers/types'
+import { isChildProcess, setProcessTitle } from './utils'
 import { disposeInternalListeners } from './workers/utils'
 
 if (isChildProcess()) {
@@ -81,6 +82,7 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
       ctx,
       // here we create a new one, workers can reassign this if they need to keep it non-isolated
       moduleCache: new ModuleCacheMap(),
+      moduleExecutionInfo: new Map(),
       config: ctx.config,
       onCancel,
       environment,
@@ -90,6 +92,9 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
       },
       rpc,
       providedContext: ctx.providedContext,
+      onFilterStackTrace(stack) {
+        return createStackString(parseStacktrace(stack))
+      },
     } satisfies WorkerGlobalState
 
     const methodName = method === 'collect' ? 'collectTests' : 'runTests'
@@ -108,10 +113,10 @@ async function execute(method: 'run' | 'collect', ctx: ContextRPC) {
   }
 }
 
-export function run(ctx: ContextRPC) {
+export function run(ctx: ContextRPC): Promise<void> {
   return execute('run', ctx)
 }
 
-export function collect(ctx: ContextRPC) {
+export function collect(ctx: ContextRPC): Promise<void> {
   return execute('collect', ctx)
 }

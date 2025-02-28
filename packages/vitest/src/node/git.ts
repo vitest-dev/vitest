@@ -1,5 +1,5 @@
-import { resolve } from 'pathe'
 import type { Output } from 'tinyexec'
+import { resolve } from 'pathe'
 import { x } from 'tinyexec'
 
 export interface GitOptions {
@@ -29,7 +29,7 @@ export class VitestGit {
       .map(changedPath => resolve(this.root, changedPath))
   }
 
-  async findChangedFiles(options: GitOptions) {
+  async findChangedFiles(options: GitOptions): Promise<string[] | null> {
     const root = await this.getRoot(this.cwd)
     if (!root) {
       return null
@@ -74,7 +74,7 @@ export class VitestGit {
     ])
   }
 
-  async getRoot(cwd: string) {
+  async getRoot(cwd: string): Promise<string | null> {
     const args = ['rev-parse', '--show-cdup']
 
     try {

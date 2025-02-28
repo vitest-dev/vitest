@@ -1,24 +1,26 @@
 import type { DeferPromise } from '@vitest/utils'
-import { createDefer } from '@vitest/utils'
 import type { TypecheckResults } from '../../typecheck/typechecker'
+import type { Vitest } from '../core'
+import type { ProcessPool } from '../pool'
+import type { TestProject } from '../project'
+import type { TestSpecification } from '../spec'
+import { hasFailed } from '@vitest/runner/utils'
+import { createDefer } from '@vitest/utils'
 import { Typechecker } from '../../typecheck/typechecker'
 import { groupBy } from '../../utils/base'
-import { hasFailed } from '../../utils/tasks'
-import type { Vitest } from '../core'
-import type { ProcessPool, WorkspaceSpec } from '../pool'
-import type { WorkspaceProject } from '../workspace'
 
 export function createTypecheckPool(ctx: Vitest): ProcessPool {
-  const promisesMap = new WeakMap<WorkspaceProject, DeferPromise<void>>()
-  const rerunTriggered = new WeakSet<WorkspaceProject>()
+  const promisesMap = new WeakMap<TestProject, DeferPromise<void>>()
+  const rerunTriggered = new WeakSet<TestProject>()
 
   async function onParseEnd(
-    project: WorkspaceProject,
+    project: TestProject,
     { files, sourceErrors }: TypecheckResults,
   ) {
     const checker = project.typechecker!
 
-    await ctx.report('onTaskUpdate', checker.getTestPacks())
+    const { packs, events } = checker.getTestPacksAndEvents()
+    await ctx._testRun.updated(packs, events)
 
     if (!project.config.typecheck.ignoreSourceErrors) {
       sourceErrors.forEach(error =>
@@ -49,7 +51,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
   }
 
   async function createWorkspaceTypechecker(
-    project: WorkspaceProject,
+    project: TestProject,
     files: string[],
   ) {
     const checker = project.typechecker ?? new Typechecker(project)
@@ -61,8 +63,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     checker.setFiles(files)
 
     checker.onParseStart(async () => {
-      ctx.state.collectFiles(project, checker.getTestFiles())
-      await ctx.report('onCollected')
+      const files = checker.getTestFiles()
+      for (const file of files) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, files)
     })
 
     checker.onParseEnd(result => onParseEnd(project, result))
@@ -80,17 +85,22 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       }
 
       await checker.collectTests()
-      ctx.state.collectFiles(project, checker.getTestFiles())
 
-      await ctx.report('onTaskUpdate', checker.getTestPacks())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, testFiles)
+
+      const { packs, events } = checker.getTestPacksAndEvents()
+      await ctx._testRun.updated(packs, events)
     })
 
     await checker.prepare()
     return checker
   }
 
-  async function startTypechecker(project: WorkspaceProject, files: string[]) {
+  async function startTypechecker(project: TestProject, files: string[]) {
     if (project.typechecker) {
       return
     }
@@ -99,26 +109,29 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
     await checker.start()
   }
 
-  async function collectTests(specs: WorkspaceSpec[]) {
+  async function collectTests(specs: TestSpecification[]) {
     const specsByProject = groupBy(specs, spec => spec.project.name)
     for (const name in specsByProject) {
       const project = specsByProject[name][0].project
       const files = specsByProject[name].map(spec => spec.moduleId)
-      const checker = await createWorkspaceTypechecker(project.workspaceProject, files)
+      const checker = await createWorkspaceTypechecker(project, files)
       checker.setFiles(files)
       await checker.collectTests()
-      ctx.state.collectFiles(project.workspaceProject, checker.getTestFiles())
-      await ctx.report('onCollected')
+      const testFiles = checker.getTestFiles()
+      for (const file of testFiles) {
+        await ctx._testRun.enqueued(project, file)
+      }
+      await ctx._testRun.collected(project, testFiles)
     }
   }
 
-  async function runTests(specs: WorkspaceSpec[]) {
+  async function runTests(specs: TestSpecification[]) {
     const specsByProject = groupBy(specs, spec => spec.project.name)
     const promises: Promise<void>[] = []
 
     for (const name in specsByProject) {
-      const project = specsByProject[name][0][0]
-      const files = specsByProject[name].map(([_, file]) => file)
+      const project = specsByProject[name][0].project
+      const files = specsByProject[name].map(spec => spec.moduleId)
       const promise = createDefer<void>()
       // check that watcher actually triggered rerun
       const _p = new Promise<boolean>((resolve) => {
@@ -135,8 +148,11 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       })
       const triggered = await _p
       if (project.typechecker && !triggered) {
-        ctx.state.collectFiles(project, project.typechecker.getTestFiles())
-        await ctx.report('onCollected')
+        const testFiles = project.typechecker.getTestFiles()
+        for (const file of testFiles) {
+          await ctx._testRun.enqueued(project, file)
+        }
+        await ctx._testRun.collected(project, testFiles)
         await onParseEnd(project, project.typechecker.getResult())
         continue
       }

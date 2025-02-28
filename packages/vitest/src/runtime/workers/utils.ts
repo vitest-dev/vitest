@@ -1,8 +1,8 @@
 import type { TinypoolWorkerMessage } from 'tinypool'
-import { parseRegexp } from '@vitest/utils'
 import type { ResolvedConfig, SerializedConfig } from '../../node/types/config'
 import type { WorkerContext } from '../../node/types/worker'
 import type { WorkerRpcOptions } from './types'
+import { parseRegexp } from '@vitest/utils'
 
 const REGEXP_WRAP_PREFIX = '$$vitest:'
 
@@ -25,7 +25,7 @@ export function createThreadsRpcOptions({
   }
 }
 
-export function disposeInternalListeners() {
+export function disposeInternalListeners(): void {
   for (const fn of dispose) {
     try {
       fn()
@@ -62,7 +62,7 @@ export function createForksRpcOptions(
 /**
  * Reverts the wrapping done by `utils/config-helpers.ts`'s `wrapSerializableConfig`
  */
-export function unwrapSerializableConfig(config: SerializedConfig) {
+export function unwrapSerializableConfig(config: SerializedConfig): SerializedConfig {
   if (config.testNamePattern && typeof config.testNamePattern === 'string') {
     const testNamePattern = config.testNamePattern as string
 

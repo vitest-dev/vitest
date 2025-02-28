@@ -8,6 +8,7 @@ export interface SafeTimers {
   clearTimeout: typeof clearTimeout
   setImmediate: typeof setImmediate
   clearImmediate: typeof clearImmediate
+  queueMicrotask: typeof queueMicrotask
 }
 
 export function getSafeTimers(): SafeTimers {
@@ -18,6 +19,7 @@ export function getSafeTimers(): SafeTimers {
     clearTimeout: safeClearTimeout,
     setImmediate: safeSetImmediate,
     clearImmediate: safeClearImmediate,
+    queueMicrotask: safeQueueMicrotask,
   } = (globalThis as any)[SAFE_TIMERS_SYMBOL] || globalThis
 
   const { nextTick: safeNextTick } = (globalThis as any)[SAFE_TIMERS_SYMBOL]
@@ -31,6 +33,7 @@ export function getSafeTimers(): SafeTimers {
     clearTimeout: safeClearTimeout,
     setImmediate: safeSetImmediate,
     clearImmediate: safeClearImmediate,
+    queueMicrotask: safeQueueMicrotask,
   }
 }
 
@@ -42,6 +45,7 @@ export function setSafeTimers(): void {
     clearTimeout: safeClearTimeout,
     setImmediate: safeSetImmediate,
     clearImmediate: safeClearImmediate,
+    queueMicrotask: safeQueueMicrotask,
   } = globalThis
 
   const { nextTick: safeNextTick } = globalThis.process || {
@@ -56,6 +60,7 @@ export function setSafeTimers(): void {
     clearTimeout: safeClearTimeout,
     setImmediate: safeSetImmediate,
     clearImmediate: safeClearImmediate,
+    queueMicrotask: safeQueueMicrotask,
   };
 
   (globalThis as any)[SAFE_TIMERS_SYMBOL] = timers

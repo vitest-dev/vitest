@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { explorerTree } from '~/composables/explorer'
 import { finished } from '~/composables/client/state'
+import { explorerTree } from '~/composables/explorer'
 
 const { width } = useWindowSize()
 const classes = computed(() => {
-  // if there are no files, then in progress and gray
-  if (explorerTree.summary.files === 0) {
-    return '!bg-gray-4 !dark:bg-gray-7 in-progress'
-  }
-  else if (!finished.value) {
-    return 'in-progress'
-  }
-
-  return null
+  return [
+    explorerTree.summary.files === 0 && '!bg-gray-4 !dark:bg-gray-7',
+    !finished.value && 'in-progress',
+  ].filter(Boolean).join(' ')
 })
 
 const widthPass = computed(() => {

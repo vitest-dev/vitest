@@ -1,12 +1,12 @@
-import { resolve } from 'pathe'
 import type { UserConfig } from 'vite'
-import { defineConfig } from 'vite'
 import Vue from '@vitejs/plugin-vue'
-import Components from 'unplugin-vue-components/vite'
-import AutoImport from 'unplugin-auto-import/vite'
-import Unocss from 'unocss/vite'
-import Pages from 'vite-plugin-pages'
+import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetUno, transformerDirectives } from 'unocss'
+import Unocss from 'unocss/vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig } from 'vite'
+import Pages from 'vite-plugin-pages'
 
 // for debug:
 // open a static file serve to share the report json
@@ -80,6 +80,17 @@ export const config: UserConfig = {
     //     return html.replace('<!-- !LOAD_METADATA! -->', `<script>window.METADATA_PATH="${debugLink}/html.meta.json.gz"</script>`)
     //   },
     // },
+    {
+      // workaround `crossorigin` issues on some browsers
+      // https://github.com/vitejs/vite/issues/6648
+      name: 'no-crossorigin-for-same-assets',
+      apply: 'build',
+      transformIndexHtml(html) {
+        return html
+          .replace('crossorigin src="./assets/', 'src="./assets/')
+          .replace('crossorigin href="./assets/', 'href="./assets/')
+      },
+    },
   ],
   build: {
     outDir: './dist/client',

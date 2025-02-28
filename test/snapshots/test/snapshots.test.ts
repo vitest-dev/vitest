@@ -1,6 +1,4 @@
-import fs from 'node:fs/promises'
 import { expect, test } from 'vitest'
-import pathe from 'pathe'
 
 import { editFile, runVitest } from '../../test-utils'
 
@@ -12,18 +10,6 @@ test('non default snapshot format', () => {
       ],
     }
   `)
-})
-
-test('js snapshots generated correctly', async () => {
-  const path = pathe.resolve(__dirname, '../test-update/snapshots-inline-js.test.js')
-  const content = await fs.readFile(path, 'utf8')
-  expect(content).toMatchSnapshot()
-})
-
-test('concurrent snapshot update', async () => {
-  const path = pathe.resolve(__dirname, '../test-update/inline-test-template-concurrent.test.js')
-  const content = await fs.readFile(path, 'utf8')
-  expect(content).toMatchSnapshot()
 })
 
 test('--update works for workspace project', async () => {

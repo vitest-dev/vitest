@@ -1,7 +1,7 @@
+import type { UserEventCommand } from './utils'
 import { dirname, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
 import { WebdriverBrowserProvider } from '../providers/webdriver'
-import type { UserEventCommand } from './utils'
 
 export const upload: UserEventCommand<(element: string, files: Array<string | {
   name: string

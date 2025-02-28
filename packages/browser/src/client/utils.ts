@@ -1,11 +1,12 @@
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { BrowserRPC } from './client'
 
-export async function importId(id: string) {
+export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export async function importFs(id: string) {
+export async function importFs(id: string): Promise<any> {
   const name = `/@fs/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
@@ -13,7 +14,7 @@ export async function importFs(id: string) {
 export const executor = {
   isBrowser: true,
 
-  executeId: (id: string) => {
+  executeId: (id: string): Promise<any> => {
     if (id[0] === '/' || id[1] === ':') {
       return importFs(id)
     }
@@ -23,6 +24,40 @@ export const executor = {
 
 export function getConfig(): SerializedConfig {
   return getBrowserState().config
+}
+
+export function ensureAwaited<T>(promise: () => Promise<T>): Promise<T> {
+  const test = getWorkerState().current
+  if (!test || test.type !== 'test') {
+    return promise()
+  }
+  let awaited = false
+  const sourceError = new Error('STACK_TRACE_ERROR')
+  test.onFinished ??= []
+  test.onFinished.push(() => {
+    if (!awaited) {
+      const error = new Error(
+        `The call was not awaited. This method is asynchronous and must be awaited; otherwise, the call will not start to avoid unhandled rejections.`,
+      )
+      error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+      throw error
+    }
+  })
+  // don't even start the promise if it's not awaited to not cause any unhanded promise rejections
+  let promiseResult: Promise<T> | undefined
+  return {
+    then(onFulfilled, onRejected) {
+      awaited = true
+      return (promiseResult ||= promise()).then(onFulfilled, onRejected)
+    },
+    catch(onRejected) {
+      return (promiseResult ||= promise()).catch(onRejected)
+    },
+    finally(onFinally) {
+      return (promiseResult ||= promise()).finally(onFinally)
+    },
+    [Symbol.toStringTag]: 'Promise',
+  } satisfies Promise<T>
 }
 
 export interface BrowserRunnerState {
@@ -38,10 +73,12 @@ export interface BrowserRunnerState {
   type: 'tester' | 'orchestrator'
   wrapModule: <T>(module: () => T) => T
   iframeId?: string
-  contextId: string
+  sessionId: string
   testerId: string
+  method: 'run' | 'collect'
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
+  commands: CommandsManager
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
     once: (event: string, listener: (payload: any) => void) => void
@@ -68,7 +105,7 @@ export function getWorkerState(): WorkerGlobalState {
 }
 
 /* @__NO_SIDE_EFFECTS__ */
-export function convertElementToCssSelector(element: Element) {
+export function convertElementToCssSelector(element: Element): string {
   if (!element || !(element instanceof Element)) {
     throw new Error(
       `Expected DOM element to be an instance of Element, received ${typeof element}`,
@@ -158,4 +195,23 @@ function getParent(el: Element) {
     return parent.host
   }
   return parent
+}
+
+export class CommandsManager {
+  private _listeners: ((command: string, args: any[]) => void)[] = []
+
+  public onCommand(listener: (command: string, args: any[]) => void): void {
+    this._listeners.push(listener)
+  }
+
+  public async triggerCommand<T>(command: string, args: any[]): Promise<T> {
+    const state = getWorkerState()
+    const rpc = state.rpc as any as BrowserRPC
+    const { sessionId } = getBrowserState()
+    const filepath = state.filepath || state.current?.file?.filepath
+    if (this._listeners.length) {
+      await Promise.all(this._listeners.map(listener => listener(command, args)))
+    }
+    return rpc.triggerCommand<T>(sessionId, command, filepath, args)
+  }
 }

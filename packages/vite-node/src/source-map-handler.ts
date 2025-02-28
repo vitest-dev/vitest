@@ -1,15 +1,15 @@
 // adapted from https://github.com/evanw/node-source-map-support/blob/master/source-map-support.js
 // we need this because "--enable-source-maps" flag doesn't support VM
-// we make a custom implementatin because we don't need some features from source-map-support,
+// we make a custom implementation because we don't need some features from source-map-support,
 // like polyfilled Buffer, browser support, etc.
 
-import path from 'node:path'
-import fs from 'node:fs'
 import type {
   OriginalMapping,
   SourceMapInput,
 } from '@jridgewell/trace-mapping'
-import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping'
+import fs from 'node:fs'
+import path from 'node:path'
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 
 // Only install once if called multiple times
 let errorFormatterInstalled = false
@@ -467,7 +467,7 @@ interface Options {
   retrieveSourceMap?: RetrieveMapHandler
 }
 
-export const install = function (options: Options) {
+export const install = function (options: Options): void {
   options = options || {}
 
   // Allow sources to be found by methods other than reading the files
@@ -498,7 +498,7 @@ export const install = function (options: Options) {
   }
 }
 
-export const resetRetrieveHandlers = function () {
+export const resetRetrieveHandlers = function (): void {
   retrieveFileHandlers.length = 0
   retrieveMapHandlers.length = 0
 

@@ -1,8 +1,8 @@
-import type { UserConfig } from 'vitest/node'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { UserConfig } from 'vitest/node'
 import { describe, expect, it } from 'vitest'
-import { createVitest, parseCLI } from 'vitest/node'
 import { extraInlineDeps } from 'vitest/config'
+import { createVitest, parseCLI } from 'vitest/node'
 
 type VitestOptions = Parameters<typeof createVitest>[3]
 
@@ -249,6 +249,7 @@ describe('correctly defines api flag', () => {
     expect(c.server.config.server.middlewareMode).toBe(true)
     expect(c.config.api).toEqual({
       middlewareMode: true,
+      token: expect.any(String),
     })
   })
 
@@ -262,6 +263,7 @@ describe('correctly defines api flag', () => {
     expect(c.server.config.server.port).toBe(4321)
     expect(c.config.api).toEqual({
       port: 4321,
+      token: expect.any(String),
     })
   })
 })

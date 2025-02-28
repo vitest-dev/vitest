@@ -14,16 +14,16 @@
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
+    "@vitest/web-worker": "workspace:*",
     "@vue/test-utils": "latest",
     "happy-dom": "latest",
     "istanbul-lib-coverage": "^3.2.0",
     "istanbul-lib-report": "^3.0.1",
-    "magic-string": "^0.30.10",
+    "magic-string": "^0.30.12",
     "magicast": "^0.3.3",
     "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
-    "vue": "^3.4.37",
-    "webdriverio": "latest"
+    "vue": "^3.5.12"
   }
 }

@@ -1,8 +1,8 @@
+import { faker } from '@faker-js/faker'
 import { describe, expect, it } from 'vitest'
 import { h } from 'vue'
-import { faker } from '@faker-js/faker'
-import DashboardEntry from './DashboardEntry.vue'
 import { render, screen } from '~/test'
+import DashboardEntry from './DashboardEntry.vue'
 
 const bodyTestId = 'body-content'
 const headerTestId = 'header-content'
