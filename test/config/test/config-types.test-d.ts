@@ -27,7 +27,7 @@ describe('merge config helper', () => {
     expectTypeOf(mergeConfig(
       defineConfig({}),
       defineProject({ test: { name: 'test' } }),
-    )).toMatchTypeOf<Record<string, unknown>>()
+    )).toExtend<Record<string, unknown>>()
   })
 })
 
@@ -77,7 +77,7 @@ describe('define workspace helper', () => {
   })
 
   test('return type matches parameters', () => {
-    expectTypeOf(defineWorkspace).returns.toMatchTypeOf<DefineWorkspaceParameter>()
+    expectTypeOf(defineWorkspace).returns.toExtend<DefineWorkspaceParameter>()
 
     expectTypeOf(defineWorkspace([
       './path/to/project',
@@ -101,6 +101,6 @@ describe('define workspace helper', () => {
           coverage: {},
         },
       },
-    ])).items.toMatchTypeOf<DefineWorkspaceParameter[number]>()
+    ])).items.toExtend<DefineWorkspaceParameter[number]>()
   })
 })
