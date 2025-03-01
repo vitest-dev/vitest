@@ -868,14 +868,14 @@ export default defineConfig({
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number or percentage of forks.
+Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.forks.minForks<NonProjectOption />
 
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number or percentage of forks.
+Minimum number or percentage of forks. You can also use `VITEST_MIN_FORKS` environment variable.
 
 ##### poolOptions.forks.isolate
 
@@ -1012,14 +1012,14 @@ export default defineConfig({
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number or percentage of threads. You can also use `VITEST_MAX_FORKS` environment variable.
+Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.vmForks.minForks<NonProjectOption />
 
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number or percentage of threads. You can also use `VITEST_MIN_FORKS` environment variable.
+Minimum number or percentage of forks. You can also use `VITEST_MIN_FORKS` environment variable.
 
 ##### poolOptions.vmForks.memoryLimit<NonProjectOption />
 
