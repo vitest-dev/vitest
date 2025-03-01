@@ -17,9 +17,9 @@ patchedDependencies:
   '@sinonjs/fake-timers@14.0.0':
     hash: 6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278
     path: patches/@sinonjs__fake-timers@14.0.0.patch
-  '@types/chai':
+  '@types/chai@5.0.1':
     hash: d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf
-    path: patches/@types__chai.patch
+    path: patches/@types__chai@5.0.1.patch
   '@types/sinonjs__fake-timers@8.1.5':
     hash: 0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
