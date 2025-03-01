@@ -17,9 +17,9 @@ patchedDependencies:
   '@sinonjs/fake-timers@14.0.0':
     hash: 6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278
     path: patches/@sinonjs__fake-timers@14.0.0.patch
-  '@types/chai@4.3.6':
-    hash: bf8d3f0f9a8fa79fc18c6022699d05f01b3f60fe137b1b415d0ffe94c324413f
-    path: patches/@types__chai@4.3.6.patch
+  '@types/chai@5.0.1':
+    hash: d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf
+    path: patches/@types__chai@5.0.1.patch
   '@types/sinonjs__fake-timers@8.1.5':
     hash: 0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
@@ -581,8 +581,8 @@ importers:
         version: 2.0.0
     devDependencies:
       '@types/chai':
-        specifier: 4.3.6
-        version: 4.3.6(patch_hash=bf8d3f0f9a8fa79fc18c6022699d05f01b3f60fe137b1b415d0ffe94c324413f)
+        specifier: 5.0.1
+        version: 5.0.1(patch_hash=d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf)
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -3564,8 +3564,8 @@ packages:
   '@types/braces@3.0.1':
     resolution: {integrity: sha512-+euflG6ygo4bn0JHtn4pYqcXwRtLvElQ7/nnjDu7iYG56H0+OhCd7d6Ug0IE3WcFpZozBKW2+80FUbv5QGk5AQ==}
 
-  '@types/chai@4.3.6':
-    resolution: {integrity: sha512-VOVRLM1mBxIRxydiViqPcKn6MIxZytrbMpd6RJLIWKxUNr3zux8no0Oc7kJx0WAPIitgZ0gkrDS+btlqQpubpw==}
+  '@types/chai@5.0.1':
+    resolution: {integrity: sha512-5T8ajsg3M/FOncpLYW7sdOcD6yf4+722sze/tc4KQV0P8Z2rAr3SAuHCIkYmYpt8VbcQlnz8SxlOlPQYefe4cA==}
 
   '@types/codemirror@5.60.15':
     resolution: {integrity: sha512-dTOvwEQ+ouKJ/rE9LT1Ue2hmP6H1mZv5+CCnNWu2qtiOe2LQa9lCprEY20HxiDmV/Bxh+dXjywmy5aKvoGjULA==}
@@ -3584,6 +3584,9 @@ packages:
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
+
+  '@types/deep-eql@4.0.2':
+    resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
   '@types/doctrine@0.0.9':
     resolution: {integrity: sha512-eOIHzCUSH7SMfonMG1LsC2f8vxBFtho6NGBznK41R84YzPuvSBzrhEps33IsQiOW9+VL6NQ9DbjQJznk/S4uRA==}
@@ -7097,6 +7100,11 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@3.3.8:
+    resolution: {integrity: sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
   napi-build-utils@1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
 
@@ -7486,6 +7494,10 @@ packages:
   postcss-selector-parser@6.0.16:
     resolution: {integrity: sha512-A0RVJrX+IUkVZbW3ClroRWurercFhieevHB38sr2+l9eUClMqome3LmEmnhlNy+5Mr2EYN6B2Kaw9wYdd+VHiw==}
     engines: {node: '>=4'}
+
+  postcss@8.5.3:
+    resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
+    engines: {node: ^10 || ^12 || >=14}
 
   postcss@8.5.3:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
@@ -11685,7 +11697,9 @@ snapshots:
 
   '@types/braces@3.0.1': {}
 
-  '@types/chai@4.3.6(patch_hash=bf8d3f0f9a8fa79fc18c6022699d05f01b3f60fe137b1b415d0ffe94c324413f)': {}
+  '@types/chai@5.0.1(patch_hash=d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf)':
+    dependencies:
+      '@types/deep-eql': 4.0.2
 
   '@types/codemirror@5.60.15':
     dependencies:
@@ -11702,6 +11716,8 @@ snapshots:
   '@types/debug@4.1.12':
     dependencies:
       '@types/ms': 0.7.31
+
+  '@types/deep-eql@4.0.2': {}
 
   '@types/doctrine@0.0.9': {}
 
@@ -16041,6 +16057,8 @@ snapshots:
 
   nanoid@3.3.8: {}
 
+  nanoid@3.3.8: {}
+
   napi-build-utils@1.0.2: {}
 
   natural-compare@1.4.0: {}
@@ -16422,6 +16440,12 @@ snapshots:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
+
+  postcss@8.5.3:
+    dependencies:
+      nanoid: 3.3.8
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
 
   postcss@8.5.3:
     dependencies:
