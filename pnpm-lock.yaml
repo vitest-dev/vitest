@@ -4,6 +4,123 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@ampproject/remapping':
+      specifier: ^2.3.0
+      version: 2.3.0
+    '@iconify-json/carbon':
+      specifier: ^1.2.7
+      version: 1.2.7
+    '@iconify-json/logos':
+      specifier: ^1.2.4
+      version: 1.2.4
+    '@jridgewell/trace-mapping':
+      specifier: ^0.3.25
+      version: 0.3.25
+    '@types/debug':
+      specifier: ^4.1.12
+      version: 4.1.12
+    '@types/estree':
+      specifier: ^1.0.6
+      version: 1.0.6
+    '@types/istanbul-lib-coverage':
+      specifier: ^2.0.6
+      version: 2.0.6
+    '@types/istanbul-lib-report':
+      specifier: ^3.0.3
+      version: 3.0.3
+    '@types/istanbul-lib-source-maps':
+      specifier: ^4.0.4
+      version: 4.0.4
+    '@types/istanbul-reports':
+      specifier: ^3.0.4
+      version: 3.0.4
+    '@types/test-exclude':
+      specifier: ^6.0.2
+      version: 6.0.2
+    '@types/ws':
+      specifier: ^8.5.14
+      version: 8.5.14
+    '@unocss/reset':
+      specifier: ^0.65.4
+      version: 0.65.4
+    '@vitejs/plugin-vue':
+      specifier: ^5.2.1
+      version: 5.2.1
+    '@vueuse/core':
+      specifier: ^12.7.0
+      version: 12.7.0
+    acorn-walk:
+      specifier: ^8.3.4
+      version: 8.3.4
+    birpc:
+      specifier: 0.2.19
+      version: 0.2.19
+    cac:
+      specifier: ^6.7.14
+      version: 6.7.14
+    chai:
+      specifier: ^5.2.0
+      version: 5.2.0
+    debug:
+      specifier: ^4.4.0
+      version: 4.4.0
+    flatted:
+      specifier: ^3.3.3
+      version: 3.3.3
+    istanbul-lib-coverage:
+      specifier: ^3.2.2
+      version: 3.2.2
+    istanbul-lib-report:
+      specifier: ^3.0.1
+      version: 3.0.1
+    istanbul-lib-source-maps:
+      specifier: ^5.0.6
+      version: 5.0.6
+    istanbul-reports:
+      specifier: ^3.1.7
+      version: 3.1.7
+    magic-string:
+      specifier: ^0.30.17
+      version: 0.30.17
+    magicast:
+      specifier: ^0.3.5
+      version: 0.3.5
+    msw:
+      specifier: ^2.7.3
+      version: 2.7.3
+    pathe:
+      specifier: ^2.0.3
+      version: 2.0.3
+    sirv:
+      specifier: ^3.0.1
+      version: 3.0.1
+    std-env:
+      specifier: ^3.8.0
+      version: 3.8.0
+    test-exclude:
+      specifier: ^7.0.1
+      version: 7.0.1
+    tinyglobby:
+      specifier: ^0.2.12
+      version: 0.2.12
+    tinyrainbow:
+      specifier: ^2.0.0
+      version: 2.0.0
+    unocss:
+      specifier: ^0.65.4
+      version: 0.65.4
+    unplugin-vue-components:
+      specifier: ^0.28.0
+      version: 0.28.0
+    vue:
+      specifier: ^3.5.12
+      version: 3.5.13
+    ws:
+      specifier: ^8.18.1
+      version: 8.18.1
+
 overrides:
   '@vitest/browser': workspace:*
   '@vitest/ui': workspace:*
@@ -128,17 +245,17 @@ importers:
   docs:
     dependencies:
       '@vueuse/core':
-        specifier: ^12.7.0
+        specifier: 'catalog:'
         version: 12.7.0(typescript@5.7.3)
       vue:
-        specifier: ^3.5.12
-        version: 3.5.12(typescript@5.7.3)
+        specifier: 'catalog:'
+        version: 3.5.13(typescript@5.7.3)
     devDependencies:
       '@iconify-json/carbon':
-        specifier: ^1.2.7
+        specifier: 'catalog:'
         version: 1.2.7
       '@iconify-json/logos':
-        specifier: ^1.2.4
+        specifier: 'catalog:'
         version: 1.2.4
       '@shikijs/transformers':
         specifier: ^1.29.2
@@ -147,7 +264,7 @@ importers:
         specifier: ^1.29.2
         version: 1.29.2(typescript@5.7.3)
       '@unocss/reset':
-        specifier: ^0.65.4
+        specifier: 'catalog:'
         version: 0.65.4
       '@vite-pwa/assets-generator':
         specifier: ^0.2.6
@@ -156,20 +273,20 @@ importers:
         specifier: ^0.5.3
         version: 0.5.3(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.21.1(@vite-pwa/assets-generator@0.2.6)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0))
       '@vitejs/plugin-vue':
-        specifier: ^5.2.1
-        version: 5.2.1(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+        specifier: 'catalog:'
+        version: 5.2.1(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
       https-localhost:
         specifier: ^4.7.1
         version: 4.7.1
       tinyglobby:
-        specifier: ^0.2.12
+        specifier: 'catalog:'
         version: 0.2.12
       unocss:
-        specifier: ^0.65.4
-        version: 0.65.4(postcss@8.5.3)(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+        specifier: 'catalog:'
+        version: 0.65.4(postcss@8.5.3)(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
       unplugin-vue-components:
-        specifier: ^0.28.0
-        version: 0.28.0(@babel/parser@7.26.2)(rollup@4.34.8)(vue@3.5.12(typescript@5.7.3))
+        specifier: 'catalog:'
+        version: 0.28.0(@babel/parser@7.26.2)(rollup@4.34.8)(vue@3.5.13(typescript@5.7.3))
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
@@ -184,7 +301,7 @@ importers:
         version: 1.3.6
       vitepress-plugin-tabs:
         specifier: ^0.6.0
-        version: 0.6.0(vitepress@1.6.3(@algolia/client-search@5.20.0)(@types/node@22.13.5)(@types/react@18.2.79)(jiti@2.4.1)(postcss@8.5.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.7.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+        version: 0.6.0(vitepress@1.6.3(@algolia/client-search@5.20.0)(@types/node@22.13.5)(@types/react@18.2.79)(jiti@2.4.1)(postcss@8.5.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.7.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
       workbox-window:
         specifier: ^7.3.0
         version: 7.3.0
@@ -361,26 +478,26 @@ importers:
         specifier: workspace:*
         version: link:../utils
       magic-string:
-        specifier: ^0.30.17
+        specifier: 'catalog:'
         version: 0.30.17
       msw:
-        specifier: ^2.7.3
+        specifier: 'catalog:'
         version: 2.7.3(@types/node@22.13.5)(typescript@5.7.3)
       sirv:
-        specifier: ^3.0.1
+        specifier: 'catalog:'
         version: 3.0.1
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       ws:
-        specifier: ^8.18.1
+        specifier: 'catalog:'
         version: 8.18.1
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.6.3
       '@types/ws':
-        specifier: ^8.5.14
+        specifier: 'catalog:'
         version: 8.5.14
       '@vitest/runner':
         specifier: workspace:*
@@ -398,10 +515,10 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       birpc:
-        specifier: 0.2.19
+        specifier: 'catalog:'
         version: 0.2.19
       flatted:
-        specifier: ^3.3.3
+        specifier: 'catalog:'
         version: 3.3.3
       ivya:
         specifier: ^1.1.1
@@ -410,7 +527,7 @@ importers:
         specifier: ^4.0.6
         version: 4.0.6
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       periscopic:
         specifier: ^4.0.2
@@ -437,56 +554,56 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3
       debug:
-        specifier: ^4.4.0
+        specifier: 'catalog:'
         version: 4.4.0
       istanbul-lib-coverage:
-        specifier: ^3.2.2
+        specifier: 'catalog:'
         version: 3.2.2
       istanbul-lib-instrument:
         specifier: ^6.0.3
         version: 6.0.3
       istanbul-lib-report:
-        specifier: ^3.0.1
+        specifier: 'catalog:'
         version: 3.0.1
       istanbul-lib-source-maps:
-        specifier: ^5.0.6
+        specifier: 'catalog:'
         version: 5.0.6
       istanbul-reports:
-        specifier: ^3.1.7
+        specifier: 'catalog:'
         version: 3.1.7
       magicast:
-        specifier: ^0.3.5
+        specifier: 'catalog:'
         version: 0.3.5
       test-exclude:
-        specifier: ^7.0.1
+        specifier: 'catalog:'
         version: 7.0.1
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
     devDependencies:
       '@types/debug':
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
       '@types/istanbul-lib-coverage':
-        specifier: ^2.0.6
+        specifier: 'catalog:'
         version: 2.0.6
       '@types/istanbul-lib-instrument':
         specifier: ^1.7.7
         version: 1.7.7
       '@types/istanbul-lib-report':
-        specifier: ^3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@types/istanbul-lib-source-maps':
-        specifier: ^4.0.4
+        specifier: 'catalog:'
         version: 4.0.4
       '@types/istanbul-reports':
-        specifier: ^3.0.4
+        specifier: 'catalog:'
         version: 3.0.4
       '@types/test-exclude':
-        specifier: ^6.0.2
+        specifier: 'catalog:'
         version: 6.0.2
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       vitest:
         specifier: workspace:*
@@ -495,65 +612,65 @@ importers:
   packages/coverage-v8:
     dependencies:
       '@ampproject/remapping':
-        specifier: ^2.3.0
+        specifier: 'catalog:'
         version: 2.3.0
       '@bcoe/v8-coverage':
         specifier: ^1.0.2
         version: 1.0.2
       debug:
-        specifier: ^4.4.0
+        specifier: 'catalog:'
         version: 4.4.0
       istanbul-lib-coverage:
-        specifier: ^3.2.2
+        specifier: 'catalog:'
         version: 3.2.2
       istanbul-lib-report:
-        specifier: ^3.0.1
+        specifier: 'catalog:'
         version: 3.0.1
       istanbul-lib-source-maps:
-        specifier: ^5.0.6
+        specifier: 'catalog:'
         version: 5.0.6
       istanbul-reports:
-        specifier: ^3.1.7
+        specifier: 'catalog:'
         version: 3.1.7
       magic-string:
-        specifier: ^0.30.17
+        specifier: 'catalog:'
         version: 0.30.17
       magicast:
-        specifier: ^0.3.5
+        specifier: 'catalog:'
         version: 0.3.5
       std-env:
-        specifier: ^3.8.0
+        specifier: 'catalog:'
         version: 3.8.0
       test-exclude:
-        specifier: ^7.0.1
+        specifier: 'catalog:'
         version: 7.0.1
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
     devDependencies:
       '@types/debug':
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
       '@types/istanbul-lib-coverage':
-        specifier: ^2.0.6
+        specifier: 'catalog:'
         version: 2.0.6
       '@types/istanbul-lib-report':
-        specifier: ^3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@types/istanbul-lib-source-maps':
-        specifier: ^4.0.4
+        specifier: 'catalog:'
         version: 4.0.4
       '@types/istanbul-reports':
-        specifier: ^3.0.4
+        specifier: 'catalog:'
         version: 3.0.4
       '@types/test-exclude':
-        specifier: ^6.0.2
+        specifier: 'catalog:'
         version: 6.0.2
       '@vitest/browser':
         specifier: workspace:*
         version: link:../browser
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       v8-to-istanbul:
         specifier: ^9.3.0
@@ -574,10 +691,10 @@ importers:
         specifier: workspace:*
         version: link:../utils
       chai:
-        specifier: ^5.2.0
+        specifier: 'catalog:'
         version: 5.2.0
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
     devDependencies:
       '@types/chai':
@@ -599,23 +716,23 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       magic-string:
-        specifier: ^0.30.17
+        specifier: 'catalog:'
         version: 0.30.17
     devDependencies:
       '@types/estree':
-        specifier: ^1.0.6
+        specifier: 'catalog:'
         version: 1.0.6
       '@vitest/utils':
         specifier: workspace:*
         version: link:../utils
       acorn-walk:
-        specifier: ^8.3.4
+        specifier: 'catalog:'
         version: 8.3.4
       msw:
-        specifier: ^2.7.3
+        specifier: 'catalog:'
         version: 2.7.3(@types/node@22.13.5)(typescript@5.7.3)
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       vite:
         specifier: ^6.2.0
@@ -624,7 +741,7 @@ importers:
   packages/pretty-format:
     dependencies:
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
     devDependencies:
       '@types/react-is':
@@ -643,7 +760,7 @@ importers:
         specifier: workspace:*
         version: link:../utils
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
 
   packages/snapshot:
@@ -652,10 +769,10 @@ importers:
         specifier: workspace:*
         version: link:../pretty-format
       magic-string:
-        specifier: ^0.30.17
+        specifier: 'catalog:'
         version: 0.30.17
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
     devDependencies:
       '@types/natural-compare':
@@ -683,19 +800,19 @@ importers:
         specifier: ^0.8.2
         version: 0.8.2
       flatted:
-        specifier: ^3.3.3
+        specifier: 'catalog:'
         version: 3.3.3
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       sirv:
-        specifier: ^3.0.1
+        specifier: 'catalog:'
         version: 3.0.1
       tinyglobby:
-        specifier: ^0.2.12
+        specifier: 'catalog:'
         version: 0.2.12
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       vitest:
         specifier: workspace:*
@@ -705,14 +822,14 @@ importers:
         specifier: ^9.5.0
         version: 9.5.0
       '@iconify-json/carbon':
-        specifier: ^1.2.7
+        specifier: 'catalog:'
         version: 1.2.7
       '@iconify-json/logos':
-        specifier: ^1.2.4
+        specifier: 'catalog:'
         version: 1.2.4
       '@testing-library/vue':
         specifier: ^8.1.0
-        version: 8.1.0(@vue/compiler-sfc@3.5.13)(vue@3.5.12(typescript@5.7.3))
+        version: 8.1.0(@vue/compiler-sfc@3.5.13)(vue@3.5.13(typescript@5.7.3))
       '@types/codemirror':
         specifier: ^5.60.15
         version: 5.60.15
@@ -723,14 +840,14 @@ importers:
         specifier: ^3.0.11
         version: 3.0.11
       '@types/ws':
-        specifier: ^8.5.14
+        specifier: 'catalog:'
         version: 8.5.14
       '@unocss/reset':
-        specifier: ^0.65.4
+        specifier: 'catalog:'
         version: 0.65.4
       '@vitejs/plugin-vue':
-        specifier: ^5.2.1
-        version: 5.2.1(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+        specifier: 'catalog:'
+        version: 5.2.1(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -741,13 +858,13 @@ importers:
         specifier: ^2.4.6
         version: 2.4.6
       '@vueuse/core':
-        specifier: ^12.7.0
+        specifier: 'catalog:'
         version: 12.7.0(typescript@5.7.3)
       ansi-to-html:
         specifier: ^0.7.2
         version: 0.7.2
       birpc:
-        specifier: 0.2.19
+        specifier: 'catalog:'
         version: 0.2.19
       codemirror:
         specifier: ^5.65.18
@@ -760,37 +877,37 @@ importers:
         version: 3.0.13
       floating-vue:
         specifier: ^5.2.2
-        version: 5.2.2(vue@3.5.12(typescript@5.7.3))
+        version: 5.2.2(vue@3.5.13(typescript@5.7.3))
       rollup:
         specifier: ^4.34.8
         version: 4.34.8
       splitpanes:
         specifier: ^3.1.8
-        version: 3.1.8(vue@3.5.12(typescript@5.7.3))
+        version: 3.1.8(vue@3.5.13(typescript@5.7.3))
       unocss:
-        specifier: ^0.65.4
-        version: 0.65.4(postcss@8.5.3)(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+        specifier: 'catalog:'
+        version: 0.65.4(postcss@8.5.3)(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
       unplugin-auto-import:
         specifier: ^0.19.0
         version: 0.19.0(@vueuse/core@12.7.0(typescript@5.7.3))(rollup@4.34.8)
       unplugin-vue-components:
-        specifier: ^0.28.0
-        version: 0.28.0(@babel/parser@7.26.2)(rollup@4.34.8)(vue@3.5.12(typescript@5.7.3))
+        specifier: 'catalog:'
+        version: 0.28.0(@babel/parser@7.26.2)(rollup@4.34.8)(vue@3.5.13(typescript@5.7.3))
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
       vite-plugin-pages:
         specifier: ^0.32.5
-        version: 0.32.5(@vue/compiler-sfc@3.5.13)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue-router@4.5.0(vue@3.5.12(typescript@5.7.3)))
+        version: 0.32.5(@vue/compiler-sfc@3.5.13)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue-router@4.5.0(vue@3.5.13(typescript@5.7.3)))
       vue:
-        specifier: ^3.5.12
-        version: 3.5.12(typescript@5.7.3)
+        specifier: 'catalog:'
+        version: 3.5.13(typescript@5.7.3)
       vue-router:
         specifier: ^4.5.0
-        version: 4.5.0(vue@3.5.12(typescript@5.7.3))
+        version: 4.5.0(vue@3.5.13(typescript@5.7.3))
       vue-virtual-scroller:
         specifier: 2.0.0-beta.8
-        version: 2.0.0-beta.8(vue@3.5.12(typescript@5.7.3))
+        version: 2.0.0-beta.8(vue@3.5.13(typescript@5.7.3))
 
   packages/utils:
     dependencies:
@@ -801,14 +918,14 @@ importers:
         specifier: ^3.1.3
         version: 3.1.3
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
     devDependencies:
       '@jridgewell/trace-mapping':
-        specifier: ^0.3.25
+        specifier: 'catalog:'
         version: 0.3.25
       '@types/estree':
-        specifier: ^1.0.6
+        specifier: 'catalog:'
         version: 1.0.6
       diff-sequences:
         specifier: ^29.6.3
@@ -820,29 +937,29 @@ importers:
   packages/vite-node:
     dependencies:
       cac:
-        specifier: ^6.7.14
+        specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
       debug:
-        specifier: ^4.4.0
+        specifier: 'catalog:'
         version: 4.4.0
       es-module-lexer:
         specifier: ^1.6.0
         version: 1.6.0
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
     devDependencies:
       '@jridgewell/trace-mapping':
-        specifier: ^0.3.25
+        specifier: 'catalog:'
         version: 0.3.25
       '@types/debug':
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
 
   packages/vitest:
@@ -875,22 +992,22 @@ importers:
         specifier: workspace:*
         version: link:../utils
       chai:
-        specifier: ^5.2.0
+        specifier: 'catalog:'
         version: 5.2.0
       debug:
-        specifier: ^4.4.0
+        specifier: 'catalog:'
         version: 4.4.0
       expect-type:
         specifier: ^1.1.0
         version: 1.1.0
       magic-string:
-        specifier: ^0.30.17
+        specifier: 'catalog:'
         version: 0.30.17
       pathe:
-        specifier: ^2.0.3
+        specifier: 'catalog:'
         version: 2.0.3
       std-env:
-        specifier: ^3.8.0
+        specifier: 'catalog:'
         version: 3.8.0
       tinybench:
         specifier: ^2.9.0
@@ -902,7 +1019,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       vite:
         specifier: ^6.2.0
@@ -915,7 +1032,7 @@ importers:
         version: 2.3.0
     devDependencies:
       '@ampproject/remapping':
-        specifier: ^2.3.0
+        specifier: 'catalog:'
         version: 2.3.0
       '@antfu/install-pkg':
         specifier: ^1.0.0
@@ -927,16 +1044,16 @@ importers:
         specifier: 14.0.0
         version: 14.0.0(patch_hash=6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278)
       '@types/debug':
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
       '@types/estree':
-        specifier: ^1.0.6
+        specifier: 'catalog:'
         version: 1.0.6
       '@types/istanbul-lib-coverage':
-        specifier: ^2.0.6
+        specifier: 'catalog:'
         version: 2.0.6
       '@types/istanbul-reports':
-        specifier: ^3.0.4
+        specifier: 'catalog:'
         version: 3.0.4
       '@types/jsdom':
         specifier: ^21.1.7
@@ -954,13 +1071,13 @@ importers:
         specifier: ^8.1.5
         version: 8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)
       acorn-walk:
-        specifier: ^8.3.4
+        specifier: 'catalog:'
         version: 8.3.4
       birpc:
-        specifier: 0.2.19
+        specifier: 'catalog:'
         version: 0.2.19
       cac:
-        specifier: ^6.7.14
+        specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
       chai-subset:
         specifier: ^1.6.0
@@ -969,7 +1086,7 @@ importers:
         specifier: ^6.3.0
         version: 6.3.0
       flatted:
-        specifier: ^3.3.3
+        specifier: 'catalog:'
         version: 3.3.3
       get-tsconfig:
         specifier: ^4.10.0
@@ -996,23 +1113,23 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       tinyglobby:
-        specifier: ^0.2.12
+        specifier: 'catalog:'
         version: 0.2.12
       ws:
-        specifier: ^8.18.1
+        specifier: 'catalog:'
         version: 8.18.1
 
   packages/web-worker:
     dependencies:
       debug:
-        specifier: ^4.4.0
+        specifier: 'catalog:'
         version: 4.4.0
       vitest:
         specifier: workspace:*
         version: link:../vitest
     devDependencies:
       '@types/debug':
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
       '@types/ungap__structured-clone':
         specifier: ^1.2.0
@@ -1024,13 +1141,13 @@ importers:
   packages/ws-client:
     dependencies:
       birpc:
-        specifier: 0.2.19
+        specifier: 'catalog:'
         version: 0.2.19
       flatted:
-        specifier: ^3.3.3
+        specifier: 'catalog:'
         version: 3.3.3
       ws:
-        specifier: ^8.18.1
+        specifier: 'catalog:'
         version: 8.18.1
     devDependencies:
       '@vitest/runner':
@@ -1591,9 +1708,6 @@ packages:
       svelte-eslint-parser:
         optional: true
 
-  '@antfu/install-pkg@0.4.1':
-    resolution: {integrity: sha512-T7yB5QNG29afhWVkVq7XeIMBa5U/vs9mX69YqayXypPRmYzUmzwnYltplHmPtZ4HPCn+sQKeXW8I47wCbuBOjw==}
-
   '@antfu/install-pkg@1.0.0':
     resolution: {integrity: sha512-xvX6P/lo1B3ej0OsaErAjqgFYzYVcJpamjLAFLYh9vRJngBrMoUG7aVnrGTeqM7yxbyTD5p3F2+0/QUEh8Vzhw==}
 
@@ -1793,10 +1907,6 @@ packages:
 
   '@babel/helper-string-parser@7.24.7':
     resolution: {integrity: sha512-7MbVt6xrwFQbunH2DNQsAP5sTGxfqQtErvBIvIMi6EQnbgUOuVYanvREcmFrOPhoXBrTtjhhP+lW+o5UfK+tDg==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/helper-string-parser@7.25.7':
-    resolution: {integrity: sha512-CbkjYdsJNHFk8uqpEkpCvRs3YRp9tY6FmFY7wLMSYuGYkrdUi7r2lc4/wqsvlHoMznX3WJ9IP8giGPq68T/Y6g==}
     engines: {node: '>=6.9.0'}
 
   '@babel/helper-string-parser@7.25.9':
@@ -2294,10 +2404,6 @@ packages:
 
   '@babel/types@7.24.7':
     resolution: {integrity: sha512-XEFXSlxiG5td2EJRe8vOmRbaXVgfcBlszKujvVmWIK/UpywWljQCfzAv3RQCGujWQ1RD4YYWEAqDXfuJiy8f5Q==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/types@7.25.7':
-    resolution: {integrity: sha512-vwIVdXG+j+FOpkwqHRcBgHLYNL7XMkufrlaFvL9o6Ai9sJn9+PdyIL5qa0XzTZw084c+u9LOls53eoZWP/W5WQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/types@7.26.0':
@@ -2951,9 +3057,6 @@ packages:
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
-
-  '@iconify/utils@2.2.1':
-    resolution: {integrity: sha512-0/7J7hk4PqXmxo5PDBDxmnecw5PxklZJfNjIVG9FM0mEfVrvfudS22rYWsqVk6gR3UJ/mSYS90X4R3znXnqfNA==}
 
   '@iconify/utils@2.3.0':
     resolution: {integrity: sha512-GmQ78prtwYW6EtzXRU1rY+KwOKfz32PD7iJh6Iyqw68GiKuoZ2A6pRtzWONz5VQJbp50mEjXh/7NkumtrAgRKA==}
@@ -6989,10 +7092,6 @@ packages:
     resolution: {integrity: sha512-0jWhJpD/MdhPXwPuiRkCbfYfSKp2qnn2eOc279qI7f+osl/l+prKSrvhg157zSYvx/1nmgn2NqdT6k2Z7zSH9w==}
     engines: {node: '>=16 || 14 >=14.17'}
 
-  minimatch@9.0.4:
-    resolution: {integrity: sha512-KqWh+VchfxcMNRAJjj2tnsSJdNbHsVgnkBhTNrW7AjVo6OvLtxw8zfT9oLw1JSohlFzJ8jCoTgaoXvJ+kHt6fw==}
-    engines: {node: '>=16 || 14 >=14.17'}
-
   minimatch@9.0.5:
     resolution: {integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==}
     engines: {node: '>=16 || 14 >=14.17'}
@@ -7424,9 +7523,6 @@ packages:
   picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
 
-  picocolors@1.0.1:
-    resolution: {integrity: sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==}
-
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -7490,10 +7586,6 @@ packages:
 
   postcss@8.4.47:
     resolution: {integrity: sha512-56rxCq7G/XfB4EkXq9Egn5GCqugWvDFjafDOThIdMBsI15iqPqR5r15TfSr1YPYeEI19YeaXMCbY6u88Y76GLQ==}
-    engines: {node: ^10 || ^12 || >=14}
-
-  postcss@8.4.49:
-    resolution: {integrity: sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==}
     engines: {node: ^10 || ^12 || >=14}
 
   postcss@8.5.3:
@@ -8084,10 +8176,6 @@ packages:
 
   source-map-js@1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
-    engines: {node: '>=0.10.0'}
-
-  source-map-js@1.2.0:
-    resolution: {integrity: sha512-itJW8lvSA0TXEphiRoawsCksnlf8SyvmFzIhltqAHluXd88pkCd+cXJVHTDwdCr0IzwptSm035IHQktUu1QUMg==}
     engines: {node: '>=0.10.0'}
 
   source-map-js@1.2.1:
@@ -9542,11 +9630,6 @@ snapshots:
       - typescript
       - vitest
 
-  '@antfu/install-pkg@0.4.1':
-    dependencies:
-      package-manager-detector: 0.2.9
-      tinyexec: 0.3.2
-
   '@antfu/install-pkg@1.0.0':
     dependencies:
       package-manager-detector: 0.2.8
@@ -9581,7 +9664,7 @@ snapshots:
   '@babel/code-frame@7.24.7':
     dependencies:
       '@babel/highlight': 7.24.7
-      picocolors: 1.0.1
+      picocolors: 1.1.1
 
   '@babel/code-frame@7.25.7':
     dependencies:
@@ -9660,14 +9743,14 @@ snapshots:
 
   '@babel/generator@7.24.5':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
       jsesc: 2.5.2
 
   '@babel/generator@7.24.7':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
       jsesc: 2.5.2
@@ -9755,16 +9838,16 @@ snapshots:
 
   '@babel/helper-environment-visitor@7.24.7':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@babel/helper-function-name@7.24.7':
     dependencies:
       '@babel/template': 7.25.0
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@babel/helper-hoist-variables@7.24.7':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@babel/helper-member-expression-to-functions@7.25.9':
     dependencies:
@@ -9776,7 +9859,7 @@ snapshots:
   '@babel/helper-module-imports@7.24.7':
     dependencies:
       '@babel/traverse': 7.24.7
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
     transitivePeerDependencies:
       - supports-color
 
@@ -9847,7 +9930,7 @@ snapshots:
   '@babel/helper-simple-access@7.24.7':
     dependencies:
       '@babel/traverse': 7.25.3
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
     transitivePeerDependencies:
       - supports-color
 
@@ -9867,13 +9950,11 @@ snapshots:
 
   '@babel/helper-split-export-declaration@7.24.7':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@babel/helper-string-parser@7.23.4': {}
 
   '@babel/helper-string-parser@7.24.7': {}
-
-  '@babel/helper-string-parser@7.25.7': {}
 
   '@babel/helper-string-parser@7.25.9': {}
 
@@ -9899,14 +9980,14 @@ snapshots:
     dependencies:
       '@babel/template': 7.24.7
       '@babel/traverse': 7.24.7
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helpers@7.24.7':
     dependencies:
       '@babel/template': 7.24.7
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@babel/helpers@7.26.0':
     dependencies:
@@ -9937,7 +10018,7 @@ snapshots:
 
   '@babel/parser@7.25.7':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@babel/parser@7.26.2':
     dependencies:
@@ -10424,14 +10505,14 @@ snapshots:
   '@babel/template@7.24.0':
     dependencies:
       '@babel/code-frame': 7.24.7
-      '@babel/parser': 7.25.7
-      '@babel/types': 7.25.7
+      '@babel/parser': 7.26.2
+      '@babel/types': 7.26.0
 
   '@babel/template@7.24.7':
     dependencies:
       '@babel/code-frame': 7.24.7
-      '@babel/parser': 7.25.7
-      '@babel/types': 7.25.7
+      '@babel/parser': 7.26.2
+      '@babel/types': 7.26.0
 
   '@babel/template@7.25.0':
     dependencies:
@@ -10453,8 +10534,8 @@ snapshots:
       '@babel/helper-function-name': 7.24.7
       '@babel/helper-hoist-variables': 7.24.7
       '@babel/helper-split-export-declaration': 7.24.7
-      '@babel/parser': 7.25.7
-      '@babel/types': 7.25.7
+      '@babel/parser': 7.26.2
+      '@babel/types': 7.26.0
       debug: 4.4.0
       globals: 11.12.0
     transitivePeerDependencies:
@@ -10468,8 +10549,8 @@ snapshots:
       '@babel/helper-function-name': 7.24.7
       '@babel/helper-hoist-variables': 7.24.7
       '@babel/helper-split-export-declaration': 7.24.7
-      '@babel/parser': 7.25.7
-      '@babel/types': 7.25.7
+      '@babel/parser': 7.26.2
+      '@babel/types': 7.26.0
       debug: 4.4.0
       globals: 11.12.0
     transitivePeerDependencies:
@@ -10514,12 +10595,6 @@ snapshots:
   '@babel/types@7.24.7':
     dependencies:
       '@babel/helper-string-parser': 7.24.7
-      '@babel/helper-validator-identifier': 7.25.7
-      to-fast-properties: 2.0.0
-
-  '@babel/types@7.25.7':
-    dependencies:
-      '@babel/helper-string-parser': 7.25.7
       '@babel/helper-validator-identifier': 7.25.7
       to-fast-properties: 2.0.0
 
@@ -10971,19 +11046,6 @@ snapshots:
       '@iconify/types': 2.0.0
 
   '@iconify/types@2.0.0': {}
-
-  '@iconify/utils@2.2.1':
-    dependencies:
-      '@antfu/install-pkg': 0.4.1
-      '@antfu/utils': 0.7.10
-      '@iconify/types': 2.0.0
-      debug: 4.4.0
-      globals: 15.14.0
-      kolorist: 1.8.0
-      local-pkg: 0.5.1
-      mlly: 1.7.4
-    transitivePeerDependencies:
-      - supports-color
 
   '@iconify/utils@2.3.0':
     dependencies:
@@ -11654,12 +11716,12 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.0
 
-  '@testing-library/vue@8.1.0(@vue/compiler-sfc@3.5.13)(vue@3.5.12(typescript@5.7.3))':
+  '@testing-library/vue@8.1.0(@vue/compiler-sfc@3.5.13)(vue@3.5.13(typescript@5.7.3))':
     dependencies:
       '@babel/runtime': 7.24.4
       '@testing-library/dom': 9.3.4
       '@vue/test-utils': 2.4.6
-      vue: 3.5.12(typescript@5.7.3)
+      vue: 3.5.13(typescript@5.7.3)
     optionalDependencies:
       '@vue/compiler-sfc': 3.5.13
 
@@ -11681,16 +11743,16 @@ snapshots:
 
   '@types/babel__generator@7.6.6':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@types/babel__template@7.4.3':
     dependencies:
-      '@babel/parser': 7.25.7
-      '@babel/types': 7.25.7
+      '@babel/parser': 7.26.2
+      '@babel/types': 7.26.0
 
   '@types/babel__traverse@7.20.3':
     dependencies:
-      '@babel/types': 7.25.7
+      '@babel/types': 7.26.0
 
   '@types/braces@3.0.1': {}
 
@@ -12029,11 +12091,11 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@unocss/astro@0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))':
+  '@unocss/astro@0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))':
     dependencies:
       '@unocss/core': 0.65.4
       '@unocss/reset': 0.65.4
-      '@unocss/vite': 0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+      '@unocss/vite': 0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
     optionalDependencies:
       vite: 6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
     transitivePeerDependencies:
@@ -12073,14 +12135,14 @@ snapshots:
     dependencies:
       '@unocss/core': 0.65.4
 
-  '@unocss/inspector@0.65.4(vue@3.5.12(typescript@5.7.3))':
+  '@unocss/inspector@0.65.4(vue@3.5.13(typescript@5.7.3))':
     dependencies:
       '@unocss/core': 0.65.4
       '@unocss/rule-utils': 0.65.4
       colorette: 2.0.20
       gzip-size: 6.0.0
       sirv: 3.0.1
-      vue-flow-layout: 0.1.1(vue@3.5.12(typescript@5.7.3))
+      vue-flow-layout: 0.1.1(vue@3.5.13(typescript@5.7.3))
     transitivePeerDependencies:
       - vue
 
@@ -12101,7 +12163,7 @@ snapshots:
 
   '@unocss/preset-icons@0.65.4':
     dependencies:
-      '@iconify/utils': 2.2.1
+      '@iconify/utils': 2.3.0
       '@unocss/core': 0.65.4
       ofetch: 1.4.1
     transitivePeerDependencies:
@@ -12165,13 +12227,13 @@ snapshots:
     dependencies:
       '@unocss/core': 0.65.4
 
-  '@unocss/vite@0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))':
+  '@unocss/vite@0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@rollup/pluginutils': 5.1.4(rollup@4.34.8)
       '@unocss/config': 0.65.4
       '@unocss/core': 0.65.4
-      '@unocss/inspector': 0.65.4(vue@3.5.12(typescript@5.7.3))
+      '@unocss/inspector': 0.65.4(vue@3.5.13(typescript@5.7.3))
       chokidar: 3.6.0
       magic-string: 0.30.17
       tinyglobby: 0.2.12
@@ -12265,7 +12327,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.12':
     dependencies:
-      '@babel/parser': 7.25.7
+      '@babel/parser': 7.26.2
       '@vue/shared': 3.5.12
       entities: 4.5.0
       estree-walker: 2.0.2
@@ -12310,7 +12372,7 @@ snapshots:
       '@vue/shared': 3.5.13
       estree-walker: 2.0.2
       magic-string: 0.30.17
-      postcss: 8.4.49
+      postcss: 8.5.3
       source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.5.12':
@@ -14439,12 +14501,6 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  floating-vue@5.2.2(vue@3.5.12(typescript@5.7.3)):
-    dependencies:
-      '@floating-ui/dom': 1.1.1
-      vue: 3.5.12(typescript@5.7.3)
-      vue-resize: 2.0.0-alpha.1(vue@3.5.12(typescript@5.7.3))
-
   floating-vue@5.2.2(vue@3.5.13(typescript@5.7.3)):
     dependencies:
       '@floating-ui/dom': 1.1.1
@@ -15575,9 +15631,9 @@ snapshots:
 
   magicast@0.3.5:
     dependencies:
-      '@babel/parser': 7.25.7
-      '@babel/types': 7.25.7
-      source-map-js: 1.2.0
+      '@babel/parser': 7.26.2
+      '@babel/types': 7.26.0
+      source-map-js: 1.2.1
 
   make-dir@4.0.0:
     dependencies:
@@ -15949,10 +16005,6 @@ snapshots:
       brace-expansion: 2.0.1
 
   minimatch@9.0.1:
-    dependencies:
-      brace-expansion: 2.0.1
-
-  minimatch@9.0.4:
     dependencies:
       brace-expansion: 2.0.1
 
@@ -16363,8 +16415,6 @@ snapshots:
 
   picocolors@1.0.0: {}
 
-  picocolors@1.0.1: {}
-
   picocolors@1.1.1: {}
 
   picomatch@2.3.1: {}
@@ -16430,12 +16480,6 @@ snapshots:
       util-deprecate: 1.0.2
 
   postcss@8.4.47:
-    dependencies:
-      nanoid: 3.3.7
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
-  postcss@8.4.49:
     dependencies:
       nanoid: 3.3.7
       picocolors: 1.1.1
@@ -17133,8 +17177,6 @@ snapshots:
 
   source-map-js@1.0.2: {}
 
-  source-map-js@1.2.0: {}
-
   source-map-js@1.2.1: {}
 
   source-map-support@0.5.21:
@@ -17216,9 +17258,9 @@ snapshots:
 
   split2@4.2.0: {}
 
-  splitpanes@3.1.8(vue@3.5.12(typescript@5.7.3)):
+  splitpanes@3.1.8(vue@3.5.13(typescript@5.7.3)):
     dependencies:
-      vue: 3.5.12(typescript@5.7.3)
+      vue: 3.5.13(typescript@5.7.3)
 
   sprintf-js@1.1.3: {}
 
@@ -17508,7 +17550,7 @@ snapshots:
     dependencies:
       '@istanbuljs/schema': 0.1.3
       glob: 10.4.1
-      minimatch: 9.0.4
+      minimatch: 9.0.5
 
   text-decoder@1.1.1:
     dependencies:
@@ -17769,7 +17811,7 @@ snapshots:
 
   unimport@3.14.5(rollup@4.34.8):
     dependencies:
-      '@rollup/pluginutils': 5.1.3(rollup@4.34.8)
+      '@rollup/pluginutils': 5.1.4(rollup@4.34.8)
       acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
       escape-string-regexp: 5.0.0
       estree-walker: 3.0.3
@@ -17819,9 +17861,9 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  unocss@0.65.4(postcss@8.5.3)(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3)):
+  unocss@0.65.4(postcss@8.5.3)(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3)):
     dependencies:
-      '@unocss/astro': 0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+      '@unocss/astro': 0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
       '@unocss/cli': 0.65.4(rollup@4.34.8)
       '@unocss/core': 0.65.4
       '@unocss/postcss': 0.65.4(postcss@8.5.3)
@@ -17837,7 +17879,7 @@ snapshots:
       '@unocss/transformer-compile-class': 0.65.4
       '@unocss/transformer-directives': 0.65.4
       '@unocss/transformer-variant-group': 0.65.4
-      '@unocss/vite': 0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3))
+      '@unocss/vite': 0.65.4(rollup@4.34.8)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3))
     optionalDependencies:
       vite: 6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
     transitivePeerDependencies:
@@ -17876,19 +17918,19 @@ snapshots:
       pathe: 2.0.3
       picomatch: 4.0.2
 
-  unplugin-vue-components@0.28.0(@babel/parser@7.26.2)(rollup@4.34.8)(vue@3.5.12(typescript@5.7.3)):
+  unplugin-vue-components@0.28.0(@babel/parser@7.26.2)(rollup@4.34.8)(vue@3.5.13(typescript@5.7.3)):
     dependencies:
       '@antfu/utils': 0.7.10
       '@rollup/pluginutils': 5.1.4(rollup@4.34.8)
       chokidar: 3.6.0
       debug: 4.4.0
-      fast-glob: 3.3.2
+      fast-glob: 3.3.3
       local-pkg: 0.5.1
       magic-string: 0.30.17
       minimatch: 9.0.5
       mlly: 1.7.4
       unplugin: 2.1.0
-      vue: 3.5.12(typescript@5.7.3)
+      vue: 3.5.13(typescript@5.7.3)
     optionalDependencies:
       '@babel/parser': 7.26.2
     transitivePeerDependencies:
@@ -17993,7 +18035,7 @@ snapshots:
       unist-util-stringify-position: 4.0.0
       vfile-message: 4.0.2
 
-  vite-plugin-pages@0.32.5(@vue/compiler-sfc@3.5.13)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue-router@4.5.0(vue@3.5.12(typescript@5.7.3))):
+  vite-plugin-pages@0.32.5(@vue/compiler-sfc@3.5.13)(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue-router@4.5.0(vue@3.5.13(typescript@5.7.3))):
     dependencies:
       '@types/debug': 4.1.12
       debug: 4.4.0
@@ -18007,7 +18049,7 @@ snapshots:
       yaml: 2.7.0
     optionalDependencies:
       '@vue/compiler-sfc': 3.5.13
-      vue-router: 4.5.0(vue@3.5.12(typescript@5.7.3))
+      vue-router: 4.5.0(vue@3.5.13(typescript@5.7.3))
     transitivePeerDependencies:
       - supports-color
 
@@ -18075,10 +18117,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vitepress-plugin-tabs@0.6.0(vitepress@1.6.3(@algolia/client-search@5.20.0)(@types/node@22.13.5)(@types/react@18.2.79)(jiti@2.4.1)(postcss@8.5.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.7.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.7.3)):
+  vitepress-plugin-tabs@0.6.0(vitepress@1.6.3(@algolia/client-search@5.20.0)(@types/node@22.13.5)(@types/react@18.2.79)(jiti@2.4.1)(postcss@8.5.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.7.3)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3)):
     dependencies:
       vitepress: 1.6.3(@algolia/client-search@5.20.0)(@types/node@22.13.5)(@types/react@18.2.79)(jiti@2.4.1)(postcss@8.5.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.7.3)(yaml@2.7.0)
-      vue: 3.5.12(typescript@5.7.3)
+      vue: 3.5.13(typescript@5.7.3)
 
   vitepress@1.6.3(@algolia/client-search@5.20.0)(@types/node@22.13.5)(@types/react@18.2.79)(jiti@2.4.1)(postcss@8.5.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.7.3)(yaml@2.7.0):
     dependencies:
@@ -18171,26 +18213,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vue-flow-layout@0.1.1(vue@3.5.12(typescript@5.7.3)):
+  vue-flow-layout@0.1.1(vue@3.5.13(typescript@5.7.3)):
     dependencies:
-      vue: 3.5.12(typescript@5.7.3)
+      vue: 3.5.13(typescript@5.7.3)
 
-  vue-observe-visibility@2.0.0-alpha.1(vue@3.5.12(typescript@5.7.3)):
+  vue-observe-visibility@2.0.0-alpha.1(vue@3.5.13(typescript@5.7.3)):
     dependencies:
-      vue: 3.5.12(typescript@5.7.3)
-
-  vue-resize@2.0.0-alpha.1(vue@3.5.12(typescript@5.7.3)):
-    dependencies:
-      vue: 3.5.12(typescript@5.7.3)
+      vue: 3.5.13(typescript@5.7.3)
 
   vue-resize@2.0.0-alpha.1(vue@3.5.13(typescript@5.7.3)):
     dependencies:
       vue: 3.5.13(typescript@5.7.3)
 
-  vue-router@4.5.0(vue@3.5.12(typescript@5.7.3)):
+  vue-router@4.5.0(vue@3.5.13(typescript@5.7.3)):
     dependencies:
       '@vue/devtools-api': 6.6.4
-      vue: 3.5.12(typescript@5.7.3)
+      vue: 3.5.13(typescript@5.7.3)
 
   vue-template-compiler@2.7.15:
     dependencies:
@@ -18204,12 +18242,12 @@ snapshots:
       semver: 7.5.4
       typescript: 5.7.3
 
-  vue-virtual-scroller@2.0.0-beta.8(vue@3.5.12(typescript@5.7.3)):
+  vue-virtual-scroller@2.0.0-beta.8(vue@3.5.13(typescript@5.7.3)):
     dependencies:
       mitt: 2.1.0
-      vue: 3.5.12(typescript@5.7.3)
-      vue-observe-visibility: 2.0.0-alpha.1(vue@3.5.12(typescript@5.7.3))
-      vue-resize: 2.0.0-alpha.1(vue@3.5.12(typescript@5.7.3))
+      vue: 3.5.13(typescript@5.7.3)
+      vue-observe-visibility: 2.0.0-alpha.1(vue@3.5.13(typescript@5.7.3))
+      vue-resize: 2.0.0-alpha.1(vue@3.5.13(typescript@5.7.3))
 
   vue@3.5.12(typescript@5.7.3):
     dependencies:
