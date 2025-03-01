@@ -1,11 +1,12 @@
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { BrowserRPC } from './client'
 
-export async function importId(id: string) {
+export async function importId(id: string): Promise<any> {
   const name = `/@id/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
 
-export async function importFs(id: string) {
+export async function importFs(id: string): Promise<any> {
   const name = `/@fs/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
@@ -13,7 +14,7 @@ export async function importFs(id: string) {
 export const executor = {
   isBrowser: true,
 
-  executeId: (id: string) => {
+  executeId: (id: string): Promise<any> => {
     if (id[0] === '/' || id[1] === ':') {
       return importFs(id)
     }
@@ -74,8 +75,10 @@ export interface BrowserRunnerState {
   iframeId?: string
   sessionId: string
   testerId: string
+  method: 'run' | 'collect'
   runTests?: (tests: string[]) => Promise<void>
   createTesters?: (files: string[]) => Promise<void>
+  commands: CommandsManager
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void
     once: (event: string, listener: (payload: any) => void) => void
@@ -102,7 +105,7 @@ export function getWorkerState(): WorkerGlobalState {
 }
 
 /* @__NO_SIDE_EFFECTS__ */
-export function convertElementToCssSelector(element: Element) {
+export function convertElementToCssSelector(element: Element): string {
   if (!element || !(element instanceof Element)) {
     throw new Error(
       `Expected DOM element to be an instance of Element, received ${typeof element}`,
@@ -192,4 +195,23 @@ function getParent(el: Element) {
     return parent.host
   }
   return parent
+}
+
+export class CommandsManager {
+  private _listeners: ((command: string, args: any[]) => void)[] = []
+
+  public onCommand(listener: (command: string, args: any[]) => void): void {
+    this._listeners.push(listener)
+  }
+
+  public async triggerCommand<T>(command: string, args: any[]): Promise<T> {
+    const state = getWorkerState()
+    const rpc = state.rpc as any as BrowserRPC
+    const { sessionId } = getBrowserState()
+    const filepath = state.filepath || state.current?.file?.filepath
+    if (this._listeners.length) {
+      await Promise.all(this._listeners.map(listener => listener(command, args)))
+    }
+    return rpc.triggerCommand<T>(sessionId, command, filepath, args)
+  }
 }

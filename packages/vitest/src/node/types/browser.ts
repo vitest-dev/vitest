@@ -24,8 +24,6 @@ export interface BrowserProvider {
    */
   supportsParallelism: boolean
   getSupportedBrowsers: () => readonly string[]
-  beforeCommand?: (command: string, args: unknown[]) => Awaitable<void>
-  afterCommand?: (command: string, args: unknown[]) => Awaitable<void>
   getCommandsContext: (sessionId: string) => Record<string, unknown>
   openPage: (sessionId: string, url: string, beforeNavigate?: () => Promise<void>) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
@@ -93,7 +91,7 @@ export interface BrowserConfigOptions {
 
   /**
    * Name of the browser
-   * @deprecated use `configs` instead. if both are defined, this will filter `configs` by name.
+   * @deprecated use `instances` instead. if both are defined, this will filter `instances` by name.
    */
   name?: string
 
@@ -118,7 +116,7 @@ export interface BrowserConfigOptions {
    *
    * @example
    * { playwright: { launch: { devtools: true } }
-   * @deprecated use `configs` instead
+   * @deprecated use `instances` instead
    */
   providerOptions?: BrowserProviderOptions
 

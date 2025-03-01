@@ -1,6 +1,7 @@
 import type {
   Suite,
   Task,
+  TaskUpdateEvent,
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
@@ -59,7 +60,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       startTime: start,
       benchmark: createBenchmarkResult(suite.name),
     }
-    updateTask(suite)
+    updateTask('suite-prepare', suite)
 
     const addBenchTaskListener = (
       task: InstanceType<typeof Task>,
@@ -71,6 +72,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           const task = e.task
           const taskRes = task.result!
           const result = benchmark.result!.benchmark!
+          benchmark.result!.state = 'pass'
           Object.assign(result, taskRes)
           // compute extra stats and free raw samples as early as possible
           const samples = result.samples
@@ -81,7 +83,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
           if (!runner.config.benchmark?.includeSamples) {
             result.samples.length = 0
           }
-          updateTask(benchmark)
+          updateTask('test-finished', benchmark)
         },
         {
           once: true,
@@ -114,13 +116,14 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
       const task = new Task(benchmarkInstance, benchmark.name, benchmarkFn)
       benchmarkTasks.set(benchmark, task)
       addBenchTaskListener(task, benchmark)
-      updateTask(benchmark)
     })
 
     const { setTimeout } = getSafeTimers()
     const tasks: [BenchTask, Benchmark][] = []
+
     for (const benchmark of benchmarkGroup) {
       const task = benchmarkTasks.get(benchmark)!
+      updateTask('test-prepare', benchmark)
       await task.warmup()
       tasks.push([
         await new Promise<BenchTask>(resolve =>
@@ -135,24 +138,14 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
     suite.result!.duration = performance.now() - start
     suite.result!.state = 'pass'
 
-    tasks
-      .sort(([taskA], [taskB]) => taskA.result!.mean - taskB.result!.mean)
-      .forEach(([, benchmark], idx) => {
-        benchmark.result!.state = 'pass'
-        if (benchmark) {
-          const result = benchmark.result!.benchmark!
-          result.rank = Number(idx) + 1
-          updateTask(benchmark)
-        }
-      })
-    updateTask(suite)
+    updateTask('suite-finished', suite)
     defer.resolve(null)
 
     await defer
   }
 
-  function updateTask(task: Task) {
-    updateRunnerTask(task, runner)
+  function updateTask(event: TaskUpdateEvent, task: Task) {
+    updateRunnerTask(event, task, runner)
   }
 }
 
@@ -161,7 +154,7 @@ export class NodeBenchmarkRunner implements VitestRunner {
 
   constructor(public config: SerializedConfig) {}
 
-  async importTinybench() {
+  async importTinybench(): Promise<typeof import('tinybench')> {
     return await import('tinybench')
   }
 

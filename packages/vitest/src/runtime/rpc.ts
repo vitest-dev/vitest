@@ -48,7 +48,7 @@ function withSafeTimers(fn: () => void) {
 
 const promises = new Set<Promise<unknown>>()
 
-export async function rpcDone() {
+export async function rpcDone(): Promise<unknown[] | undefined> {
   if (!promises.size) {
     return
   }
@@ -61,7 +61,7 @@ export function createRuntimeRpc(
     BirpcOptions<RuntimeRPC>,
     'on' | 'post' | 'serialize' | 'deserialize'
   >,
-) {
+): { rpc: WorkerRPC; onCancel: Promise<CancelReason> } {
   let setCancel = (_reason: CancelReason) => {}
   const onCancel = new Promise<CancelReason>((resolve) => {
     setCancel = resolve
@@ -75,7 +75,6 @@ export function createRuntimeRpc(
       {
         eventNames: [
           'onUserConsoleLog',
-          'onFinished',
           'onCollected',
           'onCancel',
         ],
@@ -108,7 +107,7 @@ export function createRuntimeRpc(
   }
 }
 
-export function createSafeRpc(rpc: WorkerRPC) {
+export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
       const sendCall = get(target, p, handler)

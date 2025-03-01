@@ -21,7 +21,7 @@ test('validation works', { retry: 3 }, () => { // [!code ++]
 })
 ```
 
-Vitest 4.0 will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
+The next major version will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
 
 ```ts
 test('validation works', () => {
@@ -54,6 +54,94 @@ export default defineConfig({
 
 With the new `browser.instances` field you can also specify multiple browser configurations.
 
+### `spy.mockReset` Now Restores the Original Implementation
+
+There was no good way to reset the spy to the original implementation without reaplying the spy. Now, `spy.mockReset` will reset the implementation function to the original one instead of a fake noop.
+
+```ts
+const foo = {
+  bar: () => 'Hello, world!'
+}
+
+vi.spyOn(foo, 'bar').mockImplementation(() => 'Hello, mock!')
+
+foo.bar() // 'Hello, mock!'
+
+foo.bar.mockReset()
+
+foo.bar() // undefined [!code --]
+foo.bar() // 'Hello, world!' [!code ++]
+```
+
+### `vi.spyOn` Reuses Mock if Method is Already Mocked
+
+Previously, Vitest would always assign a new spy when spying on an object. This caused errors with `mockRestore` because it would restore the spy to the previous spy instead of the original function:
+
+```ts
+vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
+vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
+vi.restoreAllMocks()
+vi.isMockFunction(fooService.foo) // true [!code --]
+vi.isMockFunction(fooService.foo) // false [!code ++]
+```
+
+### Fake Timers Defaults
+
+Vitest no longer provides default `fakeTimers.toFake` options. Now, Vitest will mock any timer-related API if it is available (except `nextTick`). Namely, `performance.now()` is now mocked when `vi.useFakeTimers` is called.
+
+```ts
+vi.useFakeTimers()
+
+performance.now() // original [!code --]
+performance.now() // fake [!code ++]
+```
+
+You can revert to the previous behaviour by specifying timers when calling `vi.useFakeTimers` or globally in the config:
+
+```ts
+export default defineConfig({
+  test: {
+    fakeTimers: {
+      toFake: [ // [!code ++]
+        'setTimeout', // [!code ++]
+        'clearTimeout', // [!code ++]
+        'setInterval', // [!code ++]
+        'clearInterval', // [!code ++]
+        'setImmediate', // [!code ++]
+        'clearImmediate', // [!code ++]
+        'Date', // [!code ++]
+      ] // [!code ++]
+    },
+  },
+})
+```
+
+### More Strict Error Equality
+
+Vitest now checks more properties when comparing errors via `toEqual` or `toThrowError`. Vitest now compares `name`, `message`, `cause` and `AggregateError.errors`. For `Error.cause`, the comparison is done asymmetrically:
+
+```ts
+expect(new Error('hi', { cause: 'x' })).toEqual(new Error('hi')) // ✅
+expect(new Error('hi')).toEqual(new Error('hi', { cause: 'x' })) // ❌
+```
+
+In addition to more properties check, Vitest now compares error prototypes. For example, if `TypeError` was thrown, the equality check should reference `TypeError`, not `Error`:
+
+```ts
+expect(() => {
+  throw new TypeError('type error')
+})
+  .toThrowError(new Error('type error')) // [!code --]
+  .toThrowError(new TypeError('type error')) // [!code ++]
+```
+
+See PR for more details: [#5876](https://github.com/vitest-dev/vitest/pull/5876).
+
+### `module` condition export is not resolved by default on Vite 6
+
+Vite 6 allows more flexible [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) options and Vitest configures it to exclude `module` conditional export by default.
+See also [Vite 6 migration guide](https://v6.vite.dev/guide/migration.html#default-value-for-resolve-conditions) for the detail of Vite side changes.
+
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
 The `Custom` type is now an alias for the `Test` type. Note that Vitest updated the public types in 2.1 and changed exported names to `RunnerCustomCase` and `RunnerTestCase`:
@@ -75,11 +163,25 @@ In the public API this type was used in custom [sequencers](/config/#sequence-se
 
 The [`onTestFinished`](/api/#ontestfinished) and [`onTestFailed`](/api/#ontestfailed) hooks previously received a test result as the first argument. Now, they receive a test context, like `beforeEach` and `afterEach`.
 
+### Changes to the Snapshot API <Badge type="danger">API</Badge> {#changes-to-the-snapshot-api}
+
+The public Snapshot API in `@vitest/snapshot` was changed to support multiple states within a single run. See PR for more details: [#6817](https://github.com/vitest-dev/vitest/pull/6817)
+
+Note that this changes only affect developers using the Snapshot API directly. There were no changes to `.toMatchSnapshot` API.
+
 ### Changes to `resolveConfig` Type Signature <Badge type="danger">API</Badge> {#changes-to-resolveconfig-type-signature}
 
 The [`resolveConfig`](/advanced/api/#resolveconfig) is now more useful. Instead of accepting already resolved Vite config, it now accepts a user config and returns resolved config.
 
 This function is not used internally and exposed exclusively as a public API.
+
+### Cleaned up `vitest/reporters` types <Badge type="danger">API</Badge> {#cleaned-up-vitest-reporters-types}
+
+The `vitest/reporters` entrypoint now only exports reporters implementations and options types. If you need access to `TestCase`/`TestSuite` and other task related types, import them additionally from `vitest/node`.
+
+### Coverage ignores test files even when `coverage.excludes` is overwritten.
+
+It is no longer possible to include test files in coverage report by overwriting `coverage.excludes`. Test files are now always excluded.
 
 ## Migrating to Vitest 2.0 {#vitest-2}
 
@@ -184,8 +286,8 @@ Previously Vitest resolved `mock.results` values if the function returned a Prom
 const fn = vi.fn().mockResolvedValueOnce('result')
 await fn()
 
-const result = fn.mock.results[0] // 'result' // [!code --]
-const result = fn.mock.results[0] // 'Promise<result>' // [!code ++]
+const result = fn.mock.results[0] // 'result' [!code --]
+const result = fn.mock.results[0] // 'Promise<result>' [!code ++]
 
 const settledResult = fn.mock.settledResults[0] // 'result'
 ```
@@ -436,14 +538,7 @@ If you want to modify the object, you will use [replaceProperty API](https://jes
 
 From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
 
-```
-it('should work', (done) => {  // [!code --]
-it('should work', () => new Promise(done => { // [!code ++]
-  // ...
-  done()
-}) // [!code --]
-})) // [!code ++]
-```
+<!--@include: ./examples/promise-done.md-->
 
 ### Hooks
 

@@ -701,6 +701,14 @@ You can provide an optional argument to test that a specific error is thrown:
 
 :::tip
 You must wrap the code in a function, otherwise the error will not be caught, and test will fail.
+
+This does not apply for async calls as [rejects](#rejects) correctly unwraps the promise:
+```ts
+test('expect rejects toThrow', async ({ expect }) => {
+  const promise = Promise.reject(new Error('Test'))
+  await expect(promise).rejects.toThrowError()
+})
+```
 :::
 
 For example, if we want to test that `getFruitStock('pineapples')` throws, we could write:
@@ -1236,7 +1244,7 @@ test('spy function resolves bananas on a last call', async () => {
 
 - **Type**: `(time: number, returnValue: any) => Awaitable<void>`
 
-You can call this assertion to check if a function has successfully resolved a certain value on a specific invokation. Requires a spy function to be passed to `expect`.
+You can call this assertion to check if a function has successfully resolved a certain value on a specific invocation. Requires a spy function to be passed to `expect`.
 
 If the function returned a promise, but it was not resolved yet, this will fail.
 

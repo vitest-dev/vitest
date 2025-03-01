@@ -1,4 +1,4 @@
-import type { TestModule } from '../reporters'
+import type { TestModule } from '../reporters/reported-tasks'
 
 export interface TestRunResult {
   testModules: TestModule[]

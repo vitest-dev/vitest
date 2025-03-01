@@ -1,5 +1,4 @@
 import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
-import type { BrowserRPC } from '@vitest/browser/client'
 import type { RunnerTask } from 'vitest'
 import type {
   BrowserPage,
@@ -11,6 +10,7 @@ import type {
   UserEventTabOptions,
   UserEventTypeOptions,
 } from '../../../context'
+import type { BrowserRunnerState } from '../utils'
 import { convertElementToCssSelector, ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 
 // this file should not import anything directly, only types and utils
@@ -18,15 +18,11 @@ import { convertElementToCssSelector, ensureAwaited, getBrowserState, getWorkerS
 const state = () => getWorkerState()
 // @ts-expect-error not typed global
 const provider = __vitest_browser_runner__.provider
-function filepath() {
-  return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
-}
-const rpc = () => getWorkerState().rpc as any as BrowserRPC
 const sessionId = getBrowserState().sessionId
 const channel = new BroadcastChannel(`vitest:${sessionId}`)
 
 function triggerCommand<T>(command: string, ...args: any[]) {
-  return rpc().triggerCommand<T>(sessionId, command, filepath(), args)
+  return getBrowserState().commands.triggerCommand<T>(command, args)
 }
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
@@ -51,6 +47,10 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
       return createUserEvent()
     },
     async cleanup() {
+      // avoid cleanup rpc call if there is nothing to cleanup
+      if (!keyboard.unreleased.length) {
+        return
+      }
       return ensureAwaited(async () => {
         await triggerCommand('__vitest_cleanup', keyboard)
         keyboard.unreleased = []
@@ -105,9 +105,7 @@ export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent
       })
     },
     tab(options: UserEventTabOptions = {}) {
-      return ensureAwaited(() => {
-        return triggerCommand('__vitest_tab', options)
-      })
+      return ensureAwaited(() => triggerCommand('__vitest_tab', options))
     },
     async keyboard(text: string) {
       return ensureAwaited(async () => {
@@ -238,7 +236,7 @@ function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options:
   return vitestUserEvent
 }
 
-export function cdp() {
+export function cdp(): BrowserRunnerState['cdp'] {
   return getBrowserState().cdp!
 }
 

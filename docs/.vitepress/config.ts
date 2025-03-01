@@ -31,6 +31,10 @@ export default ({ mode }: { mode: string }) => {
     lang: 'en-US',
     title: vitestName,
     description: vitestDescription,
+    srcExclude: [
+      '**/guide/examples/*',
+      '**/guide/cli-generated.md',
+    ],
     locales: {
       root: {
         label: 'English',
@@ -52,9 +56,6 @@ export default ({ mode }: { mode: string }) => {
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
       ['meta', { property: 'og:image', content: ogImage }],
-      ['meta', { name: 'twitter:title', content: vitestName }],
-      ['meta', { name: 'twitter:description', content: vitestDescription }],
-      ['meta', { name: 'twitter:image', content: ogImage }],
       ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
       ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
       ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
@@ -153,8 +154,16 @@ export default ({ mode }: { mode: string }) => {
               activeMatch: '^/advanced/',
             },
             {
-              text: 'Team',
-              link: '/team',
+              items: [
+                {
+                  text: 'Blog',
+                  link: '/blog',
+                },
+                {
+                  text: 'Team',
+                  link: '/team',
+                },
+              ],
             },
           ],
         },
@@ -190,6 +199,10 @@ export default ({ mode }: { mode: string }) => {
                 {
                   text: 'v1.x',
                   link: 'https://v1.vitest.dev/',
+                },
+                {
+                  text: 'v2.x',
+                  link: 'https://v2.vitest.dev/',
                 },
               ],
             },
@@ -340,6 +353,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/advanced/runner',
               },
               {
+                text: 'Reporters API',
+                link: '/advanced/api/reporters',
+              },
+              {
                 text: 'Task Metadata',
                 link: '/advanced/metadata',
               },
@@ -368,6 +385,7 @@ export default ({ mode }: { mode: string }) => {
           },
         ],
         '/team': [],
+        '/blog': [],
         '/': [
           {
             text: 'Introduction',

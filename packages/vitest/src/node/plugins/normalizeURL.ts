@@ -34,8 +34,8 @@ export function NormalizeURLPlugin(): Plugin {
         const metaUrlIndex = index + exp.indexOf('import.meta.url')
         updatedCode
           = updatedCode.slice(0, metaUrlIndex)
-          + locationString
-          + updatedCode.slice(metaUrlIndex + metaUrlLength)
+            + locationString
+            + updatedCode.slice(metaUrlIndex + metaUrlLength)
       }
 
       return {

@@ -81,7 +81,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
           if (!isNot) {
             const message
               = utils.flag(this, 'message')
-              || 'expected promise to throw an error, but it didn\'t'
+                || 'expected promise to throw an error, but it didn\'t'
             const error = {
               showDiff: false,
             }
@@ -469,7 +469,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const { value, exists } = getValue()
       const pass
         = exists
-        && (args.length === 1 || jestEquals(expected, value, customTesters))
+          && (args.length === 1 || jestEquals(expected, value, customTesters))
 
       const valueString
         = args.length === 1 ? '' : ` with value ${utils.objDisplay(expected)}`
@@ -751,7 +751,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (!isNot) {
           const message
             = utils.flag(this, 'message')
-            || 'expected promise to throw an error, but it didn\'t'
+              || 'expected promise to throw an error, but it didn\'t'
           const error = {
             showDiff: false,
           }
@@ -774,7 +774,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         if (!isThrow && !isNot) {
           const message
             = utils.flag(this, 'message')
-            || 'expected function to throw an error, but it didn\'t'
+              || 'expected function to throw an error, but it didn\'t'
           const error = {
             showDiff: false,
           }

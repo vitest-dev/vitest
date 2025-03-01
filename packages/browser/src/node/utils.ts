@@ -1,6 +1,6 @@
 import type { BrowserProviderModule, ResolvedBrowserOptions, TestProject } from 'vitest/node'
 
-export function replacer(code: string, values: Record<string, string>) {
+export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
 }
 
@@ -42,6 +42,6 @@ export async function getBrowserProvider(
   return customProviderModule.default
 }
 
-export function slash(path: string) {
+export function slash(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+/g, '/')
 }

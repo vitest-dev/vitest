@@ -1,14 +1,14 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
-import type { Logger } from '../logger'
+import type { Vitest } from '../core'
 import type { BenchmarkBuiltinReporters } from '../reporters'
 import type {
   ApiConfig,
   ResolvedConfig,
   UserConfig,
-  VitestRunMode,
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
+import crypto from 'node:crypto'
 import { toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
@@ -110,11 +110,12 @@ function resolveInlineWorkerOption(value: string | number): number {
 }
 
 export function resolveConfig(
-  mode: VitestRunMode,
+  vitest: Vitest,
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
-  logger: Logger,
 ): ResolvedConfig {
+  const mode = vitest.mode
+  const logger = vitest.logger
   if (options.dom) {
     if (
       viteConfig.test?.environment != null
@@ -141,6 +142,7 @@ export function resolveConfig(
     mode,
   } as any as ResolvedConfig
 
+  resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
 
   const inspector = resolved.inspect || resolved.inspectBrk
@@ -218,7 +220,7 @@ export function resolveConfig(
   if (resolved.inspect || resolved.inspectBrk) {
     const isSingleThread
       = resolved.pool === 'threads'
-      && resolved.poolOptions?.threads?.singleThread
+        && resolved.poolOptions?.threads?.singleThread
     const isSingleFork
       = resolved.pool === 'forks' && resolved.poolOptions?.forks?.singleFork
 
@@ -234,31 +236,43 @@ export function resolveConfig(
 
   if (browser.enabled) {
     if (!browser.name && !browser.instances) {
-      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
+      // CLI can enable `--browser.*` flag to change config of workspace projects
+      // the same flag will be applied to the root config that doesn't have to have "name" or "instances"
+      // in this case we just disable the browser mode
+      browser.enabled = false
     }
+    else {
+      const instances = browser.instances
+      if (browser.name && browser.instances) {
+        // --browser=chromium filters configs to a single one
+        browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
+      }
 
-    const configs = browser.instances
-    if (browser.name && browser.instances) {
-      // --browser=chromium filters configs to a single one
-      browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
-    }
-
-    if (browser.instances && !browser.instances.length) {
-      throw new Error([
-        `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
-        browser.name && configs?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${configs.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
-      ].join(''))
+      if (browser.instances && !browser.instances.length) {
+        throw new Error([
+          `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+          browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
+        ].join(''))
+      }
     }
   }
 
+  const playwrightChromiumOnly = isPlaywrightChromiumOnly(vitest, resolved)
+
   // Browser-mode "Playwright + Chromium" only features:
-  if (browser.enabled && !(browser.provider === 'playwright' && browser.name === 'chromium')) {
-    const browserConfig = { browser: { provider: browser.provider, name: browser.name } }
+  if (browser.enabled && !playwrightChromiumOnly) {
+    const browserConfig = {
+      browser: {
+        provider: browser.provider,
+        name: browser.name,
+        instances: browser.instances?.map(i => ({ browser: i.browser })),
+      },
+    }
 
     if (resolved.coverage.enabled && resolved.coverage.provider === 'v8') {
       throw new Error(
         `@vitest/coverage-v8 does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
         + `\n\n...or change your coverage provider to:\n${JSON.stringify({ coverage: { provider: 'istanbul' } }, null, 2)}\n`,
       )
     }
@@ -268,7 +282,7 @@ export function resolveConfig(
 
       throw new Error(
         `${inspectOption} does not work with\n${JSON.stringify(browserConfig, null, 2)}\n`
-        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', name: 'chromium' } }, null, 2)}`
+        + `\nUse either:\n${JSON.stringify({ browser: { provider: 'playwright', instances: [{ browser: 'chromium' }] } }, null, 2)}`
         + `\n\n...or disable ${inspectOption}\n`,
       )
     }
@@ -344,6 +358,7 @@ export function resolveConfig(
         )}`,
     ),
   )
+  resolved.coverage.exclude.push(...resolved.include)
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
@@ -455,7 +470,7 @@ export function resolveConfig(
   resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
 
   if (options.resolveSnapshotPath) {
-    delete (resolved as UserConfig).resolveSnapshotPath
+    delete (resolved as any).resolveSnapshotPath
   }
 
   resolved.pool ??= 'threads'
@@ -615,7 +630,8 @@ export function resolveConfig(
   }
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiServerConfig(options, defaultPort)
+  const api = resolveApiServerConfig(options, defaultPort)
+  resolved.api = { ...api, token: crypto.randomUUID() }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -881,4 +897,28 @@ export function resolveCoverageReporters(configReporters: NonNullable<BaseCovera
   }
 
   return resolvedReporters
+}
+
+function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
+  const browser = config.browser
+  if (!browser || browser.provider !== 'playwright' || !browser.enabled) {
+    return false
+  }
+  if (browser.name) {
+    return browser.name === 'chromium'
+  }
+  if (!browser.instances) {
+    return false
+  }
+  for (const instance of browser.instances) {
+    const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
+    // browser config is filtered out
+    if (!vitest._matchesProjectFilter(name)) {
+      continue
+    }
+    if (instance.browser !== 'chromium') {
+      return false
+    }
+  }
+  return true
 }

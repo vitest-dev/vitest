@@ -126,13 +126,16 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    // TODO: paralellize tests instead of running them sequentially (based on CPU?)
+    // TODO: parallelize tests instead of running them sequentially (based on CPU?)
     for (const [project, files] of groupedFiles.entries()) {
       if (isCancelled) {
         break
       }
       await project._initBrowserProvider()
 
+      if (!project.browser) {
+        throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+      }
       await executeTests(method, project, files)
     }
   }
@@ -150,6 +153,10 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
     if (!config.fileParallelism) {
       return 1
+    }
+
+    if (project.config.maxWorkers) {
+      return project.config.maxWorkers
     }
 
     return vitest.config.watch

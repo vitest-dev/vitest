@@ -101,7 +101,7 @@ List of available `browser` options:
 - [`browser.screenshotDirectory`](#browser-screenshotdirectory)
 - [`browser.screenshotFailures`](#browser-screenshotfailures)
 
-By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitets 4.
+By default, Vitest creates an array with a single element which uses the [`browser.name`](#browser-name) field as a `browser`. Note that this behaviour will be removed with Vitest 4.
 
 Under the hood, Vitest transforms these instances into separate [test projects](/advanced/api/test-project) sharing a single Vite server for better caching performance.
 
@@ -244,7 +244,7 @@ Attribute used to find elements with `getByTestId` locator.
 ## browser.screenshotDirectory
 
 - **Type:** `string`
-- **Default:** `__snapshots__` in the test file directory
+- **Default:** `__screenshots__` in the test file directory
 
 Path to the screenshots directory relative to the `root`.
 
@@ -301,7 +301,7 @@ export interface BrowserScript {
 - **Default:** `[]`
 
 ::: danger
-This API is deprecated an will be removed in Vitest 4. Please, use [`browser.testerHtmlPath`](#browser-testerHtmlPath) field instead.
+This API is deprecated an will be removed in Vitest 4. Please, use [`browser.testerHtmlPath`](#browser-testerhtmlpath) field instead.
 :::
 
 Custom scripts that should be injected into the tester HTML before the tests environment is initiated. This is useful to inject polyfills required for Vitest browser implementation. It is recommended to use [`setupFiles`](#setupfiles) in almost all cases instead of this.

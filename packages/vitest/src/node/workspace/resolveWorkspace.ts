@@ -3,16 +3,15 @@ import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, U
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
-import { deepClone, toArray } from '@vitest/utils'
-import fg from 'fast-glob'
+import { deepClone } from '@vitest/utils'
 import { dirname, relative, resolve } from 'pathe'
+import { glob, type GlobOptions, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
-import { wildcardPatternToRegExp } from '../../utils/base'
 import { isTTY } from '../../utils/env'
+import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
-import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
   vitest: Vitest,
@@ -44,6 +43,9 @@ export async function resolveWorkspace(
     'bail',
     'isolate',
     'printConsoleTrace',
+    'inspect',
+    'inspectBrk',
+    'fileParallelism',
   ] as const
 
   const cliOverrides = overridesOptions.reduce((acc, name) => {
@@ -62,12 +64,10 @@ export async function resolveWorkspace(
     // if extends a config file, resolve the file path
     const configFile = typeof options.extends === 'string'
       ? resolve(configRoot, options.extends)
-      : false
-    // if extends a root config, use the users root options
-    const rootOptions = options.extends === true
-      ? vitest._options
-      : {}
-    // if `root` is configured, resolve it relative to the workespace file or vite root (like other options)
+      : options.extends === true
+        ? (vitest.vite.config.configFile || false)
+        : false
+    // if `root` is configured, resolve it relative to the workspace file or vite root (like other options)
     // if `root` is not specified, inline configs use the same root as the root project
     const root = options.root
       ? resolve(configRoot, options.root)
@@ -75,14 +75,17 @@ export async function resolveWorkspace(
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      mergeConfig(rootOptions, { ...options, root, configFile }) as any,
+      { ...options, root, configFile, test: { ...options.test, ...cliOverrides } },
     )))
   })
 
   for (const path of fileProjects) {
     // if file leads to the root config, then we can just reuse it because we already initialized it
     if (vitest.vite.config.configFile === path) {
-      projectPromises.push(Promise.resolve(vitest._ensureRootProject()))
+      const project = getDefaultTestProject(vitest)
+      if (project) {
+        projectPromises.push(Promise.resolve(project))
+      }
       continue
     }
 
@@ -100,11 +103,40 @@ export async function resolveWorkspace(
 
   // pretty rare case - the glob didn't match anything and there are no inline configs
   if (!projectPromises.length) {
-    return resolveBrowserWorkspace(vitest, new Set(), [vitest._ensureRootProject()])
+    throw new Error(
+      [
+        'No projects were found. Make sure your configuration is correct. ',
+        vitest.config.project.length ? `The filter matched no projects: ${vitest.config.project.join(', ')}. ` : '',
+        `The workspace: ${JSON.stringify(workspaceDefinition, null, 4)}.`,
+      ].join(''),
+    )
   }
 
-  const resolvedProjects = await Promise.all(projectPromises)
+  const resolvedProjectsPromises = await Promise.allSettled(projectPromises)
   const names = new Set<string>()
+
+  const errors: Error[] = []
+  const resolvedProjects: TestProject[] = []
+
+  for (const result of resolvedProjectsPromises) {
+    if (result.status === 'rejected') {
+      if (result.reason instanceof VitestFilteredOutProjectError) {
+        // filter out filtered out projects
+        continue
+      }
+      errors.push(result.reason)
+    }
+    else {
+      resolvedProjects.push(result.value)
+    }
+  }
+
+  if (errors.length) {
+    throw new AggregateError(
+      errors,
+      'Failed to initialize projects. There were errors during workspace setup. See below for more details.',
+    )
+  }
 
   // project names are guaranteed to be unique
   for (const project of resolvedProjects) {
@@ -137,18 +169,21 @@ export async function resolveBrowserWorkspace(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
-) {
-  const filters = toArray(vitest.config.project).map(s => wildcardPatternToRegExp(s))
+): Promise<TestProject[]> {
   const removeProjects = new Set<TestProject>()
 
   resolvedProjects.forEach((project) => {
     if (!project.config.browser.enabled) {
       return
     }
-    const configs = project.config.browser.instances || []
-    if (configs.length === 0) {
+    const instances = project.config.browser.instances || []
+    if (instances.length === 0) {
+      const browser = project.config.browser.name
       // browser.name should be defined, otherwise the config fails in "resolveConfig"
-      configs.push({ browser: project.config.browser.name })
+      instances.push({
+        browser,
+        name: project.name ? `${project.name} (${browser})` : browser,
+      })
       console.warn(
         withLabel(
           'yellow',
@@ -164,16 +199,17 @@ export async function resolveBrowserWorkspace(
       )
     }
     const originalName = project.config.name
-    const filteredConfigs = !filters.length
-      ? configs
-      : configs.filter((config) => {
-        const browser = config.browser
-        const newName = config.name || (originalName ? `${originalName} (${browser})` : browser)
-        return filters.some(pattern => pattern.test(newName))
-      })
+    // if original name is in the --project=name filter, keep all instances
+    const filteredInstances = !vitest._projectFilters.length || vitest._matchesProjectFilter(originalName)
+      ? instances
+      : instances.filter((instance) => {
+          const newName = instance.name! // name is set in "workspace" plugin
+          return vitest._matchesProjectFilter(newName)
+        })
 
     // every project was filtered out
-    if (!filteredConfigs.length) {
+    if (!filteredInstances.length) {
+      removeProjects.add(project)
       return
     }
 
@@ -183,28 +219,31 @@ export async function resolveBrowserWorkspace(
       )
     }
 
-    filteredConfigs.forEach((config, index) => {
+    filteredInstances.forEach((config, index) => {
       const browser = config.browser
       if (!browser) {
         const nth = index + 1
         const ending = nth === 2 ? 'nd' : nth === 3 ? 'rd' : 'th'
         throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
       }
-      const name = config.name
-      const newName = name || (originalName ? `${originalName} (${browser})` : browser)
+      const name = config.name!
 
-      if (names.has(newName)) {
+      if (name == null) {
+        throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
+      }
+
+      if (names.has(name)) {
         throw new Error(
           [
-            `Cannot define a nested project for a ${browser} browser. The project name "${newName}" was already defined. `,
+            `Cannot define a nested project for a ${browser} browser. The project name "${name}" was already defined. `,
             'If you have multiple instances for the same browser, make sure to define a custom "name". ',
             'All projects in a workspace should have unique names. Make sure your configuration is correct.',
           ].join(''),
         )
       }
-      names.add(newName)
+      names.add(name)
       const clonedConfig = cloneConfig(project, config)
-      clonedConfig.name = newName
+      clonedConfig.name = name
       const clone = TestProject._cloneBrowserProject(project, clonedConfig)
       resolvedProjects.push(clone)
     })
@@ -307,10 +346,10 @@ async function resolveTestProjectConfigs(
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
-          const relativeWorkpaceConfigPath = workspaceConfigPath
+          const relativeWorkSpaceConfigPath = workspaceConfigPath
             ? relative(vitest.config.root, workspaceConfigPath)
             : undefined
-          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkpaceConfigPath}"` : 'Inline workspace'
+          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkSpaceConfigPath}"` : 'Inline workspace'
           throw new Error(`${note} references a non-existing file or a directory: ${file}`)
         }
 
@@ -357,14 +396,12 @@ async function resolveTestProjectConfigs(
   }
 
   if (workspaceGlobMatches.length) {
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       absolute: true,
       dot: true,
       onlyFiles: false,
       cwd: vitest.config.root,
-      markDirectories: true,
-      // TODO: revert option when we go back to tinyglobby
-      // expandDirectories: false,
+      expandDirectories: false,
       ignore: [
         '**/node_modules/**',
         // temporary vite config file
@@ -374,7 +411,7 @@ async function resolveTestProjectConfigs(
       ],
     }
 
-    const workspacesFs = await fg.glob(workspaceGlobMatches, globOptions)
+    const workspacesFs = await glob(workspaceGlobMatches, globOptions)
 
     await Promise.all(workspacesFs.map(async (path) => {
       // directories are allowed with a glob like `packages/*`
@@ -412,4 +449,31 @@ async function resolveDirectoryConfig(directory: string) {
     return resolve(directory, configFile)
   }
   return null
+}
+
+export function getDefaultTestProject(vitest: Vitest): TestProject | null {
+  const filter = vitest.config.project
+  const project = vitest._ensureRootProject()
+  if (!filter.length) {
+    return project
+  }
+  // check for the project name and browser names
+  const hasProjects = getPotentialProjectNames(project).some(p =>
+    vitest._matchesProjectFilter(p),
+  )
+  if (hasProjects) {
+    return project
+  }
+  return null
+}
+
+function getPotentialProjectNames(project: TestProject) {
+  const names = [project.name]
+  if (project.config.browser.instances) {
+    names.push(...project.config.browser.instances.map(i => i.name!))
+  }
+  else if (project.config.browser.name) {
+    names.push(project.config.browser.name)
+  }
+  return names
 }

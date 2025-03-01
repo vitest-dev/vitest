@@ -1,14 +1,15 @@
 import type { ServerIdResolution, ServerMockResolution } from '@vitest/mocker/node'
+import type { TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { AfterSuiteRunMeta, CancelReason, Reporter, RunnerTestFile, SnapshotResult, TaskResultPack, UserConsoleLog } from 'vitest'
+import type { AfterSuiteRunMeta, CancelReason, Reporter, RunnerTestFile, SnapshotResult, UserConsoleLog } from 'vitest'
 
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
   onUnhandledError: (error: unknown, type: string) => Promise<void>
   onQueued: (file: RunnerTestFile) => void
-  onCollected: (files?: RunnerTestFile[]) => Promise<void>
-  onTaskUpdate: (packs: TaskResultPack[]) => void
+  onCollected: (files: RunnerTestFile[]) => Promise<void>
+  onTaskUpdate: (packs: TaskResultPack[], events: TaskEventPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
@@ -38,6 +39,7 @@ export interface WebSocketBrowserHandlers {
   getBrowserFileSourceMap: (
     id: string
   ) => SourceMap | null | { mappings: '' } | undefined
+  wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown

@@ -49,7 +49,7 @@ export function setupInspect(ctx: ContextRPC) {
 
   const keepOpen = shouldKeepOpen(config)
 
-  return function cleanup() {
+  return function cleanup(): void {
     if (isEnabled && !keepOpen && inspector) {
       inspector.close()
       session?.disconnect()
@@ -57,7 +57,7 @@ export function setupInspect(ctx: ContextRPC) {
   }
 }
 
-export function closeInspector(config: SerializedConfig) {
+export function closeInspector(config: SerializedConfig): void {
   const keepOpen = shouldKeepOpen(config)
 
   if (inspector && !keepOpen) {
@@ -70,12 +70,12 @@ function shouldKeepOpen(config: SerializedConfig) {
   // In watch mode the inspector can persist re-runs if isolation is disabled and a single worker is used
   const isIsolatedSingleThread
     = config.pool === 'threads'
-    && config.poolOptions?.threads?.isolate === false
-    && config.poolOptions?.threads?.singleThread
+      && config.poolOptions?.threads?.isolate === false
+      && config.poolOptions?.threads?.singleThread
   const isIsolatedSingleFork
     = config.pool === 'forks'
-    && config.poolOptions?.forks?.isolate === false
-    && config.poolOptions?.forks?.singleFork
+      && config.poolOptions?.forks?.isolate === false
+      && config.poolOptions?.forks?.singleFork
 
   return config.watch && (isIsolatedSingleFork || isIsolatedSingleThread)
 }

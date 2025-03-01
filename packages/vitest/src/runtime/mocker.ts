@@ -1,4 +1,4 @@
-import type { ManualMockedModule, MockedModuleType } from '@vitest/mocker'
+import type { ManualMockedModule, MockedModule, MockedModuleType } from '@vitest/mocker'
 import type { MockFactory, MockOptions, PendingSuiteMock } from '../types/mocker'
 import type { VitestExecutor } from './execute'
 import { isAbsolute, resolve } from 'node:path'
@@ -90,7 +90,7 @@ export class VitestMocker {
     return this.executor.options.moduleDirectories || []
   }
 
-  public async initializeSpyModule() {
+  public async initializeSpyModule(): Promise<void> {
     this.spyModule = await this.executor.executeId(spyModulePath)
   }
 
@@ -102,7 +102,7 @@ export class VitestMocker {
     return this.registries.get(suite)!
   }
 
-  public reset() {
+  public reset(): void {
     this.registries.clear()
   }
 
@@ -158,7 +158,7 @@ export class VitestMocker {
     }
   }
 
-  public async resolveMocks() {
+  public async resolveMocks(): Promise<void> {
     if (!VitestMocker.pendingIds.length) {
       return
     }
@@ -232,7 +232,7 @@ export class VitestMocker {
   }
 
   // public method to avoid circular dependency
-  public getMockContext() {
+  public getMockContext(): MockContext {
     return this.mockContext
   }
 
@@ -241,16 +241,16 @@ export class VitestMocker {
     return `mock:${dep}`
   }
 
-  public getDependencyMock(id: string) {
+  public getDependencyMock(id: string): MockedModule | undefined {
     const registry = this.getMockerRegistry()
     return registry.get(id)
   }
 
-  public normalizePath(path: string) {
+  public normalizePath(path: string): string {
     return this.moduleCache.normalizePath(path)
   }
 
-  public resolveMockPath(mockPath: string, external: string | null) {
+  public resolveMockPath(mockPath: string, external: string | null): string | null {
     return findMockRedirect(this.root, mockPath, external)
   }
 
@@ -258,7 +258,7 @@ export class VitestMocker {
     object: Record<string | symbol, any>,
     mockExports: Record<string | symbol, any> = {},
     behavior: MockedModuleType = 'automock',
-  ) {
+  ): Record<string | symbol, any> {
     const spyOn = this.spyModule?.spyOn
     if (!spyOn) {
       throw this.createError(
@@ -272,7 +272,7 @@ export class VitestMocker {
     }, object, mockExports)
   }
 
-  public unmockPath(path: string) {
+  public unmockPath(path: string): void {
     const registry = this.getMockerRegistry()
     const id = this.normalizePath(path)
 
@@ -286,7 +286,7 @@ export class VitestMocker {
     external: string | null,
     mockType: MockedModuleType | undefined,
     factory: MockFactory | undefined,
-  ) {
+  ): void {
     const registry = this.getMockerRegistry()
     const id = this.normalizePath(path)
 
@@ -351,7 +351,7 @@ export class VitestMocker {
     return this.executor.dependencyRequest(mock.redirect, mock.redirect, [importee])
   }
 
-  public async requestWithMock(url: string, callstack: string[]) {
+  public async requestWithMock(url: string, callstack: string[]): Promise<any> {
     const id = this.normalizePath(url)
     const mock = this.getDependencyMock(id)
 
@@ -401,7 +401,7 @@ export class VitestMocker {
     id: string,
     importer: string,
     factoryOrOptions?: MockFactory | MockOptions,
-  ) {
+  ): void {
     const mockType = getMockType(factoryOrOptions)
     VitestMocker.pendingIds.push({
       action: 'mock',
@@ -412,7 +412,7 @@ export class VitestMocker {
     })
   }
 
-  public queueUnmock(id: string, importer: string) {
+  public queueUnmock(id: string, importer: string): void {
     VitestMocker.pendingIds.push({
       action: 'unmock',
       id,

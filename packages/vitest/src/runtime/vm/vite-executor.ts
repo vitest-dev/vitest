@@ -2,6 +2,7 @@ import type vm from 'node:vm'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { EsmExecutor } from './esm-executor'
+import type { VMModule } from './types'
 import { pathToFileURL } from 'node:url'
 import { normalize } from 'pathe'
 import { CSS_LANGS_RE, KNOWN_ASSET_RE } from 'vite-node/constants'
@@ -25,7 +26,7 @@ export class ViteExecutor {
     this.esm = options.esmExecutor
   }
 
-  public resolve = (identifier: string, parent: string) => {
+  public resolve = (identifier: string, parent: string): string | undefined => {
     if (identifier === CLIENT_ID) {
       if (this.workerState.environment.transformMode === 'web') {
         return identifier
@@ -53,7 +54,7 @@ export class ViteExecutor {
     return name
   }
 
-  public async createViteModule(fileUrl: string) {
+  public async createViteModule(fileUrl: string): Promise<VMModule> {
     if (fileUrl === CLIENT_FILE) {
       return this.createViteClientModule()
     }
@@ -93,7 +94,7 @@ export class ViteExecutor {
     return module
   }
 
-  public canResolve = (fileUrl: string) => {
+  public canResolve = (fileUrl: string): boolean => {
     const transformMode = this.workerState.environment.transformMode
     if (transformMode !== 'web') {
       return false

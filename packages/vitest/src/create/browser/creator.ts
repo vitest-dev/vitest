@@ -267,7 +267,7 @@ async function generateWorkspaceFile(options: {
     `        enabled: true,`,
     `        provider: '${options.provider}',`,
     options.provider !== 'preview' && `        // ${getProviderDocsLink(options.provider)}`,
-    `        configs: [`,
+    `        instances: [`,
     ...options.browsers.map(browser => `        { browser: '${browser}' },`),
     `        ],`,
     `      },`,
@@ -300,7 +300,7 @@ async function generateFrameworkConfigFile(options: {
     `      enabled: true,`,
     `      provider: '${options.provider}',`,
     options.provider !== 'preview' && `      // ${getProviderDocsLink(options.provider)}`,
-    `      configs: [`,
+    `      instances: [`,
     ...options.browsers.map(browser => `      { browser: '${browser}' },`),
     `      ],`,
     `    },`,
@@ -360,7 +360,7 @@ function getPlaywrightRunArgs(pkgManager: Agent | null) {
   }
 }
 
-export async function create() {
+export async function create(): Promise<void> {
   log(c.cyan('◼'), 'This utility will help you set up a browser testing environment.\n')
 
   const pkgJsonPath = resolve(process.cwd(), 'package.json')
@@ -506,7 +506,7 @@ export async function create() {
     })
   }
 
-  // TODO: can we do this ourselved?
+  // TODO: can we do this ourselves?
   if (lang === 'ts') {
     await updateTsConfig(providerPkg?.types)
   }

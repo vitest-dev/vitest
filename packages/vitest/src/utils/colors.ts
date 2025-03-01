@@ -13,7 +13,7 @@ const HIGHLIGHT_SUPPORTED_EXTS = new Set(
   ]),
 )
 
-export function highlightCode(id: string, source: string, colors?: Colors) {
+export function highlightCode(id: string, source: string, colors?: Colors): string {
   const ext = extname(id)
   if (!HIGHLIGHT_SUPPORTED_EXTS.has(ext)) {
     return source

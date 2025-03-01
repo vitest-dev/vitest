@@ -1,5 +1,6 @@
 import type { ReportOptions } from 'istanbul-reports'
 import type { TransformResult as ViteTransformResult } from 'vite'
+import type { ModuleExecutionInfo } from 'vite-node'
 import type { AfterSuiteRunMeta, Arrayable } from '../../types/general'
 import type { Vitest } from '../core'
 
@@ -57,6 +58,12 @@ export interface ReportContext {
   allTestsRun?: boolean
 }
 
+export interface CoverageModuleLoader {
+  executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
+  isBrowser?: boolean
+  moduleExecutionInfo?: ModuleExecutionInfo
+}
+
 export interface CoverageProviderModule {
   /**
    * Factory for creating a new coverage provider
@@ -71,7 +78,7 @@ export interface CoverageProviderModule {
   /**
    * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
    */
-  takeCoverage?: () => unknown | Promise<unknown>
+  takeCoverage?: (runtimeOptions?: { moduleExecutionInfo?: ModuleExecutionInfo }) => unknown | Promise<unknown>
 
   /**
    * Executed after all tests have been run in the worker thread.

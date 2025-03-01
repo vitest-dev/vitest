@@ -1,8 +1,9 @@
 import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
-import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestModule, TestProject } from 'vitest/node'
+import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
 import type { WebSocket } from 'ws'
 import type { ParentBrowserProject } from './projectParent'
+import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
@@ -10,14 +11,14 @@ import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { dirname } from 'pathe'
-import { createDebugger, isFileServingAllowed } from 'vitest/node'
+import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
 const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(globalServer: ParentBrowserProject) {
+export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
 
@@ -30,6 +31,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
 
     const { pathname, searchParams } = new URL(request.url, 'http://localhost')
     if (pathname !== BROWSER_API_PATH) {
+      return
+    }
+
+    if (!isValidApiRequest(vitest.config, request)) {
+      socket.destroy()
       return
     }
 
@@ -50,6 +56,13 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
       )
     }
 
+    const method = searchParams.get('method') as 'run' | 'collect'
+    if (method !== 'run' && method !== 'collect') {
+      return error(
+        new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
+      )
+    }
+
     if (type === 'orchestrator') {
       const session = vitest._browserSessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
@@ -67,7 +80,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws)
+      const rpc = setupClient(project, rpcId, ws, method)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -96,7 +109,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
     }
   }
 
-  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
+  function setupClient(project: TestProject, rpcId: string, ws: WebSocket, method: 'run' | 'collect') {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
@@ -111,23 +124,39 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
           vitest.state.catchError(error, type)
         },
         async onQueued(file) {
-          vitest.state.collectFiles(project, [file])
-          const testModule = vitest.state.getReportedEntity(file) as TestModule
-          await vitest.report('onTestModuleQueued', testModule)
+          if (method === 'collect') {
+            vitest.state.collectFiles(project, [file])
+          }
+          else {
+            await vitest._testRun.enqueued(project, file)
+          }
         },
         async onCollected(files) {
-          vitest.state.collectFiles(project, files)
-          await vitest.report('onCollected', files)
+          if (method === 'collect') {
+            vitest.state.collectFiles(project, files)
+          }
+          else {
+            await vitest._testRun.collected(project, files)
+          }
         },
-        async onTaskUpdate(packs) {
-          vitest.state.updateTasks(packs)
-          await vitest.report('onTaskUpdate', packs)
+        async onTaskUpdate(packs, events) {
+          if (method === 'collect') {
+            vitest.state.updateTasks(packs)
+          }
+          else {
+            await vitest._testRun.updated(packs, events)
+          }
         },
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        sendLog(log) {
-          return vitest.report('onUserConsoleLog', log)
+        async sendLog(log) {
+          if (method === 'collect') {
+            vitest.state.updateUserLog(log)
+          }
+          else {
+            await vitest._testRun.log(log)
+          }
         },
         resolveSnapshotPath(testPath) {
           return vitest.snapshot.resolvePath<ResolveSnapshotPathHandlerContext>(testPath, {
@@ -175,6 +204,21 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
         getCountOfFailedTests() {
           return vitest.state.getCountOfFailedTests()
         },
+        async wdioSwitchContext(direction) {
+          const provider = project.browser!.provider as WebdriverBrowserProvider
+          if (!provider) {
+            throw new Error('Commands are only available for browser tests.')
+          }
+          if (provider.name !== 'webdriverio') {
+            throw new Error('Switch context is only available for WebDriverIO provider.')
+          }
+          if (direction === 'iframe') {
+            await provider.switchToTestFrame()
+          }
+          else {
+            await provider.switchToMainFrame()
+          }
+        },
         async triggerCommand(sessionId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', sessionId, command)
           const provider = project.browser!.provider
@@ -185,7 +229,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
           if (!commands || !commands[command]) {
             throw new Error(`Unknown command "${command}".`)
           }
-          await provider.beforeCommand?.(command, payload)
           const context = Object.assign(
             {
               testPath,
@@ -196,14 +239,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject) {
             },
             provider.getCommandsContext(sessionId),
           ) as any as BrowserCommandContext
-          let result
-          try {
-            result = await commands[command](context, ...payload)
-          }
-          finally {
-            await provider.afterCommand?.(command, payload)
-          }
-          return result
+          return await commands[command](context, ...payload)
         },
         finishBrowserTests(sessionId: string) {
           debug?.('[%s] Finishing browser tests for session', sessionId)
@@ -261,7 +297,7 @@ function cloneByOwnProperties(value: any) {
  * Replacer function for serialization methods such as JS.stringify() or
  * flatted.stringify().
  */
-export function stringifyReplace(key: string, value: any) {
+export function stringifyReplace(key: string, value: any): any {
   if (value instanceof Error) {
     const cloned = cloneByOwnProperties(value)
     return {
