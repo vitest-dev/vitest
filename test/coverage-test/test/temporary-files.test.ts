@@ -6,7 +6,7 @@ import { runVitest, test } from '../utils'
 test('temporary files are removed after test', async () => {
   await runVitest({
     include: ['fixtures/test/math.test.ts'],
-    coverage: { reporter: 'json' },
+    coverage: { reporter: 'json', all: false },
   })
 
   const coveragePath = resolve('./coverage')
