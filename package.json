@@ -65,7 +65,7 @@
     "typescript": "^5.7.3",
     "unplugin-isolated-decl": "^0.11.2",
     "unplugin-oxc": "^0.2.4",
-    "vite": "^6.0.11",
+    "vite": "^6.2.0",
     "vitest": "workspace:*",
     "zx": "^8.3.2"
   },
@@ -85,7 +85,7 @@
       ]
     },
     "patchedDependencies": {
-      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
+      "@types/chai@5.0.1": "patches/@types__chai@5.0.1.patch",
       "@sinonjs/fake-timers@14.0.0": "patches/@sinonjs__fake-timers@14.0.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
