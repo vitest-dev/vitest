@@ -501,7 +501,8 @@ export class TestProject {
   }
 
   private _parentBrowser?: ParentProjectBrowser
-  private _parent?: TestProject
+  /** @internal */
+  public _parent?: TestProject
   /** @internal */
   _initParentBrowser = deduped(async () => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {

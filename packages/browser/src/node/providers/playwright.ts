@@ -43,7 +43,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private browserPromise: Promise<Browser> | null = null
 
-  public mocker: BrowserModuleMocker = this.createMocker()
+  public mocker: BrowserModuleMocker | undefined
 
   getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
@@ -56,6 +56,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.project = project
     this.browserName = browser
     this.options = options as any
+    this.mocker = this.createMocker()
   }
 
   private async openBrowser() {
@@ -153,6 +154,41 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
         await page.route(createPredicate(sessionId, module.url), async (route) => {
+          if (module.type === 'manual') {
+            const exports = Object.keys(await module.resolve())
+            const body = createManualModuleSource(module.url, exports)
+            return route.fulfill({
+              body,
+              headers: {
+                'Content-Type': 'application/javascript',
+              },
+            })
+          }
+
+          // webkit doesn't support redirect responses
+          const isWebkit = this.browserName === 'webkit'
+          if (isWebkit) {
+            const url = module.type === 'redirect'
+              ? module.redirect
+              : (() => {
+                  const url = new URL(route.request().url())
+                  url.searchParams.set('mock', module.type)
+                  return url.href.slice(url.origin.length)
+                })()
+            const result = await this.project.vite.transformRequest(url, {
+              ssr: false,
+            })
+            if (!result) {
+              return route.continue()
+            }
+            return route.fulfill({
+              body: result.code, // TODO: inject source map
+              headers: {
+                'Content-Type': 'application/javascript',
+              },
+            })
+          }
+
           if (module.type === 'redirect') {
             return route.fulfill({
               status: 302,
@@ -168,16 +204,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
               status: 302,
               headers: {
                 Location: url.href,
-              },
-            })
-          }
-          else if (module.type === 'manual') {
-            const exports = Object.keys(await module.resolve())
-            const body = createManualModuleSource(module.url, exports)
-            return route.fulfill({
-              body,
-              headers: {
-                'Content-Type': 'application/javascript',
               },
             })
           }
@@ -197,11 +223,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       clear: async (sessionId: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const ids = sessionIds.get(sessionId) || []
-        const promises = ids.map(id => {
+        const promises = ids.map((id) => {
           const predicate = idPreficates.get(id)
           if (predicate) {
             return page.unroute(predicate).finally(() => idPreficates.delete(id))
           }
+          return null
         })
         await Promise.all(promises).finally(() => sessionIds.delete(sessionId))
       },
