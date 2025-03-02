@@ -34,6 +34,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
   fn: T,
   timeout: number,
   isHook = false,
+  stackTraceError?: Error,
 ): T {
   if (timeout <= 0 || timeout === Number.POSITIVE_INFINITY) {
     return fn
@@ -47,10 +48,14 @@ export function withTimeout<T extends (...args: any[]) => any>(
     return new Promise((resolve_, reject_) => {
       const timer = setTimeout(() => {
         clearTimeout(timer)
-        reject(new Error(makeTimeoutMsg(isHook, timeout)))
+        rejectTimeoutError()
       }, timeout)
       // `unref` might not exist in browser
       timer.unref?.()
+
+      function rejectTimeoutError() {
+        reject_(makeTimeoutError(isHook, timeout, stackTraceError))
+      }
 
       function resolve(result: unknown) {
         clearTimeout(timer)
@@ -58,7 +63,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
         // but we still need to fail the test, see
         // https://github.com/vitest-dev/vitest/issues/2920
         if (now() - startTime >= timeout) {
-          reject_(new Error(makeTimeoutMsg(isHook, timeout)))
+          rejectTimeoutError()
           return
         }
         resolve_(result)
@@ -108,26 +113,31 @@ export function createTestContext(
   context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
     test.onFailed.push(
-      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true, new Error('STACK_TRACE_ERROR')),
     )
   }
 
   context.onTestFinished = (handler, timeout) => {
     test.onFinished ||= []
     test.onFinished.push(
-      withTimeout(handler, timeout ?? runner.config.hookTimeout, true),
+      withTimeout(handler, timeout ?? runner.config.hookTimeout, true, new Error('STACK_TRACE_ERROR')),
     )
   }
 
   return runner.extendTaskContext?.(context) || context
 }
 
-function makeTimeoutMsg(isHook: boolean, timeout: number) {
-  return `${
+function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Error) {
+  const message = `${
     isHook ? 'Hook' : 'Test'
   } timed out in ${timeout}ms.\nIf this is a long-running ${
     isHook ? 'hook' : 'test'
   }, pass a timeout value as the last argument or configure it globally with "${
     isHook ? 'hookTimeout' : 'testTimeout'
   }".`
+  const error = new Error(message)
+  if (stackTraceError?.stack) {
+    error.stack = stackTraceError.stack.replace(error.message, stackTraceError.message)
+  }
+  return error
 }
