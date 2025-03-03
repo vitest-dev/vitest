@@ -603,8 +603,11 @@ function createVitest(): VitestUtils {
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-      // return _mocker().importMock(path, getImporter('importMock'))
-      const mod = await utils.importActual(path)
+      const mod = await _mocker().importActual<any>(
+        path,
+        getImporter('importMock'),
+        _mocker().getMockContext().callstack,
+      )
       return _mocker().mockObject(mod, {}, 'automock') as any
     },
 
