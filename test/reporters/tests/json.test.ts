@@ -137,4 +137,22 @@ describe('json reporter', async () => {
     expect(data.testResults).toHaveLength(1)
     expect(data.testResults[0].status).toBe(expected)
   }, 40000)
+
+  it('should output retry and flaky info', async () => {
+    const { stdout } = await runVitest({ reporters: 'json', root, retry: 3 }, ['retry'])
+
+    const data = JSON.parse(stdout)
+    const { duration, failureMessages, ...assertionResult } = data.testResults[0].assertionResults[0]
+    expect(assertionResult).toMatchInlineSnapshot(`
+      {
+        "ancestorTitles": [],
+        "flaky": true,
+        "fullName": "pass after retries",
+        "meta": {},
+        "retryCount": 3,
+        "status": "passed",
+        "title": "pass after retries",
+      }
+    `)
+  })
 })
