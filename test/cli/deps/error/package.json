@@ -1,0 +1,9 @@
+{
+  "name": "@vitest/test-dep-error",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./index.js",
+    "./*": "./*"
+  }
+}

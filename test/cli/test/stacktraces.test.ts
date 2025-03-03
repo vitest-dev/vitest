@@ -68,6 +68,30 @@ describe('stacktrace filtering', async () => {
   })
 })
 
+describe('stacktrace in dependency package', () => {
+  const root = resolve(__dirname, '../fixtures/stacktraces')
+  const testFile = resolve(root, './error-in-package.test.js')
+
+  it('external', async () => {
+    const { stderr } = await runVitest({
+      root,
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+
+  it('inline', async () => {
+    const { stderr } = await runVitest({
+      root,
+      server: {
+        deps: {
+          inline: [/@vitest\/test-dep-error/],
+        },
+      },
+    }, [testFile])
+    expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+})
+
 it.runIf(major < 22)('stacktrace in vmThreads', async () => {
   const root = resolve(__dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-with-stack.test.js')
@@ -81,4 +105,8 @@ it.runIf(major < 22)('stacktrace in vmThreads', async () => {
 
 function removeLines(log: string) {
   return log.replace(/⎯{2,}/g, '⎯⎯')
+}
+
+function removeNodeModules(log: string) {
+  return log.replace(/[^ ]*\/node_modules\//g, '(NODE_MODULES)/')
 }
