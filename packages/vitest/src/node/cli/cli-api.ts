@@ -28,6 +28,14 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+
+  /**
+   * Override vite config's configLoader from cli.
+   * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
+   * This is only available with **vite version 6.1.0** and above.
+   * @experimental
+   */
+  configLoader?: import('vite').InlineConfig['configLoader']
 }
 
 /**

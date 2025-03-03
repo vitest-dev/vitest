@@ -1099,6 +1099,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:^
         version: link:../../packages/runner
+      '@vitest/test-dep-linked':
+        specifier: link:./deps/linked
+        version: link:deps/linked
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
