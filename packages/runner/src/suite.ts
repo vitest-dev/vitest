@@ -205,7 +205,10 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  return suite('', { concurrent: config.concurrent }, () => {})
+  const collector = suite('', { concurrent: config.concurrent }, () => {})
+  // no parent suite for top-level tests
+  delete collector.suite
+  return collector
 }
 
 export function clearCollectorContext(
@@ -303,11 +306,7 @@ function createSuiteCollector(
     const task: Test = {
       id: '',
       name,
-      // no parent suite for top-level tests
-      suite:
-        collectorContext.currentSuite === defaultSuite
-          ? undefined
-          : collectorContext.currentSuite?.suite,
+      suite: collectorContext.currentSuite?.suite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
@@ -421,10 +420,7 @@ function createSuiteCollector(
       id: '',
       type: 'suite',
       name,
-      suite:
-        collectorContext.currentSuite === defaultSuite
-          ? undefined
-          : collectorContext.currentSuite?.suite,
+      suite: collectorContext.currentSuite?.suite,
       mode,
       each,
       file: undefined!,
