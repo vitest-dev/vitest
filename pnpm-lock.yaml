@@ -363,9 +363,6 @@ importers:
       magic-string:
         specifier: ^0.30.17
         version: 0.30.17
-      msw:
-        specifier: ^2.7.3
-        version: 2.7.3(@types/node@22.13.5)(typescript@5.7.3)
       sirv:
         specifier: ^3.0.1
         version: 3.0.1
