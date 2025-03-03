@@ -16,10 +16,7 @@ interface BrowserRunnerOptions {
   config: SerializedConfig
 }
 
-export const browserHashMap = new Map<
-  string,
-  string
->()
+export const browserHashMap: Map<string, string> = new Map()
 
 interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
@@ -157,7 +154,7 @@ export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
   config: SerializedConfig,
-) {
+): Promise<VitestRunner> {
   if (cachedRunner) {
     return cachedRunner
   }

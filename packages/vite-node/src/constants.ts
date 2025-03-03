@@ -1,4 +1,4 @@
-export const KNOWN_ASSET_TYPES = [
+export const KNOWN_ASSET_TYPES: string[] = [
   // images
   'apng',
   'bmp',
@@ -34,8 +34,8 @@ export const KNOWN_ASSET_TYPES = [
   'txt',
 ]
 
-export const KNOWN_ASSET_RE = new RegExp(
+export const KNOWN_ASSET_RE: RegExp = new RegExp(
   `\\.(${KNOWN_ASSET_TYPES.join('|')})$`,
 )
-export const CSS_LANGS_RE
+export const CSS_LANGS_RE: RegExp
   = /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/

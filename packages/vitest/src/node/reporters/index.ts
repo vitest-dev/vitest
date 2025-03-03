@@ -42,17 +42,17 @@ export type {
 } from './json'
 
 export const ReportersMap = {
-  'default': DefaultReporter,
-  'basic': BasicReporter,
-  'blob': BlobReporter,
-  'verbose': VerboseReporter,
-  'dot': DotReporter,
-  'json': JsonReporter,
-  'tap': TapReporter,
-  'tap-flat': TapFlatReporter,
-  'junit': JUnitReporter,
-  'hanging-process': HangingProcessReporter,
-  'github-actions': GithubActionsReporter,
+  'default': DefaultReporter as typeof DefaultReporter,
+  'basic': BasicReporter as typeof BasicReporter,
+  'blob': BlobReporter as typeof BlobReporter,
+  'verbose': VerboseReporter as typeof VerboseReporter,
+  'dot': DotReporter as typeof DotReporter,
+  'json': JsonReporter as typeof JsonReporter,
+  'tap': TapReporter as typeof TapReporter,
+  'tap-flat': TapFlatReporter as typeof TapFlatReporter,
+  'junit': JUnitReporter as typeof JUnitReporter,
+  'hanging-process': HangingProcessReporter as typeof HangingProcessReporter,
+  'github-actions': GithubActionsReporter as typeof GithubActionsReporter,
 }
 
 export type BuiltinReporters = keyof typeof ReportersMap

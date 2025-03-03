@@ -14,13 +14,13 @@ import {
   F_POINTER,
 } from './figures'
 
-export const pointer = c.yellow(F_POINTER)
-export const skipped = c.dim(c.gray(F_DOWN))
-export const benchmarkPass = c.green(F_DOT)
-export const testPass = c.green(F_CHECK)
-export const taskFail = c.red(F_CROSS)
-export const suiteFail = c.red(F_POINTER)
-export const pending = c.gray('·')
+export const pointer: string = c.yellow(F_POINTER)
+export const skipped: string = c.dim(c.gray(F_DOWN))
+export const benchmarkPass: string = c.green(F_DOT)
+export const testPass: string = c.green(F_CHECK)
+export const taskFail: string = c.red(F_CROSS)
+export const suiteFail: string = c.red(F_POINTER)
+export const pending: string = c.gray('·')
 
 function getCols(delta = 0) {
   let length = process.stdout?.columns
@@ -30,7 +30,7 @@ function getCols(delta = 0) {
   return Math.max(length + delta, 0)
 }
 
-export function divider(text?: string, left?: number, right?: number) {
+export function divider(text?: string, left?: number, right?: number): string {
   const cols = getCols()
 
   if (text) {
@@ -49,7 +49,7 @@ export function divider(text?: string, left?: number, right?: number) {
   return F_LONG_DASH.repeat(cols)
 }
 
-export function formatTestPath(root: string, path: string) {
+export function formatTestPath(root: string, path: string): string {
   if (isAbsolute(path)) {
     path = relative(root, path)
   }
@@ -64,7 +64,7 @@ export function formatTestPath(root: string, path: string) {
 export function renderSnapshotSummary(
   rootDir: string,
   snapshots: SnapshotSummary,
-) {
+): string[] {
   const summary: string[] = []
 
   if (snapshots.added) {
@@ -121,7 +121,7 @@ export function renderSnapshotSummary(
   return summary
 }
 
-export function countTestErrors(tasks: Task[]) {
+export function countTestErrors(tasks: Task[]): number {
   return tasks.reduce((c, i) => c + (i.result?.errors?.length || 0), 0)
 }
 
@@ -129,7 +129,7 @@ export function getStateString(
   tasks: Task[],
   name = 'tests',
   showTotal = true,
-) {
+): string {
   if (tasks.length === 0) {
     return c.dim(`no ${name}`)
   }
@@ -151,7 +151,7 @@ export function getStateString(
   )
 }
 
-export function getStateSymbol(task: Task) {
+export function getStateSymbol(task: Task): string {
   if (task.mode === 'skip' || task.mode === 'todo') {
     return skipped
   }
@@ -177,7 +177,7 @@ export function getStateSymbol(task: Task) {
   return ' '
 }
 
-export function duration(time: number, locale = 'en-us') {
+export function duration(time: number, locale = 'en-us'): string {
   if (time < 1) {
     return `${Number((time * 1e3).toFixed(2)).toLocaleString(locale)} ps`
   }
@@ -201,18 +201,18 @@ export function duration(time: number, locale = 'en-us') {
   return `${Number((time / 36e11).toFixed(2)).toLocaleString(locale)} h`
 }
 
-export function formatTimeString(date: Date) {
+export function formatTimeString(date: Date): string {
   return date.toTimeString().split(' ')[0]
 }
 
-export function formatTime(time: number) {
+export function formatTime(time: number): string {
   if (time > 1000) {
     return `${(time / 1000).toFixed(2)}s`
   }
   return `${Math.round(time)}ms`
 }
 
-export function formatProjectName(name: string | undefined, suffix = ' ') {
+export function formatProjectName(name: string | undefined, suffix = ' '): string {
   if (!name) {
     return ''
   }
@@ -223,16 +223,16 @@ export function formatProjectName(name: string | undefined, suffix = ' ') {
     .split('')
     .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
 
-  const colors = [c.black, c.yellow, c.cyan, c.green, c.magenta]
+  const colors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta]
 
-  return c.inverse(colors[index % colors.length](` ${name} `)) + suffix
+  return c.black(colors[index % colors.length](` ${name} `)) + suffix
 }
 
 export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
   return `${c.bold(c.inverse(c[color](` ${label} `)))} ${message ? c[color](message) : ''}`
 }
 
-export function padSummaryTitle(str: string) {
+export function padSummaryTitle(str: string): string {
   return c.dim(`${str.padStart(11)} `)
 }
 

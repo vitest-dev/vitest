@@ -26,15 +26,16 @@ export class ServerMockResolver {
     options: { mock: 'spy' | 'factory' | 'auto' },
   ): Promise<ServerMockResolution> {
     const { id, fsPath, external } = await this.resolveMockId(rawId, importer)
+    const resolvedUrl = this.normalizeResolveIdToUrl({ id }).url
 
     if (options.mock === 'factory') {
       const manifest = getViteDepsManifest(this.server.config)
       const needsInterop = manifest?.[fsPath]?.needsInterop ?? false
-      return { mockType: 'manual', resolvedId: id, needsInterop }
+      return { mockType: 'manual', resolvedId: id, resolvedUrl, needsInterop }
     }
 
     if (options.mock === 'spy') {
-      return { mockType: 'autospy', resolvedId: id }
+      return { mockType: 'autospy', resolvedId: id, resolvedUrl }
     }
 
     const redirectUrl = findMockRedirect(this.server.config.root, fsPath, external)
@@ -43,6 +44,7 @@ export class ServerMockResolver {
       mockType: redirectUrl === null ? 'automock' : 'redirect',
       redirectUrl,
       resolvedId: id,
+      resolvedUrl,
     }
   }
 
@@ -67,10 +69,14 @@ export class ServerMockResolver {
     if (!resolved) {
       return null
     }
+    return this.normalizeResolveIdToUrl(resolved)
+  }
+
+  private normalizeResolveIdToUrl(resolved: { id: string }) {
     const isOptimized = resolved.id.startsWith(withTrailingSlash(this.server.config.cacheDir))
     let url: string
     // normalise the URL to be acceptable by the browser
-    // https://github.com/vitejs/vite/blob/e833edf026d495609558fd4fb471cf46809dc369/packages/vite/src/node/plugins/importAnalysis.ts#L335
+    // https://github.com/vitejs/vite/blob/14027b0f2a9b01c14815c38aab22baf5b29594bb/packages/vite/src/node/plugins/importAnalysis.ts#L103
     const root = this.server.config.root
     if (resolved.id.startsWith(withTrailingSlash(root))) {
       url = resolved.id.slice(root.length)
@@ -86,9 +92,9 @@ export class ServerMockResolver {
       url = resolved.id
     }
     if (url[0] !== '.' && url[0] !== '/') {
-      url = id.startsWith(VALID_ID_PREFIX)
-        ? id
-        : VALID_ID_PREFIX + id.replace('\0', '__x00__')
+      url = resolved.id.startsWith(VALID_ID_PREFIX)
+        ? resolved.id
+        : VALID_ID_PREFIX + resolved.id.replace('\0', '__x00__')
     }
     return {
       id: resolved.id,
@@ -177,6 +183,7 @@ function withTrailingSlash(path: string): string {
 export interface ServerMockResolution {
   mockType: 'manual' | 'redirect' | 'automock' | 'autospy'
   resolvedId: string
+  resolvedUrl: string
   needsInterop?: boolean
   redirectUrl?: string | null
 }

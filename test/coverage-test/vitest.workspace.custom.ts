@@ -10,6 +10,7 @@ const BROWSER_TESTS = 'test/**.browser.test.ts'
 const config = defineConfig({
   test: {
     pool: 'threads',
+    setupFiles: ['./setup.ts'],
   },
 })
 

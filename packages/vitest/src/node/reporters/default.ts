@@ -29,44 +29,44 @@ export class DefaultReporter extends BaseReporter {
     }
   }
 
-  onTestRunStart(specifications: ReadonlyArray<TestSpecification>) {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
     this.summary?.onTestRunStart(specifications)
   }
 
-  onTestModuleQueued(file: TestModule) {
+  onTestModuleQueued(file: TestModule): void {
     this.summary?.onTestModuleQueued(file)
   }
 
-  onTestModuleCollected(module: TestModule) {
+  onTestModuleCollected(module: TestModule): void {
     this.summary?.onTestModuleCollected(module)
   }
 
-  onTestModuleEnd(module: TestModule) {
+  onTestModuleEnd(module: TestModule): void {
     this.summary?.onTestModuleEnd(module)
   }
 
-  onTestCaseReady(test: TestCase) {
+  onTestCaseReady(test: TestCase): void {
     this.summary?.onTestCaseReady(test)
   }
 
-  onTestCaseResult(test: TestCase) {
+  onTestCaseResult(test: TestCase): void {
     this.summary?.onTestCaseResult(test)
   }
 
-  onHookStart(hook: ReportedHookContext) {
+  onHookStart(hook: ReportedHookContext): void {
     this.summary?.onHookStart(hook)
   }
 
-  onHookEnd(hook: ReportedHookContext) {
+  onHookEnd(hook: ReportedHookContext): void {
     this.summary?.onHookEnd(hook)
   }
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest): void {
     super.onInit(ctx)
     this.summary?.onInit(ctx, { verbose: this.verbose })
   }
 
-  onPathsCollected(paths: string[] = []) {
+  onPathsCollected(paths: string[] = []): void {
     if (this.isTTY) {
       if (this.renderSucceed === undefined) {
         this.renderSucceed = !!this.renderSucceed
@@ -78,7 +78,7 @@ export class DefaultReporter extends BaseReporter {
     }
   }
 
-  onTestRunEnd() {
+  onTestRunEnd(): void {
     this.summary?.onTestRunEnd()
   }
 }

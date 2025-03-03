@@ -198,7 +198,7 @@ function getExampleTest(framework: string) {
   }
 }
 
-export async function generateExampleFiles(framework: string, lang: 'ts' | 'js') {
+export async function generateExampleFiles(framework: string, lang: 'ts' | 'js'): Promise<string> {
   const example = getExampleTest(framework)
   let fileName = example.name
   const folder = resolve(process.cwd(), 'vitest-example')

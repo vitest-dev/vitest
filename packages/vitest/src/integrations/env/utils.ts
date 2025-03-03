@@ -6,7 +6,7 @@ export function getWindowKeys(
   global: any,
   win: any,
   additionalKeys: string[] = [],
-) {
+): Set<string> {
   const keysArray = [...additionalKeys, ...KEYS]
   const keys = new Set(
     keysArray.concat(Object.getOwnPropertyNames(win)).filter((k) => {
@@ -42,7 +42,11 @@ export function populateGlobal(
   global: any,
   win: any,
   options: PopulateOptions = {},
-) {
+): {
+    keys: Set<string>
+    skipKeys: string[]
+    originals: Map<string | symbol, any>
+  } {
   const { bindFunctions = false } = options
   const keys = getWindowKeys(global, win, options.additionalKeys)
 

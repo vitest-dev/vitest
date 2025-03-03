@@ -154,7 +154,7 @@ export class NodeBenchmarkRunner implements VitestRunner {
 
   constructor(public config: SerializedConfig) {}
 
-  async importTinybench() {
+  async importTinybench(): Promise<typeof import('tinybench')> {
     return await import('tinybench')
   }
 

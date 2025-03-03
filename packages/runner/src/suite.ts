@@ -294,7 +294,6 @@ function createSuiteCollector(
   suiteOptions?: TestOptions,
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
-  const factoryQueue: (Test | Suite | SuiteCollector)[] = []
 
   let suite!: Suite
 
@@ -451,7 +450,6 @@ function createSuiteCollector(
 
   function clear() {
     tasks.length = 0
-    factoryQueue.length = 0
     initSuite(false)
   }
 
@@ -460,14 +458,13 @@ function createSuiteCollector(
       throw new TypeError('File is required to collect tasks.')
     }
 
-    factoryQueue.length = 0
     if (factory) {
       await runWithSuite(collector, () => factory(test))
     }
 
     const allChildren: Task[] = []
 
-    for (const i of [...factoryQueue, ...tasks]) {
+    for (const i of tasks) {
       allChildren.push(i.type === 'collector' ? await i.collect(file) : i)
     }
 

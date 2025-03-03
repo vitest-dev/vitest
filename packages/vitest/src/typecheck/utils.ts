@@ -1,4 +1,4 @@
-export function createIndexMap(source: string) {
+export function createIndexMap(source: string): Map<string, number> {
   const map = new Map<string, number>()
   let index = 0
   let line = 1
