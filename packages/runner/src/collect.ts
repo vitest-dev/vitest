@@ -89,14 +89,6 @@ export async function collectTests(
 
     calculateSuiteHash(file)
 
-    file.tasks.forEach((task) => {
-      // task.suite refers to the internal default suite object
-      // it should not be reported
-      if (task.suite?.id === '') {
-        delete task.suite
-      }
-    })
-
     const hasOnlyTasks = someTasksAreOnly(file)
     interpretTaskModes(
       file,
