@@ -18,7 +18,7 @@
     "vue": "^3.5.12"
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.2.7",
+    "@iconify-json/carbon": "^1.2.8",
     "@iconify-json/logos": "^1.2.4",
     "@shikijs/transformers": "^1.29.2",
     "@shikijs/vitepress-twoslash": "^1.29.2",
