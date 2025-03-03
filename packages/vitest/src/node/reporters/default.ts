@@ -42,6 +42,7 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onTestModuleEnd(module: TestModule): void {
+    super.onTestModuleEnd(module)
     this.summary?.onTestModuleEnd(module)
   }
 
@@ -50,6 +51,7 @@ export class DefaultReporter extends BaseReporter {
   }
 
   onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
     this.summary?.onTestCaseResult(test)
   }
 
