@@ -6,7 +6,7 @@
  */
 
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
-import type { ParsedStack } from '@vitest/utils'
+import type { ParsedStack } from '../../../utils/src/index'
 import type {
   SnapshotData,
   SnapshotEnvironment,
@@ -17,7 +17,7 @@ import type {
 } from '../types'
 import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { parseErrorStacktrace } from '../../../utils/src/source-map'
 import { saveInlineSnapshots } from './inlineSnapshot'
 import { saveRawSnapshots } from './rawSnapshot'
 

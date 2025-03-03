@@ -1,10 +1,9 @@
-// @ts-check
 import { builtinModules, createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import isolatedDecl from 'unplugin-isolated-decl/rollup'
-import oxc from 'unplugin-oxc/rollup'
+import dts from 'rollup-plugin-dts'
+import esbuild from 'rollup-plugin-esbuild'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -12,7 +11,7 @@ const pkg = require('./package.json')
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
-  // ...Object.keys(pkg.peerDependencies || {}),
+  ...Object.keys(pkg.peerDependencies || {}),
 ]
 
 const entries = {
@@ -22,13 +21,12 @@ const entries = {
 }
 
 const plugins = [
-  isolatedDecl({ transformer: 'oxc' }),
   nodeResolve({
     preferBuiltins: true,
   }),
   commonjs(),
-  oxc({
-    transform: { target: 'node14' },
+  esbuild({
+    target: 'node14',
   }),
 ]
 
@@ -43,6 +41,17 @@ export default defineConfig([
     },
     external,
     plugins,
+    onwarn,
+  },
+  {
+    input: entries,
+    output: {
+      dir: 'dist',
+      entryFileNames: '[name].d.ts',
+      format: 'esm',
+    },
+    external,
+    plugins: [dts({ respectExternal: true })],
     onwarn,
   },
 ])

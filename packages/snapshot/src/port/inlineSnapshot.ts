@@ -5,7 +5,7 @@ import {
   lineSplitRE,
   offsetToLineNumber,
   positionToOffset,
-} from '@vitest/utils'
+} from '../../../utils/src/index'
 
 export interface InlineSnapshot {
   snapshot: string
