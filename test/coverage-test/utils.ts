@@ -1,7 +1,7 @@
 import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction } from 'vitest'
 import type { UserConfig } from 'vitest/node'
-import { readFileSync } from 'node:fs'
+import { readFileSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stripVTControlCharacters } from 'node:util'
@@ -30,6 +30,8 @@ export function coverageTest(name: string, fn: TestFunction) {
 
 export async function runVitest(config: UserConfig, options = { throwOnError: true }) {
   const provider = process.env.COVERAGE_PROVIDER as any
+
+  rmSync('./coverage', { force: true, recursive: true })
 
   const result = await testUtils.runVitest({
     config: 'fixtures/configs/vitest.config.ts',
