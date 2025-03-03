@@ -13,9 +13,16 @@ import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
 
+/**
+ * Extends `UserConfig` with certain Vite options that can be passed, for example, via the CLI.
+ */
+export interface CreateVitestOptions extends UserConfig {
+  configLoader?: ViteInlineConfig['configLoader']
+}
+
 export async function createVitest(
   mode: VitestRunMode,
-  options: UserConfig,
+  options: CreateVitestOptions,
   viteOverrides: ViteUserConfig = {},
   vitestOptions: VitestOptions = {},
 ): Promise<Vitest> {

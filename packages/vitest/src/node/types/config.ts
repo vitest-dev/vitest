@@ -358,9 +358,6 @@ export interface InlineConfig {
    */
   minWorkers?: number | string
 
-  /** @experimental */
-  configLoader?: 'bundle' | 'runner' | 'native'
-
   /**
    * Should all test files run in parallel. Doesn't affect tests running in the same file.
    * Setting this to `false` will override `maxWorkers` and `minWorkers` options to `1`.
@@ -947,11 +944,6 @@ export interface UserConfig extends InlineConfig {
    * Override vite config's clearScreen from cli
    */
   clearScreen?: boolean
-
-  /**
-   * Override vite config's configLoader from cli
-   */
-  configLoader?: 'bundle' | 'runner' | 'native'
 
   /**
    * benchmark.compare option exposed at the top level for cli

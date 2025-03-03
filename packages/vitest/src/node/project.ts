@@ -726,6 +726,9 @@ export interface SerializedTestProject {
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   configFile: string | false
+  test: UserWorkspaceConfig['test'] & {
+    configLoader?: ViteInlineConfig['configLoader']
+  }
 }
 
 export async function initializeProject(
