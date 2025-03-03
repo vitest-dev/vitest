@@ -1,8 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
-import resolve from '@rollup/plugin-node-resolve'
 import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 
 const entry = ['src/index.ts']
 
@@ -28,13 +27,11 @@ export default () => [
     },
     external,
     plugins: [
-      resolve({
-        preferBuiltins: true,
-      }),
       json(),
       commonjs(),
-      esbuild({
-        target: 'node18',
+      oxc({
+        resolveNodeModules: true,
+        transform: { target: 'node18' },
       }),
     ],
   },

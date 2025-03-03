@@ -1,3 +1,4 @@
+// @ts-check
 import { builtinModules, createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
@@ -24,7 +25,7 @@ const entries = {
 const external = [
   ...builtinModules,
   ...Object.keys(pkg.dependencies || {}),
-  ...Object.keys(pkg.peerDependencies || {}),
+  // ...Object.keys(pkg.peerDependencies || {}),
   'pathe',
   'birpc',
   'vite',
