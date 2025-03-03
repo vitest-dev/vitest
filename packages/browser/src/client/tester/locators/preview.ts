@@ -8,8 +8,8 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
-import { convertElementToCssSelector } from '../../utils'
 import { getElementError } from '../public-utils'
+import { convertElementToCssSelector } from '../utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({

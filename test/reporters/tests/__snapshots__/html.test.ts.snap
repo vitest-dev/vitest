@@ -68,6 +68,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
             "startTime": 0,
             "state": "fail",
           },
+          "timeout": 5000,
           "type": "test",
         },
       ],
@@ -148,6 +149,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
             "startTime": 0,
             "state": "pass",
           },
+          "timeout": 5000,
           "type": "test",
         },
         {
@@ -160,6 +162,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
+          "timeout": 5000,
           "type": "test",
         },
       ],

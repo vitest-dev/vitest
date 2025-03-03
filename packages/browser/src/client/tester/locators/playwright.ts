@@ -1,3 +1,4 @@
+import type { UserEventClearOptions, UserEventClickOptions, UserEventDragAndDropOptions, UserEventFillOptions, UserEventHoverOptions, UserEventSelectOptions, UserEventUploadOptions } from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
@@ -8,6 +9,8 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
+import { getBrowserState } from '../../utils'
+import { getIframeScale, processTimeoutOptions } from '../utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -46,6 +49,50 @@ class PlaywrightLocator extends Locator {
     super()
   }
 
+  public override click(options?: UserEventClickOptions) {
+    return super.click(processTimeoutOptions(processClickOptions(options)))
+  }
+
+  public override dblClick(options?: UserEventClickOptions): Promise<void> {
+    return super.dblClick(processTimeoutOptions(processClickOptions(options)))
+  }
+
+  public override tripleClick(options?: UserEventClickOptions): Promise<void> {
+    return super.tripleClick(processTimeoutOptions(processClickOptions(options)))
+  }
+
+  public override selectOptions(
+    value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
+    options?: UserEventSelectOptions,
+  ): Promise<void> {
+    return super.selectOptions(value, processTimeoutOptions(options))
+  }
+
+  public override clear(options?: UserEventClearOptions): Promise<void> {
+    return super.clear(processTimeoutOptions(options))
+  }
+
+  public override hover(options?: UserEventHoverOptions): Promise<void> {
+    return super.hover(processTimeoutOptions(processHoverOptions(options)))
+  }
+
+  public override upload(
+    files: string | string[] | File | File[],
+    options?: UserEventUploadOptions,
+  ): Promise<void> {
+    return super.upload(files, processTimeoutOptions(options))
+  }
+
+  public override fill(text: string, options?: UserEventFillOptions): Promise<void> {
+    return super.fill(text, processTimeoutOptions(options))
+  }
+
+  public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
+    return super.dropTo(target, processTimeoutOptions(
+      processDragAndDropOptions(options),
+    ))
+  }
+
   protected locator(selector: string) {
     return new PlaywrightLocator(`${this.selector} >> ${selector}`, this._container)
   }
@@ -56,4 +103,60 @@ class PlaywrightLocator extends Locator {
       element,
     )
   }
+}
+
+function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !getBrowserState().config.browser.ui) {
+    return options_
+  }
+  const options = options_ as NonNullable<
+    Parameters<import('playwright').Page['dragAndDrop']>[2]
+  >
+  if (options.sourcePosition) {
+    options.sourcePosition = processPlaywrightPosition(options.sourcePosition)
+  }
+  if (options.targetPosition) {
+    options.targetPosition = processPlaywrightPosition(options.targetPosition)
+  }
+  return options_
+}
+
+function processHoverOptions(options_?: UserEventHoverOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !getBrowserState().config.browser.ui) {
+    return options_
+  }
+  const options = options_ as NonNullable<
+    Parameters<import('playwright').Page['hover']>[1]
+  >
+  if (options.position) {
+    options.position = processPlaywrightPosition(options.position)
+  }
+  return options_
+}
+
+function processClickOptions(options_?: UserEventClickOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !getBrowserState().config.browser.ui) {
+    return options_
+  }
+  const options = options_ as NonNullable<
+    Parameters<import('playwright').Page['click']>[1]
+  >
+  if (options.position) {
+    options.position = processPlaywrightPosition(options.position)
+  }
+  return options
+}
+
+function processPlaywrightPosition(position: { x: number; y: number }) {
+  const scale = getIframeScale()
+  if (position.x != null) {
+    position.x *= scale
+  }
+  if (position.y != null) {
+    position.y *= scale
+  }
+  return position
 }

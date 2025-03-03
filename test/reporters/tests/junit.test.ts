@@ -36,6 +36,7 @@ test('calc the duration used by junit', () => {
     mode: 'run',
     result,
     file,
+    timeout: 0,
     context: null as any,
     suite,
     meta: {},

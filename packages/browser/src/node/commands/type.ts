@@ -45,7 +45,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
       text,
       () => browser.execute(() => {
         const element = document.activeElement as HTMLInputElement
-        if (element) {
+        if (element && typeof element.select === 'function') {
           element.select()
         }
       }),

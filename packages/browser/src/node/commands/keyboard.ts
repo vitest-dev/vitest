@@ -202,7 +202,7 @@ function focusIframe() {
 
 function selectAll() {
   const element = document.activeElement as HTMLInputElement
-  if (element && element.select) {
+  if (element && typeof element.select === 'function') {
     element.select()
   }
 }

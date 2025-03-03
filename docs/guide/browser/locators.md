@@ -3,7 +3,7 @@ title: Locators | Browser Mode
 outline: [2, 3]
 ---
 
-# Locators <Version>2.1.0</Version>
+# Locators
 
 A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate those selectors behind the scenes.
 
@@ -505,7 +505,7 @@ await page.getByRole('img', { name: 'Rose' }).tripleClick()
 ### clear
 
 ```ts
-function clear(): Promise<void>
+function clear(options?: UserEventClearOptions): Promise<void>
 ```
 
 Clears the input element content.

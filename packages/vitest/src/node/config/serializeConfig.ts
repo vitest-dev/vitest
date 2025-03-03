@@ -156,6 +156,11 @@ export function serializeConfig(
         locators: {
           testIdAttribute: browser.locators.testIdAttribute,
         },
+        providerOptions: browser.provider === 'playwright'
+          ? {
+              actionTimeout: (browser.providerOptions as any)?.context?.actionTimeout,
+            }
+          : {},
       }
     })(config.browser),
     standalone: config.standalone,

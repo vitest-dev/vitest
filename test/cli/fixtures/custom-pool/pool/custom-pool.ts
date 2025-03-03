@@ -42,6 +42,7 @@ export default (vitest: Vitest): ProcessPool => {
           suite: taskFile,
           mode: 'run',
           meta: {},
+          timeout: 0,
           file: taskFile,
           result: {
             state: 'pass',
