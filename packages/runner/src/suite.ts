@@ -472,7 +472,6 @@ function createSuiteCollector(
     suite.tasks = allChildren
 
     allChildren.forEach((task) => {
-      // task.suite = suite
       task.file = file
     })
 
