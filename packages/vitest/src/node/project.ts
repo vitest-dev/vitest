@@ -726,9 +726,6 @@ export interface SerializedTestProject {
 
 interface InitializeProjectOptions extends UserWorkspaceConfig {
   configFile: string | false
-  test: UserWorkspaceConfig['test'] & {
-    configLoader?: ViteInlineConfig['configLoader']
-  }
 }
 
 export async function initializeProject(
@@ -743,7 +740,7 @@ export async function initializeProject(
   const config: ViteInlineConfig = {
     ...restOptions,
     configFile,
-    configLoader: options.test?.configLoader,
+    configLoader: ctx.vite.config.inlineConfig.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [
