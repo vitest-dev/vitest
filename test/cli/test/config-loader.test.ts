@@ -20,5 +20,7 @@ test('configLoader runner', async () => {
     'runner',
   )
   expect(vitest.stderr).toBe('')
+  expect(vitest.stdout).toContain('✓  node')
+  expect(vitest.stdout).toContain('✓  browser (chromium)')
   expect(exitCode).toBe(0)
 })
