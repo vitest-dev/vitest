@@ -30,7 +30,7 @@ const skipConfig = new Set([
   'coverage.thresholds.lines',
   'standalone',
   'clearScreen',
-  'configRunner',
+  'configLoader',
   'color',
   'run',
   'hideSkippedTests',

@@ -919,6 +919,12 @@ Removes colors from the console output
 
 Clear terminal screen when re-running tests during watch mode (default: `true`)
 
+### configLoader
+
+- **CLI:** `--configLoader <loader>`
+
+Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly. This is only available in vite version 6.1.0 and above. (default: `bundle`)
+
 ### standalone
 
 - **CLI:** `--standalone`
