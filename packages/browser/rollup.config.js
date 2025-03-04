@@ -67,6 +67,7 @@ export default () =>
         'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
         'locators/preview': './src/client/tester/locators/preview.ts',
         'locators/index': './src/client/tester/locators/index.ts',
+        'expect-element': './src/client/tester/expect-element.ts',
         'utils': './src/client/tester/public-utils.ts',
       },
       output: {
@@ -74,7 +75,13 @@ export default () =>
         format: 'esm',
       },
       external,
-      plugins,
+      plugins: [
+        ...plugins.filter(p => p.name !== 'esbuild'),
+        esbuild({
+          target: 'node18',
+          minify: true,
+        }),
+      ],
     },
     {
       input: './src/client/tester/context.ts',

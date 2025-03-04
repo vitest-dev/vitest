@@ -519,7 +519,7 @@ export class TestProject {
       [
         ...MocksPlugins({
           filter(id) {
-            if (id.includes(distRoot)) {
+            if (id.includes(distRoot) || id.includes(browser.vite.config.cacheDir)) {
               return false
             }
             return true

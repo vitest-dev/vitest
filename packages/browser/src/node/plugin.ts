@@ -503,6 +503,14 @@ body {
             },
             injectTo: 'head' as const,
           },
+          {
+            tag: 'script',
+            attrs: {
+              type: 'module',
+              src: parentServer.matchersUrl,
+            },
+            injectTo: 'head' as const,
+          },
           parentServer.locatorsUrl
             ? {
                 tag: 'script',
