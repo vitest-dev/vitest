@@ -2,8 +2,9 @@ import type {
   InlineConfig as ViteInlineConfig,
   UserConfig as ViteUserConfig,
 } from 'vite'
+import type { CliOptions } from './cli/cli-api'
 import type { VitestOptions } from './core'
-import type { UserConfig, VitestRunMode } from './types/config'
+import type { VitestRunMode } from './types/config'
 import { resolve } from 'node:path'
 import { slash } from '@vitest/utils'
 import { findUp } from 'find-up'
@@ -13,16 +14,9 @@ import { Vitest } from './core'
 import { VitestPlugin } from './plugins'
 import { createViteServer } from './vite'
 
-/**
- * Extends `UserConfig` with certain Vite options that can be passed, for example, via the CLI.
- */
-export interface CreateVitestOptions extends UserConfig {
-  configLoader?: ViteInlineConfig['configLoader']
-}
-
 export async function createVitest(
   mode: VitestRunMode,
-  options: CreateVitestOptions,
+  options: CliOptions,
   viteOverrides: ViteUserConfig = {},
   vitestOptions: VitestOptions = {},
 ): Promise<Vitest> {

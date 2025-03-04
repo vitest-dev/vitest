@@ -61,14 +61,13 @@ The ["Running Tests"](/advanced/guide/tests#startvitest) guide has a usage examp
 ```ts
 function createVitest(
   mode: VitestRunMode,
-  options: CreateVitestOptions,
+  options: CliOptions,
   viteOverrides: ViteUserConfig = {},
   vitestOptions: VitestOptions = {},
 ): Promise<Vitest>
 ```
 
 You can create Vitest instance by using `createVitest` function. It returns the same [`Vitest`](/advanced/api/vitest) instance as `startVitest`, but it doesn't start tests and doesn't validate installed packages.
-`CreateVitestOptions` is the same as `UserConfig`, except that it takes additional arguments that can be passed to the underlying vite server, like `configLoader`
 
 ```js
 import { createVitest } from 'vitest/node'
