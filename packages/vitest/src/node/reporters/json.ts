@@ -147,6 +147,10 @@ export class JsonReporter implements Reporter {
           iter = iter.suite
         }
         ancestorTitles.reverse()
+        const entity = this.ctx.state.getReportedEntity(t)
+        const diagnostic = entity?.type === 'test' ? entity.diagnostic() : null
+        const flaky = diagnostic?.flaky ?? false
+        const retryCount = diagnostic?.retryCount ?? 0
 
         return {
           ancestorTitles,
@@ -160,8 +164,8 @@ export class JsonReporter implements Reporter {
             t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
           meta: t.meta,
-          retryCount: t.result?.retryCount ?? 0,
-          flaky: !!t.result?.retryCount && t.result?.state === 'pass' && t.result?.retryCount > 0,
+          retryCount,
+          flaky,
         } satisfies JsonAssertionResult
       })
 
