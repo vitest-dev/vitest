@@ -46,6 +46,7 @@ export async function resolveWorkspace(
     'inspect',
     'inspectBrk',
     'fileParallelism',
+    'browser',
   ] as const
 
   const cliOverrides = overridesOptions.reduce((acc, name) => {
@@ -67,6 +68,12 @@ export async function resolveWorkspace(
       : options.extends === true
         ? (vitest.vite.config.configFile || false)
         : false
+
+    // Merge --browser.<option> with projects' test.browser options
+    const browser = (cliOptions.browser || options.test?.browser)
+      ? { ...options.test?.browser, ...cliOptions.browser }
+      : undefined
+
     // if `root` is configured, resolve it relative to the workspace file or vite root (like other options)
     // if `root` is not specified, inline configs use the same root as the root project
     const root = options.root
@@ -75,7 +82,7 @@ export async function resolveWorkspace(
     projectPromises.push(concurrent(() => initializeProject(
       index,
       vitest,
-      { ...options, root, configFile, test: { ...options.test, ...cliOverrides } },
+      { ...options, root, configFile, test: { ...options.test, ...cliOverrides, browser } },
     )))
   })
 
