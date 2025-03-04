@@ -32,7 +32,29 @@ export function getElementFromUserInput(
     return elementOrLocator
   }
 
-  throw new UserInputTypeError(
+  throw new UserInputElementTypeError(
+    elementOrLocator,
+    matcherFn,
+    context,
+  )
+}
+
+export function getNodeFromUserInput(
+  elementOrLocator: Element | Locator,
+  matcherFn: (...args: any) => any,
+  context: MatcherState,
+): Node {
+  if (elementOrLocator instanceof Locator) {
+    elementOrLocator = elementOrLocator.element()
+  }
+
+  if (
+    elementOrLocator instanceof Node
+  ) {
+    return elementOrLocator
+  }
+
+  throw new UserInputNodeTypeError(
     elementOrLocator,
     matcherFn,
     context,
@@ -139,23 +161,33 @@ class GenericTypeError extends Error {
 
       `${context.utils.RECEIVED_COLOR(
         'received',
-      )} value must ${expectedString}.`,
+      )} value must ${expectedString} or a Locator that returns ${expectedString}.`,
       withType,
     ].join('\n')
   }
 }
 
-class UserInputTypeError extends GenericTypeError {
+class UserInputElementTypeError extends GenericTypeError {
   constructor(
     element: unknown,
     matcherFn: (...args: any) => any,
     context: MatcherState,
   ) {
-    super('be a Locator, an HTMLElement or an SVGElement', element, matcherFn, context)
+    super('an HTMLElement or an SVGElement', element, matcherFn, context)
   }
 }
 
-export function getTag(element: HTMLElement | SVGElement): string {
+class UserInputNodeTypeError extends GenericTypeError {
+  constructor(
+    element: unknown,
+    matcherFn: (...args: any) => any,
+    context: MatcherState,
+  ) {
+    super('a Node', element, matcherFn, context)
+  }
+}
+
+export function getTag(element: Element): string {
   // Named inputs, e.g. <input name=tagName>, will be exposed as fields on the parent <form>
   // and override its properties.
   if (element instanceof HTMLFormElement) {
@@ -172,7 +204,7 @@ export function isInputElement(element: HTMLElement | SVGElement): element is HT
 type SimpleInputValue = string | number | boolean | null
 
 export function getSingleElementValue(
-  element: HTMLElement | SVGElement | undefined,
+  element: Element | undefined,
 ): SimpleInputValue | string[] | undefined {
   if (!element) {
     return undefined
@@ -214,9 +246,22 @@ function getInputValue(inputElement: HTMLInputElement) {
 }
 
 const rolesSupportingValues = ['meter', 'progressbar', 'slider', 'spinbutton']
-function getAccessibleValue(element: HTMLElement | SVGElement) {
+function getAccessibleValue(element: Element) {
   if (!rolesSupportingValues.includes(element.getAttribute('role') || '')) {
     return undefined
   }
   return Number(element.getAttribute('aria-valuenow'))
+}
+
+export function normalize(text: string): string {
+  return text.replace(/\s+/g, ' ').trim()
+}
+
+export function matches(textToMatch: string, matcher: string | RegExp): boolean {
+  if (matcher instanceof RegExp) {
+    return matcher.test(textToMatch)
+  }
+  else {
+    return textToMatch.includes(String(matcher))
+  }
 }
