@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
+import path from 'node:path'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
@@ -39,7 +40,8 @@ export default () => {
         }),
         isolatedDecl({
           transformer: 'oxc',
-          include: '**/ui/node/**',
+          // exclude direct imports to other package sources
+          include: path.join(import.meta.dirname, 'node'),
           extraOutdir: '.types',
         }),
         json(),
