@@ -47,9 +47,13 @@ export function rollupDtsHelper() {
       }
     },
     /**
-     * @param {Record<string, string>} input
+     * @param {Record<string, string> | string} input
      */
     dtsInput(input) {
+      if (typeof input === 'string') {
+        const name = path.basename(input).replace('.ts', '')
+        input = { [name]: input }
+      }
       return Object.fromEntries(
         Object.entries(input).map(([name, file]) => [
           name,
