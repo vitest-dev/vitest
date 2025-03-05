@@ -39,7 +39,7 @@ export function rollupDtsHelper() {
       return {
         ...dts({ respectExternal: true }),
         buildEnd() {
-          // keep on watch mode since removing types makes re-build flaky
+          // keep temporary type files on watch mode since removing them makes re-build flaky
           if (!this.meta.watchMode) {
             fs.rmSync('dist/.types', { recursive: true, force: true })
           }
