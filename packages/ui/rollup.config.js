@@ -57,7 +57,7 @@ export function rollupDtsHelper() {
       return Object.fromEntries(
         Object.entries(input).map(([name, file]) => [
           name,
-          file.replace('src', 'dist/.types').replace('.ts', '.d.ts'),
+          path.join('dist/.types', path.basename(file).replace('.ts', '.d.ts')),
         ]),
       )
     },
