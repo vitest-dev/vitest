@@ -32,11 +32,17 @@ export function rollupDtsHelper() {
         extraOutdir: '.types',
       })
     },
+    /**
+     * @returns {import('rollup').Plugin} dts
+     */
     dts() {
       return {
         ...dts({ respectExternal: true }),
         buildEnd() {
-          fs.rmSync('./dist/.types', { recursive: true, force: true })
+          // keep on watch mode since removing types makes re-build flaky
+          if (!this.meta.watchMode) {
+            fs.rmSync('dist/.types', { recursive: true, force: true })
+          }
         },
       }
     },
