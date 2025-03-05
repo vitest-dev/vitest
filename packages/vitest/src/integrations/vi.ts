@@ -310,7 +310,7 @@ export interface VitestUtils {
   /**
    * Checks that a given parameter is a mock function. If you are using TypeScript, it will also narrow down its type.
    */
-  isMockFunction: (fn: any) => fn is MockInstance
+  isMockFunction: (value: any) => value is MockInstance
 
   /**
    * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function.
