@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
+import { defineConfig } from 'rollup'
 import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 import isolatedDecl from 'unplugin-isolated-decl/rollup'
@@ -35,7 +36,7 @@ const plugins = [
   }),
 ]
 
-export default () => [
+export default () => defineConfig([
   {
     input: entries,
     output: {
@@ -63,4 +64,4 @@ export default () => [
       },
     ],
   },
-]
+])

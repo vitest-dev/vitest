@@ -1,7 +1,10 @@
+import fs from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
+import { defineConfig } from 'rollup'
+import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 import isolatedDecl from 'unplugin-isolated-decl/rollup'
 
@@ -19,7 +22,7 @@ const external = [
 ]
 
 export default () => {
-  return [
+  return defineConfig([
     {
       input: {
         index: `./node/index.ts`,
@@ -37,6 +40,7 @@ export default () => {
         isolatedDecl({
           transformer: 'oxc',
           include: '**/ui/node/**',
+          extraOutdir: '.types',
         }),
         json(),
         commonjs(),
@@ -46,7 +50,25 @@ export default () => {
       ],
       onwarn,
     },
-  ]
+    {
+      input: 'dist/.types/index.d.ts',
+      output: {
+        dir: 'dist',
+        entryFileNames: '[name].ts',
+        format: 'esm',
+      },
+      external,
+      plugins: [
+        dts({ respectExternal: true }),
+        {
+          name: 'cleanup-types',
+          buildEnd() {
+            fs.rmSync('./dist/.types', { recursive: true, force: true })
+          },
+        },
+      ],
+    },
+  ])
 }
 
 function onwarn(message) {
