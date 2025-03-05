@@ -4,7 +4,9 @@ import toBeDisabled from './toBeDisabled'
 import toBeEmptyDOMElement from './toBeEmptyDOMElement'
 import toBeEnabled from './toBeEnabled'
 import toBeInTheDocument from './toBeInTheDocument'
+import { toBeInvalid, toBeValid } from './toBeInvalid'
 import toBePartiallyChecked from './toBePartiallyChecked'
+import toBeRequired from './toBeRequired'
 import toBeVisible from './toBeVisible'
 import toContainElement from './toContainElement'
 import toContainHTML from './toContainHTML'
@@ -15,6 +17,7 @@ import toHaveDisplayValue from './toHaveDisplayValue'
 import toHaveFocus from './toHaveFocus'
 import toHaveFormValues from './toHaveFormValues'
 import toHaveRole from './toHaveRole'
+import toHaveSelection from './toHaveSelection'
 import toHaveStyle from './toHaveStyle'
 import toHaveTextContent from './toHaveTextContent'
 import toHaveValue from './toHaveValue'
@@ -24,11 +27,9 @@ export const matchers: MatchersObject = {
   toBeEnabled,
   toBeEmptyDOMElement,
   toBeInTheDocument,
-
-  // toBeInvalid
-  // toBeRequired
-  // toBeValid
-
+  toBeInvalid,
+  toBeRequired,
+  toBeValid,
   toBeVisible,
   toContainElement,
   toContainHTML,
@@ -48,7 +49,5 @@ export const matchers: MatchersObject = {
   toBeChecked,
   toBePartiallyChecked,
   toHaveRole,
-
-  // toHaveErrorMessage
-  // toHaveSelection
+  toHaveSelection,
 }
