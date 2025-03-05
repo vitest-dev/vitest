@@ -2,7 +2,7 @@ function render(html: string) {
   const container = document.createElement('div')
   container.innerHTML = html
   const queryByTestId = (testId: string) =>
-    container.querySelector(`[data-testid="${testId}"]`)
+    container.querySelector(`[data-testid="${testId}"]`) as HTMLElement | SVGElement | null
   // asFragment has been stolen from react-testing-library
   const asFragment = () =>
     document.createRange().createContextualFragment(container.innerHTML)

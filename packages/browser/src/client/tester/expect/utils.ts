@@ -18,6 +18,7 @@ import { Locator } from '../locators'
 
 export function getElementFromUserInput(
   elementOrLocator: Element | Locator,
+  // TODO: minifier doesn't keep names, so we need to update this
   matcherFn: (...args: any) => any,
   context: MatcherState,
 ): HTMLElement | SVGElement {

@@ -20,10 +20,12 @@ import { getElementFromUserInput } from './utils'
 export default function toContainElement(
   this: MatcherState,
   actual: Element | Locator,
-  expectedElement: Element | Locator,
+  expectedElement: Element | Locator | null,
 ): ExpectationResult {
   const containerElement = getElementFromUserInput(actual, toContainElement, this)
-  const childElement = getElementFromUserInput(expectedElement, toContainElement, this)
+  const childElement = expectedElement !== null
+    ? getElementFromUserInput(expectedElement, toContainElement, this)
+    : null
 
   return {
     pass: containerElement.contains(childElement),
@@ -40,7 +42,7 @@ export default function toContainElement(
           containerElement.cloneNode(false),
         )} ${
           this.isNot ? 'contains:' : 'does not contain:'
-        } ${this.utils.stringify(childElement.cloneNode(false))}
+        } ${this.utils.stringify(childElement ? childElement.cloneNode(false) : null)}
         `),
       ].join('\n')
     },
