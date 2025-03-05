@@ -44,10 +44,10 @@ export default () => defineConfig([
     plugins,
   },
   {
-    input: 'dist/.types/pure.d.ts',
+    input: dtsHelper.dtsInput('dist/.types/pure.ts'),
     output: {
       dir: 'dist',
-      entryFileNames: '[name].ts',
+      entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
