@@ -1205,7 +1205,7 @@ importers:
   test/cli:
     devDependencies:
       '@types/debug':
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
       '@types/ws':
         specifier: ^8.5.9
@@ -1259,7 +1259,7 @@ importers:
   test/core:
     devDependencies:
       '@types/debug':
-        specifier: ^4.1.12
+        specifier: 'catalog:'
         version: 4.1.12
       '@vitest/expect':
         specifier: workspace:*
@@ -1310,7 +1310,7 @@ importers:
         specifier: ^11.6.16
         version: 11.6.16
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       tinyspy:
         specifier: ^1.0.2
@@ -1328,7 +1328,7 @@ importers:
         specifier: file:./vitest-environment-custom
         version: file:test/core/vitest-environment-custom
       vue:
-        specifier: ^3.5.12
+        specifier: 'catalog:'
         version: 3.5.12(typescript@5.7.3)
       zustand:
         specifier: ^4.1.1
@@ -1340,10 +1340,10 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       '@types/istanbul-lib-coverage':
-        specifier: ^2.0.6
+        specifier: 'catalog:'
         version: 2.0.6
       '@types/istanbul-lib-report':
-        specifier: ^3.0.3
+        specifier: 'catalog:'
         version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
@@ -1370,7 +1370,7 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0
       istanbul-lib-report:
-        specifier: ^3.0.1
+        specifier: 'catalog:'
         version: 3.0.1
       magic-string:
         specifier: ^0.30.12
@@ -1388,7 +1388,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
       vue:
-        specifier: ^3.5.12
+        specifier: 'catalog:'
         version: 3.5.12(typescript@5.7.3)
 
   test/dts-config:
@@ -1476,7 +1476,7 @@ importers:
         specifier: ^0.3.2
         version: 0.3.2
       tinyrainbow:
-        specifier: ^2.0.0
+        specifier: 'catalog:'
         version: 2.0.0
       vite:
         specifier: ^6.2.0
@@ -1549,7 +1549,7 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       '@types/istanbul-lib-coverage':
-        specifier: ^2.0.6
+        specifier: 'catalog:'
         version: 2.0.6
       istanbul-lib-coverage:
         specifier: ^3.2.0
@@ -15653,7 +15653,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.6.3
+      semver: 7.7.1
 
   mark.js@8.11.1: {}
 
