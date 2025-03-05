@@ -35,7 +35,7 @@ export function rollupDtsHelper() {
     dts() {
       return {
         ...dts({ respectExternal: true }),
-        closeBundle() {
+        buildEnd() {
           fs.rmSync('./dist/.types', { recursive: true, force: true })
         },
       }
@@ -58,10 +58,10 @@ export default () => {
       },
       external,
       plugins: [
+        dtsHelper.isolatedDecl(),
         resolve({
           preferBuiltins: true,
         }),
-        dtsHelper.isolatedDecl(),
         json(),
         commonjs(),
         esbuild({

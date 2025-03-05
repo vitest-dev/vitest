@@ -24,8 +24,8 @@ const external = [
 const dtsHelper = rollupDtsHelper()
 
 const plugins = [
-  json(),
   dtsHelper.isolatedDecl(),
+  json(),
   nodeResolve(),
   commonjs(),
   esbuild({

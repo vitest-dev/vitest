@@ -23,10 +23,10 @@ const entries = {
 const dtsHelper = rollupDtsHelper()
 
 const plugins = [
+  dtsHelper.isolatedDecl(),
   nodeResolve({
     preferBuiltins: true,
   }),
-  dtsHelper.isolatedDecl(),
   commonjs(),
   esbuild({
     target: 'node14',
@@ -47,7 +47,11 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: entries,
+    input: {
+      index: 'dist/.types/index.d.ts',
+      environment: 'dist/.types/environment.d.ts',
+      manager: 'dist/.types/manager.d.ts',
+    },
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
