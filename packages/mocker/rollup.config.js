@@ -1,11 +1,10 @@
-// @ts-check
 import { builtinModules, createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import isolatedDecl from 'unplugin-isolated-decl/rollup'
-import oxc from 'unplugin-oxc/rollup'
+import dts from 'rollup-plugin-dts'
+import esbuild from 'rollup-plugin-esbuild'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -30,10 +29,9 @@ const plugins = [
   resolve({
     preferBuiltins: true,
   }),
-  isolatedDecl({ transformer: 'oxc' }),
   json(),
-  oxc({
-    transform: { target: 'node14' },
+  esbuild({
+    target: 'node14',
   }),
   commonjs(),
 ]
@@ -51,11 +49,21 @@ export default defineConfig([
     plugins,
     onwarn,
   },
+  {
+    input: entries,
+    output: {
+      dir: 'dist',
+      entryFileNames: '[name].d.ts',
+      format: 'esm',
+    },
+    external,
+    plugins: [dts({ respectExternal: true })],
+    onwarn,
+  },
 ])
 
 function onwarn(message) {
-  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code)
-    || message.message.includes('vite/types/hot.js')) {
+  if (['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY'].includes(message.code)) {
     return
   }
   console.error(message)

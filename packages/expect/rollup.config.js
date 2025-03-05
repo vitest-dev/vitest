@@ -1,10 +1,8 @@
-import { rm } from 'node:fs/promises'
 import { builtinModules, createRequire } from 'node:module'
 import { defineConfig } from 'rollup'
 import copy from 'rollup-plugin-copy'
 import dts from 'rollup-plugin-dts'
-import isolatedDecl from 'unplugin-isolated-decl/rollup'
-import oxc from 'unplugin-oxc/rollup'
+import esbuild from 'rollup-plugin-esbuild'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -17,9 +15,8 @@ const external = [
 ]
 
 const plugins = [
-  isolatedDecl({ transformer: 'oxc', extraOutdir: '.types' }),
-  oxc({
-    transform: { target: 'node14' },
+  esbuild({
+    target: 'node14',
   }),
   copy({
     targets: [
@@ -46,19 +43,14 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: 'dist/.types/index.d.ts',
+    input: 'src/index.ts',
     output: {
       dir: 'dist',
-      entryFileNames: '[name].ts',
+      entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
-    plugins: [dts({ respectExternal: true }), {
-      name: 'cleanup',
-      buildEnd() {
-        return rm('dist/.types', { recursive: true, force: true })
-      },
-    }],
+    plugins: [dts({ respectExternal: true })],
     onwarn,
   },
 ])

@@ -1,13 +1,10 @@
-// @ts-check
-import { rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import dts from 'rollup-plugin-dts'
-import isolatedDecl from 'unplugin-isolated-decl/rollup'
-import oxc from 'unplugin-oxc/rollup'
+import esbuild from 'rollup-plugin-esbuild'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -27,8 +24,8 @@ const plugins = [
   }),
   json(),
   commonjs(),
-  oxc({
-    transform: { target: 'node18' },
+  esbuild({
+    target: 'node18',
   }),
 ]
 
@@ -50,7 +47,6 @@ export default () =>
       plugins: [
         {
           name: 'no-side-effects',
-          /** @returns {Promise<*>} ignore return type */
           async resolveId(id, importer) {
             // Clipboard injects "afterEach" callbacks
             // We mark it as having no side effects to prevent it from being included in the bundle
@@ -62,7 +58,6 @@ export default () =>
             }
           },
         },
-        isolatedDecl({ transformer: 'oxc', extraOutdir: '.node-types' }),
         ...plugins,
       ],
     },
@@ -79,10 +74,7 @@ export default () =>
         format: 'esm',
       },
       external,
-      plugins: [
-        isolatedDecl({ transformer: 'oxc', extraOutdir: '.client-types' }),
-        plugins,
-      ],
+      plugins,
     },
     {
       input: './src/client/tester/context.ts',
@@ -91,7 +83,9 @@ export default () =>
         format: 'esm',
       },
       plugins: [
-        oxc({ transform: { target: 'node18' } }),
+        esbuild({
+          target: 'node18',
+        }),
       ],
     },
     {
@@ -104,8 +98,8 @@ export default () =>
         resolve({
           preferBuiltins: true,
         }),
-        oxc({
-          transform: { target: 'node18' },
+        esbuild({
+          target: 'node18',
         }),
       ],
     },
@@ -116,15 +110,15 @@ export default () =>
         format: 'iife',
       },
       plugins: [
-        oxc({
-          transform: { target: 'node18' },
-          minify: true,
+        esbuild({
+          target: 'node18',
+          minifyWhitespace: true,
         }),
         resolve(),
       ],
     },
     {
-      input: './dist/.node-types/index.d.ts',
+      input: input.index,
       output: {
         file: 'dist/index.d.ts',
         format: 'esm',
@@ -134,17 +128,11 @@ export default () =>
         dts({
           respectExternal: true,
         }),
-        {
-          name: 'cleanup',
-          buildEnd() {
-            return rm('./dist/.node-types', { recursive: true, force: true })
-          },
-        },
       ],
     },
     {
       input: {
-        'locators/index': './dist/.client-types/locators/index.d.ts',
+        'locators/index': './src/client/tester/locators/index.ts',
       },
       output: {
         dir: 'dist',
@@ -155,12 +143,6 @@ export default () =>
         dts({
           respectExternal: true,
         }),
-        {
-          name: 'cleanup',
-          buildEnd() {
-            return rm('./dist/.client-types', { recursive: true, force: true })
-          },
-        },
       ],
     },
     // {
