@@ -16,21 +16,21 @@
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
 import { getAriaDisabled } from 'ivya/utils'
-import { getElementFromUserInput } from './utils'
+import { getElementFromUserInput, getTag } from './utils'
 
-export default function toBeEnabled(
+export function toBeDisabled(
   this: MatcherState,
   actual: Element | Locator,
 ): ExpectationResult {
-  const htmlElement = getElementFromUserInput(actual, toBeEnabled, this)
-  const isDisabled = getAriaDisabled(htmlElement)
+  const htmlElement = getElementFromUserInput(actual, toBeDisabled, this)
+  const isDisabled = isElementDisabled(htmlElement)
   return {
-    pass: !isDisabled,
+    pass: isDisabled,
     message: () => {
-      const is = isDisabled ? 'is not' : 'is'
+      const is = isDisabled ? 'is' : 'is not'
       return [
         this.utils.matcherHint(
-          `${this.isNot ? '.not' : ''}.toBeEnabled`,
+          `${this.isNot ? '.not' : ''}.toBeDisabled`,
           'element',
           '',
         ),
@@ -40,4 +40,36 @@ export default function toBeEnabled(
       ].join('\n')
     },
   }
+}
+
+export function toBeEnabled(
+  this: MatcherState,
+  actual: Element | Locator,
+): ExpectationResult {
+  const htmlElement = getElementFromUserInput(actual, toBeEnabled, this)
+  const isDisabled = isElementDisabled(htmlElement)
+  return {
+    pass: !isDisabled,
+    message: () => {
+      const is = !isDisabled ? 'is' : 'is not'
+      return [
+        this.utils.matcherHint(
+          `${this.isNot ? '.not' : ''}.toBeEnabled`,
+          'element',
+          '',
+        ),
+        '',
+        `Received element ${is} enabled:`,
+        `  ${this.utils.printReceived(htmlElement.cloneNode(false))}`,
+      ].join('\n')
+    },
+  }
+}
+
+function isElementDisabled(element: HTMLElement | SVGElement) {
+  // ivya doesn't support custom elements check
+  if (getTag(element).includes('-')) {
+    return element.hasAttribute('disabled')
+  }
+  return getAriaDisabled(element)
 }

@@ -1,8 +1,7 @@
 import type { MatchersObject } from '@vitest/expect'
 import toBeChecked from './toBeChecked'
-import toBeDisabled from './toBeDisabled'
 import toBeEmptyDOMElement from './toBeEmptyDOMElement'
-import toBeEnabled from './toBeEnabled'
+import { toBeDisabled, toBeEnabled } from './toBeEnabled'
 import toBeInTheDocument from './toBeInTheDocument'
 import { toBeInvalid, toBeValid } from './toBeInvalid'
 import toBePartiallyChecked from './toBePartiallyChecked'
@@ -10,6 +9,8 @@ import toBeRequired from './toBeRequired'
 import toBeVisible from './toBeVisible'
 import toContainElement from './toContainElement'
 import toContainHTML from './toContainHTML'
+import toHaveAccessibleDescription from './toHaveAccessibleDescription'
+import toHaveAccessibleErrorMessage from './toHaveAccessibleErrorMessage'
 import toHaveAccessibleName from './toHaveAccessibleName'
 import toHaveAttribute from './toHaveAttribute'
 import toHaveClass from './toHaveClass'
@@ -33,10 +34,8 @@ export const matchers: MatchersObject = {
   toBeVisible,
   toContainElement,
   toContainHTML,
-
-  // toHaveAccessibleDescription
-  // toHaveAccessibleErrorMessage
-
+  toHaveAccessibleDescription,
+  toHaveAccessibleErrorMessage,
   toHaveAccessibleName,
   toHaveAttribute,
   toHaveClass,

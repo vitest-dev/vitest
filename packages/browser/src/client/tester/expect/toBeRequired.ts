@@ -48,7 +48,7 @@ function isRequiredOnFormTagsExceptInput(element: HTMLElement | SVGElement) {
 
 function isRequiredOnSupportedInput(element: HTMLElement | SVGElement) {
   return (
-    getTag(element) === 'input'
+    getTag(element) === 'INPUT'
     && element.hasAttribute('required')
     && ((element.hasAttribute('type')
       && !UNSUPPORTED_INPUT_TYPES.includes(element.getAttribute('type') || ''))

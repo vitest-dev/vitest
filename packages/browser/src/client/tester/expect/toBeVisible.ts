@@ -15,7 +15,7 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { isElementHiddenForAria } from 'ivya/utils'
+import { isElementVisible } from 'ivya/utils'
 import { getElementFromUserInput } from './utils'
 
 export default function toBeVisible(
@@ -25,7 +25,7 @@ export default function toBeVisible(
   const htmlElement = getElementFromUserInput(actual, toBeVisible, this)
   const isInDocument
     = htmlElement.ownerDocument === htmlElement.getRootNode({ composed: true })
-  const isVisible = isInDocument && !isElementHiddenForAria(htmlElement)
+  const isVisible = isInDocument && isElementVisible(htmlElement)
   return {
     pass: isVisible,
     message: () => {
