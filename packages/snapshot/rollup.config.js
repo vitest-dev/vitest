@@ -47,11 +47,7 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: {
-      index: 'dist/.types/index.d.ts',
-      environment: 'dist/.types/environment.d.ts',
-      manager: 'dist/.types/manager.d.ts',
-    },
+    input: dtsHelper.dtsInput(entries),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',

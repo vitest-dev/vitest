@@ -40,6 +40,17 @@ export function rollupDtsHelper() {
         },
       }
     },
+    /**
+     * @param {Record<string, string>} input
+     */
+    dtsInput(input) {
+      return Object.fromEntries(
+        Object.entries(input).map(([name, file]) => [
+          name,
+          file.replace('src', 'dist/.types').replace('.ts', '.d.ts'),
+        ]),
+      )
+    },
   }
 }
 
