@@ -41,7 +41,7 @@ export default () => {
         isolatedDecl({
           transformer: 'oxc',
           // exclude direct imports to other package sources
-          include: path.join(import.meta.dirname, 'node'),
+          include: path.join(import.meta.dirname, '**/*.ts'),
           extraOutdir: '.types',
         }),
         json(),
