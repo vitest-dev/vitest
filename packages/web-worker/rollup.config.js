@@ -1,12 +1,10 @@
-import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
-import isolatedDecl from 'unplugin-isolated-decl/rollup'
+import { rollupDtsHelper } from '../ui/rollup.config.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -23,12 +21,11 @@ const external = [
   'vite-node/utils',
 ]
 
+const dtsHelper = rollupDtsHelper()
+
 const plugins = [
   json(),
-  isolatedDecl({
-    transformer: 'oxc',
-    extraOutdir: '.types',
-  }),
+  dtsHelper.isolatedDecl(),
   nodeResolve(),
   commonjs(),
   esbuild({
@@ -54,14 +51,6 @@ export default () => defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [
-      dts({ respectExternal: true }),
-      {
-        name: 'cleanup-types',
-        buildEnd() {
-          fs.rmSync('./dist/.types', { recursive: true, force: true })
-        },
-      },
-    ],
+    plugins: [dtsHelper.dts()],
   },
 ])

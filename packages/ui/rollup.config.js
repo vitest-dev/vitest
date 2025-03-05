@@ -22,6 +22,29 @@ const external = [
   'vite',
 ]
 
+export function rollupDtsHelper() {
+  return {
+    isolatedDecl() {
+      return isolatedDecl({
+        transformer: 'oxc',
+        // exclude direct imports to other package sources
+        include: path.join(process.cwd(), '**/*.ts'),
+        extraOutdir: '.types',
+      })
+    },
+    dts() {
+      return {
+        ...dts({ respectExternal: true }),
+        closeBundle() {
+          fs.rmSync('./dist/.types', { recursive: true, force: true })
+        },
+      }
+    },
+  }
+}
+
+const dtsHelper = rollupDtsHelper()
+
 export default () => {
   return defineConfig([
     {
@@ -38,12 +61,7 @@ export default () => {
         resolve({
           preferBuiltins: true,
         }),
-        isolatedDecl({
-          transformer: 'oxc',
-          // exclude direct imports to other package sources
-          include: path.join(import.meta.dirname, '**/*.ts'),
-          extraOutdir: '.types',
-        }),
+        dtsHelper.isolatedDecl(),
         json(),
         commonjs(),
         esbuild({
@@ -60,15 +78,7 @@ export default () => {
         format: 'esm',
       },
       external,
-      plugins: [
-        dts({ respectExternal: true }),
-        {
-          name: 'cleanup-types',
-          buildEnd() {
-            fs.rmSync('./dist/.types', { recursive: true, force: true })
-          },
-        },
-      ],
+      plugins: [dtsHelper.dts()],
     },
   ])
 }
