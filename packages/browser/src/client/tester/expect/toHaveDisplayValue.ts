@@ -13,8 +13,8 @@
  * copies or substantial portions of the Software.
  */
 
-import { ExpectationResult, MatcherState } from '@vitest/expect'
-import { Locator } from '../locators'
+import type { ExpectationResult, MatcherState } from '@vitest/expect'
+import type { Locator } from '../locators'
 import { getElementFromUserInput, getMessage, getTag, isInputElement } from './utils'
 
 export default function toHaveDisplayValue(

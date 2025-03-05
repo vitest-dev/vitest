@@ -10,10 +10,12 @@ import toContainElement from './toContainElement'
 import toContainHTML from './toContainHTML'
 import toHaveAccessibleName from './toHaveAccessibleName'
 import toHaveAttribute from './toHaveAttribute'
+import toHaveClass from './toHaveClass'
 import toHaveDisplayValue from './toHaveDisplayValue'
 import toHaveFocus from './toHaveFocus'
 import toHaveFormValues from './toHaveFormValues'
 import toHaveRole from './toHaveRole'
+import toHaveStyle from './toHaveStyle'
 import toHaveTextContent from './toHaveTextContent'
 import toHaveValue from './toHaveValue'
 
@@ -36,14 +38,10 @@ export const matchers: MatchersObject = {
 
   toHaveAccessibleName,
   toHaveAttribute,
-
-  // toHaveClass
-
+  toHaveClass,
   toHaveFocus,
   toHaveFormValues,
-
-  // toHaveStyle
-
+  toHaveStyle,
   toHaveTextContent,
   toHaveValue,
   toHaveDisplayValue,
