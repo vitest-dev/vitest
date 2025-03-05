@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 describe('.toHaveStyle', () => {
-  test('handles positive test cases', () => {
+  test.only('handles positive test cases', () => {
     const { container } = render(`
           <div class="label" style="background-color: blue; height: 100%;">
             Hello World

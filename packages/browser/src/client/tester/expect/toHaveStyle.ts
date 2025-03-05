@@ -117,7 +117,8 @@ function getStyleFromObjectCSS(css: Record<string, unknown>): Record<string, unk
 
 function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
   // on chromium for styles to be computed, they need to be inserted into the actual document
-  const doc = browser === 'chrome' || browser === 'chromium'
+  // webkit will also not compute _some_ style like transform if it's not in the document
+  const doc = browser === 'chrome' || browser === 'chromium' || browser === 'webkit'
     ? document
     : document.implementation.createHTMLDocument('')
 
