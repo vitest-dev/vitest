@@ -51,13 +51,12 @@ export function rollupDtsHelper() {
      */
     dtsInput(input) {
       if (typeof input === 'string') {
-        const name = path.basename(input).replace('.ts', '')
-        input = { [name]: input }
+        input = { index: '' }
       }
       return Object.fromEntries(
-        Object.entries(input).map(([name, file]) => [
+        Object.keys(input).map(name => [
           name,
-          path.join('dist/.types', path.basename(file).replace('.ts', '.d.ts')),
+          `dist/.types/${name}.d.ts`,
         ]),
       )
     },
