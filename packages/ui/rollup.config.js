@@ -27,6 +27,7 @@ export function rollupDtsHelper() {
     isolatedDecl() {
       return isolatedDecl({
         transformer: 'oxc',
+        transformOptions: { stripInternal: true },
         // exclude direct imports to other package sources
         include: path.join(process.cwd(), '**/*.ts'),
         extraOutdir: '.types',
@@ -49,14 +50,14 @@ export function rollupDtsHelper() {
     /**
      * @param {Record<string, string> | string} input
      */
-    dtsInput(input) {
+    dtsInput(input, { ext = 'ts' } = {}) {
       if (typeof input === 'string') {
         input = { index: '' }
       }
       return Object.fromEntries(
         Object.keys(input).map(name => [
           name,
-          `dist/.types/${name}.d.ts`,
+          `dist/.types/${name}.d.${ext}`,
         ]),
       )
     },

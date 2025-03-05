@@ -32,7 +32,7 @@ const plugins = [
     // silence resolution error by isolated-decl transform of type import
     name: 'ignore-isolated-decl-type-import-resolve-error',
     resolveId(id) {
-      return id === 'vite/types/hot.js' ? '/node_modules/' : undefined
+      return id === 'vite/types/' ? '/node_modules/' : undefined
     },
   },
   dtsHelper.isolatedDecl(),
