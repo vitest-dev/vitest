@@ -1,10 +1,9 @@
-// @ts-check
 import { builtinModules, createRequire } from 'node:module'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import isolatedDecl from 'unplugin-isolated-decl/rollup'
-import oxc from 'unplugin-oxc/rollup'
+import esbuild from 'rollup-plugin-esbuild'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -41,8 +40,8 @@ export default () => {
         }),
         json(),
         commonjs(),
-        oxc({
-          transform: { target: 'node18' },
+        esbuild({
+          target: 'node18',
         }),
       ],
       onwarn,
