@@ -71,10 +71,13 @@ export default function toHaveStyle(
           },
           {} as Record<string, unknown>,
         )
-      const diff = this.utils.diff(
-        printoutObjectStyles(expected),
-        printoutObjectStyles(receivedObject),
-      )
+      const receivedString = printoutObjectStyles(receivedObject)
+      const diff = receivedString === ''
+        ? 'Expected styles could not be parsed by the browser. Did you make a typo?'
+        : this.utils.diff(
+            printoutObjectStyles(expected),
+            receivedString,
+          )
       return [
         this.utils.matcherHint(matcher, 'element', ''),
         diff,

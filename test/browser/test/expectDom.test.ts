@@ -22,6 +22,11 @@ describe('.toHaveStyle', () => {
     document.body.appendChild(style)
     document.body.appendChild(container)
 
+    // border: fakefake doesn't exist
+    expect(() => {
+      expect(container.querySelector('.label')).toHaveStyle('border: fakefake')
+    }).toThrowError()
+
     expect(container.querySelector('.label')).toHaveStyle(`
           height: 100%;
           color: white;
