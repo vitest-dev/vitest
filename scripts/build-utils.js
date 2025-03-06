@@ -6,6 +6,7 @@ import isolatedDecl from 'unplugin-isolated-decl/rollup'
 
 export function createDtsUtils({
   isolatedDeclDir = '.types',
+  cleanupDir = '.types',
 } = {}) {
   return {
     /**
@@ -42,7 +43,7 @@ export function createDtsUtils({
           buildEnd() {
             // keep temporary type files on watch mode since removing them makes re-build flaky
             if (!this.meta.watchMode) {
-              fs.rmSync(`dist/${isolatedDeclDir}`, { recursive: true, force: true })
+              fs.rmSync(`dist/${cleanupDir}`, { recursive: true, force: true })
             }
           },
         },

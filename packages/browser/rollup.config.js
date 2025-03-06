@@ -19,7 +19,11 @@ const external = [
 ]
 
 const dtsUtils = createDtsUtils()
-const dtsUtilsClient = createDtsUtils({ isolatedDeclDir: '.types-client' })
+const dtsUtilsClient = createDtsUtils({
+  // need extra depth to avoid output conflict
+  isolatedDeclDir: '.types-client/tester',
+  cleanupDir: '.types-client',
+})
 
 const plugins = [
   resolve({
