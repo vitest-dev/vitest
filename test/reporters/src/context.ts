@@ -3,7 +3,7 @@ import type { Vitest } from '../../../packages/vitest/src/node/core'
 import type { Logger } from '../../../packages/vitest/src/node/logger'
 import type { StateManager } from '../../../packages/vitest/src/node/state'
 import type { ResolvedConfig } from '../../../packages/vitest/src/node/types/config'
-import type { File } from '../../../packages/vitest/src/public/index'
+import type { RunnerTestFile } from '../../../packages/vitest/src/public/index'
 
 interface Context {
   vitest: Vitest
@@ -26,7 +26,7 @@ export function getContext(): Context {
   }
 
   const state: Partial<StateManager> = {
-    filesMap: new Map<string, File[]>(),
+    filesMap: new Map<string, RunnerTestFile[]>(),
   }
 
   const context: Partial<Vitest> = {

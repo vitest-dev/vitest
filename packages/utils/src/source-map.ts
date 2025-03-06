@@ -1,5 +1,5 @@
 import type { SourceMapInput } from '@jridgewell/trace-mapping'
-import type { ErrorWithDiff, ParsedStack } from './types'
+import type { ParsedStack, TestError } from './types'
 import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping'
 import { resolve } from 'pathe'
 import { isPrimitive, notNullish } from './helpers'
@@ -17,7 +17,7 @@ export interface StackTraceParserOptions {
   ignoreStackEntries?: (RegExp | string)[]
   getSourceMap?: (file: string) => unknown
   getUrlId?: (id: string) => string
-  frameFilter?: (error: ErrorWithDiff, frame: ParsedStack) => boolean | void
+  frameFilter?: (error: TestError, frame: ParsedStack) => boolean | void
 }
 
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
@@ -266,7 +266,7 @@ function parseV8Stacktrace(stack: string): ParsedStack[] {
 }
 
 export function parseErrorStacktrace(
-  e: ErrorWithDiff,
+  e: TestError,
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
   if (!e || isPrimitive(e)) {
@@ -277,7 +277,7 @@ export function parseErrorStacktrace(
     return e.stacks
   }
 
-  const stackStr = e.stack || e.stackStr || ''
+  const stackStr = e.stack || e.stackStr as string | undefined || ''
   let stackFrames = parseStacktrace(stackStr, options)
 
   if (options.frameFilter) {

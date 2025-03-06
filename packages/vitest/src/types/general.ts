@@ -15,13 +15,6 @@ export interface Constructable {
 
 export type TransformMode = 'web' | 'ssr'
 
-/** @deprecated not used */
-export interface ModuleCache {
-  promise?: Promise<any>
-  exports?: any
-  code?: string
-}
-
 export interface AfterSuiteRunMeta {
   coverage?: unknown
   testFiles: string[]

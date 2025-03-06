@@ -1,6 +1,13 @@
 import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
 
-import type { TestProjectConfiguration, UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../node/types/config'
+import type {
+  TestProjectConfiguration,
+  UserProjectConfigExport,
+  UserProjectConfigFn,
+  UserWorkspaceConfig,
+  UserConfig as VitestUserConfig,
+  WorkspaceProjectConfiguration,
+} from '../node/types/config'
 import '../node/types/vite'
 
 export { extraInlineDeps } from '../constants'
@@ -16,30 +23,27 @@ export { mergeConfig } from 'vite'
 export type { Plugin } from 'vite'
 
 export type { ConfigEnv, ViteUserConfig }
-/**
- * @deprecated Use `ViteUserConfig` instead
- */
-export type UserConfig = ViteUserConfig
+export type UserConfig = VitestUserConfig
 export type { TestProjectConfiguration, UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration }
-export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
-export type UserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
-export type UserConfigFn = (
+export type ViteUserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
+export type ViteUserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
+export type ViteUserConfigFn = (
   env: ConfigEnv
 ) => ViteUserConfig | Promise<ViteUserConfig>
-export type UserConfigExport =
+export type ViteUserConfigExport =
   | ViteUserConfig
   | Promise<ViteUserConfig>
-  | UserConfigFnObject
-  | UserConfigFnPromise
-  | UserConfigFn
+  | ViteUserConfigFnObject
+  | ViteUserConfigFnPromise
+  | ViteUserConfigFn
 
 export function defineConfig(config: ViteUserConfig): ViteUserConfig
 export function defineConfig(
   config: Promise<ViteUserConfig>
 ): Promise<ViteUserConfig>
-export function defineConfig(config: UserConfigFnObject): UserConfigFnObject
-export function defineConfig(config: UserConfigExport): UserConfigExport
-export function defineConfig(config: UserConfigExport): UserConfigExport {
+export function defineConfig(config: ViteUserConfigFnObject): ViteUserConfigFnObject
+export function defineConfig(config: ViteUserConfigExport): ViteUserConfigExport
+export function defineConfig(config: ViteUserConfigExport): ViteUserConfigExport {
   return config
 }
 

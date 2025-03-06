@@ -1,6 +1,6 @@
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
-import type { ErrorWithDiff, ParsedStack, SerializedConfig } from 'vitest'
+import type { ParsedStack, SerializedConfig, TestError } from 'vitest'
 import type {
   BrowserProvider,
   ProjectBrowser as IProjectBrowser,
@@ -94,7 +94,7 @@ export class ProjectBrowser implements IProjectBrowser {
   }
 
   public parseErrorStacktrace(
-    e: ErrorWithDiff,
+    e: TestError,
     options: StackTraceParserOptions = {},
   ): ParsedStack[] {
     return this.parent.parseErrorStacktrace(e, options)

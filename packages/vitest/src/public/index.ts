@@ -41,8 +41,6 @@ export type { ExpectTypeOf } from '../typecheck/expectTypeOf'
 
 export type {
   AfterSuiteRunMeta,
-  ErrorWithDiff,
-  ModuleCache,
   ModuleGraphData,
   ParsedStack,
   ProvidedContext,

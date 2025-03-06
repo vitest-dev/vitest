@@ -109,8 +109,8 @@ export class TapReporter implements Reporter {
             }
 
             if (error.showDiff) {
-              this.logger.log(`actual: ${yamlString(error.actual)}`)
-              this.logger.log(`expected: ${yamlString(error.expected)}`)
+              this.logger.log(`actual: ${yamlString(error.actual || '')}`)
+              this.logger.log(`expected: ${yamlString(error.expected || '')}`)
             }
           })
 

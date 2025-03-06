@@ -1,4 +1,4 @@
-import type { ErrorWithDiff } from 'vitest'
+import type { TestError } from 'vitest'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import Filter from 'ansi-to-html'
 
@@ -25,7 +25,7 @@ function isPrimitive(value: unknown) {
 }
 
 export function parseError(e: unknown) {
-  let error = e as ErrorWithDiff
+  let error = e as TestError
 
   if (isPrimitive(e)) {
     error = {
@@ -44,7 +44,7 @@ export function parseError(e: unknown) {
     }
   }
 
-  error.stacks = parseStacktrace(error.stack || error.stackStr || '', {
+  error.stacks = parseStacktrace(error.stack || (error.stackStr as string) || '', {
     ignoreStackEntries: [],
   })
 
