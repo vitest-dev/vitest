@@ -1210,6 +1210,9 @@ importers:
       vitest-environment-custom:
         specifier: file:./vitest-environment-custom
         version: file:test/core/vitest-environment-custom
+      vitest-package-exports:
+        specifier: ^0.1.1
+        version: 0.1.1
       vue:
         specifier: ^3.5.12
         version: 3.5.12(typescript@5.7.3)
@@ -1248,7 +1251,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 17.1.8
+        version: 17.2.2
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1394,7 +1397,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 17.1.8
+        version: 17.2.2
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -6008,8 +6011,8 @@ packages:
     resolution: {integrity: sha512-cMxE0HP45kLIgWdI0PFfnitNb95Cv8kG8moqI7CK6kcEcfV7xoYVVvSmJ7EuGfDatSKWtjhG/czVooqEV0L4rA==}
     engines: {node: '>=18.0.0'}
 
-  happy-dom@17.1.8:
-    resolution: {integrity: sha512-Yxbq/FG79z1rhAf/iB6YM8wO2JB/JDQBy99RiLSs+2siEAi5J05x9eW1nnASHZJbpldjJE2KuFLsLZ+AzX/IxA==}
+  happy-dom@17.2.2:
+    resolution: {integrity: sha512-3I1/CrNi780sdOhuhUnFtgTWhloSc3quSZwsylI41jycx8o97M6Y4aQAu0phSexGusT7+59BxATh4L4xiY0HcA==}
     engines: {node: '>=18.0.0'}
 
   has-bigints@1.0.2:
@@ -8981,6 +8984,9 @@ packages:
 
   vitest-environment-custom@file:test/core/vitest-environment-custom:
     resolution: {directory: test/core/vitest-environment-custom, type: directory}
+
+  vitest-package-exports@0.1.1:
+    resolution: {integrity: sha512-rXgU5noxaaMA5VJXgVPhXRzPiQ1WFmWwgo8dQFPg9j/yFM028scO0IAylFHVI8XMRevhozEt1usa6RQYQY26lg==}
 
   vitest-sonar-reporter@0.4.1:
     resolution: {integrity: sha512-754xxoEe5h8QO8jFlNd/aLm9nUYwgu708KAiatdNH0DVwbS4LI9Mm2tBjKMPYbPVaD8UjQUO+/mGa+WTExzygQ==}
@@ -14772,7 +14778,7 @@ snapshots:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
 
-  happy-dom@17.1.8:
+  happy-dom@17.2.2:
     dependencies:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
@@ -18166,6 +18172,11 @@ snapshots:
       '@types/react-dom': 18.2.14
 
   vitest-environment-custom@file:test/core/vitest-environment-custom: {}
+
+  vitest-package-exports@0.1.1:
+    dependencies:
+      find-up-simple: 1.0.0
+      pathe: 2.0.3
 
   vitest-sonar-reporter@0.4.1(vitest@packages+vitest):
     dependencies:
