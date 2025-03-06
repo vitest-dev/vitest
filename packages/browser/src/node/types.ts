@@ -1,7 +1,8 @@
 import type { ServerIdResolution, ServerMockResolution } from '@vitest/mocker/node'
 import type { TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { AfterSuiteRunMeta, CancelReason, Reporter, RunnerTestFile, SnapshotResult, UserConsoleLog } from 'vitest'
+import type { AfterSuiteRunMeta, CancelReason, RunnerTestFile, SnapshotResult, UserConsoleLog } from 'vitest'
+import type { Reporter } from 'vitest/node'
 
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
