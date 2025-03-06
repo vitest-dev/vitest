@@ -151,6 +151,20 @@ function handleRollupError(e: unknown): never {
   throw e
 }
 
+/**
+ * Performs an atomic write operation using the write-then-rename pattern.
+ *
+ * Why we need this:
+ * - Ensures file integrity by never leaving partially written files on disk
+ * - Prevents other processes from reading incomplete data during writes
+ * - Particularly important for test files where incomplete writes could cause test failures
+ *
+ * The implementation writes to a temporary file first, then renames it to the target path.
+ * This rename operation is atomic on most filesystems (including POSIX-compliant ones),
+ * guaranteeing that other processes will only ever see the complete file.
+ *
+ * Added in https://github.com/vitest-dev/vitest/pull/7531
+ */
 async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
   const dir = dirname(realFilePath)
   const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
