@@ -79,7 +79,7 @@ export default () =>
       },
       external,
       plugins: [
-        dtsUtilsClient.isolatedDecl(),
+        ...dtsUtilsClient.isolatedDecl(),
         ...plugins,
       ],
     },
