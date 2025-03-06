@@ -5,6 +5,7 @@ import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -17,6 +18,8 @@ const external = [
   'node:worker_threads',
   'vite',
 ]
+
+const dtsUtils = createDtsUtils()
 
 const plugins = [
   resolve({
@@ -58,6 +61,7 @@ export default () =>
             }
           },
         },
+        ...dtsUtils.isolatedDecl(),
         ...plugins,
       ],
     },
@@ -118,17 +122,14 @@ export default () =>
       ],
     },
     {
-      input: input.index,
+      input: dtsUtils.dtsInput(input.index),
       output: {
-        file: 'dist/index.d.ts',
+        dir: 'dist',
+        entryFileNames: '[name].d.ts',
         format: 'esm',
       },
       external,
-      plugins: [
-        dts({
-          respectExternal: true,
-        }),
-      ],
+      plugins: dtsUtils.dts(),
     },
     {
       input: {
