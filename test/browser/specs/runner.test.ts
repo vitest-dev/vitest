@@ -176,19 +176,19 @@ error with a stack
     expect(stderr).toMatch(/bundled-lib\/src\/b.js:2:(8|18)/)
     expect(stderr).toMatch(/bundled-lib\/src\/index.js:5:(15|17)/)
 
-    // index() is called from a bundled file
-    expect(stderr).toMatch(/test\/failing.test.ts:35:(2|8)/)
-
     if (provider === 'playwright') {
       // page.getByRole('code').click()
       expect(stderr).toContain('locator.click: Timeout')
       // playwright error is proxied from the server to the client and back correctly
       expect(stderr).toContain('waiting for locator(\'[data-vitest="true"]\').contentFrame().getByRole(\'code\')')
-      expect(stderr).toMatch(/test\/failing.test.ts:26:(33|39)/)
+      expect(stderr).toMatch(/test\/failing.test.ts:27:(33|39)/)
       // await expect.element().toBeVisible()
       expect(stderr).toContain('Cannot find element with locator: getByRole(\'code\')')
-      expect(stderr).toMatch(/test\/failing.test.ts:30:(49|61)/)
+      expect(stderr).toMatch(/test\/failing.test.ts:31:(49|61)/)
     }
+
+    // index() is called from a bundled file
+    expect(stderr).toMatch(/test\/failing.test.ts:36:(2|8)/)
   })
 
   test('popup apis should log a warning', () => {
