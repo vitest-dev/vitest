@@ -46,8 +46,8 @@ test('{ all: true } includes uncovered files that require custom transform', asy
         "<process-cwd>/fixtures/src/uncovered.custom-1": {
           "branches": "0/1 (0%)",
           "functions": "0/1 (0%)",
-          "lines": "0/3 (0%)",
-          "statements": "0/3 (0%)",
+          "lines": "0/2 (0%)",
+          "statements": "0/2 (0%)",
         },
         "<process-cwd>/fixtures/workspaces/custom-2/src/covered.custom-2": {
           "branches": "1/1 (100%)",
@@ -58,8 +58,8 @@ test('{ all: true } includes uncovered files that require custom transform', asy
         "<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2": {
           "branches": "0/1 (0%)",
           "functions": "0/1 (0%)",
-          "lines": "0/3 (0%)",
-          "statements": "0/3 (0%)",
+          "lines": "0/2 (0%)",
+          "statements": "0/2 (0%)",
         },
       }
     `)
