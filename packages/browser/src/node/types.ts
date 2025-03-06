@@ -39,6 +39,7 @@ export interface WebSocketBrowserHandlers {
   getBrowserFileSourceMap: (
     id: string
   ) => SourceMap | null | { mappings: '' } | undefined
+  wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown

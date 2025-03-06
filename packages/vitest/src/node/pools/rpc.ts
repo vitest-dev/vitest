@@ -2,7 +2,8 @@ import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdirSync } from 'node:fs'
+import { writeFile } from 'node:fs/promises'
 import { join } from 'pathe'
 import { hash } from '../hash'
 
@@ -54,13 +55,13 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
       const dir = join(project.tmpDir, transformMode)
       const name = hash('sha1', id, 'hex')
       const tmp = join(dir, name)
+      if (!created.has(dir)) {
+        mkdirSync(dir, { recursive: true })
+        created.add(dir)
+      }
       if (promises.has(tmp)) {
         await promises.get(tmp)
         return { id: tmp }
-      }
-      if (!created.has(dir)) {
-        await mkdir(dir, { recursive: true })
-        created.add(dir)
       }
       promises.set(
         tmp,

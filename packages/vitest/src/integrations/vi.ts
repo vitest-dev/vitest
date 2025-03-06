@@ -1,19 +1,19 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
-import type { VitestMocker } from '../runtime/mocker'
-import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
   MaybePartiallyMocked,
   MaybePartiallyMockedDeep,
   MockInstance,
-} from './spy'
+} from '@vitest/spy'
+import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
+import type { VitestMocker } from '../runtime/mocker'
+import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
+import { fn, isMockFunction, mocks, spyOn } from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { getWorkerState, isChildProcess, resetModules, waitForImportsToResolve } from '../runtime/utils'
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
-import { fn, isMockFunction, mocks, spyOn } from './spy'
 import { waitFor, waitUntil } from './wait'
 
 type ESModuleExports = Record<string, unknown>
@@ -616,17 +616,17 @@ function createVitest(): VitestUtils {
     },
 
     clearAllMocks() {
-      mocks.forEach(spy => spy.mockClear())
+      [...mocks].reverse().forEach(spy => spy.mockClear())
       return utils
     },
 
     resetAllMocks() {
-      mocks.forEach(spy => spy.mockReset())
+      [...mocks].reverse().forEach(spy => spy.mockReset())
       return utils
     },
 
     restoreAllMocks() {
-      mocks.forEach(spy => spy.mockRestore())
+      [...mocks].reverse().forEach(spy => spy.mockRestore())
       return utils
     },
 
