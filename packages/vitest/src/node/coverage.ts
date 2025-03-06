@@ -563,7 +563,8 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       let lastError
 
       for (const { root, vitenode, browser } of servers) {
-        if (!filename.startsWith(root)) {
+        // On Windows root doesn't start with "/" while filenames do
+        if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
         }
 

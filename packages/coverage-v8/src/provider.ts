@@ -103,8 +103,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       const coveredFiles = coverageMap.files()
       const untestedCoverage = await this.getUntestedFiles(coveredFiles)
 
-      const converted = await this.convertCoverage(untestedCoverage)
-      coverageMap.merge(await transformCoverage(converted))
+      coverageMap.merge(await transformCoverage(untestedCoverage))
     }
 
     if (this.options.excludeAfterRemap) {
@@ -158,7 +157,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     )
   }
 
-  private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
+  private async getUntestedFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
@@ -179,8 +178,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       .map(file => pathToFileURL(file))
       .filter(file => !testedFiles.includes(file.pathname))
 
-    let merged: RawCoverage = { result: [] }
     let index = 0
+
+    const coverageMap = this.createCoverageMap()
 
     for (const chunk of this.toSlices(uncoveredFiles, this.options.processingConcurrency)) {
       if (debug.enabled) {
@@ -188,47 +188,47 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         debug('Uncovered files %d/%d', index, uncoveredFiles.length)
       }
 
-      const coverages = await Promise.all(
-        chunk.map(async (filename) => {
-          const { originalSource } = await this.getSources(
-            filename.href,
-            transformResults,
-            transform,
-          )
+      await Promise.all(chunk.map(async (filename) => {
+        const sources = await this.getSources(
+          filename.href,
+          transformResults,
+          transform,
+        )
 
-          const coverage = {
-            url: filename.href,
-            scriptId: '0',
-            // Create a made up function to mark whole file as uncovered. Note that this does not exist in source maps.
-            functions: [
+        const converter = v8ToIstanbul(
+          filename.href,
+          0,
+          sources,
+          undefined,
+          this.options.ignoreEmptyLines,
+        )
+
+        await converter.load()
+
+        try {
+          // Create a made up function to mark whole file as uncovered. Note that this does not exist in source maps.
+          converter.applyCoverage([{
+            ranges: [
               {
-                ranges: [
-                  {
-                    startOffset: 0,
-                    endOffset: originalSource.length,
-                    count: 0,
-                  },
-                ],
-                isBlockCoverage: true,
-                // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
-                functionName: '(empty-report)',
+                startOffset: 0,
+                endOffset: sources.originalSource.length,
+                count: 0,
               },
             ],
-          }
+            isBlockCoverage: true,
+            // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
+            functionName: '(empty-report)',
+          }])
+        }
+        catch (error) {
+          this.ctx.logger.error(`Failed to convert coverage for uncovered ${filename.href}.\n`, error)
+        }
 
-          return { result: [coverage] }
-        }),
-      )
-
-      merged = mergeProcessCovs([
-        merged,
-        ...coverages.filter(
-          (cov): cov is NonNullable<typeof cov> => cov != null,
-        ),
-      ])
+        coverageMap.merge(converter.toIstanbul())
+      }))
     }
 
-    return merged
+    return coverageMap
   }
 
   private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
