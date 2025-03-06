@@ -23,6 +23,7 @@ it('several locator methods are not awaited', () => {
 
 describe.runIf(server.provider === 'playwright')('timeouts are failing correctly', () => {
   it('click on non-existing element fails', async () => {
+    await new Promise(r => setTimeout(r, 100))
     await page.getByRole('code').click()
   }, 1000)
 
