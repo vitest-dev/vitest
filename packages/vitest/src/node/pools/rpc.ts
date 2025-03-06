@@ -28,16 +28,6 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
         config: project.serializedConfig,
       })
     },
-    async getSourceMap(id, force) {
-      if (force) {
-        const mod = project.vite.moduleGraph.getModuleById(id)
-        if (mod) {
-          project.vite.moduleGraph.invalidateModule(mod)
-        }
-      }
-      const r = await project.vitenode.transformRequest(id)
-      return r?.map as RawSourceMap | undefined
-    },
     async fetch(id, transformMode) {
       const result = await project.vitenode.fetchResult(id, transformMode).catch(handleRollupError)
       const code = result.code
