@@ -29,14 +29,7 @@ const dtsUtils = createDtsUtils()
 
 /** @type {import('rollup').Plugin[]} */
 const plugins = [
-  {
-    // silence resolution error by isolated-decl transform of type import
-    name: 'ignore-isolated-decl-type-import-resolve-error',
-    resolveId(source) {
-      return source.startsWith('vite/types/') ? { id: '/node_modules/', external: true } : undefined
-    },
-  },
-  dtsUtils.isolatedDecl(),
+  ...dtsUtils.isolatedDecl(),
   resolve({
     preferBuiltins: true,
   }),
@@ -68,7 +61,7 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [dtsUtils.dts()],
+    plugins: dtsUtils.dts(),
     onwarn,
   },
 ])

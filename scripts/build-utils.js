@@ -6,28 +6,45 @@ import isolatedDecl from 'unplugin-isolated-decl/rollup'
 
 export function createDtsUtils() {
   return {
+    /**
+     * @returns {import('rollup').Plugin[]} plugins
+     */
     isolatedDecl() {
-      return isolatedDecl({
-        transformer: 'oxc',
-        transformOptions: { stripInternal: true },
-        // exclude direct imports to other package sources
-        include: path.join(process.cwd(), '**/*.ts'),
-        extraOutdir: '.types',
-      })
+      return [
+        isolatedDecl({
+          transformer: 'oxc',
+          transformOptions: { stripInternal: true },
+          // exclude direct imports to other package sources
+          include: path.join(process.cwd(), '**/*.ts'),
+          extraOutdir: '.types',
+        }),
+        {
+          name: 'isolated-decl-dts-extra',
+          resolveId(source) {
+            // silence node-resolve error by isolated-decl transform of type import
+            if (source.startsWith('vite/types/')) {
+              return { id: '/node_modules/', external: true }
+            }
+          },
+        },
+      ]
     },
     /**
-     * @returns {import('rollup').Plugin} dts
+     * @returns {import('rollup').Plugin[]} plugins
      */
     dts() {
-      return {
-        ...dts({ respectExternal: true }),
-        buildEnd() {
-          // keep temporary type files on watch mode since removing them makes re-build flaky
-          if (!this.meta.watchMode) {
-            fs.rmSync('dist/.types', { recursive: true, force: true })
-          }
+      return [
+        dts({ respectExternal: true }),
+        {
+          name: 'isolated-decl-dts-extra',
+          buildEnd() {
+            // keep temporary type files on watch mode since removing them makes re-build flaky
+            if (!this.meta.watchMode) {
+              fs.rmSync('dist/.types', { recursive: true, force: true })
+            }
+          },
         },
-      }
+      ]
     },
     /**
      * @param {Record<string, string> | string} input

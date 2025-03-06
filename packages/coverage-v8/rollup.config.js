@@ -26,7 +26,7 @@ const external = [
 const dtsUtils = createDtsUtils()
 
 const plugins = [
-  dtsUtils.isolatedDecl(),
+  ...dtsUtils.isolatedDecl(),
   nodeResolve(),
   json(),
   commonjs(),
@@ -53,6 +53,6 @@ export default () => [
       format: 'esm',
     },
     external,
-    plugins: [dtsUtils.dts()],
+    plugins: dtsUtils.dts(),
   },
 ]

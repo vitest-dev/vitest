@@ -17,7 +17,7 @@ const external = [
 const dtsUtils = createDtsUtils()
 
 const plugins = [
-  dtsUtils.isolatedDecl(),
+  ...dtsUtils.isolatedDecl(),
   esbuild({
     target: 'node14',
   }),
@@ -53,7 +53,7 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [dtsUtils.dts()],
+    plugins: dtsUtils.dts(),
     onwarn,
   },
 ])

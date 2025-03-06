@@ -22,7 +22,7 @@ const external = [
 const dtsUtils = createDtsUtils()
 
 const plugins = [
-  dtsUtils.isolatedDecl(),
+  ...dtsUtils.isolatedDecl(),
   resolve({
     preferBuiltins: true,
   }),
@@ -54,7 +54,7 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [dtsUtils.dts()],
+    plugins: dtsUtils.dts(),
     onwarn,
   },
 ])

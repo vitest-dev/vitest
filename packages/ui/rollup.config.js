@@ -34,7 +34,7 @@ export default () => {
       },
       external,
       plugins: [
-        dtsUtils.isolatedDecl(),
+        ...dtsUtils.isolatedDecl(),
         resolve({
           preferBuiltins: true,
         }),
@@ -54,7 +54,7 @@ export default () => {
         format: 'esm',
       },
       external,
-      plugins: [dtsUtils.dts()],
+      plugins: dtsUtils.dts(),
     },
   ])
 }

@@ -60,14 +60,7 @@ export default defineConfig([
     },
     external,
     plugins: [
-      {
-        // TODO: move it to dtsUtils
-        name: 'silence-isolated-decl-type-import-error',
-        resolveId(id) {
-          return id.startsWith('vite/types/') ? '/node_modules/' : undefined
-        },
-      },
-      dtsUtils.isolatedDecl(),
+      ...dtsUtils.isolatedDecl(),
       ...plugins,
     ],
     onwarn,
@@ -92,7 +85,7 @@ export default defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [dtsUtils.dts()],
+    plugins: dtsUtils.dts(),
     onwarn,
   },
 ])

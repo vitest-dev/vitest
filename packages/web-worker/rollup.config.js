@@ -24,7 +24,7 @@ const external = [
 const dtsUtils = createDtsUtils()
 
 const plugins = [
-  dtsUtils.isolatedDecl(),
+  ...dtsUtils.isolatedDecl(),
   json(),
   nodeResolve(),
   commonjs(),
@@ -51,6 +51,6 @@ export default () => defineConfig([
       format: 'esm',
     },
     external,
-    plugins: [dtsUtils.dts()],
+    plugins: dtsUtils.dts(),
   },
 ])

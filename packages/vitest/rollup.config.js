@@ -120,7 +120,7 @@ export default ({ watch }) =>
       },
       external,
       plugins: [
-        dtsUtils.isolatedDecl(),
+        ...dtsUtils.isolatedDecl(),
         ...plugins,
         !watch && licensePlugin(),
       ],
@@ -147,7 +147,7 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
       external,
-      plugins: [dtsUtils.dts()],
+      plugins: dtsUtils.dts(),
     },
   ])
 
