@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type Convert from 'ansi-to-html'
-import type { ErrorWithDiff, File, Suite, Task } from 'vitest'
+import type { RunnerTask, RunnerTestFile, RunnerTestSuite, TestError } from 'vitest'
 import { browserState, config } from '~/composables/client'
 import { isDark } from '~/composables/dark'
 import { createAnsiToHtmlFilter } from '~/composables/error'
@@ -8,14 +8,14 @@ import { selectedTest } from '~/composables/params'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
-  file?: File
+  file?: RunnerTestFile
 }>()
 
-type LeveledTask = Task & {
+type LeveledTask = RunnerTask & {
   level: number
 }
 
-function collectFailed(task: Task, level: number): LeveledTask[] {
+function collectFailed(task: RunnerTask, level: number): LeveledTask[] {
   if (task.result?.state !== 'fail') {
     return []
   }
@@ -31,7 +31,7 @@ function collectFailed(task: Task, level: number): LeveledTask[] {
   }
 }
 
-function createHtmlError(filter: Convert, error: ErrorWithDiff) {
+function createHtmlError(filter: Convert, error: TestError) {
   let htmlError = ''
   if (error.message?.includes('\x1B')) {
     htmlError = `<b>${error.nameStr || error.name}</b>: ${filter.toHtml(
@@ -39,7 +39,7 @@ function createHtmlError(filter: Convert, error: ErrorWithDiff) {
     )}`
   }
 
-  const startStrWithX1B = error.stackStr?.includes('\x1B')
+  const startStrWithX1B = (error.stackStr as string | undefined)?.includes('\x1B')
   if (startStrWithX1B || error.stack?.includes('\x1B')) {
     if (htmlError.length > 0) {
       htmlError += filter.toHtml(
@@ -87,7 +87,7 @@ const failed = computed(() => {
   // we must check also if the test cannot compile
   if (fileError) {
     // create a dummy one
-    const fileErrorTask: Suite & { level: number } = {
+    const fileErrorTask: RunnerTestSuite & { level: number } = {
       id: file!.id,
       file: file!,
       name: file!.name,
@@ -105,7 +105,7 @@ const failed = computed(() => {
     : failedFlatMap
 })
 
-function open(task: Task) {
+function open(task: RunnerTask) {
   const filePath = task.meta?.failScreenshotPath
   if (filePath) {
     fetch(`/__open-in-editor?file=${encodeURIComponent(filePath)}`)
@@ -114,7 +114,7 @@ function open(task: Task) {
 
 const showScreenshot = ref(false)
 const timestamp = ref(Date.now())
-const currentTask = ref<Task | undefined>()
+const currentTask = ref<RunnerTask | undefined>()
 const currentScreenshotUrl = computed(() => {
   const id = currentTask.value?.id
   // force refresh
@@ -123,7 +123,7 @@ const currentScreenshotUrl = computed(() => {
   return id ? `/__screenshot-error?id=${encodeURIComponent(id)}&t=${t}` : undefined
 })
 
-function showScreenshotModal(task: Task) {
+function showScreenshotModal(task: RunnerTask) {
   currentTask.value = task
   timestamp.value = Date.now()
   showScreenshot.value = true

@@ -266,9 +266,10 @@ function parseV8Stacktrace(stack: string): ParsedStack[] {
 }
 
 export function parseErrorStacktrace(
-  e: TestError,
+  e_: TestError | Error,
   options: StackTraceParserOptions = {},
 ): ParsedStack[] {
+  const e = e_ as TestError
   if (!e || isPrimitive(e)) {
     return []
   }

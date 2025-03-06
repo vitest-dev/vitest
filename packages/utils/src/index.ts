@@ -47,7 +47,6 @@ export type {
   Constructable,
   DeepMerge,
   MergeInsertions,
-  MutableArray,
   Nullable,
   ParsedStack,
   SerializedError,

@@ -1,5 +1,5 @@
 /* eslint-disable prefer-template */
-import type { ErrorWithDiff, ParsedStack } from '@vitest/utils'
+import type { ParsedStack, TestError } from '@vitest/utils'
 import type { Vitest } from './core'
 import type { ErrorOptions, Logger } from './logger'
 import type { TestProject } from './project'
@@ -27,7 +27,7 @@ interface PrintErrorOptions {
   showCodeFrame?: boolean
   printProperties?: boolean
   screenshotPaths?: string[]
-  parseErrorStacktrace: (error: ErrorWithDiff) => ParsedStack[]
+  parseErrorStacktrace: (error: TestError) => ParsedStack[]
 }
 
 interface PrintErrorResult {
@@ -99,7 +99,7 @@ function printErrorInner(
 ): PrintErrorResult | undefined {
   const { showCodeFrame = true, type, printProperties = true } = options
   const logger = options.logger
-  let e = error as ErrorWithDiff
+  let e = error as TestError
 
   if (isPrimitive(e)) {
     e = {
@@ -240,7 +240,7 @@ function printErrorInner(
     })
   }
 
-  handleImportOutsideModuleError(e.stack || e.stackStr || '', logger)
+  handleImportOutsideModuleError(e.stack || (e.stackStr as string) || '', logger)
 
   return { nearest }
 }
@@ -271,7 +271,7 @@ const skipErrorProperties = new Set([
   ...Object.getOwnPropertyNames(Object.prototype),
 ])
 
-function getErrorProperties(e: ErrorWithDiff) {
+function getErrorProperties(e: TestError) {
   const errorObject = Object.create(null)
   if (e.name === 'AssertionError') {
     return errorObject
@@ -279,7 +279,7 @@ function getErrorProperties(e: ErrorWithDiff) {
 
   for (const key of Object.getOwnPropertyNames(e)) {
     if (!skipErrorProperties.has(key)) {
-      errorObject[key] = e[key as keyof ErrorWithDiff]
+      errorObject[key] = e[key as keyof TestError]
     }
   }
 
@@ -354,7 +354,7 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
   )
 }
 
-function printErrorMessage(error: ErrorWithDiff, logger: ErrorLogger) {
+function printErrorMessage(error: TestError, logger: ErrorLogger) {
   const errorName = error.name || error.nameStr || 'Unknown Error'
   if (!error.message) {
     logger.error(error)
