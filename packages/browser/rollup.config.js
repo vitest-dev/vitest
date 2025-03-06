@@ -3,7 +3,6 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
@@ -20,6 +19,7 @@ const external = [
 ]
 
 const dtsUtils = createDtsUtils()
+const dtsUtilsClient = createDtsUtils({ isolatedDeclDir: '.types-client' })
 
 const plugins = [
   resolve({
@@ -78,7 +78,10 @@ export default () =>
         format: 'esm',
       },
       external,
-      plugins,
+      plugins: [
+        dtsUtilsClient.isolatedDecl(),
+        ...plugins,
+      ],
     },
     {
       input: './src/client/tester/context.ts',
@@ -132,19 +135,16 @@ export default () =>
       plugins: dtsUtils.dts(),
     },
     {
-      input: {
+      input: dtsUtilsClient.dtsInput({
         'locators/index': './src/client/tester/locators/index.ts',
-      },
+      }),
       output: {
         dir: 'dist',
+        entryFileNames: '[name].d.ts',
         format: 'esm',
       },
       external,
-      plugins: [
-        dts({
-          respectExternal: true,
-        }),
-      ],
+      plugins: dtsUtilsClient.dts(),
     },
     // {
     //   input: './src/client/tester/jest-dom.ts',

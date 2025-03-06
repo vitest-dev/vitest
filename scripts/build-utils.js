@@ -4,7 +4,9 @@ import path from 'node:path'
 import dts from 'rollup-plugin-dts'
 import isolatedDecl from 'unplugin-isolated-decl/rollup'
 
-export function createDtsUtils() {
+export function createDtsUtils({
+  isolatedDeclDir = '.types',
+} = {}) {
   return {
     /**
      * @returns {import('rollup').Plugin[]} plugins
@@ -16,7 +18,7 @@ export function createDtsUtils() {
           transformOptions: { stripInternal: true },
           // exclude direct imports to other package sources
           include: path.join(process.cwd(), '**/*.ts'),
-          extraOutdir: '.types',
+          extraOutdir: isolatedDeclDir,
         }),
         {
           name: 'isolated-decl-dts-extra',
@@ -40,7 +42,7 @@ export function createDtsUtils() {
           buildEnd() {
             // keep temporary type files on watch mode since removing them makes re-build flaky
             if (!this.meta.watchMode) {
-              fs.rmSync('dist/.types', { recursive: true, force: true })
+              fs.rmSync(`dist/${isolatedDeclDir}`, { recursive: true, force: true })
             }
           },
         },
@@ -56,7 +58,7 @@ export function createDtsUtils() {
       return Object.fromEntries(
         Object.keys(input).map(name => [
           name,
-          `dist/.types/${name}.d.${ext}`,
+          `dist/${isolatedDeclDir}/${name}.d.${ext}`,
         ]),
       )
     },
