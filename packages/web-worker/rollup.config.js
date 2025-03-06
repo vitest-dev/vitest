@@ -44,7 +44,7 @@ export default () => defineConfig([
     plugins,
   },
   {
-    input: dtsUtils.dtsInput('dist/.types/pure.ts'),
+    input: dtsUtils.dtsInput({ pure: '' }),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
