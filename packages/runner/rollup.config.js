@@ -2,7 +2,7 @@ import { builtinModules, createRequire } from 'node:module'
 import json from '@rollup/plugin-json'
 import { defineConfig } from 'rollup'
 import esbuild from 'rollup-plugin-esbuild'
-import { rollupDtsHelper } from '../ui/rollup.config.js'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -20,10 +20,10 @@ const entries = {
   types: 'src/types.ts',
 }
 
-const dtsHelper = rollupDtsHelper()
+const dtsUtils = createDtsUtils()
 
 const plugins = [
-  dtsHelper.isolatedDecl(),
+  dtsUtils.isolatedDecl(),
   esbuild({
     target: 'node14',
   }),
@@ -44,14 +44,14 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: dtsHelper.dtsInput(entries),
+    input: dtsUtils.dtsInput(entries),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
-    plugins: [dtsHelper.dts()],
+    plugins: [dtsUtils.dts()],
     onwarn,
   },
 ])

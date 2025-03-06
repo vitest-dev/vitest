@@ -4,7 +4,7 @@ import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import esbuild from 'rollup-plugin-esbuild'
-import { rollupDtsHelper } from '../ui/rollup.config.js'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -21,10 +21,10 @@ const external = [
   'vite-node/utils',
 ]
 
-const dtsHelper = rollupDtsHelper()
+const dtsUtils = createDtsUtils()
 
 const plugins = [
-  dtsHelper.isolatedDecl(),
+  dtsUtils.isolatedDecl(),
   json(),
   nodeResolve(),
   commonjs(),
@@ -44,13 +44,13 @@ export default () => defineConfig([
     plugins,
   },
   {
-    input: dtsHelper.dtsInput('dist/.types/pure.ts'),
+    input: dtsUtils.dtsInput('dist/.types/pure.ts'),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
-    plugins: [dtsHelper.dts()],
+    plugins: [dtsUtils.dts()],
   },
 ])

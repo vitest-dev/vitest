@@ -4,7 +4,7 @@ import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import esbuild from 'rollup-plugin-esbuild'
-import { rollupDtsHelper } from '../ui/rollup.config.js'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -33,7 +33,7 @@ const external = [
   'node:vm',
 ]
 
-const dtsHelper = rollupDtsHelper()
+const dtsUtils = createDtsUtils()
 
 const plugins = [
   resolve({
@@ -61,13 +61,13 @@ export default defineConfig([
     external,
     plugins: [
       {
-        // TODO: move it to dtsHelper
+        // TODO: move it to dtsUtils
         name: 'silence-isolated-decl-type-import-error',
         resolveId(id) {
           return id.startsWith('vite/types/') ? '/node_modules/' : undefined
         },
       },
-      dtsHelper.isolatedDecl(),
+      dtsUtils.isolatedDecl(),
       ...plugins,
     ],
     onwarn,
@@ -85,14 +85,14 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: dtsHelper.dtsInput(entries, { ext: 'mts' }),
+    input: dtsUtils.dtsInput(entries, { ext: 'mts' }),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
-    plugins: [dtsHelper.dts()],
+    plugins: [dtsUtils.dts()],
     onwarn,
   },
 ])

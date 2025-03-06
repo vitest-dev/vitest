@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
 import esbuild from 'rollup-plugin-esbuild'
-import { rollupDtsHelper } from '../ui/rollup.config.js'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -20,10 +20,10 @@ const entries = {
   manager: 'src/manager.ts',
 }
 
-const dtsHelper = rollupDtsHelper()
+const dtsUtils = createDtsUtils()
 
 const plugins = [
-  dtsHelper.isolatedDecl(),
+  dtsUtils.isolatedDecl(),
   nodeResolve({
     preferBuiltins: true,
   }),
@@ -47,14 +47,14 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: dtsHelper.dtsInput(entries),
+    input: dtsUtils.dtsInput(entries),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
-    plugins: [dtsHelper.dts()],
+    plugins: [dtsUtils.dts()],
     onwarn,
   },
 ])

@@ -1,13 +1,10 @@
-import fs from 'node:fs'
 import { builtinModules, createRequire } from 'node:module'
-import path from 'node:path'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
-import isolatedDecl from 'unplugin-isolated-decl/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -22,49 +19,7 @@ const external = [
   'vite',
 ]
 
-export function rollupDtsHelper() {
-  return {
-    isolatedDecl() {
-      return isolatedDecl({
-        transformer: 'oxc',
-        transformOptions: { stripInternal: true },
-        // exclude direct imports to other package sources
-        include: path.join(process.cwd(), '**/*.ts'),
-        extraOutdir: '.types',
-      })
-    },
-    /**
-     * @returns {import('rollup').Plugin} dts
-     */
-    dts() {
-      return {
-        ...dts({ respectExternal: true }),
-        buildEnd() {
-          // keep temporary type files on watch mode since removing them makes re-build flaky
-          if (!this.meta.watchMode) {
-            fs.rmSync('dist/.types', { recursive: true, force: true })
-          }
-        },
-      }
-    },
-    /**
-     * @param {Record<string, string> | string} input
-     */
-    dtsInput(input, { ext = 'ts' } = {}) {
-      if (typeof input === 'string') {
-        input = { index: '' }
-      }
-      return Object.fromEntries(
-        Object.keys(input).map(name => [
-          name,
-          `dist/.types/${name}.d.${ext}`,
-        ]),
-      )
-    },
-  }
-}
-
-const dtsHelper = rollupDtsHelper()
+const dtsUtils = createDtsUtils()
 
 export default () => {
   return defineConfig([
@@ -79,7 +34,7 @@ export default () => {
       },
       external,
       plugins: [
-        dtsHelper.isolatedDecl(),
+        dtsUtils.isolatedDecl(),
         resolve({
           preferBuiltins: true,
         }),
@@ -99,7 +54,7 @@ export default () => {
         format: 'esm',
       },
       external,
-      plugins: [dtsHelper.dts()],
+      plugins: [dtsUtils.dts()],
     },
   ])
 }

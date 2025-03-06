@@ -10,7 +10,7 @@ import esbuild from 'rollup-plugin-esbuild'
 import license from 'rollup-plugin-license'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
-import { rollupDtsHelper } from '../ui/rollup.config.js'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -95,7 +95,7 @@ const external = [
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
-const dtsHelper = rollupDtsHelper()
+const dtsUtils = createDtsUtils()
 
 const plugins = [
   nodeResolve({
@@ -120,7 +120,7 @@ export default ({ watch }) =>
       },
       external,
       plugins: [
-        dtsHelper.isolatedDecl(),
+        dtsUtils.isolatedDecl(),
         ...plugins,
         !watch && licensePlugin(),
       ],
@@ -138,7 +138,7 @@ export default ({ watch }) =>
       plugins,
     },
     {
-      input: dtsHelper.dtsInput(dtsEntries),
+      input: dtsUtils.dtsInput(dtsEntries),
       output: {
         dir: 'dist',
         entryFileNames: chunk =>
@@ -147,7 +147,7 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
       external,
-      plugins: [dtsHelper.dts()],
+      plugins: [dtsUtils.dts()],
     },
   ])
 
