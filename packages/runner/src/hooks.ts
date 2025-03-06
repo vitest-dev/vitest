@@ -18,6 +18,18 @@ function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout
 }
 
+const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
+
+export function getBeforeHookCleanupCallback(hook: Function, result: any): Function | undefined {
+  if (typeof result === 'function') {
+    const timeout
+      = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
+        ? hook[CLEANUP_TIMEOUT_KEY]
+        : getDefaultHookTimeout()
+    return withTimeout(result, timeout, true)
+  }
+}
+
 /**
  * Registers a callback function to be executed once before all tests within the current suite.
  * This hook is useful for scenarios where you need to perform setup operations that are common to all tests in a suite, such as initializing a database connection or setting up a test environment.
@@ -35,11 +47,14 @@ function getDefaultHookTimeout() {
  * });
  * ```
  */
-export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
+export function beforeAll(
+  fn: BeforeAllListener,
+  timeout: number = getDefaultHookTimeout(),
+): void {
   assertTypes(fn, '"beforeAll" callback', ['function'])
   return getCurrentSuite().on(
     'beforeAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
+    Object.assign(withTimeout(fn, timeout, true), { [CLEANUP_TIMEOUT_KEY]: timeout }),
   )
 }
 
@@ -87,12 +102,15 @@ export function afterAll(fn: AfterAllListener, timeout?: number): void {
  */
 export function beforeEach<ExtraContext = object>(
   fn: BeforeEachListener<ExtraContext>,
-  timeout?: number,
+  timeout: number = getDefaultHookTimeout(),
 ): void {
   assertTypes(fn, '"beforeEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+    Object.assign(
+      withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+      { [CLEANUP_TIMEOUT_KEY]: timeout },
+    ),
   )
 }
 

@@ -21,6 +21,7 @@ import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
 import { PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
+import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
@@ -143,14 +144,18 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     updateSuiteHookState(currentTask, name, 'run', runner)
   }
 
+  async function runHook(hook: Function) {
+    return getBeforeHookCleanupCallback(hook, await hook(...args))
+  }
+
   if (sequence === 'parallel') {
     callbacks.push(
-      ...(await Promise.all(hooks.map(hook => (hook as any)(...args)))),
+      ...(await Promise.all(hooks.map(hook => runHook(hook)))),
     )
   }
   else {
     for (const hook of hooks) {
-      callbacks.push(await (hook as any)(...args))
+      callbacks.push(await runHook(hook))
     }
   }
 
