@@ -26,18 +26,78 @@ test('{ all: true } includes uncovered files that require custom transform', asy
     ]
   `)
 
-  const covered1 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/covered.custom-1')
-  const uncovered1 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/uncovered.custom-1')
-  const covered2 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/workspaces/custom-2/src/covered.custom-2')
-  const uncovered2 = coverageMap.fileCoverageFor('<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2')
+  const fileCoverages = coverageMap.files().map(file => coverageMap.fileCoverageFor(file))
 
-  // Coverage maps indicate whether source maps are correct. Check html-report if these change
-  await expect(JSON.stringify(covered1, null, 2)).toMatchFileSnapshot(snapshotName('covered-1'))
-  await expect(JSON.stringify(uncovered1, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-1'))
-  await expect(JSON.stringify(covered2, null, 2)).toMatchFileSnapshot(snapshotName('covered-2'))
-  await expect(JSON.stringify(uncovered2, null, 2)).toMatchFileSnapshot(snapshotName('uncovered-2'))
+  if (isV8Provider()) {
+    expect(fileCoverages).toMatchInlineSnapshot(`
+      {
+        "<process-cwd>/fixtures/src/covered.custom-1": {
+          "branches": "1/1 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "2/3 (66.66%)",
+          "statements": "2/3 (66.66%)",
+        },
+        "<process-cwd>/fixtures/src/math.ts": {
+          "branches": "1/1 (100%)",
+          "functions": "1/4 (25%)",
+          "lines": "6/12 (50%)",
+          "statements": "6/12 (50%)",
+        },
+        "<process-cwd>/fixtures/src/uncovered.custom-1": {
+          "branches": "0/1 (0%)",
+          "functions": "0/1 (0%)",
+          "lines": "0/3 (0%)",
+          "statements": "0/3 (0%)",
+        },
+        "<process-cwd>/fixtures/workspaces/custom-2/src/covered.custom-2": {
+          "branches": "1/1 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "2/3 (66.66%)",
+          "statements": "2/3 (66.66%)",
+        },
+        "<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2": {
+          "branches": "0/1 (0%)",
+          "functions": "0/1 (0%)",
+          "lines": "0/3 (0%)",
+          "statements": "0/3 (0%)",
+        },
+      }
+    `)
+  }
+  else {
+    expect(fileCoverages).toMatchInlineSnapshot(`
+      {
+        "<process-cwd>/fixtures/src/covered.custom-1": {
+          "branches": "0/0 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "1/2 (50%)",
+          "statements": "1/2 (50%)",
+        },
+        "<process-cwd>/fixtures/src/math.ts": {
+          "branches": "0/0 (100%)",
+          "functions": "1/4 (25%)",
+          "lines": "1/4 (25%)",
+          "statements": "1/4 (25%)",
+        },
+        "<process-cwd>/fixtures/src/uncovered.custom-1": {
+          "branches": "0/0 (100%)",
+          "functions": "0/1 (0%)",
+          "lines": "0/1 (0%)",
+          "statements": "0/1 (0%)",
+        },
+        "<process-cwd>/fixtures/workspaces/custom-2/src/covered.custom-2": {
+          "branches": "0/0 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "1/2 (50%)",
+          "statements": "1/2 (50%)",
+        },
+        "<process-cwd>/fixtures/workspaces/custom-2/src/uncovered.custom-2": {
+          "branches": "0/0 (100%)",
+          "functions": "0/1 (0%)",
+          "lines": "0/1 (0%)",
+          "statements": "0/1 (0%)",
+        },
+      }
+    `)
+  }
 })
-
-function snapshotName(label: string) {
-  return `__snapshots__/custom-file-${label}-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`
-}
