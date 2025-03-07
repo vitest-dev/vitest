@@ -18,7 +18,6 @@ export class VerboseReporter extends DefaultReporter {
       return
     }
 
-    const duration = task.result.duration
     let title = ` ${getStateSymbol(task)} `
 
     if (task.file.projectName) {
@@ -26,10 +25,7 @@ export class VerboseReporter extends DefaultReporter {
     }
 
     title += getFullName(task, c.dim(' > '))
-
-    if (duration != null && duration > this.ctx.config.slowTestThreshold) {
-      title += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)
-    }
+    title += super.getDurationPrefix(task)
 
     if (this.ctx.config.logHeapUsage && task.result.heap != null) {
       title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
