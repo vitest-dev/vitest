@@ -4,9 +4,9 @@ import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  const result = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
-  onTestFinished(() => result.close())
-  return result
+  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  onTestFinished(() => vitest.close())
+  return vitest
 }
 
 test('assignes names as browsers', async () => {
