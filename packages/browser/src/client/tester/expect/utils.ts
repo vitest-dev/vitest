@@ -83,7 +83,7 @@ export function getMessage(
   ].join('\n')
 }
 
-function redent(string: string, count: number) {
+export function redent(string: string, count: number): string {
   return indentString(stripIndent(string), count)
 }
 
@@ -265,4 +265,17 @@ export function matches(textToMatch: string, matcher: string | RegExp): boolean 
   else {
     return textToMatch.includes(String(matcher))
   }
+}
+
+export function arrayAsSetComparison(a: unknown, b: unknown): boolean | undefined {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const setB = new Set(b)
+    for (const item of new Set(a)) {
+      if (!setB.has(item)) {
+        return false
+      }
+    }
+    return true
+  }
+  return undefined
 }

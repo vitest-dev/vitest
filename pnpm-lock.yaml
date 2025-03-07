@@ -527,8 +527,8 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       ivya:
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: ^1.5.1
+        version: 1.5.1
       mime:
         specifier: ^4.0.6
         version: 4.0.6
@@ -1377,7 +1377,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 17.2.2
+        version: 17.3.0
       istanbul-lib-coverage:
         specifier: ^3.2.0
         version: 3.2.0
@@ -1523,7 +1523,7 @@ importers:
         version: 9.3.3
       happy-dom:
         specifier: latest
-        version: 17.2.2
+        version: 17.3.0
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -6174,8 +6174,8 @@ packages:
     resolution: {integrity: sha512-cMxE0HP45kLIgWdI0PFfnitNb95Cv8kG8moqI7CK6kcEcfV7xoYVVvSmJ7EuGfDatSKWtjhG/czVooqEV0L4rA==}
     engines: {node: '>=18.0.0'}
 
-  happy-dom@17.2.2:
-    resolution: {integrity: sha512-3I1/CrNi780sdOhuhUnFtgTWhloSc3quSZwsylI41jycx8o97M6Y4aQAu0phSexGusT7+59BxATh4L4xiY0HcA==}
+  happy-dom@17.3.0:
+    resolution: {integrity: sha512-dTwlpUHrhE0usQOd1Df9k461SOYQUWNl0G31mXCDj+N9//oPcDb+cchrSJzrXN6qxZ5sZSrLf5AfY702Zvddfw==}
     engines: {node: '>=18.0.0'}
 
   has-bigints@1.0.2:
@@ -6622,8 +6622,8 @@ packages:
     resolution: {integrity: sha512-BewmUXImeuRk2YY0PVbxgKAysvhRPUQE0h5QRM++nVWyubKGV0l8qQ5op8+B2DOmwSe63Jivj0BjkPQVf8fP5g==}
     engines: {node: '>=8'}
 
-  ivya@1.5.0:
-    resolution: {integrity: sha512-ytAUTyHj6aUhurC5ghpLEnJWTPDBnaktQ1Rd/LD7zEEh4iHkh0V/SYah8DSxgbxNLaHj1mRygmGLDqGo5MDk6g==}
+  ivya@1.5.1:
+    resolution: {integrity: sha512-WUDzzuxLS01qb4BujtMmqmoSxrG/EsNZjLI7+23xHf28NjlCD0KWHmeoHtaq21mUNrWxqxmgxwxxNDbuE7WOwA==}
 
   jackspeak@3.4.0:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
@@ -14920,7 +14920,7 @@ snapshots:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
 
-  happy-dom@17.2.2:
+  happy-dom@17.3.0:
     dependencies:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0
@@ -15369,7 +15369,7 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  ivya@1.5.0: {}
+  ivya@1.5.1: {}
 
   jackspeak@3.4.0:
     dependencies:

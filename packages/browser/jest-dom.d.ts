@@ -260,7 +260,7 @@ declare namespace matchers {
      * @see
      * [testing-library/jest-dom#tohaveclass](https://github.com/testing-library/jest-dom#tohaveclass)
      */
-    toHaveClass(...classNames: (string | RegExp)[] | [string, options?: {exact: boolean}]): R
+    toHaveClass(...classNames: (string | RegExp)[] | [...string, options?: {exact: boolean}]): R
     /**
      * @description
      * This allows you to check whether the given form element has the specified displayed value (the one the
@@ -302,7 +302,7 @@ declare namespace matchers {
      * @see
      * [testing-library/jest-dom#tohavedisplayvalue](https://github.com/testing-library/jest-dom#tohavedisplayvalue)
      */
-    toHaveDisplayValue(value: string | RegExp | Array<string | RegExp>): R
+    toHaveDisplayValue(value: string | number | RegExp | Array<string | RegExp | number>): R
     /**
      * @description
      * Assert whether an element has focus or not.
@@ -388,7 +388,7 @@ declare namespace matchers {
      * [testing-library/jest-dom#tohavetextcontent](https://github.com/testing-library/jest-dom#tohavetextcontent)
      */
     toHaveTextContent(
-      text: string | RegExp,
+      text: string | number | RegExp,
       options?: {normalizeWhitespace: boolean},
     ): R
     /**
@@ -704,6 +704,64 @@ declare namespace matchers {
      * [testing-library/jest-dom#tohaveerrormessage](https://github.com/testing-library/jest-dom#tohaveerrormessage)
      */
     toHaveErrorMessage(text?: string | RegExp | E): R
+    /**
+     * @description
+     * This allows to assert that an element has a
+     * [text selection](https://developer.mozilla.org/en-US/docs/Web/API/Selection).
+     *
+     * This is useful to check if text or part of the text is selected within an
+     * element. The element can be either an input of type text, a textarea, or any
+     * other element that contains text, such as a paragraph, span, div etc.
+     *
+     * NOTE: the expected selection is a string, it does not allow to check for
+     * selection range indeces.
+     *
+     * @example
+     * <div>
+     * <input type="text" value="text selected text" data-testid="text" />
+     * <textarea data-testid="textarea">text selected text</textarea>
+     * <p data-testid="prev">prev</p>
+     * <p data-testid="parent">text <span data-testid="child">selected</span> text</p>
+     * <p data-testid="next">next</p>
+     * </div>
+     *
+     * getByTestId('text').setSelectionRange(5, 13)
+     * expect(getByTestId('text')).toHaveSelection('selected')
+     *
+     * getByTestId('textarea').setSelectionRange(0, 5)
+     * expect('textarea').toHaveSelection('text ')
+     *
+     * const selection = document.getSelection()
+     * const range = document.createRange()
+     * selection.removeAllRanges()
+     * selection.empty()
+     * selection.addRange(range)
+     *
+     * // selection of child applies to the parent as well
+     * range.selectNodeContents(getByTestId('child'))
+     * expect(getByTestId('child')).toHaveSelection('selected')
+     * expect(getByTestId('parent')).toHaveSelection('selected')
+     *
+     * // selection that applies from prev all, parent text before child, and part child.
+     * range.setStart(getByTestId('prev'), 0)
+     * range.setEnd(getByTestId('child').childNodes[0], 3)
+     * expect(queryByTestId('prev')).toHaveSelection('prev')
+     * expect(queryByTestId('child')).toHaveSelection('sel')
+     * expect(queryByTestId('parent')).toHaveSelection('text sel')
+     * expect(queryByTestId('next')).not.toHaveSelection()
+     *
+     * // selection that applies from part child, parent text after child and part next.
+     * range.setStart(getByTestId('child').childNodes[0], 3)
+     * range.setEnd(getByTestId('next').childNodes[0], 2)
+     * expect(queryByTestId('child')).toHaveSelection('ected')
+     * expect(queryByTestId('parent')).toHaveSelection('ected text')
+     * expect(queryByTestId('prev')).not.toHaveSelection()
+     * expect(queryByTestId('next')).toHaveSelection('ne')
+     *
+     * @see
+     * [testing-library/jest-dom#tohaveselection](https://github.com/testing-library/jest-dom#tohaveselection)
+     */
+    toHaveSelection(selection?: string): R
   }
 }
 

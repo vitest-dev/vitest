@@ -43,7 +43,7 @@ export default function toHaveDisplayValue(
     values.some(value =>
       expected instanceof RegExp
         ? expected.test(value)
-        : this.equals(value, String(expected)),
+        : this.equals(value, String(expected), this.customTesters),
     ),
   ).length
 

@@ -37,7 +37,7 @@ export default function toHaveAccessibleName(
     pass
       = expectedAccessibleName instanceof RegExp
         ? expectedAccessibleName.test(actualAccessibleName)
-        : this.equals(actualAccessibleName, expectedAccessibleName)
+        : this.equals(actualAccessibleName, expectedAccessibleName, this.customTesters)
   }
 
   return {

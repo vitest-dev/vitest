@@ -15,7 +15,7 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { getAriaChecked } from 'ivya/utils'
+import { getAriaChecked as ivyaGetAriaChecked } from 'ivya/utils'
 import { getElementFromUserInput, isInputElement } from './utils'
 
 export default function toBePartiallyChecked(
@@ -42,7 +42,7 @@ export default function toBePartiallyChecked(
     }
   }
 
-  const isPartiallyChecked = getAriaChecked(htmlElement) === 'mixed'
+  const isPartiallyChecked = isAriaMixed(htmlElement)
 
   return {
     pass: isPartiallyChecked,
@@ -60,4 +60,21 @@ export default function toBePartiallyChecked(
       ].join('\n')
     },
   }
+}
+
+function isAriaMixed(element: HTMLElement | SVGElement): boolean {
+  const isMixed = ivyaGetAriaChecked(element) === 'mixed'
+  if (!isMixed) {
+    // playwright only looks at aria-checked if element is not a checkbox/radio
+    if (
+      isInputElement(element)
+      && ['checkbox', 'radio'].includes((element as HTMLInputElement).type)
+    ) {
+      const ariaValue = element.getAttribute('aria-checked')
+      if (ariaValue === 'mixed') {
+        return true
+      }
+    }
+  }
+  return isMixed
 }

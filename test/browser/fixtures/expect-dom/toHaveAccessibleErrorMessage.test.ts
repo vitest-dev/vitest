@@ -21,29 +21,17 @@ describe('.toHaveAccessibleErrorMessage', () => {
       `)
 
       const field = queryByTestId('input')
-      expect(() => expect(field).toHaveAccessibleErrorMessage())
-        .toThrowErrorMatchingInlineSnapshot(`
-        <dim>expect(</><red>element</><dim>).toHaveAccessibleErrorMessage(</><green>expected</><dim>)</>
+      expect(field).toHaveAccessibleErrorMessage()
+      expect(field).toHaveAccessibleErrorMessage(new RegExp(error[0]))
 
-        Expected element's \`aria-errormessage\` attribute to be empty or a single, valid ID:
-
-        Received:
-        <red>  aria-errormessage="error-id id2"</>
-      `)
-
-      // Assume the remaining error messages are the EXACT same as above
-      expect(() =>
-        expect(field).toHaveAccessibleErrorMessage(new RegExp(error[0])),
-      ).toThrow()
+      expect(field).toHaveAccessibleErrorMessage(error + ' ' + secondError)
 
       expect(() => expect(field).toHaveAccessibleErrorMessage(error)).toThrow()
       expect(() =>
         expect(field).toHaveAccessibleErrorMessage(secondError),
       ).toThrow()
 
-      expect(() =>
-        expect(field).toHaveAccessibleErrorMessage(new RegExp(secondError[0])),
-      ).toThrow()
+      expect(field).toHaveAccessibleErrorMessage(new RegExp(secondError[0]))
     })
 
     it('Fails the test if the target element is valid according to the WAI-ARIA spec', () => {
@@ -51,7 +39,11 @@ describe('.toHaveAccessibleErrorMessage', () => {
       const validFieldState = 'false'
       const invalidFieldStates = [
         'true',
-        '',
+        // difference with jest-dom
+        // https://www.w3.org/TR/wai-aria-1.2/#aria-invalid
+        // If the attribute is not present, or its value is false, or its value
+        // is an EMPTY STRING, the default value of false applies.
+        // '',
         'grammar',
         'spelling',
         'asfdafbasdfasa',
@@ -62,7 +54,6 @@ describe('.toHaveAccessibleErrorMessage', () => {
           <div>
             <${input} data-testid="${input}" aria-invalid="${state}" aria-errormessage="${errorId}" />
             <div data-testid="${errorId}" id="${errorId}" role="alert">${error}</div>
-            
             <input data-testid="${noAriaInvalidAttribute}" aria-errormessage="${errorId}" />
           </div>
         `)
@@ -84,23 +75,17 @@ describe('.toHaveAccessibleErrorMessage', () => {
 
       expect(() => expect(fieldWithoutAttribute).toHaveAccessibleErrorMessage())
         .toThrowErrorMatchingInlineSnapshot(`
-        <dim>expect(</><red>element</><dim>).toHaveAccessibleErrorMessage(</><green>expected</><dim>)</>
+          [Error: expect(element).toHaveAccessibleErrorMessage()
 
-        Expected element to be marked as invalid with attribute:
-        <green>  aria-invalid="true"</>
-        Received:
-        <red>  null</>
-      `)
+          Expected element to have accessible error message, but got nothing]
+        `)
 
       expect(() => expect(field).toHaveAccessibleErrorMessage())
         .toThrowErrorMatchingInlineSnapshot(`
-        <dim>expect(</><red>element</><dim>).toHaveAccessibleErrorMessage(</><green>expected</><dim>)</>
+          [Error: expect(element).toHaveAccessibleErrorMessage()
 
-        Expected element to be marked as invalid with attribute:
-        <green>  aria-invalid="true"</>
-        Received:
-        <red>  aria-invalid="false</>
-      `)
+          Expected element to have accessible error message, but got nothing]
+        `)
 
       // Assume the remaining error messages are the EXACT same as above
       expect(() => expect(field).toHaveAccessibleErrorMessage(error)).toThrow()
@@ -140,23 +125,17 @@ describe('.toHaveAccessibleErrorMessage', () => {
 
       expect(() => expect(fieldWithEmptyError).toHaveAccessibleErrorMessage())
         .toThrowErrorMatchingInlineSnapshot(`
-        <dim>expect(</><red>element</><dim>).toHaveAccessibleErrorMessage(</><green>expected</><dim>)</>
+          [Error: expect(element).toHaveAccessibleErrorMessage()
 
-        Expected element to have accessible error message:
-
-        Received:
-
-      `)
+          Expected element to have accessible error message, but got nothing]
+        `)
 
       expect(() => expect(fieldMissingError).toHaveAccessibleErrorMessage())
         .toThrowErrorMatchingInlineSnapshot(`
-        <dim>expect(</><red>element</><dim>).toHaveAccessibleErrorMessage(</><green>expected</><dim>)</>
+          [Error: expect(element).toHaveAccessibleErrorMessage()
 
-        Expected element to have accessible error message:
-
-        Received:
-
-      `)
+          Expected element to have accessible error message, but got nothing]
+        `)
     })
 
     it('Passes the test if the target element has the error message that was SPECIFIED', () => {
@@ -193,13 +172,13 @@ describe('.toHaveAccessibleErrorMessage', () => {
 
       expect(() => expect(field).toHaveAccessibleErrorMessage(''))
         .toThrowErrorMatchingInlineSnapshot(`
-        <dim>expect(</><red>element</><dim>).toHaveAccessibleErrorMessage(</><green>expected</><dim>)</>
+          [Error: expect(element).toHaveAccessibleErrorMessage()
 
-        Expected element to have accessible error message:
+          Expected element to have accessible error message:
 
-        Received:
-        <red>  This field is invalid</>
-      `)
+          Received:
+            This field is invalid]
+        `)
 
       // Assume this error is SIMILAR to the error above
       expect(() => expect(field).toHaveAccessibleErrorMessage(msg)).toThrow()
@@ -212,12 +191,12 @@ describe('.toHaveAccessibleErrorMessage', () => {
       expect(() =>
         expect(field).toHaveAccessibleErrorMessage(new RegExp(msg, 'i')),
       ).toThrowErrorMatchingInlineSnapshot(`
-        <dim>expect(</><red>element</><dim>).toHaveAccessibleErrorMessage(</><green>expected</><dim>)</>
+        [Error: expect(element).toHaveAccessibleErrorMessage()
 
         Expected element to have accessible error message:
-        <green>  /asdflkje2984fguyvb bnafdsasfa;lj/</>
+          /asdflkje2984fguyvb bnafdsasfa;lj/i
         Received:
-        <red>  This field is invalid</>
+          This field is invalid]
       `)
     })
 
@@ -241,26 +220,6 @@ describe('.toHaveAccessibleErrorMessage', () => {
 
   // These tests for the `.not` use cases will help us cover our bases and complete test coverage
   describe('Negated Test Cases', () => {
-    it("Passes the test if an invalid `id` is provided for the target element's `aria-errormessage`", () => {
-      const secondId = 'id2'
-      const secondError = 'LISTEN TO ME!!!'
-
-      const {queryByTestId} = render(`
-        <div>
-          <${input} data-testid="${input}" aria-invalid="${strings.true}" aria-errormessage="${errorId} ${secondId}" />
-          <div data-testid="${errorId}" id="${errorId}" role="alert">${error}</div>
-          <div data-testid="${secondId}" id="${secondId}" role="alert">${secondError}</div>
-        </div>
-      `)
-
-      const field = queryByTestId('input')
-      expect(field).not.toHaveAccessibleErrorMessage()
-      expect(field).not.toHaveAccessibleErrorMessage(error)
-      expect(field).not.toHaveAccessibleErrorMessage(new RegExp(error[0]))
-      expect(field).not.toHaveAccessibleErrorMessage(secondError)
-      expect(field).not.toHaveAccessibleErrorMessage(new RegExp(secondError[0]))
-    })
-
     it('Passes the test if the target element is valid according to the WAI-ARIA spec', () => {
       const {queryByTestId} = render(`
         <div>

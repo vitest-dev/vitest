@@ -21,7 +21,7 @@ export default function toHaveTextContent(
   this: MatcherState,
   actual: Element | Locator,
   matcher: string | RegExp,
-  options: { normalizeWhitespace?: boolean } = {},
+  options: { normalizeWhitespace?: boolean } = { normalizeWhitespace: true },
 ): ExpectationResult {
   const node = getNodeFromUserInput(actual, toHaveTextContent, this)
 

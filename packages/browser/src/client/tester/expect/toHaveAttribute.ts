@@ -29,7 +29,7 @@ export default function toHaveAttribute(
   const receivedValue = htmlElement.getAttribute(attribute)
   return {
     pass: isExpectedValuePresent
-      ? hasAttribute && this.equals(receivedValue, expectedValue)
+      ? hasAttribute && this.equals(receivedValue, expectedValue, this.customTesters)
       : hasAttribute,
     message: () => {
       const to = this.isNot ? 'not to' : 'to'

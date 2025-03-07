@@ -6,13 +6,14 @@ function render(html: string) {
   // asFragment has been stolen from react-testing-library
   const asFragment = () =>
     document.createRange().createContextualFragment(container.innerHTML)
+  const getInputByTestId = (testId: string) => queryByTestId(testId) as HTMLInputElement
 
   // Some tests need to look up global ids with document.getElementById()
   // so we need to be inside an actual document.
   document.body.innerHTML = ''
   document.body.appendChild(container)
 
-  return { container, queryByTestId, asFragment }
+  return { container, queryByTestId, asFragment, getInputByTestId }
 }
 
 export { render }

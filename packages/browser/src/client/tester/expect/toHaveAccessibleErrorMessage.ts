@@ -16,7 +16,7 @@
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
 import { getElementAccessibleErrorMessage } from 'ivya/utils'
-import { getElementFromUserInput, getMessage } from './utils'
+import { getElementFromUserInput, getMessage, redent } from './utils'
 
 export default function toHaveAccessibleErrorMessage(
   this: MatcherState,
@@ -24,7 +24,7 @@ export default function toHaveAccessibleErrorMessage(
   expectedAccessibleErrorMessage?: string | RegExp,
 ): ExpectationResult {
   const htmlElement = getElementFromUserInput(actual, toHaveAccessibleErrorMessage, this)
-  const actualAccessibleErrorMessage = getElementAccessibleErrorMessage(htmlElement)
+  const actualAccessibleErrorMessage = getElementAccessibleErrorMessage(htmlElement) ?? ''
 
   const missingExpectedValue = arguments.length === 1
 
@@ -41,6 +41,7 @@ export default function toHaveAccessibleErrorMessage(
         : this.equals(
             actualAccessibleErrorMessage,
             expectedAccessibleErrorMessage,
+            this.customTesters,
           )
   }
 
@@ -49,6 +50,17 @@ export default function toHaveAccessibleErrorMessage(
 
     message: () => {
       const to = this.isNot ? 'not to' : 'to'
+      if (expectedAccessibleErrorMessage == null) {
+        return [
+          this.utils.matcherHint(
+            `${this.isNot ? '.not' : ''}.toHaveAccessibleErrorMessage`,
+            'element',
+            '',
+          ),
+          `Expected element ${to} have accessible error message, but got${!this.isNot ? ' nothing' : ''}`,
+          this.isNot ? this.utils.RECEIVED_COLOR(redent(actualAccessibleErrorMessage, 2)) : '',
+        ].filter(Boolean).join('\n\n')
+      }
       return getMessage(
         this,
         this.utils.matcherHint(

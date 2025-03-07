@@ -8,9 +8,7 @@ window.customElements.define(
   class extends window.HTMLElement {},
 )
 
-// TODO: playwright has a bug, it doesn't follow
-// https://html.spec.whatwg.org/multipage/form-elements.html#concept-fieldset-disabled
-test.skip('.toBeDisabled', () => {
+test('.toBeDisabled', () => {
   const {queryByTestId} = render(`
     <div>
       <button disabled={true} data-testid="button-element">x</button>
@@ -49,7 +47,12 @@ test.skip('.toBeDisabled', () => {
   expect(queryByTestId('textarea-element')).toBeDisabled()
   expect(queryByTestId('input-element')).toBeDisabled()
 
-  expect(queryByTestId('fieldset-element')).toBeDisabled()
+  // technically, everything inside a disabled fieldset is disabled,
+  // but the fieldset itself is not considered disabled, because its
+  // native tag is not part of
+  // https://www.w3.org/TR/html-aam-1.0/#html-attribute-state-and-property-mappings
+  // NOTE: this is different from jest-dom, but closer to how PW works
+  expect(queryByTestId('fieldset-element')).not.toBeDisabled()
   expect(queryByTestId('fieldset-child-element')).toBeDisabled()
 
   expect(queryByTestId('div-element')).not.toBeDisabled()
@@ -110,10 +113,10 @@ test('.toBeDisabled fieldset>legend', () => {
     `)
 
   expect(queryByTestId('inherited-element')).toBeDisabled()
-  expect(queryByTestId('inside-legend-element')).not.toBeDisabled()
-  expect(queryByTestId('nested-inside-legend-element')).not.toBeDisabled()
+  expect(queryByTestId('inside-legend-element')).toBeDisabled()
+  expect(queryByTestId('nested-inside-legend-element')).toBeDisabled()
 
-  expect(queryByTestId('first-legend-element')).not.toBeDisabled()
+  expect(queryByTestId('first-legend-element')).toBeDisabled()
   expect(queryByTestId('second-legend-element')).toBeDisabled()
 
   expect(queryByTestId('outer-fieldset-element')).toBeDisabled()
@@ -180,7 +183,8 @@ test('.toBeEnabled', () => {
   }).toThrowError()
 
   expect(() => {
-    expect(queryByTestId('fieldset-element')).toBeEnabled()
+    // fieldset elements can't be considered disabled, only their children
+    expect(queryByTestId('fieldset-element')).toBeDisabled()
   }).toThrowError()
   expect(() => {
     expect(queryByTestId('fieldset-child-element')).toBeEnabled()
@@ -256,10 +260,10 @@ test('.toBeEnabled fieldset>legend', () => {
   expect(() => {
     expect(queryByTestId('inherited-element')).toBeEnabled()
   }).toThrowError()
-  expect(queryByTestId('inside-legend-element')).toBeEnabled()
-  expect(queryByTestId('nested-inside-legend-element')).toBeEnabled()
+  expect(queryByTestId('inside-legend-element')).not.toBeEnabled()
+  expect(queryByTestId('nested-inside-legend-element')).not.toBeEnabled()
 
-  expect(queryByTestId('first-legend-element')).toBeEnabled()
+  expect(queryByTestId('first-legend-element')).not.toBeEnabled()
   expect(() => {
     expect(queryByTestId('second-legend-element')).toBeEnabled()
   }).toThrowError()

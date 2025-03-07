@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { render } from './utils'
 
-// some tests fail with playwright "isElementVisible" utility
-describe.todo('.toBeVisible', () => {
+describe('.toBeVisible', () => {
   it('returns the visibility of an element', () => {
     const {container} = render(`
       <div>
@@ -24,7 +23,7 @@ describe.todo('.toBeVisible', () => {
     expect(container.querySelector('h1')).not.toBeVisible()
     expect(container.querySelector('h2')).not.toBeVisible()
     expect(container.querySelector('h3')).not.toBeVisible()
-    expect(container.querySelector('h4')).not.toBeVisible()
+    expect(container.querySelector('h4')).toBeVisible() // element.checkVisibility() returns true for opacity: 0
     expect(container.querySelector('h5')).toBeVisible()
     expect(container.querySelector('button')).not.toBeVisible()
     expect(container.querySelector('strong')).not.toBeVisible()
@@ -146,8 +145,8 @@ describe.todo('.toBeVisible', () => {
             `)
         })
 
-        it('returns false to the details content', () => {
-          expect(subject.container.querySelector('details')).not.toBeVisible()
+        it('returns true to the details content', () => {
+          expect(subject.container.querySelector('details')).toBeVisible()
         })
 
         it('returns true to the details summary', () => {
@@ -188,8 +187,8 @@ describe.todo('.toBeVisible', () => {
         describe('when the user clicks on the summary', () => {
           beforeEach(() => subject.container.querySelector('summary').click())
 
-          it('returns false to the details content', () => {
-            expect(subject.container.querySelector('details')).not.toBeVisible()
+          it('returns true to the details content', () => {
+            expect(subject.container.querySelector('details')).toBeVisible()
           })
 
           it('returns false to the inner small content', () => {
@@ -402,8 +401,8 @@ describe.todo('.toBeVisible', () => {
             `)
           })
 
-          it('returns true to outer unenclosed innerText', () => {
-            expect(subject.container.querySelector('details')).not.toBeVisible()
+          it('returns false to outer unenclosed innerText', () => {
+            expect(subject.container.querySelector('details')).toBeVisible()
           })
 
           it('returns true to outer summary', () => {

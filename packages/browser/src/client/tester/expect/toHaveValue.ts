@@ -15,7 +15,7 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { getElementFromUserInput, getMessage, getSingleElementValue, isInputElement } from './utils'
+import { arrayAsSetComparison, getElementFromUserInput, getMessage, getSingleElementValue, isInputElement } from './utils'
 
 export default function toHaveValue(
   this: MatcherState,
@@ -46,7 +46,7 @@ export default function toHaveValue(
 
   return {
     pass: expectsValue
-      ? this.equals(receivedValue, expectedValue)
+      ? this.equals(receivedValue, expectedValue, [arrayAsSetComparison, ...this.customTesters])
       : Boolean(receivedValue),
     message: () => {
       const to = this.isNot ? 'not to' : 'to'

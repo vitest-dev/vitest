@@ -4,7 +4,7 @@ import { render } from './utils'
 // FIXME
 // playwright prioritizes native checked to aria-checked for "checkbox" elements
 // jest-dom checks aria-checked="mixed" anyway
-describe.todo('.toBePartiallyChecked', () => {
+describe('.toBePartiallyChecked', () => {
   test('handles input checkbox with aria-checked', () => {
     const {queryByTestId} = render(`
       <input type="checkbox" aria-checked="mixed" data-testid="checkbox-mixed" />

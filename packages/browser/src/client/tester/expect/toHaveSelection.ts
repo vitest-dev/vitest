@@ -15,7 +15,7 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { getElementFromUserInput, getMessage, getTag } from './utils'
+import { arrayAsSetComparison, getElementFromUserInput, getMessage, getTag } from './utils'
 
 export default function toHaveSelection(
   this: MatcherState,
@@ -34,7 +34,7 @@ export default function toHaveSelection(
 
   return {
     pass: expectsSelection
-      ? this.equals(receivedSelection, expectedSelection)
+      ? this.equals(receivedSelection, expectedSelection, [arrayAsSetComparison, ...this.customTesters])
       : Boolean(receivedSelection),
     message: () => {
       const to = this.isNot ? 'not to' : 'to'

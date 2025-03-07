@@ -41,6 +41,7 @@ export default function toHaveAccessibleDescription(
         : this.equals(
             actualAccessibleDescription,
             expectedAccessibleDescription,
+            this.customTesters,
           )
   }
 

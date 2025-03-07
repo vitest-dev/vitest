@@ -28,12 +28,11 @@ export default function toHaveClass(
   const received = splitClassNames(htmlElement.getAttribute('class'))
   const expected = expectedClassNames.reduce(
     (acc, className) => {
-      acc.concat(
+      return acc.concat(
         typeof className === 'string' || !className
           ? splitClassNames(className)
           : className,
       )
-      return acc
     },
     [] as (string | RegExp)[],
   )

@@ -107,7 +107,7 @@
     "@wdio/types": "^9.9.0",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.5.0",
+    "ivya": "^1.5.1",
     "mime": "^4.0.6",
     "pathe": "catalog:",
     "periscopic": "^4.0.2",

@@ -16,7 +16,7 @@
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
 import { cssEscape } from 'ivya/utils'
-import { getElementFromUserInput, getSingleElementValue, getTag } from './utils'
+import { arrayAsSetComparison, getElementFromUserInput, getSingleElementValue, getTag } from './utils'
 
 export default function toHaveFormValues(
   this: MatcherState,
@@ -38,7 +38,7 @@ export default function toHaveFormValues(
   const formValues = getAllFormValues(formElement)
   return {
     pass: Object.entries(expectedValues).every(([name, expectedValue]) =>
-      this.equals(formValues[name], expectedValue),
+      this.equals(formValues[name], expectedValue, [arrayAsSetComparison, ...this.customTesters]),
     ),
     message: () => {
       const to = this.isNot ? 'not to' : 'to'

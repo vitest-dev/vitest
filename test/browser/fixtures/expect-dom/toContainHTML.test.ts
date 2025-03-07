@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import { render } from './utils'
-import { commands } from '@vitest/browser/context'
 
 /* eslint-disable max-statements */
 describe('.toContainHTML', () => {
@@ -105,7 +104,7 @@ describe('.toContainHTML', () => {
     try {
       expect(htmlElement).toContainHTML(nonExistantString)
     } catch (error) {
-      errorMessage = await commands.stripVTControlCharacters(error.message)
+      errorMessage = error.message
     }
 
     expect(errorMessage).toMatchInlineSnapshot(`
