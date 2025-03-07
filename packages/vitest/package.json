@@ -167,7 +167,7 @@
     "magic-string": "catalog:",
     "pathe": "catalog:",
     "std-env": "catalog:",
-    "tinybench": "^2.9.0",
+    "tinybench": "^3.1.1",
     "tinyexec": "^0.3.2",
     "tinypool": "^1.0.2",
     "tinyrainbow": "catalog:",
