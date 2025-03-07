@@ -97,7 +97,9 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
         addEventListener: (...args: any[]) => {
           return this._vw_workerTarget.addEventListener(...args as [any, any])
         },
-        removeEventListener: this._vw_workerTarget.removeEventListener,
+        removeEventListener: (...args: any[]) => {
+          return this._vw_workerTarget.removeEventListener(...args as [any, any])
+        },
         get self() {
           return selfProxy
         },
