@@ -654,7 +654,7 @@ export interface TestContext {
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
    */
-  skip: (note?: string) => void
+  skip: (note?: string) => never
 }
 
 /**
