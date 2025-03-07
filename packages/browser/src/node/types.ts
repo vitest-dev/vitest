@@ -1,3 +1,4 @@
+import type { MockedModuleSerialized } from '@vitest/mocker'
 import type { ServerIdResolution, ServerMockResolution } from '@vitest/mocker/node'
 import type { TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
@@ -41,6 +42,10 @@ export interface WebSocketBrowserHandlers {
   ) => SourceMap | null | { mappings: '' } | undefined
   wdioSwitchContext: (direction: 'iframe' | 'parent') => void
 
+  registerMock: (sessionId: string, mock: MockedModuleSerialized) => void
+  unregisterMock: (sessionId: string, id: string) => void
+  clearMocks: (sessionId: string) => void
+
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown
   trackCdpEvent: (sessionId: string, type: 'on' | 'once' | 'off', event: string, listenerId: string) => void
@@ -63,6 +68,11 @@ export interface WebSocketBrowserEvents {
   onCancel: (reason: CancelReason) => void
   createTesters: (files: string[]) => Promise<void>
   cdpEvent: (event: string, payload: unknown) => void
+  resolveManualMock: (url: string) => Promise<{
+    url: string
+    keys: string[]
+    responseId: string
+  }>
 }
 
 export type WebSocketBrowserRPC = BirpcReturn<

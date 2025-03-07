@@ -1,3 +1,4 @@
+import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
   BrowserContext,
@@ -8,10 +9,12 @@ import type {
   Page,
 } from 'playwright'
 import type {
+  BrowserModuleMocker,
   BrowserProvider,
   BrowserProviderInitializationOptions,
   TestProject,
 } from 'vitest/node'
+import { createManualModuleSource } from '@vitest/mocker/node'
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
@@ -39,6 +42,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   public pages: Map<string, Page> = new Map()
 
   private browserPromise: Promise<Browser> | null = null
+
+  public mocker: BrowserModuleMocker = this.createMocker()
 
   getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
@@ -103,6 +108,106 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
+  private createMocker(): BrowserModuleMocker {
+    const idPreficates = new Map<string, (url: URL) => boolean>()
+    const sessionIds = new Map<string, string[]>()
+
+    function createPredicate(sessionId: string, url: string) {
+      const moduleUrl = new URL(url, 'http://localhost')
+      const predicate = (url: URL) => {
+        if (url.searchParams.has('_vitest_original')) {
+          return false
+        }
+
+        // different modules, ignore request
+        if (url.pathname !== moduleUrl.pathname) {
+          return false
+        }
+
+        url.searchParams.delete('t')
+        url.searchParams.delete('v')
+        url.searchParams.delete('import')
+
+        // different search params, ignore request
+        if (url.searchParams.size !== moduleUrl.searchParams.size) {
+          return false
+        }
+
+        // check that all search params are the same
+        for (const [param, value] of url.searchParams.entries()) {
+          if (moduleUrl.searchParams.get(param) !== value) {
+            return false
+          }
+        }
+
+        return true
+      }
+      const ids = sessionIds.get(sessionId) || []
+      ids.push(moduleUrl.href)
+      sessionIds.set(sessionId, ids)
+      idPreficates.set(url, predicate)
+      return predicate
+    }
+
+    return {
+      register: async (sessionId: string, module: MockedModule): Promise<void> => {
+        const page = this.getPage(sessionId)
+        await page.route(createPredicate(sessionId, module.url), async (route) => {
+          if (module.type === 'redirect') {
+            return route.fulfill({
+              status: 302,
+              headers: {
+                Location: module.redirect,
+              },
+            })
+          }
+          else if (module.type === 'automock' || module.type === 'autospy') {
+            const url = new URL(route.request().url())
+            url.searchParams.set('mock', module.type)
+            return route.fulfill({
+              status: 302,
+              headers: {
+                Location: url.href,
+              },
+            })
+          }
+          else if (module.type === 'manual') {
+            const exports = Object.keys(await module.resolve())
+            const body = createManualModuleSource(module.url, exports)
+            return route.fulfill({
+              body,
+              headers: {
+                'Content-Type': 'application/javascript',
+              },
+            })
+          }
+          else {
+            // all types are exhausted
+            const _module: never = module
+          }
+        })
+      },
+      delete: async (sessionId: string, id: string): Promise<void> => {
+        const page = this.getPage(sessionId)
+        const predicate = idPreficates.get(id)
+        if (predicate) {
+          await page.unroute(predicate).finally(() => idPreficates.delete(id))
+        }
+      },
+      clear: async (sessionId: string): Promise<void> => {
+        const page = this.getPage(sessionId)
+        const ids = sessionIds.get(sessionId) || []
+        const promises = ids.map(id => {
+          const predicate = idPreficates.get(id)
+          if (predicate) {
+            return page.unroute(predicate).finally(() => idPreficates.delete(id))
+          }
+        })
+        await Promise.all(promises).finally(() => sessionIds.delete(sessionId))
+      },
+    }
+  }
+
   private async createContext(sessionId: string) {
     if (this.contexts.has(sessionId)) {
       return this.contexts.get(sessionId)!
@@ -113,7 +218,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const options = {
       ...contextOptions,
       ignoreHTTPSErrors: true,
-      serviceWorkers: 'allow',
     } satisfies BrowserContextOptions
     if (this.project.config.browser.ui) {
       options.viewport = null
@@ -154,7 +258,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           const timeout = setTimeout(() => {
             const err = new Error(`Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`)
             reject(err)
-          }, 1000)
+          }, 1000).unref()
           page.on('frameattached', (frame) => {
             clearTimeout(timeout)
             resolve(frame)

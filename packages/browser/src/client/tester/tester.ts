@@ -6,7 +6,7 @@ import { setupDialogsSpy } from './dialog'
 import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
-import { createModuleMockerInterceptor } from './msw'
+import { createModuleMockerInterceptor } from './mocker-interceptor'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { CommandsManager } from './utils'
@@ -37,7 +37,6 @@ async function prepareTestEnvironment(files: string[]) {
 
   getBrowserState().commands = new CommandsManager()
 
-  // TODO: expose `worker`
   const interceptor = createModuleMockerInterceptor()
   const mocker = new VitestBrowserClientMocker(
     interceptor,

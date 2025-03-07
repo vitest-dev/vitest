@@ -3,7 +3,7 @@ import type { MockedModuleSerialized } from '../registry'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path/posix'
 import { ManualMockedModule, MockerRegistry } from '../registry'
-import { cleanUrl } from '../utils'
+import { cleanUrl, createManualModuleSource } from '../utils'
 import { automockModule } from './automockPlugin'
 
 export interface InterceptorPluginOptions {
@@ -11,41 +11,36 @@ export interface InterceptorPluginOptions {
    * @default "__vitest_mocker__"
    */
   globalThisAccessor?: string
+  registry?: MockerRegistry
 }
 
-export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
-  const registry = new MockerRegistry()
+export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugin {
+  const registry = options.registry || new MockerRegistry()
   return {
     name: 'vitest:mocks:interceptor',
     enforce: 'pre',
-    async load(id) {
-      const mock = registry.get(id)
-      if (!mock) {
-        return
-      }
-      if (mock.type === 'manual') {
-        const exports = Object.keys(await mock.resolve())
-        const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
-        const serverUrl = (mock as any).serverUrl as string
-        const module = `const module = globalThis[${accessor}].getFactoryModule("${serverUrl}");`
-        const keys = exports
-          .map((name) => {
-            if (name === 'default') {
-              return `export default module["default"];`
-            }
-            return `export const ${name} = module["${name}"];`
-          })
-          .join('\n')
-        return `${module}\n${keys}`
-      }
-      if (mock.type === 'redirect') {
-        return readFile(mock.redirect, 'utf-8')
-      }
+    load: {
+      order: 'pre',
+      async handler(id) {
+        const mock = registry.get(cleanQuery(id))
+        if (!mock) {
+          return
+        }
+        if (mock.type === 'manual') {
+          const exports = Object.keys(await mock.resolve())
+          const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
+          const serverUrl = (mock as any).serverUrl as string
+          return createManualModuleSource(serverUrl, exports, accessor)
+        }
+        if (mock.type === 'redirect') {
+          return readFile(mock.redirect, 'utf-8')
+        }
+      },
     },
     transform: {
       order: 'post',
       handler(code, id) {
-        const mock = registry.get(id)
+        const mock = registry.get(cleanQuery(id))
         if (!mock) {
           return
         }
@@ -88,11 +83,11 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
       })
       server.ws.on('vitest:interceptor:delete', (id: string) => {
         registry.delete(id)
-        server.ws.send('vitest:interceptor:register:delete')
+        server.ws.send('vitest:interceptor:delete:result')
       })
       server.ws.on('vitest:interceptor:invalidate', () => {
         registry.clear()
-        server.ws.send('vitest:interceptor:register:invalidate')
+        server.ws.send('vitest:interceptor:invalidate:result')
       })
 
       function getFactoryExports(url: string) {
@@ -112,4 +107,10 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
       }
     },
   }
+}
+
+const trailingSeparatorRE = /[?&]$/
+const versionRE = /\bv=\w{8}&?\b/
+function cleanQuery(url: string) {
+  return url.replace(versionRE, '').replace(trailingSeparatorRE, '')
 }

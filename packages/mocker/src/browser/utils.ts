@@ -21,7 +21,7 @@ export function rpc<T>(event: string, data?: any): Promise<T> {
     hot.on(`${event}:result`, function r(data) {
       resolve(data)
       clearTimeout(timeout)
-      hot.off('vitest:mocks:resolvedId:result', r)
+      hot.off(`${event}:result`, r)
     })
   })
 }
