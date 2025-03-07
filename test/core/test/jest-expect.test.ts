@@ -735,6 +735,12 @@ describe('toHaveBeenCalled', () => {
     expect(fn).not.toHaveBeenCalledWith(expect.not.toSatisfy(() => false))
     expect(fn).not.toHaveBeenCalledWith(expect.toBeOneOf([undefined, null]))
   })
+
+  it('no strict equal check for each argument', () => {
+    const fn = vi.fn()
+    fn({ x: undefined, z: 123 })
+    expect(fn).toHaveBeenCalledWith({ y: undefined, z: 123 })
+  })
 })
 
 describe('toHaveBeenCalledWith', () => {
