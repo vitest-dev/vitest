@@ -9,6 +9,7 @@
     "test:playwright": "PROVIDER=playwright pnpm run test:unit",
     "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari pnpm run test:unit",
     "test-fixtures": "vitest",
+    "test-expect-dom": "vitest --root ./fixtures/expect-dom",
     "test-mocking": "vitest --root ./fixtures/mocking",
     "test-timeout": "vitest --root ./fixtures/timeout",
     "test-mocking-watch": "vitest --root ./fixtures/mocking-watch",

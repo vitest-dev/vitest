@@ -34,6 +34,7 @@ export class ParentBrowserProject {
   public injectorJs: Promise<string> | string
   public errorCatcherUrl: string
   public locatorsUrl: string | undefined
+  public matchersUrl: string
   public stateJs: Promise<string> | string
 
   public commands: Record<string, BrowserCommand<any>> = {}
@@ -130,6 +131,7 @@ export class ParentBrowserProject {
     if (builtinProviders.includes(providerName)) {
       this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
     }
+    this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',
