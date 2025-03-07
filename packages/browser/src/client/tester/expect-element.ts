@@ -2,6 +2,7 @@ import type { Locator } from '@vitest/browser/context'
 import type { ExpectPollOptions } from 'vitest'
 import { chai, expect } from 'vitest'
 import { matchers } from './expect'
+import { processTimeoutOptions } from './utils'
 
 expect.extend(matchers)
 expect.element = <T extends Element | Locator>(elementOrLocator: T, options?: ExpectPollOptions) => {
@@ -37,5 +38,5 @@ expect.element = <T extends Element | Locator>(elementOrLocator: T, options?: Ex
     }
 
     return result
-  }, options)
+  }, processTimeoutOptions(options))
 }

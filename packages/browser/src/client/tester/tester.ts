@@ -8,13 +8,14 @@ import {
   startTests,
   stopCoverageInsideWorker,
 } from 'vitest/browser'
-import { CommandsManager, executor, getBrowserState, getConfig, getWorkerState } from '../utils'
+import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
 import { createModuleMockerInterceptor } from './msw'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
+import { CommandsManager } from './utils'
 
 const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 

@@ -576,12 +576,19 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       throw new AssertionError(msg)
     }
   })
+
+  // manually compare array elements since `jestEquals` cannot
+  // apply assymetric matcher to `undefined` array element.
+  function equalsArgumentArray(a: unknown[], b: unknown[]) {
+    return a.length === b.length && a.every((aItem, i) =>
+      jestEquals(aItem, b[i], [...customTesters, iterableEquality]),
+    )
+  }
+
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function (...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.mock.calls.some(callArg =>
-      jestEquals(callArg, args, [...customTesters, iterableEquality]),
-    )
+    const pass = spy.mock.calls.some(callArg => equalsArgumentArray(callArg, args))
     const isNot = utils.flag(this, 'negate') as boolean
 
     const msg = utils.getMessage(this, [
@@ -599,9 +606,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const callCount = spy.mock.calls.length
-    const hasCallWithArgs = spy.mock.calls.some(callArg =>
-      jestEquals(callArg, args, [...customTesters, iterableEquality]),
-    )
+    const hasCallWithArgs = spy.mock.calls.some(callArg => equalsArgumentArray(callArg, args))
     const pass = hasCallWithArgs && callCount === 1
     const isNot = utils.flag(this, 'negate') as boolean
 
@@ -625,7 +630,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const callCount = spy.mock.calls.length
       const isCalled = times <= callCount
       this.assert(
-        jestEquals(nthCall, args, [...customTesters, iterableEquality]),
+        nthCall && equalsArgumentArray(nthCall, args),
         `expected ${ordinalOf(
           times,
         )} "${spyName}" call to have been called with #{exp}${
@@ -648,7 +653,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
 
       this.assert(
-        jestEquals(lastCall, args, [...customTesters, iterableEquality]),
+        lastCall && equalsArgumentArray(lastCall, args),
         `expected last "${spyName}" call to have been called with #{exp}`,
         `expected last "${spyName}" call to not have been called with #{exp}`,
         args,

@@ -37,7 +37,7 @@ test('timeout', async () => {
   await expect(async () => {
     await expect.poll(() => false, { timeout: 100, interval: 10 }).toBe(true)
   }).rejects.toThrowError(expect.objectContaining({
-    message: 'Matcher did not succeed in 100ms',
+    message: 'Matcher did not succeed in time.',
     stack: expect.stringContaining('expect-poll.test.ts:38:68'),
     cause: expect.objectContaining({
       message: 'expected false to be true // Object.is equality',
@@ -60,7 +60,7 @@ test('fake timers don\'t break it', async () => {
   vi.useFakeTimers()
   await expect(async () => {
     await expect.poll(() => false, { timeout: 100 }).toBe(true)
-  }).rejects.toThrowError('Matcher did not succeed in 100ms')
+  }).rejects.toThrowError('Matcher did not succeed in time.')
   vi.useRealTimers()
   const diff = Date.now() - now
   expect(diff >= 100).toBe(true)
@@ -91,7 +91,7 @@ test('toBeDefined', async () => {
   await expect(() =>
     expect.poll(() => 1, { timeout: 100, interval: 10 }).not.toBeDefined(),
   ).rejects.toThrowError(expect.objectContaining({
-    message: 'Matcher did not succeed in 100ms',
+    message: 'Matcher did not succeed in time.',
     cause: expect.objectContaining({
       message: 'expected 1 to be undefined',
     }),
@@ -100,7 +100,7 @@ test('toBeDefined', async () => {
   await expect(() =>
     expect.poll(() => undefined, { timeout: 100, interval: 10 }).toBeDefined(),
   ).rejects.toThrowError(expect.objectContaining({
-    message: 'Matcher did not succeed in 100ms',
+    message: 'Matcher did not succeed in time.',
     cause: expect.objectContaining({
       message: 'expected undefined to be defined',
     }),
@@ -140,7 +140,7 @@ test('should handle failure on last attempt', async () => {
   await expect(async () => {
     await expect.poll(fn, { interval: 10, timeout: 100 }).toBe(1)
   }).rejects.toThrowError(expect.objectContaining({
-    message: 'Matcher did not succeed in 100ms',
+    message: 'Matcher did not succeed in time.',
     cause: expect.objectContaining({
       // makes sure cause message reflects the last attempt value
       message: 'expected 3 to be 1 // Object.is equality',

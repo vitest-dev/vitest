@@ -715,6 +715,32 @@ describe('toHaveBeenCalled', () => {
       }).toThrow(/^expected "spy" to not be called at all[^e]/)
     })
   })
+
+  it('undefined argument', () => {
+    const fn = vi.fn()
+    fn(undefined)
+    expect(fn).not.toHaveBeenCalledWith()
+    expect(fn).toHaveBeenCalledWith(undefined)
+    expect(fn).toHaveBeenCalledWith(expect.toSatisfy(() => true))
+    expect(fn).toHaveBeenCalledWith(expect.not.toSatisfy(() => false))
+    expect(fn).toHaveBeenCalledWith(expect.toBeOneOf([undefined, null]))
+  })
+
+  it('no argument', () => {
+    const fn = vi.fn()
+    fn()
+    expect(fn).toHaveBeenCalledWith()
+    expect(fn).not.toHaveBeenCalledWith(undefined)
+    expect(fn).not.toHaveBeenCalledWith(expect.toSatisfy(() => true))
+    expect(fn).not.toHaveBeenCalledWith(expect.not.toSatisfy(() => false))
+    expect(fn).not.toHaveBeenCalledWith(expect.toBeOneOf([undefined, null]))
+  })
+
+  it('no strict equal check for each argument', () => {
+    const fn = vi.fn()
+    fn({ x: undefined, z: 123 })
+    expect(fn).toHaveBeenCalledWith({ y: undefined, z: 123 })
+  })
 })
 
 describe('toHaveBeenCalledWith', () => {

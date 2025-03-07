@@ -11,6 +11,7 @@
     "test-fixtures": "vitest",
     "test-expect-dom": "vitest --root ./fixtures/expect-dom",
     "test-mocking": "vitest --root ./fixtures/mocking",
+    "test-timeout": "vitest --root ./fixtures/timeout",
     "test-mocking-watch": "vitest --root ./fixtures/mocking-watch",
     "test-locators": "vitest --root ./fixtures/locators",
     "test-different-configs": "vitest --root ./fixtures/multiple-different-configs",
