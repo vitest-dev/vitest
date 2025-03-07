@@ -2,8 +2,9 @@ import type {
   InlineConfig as ViteInlineConfig,
   UserConfig as ViteUserConfig,
 } from 'vite'
+import type { CliOptions } from './cli/cli-api'
 import type { VitestOptions } from './core'
-import type { UserConfig, VitestRunMode } from './types/config'
+import type { VitestRunMode } from './types/config'
 import { resolve } from 'node:path'
 import { slash } from '@vitest/utils'
 import { findUp } from 'find-up'
@@ -15,7 +16,7 @@ import { createViteServer } from './vite'
 
 export async function createVitest(
   mode: VitestRunMode,
-  options: UserConfig,
+  options: CliOptions,
   viteOverrides: ViteUserConfig = {},
   vitestOptions: VitestOptions = {},
 ): Promise<Vitest> {
@@ -33,6 +34,7 @@ export async function createVitest(
 
   const config: ViteInlineConfig = {
     configFile: configPath,
+    configLoader: options.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.mode || mode,
     plugins: await VitestPlugin(options, ctx),

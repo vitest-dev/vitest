@@ -1,4 +1,4 @@
-import type { UserConfig as ViteUserConfig } from 'vite'
+import type { InlineConfig as ViteInlineConfig, UserConfig as ViteUserConfig } from 'vite'
 import type { environments } from '../../integrations/env'
 import type { Vitest, VitestOptions } from '../core'
 import type { TestModule, TestSuite } from '../reporters/reported-tasks'
@@ -28,6 +28,14 @@ export interface CliOptions extends UserConfig {
    * Output collected test files only
    */
   filesOnly?: boolean
+
+  /**
+   * Override vite config's configLoader from cli.
+   * Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly (default: `bundle`).
+   * This is only available with **vite version 6.1.0** and above.
+   * @experimental
+   */
+  configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
 }
 
 /**
