@@ -3,8 +3,8 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { join } from 'pathe'
-import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -23,7 +23,10 @@ const external = [
   /^@?vitest(\/|$)/,
 ]
 
+const dtsUtils = createDtsUtils()
+
 const plugins = [
+  ...dtsUtils.isolatedDecl(),
   nodeResolve(),
   json(),
   commonjs(),
@@ -43,13 +46,13 @@ export default () => [
     plugins,
   },
   {
-    input: entries,
+    input: dtsUtils.dtsInput(entries),
     output: {
       dir: join(process.cwd(), 'dist'),
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
-    plugins: [dts({ respectExternal: true })],
+    plugins: dtsUtils.dts(),
   },
 ]
