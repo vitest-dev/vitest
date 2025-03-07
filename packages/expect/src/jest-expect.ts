@@ -2,7 +2,7 @@ import type { Test } from '@vitest/runner'
 import type { MockInstance, MockResult, MockSettledResult } from '@vitest/spy'
 import type { Constructable } from '@vitest/utils'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
-import type { Assertion, ChaiPlugin, Tester } from './types'
+import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'
 import { assertTypes } from '@vitest/utils'
 import c from 'tinyrainbow'
@@ -577,31 +577,18 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     }
   })
 
-  // special array wrapper to avoid `toEqual` not being able to
+  // manually compare array elements since `jestEquals` cannot
   // apply assymetric matcher to `undefined` array element.
-  class ArgumentArray {
-    constructor(public data: unknown[]) {}
-  }
-
-  const argumentArrayTester: Tester = function (a, b, customTesters) {
-    if (a instanceof ArgumentArray && b instanceof ArgumentArray) {
-      return a.data.length === b.data.length && a.data.every((item, index) =>
-        this.equals(item, b.data[index], customTesters),
-      )
-    }
-    return undefined
+  function equalsArgumentArray(a: unknown[], b: unknown[]) {
+    return a.length === b.length && a.every((aItem, i) =>
+      jestEquals(aItem, b[i], [...customTesters, iterableEquality]),
+    )
   }
 
   def(['toHaveBeenCalledWith', 'toBeCalledWith'], function (...args) {
     const spy = getSpy(this)
     const spyName = spy.getMockName()
-    const pass = spy.mock.calls.some(callArg =>
-      jestEquals(
-        new ArgumentArray(callArg),
-        new ArgumentArray(args),
-        [...customTesters, iterableEquality, argumentArrayTester],
-      ),
-    )
+    const pass = spy.mock.calls.some(callArg => equalsArgumentArray(callArg, args))
     const isNot = utils.flag(this, 'negate') as boolean
 
     const msg = utils.getMessage(this, [
@@ -616,13 +603,10 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     }
   })
   def('toHaveBeenCalledExactlyOnceWith', function (...args) {
-    // TODO: args
     const spy = getSpy(this)
     const spyName = spy.getMockName()
     const callCount = spy.mock.calls.length
-    const hasCallWithArgs = spy.mock.calls.some(callArg =>
-      jestEquals(callArg, args, [...customTesters, iterableEquality]),
-    )
+    const hasCallWithArgs = spy.mock.calls.some(callArg => equalsArgumentArray(callArg, args))
     const pass = hasCallWithArgs && callCount === 1
     const isNot = utils.flag(this, 'negate') as boolean
 
@@ -640,14 +624,13 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(
     ['toHaveBeenNthCalledWith', 'nthCalledWith'],
     function (times: number, ...args: any[]) {
-      // TODO: args
       const spy = getSpy(this)
       const spyName = spy.getMockName()
       const nthCall = spy.mock.calls[times - 1]
       const callCount = spy.mock.calls.length
       const isCalled = times <= callCount
       this.assert(
-        jestEquals(nthCall, args, [...customTesters, iterableEquality]),
+        isCalled && equalsArgumentArray(nthCall, args),
         `expected ${ordinalOf(
           times,
         )} "${spyName}" call to have been called with #{exp}${
@@ -665,13 +648,12 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   def(
     ['toHaveBeenLastCalledWith', 'lastCalledWith'],
     function (...args: any[]) {
-      // TODO: args
       const spy = getSpy(this)
       const spyName = spy.getMockName()
       const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
 
       this.assert(
-        jestEquals(lastCall, args, [...customTesters, iterableEquality]),
+        equalsArgumentArray(lastCall, args),
         `expected last "${spyName}" call to have been called with #{exp}`,
         `expected last "${spyName}" call to not have been called with #{exp}`,
         args,
