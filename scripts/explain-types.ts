@@ -1,9 +1,8 @@
-import { readFileSync, writeFileSync } from 'node:fs';
-import { styleText } from 'node:util'
+import { readFileSync } from 'node:fs'
 
 // { dep: ['dep2'], dep2: [] }
 const dependencies: Record<string, string[]> = {}
-const content = readFileSync('./explainTypes.txt', 'utf-8').split('\n')
+const content = readFileSync('../explainTypes.txt', 'utf-8').split('\n')
 
 let lastKey = content[0]
 for (let i = 1; i < content.length; i++) {
@@ -22,15 +21,11 @@ for (let i = 1; i < content.length; i++) {
     if (!dependencies[from].includes(lastKey)) {
       dependencies[from].push(lastKey)
     }
-  } else {
+  }
+  else {
     lastKey = content[i]
   }
 }
-
-const start = 'src/client/tester/public-utils.ts'
-const startNode = dependencies[start]
-
-// console.log(dependencies)
 
 function printTree(start: string, deps: string[], depth = 1, seen = new Set()) {
   for (const dep of deps) {
@@ -38,21 +33,17 @@ function printTree(start: string, deps: string[], depth = 1, seen = new Set()) {
       continue
     }
     seen.add(dep)
-    console.log('  '.repeat(depth) + (dep.includes('vitest/src/public/node.ts') ? styleText('red', dep) : dep))
+    console.error('  '.repeat(depth) + dep)
     const deps = dependencies[dep]
-    if (!deps || dep.includes('node_modules')) {
-      // console.log('no deps', dep)
-    } else {
+    if (deps && !dep.includes('node_modules')) {
       printTree(start, deps, depth + 1, seen)
     }
   }
 }
 
 for (const key in dependencies) {
-  if (key.startsWith('src/client/tester/runner.ts')) {
-    console.log(key)
+  if (key.startsWith('src/client')) {
+    console.error(key)
     printTree(key, dependencies[key])
   }
 }
-
-// writeFileSync('tsDeps.json', JSON.stringify(dependencies, null, 2), 'utf-8')

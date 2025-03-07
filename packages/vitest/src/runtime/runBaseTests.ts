@@ -1,4 +1,5 @@
 import type { FileSpecification } from '@vitest/runner'
+import type { ModuleCacheMap } from 'vite-node/client'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
@@ -14,7 +15,6 @@ import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupGlobalEnv, withEnv } from './setup-node'
 import { getWorkerState, resetModules } from './utils'
-import { ModuleCacheMap } from 'vite-node/client'
 
 // browser shouldn't call this!
 export async function run(

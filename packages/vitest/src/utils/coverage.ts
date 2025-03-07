@@ -1,5 +1,5 @@
-import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ModuleExecutionInfo } from 'vite-node/client'
+import type { SerializedCoverageConfig } from '../runtime/config'
 
 export const CoverageProviderMap: Record<string, string> = {
   v8: '@vitest/coverage-v8',

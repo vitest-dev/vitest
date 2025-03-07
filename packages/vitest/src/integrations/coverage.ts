@@ -1,5 +1,6 @@
 import type { SerializedCoverageConfig } from '../runtime/config'
-import { resolveCoverageProviderModule, RuntimeCoverageModuleLoader } from '../utils/coverage'
+import type { RuntimeCoverageModuleLoader } from '../utils/coverage'
+import { resolveCoverageProviderModule } from '../utils/coverage'
 
 export async function startCoverageInsideWorker(
   options: SerializedCoverageConfig | undefined,

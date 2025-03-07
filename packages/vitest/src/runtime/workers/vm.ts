@@ -1,4 +1,5 @@
 import type { Context } from 'node:vm'
+import type { ModuleCacheMap } from 'vite-node/client'
 import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
 import { isContext } from 'node:vm'
@@ -9,7 +10,6 @@ import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { ExternalModulesExecutor } from '../external-executor'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
-import { ModuleCacheMap } from 'vite-node/client'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 

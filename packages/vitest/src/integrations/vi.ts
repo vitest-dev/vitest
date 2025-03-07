@@ -6,6 +6,7 @@ import type {
   MaybePartiallyMockedDeep,
   MockInstance,
 } from '@vitest/spy'
+import type { ModuleCacheMap } from 'vite-node'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { VitestMocker } from '../runtime/mocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
@@ -15,7 +16,6 @@ import { getWorkerState, isChildProcess, resetModules, waitForImportsToResolve }
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
 import { waitFor, waitUntil } from './wait'
-import { ModuleCacheMap } from 'vite-node'
 
 type ESModuleExports = Record<string, unknown>
 
@@ -692,8 +692,8 @@ function createVitest(): VitestUtils {
     resetModules() {
       // @ts-expect-error injected by the browser
       if (typeof __vitest_browser_runner__ !== 'undefined') {
-        throw new Error(
-          `vi.resetModules() is not supported in the browser environment.`
+        throw new TypeError(
+          `vi.resetModules() is not supported in the browser environment.`,
         )
       }
       resetModules(workerState.moduleCache as ModuleCacheMap)

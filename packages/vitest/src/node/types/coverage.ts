@@ -1,8 +1,8 @@
 import type { ReportOptions } from 'istanbul-reports'
 import type { TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta, Arrayable } from '../../types/general'
+import type { RuntimeCoverageModuleLoader, RuntimeCoverageProviderModule } from '../../utils/coverage'
 import type { Vitest } from '../core'
-import { RuntimeCoverageProviderModule, RuntimeCoverageModuleLoader } from '../../utils/coverage'
 
 type TransformResult =
   | string

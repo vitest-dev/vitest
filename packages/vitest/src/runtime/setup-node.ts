@@ -1,3 +1,4 @@
+import type { ModuleCacheMap } from 'vite-node/client'
 import type { ResolvedTestEnvironment } from '../types/environment'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
@@ -13,7 +14,6 @@ import { resolveSnapshotEnvironment } from '../integrations/snapshot/environment
 import * as VitestIndex from '../public/index'
 import { setupCommonEnv } from './setup-common'
 import { getWorkerState } from './utils'
-import { ModuleCacheMap } from 'vite-node/client'
 
 // this should only be used in Node
 let globalSetup = false

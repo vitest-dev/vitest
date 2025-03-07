@@ -1,4 +1,5 @@
 import type { FileSpecification } from '@vitest/runner'
+import type { ModuleCacheMap } from 'vite-node/client'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
@@ -20,7 +21,6 @@ import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
 import { getWorkerState } from './utils'
-import { ModuleCacheMap } from 'vite-node/client'
 
 export async function run(
   method: 'run' | 'collect',
