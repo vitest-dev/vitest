@@ -36,8 +36,8 @@
   "dependencies": {
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^5.2.0",
-    "tinyrainbow": "^2.0.0"
+    "chai": "catalog:",
+    "tinyrainbow": "catalog:"
   },
   "devDependencies": {
     "@types/chai": "5.0.1",
