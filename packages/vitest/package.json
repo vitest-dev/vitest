@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -202,7 +202,7 @@
     "micromatch": "^4.0.8",
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
-    "strip-literal": "^2.1.1",
+    "strip-literal": "^3.0.0",
     "tinyglobby": "^0.2.12",
     "ws": "^8.18.1"
   }
