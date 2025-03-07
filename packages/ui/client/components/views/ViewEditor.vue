@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type CodeMirror from 'codemirror'
-import type { ErrorWithDiff, File } from 'vitest'
+import type { RunnerTestFile, TestError } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
@@ -9,7 +9,7 @@ import { openInEditor } from '~/composables/error'
 import { lineNumber } from '~/composables/params'
 
 const props = defineProps<{
-  file?: File
+  file?: RunnerTestFile
 }>()
 
 const emit = defineEmits<{ (event: 'draft', value: boolean): void }>()
@@ -118,7 +118,7 @@ watch(
   { immediate: true },
 )
 
-function createErrorElement(e: ErrorWithDiff) {
+function createErrorElement(e: TestError) {
   const stacks = (e?.stacks || []).filter(
     i => i.file && i.file === props.file?.filepath,
   )

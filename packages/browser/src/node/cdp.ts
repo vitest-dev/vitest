@@ -1,5 +1,5 @@
 import type { CDPSession } from 'vitest/node'
-import type { WebSocketBrowserRPC } from './types'
+import type { WebSocketBrowserRPC } from '../types'
 
 export class BrowserServerCDPHandler {
   private listenerIds: Record<string, string[]> = {}

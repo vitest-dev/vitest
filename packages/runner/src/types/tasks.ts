@@ -1,4 +1,4 @@
-import type { Awaitable, ErrorWithDiff } from '@vitest/utils'
+import type { Awaitable, TestError } from '@vitest/utils'
 import type { FixtureItem } from '../fixture'
 import type { ChainableFunction } from '../utils/chain'
 
@@ -118,7 +118,7 @@ export interface TaskResult {
    * Errors that occurred during the task execution. It is possible to have several errors
    * if `expect.soft()` failed multiple times or `retry` was triggered.
    */
-  errors?: ErrorWithDiff[]
+  errors?: TestError[]
   /**
    * How long in milliseconds the task took to run.
    */

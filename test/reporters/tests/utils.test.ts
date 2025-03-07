@@ -1,5 +1,5 @@
 import type { ViteNodeRunner } from 'vite-node/client'
-import type { Vitest } from 'vitest'
+import type { Vitest } from 'vitest/node'
 /**
  * @format
  */

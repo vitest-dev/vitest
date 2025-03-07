@@ -1,5 +1,5 @@
 import type { VitestBrowserClient } from '@vitest/browser/client'
-import type { SnapshotEnvironment } from 'vitest/snapshot'
+import type { SnapshotEnvironment } from '@vitest/snapshot'
 import { originalPositionFor, type ParsedStack, TraceMap } from 'vitest/utils'
 
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {

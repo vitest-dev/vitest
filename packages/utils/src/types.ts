@@ -17,10 +17,6 @@ export type DeepMerge<F, S> = MergeInsertions<{
         : never;
 }>
 
-export type MutableArray<T extends readonly any[]> = {
-  -readonly [k in keyof T]: T[k];
-}
-
 export interface Constructable {
   new (...args: any[]): any
 }
@@ -48,23 +44,20 @@ export interface TestError extends SerializedError {
   expected?: string
 }
 
-/**
- * @deprecated Use `TestError` instead
- */
-export interface ErrorWithDiff {
-  message: string
-  name?: string
-  cause?: unknown
-  nameStr?: string
-  stack?: string
-  stackStr?: string
-  stacks?: ParsedStack[]
-  showDiff?: boolean
-  actual?: any
-  expected?: any
-  operator?: string
-  type?: string
-  frame?: string
-  diff?: string
-  codeFrame?: string
-}
+// export interface ErrorWithDiff {
+//   message: string
+//   name?: string
+//   cause?: unknown
+//   nameStr?: string
+//   stack?: string
+//   stackStr?: string
+//   stacks?: ParsedStack[]
+//   showDiff?: boolean
+//   actual?: any
+//   expected?: any
+//   operator?: string
+//   type?: string
+//   frame?: string
+//   diff?: string
+//   codeFrame?: string
+// }

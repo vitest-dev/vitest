@@ -1,5 +1,5 @@
 import type { File, Task, TaskResultPack } from '@vitest/runner'
-import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
+import type { TestError, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import { performance } from 'node:perf_hooks'
@@ -186,7 +186,7 @@ export abstract class BaseReporter implements Reporter {
     return getTestName(test, separator)
   }
 
-  protected formatShortError(error: ErrorWithDiff): string {
+  protected formatShortError(error: TestError): string {
     return `${F_RIGHT} ${error.message}`
   }
 
@@ -500,7 +500,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: ErrorWithDiff | undefined, tests: Task[]][] = []
+    const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []
 
     for (const task of tasks) {
       // Merge identical errors

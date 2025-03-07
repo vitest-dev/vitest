@@ -1,4 +1,9 @@
-import type { UserEventClickOptions, UserEventDragAndDropOptions, UserEventHoverOptions, UserEventSelectOptions } from '@vitest/browser/context'
+import type {
+  UserEventClickOptions,
+  UserEventDragAndDropOptions,
+  UserEventHoverOptions,
+  UserEventSelectOptions,
+} from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,

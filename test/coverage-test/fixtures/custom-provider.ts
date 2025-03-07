@@ -1,6 +1,13 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { normalize, resolve, sep } from 'node:path'
-import type { AfterSuiteRunMeta, CoverageProvider, CoverageProviderModule, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest'
+import type {
+  CoverageProvider,
+  CoverageProviderModule,
+  ReportContext,
+  ResolvedCoverageOptions,
+  Vitest
+} from 'vitest/node'
+import type { AfterSuiteRunMeta } from 'vitest'
 
 const CustomCoverageProviderModule: CoverageProviderModule = {
   getProvider(): CoverageProvider {

@@ -1,1 +1,1 @@
-export { BaseCoverageProvider } from '../utils/coverage'
+export { BaseCoverageProvider } from '../node/coverage'

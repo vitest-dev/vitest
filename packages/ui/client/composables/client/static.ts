@@ -1,8 +1,8 @@
 import type { VitestClient } from '@vitest/ws-client'
 import type { BirpcReturn } from 'birpc'
 import type {
-  File,
   ModuleGraphData,
+  RunnerTestFile,
   SerializedConfig,
   WebSocketEvents,
   WebSocketHandlers,
@@ -13,7 +13,7 @@ import { StateManager } from '../../../../ws-client/src/state'
 
 interface HTMLReportMetadata {
   paths: string[]
-  files: File[]
+  files: RunnerTestFile[]
   config: SerializedConfig
   projects: string[]
   moduleGraph: Record<string, Record<string, ModuleGraphData>>

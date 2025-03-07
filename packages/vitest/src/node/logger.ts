@@ -1,5 +1,5 @@
 import type { Task } from '@vitest/runner'
-import type { ErrorWithDiff } from '@vitest/utils'
+import type { TestError } from '@vitest/utils'
 import type { Writable } from 'node:stream'
 import type { TypeCheckError } from '../typecheck/typechecker'
 import type { Vitest } from './core'
@@ -267,7 +267,7 @@ export class Logger {
     errors.forEach((err) => {
       this.printError(err, {
         fullStack: true,
-        type: (err as ErrorWithDiff).type || 'Unhandled Error',
+        type: (err as TestError).type as string || 'Unhandled Error',
       })
     })
     this.error(c.red(divider()))
