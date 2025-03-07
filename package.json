@@ -62,7 +62,7 @@
     "tinyglobby": "^0.2.12",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "vite": "^6.2.0",
+    "vite": "https://pkg.pr.new/vite@7e7b660",
     "vitest": "workspace:*",
     "zx": "^8.3.2"
   },
