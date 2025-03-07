@@ -6,11 +6,11 @@ import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { dirname, join, normalize, resolve } from 'pathe'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 import license from 'rollup-plugin-license'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -19,6 +19,7 @@ const entries = {
   'path': 'src/paths.ts',
   'index': 'src/public/index.ts',
   'cli': 'src/node/cli.ts',
+  'config': 'src/public/config.ts',
   'node': 'src/public/node.ts',
   'suite': 'src/public/suite.ts',
   'browser': 'src/public/browser.ts',
@@ -73,6 +74,7 @@ const external = [
   'node:stream',
   'node:vm',
   'node:http',
+  'node:console',
   'inspector',
   'vite-node/source-map',
   'vite-node/client',
@@ -92,6 +94,8 @@ const external = [
 ]
 
 const dir = dirname(fileURLToPath(import.meta.url))
+
+const dtsUtils = createDtsUtils()
 
 const plugins = [
   nodeResolve({
@@ -115,7 +119,11 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].js',
       },
       external,
-      plugins: [...plugins, !watch && licensePlugin()],
+      plugins: [
+        ...dtsUtils.isolatedDecl(),
+        ...plugins,
+        !watch && licensePlugin(),
+      ],
       onwarn,
     },
     {
@@ -125,16 +133,12 @@ export default ({ watch }) =>
           file: 'dist/config.cjs',
           format: 'cjs',
         },
-        {
-          file: 'dist/config.js',
-          format: 'esm',
-        },
       ],
       external,
       plugins,
     },
     {
-      input: dtsEntries,
+      input: dtsUtils.dtsInput(dtsEntries),
       output: {
         dir: 'dist',
         entryFileNames: chunk =>
@@ -143,7 +147,7 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
       external,
-      plugins: [dts({ respectExternal: true })],
+      plugins: dtsUtils.dts(),
     },
   ])
 

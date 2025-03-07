@@ -22,6 +22,132 @@ Error: Something truly horrible has happened!
 "
 `;
 
+exports[`stacktrace in dependency package > external 1`] = `
+"
+⎯⎯ Failed Tests 4 ⎯⎯
+
+ FAIL  error-in-package.test.js > js
+Error: __TEST_STACK__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
+ ❯ error-in-package.test.js:8:12
+      6| 
+      7| test('js', () => {
+      8|   testStack()
+       |            ^
+      9| })
+     10| 
+
+⎯⎯[1/4]⎯
+
+ FAIL  error-in-package.test.js > ts
+Error: __TEST_STACK_TS__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:22:9
+     20|  */
+     21| function innerTestStack() {
+     22|   throw new Error('__TEST_STACK_TS__')
+       |         ^
+     23| }
+     24| 
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:12:3
+ ❯ error-in-package.test.js:12:14
+
+⎯⎯[2/4]⎯
+
+ FAIL  error-in-package.test.js > transpiled
+Error: __TEST_STACK_TRANSPILED__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:22:9
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:12:3
+ ❯ error-in-package.test.js:16:22
+     14| 
+     15| test('transpiled', () => {
+     16|   testStackTranspiled()
+       |                      ^
+     17| })
+     18| 
+
+⎯⎯[3/4]⎯
+
+ FAIL  error-in-package.test.js > transpiled inline
+Error: __TEST_STACK_TRANSPILED_INLINE__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:22:9
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:12:3
+ ❯ error-in-package.test.js:20:28
+     18| 
+     19| test('transpiled inline', () => {
+     20|   testStackTranspiledInline()
+       |                            ^
+     21| })
+     22| 
+
+⎯⎯[4/4]⎯
+
+"
+`;
+
+exports[`stacktrace in dependency package > inline 1`] = `
+"
+⎯⎯ Failed Tests 4 ⎯⎯
+
+ FAIL  error-in-package.test.js > js
+Error: __TEST_STACK__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
+      8| 
+      9| function innerTestStack() {
+     10|   throw new Error('__TEST_STACK__')
+       |         ^
+     11| }
+     12| 
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
+ ❯ error-in-package.test.js:8:12
+
+⎯⎯[1/4]⎯
+
+ FAIL  error-in-package.test.js > ts
+Error: __TEST_STACK_TS__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:22:9
+     20|  */
+     21| function innerTestStack() {
+     22|   throw new Error('__TEST_STACK_TS__')
+       |         ^
+     23| }
+     24| 
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:12:3
+ ❯ error-in-package.test.js:12:14
+
+⎯⎯[2/4]⎯
+
+ FAIL  error-in-package.test.js > transpiled
+Error: __TEST_STACK_TRANSPILED__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:22:9
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:12:3
+ ❯ error-in-package.test.js:16:22
+     14| 
+     15| test('transpiled', () => {
+     16|   testStackTranspiled()
+       |                      ^
+     17| })
+     18| 
+
+⎯⎯[3/4]⎯
+
+ FAIL  error-in-package.test.js > transpiled inline
+Error: __TEST_STACK_TRANSPILED_INLINE__
+ ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:22:9
+ ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:12:3
+ ❯ error-in-package.test.js:20:28
+     18| 
+     19| test('transpiled inline', () => {
+     20|   testStackTranspiledInline()
+       |                            ^
+     21| })
+     22| 
+
+⎯⎯[4/4]⎯
+
+"
+`;
+
 exports[`stacktrace in vmThreads 1`] = `
 "
 ⎯⎯ Failed Tests 1 ⎯⎯
@@ -114,6 +240,17 @@ exports[`stacktraces should respect sourcemaps > error-in-deps.test.js 1`] = `
 
 ⎯⎯[1/1]⎯
 
+"
+`;
+
+exports[`stacktraces should respect sourcemaps > error-in-package.test.js 1`] = `
+" ❯ error-in-package.test.js:8:12
+      6| 
+      7| test('js', () => {
+      8|   testStack()
+       |            ^
+      9| })
+     10| 
 "
 `;
 
