@@ -103,6 +103,7 @@ export default ({ mode }: { mode: string }) => {
               },
             }),
           ],
+      languages: ['js', 'jsx', 'ts', 'tsx'],
     },
     themeConfig: {
       logo: '/logo.svg',
