@@ -1,4 +1,3 @@
-import type { RawSourceMap } from 'vite-node'
 import type { RuntimeRPC } from '../../types/rpc'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
