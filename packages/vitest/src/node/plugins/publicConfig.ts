@@ -49,6 +49,7 @@ export async function resolveConfig(
     updatedOptions,
     config,
   )
+  await vitest.close()
   return {
     viteConfig: config,
     vitestConfig,
