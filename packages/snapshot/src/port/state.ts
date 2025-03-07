@@ -6,7 +6,7 @@
  */
 
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
-import type { ParsedStack } from '../../../utils/src/index'
+import type { ParsedStack } from '@vitest/utils'
 import type {
   SnapshotData,
   SnapshotEnvironment,

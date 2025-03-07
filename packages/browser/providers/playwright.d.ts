@@ -41,6 +41,7 @@ type PWFillOptions = NonNullable<Parameters<Page['fill']>[2]>
 type PWScreenshotOptions = NonNullable<Parameters<Page['screenshot']>[0]>
 type PWSelectOptions = NonNullable<Parameters<Page['selectOption']>[2]>
 type PWDragAndDropOptions = NonNullable<Parameters<Page['dragAndDrop']>[2]>
+type PWSetInputFiles = NonNullable<Parameters<Page['setInputFiles']>[2]>
 
 declare module '@vitest/browser/context' {
   export interface UserEventHoverOptions extends PWHoverOptions {}
@@ -50,6 +51,7 @@ declare module '@vitest/browser/context' {
   export interface UserEventFillOptions extends PWFillOptions {}
   export interface UserEventSelectOptions extends PWSelectOptions {}
   export interface UserEventDragAndDropOptions extends PWDragAndDropOptions {}
+  export interface UserEventUploadOptions extends PWSetInputFiles {}
 
   export interface ScreenshotOptions extends PWScreenshotOptions {}
 
