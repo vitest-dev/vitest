@@ -1,8 +1,7 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
-import type { SnapshotUpdateState } from '@vitest/snapshot'
-import type { SnapshotEnvironment } from '@vitest/snapshot/environment'
+import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { SerializedDiffOptions } from '@vitest/utils/diff'
 
 /**

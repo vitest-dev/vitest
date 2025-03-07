@@ -1,6 +1,11 @@
 import type { SerializedConfig } from 'vitest'
 import { channel, client } from '@vitest/browser/client'
-import { globalChannel, type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent } from '@vitest/browser/client'
+import {
+  globalChannel,
+  type GlobalChannelIncomingEvent,
+  type IframeChannelEvent,
+  type IframeChannelIncomingEvent,
+} from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 import { getUiAPI } from './ui'

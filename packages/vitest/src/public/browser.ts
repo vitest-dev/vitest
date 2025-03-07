@@ -1,5 +1,4 @@
 export {
-  getCoverageProvider,
   startCoverageInsideWorker,
   stopCoverageInsideWorker,
   takeCoverageInsideWorker,

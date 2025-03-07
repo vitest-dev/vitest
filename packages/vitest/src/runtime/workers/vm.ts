@@ -9,6 +9,7 @@ import { getDefaultRequestStubs, startVitestExecutor } from '../execute'
 import { ExternalModulesExecutor } from '../external-executor'
 import { provideWorkerState } from '../utils'
 import { FileMap } from '../vm/file-map'
+import { ModuleCacheMap } from 'vite-node/client'
 
 const entryFile = pathToFileURL(resolve(distDir, 'workers/runVmTests.js')).href
 
@@ -76,7 +77,7 @@ export async function runVmTests(method: 'run' | 'collect', state: WorkerGlobalS
 
   const executor = await startVitestExecutor({
     context,
-    moduleCache: state.moduleCache,
+    moduleCache: state.moduleCache as ModuleCacheMap,
     state,
     externalModulesExecutor,
     requestStubs: stubs,

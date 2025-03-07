@@ -21,7 +21,7 @@ import { ViteNodeServer } from 'vite-node/server'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
-import { getCoverageProvider } from '../integrations/coverage'
+import { getCoverageProvider } from './coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'

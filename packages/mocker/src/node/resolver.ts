@@ -1,5 +1,6 @@
 import type { PartialResolvedId } from 'rollup'
 import type { ResolvedConfig as ViteConfig, ViteDevServer } from 'vite'
+import type { ServerIdResolution, ServerMockResolution } from '../types'
 import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, join, resolve } from 'pathe'
 import { cleanUrl } from '../utils'
@@ -178,18 +179,4 @@ function withTrailingSlash(path: string): string {
   }
 
   return path
-}
-
-export interface ServerMockResolution {
-  mockType: 'manual' | 'redirect' | 'automock' | 'autospy'
-  resolvedId: string
-  resolvedUrl: string
-  needsInterop?: boolean
-  redirectUrl?: string | null
-}
-
-export interface ServerIdResolution {
-  id: string
-  url: string
-  optimized: boolean
 }

@@ -14,6 +14,7 @@ import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupGlobalEnv, withEnv } from './setup-node'
 import { getWorkerState, resetModules } from './utils'
+import { ModuleCacheMap } from 'vite-node/client'
 
 // browser shouldn't call this!
 export async function run(
@@ -56,7 +57,7 @@ export async function run(
       for (const file of files) {
         if (isolate) {
           executor.mocker.reset()
-          resetModules(workerState.moduleCache, true)
+          resetModules(workerState.moduleCache as ModuleCacheMap, true)
         }
 
         workerState.filepath = file.filepath

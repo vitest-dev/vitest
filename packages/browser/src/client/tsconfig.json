@@ -1,0 +1,19 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "esnext",
+      "DOM.Iterable"
+    ],
+    "types": ["vite/client"]
+  },
+  "include": [
+    "./**/*.ts",
+    "../types.ts",
+    "../../matchers.d.ts"
+  ],
+  "exclude": [
+    "./vite.config.ts"
+  ]
+}

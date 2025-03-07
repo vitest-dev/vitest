@@ -1,10 +1,13 @@
-import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
-import type { RunnerTask } from 'vitest'
+import type {
+  Options as TestingLibraryOptions,
+  UserEvent as TestingLibraryUserEvent,
+} from '@testing-library/user-event'
 import type {
   BrowserPage,
   Locator,
   UserEvent,
-} from '../../../context'
+} from '@vitest/browser/context'
+import type { RunnerTask } from 'vitest'
 import type { BrowserRunnerState } from '../utils'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertElementToCssSelector, processTimeoutOptions } from './utils'
@@ -280,12 +283,19 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
-    return ensureAwaited(error => triggerCommand('__vitest_screenshot', [name, processTimeoutOptions({
-      ...options,
-      element: options.element
-        ? convertToSelector(options.element)
-        : undefined,
-    })], error))
+    return ensureAwaited(error => triggerCommand(
+      '__vitest_screenshot',
+      [
+        name,
+        processTimeoutOptions({
+          ...options,
+          element: options.element
+            ? convertToSelector(options.element)
+            : undefined,
+        } as any),
+      ],
+      error,
+    ))
   },
   getByRole() {
     throw new Error(`Method "getByRole" is not implemented in the "${provider}" provider.`)

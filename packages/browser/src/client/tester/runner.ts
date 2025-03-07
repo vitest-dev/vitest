@@ -1,6 +1,5 @@
 import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
-import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
@@ -173,8 +172,8 @@ export async function initiateRunner(
   })
 
   const [diffOptions] = await Promise.all([
-    loadDiffConfig(config, executor as unknown as VitestExecutor),
-    loadSnapshotSerializers(config, executor as unknown as VitestExecutor),
+    loadDiffConfig(config, executor as any),
+    loadSnapshotSerializers(config, executor as any),
   ])
   runner.config.diffOptions = diffOptions
   cachedRunner = runner

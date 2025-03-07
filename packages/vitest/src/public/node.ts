@@ -1,7 +1,5 @@
-import type { ModuleDiagnostic as _FileDiagnostic } from '../node/reporters/reported-tasks'
 import { createServer as _createServer } from 'vite'
 import { Vitest } from '../node/core'
-import { TestModule as _TestFile } from '../node/reporters/reported-tasks'
 
 export const version: string = Vitest.version
 
@@ -79,8 +77,6 @@ export type {
   ProjectBrowser,
   ResolvedBrowserOptions,
 } from '../node/types/browser'
-/** @deprecated use `createViteServer` instead */
-export const createServer: typeof _createServer = _createServer
 export const createViteServer: typeof _createServer = _createServer
 export type {
   ApiConfig,
@@ -122,17 +118,8 @@ export type {
 } from '../node/types/coverage'
 
 export type { TestRunResult } from '../node/types/tests'
-/**
- * @deprecated Use `TestModule` instead
- */
-export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
-
-/**
- * @deprecated Use `ModuleDiagnostic` instead
- */
-export type FileDiagnostic = _FileDiagnostic
 
 export { distDir, rootDir } from '../paths'
 

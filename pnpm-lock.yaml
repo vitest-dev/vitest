@@ -391,6 +391,9 @@ importers:
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
+      '@vitest/snapshot':
+        specifier: workspace:*
+        version: link:../snapshot
       '@vitest/ui':
         specifier: workspace:*
         version: link:../ui

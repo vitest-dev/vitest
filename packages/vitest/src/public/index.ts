@@ -130,5 +130,4 @@ export type {
 } from '@vitest/spy'
 
 export type { SerializedError, TestError } from '@vitest/utils'
-
 export type { DiffOptions } from '@vitest/utils/diff'

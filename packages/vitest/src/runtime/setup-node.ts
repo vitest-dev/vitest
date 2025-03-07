@@ -13,6 +13,7 @@ import { resolveSnapshotEnvironment } from '../integrations/snapshot/environment
 import * as VitestIndex from '../public/index'
 import { setupCommonEnv } from './setup-common'
 import { getWorkerState } from './utils'
+import { ModuleCacheMap } from 'vite-node/client'
 
 // this should only be used in Node
 let globalSetup = false
@@ -66,7 +67,7 @@ export async function setupGlobalEnv(
   }
 
   installSourcemapsSupport({
-    getSourceMap: source => state.moduleCache.getSourceMap(source),
+    getSourceMap: source => (state.moduleCache as ModuleCacheMap).getSourceMap(source),
   })
 
   if (!config.disableConsoleIntercept) {

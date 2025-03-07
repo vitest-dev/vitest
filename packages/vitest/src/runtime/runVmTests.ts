@@ -20,6 +20,7 @@ import { closeInspector } from './inspector'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
 import { getWorkerState } from './utils'
+import { ModuleCacheMap } from 'vite-node/client'
 
 export async function run(
   method: 'run' | 'collect',
@@ -61,7 +62,7 @@ export async function run(
   }
 
   installSourcemapsSupport({
-    getSourceMap: source => workerState.moduleCache.getSourceMap(source),
+    getSourceMap: source => (workerState.moduleCache as ModuleCacheMap).getSourceMap(source),
   })
 
   await startCoverageInsideWorker(config.coverage, executor, { isolate: false })

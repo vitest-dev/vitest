@@ -1,6 +1,5 @@
 import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { ModuleCacheMap, ModuleExecutionInfo } from 'vite-node/client'
 import type { SerializedConfig } from '../runtime/config'
 import type { Environment } from './environment'
 import type { TransformMode } from './general'
@@ -33,10 +32,9 @@ export interface WorkerGlobalState {
   current?: Task
   filepath?: string
   environment: Environment
+  moduleCache: Map<string, any>
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
-  moduleCache: ModuleCacheMap
-  moduleExecutionInfo?: ModuleExecutionInfo
   providedContext: Record<string, any>
   durations: {
     environment: number

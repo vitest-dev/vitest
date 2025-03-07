@@ -64,6 +64,8 @@
     "providers"
   ],
   "scripts": {
+    "typebuild": "tsx ./parseExplain.ts",
+    "typecheck:why": "tsc -p ./src/client/tsconfig.json --noEmit --explainFiles > explainTypes.txt",
     "build": "rimraf dist && pnpm build:node && pnpm build:client",
     "build:client": "vite build src/client",
     "build:node": "rollup -c",
@@ -101,6 +103,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@types/ws": "^8.5.14",
     "@vitest/runner": "workspace:*",
+    "@vitest/snapshot": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@wdio/protocols": "^9.7.0",
