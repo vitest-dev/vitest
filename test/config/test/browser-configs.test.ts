@@ -1,10 +1,12 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { UserConfig, VitestOptions } from 'vitest/node'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  return await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  const result = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  onTestFinished(() => result.close())
+  return result
 }
 
 test('assignes names as browsers', async () => {
