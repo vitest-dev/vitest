@@ -630,7 +630,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const callCount = spy.mock.calls.length
       const isCalled = times <= callCount
       this.assert(
-        isCalled && equalsArgumentArray(nthCall, args),
+        nthCall && equalsArgumentArray(nthCall, args),
         `expected ${ordinalOf(
           times,
         )} "${spyName}" call to have been called with #{exp}${
@@ -653,7 +653,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
       const lastCall = spy.mock.calls[spy.mock.calls.length - 1]
 
       this.assert(
-        equalsArgumentArray(lastCall, args),
+        lastCall && equalsArgumentArray(lastCall, args),
         `expected last "${spyName}" call to have been called with #{exp}`,
         `expected last "${spyName}" call to not have been called with #{exp}`,
         args,
