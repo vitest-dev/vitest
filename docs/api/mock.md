@@ -54,17 +54,17 @@ Clears all information about every call. After calling it, all properties on `.m
 
 ```ts
 const person = {
-  greet: (name: string) => `hello ${name}`,
+  greet: (name: string) => `Hello ${name}`,
 }
-const spy = vi.spyOn(obj, 'greet').mockImplementation(() => 'mocked')
-person.greet('alice') // => 'mocked'
-spy.mock.calls // => [['alice']]
+const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+expect(person.greet('Alice')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Alice']])
 
 // clear call history but keep mock implementation
 spy.mockClear()
-spy.mock.calls // => []
-person.greet('bob') // => 'mocked'
-spy.mock.calls // => [['bob']]
+expect(spy.mock.calls).toEqual([])
+expect(person.greet('Bob')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Bob']])
 ```
 
 To automatically call this method before each test, enable the [`clearMocks`](/config/#clearmocks) setting in the configuration.
@@ -222,17 +222,18 @@ This is useful when you want to reset a mock to its original state.
 
 ```ts
 const person = {
-  greet: (name: string) => `hello ${name}`,
+  greet: (name: string) => `Hello ${name}`,
 }
-const spy = vi.spyOn(obj, 'greet').mockImplementation(() => 'mocked')
-person.greet('alice') // => 'mocked'
-spy.mock.calls // => [['alice']]
+const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+expect(person.greet('Alice')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Alice']])
 
-// clear call history and reset implementation, but it's still spied
+// clear call history and reset implementation, but method is still spied
 spy.mockReset()
-spy.mock.calls // => []
-person.greet('bob') // => 'hello bob'
-spy.mock.calls // => [['bob']]
+expect(spy.mock.calls).toEqual([])
+expect(person.greet).toBe(spy)
+expect(person.greet('Bob')).toBe('Hello Bob')
+expect(spy.mock.calls).toEqual([['Bob']])
 ```
 
 To automatically call this method before each test, enable the [`mockReset`](/config/#mockreset) setting in the configuration.
@@ -250,17 +251,18 @@ Restoring a mock from `vi.fn(impl)` will restore implementation to `impl`.
 
 ```ts
 const person = {
-  greet: (name: string) => `hello ${name}`,
+  greet: (name: string) => `Hello ${name}`,
 }
-const spy = vi.spyOn(obj, 'greet').mockImplementation(() => 'mocked')
-person.greet('alice') // => 'mocked'
-spy.mock.calls // => [['alice']]
+const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+expect(person.greet('Alice')).toBe('mocked')
+expect(spy.mock.calls).toEqual([['Alice']])
 
 // clear call history and restore spied object method
-spy.mockClear()
-spy.mock.calls // => []
-person.greet('bob') // => 'hello bob'
-spy.mock.calls // => []
+spy.mockRestore()
+expect(spy.mock.calls).toEqual([])
+expect(person.greet).not.toBe(spy)
+expect(person.greet('Bob')).toBe('Hello Bob')
+expect(spy.mock.calls).toEqual([])
 ```
 
 To automatically call this method before each test, enable the [`restoreMocks`](/config/#restoremocks) setting in the configuration.
