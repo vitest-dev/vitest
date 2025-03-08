@@ -52,6 +52,21 @@ function mockClear(): MockInstance<T>
 
 Clears all information about every call. After calling it, all properties on `.mock` will return to their initial state. This method does not reset implementations. It is useful for cleaning up mocks between different assertions.
 
+```ts
+const person = {
+  greet: (name: string) => `hello ${name}`,
+}
+const spy = vi.spyOn(obj, 'greet').mockImplementation(() => 'mocked')
+person.greet('alice') // => 'mocked'
+spy.mock.calls // => [['alice']]
+
+// clear call history but keep mock implementation
+spy.mockClear()
+spy.mock.calls // => []
+person.greet('bob') // => 'mocked'
+spy.mock.calls // => [['bob']]
+```
+
 To automatically call this method before each test, enable the [`clearMocks`](/config/#clearmocks) setting in the configuration.
 
 ## mockName
@@ -197,13 +212,28 @@ await asyncMock() // throws Error<'Async error'>
 function mockReset(): MockInstance<T>
 ```
 
-Does what `mockClear` does and resets inner implementation to the original function.
+Does what [`mockClear`](#mockClear) does and resets inner implementation to the original function.
 This also resets all "once" implementations.
 
 Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
 resetting a mock from `vi.fn(impl)` will restore implementation to `impl`.
 
 This is useful when you want to reset a mock to its original state.
+
+```ts
+const person = {
+  greet: (name: string) => `hello ${name}`,
+}
+const spy = vi.spyOn(obj, 'greet').mockImplementation(() => 'mocked')
+person.greet('alice') // => 'mocked'
+spy.mock.calls // => [['alice']]
+
+// clear call history and reset implementation, but it's still spied
+spy.mockReset()
+spy.mock.calls // => []
+person.greet('bob') // => 'hello bob'
+spy.mock.calls // => [['bob']]
+```
 
 To automatically call this method before each test, enable the [`mockReset`](/config/#mockreset) setting in the configuration.
 
@@ -213,10 +243,25 @@ To automatically call this method before each test, enable the [`mockReset`](/co
 function mockRestore(): MockInstance<T>
 ```
 
-Does what `mockReset` does and restores original descriptors of spied-on objects.
+Does what [`mockReset`](#mockReset) does and restores original descriptors of spied-on objects.
 
 Note that restoring a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
 Restoring a mock from `vi.fn(impl)` will restore implementation to `impl`.
+
+```ts
+const person = {
+  greet: (name: string) => `hello ${name}`,
+}
+const spy = vi.spyOn(obj, 'greet').mockImplementation(() => 'mocked')
+person.greet('alice') // => 'mocked'
+spy.mock.calls // => [['alice']]
+
+// clear call history and restore spied object method
+spy.mockClear()
+spy.mock.calls // => []
+person.greet('bob') // => 'hello bob'
+spy.mock.calls // => []
+```
 
 To automatically call this method before each test, enable the [`restoreMocks`](/config/#restoremocks) setting in the configuration.
 
