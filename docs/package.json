@@ -20,8 +20,8 @@
   "devDependencies": {
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
-    "@shikijs/transformers": "^3.0.0",
-    "@shikijs/vitepress-twoslash": "^3.0.0",
+    "@shikijs/transformers": "^3.1.0",
+    "@shikijs/vitepress-twoslash": "^3.1.0",
     "@unocss/reset": "catalog:",
     "@vite-pwa/assets-generator": "^0.2.6",
     "@vite-pwa/vitepress": "^0.5.3",
