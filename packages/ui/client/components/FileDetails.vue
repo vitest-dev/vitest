@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ModuleGraph } from '~/composables/module-graph'
 import type { Params } from '~/composables/params'
-import { hasFailedSnapshot } from '@vitest/ws-client'
 import { toJSON } from 'flatted'
 import {
   browserState,
@@ -10,6 +9,7 @@ import {
   currentLogs,
   isReport,
 } from '~/composables/client'
+import { hasFailedSnapshot } from '~/composables/explorer/collector'
 import { getModuleGraph } from '~/composables/module-graph'
 import { viewMode } from '~/composables/params'
 import { getProjectNameColor } from '~/utils/task'
