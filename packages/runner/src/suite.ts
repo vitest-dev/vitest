@@ -791,11 +791,12 @@ function formatName(name: string | Function) {
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
-  if (template.includes('%#')) {
+  if (template.includes('%#') || template.includes('%$')) {
     // '%#' match index of the test case
     template = template
       .replace(/%%/g, '__vitest_escaped_%__')
       .replace(/%#/g, `${idx}`)
+      .replace(/%\$/g, `${idx + 1}`)
       .replace(/__vitest_escaped_%__/g, '%%')
   }
   const count = template.split('%').length - 1
