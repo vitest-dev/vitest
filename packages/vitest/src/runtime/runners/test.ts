@@ -40,6 +40,7 @@ export class VitestTestRunner implements VitestRunner {
 
   onCollectStart(file: File): void {
     this.workerState.current = file
+    this.workerState.filepath = file.filepath
   }
 
   onAfterRunFiles(): void {
