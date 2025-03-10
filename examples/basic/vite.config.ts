@@ -1,12 +1,19 @@
 /// <reference types="vitest/config" />
 
-// Configure Vitest (https://vitest.dev/config/)
-
 import { defineConfig } from 'vite'
 
+// https://vitejs.dev/config/
 export default defineConfig({
   test: {
-    /* for example, use global to avoid globals imports (describe, test, expect): */
-    // globals: true,
+    globals: true,
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: 'playwright',
+      instances: [
+        { browser: 'chromium' },
+      ],
+      viewport: { width: 1320, height: 1500 },
+    },
   },
 })

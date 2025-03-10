@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2020",
+    "jsx": "react-jsx",
     "module": "node16",
     "strict": true,
     "declaration": true,
@@ -9,5 +10,10 @@
     "verbatimModuleSyntax": true
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "types": [
+    "@testing-library/jest-dom",
+    "vitest/globals",
+    "@vitest/browser/matchers"
+  ]
 }

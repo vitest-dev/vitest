@@ -2,15 +2,20 @@
   "name": "@vitest/example-test",
   "type": "module",
   "private": true,
-  "license": "MIT",
-  "main": "index.js",
   "scripts": {
     "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "react": "latest",
+    "remeda": "latest"
   },
   "devDependencies": {
+    "@testing-library/react": "latest",
+    "@types/react": "latest",
+    "@vitest/browser": "latest",
     "@vitest/ui": "latest",
+    "playwright": "^1.50.1",
     "vite": "latest",
     "vitest": "latest"
   },
