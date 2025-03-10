@@ -59,7 +59,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
     await browser
       .action('pointer', { parameters: { pointerType: 'mouse' } })
       // move the pointer over the button
-      .move({ origin: await browser.$(selector) })
+      .move({ origin: browser.$(selector) })
       // simulate 3 clicks
       .down()
       .up()

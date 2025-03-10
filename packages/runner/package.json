@@ -1,7 +1,7 @@
 {
   "name": "@vitest/runner",
   "type": "module",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "description": "Vitest test runner",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -43,6 +43,6 @@
   },
   "dependencies": {
     "@vitest/utils": "workspace:*",
-    "pathe": "^2.0.3"
+    "pathe": "catalog:"
   }
 }
