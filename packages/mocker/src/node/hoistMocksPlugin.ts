@@ -125,7 +125,6 @@ const regexpHoistable
 const hashbangRE = /^#!.*\n/
 
 export interface HoistMocksResult {
-  ast: Rollup.ProgramNode
   code: string
   map: SourceMap
 }
@@ -149,7 +148,7 @@ export function hoistMocks(
 
   const s = new MagicString(code)
 
-  let ast: Rollup.ProgramNode
+  let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
   }
@@ -549,7 +548,6 @@ export function hoistMocks(
   }
 
   return {
-    ast,
     code: s.toString(),
     map: s.generateMap({ hires: 'boundary', source: id }),
   }

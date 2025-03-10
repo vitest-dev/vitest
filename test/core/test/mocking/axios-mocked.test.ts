@@ -1,5 +1,8 @@
-import axios from 'axios'
+import axios_ from 'axios'
 import { expect, test, vi } from 'vitest'
+
+// workaround https://github.com/oxc-project/oxc/issues/9645
+const axios = axios_
 
 vi.mock('axios')
 
