@@ -15,18 +15,6 @@
     {
       "depTypeList": ["peerDependencies"],
       "enabled": false
-    },
-    {
-      "matchPaths": [
-        "test/**",
-        "examples/**"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "all non-major examples dependencies",
-      "groupSlug": "all-minor-patch-examples"
     }
   ],
   "ignoreDeps": [
