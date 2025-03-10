@@ -1,4 +1,3 @@
-import type { SourceMap } from 'rollup'
 /* eslint-disable no-template-curly-in-string */
 import type { TransformResult } from 'vite'
 import { describe, expect, it } from 'vitest'
@@ -30,7 +29,6 @@ describe('withInlineSourcemap', () => {
       version: 3,
       mappings: 'AAAO,SAAS,IAAI,KAAqB;AACvC,SAAO,qDAAqD;AAC9D;iHAAA',
       names: [],
-      sourceRoot: undefined,
       sources: [
         '/foo.ts',
       ],
@@ -38,7 +36,8 @@ describe('withInlineSourcemap', () => {
         'export function foo(src: string): string {\n  return `//# sourceMappingURL=data:application/json;base64,${src}`\n}\n',
       ],
       file: '/src/foo.ts',
-    } as unknown as SourceMap,
+      toUrl: () => '',
+    },
     deps: [
     ],
     dynamicDeps: [
