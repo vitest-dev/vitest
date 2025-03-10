@@ -9,11 +9,10 @@ interface Post {
   }
 }
 
-// TODO: the exact typed data loader pattern is not supported by rolldown/oxc transform
+// TODO: the exact typed data loader pattern is not supported by rolldown/oxc
 // https://vitepress.dev/guide/data-loading#typed-data-loaders
-// eslint-disable-next-line import/no-mutable-exports
-let data!: Post[]
-export { data }
+// https://github.com/rolldown/rolldown/issues/3048#issuecomment-2547371389
+export declare const data: Post[]
 
 export default createContentLoader('blog/*.md', {
   // excerpt: true,
