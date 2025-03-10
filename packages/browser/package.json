@@ -112,8 +112,8 @@
     "mime": "^4.0.6",
     "pathe": "catalog:",
     "periscopic": "^4.0.2",
-    "playwright": "^1.50.1",
-    "playwright-core": "^1.50.1",
+    "playwright": "^1.51.0",
+    "playwright-core": "^1.51.0",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
     "webdriverio": "^9.10.0"
