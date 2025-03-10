@@ -56,7 +56,6 @@
     "oxc-transform": "^0.56.0",
     "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
-    "rolldown": "1.0.0-beta.3-commit.b546e53",
     "rollup": "^4.34.8",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-esbuild": "^6.2.0",

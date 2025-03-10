@@ -217,9 +217,6 @@ importers:
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
-      rolldown:
-        specifier: 1.0.0-beta.3-commit.b546e53
-        version: 1.0.0-beta.3-commit.b546e53(@oxc-project/runtime@0.51.0)(typescript@5.7.3)
       rollup:
         specifier: ^4.34.8
         version: 4.34.8
