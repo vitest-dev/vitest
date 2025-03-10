@@ -9,7 +9,10 @@ interface Post {
   }
 }
 
-declare const data: Post[]
+// TODO: the exact typed data loader pattern is not supported by rolldown/oxc transform
+// https://vitepress.dev/guide/data-loading#typed-data-loaders
+// eslint-disable-next-line import/no-mutable-exports
+let data!: Post[]
 export { data }
 
 export default createContentLoader('blog/*.md', {
