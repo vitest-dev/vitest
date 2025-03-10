@@ -30,11 +30,11 @@ exports[`stacktrace in dependency package > external 1`] = `
 Error: __TEST_STACK__
  ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/index.js:10:9
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
- ❯ error-in-package.test.js:8:12
+ ❯ error-in-package.test.js:8:3
       6| 
       7| test('js', () => {
       8|   testStack()
-       |            ^
+       |   ^
       9| })
      10| 
 
@@ -50,7 +50,7 @@ Error: __TEST_STACK_TS__
      23| }
      24| 
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:12:3
- ❯ error-in-package.test.js:12:14
+ ❯ error-in-package.test.js:12:3
 
 ⎯⎯[2/4]⎯
 
@@ -58,11 +58,11 @@ Error: __TEST_STACK_TS__
 Error: __TEST_STACK_TRANSPILED__
  ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:22:9
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:12:3
- ❯ error-in-package.test.js:16:22
+ ❯ error-in-package.test.js:16:3
      14| 
      15| test('transpiled', () => {
      16|   testStackTranspiled()
-       |                      ^
+       |   ^
      17| })
      18| 
 
@@ -72,11 +72,11 @@ Error: __TEST_STACK_TRANSPILED__
 Error: __TEST_STACK_TRANSPILED_INLINE__
  ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:22:9
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:12:3
- ❯ error-in-package.test.js:20:28
+ ❯ error-in-package.test.js:20:3
      18| 
      19| test('transpiled inline', () => {
      20|   testStackTranspiledInline()
-       |                            ^
+       |   ^
      21| })
      22| 
 
@@ -99,7 +99,7 @@ Error: __TEST_STACK__
      11| }
      12| 
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/index.js:4:3
- ❯ error-in-package.test.js:8:12
+ ❯ error-in-package.test.js:8:3
 
 ⎯⎯[1/4]⎯
 
@@ -113,7 +113,7 @@ Error: __TEST_STACK_TS__
      23| }
      24| 
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/ts.ts:12:3
- ❯ error-in-package.test.js:12:14
+ ❯ error-in-package.test.js:12:3
 
 ⎯⎯[2/4]⎯
 
@@ -121,11 +121,11 @@ Error: __TEST_STACK_TS__
 Error: __TEST_STACK_TRANSPILED__
  ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:22:9
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled.ts:12:3
- ❯ error-in-package.test.js:16:22
+ ❯ error-in-package.test.js:16:3
      14| 
      15| test('transpiled', () => {
      16|   testStackTranspiled()
-       |                      ^
+       |   ^
      17| })
      18| 
 
@@ -135,11 +135,11 @@ Error: __TEST_STACK_TRANSPILED__
 Error: __TEST_STACK_TRANSPILED_INLINE__
  ❯ innerTestStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:22:9
  ❯ testStack (NODE_MODULES)/@vitest/test-dep-error/transpiled-inline.ts:12:3
- ❯ error-in-package.test.js:20:28
+ ❯ error-in-package.test.js:20:3
      18| 
      19| test('transpiled inline', () => {
      20|   testStackTranspiledInline()
-       |                            ^
+       |   ^
      21| })
      22| 
 
@@ -184,7 +184,7 @@ ReferenceError: bar is not defined
        |   ^
       4| }
       5| 
- ❯ error-in-deps.test.js:5:6
+ ❯ error-in-deps.test.js:5:3
 
 ⎯⎯[1/1]⎯
 
@@ -236,7 +236,7 @@ exports[`stacktraces should respect sourcemaps > add-in-js.test.js 1`] = `
 `;
 
 exports[`stacktraces should respect sourcemaps > error-in-deps.test.js 1`] = `
-" ❯ error-in-deps.test.js:5:6
+" ❯ error-in-deps.test.js:5:3
 
 ⎯⎯[1/1]⎯
 
@@ -244,11 +244,11 @@ exports[`stacktraces should respect sourcemaps > error-in-deps.test.js 1`] = `
 `;
 
 exports[`stacktraces should respect sourcemaps > error-in-package.test.js 1`] = `
-" ❯ error-in-package.test.js:8:12
+" ❯ error-in-package.test.js:8:3
       6| 
       7| test('js', () => {
       8|   testStack()
-       |            ^
+       |   ^
       9| })
      10| 
 "
@@ -299,11 +299,11 @@ exports[`stacktraces should respect sourcemaps > mocked-imported.test.ts 1`] = `
 `;
 
 exports[`stacktraces should respect sourcemaps > require-assertions.test.js 1`] = `
-" ❯ require-assertions.test.js:3:5
+" ❯ require-assertions.test.js:3:1
       1| import { test } from 'vitest'
       2| 
       3| test('assertion is not called', () => {
-       |     ^
+       | ^
       4|   // no expect
       5| })
 "
