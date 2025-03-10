@@ -292,7 +292,7 @@ References:
 ## userEvent.clear
 
 ```ts
-function clear(element: Element | Locator): Promise<void>
+function clear(element: Element | Locator, options?: UserEventClearOptions): Promise<void>
 ```
 
 This method clears the input element content.
@@ -451,6 +451,7 @@ References:
 function upload(
   element: Element | Locator,
   files: string[] | string | File[] | File,
+  options?: UserEventUploadOptions,
 ): Promise<void>
 ```
 

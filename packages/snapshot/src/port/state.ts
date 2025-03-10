@@ -6,7 +6,7 @@
  */
 
 import type { OptionsReceived as PrettyFormatOptions } from '@vitest/pretty-format'
-import type { ParsedStack } from '../../../utils/src/index'
+import type { ParsedStack } from '@vitest/utils'
 import type {
   SnapshotData,
   SnapshotEnvironment,
@@ -48,6 +48,12 @@ interface SaveStatus {
   saved: boolean
 }
 
+type ParsedStackPosition = Pick<ParsedStack, 'file' | 'line' | 'column'>
+
+function isSameStackPosition(x: ParsedStackPosition, y: ParsedStackPosition) {
+  return x.file === y.file && x.column === y.column && x.line === y.line
+}
+
 export default class SnapshotState {
   private _counters = new CounterMap<string>()
   private _dirty: boolean
@@ -55,7 +61,7 @@ export default class SnapshotState {
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
-  private _inlineSnapshotStacks: Array<ParsedStack & { testId: string }>
+  private _inlineSnapshotStacks: Array<ParsedStack & { testId: string; snapshot: string }>
   private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
   private _rawSnapshots: Array<RawSnapshot>
   private _uncheckedKeys: Set<string>
@@ -343,13 +349,26 @@ export default class SnapshotState {
       // https://github.com/vitejs/vite/issues/8657
       stack.column--
 
-      // reject multiple inline snapshots at the same location
-      if (this._inlineSnapshotStacks.some(s => s.file === stack!.file && s.line === stack!.line && s.column === stack!.column)) {
-        // remove already succeeded snapshot
-        this._inlineSnapshots = this._inlineSnapshots.filter(s => !(s.file === stack!.file && s.line === stack!.line && s.column === stack!.column))
-        throw new Error('toMatchInlineSnapshot cannot be called multiple times at the same location.')
+      // reject multiple inline snapshots at the same location if snapshot is different
+      const snapshotsWithSameStack = this._inlineSnapshotStacks.filter(s => isSameStackPosition(s, stack!))
+      if (snapshotsWithSameStack.length > 0) {
+        // ensure only one snapshot will be written at the same location
+        this._inlineSnapshots = this._inlineSnapshots.filter(s => !isSameStackPosition(s, stack!))
+
+        const differentSnapshot = snapshotsWithSameStack.find(s => s.snapshot !== receivedSerialized)
+        if (differentSnapshot) {
+          throw Object.assign(
+            new Error(
+              'toMatchInlineSnapshot with different snapshots cannot be called at the same location',
+            ),
+            {
+              actual: receivedSerialized,
+              expected: differentSnapshot.snapshot,
+            },
+          )
+        }
       }
-      this._inlineSnapshotStacks.push({ ...stack, testId })
+      this._inlineSnapshotStacks.push({ ...stack, testId, snapshot: receivedSerialized })
     }
 
     // These are the conditions on when to write snapshots:

@@ -32,15 +32,13 @@ async function generateContextFile(
   globalServer: ParentBrowserProject,
 ) {
   const commands = Object.keys(globalServer.commands)
-  const filepathCode
-    = '__vitest_worker__.filepath || __vitest_worker__.current?.file?.filepath || undefined'
   const provider = [...globalServer.children][0].provider || { name: 'preview' }
   const providerName = provider.name
 
   const commandsCode = commands
     .filter(command => !command.startsWith('__vitest'))
     .map((command) => {
-      return `    ["${command}"]: (...args) => rpc().triggerCommand(sessionId, "${command}", filepath(), args),`
+      return `    ["${command}"]: (...args) => __vitest_browser_runner__.commands.triggerCommand("${command}", args),`
     })
     .join('\n')
 
@@ -53,9 +51,6 @@ async function generateContextFile(
   return `
 import { page, createUserEvent, cdp } from '${distContextPath}'
 ${userEventNonProviderImport}
-const filepath = () => ${filepathCode}
-const rpc = () => __vitest_worker__.rpc
-const sessionId = __vitest_browser_runner__.sessionId
 
 export const server = {
   platform: ${JSON.stringify(process.platform)},

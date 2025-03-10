@@ -205,7 +205,10 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  return suite('', { concurrent: config.concurrent }, () => {})
+  const collector = suite('', { concurrent: config.concurrent }, () => {})
+  // no parent suite for top-level tests
+  delete collector.suite
+  return collector
 }
 
 export function clearCollectorContext(
@@ -295,20 +298,22 @@ function createSuiteCollector(
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
 
-  let suite: Suite
+  let suite!: Suite
 
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
+    const timeout = options?.timeout ?? runner.config.testTimeout
     const task: Test = {
       id: '',
       name,
-      suite: undefined!,
+      suite: collectorContext.currentSuite?.suite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
       type: 'test',
       file: undefined!,
+      timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
       mode: options.only
@@ -342,7 +347,7 @@ function createSuiteCollector(
         task,
         withTimeout(
           withAwaitAsyncAssertions(withFixtures(handler, context), task),
-          options?.timeout ?? runner.config.testTimeout,
+          timeout,
         ),
       )
     }
@@ -394,6 +399,7 @@ function createSuiteCollector(
     type: 'collector',
     name,
     mode,
+    suite,
     options: suiteOptions,
     test,
     tasks,
@@ -416,6 +422,7 @@ function createSuiteCollector(
       id: '',
       type: 'suite',
       name,
+      suite: collectorContext.currentSuite?.suite,
       mode,
       each,
       file: undefined!,
@@ -463,7 +470,6 @@ function createSuiteCollector(
     suite.tasks = allChildren
 
     allChildren.forEach((task) => {
-      task.suite = suite
       task.file = file
     })
 

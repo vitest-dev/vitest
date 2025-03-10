@@ -97,23 +97,23 @@ VITE_NODE_DEPS_MODULE_DIRECTORIES=/node_modules/,/packages/
 
 ```mermaid
 flowchart TD
-    start{Followed issue\ntemplate?}
-    start --NO--> close1[Close and ask to\nfollow template]
+    start{Followed issue<br/>template?}
+    start --NO--> close1[Close and ask to<br/>follow template]
     start --YES--> dupe{Is duplicate?}
-    dupe --YES--> close2[Close and point\nto duplicate]
-    dupe --NO--> repro{Has proper\nreproduction?}
-    repro --NO--> close3[Label: 'needs reproduction'\nbot will auto close if no update\nhas been made in 3 days]
+    dupe --YES--> close2[Close and point<br/>to duplicate]
+    dupe --NO--> repro{Has proper<br/>reproduction?}
+    repro --NO--> close3[Label: 'needs reproduction'<br/>bot will auto close if no update has been made in 3 days]
     repro --YES--> real{Is actually a bug?}
-    real --NO--> intended{Is the intended\nbehaviour?}
-    intended --YES--> explain[Explain and close\npoint to docs if needed]
-    intended --NO--> open[Keep open for discussion\nRemove 'pending triage' label]
-    real --YES--> real2["1. Remove 'pending triage' label\n2. Add related feature label if\napplicable (e.g. 'feat: browser')\n3. Add priority and meta labels (see below)"]
-    real2 --> unusable{Does the\nbug make Vitest\nunusable?}
-    unusable --YES--> maj{Does the bug\naffect the majority\nof Vitest users?}
+    real --NO--> intended{Is the intended<br/>behaviour?}
+    intended --YES--> explain[Explain and close<br/>point to docs if needed]
+    intended --NO--> open[Keep open for discussion<br/>Remove 'pending triage' label]
+    real --YES--> real2["1. Remove 'pending triage' label<br/>2. Add related feature label if<br/>applicable (e.g. 'feat: browser')<br/>3. Add priority and meta labels (see below)"]
+    real2 --> unusable{Does the<br/>bug make Vitest<br/>unusable?}
+    unusable --YES--> maj{Does the bug<br/>affect the majority<br/>of Vitest users?}
     maj --YES--> p5[p5: urgent]
     maj --NO--> p4[p4: important]
-    unusable --NO--> workarounds{Are there\nworkarounds for\nthe bug?}
-    workarounds --YES--> p2[p2: edge case\nhas workaround]
+    unusable --NO--> workarounds{Are there<br/>workarounds for<br/>the bug?}
+    workarounds --YES--> p2[p2: edge case<br/>has workaround]
     workarounds --NO--> p3[p3: minor bug]
 ```
 
@@ -121,16 +121,16 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    start{Bug fix\nor\nfeature}
-    start --BUG FIX--> strict_bug{"Is a 'strict fix'\ni.e. fixes an obvious\noversight with no\nside effects"}
-    start --FEATURE--> feature[- Discuss feature necessity\n- Is this the best way to address the need\n- Review code quality\n- Add feature labels\n- Approve if you feel strongly\nthat the feature is needed]
+    start{Bug fix<br/>or<br/>feature}
+    start --BUG FIX--> strict_bug{"Is a 'strict fix'<br/>i.e. fixes an obvious<br/>oversight with no<br/>side effects"}
+    start --FEATURE--> feature[- Discuss feature necessity<br/>- Is this the best way to address the need<br/>- Review code quality<br/>- Add feature labels<br/>- Approve if you feel strongly<br/>that the feature is needed]
     feature --> merge
-    strict_bug --YES--> strict[- Verify the fix locally\n- Review code quality\n- Require test case if applicable\n- Request changes if necessary]
-    strict_bug --NO--> non_strict[- Discuss the potential side\neffects of the fix, e.g.\n- Could it introduce implicit\nbehavior changes in other\ncases?\n- Does it introduce too much\nchanges?]
-    non_strict --> label["Add priority labels\n(see issue triaging workflow)"]
+    strict_bug --YES--> strict[- Verify the fix locally<br/>- Review code quality<br/>- Require test case if applicable<br/>- Request changes if necessary]
+    strict_bug --NO--> non_strict[- Discuss the potential side<br/>effects of the fix, e.g.<br/>- Could it introduce implicit<br/>behavior changes in other<br/>cases?<br/>- Does it introduce too much<br/>changes?]
+    non_strict --> label["Add priority labels<br/>(see issue triaging workflow)"]
     strict --> label
     label --> approve
-    approve --> merge["Merge if approved by 2 or\nmore team members\n- Use 'Squash and Merge'\n- Edit commit message to follow\nconvention\n- In commit message body, list\nrelevant issues being fixed\ne.g. 'fix #1234, fix #1235'"]
+    approve --> merge["Merge if approved by 2 or<br/>more team members<br/>- Use 'Squash and Merge'<br/>- Edit commit message to follow convention<br/>- In commit message body, list relevant issues being fixed<br/>e.g. 'fix #1234, fix #1235'"]
 ```
 
 ## Notes on Dependencies
