@@ -35,3 +35,16 @@ describe('cleanup-beforeEach', () => {
 
   it('ok', () => {})
 })
+
+describe('onFailed', () => {
+  it('fail', (ctx) => {
+    ctx.onTestFailed(() => new Promise(() => {}), 70)
+    throw new Error('fail')
+  })
+})
+
+describe('onFinished', () => {
+  it('ok', (ctx) => {
+    ctx.onTestFinished(() => new Promise(() => {}), 80)
+  })
+})
