@@ -89,16 +89,16 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
   (this: T, received: any, ...expected: E): ExpectationResult
 }
 
-export interface CustomMatchersObject extends Record<string, (...args: Array<any>) => any> {}
-
-type CustomMatchersToRawMatchers<T extends CustomMatchersObject> = {
-  [K in keyof T]: RawMatcherFn<MatcherState, Parameters<T[K]>>
+export interface MatchersDeclaration {
+  [name: string]: (...args: Array<any>) => any
 }
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
-> & ThisType<T> & CustomMatchersToRawMatchers<CustomMatchersObject>
+> & ThisType<T> & {
+  [K in keyof MatchersDeclaration]: RawMatcherFn<T, Parameters<MatchersDeclaration[K]>>
+}
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
