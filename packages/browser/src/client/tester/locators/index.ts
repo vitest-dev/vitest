@@ -10,6 +10,7 @@ import type {
   UserEventSelectOptions,
   UserEventUploadOptions,
 } from '@vitest/browser/context'
+import type { ParsedSelector } from 'ivya'
 import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
@@ -20,7 +21,7 @@ import {
   getByTextSelector,
   getByTitleSelector,
   Ivya,
-  type ParsedSelector,
+
 } from 'ivya'
 import { ensureAwaited, getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
