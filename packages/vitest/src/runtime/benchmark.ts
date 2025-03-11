@@ -59,7 +59,7 @@ function createBenchmark(
 function formatName(name: string | Function) {
   return typeof name === 'string'
     ? name
-    : name instanceof Function
+    : typeof name === 'function'
       ? name.name || '<anonymous>'
       : String(name)
 }

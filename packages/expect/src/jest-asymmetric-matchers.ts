@@ -1,3 +1,5 @@
+/* eslint-disable unicorn/no-instanceof-builtins -- we check both */
+
 import type { ChaiPlugin, MatcherState } from './types'
 import { GLOBAL_EXPECT } from './constants'
 import {
@@ -242,7 +244,7 @@ export class Any extends AsymmetricMatcher<any> {
     }
 
     if (this.sample === Function) {
-      return typeof other == 'function' || other instanceof Function
+      return typeof other == 'function' || typeof other === 'function'
     }
 
     if (this.sample === Boolean) {

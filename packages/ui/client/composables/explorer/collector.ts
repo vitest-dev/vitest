@@ -106,7 +106,7 @@ export function runCollect(
 }
 
 function* collectRunningTodoTests() {
-  yield * uiEntries.value.filter(isRunningTestNode)
+  yield* uiEntries.value.filter(isRunningTestNode)
 }
 
 function updateRunningTodoTests() {
@@ -473,7 +473,7 @@ function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
       yield s
     }
     else {
-      yield * testsCollector(s.tasks)
+      yield* testsCollector(s.tasks)
     }
   }
 }

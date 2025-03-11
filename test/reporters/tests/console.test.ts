@@ -1,6 +1,7 @@
+import type { UserConsoleLog } from 'vitest'
 import type { Reporter } from 'vitest/reporters'
 import { resolve } from 'pathe'
-import { expect, test, type UserConsoleLog } from 'vitest'
+import { expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/reporters'
 import { runVitest } from '../../test-utils'
 

@@ -93,7 +93,7 @@ export function renderTable(
 ): string {
   const output: string[] = []
 
-  const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult } > = {}
+  const benchMap: Record<string, { current: BenchmarkResult; baseline?: BenchmarkResult }> = {}
 
   for (const task of options.tasks) {
     if (task.meta.benchmark && task.result?.benchmark) {
