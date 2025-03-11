@@ -1,33 +1,25 @@
 import { describe, it, beforeAll, beforeEach, afterAll, afterEach } from "vitest"
 
 describe('beforeAll', () => {
-  beforeAll(async () => {
-    await new Promise(() => {})
-  }, 10)
+  beforeAll(() => new Promise(() => {}), 10)
 
   it('ok', () => {})
 })
 
 describe('beforeEach', () => {
-  beforeEach(async () => {
-    await new Promise(() => {})
-  }, 20)
+  beforeEach(() => new Promise(() => {}), 20)
 
   it('ok', () => {})
 })
 
 describe('afterAll', () => {
-  afterAll(async () => {
-    await new Promise(() => {})
-  }, 30)
+  afterAll(() => new Promise(() => {}), 30)
 
   it('ok', () => {})
 })
 
 describe('afterEach', () => {
-  afterEach(async () => {
-    await new Promise(() => {})
-  }, 40)
+  afterEach(() => new Promise(() => {}), 40)
 
   it('ok', () => {})
 })
