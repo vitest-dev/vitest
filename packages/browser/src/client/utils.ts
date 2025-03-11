@@ -63,7 +63,7 @@ export function ensureAwaited<T>(promise: (error?: Error) => Promise<T>): Promis
 export interface BrowserRunnerState {
   files: string[]
   runningFiles: string[]
-  moduleCache: WorkerGlobalState['moduleCache']
+  moduleCache: Map<string, any>
   config: SerializedConfig
   provider: string
   viteConfig: {

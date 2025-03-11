@@ -1,16 +1,9 @@
 import type { CancelReason, FileSpecification, Task } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { ModuleCacheMap, ModuleExecutionInfo, ViteNodeResolveId } from 'vite-node'
 import type { SerializedConfig } from '../runtime/config'
 import type { Environment } from './environment'
 import type { TransformMode } from './general'
 import type { RunnerRPC, RuntimeRPC } from './rpc'
-
-/** @deprecated unused */
-export type ResolveIdFunction = (
-  id: string,
-  importer?: string
-) => Promise<ViteNodeResolveId | null>
 
 export type WorkerRPC = BirpcReturn<RuntimeRPC, RunnerRPC>
 
@@ -39,10 +32,9 @@ export interface WorkerGlobalState {
   current?: Task
   filepath?: string
   environment: Environment
+  moduleCache: Map<string, any>
   environmentTeardownRun?: boolean
   onCancel: Promise<CancelReason>
-  moduleCache: ModuleCacheMap
-  moduleExecutionInfo?: ModuleExecutionInfo
   providedContext: Record<string, any>
   durations: {
     environment: number

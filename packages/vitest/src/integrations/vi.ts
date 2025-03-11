@@ -6,6 +6,7 @@ import type {
   MaybePartiallyMockedDeep,
   MockInstance,
 } from '@vitest/spy'
+import type { ModuleCacheMap } from 'vite-node'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { VitestMocker } from '../runtime/mocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
@@ -689,7 +690,13 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
-      resetModules(workerState.moduleCache)
+      // @ts-expect-error injected by the browser
+      if (typeof __vitest_browser_runner__ !== 'undefined') {
+        throw new TypeError(
+          `vi.resetModules() is not supported in the browser environment.`,
+        )
+      }
+      resetModules(workerState.moduleCache as ModuleCacheMap)
       return utils
     },
 

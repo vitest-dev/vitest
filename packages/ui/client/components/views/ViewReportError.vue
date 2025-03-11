@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { ErrorWithDiff } from 'vitest'
+import type { TestError } from 'vitest'
 import { openInEditor, shouldOpenInEditor } from '~/composables/error'
 import { escapeHtml } from '~/utils/escape'
 
 const props = defineProps<{
   root: string
   filename?: string
-  error: ErrorWithDiff
+  error: TestError
 }>()
 
 function relative(p: string) {

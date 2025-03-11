@@ -27,13 +27,6 @@ export interface RuntimeRPC {
     /** @deprecated */
     syntheticNamedExports?: boolean | string | null
   } | null>
-  /**
-   * @deprecated unused
-   */
-  getSourceMap: (
-    id: string,
-    force?: boolean
-  ) => Promise<any>
 
   onUserConsoleLog: (log: UserConsoleLog) => void
   onUnhandledError: (err: unknown, type: string) => void

@@ -1,4 +1,4 @@
-import type { UserConfig } from 'vitest'
+import type { UserConfig } from 'vitest/config'
 import { resolve } from 'node:path'
 import { describe, expect, test } from 'vitest'
 import { getCurrentTest } from 'vitest/suite'

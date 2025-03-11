@@ -1,6 +1,13 @@
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { page, server, userEvent } from '@vitest/browser/context'
-import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
+import {
+  collectTests,
+  setupCommonEnv,
+  SpyModule,
+  startCoverageInsideWorker,
+  startTests,
+  stopCoverageInsideWorker,
+} from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupExpectDom } from './expect-element'
