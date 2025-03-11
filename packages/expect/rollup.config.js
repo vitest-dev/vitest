@@ -1,8 +1,8 @@
 import { builtinModules, createRequire } from 'node:module'
 import { defineConfig } from 'rollup'
 import copy from 'rollup-plugin-copy'
-import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -14,7 +14,10 @@ const external = [
   /^@?vitest(\/|$)/,
 ]
 
+const dtsUtils = createDtsUtils()
+
 const plugins = [
+  ...dtsUtils.isolatedDecl(),
   esbuild({
     target: 'node14',
   }),
@@ -43,14 +46,14 @@ export default defineConfig([
     onwarn,
   },
   {
-    input: 'src/index.ts',
+    input: dtsUtils.dtsInput('src/index.ts'),
     output: {
       dir: 'dist',
       entryFileNames: '[name].d.ts',
       format: 'esm',
     },
     external,
-    plugins: [dts({ respectExternal: true })],
+    plugins: dtsUtils.dts(),
     onwarn,
   },
 ])

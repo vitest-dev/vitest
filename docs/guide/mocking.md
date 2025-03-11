@@ -473,7 +473,7 @@ afterAll(() => server.close())
 afterEach(() => server.resetHandlers())
 ```
 
-```js [GrapQL Setup]
+```js [GraphQL Setup]
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
 import { graphql, HttpResponse } from 'msw'

@@ -91,7 +91,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               const rejectWithCause = (cause: any) => {
                 reject(
                   copyStackTrace(
-                    new Error(`Matcher did not succeed in ${timeout}ms`, {
+                    new Error('Matcher did not succeed in time.', {
                       cause,
                     }),
                     STACK_TRACE_ERROR,

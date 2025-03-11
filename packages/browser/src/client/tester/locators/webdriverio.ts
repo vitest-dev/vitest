@@ -1,3 +1,4 @@
+import type { UserEventClickOptions, UserEventDragAndDropOptions, UserEventHoverOptions, UserEventSelectOptions } from '@vitest/browser/context'
 import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
@@ -8,8 +9,9 @@ import {
   getByTextSelector,
   getByTitleSelector,
 } from 'ivya'
-import { convertElementToCssSelector } from '../../utils'
+import { getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
+import { convertElementToCssSelector, getIframeScale } from '../utils'
 import { Locator, selectorEngine } from './index'
 
 page.extend({
@@ -45,7 +47,7 @@ class WebdriverIOLocator extends Locator {
     super()
   }
 
-  override get selector() {
+  override get selector(): string {
     const selectors = this.elements().map(element => convertElementToCssSelector(element))
     if (!selectors.length) {
       throw getElementError(this._pwSelector, this._container || document.body)
@@ -53,9 +55,32 @@ class WebdriverIOLocator extends Locator {
     return selectors.join(', ')
   }
 
-  public selectOptions(value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[]): Promise<void> {
+  public override click(options?: UserEventClickOptions): Promise<void> {
+    return super.click(processClickOptions(options))
+  }
+
+  public override dblClick(options?: UserEventClickOptions): Promise<void> {
+    return super.dblClick(processClickOptions(options))
+  }
+
+  public override tripleClick(options?: UserEventClickOptions): Promise<void> {
+    return super.tripleClick(processClickOptions(options))
+  }
+
+  public selectOptions(
+    value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
+    options?: UserEventSelectOptions,
+  ): Promise<void> {
     const values = getWebdriverioSelectOptions(this.element(), value)
-    return this.triggerCommand('__vitest_selectOptions', this.selector, values)
+    return this.triggerCommand('__vitest_selectOptions', this.selector, values, options)
+  }
+
+  public override hover(options?: UserEventHoverOptions): Promise<void> {
+    return super.hover(processHoverOptions(options))
+  }
+
+  public override dropTo(target: Locator, options?: UserEventDragAndDropOptions): Promise<void> {
+    return super.dropTo(target, processDragAndDropOptions(options))
   }
 
   protected locator(selector: string) {
@@ -106,4 +131,73 @@ function getWebdriverioSelectOptions(element: Element, value: string | string[] 
   }
 
   return [{ index: labelIndex }]
+}
+
+function processClickOptions(options_?: UserEventClickOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !getBrowserState().config.browser.ui) {
+    return options_
+  }
+  const options = options_ as import('webdriverio').ClickOptions
+  if (options.x != null || options.y != null) {
+    const cache = {}
+    if (options.x != null) {
+      options.x = scaleCoordinate(options.x, cache)
+    }
+    if (options.y != null) {
+      options.y = scaleCoordinate(options.y, cache)
+    }
+  }
+  return options_
+}
+
+function processHoverOptions(options_?: UserEventHoverOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !getBrowserState().config.browser.ui) {
+    return options_
+  }
+  const options = options_ as import('webdriverio').MoveToOptions
+  const cache = {}
+  if (options.xOffset != null) {
+    options.xOffset = scaleCoordinate(options.xOffset, cache)
+  }
+  if (options.yOffset != null) {
+    options.yOffset = scaleCoordinate(options.yOffset, cache)
+  }
+  return options_
+}
+
+function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
+  // only ui scales the iframe, so we need to adjust the position
+  if (!options_ || !getBrowserState().config.browser.ui) {
+    return options_
+  }
+  const cache = {}
+  const options = options_ as import('webdriverio').DragAndDropOptions & {
+    targetX?: number
+    targetY?: number
+    sourceX?: number
+    sourceY?: number
+  }
+  if (options.sourceX != null) {
+    options.sourceX = scaleCoordinate(options.sourceX, cache)
+  }
+  if (options.sourceY != null) {
+    options.sourceY = scaleCoordinate(options.sourceY, cache)
+  }
+  if (options.targetX != null) {
+    options.targetX = scaleCoordinate(options.targetX, cache)
+  }
+  if (options.targetY != null) {
+    options.targetY = scaleCoordinate(options.targetY, cache)
+  }
+  return options_
+}
+
+function scaleCoordinate(coordinate: number, cache: any) {
+  return Math.round(coordinate * getCachedScale(cache))
+}
+
+function getCachedScale(cache: { scale: number | undefined }) {
+  return cache.scale ??= getIframeScale()
 }

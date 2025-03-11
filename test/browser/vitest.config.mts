@@ -42,7 +42,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@vitest/cjs-lib', 'react/jsx-dev-runtime'],
+    include: ['@vitest/cjs-lib', '@vitest/bundled-lib', 'react/jsx-dev-runtime'],
   },
   test: {
     include: ['test/**.test.{ts,js,tsx}'],
