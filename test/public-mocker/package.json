@@ -9,7 +9,6 @@
   "devDependencies": {
     "@vitest/browser": "workspace:*",
     "@vitest/mocker": "workspace:*",
-    "playwright": "^1.50.1",
     "vitest": "workspace:*"
   }
 }

@@ -1447,9 +1447,6 @@ importers:
       '@vitest/mocker':
         specifier: workspace:*
         version: link:../../packages/mocker
-      playwright:
-        specifier: ^1.50.1
-        version: 1.50.1
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
