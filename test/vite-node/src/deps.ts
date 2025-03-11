@@ -1,7 +1,7 @@
 import './deps.css'
 
 // eslint-disable-next-line no-console
-console.log('deps')
+console.log('[deps.ts] imported')
 
 export {}
 
