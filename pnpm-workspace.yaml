@@ -6,7 +6,7 @@ packages:
   - test/config/fixtures/conditions-pkg
 catalog:
   '@ampproject/remapping': ^2.3.0
-  '@iconify-json/carbon': ^1.2.7
+  '@iconify-json/carbon': ^1.2.8
   '@iconify-json/logos': ^1.2.4
   '@jridgewell/trace-mapping': ^0.3.25
   '@types/debug': ^4.1.12
@@ -16,10 +16,10 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/test-exclude': ^6.0.2
-  '@types/ws': ^8.5.14
+  '@types/ws': ^8.18.0
   '@unocss/reset': ^0.65.4
   '@vitejs/plugin-vue': ^5.2.1
-  '@vueuse/core': ^12.7.0
+  '@vueuse/core': ^12.8.2
   acorn-walk: ^8.3.4
   birpc: 0.2.19
   cac: ^6.7.14
@@ -35,7 +35,7 @@ catalog:
   msw: ^2.7.3
   pathe: ^2.0.3
   sirv: ^3.0.1
-  std-env: ^3.8.0
+  std-env: ^3.8.1
   test-exclude: ^7.0.1
   tinyglobby: ^0.2.12
   tinyrainbow: ^2.0.0
