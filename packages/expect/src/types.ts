@@ -85,14 +85,20 @@ export type AsyncExpectationResult = Promise<SyncExpectationResult>
 
 export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 
-export interface RawMatcherFn<T extends MatcherState = MatcherState> {
-  (this: T, received: any, ...expected: Array<any>): ExpectationResult
+export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends Array<any> = Array<any>> {
+  (this: T, received: any, ...expected: E): ExpectationResult
+}
+
+export interface CustomMatchersObject extends Record<string, (...args: Array<any>) => any> {}
+
+type CustomMatchersToRawMatchers<T extends CustomMatchersObject> = {
+  [K in keyof T]: RawMatcherFn<MatcherState, Parameters<T[K]>>
 }
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
-> & ThisType<T>
+> & ThisType<T> & CustomMatchersToRawMatchers<CustomMatchersObject>
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
