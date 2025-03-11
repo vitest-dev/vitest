@@ -105,7 +105,7 @@ export function createTestContext(
   context.task = test
 
   context.skip = (condition?: boolean | string, note?: string): never => {
-    if (typeof condition === 'boolean' && !condition) {
+    if (condition === false) {
       // do nothing
       return undefined as never
     }
