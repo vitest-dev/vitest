@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { getWorkerState } from 'vitest/src/runtime/utils.js';
+import { getWorkerState } from '../../../test-utils/runtime';
 
 test('overriden options are found on runtime', () => {
   const config = getWorkerState().config;
