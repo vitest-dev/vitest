@@ -104,10 +104,18 @@ export function createTestContext(
 
   context.task = test
 
-  context.skip = (note?: string) => {
+  context.skip = (condition?: boolean | string, note?: string): never => {
+    if (typeof condition === 'boolean' && !condition) {
+      // do nothing
+      return undefined as never
+    }
     test.result ??= { state: 'skip' }
     test.result.pending = true
-    throw new PendingError('test is skipped; abort execution', test, note)
+    throw new PendingError(
+      'test is skipped; abort execution',
+      test,
+      typeof condition === 'string' ? condition : note,
+    )
   }
 
   context.onTestFailed = (handler, timeout) => {
