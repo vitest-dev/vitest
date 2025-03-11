@@ -89,9 +89,7 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
   (this: T, received: any, ...expected: E): ExpectationResult
 }
 
-export interface MatchersDeclaration {
-  [name: string]: (...args: Array<any>) => any
-}
+export interface MatchersDeclaration {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
