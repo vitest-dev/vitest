@@ -54,7 +54,15 @@ export function beforeAll(
   assertTypes(fn, '"beforeAll" callback', ['function'])
   return getCurrentSuite().on(
     'beforeAll',
-    Object.assign(withTimeout(fn, timeout, true, new Error('STACK_TRACE_ERROR')), { [CLEANUP_TIMEOUT_KEY]: timeout }),
+    Object.assign(
+      withTimeout(
+        fn,
+        timeout,
+        true,
+        new Error('STACK_TRACE_ERROR'),
+      ),
+      { [CLEANUP_TIMEOUT_KEY]: timeout },
+    ),
   )
 }
 
@@ -79,7 +87,12 @@ export function afterAll(fn: AfterAllListener, timeout?: number): void {
   assertTypes(fn, '"afterAll" callback', ['function'])
   return getCurrentSuite().on(
     'afterAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
+    withTimeout(
+      fn,
+      timeout ?? getDefaultHookTimeout(),
+      true,
+      new Error('STACK_TRACE_ERROR'),
+    ),
   )
 }
 
@@ -108,7 +121,12 @@ export function beforeEach<ExtraContext = object>(
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     Object.assign(
-      withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
+      withTimeout(
+        withFixtures(fn),
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        new Error('STACK_TRACE_ERROR'),
+      ),
       { [CLEANUP_TIMEOUT_KEY]: timeout },
     ),
   )
@@ -138,7 +156,12 @@ export function afterEach<ExtraContext = object>(
   assertTypes(fn, '"afterEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
+    withTimeout(
+      withFixtures(fn),
+      timeout ?? getDefaultHookTimeout(),
+      true,
+      new Error('STACK_TRACE_ERROR'),
+    ),
   )
 }
 
@@ -165,7 +188,12 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFailed ||= []
     test.onFailed.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
+      withTimeout(
+        handler,
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        new Error('STACK_TRACE_ERROR'),
+      ),
     )
   },
 )
@@ -198,7 +226,12 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFinished ||= []
     test.onFinished.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true, new Error('STACK_TRACE_ERROR')),
+      withTimeout(
+        handler,
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        new Error('STACK_TRACE_ERROR'),
+      ),
     )
   },
 )
