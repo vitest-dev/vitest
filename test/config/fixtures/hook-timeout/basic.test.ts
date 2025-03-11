@@ -31,3 +31,15 @@ describe('afterEach', () => {
 
   it('ok', () => {})
 })
+
+describe('cleanup-beforeAll', () => {
+  beforeAll(() => () => new Promise(() => {}), 50)
+
+  it('ok', () => {})
+})
+
+describe('cleanup-beforeEach', () => {
+  beforeEach(() => () => new Promise(() => {}), 60)
+
+  it('ok', () => {})
+})

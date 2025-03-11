@@ -2,7 +2,7 @@
 
 exports[`timeout error with stack trace 1`] = `
 "
-⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯ Failed Suites 3 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  basic.test.ts > beforeAll
 Error: Hook timed out in 10ms.
@@ -15,7 +15,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
       5|     await new Promise(() => {})
       6|   }, 10)
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
 
  FAIL  basic.test.ts > afterAll
 Error: Hook timed out in 30ms.
@@ -28,10 +28,23 @@ If this is a long-running hook, pass a timeout value as the last argument or con
      21|     await new Promise(() => {})
      22|   }, 30)
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  basic.test.ts > cleanup-beforeAll
+Error: Hook timed out in 50ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:36:3
+     34| 
+     35| describe('cleanup-beforeAll', () => {
+     36|   beforeAll(() => () => new Promise(() => {}), 50)
+       |   ^
+     37| 
+     38|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
 
 
-⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  basic.test.ts > beforeEach > ok
 Error: Hook timed out in 20ms.
@@ -44,7 +57,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
      13|     await new Promise(() => {})
      14|   }, 20)
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
 
  FAIL  basic.test.ts > afterEach > ok
 Error: Hook timed out in 40ms.
@@ -57,7 +70,20 @@ If this is a long-running hook, pass a timeout value as the last argument or con
      29|     await new Promise(() => {})
      30|   }, 40)
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  basic.test.ts > cleanup-beforeEach > ok
+Error: Hook timed out in 60ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:42:3
+     40| 
+     41| describe('cleanup-beforeEach', () => {
+     42|   beforeEach(() => () => new Promise(() => {}), 60)
+       |   ^
+     43| 
+     44|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
 
 "
 `;

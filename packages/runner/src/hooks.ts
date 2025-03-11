@@ -19,6 +19,7 @@ function getDefaultHookTimeout() {
 }
 
 const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
+const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(hook: Function, result: any): Function | undefined {
   if (typeof result === 'function') {
@@ -26,7 +27,11 @@ export function getBeforeHookCleanupCallback(hook: Function, result: any): Funct
       = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
         ? hook[CLEANUP_TIMEOUT_KEY]
         : getDefaultHookTimeout()
-    return withTimeout(result, timeout, true)
+    const stackTraceError
+      = CLEANUP_STACK_TRACE_KEY in hook && hook[CLEANUP_STACK_TRACE_KEY] instanceof Error
+        ? hook[CLEANUP_STACK_TRACE_KEY]
+        : undefined
+    return withTimeout(result, timeout, true, stackTraceError)
   }
 }
 
@@ -52,6 +57,7 @@ export function beforeAll(
   timeout: number = getDefaultHookTimeout(),
 ): void {
   assertTypes(fn, '"beforeAll" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
   return getCurrentSuite().on(
     'beforeAll',
     Object.assign(
@@ -59,9 +65,12 @@ export function beforeAll(
         fn,
         timeout,
         true,
-        new Error('STACK_TRACE_ERROR'),
+        stackTraceError,
       ),
-      { [CLEANUP_TIMEOUT_KEY]: timeout },
+      {
+        [CLEANUP_TIMEOUT_KEY]: timeout,
+        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+      },
     ),
   )
 }
@@ -118,6 +127,7 @@ export function beforeEach<ExtraContext = object>(
   timeout: number = getDefaultHookTimeout(),
 ): void {
   assertTypes(fn, '"beforeEach" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     Object.assign(
@@ -125,9 +135,12 @@ export function beforeEach<ExtraContext = object>(
         withFixtures(fn),
         timeout ?? getDefaultHookTimeout(),
         true,
-        new Error('STACK_TRACE_ERROR'),
+        stackTraceError,
       ),
-      { [CLEANUP_TIMEOUT_KEY]: timeout },
+      {
+        [CLEANUP_TIMEOUT_KEY]: timeout,
+        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+      },
     ),
   )
 }
