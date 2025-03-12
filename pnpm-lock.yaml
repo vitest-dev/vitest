@@ -495,9 +495,6 @@ importers:
       sirv:
         specifier: 'catalog:'
         version: 3.0.1
-      tinypool:
-        specifier: link:../../../tinypool
-        version: link:../../../tinypool
       tinyrainbow:
         specifier: 'catalog:'
         version: 2.0.0
