@@ -3,7 +3,6 @@ import type { Arrayable } from '@vitest/utils'
 import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
-import { hasFailedSnapshot } from '@vitest/ws-client'
 import { client, findById } from '~/composables/client'
 import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
@@ -23,6 +22,9 @@ import {
   isRunningTestNode,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
+import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
+
+export { hasFailedSnapshot }
 
 export function runLoadFiles(
   remoteFiles: File[],
@@ -104,7 +106,7 @@ export function runCollect(
 }
 
 function* collectRunningTodoTests() {
-  yield * uiEntries.value.filter(isRunningTestNode)
+  yield* uiEntries.value.filter(isRunningTestNode)
 }
 
 function updateRunningTodoTests() {
@@ -471,7 +473,7 @@ function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
       yield s
     }
     else {
-      yield * testsCollector(s.tasks)
+      yield* testsCollector(s.tasks)
     }
   }
 }

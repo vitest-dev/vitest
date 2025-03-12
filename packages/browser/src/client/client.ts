@@ -1,6 +1,7 @@
 import type { CancelReason } from '@vitest/runner'
+import type { BirpcReturn } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
-import { type BirpcReturn, createBirpc } from 'birpc'
+import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { getBrowserState } from './utils'
 

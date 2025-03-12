@@ -36,7 +36,7 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.16.0",
+    "@antfu/eslint-config": "^4.8.1",
     "@antfu/ni": "^23.3.1",
     "@playwright/test": "^1.50.1",
     "@rollup/plugin-commonjs": "^28.0.2",
@@ -51,7 +51,7 @@
     "bumpp": "^10.0.3",
     "changelogithub": "^13.12.1",
     "esbuild": "^0.25.0",
-    "eslint": "^9.21.0",
+    "eslint": "^9.22.0",
     "magic-string": "^0.30.17",
     "oxc-transform": "^0.56.0",
     "pathe": "^2.0.3",
