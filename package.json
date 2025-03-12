@@ -64,7 +64,7 @@
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "unplugin-isolated-decl": "^0.12.0",
-    "vite": "https://pkg.pr.new/vitejs/rolldown-vite/vite@92b3ef0",
+    "vite": "https://pkg.pr.new/vitejs/rolldown-vite/vite@9ce2683",
     "vitest": "workspace:*",
     "zx": "^8.3.2"
   },
