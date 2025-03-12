@@ -22,6 +22,39 @@ test('pre-transpiled code with source maps to original (#5341)', async () => {
   expect(files.find(file => file.includes('transpiled.ts'))).toBeFalsy()
   expect(files.find(file => file.includes('transpiled.d.ts'))).toBeFalsy()
 
+  if (isV8Provider()) {
+    if (isBrowser()) {
+      expect(coverageMap).toMatchInlineSnapshot(`
+        {
+          "branches": "2/4 (50%)",
+          "functions": "2/2 (100%)",
+          "lines": "11/17 (64.7%)",
+          "statements": "11/17 (64.7%)",
+        }
+      `)
+    }
+    else {
+      expect(coverageMap).toMatchInlineSnapshot(`
+        {
+          "branches": "2/4 (50%)",
+          "functions": "2/2 (100%)",
+          "lines": "9/13 (69.23%)",
+          "statements": "9/13 (69.23%)",
+        }
+      `)
+    }
+  }
+  else {
+    expect(coverageMap).toMatchInlineSnapshot(`
+      {
+        "branches": "3/6 (50%)",
+        "functions": "2/2 (100%)",
+        "lines": "6/8 (75%)",
+        "statements": "6/8 (75%)",
+      }
+    `)
+  }
+
   await expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(
     `__snapshots__/pre-transpiled-${
       isV8Provider() ? (isBrowser() ? 'v8-browser' : 'v8') : 'istanbul'
