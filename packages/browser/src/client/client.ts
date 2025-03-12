@@ -56,7 +56,7 @@ function createClient() {
         if (PAGE_TYPE !== 'orchestrator') {
           return
         }
-        getBrowserState().createTesters?.(files)
+        return getBrowserState().createTesters?.(files)
       },
       cdpEvent(event: string, payload: unknown) {
         const cdp = getBrowserState().cdp

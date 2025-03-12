@@ -176,6 +176,9 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const context = await this.createContext(sessionId)
     const page = await context.newPage()
+    // page.on('console', (m) => {
+    //   console.log('pw', m.text())
+    // })
     this.pages.set(sessionId, page)
 
     if (process.env.VITEST_PW_DEBUG) {

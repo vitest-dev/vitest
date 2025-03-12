@@ -14,7 +14,7 @@ class IframeOrchestrator {
   private runningFiles = new Set<string>()
   private iframes = new Map<string, HTMLIFrameElement>()
 
-  public async init(testFiles: string[]) {
+  public init(testFiles: string[]) {
     debug('test files', testFiles.join(', '))
 
     this.runningFiles.clear()
@@ -234,12 +234,15 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 client.waitForConnection().then(async () => {
   const testFiles = getBrowserState().files
 
-  await orchestrator.init(testFiles)
+  orchestrator.init(testFiles)
 
   // if page was refreshed, there will be no test files
   // createTesters will be called again when tests are running in the UI
   if (testFiles.length) {
     await orchestrator.createTesters(testFiles)
+  }
+  else {
+    await done()
   }
 })
 

@@ -28,7 +28,7 @@ export class BrowserSessions {
       resolve: () => {
         defer.resolve()
         clearTimeout(timeout)
-        this.sessions.delete(sessionId)
+        // this.sessions.delete(sessionId)
       },
       reject: defer.reject,
     })
