@@ -426,7 +426,7 @@ test('browser.instances is empty', async () => {
   expect(stderr).toMatch('"browser.instances" was set in the config, but the array is empty. Define at least one browser config.')
 })
 
-test('browser.name filteres all browser.instances are required', async () => {
+test('browser.name filters all browser.instances are required', async () => {
   const { stderr } = await runVitest({
     browser: {
       enabled: true,

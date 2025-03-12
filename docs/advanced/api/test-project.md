@@ -124,7 +124,7 @@ const value = inject('key')
 ```
 :::
 
-The values can be provided dynamicaly. Provided value in tests will be updated on their next run.
+The values can be provided dynamically. Provided value in tests will be updated on their next run.
 
 ::: tip
 This method is also available to [global setup files](/config/#globalsetup) for cases where you cannot use the public API:

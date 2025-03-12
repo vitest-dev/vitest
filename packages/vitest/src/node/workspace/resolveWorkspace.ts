@@ -216,7 +216,7 @@ export async function resolveBrowserWorkspace(
 
     if (project.config.browser.providerOptions) {
       vitest.logger.warn(
-        withLabel('yellow', 'Vitest', `"providerOptions"${originalName ? ` in "${originalName}" project` : ''} is ignored because it's overriden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
+        withLabel('yellow', 'Vitest', `"providerOptions"${originalName ? ` in "${originalName}" project` : ''} is ignored because it's overridden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
       )
     }
 
