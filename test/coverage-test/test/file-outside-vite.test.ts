@@ -14,7 +14,7 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
   if (isV8Provider()) {
     expect(fileCoverage).toMatchInlineSnapshot(`
       {
-        "branches": "0/0 (100%)",
+        "branches": "1/1 (100%)",
         "functions": "0/1 (0%)",
         "lines": "1/1 (100%)",
         "statements": "1/1 (100%)",
