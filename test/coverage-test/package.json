@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "vitest --workspace=vitest.workspace.custom.ts || true",
+    "test": "vitest --workspace=vitest.workspace.custom.ts",
     "vitest": "vitest"
   },
   "devDependencies": {
