@@ -53,6 +53,7 @@ class IframeOrchestrator {
       const iframe = this.createIframe(container, method, ID_ALL, testFiles)
 
       await setIframeViewport(iframe, width, height)
+      await this.waitForIframeDoneEvent()
       return
     }
 
@@ -66,18 +67,7 @@ class IframeOrchestrator {
 
       await setIframeViewport(iframe, width, height)
 
-      await new Promise<void>((resolve) => {
-        channel.addEventListener(
-          'message',
-          function handler(e: MessageEvent<IframeChannelEvent>) {
-            // done and error can only be triggered by the previous iframe
-            if (e.data.type === 'done' || e.data.type === 'error') {
-              channel.removeEventListener('message', handler)
-              resolve()
-            }
-          },
-        )
-      })
+      await this.waitForIframeDoneEvent()
     }
   }
 
@@ -125,6 +115,21 @@ class IframeOrchestrator {
     this.iframes.set(iframeId, iframe)
     container.appendChild(iframe)
     return iframe
+  }
+
+  private waitForIframeDoneEvent() {
+    return new Promise<void>((resolve) => {
+      channel.addEventListener(
+        'message',
+        function handler(e: MessageEvent<IframeChannelEvent>) {
+          // done and error can only be triggered by the previous iframe
+          if (e.data.type === 'done' || e.data.type === 'error') {
+            channel.removeEventListener('message', handler)
+            resolve()
+          }
+        },
+      )
+    })
   }
 
   private async onGlobalChannelEvent(e: MessageEvent<GlobalChannelIncomingEvent>) {

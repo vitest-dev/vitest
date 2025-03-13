@@ -136,7 +136,8 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       return 1
     }
 
-    if (!config.fileParallelism) {
+    // FIXME: allow isolate with parallelism
+    if (!config.fileParallelism || project.config.isolate === false) {
       return 1
     }
 
@@ -240,9 +241,22 @@ class BrowserPool {
     await Promise.all([promise, page])
   }
 
-  private runNextTest(method: 'run' | 'collect', sessionId: string) {
+  private getNextFiles() {
+    if (this.project.config.browser.isolate) {
+      const files = [...this._queue]
+      this._queue = []
+      return files
+    }
     const file = this._queue.shift()
-    if (!file) {
+    if (file) {
+      return [file]
+    }
+    return []
+  }
+
+  private runNextTest(method: 'run' | 'collect', sessionId: string) {
+    const files = this.getNextFiles()
+    if (!files.length) {
       this.readySessions.add(sessionId)
       // the last worker finished running tests
       if (this.readySessions.size === this.orchestrators.size) {
@@ -263,7 +277,7 @@ class BrowserPool {
       return
     }
 
-    orchestrator.createTesters(method, [file])
+    orchestrator.createTesters(method, files)
       .then(() => {
         this.runNextTest(method, sessionId)
       })
