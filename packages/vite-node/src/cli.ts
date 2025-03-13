@@ -98,7 +98,7 @@ async function run(files: string[], options: CliOptions = {}) {
     await server.pluginContainer.buildStart({})
   }
   else {
-    // until https://github.com/vitejs/vite/issues/19607 is fixed
+    // directly access client plugin container until https://github.com/vitejs/vite/issues/19607
     await server.environments.client.pluginContainer.buildStart({})
   }
 
