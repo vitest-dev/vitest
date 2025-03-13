@@ -59,7 +59,9 @@ export function createBrowserRunner(
 
     onTaskFinished = async (task: Task) => {
       if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
-        const screenshot = await page.screenshot().catch((err) => {
+        const screenshot = await page.screenshot({
+          timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
+        }).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {

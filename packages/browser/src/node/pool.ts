@@ -88,6 +88,9 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       worker: sessionId => waitForOrchestrator(sessionId, project),
     })
     projectPools.set(project, pool)
+    vitest.onCancel(() => {
+      pool.cancel()
+    })
 
     return pool
   }
@@ -105,20 +108,26 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    // TODO: parallelize tests instead of running them sequentially (based on CPU?)
-    for (const [project, files] of groupedFiles.entries()) {
-      if (isCancelled) {
-        break
-      }
-      await project._initBrowserProvider()
+    // TODO: this might now be a good idea... should we run these in chunks?
+    await Promise.all(
+      [...groupedFiles.entries()].map(async ([project, files]) => {
+        if (isCancelled) {
+          return
+        }
+        await project._initBrowserProvider()
 
-      if (!project.browser) {
-        throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-      }
+        if (!project.browser) {
+          throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+        }
 
-      const pool = ensurePool(project)
-      await executeTests(method, pool, project, files)
-    }
+        if (isCancelled) {
+          return
+        }
+
+        const pool = ensurePool(project)
+        await executeTests(method, pool, project, files)
+      }),
+    )
   }
 
   function getThreadsCount(project: TestProject) {
@@ -173,6 +182,10 @@ class BrowserPool {
     },
   ) {}
 
+  cancel() {
+    this._queue = []
+  }
+
   get orchestrators() {
     return this.project.browser!.state.orchestrators
   }
@@ -189,16 +202,25 @@ class BrowserPool {
     this._queue.push(...files)
 
     this.readySessions.forEach((sessionId) => {
-      this.readySessions.delete(sessionId)
-      this.runNextTest(method, sessionId)
+      if (this._queue.length) {
+        this.readySessions.delete(sessionId)
+        this.runNextTest(method, sessionId)
+      }
     })
 
     if (this.orchestrators.size >= this.options.maxWorkers) {
       return this._promise
     }
 
+    // open the minimum amount of tabs
+    // if there is only 1 file running, we don't need 8 tabs running
+    const workerCount = Math.min(
+      this.options.maxWorkers - this.orchestrators.size,
+      files.length,
+    )
+
     const promises: Promise<void>[] = []
-    for (let i = this.orchestrators.size; i < this.options.maxWorkers; i++) {
+    for (let i = 0; i < workerCount; i++) {
       const sessionId = crypto.randomUUID()
       const page = this.openPage(sessionId).then(() => {
         // start running tests on the page when it's ready
@@ -221,9 +243,12 @@ class BrowserPool {
   private runNextTest(method: 'run' | 'collect', sessionId: string) {
     const file = this._queue.shift()
     if (!file) {
-      this._promise?.resolve()
-      this._promise = undefined
       this.readySessions.add(sessionId)
+      // the last worker finished running tests
+      if (this.readySessions.size === this.orchestrators.size) {
+        this._promise?.resolve()
+        this._promise = undefined
+      }
       return
     }
     if (!this._promise) {
@@ -246,10 +271,9 @@ class BrowserPool {
         if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
           return
         }
-        return Promise.reject(error)
+        this._promise?.reject(error)
       })
   }
 
-  // TODO: onCancel
   // TODO: isolate: false
 }
