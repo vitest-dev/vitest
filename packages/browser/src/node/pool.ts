@@ -111,9 +111,6 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     // TODO: this might now be a good idea... should we run these in chunks?
     await Promise.all(
       [...groupedFiles.entries()].map(async ([project, files]) => {
-        if (isCancelled) {
-          return
-        }
         await project._initBrowserProvider()
 
         if (!project.browser) {
@@ -241,23 +238,9 @@ class BrowserPool {
     await Promise.all([promise, page])
   }
 
-  private getNextFiles() {
-    // TODO: special handling for isolate: false -- how is it supposed to work with parallelisation?
-    if (this.project.config.browser.isolate === false) {
-      const files = [...this._queue]
-      this._queue = []
-      return files
-    }
-    const file = this._queue.shift()
-    if (file) {
-      return [file]
-    }
-    return []
-  }
-
   private runNextTest(method: 'run' | 'collect', sessionId: string) {
-    const files = this.getNextFiles()
-    if (!files.length) {
+    const file = this._queue.shift()
+    if (!file) {
       this.readySessions.add(sessionId)
       // the last worker finished running tests
       if (this.readySessions.size === this.orchestrators.size) {
@@ -278,7 +261,8 @@ class BrowserPool {
       return
     }
 
-    orchestrator.createTesters(method, files)
+    // TODO: createTesters has a 60s timeout, it should wait indefinetly, especially for isolate: false
+    orchestrator.createTesters(method, [file])
       .then(() => {
         this.runNextTest(method, sessionId)
       })

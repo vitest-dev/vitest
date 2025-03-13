@@ -48,16 +48,7 @@ class IframeOrchestrator {
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
 
-    if (config.browser.isolate === false) {
-      debug('create iframe', ID_ALL)
-      await this.runTestsInIframe(
-        container,
-        method,
-        ID_ALL,
-        testFiles,
-      )
-      return
-    }
+    const isolate = config.browser.isolate
 
     for (const file of testFiles) {
       if (this.cancelled) {
@@ -66,63 +57,63 @@ class IframeOrchestrator {
 
       debug('create iframe', file)
 
-      await this.runTestsInIframe(
+      await this.runTestInIframe(
         container,
         method,
+        isolate === false ? ID_ALL : file,
         file,
-        [file],
       )
     }
   }
 
-  private async runTestsInIframe(
+  private async runTestInIframe(
     container: HTMLDivElement,
     method: 'run' | 'collect',
     id: string,
-    files: string[],
+    file: string,
   ) {
     const config = getConfig()
     const { width, height } = config.browser.viewport
 
-    const iframe = this.createIframe(container, method, id, files)
+    const iframe = config.browser.isolate === false
+      ? this.startInIsolatedIframe(container, method, file)
+      : this.startInNewIframe(container, method, id, file)
 
     await setIframeViewport(iframe, width, height)
     await this.waitForIframeDoneEvent()
   }
 
-  private createIframe(container: HTMLDivElement, method: 'run' | 'collect', iframeId: string, files: string[]) {
-    if (this.iframes.has(iframeId)) {
-      this.iframes.get(iframeId)!.remove()
-      this.iframes.delete(iframeId)
+  private startIframeTest(
+    iframe: HTMLIFrameElement,
+    method: 'run' | 'collect',
+    iframeId: string,
+    file: string,
+  ) {
+    const iframeWindow = iframe.contentWindow
+    if (!iframeWindow) {
+      debug('no window available')
+      // TODO: what happened here?
+      return
     }
 
+    iframeWindow.postMessage(
+      JSON.stringify({
+        event: 'init',
+        method,
+        files: [file],
+        iframeId,
+        context: getBrowserState().providedContext,
+      } satisfies IframeInitEvent),
+      '*',
+    )
+  }
+
+  private createTestIframe() {
     const iframe = document.createElement('iframe')
     const src = `${url.pathname}__vitest_test__/__test__/?sessionId=${getBrowserState().sessionId}`
     iframe.setAttribute('loading', 'eager')
     iframe.setAttribute('src', src)
     iframe.setAttribute('data-vitest', 'true')
-    iframe.onerror = (e) => {
-      debug('iframe error', e.toString())
-    }
-    iframe.onload = () => {
-      debug(`iframe for ${src} loaded`)
-      const iframeWindow = iframe.contentWindow
-      if (!iframeWindow) {
-        debug('no window available')
-        // TODO: what happened here?
-        return
-      }
-      iframeWindow.postMessage(
-        JSON.stringify({
-          event: 'init',
-          method,
-          files,
-          iframeId,
-          context: getBrowserState().providedContext,
-        } satisfies IframeInitEvent),
-        '*',
-      )
-    }
 
     iframe.style.border = 'none'
     iframe.style.width = '100%'
@@ -130,6 +121,37 @@ class IframeOrchestrator {
     iframe.setAttribute('allowfullscreen', 'true')
     iframe.setAttribute('allow', 'clipboard-write;')
     iframe.setAttribute('name', 'vitest-iframe')
+    return iframe
+  }
+
+  // TODO: a lot of tests on how this actually works
+  private startInIsolatedIframe(
+    container: HTMLDivElement,
+    method: 'run' | 'collect',
+    file: string,
+  ) {
+    const cachedIframe = this.iframes.get(ID_ALL)
+    if (cachedIframe) {
+      this.startIframeTest(cachedIframe, method, ID_ALL, file)
+      return cachedIframe
+    }
+    return this.startInNewIframe(container, method, ID_ALL, file)
+  }
+
+  private startInNewIframe(container: HTMLDivElement, method: 'run' | 'collect', iframeId: string, file: string) {
+    if (this.iframes.has(iframeId)) {
+      this.iframes.get(iframeId)!.remove()
+      this.iframes.delete(iframeId)
+    }
+
+    const iframe = this.createTestIframe()
+    iframe.onerror = (e) => {
+      debug('iframe error', e.toString())
+    }
+    iframe.onload = () => {
+      debug(`iframe for ${file} loaded`)
+      this.startIframeTest(iframe, method, iframeId, file)
+    }
 
     this.iframes.set(iframeId, iframe)
     container.appendChild(iframe)

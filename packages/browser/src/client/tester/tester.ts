@@ -1,3 +1,4 @@
+import type { BrowserRPC } from '@vitest/browser/client'
 import type { IframeInitEvent } from '../types'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { page, server, userEvent } from '@vitest/browser/context'
@@ -18,11 +19,30 @@ const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 const url = new URL(location.href)
 const reloadStart = url.searchParams.get('__reloadStart')
 
-function debug(...args: unknown[]) {
-  const debug = getConfig().env.VITEST_BROWSER_DEBUG
-  if (debug && debug !== 'false') {
-    client.rpc.debug(...args.map(String))
-  }
+const commands = new CommandsManager()
+getBrowserState().commands = commands
+
+let contextSwitched = false
+
+// webdiverio context depends on the iframe state, so we need to switch the context,
+// we delay this in case the user doesn't use any userEvent commands to avoid the overhead
+if (server.provider === 'webdriverio') {
+  let switchPromise: Promise<void> | null = null
+
+  commands.onCommand(async () => {
+    if (switchPromise) {
+      await switchPromise
+    }
+    // if this is the first command, make sure we switched the command context to an iframe
+    if (!contextSwitched) {
+      const rpc = getWorkerState().rpc as any as BrowserRPC
+      switchPromise = rpc.wdioSwitchContext('iframe').finally(() => {
+        switchPromise = null
+        contextSwitched = true
+      })
+      await switchPromise
+    }
+  })
 }
 
 async function prepareTestEnvironment(files: string[]) {
@@ -36,8 +56,6 @@ async function prepareTestEnvironment(files: string[]) {
   state.ctx.files = files
   state.onCancel = onCancel
   state.rpc = rpc as any
-
-  getBrowserState().commands = new CommandsManager()
 
   // TODO: expose `worker`
   const interceptor = createModuleMockerInterceptor()
@@ -66,16 +84,11 @@ async function prepareTestEnvironment(files: string[]) {
     }
   })
 
-  onCancel.then((reason) => {
-    runner.onCancel?.(reason)
-  })
-
   return {
     runner,
     config,
     state,
     rpc,
-    commands: getBrowserState().commands,
   }
 }
 
@@ -97,7 +110,6 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
     | undefined
     | false
 
-  // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
   try {
     preparedData = await prepareTestEnvironment(files)
   }
@@ -120,33 +132,11 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
 
   debug('runner resolved successfully')
 
-  const { config, runner, state, commands, rpc } = preparedData
+  const { config, runner, state, rpc } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
 
   debug('prepare time', state.durations.prepare, 'ms')
-
-  let contextSwitched = false
-
-  // webdiverio context depends on the iframe state, so we need to switch the context,
-  // we delay this in case the user doesn't use any userEvent commands to avoid the overhead
-  if (server.provider === 'webdriverio') {
-    let switchPromise: Promise<void> | null = null
-
-    commands.onCommand(async () => {
-      if (switchPromise) {
-        await switchPromise
-      }
-      // if this is the first command, make sure we switched the command context to an iframe
-      if (!contextSwitched) {
-        switchPromise = rpc.wdioSwitchContext('iframe').finally(() => {
-          switchPromise = null
-          contextSwitched = true
-        })
-        await switchPromise
-      }
-    })
-  }
 
   try {
     await Promise.all([
@@ -173,31 +163,28 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
     }
   }
   finally {
-    try {
-      if (cleanupSymbol in page) {
-        (page[cleanupSymbol] as any)()
+    if (cleanupSymbol in page) {
+      try {
+        await (page[cleanupSymbol] as any)()
       }
-      // need to cleanup for each tester
-      // since playwright keyboard API is stateful on page instance level
-      await userEvent.cleanup()
-      if (contextSwitched) {
-        await rpc.wdioSwitchContext('parent')
+      catch (error: any) {
+        await unhandledError(error, 'Cleanup Error')
       }
     }
-    catch (error: any) {
-      await client.rpc.onUnhandledError({
-        name: error.name,
-        message: error.message,
-        stack: String(error.stack),
-      }, 'Cleanup Error')
+    // need to cleanup for each tester
+    // since playwright keyboard API is stateful on page instance level
+    await userEvent.cleanup()
+      .catch(error => unhandledError(error, 'Cleanup Error'))
+
+    // if isolation is disabled, Vitest reuses the same iframe and we
+    // don't need to switch the context back at all
+    if (server.config.browser.isolate !== false && contextSwitched) {
+      await rpc.wdioSwitchContext('parent')
+        .catch(error => unhandledError(error, 'Cleanup Error'))
     }
     state.environmentTeardownRun = true
     await stopCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }).catch((error) => {
-      client.rpc.onUnhandledError({
-        name: error.name,
-        message: error.message,
-        stack: String(error.stack),
-      }, 'Coverage Error').catch(() => {})
+      return unhandledError(error, 'Coverage Error')
     })
 
     debug('finished running tests')
@@ -208,7 +195,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
 // listen when orchestrator sends a message
 window.addEventListener('message', (e) => {
   const data = JSON.parse(e.data)
-  debug('event', e.data)
+  debug('event from orchestrator', e.data)
 
   if (typeof data === 'object' && data?.event === 'init') {
     const { method, files, context, iframeId } = data as IframeInitEvent
@@ -233,9 +220,16 @@ window.addEventListener('message', (e) => {
 })
 
 function unhandledError(e: Error, type: string) {
-  client.rpc.onUnhandledError({
+  return client.rpc.onUnhandledError({
     name: e.name,
     message: e.message,
     stack: e.stack,
   }, type).catch(() => {})
+}
+
+function debug(...args: unknown[]) {
+  const debug = getConfig().env.VITEST_BROWSER_DEBUG
+  if (debug && debug !== 'false') {
+    client.rpc.debug(...args.map(String))
+  }
 }

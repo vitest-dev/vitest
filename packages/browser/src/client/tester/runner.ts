@@ -2,7 +2,7 @@ import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Vi
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
-import { globalChannel } from '@vitest/browser/client'
+import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
 import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
@@ -174,6 +174,10 @@ export async function initiateRunner(
     config,
   })
   cachedRunner = runner
+
+  onCancel.then((reason) => {
+    runner.onCancel?.(reason)
+  })
 
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, executor as unknown as VitestExecutor),
