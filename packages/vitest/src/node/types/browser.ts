@@ -236,16 +236,13 @@ export interface BrowserCommandContext {
 }
 
 export interface BrowserServerStateSession {
-  files: string[]
-  method: 'run' | 'collect'
   project: TestProject
   connected: () => void
-  resolve: () => void
   reject: (v: unknown) => void
 }
 
 export interface BrowserOrchestrator {
-  createTesters: (files: string[]) => Promise<void>
+  createTesters: (method: 'run' | 'collect', files: string[]) => Promise<void>
   onCancel: (reason: CancelReason) => Promise<void>
   $close: () => void
 }

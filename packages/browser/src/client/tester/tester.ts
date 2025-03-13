@@ -1,5 +1,6 @@
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { page, server, userEvent } from '@vitest/browser/context'
+import { parse } from 'flatted'
 import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
@@ -203,7 +204,42 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
   }
 }
 
-// @ts-expect-error untyped global for internal use
-window.__vitest_browser_runner__.runTests = files => executeTests('run', files)
-// @ts-expect-error untyped global for internal use
-window.__vitest_browser_runner__.collectTests = files => executeTests('collect', files)
+// listen when orchestrator sends a message
+window.addEventListener('message', (e) => {
+  const data = JSON.parse(e.data)
+  debug('event', e.data)
+
+  if (data.event === 'init') {
+    const { method, files, context, iframeId } = data as {
+      method: 'run' | 'collect'
+      files: string[]
+      context: string
+      iframeId: string
+    }
+    const state = getWorkerState()
+    const parsedContext = parse(context)
+
+    state.ctx.providedContext = parsedContext
+    state.providedContext = parsedContext
+    getBrowserState().iframeId = iframeId
+
+    if (method === 'collect') {
+      executeTests('collect', files).catch(err => unhandledError(err, 'Collect Error'))
+    }
+    else {
+      executeTests('run', files).catch(err => unhandledError(err, 'Run Error'))
+    }
+  }
+  else {
+    const error = new Error(`Unknown event: ${data.event}`)
+    unhandledError(error, 'Uknown Event')
+  }
+})
+
+function unhandledError(e: Error, type: string) {
+  client.rpc.onUnhandledError({
+    name: e.name,
+    message: e.message,
+    stack: e.stack,
+  }, type).catch(() => {})
+}

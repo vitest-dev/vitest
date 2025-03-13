@@ -3,7 +3,6 @@ import type { Connect } from 'vite'
 import type { ProjectBrowser } from './project'
 import type { ParentBrowserProject } from './projectParent'
 import crypto from 'node:crypto'
-import { stringify } from 'flatted'
 import { join } from 'pathe'
 import { replacer } from './utils'
 
@@ -23,7 +22,7 @@ export async function resolveTester(
     )
   }
 
-  const { sessionId, testFile } = globalServer.resolveTesterUrl(url.pathname)
+  const sessionId = url.searchParams.get('sessionId') || 'none'
   const session = globalServer.vitest._browserSessions.getSession(sessionId)
 
   if (!session) {
@@ -33,17 +32,6 @@ export async function resolveTester(
   }
 
   const project = globalServer.vitest.getProjectByName(session.project.name || '')
-  const { testFiles } = await project.globTestFiles()
-  // if decoded test file is "__vitest_all__" or not in the list of known files, run all tests
-  const tests
-    = testFile === '__vitest_all__'
-      || !testFiles.includes(testFile)
-      ? '__vitest_browser_runner__.files'
-      : JSON.stringify([testFile])
-  const iframeId = JSON.stringify(testFile)
-  const files = session.files ?? []
-  const method = session.method ?? 'run'
-
   const browserProject = (project.browser as ProjectBrowser | undefined) || [...globalServer.children][0]
 
   if (!browserProject) {
@@ -59,15 +47,14 @@ export async function resolveTester(
   const injector = replacer(injectorJs, {
     __VITEST_PROVIDER__: JSON.stringify(project.browser!.provider.name),
     __VITEST_CONFIG__: JSON.stringify(browserProject.wrapSerializedConfig()),
-    __VITEST_FILES__: JSON.stringify(files),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: browserProject.vite.config.root,
     }),
     __VITEST_TYPE__: '"tester"',
-    __VITEST_METHOD__: JSON.stringify(method),
+    __VITEST_METHOD__: JSON.stringify('none'),
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: JSON.stringify(crypto.randomUUID()),
-    __VITEST_PROVIDED_CONTEXT__: JSON.stringify(stringify(project.getProvidedContext())),
+    __VITEST_PROVIDED_CONTEXT__: '{}',
     __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
@@ -81,12 +68,12 @@ export async function resolveTester(
     const html = replacer(indexhtml, {
       __VITEST_FAVICON__: globalServer.faviconUrl,
       __VITEST_INJECTOR__: injector,
-      __VITEST_APPEND__: `
-    __vitest_browser_runner__.runningFiles = ${tests}
-    __vitest_browser_runner__.iframeId = ${iframeId}
-    __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
-    document.querySelector('script[data-vitest-append]').remove()
-    `,
+    //   __VITEST_APPEND__: `
+    // __vitest_browser_runner__.runningFiles = ${test}
+    // __vitest_browser_runner__.iframeId = ${iframeId}
+    // __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
+    // document.querySelector('script[data-vitest-append]').remove()
+    // `,
     })
     return html
   }

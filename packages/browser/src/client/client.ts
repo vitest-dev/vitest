@@ -52,11 +52,11 @@ function createClient() {
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
       onCancel: setCancel,
-      async createTesters(files: string[]) {
+      async createTesters(method: 'run' | 'collect', files: string[]) {
         if (PAGE_TYPE !== 'orchestrator') {
           return
         }
-        return getBrowserState().createTesters?.(files)
+        return getBrowserState().createTesters?.(method, files)
       },
       cdpEvent(event: string, payload: unknown) {
         const cdp = getBrowserState().cdp

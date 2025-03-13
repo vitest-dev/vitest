@@ -57,11 +57,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     }
 
     const method = searchParams.get('method') as 'run' | 'collect'
-    if (method !== 'run' && method !== 'collect') {
-      return error(
-        new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
-      )
-    }
+    // if (method !== 'run' && method !== 'collect') {
+    //   return error(
+    //     new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
+    //   )
+    // }
 
     if (type === 'orchestrator') {
       const session = vitest._browserSessions.getSession(sessionId)
@@ -91,6 +91,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
+        if (type === 'orchestrator') {
+          vitest._browserSessions.forgetSession(sessionId)
+        }
       })
     })
   })
@@ -241,10 +244,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           ) as any as BrowserCommandContext
           return await commands[command](context, ...payload)
         },
-        finishBrowserTests(sessionId: string) {
-          debug?.('[%s] Finishing browser tests for session', sessionId)
-          return vitest._browserSessions.getSession(sessionId)?.resolve()
-        },
+        // finishBrowserTests(sessionId: string) {
+        //   debug?.('[%s] Finishing browser tests for session', sessionId)
+        //   return vitest._browserSessions.getSession(sessionId)?.resolve()
+        // },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
         },

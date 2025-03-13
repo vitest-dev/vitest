@@ -17,7 +17,7 @@ export interface WebSocketBrowserHandlers {
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
   sendLog: (log: UserConsoleLog) => void
-  finishBrowserTests: (sessionId: string) => void
+  // finishBrowserTests: (sessionId: string) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
   resolveId: (
@@ -61,7 +61,7 @@ export interface WebSocketEvents
 
 export interface WebSocketBrowserEvents {
   onCancel: (reason: CancelReason) => void
-  createTesters: (files: string[]) => Promise<void>
+  createTesters: (method: 'run' | 'collect', files: string[]) => Promise<void>
   cdpEvent: (event: string, payload: unknown) => void
 }
 

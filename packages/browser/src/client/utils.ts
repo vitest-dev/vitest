@@ -76,8 +76,7 @@ export interface BrowserRunnerState {
   sessionId: string
   testerId: string
   method: 'run' | 'collect'
-  runTests?: (tests: string[]) => Promise<void>
-  createTesters?: (files: string[]) => Promise<void>
+  createTesters?: (method: 'run' | 'collect', files: string[]) => Promise<void>
   commands: CommandsManager
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void

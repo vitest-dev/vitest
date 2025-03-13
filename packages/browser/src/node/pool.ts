@@ -15,12 +15,10 @@ import { createDefer } from '@vitest/utils'
 // const debug = createDebugger('vitest:browser:pool')
 
 async function waitForOrchestrator(
-  method: 'run' | 'collect',
   sessionId: string,
   project: TestProject,
-  files: string[],
 ) {
-  const context = project.vitest._browserSessions.createAsyncSession(method, sessionId, files, project)
+  const context = project.vitest._browserSessions.createSession(sessionId, project)
   return await context
 }
 
@@ -65,7 +63,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     vitest.state.clearFiles(project, files)
     providers.add(project.browser!.provider)
 
-    await pool.runTests(files)
+    await pool.runTests(method, files)
   }
 
   const projectPools = new WeakMap<TestProject, BrowserPool>()
@@ -87,8 +85,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     const pool = new BrowserPool(project, {
       maxWorkers: getThreadsCount(project),
       origin,
-      // method doesn't matter here, we just need to create an orchestrator
-      worker: sessionId => waitForOrchestrator('run', sessionId, project, []),
+      worker: sessionId => waitForOrchestrator(sessionId, project),
     })
     projectPools.set(project, pool)
 
@@ -165,6 +162,8 @@ class BrowserPool {
   private _queue: string[] = []
   private _promise: DeferPromise<void> | undefined
 
+  private readySessions = new Set<string>()
+
   constructor(
     private project: TestProject,
     private options: {
@@ -178,8 +177,8 @@ class BrowserPool {
     return this.project.browser!.state.orchestrators
   }
 
-  // open 4 browser contexts
-  async runTests(files: string[]) {
+  // open "maxWothers" browser contexts
+  async runTests(method: 'run' | 'collect', files: string[]) {
     this._promise ??= createDefer<void>()
 
     if (!files.length) {
@@ -189,32 +188,42 @@ class BrowserPool {
 
     this._queue.push(...files)
 
+    this.readySessions.forEach((sessionId) => {
+      this.readySessions.delete(sessionId)
+      this.runNextTest(method, sessionId)
+    })
+
     if (this.orchestrators.size >= this.options.maxWorkers) {
-      // TODO: select non-busy orchestrator and run tests there(?)
       return this._promise
     }
+
     const promises: Promise<void>[] = []
     for (let i = this.orchestrators.size; i < this.options.maxWorkers; i++) {
       const sessionId = crypto.randomUUID()
-      const promise = this.options.worker(sessionId)
-      const url = new URL('/', this.options.origin)
-      url.searchParams.set('sessionId', sessionId)
-      const page = this.project.browser!.provider.openPage(sessionId, url.toString())
-      promises.push(
-        Promise.all([promise, page]).then(() => {
-          this.runNextTest(sessionId)
-        }),
-      )
+      const page = this.openPage(sessionId).then(() => {
+        // start running tests on the page when it's ready
+        this.runNextTest(method, sessionId)
+      })
+      promises.push(page)
     }
     await Promise.all(promises)
     return this._promise
   }
 
-  private runNextTest(sessionId: string) {
+  private async openPage(sessionId: string) {
+    const promise = this.options.worker(sessionId)
+    const url = new URL('/', this.options.origin)
+    url.searchParams.set('sessionId', sessionId)
+    const page = this.project.browser!.provider.openPage(sessionId, url.toString())
+    await Promise.all([promise, page])
+  }
+
+  private runNextTest(method: 'run' | 'collect', sessionId: string) {
     const file = this._queue.shift()
     if (!file) {
       this._promise?.resolve()
       this._promise = undefined
+      this.readySessions.add(sessionId)
       return
     }
     if (!this._promise) {
@@ -222,7 +231,6 @@ class BrowserPool {
     }
     const orchestrator = this.orchestrators.get(sessionId)
     if (!orchestrator) {
-      // console.log('[fail]', file)
       // TODO: handle this error
       this._promise.reject(
         new Error(`Orchestrator not found for session ${sessionId}`),
@@ -230,17 +238,18 @@ class BrowserPool {
       return
     }
 
-    orchestrator.createTesters([file])
+    orchestrator.createTesters(method, [file])
       .then(() => {
-        // console.log('[finish]', file)
-        this.runNextTest(sessionId)
+        this.runNextTest(method, sessionId)
       })
       .catch((error) => {
-        // console.log('error', error)
         if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
           return
         }
         return Promise.reject(error)
       })
   }
+
+  // TODO: onCancel
+  // TODO: isolate: false
 }

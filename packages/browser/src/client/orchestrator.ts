@@ -14,11 +14,10 @@ class IframeOrchestrator {
   private runningFiles = new Set<string>()
   private iframes = new Map<string, HTMLIFrameElement>()
 
-  public init(testFiles: string[]) {
-    debug('test files', testFiles.join(', '))
+  public init() {
+    debug('init orchestrator', getBrowserState().sessionId)
 
     this.runningFiles.clear()
-    testFiles.forEach(file => this.runningFiles.add(file))
 
     channel.addEventListener(
       'message',
@@ -30,7 +29,7 @@ class IframeOrchestrator {
     )
   }
 
-  public async createTesters(testFiles: string[]) {
+  public async createTesters(method: 'run' | 'collect', testFiles: string[]) {
     this.cancelled = false
     this.runningFiles.clear()
     testFiles.forEach(file => this.runningFiles.add(file))
@@ -51,7 +50,7 @@ class IframeOrchestrator {
 
     if (config.browser.isolate === false) {
       debug('create iframe', ID_ALL)
-      const iframe = this.createIframe(container, ID_ALL)
+      const iframe = this.createIframe(container, method, ID_ALL, testFiles)
 
       await setIframeViewport(iframe, width, height)
       return
@@ -59,12 +58,11 @@ class IframeOrchestrator {
 
     for (const file of testFiles) {
       if (this.cancelled) {
-        done()
         return
       }
 
       debug('create iframe', file)
-      const iframe = this.createIframe(container, file)
+      const iframe = this.createIframe(container, method, file, [file])
 
       await setIframeViewport(iframe, width, height)
 
@@ -83,21 +81,39 @@ class IframeOrchestrator {
     }
   }
 
-  private createIframe(container: HTMLDivElement, file: string) {
-    if (this.iframes.has(file)) {
-      this.iframes.get(file)!.remove()
-      this.iframes.delete(file)
+  private createIframe(container: HTMLDivElement, method: 'run' | 'collect', iframeId: string, files: string[]) {
+    if (this.iframes.has(iframeId)) {
+      this.iframes.get(iframeId)!.remove()
+      this.iframes.delete(iframeId)
     }
 
     const iframe = document.createElement('iframe')
+    const src = `${url.pathname}__vitest_test__/__test__/?sessionId=${getBrowserState().sessionId}`
     iframe.setAttribute('loading', 'eager')
-    iframe.setAttribute(
-      'src',
-      `${url.pathname}__vitest_test__/__test__/${
-        getBrowserState().sessionId
-      }/${encodeURIComponent(file)}`,
-    )
+    iframe.setAttribute('src', src)
     iframe.setAttribute('data-vitest', 'true')
+    iframe.onerror = (e) => {
+      debug('iframe error', e.toString())
+    }
+    iframe.onload = () => {
+      debug(`iframe for ${src} loaded`)
+      const iframeWindow = iframe.contentWindow
+      if (!iframeWindow) {
+        debug('no window available')
+        // TODO: what happened here?
+        return
+      }
+      iframeWindow.postMessage(
+        JSON.stringify({
+          event: 'init',
+          method,
+          files,
+          iframeId,
+          context: getBrowserState().providedContext,
+        }),
+        '*',
+      )
+    }
 
     iframe.style.border = 'none'
     iframe.style.width = '100%'
@@ -106,7 +122,7 @@ class IframeOrchestrator {
     iframe.setAttribute('allow', 'clipboard-write;')
     iframe.setAttribute('name', 'vitest-iframe')
 
-    this.iframes.set(file, iframe)
+    this.iframes.set(iframeId, iframe)
     container.appendChild(iframe)
     return iframe
   }
@@ -159,7 +175,6 @@ class IframeOrchestrator {
             const id = generateFileId(filenames[filenames.length - 1])
             ui.setCurrentFileId(id)
           }
-          await done()
         }
         else {
           // keep the last iframe
@@ -180,9 +195,6 @@ class IframeOrchestrator {
         else {
           this.runningFiles.delete(iframeId)
         }
-        if (!this.runningFiles.size) {
-          await done()
-        }
         break
       }
       default: {
@@ -195,7 +207,6 @@ class IframeOrchestrator {
             },
             'Unexpected Event',
           )
-          await done()
       }
     }
   }
@@ -204,16 +215,12 @@ class IframeOrchestrator {
 const orchestrator = new IframeOrchestrator()
 
 let promiseTesters: Promise<void> | undefined
-getBrowserState().createTesters = async (files) => {
+getBrowserState().createTesters = async (method, files) => {
   await promiseTesters
-  promiseTesters = orchestrator.createTesters(files).finally(() => {
+  promiseTesters = orchestrator.createTesters(method, files).finally(() => {
     promiseTesters = undefined
   })
   await promiseTesters
-}
-
-async function done() {
-  await client.rpc.finishBrowserTests(getBrowserState().sessionId)
 }
 
 async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
@@ -232,18 +239,7 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 }
 
 client.waitForConnection().then(async () => {
-  const testFiles = getBrowserState().files
-
-  orchestrator.init(testFiles)
-
-  // if page was refreshed, there will be no test files
-  // createTesters will be called again when tests are running in the UI
-  if (testFiles.length) {
-    await orchestrator.createTesters(testFiles)
-  }
-  else {
-    await done()
-  }
+  orchestrator.init()
 })
 
 function generateFileId(file: string) {
