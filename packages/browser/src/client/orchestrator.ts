@@ -1,5 +1,6 @@
 import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelIncomingEvent } from '@vitest/browser/client'
 import type { SerializedConfig } from 'vitest'
+import type { IframeInitEvent } from './types'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
@@ -43,17 +44,18 @@ class IframeOrchestrator {
       container.parentElement!.setAttribute('data-ready', 'true')
       container.textContent = ''
     }
-    const { width, height } = config.browser.viewport
 
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
 
     if (config.browser.isolate === false) {
       debug('create iframe', ID_ALL)
-      const iframe = this.createIframe(container, method, ID_ALL, testFiles)
-
-      await setIframeViewport(iframe, width, height)
-      await this.waitForIframeDoneEvent()
+      await this.runTestsInIframe(
+        container,
+        method,
+        ID_ALL,
+        testFiles,
+      )
       return
     }
 
@@ -63,12 +65,29 @@ class IframeOrchestrator {
       }
 
       debug('create iframe', file)
-      const iframe = this.createIframe(container, method, file, [file])
 
-      await setIframeViewport(iframe, width, height)
-
-      await this.waitForIframeDoneEvent()
+      await this.runTestsInIframe(
+        container,
+        method,
+        file,
+        [file],
+      )
     }
+  }
+
+  private async runTestsInIframe(
+    container: HTMLDivElement,
+    method: 'run' | 'collect',
+    id: string,
+    files: string[],
+  ) {
+    const config = getConfig()
+    const { width, height } = config.browser.viewport
+
+    const iframe = this.createIframe(container, method, id, files)
+
+    await setIframeViewport(iframe, width, height)
+    await this.waitForIframeDoneEvent()
   }
 
   private createIframe(container: HTMLDivElement, method: 'run' | 'collect', iframeId: string, files: string[]) {
@@ -100,7 +119,7 @@ class IframeOrchestrator {
           files,
           iframeId,
           context: getBrowserState().providedContext,
-        }),
+        } satisfies IframeInitEvent),
         '*',
       )
     }
@@ -233,9 +252,9 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
     const element = document.querySelector('#tester-ui')
     if (!element) {
       return new Promise<HTMLDivElement>((resolve) => {
-        setTimeout(() => {
+        queueMicrotask(() => {
           resolve(getContainer(config))
-        }, 30)
+        })
       })
     }
     return element as HTMLDivElement

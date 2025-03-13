@@ -242,7 +242,8 @@ class BrowserPool {
   }
 
   private getNextFiles() {
-    if (this.project.config.browser.isolate) {
+    // TODO: special handling for isolate: false -- how is it supposed to work with parallelisation?
+    if (this.project.config.browser.isolate === false) {
       const files = [...this._queue]
       this._queue = []
       return files

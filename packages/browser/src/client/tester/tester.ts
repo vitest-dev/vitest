@@ -1,3 +1,4 @@
+import type { IframeInitEvent } from '../types'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { page, server, userEvent } from '@vitest/browser/context'
 import { parse } from 'flatted'
@@ -209,13 +210,8 @@ window.addEventListener('message', (e) => {
   const data = JSON.parse(e.data)
   debug('event', e.data)
 
-  if (data.event === 'init') {
-    const { method, files, context, iframeId } = data as {
-      method: 'run' | 'collect'
-      files: string[]
-      context: string
-      iframeId: string
-    }
+  if (typeof data === 'object' && data?.event === 'init') {
+    const { method, files, context, iframeId } = data as IframeInitEvent
     const state = getWorkerState()
     const parsedContext = parse(context)
 

@@ -123,7 +123,7 @@ export function createBrowserRunner(
 
       if (this.config.includeTaskLocation) {
         try {
-          await updateFilesLocations(files, this.sourceMapCache)
+          await updateTestFilesLocations(files, this.sourceMapCache)
         }
         catch {}
       }
@@ -173,13 +173,13 @@ export async function initiateRunner(
   const runner = new BrowserRunner({
     config,
   })
+  cachedRunner = runner
 
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, executor as unknown as VitestExecutor),
     loadSnapshotSerializers(config, executor as unknown as VitestExecutor),
   ])
   runner.config.diffOptions = diffOptions
-  cachedRunner = runner
   getWorkerState().onFilterStackTrace = (stack: string) => {
     const stacks = parseStacktrace(stack, {
       getSourceMap(file) {
@@ -191,7 +191,7 @@ export async function initiateRunner(
   return runner
 }
 
-async function updateFilesLocations(files: File[], sourceMaps: Map<string, any>) {
+async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, any>) {
   const promises = files.map(async (file) => {
     const result = sourceMaps.get(file.filepath) || await rpc().getBrowserFileSourceMap(file.filepath)
     if (!result) {
