@@ -1,4 +1,4 @@
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { BrowserTesterOptions, SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { CommandsManager } from './tester/utils'
 
 export async function importId(id: string): Promise<any> {
@@ -76,7 +76,7 @@ export interface BrowserRunnerState {
   sessionId: string
   testerId: string
   method: 'run' | 'collect'
-  createTesters?: (method: 'run' | 'collect', files: string[]) => Promise<void>
+  createTesters?: (options: BrowserTesterOptions) => Promise<void>
   commands: CommandsManager
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void

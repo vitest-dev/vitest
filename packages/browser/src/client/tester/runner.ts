@@ -1,5 +1,5 @@
 import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
-import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, TestExecutionType, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
@@ -22,20 +22,31 @@ interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
 }
 
+interface BrowserVitestRunner extends VitestRunner {
+  sourceMapCache: Map<string, any>
+  method: TestExecutionType
+  setMethod: (method: TestExecutionType) => void
+}
+
 export function createBrowserRunner(
   runnerClass: { new (config: SerializedConfig): VitestRunner },
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler | null,
-): { new (options: BrowserRunnerOptions): VitestRunner & { sourceMapCache: Map<string, any> } } {
+): { new (options: BrowserRunnerOptions): BrowserVitestRunner } {
   return class BrowserTestRunner extends runnerClass implements VitestRunner {
     public config: SerializedConfig
     hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
+    public method = 'run' as TestExecutionType
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
+    }
+
+    setMethod(method: 'run' | 'collect') {
+      this.method = method
     }
 
     onBeforeTryTask: VitestRunner['onBeforeTryTask'] = async (...args) => {
@@ -109,7 +120,7 @@ export function createBrowserRunner(
     }
 
     onCollectStart = (file: File) => {
-      return rpc().onQueued(file)
+      return rpc().onQueued(this.method, file)
     }
 
     onCollected = async (files: File[]): Promise<unknown> => {
@@ -127,11 +138,11 @@ export function createBrowserRunner(
         }
         catch {}
       }
-      return rpc().onCollected(files)
+      return rpc().onCollected(this.method, files)
     }
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
-      return rpc().onTaskUpdate(task, events)
+      return rpc().onTaskUpdate(this.method, task, events)
     }
 
     importFile = async (filepath: string) => {
@@ -150,13 +161,17 @@ export function createBrowserRunner(
   }
 }
 
-let cachedRunner: VitestRunner | null = null
+let cachedRunner: BrowserVitestRunner | null = null
+
+export function getBrowserRunner(): BrowserVitestRunner | null {
+  return cachedRunner
+}
 
 export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
   config: SerializedConfig,
-): Promise<VitestRunner> {
+): Promise<BrowserVitestRunner> {
   if (cachedRunner) {
     return cachedRunner
   }

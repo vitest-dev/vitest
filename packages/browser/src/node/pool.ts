@@ -9,6 +9,7 @@ import type {
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils'
+import { stringify } from 'flatted'
 // import { relative } from 'pathe'
 // import { createDebugger } from 'vitest/node'
 
@@ -262,7 +263,13 @@ class BrowserPool {
     }
 
     // TODO: createTesters has a 60s timeout, it should wait indefinetly, especially for isolate: false
-    orchestrator.createTesters(method, [file])
+    orchestrator.createTesters(
+      {
+        method,
+        files: [file],
+        providedContext: stringify(this.project.getProvidedContext()),
+      },
+    )
       .then(() => {
         this.runNextTest(method, sessionId)
       })

@@ -1,22 +1,31 @@
 import type { ServerIdResolution, ServerMockResolution } from '@vitest/mocker/node'
 import type { TaskEventPack, TaskResultPack } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
-import type { AfterSuiteRunMeta, CancelReason, Reporter, RunnerTestFile, SnapshotResult, UserConsoleLog } from 'vitest'
+import type {
+  AfterSuiteRunMeta,
+  BrowserTesterOptions,
+  CancelReason,
+  Reporter,
+  RunnerTestFile,
+  SnapshotResult,
+  TestExecutionType,
+  UserConsoleLog,
+} from 'vitest'
 
 export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
   onUnhandledError: (error: unknown, type: string) => Promise<void>
-  onQueued: (file: RunnerTestFile) => void
-  onCollected: (files: RunnerTestFile[]) => Promise<void>
-  onTaskUpdate: (packs: TaskResultPack[], events: TaskEventPack[]) => void
+  onQueued: (method: TestExecutionType, file: RunnerTestFile) => void
+  onCollected: (method: TestExecutionType, files: RunnerTestFile[]) => Promise<void>
+  onTaskUpdate: (method: TestExecutionType, packs: TaskResultPack[], events: TaskEventPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
-  sendLog: (log: UserConsoleLog) => void
+  sendLog: (method: TestExecutionType, log: UserConsoleLog) => void
   // finishBrowserTests: (sessionId: string) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
@@ -61,7 +70,7 @@ export interface WebSocketEvents
 
 export interface WebSocketBrowserEvents {
   onCancel: (reason: CancelReason) => void
-  createTesters: (method: 'run' | 'collect', files: string[]) => Promise<void>
+  createTesters: (options: BrowserTesterOptions) => Promise<void>
   cdpEvent: (event: string, payload: unknown) => void
 }
 

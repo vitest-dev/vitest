@@ -3,7 +3,14 @@ import type { IframeInitEvent } from '../types'
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { page, server, userEvent } from '@vitest/browser/context'
 import { parse } from 'flatted'
-import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
+import {
+  collectTests,
+  setupCommonEnv,
+  SpyModule,
+  startCoverageInsideWorker,
+  startTests,
+  stopCoverageInsideWorker,
+} from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupExpectDom } from './expect-element'
@@ -45,7 +52,7 @@ if (server.provider === 'webdriverio') {
   })
 }
 
-async function prepareTestEnvironment(files: string[]) {
+async function prepareTestEnvironment(method: 'run' | 'collect', files: string[]) { // TODO: all of this should be done only once except setMethod
   debug('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
@@ -75,6 +82,7 @@ async function prepareTestEnvironment(files: string[]) {
   setupExpectDom()
 
   const runner = await initiateRunner(state, mocker, config)
+  runner.setMethod(method)
 
   const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
@@ -111,7 +119,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
     | false
 
   try {
-    preparedData = await prepareTestEnvironment(files)
+    preparedData = await prepareTestEnvironment(method, files)
   }
   catch (error: any) {
     debug('runner cannot be loaded because it threw an error', error.stack || error.message)

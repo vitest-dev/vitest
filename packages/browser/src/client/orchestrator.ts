@@ -1,5 +1,5 @@
 import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelIncomingEvent } from '@vitest/browser/client'
-import type { SerializedConfig } from 'vitest'
+import type { BrowserTesterOptions, SerializedConfig } from 'vitest'
 import type { IframeInitEvent } from './types'
 import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
@@ -30,13 +30,13 @@ class IframeOrchestrator {
     )
   }
 
-  public async createTesters(method: 'run' | 'collect', testFiles: string[]) {
+  public async createTesters(options: BrowserTesterOptions) {
     this.cancelled = false
     this.runningFiles.clear()
-    testFiles.forEach(file => this.runningFiles.add(file))
+    options.files.forEach(file => this.runningFiles.add(file))
 
     const config = getConfig()
-    debug('create testers', testFiles.join(', '))
+    debug('create testers', options.files.join(', '))
     const container = await getContainer(config)
 
     if (config.browser.ui) {
@@ -50,7 +50,7 @@ class IframeOrchestrator {
 
     const isolate = config.browser.isolate
 
-    for (const file of testFiles) {
+    for (const file of options.files) {
       if (this.cancelled) {
         return
       }
@@ -59,25 +59,25 @@ class IframeOrchestrator {
 
       await this.runTestInIframe(
         container,
-        method,
         isolate === false ? ID_ALL : file,
         file,
+        options,
       )
     }
   }
 
   private async runTestInIframe(
     container: HTMLDivElement,
-    method: 'run' | 'collect',
     id: string,
     file: string,
+    options: BrowserTesterOptions,
   ) {
     const config = getConfig()
     const { width, height } = config.browser.viewport
 
     const iframe = config.browser.isolate === false
-      ? this.startInIsolatedIframe(container, method, file)
-      : this.startInNewIframe(container, method, id, file)
+      ? this.startInIsolatedIframe(container, file, options)
+      : this.startInNewIframe(container, id, file, options)
 
     await setIframeViewport(iframe, width, height)
     await this.waitForIframeDoneEvent()
@@ -85,9 +85,9 @@ class IframeOrchestrator {
 
   private startIframeTest(
     iframe: HTMLIFrameElement,
-    method: 'run' | 'collect',
     iframeId: string,
     file: string,
+    options: BrowserTesterOptions,
   ) {
     const iframeWindow = iframe.contentWindow
     if (!iframeWindow) {
@@ -99,10 +99,10 @@ class IframeOrchestrator {
     iframeWindow.postMessage(
       JSON.stringify({
         event: 'init',
-        method,
+        method: options.method,
         files: [file],
         iframeId,
-        context: getBrowserState().providedContext,
+        context: options.providedContext,
       } satisfies IframeInitEvent),
       '*',
     )
@@ -127,18 +127,23 @@ class IframeOrchestrator {
   // TODO: a lot of tests on how this actually works
   private startInIsolatedIframe(
     container: HTMLDivElement,
-    method: 'run' | 'collect',
     file: string,
+    options: BrowserTesterOptions,
   ) {
     const cachedIframe = this.iframes.get(ID_ALL)
     if (cachedIframe) {
-      this.startIframeTest(cachedIframe, method, ID_ALL, file)
+      this.startIframeTest(cachedIframe, ID_ALL, file, options)
       return cachedIframe
     }
-    return this.startInNewIframe(container, method, ID_ALL, file)
+    return this.startInNewIframe(container, ID_ALL, file, options)
   }
 
-  private startInNewIframe(container: HTMLDivElement, method: 'run' | 'collect', iframeId: string, file: string) {
+  private startInNewIframe(
+    container: HTMLDivElement,
+    iframeId: string,
+    file: string,
+    options: BrowserTesterOptions,
+  ) {
     if (this.iframes.has(iframeId)) {
       this.iframes.get(iframeId)!.remove()
       this.iframes.delete(iframeId)
@@ -150,7 +155,7 @@ class IframeOrchestrator {
     }
     iframe.onload = () => {
       debug(`iframe for ${file} loaded`)
-      this.startIframeTest(iframe, method, iframeId, file)
+      this.startIframeTest(iframe, iframeId, file, options)
     }
 
     this.iframes.set(iframeId, iframe)
@@ -261,9 +266,9 @@ class IframeOrchestrator {
 const orchestrator = new IframeOrchestrator()
 
 let promiseTesters: Promise<void> | undefined
-getBrowserState().createTesters = async (method, files) => {
+getBrowserState().createTesters = async (options: BrowserTesterOptions) => {
   await promiseTesters
-  promiseTesters = orchestrator.createTesters(method, files).finally(() => {
+  promiseTesters = orchestrator.createTesters(options).finally(() => {
     promiseTesters = undefined
   })
   await promiseTesters
