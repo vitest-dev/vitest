@@ -15,34 +15,6 @@ import { stringify } from 'flatted'
 
 // const debug = createDebugger('vitest:browser:pool')
 
-async function waitForOrchestrator(
-  sessionId: string,
-  project: TestProject,
-) {
-  const context = project.vitest._browserSessions.createSession(sessionId, project)
-  return await context
-}
-
-// TODO: support breakpoints
-// async function setBreakpoint(project: TestProject, sessionId: string, file: string) {
-//   if (!project.config.inspector.waitForDebugger) {
-//     return
-//   }
-
-//   const provider = project.browser!.provider
-
-//   if (!provider.getCDPSession) {
-//     throw new Error('Unable to set breakpoint, CDP not supported')
-//   }
-
-//   const session = await provider.getCDPSession(sessionId)
-//   await session.send('Debugger.enable', {})
-//   await session.send('Debugger.setBreakpointByUrl', {
-//     lineNumber: 0,
-//     urlRegex: escapePathToRegexp(file),
-//   })
-// }
-
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
@@ -86,7 +58,9 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     const pool = new BrowserPool(project, {
       maxWorkers: getThreadsCount(project),
       origin,
-      worker: sessionId => waitForOrchestrator(sessionId, project),
+      worker: (sessionId) => {
+        return project.vitest._browserSessions.createSession(sessionId, project)
+      },
     })
     projectPools.set(project, pool)
     vitest.onCancel(() => {
@@ -162,9 +136,9 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
   }
 }
 
-// function escapePathToRegexp(path: string): string {
-//   return path.replace(/[/\\.?*()^${}|[\]+]/g, '\\$&')
-// }
+function escapePathToRegexp(path: string): string {
+  return path.replace(/[/\\.?*()^${}|[\]+]/g, '\\$&')
+}
 
 class BrowserPool {
   private _queue: string[] = []
@@ -189,7 +163,6 @@ class BrowserPool {
     return this.project.browser!.state.orchestrators
   }
 
-  // open "maxWothers" browser contexts
   async runTests(method: 'run' | 'collect', files: string[]) {
     this._promise ??= createDefer<void>()
 
@@ -262,24 +235,44 @@ class BrowserPool {
       return
     }
 
-    // TODO: createTesters has a 60s timeout, it should wait indefinetly, especially for isolate: false
-    orchestrator.createTesters(
-      {
-        method,
-        files: [file],
-        providedContext: stringify(this.project.getProvidedContext()),
-      },
-    )
-      .then(() => {
-        this.runNextTest(method, sessionId)
-      })
-      .catch((error) => {
-        if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
-          return
-        }
-        this._promise?.reject(error)
-      })
+    this.setBreakpoint(sessionId, file).then(() => {
+      orchestrator.createTesters(
+        {
+          method,
+          files: [file],
+          // this will be parsed by the test iframe, not the orchestrator
+          // so we need to stringify it first to avoid double serialization
+          providedContext: stringify(this.project.getProvidedContext()),
+        },
+      )
+        .then(() => {
+          this.runNextTest(method, sessionId)
+        })
+        .catch((error) => {
+          if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
+            return
+          }
+          this._promise?.reject(error)
+        })
+    }).catch(err => this._promise?.reject(err))
   }
 
-  // TODO: isolate: false
+  async setBreakpoint(sessionId: string, file: string) {
+    if (!this.project.config.inspector.waitForDebugger) {
+      return
+    }
+
+    const provider = this.project.browser!.provider
+
+    if (!provider.getCDPSession) {
+      throw new Error('Unable to set breakpoint, CDP not supported')
+    }
+
+    const session = await provider.getCDPSession(sessionId)
+    await session.send('Debugger.enable', {})
+    await session.send('Debugger.setBreakpointByUrl', {
+      lineNumber: 0,
+      urlRegex: escapePathToRegexp(file),
+    })
+  }
 }

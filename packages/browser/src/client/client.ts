@@ -69,6 +69,7 @@ function createClient() {
     {
       post: msg => ctx.ws.send(msg),
       on: fn => (onMessage = fn),
+      timeout: -1, // createTesters can take a while
       serialize: e =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {

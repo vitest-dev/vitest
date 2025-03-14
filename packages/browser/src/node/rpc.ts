@@ -259,6 +259,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         on: fn => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent', 'createTesters'],
         serialize: (data: any) => stringify(data, stringifyReplace),
+        timeout: -1, // createTesters can take a long time
         deserialize: parse,
         onTimeoutError(functionName) {
           throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)
