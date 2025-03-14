@@ -56,13 +56,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
       )
     }
 
-    const method = searchParams.get('method') as 'run' | 'collect'
-    if (method !== 'run' && method !== 'collect') {
-      return error(
-        new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
-      )
-    }
-
     if (type === 'orchestrator') {
       const session = vitest._browserSessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
@@ -80,7 +73,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws, method)
+      const rpc = setupClient(project, rpcId, ws)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -91,6 +84,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
+        if (type === 'orchestrator') {
+          vitest._browserSessions.forgetSession(sessionId)
+        }
       })
     })
   })
@@ -109,7 +105,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     }
   }
 
-  function setupClient(project: TestProject, rpcId: string, ws: WebSocket, method: 'run' | 'collect') {
+  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
@@ -123,7 +119,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           }
           vitest.state.catchError(error, type)
         },
-        async onQueued(file) {
+        async onQueued(method, file) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, [file])
           }
@@ -131,7 +127,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
             await vitest._testRun.enqueued(project, file)
           }
         },
-        async onCollected(files) {
+        async onCollected(method, files) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, files)
           }
@@ -139,7 +135,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
             await vitest._testRun.collected(project, files)
           }
         },
-        async onTaskUpdate(packs, events) {
+        async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
             vitest.state.updateTasks(packs)
           }
@@ -150,7 +146,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        async sendLog(log) {
+        async sendLog(method, log) {
           if (method === 'collect') {
             vitest.state.updateUserLog(log)
           }
@@ -241,10 +237,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           ) as any as BrowserCommandContext
           return await commands[command](context, ...payload)
         },
-        finishBrowserTests(sessionId: string) {
-          debug?.('[%s] Finishing browser tests for session', sessionId)
-          return vitest._browserSessions.getSession(sessionId)?.resolve()
-        },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
         },
@@ -267,6 +259,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         on: fn => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
+        timeout: -1, // createTesters can take a long time
         deserialize: parse,
         onTimeoutError(functionName) {
           throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)

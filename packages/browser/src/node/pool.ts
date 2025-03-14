@@ -1,116 +1,73 @@
-import type { BrowserProvider, ProcessPool, TestProject, TestSpecification, Vitest } from 'vitest/node'
+import type { DeferPromise } from '@vitest/utils'
+import type {
+  BrowserProvider,
+  ProcessPool,
+  TestProject,
+  TestSpecification,
+  Vitest,
+} from 'vitest/node'
 import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
-import { relative } from 'pathe'
-import { createDebugger } from 'vitest/node'
+import { createDefer } from '@vitest/utils'
+import { stringify } from 'flatted'
+// import { relative } from 'pathe'
+// import { createDebugger } from 'vitest/node'
 
-const debug = createDebugger('vitest:browser:pool')
-
-async function waitForTests(
-  method: 'run' | 'collect',
-  sessionId: string,
-  project: TestProject,
-  files: string[],
-) {
-  const context = project.vitest._browserSessions.createAsyncSession(method, sessionId, files, project)
-  return await context
-}
+// const debug = createDebugger('vitest:browser:pool')
 
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
 
-  const executeTests = async (method: 'run' | 'collect', project: TestProject, files: string[]) => {
+  const numCpus
+    = typeof nodeos.availableParallelism === 'function'
+      ? nodeos.availableParallelism()
+      : nodeos.cpus().length
+
+  const threadsCount = vitest.config.watch
+    ? Math.max(Math.floor(numCpus / 2), 1)
+    : Math.max(numCpus - 1, 1)
+
+  const executeTests = async (
+    method: 'run' | 'collect',
+    pool: BrowserPool,
+    project: TestProject,
+    files: string[],
+  ) => {
     vitest.state.clearFiles(project, files)
-    const browser = project.browser!
+    providers.add(project.browser!.provider)
 
-    const threadsCount = getThreadsCount(project)
+    await pool.runTests(method, files)
+  }
 
-    const provider = browser.provider
-    providers.add(provider)
+  const projectPools = new WeakMap<TestProject, BrowserPool>()
 
-    const resolvedUrls = browser.vite.resolvedUrls
+  const ensurePool = (project: TestProject) => {
+    if (projectPools.has(project)) {
+      return projectPools.get(project)!
+    }
+
+    const resolvedUrls = project.browser!.vite.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
 
     if (!origin) {
       throw new Error(
-        `Can't find browser origin URL for project "${project.name}" when running tests for files "${files.join('", "')}"`,
+        `Can't find browser origin URL for project "${project.name}"`,
       )
     }
 
-    async function setBreakpoint(sessionId: string, file: string) {
-      if (!project.config.inspector.waitForDebugger) {
-        return
-      }
-
-      if (!provider.getCDPSession) {
-        throw new Error('Unable to set breakpoint, CDP not supported')
-      }
-
-      const session = await provider.getCDPSession(sessionId)
-      await session.send('Debugger.enable', {})
-      await session.send('Debugger.setBreakpointByUrl', {
-        lineNumber: 0,
-        urlRegex: escapePathToRegexp(file),
-      })
-    }
-
-    const filesPerThread = Math.ceil(files.length / threadsCount)
-
-    // TODO: make it smarter,
-    // Currently if we run 4/4/4/4 tests, and one of the chunks ends,
-    // but there are pending tests in another chunks, we can't redistribute them
-    const chunks: string[][] = []
-    for (let i = 0; i < files.length; i += filesPerThread) {
-      const chunk = files.slice(i, i + filesPerThread)
-      chunks.push(chunk)
-    }
-
-    debug?.(
-      `[%s] Running %s tests in %s chunks (%s threads)`,
-      project.name || 'core',
-      files.length,
-      chunks.length,
-      threadsCount,
-    )
-
-    const orchestrators = [...browser.state.orchestrators.entries()]
-
-    const promises: Promise<void>[] = []
-
-    chunks.forEach((files, index) => {
-      if (orchestrators[index]) {
-        const [sessionId, orchestrator] = orchestrators[index]
-        debug?.(
-          'Reusing orchestrator (session %s) for files: %s',
-          sessionId,
-          [...files.map(f => relative(project.config.root, f))].join(', '),
-        )
-        const promise = waitForTests(method, sessionId, project, files)
-        const tester = orchestrator.createTesters(files).catch((error) => {
-          if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
-            return
-          }
-          return Promise.reject(error)
-        })
-        promises.push(promise, tester)
-      }
-      else {
-        const sessionId = crypto.randomUUID()
-        const waitPromise = waitForTests(method, sessionId, project, files)
-        debug?.(
-          'Opening a new session %s for files: %s',
-          sessionId,
-          [...files.map(f => relative(project.config.root, f))].join(', '),
-        )
-        const url = new URL('/', origin)
-        url.searchParams.set('sessionId', sessionId)
-        const page = provider
-          .openPage(sessionId, url.toString(), () => setBreakpoint(sessionId, files[0]))
-        promises.push(page, waitPromise)
-      }
+    const pool = new BrowserPool(project, {
+      maxWorkers: getThreadsCount(project),
+      origin,
+      worker: (sessionId) => {
+        return project.vitest._browserSessions.createSession(sessionId, project)
+      },
+    })
+    projectPools.set(project, pool)
+    vitest.onCancel(() => {
+      pool.cancel()
     })
 
-    await Promise.all(promises)
+    return pool
   }
 
   const runWorkspaceTests = async (method: 'run' | 'collect', specs: TestSpecification[]) => {
@@ -126,24 +83,24 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       isCancelled = true
     })
 
-    // TODO: parallelize tests instead of running them sequentially (based on CPU?)
-    for (const [project, files] of groupedFiles.entries()) {
-      if (isCancelled) {
-        break
-      }
-      await project._initBrowserProvider()
+    // TODO: this might now be a good idea... should we run these in chunks?
+    await Promise.all(
+      [...groupedFiles.entries()].map(async ([project, files]) => {
+        await project._initBrowserProvider()
 
-      if (!project.browser) {
-        throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-      }
-      await executeTests(method, project, files)
-    }
+        if (!project.browser) {
+          throw new TypeError(`The browser server was not initialized${project.name ? ` for the "${project.name}" project` : ''}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+        }
+
+        if (isCancelled) {
+          return
+        }
+
+        const pool = ensurePool(project)
+        await executeTests(method, pool, project, files)
+      }),
+    )
   }
-
-  const numCpus
-    = typeof nodeos.availableParallelism === 'function'
-      ? nodeos.availableParallelism()
-      : nodeos.cpus().length
 
   function getThreadsCount(project: TestProject) {
     const config = project.config.browser
@@ -151,7 +108,8 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       return 1
     }
 
-    if (!config.fileParallelism) {
+    // FIXME: allow isolate with parallelism
+    if (!config.fileParallelism || project.config.isolate === false) {
       return 1
     }
 
@@ -159,9 +117,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       return project.config.maxWorkers
     }
 
-    return vitest.config.watch
-      ? Math.max(Math.floor(numCpus / 2), 1)
-      : Math.max(numCpus - 1, 1)
+    return threadsCount
   }
 
   return {
@@ -169,7 +125,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     async close() {
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
-      vitest.resolvedProjects.forEach((project) => {
+      vitest.projects.forEach((project) => {
         project.browser?.state.orchestrators.forEach((orchestrator) => {
           orchestrator.$close()
         })
@@ -182,4 +138,147 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
 function escapePathToRegexp(path: string): string {
   return path.replace(/[/\\.?*()^${}|[\]+]/g, '\\$&')
+}
+
+class BrowserPool {
+  private _queue: string[] = []
+  private _promise: DeferPromise<void> | undefined
+
+  private readySessions = new Set<string>()
+
+  constructor(
+    private project: TestProject,
+    private options: {
+      maxWorkers: number
+      origin: string
+      worker: (sessionId: string) => Promise<void>
+    },
+  ) {}
+
+  cancel() {
+    this._queue = []
+  }
+
+  get orchestrators() {
+    return this.project.browser!.state.orchestrators
+  }
+
+  async runTests(method: 'run' | 'collect', files: string[]) {
+    this._promise ??= createDefer<void>()
+
+    if (!files.length) {
+      this._promise.resolve()
+      return this._promise
+    }
+
+    this._queue.push(...files)
+
+    this.readySessions.forEach((sessionId) => {
+      if (this._queue.length) {
+        this.readySessions.delete(sessionId)
+        this.runNextTest(method, sessionId)
+      }
+    })
+
+    if (this.orchestrators.size >= this.options.maxWorkers) {
+      return this._promise
+    }
+
+    // open the minimum amount of tabs
+    // if there is only 1 file running, we don't need 8 tabs running
+    const workerCount = Math.min(
+      this.options.maxWorkers - this.orchestrators.size,
+      files.length,
+    )
+
+    const promises: Promise<void>[] = []
+    for (let i = 0; i < workerCount; i++) {
+      const sessionId = crypto.randomUUID()
+      const page = this.openPage(sessionId).then(() => {
+        // start running tests on the page when it's ready
+        this.runNextTest(method, sessionId)
+      })
+      promises.push(page)
+    }
+    await Promise.all(promises)
+    return this._promise
+  }
+
+  private async openPage(sessionId: string) {
+    const promise = this.options.worker(sessionId)
+    const url = new URL('/', this.options.origin)
+    url.searchParams.set('sessionId', sessionId)
+    const page = this.project.browser!.provider.openPage(sessionId, url.toString())
+    await Promise.all([promise, page])
+  }
+
+  private getOrchestrator(sessionId: string) {
+    const orchestrator = this.orchestrators.get(sessionId)
+    if (!orchestrator) {
+      // TODO: handle this error
+      throw new Error(`Orchestrator not found for session ${sessionId}`)
+    }
+    return orchestrator
+  }
+
+  private runNextTest(method: 'run' | 'collect', sessionId: string) {
+    const file = this._queue.shift()
+    if (!file) {
+      const orchestrator = this.getOrchestrator(sessionId)
+      orchestrator.cleanupTesters().finally(() => {
+        this.readySessions.add(sessionId)
+        // the last worker finished running tests
+        if (this.readySessions.size === this.orchestrators.size) {
+          this._promise?.resolve()
+          this._promise = undefined
+        }
+      })
+      return
+    }
+    if (!this._promise) {
+      throw new Error(`Unexpected empty queue`)
+    }
+    const orchestrator = this.getOrchestrator(sessionId)
+
+    this.setBreakpoint(sessionId, file).then(() => {
+      // this starts running tests inside the orchestrator
+      orchestrator.createTesters(
+        {
+          method,
+          files: [file],
+          // this will be parsed by the test iframe, not the orchestrator
+          // so we need to stringify it first to avoid double serialization
+          providedContext: stringify(this.project.getProvidedContext()),
+        },
+      )
+        .then(() => {
+          this.runNextTest(method, sessionId)
+        })
+        .catch((error) => {
+          if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
+            return
+          }
+          this._promise?.reject(error)
+        })
+    }).catch(err => this._promise?.reject(err))
+  }
+
+  async setBreakpoint(sessionId: string, file: string) {
+    if (!this.project.config.inspector.waitForDebugger) {
+      return
+    }
+
+    const provider = this.project.browser!.provider
+
+    if (!provider.getCDPSession) {
+      throw new Error('Unable to set breakpoint, CDP not supported')
+    }
+
+    const session = await provider.getCDPSession(sessionId)
+    await session.send('Debugger.enable', {})
+    await session.send('Debugger.setBreakpointByUrl', {
+      lineNumber: 0,
+      urlRegex: escapePathToRegexp(file),
+    })
+  }
 }
