@@ -9,7 +9,7 @@ async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, vite
   return vitest
 }
 
-test('assignes names as browsers', async () => {
+test('assigns names as browsers', async () => {
   const { projects } = await vitest({
     browser: {
       enabled: true,
@@ -45,7 +45,7 @@ test('filters projects', async () => {
   ])
 })
 
-test('filters projects with a wildecard', async () => {
+test('filters projects with a wildcard', async () => {
   const { projects } = await vitest({
     project: 'chrom*',
     browser: {
