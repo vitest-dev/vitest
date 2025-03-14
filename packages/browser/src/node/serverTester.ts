@@ -68,17 +68,11 @@ export async function resolveTester(
     const html = replacer(indexhtml, {
       __VITEST_FAVICON__: globalServer.faviconUrl,
       __VITEST_INJECTOR__: injector,
-    //   __VITEST_APPEND__: `
-    // __vitest_browser_runner__.runningFiles = ${test}
-    // __vitest_browser_runner__.iframeId = ${iframeId}
-    // __vitest_browser_runner__.${method === 'run' ? 'runTests' : 'collectTests'}(__vitest_browser_runner__.runningFiles)
-    // document.querySelector('script[data-vitest-append]').remove()
-    // `,
     })
     return html
   }
-  catch (err) {
-    session.reject(err)
+  catch (err: any) {
+    session.fail(err)
     next(err)
   }
 }

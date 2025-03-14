@@ -13,7 +13,8 @@ export class BrowserSessions {
     this.sessions.delete(sessionId)
   }
 
-  createSession(sessionId: string, project: TestProject): Promise<void> {
+  createSession(sessionId: string, project: TestProject, pool: { reject: (error: Error) => void }): Promise<void> {
+    // this promise only waits for the WS connection with the orhcestrator to be established
     const defer = createDefer<void>()
 
     const timeout = setTimeout(() => {
@@ -26,7 +27,12 @@ export class BrowserSessions {
         defer.resolve()
         clearTimeout(timeout)
       },
-      reject: defer.reject,
+      // this fails the whole test run and cancels the pool
+      fail: (error: Error) => {
+        defer.resolve()
+        clearTimeout(timeout)
+        pool.reject(error)
+      },
     })
     return defer
   }

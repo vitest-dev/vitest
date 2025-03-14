@@ -55,11 +55,11 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       )
     }
 
-    const pool = new BrowserPool(project, {
+    const pool: BrowserPool = new BrowserPool(project, {
       maxWorkers: getThreadsCount(project),
       origin,
-      worker: (sessionId) => {
-        return project.vitest._browserSessions.createSession(sessionId, project)
+      session(sessionId) {
+        return project.vitest._browserSessions.createSession(sessionId, project, pool)
       },
     })
     projectPools.set(project, pool)
@@ -104,12 +104,11 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
 
   function getThreadsCount(project: TestProject) {
     const config = project.config.browser
-    if (!config.headless || !project.browser!.provider.supportsParallelism) {
-      return 1
-    }
-
-    // FIXME: allow isolate with parallelism
-    if (!config.fileParallelism || project.config.isolate === false) {
+    if (
+      !config.headless
+      || !config.fileParallelism
+      || !project.browser!.provider.supportsParallelism
+    ) {
       return 1
     }
 
@@ -151,19 +150,25 @@ class BrowserPool {
     private options: {
       maxWorkers: number
       origin: string
-      worker: (sessionId: string) => Promise<void>
+      session: (sessionId: string) => Promise<void>
     },
   ) {}
 
-  cancel() {
+  public cancel(): void {
     this._queue = []
+  }
+
+  public reject(error: Error): void {
+    this._promise?.reject(error)
+    this._promise = undefined
+    this.cancel()
   }
 
   get orchestrators() {
     return this.project.browser!.state.orchestrators
   }
 
-  async runTests(method: 'run' | 'collect', files: string[]) {
+  async runTests(method: 'run' | 'collect', files: string[]): Promise<void> {
     this._promise ??= createDefer<void>()
 
     if (!files.length) {
@@ -205,11 +210,14 @@ class BrowserPool {
   }
 
   private async openPage(sessionId: string) {
-    const promise = this.options.worker(sessionId)
+    const sessionPromise = this.options.session(sessionId)
     const url = new URL('/', this.options.origin)
     url.searchParams.set('sessionId', sessionId)
-    const page = this.project.browser!.provider.openPage(sessionId, url.toString())
-    await Promise.all([promise, page])
+    const pagePromise = this.project.browser!.provider.openPage(
+      sessionId,
+      url.toString(),
+    )
+    await Promise.all([sessionPromise, pagePromise])
   }
 
   private getOrchestrator(sessionId: string) {
@@ -258,9 +266,9 @@ class BrowserPool {
           if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
             return
           }
-          this._promise?.reject(error)
+          this.reject(error)
         })
-    }).catch(err => this._promise?.reject(err))
+    }).catch(err => this.reject(err))
   }
 
   async setBreakpoint(sessionId: string, file: string) {

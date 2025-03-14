@@ -239,7 +239,7 @@ export interface BrowserCommandContext {
 export interface BrowserServerStateSession {
   project: TestProject
   connected: () => void
-  reject: (v: unknown) => void
+  fail: (v: Error) => void
 }
 
 export interface BrowserOrchestrator {
