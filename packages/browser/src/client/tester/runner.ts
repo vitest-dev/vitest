@@ -156,7 +156,12 @@ export function createBrowserRunner(
       const prefix = `/${/^\w:/.test(filepath) ? '@fs/' : ''}`
       const query = `browserv=${hash}`
       const importpath = `${prefix}${filepath}?${query}`.replace(/\/+/g, '/')
-      await import(/* @vite-ignore */ importpath)
+      try {
+        await import(/* @vite-ignore */ importpath)
+      }
+      catch (err) {
+        throw new Error(`Failed to import test file ${filepath}`, { cause: err })
+      }
     }
   }
 }

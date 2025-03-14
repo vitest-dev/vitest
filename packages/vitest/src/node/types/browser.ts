@@ -243,6 +243,7 @@ export interface BrowserServerStateSession {
 }
 
 export interface BrowserOrchestrator {
+  cleanupTesters: () => Promise<void>
   createTesters: (options: BrowserTesterOptions) => Promise<void>
   onCancel: (reason: CancelReason) => Promise<void>
   $close: () => void

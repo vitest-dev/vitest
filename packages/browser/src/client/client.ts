@@ -53,10 +53,18 @@ function createClient() {
     {
       onCancel: setCancel,
       async createTesters(options) {
-        if (PAGE_TYPE !== 'orchestrator') {
+        const orchestrator = getBrowserState().orchestrator
+        if (!orchestrator) {
           throw new TypeError('Only orchestrator can create testers.')
         }
-        return getBrowserState().createTesters?.(options)
+        return orchestrator.createTesters(options)
+      },
+      async cleanupTesters() {
+        const orchestrator = getBrowserState().orchestrator
+        if (!orchestrator) {
+          throw new TypeError('Only orchestrator can cleanup testers.')
+        }
+        return orchestrator.cleanupTesters()
       },
       cdpEvent(event: string, payload: unknown) {
         const cdp = getBrowserState().cdp

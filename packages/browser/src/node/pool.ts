@@ -212,28 +212,33 @@ class BrowserPool {
     await Promise.all([promise, page])
   }
 
+  private getOrchestrator(sessionId: string) {
+    const orchestrator = this.orchestrators.get(sessionId)
+    if (!orchestrator) {
+      // TODO: handle this error
+      throw new Error(`Orchestrator not found for session ${sessionId}`)
+    }
+    return orchestrator
+  }
+
   private runNextTest(method: 'run' | 'collect', sessionId: string) {
     const file = this._queue.shift()
     if (!file) {
-      this.readySessions.add(sessionId)
-      // the last worker finished running tests
-      if (this.readySessions.size === this.orchestrators.size) {
-        this._promise?.resolve()
-        this._promise = undefined
-      }
+      const orchestrator = this.getOrchestrator(sessionId)
+      orchestrator.cleanupTesters().finally(() => {
+        this.readySessions.add(sessionId)
+        // the last worker finished running tests
+        if (this.readySessions.size === this.orchestrators.size) {
+          this._promise?.resolve()
+          this._promise = undefined
+        }
+      })
       return
     }
     if (!this._promise) {
       throw new Error(`Unexpected empty queue`)
     }
-    const orchestrator = this.orchestrators.get(sessionId)
-    if (!orchestrator) {
-      // TODO: handle this error
-      this._promise.reject(
-        new Error(`Orchestrator not found for session ${sessionId}`),
-      )
-      return
-    }
+    const orchestrator = this.getOrchestrator(sessionId)
 
     this.setBreakpoint(sessionId, file).then(() => {
       // this starts running tests inside the orchestrator

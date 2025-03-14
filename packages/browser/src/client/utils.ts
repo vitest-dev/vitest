@@ -1,4 +1,5 @@
-import type { BrowserTesterOptions, SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, WorkerGlobalState } from 'vitest'
+import type { IframeOrchestrator } from './orchestrator'
 import type { CommandsManager } from './tester/utils'
 
 export async function importId(id: string): Promise<any> {
@@ -76,7 +77,7 @@ export interface BrowserRunnerState {
   sessionId: string
   testerId: string
   method: 'run' | 'collect'
-  createTesters?: (options: BrowserTesterOptions) => Promise<void>
+  orchestrator?: IframeOrchestrator
   commands: CommandsManager
   cdp?: {
     on: (event: string, listener: (payload: any) => void) => void

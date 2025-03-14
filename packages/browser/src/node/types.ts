@@ -70,6 +70,7 @@ export interface WebSocketEvents
 export interface WebSocketBrowserEvents {
   onCancel: (reason: CancelReason) => void
   createTesters: (options: BrowserTesterOptions) => Promise<void>
+  cleanupTesters: () => Promise<void>
   cdpEvent: (event: string, payload: unknown) => void
 }
 
