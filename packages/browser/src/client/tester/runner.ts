@@ -171,13 +171,13 @@ export async function initiateRunner(
   const runner = new BrowserRunner({
     config,
   })
+  cachedRunner = runner
 
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, executor as unknown as VitestExecutor),
     loadSnapshotSerializers(config, executor as unknown as VitestExecutor),
   ])
   runner.config.diffOptions = diffOptions
-  cachedRunner = runner
   getWorkerState().onFilterStackTrace = (stack: string) => {
     const stacks = parseStacktrace(stack, {
       getSourceMap(file) {

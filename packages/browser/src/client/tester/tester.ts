@@ -1,9 +1,15 @@
 import { channel, client, onCancel } from '@vitest/browser/client'
 import { page, server, userEvent } from '@vitest/browser/context'
-import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
+import {
+  collectTests,
+  setupCommonEnv,
+  SpyModule,
+  startCoverageInsideWorker,
+  startTests,
+  stopCoverageInsideWorker,
+} from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
-import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
 import { createModuleMockerInterceptor } from './msw'
@@ -52,7 +58,6 @@ async function prepareTestEnvironment(files: string[]) {
 
   setupConsoleLogSpy()
   setupDialogsSpy()
-  setupExpectDom()
 
   const runner = await initiateRunner(state, mocker, config)
 
