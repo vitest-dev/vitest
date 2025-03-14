@@ -14,7 +14,7 @@
     "build": "pnpm -r --filter @vitest/ui --filter='./packages/**' run build",
     "dev": "NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm -r --parallel --filter='./packages/**' run dev",
     "docs": "pnpm -C docs run dev",
-    "docs:build": "pnpm -C docs run build",
+    "docs:build": "ROLLDOWN_OPTIONS_VALIDATION=loose pnpm -C docs run build",
     "docs:serve": "pnpm -C docs run serve",
     "docs:https": "pnpm -C docs run preview-https",
     "docs:https-no-prefetch": "pnpm -C docs run preview-https-no-prefetch",
@@ -64,17 +64,20 @@
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "unplugin-isolated-decl": "^0.12.0",
-    "vite": "^6.2.0",
+    "vite": "https://pkg.pr.new/vitejs/rolldown-vite/vite@3607409",
     "vitest": "workspace:*",
     "zx": "^8.3.2"
   },
   "pnpm": {
     "overrides": {
+      "@types/node": "$@types/node",
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
+      "esbuild": "$esbuild",
       "mlly": "^1.7.4",
       "rollup": "$rollup",
+      "tsx": "$tsx",
       "vite": "$vite",
       "vitest": "workspace:*"
     },

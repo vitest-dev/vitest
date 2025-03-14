@@ -1,1 +1,1 @@
-module.exports = function noop() {}
+module.exports = function noop() {};

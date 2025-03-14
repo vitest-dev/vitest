@@ -34,8 +34,8 @@ test('web worker coverage is correct', async () => {
         "<process-cwd>/fixtures/src/worker-wrapper.ts": {
           "branches": "3/3 (100%)",
           "functions": "2/4 (50%)",
-          "lines": "18/22 (81.81%)",
-          "statements": "18/22 (81.81%)",
+          "lines": "17/21 (80.95%)",
+          "statements": "17/21 (80.95%)",
         },
         "<process-cwd>/fixtures/src/worker.ts": {
           "branches": "2/4 (50%)",

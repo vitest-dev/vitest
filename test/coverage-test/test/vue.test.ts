@@ -36,8 +36,8 @@ test('coverage results matches snapshot', async () => {
   else if (isV8Provider()) {
     expect(coverageMap).toMatchInlineSnapshot(`
       {
-        "branches": "5/6 (83.33%)",
-        "functions": "3/5 (60%)",
+        "branches": "7/8 (87.5%)",
+        "functions": "4/6 (66.66%)",
         "lines": "35/43 (81.39%)",
         "statements": "35/43 (81.39%)",
       }

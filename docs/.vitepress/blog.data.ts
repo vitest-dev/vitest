@@ -9,8 +9,10 @@ interface Post {
   }
 }
 
-declare const data: Post[]
-export { data }
+// TODO: the exact typed data loader pattern is not supported by rolldown/oxc
+// https://vitepress.dev/guide/data-loading#typed-data-loaders
+// https://github.com/rolldown/rolldown/issues/3048#issuecomment-2547371389
+export declare const data: Post[]
 
 export default createContentLoader('blog/*.md', {
   // excerpt: true,
