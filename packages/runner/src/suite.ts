@@ -822,6 +822,7 @@ function formatTitle(template: string, items: any[], idx: number) {
       (_, key) =>
         objDisplay(objectAttr(items[0], key), {
           truncate: runner?.config?.chaiConfig?.truncateThreshold,
+          noStringQuote: true,
         }) as unknown as string,
     )
   }

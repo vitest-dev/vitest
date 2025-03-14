@@ -182,12 +182,16 @@ export function inspect(obj: unknown, options: LoupeOptions = {}): string {
   return loupe.inspect(obj, options)
 }
 
-export function objDisplay(obj: unknown, options: LoupeOptions = {}): string {
+export function objDisplay(obj: unknown, options: LoupeOptions & { noStringQuote?: boolean } = {}): string {
   if (typeof options.truncate === 'undefined') {
     options.truncate = 40
   }
   const str = inspect(obj, options)
   const type = Object.prototype.toString.call(obj)
+
+  if (options.noStringQuote && type === '[object String]') {
+    return str.slice(1, -1)
+  }
 
   if (options.truncate && str.length >= options.truncate) {
     if (type === '[object Function]') {
