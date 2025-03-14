@@ -244,7 +244,7 @@ export type {
   ContextRPC,
   ContextTestEnvironment,
   ResolveIdFunction,
-  TestExecutionMethod as TestExecutionType,
+  TestExecutionMethod,
   WorkerGlobalState,
 } from '../types/worker'
 export type {

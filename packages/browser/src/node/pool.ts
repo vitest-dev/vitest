@@ -236,6 +236,7 @@ class BrowserPool {
     }
 
     this.setBreakpoint(sessionId, file).then(() => {
+      // this starts running tests inside the orchestrator
       orchestrator.createTesters(
         {
           method,

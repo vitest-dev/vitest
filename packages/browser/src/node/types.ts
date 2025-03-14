@@ -8,7 +8,7 @@ import type {
   Reporter,
   RunnerTestFile,
   SnapshotResult,
-  TestExecutionType,
+  TestExecutionMethod,
   UserConsoleLog,
 } from 'vitest'
 
@@ -16,17 +16,16 @@ export interface WebSocketBrowserHandlers {
   resolveSnapshotPath: (testPath: string) => string
   resolveSnapshotRawPath: (testPath: string, rawPath: string) => string
   onUnhandledError: (error: unknown, type: string) => Promise<void>
-  onQueued: (method: TestExecutionType, file: RunnerTestFile) => void
-  onCollected: (method: TestExecutionType, files: RunnerTestFile[]) => Promise<void>
-  onTaskUpdate: (method: TestExecutionType, packs: TaskResultPack[], events: TaskEventPack[]) => void
+  onQueued: (method: TestExecutionMethod, file: RunnerTestFile) => void
+  onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
+  onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
   onCancel: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
-  sendLog: (method: TestExecutionType, log: UserConsoleLog) => void
-  // finishBrowserTests: (sessionId: string) => void
+  sendLog: (method: TestExecutionMethod, log: UserConsoleLog) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
   resolveId: (

@@ -257,7 +257,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
       {
         post: msg => ws.send(msg),
         on: fn => ws.on('message', fn),
-        eventNames: ['onCancel', 'cdpEvent', 'createTesters'],
+        eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         timeout: -1, // createTesters can take a long time
         deserialize: parse,

@@ -1,5 +1,5 @@
 import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
-import type { SerializedConfig, TestExecutionType, WorkerGlobalState } from 'vitest'
+import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
@@ -24,8 +24,8 @@ interface CoverageHandler {
 
 interface BrowserVitestRunner extends VitestRunner {
   sourceMapCache: Map<string, any>
-  method: TestExecutionType
-  setMethod: (method: TestExecutionType) => void
+  method: TestExecutionMethod
+  setMethod: (method: TestExecutionMethod) => void
 }
 
 export function createBrowserRunner(
@@ -38,14 +38,14 @@ export function createBrowserRunner(
     public config: SerializedConfig
     hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
-    public method = 'run' as TestExecutionType
+    public method = 'run' as TestExecutionMethod
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
       this.config = options.config
     }
 
-    setMethod(method: 'run' | 'collect') {
+    setMethod(method: TestExecutionMethod) {
       this.method = method
     }
 
