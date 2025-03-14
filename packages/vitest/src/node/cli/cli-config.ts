@@ -152,7 +152,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
     subcommands: apiConfig(defaultPort),
   },
   silent: {
-    description: 'Silent console output from tests',
+    description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
+    argument: '[value]',
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',

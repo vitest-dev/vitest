@@ -454,9 +454,11 @@ export interface InlineConfig {
   /**
    * Silent mode
    *
+   * Use `'passed-only'` to see logs from failing tests only.
+   *
    * @default false
    */
-  silent?: boolean
+  silent?: boolean | 'passed-only'
 
   /**
    * Hide logs for skipped tests
