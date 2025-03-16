@@ -105,6 +105,7 @@ const plugins = [
   commonjs(),
   oxc({
     transform: { target: 'node18' },
+    sourcemap: true,
   }),
 ]
 
