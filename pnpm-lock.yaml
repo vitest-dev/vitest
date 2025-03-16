@@ -220,9 +220,6 @@ importers:
       rollup-plugin-dts:
         specifier: ^6.1.1
         version: 6.1.1(rollup@4.34.8)(typescript@5.7.3)
-      rollup-plugin-esbuild:
-        specifier: ^6.2.0
-        version: 6.2.0(esbuild@0.25.0)(rollup@4.34.8)
       rollup-plugin-license:
         specifier: ^3.6.0
         version: 3.6.0(picomatch@4.0.2)(rollup@4.34.8)
@@ -8188,13 +8185,6 @@ packages:
       rollup: ^4.34.8
       typescript: ^4.5 || ^5.0
 
-  rollup-plugin-esbuild@6.2.0:
-    resolution: {integrity: sha512-LbkHaCahA6ceyWzAd6md2yajNS+HfZmZ5o58ShkZp0cQeZOnZECG2D2xWFNBq5SF6X6pfMK2udkZ+wRtvpzyVQ==}
-    engines: {node: '>=14.18.0'}
-    peerDependencies:
-      esbuild: '>=0.18.0'
-      rollup: ^4.34.8
-
   rollup-plugin-license@3.6.0:
     resolution: {integrity: sha512-1ieLxTCaigI5xokIfszVDRoy6c/Wmlot1fDEnea7Q/WXSR8AqOjYljHDLObAx7nFxHC2mbxT3QnTSPhaic2IYw==}
     engines: {node: '>=14.0.0'}
@@ -9125,10 +9115,6 @@ packages:
     resolution: {integrity: sha512-S2mgLIQVNR1+UGIk379/wD3tmkTJfm9QJFyZgXutMDNsSJrcPNJUdSXUNGE/+1Zde9i/I0r0BvDqxGgTkg+eJQ==}
     peerDependencies:
       '@swc/core': ^1.2.108
-
-  unplugin-utils@0.2.3:
-    resolution: {integrity: sha512-unB2e2ogZwEoMw/X0Gq1vj2jaRKLmTh9wcSEJggESPllcrZI68uO7B8ykixbXqsSwG8r9T7qaHZudXIC/3qvhw==}
-    engines: {node: '>=18.12.0'}
 
   unplugin-utils@0.2.4:
     resolution: {integrity: sha512-8U/MtpkPkkk3Atewj1+RcKIjb5WBimZ/WSLhhR3w6SsIj8XJuKTacSP8g+2JhfSGw0Cb125Y+2zA/IzJZDVbhA==}
@@ -17300,17 +17286,6 @@ snapshots:
     optionalDependencies:
       '@babel/code-frame': 7.24.7
 
-  rollup-plugin-esbuild@6.2.0(esbuild@0.25.0)(rollup@4.34.8):
-    dependencies:
-      debug: 4.4.0
-      es-module-lexer: 1.6.0
-      esbuild: 0.25.0
-      get-tsconfig: 4.10.0
-      rollup: 4.34.8
-      unplugin-utils: 0.2.3
-    transitivePeerDependencies:
-      - supports-color
-
   rollup-plugin-license@3.6.0(picomatch@4.0.2)(rollup@4.34.8):
     dependencies:
       commenting: 1.1.0
@@ -18385,11 +18360,6 @@ snapshots:
       unplugin: 1.7.1
     transitivePeerDependencies:
       - rollup
-
-  unplugin-utils@0.2.3:
-    dependencies:
-      pathe: 2.0.3
-      picomatch: 4.0.2
 
   unplugin-utils@0.2.4:
     dependencies:
