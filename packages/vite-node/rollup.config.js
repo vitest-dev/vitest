@@ -42,11 +42,13 @@ const plugins = [
   json(),
   commonjs(),
   oxc({
-    transform: { target: 'node14' },
+    transform: {
+      target: 'node14',
+      define: process.env.NO_VITE_TEST_WATCHER_DEBUG
+        ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
+        : {},
+    },
     sourcemap: true,
-    define: process.env.NO_VITE_TEST_WATCHER_DEBUG
-      ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
-      : {},
   }),
 ]
 
