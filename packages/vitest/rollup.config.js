@@ -6,10 +6,10 @@ import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { dirname, join, normalize, resolve } from 'pathe'
 import { defineConfig } from 'rollup'
-import esbuild from 'rollup-plugin-esbuild'
 import license from 'rollup-plugin-license'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -103,8 +103,8 @@ const plugins = [
   }),
   json(),
   commonjs(),
-  esbuild({
-    target: 'node18',
+  oxc({
+    transform: { target: 'node18' },
   }),
 ]
 
