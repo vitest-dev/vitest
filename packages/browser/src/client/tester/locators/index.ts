@@ -23,8 +23,9 @@ import {
   Ivya,
 
 } from 'ivya'
-import { ensureAwaited, escapeForTextSelector, getBrowserState } from '../../utils'
+import { ensureAwaited, getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
+import { escapeForTextSelector } from '../utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
 export const selectorEngine: Ivya = Ivya.create({
