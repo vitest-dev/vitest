@@ -816,16 +816,21 @@ function formatTitle(template: string, items: any[], idx: number) {
   }
 
   let formatted = format(template, ...items.slice(0, count))
-  if (isObject(items[0])) {
-    formatted = formatted.replace(
-      /\$([$\w.]+)/g,
-      // https://github.com/chaijs/chai/pull/1490
-      (_, key) =>
-        objDisplay(objectAttr(items[0], key), {
-          truncate: runner?.config?.chaiConfig?.truncateThreshold,
-        }) as unknown as string,
-    )
-  }
+  const isObjectItem = isObject(items[0])
+  formatted = formatted.replace(
+    /\$([$\w.]+)/g,
+    (_, key: string) => {
+      const isArrayKey = /^\d+$/.test(key)
+      if (!isObjectItem && !isArrayKey) {
+        return `$${key}`
+      }
+      const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
+      const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
+      return objDisplay(value, {
+        truncate: runner?.config?.chaiConfig?.truncateThreshold,
+      }) as unknown as string
+    },
+  )
   return formatted
 }
 

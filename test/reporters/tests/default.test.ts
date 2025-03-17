@@ -189,6 +189,38 @@ describe('default reporter', async () => {
     expect(stdout).toContain('✓ passed > 1-based index of the test case is 2')
     expect(stdout).toContain('✓ passed > 1-based index of the test case is 3')
   })
+
+  test('test.each/for title format', async () => {
+    const { stdout } = await runVitest({
+      include: ['fixtures/test-for-title.test.ts'],
+      reporters: [['default', { isTTY: true, summary: false }]],
+      config: false,
+    })
+    expect(
+      [...stdout.matchAll(/(✓ .*)$/gm)].map(v => v[0]).filter(v => !v.includes('ms')),
+    ).toMatchInlineSnapshot(`
+      [
+        "✓ test.for object : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.for object : 0 = 'b', 2 = [ 'test' ]",
+        "✓ test.each object : 0 = 'a', 2 = { te: 'st' } ",
+        "✓ test.each object : 0 = 'b', 2 = [ 'test' ] ",
+        "✓ test.for array : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.for array : 0 = 'b', 2 = [ 'test' ]",
+        "✓ test.each array : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.each array : 0 = 'b', 2 = [ 'test' ]",
+        "✓ object : add(1, 1) -> 2",
+        "✓ object : add(1, 2) -> 3",
+        "✓ object : add(2, 1) -> 3",
+        "✓ array : add(1, 1) -> 2",
+        "✓ array : add(1, 2) -> 3",
+        "✓ array : add(2, 1) -> 3",
+        "✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined",
+        "✓ first array element is not object: 0 = 'foo', 1 = 'bar', k = $k",
+        "✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1'",
+        "✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2'",
+      ]
+    `)
+  })
 }, 120000)
 
 function trimReporterOutput(report: string) {
