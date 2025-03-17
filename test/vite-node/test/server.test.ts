@@ -1,5 +1,6 @@
+import type { Plugin, ViteDevServer } from 'vite'
 import { join, resolve } from 'pathe'
-import { createServer, type Plugin, type ViteDevServer } from 'vite'
+import { createServer } from 'vite'
 import { ViteNodeServer } from 'vite-node/server'
 import { describe, expect, test, vi } from 'vitest'
 import { extractSourceMap } from '../../../packages/vite-node/src/source-map'

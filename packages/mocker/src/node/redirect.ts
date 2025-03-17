@@ -71,7 +71,13 @@ const builtins = new Set([
   'wasi',
 ])
 
-const prefixedBuiltins = new Set(['node:test', 'node:sqlite'])
+// https://nodejs.org/api/modules.html#built-in-modules-with-mandatory-node-prefix
+const prefixedBuiltins = new Set([
+  'node:sea',
+  'node:sqlite',
+  'node:test',
+  'node:test/reporters',
+])
 const NODE_BUILTIN_NAMESPACE = 'node:'
 function isNodeBuiltin(id: string): boolean {
   if (prefixedBuiltins.has(id)) {

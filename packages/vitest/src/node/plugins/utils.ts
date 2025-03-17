@@ -1,6 +1,5 @@
 import type {
   DepOptimizationOptions,
-  ResolvedConfig,
   UserConfig as ViteConfig,
 } from 'vite'
 import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
@@ -120,19 +119,6 @@ export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> 
     }
   }
   return defines
-}
-
-export function hijackVitePluginInject(viteConfig: ResolvedConfig): void {
-  // disable replacing `process.env.NODE_ENV` with static string
-  const processEnvPlugin = viteConfig.plugins.find(
-    p => p.name === 'vite:client-inject',
-  )
-  if (processEnvPlugin) {
-    const originalTransform = processEnvPlugin.transform as any
-    processEnvPlugin.transform = function transform(code, id, options) {
-      return originalTransform.call(this, code, id, { ...options, ssr: true })
-    }
-  }
 }
 
 export function resolveFsAllow(

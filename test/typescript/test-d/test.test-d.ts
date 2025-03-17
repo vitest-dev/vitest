@@ -1,6 +1,7 @@
 /* eslint-disable ts/ban-ts-comment */
 
-import { google, type sheets_v4 } from 'googleapis'
+import type { sheets_v4 } from 'googleapis'
+import { google } from 'googleapis'
 import { describe, expectTypeOf, test, vi } from 'vitest'
 
 describe('test', () => {

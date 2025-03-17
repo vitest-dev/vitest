@@ -1,6 +1,7 @@
+import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
-import inspector, { type Profiler } from 'node:inspector'
+import inspector from 'node:inspector'
 import { fileURLToPath } from 'node:url'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'

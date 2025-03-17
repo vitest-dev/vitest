@@ -18,6 +18,15 @@ describe('format', () => {
     ['%s', -0],
     ['%s', null],
     ['%s', null, 'next'],
+    [
+      '%s',
+      new (class {
+        constructor(public value: string) {}
+        toString() {
+          return this.value
+        }
+      })('string value'),
+    ],
     ['%d', 100],
     ['%d', 100n],
     ['%d', null],

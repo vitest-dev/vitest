@@ -11,6 +11,7 @@ describe('json reporter', async () => {
     const { stdout } = await runVitest({
       reporters: 'json',
       root,
+      include: ['**/json-fail-import.test.ts', '**/json-fail.test.ts'],
       includeTaskLocation: true,
     }, ['json-fail'])
 
@@ -126,11 +127,11 @@ describe('json reporter', async () => {
   })
 
   it.each([
-    ['passed', 'all-passing-or-skipped'],
-    ['passed', 'all-skipped'],
-    ['failed', 'some-failing'],
+    ['passed', 'all-passing-or-skipped.test.ts'],
+    ['passed', 'all-skipped.test.ts'],
+    ['failed', 'some-failing.test.ts'],
   ])('resolves to "%s" status for test file "%s"', async (expected, file) => {
-    const { stdout } = await runVitest({ reporters: 'json', root }, [file])
+    const { stdout } = await runVitest({ reporters: 'json', root, include: [`**/${file}`] })
 
     const data = JSON.parse(stdout)
 
