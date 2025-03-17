@@ -648,6 +648,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       printBasicPrototype: {
         description: 'Print basic prototype Object and Array (default: `true`)',
       },
+      maxDepth: {
+        description: 'Limit the depth to recurse when printing nested objects (default: `20`)',
+        argument: '<maxDepth>',
+      },
       truncateThreshold: {
         description: 'Number of lines to show before and after each change (default: `0`)',
         argument: '<threshold>',

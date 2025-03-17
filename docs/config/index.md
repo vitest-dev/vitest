@@ -2331,6 +2331,13 @@ Color of truncate annotation, default is output with no color.
 
 Print basic prototype `Object` and `Array` in diff output
 
+#### diff.maxDepth
+
+- **Type**: `number`
+- **Default**: `20` (or `8` when comparing different types)
+
+Limit the depth to recurse when printing nested objects
+
 ### fakeTimers
 
 - **Type:** `FakeTimerInstallOpts`
