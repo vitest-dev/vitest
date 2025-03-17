@@ -129,6 +129,18 @@ test('skipped test', (context) => {
 })
 ```
 
+Since Vitest 3.1, if the condition is unknonwn, you can provide it to the `skip` method as the first arguments:
+
+```ts
+import { assert, test } from 'vitest'
+
+test('skipped test', (context) => {
+  context.skip(Math.random() < 0.5, 'optional message')
+  // Test skipped, no error
+  assert.equal(Math.sqrt(4), 3)
+})
+```
+
 ### test.skipIf
 
 - **Alias:** `it.skipIf`

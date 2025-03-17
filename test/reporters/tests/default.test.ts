@@ -63,10 +63,12 @@ describe('default reporter', async () => {
       reporters: 'none',
     })
 
-    expect(stdout).contain('✓ a passed > a1 test')
-    expect(stdout).contain('✓ a passed > nested a > nested a3 test')
-    expect(stdout).contain('× a failed > a failed test')
-    expect(stdout).contain('nested a failed 1 test')
+    expect(stdout).toContain('✓ a passed > a1 test')
+    expect(stdout).toContain('✓ a passed > nested a > nested a3 test')
+    expect(stdout).toContain('× a failed > a failed test')
+    expect(stdout).toContain('nested a failed 1 test')
+    expect(stdout).toContain('[note]')
+    expect(stdout).toContain('[reason]')
   })
 
   test('rerun should undo', async () => {
