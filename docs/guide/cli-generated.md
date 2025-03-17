@@ -73,10 +73,10 @@ Set to true to exit if port is already in use, instead of automatically trying t
 
 ### silent
 
-- **CLI:** `--silent`
+- **CLI:** `--silent [value]`
 - **Config:** [silent](/config/#silent)
 
-Silent console output from tests
+Silent console output from tests. Use `'passed-only'` to see logs from failing tests only.
 
 ### hideSkippedTests
 
