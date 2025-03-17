@@ -2,8 +2,9 @@ import type { Locator } from '@vitest/browser/context'
 import type { ExpectPollOptions } from 'vitest'
 import * as matchers from '@testing-library/jest-dom/matchers'
 import { chai, expect } from 'vitest'
+import { processTimeoutOptions } from './utils'
 
-export async function setupExpectDom() {
+export async function setupExpectDom(): Promise<void> {
   expect.extend(matchers)
   expect.element = <T extends Element | Locator>(elementOrLocator: T, options?: ExpectPollOptions) => {
     if (!(elementOrLocator instanceof Element) && !('element' in elementOrLocator)) {
@@ -38,6 +39,6 @@ export async function setupExpectDom() {
       }
 
       return result
-    }, options)
+    }, processTimeoutOptions(options))
   }
 }

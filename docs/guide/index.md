@@ -133,7 +133,7 @@ export default defineConfig({
 })
 ```
 
-The `<reference types="vitest" />` will stop working in Vitest 3, but you can start migrating to `vitest/config` in Vitest 2.1:
+The `<reference types="vitest" />` will stop working in the next major update, but you can start migrating to `vitest/config` in Vitest 2.1:
 
 ```ts [vite.config.ts]
 /// <reference types="vitest/config" />
@@ -234,7 +234,7 @@ Vitest will prompt you to install certain dependencies if they are not already i
 
 ## IDE Integrations
 
-We also provided a official extension for Visual Studio Code to enhance your testing experience with Vitest.
+We also provided an official extension for Visual Studio Code to enhance your testing experience with Vitest.
 
 [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=vitest.explorer)
 

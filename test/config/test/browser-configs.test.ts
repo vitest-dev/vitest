@@ -1,13 +1,15 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { UserConfig, VitestOptions } from 'vitest/node'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
-  return await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  onTestFinished(() => vitest.close())
+  return vitest
 }
 
-test('assignes names as browsers', async () => {
+test('assigns names as browsers', async () => {
   const { projects } = await vitest({
     browser: {
       enabled: true,
@@ -43,7 +45,7 @@ test('filters projects', async () => {
   ])
 })
 
-test('filters projects with a wildecard', async () => {
+test('filters projects with a wildcard', async () => {
   const { projects } = await vitest({
     project: 'chrom*',
     browser: {

@@ -1,3 +1,4 @@
+import type { TestSpecification } from 'vitest/node'
 import { describe, expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
@@ -7,11 +8,52 @@ describe('default reporter', async () => {
       include: ['b1.test.ts', 'b2.test.ts'],
       root: 'fixtures/default',
       reporters: 'none',
+      fileParallelism: false,
+      sequence: {
+        sequencer: class StableTestFileOrderSorter {
+          sort(files: TestSpecification[]) {
+            return files.sort((a, b) => a.moduleId.localeCompare(b.moduleId))
+          }
+
+          shard(files: TestSpecification[]) {
+            return files
+          }
+        },
+      },
     })
 
-    expect(stdout).contain('✓ b2 passed > b2 test')
-    expect(stdout).not.contain('✓ nested b1 test')
-    expect(stdout).contain('× b1 failed > b failed test')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "❯ b1.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b1 passed > b1 test [...]ms
+         ✓ b1 passed > b2 test [...]ms
+         ✓ b1 passed > b3 test [...]ms
+         ✓ b1 passed > nested b > nested b1 test [...]ms
+         ✓ b1 passed > nested b > nested b2 test [...]ms
+         ✓ b1 passed > nested b > nested b3 test [...]ms
+         ✓ b1 failed > b1 test [...]ms
+         ✓ b1 failed > b2 test [...]ms
+         ✓ b1 failed > b3 test [...]ms
+         × b1 failed > b failed test [...]ms
+           → expected 1 to be 2 // Object.is equality
+         ✓ b1 failed > nested b > nested b1 test [...]ms
+         ✓ b1 failed > nested b > nested b2 test [...]ms
+         ✓ b1 failed > nested b > nested b3 test [...]ms
+       ❯ b2.test.ts (13 tests | 1 failed) [...]ms
+         ✓ b2 passed > b1 test [...]ms
+         ✓ b2 passed > b2 test [...]ms
+         ✓ b2 passed > b3 test [...]ms
+         ✓ b2 passed > nested b > nested b1 test [...]ms
+         ✓ b2 passed > nested b > nested b2 test [...]ms
+         ✓ b2 passed > nested b > nested b3 test [...]ms
+         ✓ b2 failed > b1 test [...]ms
+         ✓ b2 failed > b2 test [...]ms
+         ✓ b2 failed > b3 test [...]ms
+         × b2 failed > b failed test [...]ms
+           → expected 1 to be 2 // Object.is equality
+         ✓ b2 failed > nested b > nested b1 test [...]ms
+         ✓ b2 failed > nested b > nested b2 test [...]ms
+         ✓ b2 failed > nested b > nested b3 test [...]ms"
+    `)
   })
 
   test('show full test suite when only one file', async () => {
@@ -21,10 +63,12 @@ describe('default reporter', async () => {
       reporters: 'none',
     })
 
-    expect(stdout).contain('✓ a passed > a1 test')
-    expect(stdout).contain('✓ a passed > nested a > nested a3 test')
-    expect(stdout).contain('× a failed > a failed test')
-    expect(stdout).contain('nested a failed 1 test')
+    expect(stdout).toContain('✓ a passed > a1 test')
+    expect(stdout).toContain('✓ a passed > nested a > nested a3 test')
+    expect(stdout).toContain('× a failed > a failed test')
+    expect(stdout).toContain('nested a failed 1 test')
+    expect(stdout).toContain('[note]')
+    expect(stdout).toContain('[reason]')
   })
 
   test('rerun should undo', async () => {
@@ -118,7 +162,7 @@ describe('default reporter', async () => {
     })
 
     expect(stdout).toContain('1 passed')
-    expect(stdout).toContain('✓ pass after retries (retry x3)')
+    expect(trimReporterOutput(stdout)).toContain('✓ pass after retries [...]ms (retry x3)')
   })
 
   test('prints repeat count', async () => {
@@ -129,6 +173,64 @@ describe('default reporter', async () => {
     })
 
     expect(stdout).toContain('1 passed')
-    expect(stdout).toContain('✓ repeat couple of times (repeat x3)')
+    expect(trimReporterOutput(stdout)).toContain('✓ repeat couple of times [...]ms (repeat x3)')
+  })
+
+  test('prints 0-based index and 1-based index of the test case', async () => {
+    const { stdout } = await runVitest({
+      include: ['print-index.test.ts'],
+      root: 'fixtures/default',
+      reporters: 'none',
+    })
+
+    expect(stdout).toContain('✓ passed > 0-based index of the test case is 0')
+    expect(stdout).toContain('✓ passed > 0-based index of the test case is 1')
+    expect(stdout).toContain('✓ passed > 0-based index of the test case is 2')
+
+    expect(stdout).toContain('✓ passed > 1-based index of the test case is 1')
+    expect(stdout).toContain('✓ passed > 1-based index of the test case is 2')
+    expect(stdout).toContain('✓ passed > 1-based index of the test case is 3')
+  })
+
+  test('test.each/for title format', async () => {
+    const { stdout } = await runVitest({
+      include: ['fixtures/test-for-title.test.ts'],
+      reporters: [['default', { isTTY: true, summary: false }]],
+      config: false,
+    })
+    expect(
+      [...stdout.matchAll(/(✓ .*)$/gm)].map(v => v[0]).filter(v => !v.includes('ms')),
+    ).toMatchInlineSnapshot(`
+      [
+        "✓ test.for object : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.for object : 0 = 'b', 2 = [ 'test' ]",
+        "✓ test.each object : 0 = 'a', 2 = { te: 'st' } ",
+        "✓ test.each object : 0 = 'b', 2 = [ 'test' ] ",
+        "✓ test.for array : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.for array : 0 = 'b', 2 = [ 'test' ]",
+        "✓ test.each array : 0 = 'a', 2 = { te: 'st' }",
+        "✓ test.each array : 0 = 'b', 2 = [ 'test' ]",
+        "✓ object : add(1, 1) -> 2",
+        "✓ object : add(1, 2) -> 3",
+        "✓ object : add(2, 1) -> 3",
+        "✓ array : add(1, 1) -> 2",
+        "✓ array : add(1, 2) -> 3",
+        "✓ array : add(2, 1) -> 3",
+        "✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined",
+        "✓ first array element is not object: 0 = 'foo', 1 = 'bar', k = $k",
+        "✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1'",
+        "✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2'",
+      ]
+    `)
   })
 }, 120000)
+
+function trimReporterOutput(report: string) {
+  const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
+
+  // Trim start and end, capture just rendered tree
+  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
+  rows.splice(rows.findIndex(row => row.includes('Test Files')))
+
+  return rows.join('\n').trim()
+}

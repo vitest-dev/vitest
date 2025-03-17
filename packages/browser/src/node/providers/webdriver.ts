@@ -1,9 +1,9 @@
+import type { Capabilities } from '@wdio/types'
 import type {
   BrowserProvider,
   BrowserProviderInitializationOptions,
   TestProject,
 } from 'vitest/node'
-import type { RemoteOptions } from 'webdriverio'
 
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = (typeof webdriverBrowsers)[number]
@@ -22,41 +22,55 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private browserName!: WebdriverBrowser
   private project!: TestProject
 
-  private options?: RemoteOptions
+  private options?: Capabilities.WebdriverIOConfig
 
-  getSupportedBrowsers() {
+  getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
   }
 
   async initialize(
     ctx: TestProject,
     { browser, options }: WebdriverProviderOptions,
-  ) {
+  ): Promise<void> {
     this.project = ctx
     this.browserName = browser
-    this.options = options as RemoteOptions
+    this.options = options as Capabilities.WebdriverIOConfig
   }
 
-  async beforeCommand() {
+  async switchToTestFrame(): Promise<void> {
     const page = this.browser!
-    const iframe = await page.findElement(
-      'css selector',
-      'iframe[data-vitest]',
-    )
-    await page.switchToFrame(iframe)
+    // support wdio@9
+    if (page.switchFrame) {
+      await page.switchFrame(page.$('iframe[data-vitest]'))
+    }
+    else {
+      const iframe = await page.findElement(
+        'css selector',
+        'iframe[data-vitest]',
+      )
+      await page.switchToFrame(iframe)
+    }
   }
 
-  async afterCommand() {
-    await this.browser!.switchToParentFrame()
+  async switchToMainFrame(): Promise<void> {
+    const page = this.browser!
+    if (page.switchFrame) {
+      await page.switchFrame(null)
+    }
+    else {
+      await page.switchToParentFrame()
+    }
   }
 
-  getCommandsContext() {
+  getCommandsContext(): {
+    browser: WebdriverIO.Browser | null
+  } {
     return {
       browser: this.browser,
     }
   }
 
-  async openBrowser() {
+  async openBrowser(): Promise<WebdriverIO.Browser> {
     if (this.browser) {
       return this.browser
     }
@@ -84,7 +98,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 
   private buildCapabilities() {
-    const capabilities: RemoteOptions['capabilities'] = {
+    const capabilities: Capabilities.WebdriverIOConfig['capabilities'] = {
       ...this.options?.capabilities,
       browserName: this.browserName,
     }
@@ -120,12 +134,12 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(_sessionId: string, url: string) {
+  async openPage(_sessionId: string, url: string): Promise<void> {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
   }
 
-  async close() {
+  async close(): Promise<void> {
     await Promise.all([
       this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
     ])

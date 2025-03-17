@@ -6,7 +6,10 @@ export {
   VerboseBenchmarkReporter,
 }
 
-export const BenchmarkReportsMap = {
+export const BenchmarkReportsMap: {
+  default: typeof BenchmarkReporter
+  verbose: typeof VerboseBenchmarkReporter
+} = {
   default: BenchmarkReporter,
   verbose: VerboseBenchmarkReporter,
 }

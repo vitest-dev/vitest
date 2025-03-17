@@ -1,18 +1,18 @@
+import type { GlobOptions } from 'tinyglobby'
 import type { Vitest } from '../core'
 import type { BrowserInstanceOption, ResolvedConfig, TestProjectConfiguration, UserConfig, UserWorkspaceConfig } from '../types/config'
 import { existsSync, promises as fs } from 'node:fs'
 import os from 'node:os'
 import { limitConcurrency } from '@vitest/runner/utils'
 import { deepClone } from '@vitest/utils'
-import fg from 'fast-glob'
 import { dirname, relative, resolve } from 'pathe'
+import { glob, isDynamicPattern } from 'tinyglobby'
 import { mergeConfig } from 'vite'
 import { configFiles as defaultConfigFiles } from '../../constants'
 import { isTTY } from '../../utils/env'
 import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
-import { isDynamicPattern } from './fast-glob-pattern'
 
 export async function resolveWorkspace(
   vitest: Vitest,
@@ -170,7 +170,7 @@ export async function resolveBrowserWorkspace(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],
-) {
+): Promise<TestProject[]> {
   const removeProjects = new Set<TestProject>()
 
   resolvedProjects.forEach((project) => {
@@ -216,7 +216,7 @@ export async function resolveBrowserWorkspace(
 
     if (project.config.browser.providerOptions) {
       vitest.logger.warn(
-        withLabel('yellow', 'Vitest', `"providerOptions"${originalName ? ` in "${originalName}" project` : ''} is ignored because it's overriden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
+        withLabel('yellow', 'Vitest', `"providerOptions"${originalName ? ` in "${originalName}" project` : ''} is ignored because it's overridden by the configs. To hide this warning, remove the "providerOptions" property from the browser configuration.`),
       )
     }
 
@@ -397,14 +397,12 @@ async function resolveTestProjectConfigs(
   }
 
   if (workspaceGlobMatches.length) {
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       absolute: true,
       dot: true,
       onlyFiles: false,
       cwd: vitest.config.root,
-      markDirectories: true,
-      // TODO: revert option when we go back to tinyglobby
-      // expandDirectories: false,
+      expandDirectories: false,
       ignore: [
         '**/node_modules/**',
         // temporary vite config file
@@ -414,7 +412,7 @@ async function resolveTestProjectConfigs(
       ],
     }
 
-    const workspacesFs = await fg.glob(workspaceGlobMatches, globOptions)
+    const workspacesFs = await glob(workspaceGlobMatches, globOptions)
 
     await Promise.all(workspacesFs.map(async (path) => {
       // directories are allowed with a glob like `packages/*`

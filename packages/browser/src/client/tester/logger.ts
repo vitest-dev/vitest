@@ -4,7 +4,7 @@ import { rpc } from './rpc'
 
 const { Date, console, performance } = globalThis
 
-export function setupConsoleLogSpy() {
+export function setupConsoleLogSpy(): void {
   const {
     log,
     info,
@@ -95,6 +95,13 @@ export function setupConsoleLogSpy() {
 function stdout(base: (...args: unknown[]) => void) {
   return (...args: unknown[]) => {
     base(...args)
+    // ignore shadow root logs from wdio
+    // https://github.com/webdriverio/webdriverio/discussions/14221
+    if (args[0] === '[WDIO]') {
+      if (args[1] === 'newShadowRoot' || args[1] === 'removeShadowRoot') {
+        return
+      }
+    }
     sendLog('stdout', processLog(args))
   }
 }

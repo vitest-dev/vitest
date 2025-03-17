@@ -1,12 +1,12 @@
 import type { ViteNodeRunnerOptions } from 'vite-node'
-import type { ModuleCacheMap } from 'vite-node/client'
+import type { ModuleCacheMap, ModuleExecutionInfo } from 'vite-node/client'
 import type { WorkerGlobalState } from '../types/worker'
 import type { ExternalModulesExecutor } from './external-executor'
 import fs from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import vm from 'node:vm'
 import { processError } from '@vitest/utils/error'
-import { normalize, relative } from 'pathe'
+import { normalize } from 'pathe'
 import { DEFAULT_REQUEST_STUBS, ViteNodeRunner } from 'vite-node/client'
 import {
   isInternalRequest,
@@ -28,7 +28,7 @@ export interface ExecuteOptions extends ViteNodeRunnerOptions {
   externalModulesExecutor?: ExternalModulesExecutor
 }
 
-export async function createVitestExecutor(options: ExecuteOptions) {
+export async function createVitestExecutor(options: ExecuteOptions): Promise<VitestExecutor> {
   const runner = new VitestExecutor(options)
 
   await runner.executeId('/@vite/env')
@@ -59,7 +59,7 @@ function listenForErrors(state: () => WorkerGlobalState) {
     const worker = state()
 
     // if error happens during a test
-    if (worker.current) {
+    if (worker.current?.type === 'test') {
       const listeners = process.listeners(event as 'uncaughtException')
       // if there is another listener, assume that it's handled by user code
       // one is Vitest's own listener
@@ -70,9 +70,9 @@ function listenForErrors(state: () => WorkerGlobalState) {
 
     const error = processError(err)
     if (!isPrimitive(error)) {
-      error.VITEST_TEST_NAME = worker.current?.name
+      error.VITEST_TEST_NAME = worker.current?.type === 'test' ? worker.current.name : undefined
       if (worker.filepath) {
-        error.VITEST_TEST_PATH = relative(state().config.root, worker.filepath)
+        error.VITEST_TEST_PATH = worker.filepath
       }
       error.VITEST_AFTER_ENV_TEARDOWN = worker.environmentTeardownRun
     }
@@ -91,7 +91,7 @@ function listenForErrors(state: () => WorkerGlobalState) {
   })
 }
 
-export async function startVitestExecutor(options: ContextExecutorOptions) {
+export async function startVitestExecutor(options: ContextExecutorOptions): Promise<VitestExecutor> {
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
     globalThis.__vitest_worker__ || options.state
@@ -138,6 +138,9 @@ export async function startVitestExecutor(options: ContextExecutorOptions) {
     get moduleCache() {
       return state().moduleCache
     },
+    get moduleExecutionInfo() {
+      return state().moduleExecutionInfo
+    },
     get interopDefault() {
       return state().config.deps.interopDefault
     },
@@ -183,7 +186,10 @@ function removeStyle(id: string) {
   }
 }
 
-export function getDefaultRequestStubs(context?: vm.Context) {
+export function getDefaultRequestStubs(context?: vm.Context): {
+  '/@vite/client': any
+  '@vite/client': any
+} {
   if (!context) {
     const clientStub = {
       ...DEFAULT_REQUEST_STUBS['@vite/client'],
@@ -246,13 +252,21 @@ export class VitestExecutor extends ViteNodeRunner {
     }
   }
 
-  protected getContextPrimitives() {
+  protected getContextPrimitives(): {
+    Object: typeof Object
+    Reflect: typeof Reflect
+    Symbol: typeof Symbol
+  } {
     return this.primitives
   }
 
   get state(): WorkerGlobalState {
     // @ts-expect-error injected untyped global
     return globalThis.__vitest_worker__ || this.options.state
+  }
+
+  get moduleExecutionInfo(): ModuleExecutionInfo | undefined {
+    return this.options.moduleExecutionInfo
   }
 
   shouldResolveId(id: string, _importee?: string | undefined): boolean {
@@ -267,11 +281,11 @@ export class VitestExecutor extends ViteNodeRunner {
       : !id.startsWith('node:')
   }
 
-  async originalResolveUrl(id: string, importer?: string) {
+  async originalResolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     return super.resolveUrl(id, importer)
   }
 
-  async resolveUrl(id: string, importer?: string) {
+  async resolveUrl(id: string, importer?: string): Promise<[url: string, fsPath: string]> {
     if (VitestMocker.pendingIds.length) {
       await this.mocker.resolveMocks()
     }
@@ -295,7 +309,7 @@ export class VitestExecutor extends ViteNodeRunner {
     }
   }
 
-  protected async runModule(context: Record<string, any>, transformed: string) {
+  protected async runModule(context: Record<string, any>, transformed: string): Promise<void> {
     const vmContext = this.options.context
 
     if (!vmContext || !this.externalModules) {
@@ -312,6 +326,8 @@ export class VitestExecutor extends ViteNodeRunner {
       lineOffset: 0,
       columnOffset: -codeDefinition.length,
     }
+
+    this.options.moduleExecutionInfo?.set(options.filename, { startOffset: codeDefinition.length })
 
     const fn = vm.runInContext(code, vmContext, {
       ...options,
@@ -345,7 +361,7 @@ export class VitestExecutor extends ViteNodeRunner {
     return super.dependencyRequest(id, fsPath, callstack)
   }
 
-  prepareContext(context: Record<string, any>) {
+  prepareContext(context: Record<string, any>): Record<string, any> {
     // support `import.meta.vitest` for test entry
     if (
       this.state.filepath

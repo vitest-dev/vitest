@@ -1,15 +1,15 @@
 import type { WorkerGlobalState } from '../../types/worker'
-import type { VitestWorker } from './types'
+import type { VitestWorker, WorkerRpcOptions } from './types'
 import v8 from 'node:v8'
 import { runBaseTests } from './base'
 import { createForksRpcOptions, unwrapSerializableConfig } from './utils'
 
 class ForksBaseWorker implements VitestWorker {
-  getRpcOptions() {
+  getRpcOptions(): WorkerRpcOptions {
     return createForksRpcOptions(v8)
   }
 
-  async executeTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+  async executeTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
     // TODO: don't rely on reassigning process.exit
     // https://github.com/vitest-dev/vitest/pull/4441#discussion_r1443771486
     const exit = process.exit
@@ -23,13 +23,14 @@ class ForksBaseWorker implements VitestWorker {
     }
   }
 
-  runTests(state: WorkerGlobalState) {
+  runTests(state: WorkerGlobalState): Promise<void> {
     return this.executeTests('run', state)
   }
 
-  collectTests(state: WorkerGlobalState) {
+  collectTests(state: WorkerGlobalState): Promise<void> {
     return this.executeTests('collect', state)
   }
 }
 
-export default new ForksBaseWorker()
+const worker: ForksBaseWorker = new ForksBaseWorker()
+export default worker

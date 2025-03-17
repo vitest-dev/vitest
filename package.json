@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "3.0.5",
+  "version": "3.0.9",
   "private": true,
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.4.1",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -36,35 +36,37 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.16.0",
-    "@antfu/ni": "^23.2.0",
-    "@playwright/test": "^1.49.1",
+    "@antfu/eslint-config": "^4.8.1",
+    "@antfu/ni": "^23.3.1",
+    "@playwright/test": "^1.50.1",
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@types/node": "^22.10.9",
-    "@types/ws": "^8.5.13",
+    "@types/node": "^22.13.5",
+    "@types/ws": "^8.5.14",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "bumpp": "^10.0.2",
+    "bumpp": "^10.0.3",
     "changelogithub": "^13.12.1",
-    "esbuild": "^0.24.2",
-    "eslint": "^9.20.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.22.0",
     "magic-string": "^0.30.17",
-    "pathe": "^2.0.2",
+    "oxc-transform": "^0.56.0",
+    "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.31.0",
+    "rollup": "^4.34.8",
     "rollup-plugin-dts": "^6.1.1",
-    "rollup-plugin-esbuild": "^6.1.1",
-    "rollup-plugin-license": "^3.5.3",
-    "tinyglobby": "^0.2.10",
-    "tsx": "^4.19.2",
+    "rollup-plugin-esbuild": "^6.2.0",
+    "rollup-plugin-license": "^3.6.0",
+    "tinyglobby": "^0.2.12",
+    "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "vite": "^6.0.11",
+    "unplugin-isolated-decl": "^0.12.0",
+    "vite": "^6.2.0",
     "vitest": "workspace:*",
-    "zx": "^8.3.0"
+    "zx": "^8.3.2"
   },
   "pnpm": {
     "overrides": {
@@ -82,12 +84,23 @@
       ]
     },
     "patchedDependencies": {
-      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
+      "@types/chai@5.0.1": "patches/@types__chai@5.0.1.patch",
       "@sinonjs/fake-timers@14.0.0": "patches/@sinonjs__fake-timers@14.0.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@sveltejs/kit",
+      "@swc/core",
+      "edgedriver",
+      "esbuild",
+      "geckodriver",
+      "msw",
+      "sharp",
+      "svelte-preprocess",
+      "vue-demi"
+    ]
   }
 }

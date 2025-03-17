@@ -38,7 +38,7 @@ export class VitestSpecifications {
     )
   }
 
-  public async globTestSpecifications(filters: string[] = []) {
+  public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
     const files: TestSpecification[] = []
     const dir = process.cwd()
     const parsedFilters = filters.map(f => parseFilter(f))
@@ -55,7 +55,7 @@ export class VitestSpecifications {
       f => ({ ...f, filename: resolve(dir, f.filename) }),
     ))
 
-    // Key is file and val sepcifies whether we have matched this file with testLocation
+    // Key is file and val specifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}
 
     await Promise.all(this.vitest.projects.map(async (project) => {

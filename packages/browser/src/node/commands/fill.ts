@@ -19,6 +19,6 @@ export const fill: UserEventCommand<UserEvent['fill']> = async (
     await browser.$(selector).setValue(text)
   }
   else {
-    throw new TypeError(`Provider "${context.provider.name}" does not support clearing elements`)
+    throw new TypeError(`Provider "${context.provider.name}" does not support filling inputs`)
   }
 }

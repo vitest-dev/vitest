@@ -42,20 +42,17 @@ exports[`should fail hooks-fail-beforeAll.test.ts 1`] = `"TypeError: "beforeAll"
 
 exports[`should fail hooks-fail-beforeEach.test.ts 1`] = `"TypeError: "beforeEach" callback value must be function, received "string""`;
 
+exports[`should fail hooks-timeout-before-hook-cleanup-callback.test.ts 1`] = `
+"Error: Hook timed out in 101ms.
+Error: Hook timed out in 102ms."
+`;
+
 exports[`should fail inline-snapshop-inside-each.test.ts 1`] = `
 "Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each
 Error: InlineSnapshot cannot be used inside of test.each or describe.each"
-`;
-
-exports[`should fail inline-snapshop-inside-loop.test.ts 1`] = `
-"Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
-Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
-Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
-Error: toMatchInlineSnapshot cannot be called multiple times at the same location.
-Error: toMatchInlineSnapshot cannot be called multiple times at the same location."
 `;
 
 exports[`should fail mock-import-proxy-module.test.ts 1`] = `"Error: There are some problems in resolving the mocks API."`;
@@ -76,6 +73,8 @@ Error: expect.poll(assertion).toBe() was not awaited. This assertion is asynchro
 `;
 
 exports[`should fail primitive-error.test.ts 1`] = `"Unknown Error: 42"`;
+
+exports[`should fail skip-conditional.test.ts 1`] = `"Error: doesnt skip"`;
 
 exports[`should fail snapshot-with-not.test.ts 1`] = `
 "Error: toThrowErrorMatchingInlineSnapshot cannot be used with "not"

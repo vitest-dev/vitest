@@ -1,5 +1,6 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { WorkerGlobalState } from 'vitest'
 import type { WorkspaceProjectConfiguration } from 'vitest/config'
 import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
@@ -10,7 +11,7 @@ import { inspect } from 'node:util'
 import { dirname, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
-import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
+import { afterEach, onTestFinished } from 'vitest'
 import { startVitest } from 'vitest/node'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
@@ -185,6 +186,10 @@ export async function runCli(command: string, _options?: CliOptions | string, ..
   })
 
   if ((options as CliOptions)?.earlyReturn || args.includes('--inspect') || args.includes('--inspect-brk')) {
+    return output()
+  }
+
+  if (args[0] === 'init') {
     return output()
   }
 

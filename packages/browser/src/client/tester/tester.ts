@@ -1,5 +1,5 @@
 import { channel, client, onCancel } from '@vitest/browser/client'
-import { page, userEvent } from '@vitest/browser/context'
+import { page, server, userEvent } from '@vitest/browser/context'
 import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
@@ -9,6 +9,7 @@ import { VitestBrowserClientMocker } from './mocker'
 import { createModuleMockerInterceptor } from './msw'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
+import { CommandsManager } from './utils'
 
 const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 
@@ -33,6 +34,8 @@ async function prepareTestEnvironment(files: string[]) {
   state.ctx.files = files
   state.onCancel = onCancel
   state.rpc = rpc as any
+
+  getBrowserState().commands = new CommandsManager()
 
   // TODO: expose `worker`
   const interceptor = createModuleMockerInterceptor()
@@ -69,6 +72,8 @@ async function prepareTestEnvironment(files: string[]) {
     runner,
     config,
     state,
+    rpc,
+    commands: getBrowserState().commands,
   }
 }
 
@@ -113,11 +118,33 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
 
   debug('runner resolved successfully')
 
-  const { config, runner, state } = preparedData
+  const { config, runner, state, commands, rpc } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
 
   debug('prepare time', state.durations.prepare, 'ms')
+
+  let contextSwitched = false
+
+  // webdiverio context depends on the iframe state, so we need to switch the context,
+  // we delay this in case the user doesn't use any userEvent commands to avoid the overhead
+  if (server.provider === 'webdriverio') {
+    let switchPromise: Promise<void> | null = null
+
+    commands.onCommand(async () => {
+      if (switchPromise) {
+        await switchPromise
+      }
+      // if this is the first command, make sure we switched the command context to an iframe
+      if (!contextSwitched) {
+        switchPromise = rpc.wdioSwitchContext('iframe').finally(() => {
+          switchPromise = null
+          contextSwitched = true
+        })
+        await switchPromise
+      }
+    })
+  }
 
   try {
     await Promise.all([
@@ -151,6 +178,9 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       // need to cleanup for each tester
       // since playwright keyboard API is stateful on page instance level
       await userEvent.cleanup()
+      if (contextSwitched) {
+        await rpc.wdioSwitchContext('parent')
+      }
     }
     catch (error: any) {
       await client.rpc.onUnhandledError({

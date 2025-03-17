@@ -16,7 +16,7 @@ export function getBenchFn(key: Test): BenchFunction {
   return benchFns.get(key)!
 }
 
-export const bench = createBenchmark(function (
+export const bench: BenchmarkAPI = createBenchmark(function (
   name,
   fn: BenchFunction = noop,
   options: BenchOptions = {},
@@ -59,7 +59,7 @@ function createBenchmark(
 function formatName(name: string | Function) {
   return typeof name === 'string'
     ? name
-    : name instanceof Function
+    : typeof name === 'function'
       ? name.name || '<anonymous>'
       : String(name)
 }

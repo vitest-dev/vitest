@@ -4,3 +4,42 @@ packages:
   - examples/*
   - test/*
   - test/config/fixtures/conditions-pkg
+catalog:
+  '@ampproject/remapping': ^2.3.0
+  '@iconify-json/carbon': ^1.2.7
+  '@iconify-json/logos': ^1.2.4
+  '@jridgewell/trace-mapping': ^0.3.25
+  '@types/debug': ^4.1.12
+  '@types/estree': ^1.0.6
+  '@types/istanbul-lib-coverage': ^2.0.6
+  '@types/istanbul-lib-report': ^3.0.3
+  '@types/istanbul-lib-source-maps': ^4.0.4
+  '@types/istanbul-reports': ^3.0.4
+  '@types/test-exclude': ^6.0.2
+  '@types/ws': ^8.5.14
+  '@unocss/reset': ^0.65.4
+  '@vitejs/plugin-vue': ^5.2.1
+  '@vueuse/core': ^12.7.0
+  acorn-walk: ^8.3.4
+  birpc: 0.2.19
+  cac: ^6.7.14
+  chai: ^5.2.0
+  debug: ^4.4.0
+  flatted: ^3.3.3
+  istanbul-lib-coverage: ^3.2.2
+  istanbul-lib-report: ^3.0.1
+  istanbul-lib-source-maps: ^5.0.6
+  istanbul-reports: ^3.1.7
+  magic-string: ^0.30.17
+  magicast: ^0.3.5
+  msw: ^2.7.3
+  pathe: ^2.0.3
+  sirv: ^3.0.1
+  std-env: ^3.8.0
+  test-exclude: ^7.0.1
+  tinyglobby: ^0.2.12
+  tinyrainbow: ^2.0.0
+  unocss: ^0.65.4
+  unplugin-vue-components: ^0.28.0
+  vue: 3.5.12
+  ws: ^8.18.1

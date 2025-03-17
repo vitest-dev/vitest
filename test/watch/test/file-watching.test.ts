@@ -192,7 +192,7 @@ describe('browser', () => {
     const { vitest } = await testUtils.runVitest({
       ...options,
       browser: {
-        name: 'chrome',
+        instances: [{ browser: 'chromium' }],
         provider: 'webdriverio',
         enabled: true,
         headless: true,
