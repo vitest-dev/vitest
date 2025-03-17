@@ -535,7 +535,7 @@ export class ViteNodeRunner {
   }
 
   protected importExternalModule(path: string): Promise<any> {
-    return import(path)
+    return import(/* @vite-ignore */ path)
   }
 
   /**
