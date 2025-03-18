@@ -1282,12 +1282,12 @@ export class Vitest {
    * Check if the project with a given name should be included.
    */
   matchesProjectFilter(name: string): boolean {
-    const projects = this.config.project
+    const projects = this._config?.project || this._options?.project
     // no filters applied, any project can be included
-    if (!projects.length) {
+    if (!projects || !projects.length) {
       return true
     }
-    return projects.some((project) => {
+    return toArray(projects).some((project) => {
       const regexp = wildcardPatternToRegExp(project)
       return regexp.test(name)
     })
@@ -1296,7 +1296,7 @@ export class Vitest {
 
 function assert(condition: unknown, property: string, name: string = property): asserts condition {
   if (!condition) {
-    throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Either await the Vitest promise or check that it is initialized with \`vitest.ready()\` before accessing \`vitest.${property}\`.`)
+    throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Await the Vitest promise before accessing \`vitest.${property}\`.`)
   }
 }
 
