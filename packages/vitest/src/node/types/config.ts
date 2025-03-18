@@ -1132,10 +1132,6 @@ export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
    * @example '../vite.config.ts'
    */
   extends?: string | true
-  /**
-   * Always include this project in the test run, even if it's filtered out by the `--project` option.
-   */
-  force?: true
 })
 
 export type TestProjectConfiguration =

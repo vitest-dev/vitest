@@ -102,7 +102,6 @@ export class Vitest {
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
   /** @internal */ _testRun: TestRun = undefined!
-  /** @internal */ _projectFilters: RegExp[] = []
 
   private isFirstRun = true
   private restartsCount = 0
@@ -216,7 +215,6 @@ export class Vitest {
     this.specifications.clearCache()
     this._onUserTestsRerun = []
 
-    this._projectFilters = toArray(options.project || []).map(project => wildcardPatternToRegExp(project))
     this._vite = server
 
     const resolved = resolveConfig(this, options, server.config)
@@ -282,7 +280,11 @@ export class Vitest {
 
     await Promise.all(projects.flatMap((project) => {
       const hooks = project.vite.config.getSortedPluginHooks('configureVitest')
-      return hooks.map(hook => hook({ project, vitest: this, injectTestProjects: this.injectTestProject }))
+      return hooks.map(hook => hook({
+        project,
+        vitest: this,
+        injectTestProjects: this.injectTestProject,
+      }))
     }))
 
     if (!this.projects.length) {
@@ -891,11 +893,9 @@ export class Vitest {
   async changeProjectName(pattern: string): Promise<void> {
     if (pattern === '') {
       this.configOverride.project = undefined
-      this._projectFilters = []
     }
     else {
       this.configOverride.project = [pattern]
-      this._projectFilters = [wildcardPatternToRegExp(pattern)]
     }
 
     await this.vite.restart()
@@ -1284,11 +1284,15 @@ export class Vitest {
    * Check if the project with a given name should be included.
    */
   matchesProjectFilter(name: string): boolean {
+    const projects = this.config.project
     // no filters applied, any project can be included
-    if (!this._projectFilters.length) {
+    if (!projects.length) {
       return true
     }
-    return this._projectFilters.some(filter => filter.test(name))
+    return projects.some((project) => {
+      const regexp = wildcardPatternToRegExp(project)
+      return regexp.test(name)
+    })
   }
 }
 

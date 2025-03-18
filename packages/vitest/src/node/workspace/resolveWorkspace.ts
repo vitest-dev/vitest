@@ -201,7 +201,7 @@ export async function resolveBrowserWorkspace(
     }
     const originalName = project.config.name
     // if original name is in the --project=name filter, keep all instances
-    const filteredInstances = !vitest._projectFilters.length || vitest.matchesProjectFilter(originalName)
+    const filteredInstances = vitest.matchesProjectFilter(originalName)
       ? instances
       : instances.filter((instance) => {
           const newName = instance.name! // name is set in "workspace" plugin

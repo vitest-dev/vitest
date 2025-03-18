@@ -231,21 +231,6 @@ bun test --project e2e --project unit
 ```
 :::
 
-Since Vitest 3.1, you can define a project that will always run even if you filter it out with a `--project` flag. Specify `force: true` flag when defining the project to always include it in your test run (note that this is only available in inline configs):
-
-```ts
-export default defineWorkspace([
-  {
-    // this project will always run even if it was filtered out
-    force: true,
-    extends: './vitest.config.ts',
-    test: {
-      name: 'unit',
-    },
-  },
-])
-```
-
 ## Configuration
 
 None of the configuration options are inherited from the root-level config file, even if the workspace is defined inside that config and not in a separate `vitest.workspace` file. You can create a shared config file and merge it with the project config yourself:

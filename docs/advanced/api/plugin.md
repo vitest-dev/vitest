@@ -6,7 +6,7 @@ outline: deep
 # Plugin API <Version>3.1.0</Version> {#plugin-api}
 
 ::: warning
-This guide lists advanced APIs to run tests via a Node.js script. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
+This is an advanced API. If you just want to [run tests](/guide/), you probably don't need this. It is primarily used by library authors.
 
 This guide assumes you know how to work with [Vite plugins](https://vite.dev/guide/api-plugin.html).
 :::
@@ -94,7 +94,8 @@ This methods accepts a config glob pattern, a filepath to the config or an inlin
 // inject a single project with a custom alias
 const newProjects = await injectTestProjects({
   // you can inherit the current project config by referencing `configFile`
-  // note that you cannot have a project with the name that already exists
+  // note that you cannot have a project with the name that already exists,
+  // so it's a good practice to define a custom name
   configFile: project.vite.config.configFile,
   test: {
     name: 'my-custom-alias',
@@ -106,15 +107,13 @@ const newProjects = await injectTestProjects({
 ```
 
 ::: warning Projects are Filtered
-Vitest filters projects during the config resolution, so if the user defined a filter, injected project might not be resolved unless it [maches the filter](./vitest#matchesprojectfilter) or has `force: true`:
+Vitest filters projects during the config resolution, so if the user defined a filter, injected project might not be resolved unless it [matches the filter](./vitest#matchesprojectfilter). You can update the filter via the `vitest.config.project` option to always include your workspace project:
 
 ```ts
-await injectTestProjects({
-  // this project will always be included even
-  // if the `--project` filters it out
-  force: true,
-})
+vitest.config.project.push('my-project-name')
 ```
+
+Note that this will only affect projects injected with [`injectTestProjects`](#injecttestprojects) method.
 :::
 
 ::: tip Referencing the Current Config
