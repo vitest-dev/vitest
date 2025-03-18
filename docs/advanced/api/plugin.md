@@ -75,7 +75,7 @@ vitest.config.reporters.push([['my-reporter', {}]])
 ```
 
 ::: warning Config is Resolved
-Note that Vitest already resolved the config, so some types might be different from the usual user configuration.
+Note that Vitest already resolved the config, so some types might be different from the usual user configuration. This also means that some properties will not be resolved again, like `setupFile`. If you are adding new files, make sure to resolve it first.
 
 At this point reporters are not created yet, so modifying `vitest.reporters` will have no effect because it will be overwritten. If you need to inject your own reporter, modify the config instead.
 :::

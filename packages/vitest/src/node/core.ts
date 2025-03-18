@@ -257,7 +257,7 @@ export class Vitest {
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
-          || this.resolvedProjects.some(p => p.vite.config.configFile === file)
+          || this.projects.some(p => p.vite.config.configFile === file)
           || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -308,10 +308,9 @@ export class Vitest {
   /**
    * Inject new test projects into the workspace.
    * @param config Glob, config path or a custom config options.
-   * @returns New test project or `undefined` if it was filtered out.
+   * @returns An array of new test projects. Can be empty if the name was filtered out.
    */
   private injectTestProject = async (config: TestProjectConfiguration | TestProjectConfiguration[]): Promise<TestProject[]> => {
-    // TODO: test that it errors when the project is already in the workspace
     const currentNames = new Set(this.projects.map(p => p.name))
     const workspace = await resolveWorkspace(
       this,
@@ -320,7 +319,6 @@ export class Vitest {
       Array.isArray(config) ? config : [config],
       currentNames,
     )
-    this.resolvedProjects.push(...workspace)
     this.projects.push(...workspace)
     return workspace
   }
@@ -1126,10 +1124,10 @@ export class Vitest {
           await project._teardownGlobalSetup()
         }
 
-        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close())
+        const closePromises: unknown[] = this.projects.map(w => w.close())
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
-        if (this.coreWorkspaceProject && !this.resolvedProjects.includes(this.coreWorkspaceProject)) {
+        if (this.coreWorkspaceProject && !this.projects.includes(this.coreWorkspaceProject)) {
           closePromises.push(this.coreWorkspaceProject.close().then(() => this._vite = undefined as any))
         }
 
@@ -1166,7 +1164,7 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this._vite, ...this.resolvedProjects.map(p => p._vite)].filter(Boolean).length
+          const runningServers = [this._vite, ...this.projects.map(p => p._vite)].filter(Boolean).length
 
           if (runningServers === 1) {
             console.warn('Tests closed successfully but something prevents Vite server from exiting')
