@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { File, Task } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import { existsSync, promises as fs } from 'node:fs'
@@ -164,7 +164,7 @@ export class JUnitReporter implements Reporter {
     name: string,
     attrs: Record<string, any>,
     children: () => Promise<void>,
-  ) {
+  ): Promise<void> {
     const pairs: string[] = []
     for (const key in attrs) {
       const attr = attrs[key]
@@ -274,7 +274,7 @@ export class JUnitReporter implements Reporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  async onFinished(files: File[] = this.ctx.state.getFiles()): Promise<void> {
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
     const transformed = files.map((file) => {
@@ -317,6 +317,7 @@ export class JUnitReporter implements Reporter {
           mode: 'run',
           result: file.result,
           meta: {},
+          timeout: 0,
           // NOTE: not used in JUnitReporter
           context: null as any,
           suite: null as any,

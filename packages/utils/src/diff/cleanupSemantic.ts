@@ -65,7 +65,7 @@ class Diff {
  * @return {number} The number of characters common to the start of each
  *     string.
  */
-const diff_commonPrefix = function (text1: string, text2: string): number {
+function diff_commonPrefix(text1: string, text2: string): number {
   // Quick check for common null cases.
   if (!text1 || !text2 || text1.charAt(0) !== text2.charAt(0)) {
     return 0
@@ -99,7 +99,7 @@ const diff_commonPrefix = function (text1: string, text2: string): number {
  * @param {string} text2 Second string.
  * @return {number} The number of characters common to the end of each string.
  */
-const diff_commonSuffix = function (text1: string, text2: string): number {
+function diff_commonSuffix(text1: string, text2: string): number {
   // Quick check for common null cases.
   if (
     !text1
@@ -139,7 +139,7 @@ const diff_commonSuffix = function (text1: string, text2: string): number {
  *     string and the start of the second string.
  * @private
  */
-const diff_commonOverlap_ = function (text1: string, text2: string): number {
+function diff_commonOverlap_(text1: string, text2: string): number {
   // Cache the text lengths to prevent multiple calls.
   const text1_length = text1.length
   const text2_length = text2.length
@@ -189,7 +189,7 @@ const diff_commonOverlap_ = function (text1: string, text2: string): number {
  * Reduce the number of edits by eliminating semantically trivial equalities.
  * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
  */
-const diff_cleanupSemantic = function (diffs: Array<Diff>): void {
+function diff_cleanupSemantic(diffs: Array<Diff>): void {
   let changes = false
   const equalities = [] // Stack of indices where equalities are found.
   let equalitiesLength = 0 // Keeping our own length var is faster in JS.

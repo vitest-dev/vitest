@@ -93,7 +93,7 @@ In the future, the old API won't be exposed anymore.
 
 The global snapshot manager. Vitest keeps track of all snapshots using the `snapshot.add` method.
 
-You can get the latest summary of snapshots via the `vitest.snapshot.summay` property.
+You can get the latest summary of snapshots via the `vitest.snapshot.summary` property.
 
 ## cache
 
@@ -130,7 +130,7 @@ function provide<T extends keyof ProvidedContext & string>(
 
 Vitest exposes `provide` method which is a shorthand for `vitest.getRootProject().provide`. With this method you can pass down values from the main thread to tests. All values are checked with `structuredClone` before they are stored, but the values themselves are not cloned.
 
-To recieve the values in the test, you need to import `inject` method from `vitest` entrypont:
+To receive the values in the test, you need to import `inject` method from `vitest` entrypoint:
 
 ```ts
 import { inject } from 'vitest'
@@ -155,7 +155,7 @@ declare module 'vitest' {
 ```
 
 ::: warning
-Technically, `provide` is a method of [`TestProject`](/advanced/api/test-project), so it is limited to the specific project. However, all projects inherit the values from the core project which makes `vitest.provide` universal way of passing down values to tests.
+Technically, `provide` is a method of [`TestProject`](/advanced/api/test-project), so it is limited to the specific project. However, all projects inherit the values from the root project which makes `vitest.provide` universal way of passing down values to tests.
 :::
 
 ## getProvidedContext
@@ -172,7 +172,7 @@ This returns the root context object. This is a shorthand for `vitest.getRootPro
 function getProjectByName(name: string): TestProject
 ```
 
-This method returns the project by its name. Simillar to calling `vitest.projects.find`.
+This method returns the project by its name. Similar to calling `vitest.projects.find`.
 
 ::: warning
 In case the project doesn't exist, this method will return the root project - make sure to check the names again if the project you are looking for is the one returned.
@@ -297,7 +297,7 @@ As of Vitest 3, this method uses a cache to check if the file is a test. To make
 function clearSpecificationsCache(moduleId?: string): void
 ```
 
-Vitest automatically caches test specifications for each file when [`globTestSpecifications`](#globtestspecifications) or [`runTestSpecifications`](#runtestspecifications) is called. This method clears the cache for the given file or the whole cache alltogether depending on the first argument.
+Vitest automatically caches test specifications for each file when [`globTestSpecifications`](#globtestspecifications) or [`runTestSpecifications`](#runtestspecifications) is called. This method clears the cache for the given file or the whole cache altogether depending on the first argument.
 
 ## runTestSpecifications
 
@@ -452,7 +452,7 @@ function exit(force = false): Promise<void>
 
 Closes all projects and exit the process. If `force` is set to `true`, the process will exit immediately after closing the projects.
 
-This method will also forcefuly call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
+This method will also forcefully call `process.exit()` if the process is still active after [`config.teardownTimeout`](/config/#teardowntimeout) milliseconds.
 
 ## shouldKeepServer
 

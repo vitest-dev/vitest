@@ -1,6 +1,6 @@
 import * as chai from 'chai'
 
-export function setupChaiConfig(config: ChaiConfig) {
+export function setupChaiConfig(config: ChaiConfig): void {
   Object.assign(chai.config, config)
 }
 

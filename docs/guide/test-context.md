@@ -154,6 +154,17 @@ myTest('', ({ todos }) => {})
 
 ::: warning
 When using `test.extend()` with fixtures, you should always use the object destructuring pattern `{ todos }` to access context both in fixture function and test function.
+
+```ts
+myTest('context must be destructured', (context) => { // [!code --]
+  expect(context.todos.length).toBe(2)
+})
+
+myTest('context must be destructured', ({ todos }) => { // [!code ++]
+  expect(todos.length).toBe(2)
+})
+```
+
 :::
 
 #### Automatic fixture
@@ -245,9 +256,9 @@ const myTest = test.extend<MyFixtures>({
   archive: []
 })
 
-myTest('types are defined correctly', (context) => {
-  expectTypeOf(context.todos).toEqualTypeOf<number[]>()
-  expectTypeOf(context.archive).toEqualTypeOf<number[]>()
+myTest('types are defined correctly', ({ todos, archive }) => {
+  expectTypeOf(todos).toEqualTypeOf<number[]>()
+  expectTypeOf(archive).toEqualTypeOf<number[]>()
 })
 ```
 

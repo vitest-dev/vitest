@@ -40,12 +40,12 @@ export type IframeChannelEvent =
   | IframeChannelIncomingEvent
   | IframeChannelOutgoingEvent
 
-export const channel = new BroadcastChannel(
+export const channel: BroadcastChannel = new BroadcastChannel(
   `vitest:${getBrowserState().sessionId}`,
 )
-export const globalChannel = new BroadcastChannel('vitest:global')
+export const globalChannel: BroadcastChannel = new BroadcastChannel('vitest:global')
 
-export function waitForChannel(event: IframeChannelOutgoingEvent['type']) {
+export function waitForChannel(event: IframeChannelOutgoingEvent['type']): Promise<void> {
   return new Promise<void>((resolve) => {
     channel.addEventListener(
       'message',

@@ -54,6 +54,9 @@ export const keyboardCleanup: UserEventCommand<(state: KeyboardState) => Promise
   state,
 ) => {
   const { provider, sessionId } = context
+  if (!state.unreleased) {
+    return
+  }
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(sessionId)
     for (const key of state.unreleased) {
@@ -83,7 +86,7 @@ export async function keyboardImplementation(
   text: string,
   selectAll: () => Promise<void>,
   skipRelease: boolean,
-) {
+): Promise<{ pressed: Set<string> }> {
   if (provider instanceof PlaywrightBrowserProvider) {
     const page = provider.getPage(sessionId)
     const actions = parseKeyDef(defaultKeyMap, text)
@@ -199,7 +202,7 @@ function focusIframe() {
 
 function selectAll() {
   const element = document.activeElement as HTMLInputElement
-  if (element && element.select) {
+  if (element && typeof element.select === 'function') {
     element.select()
   }
 }

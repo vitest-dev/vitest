@@ -36,7 +36,7 @@ export function runOnce<T>(fn: () => T, key?: string): T {
  *
  * @experimental
  */
-export function isFirstRun() {
+export function isFirstRun(): boolean {
   let firstRun = false
   runOnce(() => {
     firstRun = true

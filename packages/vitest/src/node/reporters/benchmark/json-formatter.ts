@@ -18,7 +18,7 @@ export type FormattedBenchmarkResult = BenchmarkResult & {
   id: string
 }
 
-export function createBenchmarkJsonReport(files: File[]) {
+export function createBenchmarkJsonReport(files: File[]): Report {
   const report: Report = { files: [] }
 
   for (const file of files) {
@@ -54,7 +54,7 @@ export function createBenchmarkJsonReport(files: File[]) {
   return report
 }
 
-export function flattenFormattedBenchmarkReport(report: Report) {
+export function flattenFormattedBenchmarkReport(report: Report): Record<string, FormattedBenchmarkResult> {
   const flat: Record<FormattedBenchmarkResult['id'], FormattedBenchmarkResult> = {}
 
   for (const file of report.files) {

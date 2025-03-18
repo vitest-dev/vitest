@@ -205,7 +205,10 @@ export function getRunner(): VitestRunner {
 
 function createDefaultSuite(runner: VitestRunner) {
   const config = runner.config.sequence
-  return suite('', { concurrent: config.concurrent }, () => {})
+  const collector = suite('', { concurrent: config.concurrent }, () => {})
+  // no parent suite for top-level tests
+  delete collector.suite
+  return collector
 }
 
 export function clearCollectorContext(
@@ -295,20 +298,22 @@ function createSuiteCollector(
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
 
-  let suite: Suite
+  let suite!: Suite
 
   initSuite(true)
 
   const task = function (name = '', options: TaskCustomOptions = {}) {
+    const timeout = options?.timeout ?? runner.config.testTimeout
     const task: Test = {
       id: '',
       name,
-      suite: undefined!,
+      suite: collectorContext.currentSuite?.suite,
       each: options.each,
       fails: options.fails,
       context: undefined!,
       type: 'test',
       file: undefined!,
+      timeout,
       retry: options.retry ?? runner.config.retry,
       repeats: options.repeats,
       mode: options.only
@@ -342,7 +347,7 @@ function createSuiteCollector(
         task,
         withTimeout(
           withAwaitAsyncAssertions(withFixtures(handler, context), task),
-          options?.timeout ?? runner.config.testTimeout,
+          timeout,
         ),
       )
     }
@@ -394,6 +399,7 @@ function createSuiteCollector(
     type: 'collector',
     name,
     mode,
+    suite,
     options: suiteOptions,
     test,
     tasks,
@@ -416,6 +422,7 @@ function createSuiteCollector(
       id: '',
       type: 'suite',
       name,
+      suite: collectorContext.currentSuite?.suite,
       mode,
       each,
       file: undefined!,
@@ -463,7 +470,6 @@ function createSuiteCollector(
     suite.tasks = allChildren
 
     allChildren.forEach((task) => {
-      task.suite = suite
       task.file = file
     })
 
@@ -779,17 +785,18 @@ function createTest(
 function formatName(name: string | Function) {
   return typeof name === 'string'
     ? name
-    : name instanceof Function
+    : typeof name === 'function'
       ? name.name || '<anonymous>'
       : String(name)
 }
 
 function formatTitle(template: string, items: any[], idx: number) {
-  if (template.includes('%#')) {
+  if (template.includes('%#') || template.includes('%$')) {
     // '%#' match index of the test case
     template = template
       .replace(/%%/g, '__vitest_escaped_%__')
       .replace(/%#/g, `${idx}`)
+      .replace(/%\$/g, `${idx + 1}`)
       .replace(/__vitest_escaped_%__/g, '%%')
   }
   const count = template.split('%').length - 1
@@ -809,16 +816,21 @@ function formatTitle(template: string, items: any[], idx: number) {
   }
 
   let formatted = format(template, ...items.slice(0, count))
-  if (isObject(items[0])) {
-    formatted = formatted.replace(
-      /\$([$\w.]+)/g,
-      // https://github.com/chaijs/chai/pull/1490
-      (_, key) =>
-        objDisplay(objectAttr(items[0], key), {
-          truncate: runner?.config?.chaiConfig?.truncateThreshold,
-        }) as unknown as string,
-    )
-  }
+  const isObjectItem = isObject(items[0])
+  formatted = formatted.replace(
+    /\$([$\w.]+)/g,
+    (_, key: string) => {
+      const isArrayKey = /^\d+$/.test(key)
+      if (!isObjectItem && !isArrayKey) {
+        return `$${key}`
+      }
+      const arrayElement = isArrayKey ? objectAttr(items, key) : undefined
+      const value = isObjectItem ? objectAttr(items[0], key, arrayElement) : arrayElement
+      return objDisplay(value, {
+        truncate: runner?.config?.chaiConfig?.truncateThreshold,
+      }) as unknown as string
+    },
+  )
   return formatted
 }
 

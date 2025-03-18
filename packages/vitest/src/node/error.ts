@@ -39,7 +39,7 @@ export function capturePrintError(
   error: unknown,
   ctx: Vitest,
   options: ErrorOptions,
-) {
+): { nearest: ParsedStack | undefined; output: string } {
   let output = ''
   const writable = new Writable({
     write(chunk, _encoding, callback) {
@@ -64,7 +64,7 @@ export function printError(
   ctx: Vitest,
   logger: ErrorLogger,
   options: ErrorOptions,
-) {
+): PrintErrorResult | undefined {
   const project = options.project
     ?? ctx.coreWorkspaceProject
     ?? ctx.projects[0]
@@ -141,7 +141,7 @@ function printErrorInner(
         })
 
   if (type) {
-    printErrorType(type, project.ctx)
+    printErrorType(type, project.vitest)
   }
   printErrorMessage(e, logger)
   if (options.screenshotPaths?.length) {
@@ -205,7 +205,7 @@ function printErrorInner(
     logger.error(
       c.red(
         `This error originated in "${c.bold(
-          testPath,
+          relative(project.config.root, testPath),
         )}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`,
       ),
     )
@@ -264,6 +264,9 @@ const skipErrorProperties = new Set([
   'actual',
   'expected',
   'diffOptions',
+  'sourceURL',
+  'column',
+  'line',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',

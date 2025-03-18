@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
-    "@types/istanbul-lib-coverage": "^2.0.6",
+    "@types/istanbul-lib-coverage": "catalog:",
     "istanbul-lib-coverage": "^3.2.0",
     "jsdom": "latest",
     "vitest": "workspace:*"

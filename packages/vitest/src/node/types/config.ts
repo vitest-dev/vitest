@@ -99,7 +99,7 @@ interface SequenceOptions {
    * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
    * - `list` will order hooks in the order they are defined
    * - `parallel` will run hooks in a single group in parallel
-   * @default 'parallel'
+   * @default 'stack'
    */
   hooks?: SequenceHooks
 }
@@ -454,9 +454,11 @@ export interface InlineConfig {
   /**
    * Silent mode
    *
+   * Use `'passed-only'` to see logs from failing tests only.
+   *
    * @default false
    */
-  silent?: boolean
+  silent?: boolean | 'passed-only'
 
   /**
    * Hide logs for skipped tests

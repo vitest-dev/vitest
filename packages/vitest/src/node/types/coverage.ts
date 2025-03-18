@@ -1,6 +1,7 @@
 import type { ReportOptions } from 'istanbul-reports'
 import type { TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta, Arrayable } from '../../types/general'
+import type { RuntimeCoverageModuleLoader, RuntimeCoverageProviderModule } from '../../utils/coverage'
 import type { Vitest } from '../core'
 
 type TransformResult =
@@ -57,26 +58,15 @@ export interface ReportContext {
   allTestsRun?: boolean
 }
 
-export interface CoverageProviderModule {
+export interface CoverageModuleLoader extends RuntimeCoverageModuleLoader {
+  executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
+}
+
+export interface CoverageProviderModule extends RuntimeCoverageProviderModule {
   /**
    * Factory for creating a new coverage provider
    */
   getProvider: () => CoverageProvider | Promise<CoverageProvider>
-
-  /**
-   * Executed before tests are run in the worker thread.
-   */
-  startCoverage?: (runtimeOptions: { isolate: boolean }) => unknown | Promise<unknown>
-
-  /**
-   * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
-   */
-  takeCoverage?: () => unknown | Promise<unknown>
-
-  /**
-   * Executed after all tests have been run in the worker thread.
-   */
-  stopCoverage?: (runtimeOptions: { isolate: boolean }) => unknown | Promise<unknown>
 }
 
 export type CoverageReporter = keyof ReportOptions | (string & {})

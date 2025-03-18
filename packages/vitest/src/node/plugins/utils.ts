@@ -1,6 +1,5 @@
 import type {
   DepOptimizationOptions,
-  ResolvedConfig,
   UserConfig as ViteConfig,
 } from 'vite'
 import type { DepsOptimizationOptions, InlineConfig } from '../types/config'
@@ -15,7 +14,7 @@ export function resolveOptimizerConfig(
   viteOptions: DepOptimizationOptions | undefined,
   testConfig: InlineConfig,
   viteCacheDir: string | undefined,
-) {
+): { cacheDir?: string; optimizeDeps: DepOptimizationOptions } {
   const testOptions = _testOptions || {}
   const newConfig: { cacheDir?: string; optimizeDeps: DepOptimizationOptions }
     = {} as any
@@ -85,7 +84,7 @@ export function resolveOptimizerConfig(
   return newConfig
 }
 
-export function deleteDefineConfig(viteConfig: ViteConfig) {
+export function deleteDefineConfig(viteConfig: ViteConfig): Record<string, any> {
   const defines: Record<string, any> = {}
   if (viteConfig.define) {
     delete viteConfig.define['import.meta.vitest']
@@ -122,23 +121,10 @@ export function deleteDefineConfig(viteConfig: ViteConfig) {
   return defines
 }
 
-export function hijackVitePluginInject(viteConfig: ResolvedConfig) {
-  // disable replacing `process.env.NODE_ENV` with static string
-  const processEnvPlugin = viteConfig.plugins.find(
-    p => p.name === 'vite:client-inject',
-  )
-  if (processEnvPlugin) {
-    const originalTransform = processEnvPlugin.transform as any
-    processEnvPlugin.transform = function transform(code, id, options) {
-      return originalTransform.call(this, code, id, { ...options, ssr: true })
-    }
-  }
-}
-
 export function resolveFsAllow(
   projectRoot: string,
   rootConfigFile: string | false | undefined,
-) {
+): string[] {
   if (!rootConfigFile) {
     return [searchForWorkspaceRoot(projectRoot), rootDir]
   }

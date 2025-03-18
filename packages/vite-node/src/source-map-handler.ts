@@ -467,7 +467,7 @@ interface Options {
   retrieveSourceMap?: RetrieveMapHandler
 }
 
-export const install = function (options: Options) {
+export function install(options: Options): void {
   options = options || {}
 
   // Allow sources to be found by methods other than reading the files
@@ -498,7 +498,7 @@ export const install = function (options: Options) {
   }
 }
 
-export const resetRetrieveHandlers = function () {
+export function resetRetrieveHandlers(): void {
   retrieveFileHandlers.length = 0
   retrieveMapHandlers.length = 0
 

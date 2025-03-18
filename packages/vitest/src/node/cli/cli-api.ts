@@ -6,7 +6,7 @@ import type { TestSpecification } from '../spec'
 import type { UserConfig, VitestEnvironment, VitestRunMode } from '../types/config'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'pathe'
-import { CoverageProviderMap } from '../../integrations/coverage'
+import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
 import { FilesNotFoundError, GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError, RangeLocationFilterProvidedError } from '../errors'
 import { registerConsoleShortcuts } from '../stdin'
@@ -158,7 +158,7 @@ export async function prepareVitest(
   return ctx
 }
 
-export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions) {
+export function processCollected(ctx: Vitest, files: TestModule[], options: CliOptions): void {
   let errorsPrinted = false
 
   forEachSuite(files, (suite) => {
@@ -181,12 +181,12 @@ export function processCollected(ctx: Vitest, files: TestModule[], options: CliO
   return formatCollectedAsString(files).forEach(test => console.log(test))
 }
 
-export function outputFileList(files: TestSpecification[], options: CliOptions) {
+export function outputFileList(files: TestSpecification[], options: CliOptions): void {
   if (typeof options.json !== 'undefined') {
     return outputJsonFileList(files, options)
   }
 
-  return formatFilesAsString(files, options).map(file => console.log(file))
+  formatFilesAsString(files, options).map(file => console.log(file))
 }
 
 function outputJsonFileList(files: TestSpecification[], options: CliOptions) {
@@ -251,7 +251,7 @@ export interface TestCollectJSONResult {
   location?: { line: number; column: number }
 }
 
-export function formatCollectedAsJSON(files: TestModule[]) {
+export function formatCollectedAsJSON(files: TestModule[]): TestCollectJSONResult[] {
   const results: TestCollectJSONResult[] = []
 
   files.forEach((file) => {
@@ -275,7 +275,7 @@ export function formatCollectedAsJSON(files: TestModule[]) {
   return results
 }
 
-export function formatCollectedAsString(testModules: TestModule[]) {
+export function formatCollectedAsString(testModules: TestModule[]): string[] {
   const results: string[] = []
 
   testModules.forEach((testModule) => {

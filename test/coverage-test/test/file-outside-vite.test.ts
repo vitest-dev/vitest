@@ -10,65 +10,24 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
 
   const coverageMap = await readCoverageMap()
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/load-outside-vite.cjs')
-  const summary = fileCoverage.toSummary()
 
   if (isV8Provider()) {
-    expect(summary).toMatchInlineSnapshot(`
+    expect(fileCoverage).toMatchInlineSnapshot(`
       {
-        "branches": {
-          "covered": 0,
-          "pct": 100,
-          "skipped": 0,
-          "total": 0,
-        },
-        "functions": {
-          "covered": 0,
-          "pct": 0,
-          "skipped": 0,
-          "total": 1,
-        },
-        "lines": {
-          "covered": 1,
-          "pct": 100,
-          "skipped": 0,
-          "total": 1,
-        },
-        "statements": {
-          "covered": 1,
-          "pct": 100,
-          "skipped": 0,
-          "total": 1,
-        },
+        "branches": "0/0 (100%)",
+        "functions": "0/1 (0%)",
+        "lines": "1/1 (100%)",
+        "statements": "1/1 (100%)",
       }
     `)
   }
   else {
-    expect(summary).toMatchInlineSnapshot(`
+    expect(fileCoverage).toMatchInlineSnapshot(`
       {
-        "branches": {
-          "covered": 0,
-          "pct": 100,
-          "skipped": 0,
-          "total": 0,
-        },
-        "functions": {
-          "covered": 0,
-          "pct": 0,
-          "skipped": 0,
-          "total": 1,
-        },
-        "lines": {
-          "covered": 0,
-          "pct": 0,
-          "skipped": 0,
-          "total": 1,
-        },
-        "statements": {
-          "covered": 0,
-          "pct": 0,
-          "skipped": 0,
-          "total": 1,
-        },
+        "branches": "0/0 (100%)",
+        "functions": "0/1 (0%)",
+        "lines": "0/1 (0%)",
+        "statements": "0/1 (0%)",
       }
     `)
   }

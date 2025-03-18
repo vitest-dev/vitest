@@ -17,7 +17,6 @@ import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
-  hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
@@ -98,6 +97,10 @@ export function WorkspaceVitestPlugin(
         const resolveOptions = getDefaultResolveOptions()
         const config: ViteConfig = {
           root,
+          define: {
+            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+          },
           resolve: {
             ...resolveOptions,
             alias: testConfig.alias,
@@ -173,9 +176,6 @@ export function WorkspaceVitestPlugin(
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
-      },
-      configResolved(viteConfig) {
-        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})

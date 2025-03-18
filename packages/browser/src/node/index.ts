@@ -17,7 +17,7 @@ export async function createBrowserServer(
   configFile: string | undefined,
   prePlugins: Plugin[] = [],
   postPlugins: Plugin[] = [],
-) {
+): Promise<ParentBrowserProject> {
   if (project.vitest.version !== version) {
     project.vitest.logger.warn(
       c.yellow(
