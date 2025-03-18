@@ -130,27 +130,33 @@ describe('default reporter', async () => {
 
   test('prints skipped tests by default when a single file is run', async () => {
     const { stdout } = await runVitest({
-      include: ['fixtures/all-passing-or-skipped.test.ts'],
+      include: ['fixtures/pass-and-skip-test-suites.test.ts'],
       reporters: [['default', { isTTY: true, summary: false }]],
       config: 'fixtures/vitest.config.ts',
     })
 
-    expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
-    expect(stdout).toContain('✓ 2 + 3 = 5')
-    expect(stdout).toContain('↓ 3 + 3 = 6')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+         ✓ passing test #1 [...]ms
+         ↓ skipped test #1
+         ✓ passing suite > passing test #2 [...]ms
+         ↓ skipped suite > skipped test #2"
+    `)
   })
 
   test('hides skipped tests when --hideSkippedTests and a single file is run', async () => {
     const { stdout } = await runVitest({
-      include: ['fixtures/all-passing-or-skipped.test.ts'],
+      include: ['fixtures/pass-and-skip-test-suites.test.ts'],
       reporters: [['default', { isTTY: true, summary: false }]],
       hideSkippedTests: true,
       config: false,
     })
 
-    expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
-    expect(stdout).toContain('✓ 2 + 3 = 5')
-    expect(stdout).not.toContain('↓ 3 + 3 = 6')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+         ✓ passing test #1 [...]ms
+         ✓ passing suite > passing test #2 [...]ms"
+    `)
   })
 
   test('prints retry count', async () => {
