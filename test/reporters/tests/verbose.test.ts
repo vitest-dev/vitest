@@ -9,10 +9,10 @@ test('duration', async () => {
     env: { CI: '1' },
   })
 
-  expect(trimReporterOutput(stdout)).toContain(`
- ✓ basic.test.ts > fast
- ✓ basic.test.ts > slow [...]ms`,
-  )
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+    "✓ basic.test.ts > fast [...]ms
+     ✓ basic.test.ts > slow [...]ms"
+  `)
 })
 
 test('prints error properties', async () => {
@@ -32,9 +32,11 @@ test('prints skipped tests by default', async () => {
     config: false,
   })
 
-  expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
-  expect(stdout).toContain('✓ 2 + 3 = 5')
-  expect(stdout).toContain('↓ 3 + 3 = 6')
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+    "✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped) [...]ms
+       ✓ 2 + 3 = 5 [...]ms
+       ↓ 3 + 3 = 6"
+  `)
 })
 
 test('hides skipped tests when --hideSkippedTests', async () => {
@@ -45,9 +47,10 @@ test('hides skipped tests when --hideSkippedTests', async () => {
     config: false,
   })
 
-  expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
-  expect(stdout).toContain('✓ 2 + 3 = 5')
-  expect(stdout).not.toContain('↓ 3 + 3 = 6')
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+    "✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped) [...]ms
+       ✓ 2 + 3 = 5 [...]ms"
+  `)
 })
 
 test('prints retry count', async () => {
@@ -58,8 +61,10 @@ test('prints retry count', async () => {
     config: false,
   })
 
-  expect(stdout).toContain('1 passed')
-  expect(stdout).toContain('✓ pass after retries (retry x3)')
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+    "✓ fixtures/retry.test.ts (1 test) [...]ms
+       ✓ pass after retries [...]ms (retry x3)"
+  `)
 })
 
 test('prints repeat count', async () => {
@@ -69,8 +74,10 @@ test('prints repeat count', async () => {
     config: false,
   })
 
-  expect(stdout).toContain('1 passed')
-  expect(stdout).toContain('✓ repeat couple of times (repeat x3)')
+  expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+    "✓ fixtures/repeats.test.ts (1 test) [...]ms
+       ✓ repeat couple of times [...]ms (repeat x3)"
+  `)
 })
 
 test('renders tree when in TTY', async () => {
@@ -94,14 +101,14 @@ test('renders tree when in TTY', async () => {
 
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
     "❯ fixtures/verbose/example-1.test.ts (10 tests | 1 failed | 4 skipped) [...]ms
-       ✓ test pass in root
+       ✓ test pass in root [...]ms
        ↓ test skip in root
        ❯ suite in root (5)
-         ✓ test pass in 1. suite #1
-         ✓ test pass in 1. suite #2
+         ✓ test pass in 1. suite #1 [...]ms
+         ✓ test pass in 1. suite #2 [...]ms
          ❯ suite in suite (3)
-           ✓ test pass in nested suite #1
-           ✓ test pass in nested suite #2
+           ✓ test pass in nested suite #1 [...]ms
+           ✓ test pass in nested suite #2 [...]ms
            ❯ suite in nested suite (1)
              × test failure in 2x nested suite [...]ms
        ↓ suite skip in root (3)
@@ -110,10 +117,10 @@ test('renders tree when in TTY', async () => {
            ↓ test in nested suite
            ↓ test failure in nested suite of skipped suite
      ✓ fixtures/verbose/example-2.test.ts (3 tests | 1 skipped) [...]ms
-       ✓ test 0.1
+       ✓ test 0.1 [...]ms
        ↓ test 0.2
        ✓ suite 1.1 (1)
-         ✓ test 1.1"
+         ✓ test 1.1 [...]ms"
   `)
 })
 
@@ -137,15 +144,15 @@ test('does not render tree when in non-TTY', async () => {
   })
 
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
-    "✓ fixtures/verbose/example-1.test.ts > test pass in root
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite #1
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite #2
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite #1
-     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite #2
-     × fixtures/verbose/example-1.test.ts > suite in root > suite in suite > suite in nested suite > test failure in 2x nested suite
+    "✓ fixtures/verbose/example-1.test.ts > test pass in root [...]ms
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite #1 [...]ms
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > test pass in 1. suite #2 [...]ms
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite #1 [...]ms
+     ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite #2 [...]ms
+     × fixtures/verbose/example-1.test.ts > suite in root > suite in suite > suite in nested suite > test failure in 2x nested suite [...]ms
        → expected 'should fail' to be 'as expected' // Object.is equality
-     ✓ fixtures/verbose/example-2.test.ts > test 0.1
-     ✓ fixtures/verbose/example-2.test.ts > suite 1.1 > test 1.1"
+     ✓ fixtures/verbose/example-2.test.ts > test 0.1 [...]ms
+     ✓ fixtures/verbose/example-2.test.ts > suite 1.1 > test 1.1 [...]ms"
   `)
 })
 
@@ -153,7 +160,7 @@ function trimReporterOutput(report: string) {
   const rows = report.replace(/\d+ms/g, '[...]ms').split('\n')
 
   // Trim start and end, capture just rendered tree
-  rows.splice(0, rows.findIndex(row => row.includes('fixtures/verbose/example-')))
+  rows.splice(0, 1 + rows.findIndex(row => row.includes('RUN  v')))
   rows.splice(rows.findIndex(row => row.includes('Test Files')))
 
   return rows.join('\n').trim()
