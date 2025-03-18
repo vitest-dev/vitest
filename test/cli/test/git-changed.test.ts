@@ -34,7 +34,8 @@ describe.skipIf(process.env.ECOSYSTEM_CI)('forceRerunTrigger', () => {
   })
 })
 
-it.skipIf(process.env.ECOSYSTEM_CI)('related correctly runs only related tests', async () => {
+// TODO: need https://github.com/oxc-project/oxc/pull/9696
+it.skipIf(process.env.ECOSYSTEM_CI).skip('related correctly runs only related tests', async () => {
   const { stdout, stderr } = await runVitest({
     related: 'src/sourceA.ts',
     root: './fixtures/git-changed/related',

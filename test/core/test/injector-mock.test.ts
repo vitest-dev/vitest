@@ -5,7 +5,7 @@ import { describe, expect, it, test } from 'vitest'
 import { generateCodeFrame } from 'vitest/src/node/error.js'
 import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 
-function parse(code: string, options: any) {
+function parse(code: string, options: any): any {
   return parseAst(code, options)
 }
 

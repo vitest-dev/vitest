@@ -534,19 +534,20 @@ body {
       config() {
         return {
           optimizeDeps: {
-            esbuildOptions: {
+            rollupOptions: {
               plugins: [
                 {
-                  name: 'test-utils-rewrite',
-                  setup(build) {
+                  name: 'vue-test-utils-rewrite',
+                  resolveId: {
                     // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
                     // compiler-core: only CJS version allows slots as strings
-                    build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args) => {
-                      const resolved = getRequire().resolve(args.path, {
-                        paths: [args.importer],
+                    filter: { id: /^@vue\/(test-utils|compiler-core)$/ },
+                    handler(source, importer) {
+                      const resolved = getRequire().resolve(source, {
+                        paths: [importer!],
                       })
-                      return { path: resolved }
-                    })
+                      return resolved
+                    },
                   },
                 },
               ],
