@@ -468,8 +468,8 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
           ? ExtraContext[K]
           : never;
     }>
-    scoped: <T extends Record<string, any> = object>(
-      fixtures: Fixtures<T, ExtraContext>
+    scoped: (
+      fixtures: Fixtures<Partial<ExtraContext>>
     ) => void
   }
 

@@ -443,4 +443,11 @@ describe('scoping variables to suite', () => {
       expect(pkg).toEqual({ dependency: 'override' })
     })
   })
+
+  describe.skip('type only', () => {
+    testAPI.scoped({
+      // @ts-expect-error nonExisting is not defined on the testAPI
+      nonExisting: false,
+    })
+  })
 })
