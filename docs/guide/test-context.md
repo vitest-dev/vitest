@@ -355,7 +355,7 @@ test('types are defined correctly', ({ todos, archive }) => {
 ::: info Type Infering
 Note that Vitest doesn't support infering the types when the `use` function is called. It is always preferable to pass down the whole context type as the generic type when `test.extend` is called:
 
-```ts twoslash
+```ts
 import { test as baseTest } from 'vitest'
 
 const test = baseTest.extend<{
