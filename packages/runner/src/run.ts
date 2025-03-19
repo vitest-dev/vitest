@@ -174,17 +174,26 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
 const eventsPacks: [string, TaskUpdateEvent][] = []
+const pendingTasksUpdates: Promise<void>[] = []
 
-function sendTasksUpdate(runner: VitestRunner) {
+function sendTasksUpdate(runner: VitestRunner): void {
   if (packs.size) {
     const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
       return [id, task[0], task[1]]
     })
     const p = runner.onTaskUpdate?.(taskPacks, eventsPacks)
+    if (p) {
+      pendingTasksUpdates.push(p)
+      p.finally(() => pendingTasksUpdates.splice(pendingTasksUpdates.indexOf(p), 1))
+    }
     eventsPacks.length = 0
     packs.clear()
-    return p
   }
+}
+
+async function finishSendTasksUpdate(runner: VitestRunner) {
+  sendTasksUpdate(runner)
+  await Promise.all(pendingTasksUpdates)
 }
 
 function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
@@ -563,7 +572,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 
   await runner.onAfterRunFiles?.(files)
 
-  sendTasksUpdate(runner)
+  await finishSendTasksUpdate(runner)
 
   return files
 }
