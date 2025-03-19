@@ -703,6 +703,13 @@ export interface InlineConfig {
   slowTestThreshold?: number
 
   /**
+   * Number of times to repeat the tests.
+   * @default 0
+   *
+   */
+  repeats?: number
+
+  /**
    * Path to a custom test runner.
    */
   runner?: string
