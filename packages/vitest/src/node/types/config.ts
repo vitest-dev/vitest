@@ -1125,7 +1125,7 @@ export type UserProjectConfigExport =
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
 
-export type TestProjectConfiguration = string | (UserProjectConfigExport & {
+export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * If `true`, the project will inherit all options from the root config.
@@ -1133,6 +1133,12 @@ export type TestProjectConfiguration = string | (UserProjectConfigExport & {
    */
   extends?: string | true
 })
+
+export type TestProjectConfiguration =
+  string
+  | TestProjectInlineConfiguration
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn
 
 /** @deprecated use `TestProjectConfiguration` instead */
 export type WorkspaceProjectConfiguration = TestProjectConfiguration
