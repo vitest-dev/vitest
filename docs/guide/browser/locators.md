@@ -508,11 +508,10 @@ This options narrows down the selector to match elements that contain other elem
 </article>
 ```
 
-We can narrow down the locator to only find the `article` with `Vitest` text inside.
+We can narrow down the locator to only find the `article` with `Vitest` text inside:
 
 ```ts
 page.getByRole('article').filter({ has: page.getByText('Vitest') }) // ✅
-page.getByRole('article').filter({ has: page.getByText('Rolldown') }) // ❌
 ```
 
 ::: warning
