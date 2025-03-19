@@ -7,7 +7,7 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestSpecification } from './spec'
-import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
+import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
@@ -98,11 +98,10 @@ export class Vitest {
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _options: UserConfig = {}
-  /** @internal */ reporters: Reporter[] = undefined!
+  /** @internal */ reporters: Reporter[] = []
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
   /** @internal */ _testRun: TestRun = undefined!
-  /** @internal */ _projectFilters: RegExp[] = []
 
   private isFirstRun = true
   private restartsCount = 0
@@ -216,7 +215,6 @@ export class Vitest {
     this.specifications.clearCache()
     this._onUserTestsRerun = []
 
-    this._projectFilters = toArray(options.project || []).map(project => wildcardPatternToRegExp(project))
     this._vite = server
 
     const resolved = resolveConfig(this, options, server.config)
@@ -259,7 +257,7 @@ export class Vitest {
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
-          || this.resolvedProjects.some(p => p.vite.config.configFile === file)
+          || this.projects.some(p => p.vite.config.configFile === file)
           || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -279,6 +277,16 @@ export class Vitest {
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
+
+    await Promise.all(projects.flatMap((project) => {
+      const hooks = project.vite.config.getSortedPluginHooks('configureVitest')
+      return hooks.map(hook => hook({
+        project,
+        vitest: this,
+        injectTestProjects: this.injectTestProject,
+      }))
+    }))
+
     if (!this.projects.length) {
       throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
     }
@@ -295,6 +303,24 @@ export class Vitest {
       : await createReporters(resolved.reporters, this)
 
     await Promise.all(this._onSetServer.map(fn => fn()))
+  }
+
+  /**
+   * Inject new test projects into the workspace.
+   * @param config Glob, config path or a custom config options.
+   * @returns An array of new test projects. Can be empty if the name was filtered out.
+   */
+  private injectTestProject = async (config: TestProjectConfiguration | TestProjectConfiguration[]): Promise<TestProject[]> => {
+    const currentNames = new Set(this.projects.map(p => p.name))
+    const workspace = await resolveWorkspace(
+      this,
+      this._options,
+      undefined,
+      Array.isArray(config) ? config : [config],
+      currentNames,
+    )
+    this.projects.push(...workspace)
+    return workspace
   }
 
   /**
@@ -385,12 +411,15 @@ export class Vitest {
   }
 
   private async resolveWorkspace(cliOptions: UserConfig): Promise<TestProject[]> {
+    const names = new Set<string>()
+
     if (Array.isArray(this.config.workspace)) {
       return resolveWorkspace(
         this,
         cliOptions,
         undefined,
         this.config.workspace,
+        names,
       )
     }
 
@@ -406,7 +435,7 @@ export class Vitest {
       if (!project) {
         return []
       }
-      return resolveBrowserWorkspace(this, new Set(), [project])
+      return resolveBrowserWorkspace(this, new Set([project.name]), [project])
     }
 
     const workspaceModule = await this.import<{
@@ -422,6 +451,7 @@ export class Vitest {
       cliOptions,
       workspaceConfigPath,
       workspaceModule.default,
+      names,
     )
   }
 
@@ -861,11 +891,9 @@ export class Vitest {
   async changeProjectName(pattern: string): Promise<void> {
     if (pattern === '') {
       this.configOverride.project = undefined
-      this._projectFilters = []
     }
     else {
       this.configOverride.project = [pattern]
-      this._projectFilters = [wildcardPatternToRegExp(pattern)]
     }
 
     await this.vite.restart()
@@ -1096,10 +1124,10 @@ export class Vitest {
           await project._teardownGlobalSetup()
         }
 
-        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close())
+        const closePromises: unknown[] = this.projects.map(w => w.close())
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
-        if (this.coreWorkspaceProject && !this.resolvedProjects.includes(this.coreWorkspaceProject)) {
+        if (this.coreWorkspaceProject && !this.projects.includes(this.coreWorkspaceProject)) {
           closePromises.push(this.coreWorkspaceProject.close().then(() => this._vite = undefined as any))
         }
 
@@ -1136,7 +1164,7 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this._vite, ...this.resolvedProjects.map(p => p._vite)].filter(Boolean).length
+          const runningServers = [this._vite, ...this.projects.map(p => p._vite)].filter(Boolean).length
 
           if (runningServers === 1) {
             console.warn('Tests closed successfully but something prevents Vite server from exiting')
@@ -1252,20 +1280,23 @@ export class Vitest {
 
   /**
    * Check if the project with a given name should be included.
-   * @internal
    */
-  _matchesProjectFilter(name: string): boolean {
+  matchesProjectFilter(name: string): boolean {
+    const projects = this._config?.project || this._options?.project
     // no filters applied, any project can be included
-    if (!this._projectFilters.length) {
+    if (!projects || !projects.length) {
       return true
     }
-    return this._projectFilters.some(filter => filter.test(name))
+    return toArray(projects).some((project) => {
+      const regexp = wildcardPatternToRegExp(project)
+      return regexp.test(name)
+    })
   }
 }
 
 function assert(condition: unknown, property: string, name: string = property): asserts condition {
   if (!condition) {
-    throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Either await the Vitest promise or check that it is initialized with \`vitest.ready()\` before accessing \`vitest.${property}\`.`)
+    throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Await the Vitest promise before accessing \`vitest.${property}\`.`)
   }
 }
 

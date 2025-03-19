@@ -518,3 +518,13 @@ vitest.onFilterWatchedSpecification(specification =>
 ```
 
 Vitest can create different specifications for the same file depending on the `pool` or `locations` options, so do not rely on the reference. Vitest can also return cached specification from [`vitest.getModuleSpecifications`](#getmodulespecifications) - the cache is based on the `moduleId` and `pool`. Note that [`project.createSpecification`](/advanced/api/test-project#createspecification) always returns a new instance.
+
+## matchesProjectFilter <Version>3.1.0</Version> {#matchesprojectfilter}
+
+```ts
+function matchesProjectFilter(name: string): boolean
+```
+
+Check if the name matches the current [project filter](/guide/cli#project). If there is no project filter, this will always return `true`.
+
+It is not possible to programmatically change the `--project` CLI option.
