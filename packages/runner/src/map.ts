@@ -5,7 +5,6 @@ import type { Custom, Suite, SuiteHooks, Test, TestContext } from './types/tasks
 // use WeakMap here to make the Test and Suite object serializable
 const fnMap = new WeakMap()
 const testFixtureMap = new WeakMap()
-const suiteFixtureMap = new WeakMap()
 const hooksMap = new WeakMap()
 
 export function setFn(key: Test | Custom, fn: () => Awaitable<void>): void {
@@ -21,17 +20,6 @@ export function setTestFixture(
   fixture: FixtureItem[] | undefined,
 ): void {
   testFixtureMap.set(key, fixture)
-}
-
-export function setCollectorFixture(
-  key: Suite,
-  fixture: FixtureItem[],
-): void {
-  suiteFixtureMap.set(key, fixture)
-}
-
-export function getCollectorFixture(key: Suite): FixtureItem[] | undefined {
-  return suiteFixtureMap.get(key)
 }
 
 export function getTestFixture<Context = TestContext>(key: Context): FixtureItem[] {

@@ -34,7 +34,7 @@ import {
   withTimeout,
 } from './context'
 import { mergeContextFixtures, mergeScopedFixtures, withFixtures } from './fixture'
-import { getCollectorFixture, getHooks, setCollectorFixture, setFn, setHooks, setTestFixture } from './map'
+import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { getCurrentTest } from './test-state'
 import { createChainable } from './utils/chain'
 
@@ -395,6 +395,8 @@ function createSuiteCollector(
     test.type = 'test'
   })
 
+  let collectorFixtures: FixtureItem[] | undefined
+
   const collector: SuiteCollector = {
     type: 'collector',
     name,
@@ -408,17 +410,16 @@ function createSuiteCollector(
     clear,
     on: addHook,
     fixtures() {
-      return getCollectorFixture(suite)
+      return collectorFixtures
     },
     scoped(fixtures) {
-      const oldFixtures = getCollectorFixture(suite)
       const parsed = mergeContextFixtures(
         fixtures,
-        { fixtures: oldFixtures },
+        { fixtures: collectorFixtures },
         (key: string) => getRunner().injectValue?.(key),
       )
       if (parsed.fixtures) {
-        setCollectorFixture(suite, parsed.fixtures)
+        collectorFixtures = parsed.fixtures
       }
     },
   }
