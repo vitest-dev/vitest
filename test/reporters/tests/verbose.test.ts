@@ -27,29 +27,35 @@ test('prints error properties', async () => {
 
 test('prints skipped tests by default', async () => {
   const { stdout } = await runVitest({
-    include: ['fixtures/all-passing-or-skipped.test.ts'],
+    include: ['fixtures/pass-and-skip-test-suites.test.ts'],
     reporters: [['verbose', { isTTY: true, summary: false }]],
     config: false,
   })
 
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
-    "✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped) [...]ms
-       ✓ 2 + 3 = 5 [...]ms
-       ↓ 3 + 3 = 6"
+    "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+       ✓ passing test #1 [...]ms
+       ↓ skipped test #1
+       ✓ passing suite (1)
+         ✓ passing test #2 [...]ms
+       ↓ skipped suite (1)
+         ↓ skipped test #2"
   `)
 })
 
 test('hides skipped tests when --hideSkippedTests', async () => {
   const { stdout } = await runVitest({
-    include: ['fixtures/all-passing-or-skipped.test.ts'],
+    include: ['fixtures/pass-and-skip-test-suites.test.ts'],
     reporters: [['verbose', { isTTY: true, summary: false }]],
     hideSkippedTests: true,
     config: false,
   })
 
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
-    "✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped) [...]ms
-       ✓ 2 + 3 = 5 [...]ms"
+    "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+       ✓ passing test #1 [...]ms
+       ✓ passing suite (1)
+         ✓ passing test #2 [...]ms"
   `)
 })
 

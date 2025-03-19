@@ -1,7 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const entry = ['src/index.ts']
@@ -36,8 +36,8 @@ export default () => [
       }),
       json(),
       commonjs(),
-      esbuild({
-        target: 'node18',
+      oxc({
+        transform: { target: 'node18' },
       }),
     ],
   },

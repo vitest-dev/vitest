@@ -149,6 +149,11 @@ export abstract class BaseReporter implements Reporter {
     this.log(` ${title} ${task.name} ${suffix}`)
 
     for (const suite of suites) {
+      if (this.ctx.config.hideSkippedTests && (suite.mode === 'skip' || suite.result?.state === 'skip')) {
+        // Skipped suites are hidden when --hideSkippedTests
+        continue
+      }
+
       const tests = suite.tasks.filter(task => task.type === 'test')
 
       if (!('filepath' in suite)) {

@@ -130,27 +130,33 @@ describe('default reporter', async () => {
 
   test('prints skipped tests by default when a single file is run', async () => {
     const { stdout } = await runVitest({
-      include: ['fixtures/all-passing-or-skipped.test.ts'],
+      include: ['fixtures/pass-and-skip-test-suites.test.ts'],
       reporters: [['default', { isTTY: true, summary: false }]],
       config: 'fixtures/vitest.config.ts',
     })
 
-    expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
-    expect(stdout).toContain('✓ 2 + 3 = 5')
-    expect(stdout).toContain('↓ 3 + 3 = 6')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+         ✓ passing test #1 [...]ms
+         ↓ skipped test #1
+         ✓ passing suite > passing test #2 [...]ms
+         ↓ skipped suite > skipped test #2"
+    `)
   })
 
   test('hides skipped tests when --hideSkippedTests and a single file is run', async () => {
     const { stdout } = await runVitest({
-      include: ['fixtures/all-passing-or-skipped.test.ts'],
+      include: ['fixtures/pass-and-skip-test-suites.test.ts'],
       reporters: [['default', { isTTY: true, summary: false }]],
       hideSkippedTests: true,
       config: false,
     })
 
-    expect(stdout).toContain('✓ fixtures/all-passing-or-skipped.test.ts (2 tests | 1 skipped)')
-    expect(stdout).toContain('✓ 2 + 3 = 5')
-    expect(stdout).not.toContain('↓ 3 + 3 = 6')
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
+         ✓ passing test #1 [...]ms
+         ✓ passing suite > passing test #2 [...]ms"
+    `)
   })
 
   test('prints retry count', async () => {
@@ -198,29 +204,27 @@ describe('default reporter', async () => {
       reporters: [['default', { isTTY: true, summary: false }]],
       config: false,
     })
-    expect(
-      [...stdout.matchAll(/(✓ .*)$/gm)].map(v => v[0]).filter(v => !v.includes('ms')),
-    ).toMatchInlineSnapshot(`
-      [
-        "✓ test.for object : 0 = 'a', 2 = { te: 'st' }",
-        "✓ test.for object : 0 = 'b', 2 = [ 'test' ]",
-        "✓ test.each object : 0 = 'a', 2 = { te: 'st' } ",
-        "✓ test.each object : 0 = 'b', 2 = [ 'test' ] ",
-        "✓ test.for array : 0 = 'a', 2 = { te: 'st' }",
-        "✓ test.for array : 0 = 'b', 2 = [ 'test' ]",
-        "✓ test.each array : 0 = 'a', 2 = { te: 'st' }",
-        "✓ test.each array : 0 = 'b', 2 = [ 'test' ]",
-        "✓ object : add(1, 1) -> 2",
-        "✓ object : add(1, 2) -> 3",
-        "✓ object : add(2, 1) -> 3",
-        "✓ array : add(1, 1) -> 2",
-        "✓ array : add(1, 2) -> 3",
-        "✓ array : add(2, 1) -> 3",
-        "✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined",
-        "✓ first array element is not object: 0 = 'foo', 1 = 'bar', k = $k",
-        "✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1'",
-        "✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2'",
-      ]
+
+    expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
+      "✓ fixtures/test-for-title.test.ts (18 tests) [...]ms
+         ✓ test.for object : 0 = 'a', 2 = { te: 'st' } [...]ms
+         ✓ test.for object : 0 = 'b', 2 = [ 'test' ] [...]ms
+         ✓ test.each object : 0 = 'a', 2 = { te: 'st' }  [...]ms
+         ✓ test.each object : 0 = 'b', 2 = [ 'test' ]  [...]ms
+         ✓ test.for array : 0 = 'a', 2 = { te: 'st' } [...]ms
+         ✓ test.for array : 0 = 'b', 2 = [ 'test' ] [...]ms
+         ✓ test.each array : 0 = 'a', 2 = { te: 'st' } [...]ms
+         ✓ test.each array : 0 = 'b', 2 = [ 'test' ] [...]ms
+         ✓ object : add(1, 1) -> 2 [...]ms
+         ✓ object : add(1, 2) -> 3 [...]ms
+         ✓ object : add(2, 1) -> 3 [...]ms
+         ✓ array : add(1, 1) -> 2 [...]ms
+         ✓ array : add(1, 2) -> 3 [...]ms
+         ✓ array : add(2, 1) -> 3 [...]ms
+         ✓ first array element is object: 0 = { k1: 'v1' }, 1 = { k2: 'v2' }, k1 = 'v1', k2 = undefined [...]ms
+         ✓ first array element is not object: 0 = 'foo', 1 = 'bar', k = $k [...]ms
+         ✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1' [...]ms
+         ✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2' [...]ms"
     `)
   })
 }, 120000)

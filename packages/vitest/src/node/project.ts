@@ -16,8 +16,8 @@ import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
   SerializedConfig,
+  TestProjectInlineConfiguration,
   UserConfig,
-  UserWorkspaceConfig,
 } from './types/config'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
@@ -726,7 +726,7 @@ export interface SerializedTestProject {
   context: ProvidedContext
 }
 
-interface InitializeProjectOptions extends UserWorkspaceConfig {
+interface InitializeProjectOptions extends TestProjectInlineConfiguration {
   configFile: string | false
 }
 
