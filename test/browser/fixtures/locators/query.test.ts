@@ -59,7 +59,7 @@ describe('locator.or', () => {
   test('throws an error if matches multiple elements', () => {
     document.body.innerHTML = `
     <button title="Testing framework">Vitest</button>
-    <button title="Testing framework">Vitest</button>
+    <a href="https://vitest.dev" title="Testing framework">Vitest</a>
     `
     const locator = page.getByRole('button').or(page.getByTitle('Testing framework'))
     expect(() => locator.element()).toThrowError(
