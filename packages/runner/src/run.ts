@@ -175,12 +175,6 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
 const eventsPacks: [string, TaskUpdateEvent][] = []
 
-export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
-  eventsPacks.push([task.id, event])
-  packs.set(task.id, [task.result, task.meta])
-  sendTasksUpdateThrottled(runner)
-}
-
 function sendTasksUpdate(runner: VitestRunner) {
   if (packs.size) {
     const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
@@ -206,6 +200,12 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 
 // throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
+
+export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
+  eventsPacks.push([task.id, event])
+  packs.set(task.id, [task.result, task.meta])
+  sendTasksUpdateThrottled(runner)
+}
 
 async function callCleanupHooks(cleanups: unknown[]) {
   await Promise.all(
