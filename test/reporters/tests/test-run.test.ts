@@ -897,7 +897,7 @@ describe('merge reports', () => {
 })
 
 describe('type checking', () => {
-  test('typechking is reported correctly', async () => {
+  test('typechecking is reported correctly', async () => {
     const report = await run({
       'example-1.test-d.ts': ts`
         test('first', () => {});
