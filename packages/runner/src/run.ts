@@ -16,7 +16,7 @@ import type {
   Test,
   TestContext,
 } from './types/tasks'
-import { getSafeTimers, shuffle } from '@vitest/utils'
+import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
 import { PendingError } from './errors'
@@ -174,26 +174,14 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
 const eventsPacks: [string, TaskUpdateEvent][] = []
-let updateTimer: any
-let previousUpdate: Promise<void> | undefined
 
 export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
   eventsPacks.push([task.id, event])
   packs.set(task.id, [task.result, task.meta])
-
-  const { clearTimeout, setTimeout } = getSafeTimers()
-
-  clearTimeout(updateTimer)
-  updateTimer = setTimeout(() => {
-    previousUpdate = sendTasksUpdate(runner)
-  }, 10)
+  sendTasksUpdateThrottled(runner)
 }
 
-async function sendTasksUpdate(runner: VitestRunner) {
-  const { clearTimeout } = getSafeTimers()
-  clearTimeout(updateTimer)
-  await previousUpdate
-
+function sendTasksUpdate(runner: VitestRunner) {
   if (packs.size) {
     const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
       return [id, task[0], task[1]]
@@ -204,6 +192,20 @@ async function sendTasksUpdate(runner: VitestRunner) {
     return p
   }
 }
+
+function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+  let last = 0
+  return function (this: any, ...args: any[]) {
+    const now = unixNow()
+    if (now - last > ms) {
+      last = now
+      return fn.apply(this, args)
+    }
+  } as any
+}
+
+// throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
+const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
 async function callCleanupHooks(cleanups: unknown[]) {
   await Promise.all(
@@ -561,7 +563,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 
   await runner.onAfterRunFiles?.(files)
 
-  await sendTasksUpdate(runner)
+  sendTasksUpdate(runner)
 
   return files
 }
