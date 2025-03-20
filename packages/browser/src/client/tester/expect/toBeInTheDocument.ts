@@ -19,7 +19,7 @@ import { getElementFromUserInput } from './utils'
 
 export default function toBeInTheDocument(
   this: MatcherState,
-  actual: Element | Locator,
+  actual: Element | Locator | null,
 ): ExpectationResult {
   let htmlElement: null | HTMLElement | SVGElement = null
 

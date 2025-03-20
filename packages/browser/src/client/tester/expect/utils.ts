@@ -17,7 +17,7 @@ import type { MatcherState } from '@vitest/expect'
 import { Locator } from '../locators'
 
 export function getElementFromUserInput(
-  elementOrLocator: Element | Locator,
+  elementOrLocator: Element | Locator | null,
   // TODO: minifier doesn't keep names, so we need to update this
   matcherFn: (...args: any) => any,
   context: MatcherState,

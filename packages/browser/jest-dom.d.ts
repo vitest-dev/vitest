@@ -9,10 +9,9 @@ export interface TestingLibraryMatchers<E, R> {
    * @example
    * <svg data-testid="svg-element"></svg>
    *
-   * expect(queryByTestId('svg-element')).toBeInTheDocument()
-   * expect(queryByTestId('does-not-exist')).not.toBeInTheDocument()
-   * @see
-   * [testing-library/jest-dom#tobeinthedocument](https://github.com/testing-library/jest-dom#tobeinthedocument)
+   * await expect.element(page.getByTestId('svg-element')).toBeInTheDocument()
+   * await expect.element(page.getByTestId('does-not-exist')).not.toBeInTheDocument()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobeinthedocument
    */
   toBeInTheDocument(): R
   /**
@@ -36,10 +35,9 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * <div data-testid="visible">Visible Example</div>
    *
-   * expect(getByTestId('zero-opacity')).not.toBeVisible()
-   * expect(getByTestId('visible')).toBeVisible()
-   * @see
-   * [testing-library/jest-dom#tobevisible](https://github.com/testing-library/jest-dom#tobevisible)
+   * await expect.element(page.getByTestId('zero-opacity')).not.toBeVisible()
+   * await expect.element(page.getByTestId('visible')).toBeVisible()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobevisible
    */
   toBeVisible(): R
   /**
@@ -50,10 +48,9 @@ export interface TestingLibraryMatchers<E, R> {
    *   <span data-testid="empty"></span>
    * </span>
    *
-   * expect(getByTestId('empty')).toBeEmptyDOMElement()
-   * expect(getByTestId('not-empty')).not.toBeEmptyDOMElement()
-   * @see
-   * [testing-library/jest-dom#tobeemptydomelement](https://github.com/testing-library/jest-dom#tobeemptydomelement)
+   * await expect.element(page.getByTestId('empty')).toBeEmptyDOMElement()
+   * await expect.element(page.getByTestId('not-empty')).not.toBeEmptyDOMElement()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobeemptydomelement
    */
   toBeEmptyDOMElement(): R
   /**
@@ -71,9 +68,8 @@ export interface TestingLibraryMatchers<E, R> {
    *   submit
    * </button>
    *
-   * expect(getByTestId('button')).toBeDisabled()
-   * @see
-   * [testing-library/jest-dom#tobedisabled](https://github.com/testing-library/jest-dom#tobedisabled)
+   * await expect.element(page.getByTestId('button')).toBeDisabled()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobedisabled
    */
   toBeDisabled(): R
   /**
@@ -91,9 +87,8 @@ export interface TestingLibraryMatchers<E, R> {
    *   submit
    * </button>
    *
-   * expect(getByTestId('button')).toBeEnabled()
-   * @see
-   * [testing-library/jest-dom#tobeenabled](https://github.com/testing-library/jest-dom#tobeenabled)
+   * await expect.element(page.getByTestId('button')).toBeEnabled()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobeenabled
    */
   toBeEnabled(): R
   /**
@@ -109,10 +104,9 @@ export interface TestingLibraryMatchers<E, R> {
    *   <input required />
    * </form>
    *
-   * expect(getByTestId('no-aria-invalid')).not.toBeInvalid()
-   * expect(getByTestId('invalid-form')).toBeInvalid()
-   * @see
-   * [testing-library/jest-dom#tobeinvalid](https://github.com/testing-library/jest-dom#tobeinvalid)
+   * await expect(page.getByTestId('no-aria-invalid')).not.toBeInvalid()
+   * await expect(page.getByTestId('invalid-form')).toBeInvalid()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobeinvalid
    */
   toBeInvalid(): R
   /**
@@ -127,10 +121,9 @@ export interface TestingLibraryMatchers<E, R> {
    *   role="tree"
    *   required />
    *
-   * expect(getByTestId('required-input')).toBeRequired()
-   * expect(getByTestId('supported-role')).not.toBeRequired()
-   * @see
-   * [testing-library/jest-dom#toberequired](https://github.com/testing-library/jest-dom#toberequired)
+   * await expect.element(page.getByTestId('required-input')).toBeRequired()
+   * await expect.element(page.getByTestId('supported-role')).not.toBeRequired()
+   * @see https://vitest.dev/guide/browser/assertion-api#toberequired
    */
   toBeRequired(): R
   /**
@@ -146,10 +139,9 @@ export interface TestingLibraryMatchers<E, R> {
    *   <input />
    * </form>
    *
-   * expect(getByTestId('no-aria-invalid')).not.toBeValid()
-   * expect(getByTestId('invalid-form')).toBeInvalid()
-   * @see
-   * [testing-library/jest-dom#tobevalid](https://github.com/testing-library/jest-dom#tobevalid)
+   * await expect.element(page.getByTestId('no-aria-invalid')).not.toBeValid()
+   * await expect.element(page.getByTestId('invalid-form')).toBeInvalid()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobevalid
    */
   toBeValid(): R
   /**
@@ -160,14 +152,13 @@ export interface TestingLibraryMatchers<E, R> {
    *   <span data-testid="descendant"></span>
    * </span>
    *
-   * const ancestor = getByTestId('ancestor')
-   * const descendant = getByTestId('descendant')
-   * const nonExistentElement = getByTestId('does-not-exist')
-   * expect(ancestor).toContainElement(descendant)
-   * expect(descendant).not.toContainElement(ancestor)
-   * expect(ancestor).not.toContainElement(nonExistentElement)
-   * @see
-   * [testing-library/jest-dom#tocontainelement](https://github.com/testing-library/jest-dom#tocontainelement)
+   * const ancestor = page.getByTestId('ancestor')
+   * const descendant = page.getByTestId('descendant')
+   * const nonExistentElement = page.getByTestId('does-not-exist')
+   * await expect.element(ancestor).toContainElement(descendant)
+   * await expect.element(descendant).not.toContainElement(ancestor)
+   * await expect.element(ancestor).not.toContainElement(nonExistentElement)
+   * @see https://vitest.dev/guide/browser/assertion-api#tocontainelement
    */
   toContainElement(element: HTMLElement | SVGElement | null): R
   /**
@@ -176,9 +167,9 @@ export interface TestingLibraryMatchers<E, R> {
    * @example
    * <span data-testid="parent"><span data-testid="child"></span></span>
    *
-   * expect(getByTestId('parent')).toContainHTML('<span data-testid="child"></span>')
-   * @see
-   * [testing-library/jest-dom#tocontainhtml](https://github.com/testing-library/jest-dom#tocontainhtml)
+   * const parent = page.getByTestId('parent')
+   * await expect.element(parent).toContainHTML('<span data-testid="child"></span>')
+   * @see https://vitest.dev/guide/browser/assertion-api#tocontainhtml
    */
   toContainHTML(htmlText: string): R
   /**
@@ -197,11 +188,10 @@ export interface TestingLibraryMatchers<E, R> {
    *   ok
    * </button>
    *
-   * expect(button).toHaveAttribute('disabled')
-   * expect(button).toHaveAttribute('type', 'submit')
-   * expect(button).not.toHaveAttribute('type', 'button')
-   * @see
-   * [testing-library/jest-dom#tohaveattribute](https://github.com/testing-library/jest-dom#tohaveattribute)
+   * await expect.element(button).toHaveAttribute('disabled')
+   * await expect.element(button).toHaveAttribute('type', 'submit')
+   * await expect.element(button).not.toHaveAttribute('type', 'button')
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaveattribute
    */
   toHaveAttribute(attr: string, value?: unknown): R
   /**
@@ -219,18 +209,28 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * <div data-testid="no-classes">no classes</div>
    *
-   * const deleteButton = getByTestId('delete-button')
-   * const noClasses = getByTestId('no-classes')
-   * expect(deleteButton).toHaveClass('btn')
-   * expect(deleteButton).toHaveClass('btn-danger xs')
-   * expect(deleteButton).toHaveClass(/danger/, 'xs')
-   * expect(deleteButton).toHaveClass('btn xs btn-danger', {exact: true})
-   * expect(deleteButton).not.toHaveClass('btn xs btn-danger', {exact: true})
-   * expect(noClasses).not.toHaveClass()
-   * @see
-   * [testing-library/jest-dom#tohaveclass](https://github.com/testing-library/jest-dom#tohaveclass)
+   * const deleteButton = page.getByTestId('delete-button')
+   * const noClasses = page.getByTestId('no-classes')
+   * await expect.element(deleteButton).toHaveClass('btn')
+   * await expect.element(deleteButton).toHaveClass('btn-danger xs')
+   * await expect.element(deleteButton).toHaveClass(/danger/, 'xs')
+   * await expect.element(deleteButton).toHaveClass('btn xs btn-danger', {exact: true})
+   * await expect.element(deleteButton).not.toHaveClass('btn xs btn-danger', {exact: true})
+   * await expect.element(noClasses).not.toHaveClass()
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaveclass
    */
-  toHaveClass(...classNames: (string | RegExp)[] | [...string, options?: {exact: boolean}]): R
+  toHaveClass(...classNames:
+   | (string | RegExp)[]
+   | [string, options?: {exact: boolean}]
+   | [string, string, options?: {exact: boolean}]
+   | [string, string, string, options?: {exact: boolean}]
+   | [string, string, string, string, options?: {exact: boolean}]
+   | [string, string, string, string, string, options?: {exact: boolean}]
+   | [string, string, string, string, string, string, options?: {exact: boolean}]
+   | [string, string, string, string, string, string, string, options?: {exact: boolean}]
+   | [string, string, string, string, string, string, string, string, options?: {exact: boolean}]
+   | [string, string, string, string, string, string, string, string, string, options?: {exact: boolean}]
+  ): R
   /**
    * @description
    * This allows you to check whether the given form element has the specified displayed value (the one the
@@ -259,18 +259,17 @@ export interface TestingLibraryMatchers<E, R> {
    *   <option value="avocado" selected>Avocado</option>
    * </select>
    *
-   * const input = screen.getByLabelText('First name')
-   * const textarea = screen.getByLabelText('Description')
-   * const selectSingle = screen.getByLabelText('Fruit')
-   * const selectMultiple = screen.getByLabelText('Fruits')
+   * const input = page.getByLabelText('First name')
+   * const textarea = page.getByLabelText('Description')
+   * const selectSingle = page.getByLabelText('Fruit')
+   * const selectMultiple = page.getByLabelText('Fruits')
    *
-   * expect(input).toHaveDisplayValue('Luca')
-   * expect(textarea).toHaveDisplayValue('An example description here.')
-   * expect(selectSingle).toHaveDisplayValue('Select a fruit...')
-   * expect(selectMultiple).toHaveDisplayValue(['Banana', 'Avocado'])
+   * await expect.element(input).toHaveDisplayValue('Luca')
+   * await expect.element(textarea).toHaveDisplayValue('An example description here.')
+   * await expect.element(selectSingle).toHaveDisplayValue('Select a fruit...')
+   * await expect.element(selectMultiple).toHaveDisplayValue(['Banana', 'Avocado'])
    *
-   * @see
-   * [testing-library/jest-dom#tohavedisplayvalue](https://github.com/testing-library/jest-dom#tohavedisplayvalue)
+   * @see https://vitest.dev/guide/browser/assertion-api#tohavedisplayvalue
    */
   toHaveDisplayValue(value: string | number | RegExp | Array<string | RegExp | number>): R
   /**
@@ -281,13 +280,12 @@ export interface TestingLibraryMatchers<E, R> {
    *   <input type="text" data-testid="element-to-focus" />
    * </div>
    *
-   * const input = getByTestId('element-to-focus')
-   * input.focus()
-   * expect(input).toHaveFocus()
-   * input.blur()
-   * expect(input).not.toHaveFocus()
-   * @see
-   * [testing-library/jest-dom#tohavefocus](https://github.com/testing-library/jest-dom#tohavefocus)
+   * const input = page.getByTestId('element-to-focus')
+   * input.element().focus()
+   * await expect.element(input).toHaveFocus()
+   * input.element().blur()
+   * await expect.element(input).not.toHaveFocus()
+   * @see https://vitest.dev/guide/browser/assertion-api#tohavefocus
    */
   toHaveFocus(): R
   /**
@@ -303,12 +301,11 @@ export interface TestingLibraryMatchers<E, R> {
    *   <button type="submit">Sign in</button>
    * </form>
    *
-   * expect(getByTestId('login-form')).toHaveFormValues({
+   * await expect.element(page.getByTestId('login-form')).toHaveFormValues({
    *   username: 'jane.doe',
    *   rememberMe: true,
    * })
-   * @see
-   * [testing-library/jest-dom#tohaveformvalues](https://github.com/testing-library/jest-dom#tohaveformvalues)
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaveformvalues
    */
   toHaveFormValues(expectedValues: Record<string, unknown>): R
   /**
@@ -324,14 +321,13 @@ export interface TestingLibraryMatchers<E, R> {
    *   submit
    * </button>
    *
-   * const button = getByTestId('submit-button')
-   * expect(button).toHaveStyle('background-color: green')
-   * expect(button).toHaveStyle({
+   * const button = page.getByTestId('submit-button')
+   * await expect.element(button).toHaveStyle('background-color: green')
+   * await expect.element(button).toHaveStyle({
    *   'background-color': 'green',
    *   display: 'none'
    * })
-   * @see
-   * [testing-library/jest-dom#tohavestyle](https://github.com/testing-library/jest-dom#tohavestyle)
+   * @see https://vitest.dev/guide/browser/assertion-api#tohavestyle
    */
   toHaveStyle(css: string | Record<string, unknown>): R
   /**
@@ -347,15 +343,14 @@ export interface TestingLibraryMatchers<E, R> {
    * @example
    * <span data-testid="text-content">Text Content</span>
    *
-   * const element = getByTestId('text-content')
-   * expect(element).toHaveTextContent('Content')
+   * const element = page.getByTestId('text-content')
+   * await expect.element(element).toHaveTextContent('Content')
    * // to match the whole content
-   * expect(element).toHaveTextContent(/^Text Content$/)
+   * await expect.element(element).toHaveTextContent(/^Text Content$/)
    * // to use case-insensitive match
-   * expect(element).toHaveTextContent(/content$/i)
-   * expect(element).not.toHaveTextContent('content')
-   * @see
-   * [testing-library/jest-dom#tohavetextcontent](https://github.com/testing-library/jest-dom#tohavetextcontent)
+   * await expect.element(element).toHaveTextContent(/content$/i)
+   * await expect.element(element).not.toHaveTextContent('content')
+   * @see https://vitest.dev/guide/browser/assertion-api#tohavetextcontent
    */
   toHaveTextContent(
     text: string | number | RegExp,
@@ -375,10 +370,9 @@ export interface TestingLibraryMatchers<E, R> {
    *   value="5"
    *   data-testid="input-number" />
    *
-   * const numberInput = getByTestId('input-number')
-   * expect(numberInput).toHaveValue(5)
-   * @see
-   * [testing-library/jest-dom#tohavevalue](https://github.com/testing-library/jest-dom#tohavevalue)
+   * const numberInput = page.getByTestId('input-number')
+   * await expect.element(numberInput).toHaveValue(5)
+   * @see https://vitest.dev/guide/browser/assertion-api#tohavevalue
    */
   toHaveValue(value?: string | string[] | number | null): R
   /**
@@ -397,12 +391,11 @@ export interface TestingLibraryMatchers<E, R> {
    *   value="foo"
    *   data-testid="input-radio" />
    *
-   * const inputCheckbox = getByTestId('input-checkbox')
-   * const inputRadio = getByTestId('input-radio')
-   * expect(inputCheckbox).toBeChecked()
-   * expect(inputRadio).not.toBeChecked()
-   * @see
-   * [testing-library/jest-dom#tobechecked](https://github.com/testing-library/jest-dom#tobechecked)
+   * const inputCheckbox = page.getByTestId('input-checkbox')
+   * const inputRadio = page.getByTestId('input-radio')
+   * await expect.element(inputCheckbox).toBeChecked()
+   * await expect.element(inputRadio).not.toBeChecked()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobechecked
    */
   toBeChecked(): R
   /**
@@ -420,15 +413,14 @@ export interface TestingLibraryMatchers<E, R> {
    * <img src="logo.jpg" data-testid="logo" alt="Company logo" aria-describedby="t1" />
    * <span id="t1" role="presentation">The logo of Our Company</span>
    *
-   * expect(getByTestId('link')).toHaveAccessibleDescription()
-   * expect(getByTestId('link')).toHaveAccessibleDescription('A link to start over')
-   * expect(getByTestId('link')).not.toHaveAccessibleDescription('Home page')
-   * expect(getByTestId('extra-link')).not.toHaveAccessibleDescription()
-   * expect(getByTestId('avatar')).not.toHaveAccessibleDescription()
-   * expect(getByTestId('logo')).not.toHaveAccessibleDescription('Company logo')
-   * expect(getByTestId('logo')).toHaveAccessibleDescription('The logo of Our Company')
-   * @see
-   * [testing-library/jest-dom#tohaveaccessibledescription](https://github.com/testing-library/jest-dom#tohaveaccessibledescription)
+   * await expect.element(page.getByTestId('link')).toHaveAccessibleDescription()
+   * await expect.element(page.getByTestId('link')).toHaveAccessibleDescription('A link to start over')
+   * await expect.element(page.getByTestId('link')).not.toHaveAccessibleDescription('Home page')
+   * await expect.element(page.getByTestId('extra-link')).not.toHaveAccessibleDescription()
+   * await expect.element(page.getByTestId('avatar')).not.toHaveAccessibleDescription()
+   * await expect.element(page.getByTestId('logo')).not.toHaveAccessibleDescription('Company logo')
+   * await expect.element(page.getByTestId('logo')).toHaveAccessibleDescription('The logo of Our Company')
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaveaccessibledescription
    */
   toHaveAccessibleDescription(text?: string | RegExp | E): R
 
@@ -451,24 +443,23 @@ export interface TestingLibraryMatchers<E, R> {
    * <input aria-label="Not Invalid" aria-invalid="false" aria-errormessage="error-message" />
    *
    * // Inputs with Valid Error Messages
-   * expect(getByRole('textbox', {name: 'Has Error'})).toHaveAccessibleErrorMessage()
-   * expect(getByRole('textbox', {name: 'Has Error'})).toHaveAccessibleErrorMessage('This field is invalid')
-   * expect(getByRole('textbox', {name: 'Has Error'})).toHaveAccessibleErrorMessage(/invalid/i)
-   * expect(
-   *   getByRole('textbox', {name: 'Has Error'}),
+   * await expect.element(page.getByRole('textbox', {name: 'Has Error'})).toHaveAccessibleErrorMessage()
+   * await expect.element(page.getByRole('textbox', {name: 'Has Error'})).toHaveAccessibleErrorMessage('This field is invalid')
+   * await expect.element(page.getByRole('textbox', {name: 'Has Error'})).toHaveAccessibleErrorMessage(/invalid/i)
+   * await expect.element(
+   *   page.getByRole('textbox', {name: 'Has Error'}),
    * ).not.toHaveAccessibleErrorMessage('This field is absolutely correct!')
    *
    * // Inputs without Valid Error Messages
-   * expect(
-   *   getByRole('textbox', {name: 'No Error Attributes'}),
+   * await expect.element(
+   *   page.getByRole('textbox', {name: 'No Error Attributes'}),
    * ).not.toHaveAccessibleErrorMessage()
    *
-   * expect(
-   *   getByRole('textbox', {name: 'Not Invalid'}),
+   * await expect.element(
+   *   page.getByRole('textbox', {name: 'Not Invalid'}),
    * ).not.toHaveAccessibleErrorMessage()
    *
-   * @see
-   * [testing-library/jest-dom#tohaveaccessibleerrormessage](https://github.com/testing-library/jest-dom#tohaveaccessibleerrormessage)
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaveaccessibleerrormessage
    */
   toHaveAccessibleErrorMessage(text?: string | RegExp | E): R
 
@@ -491,16 +482,15 @@ export interface TestingLibraryMatchers<E, R> {
    * <div><svg data-testid="svg-without-title"></svg></div>
    * <input data-testid="input-title" title="test" />
    *
-   * expect(getByTestId('img-alt')).toHaveAccessibleName('Test alt')
-   * expect(getByTestId('img-empty-alt')).not.toHaveAccessibleName()
-   * expect(getByTestId('svg-title')).toHaveAccessibleName('Test title')
-   * expect(getByTestId('button-img-alt')).toHaveAccessibleName()
-   * expect(getByTestId('img-paragraph')).not.toHaveAccessibleName()
-   * expect(getByTestId('svg-button')).toHaveAccessibleName()
-   * expect(getByTestId('svg-without-title')).not.toHaveAccessibleName()
-   * expect(getByTestId('input-title')).toHaveAccessibleName()
-   * @see
-   * [testing-library/jest-dom#tohaveaccessiblename](https://github.com/testing-library/jest-dom#tohaveaccessiblename)
+   * await expect.element(page.getByTestId('img-alt')).toHaveAccessibleName('Test alt')
+   * await expect.element(page.getByTestId('img-empty-alt')).not.toHaveAccessibleName()
+   * await expect.element(page.getByTestId('svg-title')).toHaveAccessibleName('Test title')
+   * await expect.element(page.getByTestId('button-img-alt')).toHaveAccessibleName()
+   * await expect.element(page.getByTestId('img-paragraph')).not.toHaveAccessibleName()
+   * await expect.element(page.getByTestId('svg-button')).toHaveAccessibleName()
+   * await expect.element(page.getByTestId('svg-without-title')).not.toHaveAccessibleName()
+   * await expect.element(page.getByTestId('input-title')).toHaveAccessibleName()
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaveaccessiblename
    */
   toHaveAccessibleName(text?: string | RegExp | E): R
   /**
@@ -528,16 +518,15 @@ export interface TestingLibraryMatchers<E, R> {
    * <a href="/about" data-testid="link">About</a>
    * <a data-testid="link-invalid">Invalid link<a/>
    *
-   * expect(getByTestId('button')).toHaveRole('button')
-   * expect(getByTestId('button-explicit')).toHaveRole('button')
-   * expect(getByTestId('button-explicit-multiple')).toHaveRole('button')
-   * expect(getByTestId('button-explicit-multiple')).toHaveRole('switch')
-   * expect(getByTestId('link')).toHaveRole('link')
-   * expect(getByTestId('link-invalid')).not.toHaveRole('link')
-   * expect(getByTestId('link-invalid')).toHaveRole('generic')
+   * await expect.element(page.getByTestId('button')).toHaveRole('button')
+   * await expect.element(page.getByTestId('button-explicit')).toHaveRole('button')
+   * await expect.element(page.getByTestId('button-explicit-multiple')).toHaveRole('button')
+   * await expect.element(page.getByTestId('button-explicit-multiple')).toHaveRole('switch')
+   * await expect.element(page.getByTestId('link')).toHaveRole('link')
+   * await expect.element(page.getByTestId('link-invalid')).not.toHaveRole('link')
+   * await expect.element(page.getByTestId('link-invalid')).toHaveRole('generic')
    *
-   * @see
-   * [testing-library/jest-dom#tohaverole](https://github.com/testing-library/jest-dom#tohaverole)
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaverole
    */
   toHaveRole(
     // Get autocomplete for ARIARole union types, while still supporting another string
@@ -570,16 +559,15 @@ export interface TestingLibraryMatchers<E, R> {
    * const ariaCheckboxUnchecked = getByTestId('aria-checkbox-unchecked')
    * const inputCheckboxIndeterminate = getByTestId('input-checkbox-indeterminate')
    *
-   * expect(ariaCheckboxMixed).toBePartiallyChecked()
-   * expect(inputCheckboxChecked).not.toBePartiallyChecked()
-   * expect(inputCheckboxUnchecked).not.toBePartiallyChecked()
-   * expect(ariaCheckboxChecked).not.toBePartiallyChecked()
-   * expect(ariaCheckboxUnchecked).not.toBePartiallyChecked()
+   * await expect.element(ariaCheckboxMixed).toBePartiallyChecked()
+   * await expect.element(inputCheckboxChecked).not.toBePartiallyChecked()
+   * await expect.element(inputCheckboxUnchecked).not.toBePartiallyChecked()
+   * await expect.element(ariaCheckboxChecked).not.toBePartiallyChecked()
+   * await expect.element(ariaCheckboxUnchecked).not.toBePartiallyChecked()
    *
    * inputCheckboxIndeterminate.indeterminate = true
-   * expect(inputCheckboxIndeterminate).toBePartiallyChecked()
-   * @see
-   * [testing-library/jest-dom#tobepartiallychecked](https://github.com/testing-library/jest-dom#tobepartiallychecked)
+   * await expect.element(inputCheckboxIndeterminate).toBePartiallyChecked()
+   * @see https://vitest.dev/guide/browser/assertion-api#tobepartiallychecked
    */
   toBePartiallyChecked(): R
   /**
@@ -603,11 +591,11 @@ export interface TestingLibraryMatchers<E, R> {
    * <p data-testid="next">next</p>
    * </div>
    *
-   * getByTestId('text').setSelectionRange(5, 13)
-   * expect(getByTestId('text')).toHaveSelection('selected')
+   * page.getByTestId('text').element().setSelectionRange(5, 13)
+   * await expect.element(page.getByTestId('text')).toHaveSelection('selected')
    *
-   * getByTestId('textarea').setSelectionRange(0, 5)
-   * expect('textarea').toHaveSelection('text ')
+   * page.getByTestId('textarea').element().setSelectionRange(0, 5)
+   * await expect.element('textarea').toHaveSelection('text ')
    *
    * const selection = document.getSelection()
    * const range = document.createRange()
@@ -616,28 +604,27 @@ export interface TestingLibraryMatchers<E, R> {
    * selection.addRange(range)
    *
    * // selection of child applies to the parent as well
-   * range.selectNodeContents(getByTestId('child'))
-   * expect(getByTestId('child')).toHaveSelection('selected')
-   * expect(getByTestId('parent')).toHaveSelection('selected')
+   * range.selectNodeContents(page.getByTestId('child').element())
+   * await expect.element(page.getByTestId('child')).toHaveSelection('selected')
+   * await expect.element(page.getByTestId('parent')).toHaveSelection('selected')
    *
    * // selection that applies from prev all, parent text before child, and part child.
-   * range.setStart(getByTestId('prev'), 0)
-   * range.setEnd(getByTestId('child').childNodes[0], 3)
-   * expect(queryByTestId('prev')).toHaveSelection('prev')
-   * expect(queryByTestId('child')).toHaveSelection('sel')
-   * expect(queryByTestId('parent')).toHaveSelection('text sel')
-   * expect(queryByTestId('next')).not.toHaveSelection()
+   * range.setStart(page.getByTestId('prev').element(), 0)
+   * range.setEnd(page.getByTestId('child').element().childNodes[0], 3)
+   * await expect.element(page.queryByTestId('prev')).toHaveSelection('prev')
+   * await expect.element(page.queryByTestId('child')).toHaveSelection('sel')
+   * await expect.element(page.queryByTestId('parent')).toHaveSelection('text sel')
+   * await expect.element(page.queryByTestId('next')).not.toHaveSelection()
    *
    * // selection that applies from part child, parent text after child and part next.
-   * range.setStart(getByTestId('child').childNodes[0], 3)
-   * range.setEnd(getByTestId('next').childNodes[0], 2)
-   * expect(queryByTestId('child')).toHaveSelection('ected')
-   * expect(queryByTestId('parent')).toHaveSelection('ected text')
-   * expect(queryByTestId('prev')).not.toHaveSelection()
-   * expect(queryByTestId('next')).toHaveSelection('ne')
+   * range.setStart(page.getByTestId('child').element().childNodes[0], 3)
+   * range.setEnd(page.getByTestId('next').element().childNodes[0], 2)
+   * await expect.element(page.queryByTestId('child')).toHaveSelection('ected')
+   * await expect.element(page.queryByTestId('parent')).toHaveSelection('ected text')
+   * await expect.element(page.queryByTestId('prev')).not.toHaveSelection()
+   * await expect.element(page.queryByTestId('next')).toHaveSelection('ne')
    *
-   * @see
-   * [testing-library/jest-dom#tohaveselection](https://github.com/testing-library/jest-dom#tohaveselection)
+   * @see https://vitest.dev/guide/browser/assertion-api#tohaveselection
    */
   toHaveSelection(selection?: string): R
 }

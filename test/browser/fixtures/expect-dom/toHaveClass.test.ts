@@ -210,6 +210,7 @@ test('.toHaveClass combining {exact:true} and regular expressions throws an erro
   const {queryByTestId} = renderElementWithClasses()
 
   expect(() =>
+    // @ts-expect-error regexp is not supported with exact
     expect(queryByTestId('delete-button')).not.toHaveClass(/btn/, {
       exact: true,
     }),
@@ -217,6 +218,7 @@ test('.toHaveClass combining {exact:true} and regular expressions throws an erro
 
   expect(() =>
     expect(queryByTestId('delete-button')).not.toHaveClass(
+      // @ts-expect-error regexp is not supported with exact
       /-danger$/,
       'extra',
       /\bbtn/,
@@ -225,6 +227,7 @@ test('.toHaveClass combining {exact:true} and regular expressions throws an erro
   ).toThrowError()
 
   expect(() =>
+    // @ts-expect-error regexp is not supported with exact
     expect(queryByTestId('delete-button')).toHaveClass(/danger/, {exact: true}),
   ).toThrowError()
 })
