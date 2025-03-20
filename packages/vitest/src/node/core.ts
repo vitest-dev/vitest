@@ -906,7 +906,7 @@ export class Vitest {
       this.filenamePattern = undefined
     }
 
-    const testNamePattern = pattern ? new RegExp(pattern) : undefined
+    const testNamePattern = pattern ? new RegExp(pattern.replace(/[()[\]{}]/g, '\\$&')) : undefined
     this.configOverride.testNamePattern = testNamePattern
     // filter only test files that have tests matching the pattern
     if (testNamePattern) {
