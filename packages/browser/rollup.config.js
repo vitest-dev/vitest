@@ -85,7 +85,7 @@ export default () =>
       external,
       plugins: [
         ...dtsUtilsClient.isolatedDecl(),
-        ...plugins.filter(p => p.name !== 'oxc'),
+        ...plugins.filter(p => p.name !== 'unplugin-oxc'),
         oxc({
           transform: { target: 'node18' },
           minify: true,
