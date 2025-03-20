@@ -85,9 +85,9 @@ export default () =>
       external,
       plugins: [
         ...dtsUtilsClient.isolatedDecl(),
-        ...plugins.filter(p => p.name !== 'esbuild'),
-        esbuild({
-          target: 'node18',
+        ...plugins.filter(p => p.name !== 'oxc'),
+        oxc({
+          transform: { target: 'node18' },
           minify: true,
         }),
       ],
