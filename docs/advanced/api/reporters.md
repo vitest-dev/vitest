@@ -52,7 +52,7 @@ function onInit(vitest: Vitest): Awaitable<void>
 This method is called when [Vitest](/advanced/api/vitest) was initiated or started, but before the tests were filtered.
 
 ::: info
-Internally this method is called inside [`vitest.start`](/advanced/api/vitest#start), [`vitest.init`](/advanced/api/vitest#init) or [`vitest.mergeReports`](/advanced/api/vitest#mergereports). If you are using programmatic API, make sure to call either one dependning on your needs before calling [`vitest.runTestSpecifications`](/advanced/api/vitest#runtestspecifications), for example. Built-in CLI will always run methods in correct order.
+Internally this method is called inside [`vitest.start`](/advanced/api/vitest#start), [`vitest.init`](/advanced/api/vitest#init) or [`vitest.mergeReports`](/advanced/api/vitest#mergereports). If you are using programmatic API, make sure to call either one depending on your needs before calling [`vitest.runTestSpecifications`](/advanced/api/vitest#runtestspecifications), for example. Built-in CLI will always run methods in correct order.
 :::
 
 Note that you can also get access to `vitest` instance from test cases, suites and test modules via a [`project`](/advanced/api/test-project) property, but it might also be useful to store a reference to `vitest` in this method.
@@ -139,7 +139,7 @@ The third argument indicated why the test run was finished:
 
 - `passed`: test run was finished normally and there are no errors
 - `failed`: test run has at least one error (due to a syntax error during collection or an actual error during test execution)
-- `interrupted`: test was interruped by [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) call or `Ctrl+C` was pressed in the terminal (note that it's still possible to have failed tests in this case)
+- `interrupted`: test was interrupted by [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) call or `Ctrl+C` was pressed in the terminal (note that it's still possible to have failed tests in this case)
 
 If Vitest didn't find any test files to run, this event will be invoked with empty arrays of modules and errors, and the state will depend on the value of [`config.passWithNoTests`](/config/#passwithnotests).
 

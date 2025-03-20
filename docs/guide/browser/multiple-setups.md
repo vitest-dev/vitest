@@ -2,7 +2,7 @@
 
 Since Vitest 3, you can specify several different browser setups using the new [`browser.instances`](/guide/browser/config#browser-instances) option.
 
-The main advatage of using the `browser.instances` over the [workspace](/guide/workspace) is improved caching. Every project will use the same Vite server meaning the file transform and [dependency pre-bundling](https://vite.dev/guide/dep-pre-bundling.html) has to happen only once.
+The main advantage of using the `browser.instances` over the [workspace](/guide/workspace) is improved caching. Every project will use the same Vite server meaning the file transform and [dependency pre-bundling](https://vite.dev/guide/dep-pre-bundling.html) has to happen only once.
 
 ## Several Browsers
 
@@ -128,7 +128,7 @@ start tests with --browser=name or --project=name flag. › - Use arrow-keys. Re
     firefox
 ```
 
-If you have several non-headless projects in CI (i.e. the `headless: false` is set manually in the config and not overriden in  CI env), Vitest will fail the run and won't start any tests.
+If you have several non-headless projects in CI (i.e. the `headless: false` is set manually in the config and not overridden in  CI env), Vitest will fail the run and won't start any tests.
 
 The ability to run tests in headless mode is not affected by this. You can still run all instances in parallel as long as they don't have `headless: false`.
 :::

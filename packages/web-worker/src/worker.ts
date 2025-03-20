@@ -75,7 +75,9 @@ export function createWorkerConstructor(
           }
           return this._vw_workerTarget.addEventListener(...args as [any, any])
         },
-        removeEventListener: this._vw_workerTarget.removeEventListener,
+        removeEventListener: (...args: any[]) => {
+          return this._vw_workerTarget.removeEventListener(...args as [any, any])
+        },
         postMessage: (...args: any[]) => {
           if (!args.length) {
             throw new SyntaxError(

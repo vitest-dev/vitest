@@ -88,7 +88,7 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
           return ctx.getRootProject().serializedConfig
         },
         getResolvedProjectNames(): string[] {
-          return ctx.resolvedProjects.map(p => p.name)
+          return ctx.projects.map(p => p.name)
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)

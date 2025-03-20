@@ -1,3 +1,4 @@
+import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { HtmlTagDescriptor } from 'vite'
 import type { ErrorWithDiff, ParsedStack } from 'vitest'
 import type {
@@ -12,7 +13,7 @@ import type {
 import type { BrowserServerState } from './state'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { dirname, join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'

@@ -6,7 +6,6 @@ import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { StateManager } from './state'
 
-export * from '../../vitest/src/utils/tasks'
 export * from '@vitest/runner/utils'
 
 export interface VitestClientOptions {

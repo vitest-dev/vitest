@@ -1,6 +1,13 @@
 import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
 
-import type { TestProjectConfiguration, UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../node/types/config'
+import type {
+  TestProjectConfiguration,
+  TestProjectInlineConfiguration,
+  UserProjectConfigExport,
+  UserProjectConfigFn,
+  UserWorkspaceConfig,
+  WorkspaceProjectConfiguration,
+} from '../node/types/config'
 import '../node/types/vite'
 
 export { extraInlineDeps } from '../constants'
@@ -20,7 +27,14 @@ export type { ConfigEnv, ViteUserConfig }
  * @deprecated Use `ViteUserConfig` instead
  */
 export type UserConfig = ViteUserConfig
-export type { TestProjectConfiguration, UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration }
+export type {
+  TestProjectConfiguration,
+  TestProjectInlineConfiguration,
+  UserProjectConfigExport,
+  UserProjectConfigFn,
+  UserWorkspaceConfig,
+  WorkspaceProjectConfiguration,
+}
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
 export type UserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
 export type UserConfigFn = (

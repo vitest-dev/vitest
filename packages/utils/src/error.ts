@@ -1,5 +1,6 @@
+import type { DiffOptions } from './diff'
 import type { TestError } from './types'
-import { type DiffOptions, printDiffOrStringify } from './diff'
+import { printDiffOrStringify } from './diff'
 import { format, stringify } from './display'
 
 // utils is bundled for any environment and might not support `Element`

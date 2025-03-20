@@ -2,6 +2,7 @@ import type { File, Task, TaskResultPack } from '@vitest/runner'
 import type { ErrorWithDiff, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
+import type { TestCase, TestModule, TestResult, TestSuite } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
 import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
@@ -66,6 +67,32 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
+  onTestCaseResult(testCase: TestCase): void {
+    if (testCase.result().state === 'failed') {
+      this.logFailedTask(testCase.task)
+    }
+  }
+
+  onTestSuiteResult(testSuite: TestSuite): void {
+    if (testSuite.state() === 'failed') {
+      this.logFailedTask(testSuite.task)
+    }
+  }
+
+  onTestModuleEnd(testModule: TestModule): void {
+    if (testModule.state() === 'failed') {
+      this.logFailedTask(testModule.task)
+    }
+  }
+
+  private logFailedTask(task: Task) {
+    if (this.ctx.config.silent === 'passed-only') {
+      for (const log of task.logs || []) {
+        this.onUserConsoleLog(log, 'failed')
+      }
+    }
+  }
+
   onTaskUpdate(packs: TaskResultPack[]): void {
     for (const pack of packs) {
       const task = this.ctx.state.idMap.get(pack[0])
@@ -122,6 +149,11 @@ export abstract class BaseReporter implements Reporter {
     this.log(` ${title} ${task.name} ${suffix}`)
 
     for (const suite of suites) {
+      if (this.ctx.config.hideSkippedTests && (suite.mode === 'skip' || suite.result?.state === 'skip')) {
+        // Skipped suites are hidden when --hideSkippedTests
+        continue
+      }
+
       const tests = suite.tasks.filter(task => task.type === 'test')
 
       if (!('filepath' in suite)) {
@@ -131,7 +163,7 @@ export abstract class BaseReporter implements Reporter {
       for (const test of tests) {
         const { duration, retryCount, repeatCount } = test.result || {}
         const padding = this.getTestIndentation(test)
-        let suffix = ''
+        let suffix = this.getDurationPrefix(test)
 
         if (retryCount != null && retryCount > 0) {
           suffix += c.yellow(` (retry x${retryCount})`)
@@ -142,7 +174,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (test.result?.state === 'fail') {
-          this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test, c.dim(' > '))}${this.getDurationPrefix(test)}`) + suffix)
+          this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test, c.dim(' > '))}`) + suffix)
 
           // print short errors, full errors will be at the end in summary
           test.result?.errors?.forEach((error) => {
@@ -156,10 +188,7 @@ export abstract class BaseReporter implements Reporter {
 
         // also print slow tests
         else if (duration && duration > this.ctx.config.slowTestThreshold) {
-          this.log(
-            ` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test, c.dim(' > '))}`
-            + ` ${c.yellow(Math.round(duration) + c.dim('ms'))}${suffix}`,
-          )
+          this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test, c.dim(' > '))} ${suffix}`)
         }
 
         else if (this.ctx.config.hideSkippedTests && (test.mode === 'skip' || test.result?.state === 'skip')) {
@@ -194,14 +223,14 @@ export abstract class BaseReporter implements Reporter {
     return '  '
   }
 
-  private getDurationPrefix(task: Task) {
+  protected getDurationPrefix(task: Task): string {
     if (!task.result?.duration) {
       return ''
     }
 
     const color = task.result.duration > this.ctx.config.slowTestThreshold
       ? c.yellow
-      : c.gray
+      : c.green
 
     return color(` ${Math.round(task.result.duration)}${c.dim('ms')}`)
   }
@@ -275,8 +304,8 @@ export abstract class BaseReporter implements Reporter {
     this.start = performance.now()
   }
 
-  onUserConsoleLog(log: UserConsoleLog): void {
-    if (!this.shouldLog(log)) {
+  onUserConsoleLog(log: UserConsoleLog, taskState?: TestResult['state']): void {
+    if (!this.shouldLog(log, taskState)) {
       return
     }
 
@@ -337,10 +366,15 @@ export abstract class BaseReporter implements Reporter {
     this.log(c.yellow('Test removed...') + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''))
   }
 
-  shouldLog(log: UserConsoleLog): boolean {
-    if (this.ctx.config.silent) {
+  shouldLog(log: UserConsoleLog, taskState?: TestResult['state']): boolean {
+    if (this.ctx.config.silent === true) {
       return false
     }
+
+    if (this.ctx.config.silent === 'passed-only' && taskState !== 'failed') {
+      return false
+    }
+
     const shouldLog = this.ctx.config.onConsoleLog?.(log.content, log.type)
     if (shouldLog === false) {
       return shouldLog
