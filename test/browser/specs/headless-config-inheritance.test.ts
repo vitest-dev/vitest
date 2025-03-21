@@ -58,7 +58,7 @@ test.each<HeadlessConfigInheritanceTestCase>([
     expectedResolvedInstanceHeadless: true,
   },
 ])(
-  '$name(root=$rootHeadless, instance=$instanceHeadless, expected=$expectedResolvedInstanceHeadless)',
+  '$name (root=$rootHeadless, instance=$instanceHeadless, expected=$expectedResolvedInstanceHeadless)',
   async ({
     rootHeadless,
     instanceHeadless,
