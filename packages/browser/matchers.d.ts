@@ -22,7 +22,7 @@ declare module 'vitest' {
      * You can set default timeout via `expect.poll.timeout` option in the config.
      * @see {@link https://vitest.dev/api/expect#poll}
      */
-    element: <T extends Element | Locator>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element | null>>
+    element: <T extends Element | Locator | null>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element | null>>
   }
 }
 
