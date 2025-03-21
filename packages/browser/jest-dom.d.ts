@@ -329,7 +329,7 @@ export interface TestingLibraryMatchers<E, R> {
    * })
    * @see https://vitest.dev/guide/browser/assertion-api#tohavestyle
    */
-  toHaveStyle(css: string | Record<string, unknown>): R
+  toHaveStyle(css: string | Partial<CSSStyleDeclaration>): R
   /**
    * @description
    * Check whether the given element has a text content or not.
