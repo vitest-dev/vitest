@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { provider, runBrowserTests } from './utils'
+import { instances, runBrowserTests } from './utils'
 
 interface HeadlessConfigInheritanceTestCase {
   name: string
@@ -8,7 +8,7 @@ interface HeadlessConfigInheritanceTestCase {
   expectedResolvedInstanceHeadless: boolean
 }
 
-test.runIf(provider === 'playwright').each<HeadlessConfigInheritanceTestCase>([
+test.each<HeadlessConfigInheritanceTestCase>([
   {
     name: 'instance headless is used if root headless is not set',
     rootHeadless: undefined,
@@ -64,28 +64,35 @@ test.runIf(provider === 'playwright').each<HeadlessConfigInheritanceTestCase>([
     instanceHeadless,
     expectedResolvedInstanceHeadless,
   }) => {
-    const { ctx } = await runBrowserTests(
-      {
-        root: './fixtures/headless-config-inheritance',
-        browser: {
-          headless: rootHeadless,
-          instances: [{ browser: 'chromium', headless: instanceHeadless }],
-        },
-      },
-      [],
-      {},
-    )
+    expect(instances.length).toBeGreaterThan(0)
 
-    // Root project is used to generate child projects, each corresponding to an instance.
-    ctx.projects.forEach((project) => {
-      expect(
-        project.config.browser.instances,
-        'Child project should have the sentinel value set for browser instances',
-      ).toBeUndefined()
-      expect(
-        project.config.browser.headless,
-        'Child project should inherit the headless option from the browser instance config or fallback to root config',
-      ).toBe(expectedResolvedInstanceHeadless)
+    const { ctx } = await runBrowserTests({
+      root: './fixtures/headless-config-inheritance',
+      browser: {
+        headless: rootHeadless,
+        instances: [
+          {
+            // Doesn't matter which browser we use, we just need one to test the config inheritance.
+            ...instances[0],
+            headless: instanceHeadless,
+          },
+        ],
+      },
     })
+
+    expect(
+      ctx.projects.length,
+      'One browser instance should create a single corresponding child project',
+    ).toBe(1)
+
+    const project = ctx.projects[0]
+    expect(
+      project.config.browser.instances,
+      'Child project should have the sentinel value set for browser instances',
+    ).toBeUndefined()
+    expect(
+      project.config.browser.headless,
+      'Child project should inherit the headless option from the browser instance config or fallback to root config',
+    ).toBe(expectedResolvedInstanceHeadless)
   },
 )
