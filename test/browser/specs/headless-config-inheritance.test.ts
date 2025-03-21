@@ -76,17 +76,16 @@ test.runIf(provider === 'playwright').each<HeadlessConfigInheritanceTestCase>([
       {},
     )
 
+    // Root project is used to generate child projects, each corresponding to an instance.
     ctx.projects.forEach((project) => {
-      // Root project is used to generate child projects, each corresponding to an instance.
       expect(
         project.config.browser.instances,
-        'Project should have the sentinel value set for browser instances',
+        'Child project should have the sentinel value set for browser instances',
       ).toBeUndefined()
       expect(
         project.config.browser.headless,
-        'Project should inherit the headless option from the root config',
+        'Child project should inherit the headless option from the browser instance config or fallback to root config',
       ).toBe(expectedResolvedInstanceHeadless)
-      // console.log(project.config.browser);
     })
   },
 )
