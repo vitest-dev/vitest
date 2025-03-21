@@ -298,6 +298,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
     ...overrideConfig
   } = config
   const currentConfig = project.config.browser
+  const { headless: _, ...configWithoutHeadless } = config
   return mergeConfig<any, any>({
     ...deepClone(project.config),
     browser: {
@@ -312,9 +313,11 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       screenshotDirectory: screenshotDirectory ?? currentConfig.screenshotDirectory,
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
       // TODO: test that CLI arg is preferred over the local config
-      headless: project.vitest._options?.browser?.headless ?? headless ?? currentConfig.headless,
+      headless: headless ?? project.vitest._options?.browser?.headless ?? currentConfig.headless,
       name: browser,
-      providerOptions: config,
+      // Maintain a single source of truth: Providers should only read the headless value from
+      // the above config.browser value, rather than relying on providerOptions.
+      providerOptions: configWithoutHeadless,
       instances: undefined, // projects cannot spawn more configs
     },
     // TODO: should resolve, not merge/override
