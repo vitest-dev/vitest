@@ -20,6 +20,8 @@ export interface ContextTestEnvironment {
   options: Record<string, any> | null
 }
 
+export type TestExecutionMethod = 'run' | 'collect'
+
 export interface ContextRPC {
   pool: string
   worker: string
