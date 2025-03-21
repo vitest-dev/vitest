@@ -1618,7 +1618,7 @@ function snapshotError(f: () => unknown) {
     f()
   }
   catch (error) {
-    const e = processError(error)
+    const e = processError(error, { expand: true })
     expect({
       message: stripVTControlCharacters(e.message),
       diff: e.diff ? stripVTControlCharacters(e.diff) : e.diff,

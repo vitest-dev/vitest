@@ -30,7 +30,7 @@ function getDefaultOptions(): DiffOptionsNormalized {
     compareKeys: undefined,
     contextLines: DIFF_CONTEXT_DEFAULT,
     emptyFirstOrLastLinePlaceholder: '',
-    expand: true,
+    expand: false,
     includeChangeCounts: false,
     omitAnnotationLines: false,
     patchColor: c.yellow,
