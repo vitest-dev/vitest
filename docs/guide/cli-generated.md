@@ -761,6 +761,13 @@ Omit annotation lines from the output (default: `false`)
 
 Print basic prototype Object and Array (default: `true`)
 
+### diff.maxDepth
+
+- **CLI:** `--diff.maxDepth <maxDepth>`
+- **Config:** [diff.maxDepth](/config/#diff-maxdepth)
+
+Limit the depth to recurse when printing nested objects (default: `20`)
+
 ### diff.truncateThreshold
 
 - **CLI:** `--diff.truncateThreshold <threshold>`
