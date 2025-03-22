@@ -75,6 +75,7 @@ export default () =>
         'locators/webdriverio': './src/client/tester/locators/webdriverio.ts',
         'locators/preview': './src/client/tester/locators/preview.ts',
         'locators/index': './src/client/tester/locators/index.ts',
+        'expect-element': './src/client/tester/expect-element.ts',
         'utils': './src/client/tester/public-utils.ts',
       },
       output: {
@@ -84,7 +85,11 @@ export default () =>
       external,
       plugins: [
         ...dtsUtilsClient.isolatedDecl(),
-        ...plugins,
+        ...plugins.filter(p => p.name !== 'unplugin-oxc'),
+        oxc({
+          transform: { target: 'node18' },
+          minify: true,
+        }),
       ],
     },
     {

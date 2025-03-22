@@ -84,8 +84,8 @@ class PreviewLocator extends Locator {
     return userEvent.upload(this.element(), file)
   }
 
-  selectOptions(options_: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
-    return userEvent.selectOptions(this.element(), options_)
+  selectOptions(options: string | string[] | HTMLElement | HTMLElement[] | Locator | Locator[]): Promise<void> {
+    return userEvent.selectOptions(this.element(), options)
   }
 
   clear(): Promise<void> {
