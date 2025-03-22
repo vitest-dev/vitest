@@ -36,5 +36,8 @@
     "acorn",
     // Keep using codemirror 5
     "codemirror"
+  ],
+  "ignorePaths": [
+    "**/node_modules/**"
   ]
 }
