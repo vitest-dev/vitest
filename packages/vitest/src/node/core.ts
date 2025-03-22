@@ -906,17 +906,18 @@ export class Vitest {
       this.filenamePattern = undefined
     }
 
-    const validatePatternWithReplaceChars = () => {
-      if (!pattern) {
-        return undefined
-      }
+    // const validatePatternWithReplaceChars = () => {
+    //   if (!pattern) {
+    //     return undefined
+    //   }
 
-      return /[()[\]{}]/.test(pattern)
-        ? new RegExp(pattern.replace(/[()[\]{}]/g, '\\$&'))
-        : new RegExp(pattern)
-    }
+    //   return /[()[\]{}]/.test(pattern)
+    //     ? new RegExp(pattern.replace(/[()[\]{}]/g, '\\$&'))
+    //     : new RegExp(pattern)
+    // }
 
-    const testNamePattern = validatePatternWithReplaceChars()
+    // const testNamePattern = validatePatternWithReplaceChars()
+    const testNamePattern = pattern ? new RegExp(pattern) : undefined
     this.configOverride.testNamePattern = testNamePattern
     // filter only test files that have tests matching the pattern
     if (testNamePattern) {
