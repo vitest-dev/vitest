@@ -1299,10 +1299,10 @@ importers:
         version: link:../../packages/web-worker
       '@vueuse/integrations':
         specifier: ^10.9.0
-        version: 10.9.0(axios@0.26.1(debug@4.3.4))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.7.3))
+        version: 10.9.0(axios@0.28.1(debug@4.3.4))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.7.3))
       axios:
-        specifier: ^0.26.1
-        version: 0.26.1(debug@4.3.4)
+        specifier: ^0.28.0
+        version: 0.28.1(debug@4.3.4)
       debug:
         specifier: ^4.3.4
         version: 4.3.4
@@ -4840,8 +4840,8 @@ packages:
   avvio@8.3.0:
     resolution: {integrity: sha512-VBVH0jubFr9LdFASy/vNtm5giTrnbVquWBhT0fyizuNK2rQ7e7ONU2plZQWUNqtE1EmxFEb+kbSkFRkstiaS9Q==}
 
-  axios@0.26.1:
-    resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
+  axios@0.28.1:
+    resolution: {integrity: sha512-iUcGA5a7p0mVb4Gm/sy+FSECNkPFT4y7wt6OM/CDpO/OnNCvSs3PoMG8ibrC9jRoGYU0gUK5pXVC4NPXq6lHRQ==}
 
   b4a@1.6.4:
     resolution: {integrity: sha512-fpWrvyVHEKyeEvbKZTVOeZF3VSKKWtJxFIxX/jaVPf+cLbGUSitjb49pHLqPV2BUNNZ0LcoeEGfE/YCpyDYHIw==}
@@ -13006,13 +13006,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@vueuse/integrations@10.9.0(axios@0.26.1(debug@4.3.4))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.7.3))':
+  '@vueuse/integrations@10.9.0(axios@0.28.1(debug@4.3.4))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.7.3))':
     dependencies:
       '@vueuse/core': 10.9.0(vue@3.5.12(typescript@5.7.3))
       '@vueuse/shared': 10.9.0(vue@3.5.12(typescript@5.7.3))
       vue-demi: 0.14.7(vue@3.5.12(typescript@5.7.3))
     optionalDependencies:
-      axios: 0.26.1(debug@4.3.4)
+      axios: 0.28.1(debug@4.3.4)
       focus-trap: 7.6.4
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -13306,9 +13306,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  axios@0.26.1(debug@4.3.4):
+  axios@0.28.1(debug@4.3.4):
     dependencies:
       follow-redirects: 1.15.1(debug@4.3.4)
+      form-data: 4.0.1
+      proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
 
