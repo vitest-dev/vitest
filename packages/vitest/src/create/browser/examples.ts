@@ -186,7 +186,7 @@ import './HelloWorld.js'
 test('renders name', async () => {
   const screen = render(html\`<hello-world name="Vitest"></hello-world>\`)
   const element = screen.getByText('Hello Vitest!')
-  expect(element).toBeInTheDocument()
+  await expect.element(element).toBeInTheDocument()
 })
 `,
 }
