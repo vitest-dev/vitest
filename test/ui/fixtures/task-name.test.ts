@@ -8,14 +8,14 @@ it('<>\'"', () => {
   expect(true).toBe(true)
 })
 
-// it('char () - Square root of nine (9)', () => {
-//   expect(Math.sqrt(9)).toBe(3);
-// });
+it('char () - Square root of nine (9)', () => {
+  expect(Math.sqrt(9)).toBe(3);
+});
 
-// it('char {} - Square root of nine {9}', () => {
-//   expect(Math.sqrt(9)).toBe(3);
-// });
+it('char {} - Square root of nine {9}', () => {
+  expect(Math.sqrt(9)).toBe(3);
+});
 
-// it('char [] - Square root of nine [9]', () => {
-//   expect(Math.sqrt(9)).toBe(3);
-// });
+it('char [] - Square root of nine [9]', () => {
+  expect(Math.sqrt(9)).toBe(3);
+});
