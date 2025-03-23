@@ -7,7 +7,7 @@
   },
   "devDependencies": {
     "@types/debug": "catalog:",
-    "@types/ws": "^8.5.9",
+    "@types/ws": "catalog:",
     "@vitejs/plugin-basic-ssl": "^1.0.2",
     "@vitest/runner": "workspace:^",
     "@vitest/test-dep-error": "file:./deps/error",

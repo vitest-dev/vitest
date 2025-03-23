@@ -40,8 +40,8 @@ catalogs:
       specifier: ^6.0.2
       version: 6.0.2
     '@types/ws':
-      specifier: ^8.5.14
-      version: 8.5.14
+      specifier: ^8.18.0
+      version: 8.18.0
     '@unocss/reset':
       specifier: ^0.65.4
       version: 0.65.4
@@ -176,8 +176,8 @@ importers:
         specifier: ^22.13.5
         version: 22.13.5
       '@types/ws':
-        specifier: ^8.5.14
-        version: 8.5.14
+        specifier: 'catalog:'
+        version: 8.18.0
       '@vitest/browser':
         specifier: workspace:*
         version: link:packages/browser
@@ -507,7 +507,7 @@ importers:
         version: 6.6.3
       '@types/ws':
         specifier: 'catalog:'
-        version: 8.5.14
+        version: 8.18.0
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -850,7 +850,7 @@ importers:
         version: 3.0.11
       '@types/ws':
         specifier: 'catalog:'
-        version: 8.5.14
+        version: 8.18.0
       '@unocss/reset':
         specifier: 'catalog:'
         version: 0.65.4
@@ -1217,8 +1217,8 @@ importers:
         specifier: 'catalog:'
         version: 4.1.12
       '@types/ws':
-        specifier: ^8.5.9
-        version: 8.5.9
+        specifier: 'catalog:'
+        version: 8.18.0
       '@vitejs/plugin-basic-ssl':
         specifier: ^1.0.2
         version: 1.0.2(vite@6.2.0(@types/node@22.13.5)(jiti@2.4.1)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))
@@ -4092,11 +4092,8 @@ packages:
   '@types/which@2.0.2':
     resolution: {integrity: sha512-113D3mDkZDjo+EeUEHCFy0qniNc1ZpecGiAU7WSo7YDoSzolZIQKpYFHrPpjkB2nuyahcKfrmLXeQlh7gqJYdw==}
 
-  '@types/ws@8.5.14':
-    resolution: {integrity: sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw==}
-
-  '@types/ws@8.5.9':
-    resolution: {integrity: sha512-jbdrY0a8lxfdTp/+r7Z4CkycbOFN8WX+IOchLJr3juT/xzbJ8URyTVSJ/hvNdadTgM1mnedb47n+Y31GsFnQlg==}
+  '@types/ws@8.18.0':
+    resolution: {integrity: sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==}
 
   '@types/yargs-parser@21.0.3':
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
@@ -12375,13 +12372,9 @@ snapshots:
 
   '@types/which@2.0.2': {}
 
-  '@types/ws@8.5.14':
+  '@types/ws@8.18.0':
     dependencies:
-      '@types/node': 20.14.15
-
-  '@types/ws@8.5.9':
-    dependencies:
-      '@types/node': 20.14.15
+      '@types/node': 22.13.5
 
   '@types/yargs-parser@21.0.3':
     optional: true
@@ -18841,7 +18834,7 @@ snapshots:
   webdriver@9.9.1:
     dependencies:
       '@types/node': 20.14.15
-      '@types/ws': 8.5.14
+      '@types/ws': 8.18.0
       '@wdio/config': 9.9.0
       '@wdio/logger': 9.4.4
       '@wdio/protocols': 9.7.0
