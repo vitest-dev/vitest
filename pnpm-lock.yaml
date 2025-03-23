@@ -1208,8 +1208,8 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1(@types/react-dom@18.2.14)(@types/react@18.2.79)(@vitest/browser@packages+browser)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@packages+vitest)
       ws:
-        specifier: ^8.18.0
-        version: 8.18.0
+        specifier: 'catalog:'
+        version: 8.18.1
 
   test/cli:
     devDependencies:
@@ -1244,8 +1244,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
       ws:
-        specifier: ^8.14.2
-        version: 8.16.0
+        specifier: 'catalog:'
+        version: 8.18.1
 
   test/config:
     devDependencies:
@@ -9657,18 +9657,6 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  ws@8.16.0:
-    resolution: {integrity: sha512-HS0c//TP7Ina87TfiPUz1rQzMhHrl/SG2guqRcTOIUYD2q8uhUdNHZYJUaQ8aTGPzCh+c6oawMKW35nFl1dxyQ==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
 
   ws@8.17.1:
     resolution: {integrity: sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ==}
@@ -19123,8 +19111,6 @@ snapshots:
       strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
-
-  ws@8.16.0: {}
 
   ws@8.17.1: {}
 

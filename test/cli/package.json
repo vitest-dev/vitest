@@ -16,6 +16,6 @@
     "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
-    "ws": "^8.14.2"
+    "ws": "catalog:"
   }
 }
