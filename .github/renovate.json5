@@ -1,50 +1,43 @@
 {
-  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  extends: [
-    'config:recommended',
-    'schedule:weekly',
-    'group:allNonMajor',
-  ],
-  labels: [
-    'dependencies',
-  ],
-  rangeStrategy: 'bump',
-  packageRules: [
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "schedule:weekly", "group:allNonMajor"],
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "packageRules": [
     {
-      groupName: 'Eslint packages',
-      matchPackageNames: [
-        '/eslint/',
-      ],
+      "groupName": "Eslint packages",
+      "matchPackageNames": ["/eslint/"]
     },
     {
-      matchDepTypes: [
-        'peerDependencies',
-      ],
-      enabled: false,
+      "matchDepTypes": ["peerDependencies"],
+      "enabled": false
     },
     {
-      matchDepTypes: [
-        'action',
-      ],
-      pinDigests: true,
-      matchPackageNames: [
-        '!actions/{/,}**',
-        '!github/{/,}**',
-      ],
-    },
+      "matchDepTypes": ["action"],
+      "matchPackageNames": ["!actions/{/,}**", "!github/{/,}**"],
+      "pinDigests": true
+    }
   ],
-  ignoreDeps: [
-    'node',
-    'vite',
-    'vue',
-    '@types/chai',
-    '@sinonjs/fake-timers',
-    'cac',
-    'find-up',
-    'acorn',
-    'codemirror',
+  "ignoreDeps": [
+    // manually bumping
+    "node",
+    "vite",
+    // bumping breaks coverage
+    // https://github.com/vitest-dev/vitest/actions/runs/12121857184/job/33793728382?pr=6920
+    "vue",
+    // we patch these packages
+    "@types/chai",
+    "@sinonjs/fake-timers",
+    "cac",
+    // Pinned because it requires "node" condition in the new version
+    // But we intentionally build Vitest ambiguously
+    "find-up",
+    // Transitive dependency that we patch
+    "acorn",
+    // Keep using codemirror 5
+    "codemirror"
   ],
-  ignorePaths: [
-    '**/node_modules/**',
-  ],
+  "ignorePaths": [
+    "**/node_modules/**"
+  ]
 }
