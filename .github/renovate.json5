@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base", "schedule:weekly", "group:allNonMajor"],
+  "extends": ["config:recommended", "schedule:weekly", "group:allNonMajor"],
   "labels": ["dependencies"],
   "rangeStrategy": "bump",
   "packageRules": [
@@ -9,12 +9,12 @@
       "matchPackageNames": ["/eslint/"]
     },
     {
-      "depTypeList": ["peerDependencies"],
+      "matchDepTypes": ["peerDependencies"],
       "enabled": false
     },
     {
       "matchDepTypes": ["action"],
-      "excludePackagePrefixes": ["actions/", "github/"],
+      "matchPackageNames": ["!actions/{/,}**", "!github/{/,}**"],
       "pinDigests": true
     }
   ],
