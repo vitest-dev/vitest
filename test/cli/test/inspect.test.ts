@@ -54,7 +54,7 @@ test('--inspect-brk stops at test file', async () => {
 })
 
 async function createChannel(url: string) {
-  const ws = new WebSocket(url)
+  const ws = new WebSocket(url, { allowSynchronousEvents: false })
 
   let id = 1
   let receiver = defer()
