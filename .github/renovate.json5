@@ -35,7 +35,8 @@
     // Transitive dependency that we patch
     "acorn",
     // Keep using codemirror 5
-    "codemirror"
+    "codemirror",
+    "react-is-18"
   ],
   "ignorePaths": [
     "**/node_modules/**"
