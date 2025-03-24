@@ -10,10 +10,9 @@ import crypto from 'node:crypto'
 import * as nodeos from 'node:os'
 import { createDefer } from '@vitest/utils'
 import { stringify } from 'flatted'
-// import { relative } from 'pathe'
-// import { createDebugger } from 'vitest/node'
+import { createDebugger } from 'vitest/node'
 
-// const debug = createDebugger('vitest:browser:pool')
+const debug = createDebugger('vitest:browser:pool')
 
 export function createBrowserPool(vitest: Vitest): ProcessPool {
   const providers = new Set<BrowserProvider>()
@@ -27,24 +26,14 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     ? Math.max(Math.floor(numCpus / 2), 1)
     : Math.max(numCpus - 1, 1)
 
-  const executeTests = async (
-    method: 'run' | 'collect',
-    pool: BrowserPool,
-    project: TestProject,
-    files: string[],
-  ) => {
-    vitest.state.clearFiles(project, files)
-    providers.add(project.browser!.provider)
-
-    await pool.runTests(method, files)
-  }
-
   const projectPools = new WeakMap<TestProject, BrowserPool>()
 
   const ensurePool = (project: TestProject) => {
     if (projectPools.has(project)) {
       return projectPools.get(project)!
     }
+
+    debug?.('creating pool for project %s', project.name)
 
     const resolvedUrls = project.browser!.vite.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
@@ -97,7 +86,10 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
         }
 
         const pool = ensurePool(project)
-        await executeTests(method, pool, project, files)
+        vitest.state.clearFiles(project, files)
+        providers.add(project.browser!.provider)
+
+        await pool.runTests(method, files)
       }),
     )
   }
@@ -226,8 +218,7 @@ class BrowserPool {
   private getOrchestrator(sessionId: string) {
     const orchestrator = this.orchestrators.get(sessionId)
     if (!orchestrator) {
-      // TODO: handle this error
-      throw new Error(`Orchestrator not found for session ${sessionId}`)
+      throw new Error(`Orchestrator not found for session ${sessionId}. This is a bug in Vitest. Please, open a new issue with reproduction.`)
     }
     return orchestrator
   }
@@ -235,13 +226,15 @@ class BrowserPool {
   private runNextTest(method: 'run' | 'collect', sessionId: string) {
     const file = this._queue.shift()
     if (!file) {
+      debug?.('[%s] no more tests to run', sessionId)
       const orchestrator = this.getOrchestrator(sessionId)
-      orchestrator.cleanupTesters().finally(() => {
+      orchestrator.cleanupTesters().catch(error => this.reject(error)).finally(() => {
         this.readySessions.add(sessionId)
         // the last worker finished running tests
         if (this.readySessions.size === this.orchestrators.size) {
           this._promise?.resolve()
           this._promise = undefined
+          debug?.('all tests finished running')
         }
       })
       return
@@ -250,6 +243,7 @@ class BrowserPool {
       throw new Error(`Unexpected empty queue`)
     }
     const orchestrator = this.getOrchestrator(sessionId)
+    debug?.('[%s] run test %s', sessionId, file)
 
     this.setBreakpoint(sessionId, file).then(() => {
       // this starts running tests inside the orchestrator
@@ -263,9 +257,22 @@ class BrowserPool {
         },
       )
         .then(() => {
+          debug?.('[%s] test %s finished running', sessionId, file)
           this.runNextTest(method, sessionId)
         })
         .catch((error) => {
+          // if user cancells the test run manually, ignore the error and exit gracefully
+          if (
+            this.project.vitest.isCancelling
+            && error instanceof Error
+            && error.message.startsWith('[birpc] rpc is closed')
+          ) {
+            this.cancel()
+            this._promise?.resolve()
+            this._promise = undefined
+            return
+          }
+          debug?.('[%s] error during %s test run: %s', sessionId, file, error)
           this.reject(error)
         })
     }).catch(err => this.reject(err))
@@ -282,6 +289,7 @@ class BrowserPool {
       throw new Error('Unable to set breakpoint, CDP not supported')
     }
 
+    debug?.('[%s] set breakpoint for %s', sessionId, file)
     const session = await provider.getCDPSession(sessionId)
     await session.send('Debugger.enable', {})
     await session.send('Debugger.setBreakpointByUrl', {
