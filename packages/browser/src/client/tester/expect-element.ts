@@ -4,8 +4,7 @@ import { chai, expect } from 'vitest'
 import { matchers } from './expect'
 import { processTimeoutOptions } from './utils'
 
-expect.extend(matchers)
-expect.element = <T extends Element | null | Locator>(elementOrLocator: T, options?: ExpectPollOptions) => {
+function element<T extends Element | null | Locator>(elementOrLocator: T, options?: ExpectPollOptions): unknown {
   if (elementOrLocator != null && !(elementOrLocator instanceof Element) && !('element' in elementOrLocator)) {
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of Element or Locator, received ${typeof elementOrLocator}`)
   }
@@ -40,3 +39,7 @@ expect.element = <T extends Element | null | Locator>(elementOrLocator: T, optio
     return result
   }, processTimeoutOptions(options))
 }
+
+expect.extend(matchers)
+// Vitest typecheck doesn't pick up this assignment for some reason
+Object.assign(expect, { element })
