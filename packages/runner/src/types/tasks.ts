@@ -247,6 +247,10 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
    * Test context that will be passed to the test function.
    */
   context: TestContext & ExtraContext
+  /**
+   * The test timeout in milliseconds.
+   */
+  timeout: number
 }
 
 /**
@@ -464,6 +468,9 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
           ? ExtraContext[K]
           : never;
     }>
+    scoped: (
+      fixtures: Fixtures<Partial<ExtraContext>>
+    ) => void
   }
 
 /** @deprecated use `TestAPI` instead */
@@ -612,6 +619,9 @@ export interface SuiteCollector<ExtraContext = object> {
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
+  scoped: (fixtures: Fixtures<any, ExtraContext>) => void
+  fixtures: () => FixtureItem[] | undefined
+  suite?: Suite
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
   clear: () => void
@@ -653,7 +663,10 @@ export interface TestContext {
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
    */
-  skip: (note?: string) => void
+  skip: {
+    (note?: string): never
+    (condition: boolean, note?: string): void
+  }
 }
 
 /**

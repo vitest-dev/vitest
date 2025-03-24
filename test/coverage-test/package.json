@@ -8,22 +8,22 @@
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.2.1",
-    "@types/istanbul-lib-coverage": "^2.0.6",
-    "@types/istanbul-lib-report": "^3.0.3",
+    "@types/istanbul-lib-coverage": "catalog:",
+    "@types/istanbul-lib-report": "catalog:",
     "@vitejs/plugin-vue": "latest",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
+    "@vitest/web-worker": "workspace:*",
     "@vue/test-utils": "latest",
     "happy-dom": "latest",
     "istanbul-lib-coverage": "^3.2.0",
-    "istanbul-lib-report": "^3.0.1",
+    "istanbul-lib-report": "catalog:",
     "magic-string": "^0.30.12",
     "magicast": "^0.3.3",
     "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
-    "vue": "^3.5.12",
-    "webdriverio": "latest"
+    "vue": "catalog:"
   }
 }

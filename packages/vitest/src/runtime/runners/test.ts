@@ -27,7 +27,7 @@ export class VitestTestRunner implements VitestRunner {
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
-  public pool = this.workerState.ctx.pool
+  public pool: string = this.workerState.ctx.pool
 
   constructor(public config: SerializedConfig) {}
 
@@ -38,16 +38,16 @@ export class VitestTestRunner implements VitestRunner {
     return this.__vitest_executor.executeId(filepath)
   }
 
-  onCollectStart(file: File) {
+  onCollectStart(file: File): void {
     this.workerState.current = file
   }
 
-  onAfterRunFiles() {
+  onAfterRunFiles(): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined
   }
 
-  async onAfterRunSuite(suite: Suite) {
+  async onAfterRunSuite(suite: Suite): Promise<void> {
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       suite.result!.heap = process.memoryUsage().heapUsed
     }
@@ -68,7 +68,7 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = suite.suite || suite.file
   }
 
-  onAfterRunTask(test: Task) {
+  onAfterRunTask(test: Task): void {
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       test.result!.heap = process.memoryUsage().heapUsed
     }
@@ -76,17 +76,17 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test.suite || test.file
   }
 
-  onCancel(_reason: CancelReason) {
+  onCancel(_reason: CancelReason): void {
     this.cancelRun = true
   }
 
-  injectValue(key: string) {
+  injectValue(key: string): any {
     // inject has a very limiting type controlled by ProvidedContext
     // some tests override it which causes the build to fail
     return (inject as any)(key)
   }
 
-  async onBeforeRunTask(test: Task) {
+  async onBeforeRunTask(test: Task): Promise<void> {
     if (this.cancelRun) {
       test.mode = 'skip'
     }
@@ -100,7 +100,7 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test
   }
 
-  async onBeforeRunSuite(suite: Suite) {
+  async onBeforeRunSuite(suite: Suite): Promise<void> {
     if (this.cancelRun) {
       suite.mode = 'skip'
     }
@@ -116,7 +116,7 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task) {
+  onBeforeTryTask(test: Task): void {
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
       {
@@ -125,7 +125,6 @@ export class VitestTestRunner implements VitestRunner {
         isExpectingAssertionsError: null,
         expectedAssertionsNumber: null,
         expectedAssertionsNumberErrorGen: null,
-        testPath: test.file.filepath,
         currentTestName: getTestName(test),
         snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
       },
@@ -133,7 +132,7 @@ export class VitestTestRunner implements VitestRunner {
     )
   }
 
-  onAfterTryTask(test: Task) {
+  onAfterTryTask(test: Task): void {
     const {
       assertionCalls,
       expectedAssertionsNumber,

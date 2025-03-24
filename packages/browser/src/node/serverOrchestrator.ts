@@ -7,7 +7,7 @@ export async function resolveOrchestrator(
   globalServer: ParentBrowserProject,
   url: URL,
   res: ServerResponse<IncomingMessage>,
-) {
+): Promise<string | undefined> {
   let sessionId = url.searchParams.get('sessionId')
   // it's possible to open the page without a context
   if (!sessionId) {
@@ -42,6 +42,7 @@ export async function resolveOrchestrator(
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
     __VITEST_TESTER_ID__: '"none"',
     __VITEST_PROVIDED_CONTEXT__: '{}',
+    __VITEST_API_TOKEN__: JSON.stringify(globalServer.vitest.config.api.token),
   })
 
   // disable CSP for the orchestrator as we are the ones controlling it

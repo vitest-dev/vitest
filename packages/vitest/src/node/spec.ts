@@ -93,7 +93,7 @@ export class TestSpecification {
    * for backwards compatibility
    * @deprecated
    */
-  *[Symbol.iterator]() {
+  * [Symbol.iterator](): Generator<string | TestProject, void, unknown> {
     yield this.project
     yield this.moduleId
     yield this.pool

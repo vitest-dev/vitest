@@ -6,15 +6,16 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.12",
-    "@types/ws": "^8.5.9",
+    "@types/debug": "catalog:",
+    "@types/ws": "catalog:",
     "@vitejs/plugin-basic-ssl": "^1.0.2",
     "@vitest/runner": "workspace:^",
+    "@vitest/test-dep-error": "file:./deps/error",
     "@vitest/utils": "workspace:*",
     "debug": "^4.3.4",
     "unplugin-swc": "^1.4.4",
     "vite": "latest",
     "vitest": "workspace:*",
-    "ws": "^8.14.2"
+    "ws": "catalog:"
   }
 }

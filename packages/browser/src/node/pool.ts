@@ -155,6 +155,10 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
       return 1
     }
 
+    if (project.config.maxWorkers) {
+      return project.config.maxWorkers
+    }
+
     return vitest.config.watch
       ? Math.max(Math.floor(numCpus / 2), 1)
       : Math.max(numCpus - 1, 1)
@@ -165,7 +169,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     async close() {
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
-      vitest.resolvedProjects.forEach((project) => {
+      vitest.projects.forEach((project) => {
         project.browser?.state.orchestrators.forEach((orchestrator) => {
           orchestrator.$close()
         })

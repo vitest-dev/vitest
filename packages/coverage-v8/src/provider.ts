@@ -1,4 +1,5 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
 import type { EncodedSourceMap, FetchResult } from 'vite-node'
 import type { AfterSuiteRunMeta } from 'vitest'
@@ -25,11 +26,12 @@ import { cleanUrl } from 'vite-node/utils'
 import { BaseCoverageProvider } from 'vitest/coverage'
 import { version } from '../package.json' with { type: 'json' }
 
-type TransformResults = Map<string, FetchResult>
-type RawCoverage = Profiler.TakePreciseCoverageReturnType
+export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
+  startOffset: number
+}
 
-// TODO: vite-node should export this
-const WRAPPER_LENGTH = 185
+type TransformResults = Map<string, FetchResult>
+interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 // Note that this needs to match the line ending as well
 const VITE_EXPORTS_LINE_PATTERN
@@ -42,7 +44,7 @@ const debug = createDebug('vitest:coverage')
 
 export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'v8'>> implements CoverageProvider {
   name = 'v8' as const
-  version = version
+  version: string = version
   testExclude!: InstanceType<typeof TestExclude>
 
   initialize(ctx: Vitest): void {
@@ -58,7 +60,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     })
   }
 
-  createCoverageMap() {
+  createCoverageMap(): CoverageMap {
     return libCoverage.createCoverageMap({})
   }
 
@@ -69,6 +71,14 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
         merged = mergeProcessCovs([merged, coverage])
+
+        // mergeProcessCovs sometimes loses startOffset, e.g. in vue
+        merged.result.forEach((result) => {
+          if (!result.startOffset) {
+            const original = coverage.result.find(r => r.url === result.url)
+            result.startOffset = original?.startOffset || 0
+          }
+        })
       },
       onFinished: async (project, transformMode) => {
         const converted = await this.convertCoverage(
@@ -93,8 +103,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       const coveredFiles = coverageMap.files()
       const untestedCoverage = await this.getUntestedFiles(coveredFiles)
 
-      const converted = await this.convertCoverage(untestedCoverage)
-      coverageMap.merge(await transformCoverage(converted))
+      coverageMap.merge(await transformCoverage(untestedCoverage))
     }
 
     if (this.options.excludeAfterRemap) {
@@ -142,13 +151,13 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     }
   }
 
-  async parseConfigModule(configFilePath: string) {
+  async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
     return parseModule(
       await fs.readFile(configFilePath, 'utf8'),
     )
   }
 
-  private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
+  private async getUntestedFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
@@ -169,8 +178,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       .map(file => pathToFileURL(file))
       .filter(file => !testedFiles.includes(file.pathname))
 
-    let merged: RawCoverage = { result: [] }
     let index = 0
+
+    const coverageMap = this.createCoverageMap()
 
     for (const chunk of this.toSlices(uncoveredFiles, this.options.processingConcurrency)) {
       if (debug.enabled) {
@@ -178,47 +188,47 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         debug('Uncovered files %d/%d', index, uncoveredFiles.length)
       }
 
-      const coverages = await Promise.all(
-        chunk.map(async (filename) => {
-          const { originalSource } = await this.getSources(
-            filename.href,
-            transformResults,
-            transform,
-          )
+      await Promise.all(chunk.map(async (filename) => {
+        const sources = await this.getSources(
+          filename.href,
+          transformResults,
+          transform,
+        )
 
-          const coverage = {
-            url: filename.href,
-            scriptId: '0',
-            // Create a made up function to mark whole file as uncovered. Note that this does not exist in source maps.
-            functions: [
+        const converter = v8ToIstanbul(
+          filename.href,
+          0,
+          sources,
+          undefined,
+          this.options.ignoreEmptyLines,
+        )
+
+        await converter.load()
+
+        try {
+          // Create a made up function to mark whole file as uncovered. Note that this does not exist in source maps.
+          converter.applyCoverage([{
+            ranges: [
               {
-                ranges: [
-                  {
-                    startOffset: 0,
-                    endOffset: originalSource.length,
-                    count: 0,
-                  },
-                ],
-                isBlockCoverage: true,
-                // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
-                functionName: '(empty-report)',
+                startOffset: 0,
+                endOffset: sources.originalSource.length,
+                count: 0,
               },
             ],
-          }
+            isBlockCoverage: true,
+            // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
+            functionName: '(empty-report)',
+          }])
+        }
+        catch (error) {
+          this.ctx.logger.error(`Failed to convert coverage for uncovered ${filename.href}.\n`, error)
+        }
 
-          return { result: [coverage] }
-        }),
-      )
-
-      merged = mergeProcessCovs([
-        merged,
-        ...coverages.filter(
-          (cov): cov is NonNullable<typeof cov> => cov != null,
-        ),
-      ])
+        coverageMap.merge(converter.toIstanbul())
+      }))
     }
 
-    return merged
+    return coverageMap
   }
 
   private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
@@ -230,15 +240,12 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       source: string
       originalSource: string
       sourceMap?: { sourcemap: EncodedSourceMap }
-      isExecuted: boolean
     }> {
     const filePath = normalize(fileURLToPath(url))
 
-    let isExecuted = true
     let transformResult: FetchResult | TransformResult | undefined = transformResults.get(filePath)
 
     if (!transformResult) {
-      isExecuted = false
       transformResult = await onTransform(removeStartsWith(url, FILE_PROTOCOL)).catch(() => undefined)
     }
 
@@ -258,7 +265,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     // These can be uncovered files included by "all: true" or files that are loaded outside vite-node
     if (!map) {
       return {
-        isExecuted,
         source: code || sourcesContent[0],
         originalSource: sourcesContent[0],
       }
@@ -273,7 +279,6 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     }
 
     return {
-      isExecuted,
       originalSource: sourcesContent[0],
       source: code || sourcesContent[0],
       sourceMap: {
@@ -338,7 +343,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       }
 
       await Promise.all(
-        chunk.map(async ({ url, functions }) => {
+        chunk.map(async ({ url, functions, startOffset }) => {
           const sources = await this.getSources(
             url,
             transformResults,
@@ -346,12 +351,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             functions,
           )
 
-          // If file was executed by vite-node we'll need to add its wrapper
-          const wrapperLength = sources.isExecuted ? WRAPPER_LENGTH : 0
-
           const converter = v8ToIstanbul(
             url,
-            wrapperLength,
+            startOffset,
             sources,
             undefined,
             this.options.ignoreEmptyLines,

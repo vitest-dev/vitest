@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import fg from 'fast-glob'
 import { dirname, join, normalize, resolve } from 'pathe'
 import { defineConfig } from 'rollup'
-import dts from 'rollup-plugin-dts'
-import esbuild from 'rollup-plugin-esbuild'
 import license from 'rollup-plugin-license'
+import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
+import oxc from 'unplugin-oxc/rollup'
+import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
 const pkg = require('./package.json')
@@ -19,6 +19,7 @@ const entries = {
   'path': 'src/paths.ts',
   'index': 'src/public/index.ts',
   'cli': 'src/node/cli.ts',
+  'config': 'src/public/config.ts',
   'node': 'src/public/node.ts',
   'suite': 'src/public/suite.ts',
   'browser': 'src/public/browser.ts',
@@ -72,6 +73,8 @@ const external = [
   'node:os',
   'node:stream',
   'node:vm',
+  'node:http',
+  'node:console',
   'inspector',
   'vite-node/source-map',
   'vite-node/client',
@@ -92,14 +95,17 @@ const external = [
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
+const dtsUtils = createDtsUtils()
+
 const plugins = [
   nodeResolve({
     preferBuiltins: true,
   }),
   json(),
   commonjs(),
-  esbuild({
-    target: 'node18',
+  oxc({
+    transform: { target: 'node18' },
+    sourcemap: true,
   }),
 ]
 
@@ -114,7 +120,11 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].js',
       },
       external,
-      plugins: [...plugins, !watch && licensePlugin()],
+      plugins: [
+        ...dtsUtils.isolatedDecl(),
+        ...plugins,
+        !watch && licensePlugin(),
+      ],
       onwarn,
     },
     {
@@ -124,16 +134,12 @@ export default ({ watch }) =>
           file: 'dist/config.cjs',
           format: 'cjs',
         },
-        {
-          file: 'dist/config.js',
-          format: 'esm',
-        },
       ],
       external,
       plugins,
     },
     {
-      input: dtsEntries,
+      input: dtsUtils.dtsInput(dtsEntries),
       output: {
         dir: 'dist',
         entryFileNames: chunk =>
@@ -142,7 +148,7 @@ export default ({ watch }) =>
         chunkFileNames: 'chunks/[name].[hash].d.ts',
       },
       external,
-      plugins: [dts({ respectExternal: true })],
+      plugins: dtsUtils.dts(),
     },
   ])
 
@@ -198,8 +204,9 @@ function licensePlugin() {
                     preserveSymlinks: false,
                   }),
                 )
-                const [licenseFile] = fg.sync(`${pkgDir}/LICENSE*`, {
+                const [licenseFile] = globSync(`${pkgDir}/LICENSE*`, {
                   caseSensitiveMatch: false,
+                  expandDirectories: false,
                 })
                 if (licenseFile) {
                   licenseText = fs.readFileSync(licenseFile, 'utf-8')

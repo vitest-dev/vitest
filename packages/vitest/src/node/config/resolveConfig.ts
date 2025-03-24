@@ -8,6 +8,7 @@ import type {
 } from '../types/config'
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
+import crypto from 'node:crypto'
 import { toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
@@ -629,7 +630,8 @@ export function resolveConfig(
   }
 
   // the server has been created, we don't need to override vite.server options
-  resolved.api = resolveApiServerConfig(options, defaultPort)
+  const api = resolveApiServerConfig(options, defaultPort)
+  resolved.api = { ...api, token: crypto.randomUUID() }
 
   if (options.related) {
     resolved.related = toArray(options.related).map(file =>
@@ -911,7 +913,7 @@ function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
   for (const instance of browser.instances) {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
-    if (!vitest._matchesProjectFilter(name)) {
+    if (!vitest.matchesProjectFilter(name)) {
       continue
     }
     if (instance.browser !== 'chromium') {

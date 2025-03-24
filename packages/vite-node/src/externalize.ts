@@ -91,8 +91,8 @@ const _defaultExternalizeCache = new Map<string, Promise<string | false>>()
 export async function shouldExternalize(
   id: string,
   options?: DepsHandlingOptions,
-  cache = _defaultExternalizeCache,
-) {
+  cache: Map<string, Promise<string | false>> = _defaultExternalizeCache,
+): Promise<string | false> {
   if (!cache.has(id)) {
     cache.set(id, _shouldExternalize(id, options))
   }

@@ -66,7 +66,7 @@ function getDefaultPoolName(project: TestProject): Pool {
   return project.config.pool
 }
 
-export function getFilePoolName(project: TestProject, file: string) {
+export function getFilePoolName(project: TestProject, file: string): Pool {
   for (const [glob, pool] of project.config.poolMatchGlobs) {
     if ((pool as Pool) === 'browser') {
       throw new Error(

@@ -1,13 +1,15 @@
+import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
-import type { V8CoverageProvider } from './provider'
-import inspector, { type Profiler } from 'node:inspector'
+import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
+import inspector from 'node:inspector'
+import { fileURLToPath } from 'node:url'
 import { provider } from 'std-env'
 import { loadProvider } from './load-provider'
 
 const session = new inspector.Session()
 let enabled = false
 
-export default {
+const mod: CoverageProviderModule = {
   startCoverage({ isolate }) {
     if (isolate === false && enabled) {
       return
@@ -23,15 +25,19 @@ export default {
     })
   },
 
-  takeCoverage(): Promise<{ result: Profiler.ScriptCoverage[] }> {
+  takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
     return new Promise((resolve, reject) => {
       session.post('Profiler.takePreciseCoverage', async (error, coverage) => {
         if (error) {
           return reject(error)
         }
 
-        // Reduce amount of data sent over rpc by doing some early result filtering
-        const result = coverage.result.filter(filterResult)
+        const result = coverage.result
+          .filter(filterResult)
+          .map(res => ({
+            ...res,
+            startOffset: options?.moduleExecutionInfo?.get(fileURLToPath(res.url))?.startOffset || 0,
+          }))
 
         resolve({ result })
       })
@@ -55,7 +61,8 @@ export default {
   async getProvider(): Promise<V8CoverageProvider> {
     return loadProvider()
   },
-} satisfies CoverageProviderModule
+}
+export default mod
 
 function filterResult(coverage: Profiler.ScriptCoverage): boolean {
   if (!coverage.url.startsWith('file://')) {

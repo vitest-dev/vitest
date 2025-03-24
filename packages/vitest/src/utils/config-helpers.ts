@@ -13,7 +13,7 @@ interface PotentialConfig {
 export function getOutputFile(
   config: PotentialConfig | undefined,
   reporter: BuiltinReporters | BenchmarkBuiltinReporters | 'html',
-) {
+): string | undefined {
   if (!config?.outputFile) {
     return
   }

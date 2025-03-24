@@ -1,4 +1,4 @@
-import type { Task, TaskResultPack } from '@vitest/runner'
+import type { File, Task, TaskResultPack } from '@vitest/runner'
 import type { Vitest } from '../../core'
 import fs from 'node:fs'
 import { getFullName } from '@vitest/runner/utils'
@@ -12,7 +12,7 @@ import { renderTable } from './tableRender'
 export class BenchmarkReporter extends DefaultReporter {
   compare?: Parameters<typeof renderTable>[0]['compare']
 
-  async onInit(ctx: Vitest) {
+  async onInit(ctx: Vitest): Promise<void> {
     super.onInit(ctx)
 
     if (this.ctx.config.benchmark?.compare) {
@@ -47,7 +47,7 @@ export class BenchmarkReporter extends DefaultReporter {
     super.onTaskUpdate(packs)
   }
 
-  printTask(task: Task) {
+  printTask(task: Task): void {
     if (task?.type !== 'suite' || !task.result?.state || task.result?.state === 'run' || task.result?.state === 'queued') {
       return
     }
@@ -75,7 +75,7 @@ export class BenchmarkReporter extends DefaultReporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles(), errors = this.ctx.state.getUnhandledErrors()) {
+  async onFinished(files: File[] = this.ctx.state.getFiles(), errors: unknown[] = this.ctx.state.getUnhandledErrors()): Promise<void> {
     super.onFinished(files, errors)
 
     // write output for future comparison

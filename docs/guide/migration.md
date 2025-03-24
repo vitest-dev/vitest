@@ -21,7 +21,7 @@ test('validation works', { retry: 3 }, () => { // [!code ++]
 })
 ```
 
-Vitest 4.0 will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
+The next major version will throw an error if the third argument is an object. Note that the timeout number is not deprecated:
 
 ```ts
 test('validation works', () => {
@@ -69,8 +69,8 @@ foo.bar() // 'Hello, mock!'
 
 foo.bar.mockReset()
 
-foo.bar() // undefined // [!code --]
-foo.bar() // 'Hello, world!' // [!code ++]
+foo.bar() // undefined [!code --]
+foo.bar() // 'Hello, world!' [!code ++]
 ```
 
 ### `vi.spyOn` Reuses Mock if Method is Already Mocked
@@ -81,8 +81,8 @@ Previously, Vitest would always assign a new spy when spying on an object. This 
 vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
 vi.spyOn(fooService, 'foo').mockImplementation(() => 'bar')
 vi.restoreAllMocks()
-vi.isMockFunction(fooService.foo) // true // [!code --]
-vi.isMockFunction(fooService.foo) // false // [!code ++]
+vi.isMockFunction(fooService.foo) // true [!code --]
+vi.isMockFunction(fooService.foo) // false [!code ++]
 ```
 
 ### Fake Timers Defaults
@@ -92,8 +92,8 @@ Vitest no longer provides default `fakeTimers.toFake` options. Now, Vitest will 
 ```ts
 vi.useFakeTimers()
 
-performance.now() // original // [!code --]
-performance.now() // fake // [!code ++]
+performance.now() // original [!code --]
+performance.now() // fake [!code ++]
 ```
 
 You can revert to the previous behaviour by specifying timers when calling `vi.useFakeTimers` or globally in the config:
@@ -102,7 +102,15 @@ You can revert to the previous behaviour by specifying timers when calling `vi.u
 export default defineConfig({
   test: {
     fakeTimers: {
-      toFake: ['setTimeout', 'clearTimeout', 'Date'], // [!code ++]
+      toFake: [ // [!code ++]
+        'setTimeout', // [!code ++]
+        'clearTimeout', // [!code ++]
+        'setInterval', // [!code ++]
+        'clearInterval', // [!code ++]
+        'setImmediate', // [!code ++]
+        'clearImmediate', // [!code ++]
+        'Date', // [!code ++]
+      ] // [!code ++]
     },
   },
 })
@@ -132,6 +140,7 @@ See PR for more details: [#5876](https://github.com/vitest-dev/vitest/pull/5876)
 ### `module` condition export is not resolved by default on Vite 6
 
 Vite 6 allows more flexible [`resolve.conditions`](https://vite.dev/config/shared-options#resolve-conditions) options and Vitest configures it to exclude `module` conditional export by default.
+See also [Vite 6 migration guide](https://v6.vite.dev/guide/migration.html#default-value-for-resolve-conditions) for the detail of Vite side changes.
 
 ### `Custom` Type is Deprecated <Badge type="danger">API</Badge> {#custom-type-is-deprecated}
 
@@ -256,7 +265,8 @@ JSON reporter now prints `task.meta` for every assertion result.
 Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguments and return value. This is changed to directly accept a function type `vi.fn<T>` to simplify the usage.
 
 ```ts
-import { type Mock, vi } from 'vitest'
+import { vi } from 'vitest'
+import type { Mock } from 'vitest'
 
 const add = (x: number, y: number): number => x + y
 
@@ -277,8 +287,8 @@ Previously Vitest resolved `mock.results` values if the function returned a Prom
 const fn = vi.fn().mockResolvedValueOnce('result')
 await fn()
 
-const result = fn.mock.results[0] // 'result' // [!code --]
-const result = fn.mock.results[0] // 'Promise<result>' // [!code ++]
+const result = fn.mock.results[0] // 'result' [!code --]
+const result = fn.mock.results[0] // 'Promise<result>' [!code ++]
 
 const settledResult = fn.mock.settledResults[0] // 'result'
 ```
@@ -529,14 +539,7 @@ If you want to modify the object, you will use [replaceProperty API](https://jes
 
 From Vitest v0.10.0, the callback style of declaring tests is deprecated. You can rewrite them to use `async`/`await` functions, or use Promise to mimic the callback style.
 
-```
-it('should work', (done) => {  // [!code --]
-it('should work', () => new Promise(done => { // [!code ++]
-  // ...
-  done()
-}) // [!code --]
-})) // [!code ++]
-```
+<!--@include: ./examples/promise-done.md-->
 
 ### Hooks
 

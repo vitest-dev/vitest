@@ -1,10 +1,13 @@
+import type { CoverageMap } from 'istanbul-lib-coverage'
+import type { Instrumenter } from 'istanbul-lib-instrument'
+import type { ProxifiedModule } from 'magicast'
 import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
 import createDebug from 'debug'
-import libCoverage, { type CoverageMap } from 'istanbul-lib-coverage'
-import { createInstrumenter, type Instrumenter } from 'istanbul-lib-instrument'
+import libCoverage from 'istanbul-lib-coverage'
+import { createInstrumenter } from 'istanbul-lib-instrument'
 import libReport from 'istanbul-lib-report'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
@@ -21,7 +24,7 @@ const debug = createDebug('vitest:coverage')
 
 export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'istanbul'>> implements CoverageProvider {
   name = 'istanbul' as const
-  version = version
+  version: string = version
   instrumenter!: Instrumenter
   testExclude!: InstanceType<typeof TestExclude>
 
@@ -81,7 +84,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     return { code, map }
   }
 
-  createCoverageMap() {
+  createCoverageMap(): libCoverage.CoverageMap {
     return libCoverage.createCoverageMap({})
   }
 
@@ -149,7 +152,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     }
   }
 
-  async parseConfigModule(configFilePath: string) {
+  async parseConfigModule(configFilePath: string): Promise<ProxifiedModule<any>> {
     return parseModule(
       await fs.readFile(configFilePath, 'utf8'),
     )

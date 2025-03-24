@@ -1,3 +1,4 @@
+import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { HtmlTagDescriptor } from 'vite'
 import type { ErrorWithDiff, ParsedStack } from 'vitest'
 import type {
@@ -10,9 +11,10 @@ import type {
   Vitest,
 } from 'vitest/node'
 import type { BrowserServerState } from './state'
+import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
-import { join, resolve } from 'pathe'
+import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
+import { dirname, join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
 import { distRoot } from './constants'
@@ -36,10 +38,13 @@ export class ParentBrowserProject {
   public stateJs: Promise<string> | string
 
   public commands: Record<string, BrowserCommand<any>> = {}
-  public children = new Set<ProjectBrowser>()
+  public children: Set<ProjectBrowser> = new Set()
   public vitest: Vitest
 
   public config: ResolvedConfig
+
+  // cache for non-vite source maps
+  private sourceMapCache = new Map<string, any>()
 
   constructor(
     public project: TestProject,
@@ -50,17 +55,39 @@ export class ParentBrowserProject {
     this.stackTraceOptions = {
       frameFilter: project.config.onStackTrace,
       getSourceMap: (id) => {
+        if (this.sourceMapCache.has(id)) {
+          return this.sourceMapCache.get(id)
+        }
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
+        // this can happen for bundled dependencies in node_modules/.vite
+        if (result && !result.map) {
+          const sourceMapUrl = this.retrieveSourceMapURL(result.code)
+          if (!sourceMapUrl) {
+            return null
+          }
+          const filepathDir = dirname(id)
+          const sourceMapPath = resolve(filepathDir, sourceMapUrl)
+          const map = JSON.parse(readFileSync(sourceMapPath, 'utf-8'))
+          this.sourceMapCache.set(id, map)
+          return map
+        }
         return result?.map
       },
-      getFileName: (id) => {
+      getUrlId: (id) => {
         const mod = this.vite.moduleGraph.getModuleById(id)
-        if (mod?.file) {
-          return mod.file
+        if (mod) {
+          return id
         }
-        const modUrl = this.vite.moduleGraph.urlToModuleMap.get(id)
-        if (modUrl?.file) {
-          return modUrl.file
+        const resolvedPath = resolve(project.config.root, id.slice(1))
+        const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
+        if (modUrl) {
+          return resolvedPath
+        }
+        // some browsers (looking at you, safari) don't report queries in stack traces
+        // the next best thing is to try the first id that this file resolves to
+        const files = this.vite.moduleGraph.getModulesByFile(resolvedPath)
+        if (files && files.size) {
+          return files.values().next().value!.id!
         }
         return id
       },
@@ -110,7 +137,7 @@ export class ParentBrowserProject {
     ).then(js => (this.stateJs = js))
   }
 
-  public setServer(vite: Vite.ViteDevServer) {
+  public setServer(vite: Vite.ViteDevServer): void {
     this.vite = vite
   }
 
@@ -147,10 +174,10 @@ export class ParentBrowserProject {
     })
   }
 
-  public readonly cdps = new Map<string, BrowserServerCDPHandler>()
+  public readonly cdps: Map<string, BrowserServerCDPHandler> = new Map()
   private cdpSessionsPromises = new Map<string, Promise<CDPSession>>()
 
-  async ensureCDPHandler(sessionId: string, rpcId: string) {
+  async ensureCDPHandler(sessionId: string, rpcId: string): Promise<BrowserServerCDPHandler> {
     const cachedHandler = this.cdps.get(rpcId)
     if (cachedHandler) {
       return cachedHandler
@@ -191,11 +218,11 @@ export class ParentBrowserProject {
     return handler
   }
 
-  removeCDPHandler(sessionId: string) {
+  removeCDPHandler(sessionId: string): void {
     this.cdps.delete(sessionId)
   }
 
-  async formatScripts(scripts: BrowserScript[] | undefined) {
+  async formatScripts(scripts: BrowserScript[] | undefined): Promise<HtmlTagDescriptor[]> {
     if (!scripts?.length) {
       return []
     }
@@ -228,11 +255,27 @@ export class ParentBrowserProject {
     return (await Promise.all(promises))
   }
 
-  resolveTesterUrl(pathname: string) {
+  resolveTesterUrl(pathname: string): { sessionId: string; testFile: string } {
     const [sessionId, testFile] = pathname
       .slice(this.prefixTesterUrl.length)
       .split('/')
     const decodedTestFile = decodeURIComponent(testFile)
     return { sessionId, testFile: decodedTestFile }
+  }
+
+  private retrieveSourceMapURL(source: string): string | null {
+    const re
+      = /\/\/[@#]\s*sourceMappingURL=([^\s'"]+)\s*$|\/\*[@#]\s*sourceMappingURL=[^\s*'"]+\s*\*\/\s*$/gm
+    // Keep executing the search to find the *last* sourceMappingURL to avoid
+    // picking up sourceMappingURLs from comments, strings, etc.
+    let lastMatch, match
+    // eslint-disable-next-line no-cond-assign
+    while ((match = re.exec(source))) {
+      lastMatch = match
+    }
+    if (!lastMatch) {
+      return null
+    }
+    return lastMatch[1]
   }
 }

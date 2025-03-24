@@ -1,5 +1,6 @@
 ---
 title: Test Context | Guide
+outline: deep
 ---
 
 # Test Context
@@ -154,6 +155,17 @@ myTest('', ({ todos }) => {})
 
 ::: warning
 When using `test.extend()` with fixtures, you should always use the object destructuring pattern `{ todos }` to access context both in fixture function and test function.
+
+```ts
+myTest('context must be destructured', (context) => { // [!code --]
+  expect(context.todos.length).toBe(2)
+})
+
+myTest('context must be destructured', ({ todos }) => { // [!code ++]
+  expect(todos.length).toBe(2)
+})
+```
+
 :::
 
 #### Automatic fixture
@@ -189,7 +201,7 @@ import { test as base } from 'vitest'
 const test = base.extend({
   url: [
     // default value if "url" is not defined in the config
-    'default',
+    '/default',
     // mark the fixture as "injected" to allow the override
     { injected: true },
   ],
@@ -230,6 +242,70 @@ export default defineWorkspace([
 ```
 :::
 
+#### Scoping Values to Suite <Version>3.1.0</Version> {#scoping-values-to-suite}
+
+Since Vitest 3.1, you can override context values per suite and its children by using the `test.scoped` API:
+
+```ts
+import { test as baseTest, describe, expect } from 'vitest'
+
+const test = baseTest.extend({
+  dependency: 'default',
+  dependant: ({ dependency }, use) => use({ dependency })
+})
+
+describe('use scoped values', () => {
+  test.scoped({ dependency: 'new' })
+
+  test('uses scoped value', ({ dependant }) => {
+    // `dependant` uses the new overriden value that is scoped
+    // to all tests in this suite
+    expect(dependant).toEqual({ dependency: 'new' })
+  })
+
+  describe('keeps using scoped value', () => {
+    test('uses scoped value', ({ dependant }) => {
+      // nested suite inherited the value
+      expect(dependant).toEqual({ dependency: 'new' })
+    })
+  })
+})
+
+test('keep using the default values', ({ dependant }) => {
+  // the `dependency` is using the default
+  // value outside of the suite with .scoped
+  expect(dependant).toEqual({ dependency: 'default' })
+})
+```
+
+This API is particularly useful if you have a context value that relies on a dynamic variable like a database connection:
+
+```ts
+const test = baseTest.extend<{
+  db: Database
+  schema: string
+}>({
+  db: async ({ schema }, use) => {
+    const db = await createDb({ schema })
+    await use(db)
+    await cleanup(db)
+  },
+  schema: '',
+})
+
+describe('one type of schema', () => {
+  test.scoped({ schema: 'schema-1' })
+
+  // ... tests
+})
+
+describe('another type of schema', () => {
+  test.scoped({ schema: 'schema-2' })
+
+  // ... tests
+})
+```
+
 #### TypeScript
 
 To provide fixture types for all your custom contexts, you can pass the fixtures type as a generic.
@@ -245,9 +321,9 @@ const myTest = test.extend<MyFixtures>({
   archive: []
 })
 
-myTest('types are defined correctly', (context) => {
-  expectTypeOf(context.todos).toEqualTypeOf<number[]>()
-  expectTypeOf(context.archive).toEqualTypeOf<number[]>()
+myTest('types are defined correctly', ({ todos, archive }) => {
+  expectTypeOf(todos).toEqualTypeOf<number[]>()
+  expectTypeOf(archive).toEqualTypeOf<number[]>()
 })
 ```
 

@@ -142,7 +142,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/clearValue} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#clear} testing-library API
    */
-  clear: (element: Element | Locator) => Promise<void>
+  clear: (element: Element | Locator, options?: UserEventClearOptions) => Promise<void>
   /**
    * Sends a `Tab` key event. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -171,7 +171,7 @@ export interface UserEvent {
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-set-input-files} Playwright API
    * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
    */
-  upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
+  upload: (element: Element | Locator, files: File | File[] | string | string[], options?: UserEventUploadOptions) => Promise<void>
   /**
    * Copies the selected content.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -218,9 +218,11 @@ export interface UserEventFillOptions {}
 export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
+export interface UserEventClearOptions {}
 export interface UserEventDoubleClickOptions {}
 export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
+export interface UserEventUploadOptions {}
 
 export interface LocatorOptions {
   /**
@@ -288,38 +290,38 @@ interface LocatorSelectors {
    * Creates a way to locate an element by its [ARIA role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles), [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes) and [accessible name](https://developer.mozilla.org/en-US/docs/Glossary/Accessible_name).
    * @see {@link https://vitest.dev/guide/browser/locators#getbyrole}
    */
-  getByRole(role: ARIARole | ({} & string), options?: LocatorByRoleOptions): Locator
+  getByRole: (role: ARIARole | ({} & string), options?: LocatorByRoleOptions) => Locator
   /**
    * @see {@link https://vitest.dev/guide/browser/locators#getbylabeltext}
    */
-  getByLabelText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByLabelText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element with an `alt` attribute that matches the text. Unlike testing-library's implementation, Vitest will match any element that has an `alt` attribute.
    * @see {@link https://vitest.dev/guide/browser/locators#getbyalttext}
    */
-  getByAltText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByAltText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified placeholder text. Vitest will match any element that has a matching `placeholder` attribute, not just `input`.
    * @see {@link https://vitest.dev/guide/browser/locators#getbyplaceholder}
    */
-  getByPlaceholder(text: string | RegExp, options?: LocatorOptions): Locator
+  getByPlaceholder: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that contains the specified text. The text will be matched against TextNode's [`nodeValue`](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue) or input's value if the type is `button` or `reset`.
    * Matching by text always normalizes whitespace, even with exact match.
    * For example, it turns multiple spaces into one, turns line breaks into spaces and ignores leading and trailing whitespace.
    * @see {@link https://vitest.dev/guide/browser/locators#getbytext}
    */
-  getByText(text: string | RegExp, options?: LocatorOptions): Locator
+  getByText: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that has the specified `title` attribute. Unlike testing-library's `getByTitle`, Vitest cannot find `title` elements within an SVG.
    * @see {@link https://vitest.dev/guide/browser/locators#getbytitle}
    */
-  getByTitle(text: string | RegExp, options?: LocatorOptions): Locator
+  getByTitle: (text: string | RegExp, options?: LocatorOptions) => Locator
   /**
    * Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
    * @see {@link https://vitest.dev/guide/browser/locators#getbytestid}
    */
-  getByTestId(text: string | RegExp): Locator
+  getByTestId: (text: string | RegExp) => Locator
 }
 
 export interface Locator extends LocatorSelectors {
@@ -358,7 +360,7 @@ export interface Locator extends LocatorSelectors {
    * Clears the input element content
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-clear}
    */
-  clear(): Promise<void>
+  clear(options?: UserEventClearOptions): Promise<void>
   /**
    * Moves the cursor position to the selected element
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-hover}
@@ -391,7 +393,7 @@ export interface Locator extends LocatorSelectors {
    * Change a file input element to have the specified files. Uses provider's API under the hood.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
    */
-  upload: (files: File | File[] | string | string[]) => Promise<void>
+  upload(files: File | File[] | string | string[], options?: UserEventUploadOptions): Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.
@@ -450,6 +452,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#last}
    */
   last(): Locator
+  /**
+   * Returns a locator that matches both the current locator and the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   */
+  and(locator: Locator): Locator
+  /**
+   * Returns a locator that matches either the current locator or the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   */
+  or(locator: Locator): Locator
+  /**
+   * Narrows existing locator according to the options.
+   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   */
+  filter(options: LocatorOptions): Locator
 }
 
 export interface UserEventTabOptions {
@@ -502,6 +519,13 @@ export const server: {
    * Serialized test config.
    */
   config: SerializedConfig
+}
+
+export interface LocatorOptions {
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
 }
 
 /**

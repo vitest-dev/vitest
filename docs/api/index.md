@@ -129,6 +129,18 @@ test('skipped test', (context) => {
 })
 ```
 
+Since Vitest 3.1, if the condition is unknonwn, you can provide it to the `skip` method as the first arguments:
+
+```ts
+import { assert, test } from 'vitest'
+
+test('skipped test', (context) => {
+  context.skip(Math.random() < 0.5, 'optional message')
+  // Test skipped, no error
+  assert.equal(Math.sqrt(4), 3)
+})
+```
+
 ### test.skipIf
 
 - **Alias:** `it.skipIf`
@@ -310,7 +322,8 @@ You can inject parameters with [printf formatting](https://nodejs.org/api/util.h
 - `%f`: floating point value
 - `%j`: json
 - `%o`: object
-- `%#`: index of the test case
+- `%#`: 0-based index of the test case
+- `%$`: 1-based index of the test case
 - `%%`: single percent sign ('%')
 
 ```ts
@@ -330,16 +343,29 @@ test.each([
 // ✓ add(2, 1) -> 3
 ```
 
-You can also access object properties with `$` prefix, if you are using objects as arguments:
+You can also access object properties and array elements with `$` prefix:
 
-  ```ts
-  test.each([
-    { a: 1, b: 1, expected: 2 },
-    { a: 1, b: 2, expected: 3 },
-    { a: 2, b: 1, expected: 3 },
-  ])('add($a, $b) -> $expected', ({ a, b, expected }) => {
-    expect(a + b).toBe(expected)
-  })
+```ts
+test.each([
+  { a: 1, b: 1, expected: 2 },
+  { a: 1, b: 2, expected: 3 },
+  { a: 2, b: 1, expected: 3 },
+])('add($a, $b) -> $expected', ({ a, b, expected }) => {
+  expect(a + b).toBe(expected)
+})
+
+// this will return
+// ✓ add(1, 1) -> 2
+// ✓ add(1, 2) -> 3
+// ✓ add(2, 1) -> 3
+
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add($0, $1) -> $2', (a, b, expected) => {
+  expect(a + b).toBe(expected)
+})
 
 // this will return
 // ✓ add(1, 1) -> 2

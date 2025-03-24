@@ -13,7 +13,7 @@
     "collect": "vitest list"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.12",
+    "@types/debug": "catalog:",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/runner": "workspace:*",
@@ -23,20 +23,20 @@
     "@vitest/utils": "workspace:*",
     "@vitest/web-worker": "workspace:^",
     "@vueuse/integrations": "^10.9.0",
-    "axios": "^0.26.1",
+    "axios": "^0.28.0",
     "debug": "^4.3.4",
     "immutable": "5.0.0-beta.5",
     "memfs": "^4.8.2",
     "react": "^18.3.1",
     "react-19": "npm:react@19.0.0-rc-b01722d5-20241114",
     "sweetalert2": "^11.6.16",
-    "tinyrainbow": "^2.0.0",
+    "tinyrainbow": "catalog:",
     "tinyspy": "^1.0.2",
     "url": "^0.11.0",
     "vite-node": "workspace:*",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
-    "vue": "^3.5.12",
+    "vue": "catalog:",
     "zustand": "^4.1.1"
   }
 }

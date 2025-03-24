@@ -7,7 +7,7 @@ import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestSpecification } from './spec'
-import type { ResolvedConfig, UserConfig, VitestRunMode } from './types/config'
+import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
 import type { CoverageProvider } from './types/coverage'
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
@@ -21,13 +21,13 @@ import { ViteNodeServer } from 'vite-node/server'
 import { version } from '../../package.json' with { type: 'json' }
 import { WebSocketReporter } from '../api/setup'
 import { defaultBrowserPort, workspacesFiles as workspaceFiles } from '../constants'
-import { getCoverageProvider } from '../integrations/coverage'
 import { distDir } from '../paths'
 import { wildcardPatternToRegExp } from '../utils/base'
 import { convertTasksToEvents } from '../utils/tasks'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
 import { resolveConfig } from './config/resolveConfig'
+import { getCoverageProvider } from './coverage'
 import { FilesNotFoundError } from './errors'
 import { Logger } from './logger'
 import { VitestPackageInstaller } from './packageInstaller'
@@ -56,8 +56,8 @@ export class Vitest {
    * Current Vitest version.
    * @example '2.0.0'
    */
-  public readonly version = version
-  static readonly version = version
+  public readonly version: string = version
+  static readonly version: string = version
   /**
    * The logger instance used to log messages. It's recommended to use this logger instead of `console`.
    * It's possible to override stdout and stderr streams when initiating Vitest.
@@ -76,7 +76,7 @@ export class Vitest {
   /**
    * A path to the built Vitest directory. This is usually a folder in `node_modules`.
    */
-  public readonly distPath = distDir
+  public readonly distPath: string = distDir
   /**
    * A list of projects that are currently running.
    * If projects were filtered with `--project` flag, they won't appear here.
@@ -98,11 +98,10 @@ export class Vitest {
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _browserSessions = new BrowserSessions()
   /** @internal */ _options: UserConfig = {}
-  /** @internal */ reporters: Reporter[] = undefined!
+  /** @internal */ reporters: Reporter[] = []
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
   /** @internal */ _testRun: TestRun = undefined!
-  /** @internal */ _projectFilters: RegExp[] = []
 
   private isFirstRun = true
   private restartsCount = 0
@@ -137,12 +136,12 @@ export class Vitest {
   private _onFilterWatchedSpecification: ((spec: TestSpecification) => boolean)[] = []
 
   /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get invalidates() {
+  public get invalidates(): Set<string> {
     return this.watcher.invalidates
   }
 
   /** @deprecated will be removed in 4.0, use `onFilterWatchedSpecification` instead */
-  public get changedTests() {
+  public get changedTests(): Set<string> {
     return this.watcher.changedTests
   }
 
@@ -193,7 +192,7 @@ export class Vitest {
   }
 
   /** @deprecated internal */
-  setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
+  setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig): Promise<void> {
     return this._setServer(options, server, cliOptions)
   }
 
@@ -216,7 +215,6 @@ export class Vitest {
     this.specifications.clearCache()
     this._onUserTestsRerun = []
 
-    this._projectFilters = toArray(options.project || []).map(project => wildcardPatternToRegExp(project))
     this._vite = server
 
     const resolved = resolveConfig(this, options, server.config)
@@ -259,7 +257,7 @@ export class Vitest {
       server.watcher.on('change', async (file) => {
         file = normalize(file)
         const isConfig = file === server.config.configFile
-          || this.resolvedProjects.some(p => p.vite.config.configFile === file)
+          || this.projects.some(p => p.vite.config.configFile === file)
           || file === this._workspaceConfigPath
         if (isConfig) {
           await Promise.all(this._onRestartListeners.map(fn => fn('config')))
@@ -279,6 +277,16 @@ export class Vitest {
     const projects = await this.resolveWorkspace(cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
+
+    await Promise.all(projects.flatMap((project) => {
+      const hooks = project.vite.config.getSortedPluginHooks('configureVitest')
+      return hooks.map(hook => hook({
+        project,
+        vitest: this,
+        injectTestProjects: this.injectTestProject,
+      }))
+    }))
+
     if (!this.projects.length) {
       throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
     }
@@ -298,9 +306,27 @@ export class Vitest {
   }
 
   /**
+   * Inject new test projects into the workspace.
+   * @param config Glob, config path or a custom config options.
+   * @returns An array of new test projects. Can be empty if the name was filtered out.
+   */
+  private injectTestProject = async (config: TestProjectConfiguration | TestProjectConfiguration[]): Promise<TestProject[]> => {
+    const currentNames = new Set(this.projects.map(p => p.name))
+    const workspace = await resolveWorkspace(
+      this,
+      this._options,
+      undefined,
+      Array.isArray(config) ? config : [config],
+      currentNames,
+    )
+    this.projects.push(...workspace)
+    return workspace
+  }
+
+  /**
    * Provide a value to the test context. This value will be available to all tests with `inject`.
    */
-  public provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]) => {
+  public provide = <T extends keyof ProvidedContext & string>(key: T, value: ProvidedContext[T]): void => {
     this.getRootProject().provide(key, value)
   }
 
@@ -385,12 +411,15 @@ export class Vitest {
   }
 
   private async resolveWorkspace(cliOptions: UserConfig): Promise<TestProject[]> {
+    const names = new Set<string>()
+
     if (Array.isArray(this.config.workspace)) {
       return resolveWorkspace(
         this,
         cliOptions,
         undefined,
         this.config.workspace,
+        names,
       )
     }
 
@@ -406,7 +435,7 @@ export class Vitest {
       if (!project) {
         return []
       }
-      return resolveBrowserWorkspace(this, new Set(), [project])
+      return resolveBrowserWorkspace(this, new Set([project.name]), [project])
     }
 
     const workspaceModule = await this.import<{
@@ -422,6 +451,7 @@ export class Vitest {
       cliOptions,
       workspaceConfigPath,
       workspaceModule.default,
+      names,
     )
   }
 
@@ -509,8 +539,6 @@ export class Vitest {
   }
 
   async collect(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     const files = await this.specifications.getRelevantTestSpecifications(filters)
 
     // if run with --changed, don't exit if no tests are found
@@ -543,8 +571,6 @@ export class Vitest {
    * @param filters String filters to match the test files
    */
   async start(filters?: string[]): Promise<TestRunResult> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -602,8 +628,6 @@ export class Vitest {
    * If the `--watch` flag is provided, Vitest will still run changed tests even if this method was not called.
    */
   async init(): Promise<void> {
-    this._onClose = []
-
     try {
       await this.initCoverageProvider()
       await this.coverageProvider?.clean(this.config.coverage.clean)
@@ -645,7 +669,7 @@ export class Vitest {
   /**
    * Vitest automatically caches test specifications for each file. This method clears the cache for the given file or the whole cache altogether.
    */
-  public clearSpecificationsCache(moduleId?: string) {
+  public clearSpecificationsCache(moduleId?: string): void {
     this.specifications.clearCache(moduleId)
   }
 
@@ -867,11 +891,9 @@ export class Vitest {
   async changeProjectName(pattern: string): Promise<void> {
     if (pattern === '') {
       this.configOverride.project = undefined
-      this._projectFilters = []
     }
     else {
       this.configOverride.project = [pattern]
-      this._projectFilters = [wildcardPatternToRegExp(pattern)]
     }
 
     await this.vite.restart()
@@ -1102,10 +1124,10 @@ export class Vitest {
           await project._teardownGlobalSetup()
         }
 
-        const closePromises: unknown[] = this.resolvedProjects.map(w => w.close())
+        const closePromises: unknown[] = this.projects.map(w => w.close())
         // close the core workspace server only once
         // it's possible that it's not initialized at all because it's not running any tests
-        if (this.coreWorkspaceProject && !this.resolvedProjects.includes(this.coreWorkspaceProject)) {
+        if (this.coreWorkspaceProject && !this.projects.includes(this.coreWorkspaceProject)) {
           closePromises.push(this.coreWorkspaceProject.close().then(() => this._vite = undefined as any))
         }
 
@@ -1142,7 +1164,7 @@ export class Vitest {
         this.state.getProcessTimeoutCauses().forEach(cause => console.warn(cause))
 
         if (!this.pool) {
-          const runningServers = [this._vite, ...this.resolvedProjects.map(p => p._vite)].filter(Boolean).length
+          const runningServers = [this._vite, ...this.projects.map(p => p._vite)].filter(Boolean).length
 
           if (runningServers === 1) {
             console.warn('Tests closed successfully but something prevents Vite server from exiting')
@@ -1186,19 +1208,19 @@ export class Vitest {
   /**
    * @deprecated use `globTestSpecifications` instead
    */
-  public async globTestSpecs(filters: string[] = []) {
+  public async globTestSpecs(filters: string[] = []): Promise<TestSpecification[]> {
     return this.globTestSpecifications(filters)
   }
 
   /**
    * @deprecated use `globTestSpecifications` instead
    */
-  public async globTestFiles(filters: string[] = []) {
+  public async globTestFiles(filters: string[] = []): Promise<TestSpecification[]> {
     return this.globTestSpecifications(filters)
   }
 
   /** @deprecated filter by `this.projects` yourself */
-  public getModuleProjects(filepath: string) {
+  public getModuleProjects(filepath: string): TestProject[] {
     return this.projects.filter((project) => {
       return project.getModulesByFilepath(filepath).size
       // TODO: reevaluate || project.browser?.moduleGraph.getModulesByFile(id)?.size
@@ -1258,20 +1280,23 @@ export class Vitest {
 
   /**
    * Check if the project with a given name should be included.
-   * @internal
    */
-  _matchesProjectFilter(name: string): boolean {
+  matchesProjectFilter(name: string): boolean {
+    const projects = this._config?.project || this._options?.project
     // no filters applied, any project can be included
-    if (!this._projectFilters.length) {
+    if (!projects || !projects.length) {
       return true
     }
-    return this._projectFilters.some(filter => filter.test(name))
+    return toArray(projects).some((project) => {
+      const regexp = wildcardPatternToRegExp(project)
+      return regexp.test(name)
+    })
   }
 }
 
 function assert(condition: unknown, property: string, name: string = property): asserts condition {
   if (!condition) {
-    throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Either await the Vitest promise or check that it is initialized with \`vitest.ready()\` before accessing \`vitest.${property}\`.`)
+    throw new Error(`The ${name} was not set. It means that \`vitest.${property}\` was called before the Vite server was established. Await the Vitest promise before accessing \`vitest.${property}\`.`)
   }
 }
 
