@@ -9,7 +9,7 @@ declare module 'vitest' {
   interface Matchers extends CustomMatchers {}
 }
 
-test('infers matcher declaration type from a matcher with a single argument', () => {
+test('infers matcher declaration type from a custom matcher type', () => {
   expect.extend({
     toMatchSchema(received, expected) {
       expectTypeOf(received).toBeAny()
