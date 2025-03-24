@@ -13,5 +13,7 @@ test.runIf(provider === 'playwright')('fails gracefully when browser crashes', a
     },
   })
 
-  expect(stderr).toContain('Page crashed when executing tests')
+  // TODO 2025-03-24 whtn https://github.com/antfu/birpc/pull/23 is merged,
+  // provide a better error message
+  expect(stderr).toContain('rpc is closed, cannot call "createTesters"')
 })

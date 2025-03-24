@@ -85,8 +85,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
         if (type === 'orchestrator') {
-          vitest._browserSessions.forgetSession(sessionId)
+          vitest._browserSessions.destroySession(sessionId)
         }
+        // this will reject any hanging methods if there are any
+        rpc.$close()
       })
     })
   })

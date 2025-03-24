@@ -9,7 +9,7 @@ export class BrowserSessions {
     return this.sessions.get(sessionId)
   }
 
-  forgetSession(sessionId: string): void {
+  destroySession(sessionId: string): void {
     this.sessions.delete(sessionId)
   }
 

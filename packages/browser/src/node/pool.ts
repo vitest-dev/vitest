@@ -142,6 +142,7 @@ function escapePathToRegexp(path: string): string {
 class BrowserPool {
   private _queue: string[] = []
   private _promise: DeferPromise<void> | undefined
+  private _providedContext: string | undefined
 
   private readySessions = new Set<string>()
 
@@ -175,6 +176,8 @@ class BrowserPool {
       this._promise.resolve()
       return this._promise
     }
+
+    this._providedContext = stringify(this.project.getProvidedContext())
 
     this._queue.push(...files)
 
@@ -256,16 +259,13 @@ class BrowserPool {
           files: [file],
           // this will be parsed by the test iframe, not the orchestrator
           // so we need to stringify it first to avoid double serialization
-          providedContext: stringify(this.project.getProvidedContext()),
+          providedContext: this._providedContext || '[]',
         },
       )
         .then(() => {
           this.runNextTest(method, sessionId)
         })
         .catch((error) => {
-          if (error instanceof Error && error.message.startsWith('[birpc] rpc is closed')) {
-            return
-          }
           this.reject(error)
         })
     }).catch(err => this.reject(err))
