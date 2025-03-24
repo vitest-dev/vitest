@@ -10,6 +10,7 @@ import type {
 import type {
   BrowserProvider,
   BrowserProviderInitializationOptions,
+  CDPSession,
   TestProject,
 } from 'vitest/node'
 
@@ -191,12 +192,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       })
     }
 
-    // unhandled page crashes will hang vitest process
-    page.on('crash', () => {
-      const session = this.project.vitest._browserSessions.getSession(sessionId)
-      session?.fail(new Error('Page crashed when executing tests'))
-    })
-
     return page
   }
 
@@ -206,12 +201,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     await browserPage.goto(url, { timeout: 0 })
   }
 
-  async getCDPSession(sessionid: string): Promise<{
-    send: (method: string, params: any) => Promise<unknown>
-    on: (event: string, listener: (...args: any[]) => void) => void
-    off: (event: string, listener: (...args: any[]) => void) => void
-    once: (event: string, listener: (...args: any[]) => void) => void
-  }> {
+  async getCDPSession(sessionid: string): Promise<CDPSession> {
     const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
