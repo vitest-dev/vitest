@@ -91,6 +91,13 @@ export class IframeOrchestrator {
   }
 
   private async runNonIsolatedTests(container: HTMLDivElement, options: BrowserTesterOptions) {
+    // if the iframe was somehow removed from the DOM, recreate it
+    const existingIframe = this.iframes.get(ID_ALL)
+    if (existingIframe && !document.body.contains(existingIframe)) {
+      debug('recreating iframe due to the missing element')
+      this.recreateNonIsolatedIframe = true
+    }
+
     if (this.recreateNonIsolatedIframe) {
       // recreate a new non-isolated iframe during watcher reruns
       // because we called "cleanup" in the previous run
@@ -98,9 +105,11 @@ export class IframeOrchestrator {
       this.recreateNonIsolatedIframe = false
       this.iframes.get(ID_ALL)!.remove()
       this.iframes.delete(ID_ALL)
+      debug('recreate non-isolated iframe')
     }
 
     if (!this.iframes.has(ID_ALL)) {
+      debug('preparing non-isolated iframe')
       await this.prepareIframe(container, ID_ALL)
     }
 
@@ -109,6 +118,7 @@ export class IframeOrchestrator {
     const iframe = this.iframes.get(ID_ALL)!
 
     await setIframeViewport(iframe, width, height)
+    debug('run non-isolated tests', options.files.join(', '))
     await sendEventToIframe({
       event: 'execute',
       iframeId: ID_ALL,
