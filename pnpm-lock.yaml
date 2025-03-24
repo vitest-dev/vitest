@@ -132,22 +132,22 @@ overrides:
 
 patchedDependencies:
   '@sinonjs/fake-timers@14.0.0':
-    hash: 6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278
+    hash: 2nfgj35ccipklw62qci72snyqi
     path: patches/@sinonjs__fake-timers@14.0.0.patch
   '@types/chai@5.0.1':
-    hash: d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf
+    hash: 7aemscswk25eebfiaafqarff4e
     path: patches/@types__chai@5.0.1.patch
   '@types/sinonjs__fake-timers@8.1.5':
-    hash: 0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252
+    hash: 2mhlvt7le3jrisxefe6ifblg2q
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
   acorn@8.11.3:
-    hash: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
+    hash: no36qihqjrd3chyjw73dk5xfkm
     path: patches/acorn@8.11.3.patch
   cac@6.7.14:
-    hash: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
+    hash: slh3cigivjjjktoa42g2agwaem
     path: patches/cac@6.7.14.patch
   v8-to-istanbul@9.3.0:
-    hash: fc8eccce7f8e7c27b0d0b1c63e93ff3adaa8c05c33d5603bacf58ea6d12951f3
+    hash: 5pdyrbs4i7bdmssok6uzfxxdia
     path: patches/v8-to-istanbul@9.3.0.patch
 
 importers:
@@ -683,7 +683,7 @@ importers:
         version: 2.0.3
       v8-to-istanbul:
         specifier: ^9.3.0
-        version: 9.3.0(patch_hash=fc8eccce7f8e7c27b0d0b1c63e93ff3adaa8c05c33d5603bacf58ea6d12951f3)
+        version: 9.3.0(patch_hash=5pdyrbs4i7bdmssok6uzfxxdia)
       vite-node:
         specifier: workspace:*
         version: link:../vite-node
@@ -708,7 +708,7 @@ importers:
     devDependencies:
       '@types/chai':
         specifier: 5.0.1
-        version: 5.0.1(patch_hash=d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf)
+        version: 5.0.1(patch_hash=7aemscswk25eebfiaafqarff4e)
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -947,7 +947,7 @@ importers:
     dependencies:
       cac:
         specifier: 'catalog:'
-        version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+        version: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       debug:
         specifier: 'catalog:'
         version: 4.4.0
@@ -1051,7 +1051,7 @@ importers:
         version: 5.0.0
       '@sinonjs/fake-timers':
         specifier: 14.0.0
-        version: 14.0.0(patch_hash=6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278)
+        version: 14.0.0(patch_hash=2nfgj35ccipklw62qci72snyqi)
       '@types/debug':
         specifier: 'catalog:'
         version: 4.1.12
@@ -1078,7 +1078,7 @@ importers:
         version: 2.4.9
       '@types/sinonjs__fake-timers':
         specifier: ^8.1.5
-        version: 8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)
+        version: 8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)
       acorn-walk:
         specifier: 'catalog:'
         version: 8.3.4
@@ -1087,7 +1087,7 @@ importers:
         version: 0.2.19
       cac:
         specifier: 'catalog:'
-        version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+        version: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -11566,7 +11566,7 @@ snapshots:
     dependencies:
       type-detect: 4.0.8
 
-  '@sinonjs/fake-timers@14.0.0(patch_hash=6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278)':
+  '@sinonjs/fake-timers@14.0.0(patch_hash=2nfgj35ccipklw62qci72snyqi)':
     dependencies:
       '@sinonjs/commons': 3.0.1
 
@@ -11821,7 +11821,7 @@ snapshots:
 
   '@types/braces@3.0.1': {}
 
-  '@types/chai@5.0.1(patch_hash=d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf)':
+  '@types/chai@5.0.1(patch_hash=7aemscswk25eebfiaafqarff4e)':
     dependencies:
       '@types/deep-eql': 4.0.2
 
@@ -11972,7 +11972,7 @@ snapshots:
 
   '@types/resolve@1.20.2': {}
 
-  '@types/sinonjs__fake-timers@8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)': {}
+  '@types/sinonjs__fake-timers@8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)': {}
 
   '@types/stack-utils@2.0.3':
     optional: true
@@ -12172,7 +12172,7 @@ snapshots:
       '@unocss/config': 0.65.4
       '@unocss/core': 0.65.4
       '@unocss/preset-uno': 0.65.4
-      cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       chokidar: 3.6.0
       colorette: 2.0.20
       consola: 3.4.0
@@ -12307,7 +12307,7 @@ snapshots:
 
   '@vite-pwa/assets-generator@0.2.6':
     dependencies:
-      cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       colorette: 2.0.20
       consola: 3.2.3
       sharp: 0.32.6
@@ -12698,15 +12698,15 @@ snapshots:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
-  acorn-jsx@5.3.2(acorn@8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)):
+  acorn-jsx@5.3.2(acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)):
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
 
   acorn-walk@8.3.4:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
 
-  acorn@8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4): {}
+  acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm): {}
 
   agent-base@7.1.0:
     dependencies:
@@ -13050,7 +13050,7 @@ snapshots:
     dependencies:
       args-tokenizer: 0.3.0
       c12: 2.0.1(magicast@0.3.5)
-      cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       escalade: 3.2.0
       js-yaml: 4.1.0
       jsonc-parser: 3.3.1
@@ -13113,7 +13113,7 @@ snapshots:
     optionalDependencies:
       magicast: 0.3.5
 
-  cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588): {}
+  cac@6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem): {}
 
   call-bind@1.0.5:
     dependencies:
@@ -13192,7 +13192,7 @@ snapshots:
     dependencies:
       '@antfu/utils': 8.1.0
       c12: 2.0.1(magicast@0.3.5)
-      cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      cac: 6.7.14(patch_hash=slh3cigivjjjktoa42g2agwaem)
       changelogen: 0.5.7(magicast@0.3.5)
       convert-gitmoji: 0.1.5
       execa: 9.5.2
@@ -14261,14 +14261,14 @@ snapshots:
 
   espree@10.3.0:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
-      acorn-jsx: 5.3.2(acorn@8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4))
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
+      acorn-jsx: 5.3.2(acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm))
       eslint-visitor-keys: 4.2.0
 
   espree@9.6.1:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
-      acorn-jsx: 5.3.2(acorn@8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4))
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
+      acorn-jsx: 5.3.2(acorn@8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm))
       eslint-visitor-keys: 3.4.3
 
   esprima-extract-comments@1.1.0:
@@ -15515,7 +15515,7 @@ snapshots:
 
   jsonc-eslint-parser@2.4.0:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
       semver: 7.7.1
@@ -16130,7 +16130,7 @@ snapshots:
 
   mlly@1.7.4:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       pathe: 2.0.3
       pkg-types: 1.3.1
       ufo: 1.5.4
@@ -17623,7 +17623,7 @@ snapshots:
   terser@5.36.0:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -17893,7 +17893,7 @@ snapshots:
   unimport@3.14.5(rollup@4.34.8):
     dependencies:
       '@rollup/pluginutils': 5.1.4(rollup@4.34.8)
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       escape-string-regexp: 5.0.0
       estree-walker: 3.0.3
       fast-glob: 3.3.3
@@ -18038,24 +18038,24 @@ snapshots:
 
   unplugin@1.16.0:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       webpack-virtual-modules: 0.6.2
 
   unplugin@1.7.1:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       chokidar: 3.6.0
       webpack-sources: 3.2.3
       webpack-virtual-modules: 0.6.1
 
   unplugin@2.1.0:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       webpack-virtual-modules: 0.6.2
 
   unplugin@2.2.0:
     dependencies:
-      acorn: 8.11.3(patch_hash=62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4)
+      acorn: 8.11.3(patch_hash=no36qihqjrd3chyjw73dk5xfkm)
       webpack-virtual-modules: 0.6.2
 
   upath@1.2.0: {}
@@ -18113,7 +18113,7 @@ snapshots:
 
   uuid@9.0.1: {}
 
-  v8-to-istanbul@9.3.0(patch_hash=fc8eccce7f8e7c27b0d0b1c63e93ff3adaa8c05c33d5603bacf58ea6d12951f3):
+  v8-to-istanbul@9.3.0(patch_hash=5pdyrbs4i7bdmssok6uzfxxdia):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       '@types/istanbul-lib-coverage': 2.0.6
@@ -18418,7 +18418,7 @@ snapshots:
   webdriverio@9.10.0:
     dependencies:
       '@types/node': 20.14.15
-      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252)
+      '@types/sinonjs__fake-timers': 8.1.5(patch_hash=2mhlvt7le3jrisxefe6ifblg2q)
       '@wdio/config': 9.9.0
       '@wdio/logger': 9.4.4
       '@wdio/protocols': 9.7.0
