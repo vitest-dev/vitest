@@ -175,36 +175,6 @@ export async function saveSnapshotFileRaw(
   await environment.saveSnapshotFile(snapshotPath, content)
 }
 
-export function prepareExpected(expected?: string): string | undefined {
-  function findStartIndent() {
-    // Attempts to find indentation for objects.
-    // Matches the ending tag of the object.
-    const matchObject = /^( +)\}\s+$/m.exec(expected || '')
-    const objectIndent = matchObject?.[1]?.length
-
-    if (objectIndent) {
-      return objectIndent
-    }
-
-    // Attempts to find indentation for texts.
-    // Matches the quote of first line.
-    const matchText = /^\n( +)"/.exec(expected || '')
-    return matchText?.[1]?.length || 0
-  }
-
-  const startIndent = findStartIndent()
-
-  let expectedTrimmed = expected?.trim()
-
-  if (startIndent) {
-    expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '')
-      .replace(/ +\}$/, '}')
-  }
-
-  return expectedTrimmed
-}
-
 function deepMergeArray(target: any[] = [], source: any[] = []) {
   const mergedOutput = Array.from(target)
 
