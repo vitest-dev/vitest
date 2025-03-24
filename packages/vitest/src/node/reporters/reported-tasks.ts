@@ -237,10 +237,10 @@ class TestCollection {
   /**
    * Filters all tests that are part of this collection and its children.
    */
-  *allTests(state?: TestState): Generator<TestCase, undefined, void> {
+  * allTests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
-        yield * child.children.allTests(state)
+        yield* child.children.allTests(state)
       }
       else if (state) {
         const testState = child.result().state
@@ -257,7 +257,7 @@ class TestCollection {
   /**
    * Filters only the tests that are part of this collection.
    */
-  *tests(state?: TestState): Generator<TestCase, undefined, void> {
+  * tests(state?: TestState): Generator<TestCase, undefined, void> {
     for (const child of this) {
       if (child.type !== 'test') {
         continue
@@ -278,7 +278,7 @@ class TestCollection {
   /**
    * Filters only the suites that are part of this collection.
    */
-  *suites(): Generator<TestSuite, undefined, void> {
+  * suites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
@@ -289,16 +289,16 @@ class TestCollection {
   /**
    * Filters all suites that are part of this collection and its children.
    */
-  *allSuites(): Generator<TestSuite, undefined, void> {
+  * allSuites(): Generator<TestSuite, undefined, void> {
     for (const child of this) {
       if (child.type === 'suite') {
         yield child
-        yield * child.children.allSuites()
+        yield* child.children.allSuites()
       }
     }
   }
 
-  *[Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
+  * [Symbol.iterator](): Generator<TestSuite | TestCase, undefined, void> {
     for (const task of this.#task.tasks) {
       yield getReportedTask(this.#project, task) as TestSuite | TestCase
     }

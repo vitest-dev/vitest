@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-test('jest-image-sapshot', async () => {
+test('jest-image-snapshot', async () => {
   // cleanup snapshot
   const root = join(import.meta.dirname, 'fixtures/jest-image-snapshot')
   fs.rmSync(join(root, '__image_snapshots__'), { recursive: true, force: true })

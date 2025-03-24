@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { readCoverageMap, runVitest, test } from '../utils'
+import { isBrowser, readCoverageMap, runVitest, test } from '../utils'
 
 test('{ all: true } includes uncovered files', async () => {
   await runVitest({
@@ -76,5 +76,37 @@ test('{ all: true } includes uncovered files after watch-mode re-run', async () 
 
     expect(files).toContain('<process-cwd>/fixtures/src/untested-file.ts')
     expect(files.length).toBeGreaterThanOrEqual(3)
+  }
+})
+
+test('transforms uncovered files correctly', async () => {
+  await runVitest({
+    config: 'fixtures/configs/vitest.config.conditional.ts',
+    include: ['fixtures/test/math.test.ts'],
+    coverage: {
+      include: ['fixtures/src/math.ts', 'fixtures/src/conditional/*'],
+      all: true,
+      reporter: 'json',
+    },
+  })
+
+  const coverageMap = await readCoverageMap()
+  const files = coverageMap.files()
+
+  if (isBrowser()) {
+    expect(files).toMatchInlineSnapshot(`
+      [
+        "<process-cwd>/fixtures/src/math.ts",
+        "<process-cwd>/fixtures/src/conditional/browser.ts",
+      ]
+    `)
+  }
+  else {
+    expect(files).toMatchInlineSnapshot(`
+      [
+        "<process-cwd>/fixtures/src/math.ts",
+        "<process-cwd>/fixtures/src/conditional/node.ts",
+      ]
+    `)
   }
 })

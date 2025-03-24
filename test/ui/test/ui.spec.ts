@@ -1,6 +1,7 @@
+import type { Vitest } from 'vitest/node'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { startVitest, type Vitest } from 'vitest/node'
+import { startVitest } from 'vitest/node'
 
 const port = 9000
 const pageUrl = `http://localhost:${port}/__vitest__/`

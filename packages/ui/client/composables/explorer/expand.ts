@@ -143,7 +143,7 @@ function* collectExpandedNode(
       if (!ids.has(child.id)) {
         yield node
       }
-      yield * children
+      yield* children
     }
     else if (!ids.has(child.id)) {
       yield child

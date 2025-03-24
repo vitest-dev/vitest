@@ -169,7 +169,7 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     async close() {
       await Promise.all([...providers].map(provider => provider.close()))
       providers.clear()
-      vitest.resolvedProjects.forEach((project) => {
+      vitest.projects.forEach((project) => {
         project.browser?.state.orchestrators.forEach((orchestrator) => {
           orchestrator.$close()
         })
