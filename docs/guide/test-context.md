@@ -201,7 +201,7 @@ import { test as base } from 'vitest'
 const test = base.extend({
   url: [
     // default value if "url" is not defined in the config
-    'default',
+    '/default',
     // mark the fixture as "injected" to allow the override
     { injected: true },
   ],

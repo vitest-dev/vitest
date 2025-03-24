@@ -16,7 +16,7 @@ catalog:
   '@types/istanbul-lib-source-maps': ^4.0.4
   '@types/istanbul-reports': ^3.0.4
   '@types/test-exclude': ^6.0.2
-  '@types/ws': ^8.5.14
+  '@types/ws': ^8.18.0
   '@unocss/reset': ^0.65.4
   '@vitejs/plugin-vue': ^5.2.1
   '@vueuse/core': ^12.7.0
