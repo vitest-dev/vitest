@@ -578,7 +578,7 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 
   // manually compare array elements since `jestEquals` cannot
-  // apply assymetric matcher to `undefined` array element.
+  // apply asymmetric matcher to `undefined` array element.
   function equalsArgumentArray(a: unknown[], b: unknown[]) {
     return a.length === b.length && a.every((aItem, i) =>
       jestEquals(aItem, b[i], [...customTesters, iterableEquality]),

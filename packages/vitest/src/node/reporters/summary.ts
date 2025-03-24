@@ -248,7 +248,7 @@ export class SummaryReporter implements Reporter {
     }
     else {
       // Run is about to end as there are less tests left than whole run had parallel at max.
-      // Remove finished test immediatelly.
+      // Remove finished test immediately.
       this.removeTestModule(module.id)
     }
 

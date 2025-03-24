@@ -1,7 +1,7 @@
 import { builtinModules, createRequire } from 'node:module'
 import json from '@rollup/plugin-json'
 import { defineConfig } from 'rollup'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -24,8 +24,8 @@ const dtsUtils = createDtsUtils()
 
 const plugins = [
   ...dtsUtils.isolatedDecl(),
-  esbuild({
-    target: 'node14',
+  oxc({
+    transform: { target: 'node14' },
   }),
   json(),
 ]

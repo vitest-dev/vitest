@@ -552,18 +552,28 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
     const servers = [
       ...ctx.projects.map(project => ({
         root: project.config.root,
+        isBrowserEnabled: project.isBrowserEnabled(),
         vitenode: project.vitenode,
       })),
       // Check core last as it will match all files anyway
-      { root: ctx.config.root, vitenode: ctx.vitenode },
+      { root: ctx.config.root, vitenode: ctx.vitenode, isBrowserEnabled: ctx.getRootProject().isBrowserEnabled() },
     ]
 
     return async function transformFile(filename: string): Promise<TransformResult | null | undefined> {
       let lastError
 
-      for (const { root, vitenode } of servers) {
-        if (!filename.startsWith(root)) {
+      for (const { root, vitenode, isBrowserEnabled } of servers) {
+        // On Windows root doesn't start with "/" while filenames do
+        if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
           continue
+        }
+
+        if (isBrowserEnabled) {
+          const result = await vitenode.transformRequest(filename, undefined, 'web').catch(() => null)
+
+          if (result) {
+            return result
+          }
         }
 
         try {

@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -41,11 +41,14 @@ const plugins = [
   }),
   json(),
   commonjs(),
-  esbuild({
-    target: 'node14',
-    define: process.env.NO_VITE_TEST_WATCHER_DEBUG
-      ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
-      : {},
+  oxc({
+    transform: {
+      target: 'node14',
+      define: process.env.NO_VITE_TEST_WATCHER_DEBUG
+        ? { 'process.env.VITE_TEST_WATCHER_DEBUG': 'false' }
+        : {},
+    },
+    sourcemap: true,
   }),
 ]
 
