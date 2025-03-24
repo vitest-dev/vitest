@@ -251,7 +251,7 @@ export type {
   ExpectPollOptions,
   ExpectStatic,
   JestAssertion,
-  MatchersDeclaration,
+  Matchers,
 } from '@vitest/expect'
 export {
   afterAll,
