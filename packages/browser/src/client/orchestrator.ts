@@ -37,7 +37,11 @@ export class IframeOrchestrator {
     if (config.browser.ui) {
       container.className = 'absolute origin-top mt-[8px]'
       container.parentElement!.setAttribute('data-ready', 'true')
-      container.textContent = ''
+      // in non-isolated mode this will also remove the iframe,
+      // so we only do this once
+      if (container.textContent) {
+        container.textContent = ''
+      }
     }
 
     if (config.browser.isolate === false) {
@@ -91,13 +95,6 @@ export class IframeOrchestrator {
   }
 
   private async runNonIsolatedTests(container: HTMLDivElement, options: BrowserTesterOptions) {
-    // if the iframe was somehow removed from the DOM, recreate it
-    const existingIframe = this.iframes.get(ID_ALL)
-    if (existingIframe && !document.body.contains(existingIframe)) {
-      debug('recreating iframe due to the missing element')
-      this.recreateNonIsolatedIframe = true
-    }
-
     if (this.recreateNonIsolatedIframe) {
       // recreate a new non-isolated iframe during watcher reruns
       // because we called "cleanup" in the previous run

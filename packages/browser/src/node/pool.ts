@@ -253,7 +253,7 @@ class BrowserPool {
           files: [file],
           // this will be parsed by the test iframe, not the orchestrator
           // so we need to stringify it first to avoid double serialization
-          providedContext: this._providedContext || '[]',
+          providedContext: this._providedContext || '[{}]',
         },
       )
         .then(() => {

@@ -20,11 +20,16 @@ import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { CommandsManager } from './utils'
 
+const debugVar = getConfig().env.VITEST_BROWSER_DEBUG
+const debug = debugVar && debugVar !== 'false'
+  ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
+  : undefined
+
 channel.addEventListener('message', async (e) => {
   await client.waitForConnection()
 
   const data = e.data
-  debug('event from orchestrator', e.data)
+  debug?.('event from orchestrator', JSON.stringify(e.data))
 
   if (!isEvent(data)) {
     const error = new Error(`Unknown message: ${JSON.stringify(e.data)}`)
@@ -90,7 +95,7 @@ getBrowserState().iframeId = iframeId
 let contextSwitched = false
 
 async function prepareTestEnvironment() {
-  debug('trying to resolve runner', `${reloadStart}`)
+  debug?.('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
   const rpc = createSafeRpc(client)
@@ -139,6 +144,8 @@ async function prepareTestEnvironment() {
     })
   }
 
+  state.durations.prepare = performance.now() - state.durations.prepare
+
   return {
     runner,
     config,
@@ -155,7 +162,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
     throw new Error(`Data was not properly initialized. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
 
-  debug('runner resolved successfully')
+  debug?.('runner resolved successfully')
 
   const { runner, state } = preparedData
 
@@ -170,9 +177,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
     }
   })
 
-  state.durations.prepare = performance.now() - state.durations.prepare
-
-  debug('prepare time', state.durations.prepare, 'ms')
+  debug?.('prepare time', state.durations.prepare, 'ms')
 
   for (const file of files) {
     state.filepath = file
@@ -190,13 +195,13 @@ async function prepare() {
   preparedData = await prepareTestEnvironment()
 
   // page is reloading
-  debug('runner resolved successfully')
+  debug?.('runner resolved successfully')
 
   const { config, state } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
 
-  debug('prepare time', state.durations.prepare, 'ms')
+  debug?.('prepare time', state.durations.prepare, 'ms')
 
   await Promise.all([
     setupCommonEnv(config),
@@ -250,14 +255,6 @@ function unhandledError(e: Error, type: string) {
     stack: e.stack,
   }, type).catch(() => {})
 }
-
-function debug(...args: unknown[]) {
-  const debug = getConfig().env.VITEST_BROWSER_DEBUG
-  if (debug && debug !== 'false') {
-    client.rpc.debug(...args.map(String))
-  }
-}
-
 function isEvent(data: unknown): data is IframeChannelEvent {
   return typeof data === 'object' && !!data && 'event' in data
 }
