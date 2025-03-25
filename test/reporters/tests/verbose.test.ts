@@ -35,9 +35,9 @@ test('prints skipped tests by default', async () => {
   expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
     "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
        ✓ passing test #1 [...]ms
-       ↓ skipped test #1
        ✓ passing suite (1)
          ✓ passing test #2 [...]ms
+       ↓ skipped test #1
        ↓ skipped suite (1)
          ↓ skipped test #2"
   `)
@@ -157,8 +157,13 @@ test('does not render tree when in non-TTY', async () => {
      ✓ fixtures/verbose/example-1.test.ts > suite in root > suite in suite > test pass in nested suite #2 [...]ms
      × fixtures/verbose/example-1.test.ts > suite in root > suite in suite > suite in nested suite > test failure in 2x nested suite [...]ms
        → expected 'should fail' to be 'as expected' // Object.is equality
+     ↓ fixtures/verbose/example-1.test.ts > suite skip in root > test 1.3
+     ↓ fixtures/verbose/example-1.test.ts > suite skip in root > suite in suite > test in nested suite
+     ↓ fixtures/verbose/example-1.test.ts > suite skip in root > suite in suite > test failure in nested suite of skipped suite
+     ↓ fixtures/verbose/example-1.test.ts > test skip in root
      ✓ fixtures/verbose/example-2.test.ts > test 0.1 [...]ms
-     ✓ fixtures/verbose/example-2.test.ts > suite 1.1 > test 1.1 [...]ms"
+     ✓ fixtures/verbose/example-2.test.ts > suite 1.1 > test 1.1 [...]ms
+     ↓ fixtures/verbose/example-2.test.ts > test 0.2"
   `)
 })
 

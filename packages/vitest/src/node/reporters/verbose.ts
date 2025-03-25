@@ -29,6 +29,12 @@ export class VerboseReporter extends DefaultReporter {
       return
     }
 
+    const testResult = test.result()
+
+    if (this.ctx.config.hideSkippedTests && testResult.state === 'skipped') {
+      return
+    }
+
     let title = ` ${getStateSymbol(test.task)} `
 
     if (test.project.name) {
@@ -42,8 +48,6 @@ export class VerboseReporter extends DefaultReporter {
     if (diagnostic?.heap != null) {
       title += c.magenta(` ${Math.floor(diagnostic.heap / 1024 / 1024)} MB heap used`)
     }
-
-    const testResult = test.result()
 
     if (testResult.state === 'skipped' && testResult.note) {
       title += c.dim(c.gray(` [${testResult.note}]`))

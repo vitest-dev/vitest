@@ -116,7 +116,11 @@ export abstract class BaseReporter implements Reporter {
         if (child.type === 'suite') {
           const suiteState = child.state()
 
-          this.printTestSuite(child)
+          // Skipped suites are hidden when --hideSkippedTests, print otherwise
+          if (!this.ctx.config.hideSkippedTests || suiteState !== 'skipped') {
+            this.printTestSuite(child)
+          }
+
           visit(suiteState, child.children)
         }
         else {
@@ -211,7 +215,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (counts.skipped) {
-      state += c.dim(' | ') + c.yellow(`${counts.failed} skipped`)
+      state += c.dim(' | ') + c.yellow(`${counts.skipped} skipped`)
     }
 
     let suffix = c.dim('(') + state + c.dim(')') + this.getDurationPrefix(testModule.task)
