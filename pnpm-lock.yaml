@@ -301,13 +301,13 @@ importers:
         version: 0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@6.2.0(@types/node@22.13.13)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(workbox-build@7.1.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
       vitepress:
         specifier: 2.0.0-alpha.4
-        version: 2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
+        version: 2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(axios@1.8.4)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
       vitepress-plugin-group-icons:
         specifier: ^1.3.8
         version: 1.3.8
       vitepress-plugin-tabs:
         specifier: ^0.6.0
-        version: 0.6.0(vitepress@2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.2))
+        version: 0.6.0(vitepress@2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(axios@1.8.4)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.2))
       workbox-window:
         specifier: ^7.3.0
         version: 7.3.0
@@ -1299,10 +1299,10 @@ importers:
         version: link:../../packages/web-worker
       '@vueuse/integrations':
         specifier: ^10.11.1
-        version: 10.11.1(axios@0.28.1(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.2))
+        version: 10.11.1(axios@1.8.4(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.2))
       axios:
-        specifier: ^0.28.0
-        version: 0.28.1(debug@4.4.0)
+        specifier: ^1.0.0
+        version: 1.8.4(debug@4.4.0)
       debug:
         specifier: ^4.4.0
         version: 4.4.0
@@ -4680,8 +4680,8 @@ packages:
   avvio@8.3.0:
     resolution: {integrity: sha512-VBVH0jubFr9LdFASy/vNtm5giTrnbVquWBhT0fyizuNK2rQ7e7ONU2plZQWUNqtE1EmxFEb+kbSkFRkstiaS9Q==}
 
-  axios@0.28.1:
-    resolution: {integrity: sha512-iUcGA5a7p0mVb4Gm/sy+FSECNkPFT4y7wt6OM/CDpO/OnNCvSs3PoMG8ibrC9jRoGYU0gUK5pXVC4NPXq6lHRQ==}
+  axios@1.8.4:
+    resolution: {integrity: sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw==}
 
   b4a@1.6.4:
     resolution: {integrity: sha512-fpWrvyVHEKyeEvbKZTVOeZF3VSKKWtJxFIxX/jaVPf+cLbGUSitjb49pHLqPV2BUNNZ0LcoeEGfE/YCpyDYHIw==}
@@ -5513,10 +5513,6 @@ packages:
   es-module-lexer@1.6.0:
     resolution: {integrity: sha512-qqnD1yMU6tk/jnaMosogGySTZP8YtUgAffA9nMN+E/rjxcfRQ6IEk7IiozUjgxKoFHBGjTLnrHB/YC45r/59EQ==}
 
-  es-object-atoms@1.0.0:
-    resolution: {integrity: sha512-MZ4iQ6JwHOBQjahnjwaC1ZtIBH+2ohjamzAO3oaHcXYup7qxjF2fixyH+Q71voWHeOkI2q/TnJao/KfXYIZWbw==}
-    engines: {node: '>= 0.4'}
-
   es-object-atoms@1.1.1:
     resolution: {integrity: sha512-FGgH2h8zKNim9ljj7dankFPcICIK9Cp5bm+c2gQSYePhpaG5+esrLODihIorn+Pe6FGJzWhXQotPv73jTaldXA==}
     engines: {node: '>= 0.4'}
@@ -5948,8 +5944,8 @@ packages:
   focus-trap@7.6.4:
     resolution: {integrity: sha512-xx560wGBk7seZ6y933idtjJQc1l+ck+pI3sKvhKozdBV1dRZoKhkW5xoCaFv9tQiX5RH1xfSxjuNu6g+lmN/gw==}
 
-  follow-redirects@1.15.1:
-    resolution: {integrity: sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==}
+  follow-redirects@1.15.9:
+    resolution: {integrity: sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -12351,24 +12347,25 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@vueuse/integrations@10.11.1(axios@0.28.1(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.2))':
+  '@vueuse/integrations@10.11.1(axios@1.8.4(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.2))':
     dependencies:
       '@vueuse/core': 10.11.1(vue@3.5.12(typescript@5.8.2))
       '@vueuse/shared': 10.11.1(vue@3.5.12(typescript@5.8.2))
       vue-demi: 0.14.10(vue@3.5.12(typescript@5.8.2))
     optionalDependencies:
-      axios: 0.28.1(debug@4.4.0)
+      axios: 1.8.4(debug@4.4.0)
       focus-trap: 7.6.4
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
 
-  '@vueuse/integrations@12.8.2(focus-trap@7.6.4)(typescript@5.8.2)':
+  '@vueuse/integrations@12.8.2(axios@1.8.4)(focus-trap@7.6.4)(typescript@5.8.2)':
     dependencies:
       '@vueuse/core': 12.8.2(typescript@5.8.2)
       '@vueuse/shared': 12.8.2(typescript@5.8.2)
       vue: 3.5.13(typescript@5.8.2)
     optionalDependencies:
+      axios: 1.8.4(debug@4.4.0)
       focus-trap: 7.6.4
     transitivePeerDependencies:
       - typescript
@@ -12598,7 +12595,7 @@ snapshots:
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-errors: 1.3.0
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.3.0
       is-array-buffer: 3.0.4
       is-shared-array-buffer: 1.0.3
 
@@ -12631,9 +12628,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  axios@0.28.1(debug@4.4.0):
+  axios@1.8.4(debug@4.4.0):
     dependencies:
-      follow-redirects: 1.15.1(debug@4.4.0)
+      follow-redirects: 1.15.9(debug@4.4.0)
       form-data: 4.0.1
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -13522,19 +13519,19 @@ snapshots:
       data-view-buffer: 1.0.1
       data-view-byte-length: 1.0.1
       data-view-byte-offset: 1.0.0
-      es-define-property: 1.0.0
+      es-define-property: 1.0.1
       es-errors: 1.3.0
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
       es-set-tostringtag: 2.0.3
       es-to-primitive: 1.2.1
       function.prototype.name: 1.1.6
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.3.0
       get-symbol-description: 1.0.2
       globalthis: 1.0.4
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-property-descriptors: 1.0.2
       has-proto: 1.0.3
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
       hasown: 2.0.2
       internal-slot: 1.0.7
       is-array-buffer: 3.0.4
@@ -13546,7 +13543,7 @@ snapshots:
       is-string: 1.0.7
       is-typed-array: 1.1.13
       is-weakref: 1.0.2
-      object-inspect: 1.13.2
+      object-inspect: 1.13.4
       object-keys: 1.1.1
       object.assign: 4.1.5
       regexp.prototype.flags: 1.5.3
@@ -13584,17 +13581,13 @@ snapshots:
 
   es-module-lexer@1.6.0: {}
 
-  es-object-atoms@1.0.0:
-    dependencies:
-      es-errors: 1.3.0
-
   es-object-atoms@1.1.1:
     dependencies:
       es-errors: 1.3.0
 
   es-set-tostringtag@2.0.3:
     dependencies:
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
       hasown: 2.0.2
 
@@ -14261,7 +14254,7 @@ snapshots:
     dependencies:
       tabbable: 6.2.0
 
-  follow-redirects@1.15.1(debug@4.4.0):
+  follow-redirects@1.15.9(debug@4.4.0):
     optionalDependencies:
       debug: 4.4.0
 
@@ -14403,7 +14396,7 @@ snapshots:
     dependencies:
       call-bind: 1.0.7
       es-errors: 1.3.0
-      get-intrinsic: 1.2.4
+      get-intrinsic: 1.3.0
 
   get-tsconfig@4.10.0:
     dependencies:
@@ -14487,7 +14480,7 @@ snapshots:
   globalthis@1.0.4:
     dependencies:
       define-properties: 1.2.1
-      gopd: 1.0.1
+      gopd: 1.2.0
 
   globalyzer@0.1.0: {}
 
@@ -16534,8 +16527,8 @@ snapshots:
   safe-array-concat@1.1.2:
     dependencies:
       call-bind: 1.0.7
-      get-intrinsic: 1.2.4
-      has-symbols: 1.0.3
+      get-intrinsic: 1.3.0
+      has-symbols: 1.1.0
       isarray: 2.0.5
 
   safe-buffer@5.1.2: {}
@@ -16927,33 +16920,33 @@ snapshots:
       define-properties: 1.2.1
       es-abstract: 1.23.3
       es-errors: 1.3.0
-      es-object-atoms: 1.0.0
-      get-intrinsic: 1.2.4
-      gopd: 1.0.1
-      has-symbols: 1.0.3
+      es-object-atoms: 1.1.1
+      get-intrinsic: 1.3.0
+      gopd: 1.2.0
+      has-symbols: 1.1.0
       internal-slot: 1.0.7
       regexp.prototype.flags: 1.5.3
       set-function-name: 2.0.2
-      side-channel: 1.0.6
+      side-channel: 1.1.0
 
   string.prototype.trim@1.2.9:
     dependencies:
       call-bind: 1.0.7
       define-properties: 1.2.1
       es-abstract: 1.23.3
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
 
   string.prototype.trimend@1.0.8:
     dependencies:
       call-bind: 1.0.7
       define-properties: 1.2.1
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
 
   string.prototype.trimstart@1.0.8:
     dependencies:
       call-bind: 1.0.7
       define-properties: 1.2.1
-      es-object-atoms: 1.0.0
+      es-object-atoms: 1.1.1
 
   string_decoder@1.1.1:
     dependencies:
@@ -17332,7 +17325,7 @@ snapshots:
     dependencies:
       call-bind: 1.0.7
       for-each: 0.3.3
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-proto: 1.0.3
       is-typed-array: 1.1.13
 
@@ -17341,7 +17334,7 @@ snapshots:
       available-typed-arrays: 1.0.7
       call-bind: 1.0.7
       for-each: 0.3.3
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-proto: 1.0.3
       is-typed-array: 1.1.13
 
@@ -17349,7 +17342,7 @@ snapshots:
     dependencies:
       call-bind: 1.0.7
       for-each: 0.3.3
-      gopd: 1.0.1
+      gopd: 1.2.0
       has-proto: 1.0.3
       is-typed-array: 1.1.13
       possible-typed-array-names: 1.0.0
@@ -17364,7 +17357,7 @@ snapshots:
     dependencies:
       call-bind: 1.0.7
       has-bigints: 1.0.2
-      has-symbols: 1.0.3
+      has-symbols: 1.1.0
       which-boxed-primitive: 1.0.2
 
   unconfig@0.3.11:
@@ -17706,12 +17699,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vitepress-plugin-tabs@0.6.0(vitepress@2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.2)):
+  vitepress-plugin-tabs@0.6.0(vitepress@2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(axios@1.8.4)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.2)):
     dependencies:
-      vitepress: 2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
+      vitepress: 2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(axios@1.8.4)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
       vue: 3.5.12(typescript@5.8.2)
 
-  vitepress@2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0):
+  vitepress@2.0.0-alpha.4(@algolia/client-search@5.20.0)(@types/node@22.13.13)(@types/react@19.0.12)(axios@1.8.4)(jiti@2.4.2)(postcss@8.5.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)(terser@5.36.0)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0):
     dependencies:
       '@docsearch/css': 3.9.0
       '@docsearch/js': 3.9.0(@algolia/client-search@5.20.0)(@types/react@19.0.12)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(search-insights@2.9.0)
@@ -17723,7 +17716,7 @@ snapshots:
       '@vue/devtools-api': 7.7.2
       '@vue/shared': 3.5.13
       '@vueuse/core': 12.8.2(typescript@5.8.2)
-      '@vueuse/integrations': 12.8.2(focus-trap@7.6.4)(typescript@5.8.2)
+      '@vueuse/integrations': 12.8.2(axios@1.8.4)(focus-trap@7.6.4)(typescript@5.8.2)
       focus-trap: 7.6.4
       mark.js: 8.11.1
       minisearch: 7.1.2
