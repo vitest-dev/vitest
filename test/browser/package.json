@@ -23,18 +23,18 @@
     "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
   },
   "devDependencies": {
-    "@testing-library/react": "^13.2.0",
+    "@testing-library/react": "^13.4.0",
     "@types/react": "^19.0.12",
-    "@vitejs/plugin-basic-ssl": "^1.0.2",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitest/browser": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/injected-lib": "link:./injected-lib",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "url": "^0.11.3",
+    "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^0.0.1",
+    "vitest-browser-react": "^0.1.1",
     "ws": "catalog:"
   }
 }
