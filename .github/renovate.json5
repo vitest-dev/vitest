@@ -36,6 +36,7 @@
     "acorn",
     // Keep using codemirror 5
     "codemirror",
+    "react-18",
     "react-is-18"
   ],
   "ignorePaths": [
