@@ -723,7 +723,7 @@ function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide
     ? __vitest_mocker__
     : new Proxy(
-      {},
+      {} as any,
       {
         get(_, name) {
           throw new Error(
