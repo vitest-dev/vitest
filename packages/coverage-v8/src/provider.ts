@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import remapping from '@ampproject/remapping'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
@@ -24,6 +25,7 @@ import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
 
 import { BaseCoverageProvider } from 'vitest/coverage'
+import { parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
@@ -34,10 +36,10 @@ type TransformResults = Map<string, FetchResult>
 interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 // Note that this needs to match the line ending as well
-const VITE_EXPORTS_LINE_PATTERN
-  = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
-const DECORATOR_METADATA_PATTERN
-  = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
+const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
+const VITE_EXPORTS_LINE_PATTERN_2 = /^__vite_ssr_exports__\..*/gm
+const VITE_IMPORTS_LINE_PATTERN = /^const __vite_ssr_import_.*$/gm
+const DECORATOR_METADATA_PATTERN = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
 const FILE_PROTOCOL = 'file://'
 
 const debug = createDebug('vitest:coverage')
@@ -219,6 +221,25 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   private async v8ToIstanbul(filename: string, wrapperLength: number, sources: Awaited<ReturnType<typeof this.getSources>>, functions: Profiler.FunctionCoverage[]) {
+    if (this.options.experimentalAstAwareRemapping) {
+      const sourceMap = sources.sourceMap?.sourcemap as any || {
+        mappings: '',
+        version: 3,
+        names: [],
+        sources: [],
+      } satisfies FetchResult['map']
+
+      return await astV8ToIstanbul({
+        code: sources.source,
+        sourceMap,
+        ast: parseAstAsync(sources.source) as any,
+        coverage: { functions, url: filename },
+        ignoreClassMethods: this.options.ignoreClassMethods,
+        wrapperLength,
+      },
+      )
+    }
+
     const converter = v8ToIstanbul(
       filename,
       wrapperLength,
@@ -265,7 +286,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
         const length = findLongestFunctionLength(functions)
-        return '.'.repeat(length)
+        return '/'.repeat(length)
       })
     }
 
@@ -392,6 +413,8 @@ function excludeGeneratedCode(
 
   if (
     !source.match(VITE_EXPORTS_LINE_PATTERN)
+    && !source.match(VITE_EXPORTS_LINE_PATTERN_2)
+    && !source.match(VITE_IMPORTS_LINE_PATTERN)
     && !source.match(DECORATOR_METADATA_PATTERN)
   ) {
     return map
@@ -399,6 +422,8 @@ function excludeGeneratedCode(
 
   const trimmed = new MagicString(source)
   trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
+  trimmed.replaceAll(VITE_IMPORTS_LINE_PATTERN, '')
+  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN_2, '')
   trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match =>
     '\n'.repeat(match.split('\n').length - 1))
 

@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { beforeAll, expect } from 'vitest'
-import { isBrowser, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
+import { isBrowser, isExperimentalV8Provider, isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
 beforeAll(async () => {
   await runVitest({
@@ -38,8 +38,18 @@ test('coverage results matches snapshot', async () => {
       {
         "branches": "5/6 (83.33%)",
         "functions": "3/5 (60%)",
-        "lines": "35/43 (81.39%)",
-        "statements": "35/43 (81.39%)",
+        "lines": "32/40 (80%)",
+        "statements": "32/40 (80%)",
+      }
+    `)
+  }
+  else if (isExperimentalV8Provider()) {
+    expect(coverageMap).toMatchInlineSnapshot(`
+      {
+        "branches": "5/6 (83.33%)",
+        "functions": "5/7 (71.42%)",
+        "lines": "12/15 (80%)",
+        "statements": "13/16 (81.25%)",
       }
     `)
   }
