@@ -105,14 +105,18 @@ export abstract class BaseReporter implements Reporter {
     let failedCount = 0
     let skippedCount = 0
 
+    // delaying logs to calculate the test stats first
+    // which minimizes the amount of for loops
     const logs: string[] = []
+    const originalLog = this.log.bind(this)
+    this.log = (msg: string) => logs.push(msg)
 
     const visit = (suiteState: TestSuiteState, children: TestCollection) => {
       for (const child of children) {
         if (child.type === 'suite') {
           const suiteState = child.state()
 
-          this.populateSuiteLogs(child, logs)
+          this.logTestSuite(child)
           visit(suiteState, child.children)
         }
         else {
@@ -131,12 +135,14 @@ export abstract class BaseReporter implements Reporter {
             continue
           }
 
-          this.populateTestLogs(moduleState, child, logs)
+          this.logTestCase(moduleState, child)
         }
       }
     }
 
     visit(moduleState, testModule.children)
+
+    this.log = originalLog
 
     this.log(this.getModuleLog(testModule, {
       tests: testsCount,
@@ -146,7 +152,7 @@ export abstract class BaseReporter implements Reporter {
     logs.forEach(log => this.log(log))
   }
 
-  protected populateTestLogs(moduleState: TestModuleState, test: TestCase, logs: string[]): void {
+  protected logTestCase(moduleState: TestModuleState, test: TestCase): void {
     const testResult = test.result()
 
     const { duration, retryCount, repeatCount } = test.diagnostic() || {}
@@ -162,21 +168,21 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (testResult.state === 'failed') {
-      logs.push(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, c.dim(' > '))}`) + suffix)
+      this.log(c.red(` ${padding}${taskFail} ${this.getTestName(test.task, c.dim(' > '))}`) + suffix)
 
       // print short errors, full errors will be at the end in summary
       testResult.errors.forEach((error) => {
         const message = this.formatShortError(error)
 
         if (message) {
-          logs.push(c.red(`   ${padding}${message}`))
+          this.log(c.red(`   ${padding}${message}`))
         }
       })
     }
 
     // also print slow tests
     else if (duration && duration > this.ctx.config.slowTestThreshold) {
-      logs.push(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, c.dim(' > '))} ${suffix}`)
+      this.log(` ${padding}${c.yellow(c.dim(F_CHECK))} ${this.getTestName(test.task, c.dim(' > '))} ${suffix}`)
     }
 
     else if (this.ctx.config.hideSkippedTests && (testResult.state === 'skipped')) {
@@ -185,11 +191,11 @@ export abstract class BaseReporter implements Reporter {
 
     // also print skipped tests that have notes
     else if (testResult.state === 'skipped' && testResult.note) {
-      logs.push(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${c.dim(c.gray(` [${testResult.note}]`))}`)
+      this.log(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${c.dim(c.gray(` [${testResult.note}]`))}`)
     }
 
     else if (this.renderSucceed || moduleState === 'failed') {
-      logs.push(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${suffix}`)
+      this.log(` ${padding}${getStateSymbol(test.task)} ${this.getTestName(test.task, c.dim(' > '))}${suffix}`)
     }
   }
 
@@ -228,7 +234,7 @@ export abstract class BaseReporter implements Reporter {
     return ` ${title} ${testModule.task.name} ${suffix}`
   }
 
-  protected populateSuiteLogs(_suite: TestSuite, _logs: string[]): void {
+  protected logTestSuite(_suite: TestSuite): void {
     // Suite name is included in getTestName by default
   }
 
