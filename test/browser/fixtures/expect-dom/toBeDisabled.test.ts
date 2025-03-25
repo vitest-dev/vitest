@@ -113,10 +113,10 @@ test('.toBeDisabled fieldset>legend', () => {
     `)
 
   expect(queryByTestId('inherited-element')).toBeDisabled()
-  expect(queryByTestId('inside-legend-element')).toBeDisabled()
-  expect(queryByTestId('nested-inside-legend-element')).toBeDisabled()
+  expect(queryByTestId('inside-legend-element')).not.toBeDisabled()
+  expect(queryByTestId('nested-inside-legend-element')).not.toBeDisabled()
 
-  expect(queryByTestId('first-legend-element')).toBeDisabled()
+  expect(queryByTestId('first-legend-element')).not.toBeDisabled()
   expect(queryByTestId('second-legend-element')).toBeDisabled()
 
   expect(queryByTestId('outer-fieldset-element')).toBeDisabled()
@@ -260,10 +260,10 @@ test('.toBeEnabled fieldset>legend', () => {
   expect(() => {
     expect(queryByTestId('inherited-element')).toBeEnabled()
   }).toThrowError()
-  expect(queryByTestId('inside-legend-element')).not.toBeEnabled()
-  expect(queryByTestId('nested-inside-legend-element')).not.toBeEnabled()
+  expect(queryByTestId('inside-legend-element')).toBeEnabled()
+  expect(queryByTestId('nested-inside-legend-element')).toBeEnabled()
 
-  expect(queryByTestId('first-legend-element')).not.toBeEnabled()
+  expect(queryByTestId('first-legend-element')).toBeEnabled()
   expect(() => {
     expect(queryByTestId('second-legend-element')).toBeEnabled()
   }).toThrowError()
