@@ -52,21 +52,30 @@ export default function toBeVisible(
 function isElementVisible(element: HTMLElement | SVGElement): boolean {
   const isIvyaVisible = ivyaIsVisible(element)
   // if it's visible or not, but we are not in webkit, respect the result
-  if (server.browser !== 'webkit' || isIvyaVisible) {
+  if (server.browser !== 'webkit') {
     return isIvyaVisible
   }
   // if we are in webkit and it's not visible, fallback to jest-dom check
-  // because ivya doesn't use .checkVisibility
-  const detailsOrSummary = element.closest('details,summary')
-  if (!detailsOrSummary || detailsOrSummary === element) {
-    return false
+  // because ivya doesn't use .checkVisibility here
+  const detailsElement = element.closest('details')
+  if (!detailsElement || element === detailsElement) {
+    return isIvyaVisible
   }
-  if (
-    detailsOrSummary !== element
-    && detailsOrSummary.nodeName === 'DETAILS'
-    && !(detailsOrSummary as HTMLDetailsElement).open
-  ) {
-    return false
+  return isElementVisibleInDetails(element as HTMLElement)
+}
+
+function isElementVisibleInDetails(targetElement: HTMLElement) {
+  let currentElement: HTMLElement | null = targetElement
+
+  while (currentElement) {
+    if (currentElement.tagName === 'DETAILS') {
+      const isSummary = currentElement.querySelector('summary') === targetElement
+      if (!(currentElement as HTMLDetailsElement).open && !isSummary) {
+        return false
+      }
+    }
+    currentElement = currentElement.parentElement
   }
-  return isElementVisible(detailsOrSummary as HTMLElement)
+
+  return targetElement.offsetParent !== null
 }
