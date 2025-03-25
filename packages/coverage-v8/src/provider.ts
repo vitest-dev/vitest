@@ -209,19 +209,11 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           transform,
         )
 
-        const converter = v8ToIstanbul(
+        coverageMap.merge(await this.v8ToIstanbul(
           filename.href,
           0,
           sources,
-          undefined,
-          this.options.ignoreEmptyLines,
-        )
-
-        await converter.load()
-
-        try {
-          // Create a made up function to mark whole file as uncovered. Note that this does not exist in source maps.
-          converter.applyCoverage([{
+          [{
             ranges: [
               {
                 startOffset: 0,
@@ -232,13 +224,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             isBlockCoverage: true,
             // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
             functionName: '(empty-report)',
-          }])
-        }
-        catch (error) {
-          this.ctx.logger.error(`Failed to convert coverage for uncovered ${filename.href}.\n`, error)
-        }
-
-        coverageMap.merge(converter.toIstanbul())
+          }],
+        ))
 
         if (debug.enabled) {
           clearTimeout(timeout)
@@ -251,6 +238,26 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     }
 
     return coverageMap
+  }
+
+  private async v8ToIstanbul(filename: string, wrapperLength: number, sources: Awaited<ReturnType<typeof this.getSources>>, functions: Profiler.FunctionCoverage[]) {
+    const converter = v8ToIstanbul(
+      filename,
+      wrapperLength,
+      sources,
+      undefined,
+      this.options.ignoreEmptyLines,
+    )
+    await converter.load()
+
+    try {
+      converter.applyCoverage(functions)
+    }
+    catch (error) {
+      this.ctx.logger.error(`Failed to convert coverage for ${filename}.\n`, error)
+    }
+
+    return converter.toIstanbul()
   }
 
   private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
@@ -381,23 +388,12 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             functions,
           )
 
-          const converter = v8ToIstanbul(
+          coverageMap.merge(await this.v8ToIstanbul(
             url,
             startOffset,
             sources,
-            undefined,
-            this.options.ignoreEmptyLines,
-          )
-          await converter.load()
-
-          try {
-            converter.applyCoverage(functions)
-          }
-          catch (error) {
-            this.ctx.logger.error(`Failed to convert coverage for ${url}.\n`, error)
-          }
-
-          coverageMap.merge(converter.toIstanbul())
+            functions,
+          ))
 
           if (debug.enabled) {
             clearTimeout(timeout)
