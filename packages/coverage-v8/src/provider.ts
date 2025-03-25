@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import remapping from '@ampproject/remapping'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
@@ -24,6 +25,7 @@ import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
 
 import { BaseCoverageProvider } from 'vitest/coverage'
+import { parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
@@ -241,6 +243,51 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   private async v8ToIstanbul(filename: string, wrapperLength: number, sources: Awaited<ReturnType<typeof this.getSources>>, functions: Profiler.FunctionCoverage[]) {
+    if (this.options.experimentalAstAwareRemapping) {
+      let ast
+      try {
+        ast = await parseAstAsync(sources.source)
+      }
+      catch (error) {
+        this.ctx.logger.error(`Failed to parse ${filename}. Excluding it from coverage.\n`, error)
+        return {}
+      }
+
+      return await astV8ToIstanbul({
+        code: sources.source,
+        sourceMap: sources.sourceMap?.sourcemap,
+        ast,
+        coverage: { functions, url: filename },
+        ignoreClassMethods: this.options.ignoreClassMethods,
+        wrapperLength,
+        ignoreNode: (node, type) => {
+          // SSR transformed imports
+          if (
+            type === 'statement'
+            && node.type === 'AwaitExpression'
+            && node.argument.type === 'CallExpression'
+            && node.argument.callee.type === 'Identifier'
+            && node.argument.callee.name === '__vite_ssr_import__'
+          ) {
+            return true
+          }
+
+          // SSR transformed exports
+          if (
+            type === 'statement'
+            && node.type === 'ExpressionStatement'
+            && node.expression.type === 'AssignmentExpression'
+            && node.expression.left.type === 'MemberExpression'
+            && node.expression.left.object.type === 'Identifier'
+            && node.expression.left.object.name === '__vite_ssr_exports__'
+          ) {
+            return true
+          }
+        },
+      },
+      )
+    }
+
     const converter = v8ToIstanbul(
       filename,
       wrapperLength,
@@ -287,7 +334,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
         const length = findLongestFunctionLength(functions)
-        return '.'.repeat(length)
+        return '/'.repeat(length)
       })
     }
 

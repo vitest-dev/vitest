@@ -190,24 +190,21 @@ Both coverage providers have their own ways how to ignore code from coverage rep
 
 - [`v8`](https://github.com/istanbuljs/v8-to-istanbul#ignoring-uncovered-lines)
 - [`ìstanbul`](https://github.com/istanbuljs/nyc#parsing-hints-ignoring-lines)
+- `v8` with [`experimentalAstAwareRemapping: true`](https://vitest.dev/config/#coverage-experimentalAstAwareRemapping) see [ast-v8-to-istanbul | Ignoring code](https://github.com/AriPerkkio/ast-v8-to-istanbul?tab=readme-ov-file#ignoring-code)
 
 When using TypeScript the source codes are transpiled using `esbuild`, which strips all comments from the source codes ([esbuild#516](https://github.com/evanw/esbuild/issues/516)).
 Comments which are considered as [legal comments](https://esbuild.github.io/api/#legal-comments) are preserved.
 
-For `istanbul` provider you can include a `@preserve` keyword in the ignore hint.
+You can include a `@preserve` keyword in the ignore hint.
 Beware that these ignore hints may now be included in final production build as well.
 
 ```diff
 -/* istanbul ignore if */
 +/* istanbul ignore if -- @preserve */
 if (condition) {
-```
 
-For `v8` this does not cause any issues. You can use `v8 ignore` comments with Typescript as usual:
-
-<!-- eslint-skip -->
-```ts
-/* v8 ignore next 3 */
+-/* v8 ignore if */
++/* v8 ignore if -- @preserve */
 if (condition) {
 ```
 

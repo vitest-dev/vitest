@@ -31,6 +31,25 @@ export default defineWorkspace([
     },
   },
 
+  // Test cases for experimental AST aware v8-provider
+  {
+    test: {
+      ...config.test,
+      name: 'v8-ast-aware',
+      env: { COVERAGE_PROVIDER: 'v8-ast-aware' },
+
+      // Intentionally run Istanbul tests too
+      include: [GENERIC_TESTS, ISTANBUL_TESTS, V8_TESTS],
+      exclude: [
+        UNIT_TESTS,
+        CUSTOM_TESTS,
+        BROWSER_TESTS,
+        // Not using original v8-to-istanbul that has patch applied: github.com/istanbuljs/v8-to-istanbul/pull/244
+        'test/empty-lines.v8.test.ts',
+      ],
+    },
+  },
+
   // Test cases for istanbul-provider
   {
     test: {
