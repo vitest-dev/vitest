@@ -56,7 +56,7 @@ export class VerboseReporter extends DefaultReporter {
     }
   }
 
-  protected logTestSuite(testSuite: TestSuite): void {
+  protected printTestSuite(testSuite: TestSuite): void {
     const indentation = '  '.repeat(getIndentation(testSuite.task))
     const tests = Array.from(testSuite.children.allTests())
     const state = getStateSymbol(testSuite.task)

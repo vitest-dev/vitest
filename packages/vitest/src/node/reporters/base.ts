@@ -116,7 +116,7 @@ export abstract class BaseReporter implements Reporter {
         if (child.type === 'suite') {
           const suiteState = child.state()
 
-          this.logTestSuite(child)
+          this.printTestSuite(child)
           visit(suiteState, child.children)
         }
         else {
@@ -135,7 +135,7 @@ export abstract class BaseReporter implements Reporter {
             continue
           }
 
-          this.logTestCase(moduleState, child)
+          this.printTestCase(moduleState, child)
         }
       }
     }
@@ -152,7 +152,7 @@ export abstract class BaseReporter implements Reporter {
     logs.forEach(log => this.log(log))
   }
 
-  protected logTestCase(moduleState: TestModuleState, test: TestCase): void {
+  protected printTestCase(moduleState: TestModuleState, test: TestCase): void {
     const testResult = test.result()
 
     const { duration, retryCount, repeatCount } = test.diagnostic() || {}
@@ -234,7 +234,7 @@ export abstract class BaseReporter implements Reporter {
     return ` ${title} ${testModule.task.name} ${suffix}`
   }
 
-  protected logTestSuite(_suite: TestSuite): void {
+  protected printTestSuite(_suite: TestSuite): void {
     // Suite name is included in getTestName by default
   }
 

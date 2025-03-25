@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
-test('compare', { timeout: 60_000 }, async () => {
+test.only('compare', { timeout: 60_000 }, async () => {
   await fs.promises.rm('./fixtures/compare/bench.json', { force: true })
 
   // --outputJson
