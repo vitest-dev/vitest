@@ -55,8 +55,8 @@ it.concurrent('math is hard', ({ expect }) => {
 #### `skip`
 
 ```ts
-function skip(note?: string)
-function skip(condition: boolean, note?: string)
+function skip(note?: string): never
+function skip(condition: boolean, note?: string): void
 ```
 
 Skips subsequent test execution and marks test as skipped:
