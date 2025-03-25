@@ -48,10 +48,14 @@ export class BenchmarkReporter extends DefaultReporter {
 
   onTestSuiteResult(testSuite: TestSuite): void {
     super.onTestSuiteResult(testSuite)
-    this.printTestModule(testSuite)
+    this.printSuiteTable(testSuite)
   }
 
-  protected printTestModule(testTask: TestModule | TestSuite): void {
+  protected printTestModule(testModule: TestModule): void {
+    this.printSuiteTable(testModule)
+  }
+
+  private printSuiteTable(testTask: TestModule | TestSuite): void {
     const state = testTask.state()
     if (state === 'pending' || state === 'queued') {
       return
