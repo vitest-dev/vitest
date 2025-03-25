@@ -15,7 +15,7 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { getAriaRole } from 'ivya/utils'
+import { beginAriaCaches, endAriaCaches, getAriaRole } from 'ivya/utils'
 import { getElementFromUserInput, getMessage } from './utils'
 
 export default function toHaveRole(
@@ -24,7 +24,9 @@ export default function toHaveRole(
   expectedRole: string,
 ): ExpectationResult {
   const htmlElement = getElementFromUserInput(actual, toHaveRole, this)
+  beginAriaCaches()
   const actualRole = getAriaRole(htmlElement)
+  endAriaCaches()
   return {
     pass: actualRole === expectedRole,
     message: () => {

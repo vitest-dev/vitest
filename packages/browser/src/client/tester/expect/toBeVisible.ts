@@ -15,7 +15,8 @@
 
 import type { ExpectationResult, MatcherState } from '@vitest/expect'
 import type { Locator } from '../locators'
-import { isElementVisible } from 'ivya/utils'
+import { server } from '@vitest/browser/context'
+import { beginAriaCaches, endAriaCaches, isElementVisible as ivyaIsVisible } from 'ivya/utils'
 import { getElementFromUserInput } from './utils'
 
 export default function toBeVisible(
@@ -25,7 +26,9 @@ export default function toBeVisible(
   const htmlElement = getElementFromUserInput(actual, toBeVisible, this)
   const isInDocument
     = htmlElement.ownerDocument === htmlElement.getRootNode({ composed: true })
+  beginAriaCaches()
   const isVisible = isInDocument && isElementVisible(htmlElement)
+  endAriaCaches()
   return {
     pass: isVisible,
     message: () => {
@@ -44,4 +47,26 @@ export default function toBeVisible(
       ].join('\n')
     },
   }
+}
+
+function isElementVisible(element: HTMLElement | SVGElement): boolean {
+  const isIvyaVisible = ivyaIsVisible(element)
+  // if it's visible or not, but we are not in webkit, respect the result
+  if (server.browser !== 'webkit' || isIvyaVisible) {
+    return isIvyaVisible
+  }
+  // if we are in webkit and it's not visible, fallback to jest-dom check
+  // because ivya doesn't use .checkVisibility
+  const detailsOrSummary = element.closest('details,summary')
+  if (!detailsOrSummary || detailsOrSummary === element) {
+    return false
+  }
+  if (
+    detailsOrSummary !== element
+    && detailsOrSummary.nodeName === 'DETAILS'
+    && !(detailsOrSummary as HTMLDetailsElement).open
+  ) {
+    return false
+  }
+  return isElementVisible(detailsOrSummary as HTMLElement)
 }
