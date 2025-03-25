@@ -1,9 +1,7 @@
 import { expect, test } from 'vitest'
-import { instances, provider, runBrowserTests } from './utils'
+import { instances, runBrowserTests } from './utils'
 
-// TODO handle webdriverio. Currently they
-// expose no trustable way to detect browser crashes.
-test.runIf(provider === 'playwright')('fails gracefully when browser crashes', async () => {
+test('fails gracefully when browser crashes', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/browser-crash',
     reporters: [['verbose', { isTTY: false }]],
@@ -13,7 +11,5 @@ test.runIf(provider === 'playwright')('fails gracefully when browser crashes', a
     },
   })
 
-  // TODO 2025-03-24 whtn https://github.com/antfu/birpc/pull/23 is merged,
-  // provide a better error message
-  expect(stderr).toContain('rpc is closed, cannot call "createTesters"')
+  expect(stderr).toContain('Browser connection was closed while running tests. Was the page closed unexpectedly?')
 })

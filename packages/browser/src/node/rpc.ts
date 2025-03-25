@@ -88,7 +88,9 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           vitest._browserSessions.destroySession(sessionId)
         }
         // this will reject any hanging methods if there are any
-        rpc.$close()
+        rpc.$close(
+          new Error(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
+        )
       })
     })
   })
