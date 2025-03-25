@@ -117,12 +117,12 @@ describe('.toHaveValue', () => {
     }
 
     expect(errorMessage).toMatchInlineSnapshot(`
-      "expect(element).toHaveValue(something else)
+      expect(element).toHaveValue(something else)
 
       Expected the element to have value:
         something else
       Received:
-        foo"
+        foo
     `)
   })
 
@@ -137,12 +137,12 @@ describe('.toHaveValue', () => {
     }
 
     expect(errorMessage).toMatchInlineSnapshot(`
-      "expect(element).toHaveValue(8)
+      expect(element).toHaveValue(8)
 
       Expected the element to have value:
         8 (number)
       Received:
-        8 (string)"
+        8 (string)
     `)
   })
 
@@ -157,12 +157,12 @@ describe('.toHaveValue', () => {
       errorMessage = error.message
     }
     expect(errorMessage).toMatchInlineSnapshot(`
-      "expect(element).not.toHaveValue(foo)
+      expect(element).not.toHaveValue(foo)
 
       Expected the element not to have value:
         foo
       Received:
-        foo"
+        foo
     `)
   })
 
@@ -177,12 +177,11 @@ describe('.toHaveValue', () => {
       errorMessage = error.message
     }
     expect(errorMessage).toMatchInlineSnapshot(`
-      "expect(element).toHaveValue(expected)
+      expect(element).toHaveValue(expected)
 
       Expected the element to have value:
         (any)
       Received:
-      "
     `)
   })
 
@@ -197,12 +196,12 @@ describe('.toHaveValue', () => {
       errorMessage = error.message
     }
     expect(errorMessage).toMatchInlineSnapshot(`
-      "expect(element).not.toHaveValue(expected)
+      expect(element).not.toHaveValue(expected)
 
       Expected the element not to have value:
         (any)
       Received:
-        foo"
+        foo
     `)
   })
 

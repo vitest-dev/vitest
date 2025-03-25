@@ -108,13 +108,13 @@ describe('.toContainHTML', () => {
     }
 
     expect(errorMessage).toMatchInlineSnapshot(`
-      "expect(element).toContainHTML()
+      expect(element).toContainHTML()
       Expected:
         <div> non-existant element </div>
       Received:
         <span
         data-testid="child"
-      />"
+      />
     `)
   })
 })

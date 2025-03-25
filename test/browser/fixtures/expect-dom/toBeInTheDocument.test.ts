@@ -4,7 +4,7 @@ test('.toBeInTheDocument', () => {
   const window = document.defaultView
 
   window.customElements.define(
-    'custom-element',
+    'custom-element-document',
     class extends window.HTMLElement {
       constructor() {
         super()
@@ -17,7 +17,7 @@ test('.toBeInTheDocument', () => {
   document.body.innerHTML = `
     <span data-testid="html-element"><span>Html Element</span></span>
     <svg data-testid="svg-element"></svg>
-    <custom-element data-testid="custom-element"></custom-element>`
+    <custom-element-document data-testid="custom-element"></custom-element-document>`
 
   const htmlElement = document.querySelector('[data-testid="html-element"]')
   const svgElement = document.querySelector('[data-testid="svg-element"]')

@@ -11,5 +11,6 @@ export default defineConfig({
       instances,
       isolate: false,
     },
+    setupFiles: './setup.ts',
   },
 })
