@@ -1,5 +1,6 @@
 import type { Task } from '@vitest/runner'
-import { getFullName, getTests } from '@vitest/runner/utils'
+import type { TestCase, TestModule, TestSuite } from './reported-tasks'
+import { getFullName } from '@vitest/runner/utils'
 import c from 'tinyrainbow'
 import { DefaultReporter } from './default'
 import { F_RIGHT } from './renderers/figures'
@@ -9,45 +10,58 @@ export class VerboseReporter extends DefaultReporter {
   protected verbose = true
   renderSucceed = true
 
-  printTask(task: Task): void {
+  printTestModule(module: TestModule): void {
+    // still print the test module in watch mode,
+    // but don't print it in the CLI because we
+    // print all the tests when they finish
+    // instead of printing them when the test file finishes
     if (this.isTTY) {
-      return super.printTask(task)
-    }
-
-    if (task.type !== 'test' || !task.result?.state || task.result?.state === 'run' || task.result?.state === 'queued') {
-      return
-    }
-
-    let title = ` ${getStateSymbol(task)} `
-
-    if (task.file.projectName) {
-      title += formatProjectName(task.file.projectName)
-    }
-
-    title += getFullName(task, c.dim(' > '))
-    title += super.getDurationPrefix(task)
-
-    if (this.ctx.config.logHeapUsage && task.result.heap != null) {
-      title += c.magenta(` ${Math.floor(task.result.heap / 1024 / 1024)} MB heap used`)
-    }
-
-    if (task.result?.note) {
-      title += c.dim(c.gray(` [${task.result.note}]`))
-    }
-
-    this.ctx.logger.log(title)
-
-    if (task.result.state === 'fail') {
-      task.result.errors?.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error?.message}`)))
+      return super.printTestModule(module)
     }
   }
 
-  protected printSuite(task: Task): void {
-    const indentation = '  '.repeat(getIndentation(task))
-    const tests = getTests(task)
-    const state = getStateSymbol(task)
+  onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
 
-    this.log(` ${indentation}${state} ${task.name} ${c.dim(`(${tests.length})`)}`)
+    // don't print tests in watch mode as they go, only print them
+    // in the CLI when they finish
+    if (this.isTTY) {
+      return
+    }
+
+    let title = ` ${getStateSymbol(test.task)} `
+
+    if (test.project.name) {
+      title += formatProjectName(test.project.name)
+    }
+
+    title += getFullName(test.task, c.dim(' > '))
+    title += this.getDurationPrefix(test.task)
+
+    const diagnostic = test.diagnostic()
+    if (diagnostic?.heap != null) {
+      title += c.magenta(` ${Math.floor(diagnostic.heap / 1024 / 1024)} MB heap used`)
+    }
+
+    const testResult = test.result()
+
+    if (testResult.state === 'skipped' && testResult.note) {
+      title += c.dim(c.gray(` [${testResult.note}]`))
+    }
+
+    this.log(title)
+
+    if (testResult.state === 'failed') {
+      testResult.errors.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error?.message}`)))
+    }
+  }
+
+  protected populateSuiteLogs(testSuite: TestSuite, logs: string[]): void {
+    const indentation = '  '.repeat(getIndentation(testSuite.task))
+    const tests = Array.from(testSuite.children.allTests())
+    const state = getStateSymbol(testSuite.task)
+
+    logs.push(` ${indentation}${state} ${testSuite.name} ${c.dim(`(${tests.length})`)}`)
   }
 
   protected getTestName(test: Task): string {
