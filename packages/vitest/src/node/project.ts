@@ -1,3 +1,4 @@
+import type { GlobOptions } from 'tinyglobby'
 import type {
   ModuleNode,
   TransformResult,
@@ -9,13 +10,14 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
   SerializedConfig,
+  TestProjectInlineConfiguration,
   UserConfig,
-  UserWorkspaceConfig,
 } from './types/config'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
@@ -24,7 +26,7 @@ import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
 import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
-import { glob, type GlobOptions } from 'tinyglobby'
+import { glob } from 'tinyglobby'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { setup } from '../api/setup'
@@ -34,7 +36,7 @@ import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
-import { type WorkspaceSpec as DeprecatedWorkspaceSpec, getFilePoolName } from './pool'
+import { getFilePoolName } from './pool'
 import { TestSpecification } from './spec'
 import { createViteServer } from './vite'
 
@@ -724,7 +726,7 @@ export interface SerializedTestProject {
   context: ProvidedContext
 }
 
-interface InitializeProjectOptions extends UserWorkspaceConfig {
+interface InitializeProjectOptions extends TestProjectInlineConfiguration {
   configFile: string | false
 }
 

@@ -152,7 +152,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
     subcommands: apiConfig(defaultPort),
   },
   silent: {
-    description: 'Silent console output from tests',
+    description: 'Silent console output from tests. Use `\'passed-only\'` to see logs from failing tests only.',
+    argument: '[value]',
   },
   hideSkippedTests: {
     description: 'Hide logs for skipped tests',
@@ -646,6 +647,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       printBasicPrototype: {
         description: 'Print basic prototype Object and Array (default: `true`)',
+      },
+      maxDepth: {
+        description: 'Limit the depth to recurse when printing nested objects (default: `20`)',
+        argument: '<maxDepth>',
       },
       truncateThreshold: {
         description: 'Number of lines to show before and after each change (default: `0`)',

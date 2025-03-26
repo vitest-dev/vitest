@@ -1,6 +1,7 @@
+import type { Colors } from 'tinyrainbow'
 import { highlight } from '@vitest/utils'
 import { extname } from 'pathe'
-import c, { type Colors } from 'tinyrainbow'
+import c from 'tinyrainbow'
 
 const HIGHLIGHT_SUPPORTED_EXTS = new Set(
   ['js', 'ts'].flatMap(lang => [

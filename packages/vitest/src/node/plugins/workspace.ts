@@ -1,6 +1,6 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
@@ -17,12 +17,11 @@ import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
   getDefaultResolveOptions,
-  hijackVitePluginInject,
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
 
-interface WorkspaceOptions extends UserWorkspaceConfig {
+interface WorkspaceOptions extends TestProjectInlineConfiguration {
   root?: string
   workspacePath: string | number
 }
@@ -86,7 +85,7 @@ export function WorkspaceVitestPlugin(
         // if some of them match, they will later be filtered again by `resolveWorkspace`
         if (filters.length) {
           const hasProject = workspaceNames.some((name) => {
-            return project.vitest._matchesProjectFilter(name)
+            return project.vitest.matchesProjectFilter(name)
           })
           if (!hasProject) {
             throw new VitestFilteredOutProjectError()
@@ -96,6 +95,10 @@ export function WorkspaceVitestPlugin(
         const resolveOptions = getDefaultResolveOptions()
         const config: ViteConfig = {
           root,
+          define: {
+            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+          },
           resolve: {
             ...resolveOptions,
             alias: testConfig.alias,
@@ -171,9 +174,6 @@ export function WorkspaceVitestPlugin(
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
-      },
-      configResolved(viteConfig) {
-        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})

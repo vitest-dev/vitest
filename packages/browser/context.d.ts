@@ -142,7 +142,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/clearValue} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#clear} testing-library API
    */
-  clear: (element: Element | Locator) => Promise<void>
+  clear: (element: Element | Locator, options?: UserEventClearOptions) => Promise<void>
   /**
    * Sends a `Tab` key event. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -171,7 +171,7 @@ export interface UserEvent {
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-set-input-files} Playwright API
    * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
    */
-  upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
+  upload: (element: Element | Locator, files: File | File[] | string | string[], options?: UserEventUploadOptions) => Promise<void>
   /**
    * Copies the selected content.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -218,9 +218,11 @@ export interface UserEventFillOptions {}
 export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
+export interface UserEventClearOptions {}
 export interface UserEventDoubleClickOptions {}
 export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
+export interface UserEventUploadOptions {}
 
 export interface LocatorOptions {
   /**
@@ -358,7 +360,7 @@ export interface Locator extends LocatorSelectors {
    * Clears the input element content
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-clear}
    */
-  clear(): Promise<void>
+  clear(options?: UserEventClearOptions): Promise<void>
   /**
    * Moves the cursor position to the selected element
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-hover}
@@ -391,7 +393,7 @@ export interface Locator extends LocatorSelectors {
    * Change a file input element to have the specified files. Uses provider's API under the hood.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
    */
-  upload(files: File | File[] | string | string[]): Promise<void>
+  upload(files: File | File[] | string | string[], options?: UserEventUploadOptions): Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.
@@ -450,6 +452,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#last}
    */
   last(): Locator
+  /**
+   * Returns a locator that matches both the current locator and the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   */
+  and(locator: Locator): Locator
+  /**
+   * Returns a locator that matches either the current locator or the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   */
+  or(locator: Locator): Locator
+  /**
+   * Narrows existing locator according to the options.
+   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   */
+  filter(options: LocatorOptions): Locator
 }
 
 export interface UserEventTabOptions {
@@ -502,6 +519,13 @@ export const server: {
    * Serialized test config.
    */
   config: SerializedConfig
+}
+
+export interface LocatorOptions {
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
 }
 
 /**

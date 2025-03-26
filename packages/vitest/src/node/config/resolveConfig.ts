@@ -913,7 +913,7 @@ function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
   for (const instance of browser.instances) {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
-    if (!vitest._matchesProjectFilter(name)) {
+    if (!vitest.matchesProjectFilter(name)) {
       continue
     }
     if (instance.browser !== 'chromium') {

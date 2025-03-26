@@ -20,9 +20,9 @@ export class FakeTimers {
   // | _fakingTime | _fakingDate |
   // +-------------+-------------+
   // | false       | falsy       | initial
-  // | false       | truethy     | vi.setSystemTime called first (for mocking only Date without fake timers)
+  // | false       | truthy     | vi.setSystemTime called first (for mocking only Date without fake timers)
   // | true        | falsy       | vi.useFakeTimers called first
-  // | true        | truethy     | unreachable
+  // | true        | truthy     | unreachable
   private _fakingTime: boolean
   private _fakingDate: Date | null
   private _fakeTimers: FakeTimerWithContext
