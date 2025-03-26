@@ -99,7 +99,6 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",

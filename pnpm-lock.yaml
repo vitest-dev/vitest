@@ -502,9 +502,6 @@ importers:
         specifier: 'catalog:'
         version: 8.18.1
     devDependencies:
-      '@testing-library/jest-dom':
-        specifier: ^6.6.3
-        version: 6.6.3
       '@types/ws':
         specifier: 'catalog:'
         version: 8.18.0
