@@ -35,7 +35,6 @@ export class CommonjsExecutor {
 
   private fs: FileMap
   private Module: typeof _Module
-  private cjsNamedExportsMap = new Map<string, Set<string>>()
   private interopDefault: boolean | undefined
 
   constructor(options: CommonjsExecutorOptions) {
@@ -137,7 +136,7 @@ export class CommonjsExecutor {
       static SourceMap = _Module.SourceMap
       static syncBuiltinESMExports = _Module.syncBuiltinESMExports
 
-      static _cache = executor.builtinCache
+      static _cache = executor.publicRequireCache
       static _extensions = executor.extensions
 
       static createRequire = (filename: string | URL) => {
