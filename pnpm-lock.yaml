@@ -1228,6 +1228,9 @@ importers:
       '@vitest/test-dep-error':
         specifier: file:./deps/error
         version: file:test/cli/deps/error
+      '@vitest/test-dep-linked':
+        specifier: link:./deps/linked
+        version: link:deps/linked
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
