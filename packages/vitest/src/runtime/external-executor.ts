@@ -163,11 +163,11 @@ export class ExternalModulesExecutor {
     const moduleKeys = Object.keys(exports)
     const m = new SyntheticModule(
       [...moduleKeys, 'default'],
-      () => {
+      function () {
         for (const key of moduleKeys) {
-          m.setExport(key, exports[key])
+          this.setExport(key, exports[key])
         }
-        m.setExport('default', exports)
+        this.setExport('default', exports)
       },
       {
         context: this.context,
@@ -188,11 +188,11 @@ export class ExternalModulesExecutor {
     )
     const m = new SyntheticModule(
       [...keys, 'default'],
-      () => {
+      function () {
         for (const key of keys) {
-          m.setExport(key, moduleExports[key])
+          this.setExport(key, moduleExports[key])
         }
-        m.setExport('default', defaultExport)
+        this.setExport('default', defaultExport)
       },
       {
         context: this.context,
