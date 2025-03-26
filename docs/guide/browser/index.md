@@ -399,6 +399,10 @@ However, Vitest also provides packages to render components for several popular 
 - [`vitest-browser-svelte`](https://github.com/vitest-dev/vitest-browser-svelte) to render [svelte](https://svelte.dev) components
 - [`vitest-browser-react`](https://github.com/vitest-dev/vitest-browser-react) to render [react](https://react.dev) components
 
+Community packages are available for other frameworks:
+
+- [`vitest-browser-lit`](https://github.com/EskiMojo14/vitest-browser-lit) to render [lit](https://lit.dev) components
+
 If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
 Besides rendering components and locating elements, you will also need to make assertions. Vitest forks the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
@@ -471,6 +475,21 @@ test('loads and displays greeting', async () => {
   // assert that the alert message is correct
   await expect.element(heading).toHaveTextContent('hello there')
   await expect.element(screen.getByRole('button')).toBeDisabled()
+})
+```
+```ts [lit]
+import { render } from 'vitest-browser-lit'
+import { html } from 'lit'
+import './greeter-button'
+
+test('greeting appears on click', async () => {
+  const screen = render(html`<greeter-button name="World"></greeter-button>`)
+
+  const button = screen.getByRole('button')
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
+
+  await expect.element(greeting).toBeInTheDocument()
 })
 ```
 :::
