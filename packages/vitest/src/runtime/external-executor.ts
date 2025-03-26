@@ -1,18 +1,15 @@
+import type vm from 'node:vm'
 import type { RuntimeRPC } from '../types/rpc'
 import type { FileMap } from './vm/file-map'
-import type { VMModule, VMSyntheticModule } from './vm/types'
+import type { VMModule } from './vm/types'
 import fs from 'node:fs'
 import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import vm from 'node:vm'
 import { extname, join, normalize } from 'pathe'
 import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
-import { interopCommonJsModule } from './vm/utils'
 import { ViteExecutor } from './vm/vite-executor'
-
-const SyntheticModule: typeof VMSyntheticModule = (vm as any).SyntheticModule
 
 const { existsSync, statSync } = fs
 
@@ -64,6 +61,7 @@ export class ExternalModulesExecutor {
       context: this.context,
       importModuleDynamically: this.importModuleDynamically,
       fileMap: options.fileMap,
+      interopDefault: options.interopDefault,
     })
     this.vite = new ViteExecutor({
       esmExecutor: this.esm,
@@ -156,52 +154,6 @@ export class ExternalModulesExecutor {
     return {}
   }
 
-  private wrapCoreSyntheticModule(
-    identifier: string,
-    exports: Record<string, unknown>,
-  ) {
-    const moduleKeys = Object.keys(exports)
-    const m = new SyntheticModule(
-      [...moduleKeys, 'default'],
-      function () {
-        for (const key of moduleKeys) {
-          this.setExport(key, exports[key])
-        }
-        this.setExport('default', exports)
-      },
-      {
-        context: this.context,
-        identifier,
-      },
-    )
-    return m
-  }
-
-  private wrapCommonJsSynteticModule(
-    identifier: string,
-    exports: Record<string, unknown>,
-  ) {
-    // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
-    const { keys, moduleExports, defaultExport } = interopCommonJsModule(
-      this.options.interopDefault,
-      exports,
-    )
-    const m = new SyntheticModule(
-      [...keys, 'default'],
-      function () {
-        for (const key of keys) {
-          this.setExport(key, moduleExports[key])
-        }
-        this.setExport('default', defaultExport)
-      },
-      {
-        context: this.context,
-        identifier,
-      },
-    )
-    return m
-  }
-
   private getModuleInformation(identifier: string): ModuleInformation {
     if (identifier.startsWith('data:')) {
       return { type: 'data', url: identifier, path: identifier }
@@ -248,7 +200,7 @@ export class ExternalModulesExecutor {
     return { type, path: pathUrl, url: fileUrl }
   }
 
-  private async createModule(identifier: string): Promise<VMModule> {
+  private createModule(identifier: string): VMModule | Promise<VMModule> {
     const { type, url, path } = this.getModuleInformation(identifier)
 
     // create ERR_MODULE_NOT_FOUND on our own since latest NodeJS's import.meta.resolve doesn't throw on non-existing namespace or path
@@ -264,25 +216,21 @@ export class ExternalModulesExecutor {
 
     switch (type) {
       case 'data':
-        return await this.esm.createDataModule(identifier)
-      case 'builtin': {
-        const exports = this.require(identifier)
-        return this.wrapCoreSyntheticModule(identifier, exports)
-      }
+        return this.esm.createDataModule(identifier)
+      case 'builtin':
+        return this.cjs.getCoreSyntheticModule(identifier)
       case 'vite':
-        return await this.vite.createViteModule(url)
+        return this.vite.createViteModule(url)
       case 'wasm':
-        return await this.esm.createWebAssemblyModule(url, () =>
+        return this.esm.createWebAssemblyModule(url, () =>
           this.fs.readBuffer(path))
       case 'module':
-        return await this.esm.createEsModule(url, () =>
+        return this.esm.createEsModule(url, () =>
           this.fs.readFileAsync(path))
-      case 'commonjs': {
-        const exports = this.require(path)
-        return this.wrapCommonJsSynteticModule(identifier, exports)
-      }
+      case 'commonjs':
+        return this.cjs.getCjsSyntheticModule(path, identifier)
       case 'network':
-        return await this.esm.createNetworkModule(url)
+        return this.esm.createNetworkModule(url)
       default: {
         const _deadend: never = type
         return _deadend

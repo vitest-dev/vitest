@@ -1,12 +1,14 @@
 import type { FileMap } from './file-map'
-import type { ImportModuleDynamically, VMModule } from './types'
+import type { ImportModuleDynamically, VMSyntheticModule } from './types'
 import { Module as _Module, createRequire } from 'node:module'
 import vm from 'node:vm'
 import { basename, dirname, extname } from 'pathe'
 import { isNodeBuiltin } from 'vite-node/utils'
+import { interopCommonJsModule, SyntheticModule } from './utils'
 
 interface CommonjsExecutorOptions {
   fileMap: FileMap
+  interopDefault?: boolean
   context: vm.Context
   importModuleDynamically: ImportModuleDynamically
 }
@@ -24,7 +26,7 @@ export class CommonjsExecutor {
   private requireCache = new Map<string, NodeJS.Module>()
   private publicRequireCache = this.createProxyCache()
 
-  private moduleCache = new Map<string, VMModule | Promise<VMModule>>()
+  private moduleCache = new Map<string, VMSyntheticModule>()
   private builtinCache: Record<string, NodeJS.Module> = Object.create(null)
   private extensions: Record<
     string,
@@ -33,10 +35,13 @@ export class CommonjsExecutor {
 
   private fs: FileMap
   private Module: typeof _Module
+  private cjsNamedExportsMap = new Map<string, Set<string>>()
+  private interopDefault: boolean | undefined
 
   constructor(options: CommonjsExecutorOptions) {
     this.context = options.context
     this.fs = options.fileMap
+    this.interopDefault = options.interopDefault
 
     const primitives = vm.runInContext(
       '({ Object, Array, Error })',
@@ -132,7 +137,7 @@ export class CommonjsExecutor {
       static SourceMap = _Module.SourceMap
       static syncBuiltinESMExports = _Module.syncBuiltinESMExports
 
-      static _cache = executor.moduleCache
+      static _cache = executor.builtinCache
       static _extensions = executor.extensions
 
       static createRequire = (filename: string | URL) => {
@@ -255,6 +260,86 @@ export class CommonjsExecutor {
     }
     return '.js'
   }
+
+  public getCoreSyntheticModule(identifier: string): VMSyntheticModule {
+    if (this.moduleCache.has(identifier)) {
+      return this.moduleCache.get(identifier)!
+    }
+    const exports = this.require(identifier)
+    const keys = Object.keys(exports)
+    const module = new SyntheticModule([...keys, 'default'], () => {
+      for (const key of keys) {
+        module.setExport(key, exports[key])
+      }
+      module.setExport('default', exports)
+    }, { context: this.context, identifier })
+    this.moduleCache.set(identifier, module)
+    return module
+  }
+
+  public getCjsSyntheticModule(path: string, identifier: string): VMSyntheticModule {
+    if (this.moduleCache.has(identifier)) {
+      return this.moduleCache.get(identifier)!
+    }
+    const exports = this.require(path)
+    // TODO: technically module should be parsed to find static exports, implement for strict mode in #2854
+    const { keys, moduleExports, defaultExport } = interopCommonJsModule(
+      this.interopDefault,
+      exports,
+    )
+    const module = new SyntheticModule([...keys, 'default'], function () {
+      for (const key of keys) {
+        this.setExport(key, moduleExports[key])
+      }
+      this.setExport('default', defaultExport)
+    }, { context: this.context, identifier })
+    this.moduleCache.set(identifier, module)
+    return module
+  }
+
+  // TODO: use this in strict mode, when available in #2854
+  // private _getNamedCjsExports(path: string): Set<string> {
+  //   const cachedNamedExports = this.cjsNamedExportsMap.get(path)
+
+  //   if (cachedNamedExports) {
+  //     return cachedNamedExports
+  //   }
+
+  //   if (extname(path) === '.node') {
+  //     const moduleExports = this.require(path)
+  //     const namedExports = new Set(Object.keys(moduleExports))
+  //     this.cjsNamedExportsMap.set(path, namedExports)
+  //     return namedExports
+  //   }
+
+  //   const code = this.fs.readFile(path)
+  //   const { exports, reexports } = parseCjs(code, path)
+  //   const namedExports = new Set(exports)
+  //   this.cjsNamedExportsMap.set(path, namedExports)
+
+  //   for (const reexport of reexports) {
+  //     if (isNodeBuiltin(reexport)) {
+  //       const exports = this.require(reexport)
+  //       if (exports !== null && typeof exports === 'object') {
+  //         for (const e of Object.keys(exports)) {
+  //           namedExports.add(e)
+  //         }
+  //       }
+  //     }
+  //     else {
+  //       const require = this.createRequire(path)
+  //       const resolved = require.resolve(reexport)
+
+  //       const exports = this._getNamedCjsExports(resolved)
+
+  //       for (const e of exports) {
+  //         namedExports.add(e)
+  //       }
+  //     }
+  //   }
+
+  //   return namedExports
+  // }
 
   public require(identifier: string): any {
     const ext = extname(identifier)
