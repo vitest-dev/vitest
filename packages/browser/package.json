@@ -99,7 +99,6 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
     "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
@@ -108,7 +107,7 @@
     "@wdio/types": "^9.10.1",
     "birpc": "catalog:",
     "flatted": "catalog:",
-    "ivya": "^1.5.1",
+    "ivya": "^1.6.0",
     "mime": "^4.0.6",
     "pathe": "catalog:",
     "periscopic": "^4.0.2",

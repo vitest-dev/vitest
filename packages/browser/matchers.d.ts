@@ -1,10 +1,10 @@
 import type { Locator } from '@vitest/browser/context'
-import type jsdomMatchers from './jest-dom.js'
+import type { TestingLibraryMatchers } from './jest-dom.js'
 import type { Assertion, ExpectPollOptions } from 'vitest'
 
 declare module 'vitest' {
-  interface JestAssertion<T = any> extends jsdomMatchers.default.TestingLibraryMatchers<void, T> {}
-  interface AsymmetricMatchersContaining extends jsdomMatchers.default.TestingLibraryMatchers<void, void> {}
+  interface JestAssertion<T = any> extends TestingLibraryMatchers<void, T> {}
+  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<void, void> {}
 
   type Promisify<O> = {
     [K in keyof O]: O[K] extends (...args: infer A) => infer R
@@ -22,7 +22,7 @@ declare module 'vitest' {
      * You can set default timeout via `expect.poll.timeout` option in the config.
      * @see {@link https://vitest.dev/api/expect#poll}
      */
-    element: <T extends Element | Locator>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element | null>>
+    element: <T extends Element | Locator | null>(element: T, options?: ExpectPollOptions) => PromisifyDomAssertion<Awaited<Element | null>>
   }
 }
 
