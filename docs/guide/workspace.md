@@ -16,7 +16,7 @@ Vitest provides a way to define multiple project configurations within a single 
 
 A workspace must include a `vitest.workspace` or `vitest.projects` file in its root directory (located in the same folder as your root configuration file or working directory if it doesn't exist). Note that `projects` is just an alias and does not change the behavior or semantics of this feature. Vitest supports `ts`, `js`, and `json` extensions for this file.
 
-Since Vitest 2.2, you can also define a workspace in the root config. In this case, Vitest will ignore the `vitest.workspace` file in the root, if one exists.
+Since Vitest 3, you can also define a workspace in the root config. In this case, Vitest will ignore the `vitest.workspace` file in the root, if one exists.
 
 ::: tip NAMING
 Please note that this feature is named `workspace`, not `workspaces` (without an "s" at the end).
@@ -30,7 +30,7 @@ export default [
   'packages/*'
 ]
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -41,10 +41,10 @@ export default defineConfig({
 ```
 :::
 
-Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. Since Vitest 2.1, if this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
+Vitest will treat every folder in `packages` as a separate project even if it doesn't have a config file inside. If this glob pattern matches any file it will be considered a Vitest config even if it doesn't have a `vitest` in its name.
 
 ::: warning
-Vitest does not treat the root `vitest.config` file as a workspace project unless it is explicitly specified in the workspace configuration. Consequently, the root configuration will only influence global options such as `reporters` and `coverage`.
+Vitest does not treat the root `vitest.config` file as a workspace project unless it is explicitly specified in the workspace configuration. Consequently, the root configuration will only influence global options such as `reporters` and `coverage`. Note that Vitest will always run certain plugin hooks, like `apply`, `config`, `configResolved` or `configureServer`, specified in the root config file. Vitest also uses the same plugins to execute global setups, workspace files and custom coverage provider.
 :::
 
 You can also reference projects with their config files:
@@ -55,7 +55,7 @@ export default [
   'packages/*/vitest.config.{e2e,unit}.ts'
 ]
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -97,7 +97,7 @@ export default defineWorkspace([
   }
 ])
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -140,7 +140,7 @@ If you do not use inline configurations, you can create a small JSON file in you
   "packages/*"
 ]
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -153,8 +153,7 @@ export default defineConfig({
 
 Workspace projects do not support all configuration properties. For better type safety, use the `defineProject` method instead of `defineConfig` within project configuration files:
 
-:::code-group
-```ts [packages/a/vitest.config.ts] twoslash
+```ts twoslash [packages/a/vitest.config.ts]
 // @errors: 2769
 import { defineProject } from 'vitest/config'
 
@@ -167,13 +166,12 @@ export default defineProject({
   }
 })
 ```
-:::
 
 ## Running tests
 
 To run tests inside the workspace, define a script in your root `package.json`:
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest"
@@ -235,9 +233,8 @@ bun test --project e2e --project unit
 
 ## Configuration
 
-None of the configuration options are inherited from the root-level config file. You can create a shared config file and merge it with the project config yourself:
+None of the configuration options are inherited from the root-level config file, even if the workspace is defined inside that config and not in a separate `vitest.workspace` file. You can create a shared config file and merge it with the project config yourself:
 
-::: code-group
 ```ts [packages/a/vitest.config.ts]
 import { defineProject, mergeConfig } from 'vitest/config'
 import configShared from '../vitest.shared.js'
@@ -251,7 +248,6 @@ export default mergeConfig(
   })
 )
 ```
-:::
 
 Additionally, at the `defineWorkspace` level, you can use the `extends` option to inherit from your root-level configuration. All options will be merged.
 
@@ -276,7 +272,7 @@ export default defineWorkspace([
   },
 ])
 ```
-```ts [vitest.config.ts <Version>2.2.0</Version>]
+```ts [vitest.config.ts <Version>3.0.0</Version>]
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 

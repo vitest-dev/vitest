@@ -282,7 +282,7 @@ Asserts that `value` is not null.
 ```ts
 import { assert, test } from 'vitest'
 
-const error = { message: 'error was occured' }
+const error = { message: 'error was occurred' }
 
 test('assert.isNotNull', () => {
   assert.isNotNull(error, 'error is not null but object')
@@ -298,7 +298,7 @@ Asserts that `value` is NaN.
 ```ts
 import { assert, test } from 'vitest'
 
-const calculation = 1 * 'viitest'
+const calculation = 1 * 'vitest'
 
 test('assert.isNaN', () => {
   assert.isNaN(calculation, '1 * "vitest" is NaN')
@@ -1688,10 +1688,10 @@ Asserts that a `modifier` increases a numeric `object`'s `property` or a `modifi
 ```ts
 import { assert, test } from 'vitest'
 
-test('assert.increases', () => {
+test('assert.increasesBy', () => {
   const obj = { val: 10 }
   function fn() { obj.val += 10 };
-  assert.increases(fn, obj, 'val', 10)
+  assert.increasesBy(fn, obj, 'val', 10)
 })
 ```
 

@@ -1,15 +1,12 @@
 import type { Writable } from 'node:stream'
 import type { Vitest } from '../../core'
 import { stripVTControlCharacters } from 'node:util'
-import restoreCursor from 'restore-cursor'
 
-const DEFAULT_RENDER_INTERVAL = 16
+const DEFAULT_RENDER_INTERVAL_MS = 1_000
 
 const ESC = '\x1B['
 const CLEAR_LINE = `${ESC}K`
 const MOVE_CURSOR_ONE_ROW_UP = `${ESC}1A`
-const HIDE_CURSOR = `${ESC}?25l`
-const SHOW_CURSOR = `${ESC}?25h`
 const SYNC_START = `${ESC}?2026h`
 const SYNC_END = `${ESC}?2026l`
 
@@ -30,6 +27,7 @@ export class WindowRenderer {
   private streams!: Record<StreamType, Vitest['logger']['outputStream' | 'errorStream']['write']>
   private buffer: { type: StreamType; message: string }[] = []
   private renderInterval: NodeJS.Timeout | undefined = undefined
+  private renderScheduled = false
 
   private windowHeight = 0
   private finished = false
@@ -37,7 +35,7 @@ export class WindowRenderer {
 
   constructor(options: Options) {
     this.options = {
-      interval: DEFAULT_RENDER_INTERVAL,
+      interval: DEFAULT_RENDER_INTERVAL_MS,
       ...options,
     }
 
@@ -51,19 +49,21 @@ export class WindowRenderer {
       this.interceptStream(process.stderr, 'error'),
     )
 
-    restoreCursor()
-    this.write(HIDE_CURSOR, 'output')
+    // Write buffered content on unexpected exits, e.g. direct `process.exit()` calls
+    this.options.logger.onTerminalCleanup(() => {
+      this.flushBuffer()
+      this.stop()
+    })
 
     this.start()
   }
 
-  start() {
+  start(): void {
     this.finished = false
-    this.renderInterval = setInterval(() => this.flushBuffer(), this.options.interval)
+    this.renderInterval = setInterval(() => this.schedule(), this.options.interval).unref()
   }
 
-  stop() {
-    this.write(SHOW_CURSOR, 'output')
+  stop(): void {
     this.cleanups.splice(0).map(fn => fn())
     clearInterval(this.renderInterval)
   }
@@ -72,10 +72,24 @@ export class WindowRenderer {
    * Write all buffered output and stop buffering.
    * All intercepted writes are forwarded to actual write after this.
    */
-  finish() {
+  finish(): void {
     this.finished = true
     this.flushBuffer()
     clearInterval(this.renderInterval)
+  }
+
+  /**
+   * Queue new render update
+   */
+  schedule(): void {
+    if (!this.renderScheduled) {
+      this.renderScheduled = true
+      this.flushBuffer()
+
+      setTimeout(() => {
+        this.renderScheduled = false
+      }, 100).unref()
+    }
   }
 
   private flushBuffer() {
@@ -113,11 +127,11 @@ export class WindowRenderer {
     }
 
     const windowContent = this.options.getWindow()
-    const rowCount = getRenderedRowCount(windowContent, this.options.logger.outputStream)
+    const rowCount = getRenderedRowCount(windowContent, this.options.logger.getColumns())
     let padding = this.windowHeight - rowCount
 
     if (padding > 0 && message) {
-      padding -= getRenderedRowCount([message], this.options.logger.outputStream)
+      padding -= getRenderedRowCount([message], this.options.logger.getColumns())
     }
 
     this.write(SYNC_START)
@@ -178,9 +192,8 @@ export class WindowRenderer {
 }
 
 /** Calculate the actual row count needed to render `rows` into `stream` */
-function getRenderedRowCount(rows: string[], stream: Options['logger']['outputStream']) {
+function getRenderedRowCount(rows: string[], columns: number) {
   let count = 0
-  const columns = 'columns' in stream ? stream.columns : 80
 
   for (const row of rows) {
     const text = stripVTControlCharacters(row)

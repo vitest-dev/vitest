@@ -20,7 +20,7 @@ test('{ threshold: { 100: true }}', async () => {
       'verbose',
       {
         onInit(ctx) {
-          ctx.getRootTestProject().provide('coverage', {
+          ctx.getRootProject().provide('coverage', {
             provider: ctx.config.coverage.provider,
             thresholds: (ctx.config.coverage as any).thresholds,
           })

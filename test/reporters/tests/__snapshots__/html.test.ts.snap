@@ -17,10 +17,6 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "prepareDuration": 0,
       "result": {
         "duration": 0,
-        "hooks": {
-          "afterAll": "pass",
-          "beforeAll": "pass",
-        },
         "startTime": 0,
         "state": "fail",
       },
@@ -67,15 +63,12 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
                 "stackStr": "AssertionError: expected 2 to deeply equal 1",
               },
             ],
-            "hooks": {
-              "afterEach": "pass",
-              "beforeEach": "pass",
-            },
             "repeatCount": 0,
             "retryCount": 0,
             "startTime": 0,
             "state": "fail",
           },
+          "timeout": 5000,
           "type": "test",
         },
       ],
@@ -97,6 +90,9 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
   },
   "paths": [
     "<rootDir>/test/reporters/fixtures/json-fail.test.ts",
+  ],
+  "projects": [
+    "",
   ],
   "sources": {
     "<rootDir>/test/reporters/fixtures/json-fail.test.ts": "import { expect, test } from 'vitest'
@@ -131,10 +127,6 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "prepareDuration": 0,
       "result": {
         "duration": 0,
-        "hooks": {
-          "afterAll": "pass",
-          "beforeAll": "pass",
-        },
         "startTime": 0,
         "state": "pass",
       },
@@ -152,15 +144,12 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "name": "2 + 3 = 5",
           "result": {
             "duration": 0,
-            "hooks": {
-              "afterEach": "pass",
-              "beforeEach": "pass",
-            },
             "repeatCount": 0,
             "retryCount": 0,
             "startTime": 0,
             "state": "pass",
           },
+          "timeout": 5000,
           "type": "test",
         },
         {
@@ -173,6 +162,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
           "meta": {},
           "mode": "skip",
           "name": "3 + 3 = 6",
+          "timeout": 5000,
           "type": "test",
         },
       ],
@@ -194,6 +184,9 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
   },
   "paths": [
     "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts",
+  ],
+  "projects": [
+    "",
   ],
   "sources": {
     "<rootDir>/test/reporters/fixtures/all-passing-or-skipped.test.ts": "import { expect, test } from 'vitest'

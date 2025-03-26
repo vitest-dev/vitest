@@ -18,19 +18,23 @@ vitest --ui
 
 Then you can visit the Vitest UI at <a href="http://localhost:51204/__vitest__/">`http://localhost:51204/__vitest__/`</a>
 
+::: warning
+The UI is interactive and requires a running Vite server, so make sure to run Vitest in `watch` mode (the default). Alternatively, you can generate a static HTML report that looks identical to the Vitest UI by specifying `html` in config's `reporters` option.
+:::
+
 <img alt="Vitest UI" img-light src="/ui-1-light.png">
 <img alt="Vitest UI" img-dark src="/ui-1-dark.png">
 
 UI can also be used as a reporter. Use `'html'` reporter in your Vitest configuration to generate HTML output and preview the results of your tests:
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default {
+export default defineConfig({
   test: {
-    reporters: ['html']
-  }
-}
+    reporters: ['html'],
+  },
+})
 ```
 
 You can check your coverage report in Vitest UI: see [Vitest UI Coverage](/guide/coverage#vitest-ui) for more details.

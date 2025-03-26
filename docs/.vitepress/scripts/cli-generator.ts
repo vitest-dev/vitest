@@ -30,6 +30,7 @@ const skipConfig = new Set([
   'coverage.thresholds.lines',
   'standalone',
   'clearScreen',
+  'configLoader',
   'color',
   'run',
   'hideSkippedTests',
@@ -75,7 +76,7 @@ const options = resolveOptions(cliOptionsConfig)
 const template = options.map((option) => {
   const title = option.title
   const cli = option.cli
-  const config = skipConfig.has(title) ? '' : `[${title}](/config/#${title.toLowerCase().replace(/\./g, '-')})`
+  const config = skipConfig.has(title) ? '' : `[${title}](${title.includes('browser.') ? '/guide/browser/config' : '/config/'}#${title.toLowerCase().replace(/\./g, '-')})`
   return `### ${title}\n\n- **CLI:** ${cli}\n${config ? `- **Config:** ${config}\n` : ''}\n${option.description}\n`
 }).join('\n')
 

@@ -1,21 +1,29 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { WorkerGlobalState } from 'vitest'
 import type { WorkspaceProjectConfiguration } from 'vitest/config'
 import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
 import fs from 'node:fs'
 import { Readable, Writable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
+import { inspect } from 'node:util'
 import { dirname, resolve } from 'pathe'
 import { x } from 'tinyexec'
-import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
+import * as tinyrainbow from 'tinyrainbow'
+import { afterEach, onTestFinished } from 'vitest'
 import { startVitest } from 'vitest/node'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
 
-interface VitestRunnerCLIOptions {
+// override default colors to disable them in tests
+Object.assign(tinyrainbow.default, tinyrainbow.getDefaultColors())
+
+export interface VitestRunnerCLIOptions {
   std?: 'inherit'
   fails?: boolean
+  preserveAnsi?: boolean
+  tty?: boolean
 }
 
 export async function runVitest(
@@ -41,6 +49,11 @@ export async function runVitest(
       callback()
     },
   })
+
+  if (runnerOptions?.tty) {
+    (stdout as typeof process.stdout).isTTY = true
+  }
+
   const stderr = new Writable({
     write(chunk, __, callback) {
       if (runnerOptions.std === 'inherit') {
@@ -54,7 +67,7 @@ export async function runVitest(
   const stdin = new Readable({ read: () => '' }) as NodeJS.ReadStream
   stdin.isTTY = true
   stdin.setRawMode = () => stdin
-  const cli = new Cli({ stdin, stdout, stderr })
+  const cli = new Cli({ stdin, stdout, stderr, preserveAnsi: runnerOptions.preserveAnsi })
 
   let ctx: Vitest | undefined
   let thrown = false
@@ -66,6 +79,10 @@ export async function runVitest(
       // "none" can be used to disable passing "reporter" option so that default value is used (it's not same as reporters: ["default"])
       ...(reporters === 'none' ? {} : reporters ? { reporters } : { reporters: ['verbose'] }),
       ...rest,
+      env: {
+        NO_COLOR: 'true',
+        ...rest.env,
+      },
     }, {
       ...viteOverrides,
       server: {
@@ -92,7 +109,7 @@ export async function runVitest(
       console.error(e)
     }
     thrown = true
-    cli.stderr += e.stack
+    cli.stderr += inspect(e)
   }
   finally {
     exitCode = process.exitCode
@@ -101,14 +118,12 @@ export async function runVitest(
     if (getCurrentTest()) {
       onTestFinished(async () => {
         await ctx?.close()
-        await ctx?.closingPromise
         process.exit = exit
       })
     }
     else {
       afterEach(async () => {
         await ctx?.close()
-        await ctx?.closingPromise
         process.exit = exit
       })
     }
@@ -128,7 +143,11 @@ export async function runVitest(
   }
 }
 
-export async function runCli(command: string, _options?: Partial<Options> | string, ...args: string[]) {
+interface CliOptions extends Partial<Options> {
+  earlyReturn?: boolean
+}
+
+export async function runCli(command: string, _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -166,7 +185,11 @@ export async function runCli(command: string, _options?: Partial<Options> | stri
     await isDone
   })
 
-  if (args.includes('--inspect') || args.includes('--inspect-brk')) {
+  if ((options as CliOptions)?.earlyReturn || args.includes('--inspect') || args.includes('--inspect-brk')) {
+    return output()
+  }
+
+  if (args[0] === 'init') {
     return output()
   }
 
@@ -186,12 +209,12 @@ export async function runCli(command: string, _options?: Partial<Options> | stri
   return output()
 }
 
-export async function runVitestCli(_options?: Partial<Options> | string, ...args: string[]) {
+export async function runVitestCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   return runCli('vitest', _options, ...args)
 }
 
-export async function runViteNodeCli(_options?: Partial<Options> | string, ...args: string[]) {
+export async function runViteNodeCli(_options?: CliOptions | string, ...args: string[]) {
   process.env.VITE_TEST_WATCHER_DEBUG = 'true'
   const { vitest, ...rest } = await runCli('vite-node', _options, ...args)
 
@@ -282,13 +305,14 @@ export function useFS(root: string, structure: Record<string, string | ViteUserC
 export async function runInlineTests(
   structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
   config?: UserConfig,
+  options?: VitestRunnerCLIOptions,
 ) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   const fs = useFS(root, structure)
   const vitest = await runVitest({
     root,
     ...config,
-  })
+  }, [], 'test', {}, options)
   return {
     fs,
     root,

@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     include: ['basic.test.ts', 'math.test.ts'],
     browser: {
-      name: 'chromium',
+      instances: [{ browser: 'chromium' }],
       provider: 'playwright',
       headless: true,
       api: 7523,

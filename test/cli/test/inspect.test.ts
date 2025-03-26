@@ -38,7 +38,7 @@ test('--inspect-brk stops at test file', async () => {
 
   if (viteVersion[0] >= '6') {
     // vite ssr transform wraps import by
-    //   __vite_ssr_identity__(__vite_ssr_import_0__.test)(...)
+    //   (0, __vite_ssr_import_0__.test)(...)
     expect(result.scriptSource).toContain('test)("sum", () => {')
     expect(result.scriptSource).toContain('expect)(1 + 1).toBe(2)')
   }
@@ -54,7 +54,7 @@ test('--inspect-brk stops at test file', async () => {
 })
 
 async function createChannel(url: string) {
-  const ws = new WebSocket(url)
+  const ws = new WebSocket(url, { allowSynchronousEvents: false })
 
   let id = 1
   let receiver = defer()

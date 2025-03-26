@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "isolatedDeclarations": true
+  },
   "exclude": ["./dist"]
 }

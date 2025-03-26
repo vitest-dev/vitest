@@ -1,0 +1,51 @@
+diff --git a/index.d.ts b/index.d.ts
+index 986e0d507d88bc033f0a0f0b4dcc40be0635df94..beab8eae28220a457950cdbf5c7f043424f4fa14 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -1,7 +1,7 @@
+-import deepEqual = require("deep-eql");
++// import deepEqual = require("deep-eql");
+ 
+-declare global {
+-    namespace Chai {
++// declare global {
++    declare namespace Chai {
+         type Message = string | (() => string);
+         type ObjectProperty = string | symbol | number;
+ 
+@@ -73,7 +73,7 @@ declare global {
+             getPathInfo(obj: object, path: string): PathInfo;
+             getPathValue(obj: object, path: string): object | undefined;
+ 
+-            eql: typeof deepEqual;
++            // eql: typeof deepEqual;
+         }
+ 
+         type ChaiPlugin = (chai: ChaiStatic, utils: ChaiUtils) => void;
+@@ -2104,8 +2104,9 @@ declare global {
+             stack: string;
+         }
+     }
+-}
++// }
+ 
++declare module "chai" {
+ export function use(fn: Chai.ChaiPlugin): Chai.ChaiStatic;
+ 
+ export const util: Chai.ChaiUtils;
+@@ -2115,9 +2116,10 @@ export function should(): Chai.Should;
+ export function Should(): Chai.Should;
+ export const assert: Chai.AssertStatic;
+ export const expect: Chai.ExpectStatic;
+-
+-declare global {
+-    interface Object {
+-        should: Chai.Assertion;
+-    }
+ }
++
++// declare global {
++//     interface Object {
++//         should: Chai.Assertion;
++//     }
++// }

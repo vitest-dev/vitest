@@ -1,3 +1,4 @@
+import type { FileSpecification } from '@vitest/runner'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
@@ -19,7 +20,7 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createChildProcessChannel(project: TestProject) {
+function createChildProcessChannel(project: TestProject, collect: boolean) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -30,7 +31,7 @@ function createChildProcessChannel(project: TestProject) {
   }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
-    createMethodsRPC(project, { cacheFs: true }),
+    createMethodsRPC(project, { cacheFs: true, collect }),
     {
       eventNames: ['onCancel'],
       serialize: (data) => {
@@ -111,12 +112,14 @@ export function createVmForksPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: string[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
-      ctx.state.clearFiles(project, files)
-      const { channel, cleanup } = createChildProcessChannel(project)
+      const paths = files.map(f => f.filepath)
+      ctx.state.clearFiles(project, paths)
+
+      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
@@ -139,7 +142,7 @@ export function createVmForksPool(
           && /Failed to terminate worker/.test(error.message)
         ) {
           ctx.state.addProcessTimeoutCause(
-            `Failed to terminate worker while running ${files.join(', ')}.`,
+            `Failed to terminate worker while running ${paths.join(', ')}.`,
           )
         }
         // Intentionally cancelled
@@ -148,7 +151,7 @@ export function createVmForksPool(
           && error instanceof Error
           && /The task has been cancelled/.test(error.message)
         ) {
-          ctx.state.cancelFiles(files, project)
+          ctx.state.cancelFiles(paths, project)
         }
         else {
           throw error

@@ -1,4 +1,10 @@
 import type { File, TaskResultPack } from '@vitest/runner'
+import type {
+  CollectorInfo,
+  FilteredTests,
+  RootTreeNode,
+  UITaskTreeNode,
+} from '~/composables/explorer/types'
 import { runCollapseAllTask, runCollapseNode } from '~/composables/explorer/collapse'
 import { collectTestsTotalData, preparePendingTasks, runCollect, runLoadFiles } from '~/composables/explorer/collector'
 import { runExpandAll, runExpandNode } from '~/composables/explorer/expand'
@@ -7,17 +13,12 @@ import {
   filter,
   search,
 } from '~/composables/explorer/state'
-import type {
-  CollectorInfo,
-  FilteredTests,
-  RootTreeNode,
-  UITaskTreeNode,
-} from '~/composables/explorer/types'
 
 export class ExplorerTree {
   private rafCollector: ReturnType<typeof useRafFn>
   private resumeEndRunId: ReturnType<typeof setTimeout> | undefined
   constructor(
+    public projects: string[] = [],
     private onTaskUpdateCalled: boolean = false,
     private resumeEndTimeout = 500,
     public root = <RootTreeNode>{
@@ -53,7 +54,8 @@ export class ExplorerTree {
     this.rafCollector = useRafFn(this.runCollect.bind(this), { fpsLimit: 10, immediate: false })
   }
 
-  loadFiles(remoteFiles: File[]) {
+  loadFiles(remoteFiles: File[], projects: string[]) {
+    this.projects.splice(0, this.projects.length, ...projects)
     runLoadFiles(
       remoteFiles,
       true,

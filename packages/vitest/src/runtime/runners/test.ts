@@ -1,12 +1,10 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type {
   CancelReason,
-  ExtendedContext,
   File,
   Suite,
   Task,
-  TaskContext,
-  Test,
+  TestContext,
   VitestRunner,
   VitestRunnerImportSource,
 } from '@vitest/runner'
@@ -29,7 +27,7 @@ export class VitestTestRunner implements VitestRunner {
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
 
-  public pool = this.workerState.ctx.pool
+  public pool: string = this.workerState.ctx.pool
 
   constructor(public config: SerializedConfig) {}
 
@@ -40,19 +38,16 @@ export class VitestTestRunner implements VitestRunner {
     return this.__vitest_executor.executeId(filepath)
   }
 
-  onCollectStart(file: File) {
+  onCollectStart(file: File): void {
     this.workerState.current = file
   }
 
-  onBeforeRunFiles() {
+  onAfterRunFiles(): void {
     this.snapshotClient.clear()
-  }
-
-  onAfterRunFiles() {
     this.workerState.current = undefined
   }
 
-  async onAfterRunSuite(suite: Suite) {
+  async onAfterRunSuite(suite: Suite): Promise<void> {
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       suite.result!.heap = process.memoryUsage().heapUsed
     }
@@ -62,22 +57,18 @@ export class VitestTestRunner implements VitestRunner {
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
           const name = getNames(test).slice(1).join(' > ')
-          this.snapshotClient.skipTestSnapshots(name)
+          this.snapshotClient.skipTest(suite.file.filepath, name)
         }
       }
 
-      const result = await this.snapshotClient.finishCurrentRun()
-      if (result) {
-        await rpc().snapshotSaved(result)
-      }
+      const result = await this.snapshotClient.finish(suite.file.filepath)
+      await rpc().snapshotSaved(result)
     }
 
     this.workerState.current = suite.suite || suite.file
   }
 
-  onAfterRunTask(test: Task) {
-    this.snapshotClient.clearTest()
-
+  onAfterRunTask(test: Task): void {
     if (this.config.logHeapUsage && typeof process !== 'undefined') {
       test.result!.heap = process.memoryUsage().heapUsed
     }
@@ -85,22 +76,22 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test.suite || test.file
   }
 
-  onCancel(_reason: CancelReason) {
+  onCancel(_reason: CancelReason): void {
     this.cancelRun = true
   }
 
-  injectValue(key: string) {
+  injectValue(key: string): any {
     // inject has a very limiting type controlled by ProvidedContext
     // some tests override it which causes the build to fail
     return (inject as any)(key)
   }
 
-  async onBeforeRunTask(test: Task) {
+  async onBeforeRunTask(test: Task): Promise<void> {
     if (this.cancelRun) {
       test.mode = 'skip'
     }
 
-    if (test.mode !== 'run') {
+    if (test.mode !== 'run' && test.mode !== 'queued') {
       return
     }
 
@@ -109,18 +100,15 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test
   }
 
-  async onBeforeRunSuite(suite: Suite) {
+  async onBeforeRunSuite(suite: Suite): Promise<void> {
     if (this.cancelRun) {
       suite.mode = 'skip'
     }
 
     // initialize snapshot state before running file suite
     if (suite.mode !== 'skip' && 'filepath' in suite) {
-      // default "name" is irrelevant for Vitest since each snapshot assertion
-      // (e.g. `toMatchSnapshot`) specifies "filepath" / "name" pair explicitly
-      await this.snapshotClient.startCurrentRun(
-        (suite as File).filepath,
-        '__default_name_',
+      await this.snapshotClient.setup(
+        suite.file.filepath,
         this.workerState.config.snapshotOptions,
       )
     }
@@ -128,7 +116,8 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task) {
+  onBeforeTryTask(test: Task): void {
+    this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
       {
         assertionCalls: 0,
@@ -136,15 +125,14 @@ export class VitestTestRunner implements VitestRunner {
         isExpectingAssertionsError: null,
         expectedAssertionsNumber: null,
         expectedAssertionsNumberErrorGen: null,
-        testPath: test.file.filepath,
         currentTestName: getTestName(test),
-        snapshotState: this.snapshotClient.snapshotState,
+        snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )
   }
 
-  onAfterTryTask(test: Task) {
+  onAfterTryTask(test: Task): void {
     const {
       assertionCalls,
       expectedAssertionsNumber,
@@ -170,9 +158,7 @@ export class VitestTestRunner implements VitestRunner {
     }
   }
 
-  extendTaskContext<T extends Test>(
-    context: TaskContext<T>,
-  ): ExtendedContext<T> {
+  extendTaskContext(context: TestContext): TestContext {
     // create error during the test initialization so we have a nice stack trace
     if (this.config.expect.requireAssertions) {
       this.assertionsErrors.set(
@@ -194,7 +180,7 @@ export class VitestTestRunner implements VitestRunner {
         return _expect != null
       },
     })
-    return context as ExtendedContext<T>
+    return context
   }
 }
 

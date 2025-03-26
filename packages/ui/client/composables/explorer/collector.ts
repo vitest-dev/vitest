@@ -1,9 +1,10 @@
-import type { Custom, File, Task, TaskResultPack, Test } from '@vitest/runner'
+import type { File, Task, TaskResultPack, Test } from '@vitest/runner'
 import type { Arrayable } from '@vitest/utils'
-import { isAtomTest } from '@vitest/runner/utils'
+import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
+import { isTestCase } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
-import { hasFailedSnapshot } from '@vitest/ws-client'
 import { client, findById } from '~/composables/client'
+import { testRunState } from '~/composables/client/state'
 import { expandNodesOnEndRun } from '~/composables/explorer/expand'
 import { runFilter, testMatcher } from '~/composables/explorer/filter'
 import { explorerTree } from '~/composables/explorer/index'
@@ -14,7 +15,6 @@ import {
   uiEntries,
   uiFiles,
 } from '~/composables/explorer/state'
-import type { CollectFilteredTests, CollectorInfo, Filter, FilteredTests } from '~/composables/explorer/types'
 import {
   createOrUpdateFileNode,
   createOrUpdateNodeTask,
@@ -22,6 +22,9 @@ import {
   isRunningTestNode,
 } from '~/composables/explorer/utils'
 import { isSuite } from '~/utils/task'
+import { hasFailedSnapshot } from '../../../../vitest/src/utils/tasks'
+
+export { hasFailedSnapshot }
 
 export function runLoadFiles(
   remoteFiles: File[],
@@ -103,7 +106,7 @@ export function runCollect(
 }
 
 function* collectRunningTodoTests() {
-  yield * uiEntries.value.filter(isRunningTestNode)
+  yield* uiEntries.value.filter(isRunningTestNode)
 }
 
 function updateRunningTodoTests() {
@@ -234,6 +237,7 @@ function refreshExplorer(search: string, filter: Filter, end: boolean) {
   // update only at the end
   if (end) {
     updateRunningTodoTests()
+    testRunState.value = 'idle'
   }
 }
 
@@ -460,16 +464,16 @@ export function collectTestsTotalData(
   return filesSummary
 }
 
-function* testsCollector(suite: Arrayable<Task>): Generator<Test | Custom> {
+function* testsCollector(suite: Arrayable<Task>): Generator<Test> {
   const arraySuites = toArray(suite)
   let s: Task
   for (let i = 0; i < arraySuites.length; i++) {
     s = arraySuites[i]
-    if (isAtomTest(s)) {
+    if (isTestCase(s)) {
       yield s
     }
     else {
-      yield * testsCollector(s.tasks)
+      yield* testsCollector(s.tasks)
     }
   }
 }

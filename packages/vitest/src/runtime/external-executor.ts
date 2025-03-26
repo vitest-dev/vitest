@@ -73,17 +73,17 @@ export class ExternalModulesExecutor {
     this.resolvers = [this.vite.resolve]
   }
 
-  async import(identifier: string) {
+  async import(identifier: string): Promise<object> {
     const module = await this.createModule(identifier)
     await this.esm.evaluateModule(module)
     return module.namespace
   }
 
-  require(identifier: string) {
+  require(identifier: string): any {
     return this.cjs.require(identifier)
   }
 
-  createRequire(identifier: string) {
+  createRequire(identifier: string): NodeJS.Require {
     return this.cjs.createRequire(identifier)
   }
 
@@ -91,12 +91,12 @@ export class ExternalModulesExecutor {
   public importModuleDynamically = async (
     specifier: string,
     referencer: VMModule,
-  ) => {
+  ): Promise<VMModule> => {
     const module = await this.resolveModule(specifier, referencer.identifier)
     return await this.esm.evaluateModule(module)
   }
 
-  public resolveModule = async (specifier: string, referencer: string) => {
+  public resolveModule = async (specifier: string, referencer: string): Promise<VMModule> => {
     let identifier = this.resolve(specifier, referencer) as
       | string
       | Promise<string>
@@ -108,7 +108,7 @@ export class ExternalModulesExecutor {
     return await this.createModule(identifier)
   }
 
-  public resolve(specifier: string, parent: string) {
+  public resolve(specifier: string, parent: string): string {
     for (const resolver of this.resolvers) {
       const id = resolver(specifier, parent)
       if (id) {
@@ -155,7 +155,7 @@ export class ExternalModulesExecutor {
     return {}
   }
 
-  private wrapCoreSynteticModule(
+  private wrapCoreSyntheticModule(
     identifier: string,
     exports: Record<string, unknown>,
   ) {
@@ -266,7 +266,7 @@ export class ExternalModulesExecutor {
         return await this.esm.createDataModule(identifier)
       case 'builtin': {
         const exports = this.require(identifier)
-        return this.wrapCoreSynteticModule(identifier, exports)
+        return this.wrapCoreSyntheticModule(identifier, exports)
       }
       case 'vite':
         return await this.vite.createViteModule(url)

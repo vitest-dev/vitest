@@ -1,19 +1,20 @@
-import type { Custom, Suite, Task, Test } from '../types/tasks'
-import { type Arrayable, toArray } from '@vitest/utils'
+import type { Arrayable } from '@vitest/utils'
+import type { Suite, Task, Test } from '../types/tasks'
+import { toArray } from '@vitest/utils'
 
 /**
  * @deprecated use `isTestCase` instead
  */
-export function isAtomTest(s: Task): s is Test | Custom {
+export function isAtomTest(s: Task): s is Test {
   return isTestCase(s)
 }
 
-export function isTestCase(s: Task): s is Test | Custom {
-  return s.type === 'test' || s.type === 'custom'
+export function isTestCase(s: Task): s is Test {
+  return s.type === 'test'
 }
 
-export function getTests(suite: Arrayable<Task>): (Test | Custom)[] {
-  const tests: (Test | Custom)[] = []
+export function getTests(suite: Arrayable<Task>): Test[] {
+  const tests: Test[] = []
   const arraySuites = toArray(suite)
   for (const s of arraySuites) {
     if (isTestCase(s)) {

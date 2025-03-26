@@ -149,7 +149,7 @@ export interface MockContext<T extends Procedure> {
 
 type Procedure = (...args: any[]) => any
 // pick a single function type from function overloads, unions, etc...
-type NormalizedPrecedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
+type NormalizedProcedure<T extends Procedure> = (...args: Parameters<T>) => ReturnType<T>
 
 type Methods<T> = keyof {
   [K in keyof T as T[K] extends Procedure ? K : never]: T[K];
@@ -198,28 +198,30 @@ export interface MockInstance<T extends Procedure = Procedure> {
    */
   mockClear(): this
   /**
-   * Performs the same actions as `mockClear` and sets the inner implementation to an empty function (returning `undefined` when invoked). This also resets all "once" implementations. It is useful for completely resetting a mock to its default state.
+   * Does what `mockClear` does and resets inner implementation to the original function. This also resets all "once" implementations.
+   *
+   * Note that resetting a mock from `vi.fn()` will set implementation to an empty function that returns `undefined`.
+   * Resetting a mock from `vi.fn(impl)` will set implementation to `impl`. It is useful for completely resetting a mock to its default state.
    *
    * To automatically call this method before each test, enable the [`mockReset`](https://vitest.dev/config/#mockreset) setting in the configuration.
    * @see https://vitest.dev/api/mock#mockreset
    */
   mockReset(): this
   /**
-   * Does what `mockReset` does and restores inner implementation to the original function.
+   * Does what `mockReset` does and restores original descriptors of spied-on objects.
    *
    * Note that restoring mock from `vi.fn()` will set implementation to an empty function that returns `undefined`. Restoring a `vi.fn(impl)` will restore implementation to `impl`.
    * @see https://vitest.dev/api/mock#mockrestore
    */
   mockRestore(): void
   /**
-   * Performs the same actions as `mockReset` and restores the inner implementation to the original function.
+   * Returns current permanent mock implementation if there is one.
    *
-   * Note that restoring a mock created with `vi.fn()` will set the implementation to an empty function that returns `undefined`. Restoring a mock created with `vi.fn(impl)` will restore the implementation to `impl`.
+   * If mock was created with `vi.fn`, it will consider passed down method as a mock implementation.
    *
-   * To automatically call this method before each test, enable the [`restoreMocks`](https://vitest.dev/config/#restoremocks) setting in the configuration.
-   * @see https://vitest.dev/api/mock#getmockimplementation
+   * If mock was created with `vi.spyOn`, it will return `undefined` unless a custom implementation was provided.
    */
-  getMockImplementation(): NormalizedPrecedure<T> | undefined
+  getMockImplementation(): NormalizedProcedure<T> | undefined
   /**
    * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
    * @see https://vitest.dev/api/mock#mockimplementation
@@ -227,7 +229,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * const increment = vi.fn().mockImplementation(count => count + 1);
    * expect(increment(3)).toBe(4);
    */
-  mockImplementation(fn: NormalizedPrecedure<T>): this
+  mockImplementation(fn: NormalizedProcedure<T>): this
   /**
    * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function. This method can be chained to produce different results for multiple function calls.
    *
@@ -238,7 +240,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    * expect(fn(3)).toBe(4);
    * expect(fn(3)).toBe(3);
    */
-  mockImplementationOnce(fn: NormalizedPrecedure<T>): this
+  mockImplementationOnce(fn: NormalizedProcedure<T>): this
   /**
    * Overrides the original mock implementation temporarily while the callback is being executed.
    *
@@ -253,7 +255,7 @@ export interface MockInstance<T extends Procedure = Procedure> {
    *
    * myMockFn() // 'original'
    */
-  withImplementation<T2>(fn: NormalizedPrecedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
+  withImplementation<T2>(fn: NormalizedProcedure<T>, cb: () => T2): T2 extends Promise<unknown> ? Promise<this> : this
 
   /**
    * Use this if you need to return the `this` context from the method without invoking the actual implementation.
@@ -536,7 +538,7 @@ function enhanceSpy<T extends Procedure>(
 
   stub.mockReset = () => {
     stub.mockClear()
-    implementation = (() => undefined) as T
+    implementation = undefined
     onceImplementations = []
     return stub
   }
@@ -544,11 +546,11 @@ function enhanceSpy<T extends Procedure>(
   stub.mockRestore = () => {
     stub.mockReset()
     state.restore()
-    implementation = undefined
     return stub
   }
 
-  stub.getMockImplementation = () => implementation
+  stub.getMockImplementation = () =>
+    implementationChangedTemporarily ? implementation : (onceImplementations.at(0) || implementation)
   stub.mockImplementation = (fn: T) => {
     implementation = fn
     state.willCall(mockCall)

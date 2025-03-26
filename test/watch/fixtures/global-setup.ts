@@ -1,12 +1,12 @@
-import { GlobalSetupContext } from 'vitest/node';
+import { TestProject } from 'vitest/node';
 
 const calls: string[] = [];
 
 (globalThis as any).__CALLS = calls
 
-export default ({ onTestsRerun }: GlobalSetupContext) => {
+export default (project: TestProject) => {
   calls.push('start')
-  onTestsRerun(() => {
+  project.onTestsRerun(() => {
     calls.push('rerun')
   })
   return () => {

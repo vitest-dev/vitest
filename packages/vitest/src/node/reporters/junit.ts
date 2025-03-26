@@ -1,4 +1,4 @@
-import type { Task } from '@vitest/runner'
+import type { File, Task } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import { existsSync, promises as fs } from 'node:fs'
@@ -164,7 +164,7 @@ export class JUnitReporter implements Reporter {
     name: string,
     attrs: Record<string, any>,
     children: () => Promise<void>,
-  ) {
+  ): Promise<void> {
     const pairs: string[] = []
     for (const key in attrs) {
       const attr = attrs[key]
@@ -260,7 +260,7 @@ export class JUnitReporter implements Reporter {
                   const result = capturePrintError(
                     error,
                     this.ctx,
-                    { project: this.ctx.getProjectByTaskId(task.id), task },
+                    { project: this.ctx.getProjectByName(task.file.projectName || ''), task },
                   )
                   await this.baseLog(
                     escapeXML(stripVTControlCharacters(result.output.trim())),
@@ -274,7 +274,7 @@ export class JUnitReporter implements Reporter {
     }
   }
 
-  async onFinished(files = this.ctx.state.getFiles()) {
+  async onFinished(files: File[] = this.ctx.state.getFiles()): Promise<void> {
     await this.logger.log('<?xml version="1.0" encoding="UTF-8" ?>')
 
     const transformed = files.map((file) => {
@@ -317,6 +317,7 @@ export class JUnitReporter implements Reporter {
           mode: 'run',
           result: file.result,
           meta: {},
+          timeout: 0,
           // NOTE: not used in JUnitReporter
           context: null as any,
           suite: null as any,
@@ -335,6 +336,7 @@ export class JUnitReporter implements Reporter {
       (stats, file) => {
         stats.tests += file.tasks.length
         stats.failures += file.stats.failures
+        stats.time += file.result?.duration || 0
         return stats
       },
       {
@@ -342,11 +344,11 @@ export class JUnitReporter implements Reporter {
         tests: 0,
         failures: 0,
         errors: 0, // we cannot detect those
-        time: executionTime(new Date().getTime() - this._timeStart.getTime()),
+        time: 0,
       },
     )
 
-    await this.writeElement('testsuites', stats, async () => {
+    await this.writeElement('testsuites', { ...stats, time: executionTime(stats.time) }, async () => {
       for (const file of transformed) {
         const filename = relative(this.ctx.config.root, file.filepath)
         await this.writeElement(

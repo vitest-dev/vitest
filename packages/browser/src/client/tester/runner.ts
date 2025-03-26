@@ -1,4 +1,4 @@
-import type { CancelReason, File, Suite, Task, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
@@ -16,10 +16,7 @@ interface BrowserRunnerOptions {
   config: SerializedConfig
 }
 
-export const browserHashMap = new Map<
-  string,
-  string
->()
+export const browserHashMap: Map<string, string> = new Map()
 
 interface CoverageHandler {
   takeCoverage: () => Promise<unknown>
@@ -61,8 +58,13 @@ export function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
-      if (this.config.browser.screenshotFailures && task.result?.state === 'fail') {
-        task.meta.failScreenshotPath = await page.screenshot()
+      if (this.config.browser.screenshotFailures && document.body.clientHeight > 0 && task.result?.state === 'fail') {
+        const screenshot = await page.screenshot().catch((err) => {
+          console.error('[vitest] Failed to take a screenshot', err)
+        })
+        if (screenshot) {
+          task.meta.failScreenshotPath = screenshot
+        }
       }
     }
 
@@ -104,6 +106,10 @@ export function createBrowserRunner(
       }
     }
 
+    onCollectStart = (file: File) => {
+      return rpc().onQueued(file)
+    }
+
     onCollected = async (files: File[]): Promise<unknown> => {
       files.forEach((file) => {
         file.prepareDuration = state.durations.prepare
@@ -122,8 +128,8 @@ export function createBrowserRunner(
       return rpc().onCollected(files)
     }
 
-    onTaskUpdate = (task: TaskResultPack[]): Promise<void> => {
-      return rpc().onTaskUpdate(task)
+    onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
+      return rpc().onTaskUpdate(task, events)
     }
 
     importFile = async (filepath: string) => {
@@ -148,7 +154,7 @@ export async function initiateRunner(
   state: WorkerGlobalState,
   mocker: VitestBrowserClientMocker,
   config: SerializedConfig,
-) {
+): Promise<VitestRunner> {
   if (cachedRunner) {
     return cachedRunner
   }
@@ -165,13 +171,13 @@ export async function initiateRunner(
   const runner = new BrowserRunner({
     config,
   })
+  cachedRunner = runner
 
   const [diffOptions] = await Promise.all([
     loadDiffConfig(config, executor as unknown as VitestExecutor),
     loadSnapshotSerializers(config, executor as unknown as VitestExecutor),
   ])
   runner.config.diffOptions = diffOptions
-  cachedRunner = runner
   getWorkerState().onFilterStackTrace = (stack: string) => {
     const stacks = parseStacktrace(stack, {
       getSourceMap(file) {

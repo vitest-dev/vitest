@@ -1,14 +1,21 @@
 import { channel, client, onCancel } from '@vitest/browser/client'
-import { page, userEvent } from '@vitest/browser/context'
-import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
+import { page, server, userEvent } from '@vitest/browser/context'
+import {
+  collectTests,
+  setupCommonEnv,
+  SpyModule,
+  startCoverageInsideWorker,
+  startTests,
+  stopCoverageInsideWorker,
+} from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
-import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
 import { createModuleMockerInterceptor } from './msw'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
+import { CommandsManager } from './utils'
 
 const cleanupSymbol = Symbol.for('vitest:component-cleanup')
 
@@ -34,6 +41,8 @@ async function prepareTestEnvironment(files: string[]) {
   state.onCancel = onCancel
   state.rpc = rpc as any
 
+  getBrowserState().commands = new CommandsManager()
+
   // TODO: expose `worker`
   const interceptor = createModuleMockerInterceptor()
   const mocker = new VitestBrowserClientMocker(
@@ -49,7 +58,6 @@ async function prepareTestEnvironment(files: string[]) {
 
   setupConsoleLogSpy()
   setupDialogsSpy()
-  setupExpectDom()
 
   const runner = await initiateRunner(state, mocker, config)
 
@@ -69,6 +77,8 @@ async function prepareTestEnvironment(files: string[]) {
     runner,
     config,
     state,
+    rpc,
+    commands: getBrowserState().commands,
   }
 }
 
@@ -113,16 +123,38 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
 
   debug('runner resolved successfully')
 
-  const { config, runner, state } = preparedData
+  const { config, runner, state, commands, rpc } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
 
   debug('prepare time', state.durations.prepare, 'ms')
 
+  let contextSwitched = false
+
+  // webdiverio context depends on the iframe state, so we need to switch the context,
+  // we delay this in case the user doesn't use any userEvent commands to avoid the overhead
+  if (server.provider === 'webdriverio') {
+    let switchPromise: Promise<void> | null = null
+
+    commands.onCommand(async () => {
+      if (switchPromise) {
+        await switchPromise
+      }
+      // if this is the first command, make sure we switched the command context to an iframe
+      if (!contextSwitched) {
+        switchPromise = rpc.wdioSwitchContext('iframe').finally(() => {
+          switchPromise = null
+          contextSwitched = true
+        })
+        await switchPromise
+      }
+    })
+  }
+
   try {
     await Promise.all([
       setupCommonEnv(config),
-      startCoverageInsideWorker(config.coverage, executor),
+      startCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }),
       (async () => {
         const VitestIndex = await import('vitest')
         Object.defineProperty(window, '__vitest_index__', {
@@ -149,8 +181,11 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
         (page[cleanupSymbol] as any)()
       }
       // need to cleanup for each tester
-      // since playwright keybaord API is stateful on page instance level
+      // since playwright keyboard API is stateful on page instance level
       await userEvent.cleanup()
+      if (contextSwitched) {
+        await rpc.wdioSwitchContext('parent')
+      }
     }
     catch (error: any) {
       await client.rpc.onUnhandledError({
@@ -160,7 +195,7 @@ async function executeTests(method: 'run' | 'collect', files: string[]) {
       }, 'Cleanup Error')
     }
     state.environmentTeardownRun = true
-    await stopCoverageInsideWorker(config.coverage, executor).catch((error) => {
+    await stopCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }).catch((error) => {
       client.rpc.onUnhandledError({
         name: error.name,
         message: error.message,

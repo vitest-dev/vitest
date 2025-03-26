@@ -9,11 +9,11 @@ import { capturePrintError } from '../error'
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!
 
-  onInit(ctx: Vitest) {
+  onInit(ctx: Vitest): void {
     this.ctx = ctx
   }
 
-  onFinished(files: File[] = [], errors: unknown[] = []) {
+  onFinished(files: File[] = [], errors: unknown[] = []): void {
     // collect all errors and associate them with projects
     const projectErrors = new Array<{
       project: TestProject
@@ -23,14 +23,14 @@ export class GithubActionsReporter implements Reporter {
     }>()
     for (const error of errors) {
       projectErrors.push({
-        project: this.ctx.getRootTestProject(),
+        project: this.ctx.getRootProject(),
         title: 'Unhandled error',
         error,
       })
     }
     for (const file of files) {
       const tasks = getTasks(file)
-      const project = this.ctx.getProjectByTaskId(file.id)
+      const project = this.ctx.getProjectByName(file.projectName || '')
       for (const task of tasks) {
         if (task.result?.state !== 'fail') {
           continue

@@ -1,10 +1,11 @@
-// CI failes only for this file, but it works locally
+// CI fails only for this file, but it works locally
 
 import type { Assertion, ExpectStatic, MatcherState } from '@vitest/expect'
 import type { TaskPopulated, Test } from '@vitest/runner'
 import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
+  customMatchers,
   getState,
   GLOBAL_EXPECT,
   setState,
@@ -16,7 +17,7 @@ import { getCurrentEnvironment, getWorkerState } from '../../runtime/utils'
 import { createExpectPoll } from './poll'
 import './setup'
 
-export function createExpect(test?: TaskPopulated) {
+export function createExpect(test?: TaskPopulated): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
@@ -109,10 +110,12 @@ export function createExpect(test?: TaskPopulated) {
   chai.util.addMethod(expect, 'assertions', assertions)
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
+  expect.extend(customMatchers)
+
   return expect
 }
 
-const globalExpect = createExpect()
+const globalExpect: ExpectStatic = createExpect()
 
 Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   value: globalExpect,

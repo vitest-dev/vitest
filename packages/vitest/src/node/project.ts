@@ -1,3 +1,4 @@
+import type { GlobOptions } from 'tinyglobby'
 import type {
   ModuleNode,
   TransformResult,
@@ -6,23 +7,26 @@ import type {
 } from 'vite'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
-import type { Vitest } from './core'
+import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
-import type { BrowserServer } from './types/browser'
+import type { Logger } from './logger'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
+import type { Reporter } from './reporters'
+import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
   SerializedConfig,
+  TestProjectInlineConfiguration,
   UserConfig,
-  UserWorkspaceConfig,
 } from './types/config'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
-import fg from 'fast-glob'
 import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
+import { glob } from 'tinyglobby'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { setup } from '../api/setup'
@@ -32,7 +36,7 @@ import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
-import { type WorkspaceSpec as DeprecatedWorkspaceSpec, getFilePoolName } from './pool'
+import { getFilePoolName } from './pool'
 import { TestSpecification } from './spec'
 import { createViteServer } from './vite'
 
@@ -51,7 +55,7 @@ export class TestProject {
   /**
    * Browser instance if the browser is enabled. This is initialized when the tests run for the first time.
    */
-  public browser?: BrowserServer
+  public browser?: ProjectBrowser
 
   /** @deprecated use `vitest` instead */
   public ctx: Vitest
@@ -59,11 +63,14 @@ export class TestProject {
   /**
    * Temporary directory for the project. This is unique for each project. Vitest stores transformed content here.
    */
-  public readonly tmpDir = join(tmpdir(), nanoid())
+  public readonly tmpDir: string = join(tmpdir(), nanoid())
 
-  vitenode!: ViteNodeServer
-  runner!: ViteNodeRunner
-  typechecker?: Typechecker
+  /** @internal */ vitenode!: ViteNodeServer
+  /** @internal */ typechecker?: Typechecker
+  /** @internal */ _config?: ResolvedConfig
+  /** @internal */ _vite?: ViteDevServer
+
+  private runner!: ViteNodeRunner
 
   private closingPromise: Promise<void> | undefined
 
@@ -72,28 +79,27 @@ export class TestProject {
 
   private _globalSetups?: GlobalSetupFile[]
   private _provided: ProvidedContext = {} as any
-  private _config?: ResolvedConfig
-  private _vite?: ViteDevServer
 
   constructor(
     /** @deprecated */
     public path: string | number,
     vitest: Vitest,
-    /** @deprecated */
-    public options?: InitializeProjectOptions,
+    public options?: InitializeProjectOptions | undefined,
   ) {
     this.vitest = vitest
     this.ctx = vitest
     this.globalConfig = vitest.config
   }
 
+  // "provide" is a property, not a method to keep the context when destructed in the global setup,
+  // making it a method would be a breaking change, and can be done in Vitest 3 at minimum
   /**
    * Provide a value to the test context. This value will be available to all tests with `inject`.
    */
-  provide<T extends keyof ProvidedContext & string>(
+  provide = <T extends keyof ProvidedContext & string>(
     key: T,
     value: ProvidedContext[T],
-  ): void {
+  ): void => {
     try {
       structuredClone(value)
     }
@@ -119,7 +125,7 @@ export class TestProject {
     // globalSetup can run even if core workspace is not part of the test run
     // so we need to inherit its provided context
     return {
-      ...this.vitest.getRootTestProject().getProvidedContext(),
+      ...this.vitest.getRootProject().getProvidedContext(),
       ...this._provided,
     }
   }
@@ -128,11 +134,17 @@ export class TestProject {
    * Creates a new test specification. Specifications describe how to run tests.
    * @param moduleId The file path
    */
-  public createSpecification(moduleId: string, pool?: string): TestSpecification {
+  public createSpecification(
+    moduleId: string,
+    locations?: number[] | undefined,
+    /** @internal */
+    pool?: string,
+  ): TestSpecification {
     return new TestSpecification(
       this,
       moduleId,
       pool || getFilePoolName(this, moduleId),
+      locations,
     )
   }
 
@@ -151,6 +163,12 @@ export class TestProject {
     if (!this._vite) {
       throw new Error('The server was not set. It means that `project.vite` was called before the Vite server was established.')
     }
+    // checking it once should be enough
+    Object.defineProperty(this, 'vite', {
+      configurable: true,
+      writable: true,
+      value: this._vite,
+    })
     return this._vite
   }
 
@@ -161,6 +179,12 @@ export class TestProject {
     if (!this._config) {
       throw new Error('The config was not set. It means that `project.config` was called before the Vite server was established.')
     }
+    // checking it once should be enough
+    // Object.defineProperty(this, 'config', {
+    //   configurable: true,
+    //   writable: true,
+    //   value: this._config,
+    // })
     return this._config
   }
 
@@ -175,7 +199,7 @@ export class TestProject {
    * Serialized project configuration. This is the config that tests receive.
    */
   public get serializedConfig(): SerializedConfig {
-    return this._serializeOverridenConfig()
+    return this._serializeOverriddenConfig()
   }
 
   /** @deprecated use `vite` instead */
@@ -187,7 +211,7 @@ export class TestProject {
    * Check if this is the root project. The root project is the one that has the root config.
    */
   public isRootProject(): boolean {
-    return this.vitest.getRootTestProject() === this
+    return this.vitest.getRootProject() === this
   }
 
   /** @deprecated use `isRootProject` instead */
@@ -201,7 +225,7 @@ export class TestProject {
   }
 
   /** @deprecated */
-  initializeGlobalSetup() {
+  initializeGlobalSetup(): Promise<void> {
     return this._initializeGlobalSetup()
   }
 
@@ -217,11 +241,7 @@ export class TestProject {
     )
 
     for (const globalSetupFile of this._globalSetups) {
-      const teardown = await globalSetupFile.setup?.({
-        provide: (key, value) => this.provide(key, value),
-        config: this.config,
-        onTestsRerun: cb => this.vitest.onTestsRerun(cb),
-      })
+      const teardown = await globalSetupFile.setup?.(this)
       if (teardown == null || !!globalSetupFile.teardown) {
         continue
       }
@@ -234,13 +254,17 @@ export class TestProject {
     }
   }
 
+  onTestsRerun(cb: OnTestsRerunHandler): void {
+    this.vitest.onTestsRerun(cb)
+  }
+
   /** @deprecated */
-  teardownGlobalSetup() {
+  teardownGlobalSetup(): Promise<void> {
     return this._teardownGlobalSetup()
   }
 
   /** @internal */
-  async _teardownGlobalSetup() {
+  async _teardownGlobalSetup(): Promise<void> {
     if (!this._globalSetups) {
       return
     }
@@ -250,7 +274,7 @@ export class TestProject {
   }
 
   /** @deprecated use `vitest.logger` instead */
-  get logger() {
+  get logger(): Logger {
     return this.vitest.logger
   }
 
@@ -259,7 +283,7 @@ export class TestProject {
   getModulesByFilepath(file: string): Set<ModuleNode> {
     const set
       = this.server.moduleGraph.getModulesByFile(file)
-      || this.browser?.vite.moduleGraph.getModulesByFile(file)
+        || this.browser?.vite.moduleGraph.getModulesByFile(file)
     return set || new Set()
   }
 
@@ -278,7 +302,7 @@ export class TestProject {
   }
 
   /** @deprecated use `vitest.reporters` instead */
-  get reporters() {
+  get reporters(): Reporter[] {
     return this.ctx.reporters
   }
 
@@ -365,16 +389,22 @@ export class TestProject {
     return isBrowserEnabled(this.config)
   }
 
-  /** @internal */
-  _markTestFile(testPath: string): void {
+  private markTestFile(testPath: string): void {
     this.testFilesList?.push(testPath)
+  }
+
+  /** @internal */
+  _removeCachedTestFile(testPath: string): void {
+    if (this.testFilesList) {
+      this.testFilesList = this.testFilesList.filter(file => file !== testPath)
+    }
   }
 
   /**
    * Returns if the file is a test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isTestFile(testPath: string): boolean {
+  _isCachedTestFile(testPath: string): boolean {
     return !!this.testFilesList && this.testFilesList.includes(testPath)
   }
 
@@ -382,24 +412,25 @@ export class TestProject {
    * Returns if the file is a typecheck test file. Requires `.globTestFiles()` to be called first.
    * @internal
    */
-  isTypecheckFile(testPath: string): boolean {
+  _isCachedTypecheckFile(testPath: string): boolean {
     return !!this.typecheckFilesList && this.typecheckFilesList.includes(testPath)
   }
 
   /** @deprecated use `serializedConfig` instead */
   getSerializableConfig(): SerializedConfig {
-    return this._serializeOverridenConfig()
+    return this._serializeOverriddenConfig()
   }
 
   /** @internal */
   async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       dot: true,
       cwd,
       ignore: exclude,
+      expandDirectories: false,
     }
 
-    const files = await fg(include, globOptions)
+    const files = await glob(include, globOptions)
     // keep the slashes consistent with Vite
     // we are not using the pathe here because it normalizes the drive letter on Windows
     // and we want to keep it the same as working dir
@@ -407,29 +438,36 @@ export class TestProject {
   }
 
   /**
-   * Test if a file matches the test globs. This does the actual glob matching unlike `isTestFile`.
+   * Test if a file matches the test globs. This does the actual glob matching if the test is not cached, unlike `isCachedTestFile`.
    */
-  public matchesTestGlob(filepath: string, source?: string): boolean {
-    const relativeId = relative(this.config.dir || this.config.root, filepath)
+  public matchesTestGlob(moduleId: string, source?: () => string): boolean {
+    if (this._isCachedTestFile(moduleId)) {
+      return true
+    }
+    const relativeId = relative(this.config.dir || this.config.root, moduleId)
     if (mm.isMatch(relativeId, this.config.exclude)) {
       return false
     }
     if (mm.isMatch(relativeId, this.config.include)) {
+      this.markTestFile(moduleId)
       return true
     }
     if (
       this.config.includeSource?.length
       && mm.isMatch(relativeId, this.config.includeSource)
     ) {
-      const code = source || readFileSync(filepath, 'utf-8')
-      return this.isInSourceTestCode(code)
+      const code = source?.() || readFileSync(moduleId, 'utf-8')
+      if (this.isInSourceTestCode(code)) {
+        this.markTestFile(moduleId)
+        return true
+      }
     }
     return false
   }
 
   /** @deprecated use `matchesTestGlob` instead */
   async isTargetFile(id: string, source?: string): Promise<boolean> {
-    return this.matchesTestGlob(id, source)
+    return this.matchesTestGlob(id, source ? () => source : undefined)
   }
 
   private isInSourceTestCode(code: string): boolean {
@@ -464,12 +502,18 @@ export class TestProject {
     return testFiles
   }
 
+  private _parentBrowser?: ParentProjectBrowser
+  private _parent?: TestProject
   /** @internal */
-  async _initBrowserServer() {
-    if (!this.isBrowserEnabled() || this.browser) {
+  _initParentBrowser = deduped(async () => {
+    if (!this.isBrowserEnabled() || this._parentBrowser) {
       return
     }
-    await this.vitest.packageInstaller.ensureInstalled('@vitest/browser', this.config.root, this.ctx.version)
+    await this.vitest.packageInstaller.ensureInstalled(
+      '@vitest/browser',
+      this.config.root,
+      this.vitest.version,
+    )
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
     const browser = await createBrowserServer(
       this,
@@ -477,20 +521,30 @@ export class TestProject {
       [
         ...MocksPlugins({
           filter(id) {
-            if (id.includes(distRoot)) {
+            if (id.includes(distRoot) || id.includes(browser.vite.config.cacheDir)) {
               return false
             }
             return true
           },
         }),
       ],
-      [CoverageTransform(this.ctx)],
+      [CoverageTransform(this.vitest)],
     )
-    this.browser = browser
+    this._parentBrowser = browser
     if (this.config.browser.ui) {
       setup(this.vitest, browser.vite)
     }
-  }
+  })
+
+  /** @internal */
+  _initBrowserServer = deduped(async () => {
+    await this._parent?._initParentBrowser()
+
+    if (!this.browser && this._parent?._parentBrowser) {
+      this.browser = this._parent._parentBrowser.spawn(this)
+      await this.vitest.report('onBrowserInit', this)
+    }
+  })
 
   /**
    * Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts.
@@ -513,26 +567,33 @@ export class TestProject {
     return this.closingPromise
   }
 
+  /**
+   * Import a file using Vite module runner.
+   * @param moduleId The ID of the module in Vite module graph
+   */
+  public import<T>(moduleId: string): Promise<T> {
+    return this.runner.executeId(moduleId)
+  }
+
   /** @deprecated use `name` instead */
   public getName(): string {
     return this.config.name || ''
   }
 
   /** @deprecated internal */
-  public setServer(options: UserConfig, server: ViteDevServer) {
+  public setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     return this._configureServer(options, server)
   }
 
   /** @internal */
   async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     this._config = resolveConfig(
-      this.vitest.mode,
+      this.vitest,
       {
         ...options,
         coverage: this.vitest.config.coverage,
       },
       server.config,
-      this.vitest.logger,
     )
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
@@ -561,7 +622,7 @@ export class TestProject {
     })
   }
 
-  private _serializeOverridenConfig(): SerializedConfig {
+  private _serializeOverriddenConfig(): SerializedConfig {
     // TODO: serialize the config _once_ or when needed
     const config = serializeConfig(
       this.config,
@@ -590,14 +651,26 @@ export class TestProject {
   }
 
   /** @internal */
-  async _initBrowserProvider(): Promise<void> {
+  _initBrowserProvider = deduped(async (): Promise<void> => {
     if (!this.isBrowserEnabled() || this.browser?.provider) {
       return
     }
     if (!this.browser) {
       await this._initBrowserServer()
     }
-    await this.browser?.initBrowserProvider()
+    await this.browser?.initBrowserProvider(this)
+  })
+
+  /** @internal */
+  public _provideObject(context: Partial<ProvidedContext>): void {
+    for (const _providedKey in context) {
+      const providedKey = _providedKey as keyof ProvidedContext
+      // type is very strict here, so we cast it to any
+      (this.provide as (key: string, value: unknown) => void)(
+        providedKey,
+        context[providedKey],
+      )
+    }
   }
 
   /** @internal */
@@ -610,16 +683,36 @@ export class TestProject {
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
-    for (const _providedKey in vitest.config.provide) {
-      const providedKey = _providedKey as keyof ProvidedContext
-      // type is very strict here, so we cast it to any
-      (project.provide as (key: string, value: unknown) => void)(
-        providedKey,
-        vitest.config.provide[providedKey],
-      )
-    }
+    project._provideObject(vitest.config.provide)
     return project
   }
+
+  /** @internal */
+  static _cloneBrowserProject(parent: TestProject, config: ResolvedConfig): TestProject {
+    const clone = new TestProject(
+      parent.path,
+      parent.vitest,
+    )
+    clone.vitenode = parent.vitenode
+    clone.runner = parent.runner
+    clone._vite = parent._vite
+    clone._config = config
+    clone._parent = parent
+    clone._provideObject(config.provide)
+    return clone
+  }
+}
+
+function deduped<T extends (...args: any[]) => Promise<void>>(cb: T): T {
+  let _promise: Promise<void> | undefined
+  return ((...args: any[]) => {
+    if (!_promise) {
+      _promise = cb(...args).finally(() => {
+        _promise = undefined
+      })
+    }
+    return _promise
+  }) as T
 }
 
 export {
@@ -633,23 +726,23 @@ export interface SerializedTestProject {
   context: ProvidedContext
 }
 
-interface InitializeProjectOptions extends UserWorkspaceConfig {
+interface InitializeProjectOptions extends TestProjectInlineConfiguration {
   configFile: string | false
-  extends?: string
 }
 
 export async function initializeProject(
   workspacePath: string | number,
   ctx: Vitest,
   options: InitializeProjectOptions,
-) {
+): Promise<TestProject> {
   const project = new TestProject(workspacePath, ctx, options)
 
-  const { extends: extendsConfig, configFile, ...restOptions } = options
+  const { configFile, ...restOptions } = options
 
   const config: ViteInlineConfig = {
     ...restOptions,
     configFile,
+    configLoader: ctx.vite.config.inlineConfig.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [

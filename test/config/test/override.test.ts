@@ -1,6 +1,6 @@
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from 'vitest/node'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, onTestFinished } from 'vitest'
 import { extraInlineDeps } from 'vitest/config'
 import { createVitest, parseCLI } from 'vitest/node'
 
@@ -8,6 +8,7 @@ type VitestOptions = Parameters<typeof createVitest>[3]
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
+  onTestFinished(() => vitest.close())
   return vitest
 }
 
@@ -249,6 +250,7 @@ describe('correctly defines api flag', () => {
     expect(c.server.config.server.middlewareMode).toBe(true)
     expect(c.config.api).toEqual({
       middlewareMode: true,
+      token: expect.any(String),
     })
   })
 
@@ -262,6 +264,7 @@ describe('correctly defines api flag', () => {
     expect(c.server.config.server.port).toBe(4321)
     expect(c.config.api).toEqual({
       port: 4321,
+      token: expect.any(String),
     })
   })
 })

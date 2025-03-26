@@ -7,6 +7,7 @@ import { provideWorkerState } from '../utils'
 let _viteNode: VitestExecutor
 
 const moduleCache = new ModuleCacheMap()
+const moduleExecutionInfo = new Map()
 
 async function startViteNode(options: ContextExecutorOptions) {
   if (_viteNode) {
@@ -17,10 +18,11 @@ async function startViteNode(options: ContextExecutorOptions) {
   return _viteNode
 }
 
-export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState) {
+export async function runBaseTests(method: 'run' | 'collect', state: WorkerGlobalState): Promise<void> {
   const { ctx } = state
   // state has new context, but we want to reuse existing ones
   state.moduleCache = moduleCache
+  state.moduleExecutionInfo = moduleExecutionInfo
 
   provideWorkerState(globalThis, state)
 
@@ -30,15 +32,23 @@ export async function runBaseTests(method: 'run' | 'collect', state: WorkerGloba
       moduleCache.delete(`mock:${fsPath}`)
     })
   }
-  ctx.files.forEach(i => state.moduleCache.delete(i))
+  ctx.files.forEach(i => state.moduleCache.delete(
+    typeof i === 'string' ? i : i.filepath,
+  ))
 
   const [executor, { run }] = await Promise.all([
     startViteNode({ state, requestStubs: getDefaultRequestStubs() }),
     import('../runBaseTests'),
   ])
+  const fileSpecs = ctx.files.map(f =>
+    typeof f === 'string'
+      ? { filepath: f, testLocations: undefined }
+      : f,
+  )
+
   await run(
     method,
-    ctx.files,
+    fileSpecs,
     ctx.config,
     { environment: state.environment, options: ctx.environment.options },
     executor,

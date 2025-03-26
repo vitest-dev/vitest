@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["@vitest/browser/providers/playwright"],
+    "strict": true,
+    "noEmit": true
+  },
+  "include": ["src", "*.ts"]
+}

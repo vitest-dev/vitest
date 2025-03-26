@@ -1,11 +1,12 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { TestProject } from '../project'
-import type { ResolvedConfig, UserWorkspaceConfig } from '../types/config'
+import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/config'
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
+import { VitestFilteredOutProjectError } from '../errors'
 import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
@@ -15,12 +16,12 @@ import { VitestOptimizer } from './optimizer'
 import { SsrReplacerPlugin } from './ssrReplacer'
 import {
   deleteDefineConfig,
-  hijackVitePluginInject,
+  getDefaultResolveOptions,
   resolveFsAllow,
 } from './utils'
 import { VitestProjectResolver } from './vitestResolver'
 
-interface WorkspaceOptions extends UserWorkspaceConfig {
+interface WorkspaceOptions extends TestProjectInlineConfiguration {
   root?: string
   workspacePath: string | number
 }
@@ -62,14 +63,45 @@ export function WorkspaceVitestPlugin(
           }
         }
 
+        // keep project names to potentially filter it out
+        const workspaceNames = [name]
+        if (viteConfig.test?.browser?.enabled) {
+          if (viteConfig.test.browser.name) {
+            const browser = viteConfig.test.browser.name
+            // vitest injects `instances` in this case later on
+            workspaceNames.push(name ? `${name} (${browser})` : browser)
+          }
+
+          viteConfig.test.browser.instances?.forEach((instance) => {
+            // every instance is a potential project
+            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
+            workspaceNames.push(instance.name)
+          })
+        }
+
+        const filters = project.vitest.config.project
+        // if there is `--project=...` filter, check if any of the potential projects match
+        // if projects don't match, we ignore the test project altogether
+        // if some of them match, they will later be filtered again by `resolveWorkspace`
+        if (filters.length) {
+          const hasProject = workspaceNames.some((name) => {
+            return project.vitest.matchesProjectFilter(name)
+          })
+          if (!hasProject) {
+            throw new VitestFilteredOutProjectError()
+          }
+        }
+
+        const resolveOptions = getDefaultResolveOptions()
         const config: ViteConfig = {
           root,
+          define: {
+            // disable replacing `process.env.NODE_ENV` with static string by vite:client-inject
+            'process.env.NODE_ENV': 'process.env.NODE_ENV',
+          },
           resolve: {
-            // by default Vite resolves `module` field, which not always a native ESM module
-            // setting this option can bypass that and fallback to cjs version
-            mainFields: [],
+            ...resolveOptions,
             alias: testConfig.alias,
-            conditions: ['node'],
           },
           esbuild: viteConfig.esbuild === false
             ? false
@@ -91,8 +123,8 @@ export function WorkspaceVitestPlugin(
             middlewareMode: true,
             fs: {
               allow: resolveFsAllow(
-                project.ctx.config.root,
-                project.ctx.server.config.configFile,
+                project.vitest.config.root,
+                project.vitest.vite.config.configFile,
               ),
             },
           },
@@ -100,12 +132,7 @@ export function WorkspaceVitestPlugin(
           // @ts-ignore Vite 6 compat
           environments: {
             ssr: {
-              resolve: {
-                // by default Vite resolves `module` field, which not always a native ESM module
-                // setting this option can bypass that and fallback to cjs version
-                mainFields: [],
-                conditions: ['node'],
-              },
+              resolve: resolveOptions,
             },
           },
           test: {
@@ -118,7 +145,7 @@ export function WorkspaceVitestPlugin(
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'
             && testConfig.css?.modules?.classNameStrategy)
-            || 'stable'
+          || 'stable'
 
         if (classNameStrategy !== 'scoped') {
           config.css ??= {}
@@ -138,7 +165,7 @@ export function WorkspaceVitestPlugin(
           }
         }
         config.customLogger = createViteLogger(
-          project.logger,
+          project.vitest.logger,
           viteConfig.logLevel || 'warn',
           {
             allowClearScreen: false,
@@ -147,9 +174,6 @@ export function WorkspaceVitestPlugin(
         config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
 
         return config
-      },
-      configResolved(viteConfig) {
-        hijackVitePluginInject(viteConfig)
       },
       async configureServer(server) {
         const options = deepMerge({}, configDefaults, server.config.test || {})
