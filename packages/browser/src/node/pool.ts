@@ -47,9 +47,6 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     const pool: BrowserPool = new BrowserPool(project, {
       maxWorkers: getThreadsCount(project),
       origin,
-      session(sessionId) {
-        return project.vitest._browserSessions.createSession(sessionId, project, pool)
-      },
     })
     projectPools.set(project, pool)
     vitest.onCancel(() => {
@@ -143,7 +140,6 @@ class BrowserPool {
     private options: {
       maxWorkers: number
       origin: string
-      session: (sessionId: string) => Promise<void>
     },
   ) {}
 
@@ -205,7 +201,11 @@ class BrowserPool {
   }
 
   private async openPage(sessionId: string) {
-    const sessionPromise = this.options.session(sessionId)
+    const sessionPromise = this.project.vitest._browserSessions.createSession(
+      sessionId,
+      this.project,
+      this,
+    )
     const url = new URL('/', this.options.origin)
     url.searchParams.set('sessionId', sessionId)
     const pagePromise = this.project.browser!.provider.openPage(
@@ -223,25 +223,43 @@ class BrowserPool {
     return orchestrator
   }
 
-  private runNextTest(method: 'run' | 'collect', sessionId: string) {
+  private finishSession(sessionId: string): void {
+    this.readySessions.add(sessionId)
+
+    // the last worker finished running tests
+    if (this.readySessions.size === this.orchestrators.size) {
+      this._promise?.resolve()
+      this._promise = undefined
+      debug?.('all tests finished running')
+    }
+  }
+
+  private runNextTest(method: 'run' | 'collect', sessionId: string): void {
     const file = this._queue.shift()
+
     if (!file) {
       debug?.('[%s] no more tests to run', sessionId)
+      const isolate = this.project.config.browser.isolate
+      // we don't need to cleanup testers if isolation is enabled,
+      // because cleanup is done at the end of every test
+      if (isolate) {
+        this.finishSession(sessionId)
+        return
+      }
+
+      // we need to cleanup testers first because there is only
+      // one iframe and it does the cleanup only after everything is completed
       const orchestrator = this.getOrchestrator(sessionId)
-      orchestrator.cleanupTesters().catch(error => this.reject(error)).finally(() => {
-        this.readySessions.add(sessionId)
-        // the last worker finished running tests
-        if (this.readySessions.size === this.orchestrators.size) {
-          this._promise?.resolve()
-          this._promise = undefined
-          debug?.('all tests finished running')
-        }
-      })
+      orchestrator.cleanupTesters()
+        .catch(error => this.reject(error))
+        .finally(() => this.finishSession(sessionId))
       return
     }
+
     if (!this._promise) {
       throw new Error(`Unexpected empty queue`)
     }
+
     const orchestrator = this.getOrchestrator(sessionId)
     debug?.('[%s] run test %s', sessionId, file)
 
@@ -265,7 +283,7 @@ class BrowserPool {
           if (
             this.project.vitest.isCancelling
             && error instanceof Error
-            && error.message.startsWith('[birpc] rpc is closed')
+            && error.message.startsWith('Browser connection was closed while running tests')
           ) {
             this.cancel()
             this._promise?.resolve()
