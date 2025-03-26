@@ -12,7 +12,6 @@ import {
 } from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
-import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
 import { createModuleMockerInterceptor } from './msw'
@@ -120,7 +119,6 @@ async function prepareTestEnvironment() {
 
   setupConsoleLogSpy()
   setupDialogsSpy()
-  setupExpectDom()
 
   const runner = await initiateRunner(state, mocker, config)
 

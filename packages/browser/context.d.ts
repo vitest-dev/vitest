@@ -1,5 +1,6 @@
-import type { SerializedConfig } from 'vitest'
+import { SerializedConfig } from 'vitest'
 import { ARIARole } from './aria-role.js'
+import {} from './matchers.js'
 
 export type BufferEncoding =
   | 'ascii'
