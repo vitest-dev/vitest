@@ -362,8 +362,8 @@ export interface TestingLibraryMatchers<E, R> {
    *
    * Accepts `<input>`, `<select>`, and `<textarea>` elements with the exception of `<input type="checkbox">` and
    * `<input type="radiobox">`, which can be matched only using
-   * [toBeChecked](https://github.com/testing-library/jest-dom#tobechecked) or
-   * [toHaveFormValues](https://github.com/testing-library/jest-dom#tohaveformvalues).
+   * [toBeChecked](https://vitest.dev/guide/browser/assertion-api#tobechecked) or
+   * [toHaveFormValues](https://vitest.dev/guide/browser/assertion-api#tohaveformvalues).
    * @example
    * <input
    *   type="number"
