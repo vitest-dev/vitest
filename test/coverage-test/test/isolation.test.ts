@@ -6,19 +6,14 @@ const pools = ['forks']
 
 if (!process.env.COVERAGE_BROWSER) {
   pools.push('threads')
-
-  const [major] = process.version.slice(1).split('.').map(num => Number(num))
-
-  if (major < 22) {
-    pools.push('vmForks', 'vmThreads')
-  }
+  pools.push('vmForks', 'vmThreads')
 }
 
 for (const isolate of [true, false]) {
   for (const pool of pools) {
     test(`{ isolate: ${isolate}, pool: "${pool}" }`, async () => {
       await runVitest({
-        include: ['fixtures/test/isolation-*'],
+        include: ['fixtures/test/isolation-*.test.ts'],
         setupFiles: ['fixtures/setup.isolation.ts'],
         sequence: { sequencer: Sorter },
 
