@@ -60,6 +60,7 @@ async function prepareTestEnvironment(files: string[]) {
   setupDialogsSpy()
 
   const runner = await initiateRunner(state, mocker, config)
+  getBrowserState().runner = runner
 
   const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {

@@ -162,4 +162,9 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
+
+  /** @private */
+  _currentTaskStartTime?: number
+  /** @private */
+  _currentTaskTimeout?: number
 }
