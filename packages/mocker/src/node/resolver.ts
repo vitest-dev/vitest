@@ -55,7 +55,6 @@ export class ServerMockResolver {
       if (module) {
         moduleGraph.invalidateModule(
           module,
-          // TODO: add test file as modules to not invalidate them
           new Set(),
           Date.now(),
           true,

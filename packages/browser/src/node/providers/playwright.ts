@@ -8,6 +8,8 @@ import type {
   LaunchOptions,
   Page,
 } from 'playwright'
+import type { SourceMap } from 'rollup'
+import type { ResolvedConfig } from 'vite'
 import type {
   BrowserModuleMocker,
   BrowserProvider,
@@ -159,33 +161,37 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
             const body = createManualModuleSource(module.url, exports)
             return route.fulfill({
               body,
-              headers: {
-                'Content-Type': 'application/javascript',
-              },
+              headers: getHeaders(this.project.browser!.vite.config),
             })
           }
 
           // webkit doesn't support redirect responses
+          // https://github.com/microsoft/playwright/issues/18318
           const isWebkit = this.browserName === 'webkit'
           if (isWebkit) {
             const url = module.type === 'redirect'
-              ? module.redirect
+              ? (() => {
+                  // url has http:// which vite.trasnformRequest doesn't understand
+                  const url = new URL(module.redirect)
+                  return url.href.slice(url.origin.length)
+                })()
               : (() => {
                   const url = new URL(route.request().url())
                   url.searchParams.set('mock', module.type)
                   return url.href.slice(url.origin.length)
                 })()
-            const result = await this.project.vite.transformRequest(url, {
-              ssr: false,
-            })
+            const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
             if (!result) {
               return route.continue()
             }
+            let content = result.code
+            if (result.map && 'version' in result.map && result.map.mappings) {
+              const type = isDirectCSSRequest(url) ? 'css' : 'js'
+              content = getCodeWithSourcemap(type, content.toString(), result.map)
+            }
             return route.fulfill({
-              body: result.code, // TODO: inject source map
-              headers: {
-                'Content-Type': 'application/javascript',
-              },
+              body: content,
+              headers: getHeaders(this.project.browser!.vite.config),
             })
           }
 
@@ -371,4 +377,45 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     this.contexts.clear()
     await browser?.close()
   }
+}
+
+function getHeaders(config: ResolvedConfig) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/javascript',
+  }
+
+  for (const name in config.server.headers) {
+    headers[name] = String(config.server.headers[name]!)
+  }
+  return headers
+}
+
+function getCodeWithSourcemap(
+  type: 'js' | 'css',
+  code: string,
+  map: SourceMap,
+): string {
+  if (type === 'js') {
+    code += `\n//# sourceMappingURL=${genSourceMapUrl(map)}`
+  }
+  else if (type === 'css') {
+    code += `\n/*# sourceMappingURL=${genSourceMapUrl(map)} */`
+  }
+
+  return code
+}
+
+function genSourceMapUrl(map: SourceMap | string): string {
+  if (typeof map !== 'string') {
+    map = JSON.stringify(map)
+  }
+  return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
+}
+
+const CSS_LANGS_RE
+  = /\.(?:css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/
+const directRequestRE = /[?&]direct\b/
+
+function isDirectCSSRequest(request: string): boolean {
+  return CSS_LANGS_RE.test(request) && directRequestRE.test(request)
 }
