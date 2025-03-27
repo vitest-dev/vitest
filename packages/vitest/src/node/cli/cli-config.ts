@@ -806,6 +806,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description:
       'Clear terminal screen when re-running tests during watch mode (default: `true`)',
   },
+  configLoader: {
+    description:
+      'Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly. This is only available in vite version 6.1.0 and above. (default: `bundle`)',
+    argument: '<loader>',
+  },
   standalone: {
     description:
       'Start Vitest without running tests. File filters will be ignored, tests will be running only on change (default: `false`)',
