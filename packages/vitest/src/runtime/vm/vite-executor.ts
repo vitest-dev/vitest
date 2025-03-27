@@ -83,9 +83,9 @@ export class ViteExecutor {
     const moduleKeys = Object.keys(stub)
     const module = new SyntheticModule(
       moduleKeys,
-      () => {
+      function () {
         moduleKeys.forEach((key) => {
-          module.setExport(key, stub[key])
+          this.setExport(key, stub[key])
         })
       },
       { context: this.options.context, identifier },
