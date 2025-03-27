@@ -62,6 +62,7 @@ export async function createBrowserServer(
     },
     mode: project.config.mode,
     configFile: configPath,
+    configLoader: project.vite.config.inlineConfig.configLoader,
     // watch is handled by Vitest
     server: {
       hmr: false,

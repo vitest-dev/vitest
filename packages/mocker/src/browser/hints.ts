@@ -37,7 +37,7 @@ export function createCompilerHints(options?: CompilerHintsOptions): ModuleMocke
       // @ts-expect-error injected by the plugin
       ? globalThis[globalThisAccessor]
       : new Proxy(
-        {},
+        {} as any,
         {
           get(_, name) {
             throw new Error(

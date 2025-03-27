@@ -122,6 +122,7 @@ export type {
   ResolvedCoverageOptions,
 } from '../node/types/coverage'
 
+export type { VitestPluginContext } from '../node/types/plugin'
 export type { TestRunResult } from '../node/types/tests'
 /**
  * @deprecated Use `TestModule` instead

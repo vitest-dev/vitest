@@ -9,7 +9,9 @@
     "test:playwright": "PROVIDER=playwright pnpm run test:unit",
     "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari pnpm run test:unit",
     "test-fixtures": "vitest",
+    "test-expect-dom": "vitest --root ./fixtures/expect-dom",
     "test-mocking": "vitest --root ./fixtures/mocking",
+    "test-timeout": "vitest --root ./fixtures/timeout",
     "test-mocking-watch": "vitest --root ./fixtures/mocking-watch",
     "test-locators": "vitest --root ./fixtures/locators",
     "test-different-configs": "vitest --root ./fixtures/multiple-different-configs",
@@ -22,18 +24,18 @@
     "test:browser:playwright:html": "PROVIDER=playwright vitest --reporter=html"
   },
   "devDependencies": {
-    "@testing-library/react": "^13.2.0",
-    "@types/react": "^18.2.79",
-    "@vitejs/plugin-basic-ssl": "^1.0.2",
+    "@testing-library/react": "^13.4.0",
+    "@types/react": "^19.0.12",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitest/browser": "workspace:*",
     "@vitest/bundled-lib": "link:./bundled-lib",
     "@vitest/cjs-lib": "link:./cjs-lib",
     "@vitest/injected-lib": "link:./injected-lib",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "url": "^0.11.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "url": "^0.11.4",
     "vitest": "workspace:*",
-    "vitest-browser-react": "^0.0.1",
-    "ws": "^8.18.0"
+    "vitest-browser-react": "^0.1.1",
+    "ws": "catalog:"
   }
 }

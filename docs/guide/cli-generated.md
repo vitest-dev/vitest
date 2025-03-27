@@ -73,10 +73,10 @@ Set to true to exit if port is already in use, instead of automatically trying t
 
 ### silent
 
-- **CLI:** `--silent`
+- **CLI:** `--silent [value]`
 - **Config:** [silent](/config/#silent)
 
-Silent console output from tests
+Silent console output from tests. Use `'passed-only'` to see logs from failing tests only.
 
 ### hideSkippedTests
 
@@ -918,6 +918,12 @@ Removes colors from the console output
 - **CLI:** `--clearScreen`
 
 Clear terminal screen when re-running tests during watch mode (default: `true`)
+
+### configLoader
+
+- **CLI:** `--configLoader <loader>`
+
+Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly. This is only available in vite version 6.1.0 and above. (default: `bundle`)
 
 ### standalone
 

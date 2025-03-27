@@ -9,7 +9,7 @@
     "test-fixtures": "vitest"
   },
   "devDependencies": {
-    "@testing-library/dom": "^9.3.3",
+    "@testing-library/dom": "^9.3.4",
     "happy-dom": "latest",
     "vitest": "workspace:*"
   }

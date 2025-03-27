@@ -85,6 +85,11 @@ function getFramework(): prompt.Choice[] {
       description: '"The library for web and native user interfaces"',
     },
     {
+      title: 'lit',
+      value: 'lit',
+      description: '"A simple library for building fast, lightweight web components."',
+    },
+    {
       title: 'preact',
       value: 'preact',
       description: '"Fast 3kB alternative to React with the same modern API"',
@@ -112,6 +117,8 @@ function getFrameworkTestPackage(framework: string) {
       return 'vitest-browser-svelte'
     case 'react':
       return 'vitest-browser-react'
+    case 'lit':
+      return 'vitest-browser-lit'
     case 'preact':
       return '@testing-library/preact'
     case 'solid':
@@ -204,6 +211,9 @@ function getPossibleFramework(dependencies: Record<string, string>) {
   }
   if (dependencies.svelte || dependencies['@sveltejs/kit']) {
     return 'svelte'
+  }
+  if (dependencies.lit || dependencies['lit-html']) {
+    return 'lit'
   }
   if (dependencies.preact) {
     return 'preact'

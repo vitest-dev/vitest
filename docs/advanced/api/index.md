@@ -61,7 +61,7 @@ The ["Running Tests"](/advanced/guide/tests#startvitest) guide has a usage examp
 ```ts
 function createVitest(
   mode: VitestRunMode,
-  options: UserConfig,
+  options: CliOptions,
   viteOverrides: ViteUserConfig = {},
   vitestOptions: VitestOptions = {},
 ): Promise<Vitest>
