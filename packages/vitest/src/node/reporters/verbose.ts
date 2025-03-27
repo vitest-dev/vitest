@@ -11,7 +11,7 @@ export class VerboseReporter extends DefaultReporter {
   renderSucceed = true
 
   printTestModule(module: TestModule): void {
-    // still print the test module in watch mode,
+    // still print the test module in TTY,
     // but don't print it in the CLI because we
     // print all the tests when they finish
     // instead of printing them when the test file finishes
@@ -23,7 +23,7 @@ export class VerboseReporter extends DefaultReporter {
   onTestCaseResult(test: TestCase): void {
     super.onTestCaseResult(test)
 
-    // don't print tests in watch mode as they go, only print them
+    // don't print tests in TTY as they go, only print them
     // in the CLI when they finish
     if (this.isTTY) {
       return

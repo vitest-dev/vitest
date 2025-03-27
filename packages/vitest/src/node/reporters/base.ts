@@ -144,9 +144,12 @@ export abstract class BaseReporter implements Reporter {
       }
     }
 
-    visit(moduleState, testModule.children)
-
-    this.log = originalLog
+    try {
+      visit(moduleState, testModule.children)
+    }
+    finally {
+      this.log = originalLog
+    }
 
     this.log(this.getModuleLog(testModule, {
       tests: testsCount,
