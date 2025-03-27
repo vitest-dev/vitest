@@ -92,6 +92,7 @@ export function createBrowserRunner(
     onAfterRunFiles = async (files: File[]) => {
       const [coverage] = await Promise.all([
         coverageModule?.takeCoverage?.(),
+        mocker.invalidate(),
         super.onAfterRunFiles?.(files),
       ])
 
@@ -103,13 +104,6 @@ export function createBrowserRunner(
           projectName: this.config.name,
         })
       }
-    }
-
-    onBeforeCollect = async (paths: string[]) => {
-      await super.onBeforeCollect?.(paths)
-      // we are invalidating before importing the files instead of after
-      // to keep the source maps intact
-      await mocker.invalidate()
     }
 
     onCollectStart = (file: File) => {

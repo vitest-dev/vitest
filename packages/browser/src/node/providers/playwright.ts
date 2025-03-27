@@ -148,7 +148,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const ids = sessionIds.get(sessionId) || []
       ids.push(moduleUrl.href)
       sessionIds.set(sessionId, ids)
-      idPreficates.set(url, predicate)
+      idPreficates.set(moduleUrl.href, predicate)
       return predicate
     }
 
