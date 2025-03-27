@@ -7,4 +7,3 @@ it('<MyComponent />', () => {
 it('<>\'"', () => {
   expect(true).toBe(true)
 })
-
