@@ -100,9 +100,3 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
     },
   }
 }
-
-const trailingSeparatorRE = /[?&]$/
-const versionRE = /\bv=\w{8}&?\b/
-function cleanQuery(url: string) {
-  return url.replace(versionRE, '').replace(trailingSeparatorRE, '')
-}
