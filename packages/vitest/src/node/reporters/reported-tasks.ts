@@ -622,7 +622,7 @@ export interface ModuleDiagnostic {
    */
   readonly duration: number
   /**
-   * The amount of memory used by the module in bytes.
+   * The amount of memory used by the test module in bytes.
    * This value is only available if the test was executed with `logHeapUsage` flag.
    */
   readonly heap: number | undefined
