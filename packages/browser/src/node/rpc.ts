@@ -257,15 +257,14 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
 
         async registerMock(sessionId, module) {
           if (!mocker) {
-            const serverUrl = module.url
-            // the browsers stores the url relative to the root
-            // but on the server "id" operates on the file paths
-            module.url = join(vite.config.root, module.url)
+            // make sure modules are not processed yet in case they were imported before
+            // and were not mocked
+            mockResolver.invalidate([module.id])
 
             if (module.type === 'manual') {
               const mock = ManualMockedModule.fromJSON(module, async () => {
                 try {
-                  const { keys } = await rpc.resolveManualMock(serverUrl)
+                  const { keys } = await rpc.resolveManualMock(module.url)
                   return Object.fromEntries(keys.map(key => [key, null]))
                 }
                 catch (err) {
@@ -273,7 +272,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
                   return {}
                 }
               })
-              Object.assign(mock, { serverUrl })
               defaultMockerRegistry.add(mock)
             }
             else {

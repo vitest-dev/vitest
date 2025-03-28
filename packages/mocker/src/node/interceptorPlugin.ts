@@ -22,15 +22,14 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
     load: {
       order: 'pre',
       async handler(id) {
-        const mock = registry.get(cleanQuery(id))
+        const mock = registry.getById(id)
         if (!mock) {
           return
         }
         if (mock.type === 'manual') {
           const exports = Object.keys(await mock.resolve())
           const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
-          const serverUrl = (mock as any).serverUrl as string
-          return createManualModuleSource(serverUrl, exports, accessor)
+          return createManualModuleSource(mock.url, exports, accessor)
         }
         if (mock.type === 'redirect') {
           return readFile(mock.redirect, 'utf-8')
@@ -40,7 +39,7 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
     transform: {
       order: 'post',
       handler(code, id) {
-        const mock = registry.get(cleanQuery(id))
+        const mock = registry.getById(id)
         if (!mock) {
           return
         }
@@ -58,17 +57,10 @@ export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugi
     },
     configureServer(server) {
       server.ws.on('vitest:interceptor:register', (event: MockedModuleSerialized) => {
-        const serverUrl = event.url
-        // the browsers stores the url relative to the root
-        // but on the server "id" operates on the file paths
-        event.url = join(server.config.root, event.url)
         if (event.type === 'manual') {
           const module = ManualMockedModule.fromJSON(event, async () => {
-            const keys = await getFactoryExports(serverUrl)
+            const keys = await getFactoryExports(event.url)
             return Object.fromEntries(keys.map(key => [key, null]))
-          })
-          Object.assign(module, {
-            serverUrl,
           })
           registry.add(module)
         }
