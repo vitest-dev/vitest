@@ -93,7 +93,6 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
-    "msw": "catalog:",
     "sirv": "catalog:",
     "tinyrainbow": "catalog:",
     "ws": "catalog:"

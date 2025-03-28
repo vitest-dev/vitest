@@ -489,9 +489,6 @@ importers:
       magic-string:
         specifier: 'catalog:'
         version: 0.30.17
-      msw:
-        specifier: 'catalog:'
-        version: 2.7.3(@types/node@22.13.13)(typescript@5.8.2)
       sirv:
         specifier: 'catalog:'
         version: 3.0.1
