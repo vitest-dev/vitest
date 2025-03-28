@@ -8,6 +8,13 @@ import type {
 import type { SerializedError, TestError } from '@vitest/utils'
 import type { TestProject } from '../project'
 
+interface ReportedTaskOptions {
+  /**
+   * @default true
+   */
+  register?: boolean
+}
+
 class ReportedTaskImplementation {
   /**
    * Task instance.
@@ -33,10 +40,14 @@ class ReportedTaskImplementation {
   public readonly location: { line: number; column: number } | undefined
 
   /** @internal */
-  protected constructor(
+  constructor(
     task: RunnerTask,
     project: TestProject,
+    options: ReportedTaskOptions = {},
   ) {
+    if (options.register !== false) {
+      storeTask(project, task, this as unknown as TestModule | TestCase | TestSuite)
+    }
     this.task = task
     this.project = project
     this.id = task.id
@@ -57,9 +68,7 @@ class ReportedTaskImplementation {
    * @internal
    */
   static register(task: RunnerTask, project: TestProject) {
-    const state = new this(task, project) as TestCase | TestSuite | TestModule
-    storeTask(project, task, state)
-    return state
+    return new this(task, project) as TestCase | TestSuite | TestModule
   }
 }
 
@@ -86,9 +95,9 @@ export class TestCase extends ReportedTaskImplementation {
   public readonly options: TaskOptions
 
   /**
-   * Parent suite. If the test was called directly inside the module, the parent will be the module itself.
+   * Parent suite.
    */
-  public readonly parent: TestSuite | TestModule
+  public readonly parent: TestSuite
 
   /** @internal */
   protected constructor(task: RunnerTestCase, project: TestProject) {
@@ -101,7 +110,7 @@ export class TestCase extends ReportedTaskImplementation {
       this.parent = getReportedTask(project, suite) as TestSuite
     }
     else {
-      this.parent = this.module
+      this.parent = this.module.suite
     }
     this.options = buildOptions(task)
   }
@@ -111,7 +120,7 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      if (this.parent.type !== 'module') {
+      if (this.parent.task !== this.module.task) {
         this.#fullName = `${this.parent.fullName} > ${this.name}`
       }
       else {
@@ -325,8 +334,12 @@ abstract class SuiteImplementation extends ReportedTaskImplementation {
   public readonly children: TestCollection
 
   /** @internal */
-  protected constructor(task: RunnerTestSuite | RunnerTestFile, project: TestProject) {
-    super(task, project)
+  protected constructor(
+    task: RunnerTestSuite | RunnerTestFile,
+    project: TestProject,
+    options?: ReportedTaskOptions,
+  ) {
+    super(task, project, options)
     this.children = new TestCollection(task, project)
   }
 
@@ -356,9 +369,9 @@ export class TestSuite extends SuiteImplementation {
   public readonly module: TestModule
 
   /**
-   * Parent suite. If suite was called directly inside the module, the parent will be the module itself.
+   * Parent suite. If suite was called directly inside the module, the parent will be undefined.
    */
-  public readonly parent: TestSuite | TestModule
+  public readonly parent: TestSuite | undefined
 
   /**
    * Options that suite was initiated with.
@@ -366,19 +379,30 @@ export class TestSuite extends SuiteImplementation {
   public readonly options: TaskOptions
 
   /** @internal */
-  protected constructor(task: RunnerTestSuite, project: TestProject) {
-    super(task, project)
+  constructor(
+    task: RunnerTestSuite,
+    project: TestProject,
+    testModule?: TestModule,
+    options?: ReportedTaskOptions,
+  ) {
+    super(task, project, options)
 
     this.name = task.name
-    this.module = getReportedTask(project, task.file) as TestModule
+    this.module = testModule || getReportedTask(project, task.file) as TestModule
     const suite = this.task.suite
     if (suite) {
       this.parent = getReportedTask(project, suite) as TestSuite
     }
-    else {
-      this.parent = this.module
+    else if (this.module.suite && this !== this.module.suite) {
+      this.parent = this.module.suite
     }
     this.options = buildOptions(task)
+  }
+
+  static fromTestModule(testModule: TestModule): TestSuite {
+    return new this(testModule.task, testModule.project, testModule, {
+      register: false,
+    })
   }
 
   /**
@@ -399,7 +423,7 @@ export class TestSuite extends SuiteImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      if (this.parent.type !== 'module') {
+      if (this.parent) {
         this.#fullName = `${this.parent.fullName} > ${this.name}`
       }
       else {
@@ -415,6 +439,7 @@ export class TestModule extends SuiteImplementation {
   declare public readonly task: RunnerTestFile
   declare public readonly location: undefined
   public readonly type = 'module'
+  public readonly suite: TestSuite
 
   /**
    * This is usually an absolute UNIX file path.
@@ -427,6 +452,7 @@ export class TestModule extends SuiteImplementation {
   protected constructor(task: RunnerTestFile, project: TestProject) {
     super(task, project)
     this.moduleId = task.filepath
+    this.suite = TestSuite.fromTestModule(this)
   }
 
   /**
