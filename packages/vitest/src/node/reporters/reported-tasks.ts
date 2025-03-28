@@ -120,10 +120,9 @@ export class TestCase extends ReportedTaskImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      if (this.parent.task !== this.module.task) {
+      if (!this.parent.isTestModule()) {
         this.#fullName = `${this.parent.fullName} > ${this.name}`
-      }
-      else {
+      } else {
         this.#fullName = this.name
       }
     }
@@ -399,10 +398,20 @@ export class TestSuite extends SuiteImplementation {
     this.options = buildOptions(task)
   }
 
+  /** @internal */
   static fromTestModule(testModule: TestModule): TestSuite {
     return new this(testModule.task, testModule.project, testModule, {
       register: false,
     })
+  }
+
+  /**
+   * Returns true if the current test suite is a test module.
+   * Test module suite is a "virtual" suite that wraps all tests in the module,
+   * it is not defined by the user manually.
+   */
+  isTestModule(): boolean {
+    return 'filepath' in this.task
   }
 
   /**
@@ -423,10 +432,9 @@ export class TestSuite extends SuiteImplementation {
    */
   public get fullName(): string {
     if (this.#fullName === undefined) {
-      if (this.parent) {
+      if (this.parent && !this.parent?.isTestModule()) {
         this.#fullName = `${this.parent.fullName} > ${this.name}`
-      }
-      else {
+      } else {
         this.#fullName = this.name
       }
     }
