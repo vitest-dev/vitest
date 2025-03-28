@@ -1,4 +1,4 @@
-import { parseAst } from 'rollup/parseAst'
+import { parseAst } from 'vite'
 import { expect, test } from 'vitest'
 import { injectDynamicImport } from '../../../packages/mocker/src/node/dynamicImportPlugin'
 

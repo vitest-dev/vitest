@@ -9,7 +9,6 @@ import type {
   VariableDeclaration,
 } from 'estree'
 import type { SourceMap } from 'magic-string'
-import type { RollupAstNode } from 'rollup'
 import type { Plugin, Rollup } from 'vite'
 import type { Node, Positioned } from './esmWalker'
 import { findNodeAround } from 'acorn-walk'
@@ -125,7 +124,6 @@ const regexpHoistable
 const hashbangRE = /^#!.*\n/
 
 export interface HoistMocksResult {
-  ast: Rollup.ProgramNode
   code: string
   map: SourceMap
 }
@@ -149,7 +147,7 @@ export function hoistMocks(
 
   const s = new MagicString(code)
 
-  let ast: Rollup.ProgramNode
+  let ast: ReturnType<Rollup.PluginContext['parse']>
   try {
     ast = parse(code)
   }
@@ -175,7 +173,7 @@ export function hoistMocks(
   const idToImportMap = new Map<string, string>()
 
   const imports: {
-    node: RollupAstNode<ImportDeclaration>
+    node: Positioned<ImportDeclaration>
     id: string
   }[] = []
 
@@ -549,7 +547,6 @@ export function hoistMocks(
   }
 
   return {
-    ast,
     code: s.toString(),
     map: s.generateMap({ hires: 'boundary', source: id }),
   }
