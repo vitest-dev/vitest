@@ -1,12 +1,9 @@
 import type { BrowserRPC } from '@vitest/browser/client'
 import type { WorkerGlobalState } from 'vitest'
-import { parse } from 'flatted'
 import { getBrowserState } from '../utils'
 
 const config = getBrowserState().config
 const sessionId = getBrowserState().sessionId
-
-const providedContext = parse(getBrowserState().providedContext)
 
 const state: WorkerGlobalState = {
   ctx: {
@@ -20,7 +17,8 @@ const state: WorkerGlobalState = {
       name: 'browser',
       options: null,
     },
-    providedContext,
+    // this is populated before tests run
+    providedContext: {},
     invalidates: [],
   },
   onCancel: null as any,
@@ -38,7 +36,7 @@ const state: WorkerGlobalState = {
     environment: 0,
     prepare: performance.now(),
   },
-  providedContext,
+  providedContext: {},
 }
 
 // @ts-expect-error not typed global

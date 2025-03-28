@@ -526,15 +526,6 @@ body {
             : null,
           ...parentServer.testerScripts,
           ...testerTags,
-          {
-            tag: 'script',
-            attrs: {
-              'type': 'module',
-              'data-vitest-append': '',
-            },
-            children: '{__VITEST_APPEND__}',
-            injectTo: 'body',
-          } as const,
         ].filter(s => s != null)
       },
     },

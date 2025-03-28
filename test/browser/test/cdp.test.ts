@@ -7,9 +7,10 @@ describe.runIf(
   it('cdp sends events correctly', async () => {
     const messageAdded = vi.fn()
 
+    await cdp().send('Console.enable')
+
     cdp().on('Console.messageAdded', messageAdded)
 
-    await cdp().send('Console.enable')
     onTestFinished(async () => {
       await cdp().send('Console.disable')
     })
