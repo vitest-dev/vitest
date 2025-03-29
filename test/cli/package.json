@@ -11,6 +11,7 @@
     "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitest/runner": "workspace:^",
     "@vitest/test-dep-error": "file:./deps/error",
+    "@vitest/test-dep-linked": "link:./deps/linked",
     "@vitest/utils": "workspace:*",
     "debug": "^4.4.0",
     "unplugin-swc": "^1.5.1",

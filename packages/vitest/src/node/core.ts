@@ -880,8 +880,11 @@ export class Vitest {
     if (!task) {
       throw new Error(`Task ${id} was not found`)
     }
+
+    const taskNamePattern = task.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
     await this.changeNamePattern(
-      task.name,
+      taskNamePattern,
       [task.file.filepath],
       'tasks' in task ? 'rerun suite' : 'rerun test',
     )
@@ -918,6 +921,7 @@ export class Vitest {
         })
       })
     }
+
     await this.rerunFiles(files, trigger, pattern === '')
   }
 

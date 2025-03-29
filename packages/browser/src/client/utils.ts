@@ -1,3 +1,4 @@
+import type { VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, WorkerGlobalState } from 'vitest'
 import type { CommandsManager } from './tester/utils'
 
@@ -66,6 +67,7 @@ export interface BrowserRunnerState {
   moduleCache: WorkerGlobalState['moduleCache']
   config: SerializedConfig
   provider: string
+  runner: VitestRunner
   viteConfig: {
     root: string
   }
