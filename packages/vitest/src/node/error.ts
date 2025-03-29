@@ -342,9 +342,12 @@ function printModuleWarningForPackage(
   test: {
     server: {
       deps: {
-        inline: [
-          ${c.yellow(c.bold(`"${name}"`))}
-        ]
+        optimizer: {
+          web: {
+            enabled: true,
+            include: [${c.yellow(c.bold(`"${name}"`))}]
+          }
+        }
       }
     }
   }
