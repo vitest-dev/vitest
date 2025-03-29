@@ -279,9 +279,14 @@ export interface VitestUtils {
    *   nested: {
    *     method: () => 'real'
    *   },
+   *   prop: 'foo',
    * }
    *
    * const mocked = vi.mockObject(original)
+   * expect(mocked.simple()).toBe(undefined)
+   * expect(mocked.nested.method()).toBe(undefined)
+   * expect(mocked.prop).toBe('foo')
+   *
    * mocked.simple.mockReturnValue('mocked')
    * mocked.nested.method.mockReturnValue('mocked nested')
    *

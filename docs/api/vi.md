@@ -402,6 +402,7 @@ const original = {
   nested: {
     method: () => 'real'
   },
+  prop: 'foo',
 }
 
 const mocked = vi.mockObject(original)
