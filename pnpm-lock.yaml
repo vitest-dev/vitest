@@ -1421,6 +1421,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vitest
 
+  test/fake-test:
+    devDependencies:
+      vitest:
+        specifier: workspace:*
+        version: link:../../packages/vitest
+
   test/global-setup:
     devDependencies:
       vitest:
