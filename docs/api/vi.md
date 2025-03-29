@@ -394,7 +394,7 @@ expect(getApples).toHaveNthReturnedWith(2, 5)
 
 - **Type:** `<T>(value: T) => MaybeMockedDeep<T>`
 
-Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports, known as [automocking](/guide/mocking.html#automocking-algorithm).
+Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
 
 ```ts
 const original = {
