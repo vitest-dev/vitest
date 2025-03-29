@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module'
 import { expect } from 'vitest'
-import { coverageTest, isV8Provider, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
+import { coverageTest, isExperimentalV8Provider, isV8Provider, normalizeURL, readCoverageMap, runVitest, test } from '../utils'
 
 test('does not crash when file outside Vite is loaded (#5639)', async () => {
   await runVitest({
@@ -11,7 +11,7 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
   const coverageMap = await readCoverageMap()
   const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/load-outside-vite.cjs')
 
-  if (isV8Provider()) {
+  if (isV8Provider() || isExperimentalV8Provider()) {
     expect(fileCoverage).toMatchInlineSnapshot(`
       {
         "branches": "0/0 (100%)",
@@ -22,6 +22,8 @@ test('does not crash when file outside Vite is loaded (#5639)', async () => {
     `)
   }
   else {
+    // On istanbul the instrumentation happens on Vite plugin, so files
+    // loaded outsite Vite should have 0% coverage
     expect(fileCoverage).toMatchInlineSnapshot(`
       {
         "branches": "0/0 (100%)",
