@@ -200,4 +200,34 @@ describe('testing vi utils', () => {
     expect(mod).toBeDefined()
     expect(mod.timeout).toBe(100)
   })
+
+  test('mockObject', () => {
+    const original = {
+      simple: () => 'value',
+      nested: {
+        method: () => 'real',
+      },
+    }
+
+    const mocked = vi.mockObject(original)
+    mocked.simple.mockReturnValue('mocked')
+    mocked.nested.method.mockReturnValue('mocked nested')
+    expect(mocked.simple()).toBe('mocked')
+    expect(mocked.nested.method()).toBe('mocked nested')
+
+    class OriginalClass {
+      constructor() {
+        throw new Error('should be mocked!')
+      }
+
+      someFn() {
+        return 'value'
+      }
+    }
+    const MockedClass = vi.mockObject(OriginalClass)
+    const mockedInstance = new MockedClass()
+    expect(MockedClass).toHaveBeenCalled()
+    vi.mocked(mockedInstance).someFn.mockImplementation(() => 'mocked')
+    expect(mockedInstance.someFn()).toBe('mocked')
+  })
 })
