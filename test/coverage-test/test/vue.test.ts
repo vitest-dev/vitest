@@ -38,8 +38,8 @@ test('coverage results matches snapshot', async () => {
       {
         "branches": "5/6 (83.33%)",
         "functions": "3/5 (60%)",
-        "lines": "32/40 (80%)",
-        "statements": "32/40 (80%)",
+        "lines": "35/43 (81.39%)",
+        "statements": "35/43 (81.39%)",
       }
     `)
   }

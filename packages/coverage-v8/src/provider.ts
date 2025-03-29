@@ -37,8 +37,6 @@ interface RawCoverage { result: ScriptCoverageWithOffset[] }
 
 // Note that this needs to match the line ending as well
 const VITE_EXPORTS_LINE_PATTERN = /Object\.defineProperty\(__vite_ssr_exports__.*\n/g
-const VITE_EXPORTS_LINE_PATTERN_2 = /^__vite_ssr_exports__\..*/gm
-const VITE_IMPORTS_LINE_PATTERN = /^const __vite_ssr_import_.*$/gm
 const DECORATOR_METADATA_PATTERN = /_ts_metadata\("design:paramtypes", \[[^\]]*\]\),*/g
 const FILE_PROTOCOL = 'file://'
 
@@ -236,6 +234,30 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         coverage: { functions, url: filename },
         ignoreClassMethods: this.options.ignoreClassMethods,
         wrapperLength,
+        ignoreNode: (node, type) => {
+          // SSR transformed imports
+          if (
+            type === 'statement'
+            && node.type === 'AwaitExpression'
+            && node.argument.type === 'CallExpression'
+            && node.argument.callee.type === 'Identifier'
+            && node.argument.callee.name === '__vite_ssr_import__'
+          ) {
+            return true
+          }
+
+          // SSR transformed exports
+          if (
+            type === 'statement'
+            && node.type === 'ExpressionStatement'
+            && node.expression.type === 'AssignmentExpression'
+            && node.expression.left.type === 'MemberExpression'
+            && node.expression.left.object.type === 'Identifier'
+            && node.expression.left.object.name === '__vite_ssr_exports__'
+          ) {
+            return true
+          }
+        },
       },
       )
     }
@@ -413,8 +435,6 @@ function excludeGeneratedCode(
 
   if (
     !source.match(VITE_EXPORTS_LINE_PATTERN)
-    && !source.match(VITE_EXPORTS_LINE_PATTERN_2)
-    && !source.match(VITE_IMPORTS_LINE_PATTERN)
     && !source.match(DECORATOR_METADATA_PATTERN)
   ) {
     return map
@@ -422,8 +442,6 @@ function excludeGeneratedCode(
 
   const trimmed = new MagicString(source)
   trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN, '\n')
-  trimmed.replaceAll(VITE_IMPORTS_LINE_PATTERN, '')
-  trimmed.replaceAll(VITE_EXPORTS_LINE_PATTERN_2, '')
   trimmed.replaceAll(DECORATOR_METADATA_PATTERN, match =>
     '\n'.repeat(match.split('\n').length - 1))
 
