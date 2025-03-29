@@ -10,7 +10,7 @@ const session = new inspector.Session()
 let enabled = false
 
 const mod: CoverageProviderModule = {
-  startCoverage({ isolate }) {
+  async startCoverage({ isolate }) {
     if (isolate === false && enabled) {
       return
     }
@@ -18,11 +18,13 @@ const mod: CoverageProviderModule = {
     enabled = true
 
     session.connect()
-    session.post('Profiler.enable')
-    session.post('Profiler.startPreciseCoverage', {
-      callCount: true,
-      detailed: true,
-    })
+    await new Promise(resolve => session.post('Profiler.enable', resolve))
+    await new Promise(resolve =>
+      session.post(
+        'Profiler.startPreciseCoverage',
+        { callCount: true, detailed: true },
+        resolve,
+      ))
   },
 
   takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
@@ -48,13 +50,13 @@ const mod: CoverageProviderModule = {
     })
   },
 
-  stopCoverage({ isolate }) {
+  async stopCoverage({ isolate }) {
     if (isolate === false) {
       return
     }
 
-    session.post('Profiler.stopPreciseCoverage')
-    session.post('Profiler.disable')
+    await new Promise(resolve => session.post('Profiler.stopPreciseCoverage', resolve))
+    await new Promise(resolve => session.post('Profiler.disable', resolve))
     session.disconnect()
   },
 
