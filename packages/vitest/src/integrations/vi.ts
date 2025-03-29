@@ -269,8 +269,8 @@ export interface VitestUtils {
   ) => Promise<MaybeMockedDeep<T>>
 
   /**
-   * Recursively mocks all properties, methods, and nested objects of a given object.
-   * Similar to creating a deeply mocked version of an object without having to import it.
+   * Deeply mocks properties and methods of a given object
+   * in the same way as `vi.mock()` mocks module exports.
    *
    * @example
    * ```ts
