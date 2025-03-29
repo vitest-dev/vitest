@@ -107,17 +107,6 @@ export class TestRun {
         // we need to report everything manually
         await this.reportChildren(entity.children)
       }
-      else {
-        // skipped tests need to be reported manually once test module/suite has finished
-        for (const test of entity.children.tests('skipped')) {
-          if (test.task.result?.pending) {
-            // pending error tasks are reported normally
-            continue
-          }
-          await this.vitest.report('onTestCaseReady', test)
-          await this.vitest.report('onTestCaseResult', test)
-        }
-      }
 
       if (entity.type === 'module') {
         await this.vitest.report('onTestModuleEnd', entity)

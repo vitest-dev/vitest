@@ -236,6 +236,8 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run' && test.mode !== 'queued') {
+    updateTask('test-prepare', test, runner)
+    updateTask('test-finished', test, runner)
     return
   }
 

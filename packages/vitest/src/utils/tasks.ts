@@ -37,8 +37,8 @@ export function convertTasksToEvents(file: File, onTask?: (task: Task) => void):
       }
       else {
         onTask?.(task)
-        packs.push([task.id, task.result, task.meta])
-        if (task.mode !== 'skip' && task.mode !== 'todo') {
+        if (suite.mode !== 'skip' && suite.mode !== 'todo') {
+          packs.push([task.id, task.result, task.meta])
           events.push([task.id, 'test-prepare'], [task.id, 'test-finished'])
         }
       }
