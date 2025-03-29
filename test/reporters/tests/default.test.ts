@@ -138,8 +138,8 @@ describe('default reporter', async () => {
     expect(trimReporterOutput(stdout)).toMatchInlineSnapshot(`
       "✓ fixtures/pass-and-skip-test-suites.test.ts (4 tests | 2 skipped) [...]ms
          ✓ passing test #1 [...]ms
-         ↓ skipped test #1
          ✓ passing suite > passing test #2 [...]ms
+         ↓ skipped test #1
          ↓ skipped suite > skipped test #2"
     `)
   })

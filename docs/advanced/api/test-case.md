@@ -125,7 +125,7 @@ Checks if the test did not fail the suite. If the test is not finished yet or wa
 function meta(): TaskMeta
 ```
 
-Custom metadata that was attached to the test during its execution. The meta can be attached by assigning a property to the `ctx.task.meta` object during a test run:
+Custom [metadata](/advanced/metadata) that was attached to the test during its execution. The meta can be attached by assigning a property to the `ctx.task.meta` object during a test run:
 
 ```ts {3,6}
 import { test } from 'vitest'

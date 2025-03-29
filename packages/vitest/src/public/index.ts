@@ -274,6 +274,7 @@ export type {
   Custom as RunnerCustomCase,
   Task as RunnerTask,
   TaskBase as RunnerTaskBase,
+  TaskEventPack as RunnerTaskEventPack,
   TaskResult as RunnerTaskResult,
   TaskResultPack as RunnerTaskResultPack,
   Test as RunnerTestCase,

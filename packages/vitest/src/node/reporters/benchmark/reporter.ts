@@ -1,5 +1,6 @@
-import type { File, Task, TaskResultPack } from '@vitest/runner'
+import type { File, TaskResultPack } from '@vitest/runner'
 import type { Vitest } from '../../core'
+import type { TestModule, TestSuite } from '../reported-tasks'
 import fs from 'node:fs'
 import { getFullName } from '@vitest/runner/utils'
 import * as pathe from 'pathe'
@@ -43,20 +44,28 @@ export class BenchmarkReporter extends DefaultReporter {
           })
       }
     }
-
-    super.onTaskUpdate(packs)
   }
 
-  printTask(task: Task): void {
-    if (task?.type !== 'suite' || !task.result?.state || task.result?.state === 'run' || task.result?.state === 'queued') {
+  onTestSuiteResult(testSuite: TestSuite): void {
+    super.onTestSuiteResult(testSuite)
+    this.printSuiteTable(testSuite)
+  }
+
+  protected printTestModule(testModule: TestModule): void {
+    this.printSuiteTable(testModule)
+  }
+
+  private printSuiteTable(testTask: TestModule | TestSuite): void {
+    const state = testTask.state()
+    if (state === 'pending' || state === 'queued') {
       return
     }
 
-    const benches = task.tasks.filter(t => t.meta.benchmark)
-    const duration = task.result.duration
+    const benches = testTask.task.tasks.filter(t => t.meta.benchmark)
+    const duration = testTask.task.result?.duration || 0
 
     if (benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')) {
-      let title = `\n ${getStateSymbol(task)} ${formatProjectName(task.file.projectName)}${getFullName(task, c.dim(' > '))}`
+      let title = `\n ${getStateSymbol(testTask.task)} ${formatProjectName(testTask.project.name)}${getFullName(testTask.task, c.dim(' > '))}`
 
       if (duration != null && duration > this.ctx.config.slowTestThreshold) {
         title += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)

@@ -502,25 +502,7 @@ export class Vitest {
     await this._testRun.start(specifications).catch(noop)
 
     for (const file of files) {
-      const project = this.getProjectByName(file.projectName || '')
-      await this._testRun.enqueued(project, file).catch(noop)
-      await this._testRun.collected(project, [file]).catch(noop)
-
-      const logs: UserConsoleLog[] = []
-
-      const { packs, events } = convertTasksToEvents(file, (task) => {
-        if (task.logs) {
-          logs.push(...task.logs)
-        }
-      })
-
-      logs.sort((log1, log2) => log1.time - log2.time)
-
-      for (const log of logs) {
-        await this._testRun.log(log).catch(noop)
-      }
-
-      await this._testRun.updated(packs, events).catch(noop)
+      await this._reportFileTask(file)
     }
 
     if (hasFailed(files)) {
@@ -536,6 +518,29 @@ export class Vitest {
       testModules: this.state.getTestModules(),
       unhandledErrors: this.state.getUnhandledErrors(),
     }
+  }
+
+  /** @internal */
+  public async _reportFileTask(file: File): Promise<void> {
+    const project = this.getProjectByName(file.projectName || '')
+    await this._testRun.enqueued(project, file).catch(noop)
+    await this._testRun.collected(project, [file]).catch(noop)
+
+    const logs: UserConsoleLog[] = []
+
+    const { packs, events } = convertTasksToEvents(file, (task) => {
+      if (task.logs) {
+        logs.push(...task.logs)
+      }
+    })
+
+    logs.sort((log1, log2) => log1.time - log2.time)
+
+    for (const log of logs) {
+      await this._testRun.log(log).catch(noop)
+    }
+
+    await this._testRun.updated(packs, events).catch(noop)
   }
 
   async collect(filters?: string[]): Promise<TestRunResult> {

@@ -1,4 +1,4 @@
-import type { File, Task, Test } from '@vitest/runner'
+import type { File, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -30,9 +30,9 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  printTask(task: Task): void {
+  printTestModule(testModule: TestModule): void {
     if (!this.isTTY) {
-      super.printTask(task)
+      super.printTestModule(testModule)
     }
   }
 

@@ -87,17 +87,21 @@ for (const config of configs) {
       if (browser) {
         expect(stdout).toMatch(`✓ |chromium| test/first.test.ts > 1 - first.test.ts - this should pass`)
         expect(stdout).toMatch(`× |chromium| test/first.test.ts > 2 - first.test.ts - this should fail`)
+
+        expect(stdout).not.toMatch('✓ |chromium| test/first.test.ts > 3 - first.test.ts - this should be skipped')
+        expect(stdout).not.toMatch('✓ |chromium| test/second.test.ts > 1 - second.test.ts - this should be skipped')
+        expect(stdout).not.toMatch('✓ |chromium| test/second.test.ts > 2 - second.test.ts - this should be skipped')
+        expect(stdout).not.toMatch('✓ |chromium| test/second.test.ts > 3 - second.test.ts - this should be skipped')
       }
       else {
         expect(stdout).toMatch('✓ test/first.test.ts > 1 - first.test.ts - this should pass')
         expect(stdout).toMatch('× test/first.test.ts > 2 - first.test.ts - this should fail')
-      }
 
-      // Cancelled tests should not be run
-      expect(stdout).not.toMatch('test/first.test.ts > 3 - first.test.ts - this should be skipped')
-      expect(stdout).not.toMatch('test/second.test.ts > 1 - second.test.ts - this should be skipped')
-      expect(stdout).not.toMatch('test/second.test.ts > 2 - second.test.ts - this should be skipped')
-      expect(stdout).not.toMatch('test/second.test.ts > 3 - second.test.ts - this should be skipped')
+        expect(stdout).not.toMatch('✓ test/first.test.ts > 3 - first.test.ts - this should be skipped')
+        expect(stdout).not.toMatch('✓ test/second.test.ts > 1 - second.test.ts - this should be skipped')
+        expect(stdout).not.toMatch('✓ test/second.test.ts > 2 - second.test.ts - this should be skipped')
+        expect(stdout).not.toMatch('✓ test/second.test.ts > 3 - second.test.ts - this should be skipped')
+      }
     },
   )
 }
