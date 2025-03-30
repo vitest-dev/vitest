@@ -31,9 +31,10 @@ export class VitestTestRunner implements VitestRunner {
 
   constructor(public config: SerializedConfig) {}
 
-  importFile(filepath: string, source: VitestRunnerImportSource): unknown {
+  async importFile(filepath: string, source: VitestRunnerImportSource): Promise<unknown> {
     if (source === 'setup') {
-      this.workerState.moduleCache.delete(filepath)
+      const resolved = await this.__vitest_executor.resolveUrl(filepath)
+      this.workerState.moduleCache.delete(resolved[1])
     }
     return this.__vitest_executor.executeId(filepath)
   }
