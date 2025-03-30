@@ -19,16 +19,10 @@ export const coverageEnabled = computed(() => {
 export const mainSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-mainSizes',
   [33, 67],
-  {
-    initOnMounted: true,
-  },
 )
 export const detailSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-detailSizes',
   [33, 67],
-  {
-    initOnMounted: true,
-  },
 )
 
 // live sizes of panels in percentage
