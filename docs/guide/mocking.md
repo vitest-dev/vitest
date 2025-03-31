@@ -620,18 +620,19 @@ class Dog {
 We can re-create this class with ES5 functions:
 
 ```ts
-const Dog = vi.fn(function (name) {
-  this.name = name
-})
+// constructor parameters are passed to the mock implementation
+const Dog = vi.fn(name => ({
+  // assign class fields to the returned object
+  name,
+  // mock the "speak" and "feed" methods on every instance of a class
+  speak: vi.fn(() => 'loud bark!'),
+  feed: vi.fn(),
+}))
 
-// notice that static methods are mocked directly on the function,
+// notice that static methods are mocked directly on the function prototype,
 // not on the instance of the class
-Dog.getType = vi.fn(() => 'mocked animal')
-
-// mock the "speak" and "feed" methods on every instance of a class
-// all `new Dog()` instances will inherit these spies
-Dog.prototype.speak = vi.fn(() => 'loud bark!')
-Dog.prototype.feed = vi.fn()
+// all `new Dog()` instances will inherit and share this mock
+Dog.prototype.getType = vi.fn(() => 'mocked animal')
 ```
 
 ::: tip WHEN TO USE?
@@ -640,12 +641,13 @@ Generally speaking, you would re-create a class like this inside the module fact
 ```ts
 import { Dog } from './dog.js'
 
-vi.mock(import('./dog.js'), () => {
-  const Dog = vi.fn()
-  Dog.prototype.feed = vi.fn()
-  // ... other mocks
-  return { Dog }
-})
+vi.mock('./dog.js', () => ({
+  Dog: vi.fn(name => ({
+    name,
+    feed: vi.fn(),
+    // ... other mocks
+  }))
+}))
 ```
 
 This method can also be used to pass an instance of a class to a function that accepts the same interface:
@@ -659,8 +661,10 @@ function feed(dog: Dog) {
 import { expect, test, vi } from 'vitest'
 import { feed } from '../src/feed.js'
 
-const Dog = vi.fn()
-Dog.prototype.feed = vi.fn()
+const Dog = vi.fn(name => ({
+  name,
+  feed: vi.fn(),
+}))
 
 test('can feed dogs', () => {
   const dogMax = new Dog('Max')
@@ -765,9 +769,12 @@ export class SomeClass {}
 ```ts
 import { SomeClass } from './example.js'
 
-vi.mock(import('./example.js'), () => {
-  const SomeClass = vi.fn()
-  SomeClass.prototype.someMethod = vi.fn()
+vi.mock('./example.js', () => {
+  const SomeClass = vi.fn(someConstructorParameter => ({
+    someInstanceField: someConstructorParameter,
+    someInstanceMethod: vi.fn(),
+  }))
+  SomeClass.prototype.someStaticMethod = vi.fn()
   return { SomeClass }
 })
 // SomeClass.mock.instances will have SomeClass
