@@ -14,7 +14,7 @@ import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
-import { createModuleMockerInterceptor } from './msw'
+import { createModuleMockerInterceptor } from './mocker-interceptor'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { CommandsManager } from './utils'
@@ -104,7 +104,8 @@ async function prepareTestEnvironment() {
   state.onCancel = onCancel
   state.rpc = rpc as any
 
-  // TODO: expose `worker`
+  getBrowserState().commands = new CommandsManager()
+
   const interceptor = createModuleMockerInterceptor()
   const mocker = new VitestBrowserClientMocker(
     interceptor,
@@ -121,6 +122,7 @@ async function prepareTestEnvironment() {
   setupDialogsSpy()
 
   const runner = await initiateRunner(state, mocker, config)
+  getBrowserState().runner = runner
 
   // webdiverio context depends on the iframe state, so we need to switch the context,
   // we delay this in case the user doesn't use any userEvent commands to avoid the overhead

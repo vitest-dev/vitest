@@ -10,6 +10,7 @@ import { toArray } from '@vitest/utils'
 import MagicString from 'magic-string'
 import { basename, dirname, extname, resolve } from 'pathe'
 import sirv from 'sirv'
+import * as vite from 'vite'
 import { coverageConfigDefaults } from 'vitest/config'
 import { getFilePoolName, resolveApiServerConfig, resolveFsAllow, distDir as vitestDist } from 'vitest/node'
 import { distRoot } from './constants'
@@ -531,26 +532,40 @@ body {
     {
       name: 'vitest:browser:support-testing-library',
       config() {
-        return {
-          optimizeDeps: {
-            esbuildOptions: {
-              plugins: [
-                {
-                  name: 'test-utils-rewrite',
-                  setup(build) {
-                    // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
-                    // compiler-core: only CJS version allows slots as strings
-                    build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args) => {
-                      const resolved = getRequire().resolve(args.path, {
-                        paths: [args.importer],
-                      })
-                      return { path: resolved }
-                    })
-                  },
-                },
-              ],
+        const rolldownPlugin = {
+          name: 'vue-test-utils-rewrite',
+          resolveId: {
+            // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+            // compiler-core: only CJS version allows slots as strings
+            filter: { id: /^@vue\/(test-utils|compiler-core)$/ },
+            handler(source: string, importer: string) {
+              const resolved = getRequire().resolve(source, {
+                paths: [importer!],
+              })
+              return resolved
             },
           },
+        }
+
+        const esbuildPlugin = {
+          name: 'test-utils-rewrite',
+          // "any" because vite doesn't expose any types for this
+          setup(build: any) {
+            // test-utils: resolve to CJS instead of the browser because the browser version expects a global Vue object
+            // compiler-core: only CJS version allows slots as strings
+            build.onResolve({ filter: /^@vue\/(test-utils|compiler-core)$/ }, (args: any) => {
+              const resolved = getRequire().resolve(args.path, {
+                paths: [args.importer],
+              })
+              return { path: resolved }
+            })
+          },
+        }
+
+        return {
+          optimizeDeps: 'rolldownVersion' in vite
+            ? { rollupOptions: { plugins: [rolldownPlugin] } }
+            : { esbuildOptions: { plugins: [esbuildPlugin] } },
         }
       },
     },

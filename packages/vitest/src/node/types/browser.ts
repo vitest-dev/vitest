@@ -1,3 +1,4 @@
+import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
@@ -18,8 +19,15 @@ export interface CDPSession {
   off: (event: string, listener: (...args: unknown[]) => void) => void
 }
 
+export interface BrowserModuleMocker {
+  register: (sessionId: string, module: MockedModule) => Promise<void>
+  delete: (sessionId: string, url: string) => Promise<void>
+  clear: (sessionId: string) => Promise<void>
+}
+
 export interface BrowserProvider {
   name: string
+  mocker?: BrowserModuleMocker
   /**
    * @experimental opt-in into file parallelisation
    */
