@@ -95,7 +95,8 @@ export class TestRun {
     }
 
     if (event === 'suite-prepare' && entity.type === 'module') {
-      return await this.vitest.report('onTestModuleStart', entity)
+      await this.vitest.report('onTestModuleStart', entity)
+      return await this.vitest.report('onTestSuiteReady', entity.suite)
     }
 
     if (event === 'suite-finished') {
@@ -120,6 +121,7 @@ export class TestRun {
       }
 
       if (entity.type === 'module') {
+        await this.vitest.report('onTestSuiteResult', entity.suite)
         await this.vitest.report('onTestModuleEnd', entity)
       }
       else {
