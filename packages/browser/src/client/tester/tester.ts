@@ -104,8 +104,6 @@ async function prepareTestEnvironment() {
   state.onCancel = onCancel
   state.rpc = rpc as any
 
-  getBrowserState().commands = new CommandsManager()
-
   const interceptor = createModuleMockerInterceptor()
   const mocker = new VitestBrowserClientMocker(
     interceptor,
