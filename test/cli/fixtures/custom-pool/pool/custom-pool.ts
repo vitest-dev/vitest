@@ -1,7 +1,14 @@
-import type { RunnerTestFile, RunnerTestCase } from 'vitest'
+import type {
+  RunnerTestFile,
+  RunnerTestCase,
+  RunnerTestSuite,
+  RunnerTaskResultPack,
+  RunnerTaskEventPack,
+  RunnerTask
+} from 'vitest'
 import type { ProcessPool, Vitest } from 'vitest/node'
 import { createMethodsRPC } from 'vitest/node'
-import { getTasks, generateFileHash } from '@vitest/runner/utils'
+import { generateFileHash } from '@vitest/runner/utils'
 import { normalize, relative } from 'pathe'
 
 export default (vitest: Vitest): ProcessPool => {
@@ -16,7 +23,6 @@ export default (vitest: Vitest): ProcessPool => {
       vitest.logger.console.warn('[pool] array option', options.array)
       for (const [project, file] of specs) {
         vitest.state.clearFiles(project)
-        const methods = createMethodsRPC(project)
         vitest.logger.console.warn('[pool] running tests for', project.name, 'in', normalize(file).toLowerCase().replace(normalize(process.cwd()).toLowerCase(), ''))
         const path = relative(project.config.root, file)
         const taskFile: RunnerTestFile = {
@@ -49,12 +55,7 @@ export default (vitest: Vitest): ProcessPool => {
           },
         }
         taskFile.tasks.push(taskTest)
-        await methods.onCollected([taskFile])
-        await methods.onTaskUpdate(getTasks(taskFile).map(task => [
-          task.id,
-          task.result,
-          task.meta,
-        ]), [])
+        await vitest._reportFileTask(taskFile)
       }
     },
     close() {
