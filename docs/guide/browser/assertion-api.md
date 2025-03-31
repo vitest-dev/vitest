@@ -7,10 +7,10 @@ title: Assertion API | Browser Mode
 Vitest provides a wide range of DOM assertions out of the box forked from [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library with the added support for locators and built-in retry-ability.
 
 ::: tip TypeScript Support
-If you are using [TypeScript](/guide/browser/#typescript) or want to have correct type hints in `expect`, make sure you have `@vitest/browser/context` referenced somewhere. If you never imported from there, you can add a `reference` comment in any file that's covered by your `tsconfig.json`:
+If you are using [TypeScript](/guide/browser/#typescript) or want to have correct type hints in `expect`, make sure you have `@vitest/browser/matchers` referenced somewhere. If you never imported from there, you can add a `reference` comment in any file that's covered by your `tsconfig.json`:
 
 ```ts
-/// <reference types="@vitest/browser/context" />
+/// <reference types="@vitest/browser/matchers" />
 ```
 :::
 
