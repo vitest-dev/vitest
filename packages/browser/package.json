@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "3.1.0-beta.2",
+  "version": "3.1.0",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -93,7 +93,6 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
     "magic-string": "catalog:",
-    "msw": "catalog:",
     "sirv": "catalog:",
     "tinyrainbow": "catalog:",
     "ws": "catalog:"

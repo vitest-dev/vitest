@@ -1,3 +1,4 @@
+import type { MockerRegistry } from '@vitest/mocker'
 import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
@@ -7,10 +8,11 @@ import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
+import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname } from 'pathe'
+import { dirname, join } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -18,7 +20,7 @@ const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
+export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
 
@@ -113,6 +115,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
+    const mocker = project.browser?.provider.mocker
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
@@ -250,6 +253,65 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         },
         invalidate(ids) {
           return mockResolver.invalidate(ids)
+        },
+
+        async registerMock(sessionId, module) {
+          if (!mocker) {
+            // make sure modules are not processed yet in case they were imported before
+            // and were not mocked
+            mockResolver.invalidate([module.id])
+
+            if (module.type === 'manual') {
+              const mock = ManualMockedModule.fromJSON(module, async () => {
+                try {
+                  const { keys } = await rpc.resolveManualMock(module.url)
+                  return Object.fromEntries(keys.map(key => [key, null]))
+                }
+                catch (err) {
+                  vitest.state.catchError(err, 'Manual Mock Resolver Error')
+                  return {}
+                }
+              })
+              defaultMockerRegistry.add(mock)
+            }
+            else {
+              if (module.type === 'redirect') {
+                const redirectUrl = new URL(module.redirect)
+                module.redirect = join(vite.config.root, redirectUrl.pathname)
+              }
+              defaultMockerRegistry.register(module)
+            }
+            return
+          }
+
+          if (module.type === 'manual') {
+            const manualModule = ManualMockedModule.fromJSON(module, async () => {
+              const { keys } = await rpc.resolveManualMock(module.url)
+              return Object.fromEntries(keys.map(key => [key, null]))
+            })
+            await mocker.register(sessionId, manualModule)
+          }
+          else if (module.type === 'redirect') {
+            await mocker.register(sessionId, RedirectedModule.fromJSON(module))
+          }
+          else if (module.type === 'automock') {
+            await mocker.register(sessionId, AutomockedModule.fromJSON(module))
+          }
+          else if (module.type === 'autospy') {
+            await mocker.register(sessionId, AutospiedModule.fromJSON(module))
+          }
+        },
+        clearMocks(sessionId) {
+          if (!mocker) {
+            return defaultMockerRegistry.clear()
+          }
+          return mocker.clear(sessionId)
+        },
+        unregisterMock(sessionId, id) {
+          if (!mocker) {
+            return defaultMockerRegistry.delete(id)
+          }
+          return mocker.delete(sessionId, id)
         },
 
         // CDP
