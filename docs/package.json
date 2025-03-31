@@ -24,7 +24,7 @@
     "@shikijs/vitepress-twoslash": "^3.2.1",
     "@unocss/reset": "catalog:",
     "@vite-pwa/assets-generator": "^0.2.6",
-    "@vite-pwa/vitepress": "^0.5.3",
+    "@vite-pwa/vitepress": "^0.5.4",
     "@vitejs/plugin-vue": "catalog:",
     "https-localhost": "^4.7.1",
     "tinyglobby": "catalog:",

@@ -102,8 +102,8 @@
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^9.7.0",
-    "@wdio/types": "^9.10.1",
+    "@wdio/protocols": "^9.12.2",
+    "@wdio/types": "^9.12.2",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.6.0",
@@ -114,6 +114,6 @@
     "playwright-core": "^1.51.1",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^9.12.1"
+    "webdriverio": "^9.12.2"
   }
 }
