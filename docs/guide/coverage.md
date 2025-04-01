@@ -173,7 +173,7 @@ Please refer to the type definition for more details.
 When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vitest.config.ts` file.
 
 ```js [vitest.config.ts]
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
