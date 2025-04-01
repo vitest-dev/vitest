@@ -325,6 +325,25 @@ export class ViteNodeRunner {
     return await this.cachedRequest(id, fsPath, callstack)
   }
 
+  private async _fetchModule(id: string, importer?: string) {
+    try {
+      return await this.options.fetchModule(id)
+    }
+    catch (cause) {
+      // rethrow vitest error if it cannot load the module because it's not resolved
+      if (cause instanceof Error && cause.message.includes('Failed to load url')) {
+        const error = new Error(
+          `Cannot find package '${id}' imported from '${importer}'`,
+          { cause },
+        ) as Error & { code: string }
+        error.code = 'ERR_MODULE_NOT_FOUND'
+        throw error
+      }
+
+      throw cause
+    }
+  }
+
   /** @internal */
   async directRequest(id: string, fsPath: string, _callstack: string[]) {
     const moduleId = normalizeModuleId(fsPath)
@@ -345,7 +364,10 @@ export class ViteNodeRunner {
     if (id in requestStubs) {
       return requestStubs[id]
     }
-    let { code: transformed, externalize } = await this.options.fetchModule(id)
+    let { code: transformed, externalize } = await this._fetchModule(
+      id,
+      callstack[callstack.length - 2],
+    )
 
     if (externalize) {
       debugNative(externalize)
