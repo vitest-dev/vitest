@@ -103,3 +103,37 @@ suite('hooks cleanup', () => {
     expect(cleanUpCount).toBe(0)
   })
 })
+
+suite('hooks cleanup order', () => {
+  const order: string[] = []
+
+  beforeEach(() => {
+    order.push('[a] beforeEach')
+    return () => {
+      order.push('[a] cleanup')
+    }
+  })
+
+  beforeEach(() => {
+    order.push('[b] beforeEach')
+    return () => {
+      order.push('[b] cleanup')
+    }
+  })
+
+  it('one', () => {
+    expect(order).toEqual([
+      '[a] beforeEach',
+      '[b] beforeEach',
+    ])
+  })
+
+  afterAll(() => {
+    expect(order).toEqual([
+      '[a] beforeEach',
+      '[b] beforeEach',
+      '[b] cleanup',
+      '[a] cleanup',
+    ])
+  })
+})

@@ -96,27 +96,30 @@ async function callTestHooks(
     throw new Error(`Cannot call "onTestFinished" inside a test hook.`)
   }
 
-  if (sequence === 'parallel') {
-    try {
-      await Promise.all(hooks.map(fn => fn(test.context)))
-    }
-    catch (e) {
-      failTask(test.result!, e, runner.config.diffOptions)
-    }
-  }
-  else {
-    for (const fn of hooks) {
+  try {
+    if (sequence === 'parallel') {
       try {
-        await fn(test.context)
+        await Promise.all(hooks.map(fn => fn(test.context)))
       }
       catch (e) {
         failTask(test.result!, e, runner.config.diffOptions)
       }
     }
+    else {
+      for (const fn of hooks) {
+        try {
+          await fn(test.context)
+        }
+        catch (e) {
+          failTask(test.result!, e, runner.config.diffOptions)
+        }
+      }
+    }
   }
-
-  test.context.onTestFailed = onTestFailed
-  test.context.onTestFinished = onTestFinished
+  finally {
+    test.context.onTestFailed = onTestFailed
+    test.context.onTestFinished = onTestFinished
+  }
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
@@ -221,15 +224,31 @@ export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRun
   sendTasksUpdateThrottled(runner)
 }
 
-async function callCleanupHooks(cleanups: unknown[]) {
-  await Promise.all(
-    cleanups.map(async (fn) => {
+async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+  const sequence = runner.config.sequence.hooks
+
+  if (sequence === 'stack') {
+    cleanups = cleanups.slice().reverse()
+  }
+
+  if (sequence === 'parallel') {
+    await Promise.all(
+      cleanups.map(async (fn) => {
+        if (typeof fn !== 'function') {
+          return
+        }
+        await fn()
+      }),
+    )
+  }
+  else {
+    for (const fn of cleanups) {
       if (typeof fn !== 'function') {
-        return
+        continue
       }
       await fn()
-    }),
-  )
+    }
+  }
 }
 
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
@@ -335,7 +354,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           test.context,
           suite,
         ])
-        await callCleanupHooks(beforeEachCleanups)
+        await callCleanupHooks(runner, beforeEachCleanups)
         await callFixtureCleanup(test.context)
       }
       catch (e) {
@@ -504,7 +523,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
     try {
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-      await callCleanupHooks(beforeAllCleanups)
+      await callCleanupHooks(runner, beforeAllCleanups)
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
