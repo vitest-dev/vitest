@@ -333,7 +333,7 @@ export class ViteNodeRunner {
       // rethrow vitest error if it cannot load the module because it's not resolved
       if (cause instanceof Error && cause.message.includes('Failed to load url')) {
         const error = new Error(
-          `Cannot find package '${id}' imported from '${importer}'`,
+          `Cannot find package '${id}'${importer ? ` imported from '${importer}'` : ''}`,
           { cause },
         ) as Error & { code: string }
         error.code = 'ERR_MODULE_NOT_FOUND'
