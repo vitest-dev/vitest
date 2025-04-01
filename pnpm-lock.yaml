@@ -764,8 +764,8 @@ importers:
   packages/spy:
     dependencies:
       tinyspy:
-        specifier: ^3.0.2
-        version: 3.0.2
+        specifier: ^4.0.1
+        version: 4.0.1
 
   packages/ui:
     dependencies:
@@ -1295,8 +1295,8 @@ importers:
         specifier: 'catalog:'
         version: 2.0.0
       tinyspy:
-        specifier: ^1.1.1
-        version: 1.1.1
+        specifier: ^4.0.1
+        version: 4.0.1
       url:
         specifier: ^0.11.4
         version: 0.11.4
@@ -8473,12 +8473,8 @@ packages:
     resolution: {integrity: sha512-op4nsTR47R6p0vMUUoYl/a+ljLFVtlfaXkLQmqfLR1qHma1h/ysYk4hEXZ880bf2CYgTskvTa/e196Vd5dDQXw==}
     engines: {node: '>=14.0.0'}
 
-  tinyspy@1.1.1:
-    resolution: {integrity: sha512-UVq5AXt/gQlti7oxoIg5oi/9r0WpF7DGEVwXgqWSMmyN16+e3tl5lIvTaOpJ3TAtu5xFzWccFRM4R5NaWHF+4g==}
-    engines: {node: '>=14.0.0'}
-
-  tinyspy@3.0.2:
-    resolution: {integrity: sha512-n1cw8k1k0x4pgA2+9XrOkFydTerNcJ1zWCO5Nn9scWHTD+5tp8dghT2x1uduQePZTZgd3Tupf+x9BxJjeJi77Q==}
+  tinyspy@4.0.1:
+    resolution: {integrity: sha512-dI+PLAVsfw9s92CdS+YGhRCqjK0RWlW/Z0Etngirsly/7gMb297mk8niOwgwbPAaiiHTGPOBW1JzP8D23XI8Mw==}
     engines: {node: '>=14.0.0'}
 
   tldts-core@6.1.48:
@@ -17059,9 +17055,7 @@ snapshots:
 
   tinyrainbow@2.0.0: {}
 
-  tinyspy@1.1.1: {}
-
-  tinyspy@3.0.2: {}
+  tinyspy@4.0.1: {}
 
   tldts-core@6.1.48: {}
 
