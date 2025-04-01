@@ -96,30 +96,27 @@ async function callTestHooks(
     throw new Error(`Cannot call "onTestFinished" inside a test hook.`)
   }
 
-  try {
-    if (sequence === 'parallel') {
+  if (sequence === 'parallel') {
+    try {
+      await Promise.all(hooks.map(fn => fn(test.context)))
+    }
+    catch (e) {
+      failTask(test.result!, e, runner.config.diffOptions)
+    }
+  }
+  else {
+    for (const fn of hooks) {
       try {
-        await Promise.all(hooks.map(fn => fn(test.context)))
+        await fn(test.context)
       }
       catch (e) {
         failTask(test.result!, e, runner.config.diffOptions)
       }
     }
-    else {
-      for (const fn of hooks) {
-        try {
-          await fn(test.context)
-        }
-        catch (e) {
-          failTask(test.result!, e, runner.config.diffOptions)
-        }
-      }
-    }
   }
-  finally {
-    test.context.onTestFailed = onTestFailed
-    test.context.onTestFinished = onTestFinished
-  }
+
+  test.context.onTestFailed = onTestFailed
+  test.context.onTestFinished = onTestFinished
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
