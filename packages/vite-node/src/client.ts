@@ -9,6 +9,7 @@ import { extractSourceMap } from './source-map'
 import {
   cleanUrl,
   createImportMetaEnvProxy,
+  isBareImport,
   isInternalRequest,
   isNodeBuiltin,
   isPrimitive,
@@ -329,11 +330,11 @@ export class ViteNodeRunner {
     try {
       return await this.options.fetchModule(id)
     }
-    catch (cause) {
+    catch (cause: any) {
       // rethrow vitest error if it cannot load the module because it's not resolved
-      if (cause instanceof Error && cause.message.includes('Failed to load url')) {
+      if (typeof cause?.message === 'string' && cause.message.includes('Failed to load url')) {
         const error = new Error(
-          `Cannot find package '${id}'${importer ? ` imported from '${importer}'` : ''}`,
+          `Cannot find ${isBareImport(id) ? 'package' : 'module'} '${id}'${importer ? ` imported from '${importer}'` : ''}`,
           { cause },
         ) as Error & { code: string }
         error.code = 'ERR_MODULE_NOT_FOUND'
