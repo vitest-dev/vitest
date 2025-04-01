@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, beforeEach, expect, it, suite } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, expect, it, onTestFinished, suite } from 'vitest'
 
 let count = -1
 
@@ -134,6 +134,52 @@ suite('hooks cleanup order', () => {
       '[b] beforeEach',
       '[b] cleanup',
       '[a] cleanup',
+    ])
+  })
+})
+
+suite('hooks are called for dynamically skipped tests', () => {
+  const order: string[] = []
+
+  suite('tests', () => {
+    beforeEach(() => {
+      order.push('beforeEach')
+      return () => {
+        order.push('beforeEach cleanup')
+      }
+    })
+    afterEach(() => {
+      order.push('afterEach')
+    })
+
+    beforeAll(() => {
+      order.push('beforeAll')
+      return () => {
+        order.push('beforeAll cleanup')
+      }
+    })
+
+    afterAll(() => {
+      order.push('afterAll')
+    })
+
+    it('skipped', (ctx) => {
+      onTestFinished(() => {
+        order.push('onTestFinished')
+      })
+      ctx.skip()
+    })
+  })
+
+  it('order is correct', () => {
+    expect(order).toEqual([
+      'beforeAll',
+      'beforeEach',
+      'afterEach',
+      'beforeEach cleanup',
+      'onTestFinished',
+      'afterAll',
+      'beforeAll cleanup',
     ])
   })
 })

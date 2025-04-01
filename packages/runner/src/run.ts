@@ -330,15 +330,6 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         failTask(test.result, e, runner.config.diffOptions)
       }
 
-      // skipped with new PendingError
-      if (test.result?.pending || test.result?.state === 'skip') {
-        test.mode = 'skip'
-        test.result = { state: 'skip', note: test.result?.note, pending: true }
-        updateTask('test-finished', test, runner)
-        setCurrentTest(undefined)
-        return
-      }
-
       try {
         await runner.onTaskFinished?.(test)
       }
@@ -371,6 +362,20 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       test.onFailed = undefined
       test.onFinished = undefined
+
+      // skipped with new PendingError
+      if (test.result?.pending || test.result?.state === 'skip') {
+        test.mode = 'skip'
+        test.result = {
+          state: 'skip',
+          note: test.result?.note,
+          pending: true,
+          duration: now() - start,
+        }
+        updateTask('test-finished', test, runner)
+        setCurrentTest(undefined)
+        return
+      }
 
       if (test.result.state === 'pass') {
         break
