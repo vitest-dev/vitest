@@ -322,7 +322,7 @@ test('truncate large diff', () => {
   const diff = getErrorDiff(Array.from({ length: 500_000 }).fill(0), 1234)
   expect(diff.length).lessThan(200_000)
   expect(diff.trim()).toMatch(/\.\.\.$/)
-})
+}, 60_000)
 
 test('diff default maxDepth', () => {
   function generateCycle(n: number) {

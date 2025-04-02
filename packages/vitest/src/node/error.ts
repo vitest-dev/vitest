@@ -264,9 +264,14 @@ const skipErrorProperties = new Set([
   'actual',
   'expected',
   'diffOptions',
+  // webkit props
   'sourceURL',
   'column',
   'line',
+  // firefox props
+  'fileName',
+  'lineNumber',
+  'columnNumber',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',

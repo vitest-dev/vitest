@@ -144,14 +144,14 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
   if (getWorkerState().config.browser.providerOptions.actionTimeout != null) {
     return options_
   }
-  const currentTest = getWorkerState().current
-  const startTime = currentTest?.result?.startTime
+  const runner = getBrowserState().runner
+  const startTime = runner._currentTaskStartTime
   // ignore timeout if this is called outside of a test
-  if (!currentTest || currentTest.type === 'suite' || !startTime) {
+  if (!startTime) {
     return options_
   }
-  const timeout = currentTest.timeout
-  if (timeout === 0 || timeout === Number.POSITIVE_INFINITY) {
+  const timeout = runner._currentTaskTimeout
+  if (timeout === 0 || timeout == null || timeout === Number.POSITIVE_INFINITY) {
     return options_
   }
   options_ = options_ || {} as T

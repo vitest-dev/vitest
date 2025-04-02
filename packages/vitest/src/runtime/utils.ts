@@ -14,6 +14,7 @@ export function getWorkerState(): WorkerGlobalState {
         + '\n\nOne of the following is possible:'
         + '\n- "vitest" is imported directly without running "vitest" command'
         + '\n- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)'
+        + '\n- "vitest" is imported inside Vite / Vitest config file'
         + '\n- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues\n'
     throw new Error(errorMsg)
   }
