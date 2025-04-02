@@ -764,8 +764,8 @@ importers:
   packages/spy:
     dependencies:
       tinyspy:
-        specifier: ^4.0.1
-        version: 4.0.1
+        specifier: ^4.0.2
+        version: 4.0.2
 
   packages/ui:
     dependencies:
@@ -8475,6 +8475,10 @@ packages:
 
   tinyspy@4.0.1:
     resolution: {integrity: sha512-dI+PLAVsfw9s92CdS+YGhRCqjK0RWlW/Z0Etngirsly/7gMb297mk8niOwgwbPAaiiHTGPOBW1JzP8D23XI8Mw==}
+    engines: {node: '>=14.0.0'}
+
+  tinyspy@4.0.2:
+    resolution: {integrity: sha512-1gniIIoDOAivEwCUNJI1Vz0y47HfxLlVJLYAi3TtDvu0PIxeV6tICaJPiZFUxc/0RoohyECxSwLHvnBDBIhDdw==}
     engines: {node: '>=14.0.0'}
 
   tldts-core@6.1.48:
@@ -17056,6 +17060,8 @@ snapshots:
   tinyrainbow@2.0.0: {}
 
   tinyspy@4.0.1: {}
+
+  tinyspy@4.0.2: {}
 
   tldts-core@6.1.48: {}
 
