@@ -609,7 +609,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         this.ctx.logger.error(
-          `${c.red(c.bold(c.inverse(' FAIL ')))} ${formatProjectName(projectName)}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(projectName)}${name}`,
         )
       }
 
@@ -628,7 +628,7 @@ export abstract class BaseReporter implements Reporter {
 }
 
 function errorBanner(message: string) {
-  return c.red(divider(c.bold(c.inverse(` ${message} `))))
+  return c.bgRed(divider(c.bold(` ${message} `)))
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {

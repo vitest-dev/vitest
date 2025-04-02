@@ -229,7 +229,8 @@ export function formatProjectName(name: string | undefined, suffix = ' '): strin
 }
 
 export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
-  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${message ? c[color](message) : ''}`
+  const bgColor = `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as 'bgRed' | 'bgGreen' | 'bgBlue' | 'bgCyan' | 'bgYellow'
+  return `${c.bold(c[bgColor](` ${label} `))} ${message ? c[color](message) : ''}`
 }
 
 export function padSummaryTitle(str: string): string {
