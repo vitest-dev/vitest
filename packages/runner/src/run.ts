@@ -221,15 +221,31 @@ export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRun
   sendTasksUpdateThrottled(runner)
 }
 
-async function callCleanupHooks(cleanups: unknown[]) {
-  await Promise.all(
-    cleanups.map(async (fn) => {
+async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+  const sequence = runner.config.sequence.hooks
+
+  if (sequence === 'stack') {
+    cleanups = cleanups.slice().reverse()
+  }
+
+  if (sequence === 'parallel') {
+    await Promise.all(
+      cleanups.map(async (fn) => {
+        if (typeof fn !== 'function') {
+          return
+        }
+        await fn()
+      }),
+    )
+  }
+  else {
+    for (const fn of cleanups) {
       if (typeof fn !== 'function') {
-        return
+        continue
       }
       await fn()
-    }),
-  )
+    }
+  }
 }
 
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
@@ -314,15 +330,6 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         failTask(test.result, e, runner.config.diffOptions)
       }
 
-      // skipped with new PendingError
-      if (test.result?.pending || test.result?.state === 'skip') {
-        test.mode = 'skip'
-        test.result = { state: 'skip', note: test.result?.note, pending: true }
-        updateTask('test-finished', test, runner)
-        setCurrentTest(undefined)
-        return
-      }
-
       try {
         await runner.onTaskFinished?.(test)
       }
@@ -335,7 +342,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           test.context,
           suite,
         ])
-        await callCleanupHooks(beforeEachCleanups)
+        await callCleanupHooks(runner, beforeEachCleanups)
         await callFixtureCleanup(test.context)
       }
       catch (e) {
@@ -355,6 +362,20 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       test.onFailed = undefined
       test.onFinished = undefined
+
+      // skipped with new PendingError
+      if (test.result?.pending || test.result?.state === 'skip') {
+        test.mode = 'skip'
+        test.result = {
+          state: 'skip',
+          note: test.result?.note,
+          pending: true,
+          duration: now() - start,
+        }
+        updateTask('test-finished', test, runner)
+        setCurrentTest(undefined)
+        return
+      }
 
       if (test.result.state === 'pass') {
         break
@@ -504,7 +525,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
     try {
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-      await callCleanupHooks(beforeAllCleanups)
+      await callCleanupHooks(runner, beforeAllCleanups)
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
