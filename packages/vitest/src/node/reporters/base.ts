@@ -628,7 +628,7 @@ export abstract class BaseReporter implements Reporter {
 }
 
 function errorBanner(message: string) {
-  return c.bgRed(divider(c.bold(` ${message} `)))
+  return c.red(divider(c.bold(c.bgRed(c.inverse(` ${message} `)))))
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {
