@@ -5,6 +5,7 @@ import { getTestFixture } from './map'
 export interface FixtureItem extends FixtureOptions {
   prop: string
   value: any
+  scope: 'test' | 'file' | 'worker'
   /**
    * Indicates whether the fixture is a function
    */
@@ -64,6 +65,7 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
           : userValue
       }
 
+      fixtureItem.scope = fixtureItem.scope || 'test'
       fixtureItem.prop = prop
       fixtureItem.isFn = typeof fixtureItem.value === 'function'
       return fixtureItem
@@ -85,6 +87,13 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
         fixture.deps = context.fixtures!.filter(
           ({ prop }) => prop !== fixture.prop && usedProps.includes(prop),
         )
+      }
+      if (fixture.scope !== 'test') {
+        fixture.deps?.forEach((dep) => {
+          if (dep.isFn && dep.scope !== fixture.scope) {
+            throw new Error(`cannot use ${dep.scope} fixture "${dep.prop}" inside ${fixture.scope} fixture "${fixture.prop}"`)
+          }
+        })
       }
     }
   })
@@ -180,7 +189,10 @@ function resolveFixtureValue(
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
 ) {
+  const fileContext = context.task.file.context
+
   if (!fixture.isFn) {
+    fileContext[fixture.prop] ??= fixture.value
     return fixture.value
   }
 
@@ -191,8 +203,6 @@ function resolveFixtureValue(
       cleanupFnArray,
     )
   }
-
-  const fileContext = context.task.file.context
 
   if (fixture.prop in fileContext) {
     return fileContext[fixture.prop]
