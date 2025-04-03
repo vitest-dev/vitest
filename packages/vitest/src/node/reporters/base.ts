@@ -12,7 +12,7 @@ import c from 'tinyrainbow'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
 import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
-import { countTestErrors, divider, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
+import { countTestErrors, divider, errorBanner, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
 
 const BADGE_PADDING = '       '
 
@@ -625,10 +625,6 @@ export abstract class BaseReporter implements Reporter {
       errorDivider()
     }
   }
-}
-
-function errorBanner(message: string) {
-  return c.red(divider(c.bold(c.bgRed(c.inverse(` ${message} `)))))
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {

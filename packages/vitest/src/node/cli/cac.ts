@@ -308,8 +308,8 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     }
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Startup Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner(' Startup Error ')}`)
     console.error(e)
     console.error('\n\n')
 
@@ -365,8 +365,8 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
     await ctx.close()
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Collect Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner(' Collect Error ')}`)
     console.error(e)
     console.error('\n\n')
 

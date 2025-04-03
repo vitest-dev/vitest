@@ -17,7 +17,7 @@ import {
   positionToOffset,
 } from '../utils/source-map'
 import { F_POINTER } from './reporters/renderers/figures'
-import { divider, truncateString } from './reporters/renderers/utils'
+import { divider, errorBanner, truncateString } from './reporters/renderers/utils'
 
 type ErrorLogger = Pick<Logger, 'error' | 'highlight'>
 
@@ -246,7 +246,7 @@ function printErrorInner(
 }
 
 function printErrorType(type: string, ctx: Vitest) {
-  ctx.logger.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
+  ctx.logger.error(`\n${errorBanner(` ${type} `)}`)
 }
 
 const skipErrorProperties = new Set([
