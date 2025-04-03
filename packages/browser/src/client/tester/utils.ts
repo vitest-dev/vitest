@@ -182,7 +182,6 @@ export function getIframeScale(): number {
   return scale
 }
 
-
 function escapeRegexForSelector(re: RegExp): string {
   // Unicode mode does not allow "identity character escapes", so we do not escape and
   // hope that it does not contain quotes and/or >> signs.
