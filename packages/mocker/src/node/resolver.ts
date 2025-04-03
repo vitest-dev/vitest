@@ -103,9 +103,16 @@ export class ServerMockResolver {
   }
 
   private async resolveMockId(rawId: string, importer: string) {
-    // if (!importer.startsWith(this.server.config.root)) {
-    //   importer = join(this.server.config.root, importer)
-    // }
+    if (!importer.startsWith(this.server.config.root)) {
+      const resolved = await this.server.pluginContainer.resolveId(
+        importer,
+        this.server.config.root,
+        {
+          ssr: false,
+        },
+      )
+      importer = resolved?.id ?? this.server.config.root
+    }
     const resolved = await this.server.pluginContainer.resolveId(
       rawId,
       importer,
