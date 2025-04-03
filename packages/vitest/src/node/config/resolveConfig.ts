@@ -349,7 +349,12 @@ export function resolveConfig(
   resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
     resolvePath(file, resolved.root),
   )
-  resolved.coverage.exclude.push(
+
+  // override original exclude array for cases where user re-uses same object in test.exclude
+  resolved.coverage.exclude = [
+    ...resolved.coverage.exclude,
+
+    // Exclude setup files
     ...resolved.setupFiles.map(
       file =>
         `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
@@ -357,8 +362,10 @@ export function resolveConfig(
           file,
         )}`,
     ),
-  )
-  resolved.coverage.exclude.push(...resolved.include)
+
+    // Exclude test files
+    ...resolved.include,
+  ]
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,

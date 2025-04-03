@@ -53,6 +53,13 @@ class ReportedTaskImplementation {
   }
 
   /**
+   * Custom metadata that was attached to the test during its execution.
+   */
+  public meta(): TaskMeta {
+    return this.task.meta
+  }
+
+  /**
    * Creates a new reported task instance and stores it in the project's state for future use.
    * @internal
    */
@@ -168,13 +175,6 @@ export class TestCase extends ReportedTaskImplementation {
       state,
       errors: (result.errors || []) as TestError[],
     } satisfies TestResultFailed
-  }
-
-  /**
-   * Custom metadata that was attached to the test during its execution.
-   */
-  public meta(): TaskMeta {
-    return this.task.meta
   }
 
   /**
@@ -388,6 +388,11 @@ export class TestSuite extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
+   * The meta information attached to the suite during its collection or execution.
+   */
+  declare public meta: () => TaskMeta
+
+  /**
    * Checks the running state of the suite.
    */
   public state(): TestSuiteState {
@@ -447,6 +452,11 @@ export class TestModule extends SuiteImplementation {
   declare public ok: () => boolean
 
   /**
+   * The meta information attached to the module during its collection or execution.
+   */
+  declare public meta: () => TaskMeta
+
+  /**
    * Useful information about the module like duration, memory usage, etc.
    * If the module was not executed yet, all diagnostic values will return `0`.
    */
@@ -456,12 +466,14 @@ export class TestModule extends SuiteImplementation {
     const prepareDuration = this.task.prepareDuration || 0
     const environmentSetupDuration = this.task.environmentLoad || 0
     const duration = this.task.result?.duration || 0
+    const heap = this.task.result?.heap
     return {
       environmentSetupDuration,
       prepareDuration,
       collectDuration,
       setupDuration,
       duration,
+      heap,
     }
   }
 }
@@ -609,6 +621,11 @@ export interface ModuleDiagnostic {
    * Accumulated duration of all tests and hooks in the module.
    */
   readonly duration: number
+  /**
+   * The amount of memory used by the test module in bytes.
+   * This value is only available if the test was executed with `logHeapUsage` flag.
+   */
+  readonly heap: number | undefined
 }
 
 function storeTask(

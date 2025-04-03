@@ -658,7 +658,7 @@ export interface TestContext {
   /**
    * Metadata of the current test
    */
-  task: Readonly<Task>
+  task: Readonly<Test<TestContext>>
 
   /**
    * Extract hooks on test failed

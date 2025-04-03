@@ -170,7 +170,7 @@ Please refer to the type definition for more details.
 
 ## Changing the Default Coverage Folder Location
 
-When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vite.config.js` file.
+When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vitest.config.js` file.
 
 ```js [vitest.config.js]
 import { defineConfig } from 'vite'
@@ -220,7 +220,7 @@ To see all configurable options for coverage, see the [coverage Config Reference
 You can check your coverage report in [Vitest UI](/guide/ui).
 
 Vitest UI will enable coverage report when it is enabled explicitly and the html coverage reporter is present, otherwise it will not be available:
-- enable `coverage.enabled=true` in your configuration or run Vitest with `--coverage.enabled=true` flag
+- enable `coverage.enabled=true` in your configuration file or run Vitest with `--coverage.enabled=true` flag
 - add `html` to the `coverage.reporter` list: you can also enable `subdir` option to put coverage report in a subdirectory
 
 <img alt="html coverage activation in Vitest UI" img-light src="/vitest-ui-show-coverage-light.png">
