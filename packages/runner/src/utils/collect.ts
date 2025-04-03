@@ -192,7 +192,6 @@ export function createFileTask(
     projectName,
     file: undefined!,
     pool,
-    context: Object.create(null),
   }
   file.file = file
   return file

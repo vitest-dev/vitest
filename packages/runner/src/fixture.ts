@@ -45,7 +45,7 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
   context: T,
   inject: (key: string) => unknown,
 ): T {
-  const fixtureOptionKeys = ['auto', 'injected', 'scope']
+  const fixtureOptionKeys = ['auto', 'injected']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
     ([prop, value]) => {
       const fixtureItem = { value } as FixtureItem
@@ -94,11 +94,11 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
 
 const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
 const cleanupFnArrayMap = new Map<
-  object,
+  TestContext,
   Array<() => void | Promise<void>>
 >()
 
-export async function callFixtureCleanup(context: object): Promise<void> {
+export async function callFixtureCleanup(context: TestContext): Promise<void> {
   const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
   for (const cleanup of cleanupFnArray.reverse()) {
     await cleanup()
@@ -153,73 +153,19 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
           continue
         }
 
-        const resolvedValue = await resolveFixtureValue(
-          fixture,
-          context!,
-          cleanupFnArray,
-        )
+        const resolvedValue = fixture.isFn
+          ? await resolveFixtureFunction(fixture.value, context, cleanupFnArray)
+          : fixture.value
         context![fixture.prop] = resolvedValue
         fixtureValueMap.set(fixture, resolvedValue)
-
-        if (!fixture.scope || fixture.scope === 'test') {
-          cleanupFnArray.unshift(() => {
-            fixtureValueMap.delete(fixture)
-          })
-        }
+        cleanupFnArray.unshift(() => {
+          fixtureValueMap.delete(fixture)
+        })
       }
     }
 
     return resolveFixtures().then(() => fn(context))
   }
-}
-
-const fileFixturePromise = new WeakMap<FixtureItem, Promise<unknown>>()
-
-function resolveFixtureValue(
-  fixture: FixtureItem,
-  context: TestContext & { [key: string]: any },
-  cleanupFnArray: (() => void | Promise<void>)[],
-) {
-  if (!fixture.isFn) {
-    return fixture.value
-  }
-
-  if (!fixture.scope || fixture.scope === 'test') {
-    return resolveFixtureFunction(
-      fixture.value,
-      context,
-      cleanupFnArray,
-    )
-  }
-
-  const fileContext = context.task.file.context
-
-  if (fixture.prop in fileContext) {
-    return fileContext[fixture.prop]
-  }
-
-  // in case the test runs in parallel
-  if (fileFixturePromise.has(fixture)) {
-    return fileFixturePromise.get(fixture)!
-  }
-
-  if (!cleanupFnArrayMap.has(fileContext)) {
-    cleanupFnArrayMap.set(fileContext, [])
-  }
-  const cleanupFnFileArray = cleanupFnArrayMap.get(fileContext)!
-
-  const promise = resolveFixtureFunction(
-    fixture.value,
-    fileContext,
-    cleanupFnFileArray,
-  ).then((value) => {
-    fileContext[fixture.prop] = value
-    fileFixturePromise.delete(fixture)
-    return value
-  })
-
-  fileFixturePromise.set(fixture, promise)
-  return promise
 }
 
 async function resolveFixtureFunction(

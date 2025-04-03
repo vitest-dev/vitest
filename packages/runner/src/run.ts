@@ -526,9 +526,6 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     try {
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
       await callCleanupHooks(runner, beforeAllCleanups)
-      if (suite.file === suite) {
-        await callFixtureCleanup((suite as File).context)
-      }
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
