@@ -390,7 +390,7 @@ expect(res).toBe(5)
 expect(getApples).toHaveNthReturnedWith(2, 5)
 ```
 
-### vi.mockObject
+### vi.mockObject <Version>3.2.0</Version>
 
 - **Type:** `<T>(value: T) => MaybeMockedDeep<T>`
 
