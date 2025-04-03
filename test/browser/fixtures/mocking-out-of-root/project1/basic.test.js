@@ -1,5 +1,6 @@
 import { test, expect, vi } from 'vitest';
 import project2 from "../project2/index.js"
+import "../project3/index.js"
 
 vi.mock("../project2/index.js", () => ({
   default: 'project2-mocked'
