@@ -1,3 +1,4 @@
+import type { GlobOptions } from 'tinyglobby'
 import type {
   ModuleNode,
   TransformResult,
@@ -9,22 +10,23 @@ import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
 import type { GlobalSetupFile } from './globalSetup'
 import type { Logger } from './logger'
+import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
   SerializedConfig,
+  TestProjectInlineConfiguration,
   UserConfig,
-  UserWorkspaceConfig,
 } from './types/config'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
-import fg from 'fast-glob'
 import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
+import { glob } from 'tinyglobby'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
 import { setup } from '../api/setup'
@@ -34,7 +36,7 @@ import { loadGlobalSetupFiles } from './globalSetup'
 import { CoverageTransform } from './plugins/coverageTransform'
 import { MocksPlugins } from './plugins/mocks'
 import { WorkspaceVitestPlugin } from './plugins/workspace'
-import { type WorkspaceSpec as DeprecatedWorkspaceSpec, getFilePoolName } from './pool'
+import { getFilePoolName } from './pool'
 import { TestSpecification } from './spec'
 import { createViteServer } from './vite'
 
@@ -421,13 +423,14 @@ export class TestProject {
 
   /** @internal */
   async globFiles(include: string[], exclude: string[], cwd: string) {
-    const globOptions: fg.Options = {
+    const globOptions: GlobOptions = {
       dot: true,
       cwd,
       ignore: exclude,
+      expandDirectories: false,
     }
 
-    const files = await fg(include, globOptions)
+    const files = await glob(include, globOptions)
     // keep the slashes consistent with Vite
     // we are not using the pathe here because it normalizes the drive letter on Windows
     // and we want to keep it the same as working dir
@@ -500,7 +503,8 @@ export class TestProject {
   }
 
   private _parentBrowser?: ParentProjectBrowser
-  private _parent?: TestProject
+  /** @internal */
+  public _parent?: TestProject
   /** @internal */
   _initParentBrowser = deduped(async () => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
@@ -512,13 +516,20 @@ export class TestProject {
       this.vitest.version,
     )
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
+    let cacheDir: string
     const browser = await createBrowserServer(
       this,
       this.vite.config.configFile,
       [
+        {
+          name: 'vitest:browser-cacheDir',
+          configResolved(config) {
+            cacheDir = config.cacheDir
+          },
+        },
         ...MocksPlugins({
           filter(id) {
-            if (id.includes(distRoot)) {
+            if (id.includes(distRoot) || id.includes(cacheDir)) {
               return false
             }
             return true
@@ -723,7 +734,7 @@ export interface SerializedTestProject {
   context: ProvidedContext
 }
 
-interface InitializeProjectOptions extends UserWorkspaceConfig {
+interface InitializeProjectOptions extends TestProjectInlineConfiguration {
   configFile: string | false
 }
 
@@ -739,6 +750,7 @@ export async function initializeProject(
   const config: ViteInlineConfig = {
     ...restOptions,
     configFile,
+    configLoader: ctx.vite.config.inlineConfig.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [

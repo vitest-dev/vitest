@@ -1,6 +1,6 @@
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
-import { parseAst } from 'rollup/parseAst'
+import { parseAst } from 'vite'
 import { describe, expect, it, test } from 'vitest'
 import { generateCodeFrame } from 'vitest/src/node/error.js'
 import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'

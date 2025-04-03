@@ -16,11 +16,12 @@ import type {
   Test,
   TestContext,
 } from './types/tasks'
-import { getSafeTimers, shuffle } from '@vitest/utils'
+import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
 import { PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
+import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
 import { setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
@@ -143,14 +144,18 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
     updateSuiteHookState(currentTask, name, 'run', runner)
   }
 
+  async function runHook(hook: Function) {
+    return getBeforeHookCleanupCallback(hook, await hook(...args))
+  }
+
   if (sequence === 'parallel') {
     callbacks.push(
-      ...(await Promise.all(hooks.map(hook => (hook as any)(...args)))),
+      ...(await Promise.all(hooks.map(hook => runHook(hook)))),
     )
   }
   else {
     for (const hook of hooks) {
-      callbacks.push(await (hook as any)(...args))
+      callbacks.push(await runHook(hook))
     }
   }
 
@@ -169,52 +174,86 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
 const eventsPacks: [string, TaskUpdateEvent][] = []
-let updateTimer: any
-let previousUpdate: Promise<void> | undefined
+const pendingTasksUpdates: Promise<void>[] = []
 
-export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
-  eventsPacks.push([task.id, event])
-  packs.set(task.id, [task.result, task.meta])
-
-  const { clearTimeout, setTimeout } = getSafeTimers()
-
-  clearTimeout(updateTimer)
-  updateTimer = setTimeout(() => {
-    previousUpdate = sendTasksUpdate(runner)
-  }, 10)
-}
-
-async function sendTasksUpdate(runner: VitestRunner) {
-  const { clearTimeout } = getSafeTimers()
-  clearTimeout(updateTimer)
-  await previousUpdate
-
+function sendTasksUpdate(runner: VitestRunner): void {
   if (packs.size) {
     const taskPacks = Array.from(packs).map<TaskResultPack>(([id, task]) => {
       return [id, task[0], task[1]]
     })
     const p = runner.onTaskUpdate?.(taskPacks, eventsPacks)
+    if (p) {
+      pendingTasksUpdates.push(p)
+      // remove successful promise to not grow array indefnitely,
+      // but keep rejections so finishSendTasksUpdate can handle them
+      p.then(
+        () => pendingTasksUpdates.splice(pendingTasksUpdates.indexOf(p), 1),
+        () => {},
+      )
+    }
     eventsPacks.length = 0
     packs.clear()
-    return p
   }
 }
 
-async function callCleanupHooks(cleanups: unknown[]) {
-  await Promise.all(
-    cleanups.map(async (fn) => {
+async function finishSendTasksUpdate(runner: VitestRunner) {
+  sendTasksUpdate(runner)
+  await Promise.all(pendingTasksUpdates)
+}
+
+function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+  let last = 0
+  return function (this: any, ...args: any[]) {
+    const now = unixNow()
+    if (now - last > ms) {
+      last = now
+      return fn.apply(this, args)
+    }
+  } as any
+}
+
+// throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
+const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
+
+export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
+  eventsPacks.push([task.id, event])
+  packs.set(task.id, [task.result, task.meta])
+  sendTasksUpdateThrottled(runner)
+}
+
+async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+  const sequence = runner.config.sequence.hooks
+
+  if (sequence === 'stack') {
+    cleanups = cleanups.slice().reverse()
+  }
+
+  if (sequence === 'parallel') {
+    await Promise.all(
+      cleanups.map(async (fn) => {
+        if (typeof fn !== 'function') {
+          return
+        }
+        await fn()
+      }),
+    )
+  }
+  else {
+    for (const fn of cleanups) {
       if (typeof fn !== 'function') {
-        return
+        continue
       }
       await fn()
-    }),
-  )
+    }
+  }
 }
 
 export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunTask?.(test)
 
   if (test.mode !== 'run' && test.mode !== 'queued') {
+    updateTask('test-prepare', test, runner)
+    updateTask('test-finished', test, runner)
     return
   }
 
@@ -291,15 +330,6 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         failTask(test.result, e, runner.config.diffOptions)
       }
 
-      // skipped with new PendingError
-      if (test.result?.pending || test.result?.state === 'skip') {
-        test.mode = 'skip'
-        test.result = { state: 'skip', note: test.result?.note, pending: true }
-        updateTask('test-finished', test, runner)
-        setCurrentTest(undefined)
-        return
-      }
-
       try {
         await runner.onTaskFinished?.(test)
       }
@@ -312,7 +342,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           test.context,
           suite,
         ])
-        await callCleanupHooks(beforeEachCleanups)
+        await callCleanupHooks(runner, beforeEachCleanups)
         await callFixtureCleanup(test.context)
       }
       catch (e) {
@@ -332,6 +362,20 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       test.onFailed = undefined
       test.onFinished = undefined
+
+      // skipped with new PendingError
+      if (test.result?.pending || test.result?.state === 'skip') {
+        test.mode = 'skip'
+        test.result = {
+          state: 'skip',
+          note: test.result?.note,
+          pending: true,
+          duration: now() - start,
+        }
+        updateTask('test-finished', test, runner)
+        setCurrentTest(undefined)
+        return
+      }
 
       if (test.result.state === 'pass') {
         break
@@ -481,7 +525,7 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
 
     try {
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-      await callCleanupHooks(beforeAllCleanups)
+      await callCleanupHooks(runner, beforeAllCleanups)
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
@@ -556,7 +600,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
 
   await runner.onAfterRunFiles?.(files)
 
-  await sendTasksUpdate(runner)
+  await finishSendTasksUpdate(runner)
 
   return files
 }

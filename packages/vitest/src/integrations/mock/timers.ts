@@ -20,9 +20,9 @@ export class FakeTimers {
   // | _fakingTime | _fakingDate |
   // +-------------+-------------+
   // | false       | falsy       | initial
-  // | false       | truethy     | vi.setSystemTime called first (for mocking only Date without fake timers)
+  // | false       | truthy     | vi.setSystemTime called first (for mocking only Date without fake timers)
   // | true        | falsy       | vi.useFakeTimers called first
-  // | true        | truethy     | unreachable
+  // | true        | truthy     | unreachable
   private _fakingTime: boolean
   private _fakingDate: Date | null
   private _fakeTimers: FakeTimerWithContext
@@ -153,9 +153,9 @@ export class FakeTimers {
 
     if (!this._fakingTime) {
       const toFake = Object.keys(this._fakeTimers.timers)
-        // Do not mock nextTick by default. It can still be mocked through userConfig.
+        // Do not mock timers internally used by node by default. It can still be mocked through userConfig.
         .filter(
-          timer => timer !== 'nextTick',
+          timer => timer !== 'nextTick' && timer !== 'queueMicrotask',
         ) as (keyof FakeTimerWithContext['timers'])[]
 
       if (this._userConfig?.toFake?.includes('nextTick') && isChildProcess()) {

@@ -1,0 +1,127 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`timeout error with stack trace 1`] = `
+"
+⎯⎯⎯⎯⎯⎯ Failed Suites 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  basic.test.ts > beforeAll
+Error: Hook timed out in 10ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:4:3
+      2| 
+      3| describe('beforeAll', () => {
+      4|   beforeAll(() => new Promise(() => {}), 10)
+       |   ^
+      5| 
+      6|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  basic.test.ts > afterAll
+Error: Hook timed out in 30ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:16:3
+     14| 
+     15| describe('afterAll', () => {
+     16|   afterAll(() => new Promise(() => {}), 30)
+       |   ^
+     17| 
+     18|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  basic.test.ts > cleanup-beforeAll
+Error: Hook timed out in 50ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:28:3
+     26| 
+     27| describe('cleanup-beforeAll', () => {
+     28|   beforeAll(() => () => new Promise(() => {}), 50)
+       |   ^
+     29| 
+     30|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  basic.test.ts > beforeEach > ok
+Error: Hook timed out in 20ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:10:3
+      8| 
+      9| describe('beforeEach', () => {
+     10|   beforeEach(() => new Promise(() => {}), 20)
+       |   ^
+     11| 
+     12|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  basic.test.ts > afterEach > ok
+Error: Hook timed out in 40ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:22:3
+     20| 
+     21| describe('afterEach', () => {
+     22|   afterEach(() => new Promise(() => {}), 40)
+       |   ^
+     23| 
+     24|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  basic.test.ts > cleanup-beforeEach > ok
+Error: Hook timed out in 60ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:34:3
+     32| 
+     33| describe('cleanup-beforeEach', () => {
+     34|   beforeEach(() => () => new Promise(() => {}), 60)
+       |   ^
+     35| 
+     36|   it('ok', () => {})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  basic.test.ts > onFailed > fail
+Error: fail
+ ❯ basic.test.ts:42:11
+     40|   it('fail', (ctx) => {
+     41|     ctx.onTestFailed(() => new Promise(() => {}), 70)
+     42|     throw new Error('fail')
+       |           ^
+     43|   })
+     44| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  basic.test.ts > onFailed > fail
+Error: Hook timed out in 70ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:41:9
+     39| describe('onFailed', () => {
+     40|   it('fail', (ctx) => {
+     41|     ctx.onTestFailed(() => new Promise(() => {}), 70)
+       |         ^
+     42|     throw new Error('fail')
+     43|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  basic.test.ts > onFinished > ok
+Error: Hook timed out in 80ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ basic.test.ts:48:9
+     46| describe('onFinished', () => {
+     47|   it('ok', (ctx) => {
+     48|     ctx.onTestFinished(() => new Promise(() => {}), 80)
+       |         ^
+     49|   })
+     50| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+"
+`;

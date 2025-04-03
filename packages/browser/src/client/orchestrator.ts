@@ -1,6 +1,6 @@
+import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelIncomingEvent } from '@vitest/browser/client'
 import type { SerializedConfig } from 'vitest'
-import { channel, client } from '@vitest/browser/client'
-import { globalChannel, type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent } from '@vitest/browser/client'
+import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 import { getUiAPI } from './ui'
@@ -49,7 +49,7 @@ class IframeOrchestrator {
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
 
-    if (config.isolate === false) {
+    if (config.browser.isolate === false) {
       debug('create iframe', ID_ALL)
       const iframe = this.createIframe(container, ID_ALL)
 

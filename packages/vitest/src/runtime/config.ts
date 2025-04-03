@@ -126,6 +126,10 @@ export interface SerializedConfig {
       testIdAttribute: string
     }
     screenshotFailures: boolean
+    providerOptions: {
+      // for playwright
+      actionTimeout?: number
+    }
   }
   standalone: boolean
   logHeapUsage: boolean | undefined

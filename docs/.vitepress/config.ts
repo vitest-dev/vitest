@@ -59,6 +59,7 @@ export default ({ mode }: { mode: string }) => {
       ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
       ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
       ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
+      ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
       ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
     ],
@@ -102,6 +103,7 @@ export default ({ mode }: { mode: string }) => {
               },
             }),
           ],
+      languages: ['js', 'jsx', 'ts', 'tsx'],
     },
     themeConfig: {
       logo: '/logo.svg',
@@ -347,6 +349,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/advanced/api/test-collection',
                   },
                 ],
+              },
+              {
+                text: 'Plugin API',
+                link: '/advanced/api/plugin',
               },
               {
                 text: 'Runner API',

@@ -868,14 +868,14 @@ export default defineConfig({
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number or percentage of forks.
+Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.forks.minForks<NonProjectOption />
 
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number or percentage of forks.
+Minimum number or percentage of forks. You can also use `VITEST_MIN_FORKS` environment variable.
 
 ##### poolOptions.forks.isolate
 
@@ -1012,14 +1012,14 @@ export default defineConfig({
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Maximum number or percentage of threads. You can also use `VITEST_MAX_FORKS` environment variable.
+Maximum number or percentage of forks. You can also use `VITEST_MAX_FORKS` environment variable.
 
 ##### poolOptions.vmForks.minForks<NonProjectOption />
 
 - **Type:** `number | string`
 - **Default:** _available CPUs_
 
-Minimum number or percentage of threads. You can also use `VITEST_MIN_FORKS` environment variable.
+Minimum number or percentage of forks. You can also use `VITEST_MIN_FORKS` environment variable.
 
 ##### poolOptions.vmForks.memoryLimit<NonProjectOption />
 
@@ -1089,11 +1089,13 @@ Default timeout to wait for close when Vitest shuts down, in milliseconds
 
 ### silent<NonProjectOption />
 
-- **Type:** `boolean`
+- **Type:** `boolean | 'passed-only'`
 - **Default:** `false`
 - **CLI:** `--silent`, `--silent=false`
 
-Silent console output from tests
+Silent console output from tests.
+
+Use `'passed-only'` to see logs from failing tests only. Logs from failing tests are printed after a test has finished.
 
 ### setupFiles
 
@@ -2329,6 +2331,13 @@ Color of truncate annotation, default is output with no color.
 
 Print basic prototype `Object` and `Array` in diff output
 
+#### diff.maxDepth
+
+- **Type**: `number`
+- **Default**: `20` (or `8` when comparing different types)
+
+Limit the depth to recurse when printing nested objects
+
 ### fakeTimers
 
 - **Type:** `FakeTimerInstallOpts`
@@ -2345,7 +2354,7 @@ Installs fake timers with the specified Unix epoch.
 #### fakeTimers.toFake
 
 - **Type:** `('setTimeout' | 'clearTimeout' | 'setImmediate' | 'clearImmediate' | 'setInterval' | 'clearInterval' | 'Date' | 'nextTick' | 'hrtime' | 'requestAnimationFrame' | 'cancelAnimationFrame' | 'requestIdleCallback' | 'cancelIdleCallback' | 'performance' | 'queueMicrotask')[]`
-- **Default:** everything available globally except `nextTick`
+- **Default:** everything available globally except `nextTick` and `queueMicrotask`
 
 An array with names of global methods and APIs to fake.
 
