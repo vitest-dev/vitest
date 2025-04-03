@@ -227,6 +227,16 @@ test('timeout settings', async () => {
   }
 })
 
+test('viewport', async () => {
+  const { stdout, stderr } = await runBrowserTests({
+    root: './fixtures/viewport',
+  })
+  expect(stderr).toBe('')
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('basic.test.ts', browser)
+  })
+})
+
 test.runIf(provider === 'playwright')('timeout hooks', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/timeout-hooks',
