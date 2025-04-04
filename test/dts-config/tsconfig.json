@@ -3,6 +3,9 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "happy-dom": ["./happy-dom-patch.ts"]
+    },
     "types": [],
     "strict": true,
     "noEmit": true
