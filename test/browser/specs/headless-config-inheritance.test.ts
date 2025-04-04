@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
-import { instances, runBrowserTests } from './utils'
+import { runInlineTests, ts } from '../../test-utils'
+import { instances, provider } from './utils'
 
 interface HeadlessConfigInheritanceTestCase {
   name: string
@@ -66,18 +67,47 @@ test.each<HeadlessConfigInheritanceTestCase>([
   }) => {
     expect(instances.length).toBeGreaterThan(0)
 
-    const { ctx } = await runBrowserTests({
-      root: './fixtures/headless-config-inheritance',
-      browser: {
-        headless: rootHeadless,
-        instances: [
-          {
-            // Doesn't matter which browser we use, we just need one to test the config inheritance.
-            ...instances[0],
-            headless: instanceHeadless,
+    const { ctx } = await runInlineTests({
+      'vitest.config.ts': ts`
+        import { fileURLToPath } from 'node:url'
+        import { defineConfig } from 'vitest/config'
+        import instance from './instance.json'
+
+        export default defineConfig({
+          test: {
+            browser: {
+              enabled: true,
+              provider: '${provider}',
+              headless: ${rootHeadless},
+              instances: [
+                instance,
+              ],
+            },
           },
-        ],
-      },
+          cacheDir: fileURLToPath(new URL('./node_modules/.vite', import.meta.url)),
+        })
+      `,
+
+      // Can also change this to pass the object directly, but would need to modify the
+      // type signature in `useFS()` to accept a `BrowserInstance` type like this:
+      // `structure: Record<string, ... | BrowserInstance>`.
+      'instance.json': JSON.stringify({
+        ...instances[0],
+        headless: instanceHeadless,
+      }, null, 2),
+
+      // Below test is not technically required because we just need to check the vitest
+      // config output is correct. We don't need to run any tests.
+      'pass.test.ts': ts`
+        import { test, expect } from 'vitest'
+
+        test("pass", () => {
+          expect(true).toBe(true)
+        })
+      `,
+    }, {
+      watch: false,
+      reporters: 'none',
     })
 
     expect(
