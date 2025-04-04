@@ -172,9 +172,6 @@ export function getIframeScale(): number {
     throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
   const scaleAttribute = testerUi.getAttribute('data-scale')
-  if (scaleAttribute === null) {
-    return 1
-  }
   const scale = Number(scaleAttribute)
   if (Number.isNaN(scale)) {
     throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)

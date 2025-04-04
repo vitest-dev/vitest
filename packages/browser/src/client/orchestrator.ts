@@ -262,6 +262,7 @@ async function setIframeViewport(
   else if (getBrowserState().provider === 'webdriverio') {
     iframe.style.width = `${width}px`
     iframe.style.height = `${height}px`
+    iframe.parentElement?.setAttribute('data-scale', '1')
   }
   else {
     const scale = Math.min(
