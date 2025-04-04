@@ -88,11 +88,23 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
           ({ prop }) => prop !== fixture.prop && usedProps.includes(prop),
         )
       }
+      // test can access anything, so we ignore it
       if (fixture.scope !== 'test') {
         fixture.deps?.forEach((dep) => {
-          if (dep.isFn && dep.scope !== fixture.scope) {
-            throw new Error(`cannot use ${dep.scope} fixture "${dep.prop}" inside ${fixture.scope} fixture "${fixture.prop}"`)
+          if (!dep.isFn) {
+            // non fn fixtures are always resolved an available to anyone
+            return
           }
+          // worker scope can only import from worker scope
+          if (fixture.scope === 'worker' && dep.scope === 'worker') {
+            return
+          }
+          // file scope an import from file and worker scopes
+          if (fixture.scope === 'file' && dep.scope !== 'test') {
+            return
+          }
+
+          throw new SyntaxError(`cannot use ${dep.scope} fixture "${dep.prop}" inside ${fixture.scope} fixture "${fixture.prop}"`)
         })
       }
     }
