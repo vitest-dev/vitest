@@ -290,7 +290,7 @@ export async function VitestPlugin(
     ...CSSEnablerPlugin(ctx),
     CoverageTransform(ctx),
     VitestCoreResolver(ctx),
-    options.ui ? await UIPlugin() : null,
+    await UIPlugin(),
     ...MocksPlugins(),
     VitestOptimizer(),
     NormalizeURLPlugin(),
