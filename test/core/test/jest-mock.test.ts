@@ -608,4 +608,16 @@ describe('jest mock compat layer', () => {
       expect(spy.mock.calls).toEqual([])
     })
   })
+
+  it.fails('optional method type', () => {
+    interface Person {
+      greet: (name: string) => string
+    }
+    const person: Partial<Person> = {}
+    const spy = vi.spyOn(person, 'greet')
+    expect(spy).toBe(person.greet)
+    expect(person.greet?.('Alice')).toMatchInlineSnapshot()
+    spy.mockImplementation(() => 'mocked')
+    expect(person.greet?.('Bob')).toMatchInlineSnapshot()
+  })
 })
