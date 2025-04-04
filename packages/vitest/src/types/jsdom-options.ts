@@ -1,8 +1,6 @@
-// eslint-disable-next-line ts/ban-ts-comment
-// @ts-ignore `jsdom` is optional peeer dep
-import type { ConstructorOptions } from 'jsdom'
+import type { jsdomTypes } from 'vitest/optional-types.js'
 
-export type JSDOMOptions = ConstructorOptionsOverride & Omit<ConstructorOptions, keyof ConstructorOptionsOverride>
+export type JSDOMOptions = ConstructorOptionsOverride & Omit<jsdomTypes.ConstructorOptions, keyof ConstructorOptionsOverride>
 
 interface ConstructorOptionsOverride {
   /**
