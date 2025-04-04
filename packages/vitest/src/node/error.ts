@@ -246,7 +246,7 @@ function printErrorInner(
 }
 
 function printErrorType(type: string, ctx: Vitest) {
-  ctx.logger.error(`\n${errorBanner(` ${type} `)}`)
+  ctx.logger.error(`\n${errorBanner(type)}`)
 }
 
 const skipErrorProperties = new Set([

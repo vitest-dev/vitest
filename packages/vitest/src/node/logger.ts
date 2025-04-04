@@ -262,7 +262,7 @@ export class Logger {
         + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
       ),
     )
-    this.error(errorBanner(' Unhandled Errors '))
+    this.error(errorBanner('Unhandled Errors'))
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
@@ -281,7 +281,7 @@ export class Logger {
         } not related to your test files.`,
       ),
     )
-    this.log(errorBanner(' Source Errors '))
+    this.log(errorBanner('Source Errors'))
     this.log(errorMessage)
     errors.forEach((err) => {
       this.printError(err, { fullStack: true })
