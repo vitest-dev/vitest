@@ -1,23 +1,8 @@
-/**
- * Happy DOM options.
- */
-export interface HappyDOMOptions {
-  width?: number
-  height?: number
-  url?: string
-  settings?: {
-    disableJavaScriptEvaluation?: boolean
-    disableJavaScriptFileLoading?: boolean
-    disableCSSFileLoading?: boolean
-    disableIframePageLoading?: boolean
-    disableComputedStyleRendering?: boolean
-    enableFileSystemHttpRequests?: boolean
-    navigator?: {
-      userAgent?: string
-    }
-    device?: {
-      prefersColorScheme?: string
-      mediaType?: string
-    }
-  }
-}
+// eslint-disable-next-line ts/ban-ts-comment
+// @ts-ignore `happy-dom` is optional peeer dep
+import type { Window } from 'happy-dom'
+
+export type HappyDOMOptions = Omit<
+  NonNullable<ConstructorParameters<typeof Window>[0]>,
+  'console'
+>
