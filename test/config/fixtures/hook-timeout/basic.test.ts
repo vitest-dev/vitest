@@ -48,3 +48,5 @@ describe('onFinished', () => {
     ctx.onTestFinished(() => new Promise(() => {}), 80)
   })
 })
+
+it("test timeout", () => new Promise(() => {}), 123)
