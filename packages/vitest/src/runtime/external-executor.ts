@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import { dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { extname, join, normalize } from 'pathe'
-import { getCachedData, isNodeBuiltin, setCacheData } from 'vite-node/utils'
+import { getCachedData, isBareImport, isNodeBuiltin, setCacheData } from 'vite-node/utils'
 import { CommonjsExecutor } from './vm/commonjs-executor'
 import { EsmExecutor } from './vm/esm-executor'
 import { ViteExecutor } from './vm/vite-executor'
@@ -209,7 +209,7 @@ export class ExternalModulesExecutor {
       (type === 'module' || type === 'commonjs' || type === 'wasm')
       && !existsSync(path)
     ) {
-      const error = new Error(`Cannot find module '${path}'`);
+      const error = new Error(`Cannot find ${isBareImport(path) ? 'package' : 'module'} '${path}'`);
       (error as any).code = 'ERR_MODULE_NOT_FOUND'
       throw error
     }
