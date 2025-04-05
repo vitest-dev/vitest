@@ -5,6 +5,7 @@ import { getTestFixture } from './map'
 export interface FixtureItem extends FixtureOptions {
   prop: string
   value: any
+  scope: 'test' | 'file' | 'worker'
   /**
    * Indicates whether the fixture is a function
    */
@@ -45,7 +46,7 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
   context: T,
   inject: (key: string) => unknown,
 ): T {
-  const fixtureOptionKeys = ['auto', 'injected']
+  const fixtureOptionKeys = ['auto', 'injected', 'scope']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
     ([prop, value]) => {
       const fixtureItem = { value } as FixtureItem
@@ -64,6 +65,7 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
           : userValue
       }
 
+      fixtureItem.scope = fixtureItem.scope || 'test'
       fixtureItem.prop = prop
       fixtureItem.isFn = typeof fixtureItem.value === 'function'
       return fixtureItem
@@ -86,6 +88,13 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
           ({ prop }) => prop !== fixture.prop && usedProps.includes(prop),
         )
       }
+      if (fixture.scope !== 'test') {
+        fixture.deps?.forEach((dep) => {
+          if (dep.isFn && dep.scope !== fixture.scope) {
+            throw new Error(`cannot use ${dep.scope} fixture "${dep.prop}" inside ${fixture.scope} fixture "${fixture.prop}"`)
+          }
+        })
+      }
     }
   })
 
@@ -94,11 +103,11 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
 
 const fixtureValueMaps = new Map<TestContext, Map<FixtureItem, any>>()
 const cleanupFnArrayMap = new Map<
-  TestContext,
+  object,
   Array<() => void | Promise<void>>
 >()
 
-export async function callFixtureCleanup(context: TestContext): Promise<void> {
+export async function callFixtureCleanup(context: object): Promise<void> {
   const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
   for (const cleanup of cleanupFnArray.reverse()) {
     await cleanup()
@@ -153,19 +162,74 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
           continue
         }
 
-        const resolvedValue = fixture.isFn
-          ? await resolveFixtureFunction(fixture.value, context, cleanupFnArray)
-          : fixture.value
+        const resolvedValue = await resolveFixtureValue(
+          fixture,
+          context!,
+          cleanupFnArray,
+        )
         context![fixture.prop] = resolvedValue
         fixtureValueMap.set(fixture, resolvedValue)
-        cleanupFnArray.unshift(() => {
-          fixtureValueMap.delete(fixture)
-        })
+
+        if (!fixture.scope || fixture.scope === 'test') {
+          cleanupFnArray.unshift(() => {
+            fixtureValueMap.delete(fixture)
+          })
+        }
       }
     }
 
     return resolveFixtures().then(() => fn(context))
   }
+}
+
+const fileFixturePromise = new WeakMap<FixtureItem, Promise<unknown>>()
+
+function resolveFixtureValue(
+  fixture: FixtureItem,
+  context: TestContext & { [key: string]: any },
+  cleanupFnArray: (() => void | Promise<void>)[],
+) {
+  const fileContext = context.task.file.context
+
+  if (!fixture.isFn) {
+    fileContext[fixture.prop] ??= fixture.value
+    return fixture.value
+  }
+
+  if (!fixture.scope || fixture.scope === 'test') {
+    return resolveFixtureFunction(
+      fixture.value,
+      context,
+      cleanupFnArray,
+    )
+  }
+
+  if (fixture.prop in fileContext) {
+    return fileContext[fixture.prop]
+  }
+
+  // in case the test runs in parallel
+  if (fileFixturePromise.has(fixture)) {
+    return fileFixturePromise.get(fixture)!
+  }
+
+  if (!cleanupFnArrayMap.has(fileContext)) {
+    cleanupFnArrayMap.set(fileContext, [])
+  }
+  const cleanupFnFileArray = cleanupFnArrayMap.get(fileContext)!
+
+  const promise = resolveFixtureFunction(
+    fixture.value,
+    fileContext,
+    cleanupFnFileArray,
+  ).then((value) => {
+    fileContext[fixture.prop] = value
+    fileFixturePromise.delete(fixture)
+    return value
+  })
+
+  fileFixturePromise.set(fixture, promise)
+  return promise
 }
 
 async function resolveFixtureFunction(
