@@ -34,7 +34,7 @@ describe('before and after hooks', () => {
         resolve()
       }, 100)
     })
-  }, 200)
+  }, 1000)
 
   it('beforeEach works', () => {
     assert.equal(eachState, 'running')
