@@ -3,6 +3,7 @@ import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
+import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
@@ -244,16 +245,14 @@ export interface BrowserCommandContext {
 }
 
 export interface BrowserServerStateSession {
-  files: string[]
-  method: 'run' | 'collect'
   project: TestProject
   connected: () => void
-  resolve: () => void
-  reject: (v: unknown) => void
+  fail: (v: Error) => void
 }
 
 export interface BrowserOrchestrator {
-  createTesters: (files: string[]) => Promise<void>
+  cleanupTesters: () => Promise<void>
+  createTesters: (options: BrowserTesterOptions) => Promise<void>
   onCancel: (reason: CancelReason) => Promise<void>
   $close: () => void
 }

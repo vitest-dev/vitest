@@ -1,3 +1,4 @@
+import type { BrowserInstanceOption } from 'vitest/node'
 import { expect } from 'vitest'
 
 interface SummaryOptions {
@@ -5,12 +6,26 @@ interface SummaryOptions {
 }
 
 expect.extend({
-  toReportPassedTest(stdout: string, testName: string, testProject?: string) {
-    const includePattern = `✓ ${testProject ? `|${testProject}| ` : ''}${testName}`
-    const pass = stdout.includes(`✓ ${testProject ? `|${testProject}| ` : ''}${testName}`)
+  toReportPassedTest(stdout: string, testName: string, testProject?: string | BrowserInstanceOption[]) {
+    const checks: BrowserInstanceOption[] | undefined = Array.isArray(testProject)
+      ? testProject
+      : (testProject && [{ browser: testProject }])
+
+    const pass = checks?.length
+      ? checks.every(({ browser }) => {
+          const includePattern = `✓ |${browser}| ${testName}`
+          return stdout.includes(includePattern)
+        })
+      : stdout.includes(`✓ ${testName}`)
+
     return {
       pass,
-      message: () => `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`,
+      message: () => {
+        const includePattern = checks?.length
+          ? checks.map(check => `✓ |${check}| ${testName}`).join('\n')
+          : `✓ ${testName}`
+        return `expected ${pass ? 'not ' : ''}to have "${includePattern}" in the report.\n\nstdout:\n${stdout}`
+      },
     }
   },
   toReportSummaryTestFiles(stdout: string, { passed }: SummaryOptions) {
@@ -42,7 +57,7 @@ declare module 'vitest' {
   // eslint-disable-next-line unused-imports/no-unused-vars
   interface Assertion<T = any> {
     // eslint-disable-next-line ts/method-signature-style
-    toReportPassedTest(testName: string, testProject?: string): void
+    toReportPassedTest(testName: string, testProject?: string | BrowserInstanceOption[]): void
     // eslint-disable-next-line ts/method-signature-style
     toReportSummaryTestFiles(options: SummaryOptions): void
     // eslint-disable-next-line ts/method-signature-style
