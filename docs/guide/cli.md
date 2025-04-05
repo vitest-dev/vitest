@@ -9,7 +9,7 @@ outline: deep
 
 ### `vitest`
 
-Start Vitest in the current directory. Will enter the watch mode in development environment and run mode in CI automatically.
+Start Vitest in the current directory. Will enter the watch mode in development environment and run mode in CI (or non-interactive terminal) automatically.
 
 You can pass an additional argument as the filter of the test files to run. For example:
 
@@ -50,7 +50,7 @@ Perform a single run without watch mode.
 
 ### `vitest watch`
 
-Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without an argument. Will fallback to `vitest run` in CI.
+Run all test suites but watch for changes and rerun tests when they change. Same as calling `vitest` without an argument. Will fallback to `vitest run` in CI or when stdin is not a TTY (non-interactive environment).
 
 ### `vitest dev`
 
