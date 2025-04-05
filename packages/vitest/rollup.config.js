@@ -76,6 +76,7 @@ const external = [
   'node:http',
   'node:console',
   'inspector',
+  'vitest/optional-types.js',
   'vite-node/source-map',
   'vite-node/client',
   'vite-node/server',
