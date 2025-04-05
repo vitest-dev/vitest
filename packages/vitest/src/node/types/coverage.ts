@@ -275,8 +275,23 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
 export interface CoverageV8Options extends BaseCoverageOptions {
   /**
    * Ignore empty lines, comments and other non-runtime code, e.g. Typescript types
+   * - Requires `experimentalAstAwareRemapping: false`
    */
   ignoreEmptyLines?: boolean
+
+  /**
+   * Remap coverage with experimental AST based analysis
+   * - Provides more accurate results compared to default mode
+   */
+  experimentalAstAwareRemapping?: boolean
+
+  /**
+   * Set to array of class method names to ignore for coverage.
+   * - Requires `experimentalAstAwareRemapping: true`
+   *
+   * @default []
+   */
+  ignoreClassMethods?: string[]
 }
 
 export interface CustomProviderOptions
