@@ -16,6 +16,7 @@ import type {
   BuiltinReporters,
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
+import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
@@ -485,6 +486,12 @@ export interface InlineConfig {
    * @default ['**\/package.json/**', '**\/{vitest,vite}.config.*\/**']
    */
   forceRerunTriggers?: string[]
+
+  /**
+   * Pattern configuration to rerun only the tests that are affected
+   * by the changes of specific files in the repository.
+   */
+  watchTriggerPatterns?: WatcherTriggerPattern[]
 
   /**
    * Coverage options
@@ -1086,6 +1093,7 @@ type NonProjectOptions =
   | 'minWorkers'
   | 'fileParallelism'
   | 'workspace'
+  | 'watchTriggerPatterns'
 
 export type ProjectConfig = Omit<
   InlineConfig,

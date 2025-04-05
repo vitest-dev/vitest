@@ -19,6 +19,7 @@ export {
   defaultExclude,
   defaultInclude,
 } from '../defaults'
+export type { WatcherTriggerPattern } from '../node/watcher'
 export { mergeConfig } from 'vite'
 export type { Plugin } from 'vite'
 
