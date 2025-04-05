@@ -805,7 +805,7 @@ export function resolveConfig(
 
   resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
-  resolved.browser.headless ??= isCI
+  resolved.browser.headless ??= resolved.browser.enabled ? isCI : true
   resolved.browser.isolate ??= true
   resolved.browser.fileParallelism
     ??= options.fileParallelism ?? mode !== 'benchmark'
