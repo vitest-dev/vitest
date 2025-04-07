@@ -1,5 +1,6 @@
 import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
+import type { Formatter } from 'tinyrainbow'
 import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
@@ -30,8 +31,18 @@ function getCols(delta = 0) {
   return Math.max(length + delta, 0)
 }
 
-export function divider(text?: string, left?: number, right?: number): string {
+export function errorBanner(message: string): string {
+  return divider(c.bold(c.bgRed(` ${message} `)), null, null, c.red)
+}
+
+export function divider(
+  text?: string,
+  left?: number | null,
+  right?: number | null,
+  color?: Formatter,
+): string {
   const cols = getCols()
+  const c = color || ((text: string) => text)
 
   if (text) {
     const textLength = stripVTControlCharacters(text).length
@@ -44,7 +55,7 @@ export function divider(text?: string, left?: number, right?: number): string {
     }
     left = Math.max(0, left)
     right = Math.max(0, right)
-    return `${F_LONG_DASH.repeat(left)}${text}${F_LONG_DASH.repeat(right)}`
+    return `${c(F_LONG_DASH.repeat(left))}${text}${c(F_LONG_DASH.repeat(right))}`
   }
   return F_LONG_DASH.repeat(cols)
 }
@@ -229,7 +240,8 @@ export function formatProjectName(name: string | undefined, suffix = ' '): strin
 }
 
 export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
-  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${message ? c[color](message) : ''}`
+  const bgColor = `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
+  return `${c.bold(c[bgColor](` ${label} `))} ${message ? c[color](message) : ''}`
 }
 
 export function padSummaryTitle(str: string): string {

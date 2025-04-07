@@ -117,5 +117,11 @@ export default defineConfig({
         }
       },
     },
+    {
+      name: 'test-early-transform',
+      async configureServer(server) {
+        await server.ssrLoadModule('/package.json')
+      },
+    },
   ],
 })
