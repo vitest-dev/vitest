@@ -107,6 +107,8 @@ declare module '@vitest/expect' {
 declare module '@vitest/runner' {
   interface TestContext {
     expect: ExpectStatic
+    /** @internal */
+    _local: boolean
   }
 
   interface TaskMeta {

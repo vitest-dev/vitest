@@ -128,11 +128,12 @@ export function beforeEach<ExtraContext = object>(
 ): void {
   assertTypes(fn, '"beforeEach" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
+  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
     Object.assign(
       withTimeout(
-        withFixtures(fn),
+        withFixtures(runner, fn),
         timeout ?? getDefaultHookTimeout(),
         true,
         stackTraceError,
@@ -167,10 +168,11 @@ export function afterEach<ExtraContext = object>(
   timeout?: number,
 ): void {
   assertTypes(fn, '"afterEach" callback', ['function'])
+  const runner = getRunner()
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
     withTimeout(
-      withFixtures(fn),
+      withFixtures(runner, fn),
       timeout ?? getDefaultHookTimeout(),
       true,
       new Error('STACK_TRACE_ERROR'),

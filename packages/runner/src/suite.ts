@@ -346,7 +346,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withAwaitAsyncAssertions(withFixtures(handler, context), task),
+          withAwaitAsyncAssertions(withFixtures(runner, handler, context), task),
           timeout,
         ),
       )

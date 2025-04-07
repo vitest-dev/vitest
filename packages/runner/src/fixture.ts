@@ -1,3 +1,4 @@
+import type { VitestRunner } from './types'
 import type { FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, isObject } from '@vitest/utils'
 import { getTestFixture } from './map'
@@ -104,7 +105,7 @@ export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
             return
           }
 
-          throw new SyntaxError(`cannot use ${dep.scope} fixture "${dep.prop}" inside ${fixture.scope} fixture "${fixture.prop}"`)
+          throw new SyntaxError(`cannot use the ${dep.scope} fixture "${dep.prop}" inside the ${fixture.scope} fixture "${fixture.prop}"`)
         })
       }
     }
@@ -127,7 +128,7 @@ export async function callFixtureCleanup(context: object): Promise<void> {
   cleanupFnArrayMap.delete(context)
 }
 
-export function withFixtures(fn: Function, testContext?: TestContext) {
+export function withFixtures(runner: VitestRunner, fn: Function, testContext?: TestContext) {
   return (hookContext?: TestContext): any => {
     const context: (TestContext & { [key: string]: any }) | undefined
       = hookContext || testContext
@@ -175,6 +176,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         }
 
         const resolvedValue = await resolveFixtureValue(
+          runner,
           fixture,
           context!,
           cleanupFnArray,
@@ -182,7 +184,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
         context![fixture.prop] = resolvedValue
         fixtureValueMap.set(fixture, resolvedValue)
 
-        if (!fixture.scope || fixture.scope === 'test') {
+        if (fixture.scope === 'test') {
           cleanupFnArray.unshift(() => {
             fixtureValueMap.delete(fixture)
           })
@@ -194,21 +196,26 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
   }
 }
 
-const fileFixturePromise = new WeakMap<FixtureItem, Promise<unknown>>()
+const globalFixturePromise = new WeakMap<FixtureItem, Promise<unknown>>()
 
 function resolveFixtureValue(
+  runner: VitestRunner,
   fixture: FixtureItem,
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
 ) {
   const fileContext = context.task.file.context
+  const workerContext = runner.getWorkerContext?.()
 
   if (!fixture.isFn) {
     fileContext[fixture.prop] ??= fixture.value
+    if (workerContext) {
+      workerContext[fixture.prop] ??= fixture.value
+    }
     return fixture.value
   }
 
-  if (!fixture.scope || fixture.scope === 'test') {
+  if (fixture.scope === 'test') {
     return resolveFixtureFunction(
       fixture.value,
       context,
@@ -216,31 +223,43 @@ function resolveFixtureValue(
     )
   }
 
-  if (fixture.prop in fileContext) {
-    return fileContext[fixture.prop]
-  }
-
   // in case the test runs in parallel
-  if (fileFixturePromise.has(fixture)) {
-    return fileFixturePromise.get(fixture)!
+  if (globalFixturePromise.has(fixture)) {
+    return globalFixturePromise.get(fixture)!
   }
 
-  if (!cleanupFnArrayMap.has(fileContext)) {
-    cleanupFnArrayMap.set(fileContext, [])
+  let fixtureContext: Record<string, unknown>
+
+  if (fixture.scope === 'worker') {
+    if (!workerContext) {
+      throw new TypeError('[@vitets/runner] The worker context is not available by the current test runner. Please, provide the `getWorkerContext` method when initiating the runner.')
+    }
+    fixtureContext = workerContext
   }
-  const cleanupFnFileArray = cleanupFnArrayMap.get(fileContext)!
+  else {
+    fixtureContext = fileContext
+  }
+
+  if (fixture.prop in fixtureContext) {
+    return fixtureContext[fixture.prop]
+  }
+
+  if (!cleanupFnArrayMap.has(fixtureContext)) {
+    cleanupFnArrayMap.set(fixtureContext, [])
+  }
+  const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
   const promise = resolveFixtureFunction(
     fixture.value,
-    fileContext,
+    fixtureContext,
     cleanupFnFileArray,
   ).then((value) => {
-    fileContext[fixture.prop] = value
-    fileFixturePromise.delete(fixture)
+    fixtureContext[fixture.prop] = value
+    globalFixturePromise.delete(fixture)
     return value
   })
 
-  fileFixturePromise.set(fixture, promise)
+  globalFixturePromise.set(fixture, promise)
   return promise
 }
 
