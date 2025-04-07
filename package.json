@@ -51,7 +51,7 @@
     "bumpp": "^10.1.0",
     "changelogithub": "^13.13.0",
     "esbuild": "^0.25.2",
-    "eslint": "^9.23.0",
+    "eslint": "^9.24.0",
     "magic-string": "^0.30.17",
     "oxc-transform": "^0.62.0",
     "pathe": "^2.0.3",
