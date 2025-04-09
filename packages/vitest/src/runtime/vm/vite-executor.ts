@@ -63,13 +63,27 @@ export class ViteExecutor {
       return cached
     }
     return this.esm.createEsModule(fileUrl, async () => {
-      const result = await this.options.transform(fileUrl, 'web')
-      if (!result.code) {
-        throw new Error(
-          `[vitest] Failed to transform ${fileUrl}. Does the file exist?`,
-        )
+      try {
+        const result = await this.options.transform(fileUrl, 'web')
+        if (result.code) {
+          return result.code
+        }
       }
-      return result.code
+      catch (cause: any) {
+        // rethrow vitest error if it cannot load the module because it's not resolved
+        if (typeof cause?.message === 'string' && cause.message.includes('Failed to load url')) {
+          const error = new Error(
+            `Cannot find module '${fileUrl}'`,
+            { cause },
+          ) as Error & { code: string }
+          error.code = 'ERR_MODULE_NOT_FOUND'
+          throw error
+        }
+      }
+
+      throw new Error(
+        `[vitest] Failed to transform ${fileUrl}. Does the file exist?`,
+      )
     })
   }
 
