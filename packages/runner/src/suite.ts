@@ -343,22 +343,26 @@ function createSuiteCollector(
     })
     setTestFixture(context, options.fixtures)
 
+    // custom can be called from any place, let's assume the limit is 15 stacks
+    const limit = Error.stackTraceLimit
+    Error.stackTraceLimit = 15
+    const stackTraceError = new Error('STACK_TRACE_ERROR')
+    Error.stackTraceLimit = limit
+
     if (handler) {
       setFn(
         task,
         withTimeout(
           withAwaitAsyncAssertions(withFixtures(handler, context), task),
           timeout,
+          false,
+          stackTraceError,
         ),
       )
     }
 
     if (runner.config.includeTaskLocation) {
-      const limit = Error.stackTraceLimit
-      // custom can be called from any place, let's assume the limit is 15 stacks
-      Error.stackTraceLimit = 15
-      const error = new Error('stacktrace').stack!
-      Error.stackTraceLimit = limit
+      const error = stackTraceError.stack!
       const stack = findTestFileStackTrace(error, task.each ?? false)
       if (stack) {
         task.location = stack
