@@ -1,6 +1,6 @@
 import type { BrowserCommand, ResolvedConfig } from 'vitest/node'
 import type { ScreenshotOptions } from '../../../context'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import { normalize } from 'node:path'
 import { basename, dirname, relative, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
@@ -13,6 +13,12 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
 ) => {
   if (!context.testPath) {
     throw new Error(`Cannot take a screenshot without a test path`)
+  }
+
+  options.save ??= true
+
+  if (!options.save) {
+    options.base64 = true
   }
 
   const path = options.path
@@ -31,28 +37,28 @@ export const screenshot: BrowserCommand<[string, ScreenshotOptions]> = async (
       const element = context.iframe.locator(`${selector}`)
       const buffer = await element.screenshot({
         ...config,
-        path: savePath,
+        path: options.save ? savePath : undefined,
       })
       return returnResult(options, path, buffer)
     }
 
     const buffer = await context.iframe.locator('body').screenshot({
       ...options,
-      path: savePath,
+      path: options.save ? savePath : undefined,
     })
     return returnResult(options, path, buffer)
   }
 
   if (context.provider instanceof WebdriverBrowserProvider) {
     const page = context.provider.browser!
-    if (!options.element) {
-      const body = await page.$('body')
-      const buffer = await body.saveScreenshot(savePath)
-      return returnResult(options, path, buffer)
-    }
+    const element = !options.element
+      ? await page.$('body')
+      : await page.$(`${options.element}`)
 
-    const element = await page.$(`${options.element}`)
     const buffer = await element.saveScreenshot(savePath)
+    if (!options.save) {
+      await rm(savePath, { force: true })
+    }
     return returnResult(options, path, buffer)
   }
 
@@ -84,6 +90,9 @@ function returnResult(
   path: string,
   buffer: Buffer,
 ) {
+  if (!options.save) {
+    return buffer.toString('base64')
+  }
   if (options.base64) {
     return { path, base64: buffer.toString('base64') }
   }
