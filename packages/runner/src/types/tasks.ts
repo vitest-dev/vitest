@@ -239,6 +239,8 @@ export interface File extends Suite {
    * @internal
    */
   local?: boolean
+  /** @internal */
+  context: Record<string, unknown>
 }
 
 export interface Test<ExtraContext = object> extends TaskPopulated {
@@ -479,12 +481,21 @@ export type { TestAPI as CustomAPI }
 export interface FixtureOptions {
   /**
    * Whether to automatically set up current fixture, even though it's not being used in tests.
+   * @default false
    */
   auto?: boolean
   /**
    * Indicated if the injected value from the config should be preferred over the fixture value
    */
   injected?: boolean
+  /**
+   * When should the fixture be set up.
+   * - **test**: fixture will be set up before ever test
+   * - **worker**: fixture will be set up once per worker
+   * - **file**: fixture will be set up once per file
+   * @default 'test'
+   */
+  scope?: 'test' | 'worker' | 'file'
 }
 
 export type Use<T> = (value: T) => Promise<void>
