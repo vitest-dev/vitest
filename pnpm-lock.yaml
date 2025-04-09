@@ -1269,10 +1269,10 @@ importers:
         version: link:../../packages/web-worker
       '@vueuse/integrations':
         specifier: ^10.11.1
-        version: 10.11.1(axios@0.28.1(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.3))
+        version: 10.11.1(axios@0.30.0(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.3))
       axios:
-        specifier: ^0.28.0
-        version: 0.28.1(debug@4.4.0)
+        specifier: ^0.30.0
+        version: 0.30.0(debug@4.4.0)
       debug:
         specifier: ^4.4.0
         version: 4.4.0
@@ -4753,8 +4753,8 @@ packages:
   avvio@8.3.0:
     resolution: {integrity: sha512-VBVH0jubFr9LdFASy/vNtm5giTrnbVquWBhT0fyizuNK2rQ7e7ONU2plZQWUNqtE1EmxFEb+kbSkFRkstiaS9Q==}
 
-  axios@0.28.1:
-    resolution: {integrity: sha512-iUcGA5a7p0mVb4Gm/sy+FSECNkPFT4y7wt6OM/CDpO/OnNCvSs3PoMG8ibrC9jRoGYU0gUK5pXVC4NPXq6lHRQ==}
+  axios@0.30.0:
+    resolution: {integrity: sha512-Z4F3LjCgfjZz8BMYalWdMgAQUnEtKDmpwNHjh/C8pQZWde32TF64cqnSeyL3xD/aTIASRU30RHTNzRiV/NpGMg==}
 
   b4a@1.6.4:
     resolution: {integrity: sha512-fpWrvyVHEKyeEvbKZTVOeZF3VSKKWtJxFIxX/jaVPf+cLbGUSitjb49pHLqPV2BUNNZ0LcoeEGfE/YCpyDYHIw==}
@@ -6005,8 +6005,8 @@ packages:
   focus-trap@7.6.4:
     resolution: {integrity: sha512-xx560wGBk7seZ6y933idtjJQc1l+ck+pI3sKvhKozdBV1dRZoKhkW5xoCaFv9tQiX5RH1xfSxjuNu6g+lmN/gw==}
 
-  follow-redirects@1.15.1:
-    resolution: {integrity: sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==}
+  follow-redirects@1.15.9:
+    resolution: {integrity: sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -12306,13 +12306,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@vueuse/integrations@10.11.1(axios@0.28.1(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.3))':
+  '@vueuse/integrations@10.11.1(axios@0.30.0(debug@4.4.0))(focus-trap@7.6.4)(vue@3.5.12(typescript@5.8.3))':
     dependencies:
       '@vueuse/core': 10.11.1(vue@3.5.12(typescript@5.8.3))
       '@vueuse/shared': 10.11.1(vue@3.5.12(typescript@5.8.3))
       vue-demi: 0.14.10(vue@3.5.12(typescript@5.8.3))
     optionalDependencies:
-      axios: 0.28.1(debug@4.4.0)
+      axios: 0.30.0(debug@4.4.0)
       focus-trap: 7.6.4
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -12586,9 +12586,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  axios@0.28.1(debug@4.4.0):
+  axios@0.30.0(debug@4.4.0):
     dependencies:
-      follow-redirects: 1.15.1(debug@4.4.0)
+      follow-redirects: 1.15.9(debug@4.4.0)
       form-data: 4.0.1
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -14228,7 +14228,7 @@ snapshots:
     dependencies:
       tabbable: 6.2.0
 
-  follow-redirects@1.15.1(debug@4.4.0):
+  follow-redirects@1.15.9(debug@4.4.0):
     optionalDependencies:
       debug: 4.4.0
 
