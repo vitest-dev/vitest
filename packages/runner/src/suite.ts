@@ -295,6 +295,7 @@ function createSuiteCollector(
   mode: RunMode,
   each?: boolean,
   suiteOptions?: TestOptions,
+  parentCollectorFixtures?: FixtureItem[],
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
 
@@ -395,7 +396,7 @@ function createSuiteCollector(
     test.type = 'test'
   })
 
-  let collectorFixtures: FixtureItem[] | undefined
+  let collectorFixtures = parentCollectorFixtures
 
   const collector: SuiteCollector = {
     type: 'collector',
@@ -555,6 +556,7 @@ function createSuite() {
       mode,
       this.each,
       options,
+      currentSuite?.fixtures(),
     )
   }
 
@@ -768,14 +770,15 @@ export function createTaskCollector(
     ) {
       const collector = getCurrentSuite()
       const scopedFixtures = collector.fixtures()
+      const context = { ...this }
       if (scopedFixtures) {
-        this.fixtures = mergeScopedFixtures(
-          this.fixtures || [],
+        context.fixtures = mergeScopedFixtures(
+          context.fixtures || [],
           scopedFixtures,
         )
       }
       collector.test.fn.call(
-        this,
+        context,
         formatName(name),
         optionsOrFn as TestOptions,
         optionsOrTest as TestFunction,
