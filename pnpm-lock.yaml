@@ -593,6 +593,9 @@ importers:
       '@bcoe/v8-coverage':
         specifier: ^1.0.2
         version: 1.0.2
+      ast-v8-to-istanbul:
+        specifier: ^0.2.0
+        version: 0.2.0
       debug:
         specifier: 'catalog:'
         version: 4.4.0
@@ -4731,6 +4734,9 @@ packages:
   ast-types@0.13.4:
     resolution: {integrity: sha512-x1FCFnFifvYDDzTaLII71vG5uvDwgtmDTEVWAxrgeiR8VjMONcCXJx7E+USjDtHlwFmt9MysbqgF9b9Vjr6w+w==}
     engines: {node: '>=4'}
+
+  ast-v8-to-istanbul@0.2.0:
+    resolution: {integrity: sha512-Zsr9Kxa0wYtF7efiRCy8vjcH4NHvA5ADg5lxXPWnrvvssIMfc5T/lHwP5OAhT50oDMcHtJHiTqQyQgzEDyiSdg==}
 
   async@3.2.6:
     resolution: {integrity: sha512-htCUDlxyyCLMgaM3xXg0C0LW2xqfuQ6p05pCEIsXuyQ+a1koYKTuBMzRNwmybfLgvJDMd0r1LTn4+E0Ti6C2AA==}
@@ -12564,6 +12570,12 @@ snapshots:
   ast-types@0.13.4:
     dependencies:
       tslib: 2.8.1
+
+  ast-v8-to-istanbul@0.2.0:
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      estree-walker: 3.0.3
+      js-tokens: 9.0.1
 
   async@3.2.6: {}
 
