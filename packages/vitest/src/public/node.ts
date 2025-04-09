@@ -136,6 +136,8 @@ export { createViteLogger } from '../node/viteLogger'
  */
 export type FileDiagnostic = _FileDiagnostic
 
+export type { WatcherTriggerPattern } from '../node/watcher'
+
 export { distDir, rootDir } from '../paths'
 
 export type {
@@ -148,7 +150,6 @@ export type {
 } from '../typecheck/types'
 
 export { createDebugger } from '../utils/debugger'
-
 export type {
   RunnerTask,
   RunnerTaskResult,
