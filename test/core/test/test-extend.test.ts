@@ -451,3 +451,39 @@ describe('scoping variables to suite', () => {
     })
   })
 })
+
+describe('test.scoped repro #7793', () => {
+  const extendedTest = test.extend<{ foo: boolean }>({
+    foo: false,
+  })
+
+  describe('top level', () => {
+    extendedTest.scoped({ foo: true })
+
+    describe('second level', () => {
+      extendedTest('foo is true', ({ foo }) => {
+        expect(foo).toBe(true)
+      })
+    })
+  })
+})
+
+describe('test.scoped repro #7813', () => {
+  const extendedTest = test.extend<{ foo?: boolean }>({
+    foo: false,
+  })
+
+  describe('foo is scoped to true', () => {
+    extendedTest.scoped({ foo: true })
+
+    extendedTest('foo is true', ({ foo }) => {
+      expect(foo).toBe(true)
+    })
+  })
+
+  describe('foo is left as default of false', () => {
+    extendedTest('foo is false', ({ foo }) => {
+      expect(foo).toBe(false)
+    })
+  })
+})
