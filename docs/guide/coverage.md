@@ -215,6 +215,10 @@ if (condition) {
 
 To see all configurable options for coverage, see the [coverage Config Reference](https://vitest.dev/config/#coverage).
 
+## Coverage performance
+
+If code coverage generation is slow on your project, see [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage).
+
 ## Vitest UI
 
 You can check your coverage report in [Vitest UI](/guide/ui).
