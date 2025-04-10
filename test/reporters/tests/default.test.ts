@@ -1,6 +1,6 @@
 import type { TestSpecification } from 'vitest/node'
 import { describe, expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 describe('default reporter', async () => {
   test('normal', async () => {
@@ -226,6 +226,17 @@ describe('default reporter', async () => {
          ✓ not array: 0 = { k: 'v1' }, 1 = undefined, k = 'v1' [...]ms
          ✓ not array: 0 = { k: 'v2' }, 1 = undefined, k = 'v2' [...]ms"
     `)
+  })
+
+  test('project name color', async () => {
+    const { stdout } = await runVitestCli(
+      { preserveAnsi: true },
+      '--root',
+      'fixtures/project-name',
+    )
+
+    expect(stdout).toContain('Example project')
+    expect(stdout).toContain('\x1B[30m\x1B[45m Example project \x1B[49m\x1B[39m')
   })
 }, 120000)
 

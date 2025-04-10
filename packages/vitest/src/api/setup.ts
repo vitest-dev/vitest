@@ -6,7 +6,7 @@ import type { WebSocket } from 'ws'
 import type { Vitest } from '../node/core'
 import type { Reporter } from '../node/types/reporter'
 import type { SerializedTestSpecification } from '../runtime/types/utils'
-import type { Awaitable, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type { Awaitable, LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
 import type {
   TransformResultWithSource,
   WebSocketEvents,
@@ -89,6 +89,9 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         },
         getResolvedProjectNames(): string[] {
           return ctx.projects.map(p => p.name)
+        },
+        getResolvedProjectLabels(): { name: string; color?: LabelColor }[] {
+          return ctx.projects.map(p => ({ name: p.name, color: p.color }))
         },
         async getTransformResult(projectName: string, id, browser = false) {
           const project = ctx.getProjectByName(projectName)

@@ -161,7 +161,7 @@ watch(
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
-        client.rpc.getResolvedProjectNames(),
+        client.rpc.getResolvedProjectLabels(),
       ])
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()

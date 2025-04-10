@@ -51,6 +51,9 @@ export function createStaticClient(): VitestClient {
     getResolvedProjectNames: () => {
       return metadata.projects
     },
+    getResolvedProjectLabels: () => {
+      return []
+    },
     getModuleGraph: async (projectName, id) => {
       return metadata.moduleGraph[projectName]?.[id]
     },
