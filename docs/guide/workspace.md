@@ -102,7 +102,8 @@ export default defineConfig({
       {
         test: {
           include: ['tests/**/*.{node}.test.{ts,js}'],
-          name: 'node',
+          // color of the name label can be changed
+          name: { label: 'node', color: 'green' },
           environment: 'node',
         }
       }
