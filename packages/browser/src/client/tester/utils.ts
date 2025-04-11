@@ -167,7 +167,7 @@ export function processTimeoutOptions<T extends { timeout?: number }>(options_?:
 }
 
 export function getIframeScale(): number {
-  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
+  const testerUi = window.parent.document.querySelector(`iframe[data-vitest]`)?.parentElement
   if (!testerUi) {
     throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
   }
