@@ -1,9 +1,7 @@
 import { expect, test } from 'vitest'
-import { instances, provider, runBrowserTests } from './utils'
+import { instances, runBrowserTests } from './utils'
 
-// TODO handle webdriverio. Currently they
-// expose no trustable way to detect browser crashes.
-test.runIf(provider === 'playwright')('fails gracefully when browser crashes', async () => {
+test('fails gracefully when browser crashes', async () => {
   const { stderr } = await runBrowserTests({
     root: './fixtures/browser-crash',
     reporters: [['verbose', { isTTY: false }]],
@@ -13,5 +11,5 @@ test.runIf(provider === 'playwright')('fails gracefully when browser crashes', a
     },
   })
 
-  expect(stderr).toContain('Page crashed when executing tests')
+  expect(stderr).toContain('Browser connection was closed while running tests. Was the page closed unexpectedly?')
 })
