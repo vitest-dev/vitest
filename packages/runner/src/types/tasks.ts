@@ -468,6 +468,9 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
           ? ExtraContext[K]
           : never;
     }>
+    scoped: (
+      fixtures: Fixtures<Partial<ExtraContext>>
+    ) => void
   }
 
 /** @deprecated use `TestAPI` instead */
@@ -616,6 +619,8 @@ export interface SuiteCollector<ExtraContext = object> {
     | Test<ExtraContext>
     | SuiteCollector<ExtraContext>
   )[]
+  scoped: (fixtures: Fixtures<any, ExtraContext>) => void
+  fixtures: () => FixtureItem[] | undefined
   suite?: Suite
   task: (name: string, options?: TaskCustomOptions) => Test<ExtraContext>
   collect: (file: File) => Promise<Suite>
@@ -642,7 +647,7 @@ export interface TestContext {
   /**
    * Metadata of the current test
    */
-  task: Readonly<Task>
+  task: Readonly<Test<TestContext>>
 
   /**
    * Extract hooks on test failed
@@ -658,7 +663,10 @@ export interface TestContext {
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
    */
-  skip: (note?: string) => never
+  skip: {
+    (note?: string): never
+    (condition: boolean, note?: string): void
+  }
 }
 
 /**

@@ -120,8 +120,8 @@ test('options.classname changes classname property', async () => {
 
   // All classname attributes should have the custom value
   expect(xml.match(/<testcase classname="a\.test\.ts"/g)).toBeNull()
-  expect(xml.match(/<testcase classname="/g)).toHaveLength(13)
-  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(13)
+  expect(xml.match(/<testcase classname="/g)).toHaveLength(16)
+  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(16)
 })
 
 test('options.suiteName changes name property', async () => {

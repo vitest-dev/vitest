@@ -280,6 +280,16 @@ export function parseErrorStacktrace(
   const stackStr = e.stack || e.stackStr || ''
   let stackFrames = parseStacktrace(stackStr, options)
 
+  if (!stackFrames.length) {
+    const e_ = e as any
+    if (e_.fileName != null && e_.lineNumber != null && e_.columnNumber != null) {
+      stackFrames = parseStacktrace(`${e_.fileName}:${e_.lineNumber}:${e_.columnNumber}`, options)
+    }
+    if (e_.sourceURL != null && e_.line != null && e_._column != null) {
+      stackFrames = parseStacktrace(`${e_.sourceURL}:${e_.line}:${e_.column}`, options)
+    }
+  }
+
   if (options.frameFilter) {
     stackFrames = stackFrames.filter(
       f => options.frameFilter!(e, f) !== false,

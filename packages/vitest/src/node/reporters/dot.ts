@@ -1,4 +1,4 @@
-import type { File, Task, Test } from '@vitest/runner'
+import type { File, Test } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { TestCase, TestModule } from './reported-tasks'
 import c from 'tinyrainbow'
@@ -30,9 +30,9 @@ export class DotReporter extends BaseReporter {
     }
   }
 
-  printTask(task: Task): void {
+  printTestModule(testModule: TestModule): void {
     if (!this.isTTY) {
-      super.printTask(task)
+      super.printTestModule(testModule)
     }
   }
 
@@ -70,12 +70,16 @@ export class DotReporter extends BaseReporter {
   }
 
   onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
+
     this.finishedTests.add(test.id)
     this.tests.set(test.id, test.result().state || 'skipped')
     this.renderer?.schedule()
   }
 
-  onTestModuleEnd(): void {
+  onTestModuleEnd(testModule: TestModule): void {
+    super.onTestModuleEnd(testModule)
+
     if (!this.isTTY) {
       return
     }

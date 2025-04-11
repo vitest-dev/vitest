@@ -1,6 +1,7 @@
 name: 🚀 New feature proposal
 description: Propose a new feature to be added to Vitest
 labels: ['enhancement: pending triage']
+type: Feature
 body:
   - type: markdown
     attributes:

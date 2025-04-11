@@ -13,7 +13,7 @@ test('same snapshots in single test', async () => {
   const testFile = join(root, 'same.test.ts')
   editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
 
-  // iniital run (create snapshot)
+  // initial run (create snapshot)
   let vitest = await runVitest({
     root,
     include: [testFile],
@@ -102,7 +102,7 @@ test('same snapshots in multiple tests', async () => {
   const testFile = join(root, 'same2.test.ts')
   editFile(testFile, s => s.replace(/toMatchInlineSnapshot\(`.*`\)/gs, 'toMatchInlineSnapshot()'))
 
-  // iniital run (create snapshot)
+  // initial run (create snapshot)
   let vitest = await runVitest({
     root,
     include: [testFile],

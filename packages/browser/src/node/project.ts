@@ -19,7 +19,6 @@ import { getBrowserProvider } from './utils'
 export class ProjectBrowser implements IProjectBrowser {
   public testerHtml: Promise<string> | string
   public testerFilepath: string
-  public locatorsUrl: string | undefined
 
   public provider!: BrowserProvider
   public vitest: Vitest

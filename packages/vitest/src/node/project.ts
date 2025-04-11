@@ -16,8 +16,8 @@ import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
   ResolvedConfig,
   SerializedConfig,
+  TestProjectInlineConfiguration,
   UserConfig,
-  UserWorkspaceConfig,
 } from './types/config'
 import { promises as fs, readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
@@ -503,7 +503,8 @@ export class TestProject {
   }
 
   private _parentBrowser?: ParentProjectBrowser
-  private _parent?: TestProject
+  /** @internal */
+  public _parent?: TestProject
   /** @internal */
   _initParentBrowser = deduped(async () => {
     if (!this.isBrowserEnabled() || this._parentBrowser) {
@@ -515,13 +516,20 @@ export class TestProject {
       this.vitest.version,
     )
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
+    let cacheDir: string
     const browser = await createBrowserServer(
       this,
       this.vite.config.configFile,
       [
+        {
+          name: 'vitest:browser-cacheDir',
+          configResolved(config) {
+            cacheDir = config.cacheDir
+          },
+        },
         ...MocksPlugins({
           filter(id) {
-            if (id.includes(distRoot)) {
+            if (id.includes(distRoot) || id.includes(cacheDir)) {
               return false
             }
             return true
@@ -726,7 +734,7 @@ export interface SerializedTestProject {
   context: ProvidedContext
 }
 
-interface InitializeProjectOptions extends UserWorkspaceConfig {
+interface InitializeProjectOptions extends TestProjectInlineConfiguration {
   configFile: string | false
 }
 
@@ -742,6 +750,7 @@ export async function initializeProject(
   const config: ViteInlineConfig = {
     ...restOptions,
     configFile,
+    configLoader: ctx.vite.config.inlineConfig.configLoader,
     // this will make "mode": "test" | "benchmark" inside defineConfig
     mode: options.test?.mode || options.mode || ctx.config.mode,
     plugins: [

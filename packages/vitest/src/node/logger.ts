@@ -9,7 +9,7 @@ import { toArray } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { printError } from './error'
-import { divider, formatProjectName, withLabel } from './reporters/renderers/utils'
+import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 
 export interface ErrorOptions {
@@ -262,7 +262,7 @@ export class Logger {
         + '\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.',
       ),
     )
-    this.error(c.red(divider(c.bold(c.inverse(' Unhandled Errors ')))))
+    this.error(errorBanner('Unhandled Errors'))
     this.error(errorMessage)
     errors.forEach((err) => {
       this.printError(err, {
@@ -281,7 +281,7 @@ export class Logger {
         } not related to your test files.`,
       ),
     )
-    this.log(c.red(divider(c.bold(c.inverse(' Source Errors ')))))
+    this.log(errorBanner('Source Errors'))
     this.log(errorMessage)
     errors.forEach((err) => {
       this.printError(err, { fullStack: true })

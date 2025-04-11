@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { defineConfig } from 'rollup'
-import esbuild from 'rollup-plugin-esbuild'
+import oxc from 'unplugin-oxc/rollup'
 import { createDtsUtils } from '../../scripts/build-utils.js'
 
 const require = createRequire(import.meta.url)
@@ -28,8 +28,8 @@ const plugins = [
   json(),
   nodeResolve(),
   commonjs(),
-  esbuild({
-    target: 'node18',
+  oxc({
+    transform: { target: 'node18' },
   }),
 ]
 
