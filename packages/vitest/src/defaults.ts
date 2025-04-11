@@ -131,7 +131,7 @@ export const configDefaults: Readonly<{
 }> = Object.freeze({
   allowOnly: !isCI,
   isolate: true,
-  watch: !isCI,
+  watch: !isCI && process.stdin.isTTY,
   globals: false,
   environment: 'node' as const,
   pool: 'forks' as const,
