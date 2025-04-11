@@ -145,6 +145,7 @@ export async function runVitest(
 
 interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
+  preserveAnsi?: boolean
 }
 
 export async function runCli(command: string, _options?: CliOptions | string, ...args: string[]) {
@@ -160,6 +161,7 @@ export async function runCli(command: string, _options?: CliOptions | string, ..
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
     stderr: subprocess.stderr!,
+    preserveAnsi: typeof _options !== 'string' ? _options?.preserveAnsi : false,
   })
 
   let setDone: (value?: unknown) => void

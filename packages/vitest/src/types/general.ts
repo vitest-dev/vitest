@@ -46,3 +46,6 @@ export interface ModuleGraphData {
 }
 
 export interface ProvidedContext {}
+
+// These need to be compatible with Tinyrainbow's bg-colors, and CSS's background-color
+export type LabelColor = 'black' | 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'white'

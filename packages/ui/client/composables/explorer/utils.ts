@@ -71,7 +71,7 @@ export function createOrUpdateFileNode(
       duration: file.result?.duration != null ? Math.round(file.result?.duration) : undefined,
       filepath: file.filepath,
       projectName: file.projectName || '',
-      projectNameColor: getProjectNameColor(file.projectName),
+      projectNameColor: explorerTree.colors.get(file.projectName || '') || getProjectNameColor(file.projectName),
       collectDuration: file.collectDuration,
       setupDuration: file.setupDuration,
       environmentLoad: file.environmentLoad,

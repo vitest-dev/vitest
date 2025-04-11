@@ -182,6 +182,7 @@ export type WorkerRPC = WorkerRPC_
 export type {
   AfterSuiteRunMeta,
   ErrorWithDiff,
+  LabelColor,
   ModuleCache,
   ModuleGraphData,
   ParsedStack,
