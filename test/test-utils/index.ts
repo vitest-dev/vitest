@@ -83,6 +83,10 @@ export async function runVitest(
         NO_COLOR: 'true',
         ...rest.env,
       },
+
+      // Test cases are already run with multiple forks/threads
+      maxWorkers: 1,
+      minWorkers: 1,
     }, {
       ...viteOverrides,
       server: {
@@ -147,12 +151,17 @@ interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
 }
 
-export async function runCli(command: string, _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
     args.unshift(_options)
     options = undefined
+  }
+
+  if (command === 'vitest') {
+    args.push('--maxWorkers=1')
+    args.push('--minWorkers=1')
   }
 
   const subprocess = x(command, args, options as Options).process!
