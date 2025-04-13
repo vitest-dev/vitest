@@ -60,3 +60,22 @@ test('default value changes of coverage.exclude do not reflect to test.exclude',
   expect(vitestConfig.exclude).toStrictEqual(['**/custom-exclude/**'])
   expect(vitestConfig.coverage.exclude).toStrictEqual(['**/custom-exclude/**', '**/example.test.ts'])
 })
+
+test('root browser mode is disabled when no instances are found', async () => {
+  const { vitestConfig } = await resolveConfig({
+    browser: {
+      enabled: true,
+    },
+  })
+  expect(vitestConfig.browser.enabled).toBe(false)
+})
+
+test('root browser mode is remains enabled when instances are found', async () => {
+  const { vitestConfig } = await resolveConfig({
+    browser: {
+      enabled: true,
+      instances: [{ browser: 'chromium' }],
+    },
+  })
+  expect(vitestConfig.browser.enabled).toBe(true)
+})

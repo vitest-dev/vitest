@@ -9,7 +9,10 @@ test.each([
   ['--browser.enabled'],
 ])('correctly outputs all tests with args: "%s"', async (...args) => {
   const { stdout, exitCode } = await runVitestCli('list', '-r=./fixtures/list', ...args)
-  expect(stdout).toMatchSnapshot()
+
+  const lines = stdout.split('\n').filter(line => !line.includes('Re-optimizing dependencies because vite config has changed')).join('\n')
+
+  expect(lines).toMatchSnapshot()
   expect(exitCode).toBe(0)
 })
 
