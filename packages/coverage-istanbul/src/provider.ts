@@ -12,8 +12,6 @@ import libReport from 'istanbul-lib-report'
 import libSourceMaps from 'istanbul-lib-source-maps'
 import reports from 'istanbul-reports'
 import { parseModule } from 'magicast'
-import { resolve } from 'pathe'
-import TestExclude from 'test-exclude'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider } from 'vitest/coverage'
 
@@ -26,19 +24,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   name = 'istanbul' as const
   version: string = version
   instrumenter!: Instrumenter
-  testExclude!: InstanceType<typeof TestExclude>
 
-  initialize(ctx: Vitest): void {
+  async initialize(ctx: Vitest): Promise<void> {
     this._initialize(ctx)
-
-    this.testExclude = new TestExclude({
-      cwd: ctx.config.root,
-      include: this.options.include,
-      exclude: this.options.exclude,
-      excludeNodeModules: true,
-      extension: this.options.extension,
-      relativePath: !this.options.allowExternal,
-    })
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -61,7 +49,12 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   onFileTransform(sourceCode: string, id: string, pluginCtx: any): { code: string; map: any } | undefined {
-    if (!this.testExclude.shouldInstrument(id)) {
+    // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
+    if (id.endsWith('.css')) {
+      return
+    }
+
+    if (!this.isIncluded(id)) {
       return
     }
 
@@ -111,7 +104,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
 
     // Include untested files when all tests were run (not a single file re-run)
     // or if previous results are preserved by "cleanOnRerun: false"
-    if (this.options.all && (allTestsRun || !this.options.cleanOnRerun)) {
+    if (this.options.include != null && (allTestsRun || !this.options.cleanOnRerun)) {
       const coveredFiles = coverageMap.files()
       const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
@@ -119,7 +112,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     }
 
     if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+      coverageMap.filter(filename => this.isIncluded(filename))
     }
 
     if (debug.enabled) {
@@ -165,20 +158,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
-    const allFiles = await this.testExclude.glob(this.ctx.config.root)
-    let includedFiles = allFiles.map(file =>
-      resolve(this.ctx.config.root, file),
-    )
-
-    if (this.ctx.config.changed) {
-      includedFiles = (this.ctx.config.related || []).filter(file =>
-        includedFiles.includes(file),
-      )
-    }
-
-    const uncoveredFiles = includedFiles
-      .filter(file => !coveredFiles.includes(file))
-      .sort()
+    const uncoveredFiles = await this.getUntestedFiles(coveredFiles)
 
     const cacheKey = new Date().getTime()
     const coverageMap = this.createCoverageMap()

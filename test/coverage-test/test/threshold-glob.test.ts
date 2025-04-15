@@ -7,8 +7,10 @@ test('threshold glob patterns count in global coverage', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      all: false,
-      include: ['**/fixtures/src/**'],
+      include: [
+        '**/fixtures/src/even.ts',
+        '**/fixtures/src/math.ts',
+      ],
       thresholds: {
         'branches': 100,
         'functions': 50,

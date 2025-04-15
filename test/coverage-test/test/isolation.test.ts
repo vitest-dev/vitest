@@ -22,7 +22,6 @@ for (const isolate of [true, false]) {
         fileParallelism: false,
 
         coverage: {
-          all: false,
           reporter: 'json',
         },
 
