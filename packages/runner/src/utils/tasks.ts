@@ -1,5 +1,6 @@
+import type { Arrayable } from '@vitest/utils'
 import type { Suite, Task, Test } from '../types/tasks'
-import { type Arrayable, toArray } from '@vitest/utils'
+import { toArray } from '@vitest/utils'
 
 /**
  * @deprecated use `isTestCase` instead

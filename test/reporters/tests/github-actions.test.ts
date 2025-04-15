@@ -5,8 +5,7 @@ import { runVitest } from '../../test-utils'
 
 test(GithubActionsReporter, async () => {
   let { stdout, stderr } = await runVitest(
-    { reporters: new GithubActionsReporter(), root: './fixtures' },
-    ['some-failing.test.ts'],
+    { reporters: new GithubActionsReporter(), root: './fixtures', include: ['**/some-failing.test.ts'] },
   )
   stdout = stdout.replace(resolve(__dirname, '..').replace(/:/g, '%3A'), '__TEST_DIR__')
   expect(stdout).toMatchInlineSnapshot(`

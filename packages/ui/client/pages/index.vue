@@ -24,6 +24,7 @@ const onMainResized = useDebounceFn((event: { size: number }[]) => {
     mainSizes.value[i] = e.size
   })
   recordMainResize(event)
+  allowBrowserEvents()
 }, 0)
 
 const onModuleResized = useDebounceFn((event: { size: number }[]) => {

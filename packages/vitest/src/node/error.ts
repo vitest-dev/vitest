@@ -17,7 +17,7 @@ import {
   positionToOffset,
 } from '../utils/source-map'
 import { F_POINTER } from './reporters/renderers/figures'
-import { divider, truncateString } from './reporters/renderers/utils'
+import { divider, errorBanner, truncateString } from './reporters/renderers/utils'
 
 type ErrorLogger = Pick<Logger, 'error' | 'highlight'>
 
@@ -141,7 +141,7 @@ function printErrorInner(
         })
 
   if (type) {
-    printErrorType(type, project.ctx)
+    printErrorType(type, project.vitest)
   }
   printErrorMessage(e, logger)
   if (options.screenshotPaths?.length) {
@@ -205,7 +205,7 @@ function printErrorInner(
     logger.error(
       c.red(
         `This error originated in "${c.bold(
-          testPath,
+          relative(project.config.root, testPath),
         )}" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.`,
       ),
     )
@@ -246,7 +246,7 @@ function printErrorInner(
 }
 
 function printErrorType(type: string, ctx: Vitest) {
-  ctx.logger.error(`\n${c.red(divider(c.bold(c.inverse(` ${type} `))))}`)
+  ctx.logger.error(`\n${errorBanner(type)}`)
 }
 
 const skipErrorProperties = new Set([
@@ -264,6 +264,14 @@ const skipErrorProperties = new Set([
   'actual',
   'expected',
   'diffOptions',
+  // webkit props
+  'sourceURL',
+  'column',
+  'line',
+  // firefox props
+  'fileName',
+  'lineNumber',
+  'columnNumber',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
   'VITEST_AFTER_ENV_TEARDOWN',

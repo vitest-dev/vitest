@@ -38,24 +38,62 @@ When a test function returns a promise, the runner will wait until it is resolve
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
-Most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+You can define options by chaining properties on a function:
 
-:::code-group
-```ts [dot-syntax]
+```ts
 import { test } from 'vitest'
 
 test.skip('skipped test', () => {
   // some logic that fails right now
 })
+
+test.concurrent.skip('skipped concurrent test', () => {
+  // some logic that fails right now
+})
 ```
-```ts [object-syntax]
+
+But you can also provide an object as a second argument instead:
+
+```ts
 import { test } from 'vitest'
 
 test('skipped test', { skip: true }, () => {
   // some logic that fails right now
 })
+
+test('skipped concurrent test', { skip: true, concurrent: true }, () => {
+  // some logic that fails right now
+})
 ```
-:::
+
+They both work in exactly the same way. To use either one is purely a stylistic choice.
+
+Note that if you are providing timeout as the last argument, you cannot use options anymore:
+
+```ts
+import { test } from 'vitest'
+
+// ✅ this works
+test.skip('heavy test', () => {
+  // ...
+}, 10_000)
+
+// ❌ this doesn't work
+test('heavy test', { skip: true }, () => {
+  // ...
+}, 10_000)
+```
+
+However, you can provide a timeout inside the object:
+
+```ts
+import { test } from 'vitest'
+
+// ✅ this works
+test('heavy test', { skip: true, timeout: 10_000 }, () => {
+  // ...
+})
+```
 
 ## test
 
@@ -124,6 +162,18 @@ import { assert, test } from 'vitest'
 
 test('skipped test', (context) => {
   context.skip()
+  // Test skipped, no error
+  assert.equal(Math.sqrt(4), 3)
+})
+```
+
+Since Vitest 3.1, if the condition is unknonwn, you can provide it to the `skip` method as the first arguments:
+
+```ts
+import { assert, test } from 'vitest'
+
+test('skipped test', (context) => {
+  context.skip(Math.random() < 0.5, 'optional message')
   // Test skipped, no error
   assert.equal(Math.sqrt(4), 3)
 })
@@ -310,7 +360,8 @@ You can inject parameters with [printf formatting](https://nodejs.org/api/util.h
 - `%f`: floating point value
 - `%j`: json
 - `%o`: object
-- `%#`: index of the test case
+- `%#`: 0-based index of the test case
+- `%$`: 1-based index of the test case
 - `%%`: single percent sign ('%')
 
 ```ts
@@ -330,16 +381,29 @@ test.each([
 // ✓ add(2, 1) -> 3
 ```
 
-You can also access object properties with `$` prefix, if you are using objects as arguments:
+You can also access object properties and array elements with `$` prefix:
 
-  ```ts
-  test.each([
-    { a: 1, b: 1, expected: 2 },
-    { a: 1, b: 2, expected: 3 },
-    { a: 2, b: 1, expected: 3 },
-  ])('add($a, $b) -> $expected', ({ a, b, expected }) => {
-    expect(a + b).toBe(expected)
-  })
+```ts
+test.each([
+  { a: 1, b: 1, expected: 2 },
+  { a: 1, b: 2, expected: 3 },
+  { a: 2, b: 1, expected: 3 },
+])('add($a, $b) -> $expected', ({ a, b, expected }) => {
+  expect(a + b).toBe(expected)
+})
+
+// this will return
+// ✓ add(1, 1) -> 2
+// ✓ add(1, 2) -> 3
+// ✓ add(2, 1) -> 3
+
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add($0, $1) -> $2', (a, b, expected) => {
+  expect(a + b).toBe(expected)
+})
 
 // this will return
 // ✓ add(1, 1) -> 2

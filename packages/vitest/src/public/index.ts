@@ -109,15 +109,6 @@ export { assert, chai, createExpect, expect, should } from '../integrations/chai
 export { inject } from '../integrations/inject'
 export { isFirstRun, runOnce } from '../integrations/run-once'
 
-export type {
-  Mock,
-  MockContext,
-  Mocked,
-  MockedClass,
-  MockedFunction,
-  MockedObject,
-  MockInstance,
-} from '../integrations/spy'
 export { getRunningMode, isWatchMode } from '../integrations/utils'
 export { vi, vitest } from '../integrations/vi'
 export type { VitestUtils } from '../integrations/vi'
@@ -283,6 +274,7 @@ export type {
   Custom as RunnerCustomCase,
   Task as RunnerTask,
   TaskBase as RunnerTaskBase,
+  TaskEventPack as RunnerTaskEventPack,
   TaskResult as RunnerTaskResult,
   TaskResultPack as RunnerTaskResultPack,
   Test as RunnerTestCase,
@@ -318,6 +310,16 @@ export type {
   SnapshotUpdateState,
   UncheckedSnapshot,
 } from '@vitest/snapshot'
+
+export type {
+  Mock,
+  MockContext,
+  Mocked,
+  MockedClass,
+  MockedFunction,
+  MockedObject,
+  MockInstance,
+} from '@vitest/spy'
 
 /** @deprecated import from `vitest/node` instead */
 export type BrowserScript = BrowserScript_

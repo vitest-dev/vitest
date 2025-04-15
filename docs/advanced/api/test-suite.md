@@ -190,3 +190,30 @@ describe('collection failed', () => {
 ::: warning
 Note that errors are serialized into simple objects: `instanceof Error` will always return `false`.
 :::
+
+## meta <Version>3.1.0</Version> {#meta}
+
+```ts
+function meta(): TaskMeta
+```
+
+Custom [metadata](/advanced/metadata) that was attached to the suite during its execution or collection. The meta can be attached by assigning a property to the `task.meta` object during a test run:
+
+```ts {5,10}
+import { test } from 'vitest'
+
+describe('the validation works correctly', (task) => {
+  // assign "decorated" during collection
+  task.meta.decorated = false
+
+  test('some test', ({ task }) => {
+    // assign "decorated" during test run, it will be available
+    // only in onTestCaseReady hook
+    task.suite.meta.decorated = false
+  })
+})
+```
+
+:::tip
+If metadata was attached during collection (outside of the `test` function), then it will be available in [`onTestModuleCollected`](./reporters#ontestmodulecollected) hook in the custom reporter.
+:::

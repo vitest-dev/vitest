@@ -1,6 +1,8 @@
+import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
+import type { BirpcReturn } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
-import { type BirpcReturn, createBirpc } from 'birpc'
+import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
 import { getBrowserState } from './utils'
 
@@ -63,6 +65,21 @@ function createClient() {
           return
         }
         cdp.emit(event, payload)
+      },
+      async resolveManualMock(url: string) {
+        // @ts-expect-error not typed global API
+        const mocker = globalThis.__vitest_mocker__ as ModuleMocker | undefined
+        const responseId = getBrowserState().sessionId
+        if (!mocker) {
+          return { url, keys: [], responseId }
+        }
+        const exports = await mocker.resolveFactoryModule(url)
+        const keys = Object.keys(exports)
+        return {
+          url,
+          keys,
+          responseId,
+        }
       },
     },
     {

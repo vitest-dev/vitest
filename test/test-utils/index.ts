@@ -1,5 +1,6 @@
 import type { Options } from 'tinyexec'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { WorkerGlobalState } from 'vitest'
 import type { WorkspaceProjectConfiguration } from 'vitest/config'
 import type { TestModule, UserConfig, Vitest, VitestRunMode } from 'vitest/node'
 import { webcrypto as crypto } from 'node:crypto'
@@ -10,7 +11,7 @@ import { inspect } from 'node:util'
 import { dirname, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import * as tinyrainbow from 'tinyrainbow'
-import { afterEach, onTestFinished, type WorkerGlobalState } from 'vitest'
+import { afterEach, onTestFinished } from 'vitest'
 import { startVitest } from 'vitest/node'
 import { getCurrentTest } from 'vitest/suite'
 import { Cli } from './cli'
@@ -82,6 +83,10 @@ export async function runVitest(
         NO_COLOR: 'true',
         ...rest.env,
       },
+
+      // Test cases are already run with multiple forks/threads
+      maxWorkers: 1,
+      minWorkers: 1,
     }, {
       ...viteOverrides,
       server: {
@@ -146,12 +151,17 @@ interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
 }
 
-export async function runCli(command: string, _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
     args.unshift(_options)
     options = undefined
+  }
+
+  if (command === 'vitest') {
+    args.push('--maxWorkers=1')
+    args.push('--minWorkers=1')
   }
 
   const subprocess = x(command, args, options as Options).process!
