@@ -6,6 +6,10 @@ html:not(.dark) [img-dark] {
   display: none;
 }
 
+details summary {
+  cursor: pointer;
+}
+
 /* Overrides */
 
 .sp .sp-link.link:hover,
@@ -165,4 +169,10 @@ img.resizable-img {
   .VPTeamMembersItem.small .profile .data .desc {
     min-height: unset;
   }
+}
+
+.highlighted-word {
+  background-color: var(--vp-code-line-highlight-color);
+  transition: background-color 0.5s;
+  display: inline-block;
 }

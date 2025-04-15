@@ -1,11 +1,12 @@
-import type { WorkspaceSpec } from '../node/pool'
+import type { TestProject } from '../node/project'
+import type { TestSpecification } from '../node/spec'
 import type { EnvironmentOptions, TransformModePatterns, VitestEnvironment } from '../node/types/config'
 import type { ContextTestEnvironment } from '../types/worker'
 import { promises as fs } from 'node:fs'
 import mm from 'micromatch'
 import { groupBy } from './base'
 
-export const envsOrder = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
+export const envsOrder: string[] = ['node', 'jsdom', 'happy-dom', 'edge-runtime']
 
 export interface FileByEnv {
   file: string
@@ -27,13 +28,15 @@ function getTransformMode(
 }
 
 export async function groupFilesByEnv(
-  files: Array<WorkspaceSpec>,
-) {
+  files: Array<TestSpecification>,
+): Promise<Record<string, {
+    file: { filepath: string; testLocations: number[] | undefined }
+    project: TestProject
+    environment: ContextTestEnvironment
+  }[]>> {
   const filesWithEnv = await Promise.all(
-    files.map(async (spec) => {
-      const file = spec.moduleId
-      const project = spec.project.workspaceProject
-      const code = await fs.readFile(file, 'utf-8')
+    files.map(async ({ moduleId: filepath, project, testLines }) => {
+      const code = await fs.readFile(filepath, 'utf-8')
 
       // 1. Check for control comments in the file
       let env = code.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1]
@@ -41,7 +44,7 @@ export async function groupFilesByEnv(
       if (!env) {
         for (const [glob, target] of project.config.environmentMatchGlobs
           || []) {
-          if (mm.isMatch(file, glob, { cwd: project.config.root })) {
+          if (mm.isMatch(filepath, glob, { cwd: project.config.root })) {
             env = target
             break
           }
@@ -52,7 +55,7 @@ export async function groupFilesByEnv(
 
       const transformMode = getTransformMode(
         project.config.testTransformMode,
-        file,
+        filepath,
       )
 
       let envOptionsJson = code.match(/@(?:vitest|jest)-environment-options\s+(.+)/)?.[1]
@@ -71,7 +74,10 @@ export async function groupFilesByEnv(
           : null,
       }
       return {
-        file,
+        file: {
+          filepath,
+          testLocations: testLines,
+        },
         project,
         environment,
       }

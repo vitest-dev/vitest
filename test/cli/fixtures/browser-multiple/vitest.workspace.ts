@@ -6,10 +6,11 @@ export default defineWorkspace([
     cacheDir: resolve(import.meta.dirname, 'basic-1'),
     test: {
       name: 'basic-1',
-      include: ['none'],
+      dir: import.meta.dirname,
+      include: ['./basic.test.js'],
       browser: {
         enabled: true,
-        name: 'chromium',
+        instances: [{ browser: 'chromium' }],
         provider: 'playwright',
         headless: true,
       }
@@ -19,10 +20,11 @@ export default defineWorkspace([
     cacheDir: resolve(import.meta.dirname, 'basic-2'),
     test: {
       name: 'basic-2',
-      include: ['none'],
+      dir: import.meta.dirname,
+      include: ['./basic.test.js'],
       browser: {
         enabled: true,
-        name: 'chromium',
+        instances: [{ browser: 'chromium' }],
         provider: 'playwright',
         headless: true,
       }

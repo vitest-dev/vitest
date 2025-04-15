@@ -1,99 +1,86 @@
-import type { UserConsoleLog } from '../../types/general'
-import type { ListRendererOptions } from './renderers/listRenderer'
-import c from 'tinyrainbow'
+import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
+import type { BaseOptions } from './base'
+import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
-import { createListRenderer } from './renderers/listRenderer'
+import { SummaryReporter } from './summary'
+
+export interface DefaultReporterOptions extends BaseOptions {
+  summary?: boolean
+}
 
 export class DefaultReporter extends BaseReporter {
-  renderer?: ReturnType<typeof createListRenderer>
-  rendererOptions: ListRendererOptions = {} as any
-  private renderSucceedDefault?: boolean
+  private options: DefaultReporterOptions
+  private summary?: SummaryReporter
 
-  onPathsCollected(paths: string[] = []) {
+  constructor(options: DefaultReporterOptions = {}) {
+    super(options)
+    this.options = {
+      summary: true,
+      ...options,
+    }
+
+    if (!this.isTTY) {
+      this.options.summary = false
+    }
+
+    if (this.options.summary) {
+      this.summary = new SummaryReporter()
+    }
+  }
+
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
+    this.summary?.onTestRunStart(specifications)
+  }
+
+  onTestModuleQueued(file: TestModule): void {
+    this.summary?.onTestModuleQueued(file)
+  }
+
+  onTestModuleCollected(module: TestModule): void {
+    this.summary?.onTestModuleCollected(module)
+  }
+
+  onTestModuleEnd(module: TestModule): void {
+    super.onTestModuleEnd(module)
+    this.summary?.onTestModuleEnd(module)
+  }
+
+  onTestCaseReady(test: TestCase): void {
+    this.summary?.onTestCaseReady(test)
+  }
+
+  onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
+    this.summary?.onTestCaseResult(test)
+  }
+
+  onHookStart(hook: ReportedHookContext): void {
+    this.summary?.onHookStart(hook)
+  }
+
+  onHookEnd(hook: ReportedHookContext): void {
+    this.summary?.onHookEnd(hook)
+  }
+
+  onInit(ctx: Vitest): void {
+    super.onInit(ctx)
+    this.summary?.onInit(ctx, { verbose: this.verbose })
+  }
+
+  onPathsCollected(paths: string[] = []): void {
     if (this.isTTY) {
-      if (this.renderSucceedDefault === undefined) {
-        this.renderSucceedDefault = !!this.rendererOptions.renderSucceed
+      if (this.renderSucceed === undefined) {
+        this.renderSucceed = !!this.renderSucceed
       }
 
-      if (this.renderSucceedDefault !== true) {
-        this.rendererOptions.renderSucceed = paths.length <= 1
-      }
-    }
-  }
-
-  async onTestRemoved(trigger?: string) {
-    this.stopListRender()
-    this.ctx.logger.clearScreen(
-      c.yellow('Test removed...')
-      + (trigger ? c.dim(` [ ${this.relative(trigger)} ]\n`) : ''),
-      true,
-    )
-    const files = this.ctx.state.getFiles(this.watchFilters)
-    createListRenderer(files, this.rendererOptions).stop()
-    this.ctx.logger.log()
-    super.reportSummary(files, this.ctx.state.getUnhandledErrors())
-    super.onWatcherStart()
-  }
-
-  onCollected() {
-    if (this.isTTY) {
-      this.rendererOptions.logger = this.ctx.logger
-      this.rendererOptions.showHeap = this.ctx.config.logHeapUsage
-      this.rendererOptions.slowTestThreshold
-        = this.ctx.config.slowTestThreshold
-      this.rendererOptions.mode = this.mode
-      const files = this.ctx.state.getFiles(this.watchFilters)
-      if (!this.renderer) {
-        this.renderer = createListRenderer(files, this.rendererOptions).start()
-      }
-      else {
-        this.renderer.update(files)
+      if (this.renderSucceed !== true) {
+        this.renderSucceed = paths.length <= 1
       }
     }
   }
 
-  onFinished(
-    files = this.ctx.state.getFiles(),
-    errors = this.ctx.state.getUnhandledErrors(),
-  ) {
-    // print failed tests without their errors to keep track of previously failed tests
-    // this can happen if there are multiple test errors, and user changed a file
-    // that triggered a rerun of unrelated tests - in that case they want to see
-    // the error for the test they are currently working on, but still keep track of
-    // the other failed tests
-    this.renderer?.update([
-      ...this.failedUnwatchedFiles,
-      ...files,
-    ])
-
-    this.stopListRender()
-    this.ctx.logger.log()
-    super.onFinished(files, errors)
-  }
-
-  async onWatcherStart(
-    files = this.ctx.state.getFiles(),
-    errors = this.ctx.state.getUnhandledErrors(),
-  ) {
-    this.stopListRender()
-    await super.onWatcherStart(files, errors)
-  }
-
-  stopListRender() {
-    this.renderer?.stop()
-    this.renderer = undefined
-  }
-
-  async onWatcherRerun(files: string[], trigger?: string) {
-    this.stopListRender()
-    await super.onWatcherRerun(files, trigger)
-  }
-
-  onUserConsoleLog(log: UserConsoleLog) {
-    if (!this.shouldLog(log)) {
-      return
-    }
-    this.renderer?.clear()
-    super.onUserConsoleLog(log)
+  onTestRunEnd(): void {
+    this.summary?.onTestRunEnd()
   }
 }

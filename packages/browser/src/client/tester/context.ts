@@ -1,127 +1,240 @@
 import type { Options as TestingLibraryOptions, UserEvent as TestingLibraryUserEvent } from '@testing-library/user-event'
-import type { BrowserRPC } from '@vitest/browser/client'
 import type { RunnerTask } from 'vitest'
 import type {
   BrowserPage,
   Locator,
   UserEvent,
-  UserEventClickOptions,
-  UserEventDragAndDropOptions,
-  UserEventHoverOptions,
-  UserEventTabOptions,
-  UserEventTypeOptions,
 } from '../../../context'
-import { convertElementToCssSelector, getBrowserState, getWorkerState } from '../utils'
+import type { BrowserRunnerState } from '../utils'
+import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
+import { convertElementToCssSelector, processTimeoutOptions } from './utils'
 
 // this file should not import anything directly, only types and utils
 
-const state = () => getWorkerState()
 // @ts-expect-error not typed global
 const provider = __vitest_browser_runner__.provider
-function filepath() {
-  return getWorkerState().filepath || getWorkerState().current?.file?.filepath || undefined
-}
-const rpc = () => getWorkerState().rpc as any as BrowserRPC
-const contextId = getBrowserState().contextId
-const channel = new BroadcastChannel(`vitest:${contextId}`)
+const sessionId = getBrowserState().sessionId
+const channel = new BroadcastChannel(`vitest:${sessionId}`)
 
-function triggerCommand<T>(command: string, ...args: any[]) {
-  return rpc().triggerCommand<T>(contextId, command, filepath(), args)
+function triggerCommand<T>(command: string, args: any[], error?: Error) {
+  return getBrowserState().commands.triggerCommand<T>(command, args, error)
 }
 
 export function createUserEvent(__tl_user_event_base__?: TestingLibraryUserEvent, options?: TestingLibraryOptions): UserEvent {
-  let __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
+  if (__tl_user_event_base__) {
+    return createPreviewUserEvent(__tl_user_event_base__, options ?? {})
+  }
+
   const keyboard = {
     unreleased: [] as string[],
   }
 
-  return {
-    setup(options?: any) {
-      return createUserEvent(__tl_user_event_base__, options)
+  // https://playwright.dev/docs/api/class-keyboard
+  // https://webdriver.io/docs/api/browser/keys/
+  const modifier = provider === `playwright`
+    ? 'ControlOrMeta'
+    : provider === 'webdriverio'
+      ? 'Ctrl'
+      : 'Control'
+
+  const userEvent: UserEvent = {
+    setup() {
+      return createUserEvent()
     },
     async cleanup() {
-      if (typeof __tl_user_event_base__ !== 'undefined') {
-        __tl_user_event__ = __tl_user_event_base__?.setup(options ?? {})
+      // avoid cleanup rpc call if there is nothing to cleanup
+      if (!keyboard.unreleased.length) {
         return
       }
-      await triggerCommand('__vitest_cleanup', keyboard)
-      keyboard.unreleased = []
+      return ensureAwaited(async (error) => {
+        await triggerCommand('__vitest_cleanup', [keyboard], error)
+        keyboard.unreleased = []
+      })
     },
-    click(element: Element | Locator, options: UserEventClickOptions = {}) {
-      return convertToLocator(element).click(processClickOptions(options))
+    click(element, options) {
+      return convertToLocator(element).click(options)
     },
-    dblClick(element: Element | Locator, options: UserEventClickOptions = {}) {
-      return convertToLocator(element).dblClick(processClickOptions(options))
+    dblClick(element, options) {
+      return convertToLocator(element).dblClick(options)
     },
-    tripleClick(element: Element | Locator, options: UserEventClickOptions = {}) {
-      return convertToLocator(element).tripleClick(processClickOptions(options))
+    tripleClick(element, options) {
+      return convertToLocator(element).tripleClick(options)
     },
-    selectOptions(element, value) {
-      return convertToLocator(element).selectOptions(value)
+    selectOptions(element, value, options) {
+      return convertToLocator(element).selectOptions(value, options)
     },
-    clear(element: Element | Locator) {
-      return convertToLocator(element).clear()
+    clear(element, options) {
+      return convertToLocator(element).clear(options)
     },
-    hover(element: Element | Locator, options: UserEventHoverOptions = {}) {
-      return convertToLocator(element).hover(processHoverOptions(options))
+    hover(element, options) {
+      return convertToLocator(element).hover(options)
     },
-    unhover(element: Element | Locator, options: UserEventHoverOptions = {}) {
+    unhover(element, options) {
       return convertToLocator(element).unhover(options)
     },
-    upload(element: Element | Locator, files: string | string[] | File | File[]) {
-      return convertToLocator(element).upload(files)
+    upload(element, files: string | string[] | File | File[], options) {
+      return convertToLocator(element).upload(files, options)
     },
 
     // non userEvent events, but still useful
-    fill(element: Element | Locator, text: string, options) {
+    fill(element, text, options) {
       return convertToLocator(element).fill(text, options)
     },
-    dragAndDrop(source: Element | Locator, target: Element | Locator, options = {}) {
+    dragAndDrop(source, target, options) {
       const sourceLocator = convertToLocator(source)
       const targetLocator = convertToLocator(target)
-      return sourceLocator.dropTo(targetLocator, processDragAndDropOptions(options))
+      return sourceLocator.dropTo(targetLocator, options)
     },
 
     // testing-library user-event
-    async type(element: Element | Locator, text: string, options: UserEventTypeOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.type(
-          element instanceof Element ? element : element.element(),
-          text,
-          options,
+    async type(element, text, options) {
+      return ensureAwaited(async (error) => {
+        const selector = convertToSelector(element)
+        const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+          '__vitest_type',
+          [
+            selector,
+            text,
+            { ...options, unreleased: keyboard.unreleased },
+          ],
+          error,
         )
-      }
-
-      const selector = convertToSelector(element)
-      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
-        '__vitest_type',
-        selector,
-        text,
-        { ...options, unreleased: keyboard.unreleased },
-      )
-      keyboard.unreleased = unreleased
+        keyboard.unreleased = unreleased
+      })
     },
-    tab(options: UserEventTabOptions = {}) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.tab(options)
-      }
-      return triggerCommand('__vitest_tab', options)
+    tab(options = {}) {
+      return ensureAwaited(error => triggerCommand('__vitest_tab', [options], error))
     },
-    async keyboard(text: string) {
-      if (typeof __tl_user_event__ !== 'undefined') {
-        return __tl_user_event__.keyboard(text)
-      }
-      const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
-        '__vitest_keyboard',
-        text,
-        keyboard,
-      )
-      keyboard.unreleased = unreleased
+    async keyboard(text) {
+      return ensureAwaited(async (error) => {
+        const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
+          '__vitest_keyboard',
+          [text, keyboard],
+          error,
+        )
+        keyboard.unreleased = unreleased
+      })
+    },
+    async copy() {
+      await userEvent.keyboard(`{${modifier}>}{c}{/${modifier}}`)
+    },
+    async cut() {
+      await userEvent.keyboard(`{${modifier}>}{x}{/${modifier}}`)
+    },
+    async paste() {
+      await userEvent.keyboard(`{${modifier}>}{v}{/${modifier}}`)
     },
   }
+  return userEvent
 }
 
-export function cdp() {
+function createPreviewUserEvent(userEventBase: TestingLibraryUserEvent, options: TestingLibraryOptions): UserEvent {
+  let userEvent = userEventBase.setup(options)
+  let clipboardData: DataTransfer | undefined
+
+  function toElement(element: Element | Locator) {
+    return element instanceof Element ? element : element.element()
+  }
+
+  const vitestUserEvent: UserEvent = {
+    setup(options?: any) {
+      return createPreviewUserEvent(userEventBase, options)
+    },
+    async cleanup() {
+      userEvent = userEventBase.setup(options ?? {})
+    },
+    async click(element) {
+      await userEvent.click(toElement(element))
+    },
+    async dblClick(element) {
+      await userEvent.dblClick(toElement(element))
+    },
+    async tripleClick(element) {
+      await userEvent.tripleClick(toElement(element))
+    },
+    async selectOptions(element, value) {
+      const options = (Array.isArray(value) ? value : [value]).map((option) => {
+        if (typeof option !== 'string') {
+          return toElement(option)
+        }
+        return option
+      })
+      await userEvent.selectOptions(
+        element,
+        options as string[] | HTMLElement[],
+      )
+    },
+    async clear(element) {
+      await userEvent.clear(toElement(element))
+    },
+    async hover(element: Element | Locator) {
+      await userEvent.hover(toElement(element))
+    },
+    async unhover(element: Element | Locator) {
+      await userEvent.unhover(toElement(element))
+    },
+    async upload(element, files: string | string[] | File | File[]) {
+      const uploadPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
+        if (typeof file !== 'string') {
+          return file
+        }
+
+        const { content: base64, basename, mime } = await triggerCommand<{
+          content: string
+          basename: string
+          mime: string
+        }>('__vitest_fileInfo', [file, 'base64'])
+
+        const fileInstance = fetch(`data:${mime};base64,${base64}`)
+          .then(r => r.blob())
+          .then(blob => new File([blob], basename, { type: mime }))
+        return fileInstance
+      })
+      const uploadFiles = await Promise.all(uploadPromise)
+      return userEvent.upload(toElement(element) as HTMLElement, uploadFiles)
+    },
+
+    async fill(element, text) {
+      await userEvent.clear(toElement(element))
+      return userEvent.type(toElement(element), text)
+    },
+    async dragAndDrop() {
+      throw new Error(`The "preview" provider doesn't support 'userEvent.dragAndDrop'`)
+    },
+
+    async type(element, text, options) {
+      await userEvent.type(toElement(element), text, options)
+    },
+    async tab(options) {
+      await userEvent.tab(options)
+    },
+    async keyboard(text: string) {
+      await userEvent.keyboard(text)
+    },
+
+    async copy() {
+      clipboardData = await userEvent.copy()
+    },
+    async cut() {
+      clipboardData = await userEvent.cut()
+    },
+    async paste() {
+      await userEvent.paste(clipboardData)
+    },
+  }
+
+  for (const [name, fn] of Object.entries(vitestUserEvent)) {
+    if (name !== 'setup') {
+      (vitestUserEvent as any)[name] = function (this: any, ...args: any[]) {
+        return ensureAwaited(() => fn.apply(this, args))
+      }
+    }
+  }
+
+  return vitestUserEvent
+}
+
+export function cdp(): BrowserRunnerState['cdp'] {
   return getBrowserState().cdp!
 }
 
@@ -167,36 +280,36 @@ export const page: BrowserPage = {
     const name
       = options.path || `${taskName.replace(/[^a-z0-9]/gi, '-')}-${number}.png`
 
-    return triggerCommand('__vitest_screenshot', name, {
+    return ensureAwaited(error => triggerCommand('__vitest_screenshot', [name, processTimeoutOptions({
       ...options,
       element: options.element
         ? convertToSelector(options.element)
         : undefined,
-    })
+    })], error))
   },
   getByRole() {
-    throw new Error('Method "getByRole" is not implemented in the current provider.')
+    throw new Error(`Method "getByRole" is not implemented in the "${provider}" provider.`)
   },
   getByLabelText() {
-    throw new Error('Method "getByLabelText" is not implemented in the current provider.')
+    throw new Error(`Method "getByLabelText" is not implemented in the "${provider}" provider.`)
   },
   getByTestId() {
-    throw new Error('Method "getByTestId" is not implemented in the current provider.')
+    throw new Error(`Method "getByTestId" is not implemented in the "${provider}" provider.`)
   },
   getByAltText() {
-    throw new Error('Method "getByAltText" is not implemented in the current provider.')
+    throw new Error(`Method "getByAltText" is not implemented in the "${provider}" provider.`)
   },
   getByPlaceholder() {
-    throw new Error('Method "getByPlaceholder" is not implemented in the current provider.')
+    throw new Error(`Method "getByPlaceholder" is not implemented in the "${provider}" provider.`)
   },
   getByText() {
-    throw new Error('Method "getByText" is not implemented in the current provider.')
+    throw new Error(`Method "getByText" is not implemented in the "${provider}" provider.`)
   },
   getByTitle() {
-    throw new Error('Method "getByTitle" is not implemented in the current provider.')
+    throw new Error(`Method "getByTitle" is not implemented in the "${provider}" provider.`)
   },
   elementLocator() {
-    throw new Error('Method "elementLocator" is not implemented in the current provider.')
+    throw new Error(`Method "elementLocator" is not implemented in the "${provider}" provider.`)
   },
   extend(methods) {
     for (const key in methods) {
@@ -228,131 +341,4 @@ function convertToSelector(elementOrLocator: Element | Locator): string {
 
 function getTaskFullName(task: RunnerTask): string {
   return task.suite ? `${getTaskFullName(task.suite)} ${task.name}` : task.name
-}
-
-function processClickOptions(options_?: UserEventClickOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
-    return options_
-  }
-  if (provider === 'playwright') {
-    const options = options_ as NonNullable<
-      Parameters<import('playwright').Page['click']>[1]
-    >
-    if (options.position) {
-      options.position = processPlaywrightPosition(options.position)
-    }
-  }
-  if (provider === 'webdriverio') {
-    const options = options_ as import('webdriverio').ClickOptions
-    if (options.x != null || options.y != null) {
-      const cache = {}
-      if (options.x != null) {
-        options.x = scaleCoordinate(options.x, cache)
-      }
-      if (options.y != null) {
-        options.y = scaleCoordinate(options.y, cache)
-      }
-    }
-  }
-  return options_
-}
-
-function processHoverOptions(options_?: UserEventHoverOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
-    return options_
-  }
-
-  if (provider === 'playwright') {
-    const options = options_ as NonNullable<
-      Parameters<import('playwright').Page['hover']>[1]
-    >
-    if (options.position) {
-      options.position = processPlaywrightPosition(options.position)
-    }
-  }
-  if (provider === 'webdriverio') {
-    const options = options_ as import('webdriverio').MoveToOptions
-    const cache = {}
-    if (options.xOffset != null) {
-      options.xOffset = scaleCoordinate(options.xOffset, cache)
-    }
-    if (options.yOffset != null) {
-      options.yOffset = scaleCoordinate(options.yOffset, cache)
-    }
-  }
-  return options_
-}
-
-function processDragAndDropOptions(options_?: UserEventDragAndDropOptions) {
-  // only ui scales the iframe, so we need to adjust the position
-  if (!options_ || !state().config.browser.ui) {
-    return options_
-  }
-  if (provider === 'playwright') {
-    const options = options_ as NonNullable<
-      Parameters<import('playwright').Page['dragAndDrop']>[2]
-    >
-    if (options.sourcePosition) {
-      options.sourcePosition = processPlaywrightPosition(options.sourcePosition)
-    }
-    if (options.targetPosition) {
-      options.targetPosition = processPlaywrightPosition(options.targetPosition)
-    }
-  }
-  if (provider === 'webdriverio') {
-    const cache = {}
-    const options = options_ as import('webdriverio').DragAndDropOptions & {
-      targetX?: number
-      targetY?: number
-      sourceX?: number
-      sourceY?: number
-    }
-    if (options.sourceX != null) {
-      options.sourceX = scaleCoordinate(options.sourceX, cache)
-    }
-    if (options.sourceY != null) {
-      options.sourceY = scaleCoordinate(options.sourceY, cache)
-    }
-    if (options.targetX != null) {
-      options.targetX = scaleCoordinate(options.targetX, cache)
-    }
-    if (options.targetY != null) {
-      options.targetY = scaleCoordinate(options.targetY, cache)
-    }
-  }
-  return options_
-}
-
-function scaleCoordinate(coordinate: number, cache: any) {
-  return Math.round(coordinate * getCachedScale(cache))
-}
-
-function getCachedScale(cache: { scale: number | undefined }) {
-  return cache.scale ??= getIframeScale()
-}
-
-function processPlaywrightPosition(position: { x: number; y: number }) {
-  const scale = getIframeScale()
-  if (position.x != null) {
-    position.x *= scale
-  }
-  if (position.y != null) {
-    position.y *= scale
-  }
-  return position
-}
-
-function getIframeScale() {
-  const testerUi = window.parent.document.querySelector('#tester-ui') as HTMLElement | null
-  if (!testerUi) {
-    throw new Error(`Cannot find Tester element. This is a bug in Vitest. Please, open a new issue with reproduction.`)
-  }
-  const scaleAttribute = testerUi.getAttribute('data-scale')
-  const scale = Number(scaleAttribute)
-  if (Number.isNaN(scale)) {
-    throw new TypeError(`Cannot parse scale value from Tester element (${scaleAttribute}). This is a bug in Vitest. Please, open a new issue with reproduction.`)
-  }
-  return scale
 }

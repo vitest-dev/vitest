@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { afterEach, describe, expect, test } from 'vitest'
 
 import * as testUtils from '../../test-utils'
@@ -120,6 +120,42 @@ test("dynamic test case", () => {
   await vitest.waitForStdout('1 passed')
 })
 
+test('renaming an existing test file', async () => {
+  cleanups.push(() => rmSync('fixtures/after.test.ts'))
+  const beforeFile = 'fixtures/before.test.ts'
+  const afterFile = 'fixtures/after.test.ts'
+  const textContent = `
+import { expect, test } from "vitest";
+
+test("test case", () => {
+  console.log("Running existing test")
+  expect(true).toBeTruthy()
+})
+`
+  writeFileSync(beforeFile, textContent, 'utf-8')
+  const { vitest } = await testUtils.runVitest({ root: 'fixtures', watch: true })
+  await vitest.waitForStdout('Running existing test')
+
+  renameSync(beforeFile, afterFile)
+  await vitest.waitForStdout('Test removed')
+  await vitest.waitForStdout('Waiting for file changes...')
+
+  vitest.write('p')
+  await vitest.waitForStdout('Input filename pattern')
+  vitest.write('before')
+  await vitest.waitForStdout('Pattern matches no results')
+  vitest.write('\n')
+  await vitest.waitForStdout('No test files found')
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.write('p')
+  await vitest.waitForStdout('Input filename pattern')
+  vitest.write('after')
+  await vitest.waitForStdout('Pattern matches 1 result')
+  vitest.write('\n')
+  await vitest.waitForStdout('Filename pattern: after')
+  await vitest.waitForStdout('1 passed')
+})
+
 test('editing source file generates new test report to file system', async () => {
   const report = 'fixtures/test-results/junit.xml'
   if (existsSync(report)) {
@@ -156,7 +192,7 @@ describe('browser', () => {
     const { vitest } = await testUtils.runVitest({
       ...options,
       browser: {
-        name: 'chrome',
+        instances: [{ browser: 'chromium' }],
         provider: 'webdriverio',
         enabled: true,
         headless: true,

@@ -11,10 +11,7 @@ export const click: UserEventCommand<UserEvent['click']> = async (
   const provider = context.provider
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
-    await tester.locator(selector).click({
-      timeout: 1000,
-      ...options,
-    })
+    await tester.locator(selector).click(options)
   }
   else if (provider instanceof WebdriverBrowserProvider) {
     const browser = context.browser
@@ -53,7 +50,6 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
   if (provider instanceof PlaywrightBrowserProvider) {
     const tester = context.iframe
     await tester.locator(selector).click({
-      timeout: 1000,
       ...options,
       clickCount: 3,
     })
@@ -63,7 +59,7 @@ export const tripleClick: UserEventCommand<UserEvent['tripleClick']> = async (
     await browser
       .action('pointer', { parameters: { pointerType: 'mouse' } })
       // move the pointer over the button
-      .move({ origin: await browser.$(selector) })
+      .move({ origin: browser.$(selector) })
       // simulate 3 clicks
       .down()
       .up()

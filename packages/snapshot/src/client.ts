@@ -36,7 +36,11 @@ interface AssertOptions {
   received: unknown
   filepath: string
   name: string
-  testId: string
+  /**
+   * Not required but needed for `SnapshotClient.clearTest` to implement test-retry behavior.
+   * @default name
+   */
+  testId?: string
   message?: string
   isInline?: boolean
   properties?: object
@@ -128,13 +132,55 @@ export class SnapshotClient {
     // maybe should setup one for fallback in concurrent case?
     // or just warning users to use `TestContext.expect`?
     throw new Error('snapshot state not initialized')
+    // snapshotStateMap: Map<string, SnapshotState> = new Map()
+
+    // constructor(private options: SnapshotClientOptions = {}) {}
+
+    // async setup(
+    //   filepath: string,
+    //   options: SnapshotStateOptions,
+    // ): Promise<void> {
+    //   if (this.snapshotStateMap.has(filepath)) {
+    //     return
+    //   }
+    //   this.snapshotStateMap.set(
+    //     filepath,
+    //     await SnapshotState.create(filepath, options),
+    //   )
+    // }
+
+    // async finish(filepath: string): Promise<SnapshotResult> {
+    //   const state = this.getSnapshotState(filepath)
+    //   const result = await state.pack()
+    //   this.snapshotStateMap.delete(filepath)
+    //   return result
+    // }
+
+    // skipTest(filepath: string, testName: string): void {
+    //   const state = this.getSnapshotState(filepath)
+    //   state.markSnapshotsAsCheckedForTest(testName)
+    // }
+
+    // clearTest(filepath: string, testId: string): void {
+    //   const state = this.getSnapshotState(filepath)
+    //   state.clearTest(testId)
+    // }
+
+  // getSnapshotState(filepath: string): SnapshotState {
+  //   const state = this.snapshotStateMap.get(filepath)
+  //   if (!state) {
+  //     throw new Error(
+  //       `The snapshot state for '${filepath}' is not found. Did you call 'SnapshotClient.setup()'?`,
+  //     )
+  //   }
+  //   return state
   }
 
   assert(options: AssertOptions): void {
     const {
       filepath,
       name,
-      testId,
+      testId = name,
       message,
       isInline = false,
       properties,
@@ -150,6 +196,7 @@ export class SnapshotClient {
     }
 
     const snapshotState = this.getSnapshotState(testId)
+    // const snapshotState = this.getSnapshotState(filepath)
 
     if (typeof properties === 'object') {
       if (typeof received !== 'object' || !received) {
@@ -195,8 +242,8 @@ export class SnapshotClient {
       throw createMismatchError(
         `Snapshot \`${key || 'unknown'}\` mismatched`,
         snapshotState.expand,
-        actual?.trim(),
-        expected?.trim(),
+        rawSnapshot ? actual : actual?.trim(),
+        rawSnapshot ? expected : expected?.trim(),
       )
     }
   }
@@ -213,7 +260,7 @@ export class SnapshotClient {
         throw new Error('Snapshot cannot be used outside of test')
       }
 
-      const snapshotState = this.getSnapshotState(options.testId)
+      const snapshotState = this.getSnapshotState(options.testId || options.name)
 
       // save the filepath, so it don't lose even if the await make it out-of-context
       options.filepath ||= filepath
@@ -224,7 +271,7 @@ export class SnapshotClient {
       )
       rawSnapshot.content
         = (await snapshotState.environment.readSnapshotFile(rawSnapshot.file))
-        ?? undefined
+          ?? undefined
     }
 
     return this.assert(options)

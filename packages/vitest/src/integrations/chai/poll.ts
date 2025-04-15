@@ -1,4 +1,5 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
+import type { Test } from '@vitest/runner'
 import { getSafeTimers } from '@vitest/utils'
 import * as chai from 'chai'
 import { getWorkerState } from '../../runtime/utils'
@@ -6,7 +7,7 @@ import { getWorkerState } from '../../runtime/utils'
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
   // .poll is meant to retry matchers until they succeed, and
-  // snapshots will always succeed as long as the poll method doesn't thow an error
+  // snapshots will always succeed as long as the poll method doesn't throw an error
   // in this case using the `vi.waitFor` method is more appropriate
   'matchSnapshot',
   'toMatchSnapshot',
@@ -39,6 +40,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
       poll: true,
     }) as Assertion
     fn = fn.bind(assertion)
+    const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
+    if (!test) {
+      throw new Error('expect.poll() must be called inside a test')
+    }
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
@@ -59,21 +64,11 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
 
         return function (this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-          return new Promise((resolve, reject) => {
+          const promise = () => new Promise<void>((resolve, reject) => {
             let intervalId: any
+            let timeoutId: any
             let lastError: any
             const { setTimeout, clearTimeout } = getSafeTimers()
-            const timeoutId = setTimeout(() => {
-              clearTimeout(intervalId)
-              reject(
-                copyStackTrace(
-                  new Error(`Matcher did not succeed in ${timeout}ms`, {
-                    cause: lastError,
-                  }),
-                  STACK_TRACE_ERROR,
-                ),
-              )
-            }, timeout)
             const check = async () => {
               try {
                 chai.util.flag(assertion, '_name', key)
@@ -85,11 +80,59 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               }
               catch (err) {
                 lastError = err
-                intervalId = setTimeout(check, interval)
+                if (!chai.util.flag(assertion, '_isLastPollAttempt')) {
+                  intervalId = setTimeout(check, interval)
+                }
               }
             }
+            timeoutId = setTimeout(() => {
+              clearTimeout(intervalId)
+              chai.util.flag(assertion, '_isLastPollAttempt', true)
+              const rejectWithCause = (cause: any) => {
+                reject(
+                  copyStackTrace(
+                    new Error('Matcher did not succeed in time.', {
+                      cause,
+                    }),
+                    STACK_TRACE_ERROR,
+                  ),
+                )
+              }
+              check()
+                .then(() => rejectWithCause(lastError))
+                .catch(e => rejectWithCause(e))
+            }, timeout)
             check()
           })
+          let awaited = false
+          test.onFinished ??= []
+          test.onFinished.push(() => {
+            if (!awaited) {
+              const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
+              const name = chai.util.flag(assertion, '_poll.element') ? 'element(locator)' : 'poll(assertion)'
+              const assertionString = `expect.${name}.${negated}${String(key)}()`
+              const error = new Error(
+                `${assertionString} was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:\n\nawait ${assertionString}\n`,
+              )
+              throw copyStackTrace(error, STACK_TRACE_ERROR)
+            }
+          })
+          let resultPromise: Promise<void> | undefined
+          // only .then is enough to check awaited, but we type this as `Promise<void>` in global types
+          // so let's follow it
+          return {
+            then(onFulfilled, onRejected) {
+              awaited = true
+              return (resultPromise ||= promise()).then(onFulfilled, onRejected)
+            },
+            catch(onRejected) {
+              return (resultPromise ||= promise()).catch(onRejected)
+            },
+            finally(onFinally) {
+              return (resultPromise ||= promise()).finally(onFinally)
+            },
+            [Symbol.toStringTag]: 'Promise',
+          } satisfies Promise<void>
         }
       },
     })

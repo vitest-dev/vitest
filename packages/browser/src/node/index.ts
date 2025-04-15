@@ -1,42 +1,46 @@
 import type { Plugin } from 'vitest/config'
-import type { WorkspaceProject } from 'vitest/node'
+import type { TestProject } from 'vitest/node'
+import { MockerRegistry } from '@vitest/mocker'
+import { interceptorPlugin } from '@vitest/mocker/node'
 import c from 'tinyrainbow'
 import { createViteLogger, createViteServer } from 'vitest/node'
 import { version } from '../../package.json'
 import BrowserPlugin from './plugin'
+import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
-import { BrowserServer } from './server'
 
 export { distRoot } from './constants'
 export { createBrowserPool } from './pool'
 
-export type { BrowserServer } from './server'
+export type { ProjectBrowser } from './project'
 
 export async function createBrowserServer(
-  project: WorkspaceProject,
+  project: TestProject,
   configFile: string | undefined,
   prePlugins: Plugin[] = [],
   postPlugins: Plugin[] = [],
-) {
-  if (project.ctx.version !== version) {
-    project.ctx.logger.warn(
+): Promise<ParentBrowserProject> {
+  if (project.vitest.version !== version) {
+    project.vitest.logger.warn(
       c.yellow(
-        `Loaded ${c.inverse(c.yellow(` vitest@${project.ctx.version} `))} and ${c.inverse(c.yellow(` @vitest/browser@${version} `))}.`
+        `Loaded ${c.inverse(c.yellow(` vitest@${project.vitest.version} `))} and ${c.inverse(c.yellow(` @vitest/browser@${version} `))}.`
         + '\nRunning mixed versions is not supported and may lead into bugs'
         + '\nUpdate your dependencies and make sure the versions match.',
       ),
     )
   }
 
-  const server = new BrowserServer(project, '/')
+  const server = new ParentBrowserProject(project, '/')
 
   const configPath = typeof configFile === 'string' ? configFile : false
 
   const logLevel = (process.env.VITEST_BROWSER_DEBUG as 'info') ?? 'info'
 
-  const logger = createViteLogger(project.logger, logLevel, {
+  const logger = createViteLogger(project.vitest.logger, logLevel, {
     allowClearScreen: false,
   })
+
+  const mockerRegistry = new MockerRegistry()
 
   const vite = await createViteServer({
     ...project.options, // spread project config inlined in root workspace config
@@ -58,6 +62,7 @@ export async function createBrowserServer(
     },
     mode: project.config.mode,
     configFile: configPath,
+    configLoader: project.vite.config.inlineConfig.configLoader,
     // watch is handled by Vitest
     server: {
       hmr: false,
@@ -67,13 +72,14 @@ export async function createBrowserServer(
       ...prePlugins,
       ...(project.options?.plugins || []),
       BrowserPlugin(server),
+      interceptorPlugin({ registry: mockerRegistry }),
       ...postPlugins,
     ],
   })
 
   await vite.listen()
 
-  setupBrowserRpc(server)
+  setupBrowserRpc(server, mockerRegistry)
 
   return server
 }

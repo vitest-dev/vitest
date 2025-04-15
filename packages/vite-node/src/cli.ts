@@ -2,7 +2,7 @@ import type { ViteNodeServerOptions } from './types'
 import { resolve } from 'node:path'
 import cac from 'cac'
 import c from 'tinyrainbow'
-import { createServer, loadEnv } from 'vite'
+import { createServer, loadEnv, version as viteVersion } from 'vite'
 import { version } from '../package.json'
 import { ViteNodeRunner } from './client'
 import { createHotContext, handleMessage, viteNodeHmrPlugin } from './hmr'
@@ -94,7 +94,13 @@ async function run(files: string[], options: CliOptions = {}) {
     },
     plugins: [options.watch && viteNodeHmrPlugin()],
   })
-  await server.pluginContainer.buildStart({})
+  if (Number(viteVersion.split('.')[0]) < 6) {
+    await server.pluginContainer.buildStart({})
+  }
+  else {
+    // directly access client plugin container until https://github.com/vitejs/vite/issues/19607
+    await server.environments.client.pluginContainer.buildStart({})
+  }
 
   const env = loadEnv(server.config.mode, server.config.envDir, '')
 
@@ -186,10 +192,10 @@ function parseServerOptions(
       inline:
         inlineOptions !== true
           ? inlineOptions.map((dep) => {
-            return dep.startsWith('/') && dep.endsWith('/')
-              ? new RegExp(dep)
-              : dep
-          })
+              return dep.startsWith('/') && dep.endsWith('/')
+                ? new RegExp(dep)
+                : dep
+            })
           : true,
       external: toArray(serverOptions.deps?.external).map((dep) => {
         return dep.startsWith('/') && dep.endsWith('/') ? new RegExp(dep) : dep

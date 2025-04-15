@@ -1,7 +1,7 @@
 import libCoverage from 'istanbul-lib-coverage'
 import { expect } from 'vitest'
 import * as transpiled from '../fixtures/src/pre-bundle/bundle.js'
-import { coverageTest, isV8Provider, normalizeURL, readCoverageJson, runVitest, test } from '../utils.js'
+import { coverageTest, formatSummary, isV8Provider, normalizeURL, readCoverageJson, runVitest, test } from '../utils.js'
 
 test('bundled code with source maps to originals', async () => {
   await runVitest({
@@ -15,16 +15,59 @@ test('bundled code with source maps to originals', async () => {
 
   const coverageJson = await readCoverageJson()
   const coverageMap = libCoverage.createCoverageMap(coverageJson)
-  const files = coverageMap.files()
 
-  expect(files).toContain('<process-cwd>/fixtures/src/pre-bundle/first.ts')
-  expect(files).toContain('<process-cwd>/fixtures/src/pre-bundle/second.ts')
-  expect(files.find(file => file.includes('bundle.js'))).toBeFalsy()
-  expect(files.find(file => file.includes('bundle.js.map'))).toBeFalsy()
-  expect(files.find(file => file.includes('bundle.ts'))).toBeFalsy()
-  expect(files.find(file => file.includes('bundle.d.ts'))).toBeFalsy()
+  // bundle.ts/bundle.js should not be included
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/pre-bundle/first.ts",
+      "<process-cwd>/fixtures/src/pre-bundle/second.ts",
+    ]
+  `)
 
-  expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/bundled-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
+  const first = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/pre-bundle/first.ts')
+  const second = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/pre-bundle/second.ts')
+
+  const summary = {
+    [first.path]: formatSummary(first.toSummary()),
+    [second.path]: formatSummary(second.toSummary()),
+  }
+
+  if (isV8Provider()) {
+    expect(summary).toMatchInlineSnapshot(`
+      {
+        "<process-cwd>/fixtures/src/pre-bundle/first.ts": {
+          "branches": "1/1 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "4/6 (66.66%)",
+          "statements": "4/6 (66.66%)",
+        },
+        "<process-cwd>/fixtures/src/pre-bundle/second.ts": {
+          "branches": "1/1 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "4/6 (66.66%)",
+          "statements": "4/6 (66.66%)",
+        },
+      }
+    `)
+  }
+  else {
+    expect(summary).toMatchInlineSnapshot(`
+      {
+        "<process-cwd>/fixtures/src/pre-bundle/first.ts": {
+          "branches": "0/0 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "1/2 (50%)",
+          "statements": "1/2 (50%)",
+        },
+        "<process-cwd>/fixtures/src/pre-bundle/second.ts": {
+          "branches": "0/0 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "1/2 (50%)",
+          "statements": "1/2 (50%)",
+        },
+      }
+    `)
+  }
 })
 
 coverageTest('run bundled sources', () => {

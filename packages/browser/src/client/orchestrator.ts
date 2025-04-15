@@ -1,6 +1,6 @@
+import type { GlobalChannelIncomingEvent, IframeChannelEvent, IframeChannelIncomingEvent } from '@vitest/browser/client'
 import type { SerializedConfig } from 'vitest'
-import { channel, client } from '@vitest/browser/client'
-import { globalChannel, type GlobalChannelIncomingEvent, type IframeChannelEvent, type IframeChannelIncomingEvent } from '@vitest/browser/client'
+import { channel, client, globalChannel } from '@vitest/browser/client'
 import { generateHash } from '@vitest/runner/utils'
 import { relative } from 'pathe'
 import { getUiAPI } from './ui'
@@ -14,9 +14,7 @@ class IframeOrchestrator {
   private runningFiles = new Set<string>()
   private iframes = new Map<string, HTMLIFrameElement>()
 
-  public async init() {
-    const testFiles = getBrowserState().files
-
+  public async init(testFiles: string[]) {
     debug('test files', testFiles.join(', '))
 
     this.runningFiles.clear()
@@ -38,6 +36,7 @@ class IframeOrchestrator {
     testFiles.forEach(file => this.runningFiles.add(file))
 
     const config = getConfig()
+    debug('create testers', testFiles.join(', '))
     const container = await getContainer(config)
 
     if (config.browser.ui) {
@@ -50,7 +49,8 @@ class IframeOrchestrator {
     this.iframes.forEach(iframe => iframe.remove())
     this.iframes.clear()
 
-    if (config.isolate === false) {
+    if (config.browser.isolate === false) {
+      debug('create iframe', ID_ALL)
       const iframe = this.createIframe(container, ID_ALL)
 
       await setIframeViewport(iframe, width, height)
@@ -63,6 +63,7 @@ class IframeOrchestrator {
         return
       }
 
+      debug('create iframe', file)
       const iframe = this.createIframe(container, file)
 
       await setIframeViewport(iframe, width, height)
@@ -93,7 +94,7 @@ class IframeOrchestrator {
     iframe.setAttribute(
       'src',
       `${url.pathname}__vitest_test__/__test__/${
-        getBrowserState().contextId
+        getBrowserState().sessionId
       }/${encodeURIComponent(file)}`,
     )
     iframe.setAttribute('data-vitest', 'true')
@@ -212,7 +213,7 @@ getBrowserState().createTesters = async (files) => {
 }
 
 async function done() {
-  await client.rpc.finishBrowserTests(getBrowserState().contextId)
+  await client.rpc.finishBrowserTests(getBrowserState().sessionId)
 }
 
 async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
@@ -233,7 +234,7 @@ async function getContainer(config: SerializedConfig): Promise<HTMLDivElement> {
 client.waitForConnection().then(async () => {
   const testFiles = getBrowserState().files
 
-  await orchestrator.init()
+  await orchestrator.init(testFiles)
 
   // if page was refreshed, there will be no test files
   // createTesters will be called again when tests are running in the UI

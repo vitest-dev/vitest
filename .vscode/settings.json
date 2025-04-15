@@ -5,7 +5,7 @@
   ],
 
   // Enable the ESlint flat config support
-  "eslint.experimental.useFlatConfig": true,
+  "eslint.useFlatConfig": true,
 
   // Disable the default formatter, use eslint instead
   "prettier.enable": false,
@@ -45,5 +45,8 @@
     "json",
     "jsonc",
     "yaml"
-  ]
+  ],
+  "testing.automaticallyOpenTestResults": "neverOpen",
+  // Use the project's typescript version
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

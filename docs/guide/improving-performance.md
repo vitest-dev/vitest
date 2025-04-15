@@ -8,7 +8,7 @@ By default Vitest runs every test file in an isolated environment based on the [
 - `forks` pool runs every test file in a separate [forked child process](https://nodejs.org/api/child_process.html#child_processforkmodulepath-args-options)
 - `vmThreads` pool runs every test file in a separate [VM context](https://nodejs.org/api/vm.html#vmcreatecontextcontextobject-options), but it uses workers for parallelism
 
-This greatly increases test times, which might not be desirable for projects that don't rely on side effects and properly cleanup their state (which is usually true for projects with `node` environment). In this case disabling isolation will improve the speed of your tests. To do that, you can provide `--no-isolate` flag to the CLI or set [`test.isolate`](/config/#isolate) property in the config to `false`. If you are using several pools at once with `poolMatchGlobs`, you can also disable isolation for a specific pool you are using.
+This greatly increases test times, which might not be desirable for projects that don't rely on side effects and properly cleanup their state (which is usually true for projects with `node` environment). In this case disabling isolation will improve the speed of your tests. To do that, you can provide `--no-isolate` flag to the CLI or set [`test.isolate`](/config/#isolate) property in the config to `false`.
 
 ::: code-group
 ```bash [CLI]
@@ -88,12 +88,10 @@ vitest run --reporter=blob --shard=3/3 # 3rd machine
 Collect the results stored in `.vitest-reports` directory from each machine and merge them with [`--merge-reports`](/guide/cli#merge-reports) option:
 
 ```sh
-vitest --merge-reports
+vitest run --merge-reports
 ```
 
-<details>
-  <summary>Github action example</summary>
-
+::: details Github action example
 This setup is also used at https://github.com/vitest-tests/test-sharding.
 
 ```yaml
@@ -117,7 +115,7 @@ jobs:
           node-version: 20
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Install dependencies
         run: pnpm i
@@ -146,7 +144,7 @@ jobs:
           node-version: 20
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Install dependencies
         run: pnpm i
@@ -162,7 +160,7 @@ jobs:
         run: npx vitest --merge-reports
 ```
 
-</details>
+:::
 
 :::tip
 Test sharding can also become useful on high CPU-count machines.
@@ -182,7 +180,7 @@ VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=3/4 & \
 VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=4/4 & \
 wait # https://man7.org/linux/man-pages/man2/waitpid.2.html
 
-vitest --merge-reports
+vitest run --merge-reports
 ```
 
 :::

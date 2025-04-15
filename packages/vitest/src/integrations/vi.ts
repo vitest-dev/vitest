@@ -1,19 +1,19 @@
 import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
-import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
-import type { VitestMocker } from '../runtime/mocker'
-import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
   MaybePartiallyMocked,
   MaybePartiallyMockedDeep,
   MockInstance,
-} from './spy'
+} from '@vitest/spy'
+import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
+import type { VitestMocker } from '../runtime/mocker'
+import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
+import { fn, isMockFunction, mocks, spyOn } from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils'
 import { getWorkerState, isChildProcess, resetModules, waitForImportsToResolve } from '../runtime/utils'
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
-import { fn, isMockFunction, mocks, spyOn } from './spy'
 import { waitFor, waitUntil } from './wait'
 
 type ESModuleExports = Record<string, unknown>
@@ -85,7 +85,7 @@ export interface VitestUtils {
    */
   setSystemTime: (time: number | string | Date) => VitestUtils
   /**
-   * Returns mocked current date that was set using `setSystemTime`. If date is not mocked the method will return `null`.
+   * Returns mocked current date. If date is not mocked the method will return `null`.
    */
   getMockedSystemTime: () => Date | null
   /**
@@ -313,21 +313,29 @@ export interface VitestUtils {
   isMockFunction: (fn: any) => fn is MockInstance
 
   /**
-   * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function. This will only empty `.mock` state, it will not reset implementation.
+   * Calls [`.mockClear()`](https://vitest.dev/api/mock#mockclear) on every mocked function.
    *
-   * It is useful if you need to clean up mock between different assertions.
+   * This will only empty `.mock` state, it will not affect mock implementations.
+   *
+   * This is useful if you need to clean up mocks between different assertions within a test.
    */
   clearAllMocks: () => VitestUtils
 
   /**
-   * Calls [`.mockReset()`](https://vitest.dev/api/mock#mockreset) on every mocked function. This will empty `.mock` state, reset "once" implementations and force the base implementation to return `undefined` when invoked.
+   * Calls [`.mockReset()`](https://vitest.dev/api/mock#mockreset) on every mocked function.
    *
-   * This is useful when you want to completely reset a mock to the default state.
+   * This will empty `.mock` state, reset "once" implementations, and reset each mock's base implementation to its original.
+   *
+   * This is useful when you want to reset all mocks to their original states.
    */
   resetAllMocks: () => VitestUtils
 
   /**
-   * Calls [`.mockRestore()`](https://vitest.dev/api/mock#mockrestore) on every mocked function. This will restore all original implementations.
+   * Calls [`.mockRestore()`](https://vitest.dev/api/mock#mockrestore) on every mocked function.
+   *
+   * This will empty `.mock` state, restore all original mock implementations, and restore original descriptors of spied-on objects.
+   *
+   * This is useful for inter-test cleanup and/or removing mocks created by [`vi.spyOn(...)`](https://vitest.dev/api/vi#vi-spyon).
    */
   restoreAllMocks: () => VitestUtils
 
@@ -494,14 +502,12 @@ function createVitest(): VitestUtils {
     },
 
     setSystemTime(time: number | string | Date) {
-      const date = time instanceof Date ? time : new Date(time)
-      _mockedDate = date
-      timers().setSystemTime(date)
+      timers().setSystemTime(time)
       return utils
     },
 
     getMockedSystemTime() {
-      return _mockedDate
+      return timers().getMockedSystemTime()
     },
 
     getRealSystemTime() {
@@ -610,17 +616,17 @@ function createVitest(): VitestUtils {
     },
 
     clearAllMocks() {
-      mocks.forEach(spy => spy.mockClear())
+      [...mocks].reverse().forEach(spy => spy.mockClear())
       return utils
     },
 
     resetAllMocks() {
-      mocks.forEach(spy => spy.mockReset())
+      [...mocks].reverse().forEach(spy => spy.mockReset())
       return utils
     },
 
     restoreAllMocks() {
-      mocks.forEach(spy => spy.mockRestore())
+      [...mocks].reverse().forEach(spy => spy.mockRestore())
       return utils
     },
 
@@ -708,8 +714,8 @@ function createVitest(): VitestUtils {
   return utils
 }
 
-export const vitest = createVitest()
-export const vi = vitest
+export const vitest: VitestUtils = createVitest()
+export const vi: VitestUtils = vitest
 
 function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide
@@ -717,7 +723,7 @@ function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide
     ? __vitest_mocker__
     : new Proxy(
-      {},
+      {} as any,
       {
         get(_, name) {
           throw new Error(

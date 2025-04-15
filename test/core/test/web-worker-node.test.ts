@@ -8,8 +8,8 @@ import MyEventListenerWorker from '../src/web-worker/eventListenerWorker?worker'
 import MyObjectWorker from '../src/web-worker/objectWorker?worker'
 import MySelfWorker from '../src/web-worker/selfWorker?worker'
 import MySharedWorker from '../src/web-worker/sharedWorker?sharedworker'
-import MyWorker from '../src/web-worker/worker?worker'
 import GlobalsWorker from '../src/web-worker/worker-globals?worker'
+import MyWorker from '../src/web-worker/worker?worker'
 import '@vitest/web-worker'
 
 const major = Number(version.split('.')[0].slice(1))

@@ -24,7 +24,7 @@ export function useSearch(searchBox: Ref<HTMLDivElement | undefined>) {
   const disableClearSearch = computed(() => search.value === '')
   const debouncedSearch = ref(search.value)
 
-  debouncedWatch(search, (value) => {
+  debouncedWatch(() => search.value, (value) => {
     debouncedSearch.value = value?.trim() ?? ''
   }, { debounce: 256 })
 

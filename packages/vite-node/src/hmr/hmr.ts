@@ -62,13 +62,13 @@ export function getCache(runner: ViteNodeRunner): CacheData {
   return cache.get(runner) as CacheData
 }
 
-export function sendMessageBuffer(runner: ViteNodeRunner, emitter: HMREmitter) {
+export function sendMessageBuffer(runner: ViteNodeRunner, emitter: HMREmitter): void {
   const maps = getCache(runner)
   maps.messageBuffer.forEach(msg => emitter.emit('custom', msg))
   maps.messageBuffer.length = 0
 }
 
-export async function reload(runner: ViteNodeRunner, files: string[]) {
+export async function reload(runner: ViteNodeRunner, files: string[]): Promise<any[]> {
   // invalidate module cache but not node_modules
   Array.from(runner.moduleCache.keys()).forEach((fsPath) => {
     if (!fsPath.includes('node_modules')) {
@@ -160,8 +160,8 @@ async function fetchUpdate(
   }
 }
 
-function warnFailedFetch(err: Error, path: string | string[]) {
-  if (!err.message.match('fetch')) {
+function warnFailedFetch(err: unknown, path: string | string[]) {
+  if (!(err instanceof Error) || !err.message.match('fetch')) {
     console.error(err)
   }
 
@@ -177,7 +177,7 @@ export async function handleMessage(
   emitter: HMREmitter,
   files: string[],
   payload: HMRPayload,
-) {
+): Promise<void> {
   const maps = getCache(runner)
   switch (payload.type) {
     case 'connected':

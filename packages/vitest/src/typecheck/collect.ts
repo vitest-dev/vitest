@@ -1,6 +1,6 @@
-import type { File, Suite, Test } from '@vitest/runner'
+import type { File, RunMode, Suite, Test } from '@vitest/runner'
 import type { RawSourceMap } from 'vite-node'
-import type { WorkspaceProject } from '../node/workspace'
+import type { TestProject } from '../node/project'
 import {
   calculateSuiteHash,
   generateHash,
@@ -31,7 +31,7 @@ interface LocalCallDefinition {
   end: number
   name: string
   type: 'suite' | 'test'
-  mode: 'run' | 'skip' | 'only' | 'todo'
+  mode: RunMode
   task: ParsedSuite | ParsedFile | ParsedTest
 }
 
@@ -44,7 +44,7 @@ export interface FileInformation {
 }
 
 export async function collectTests(
-  ctx: WorkspaceProject,
+  ctx: TestProject,
   filepath: string,
 ): Promise<null | FileInformation> {
   const request = await ctx.vitenode.transformRequest(filepath, filepath)
@@ -53,7 +53,7 @@ export async function collectTests(
   }
   const ast = await parseAstAsync(request.code)
   const testFilepath = relative(ctx.config.root, filepath)
-  const projectName = ctx.getName()
+  const projectName = ctx.name
   const typecheckSubprojectName = projectName ? `${projectName}:__typecheck__` : '__typecheck__'
   const file: ParsedFile = {
     filepath,
@@ -84,12 +84,25 @@ export async function collectTests(
       return getName(callee.tag)
     }
     if (callee.type === 'MemberExpression') {
+      if (
+        callee.object?.type === 'Identifier'
+        && ['it', 'test', 'describe', 'suite'].includes(callee.object.name)
+      ) {
+        return callee.object?.name
+      }
       // direct call as `__vite_ssr_exports_0__.test()`
       if (callee.object?.name?.startsWith('__vite_ssr_')) {
         return getName(callee.property)
       }
       // call as `__vite_ssr__.test.skip()`
       return getName(callee.object?.property)
+    }
+    // unwrap (0, ...)
+    if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
+      const [e0, e1] = callee.expressions
+      if (e0.type === 'Literal' && e0.value === 0) {
+        return getName(e1)
+      }
     }
     return null
   }
@@ -105,15 +118,15 @@ export async function collectTests(
         return
       }
       const property = callee?.property?.name
-      const mode = !property || property === name ? 'run' : property
-      // the test node for skipIf and runIf will be the next CallExpression
-      if (mode === 'each' || mode === 'skipIf' || mode === 'runIf' || mode === 'for') {
+      let mode = !property || property === name ? 'run' : property
+      // they will be picked up in the next iteration
+      if (['each', 'for', 'skipIf', 'runIf'].includes(mode)) {
         return
       }
 
       let start: number
       const end = node.end
-
+      // .each
       if (callee.type === 'CallExpression') {
         start = callee.end
       }
@@ -128,13 +141,15 @@ export async function collectTests(
         arguments: [messageNode],
       } = node
 
-      if (!messageNode) {
-        // called as "test()"
-        return
+      const isQuoted = messageNode?.type === 'Literal' || messageNode?.type === 'TemplateLiteral'
+      const message = isQuoted
+        ? request.code.slice(messageNode.start + 1, messageNode.end - 1)
+        : request.code.slice(messageNode.start, messageNode.end)
+
+      // cannot statically analyze, so we always skip it
+      if (mode === 'skipIf' || mode === 'runIf') {
+        mode = 'skip'
       }
-
-      const message = getNodeAsString(messageNode, request.code)
-
       definitions.push({
         start,
         end,
@@ -187,6 +202,7 @@ export async function collectTests(
         suite: latestSuite,
         file,
         mode,
+        timeout: 0,
         context: {} as any, // not used in typecheck
         name: definition.name,
         end: definition.end,
@@ -203,6 +219,7 @@ export async function collectTests(
   interpretTaskModes(
     file,
     ctx.config.testNamePattern,
+    undefined,
     hasOnly,
     false,
     ctx.config.allowOnly,

@@ -14,13 +14,34 @@ test('pre-transpiled code with source maps to original (#5341)', async () => {
 
   const coverageJson = await readCoverageJson()
   const coverageMap = libCoverage.createCoverageMap(coverageJson)
-  const files = coverageMap.files()
 
-  expect(files).toContain('<process-cwd>/fixtures/src/pre-transpiled/original.ts')
-  expect(files.find(file => file.includes('transpiled.js'))).toBeFalsy()
-  expect(files.find(file => file.includes('transpiled.js.map'))).toBeFalsy()
-  expect(files.find(file => file.includes('transpiled.ts'))).toBeFalsy()
-  expect(files.find(file => file.includes('transpiled.d.ts'))).toBeFalsy()
+  // transpiled.ts/transpiled.js should not be included
+  expect(coverageMap.files()).toMatchInlineSnapshot(`
+    [
+      "<process-cwd>/fixtures/src/pre-transpiled/original.ts",
+    ]
+  `)
 
-  expect(JSON.stringify(coverageJson, null, 2)).toMatchFileSnapshot(`__snapshots__/pre-transpiled-${isV8Provider() ? 'v8' : 'istanbul'}.snapshot.json`)
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/pre-transpiled/original.ts')
+
+  if (isV8Provider()) {
+    expect(fileCoverage).toMatchInlineSnapshot(`
+      {
+        "branches": "2/4 (50%)",
+        "functions": "2/2 (100%)",
+        "lines": "11/17 (64.7%)",
+        "statements": "11/17 (64.7%)",
+      }
+    `)
+  }
+  else {
+    expect(fileCoverage).toMatchInlineSnapshot(`
+      {
+        "branches": "3/6 (50%)",
+        "functions": "2/2 (100%)",
+        "lines": "6/8 (75%)",
+        "statements": "6/8 (75%)",
+      }
+    `)
+  }
 })

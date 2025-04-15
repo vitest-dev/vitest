@@ -175,36 +175,6 @@ export async function saveSnapshotFileRaw(
   await environment.saveSnapshotFile(snapshotPath, content)
 }
 
-export function prepareExpected(expected?: string): string | undefined {
-  function findStartIndent() {
-    // Attempts to find indentation for objects.
-    // Matches the ending tag of the object.
-    const matchObject = /^( +)\}\s+$/m.exec(expected || '')
-    const objectIndent = matchObject?.[1]?.length
-
-    if (objectIndent) {
-      return objectIndent
-    }
-
-    // Attempts to find indentation for texts.
-    // Matches the quote of first line.
-    const matchText = /^\n( +)"/.exec(expected || '')
-    return matchText?.[1]?.length || 0
-  }
-
-  const startIndent = findStartIndent()
-
-  let expectedTrimmed = expected?.trim()
-
-  if (startIndent) {
-    expectedTrimmed = expectedTrimmed
-      ?.replace(new RegExp(`^${' '.repeat(startIndent)}`, 'gm'), '')
-      .replace(/ +\}$/, '}')
-  }
-
-  return expectedTrimmed
-}
-
 function deepMergeArray(target: any[] = [], source: any[] = []) {
   const mergedOutput = Array.from(target)
 
@@ -282,12 +252,33 @@ export class DefaultMap<K, V> extends Map<K, V> {
   }
 }
 
-export class CounterMap<K> extends Map<K, number> {
+export class CounterMap<K> extends DefaultMap<K, number> {
+  constructor() {
+    super(() => 0)
+  }
+
+  // compat for jest-image-snapshot https://github.com/vitest-dev/vitest/issues/7322
+  // `valueOf` and `Snapshot.added` setter allows
+  //   snapshotState.added = snapshotState.added + 1
+  // to function as
+  //   snapshotState.added.total_ = snapshotState.added.total() + 1
+  _total: number | undefined
+
+  valueOf(): number {
+    return this._total = this.total()
+  }
+
   increment(key: K): void {
-    this.set(key, (this.get(key) ?? 0) + 1)
+    if (typeof this._total !== 'undefined') {
+      this._total++
+    }
+    this.set(key, this.get(key) + 1)
   }
 
   total(): number {
+    if (typeof this._total !== 'undefined') {
+      return this._total
+    }
     let total = 0
     for (const x of this.values()) {
       total += x

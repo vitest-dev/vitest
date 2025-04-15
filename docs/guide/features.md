@@ -22,7 +22,7 @@ Learn more at [Configuring Vitest](/guide/#configuring-vitest).
 $ vitest
 ```
 
-When you modify your source code or the test files, Vitest smartly searches the module graph and only reruns the related tests, [just like how HMR works in Vite!](https://twitter.com/antfu7/status/1468233216939245579)
+When you modify your source code or the test files, Vitest smartly searches the module graph and only reruns the related tests, just like how HMR works in Vite!
 
 `vitest` starts in `watch mode` **by default in development environment** and `run mode` in CI environment (when `process.env.CI` presents) smartly. You can use `vitest watch` or `vitest run` to explicitly specify the desired mode.
 
@@ -124,16 +124,18 @@ expect(fn.mock.results[1].value).toBe('world')
 
 Vitest supports both [happy-dom](https://github.com/capricorn86/happy-dom) or [jsdom](https://github.com/jsdom/jsdom) for mocking DOM and browser APIs. They don't come with Vitest, you will need to install them separately:
 
-```bash
+::: code-group
+```bash [happy-dom]
 $ npm i -D happy-dom
-# or
+```
+```bash [jsdom]
 $ npm i -D jsdom
 ```
+:::
 
 After that, change the `environment` option in your config file:
 
-```ts
-// vitest.config.ts
+```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -149,7 +151,7 @@ Learn more at [Mocking](/guide/mocking).
 
 Vitest supports Native code coverage via [`v8`](https://v8.dev/blog/javascript-code-coverage) and instrumented code coverage via [`istanbul`](https://istanbul.js.org/).
 
-```json
+```json [package.json]
 {
   "scripts": {
     "test": "vitest",
@@ -166,9 +168,7 @@ Vitest also provides a way to run tests within your source code along with the i
 
 This makes the tests share the same closure as the implementations and able to test against private states without exporting. Meanwhile, it also brings the feedback loop closer for development.
 
-```ts
-// src/index.ts
-
+```ts [src/index.ts]
 // the implementation
 export function add(...args: number[]): number {
   return args.reduce((a, b) => a + b, 0)
@@ -191,7 +191,7 @@ Learn more at [In-source testing](/guide/in-source).
 
 You can run benchmark tests with [`bench`](/api/#bench) function via [Tinybench](https://github.com/tinylibs/tinybench) to compare performance results.
 
-```ts
+```ts [sort.bench.ts]
 import { bench, describe } from 'vitest'
 
 describe('sort', () => {
@@ -218,7 +218,7 @@ describe('sort', () => {
 
 You can [write tests](/guide/testing-types) to catch type regressions. Vitest comes with [`expect-type`](https://github.com/mmkal/expect-type) package to provide you with a similar and easy to understand API.
 
-```ts
+```ts [types.test-d.ts]
 import { assertType, expectTypeOf, test } from 'vitest'
 import { mount } from './mount.js'
 
@@ -237,9 +237,9 @@ Run tests on different machines using [`--shard`](/guide/cli#shard) and [`--repo
 All test and coverage results can be merged at the end of your CI pipeline using `--merge-reports` command:
 
 ```bash
-vitest --shard=1/2 --reporter=blob
-vitest --shard=2/2 --reporter=blob
-vitest --merge-reports --reporter=junit --coverage.reporter=text
+vitest --shard=1/2 --reporter=blob --coverage
+vitest --shard=2/2 --reporter=blob --coverage
+vitest --merge-reports --reporter=junit --coverage
 ```
 
 See [`Improving Performance | Sharding`](/guide/improving-performance#sharding) for more information.
@@ -248,7 +248,7 @@ See [`Improving Performance | Sharding`](/guide/improving-performance#sharding) 
 
 Vitest exclusively autoloads environment variables prefixed with `VITE_` from `.env` files to maintain compatibility with frontend-related tests, adhering to [Vite's established convention](https://vitejs.dev/guide/env-and-mode.html#env-files). To load every environmental variable from `.env` files anyway, you can use `loadEnv` method imported from `vite`:
 
-```ts
+```ts [vitest.config.ts]
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
 

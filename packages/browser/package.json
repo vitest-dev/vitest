@@ -1,7 +1,7 @@
 {
   "name": "@vitest/browser",
   "type": "module",
-  "version": "2.1.4",
+  "version": "3.1.1",
   "description": "Browser running for Vitest",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -32,13 +32,16 @@
       "default": "./dist/client.js"
     },
     "./matchers": {
-      "types": "./matchers.d.ts"
+      "types": "./matchers.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/webdriverio": {
-      "types": "./providers/webdriverio.d.ts"
+      "types": "./providers/webdriverio.d.ts",
+      "default": "./dummy.js"
     },
     "./providers/playwright": {
-      "types": "./providers/playwright.d.ts"
+      "types": "./providers/playwright.d.ts",
+      "default": "./dummy.js"
     },
     "./locator": {
       "types": "./dist/locators/index.d.ts",
@@ -57,6 +60,7 @@
     "*.d.ts",
     "context.js",
     "dist",
+    "dummy.js",
     "providers"
   ],
   "scripts": {
@@ -70,7 +74,7 @@
   "peerDependencies": {
     "playwright": "*",
     "vitest": "workspace:*",
-    "webdriverio": "*"
+    "webdriverio": "^7.0.0 || ^8.0.0 || ^9.0.0"
   },
   "peerDependenciesMeta": {
     "playwright": {
@@ -85,32 +89,31 @@
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/user-event": "^14.5.2",
+    "@testing-library/user-event": "^14.6.1",
     "@vitest/mocker": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "magic-string": "^0.30.12",
-    "msw": "^2.6.0",
-    "sirv": "^3.0.0",
-    "tinyrainbow": "^1.2.0",
-    "ws": "^8.18.0"
+    "magic-string": "catalog:",
+    "sirv": "catalog:",
+    "tinyrainbow": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.2",
-    "@types/ws": "^8.5.12",
+    "@types/ws": "catalog:",
     "@vitest/runner": "workspace:*",
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
-    "@wdio/protocols": "^8.40.3",
-    "birpc": "0.2.19",
-    "flatted": "^3.3.1",
-    "ivya": "^1.1.1",
-    "mime": "^4.0.4",
-    "pathe": "^1.1.2",
+    "@wdio/protocols": "^9.12.5",
+    "@wdio/types": "^9.12.3",
+    "birpc": "catalog:",
+    "flatted": "catalog:",
+    "ivya": "^1.6.0",
+    "mime": "^4.0.7",
+    "pathe": "catalog:",
     "periscopic": "^4.0.2",
-    "playwright": "^1.48.2",
-    "playwright-core": "^1.48.2",
-    "safaridriver": "^0.1.2",
+    "playwright": "^1.51.1",
+    "playwright-core": "^1.51.1",
+    "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^8.40.6"
+    "webdriverio": "^9.12.5"
   }
 }

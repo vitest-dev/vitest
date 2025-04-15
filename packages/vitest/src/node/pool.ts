@@ -1,9 +1,11 @@
 import type { Awaitable } from '@vitest/utils'
 import type { Vitest } from './core'
+import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import type { BuiltinPool, Pool } from './types/pool-options'
-import type { WorkspaceProject } from './workspace'
+import { isatty } from 'node:tty'
 import mm from 'micromatch'
+import { version as viteVersion } from 'vite'
 import { isWindows } from '../utils/env'
 import { createForksPool } from './pools/forks'
 import { createThreadsPool } from './pools/threads'
@@ -18,7 +20,7 @@ export type WorkspaceSpec = TestSpecification & [
   /**
    * @deprecated use spec.project instead
    */
-  project: WorkspaceProject,
+  project: TestProject,
   /**
    * @deprecated use spec.moduleId instead
    */
@@ -30,7 +32,7 @@ export type WorkspaceSpec = TestSpecification & [
 ]
 
 export type RunWithFiles = (
-  files: WorkspaceSpec[],
+  files: TestSpecification[],
   invalidates?: string[]
 ) => Awaitable<void>
 
@@ -57,14 +59,14 @@ export const builtinPools: BuiltinPool[] = [
   'typescript',
 ]
 
-function getDefaultPoolName(project: WorkspaceProject): Pool {
+function getDefaultPoolName(project: TestProject): Pool {
   if (project.config.browser.enabled) {
     return 'browser'
   }
   return project.config.pool
 }
 
-export function getFilePoolName(project: WorkspaceProject, file: string) {
+export function getFilePoolName(project: TestProject, file: string): Pool {
   for (const [glob, pool] of project.config.poolMatchGlobs) {
     if ((pool as Pool) === 'browser') {
       throw new Error(
@@ -90,20 +92,29 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   // in addition to resolve.conditions Vite also adds production/development,
   // see: https://github.com/vitejs/vite/blob/af2aa09575229462635b7cbb6d248ca853057ba2/packages/vite/src/node/plugins/resolve.ts#L1056-L1080
-  const potentialConditions = new Set([
-    'production',
-    'development',
-    ...ctx.server.config.resolve.conditions,
-  ])
+  const viteMajor = Number(viteVersion.split('.')[0])
+  const potentialConditions = new Set(viteMajor >= 6
+    ? (ctx.vite.config.ssr.resolve?.conditions ?? [])
+    : [
+        'production',
+        'development',
+        ...ctx.vite.config.resolve.conditions,
+      ])
   const conditions = [...potentialConditions]
     .filter((condition) => {
       if (condition === 'production') {
-        return ctx.server.config.isProduction
+        return ctx.vite.config.isProduction
       }
       if (condition === 'development') {
-        return !ctx.server.config.isProduction
+        return !ctx.vite.config.isProduction
       }
       return true
+    })
+    .map((condition) => {
+      if (viteMajor >= 6 && condition === 'development|production') {
+        return ctx.vite.config.isProduction ? 'production' : 'development'
+      }
+      return condition
     })
     .flatMap(c => ['--conditions', c])
 
@@ -116,7 +127,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       || execArg.startsWith('--diagnostic-dir'),
   )
 
-  async function executeTests(method: 'runTests' | 'collectTests', files: WorkspaceSpec[], invalidate?: string[]) {
+  async function executeTests(method: 'runTests' | 'collectTests', files: TestSpecification[], invalidate?: string[]) {
     const options: PoolProcessOptions = {
       execArgv: [...execArgv, ...conditions],
       env: {
@@ -124,6 +135,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         VITEST: 'true',
         NODE_ENV: process.env.NODE_ENV || 'test',
         VITEST_MODE: ctx.config.watch ? 'WATCH' : 'RUN',
+        FORCE_TTY: isatty(1) ? 'true' : '',
         ...process.env,
         ...ctx.config.env,
       },
@@ -166,7 +178,7 @@ export function createPool(ctx: Vitest): ProcessPool {
       return poolInstance as ProcessPool
     }
 
-    const filesByPool: Record<LocalPool, WorkspaceSpec[]> = {
+    const filesByPool: Record<LocalPool, TestSpecification[]> = {
       forks: [],
       threads: [],
       vmThreads: [],
@@ -191,7 +203,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     const Sequencer = ctx.config.sequence.sequencer
     const sequencer = new Sequencer(ctx)
 
-    async function sortSpecs(specs: WorkspaceSpec[]) {
+    async function sortSpecs(specs: TestSpecification[]) {
       if (ctx.config.shard) {
         specs = await sequencer.shard(specs)
       }
@@ -200,7 +212,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     await Promise.all(
       Object.entries(filesByPool).map(async (entry) => {
-        const [pool, files] = entry as [Pool, WorkspaceSpec[]]
+        const [pool, files] = entry as [Pool, TestSpecification[]]
 
         if (!files.length) {
           return null

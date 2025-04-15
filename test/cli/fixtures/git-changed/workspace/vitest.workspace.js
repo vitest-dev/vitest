@@ -1,3 +1,3 @@
 export default [
-  "packages/*/vitest.config.js",
+  "packages/*/vitest.config.mjs",
 ];

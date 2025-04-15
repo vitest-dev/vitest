@@ -2,9 +2,11 @@ import type { FakeTimerInstallOpts } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
+import type { SerializedDiffOptions } from '@vitest/utils/diff'
 import type { AliasOptions, ConfigEnv, DepOptimizationConfig, ServerOptions, UserConfig as ViteUserConfig } from 'vite'
 import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
+import type { SerializedConfig } from '../../runtime/config'
 import type { EnvironmentOptions } from '../../types/environment'
 import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
@@ -23,7 +25,7 @@ import type { Reporter } from './reporter'
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
-export type { BrowserConfigOptions, BrowserScript } from './browser'
+export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
@@ -97,7 +99,7 @@ interface SequenceOptions {
    * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
    * - `list` will order hooks in the order they are defined
    * - `parallel` will run hooks in a single group in parallel
-   * @default 'parallel'
+   * @default 'stack'
    */
   hooks?: SequenceHooks
 }
@@ -224,6 +226,14 @@ type ReporterWithOptions<Name extends ReporterName = ReporterName> =
       : [Name, Partial<BuiltinReporterOptions[Name]>]
     : [Name, Record<string, unknown>]
 
+export interface ResolveSnapshotPathHandlerContext { config: SerializedConfig }
+
+export type ResolveSnapshotPathHandler = (
+  testPath: string,
+  snapExtension: string,
+  context: ResolveSnapshotPathHandlerContext
+) => string
+
 export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
@@ -304,6 +314,7 @@ export interface InlineConfig {
    *
    * Format: [glob, environment-name]
    *
+   * @deprecated use [`workspace`](https://vitest.dev/config/#environmentmatchglobs) instead
    * @default []
    * @example [
    *   // all tests in tests/dom will run in jsdom
@@ -360,6 +371,7 @@ export interface InlineConfig {
    *
    * Format: [glob, pool-name]
    *
+   * @deprecated use [`workspace`](https://vitest.dev/config/#poolmatchglobs) instead
    * @default []
    * @example [
    *   // all tests in "forks" directory will run using "poolOptions.forks" API
@@ -373,7 +385,7 @@ export interface InlineConfig {
   /**
    * Path to a workspace configuration file
    */
-  workspace?: string
+  workspace?: string | TestProjectConfiguration[]
 
   /**
    * Update snapshot
@@ -442,9 +454,11 @@ export interface InlineConfig {
   /**
    * Silent mode
    *
+   * Use `'passed-only'` to see logs from failing tests only.
+   *
    * @default false
    */
-  silent?: boolean
+  silent?: boolean | 'passed-only'
 
   /**
    * Hide logs for skipped tests
@@ -563,7 +577,7 @@ export interface InlineConfig {
   /**
    * Path to a module which has a default export of diff config.
    */
-  diff?: string
+  diff?: string | SerializedDiffOptions
 
   /**
    * Paths to snapshot serializer modules.
@@ -573,7 +587,7 @@ export interface InlineConfig {
   /**
    * Resolve custom snapshot path
    */
-  resolveSnapshotPath?: (path: string, extension: string) => string
+  resolveSnapshotPath?: ResolveSnapshotPathHandler
 
   /**
    * Path to a custom snapshot environment module that has a default export of `SnapshotEnvironment` object.
@@ -803,7 +817,7 @@ export interface InlineConfig {
   /**
    * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
    * This is also required for console log preview on Vitest UI.
-   * However, disabling such interception might help when you want to debug a code with normal synchronus terminal console logging.
+   * However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
    *
    * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
    *
@@ -828,7 +842,7 @@ export interface InlineConfig {
 
 export interface TypecheckConfig {
   /**
-   * Run typechecking tests alongisde regular tests.
+   * Run typechecking tests alongside regular tests.
    */
   enabled?: boolean
   /**
@@ -953,6 +967,7 @@ export interface UserConfig extends InlineConfig {
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
+    | 'project'
     | 'config'
     | 'filters'
     | 'browser'
@@ -979,7 +994,7 @@ export interface ResolvedConfig
   mode: VitestRunMode
 
   base?: string
-  diff?: string
+  diff?: string | SerializedDiffOptions
   bail?: number
 
   setupFiles: string[]
@@ -1001,9 +1016,10 @@ export interface ResolvedConfig
 
   defines: Record<string, any>
 
-  api?: ApiConfig
+  api: ApiConfig & { token: string }
   cliExclude?: string[]
 
+  project: string[]
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   > &
@@ -1069,14 +1085,16 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
+  | 'workspace'
 
 export type ProjectConfig = Omit<
-  UserConfig,
+  InlineConfig,
   NonProjectOptions
   | 'sequencer'
   | 'deps'
   | 'poolOptions'
 > & {
+  mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
   poolOptions?: {
@@ -1091,7 +1109,8 @@ export type ProjectConfig = Omit<
 
 export type ResolvedProjectConfig = Omit<
   ResolvedConfig,
-  NonProjectOptions
+  // some options cannot be set, but they are inherited from the workspace
+  Exclude<NonProjectOptions, 'coverage' | 'watch'>
 >
 
 export interface UserWorkspaceConfig extends ViteUserConfig {
@@ -1106,10 +1125,20 @@ export type UserProjectConfigExport =
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
 
-export type WorkspaceProjectConfiguration = string | (UserProjectConfigExport & {
+export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
+   * If `true`, the project will inherit all options from the root config.
    * @example '../vite.config.ts'
    */
-  extends?: string
+  extends?: string | true
 })
+
+export type TestProjectConfiguration =
+  string
+  | TestProjectInlineConfiguration
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn
+
+/** @deprecated use `TestProjectConfiguration` instead */
+export type WorkspaceProjectConfiguration = TestProjectConfiguration

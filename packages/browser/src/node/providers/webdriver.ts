@@ -1,9 +1,9 @@
+import type { Capabilities } from '@wdio/types'
 import type {
   BrowserProvider,
   BrowserProviderInitializationOptions,
-  WorkspaceProject,
+  TestProject,
 } from 'vitest/node'
-import type { RemoteOptions } from 'webdriverio'
 
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = (typeof webdriverBrowsers)[number]
@@ -20,48 +20,62 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   public browser: WebdriverIO.Browser | null = null
 
   private browserName!: WebdriverBrowser
-  private ctx!: WorkspaceProject
+  private project!: TestProject
 
-  private options?: RemoteOptions
+  private options?: Capabilities.WebdriverIOConfig
 
-  getSupportedBrowsers() {
+  getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
   }
 
   async initialize(
-    ctx: WorkspaceProject,
+    ctx: TestProject,
     { browser, options }: WebdriverProviderOptions,
-  ) {
-    this.ctx = ctx
+  ): Promise<void> {
+    this.project = ctx
     this.browserName = browser
-    this.options = options as RemoteOptions
+    this.options = options as Capabilities.WebdriverIOConfig
   }
 
-  async beforeCommand() {
+  async switchToTestFrame(): Promise<void> {
     const page = this.browser!
-    const iframe = await page.findElement(
-      'css selector',
-      'iframe[data-vitest]',
-    )
-    await page.switchToFrame(iframe)
+    // support wdio@9
+    if (page.switchFrame) {
+      await page.switchFrame(page.$('iframe[data-vitest]'))
+    }
+    else {
+      const iframe = await page.findElement(
+        'css selector',
+        'iframe[data-vitest]',
+      )
+      await page.switchToFrame(iframe)
+    }
   }
 
-  async afterCommand() {
-    await this.browser!.switchToParentFrame()
+  async switchToMainFrame(): Promise<void> {
+    const page = this.browser!
+    if (page.switchFrame) {
+      await page.switchFrame(null)
+    }
+    else {
+      await page.switchToParentFrame()
+    }
   }
 
-  getCommandsContext() {
+  getCommandsContext(): {
+    browser: WebdriverIO.Browser | null
+  } {
     return {
       browser: this.browser,
     }
   }
 
-  async openBrowser() {
+  async openBrowser(): Promise<WebdriverIO.Browser> {
     if (this.browser) {
       return this.browser
     }
 
-    const options = this.ctx.config.browser
+    const options = this.project.config.browser
 
     if (this.browserName === 'safari') {
       if (options.headless) {
@@ -84,7 +98,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 
   private buildCapabilities() {
-    const capabilities: RemoteOptions['capabilities'] = {
+    const capabilities: Capabilities.WebdriverIOConfig['capabilities'] = {
       ...this.options?.capabilities,
       browserName: this.browserName,
     }
@@ -95,7 +109,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
       edge: ['ms:edgeOptions', ['--headless']],
     } as const
 
-    const options = this.ctx.config.browser
+    const options = this.project.config.browser
     const browser = this.browserName
     if (browser !== 'safari' && options.headless) {
       const [key, args] = headlessMap[browser]
@@ -120,12 +134,12 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(_contextId: string, url: string) {
+  async openPage(_sessionId: string, url: string): Promise<void> {
     const browserInstance = await this.openBrowser()
     await browserInstance.url(url)
   }
 
-  async close() {
+  async close(): Promise<void> {
     await Promise.all([
       this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
     ])

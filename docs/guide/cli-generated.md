@@ -73,10 +73,10 @@ Set to true to exit if port is already in use, instead of automatically trying t
 
 ### silent
 
-- **CLI:** `--silent`
+- **CLI:** `--silent [value]`
 - **Config:** [silent](/config/#silent)
 
-Silent console output from tests
+Silent console output from tests. Use `'passed-only'` to see logs from failing tests only.
 
 ### hideSkippedTests
 
@@ -316,86 +316,93 @@ Mock browser API with happy-dom
 ### browser.enabled
 
 - **CLI:** `--browser.enabled`
-- **Config:** [browser.enabled](/config/#browser-enabled)
+- **Config:** [browser.enabled](/guide/browser/config#browser-enabled)
 
 Run tests in the browser. Equivalent to `--browser.enabled` (default: `false`)
 
 ### browser.name
 
 - **CLI:** `--browser.name <name>`
-- **Config:** [browser.name](/config/#browser-name)
+- **Config:** [browser.name](/guide/browser/config#browser-name)
 
-Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/config/#browser-name) for more information
+Run all tests in a specific browser. Some browsers are only available for specific providers (see `--browser.provider`). Visit [`browser.name`](https://vitest.dev/guide/browser/config/#browser-name) for more information
 
 ### browser.headless
 
 - **CLI:** `--browser.headless`
-- **Config:** [browser.headless](/config/#browser-headless)
+- **Config:** [browser.headless](/guide/browser/config#browser-headless)
 
 Run the browser in headless mode (i.e. without opening the GUI (Graphical User Interface)). If you are running Vitest in CI, it will be enabled by default (default: `process.env.CI`)
 
 ### browser.api.port
 
 - **CLI:** `--browser.api.port [port]`
-- **Config:** [browser.api.port](/config/#browser-api-port)
+- **Config:** [browser.api.port](/guide/browser/config#browser-api-port)
 
 Specify server port. Note if the port is already being used, Vite will automatically try the next available port so this may not be the actual port the server ends up listening on. If true will be set to `63315`
 
 ### browser.api.host
 
 - **CLI:** `--browser.api.host [host]`
-- **Config:** [browser.api.host](/config/#browser-api-host)
+- **Config:** [browser.api.host](/guide/browser/config#browser-api-host)
 
 Specify which IP addresses the server should listen on. Set this to `0.0.0.0` or `true` to listen on all addresses, including LAN and public addresses
 
 ### browser.api.strictPort
 
 - **CLI:** `--browser.api.strictPort`
-- **Config:** [browser.api.strictPort](/config/#browser-api-strictport)
+- **Config:** [browser.api.strictPort](/guide/browser/config#browser-api-strictport)
 
 Set to true to exit if port is already in use, instead of automatically trying the next available port
 
 ### browser.provider
 
 - **CLI:** `--browser.provider <name>`
-- **Config:** [browser.provider](/config/#browser-provider)
+- **Config:** [browser.provider](/guide/browser/config#browser-provider)
 
 Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"preview"`)
 
 ### browser.providerOptions
 
 - **CLI:** `--browser.providerOptions <options>`
-- **Config:** [browser.providerOptions](/config/#browser-provideroptions)
+- **Config:** [browser.providerOptions](/guide/browser/config#browser-provideroptions)
 
 Options that are passed down to a browser provider. Visit [`browser.providerOptions`](https://vitest.dev/config/#browser-provideroptions) for more information
 
 ### browser.isolate
 
 - **CLI:** `--browser.isolate`
-- **Config:** [browser.isolate](/config/#browser-isolate)
+- **Config:** [browser.isolate](/guide/browser/config#browser-isolate)
 
 Run every browser test file in isolation. To disable isolation, use `--browser.isolate=false` (default: `true`)
 
 ### browser.ui
 
 - **CLI:** `--browser.ui`
-- **Config:** [browser.ui](/config/#browser-ui)
+- **Config:** [browser.ui](/guide/browser/config#browser-ui)
 
 Show Vitest UI when running tests (default: `!process.env.CI`)
 
 ### browser.fileParallelism
 
 - **CLI:** `--browser.fileParallelism`
-- **Config:** [browser.fileParallelism](/config/#browser-fileparallelism)
+- **Config:** [browser.fileParallelism](/guide/browser/config#browser-fileparallelism)
 
 Should browser test files run in parallel. Use `--browser.fileParallelism=false` to disable (default: `true`)
+
+### browser.connectTimeout
+
+- **CLI:** `--browser.connectTimeout <timeout>`
+- **Config:** [browser.connectTimeout](/guide/browser/config#browser-connecttimeout)
+
+If connection to the browser takes longer, the test suite will fail (default: `60_000`)
 
 ### pool
 
 - **CLI:** `--pool <pool>`
 - **Config:** [pool](/config/#pool)
 
-Specify pool, if not running in the browser (default: `threads`)
+Specify pool, if not running in the browser (default: `forks`)
 
 ### poolOptions.threads.isolate
 
@@ -654,14 +661,14 @@ Enable Node.js inspector and break before the test starts
 - **CLI:** `--testTimeout <timeout>`
 - **Config:** [testTimeout](/config/#testtimeout)
 
-Default timeout of a test in milliseconds (default: `5000`)
+Default timeout of a test in milliseconds (default: `5000`). Use `0` to disable timeout completely.
 
 ### hookTimeout
 
 - **CLI:** `--hookTimeout <timeout>`
 - **Config:** [hookTimeout](/config/#hooktimeout)
 
-Default hook timeout in milliseconds (default: `10000`)
+Default hook timeout in milliseconds (default: `10000`). Use `0` to disable timeout completely.
 
 ### bail
 
@@ -677,12 +684,96 @@ Stop test execution when given number of tests have failed (default: `0`)
 
 Retry the test specific number of times if it fails (default: `0`)
 
-### diff
+### diff.aAnnotation
 
-- **CLI:** `--diff <path>`
-- **Config:** [diff](/config/#diff)
+- **CLI:** `--diff.aAnnotation <annotation>`
+- **Config:** [diff.aAnnotation](/config/#diff-aannotation)
 
-Path to a diff config that will be used to generate diff interface
+Annotation for expected lines (default: `Expected`)
+
+### diff.aIndicator
+
+- **CLI:** `--diff.aIndicator <indicator>`
+- **Config:** [diff.aIndicator](/config/#diff-aindicator)
+
+Indicator for expected lines (default: `-`)
+
+### diff.bAnnotation
+
+- **CLI:** `--diff.bAnnotation <annotation>`
+- **Config:** [diff.bAnnotation](/config/#diff-bannotation)
+
+Annotation for received lines (default: `Received`)
+
+### diff.bIndicator
+
+- **CLI:** `--diff.bIndicator <indicator>`
+- **Config:** [diff.bIndicator](/config/#diff-bindicator)
+
+Indicator for received lines (default: `+`)
+
+### diff.commonIndicator
+
+- **CLI:** `--diff.commonIndicator <indicator>`
+- **Config:** [diff.commonIndicator](/config/#diff-commonindicator)
+
+Indicator for common lines (default: ` `)
+
+### diff.contextLines
+
+- **CLI:** `--diff.contextLines <lines>`
+- **Config:** [diff.contextLines](/config/#diff-contextlines)
+
+Number of lines of context to show around each change (default: `5`)
+
+### diff.emptyFirstOrLastLinePlaceholder
+
+- **CLI:** `--diff.emptyFirstOrLastLinePlaceholder <placeholder>`
+- **Config:** [diff.emptyFirstOrLastLinePlaceholder](/config/#diff-emptyfirstorlastlineplaceholder)
+
+Placeholder for an empty first or last line (default: `""`)
+
+### diff.expand
+
+- **CLI:** `--diff.expand`
+- **Config:** [diff.expand](/config/#diff-expand)
+
+Expand all common lines (default: `true`)
+
+### diff.includeChangeCounts
+
+- **CLI:** `--diff.includeChangeCounts`
+- **Config:** [diff.includeChangeCounts](/config/#diff-includechangecounts)
+
+Include comparison counts in diff output (default: `false`)
+
+### diff.omitAnnotationLines
+
+- **CLI:** `--diff.omitAnnotationLines`
+- **Config:** [diff.omitAnnotationLines](/config/#diff-omitannotationlines)
+
+Omit annotation lines from the output (default: `false`)
+
+### diff.printBasicPrototype
+
+- **CLI:** `--diff.printBasicPrototype`
+- **Config:** [diff.printBasicPrototype](/config/#diff-printbasicprototype)
+
+Print basic prototype Object and Array (default: `true`)
+
+### diff.truncateThreshold
+
+- **CLI:** `--diff.truncateThreshold <threshold>`
+- **Config:** [diff.truncateThreshold](/config/#diff-truncatethreshold)
+
+Number of lines to show before and after each change (default: `0`)
+
+### diff.truncateAnnotation
+
+- **CLI:** `--diff.truncateAnnotation <annotation>`
+- **Config:** [diff.truncateAnnotation](/config/#diff-truncateannotation)
+
+Annotation for truncated lines (default: `... Diff result is truncated`)
 
 ### exclude
 
@@ -752,14 +843,14 @@ Path to a custom tsconfig file
 - **CLI:** `--project <name>`
 - **Config:** [project](/config/#project)
 
-The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`
+The name of the project to run if you are using Vitest workspace feature. This can be repeated for multiple projects: `--project=1 --project=2`. You can also filter projects using wildcards like `--project=packages*`, and exclude projects with `--project=!pattern`.
 
 ### slowTestThreshold
 
 - **CLI:** `--slowTestThreshold <threshold>`
 - **Config:** [slowTestThreshold](/config/#slowtestthreshold)
 
-Threshold in milliseconds for a test to be considered slow (default: `300`)
+Threshold in milliseconds for a test or suite to be considered slow (default: `300`)
 
 ### teardownTimeout
 
@@ -803,6 +894,13 @@ Poll timeout in milliseconds for `expect.poll()` assertions (default: `1000`)
 
 Always print console stack traces
 
+### includeTaskLocation
+
+- **CLI:** `--includeTaskLocation`
+- **Config:** [includeTaskLocation](/config/#includetasklocation)
+
+Collect test and suite locations in the `location` property
+
 ### run
 
 - **CLI:** `--run`
@@ -820,6 +918,12 @@ Removes colors from the console output
 - **CLI:** `--clearScreen`
 
 Clear terminal screen when re-running tests during watch mode (default: `true`)
+
+### configLoader
+
+- **CLI:** `--configLoader <loader>`
+
+Use `bundle` to bundle the config with esbuild or `runner` (experimental) to process it on the fly. This is only available in vite version 6.1.0 and above. (default: `bundle`)
 
 ### standalone
 

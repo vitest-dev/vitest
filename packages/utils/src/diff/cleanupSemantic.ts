@@ -65,7 +65,7 @@ class Diff {
  * @return {number} The number of characters common to the start of each
  *     string.
  */
-const diff_commonPrefix = function (text1: string, text2: string): number {
+function diff_commonPrefix(text1: string, text2: string): number {
   // Quick check for common null cases.
   if (!text1 || !text2 || text1.charAt(0) !== text2.charAt(0)) {
     return 0
@@ -99,7 +99,7 @@ const diff_commonPrefix = function (text1: string, text2: string): number {
  * @param {string} text2 Second string.
  * @return {number} The number of characters common to the end of each string.
  */
-const diff_commonSuffix = function (text1: string, text2: string): number {
+function diff_commonSuffix(text1: string, text2: string): number {
   // Quick check for common null cases.
   if (
     !text1
@@ -139,7 +139,7 @@ const diff_commonSuffix = function (text1: string, text2: string): number {
  *     string and the start of the second string.
  * @private
  */
-const diff_commonOverlap_ = function (text1: string, text2: string): number {
+function diff_commonOverlap_(text1: string, text2: string): number {
   // Cache the text lengths to prevent multiple calls.
   const text1_length = text1.length
   const text2_length = text2.length
@@ -189,7 +189,7 @@ const diff_commonOverlap_ = function (text1: string, text2: string): number {
  * Reduce the number of edits by eliminating semantically trivial equalities.
  * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
  */
-const diff_cleanupSemantic = function (diffs: Array<Diff>): void {
+function diff_cleanupSemantic(diffs: Array<Diff>): void {
   let changes = false
   const equalities = [] // Stack of indices where equalities are found.
   let equalitiesLength = 0 // Keeping our own length var is faster in JS.
@@ -365,14 +365,14 @@ function diff_cleanupSemanticLossless(diffs: Array<Diff>) {
       let bestEquality2 = equality2
       let bestScore
         = diff_cleanupSemanticScore_(equality1, edit)
-        + diff_cleanupSemanticScore_(edit, equality2)
+          + diff_cleanupSemanticScore_(edit, equality2)
       while (edit.charAt(0) === equality2.charAt(0)) {
         equality1 += edit.charAt(0)
         edit = edit.substring(1) + equality2.charAt(0)
         equality2 = equality2.substring(1)
         const score
           = diff_cleanupSemanticScore_(equality1, edit)
-          + diff_cleanupSemanticScore_(edit, equality2)
+            + diff_cleanupSemanticScore_(edit, equality2)
         // The >= encourages trailing rather than leading whitespace on edits.
         if (score >= bestScore) {
           bestScore = score
@@ -435,7 +435,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         // Upon reaching an equality, check for prior redundancies.
         if (count_delete + count_insert > 1) {
           if (count_delete !== 0 && count_insert !== 0) {
-            // Factor out any common prefixies.
+            // Factor out any common prefixes.
             commonlength = diff_commonPrefix(text_insert, text_delete)
             if (commonlength !== 0) {
               if (
@@ -457,12 +457,12 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
               text_insert = text_insert.substring(commonlength)
               text_delete = text_delete.substring(commonlength)
             }
-            // Factor out any common suffixies.
+            // Factor out any common suffixes.
             commonlength = diff_commonSuffix(text_insert, text_delete)
             if (commonlength !== 0) {
               diffs[pointer][1]
                 = text_insert.substring(text_insert.length - commonlength)
-                + diffs[pointer][1]
+                  + diffs[pointer][1]
               text_insert = text_insert.substring(
                 0,
                 text_insert.length - commonlength,
@@ -525,10 +525,10 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         // Shift the edit over the previous equality.
         diffs[pointer][1]
           = diffs[pointer - 1][1]
-          + diffs[pointer][1].substring(
-            0,
-            diffs[pointer][1].length - diffs[pointer - 1][1].length,
-          )
+            + diffs[pointer][1].substring(
+              0,
+              diffs[pointer][1].length - diffs[pointer - 1][1].length,
+            )
         diffs[pointer + 1][1] = diffs[pointer - 1][1] + diffs[pointer + 1][1]
         diffs.splice(pointer - 1, 1)
         changes = true
@@ -541,7 +541,7 @@ function diff_cleanupMerge(diffs: Array<Diff>) {
         diffs[pointer - 1][1] += diffs[pointer + 1][1]
         diffs[pointer][1]
           = diffs[pointer][1].substring(diffs[pointer + 1][1].length)
-          + diffs[pointer + 1][1]
+            + diffs[pointer + 1][1]
         diffs.splice(pointer + 1, 1)
         changes = true
       }
@@ -610,8 +610,8 @@ function diff_cleanupSemanticScore_(one: string, two: string): number {
 }
 
 export {
-  Diff,
   diff_cleanupSemantic as cleanupSemantic,
+  Diff,
   DIFF_DELETE,
   DIFF_EQUAL,
   DIFF_INSERT,

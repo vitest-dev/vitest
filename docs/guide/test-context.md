@@ -1,5 +1,6 @@
 ---
 title: Test Context | Guide
+outline: deep
 ---
 
 # Test Context
@@ -74,8 +75,7 @@ Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you c
 
 For example, we first create `myTest` with two fixtures, `todos` and `archive`.
 
-```ts
-// my-test.ts
+```ts [my-test.ts]
 import { test } from 'vitest'
 
 const todos = []
@@ -98,7 +98,7 @@ export const myTest = test.extend({
 
 Then we can import and use it.
 
-```ts
+```ts [my-test.test.ts]
 import { expect } from 'vitest'
 import { myTest } from './my-test.js'
 
@@ -155,6 +155,17 @@ myTest('', ({ todos }) => {})
 
 ::: warning
 When using `test.extend()` with fixtures, you should always use the object destructuring pattern `{ todos }` to access context both in fixture function and test function.
+
+```ts
+myTest('context must be destructured', (context) => { // [!code --]
+  expect(context.todos.length).toBe(2)
+})
+
+myTest('context must be destructured', ({ todos }) => { // [!code ++]
+  expect(todos.length).toBe(2)
+})
+```
+
 :::
 
 #### Automatic fixture
@@ -176,7 +187,123 @@ const test = base.extend({
   ],
 })
 
-test('', () => {})
+test('works correctly')
+```
+
+#### Default fixture
+
+Since Vitest 3, you can provide different values in different [projects](/guide/workspace). To enable this feature, pass down `{ injected: true }` to the options. If the key is not specified in the [project configuration](/config/#provide), then the default value will be used.
+
+:::code-group
+```ts [fixtures.test.ts]
+import { test as base } from 'vitest'
+
+const test = base.extend({
+  url: [
+    // default value if "url" is not defined in the config
+    '/default',
+    // mark the fixture as "injected" to allow the override
+    { injected: true },
+  ],
+})
+
+test('works correctly', ({ url }) => {
+  // url is "/default" in "project-new"
+  // url is "/full" in "project-full"
+  // url is "/empty" in "project-empty"
+})
+```
+```ts [vitest.workspace.ts]
+import { defineWorkspace } from 'vitest/config'
+
+export default defineWorkspace([
+  {
+    test: {
+      name: 'project-new',
+    },
+  },
+  {
+    test: {
+      name: 'project-full',
+      provide: {
+        url: '/full',
+      },
+    },
+  },
+  {
+    test: {
+      name: 'project-empty',
+      provide: {
+        url: '/empty',
+      },
+    },
+  },
+])
+```
+:::
+
+#### Scoping Values to Suite <Version>3.1.0</Version> {#scoping-values-to-suite}
+
+Since Vitest 3.1, you can override context values per suite and its children by using the `test.scoped` API:
+
+```ts
+import { test as baseTest, describe, expect } from 'vitest'
+
+const test = baseTest.extend({
+  dependency: 'default',
+  dependant: ({ dependency }, use) => use({ dependency })
+})
+
+describe('use scoped values', () => {
+  test.scoped({ dependency: 'new' })
+
+  test('uses scoped value', ({ dependant }) => {
+    // `dependant` uses the new overriden value that is scoped
+    // to all tests in this suite
+    expect(dependant).toEqual({ dependency: 'new' })
+  })
+
+  describe('keeps using scoped value', () => {
+    test('uses scoped value', ({ dependant }) => {
+      // nested suite inherited the value
+      expect(dependant).toEqual({ dependency: 'new' })
+    })
+  })
+})
+
+test('keep using the default values', ({ dependant }) => {
+  // the `dependency` is using the default
+  // value outside of the suite with .scoped
+  expect(dependant).toEqual({ dependency: 'default' })
+})
+```
+
+This API is particularly useful if you have a context value that relies on a dynamic variable like a database connection:
+
+```ts
+const test = baseTest.extend<{
+  db: Database
+  schema: string
+}>({
+  db: async ({ schema }, use) => {
+    const db = await createDb({ schema })
+    await use(db)
+    await cleanup(db)
+  },
+  schema: '',
+})
+
+describe('one type of schema', () => {
+  test.scoped({ schema: 'schema-1' })
+
+  // ... tests
+})
+
+describe('another type of schema', () => {
+  test.scoped({ schema: 'schema-2' })
+
+  // ... tests
+})
 ```
 
 #### TypeScript
@@ -194,9 +321,9 @@ const myTest = test.extend<MyFixtures>({
   archive: []
 })
 
-myTest('', (context) => {
-  expectTypeOf(context.todos).toEqualTypeOf<number[]>()
-  expectTypeOf(context.archive).toEqualTypeOf<number[]>()
+myTest('types are defined correctly', ({ todos, archive }) => {
+  expectTypeOf(todos).toEqualTypeOf<number[]>()
+  expectTypeOf(archive).toEqualTypeOf<number[]>()
 })
 ```
 

@@ -4,7 +4,7 @@ title: Interactivity API | Browser Mode
 
 # Interactivity API
 
-Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
+Vitest implements a subset of [`@testing-library/user-event`](https://testing-library.com/docs/user-event/intro) APIs using [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) or [webdriver](https://www.w3.org/TR/webdriver/) instead of faking events which makes the browser behaviour more reliable and consistent with how users interact with a page.
 
 ```ts
 import { userEvent } from '@vitest/browser/context'
@@ -12,26 +12,14 @@ import { userEvent } from '@vitest/browser/context'
 await userEvent.click(document.querySelector('.button'))
 ```
 
-Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types (depending on your provider) to your `tsconfig.json` file:
+Almost every `userEvent` method inherits its provider options. To see all available options in your IDE, add `webdriver` or `playwright` types (depending on your provider) to your [setup file](/config/#setupfile) or a [config file](/config/) (depending on what is in `included` in your `tsconfig.json`):
 
 ::: code-group
-```json [playwright]
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/providers/playwright"
-    ]
-  }
-}
+```ts [playwright]
+/// <reference types="@vitest/browser/providers/playwright" />
 ```
-```json [webdriverio]
-{
-  "compilerOptions": {
-    "types": [
-      "@vitest/browser/providers/webdriverio"
-    ]
-  }
-}
+```ts [webdriverio]
+/// <reference types="@vitest/browser/providers/webdriverio" />
 ```
 :::
 
@@ -292,7 +280,7 @@ test('update input', async () => {
 ```
 
 ::: info
-Vitest doesn't expose `.type` method on the locator like `input.type` because it exists only for compatiblity with the `userEvent` library. Consider using `.fill` instead as it is faster.
+Vitest doesn't expose `.type` method on the locator like `input.type` because it exists only for compatibility with the `userEvent` library. Consider using `.fill` instead as it is faster.
 :::
 
 References:
@@ -304,7 +292,7 @@ References:
 ## userEvent.clear
 
 ```ts
-function clear(element: Element | Locator): Promise<void>
+function clear(element: Element | Locator, options?: UserEventClearOptions): Promise<void>
 ```
 
 This method clears the input element content.
@@ -463,6 +451,7 @@ References:
 function upload(
   element: Element | Locator,
   files: string[] | string | File[] | File,
+  options?: UserEventUploadOptions,
 ): Promise<void>
 ```
 
@@ -530,3 +519,81 @@ References:
 
 - [Playwright `frame.dragAndDrop` API](https://playwright.dev/docs/api/class-frame#frame-drag-and-drop)
 - [WebdriverIO `element.dragAndDrop` API](https://webdriver.io/docs/api/element/dragAndDrop/)
+
+## userEvent.copy
+
+```ts
+function copy(): Promise<void>
+```
+
+Copy the selected text to the clipboard.
+
+```js
+import { page, userEvent } from '@vitest/browser/context'
+
+test('copy and paste', async () => {
+  // write to 'source'
+  await userEvent.click(page.getByPlaceholder('source'))
+  await userEvent.keyboard('hello')
+
+  // select and copy 'source'
+  await userEvent.dblClick(page.getByPlaceholder('source'))
+  await userEvent.copy()
+
+  // paste to 'target'
+  await userEvent.click(page.getByPlaceholder('target'))
+  await userEvent.paste()
+
+  await expect.element(page.getByPlaceholder('source')).toHaveTextContent('hello')
+  await expect.element(page.getByPlaceholder('target')).toHaveTextContent('hello')
+})
+```
+
+References:
+
+- [testing-library `copy` API](https://testing-library.com/docs/user-event/convenience/#copy)
+
+## userEvent.cut
+
+```ts
+function cut(): Promise<void>
+```
+
+Cut the selected text to the clipboard.
+
+```js
+import { page, userEvent } from '@vitest/browser/context'
+
+test('copy and paste', async () => {
+  // write to 'source'
+  await userEvent.click(page.getByPlaceholder('source'))
+  await userEvent.keyboard('hello')
+
+  // select and cut 'source'
+  await userEvent.dblClick(page.getByPlaceholder('source'))
+  await userEvent.cut()
+
+  // paste to 'target'
+  await userEvent.click(page.getByPlaceholder('target'))
+  await userEvent.paste()
+
+  await expect.element(page.getByPlaceholder('source')).toHaveTextContent('')
+  await expect.element(page.getByPlaceholder('target')).toHaveTextContent('hello')
+})
+```
+
+References:
+
+- [testing-library `cut` API](https://testing-library.com/docs/user-event/clipboard#cut)
+
+## userEvent.paste
+
+```ts
+function paste(): Promise<void>
+```
+
+Paste the text from the clipboard. See [`userEvent.copy`](#userevent-copy) and [`userEvent.cut`](#userevent-cut) for usage examples.
+
+References:
+
+- [testing-library `paste` API](https://testing-library.com/docs/user-event/clipboard#paste)

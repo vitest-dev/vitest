@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     include: ['./browser-basic.test.ts'],
     browser: {
-      name: 'chromium',
+      instances: [{ browser: 'chromium' }],
       enabled: true,
       headless: true,
       provider: 'playwright',

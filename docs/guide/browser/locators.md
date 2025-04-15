@@ -3,11 +3,15 @@ title: Locators | Browser Mode
 outline: [2, 3]
 ---
 
-# Locators <Version>2.1.0</Version>
+# Locators
 
-A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate those selectors behind the scenes.
+A locator is a representation of an element or a number of elements. Every locator is defined by a string called a selector. Vitest abstracts this selector by providing convenient methods that generate them behind the scenes.
 
-The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/guide/browser/#provider-configuration).
+The locator API uses a fork of [Playwright's locators](https://playwright.dev/docs/api/class-locator) called [Ivya](https://npmjs.com/ivya). However, Vitest provides this API to every [provider](/guide/browser/config.html#browser-provider), not just playwright.
+
+::: tip
+This page covers API usage. To better understand locators and their usage, read [Playwright's "Locators" documentation](https://playwright.dev/docs/locators).
+:::
 
 ## getByRole
 
@@ -65,7 +69,7 @@ Providing roles via `role` or `aria-*` attributes to built-in elements that alre
 
 - `exact: boolean`
 
-  Whether the `name` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `name` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `name` is a regular expression. Note that exact match still trims whitespace.
 
   ```tsx
   <button>Hello World</button>
@@ -213,7 +217,7 @@ page.getByAltText('non existing alt text') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -228,7 +232,7 @@ function getByLabelText(
 ): Locator
 ```
 
-Creates a locator capable of finding an element that has an assosiated label.
+Creates a locator capable of finding an element that has an associated label.
 
 The `page.getByLabelText('Username')` locator will find every input in the example bellow:
 
@@ -260,7 +264,7 @@ The `page.getByLabelText('Username')` locator will find every input in the examp
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -292,7 +296,7 @@ It is generally better to rely on a label using [`getByLabelText`](#getbylabelte
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -324,7 +328,7 @@ This locator is useful for locating non-interactive elements. If you need to loc
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -352,7 +356,7 @@ page.getByTitle('Create') // ❌
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
@@ -364,7 +368,7 @@ page.getByTitle('Create') // ❌
 function getByTestId(text: string | RegExp): Locator
 ```
 
-Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/config/#browser-locators-testidattribute).
+Creates a locator capable of finding an element that matches the specified test id attribute. You can configure the attribute name with [`browser.locators.testIdAttribute`](/guide/browser/config#browser-locators-testidattribute).
 
 ```tsx
 <div data-testid="custom-element" />
@@ -381,13 +385,220 @@ It is recommended to use this only after the other locators don't work for your 
 
 - `exact: boolean`
 
-  Whether the `text` is matched exactly: case-sensetive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
+  Whether the `text` is matched exactly: case-sensitive and whole-string. Disabled by default. This option is ignored if `text` is a regular expression. Note that exact match still trims whitespace.
 
 #### See also
 
 - [testing-library's `ByTestId`](https://testing-library.com/docs/queries/bytestid/)
 
+## nth
+
+```ts
+function nth(index: number): Locator
+```
+
+This method returns a new locator that matches only a specific index within a multi-element query result. It's zero based, `nth(0)` selects the first element. Unlike `elements()[n]`, the `nth` locator will be retried until the element is present.
+
+```html
+<div aria-label="one"><input/><input/><input/></div>
+<div aria-label="two"><input/></div>
+```
+
+```tsx
+page.getByRole('textbox').nth(0) // ✅
+page.getByRole('textbox').nth(4) // ❌
+```
+
+::: tip
+Before resorting to `nth`, you may find it useful to use chained locators to narrow down your search.
+Sometimes there is no better way to distinguish than by element position; although this can lead to flake, it's better than nothing.
+:::
+
+```tsx
+page.getByLabel('two').getByRole('input') // ✅ better alternative to page.getByRole('textbox').nth(3)
+page.getByLabel('one').getByRole('input') // ❌ too ambiguous
+page.getByLabel('one').getByRole('input').nth(1) // ✅ pragmatic compromise
+```
+
+## first
+
+```ts
+function first(): Locator
+```
+
+This method returns a new locator that matches only the first index of a multi-element query result.
+It is sugar for `nth(0)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').first() // ✅
+```
+
+## last
+
+```ts
+function last(): Locator
+```
+
+This method returns a new locator that matches only the last index of a multi-element query result.
+It is sugar for `nth(-1)`.
+
+```html
+<input/> <input/> <input/>
+```
+
+```tsx
+page.getByRole('textbox').last() // ✅
+```
+
+## and
+
+```ts
+function and(locator: Locator): Locator
+```
+
+This method creates a new locator that matches both the parent and provided locator. The following example finds a button with a specific title:
+
+```ts
+page.getByRole('button').and(page.getByTitle('Subscribe'))
+```
+
+## or
+
+```ts
+function or(locator: Locator): Locator
+```
+
+This method creates a new locator that matches either one or both locators.
+
+::: warning
+Note that if locator matches more than a single element, calling another method might throw an error if it expects a single element:
+
+```tsx
+<>
+  <button>Click me</button>
+  <a href="https://vitest.dev">Error happened!</a>
+</>
+
+page.getByRole('button')
+  .or(page.getByRole('link'))
+  .click() // ❌ matches multiple elements
+```
+:::
+
+## filter
+
+```ts
+function filter(options: LocatorOptions): Locator
+```
+
+This methods narrows down the locator according to the options, such as filtering by text. It can be chained to apply multiple filters.
+
+### has
+
+- **Type:** `Locator`
+
+This options narrows down the selector to match elements that contain other elements matching provided locator. For example, with this HTML:
+
+```html{1,3}
+<article>
+  <div>Vitest</div>
+</article>
+<article>
+  <div>Rolldown</div>
+</article>
+```
+
+We can narrow down the locator to only find the `article` with `Vitest` text inside:
+
+```ts
+page.getByRole('article').filter({ has: page.getByText('Vitest') }) // ✅
+```
+
+::: warning
+Provided locator (`page.getByText('Vitest')` in the example) must be relative to the parent locator (`page.getByRole('article')` in the example). It will be queried starting with the parent locator, not the document root.
+
+Meaning, you cannot pass down a locator that queries the element outside of the parent locator:
+
+```ts
+page.getByText('Vitest').filter({ has: page.getByRole('article') }) // ❌
+```
+
+This example will fail because the `article` element is outside the element with `Vitest` text.
+:::
+
+::: tip
+This method can be chained to narrow down the element even further:
+
+```ts
+page.getByRole('article')
+  .filter({ has: page.getByRole('button', { name: 'delete row' }) })
+  .filter({ has: page.getByText('Vitest') })
+```
+:::
+
+### hasNot
+
+- **Type:** `Locator`
+
+This option narrows down the selector to match elements that do not contain other elements matching provided locator. For example, with this HTML:
+
+```html{1,3}
+<article>
+  <div>Vitest</div>
+</article>
+<article>
+  <div>Rolldown</div>
+</article>
+```
+
+We can narrow down the locator to only find the `article` that doesn't have `Rolldown` inside.
+
+```ts
+page.getByRole('article')
+  .filter({ hasNot: page.getByText('Rolldown') }) // ✅
+page.getByRole('article')
+  .filter({ hasNot: page.getByText('Vitest') }) // ❌
+```
+
+::: warning
+Note that provided locator is queried against the parent, not the document root, just like [`has`](#has) option.
+:::
+
+### hasText
+
+- **Type:** `string | RegExp`
+
+This options narrows down the selector to only match elements that contain provided text somewhere inside. When the `string` is passed, matching is case-insensitive and searches for a substring.
+
+```html{1,3}
+<article>
+  <div>Vitest</div>
+</article>
+<article>
+  <div>Rolldown</div>
+</article>
+```
+
+Both locators will find the same element because the search is case-insensitive:
+
+```ts
+page.getByRole('article').filter({ hasText: 'Vitest' }) // ✅
+page.getByRole('article').filter({ hasText: 'Vite' }) // ✅
+```
+
+### hasNotText
+
+- **Type:** `string | RegExp`
+
+This options narrows down the selector to only match elements that do not contain provided text somewhere inside. When the `string` is passed, matching is case-insensitive and searches for a substring.
+
 ## Methods
+
+All methods are asynchronous and must be awaited. Since Vitest 3, tests will fail if a method is not awaited.
 
 ### click
 
@@ -440,7 +651,7 @@ await page.getByRole('img', { name: 'Rose' }).tripleClick()
 ### clear
 
 ```ts
-function clear(): Promise<void>
+function clear(options?: UserEventClearOptions): Promise<void>
 ```
 
 Clears the input element content.
@@ -567,7 +778,7 @@ function screenshot(options?: LocatorScreenshotOptions & { base64?: false }): Pr
 
 Creates a screenshot of the element matching the locator's selector.
 
-You can specify the save location for the screenshot using the `path` option, which is relative to the current test file. If the `path` option is not set, Vitest will default to using [`browser.screenshotDirectory`](/config/#browser-screenshotdirectory) (`__screenshot__` by default), along with the names of the file and the test to determine the screenshot's filepath.
+You can specify the save location for the screenshot using the `path` option, which is relative to the current test file. If the `path` option is not set, Vitest will default to using [`browser.screenshotDirectory`](/guide/browser/config#browser-screenshotdirectory) (`__screenshot__` by default), along with the names of the file and the test to determine the screenshot's filepath.
 
 If you also need the content of the screenshot, you can specify `base64: true` to return it alongside the filepath where the screenshot is saved.
 
@@ -594,7 +805,7 @@ function query(): Element | null
 
 This method returns a single element matching the locator's selector or `null` if no element is found.
 
-If multilple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
+If multiple elements match the selector, this method will throw an error.  Use [`.elements()`](#elements) when you need all matching DOM Elements or [`.all()`](#all) if you need an array of locators matching the selector.
 
 Consider the following DOM structure:
 
@@ -706,3 +917,35 @@ This method returns an array of new locators that match the selector.
 Internally, this method calls `.elements` and wraps every element using [`page.elementLocator`](/guide/browser/context#page).
 
 - [See `locator.elements()`](#elements)
+
+## Properties
+
+### selector
+
+The `selector` is a string that will be used to locate the element by the browser provider. Playwright will use a `playwright` locator syntax while `preview` and `webdriverio` will use CSS.
+
+::: danger
+You should not use this string in your test code. The `selector` string should only be used when working with the Commands API:
+
+```ts [commands.ts]
+import type { BrowserCommand } from 'vitest/node'
+
+const test: BrowserCommand<string> = function test(context, selector) {
+  // playwright
+  await context.iframe.locator(selector).click()
+  // webdriverio
+  await context.browser.$(selector).click()
+}
+```
+
+```ts [example.test.ts]
+import { test } from 'vitest'
+import { commands, page } from '@vitest/browser/context'
+
+test('works correctly', async () => {
+  await commands.test(page.getByText('Hello').selector) // ✅
+  // vitest will automatically unwrap it to a string
+  await commands.test(page.getByText('Hello')) // ✅
+})
+```
+:::

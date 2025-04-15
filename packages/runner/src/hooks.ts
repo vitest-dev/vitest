@@ -18,6 +18,23 @@ function getDefaultHookTimeout() {
   return getRunner().config.hookTimeout
 }
 
+const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
+const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
+
+export function getBeforeHookCleanupCallback(hook: Function, result: any): Function | undefined {
+  if (typeof result === 'function') {
+    const timeout
+      = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
+        ? hook[CLEANUP_TIMEOUT_KEY]
+        : getDefaultHookTimeout()
+    const stackTraceError
+      = CLEANUP_STACK_TRACE_KEY in hook && hook[CLEANUP_STACK_TRACE_KEY] instanceof Error
+        ? hook[CLEANUP_STACK_TRACE_KEY]
+        : undefined
+    return withTimeout(result, timeout, true, stackTraceError)
+  }
+}
+
 /**
  * Registers a callback function to be executed once before all tests within the current suite.
  * This hook is useful for scenarios where you need to perform setup operations that are common to all tests in a suite, such as initializing a database connection or setting up a test environment.
@@ -35,11 +52,26 @@ function getDefaultHookTimeout() {
  * });
  * ```
  */
-export function beforeAll(fn: BeforeAllListener, timeout?: number): void {
+export function beforeAll(
+  fn: BeforeAllListener,
+  timeout: number = getDefaultHookTimeout(),
+): void {
   assertTypes(fn, '"beforeAll" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
   return getCurrentSuite().on(
     'beforeAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
+    Object.assign(
+      withTimeout(
+        fn,
+        timeout,
+        true,
+        stackTraceError,
+      ),
+      {
+        [CLEANUP_TIMEOUT_KEY]: timeout,
+        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+      },
+    ),
   )
 }
 
@@ -64,7 +96,12 @@ export function afterAll(fn: AfterAllListener, timeout?: number): void {
   assertTypes(fn, '"afterAll" callback', ['function'])
   return getCurrentSuite().on(
     'afterAll',
-    withTimeout(fn, timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(
+      fn,
+      timeout ?? getDefaultHookTimeout(),
+      true,
+      new Error('STACK_TRACE_ERROR'),
+    ),
   )
 }
 
@@ -87,12 +124,24 @@ export function afterAll(fn: AfterAllListener, timeout?: number): void {
  */
 export function beforeEach<ExtraContext = object>(
   fn: BeforeEachListener<ExtraContext>,
-  timeout?: number,
+  timeout: number = getDefaultHookTimeout(),
 ): void {
   assertTypes(fn, '"beforeEach" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
   return getCurrentSuite<ExtraContext>().on(
     'beforeEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+    Object.assign(
+      withTimeout(
+        withFixtures(fn),
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        stackTraceError,
+      ),
+      {
+        [CLEANUP_TIMEOUT_KEY]: timeout,
+        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+      },
+    ),
   )
 }
 
@@ -120,7 +169,12 @@ export function afterEach<ExtraContext = object>(
   assertTypes(fn, '"afterEach" callback', ['function'])
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
-    withTimeout(withFixtures(fn), timeout ?? getDefaultHookTimeout(), true),
+    withTimeout(
+      withFixtures(fn),
+      timeout ?? getDefaultHookTimeout(),
+      true,
+      new Error('STACK_TRACE_ERROR'),
+    ),
   )
 }
 
@@ -147,7 +201,12 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFailed ||= []
     test.onFailed.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(
+        handler,
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        new Error('STACK_TRACE_ERROR'),
+      ),
     )
   },
 )
@@ -159,6 +218,8 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
  * This hook is useful if you have access to a resource in the test itself and you want to clean it up after the test finishes. It is a more compact way to clean up resources than using the combination of `beforeEach` and `afterEach`.
  *
  * **Note:** The `onTestFinished` hooks are running in reverse order of their registration. You can configure this by changing the `sequence.hooks` option in the config file.
+ *
+ * **Note:** The `onTestFinished` hook is not called if the test is canceled with a dynamic `ctx.skip()` call.
  *
  * @param {Function} fn - The callback function to be executed after a test finishes. The function can receive parameters providing details about the completed test, including its success or failure status.
  * @param {number} [timeout] - Optional timeout in milliseconds for the hook. If not provided, the default hook timeout from the runner's configuration is used.
@@ -178,7 +239,12 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   (test, handler, timeout) => {
     test.onFinished ||= []
     test.onFinished.push(
-      withTimeout(handler, timeout ?? getDefaultHookTimeout(), true),
+      withTimeout(
+        handler,
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        new Error('STACK_TRACE_ERROR'),
+      ),
     )
   },
 )
