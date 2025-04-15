@@ -145,7 +145,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
 
       if (benchmark.suite) {
         await callSuiteHook(benchmark.suite, benchmark, 'afterEach', runner, [benchmark.context, benchmark.suite])
-        await callCleanupHooks(beforeEachCleanups)
+        await callCleanupHooks(runner, beforeEachCleanups)
       }
 
       tasks.push([task, benchmark])
@@ -161,7 +161,7 @@ async function runBenchmarkSuite(suite: Suite, runner: NodeBenchmarkRunner) {
   }
 
   await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
-  await callCleanupHooks(beforeAllCleanups)
+  await callCleanupHooks(runner, beforeAllCleanups)
 
   function updateTask(event: TaskUpdateEvent, task: Task) {
     updateRunnerTask(event, task, runner)
