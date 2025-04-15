@@ -221,7 +221,7 @@ export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRun
   sendTasksUpdateThrottled(runner)
 }
 
-async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+export async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]): Promise<void> {
   const sequence = runner.config.sequence.hooks
 
   if (sequence === 'stack') {
