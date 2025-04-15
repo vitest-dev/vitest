@@ -9,7 +9,7 @@ import { isExperimentalV8Provider, isV8Provider, readCoverageMap, runVitest, tes
 test('ignore hints work', async () => {
   await runVitest({
     include: ['fixtures/test/ignore-hints-fixture.test.ts'],
-    coverage: { reporter: 'json', all: false },
+    coverage: { reporter: 'json' },
   })
 
   const coverageMap = await readCoverageMap()

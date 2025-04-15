@@ -5,7 +5,7 @@ import { coverageTest, isExperimentalV8Provider, isV8Provider, normalizeURL, rea
 test('does not crash when file outside Vite is loaded (#5639)', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
-    coverage: { reporter: 'json' },
+    coverage: { reporter: 'json', include: ['fixtures/src/load-outside-vite.cjs'] },
   })
 
   const coverageMap = await readCoverageMap()

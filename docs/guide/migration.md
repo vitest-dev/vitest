@@ -21,6 +21,55 @@ export default defineConfig({
 })
 ```
 
+### Removed options `coverage.all` and `coverage.extensions`
+
+In previous versions Vitest included all uncovered files in coverage report by default.
+This was due to `coverage.all` defaulting to `true`, and `coverage.include` defaulting to `**`.
+These default values were chosen for a good reason - it is impossible for testing tools to guess where users are storing their source files.
+
+This ended up having Vitest's coverage providers processing unexpected files, like minified Javascript, leading to slow/stuck coverage report generations.
+In Vitest v4 we have removed `coverage.all` completely and <ins>**defaulted to include only covered files in the report**</ins>.
+
+When upgrading to v4 it is recommended to define `coverage.include` in your configuration, and then start applying simple `coverage.exclusion` patterns if needed.
+
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      // Include covered and uncovered files matching this pattern:
+      include: ['packages/**/src/**.{js,jsx,ts,tsx}'], // [!code ++]
+
+      // Exclusion is applied for the files that match include pattern above
+      // No need to define root level *.config.ts files or node_modules, as we didn't add those in include
+      exclude: ['**/some-pattern/**'], // [!code ++]
+
+      // These options are removed now
+      all: true, // [!code --]
+      extensions: ['js', 'ts'], // [!code --]
+    }
+  }
+})
+```
+
+If `coverage.include` is not defined, coverage report will include only files that were loaded during test run:
+```ts [vitest.config.ts]
+export default defineConfig({
+  test: {
+    coverage: {
+      // Include not set, include only files that are loaded during test run
+      include: undefined, // [!code ++]
+
+      // Loaded files that match this pattern will be excluded:
+      exclude: ['**/some-pattern/**'], // [!code ++]
+    }
+  }
+})
+```
+
+See also new guides:
+- [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples
+- [Profiling Test Performance | Code coverage](/guide/profiling-test-performance.html#code-coverage) for tips about debugging coverage generation
+
 ## Migrating to Vitest 3.0 {#vitest-3}
 
 ### Test Options as a Third Argument

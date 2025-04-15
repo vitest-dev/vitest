@@ -48,7 +48,6 @@ test('negated top level nested options return boolean', async () => {
 
 test('nested coverage options have correct types', async () => {
   expect(getCLIOptions(`
-    --coverage.all
     --coverage.enabled=true
     --coverage.clean false
     --coverage.cleanOnRerun true
@@ -81,7 +80,6 @@ test('nested coverage options have correct types', async () => {
   `).coverage).toEqual({
     enabled: true,
     reporter: ['text'],
-    all: true,
     provider: 'v8',
     clean: false,
     cleanOnRerun: true,
@@ -124,12 +122,6 @@ test('correctly normalizes methods to be an array', async () => {
   })
 })
 
-test('all coverage enable options are working correctly', () => {
-  expect(getCLIOptions('--coverage').coverage).toEqual({ enabled: true })
-  expect(getCLIOptions('--coverage.enabled --coverage.all=false').coverage).toEqual({ enabled: true, all: false })
-  expect(getCLIOptions('--coverage.enabled --coverage.all').coverage).toEqual({ enabled: true, all: true })
-})
-
 test('fails when an array is passed down for a single value', async () => {
   expect(() => getCLIOptions('--coverage.provider v8 --coverage.provider istanbul'))
     .toThrowErrorMatchingInlineSnapshot(`[Error: Expected a single value for option "--coverage.provider <name>", received ["v8", "istanbul"]]`)
@@ -161,11 +153,11 @@ test('even if coverage is boolean, don\'t fail', () => {
 })
 
 test('array options', () => {
-  expect(getCLIOptions('--reporter json --coverage.reporter=html --coverage.extension ts')).toMatchInlineSnapshot(`
+  expect(getCLIOptions('--reporter json --coverage.reporter=html --coverage.exclude utils')).toMatchInlineSnapshot(`
     {
       "coverage": {
-        "extension": [
-          "ts",
+        "exclude": [
+          "utils",
         ],
         "reporter": [
           "html",
@@ -182,14 +174,14 @@ test('array options', () => {
   --reporter=default
   --coverage.reporter=json
   --coverage.reporter html
-  --coverage.extension=ts
-  --coverage.extension=tsx
+  --coverage.exclude=utils
+  --coverage.exclude=components
   `)).toMatchInlineSnapshot(`
     {
       "coverage": {
-        "extension": [
-          "ts",
-          "tsx",
+        "exclude": [
+          "utils",
+          "components",
         ],
         "reporter": [
           "json",

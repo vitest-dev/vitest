@@ -65,7 +65,6 @@
     "magic-string": "catalog:",
     "magicast": "catalog:",
     "std-env": "catalog:",
-    "test-exclude": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
@@ -74,7 +73,6 @@
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-lib-source-maps": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/test-exclude": "catalog:",
     "@vitest/browser": "workspace:*",
     "pathe": "catalog:",
     "v8-to-istanbul": "^9.3.0",

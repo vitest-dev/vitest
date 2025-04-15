@@ -6,7 +6,7 @@ test('decorators generated metadata is ignored', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     config: 'fixtures/configs/vitest.config.decorators.ts',
-    coverage: { reporter: 'json', all: false },
+    coverage: { reporter: 'json' },
   })
 
   const coverageMap = await readCoverageMap()

@@ -394,7 +394,7 @@ test('coverage.autoUpdate cannot update thresholds when configuration file doesn
 })
 
 test('boolean flag 100 should not crash CLI', async () => {
-  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100')
+  let { stderr } = await runVitestCli('--coverage.enabled', '--coverage.thresholds.100', '--coverage.include=fixtures/coverage-test')
   // non-zero coverage shows up, which is non-deterministic, so strip it.
   stderr = stderr.replace(/\([0-9.]+%\) does/g, '(0%) does')
 
