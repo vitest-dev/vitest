@@ -832,7 +832,7 @@ Returns `true` if fake timers are enabled.
 
 - **Type:** `() => Vitest`
 
-When timers are run out, you may call this method to return mocked timers to its original implementations. All timers that were scheduled before will be discarded.
+When timers have run out, you may call this method to return mocked timers to its original implementations. All timers that were scheduled before will be discarded.
 
 ## Miscellaneous
 
