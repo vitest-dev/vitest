@@ -568,5 +568,14 @@ export interface BrowserPage extends LocatorSelectors {
   elementLocator(element: Element): Locator
 }
 
+export interface BrowserLocators {
+  createElementLocators(element: Element): LocatorSelectors
+  extend(methods: {
+    [K in keyof LocatorSelectors]?: (...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+  }): void
+}
+
+export const locators: BrowserLocators
+
 export const page: BrowserPage
 export const cdp: () => CDPSession
