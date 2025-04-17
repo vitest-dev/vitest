@@ -14,7 +14,7 @@ Vitest provides a way to define multiple project configurations within a single 
 
 ## Defining a Workspace
 
-Since Vitest 3, you can define a workspace in you root [config](/config). In this case, Vitest will ignore the `vitest.workspace` file in the root, if one exists.
+Since Vitest 3, you can define a workspace in your root [config](/config/). In this case, Vitest will ignore the `vitest.workspace` file in the root, if one exists.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
