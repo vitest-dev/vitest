@@ -140,9 +140,10 @@ describe('userEvent.click', () => {
       },
     })
 
+    // not exact due to scaling and rounding
     expect(spy).toHaveBeenCalledWith({
-      x: 200,
-      y: 150,
+      x: expect.closeTo(200, -1),
+      y: expect.closeTo(150, -1),
     })
   })
 })
