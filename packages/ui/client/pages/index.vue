@@ -40,17 +40,6 @@ const resizingMain = useDebounceFn((event: { size: number }[]) => {
   preventBrowserEvents()
 }, 0)
 
-function resizeMain() {
-  const width = window.innerWidth
-  const panelWidth = Math.min(width / 3, 300)
-  mainSizes.value[0] = (100 * panelWidth) / width
-  mainSizes.value[1] = 100 - mainSizes.value[0]
-  recordMainResize([
-    { size: mainSizes.value[0] },
-    { size: mainSizes.value[1] },
-  ])
-}
-
 function recordMainResize(event: { size: number }[]) {
   panels.navigation = event[0].size
   panels.details.size = event[1].size
@@ -83,7 +72,6 @@ function allowBrowserEvents() {
       class="pt-4px"
       @resized="onMainResized"
       @resize="resizingMain"
-      @ready="resizeMain"
     >
       <Pane :size="mainSizes[0]">
         <Navigation />

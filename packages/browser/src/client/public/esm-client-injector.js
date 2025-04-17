@@ -22,7 +22,6 @@
     moduleCache,
     config: { __VITEST_CONFIG__ },
     viteConfig: { __VITEST_VITE_CONFIG__ },
-    files: { __VITEST_FILES__ },
     type: { __VITEST_TYPE__ },
     sessionId: { __VITEST_SESSION_ID__ },
     testerId: { __VITEST_TESTER_ID__ },

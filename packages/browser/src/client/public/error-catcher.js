@@ -77,9 +77,9 @@ async function reportUnexpectedError(
 
   if (!state.runTests || !__vitest_worker__.current) {
     channel.postMessage({
-      type: 'done',
-      filenames: state.files,
-      id: state.iframeId,
+      // TODO: what to do in this case now?
+      event: 'response:???',
+      iframeId: state.iframeId,
     })
   }
 }
