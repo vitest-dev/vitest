@@ -55,8 +55,8 @@ catalogs:
       specifier: ^8.3.4
       version: 8.3.4
     birpc:
-      specifier: 0.2.19
-      version: 0.2.19
+      specifier: 2.3.0
+      version: 2.3.0
     cac:
       specifier: ^6.7.14
       version: 6.7.14
@@ -492,7 +492,7 @@ importers:
         version: 9.12.3
       birpc:
         specifier: 'catalog:'
-        version: 0.2.19
+        version: 2.3.0
       flatted:
         specifier: 'catalog:'
         version: 3.3.3
@@ -841,7 +841,7 @@ importers:
         version: 0.7.2
       birpc:
         specifier: 'catalog:'
-        version: 0.2.19
+        version: 2.3.0
       codemirror:
         specifier: ^5.65.18
         version: 5.65.18
@@ -1051,7 +1051,7 @@ importers:
         version: 8.3.4
       birpc:
         specifier: 'catalog:'
-        version: 0.2.19
+        version: 2.3.0
       cac:
         specifier: 'catalog:'
         version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
@@ -1118,7 +1118,7 @@ importers:
     dependencies:
       birpc:
         specifier: 'catalog:'
-        version: 0.2.19
+        version: 2.3.0
       flatted:
         specifier: 'catalog:'
         version: 3.3.3
@@ -4944,6 +4944,9 @@ packages:
 
   birpc@0.2.19:
     resolution: {integrity: sha512-5WeXXAvTmitV1RqJFppT5QtUiz2p1mRSYU000Jkft5ZUCLJIk4uQriYNO50HknxKwM6jd8utNc66K1qGIwwWBQ==}
+
+  birpc@2.3.0:
+    resolution: {integrity: sha512-ijbtkn/F3Pvzb6jHypHRyve2QApOCZDR25D/VnkY2G/lBNcXCTsnsCxgY4k4PkVB7zfwzYbY3O9Lcqe3xufS5g==}
 
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
@@ -12917,6 +12920,8 @@ snapshots:
   binary-extensions@2.2.0: {}
 
   birpc@0.2.19: {}
+
+  birpc@2.3.0: {}
 
   bl@4.1.0:
     dependencies:

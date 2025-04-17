@@ -8,11 +8,14 @@ test('setup file imports the same modules', async () => {
     {
       root: './fixtures/setup-file',
     },
+    undefined,
+    {},
+    {
+      // TODO 2025-03-26 remove after debugging
+      std: 'inherit',
+    },
   )
 
   expect(stderr).toReportNoErrors()
-
-  instances.forEach(({ browser }) => {
-    expect(stdout).toReportPassedTest('module-equality.test.ts', browser)
-  })
+  expect(stdout).toReportPassedTest('module-equality.test.ts', instances)
 })

@@ -53,11 +53,19 @@ function createClient() {
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
       onCancel: setCancel,
-      async createTesters(files: string[]) {
-        if (PAGE_TYPE !== 'orchestrator') {
-          return
+      async createTesters(options) {
+        const orchestrator = getBrowserState().orchestrator
+        if (!orchestrator) {
+          throw new TypeError('Only orchestrator can create testers.')
         }
-        getBrowserState().createTesters?.(files)
+        return orchestrator.createTesters(options)
+      },
+      async cleanupTesters() {
+        const orchestrator = getBrowserState().orchestrator
+        if (!orchestrator) {
+          throw new TypeError('Only orchestrator can cleanup testers.')
+        }
+        return orchestrator.cleanupTesters()
       },
       cdpEvent(event: string, payload: unknown) {
         const cdp = getBrowserState().cdp
@@ -85,6 +93,7 @@ function createClient() {
     {
       post: msg => ctx.ws.send(msg),
       on: fn => (onMessage = fn),
+      timeout: -1, // createTesters can take a while
       serialize: e =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {
