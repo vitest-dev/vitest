@@ -625,7 +625,7 @@ function exportAll(exports: any, sourceModule: any) {
   }
 
   for (const key in sourceModule) {
-    if (key !== 'default') {
+    if (key !== 'default' && !(key in exports)) {
       try {
         defineExport(exports, key, () => sourceModule[key])
       }
