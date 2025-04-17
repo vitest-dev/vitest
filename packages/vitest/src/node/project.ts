@@ -14,6 +14,7 @@ import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
+  ProjectName,
   ResolvedConfig,
   SerializedConfig,
   TestProjectInlineConfiguration,
@@ -193,6 +194,13 @@ export class TestProject {
    */
   public get name(): string {
     return this.config.name || ''
+  }
+
+  /**
+   * The color used when reporting tasks of this project.
+   */
+  public get color(): ProjectName['color'] {
+    return this.config.color
   }
 
   /**

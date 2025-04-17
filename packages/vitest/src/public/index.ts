@@ -183,6 +183,7 @@ export type { BrowserTesterOptions } from '../types/browser'
 export type {
   AfterSuiteRunMeta,
   ErrorWithDiff,
+  LabelColor,
   ModuleCache,
   ModuleGraphData,
   ParsedStack,

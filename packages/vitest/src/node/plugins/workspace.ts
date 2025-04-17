@@ -43,7 +43,11 @@ export function WorkspaceVitestPlugin(
         const testConfig = viteConfig.test || {}
 
         const root = testConfig.root || viteConfig.root || options.root
-        let name = testConfig.name
+
+        let { label: name, color } = typeof testConfig.name === 'string'
+          ? { label: testConfig.name }
+          : { label: '', ...testConfig.name }
+
         if (!name) {
           if (typeof options.workspacePath === 'string') {
             // if there is a package.json, read the name from it
@@ -136,7 +140,7 @@ export function WorkspaceVitestPlugin(
             },
           },
           test: {
-            name,
+            name: { label: name, color },
           },
         };
 

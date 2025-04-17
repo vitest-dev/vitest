@@ -15,6 +15,7 @@ exports[`html reporter > resolves to "failing" status for test file "json-fail" 
       "name": "json-fail.test.ts",
       "pool": "forks",
       "prepareDuration": 0,
+      "projectName": "",
       "result": {
         "duration": 0,
         "startTime": 0,
@@ -125,6 +126,7 @@ exports[`html reporter > resolves to "passing" status for test file "all-passing
       "name": "all-passing-or-skipped.test.ts",
       "pool": "forks",
       "prepareDuration": 0,
+      "projectName": "",
       "result": {
         "duration": 0,
         "startTime": 0,

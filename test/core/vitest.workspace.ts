@@ -1,18 +1,25 @@
-import type { Pool } from 'vitest/node'
 import { defineWorkspace } from 'vitest/config'
 
-function project(pool: Pool) {
-  return {
+export default defineWorkspace([
+  {
     extends: './vite.config.ts',
     test: {
-      name: pool,
-      pool,
+      name: { label: 'threads', color: 'red' },
+      pool: 'threads',
     },
-  }
-}
-
-export default defineWorkspace([
-  project('threads'),
-  project('forks'),
-  project('vmThreads'),
+  },
+  {
+    extends: './vite.config.ts',
+    test: {
+      name: { label: 'forks', color: 'green' },
+      pool: 'forks',
+    },
+  },
+  {
+    extends: './vite.config.ts',
+    test: {
+      name: { label: 'vmThreads', color: 'blue' },
+      pool: 'vmThreads',
+    },
+  },
 ])

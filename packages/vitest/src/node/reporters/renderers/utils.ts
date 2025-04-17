@@ -1,6 +1,7 @@
 import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
 import type { Formatter } from 'tinyrainbow'
+import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
@@ -22,6 +23,8 @@ export const testPass: string = c.green(F_CHECK)
 export const taskFail: string = c.red(F_CROSS)
 export const suiteFail: string = c.red(F_POINTER)
 export const pending: string = c.gray('·')
+
+const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
 
 function getCols(delta = 0) {
   let length = process.stdout?.columns
@@ -223,20 +226,25 @@ export function formatTime(time: number): string {
   return `${Math.round(time)}ms`
 }
 
-export function formatProjectName(name: string | undefined, suffix = ' '): string {
-  if (!name) {
+export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>, suffix = ' '): string {
+  if (!project?.name) {
     return ''
   }
   if (!c.isColorSupported) {
-    return `|${name}|${suffix}`
+    return `|${project.name}|${suffix}`
   }
-  const index = name
-    .split('')
-    .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
 
-  const colors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta]
+  let background = project.color && c[`bg${capitalize(project.color)}`]
 
-  return c.black(colors[index % colors.length](` ${name} `)) + suffix
+  if (!background) {
+    const index = project.name
+      .split('')
+      .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+
+    background = labelDefaultColors[index % labelDefaultColors.length]
+  }
+
+  return c.black(background(` ${project.name} `)) + suffix
 }
 
 export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
@@ -256,4 +264,8 @@ export function truncateString(text: string, maxLength: number): string {
   }
 
   return `${plainText.slice(0, maxLength - 1)}…`
+}
+
+function capitalize<T extends string>(text: T) {
+  return `${text[0].toUpperCase()}${text.slice(1)}` as Capitalize<T>
 }
