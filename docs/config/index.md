@@ -781,7 +781,7 @@ The pool group order in which this project runs its tests. If not specified, all
 
 This option only works if you have more than one project in your [workspace](/guide/workspace). If the same value is used in different projects, all those project will run together.
 
-Note that this options does not affect how tests run inside the project. To configure isolation or test order, use [`isolate`](#isolate) and [`sequence.sequencer`](#sequencesequencer) options.
+Note that this options does not affect how tests run inside the project. To configure isolation or test order, use [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
 
 ::: details Example
 Consider this example:
