@@ -70,8 +70,11 @@ export class ViteExecutor {
         }
       }
       catch (cause: any) {
-        // rethrow vitest error if it cannot load the module because it's not resolved
-        if (typeof cause?.message === 'string' && cause.message.includes('Failed to load url')) {
+        // rethrow vite error if it cannot load the module because it's not resolved
+        if (
+          (typeof cause === 'object' && cause.code === 'ERR_LOAD_URL')
+          || (typeof cause?.message === 'string' && cause.message.includes('Failed to load url'))
+        ) {
           const error = new Error(
             `Cannot find module '${fileUrl}'`,
             { cause },
