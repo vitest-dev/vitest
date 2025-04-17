@@ -106,7 +106,7 @@ export default defineConfig({
 
 Since Vitest uses Vite config, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases - these options should be defined on the top level, _not_ within a `test` property.
 
-Configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them.
+Configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them. This means they can only be set in the root Vitest config.
 :::
 
 ### include
