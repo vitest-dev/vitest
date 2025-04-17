@@ -498,11 +498,11 @@ export function hoistMocks(
   // hoist vi.mock/vi.hoisted
   for (const node of hoistedNodes) {
     const end = getNodeTail(code, node)
-    if (hoistIndex === end) {
+    // don't hoist into itself if it's already at the top
+    if (hoistIndex === end || hoistIndex === node.start) {
       hoistIndex = end
     }
-    // don't hoist into itself if it's already at the top
-    else if (hoistIndex !== node.start) {
+    else {
       s.move(node.start, end, hoistIndex)
     }
   }
