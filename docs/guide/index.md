@@ -177,36 +177,40 @@ However, we recommend using the same file for both Vite and Vitest, instead of c
 
 ## Workspaces Support
 
-Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.workspace` file. The file supports `js`/`ts`/`json` extensions. This feature works great with monorepo setups.
+Run different project configurations inside the same project with [Vitest Workspaces](/guide/workspace). You can define a list of files and folders that define your workspace in `vitest.config` file.
 
-```ts [vitest.workspace.ts]
-import { defineWorkspace } from 'vitest/config'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkspace([
-  // you can use a list of glob patterns to define your workspaces
-  // Vitest expects a list of config files
-  // or directories where there is a config file
-  'packages/*',
-  'tests/*/vitest.config.{e2e,unit}.ts',
-  // you can even run the same tests,
-  // but with different configs in the same "vitest" process
-  {
-    test: {
-      name: 'happy-dom',
-      root: './shared_tests',
-      environment: 'happy-dom',
-      setupFiles: ['./setup.happy-dom.ts'],
-    },
+export default defineConfig({
+  test: {
+    workspace: [
+      // you can use a list of glob patterns to define your workspaces
+      // Vitest expects a list of config files
+      // or directories where there is a config file
+      'packages/*',
+      'tests/*/vitest.config.{e2e,unit}.ts',
+      // you can even run the same tests,
+      // but with different configs in the same "vitest" process
+      {
+        test: {
+          name: 'happy-dom',
+          root: './shared_tests',
+          environment: 'happy-dom',
+          setupFiles: ['./setup.happy-dom.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'node',
+          root: './shared_tests',
+          environment: 'node',
+          setupFiles: ['./setup.node.ts'],
+        },
+      },
+    ],
   },
-  {
-    test: {
-      name: 'node',
-      root: './shared_tests',
-      environment: 'node',
-      setupFiles: ['./setup.node.ts'],
-    },
-  },
-])
+})
 ```
 
 ## Command Line Interface
