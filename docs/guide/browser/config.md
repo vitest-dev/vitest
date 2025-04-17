@@ -184,7 +184,7 @@ The custom provider API is highly experimental and can change between patches. I
 
 - **Type:** `BrowserProviderOptions`
 
-::: danger
+::: danger DEPRECATED
 This API is deprecated an will be removed in Vitest 4. Please, use [`browser.instances`](#browser-instances) option instead.
 :::
 
