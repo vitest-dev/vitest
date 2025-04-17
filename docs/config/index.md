@@ -781,6 +781,8 @@ The pool group order in which this project runs its tests. If not specified, all
 
 This option only works if you have more than one project in your [workspace](/guide/workspace). If the same value is used in different projects, all those project will run together.
 
+Note that this options does not affect how tests run inside the project. To configure isolation or test order, use [`isolate`](#isolate) and [`sequence.sequencer`](#sequencesequencer) options.
+
 ::: details Example
 Consider this example:
 
@@ -2053,6 +2055,8 @@ npx vitest --sequence.shuffle --sequence.seed=1000
 A custom class that defines methods for sharding and sorting. You can extend `BaseSequencer` from `vitest/node`, if you only need to redefine one of the `sort` and `shard` methods, but both should exist.
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
+
+If [`poolOrder`](#poolorder) is specified, the sequencer will be called once for each group and pool.
 
 #### sequence.shuffle
 
