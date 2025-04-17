@@ -350,6 +350,16 @@ export interface InlineConfig {
   poolOptions?: PoolOptions
 
   /**
+   * The pool group order in which this project runs its tests.
+   * If not specified, all projects run in parallel.
+   *
+   * You can group tests in certain projects to run together and delay others.
+   *
+   * @default 0
+   */
+  poolOrder?: number
+
+  /**
    * Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
    */
   maxWorkers?: number | string

@@ -772,6 +772,58 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 
 Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and the main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
 
+### poolOrder <Version>3.2.0</Version> {#poolorder}
+
+- **Type:** `number`
+- **Default:** `0`
+
+The pool group order in which this project runs its tests. If not specified, all projects run in parallel.
+
+This option only works if you have more than one project in your [workspace](/guide/workspace). If the same value is used in different projects, all those project will run together.
+
+::: details Example
+Consider this example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    workspace: [
+      {
+        test: {
+          name: 'slow',
+          poolOrder: 0,
+        },
+      },
+      {
+        test: {
+          name: 'fast',
+          poolOrder: 0,
+        },
+      },
+      {
+        test: {
+          name: 'flaky',
+          poolOrder: 1,
+        },
+      },
+    ],
+  },
+})
+```
+
+Tests in these projects will run in this order:
+
+```
+ 0. slow  |
+          |> running together
+ 0. fast  |
+
+ 1. flaky |> runs after slow and fast alone
+```
+:::
+
 ### poolOptions<NonProjectOption /> {#pooloptions}
 
 - **Type:** `Record<'threads' | 'forks' | 'vmThreads' | 'vmForks', {}>`
