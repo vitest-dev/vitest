@@ -703,19 +703,19 @@ test('can feed dogs', () => {
 Now, when we create a new instance of the `Dog` class its `speak` method (alongside `feed` and `greet`) is already mocked:
 
 ```ts
-const dog = new Dog('Cooper')
-dog.speak() // loud bark!
-dog.greet() // Hi! My name is Cooper!
+const Cooper = new Dog('Cooper')
+Cooper.speak() // loud bark!
+Cooper.greet() // Hi! My name is Cooper!
 
 // you can use built-in assertions to check the validity of the call
-expect(dog.speak).toHaveBeenCalled()
-expect(dog.greet).toHaveBeenCalled()
+expect(Cooper.speak).toHaveBeenCalled()
+expect(Cooper.greet).toHaveBeenCalled()
 
-const dog2 = new Dog('Max')
+const Max = new Dog('Max')
 
 // methods assigned to the prototype are shared between instances
-expect(dog2.speak).toHaveBeenCalled()
-expect(dog2.greet).not.toHaveBeenCalled()
+expect(Max.speak).toHaveBeenCalled()
+expect(Max.greet).not.toHaveBeenCalled()
 ```
 
 We can reassign the return value for a specific instance:
