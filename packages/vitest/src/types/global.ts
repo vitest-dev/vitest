@@ -34,6 +34,9 @@ interface InlineSnapshotMatcher<T> {
 }
 
 declare module '@vitest/expect' {
+  // Allow unused `T` to preserve its name for extensions.
+  // Type parameter names must be identical when extending those types.
+  // eslint-disable-next-line
   interface Matchers<T> {}
 
   interface MatcherState {

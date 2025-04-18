@@ -89,6 +89,9 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
   (this: T, received: any, ...expected: E): ExpectationResult
 }
 
+// Allow unused `T` to preserve its name for extensions.
+// Type parameter names must be identical when extending those types.
+// eslint-disable-next-line
 export interface Matchers<T = any> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
