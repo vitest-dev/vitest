@@ -311,8 +311,7 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
       testerHtmlPath: testerHtmlPath ?? currentConfig.testerHtmlPath,
       screenshotDirectory: screenshotDirectory ?? currentConfig.screenshotDirectory,
       screenshotFailures: screenshotFailures ?? currentConfig.screenshotFailures,
-      // TODO: test that CLI arg is preferred over the local config
-      headless: project.vitest._options?.browser?.headless ?? headless ?? currentConfig.headless,
+      headless: headless ?? currentConfig.headless,
       name: browser,
       providerOptions: config,
       instances: undefined, // projects cannot spawn more configs
