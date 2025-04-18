@@ -286,3 +286,19 @@ export class CounterMap<K> extends DefaultMap<K, number> {
     return total
   }
 }
+
+export class PromiseMap<K, V> extends Map<K, V> {
+  private inner = new Map<K, Promise<V>>()
+
+  getOrCreate(key: K, createFn: () => Promise<V>): Promise<V> {
+    let promise = this.inner.get(key)
+    if (!promise) {
+      promise = createFn().then((value) => {
+        this.set(key, value)
+        return value
+      })
+      this.inner.set(key, promise)
+    }
+    return promise
+  }
+}

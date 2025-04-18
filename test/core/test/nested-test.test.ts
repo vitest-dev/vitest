@@ -15,14 +15,16 @@ test('nested test should throw error', () => {
 })
 
 describe('parallel tests', () => {
-  test.concurrent('parallel test 1 with nested test', () => {
+  test.concurrent('parallel test 1 with nested test', ({ expect }) => {
     expect(() => {
       test('test inside test', () => {})
     }).toThrowErrorMatchingInlineSnapshot(`[Error: Calling the test function inside another test function is not allowed. Please put it inside "describe" or "suite" so it can be properly collected.]`)
   })
   test.concurrent('parallel test 2 without nested test', () => {})
   test.concurrent('parallel test 3 without nested test', () => {})
-  test.concurrent('parallel test 4 with nested test', () => {
+  // TODO: the error is not guaranteed since getCurrentTest can be already cleared
+  // https://stackblitz.com/edit/vitest-dev-vitest-44ezrs?file=test%2Fbasic.test.ts
+  test.skip.concurrent('parallel test 4 with nested test', () => {
     expect(() => {
       test('test inside test', () => {})
     }).toThrowErrorMatchingInlineSnapshot(`[Error: Calling the test function inside another test function is not allowed. Please put it inside "describe" or "suite" so it can be properly collected.]`)

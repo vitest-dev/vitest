@@ -57,12 +57,21 @@ export class VitestTestRunner implements VitestRunner {
       for (const test of getTests(suite)) {
         if (test.mode === 'skip') {
           const name = getNames(test).slice(1).join(' > ')
-          this.snapshotClient.skipTest(suite.file.filepath, name)
+          await this.snapshotClient.setupTest(
+            test.file.filepath,
+            test.id,
+            this.workerState.config.snapshotOptions,
+          )
+          this.snapshotClient.skipTest(test.id, name)
+          // this.snapshotClient.skipTest(suite.file.filepath, name)
         }
       }
 
       const result = await this.snapshotClient.finish(suite.file.filepath)
-      await rpc().snapshotSaved(result)
+      if (result) {
+        await rpc().snapshotSaved(result)
+      }
+      // await rpc().snapshotSaved(result)
     }
 
     this.workerState.current = suite.suite || suite.file
@@ -106,18 +115,22 @@ export class VitestTestRunner implements VitestRunner {
     }
 
     // initialize snapshot state before running file suite
-    if (suite.mode !== 'skip' && 'filepath' in suite) {
-      await this.snapshotClient.setup(
-        suite.file.filepath,
-        this.workerState.config.snapshotOptions,
-      )
-    }
+    // if (suite.mode !== 'skip' && 'filepath' in suite) {
+    //   await this.snapshotClient.setup(
+    //     suite.file.filepath,
+    //     this.workerState.config.snapshotOptions,
+    //   )
+    // }
 
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task): void {
-    this.snapshotClient.clearTest(test.file.filepath, test.id)
+  async onBeforeTryTask(test: Task): Promise<void> {
+    const snapshotState = await this.snapshotClient.setupTest(
+      test.file.filepath,
+      test.id,
+      this.workerState.config.snapshotOptions,
+    )
     setState(
       {
         assertionCalls: 0,
@@ -126,7 +139,7 @@ export class VitestTestRunner implements VitestRunner {
         expectedAssertionsNumber: null,
         expectedAssertionsNumberErrorGen: null,
         currentTestName: getTestName(test),
-        snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
+        snapshotState,
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )

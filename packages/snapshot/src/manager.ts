@@ -23,6 +23,7 @@ export class SnapshotManager {
     addSnapshotResult(this.summary, result)
   }
 
+  // TODO: can remove in favor of SnapshotEnvironment.resolvePath?
   resolvePath<T = any>(testPath: string, context?: T): string {
     const resolver
       = this.options.resolveSnapshotPath || (() => {

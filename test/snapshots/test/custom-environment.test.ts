@@ -23,6 +23,7 @@ test('custom environment resolved correctly', async () => {
   expect(snapshotLogs).toMatchInlineSnapshot(`
     "## resolvePath test/fixtures/custom-snapshot-environment/test/snapshots.test.ts
     ## readSnapshotFile test/fixtures/custom-snapshot-environment/test/__snapshots__/snapshots.test.ts.snap
+    ## resolvePath test/fixtures/custom-snapshot-environment/test/snapshots.test.ts
     ## getHeader
     ## getVersion
     ## readSnapshotFile test/fixtures/custom-snapshot-environment/test/__snapshots__/snapshots.test.ts.snap
