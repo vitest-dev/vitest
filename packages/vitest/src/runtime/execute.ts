@@ -100,7 +100,7 @@ function getVitestImport(id: string, state: () => WorkerGlobalState) {
   // always externalize Vitest because we import from there before running tests
   // so we already have it cached by Node.js
   const root = state().config.root
-  const relativeRoot = relativeIds[root] || (relativeIds[root] = normalizedDistDir.slice(root.length))
+  const relativeRoot = relativeIds[root] ?? (relativeIds[root] = normalizedDistDir.slice(root.length))
   if (
     // full dist path
     id.includes(distDir)
