@@ -482,6 +482,8 @@ export function resolveConfig(
 
   resolved.pool ??= 'threads'
 
+  resolved.poolOrder ??= 0
+
   if (process.env.VITEST_MAX_THREADS) {
     resolved.poolOptions = {
       ...resolved.poolOptions,
