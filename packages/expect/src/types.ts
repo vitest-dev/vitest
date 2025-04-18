@@ -85,14 +85,21 @@ export type AsyncExpectationResult = Promise<SyncExpectationResult>
 
 export type ExpectationResult = SyncExpectationResult | AsyncExpectationResult
 
-export interface RawMatcherFn<T extends MatcherState = MatcherState> {
-  (this: T, received: any, ...expected: Array<any>): ExpectationResult
+export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends Array<any> = Array<any>> {
+  (this: T, received: any, ...expected: E): ExpectationResult
 }
+
+// Allow unused `T` to preserve its name for extensions.
+// Type parameter names must be identical when extending those types.
+// eslint-disable-next-line
+export interface Matchers<T = any> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
-> & ThisType<T>
+> & ThisType<T> & {
+  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
+}
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
