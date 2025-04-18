@@ -602,10 +602,15 @@ class Dog {
 
   constructor(name: string) {
     this.name = name
+    this.greet = this.greet.bind(this)
   }
 
   static getType(): string {
     return 'animal'
+  }
+
+  greet(): string {
+    return `Hi! My name is ${this.name}!`
   }
 
   speak(): string {
@@ -622,6 +627,8 @@ We can re-create this class with ES5 functions:
 ```ts
 const Dog = vi.fn(function (name) {
   this.name = name
+  // mock bound methods in the constructor, each instance will have its own spy
+  this.greet = vi.fn(() => `Hi! My name is ${name}!`)
 })
 
 // notice that static methods are mocked directly on the function,
@@ -629,10 +636,30 @@ const Dog = vi.fn(function (name) {
 Dog.getType = vi.fn(() => 'mocked animal')
 
 // mock the "speak" and "feed" methods on every instance of a class
-// all `new Dog()` instances will inherit these spies
+// all `new Dog()` instances will inherit and share these spies
 Dog.prototype.speak = vi.fn(() => 'loud bark!')
 Dog.prototype.feed = vi.fn()
 ```
+
+::: warning
+If a non-primitive is returned from the constructor function, that value will become the result of the new expression. In this case the `[[Prototype]]` may not be correctly bound:
+
+```ts
+const CorrectDogClass = vi.fn(function (name) {
+  this.name = name
+})
+
+const IncorrectDogClass = vi.fn(name => ({
+  name
+}))
+
+const Marti = new CorrectDogClass('Marti')
+const Newt = new IncorrectDogClass('Newt')
+
+Marti instanceof CorrectDogClass // true
+Newt instanceof IncorrectDogClass // false!
+```
+:::
 
 ::: tip WHEN TO USE?
 Generally speaking, you would re-create a class like this inside the module factory if the class is re-exported from another module:
@@ -673,14 +700,22 @@ test('can feed dogs', () => {
 ```
 :::
 
-Now, when we create a new instance of the `Dog` class its `speak` method (alongside `feed`) is already mocked:
+Now, when we create a new instance of the `Dog` class its `speak` method (alongside `feed` and `greet`) is already mocked:
 
 ```ts
 const dog = new Dog('Cooper')
 dog.speak() // loud bark!
+dog.greet() // Hi! My name is Cooper!
 
 // you can use built-in assertions to check the validity of the call
 expect(dog.speak).toHaveBeenCalled()
+expect(dog.greet).toHaveBeenCalled()
+
+const dog2 = new Dog('Max')
+
+// methods assigned to the prototype are shared between instances
+expect(dog2.speak).toHaveBeenCalled()
+expect(dog2.greet).not.toHaveBeenCalled()
 ```
 
 We can reassign the return value for a specific instance:
