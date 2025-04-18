@@ -178,6 +178,32 @@ _x_examples_profiling_test_prime-number_test_ts-1413378098.js
 _src_prime-number_ts-525172412.js
 ```
 
+## Code coverage
+
+If code coverage generation is slow on your project you can use `DEBUG=vitest:coverage` environment variable to enable performance logging.
+
+```bash
+$ DEBUG=vitest:coverage vitest --run --coverage
+
+ RUN  v3.1.1 /x/vitest-example
+
+  vitest:coverage Reading coverage results 2/2
+  vitest:coverage Converting 1/2
+  vitest:coverage 4 ms /x/src/multiply.ts
+  vitest:coverage Converting 2/2
+  vitest:coverage 552 ms /x/src/add.ts
+  vitest:coverage Uncovered files 1/2
+  vitest:coverage File "/x/src/large-file.ts" is taking longer than 3s # [!code error]
+  vitest:coverage 3027 ms /x/src/large-file.ts
+  vitest:coverage Uncovered files 2/2
+  vitest:coverage 4 ms /x/src/untested-file.ts
+  vitest:coverage Generate coverage total time 3521 ms
+```
+
+This profiling approach is great for detecting large files that are accidentally picked by coverage providers.
+For example if your configuration is accidentally including large built minified Javascript files in code coverage, they should appear in logs.
+In these cases you might want to adjust your [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude) options.
+
 ## Inspecting profiling records
 
 You can inspect the contents of `*.cpuprofile` and `*.heapprofile` with various tools. See list below for examples.

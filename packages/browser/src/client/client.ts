@@ -1,3 +1,4 @@
+import type { ModuleMocker } from '@vitest/mocker/browser'
 import type { CancelReason } from '@vitest/runner'
 import type { BirpcReturn } from 'birpc'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from '../node/types'
@@ -52,11 +53,19 @@ function createClient() {
   ctx.rpc = createBirpc<WebSocketBrowserHandlers, WebSocketBrowserEvents>(
     {
       onCancel: setCancel,
-      async createTesters(files: string[]) {
-        if (PAGE_TYPE !== 'orchestrator') {
-          return
+      async createTesters(options) {
+        const orchestrator = getBrowserState().orchestrator
+        if (!orchestrator) {
+          throw new TypeError('Only orchestrator can create testers.')
         }
-        getBrowserState().createTesters?.(files)
+        return orchestrator.createTesters(options)
+      },
+      async cleanupTesters() {
+        const orchestrator = getBrowserState().orchestrator
+        if (!orchestrator) {
+          throw new TypeError('Only orchestrator can cleanup testers.')
+        }
+        return orchestrator.cleanupTesters()
       },
       cdpEvent(event: string, payload: unknown) {
         const cdp = getBrowserState().cdp
@@ -65,10 +74,26 @@ function createClient() {
         }
         cdp.emit(event, payload)
       },
+      async resolveManualMock(url: string) {
+        // @ts-expect-error not typed global API
+        const mocker = globalThis.__vitest_mocker__ as ModuleMocker | undefined
+        const responseId = getBrowserState().sessionId
+        if (!mocker) {
+          return { url, keys: [], responseId }
+        }
+        const exports = await mocker.resolveFactoryModule(url)
+        const keys = Object.keys(exports)
+        return {
+          url,
+          keys,
+          responseId,
+        }
+      },
     },
     {
       post: msg => ctx.ws.send(msg),
       on: fn => (onMessage = fn),
+      timeout: -1, // createTesters can take a while
       serialize: e =>
         stringify(e, (_, v) => {
           if (v instanceof Error) {

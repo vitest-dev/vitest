@@ -58,7 +58,7 @@ export default defineConfig({
           ? playwrightInstances
           : webdriverioInstances,
       provider,
-      isolate: false,
+      // isolate: false,
       testerScripts: [
         {
           content: 'globalThis.__injected = []',
@@ -115,6 +115,12 @@ export default defineConfig({
         if (id.includes('/__vitest__/')) {
           throw new Error(`Unexpected transform: ${id}`)
         }
+      },
+    },
+    {
+      name: 'test-early-transform',
+      async configureServer(server) {
+        await server.ssrLoadModule('/package.json')
       },
     },
   ],

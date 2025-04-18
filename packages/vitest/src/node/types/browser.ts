@@ -1,7 +1,9 @@
+import type { MockedModule } from '@vitest/mocker'
 import type { CancelReason } from '@vitest/runner'
 import type { Awaitable, ErrorWithDiff, ParsedStack } from '@vitest/utils'
 import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { ViteDevServer } from 'vite'
+import type { BrowserTesterOptions } from '../../types/browser'
 import type { TestProject } from '../project'
 import type { ApiConfig, ProjectConfig } from './config'
 
@@ -17,8 +19,15 @@ export interface CDPSession {
   off: (event: string, listener: (...args: unknown[]) => void) => void
 }
 
+export interface BrowserModuleMocker {
+  register: (sessionId: string, module: MockedModule) => Promise<void>
+  delete: (sessionId: string, url: string) => Promise<void>
+  clear: (sessionId: string) => Promise<void>
+}
+
 export interface BrowserProvider {
   name: string
+  mocker?: BrowserModuleMocker
   /**
    * @experimental opt-in into file parallelisation
    */
@@ -236,16 +245,14 @@ export interface BrowserCommandContext {
 }
 
 export interface BrowserServerStateSession {
-  files: string[]
-  method: 'run' | 'collect'
   project: TestProject
   connected: () => void
-  resolve: () => void
-  reject: (v: unknown) => void
+  fail: (v: Error) => void
 }
 
 export interface BrowserOrchestrator {
-  createTesters: (files: string[]) => Promise<void>
+  cleanupTesters: () => Promise<void>
+  createTesters: (options: BrowserTesterOptions) => Promise<void>
   onCancel: (reason: CancelReason) => Promise<void>
   $close: () => void
 }
