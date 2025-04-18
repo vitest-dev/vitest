@@ -30,6 +30,16 @@ test('infers matcher declaration type from a custom matcher type', () => {
   expect('a').toEqualMultiple('a', 1)
 })
 
+test('automatically extends asymmetric matchers', () => {
+  expect({}).toEqual({
+    nestedSchema: expect.toMatchSchema({
+      a: '1',
+      // @ts-expect-error Unknown property.
+      b: 2,
+    }),
+  })
+})
+
 test('treats matcher declarations as optional', () => {
   expect.extend(
     /**
