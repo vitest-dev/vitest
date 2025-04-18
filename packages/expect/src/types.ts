@@ -95,7 +95,7 @@ export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
 > & ThisType<T> & {
-  [K in keyof Matchers<T>]: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
+  [K in keyof Matchers<T>]?: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
 }
 
 export interface ExpectStatic
