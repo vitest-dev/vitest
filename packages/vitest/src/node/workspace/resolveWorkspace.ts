@@ -178,9 +178,8 @@ export async function resolveBrowserWorkspace(
       return
     }
     const instances = project.config.browser.instances || []
-    if (instances.length === 0) {
-      const browser = project.config.browser.name
-      // browser.name should be defined, otherwise the config fails in "resolveConfig"
+    const browser = project.config.browser.name
+    if (instances.length === 0 && browser) {
       instances.push({
         browser,
         name: project.name ? `${project.name} (${browser})` : browser,

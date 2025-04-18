@@ -288,7 +288,16 @@ export class Vitest {
     }))
 
     if (!this.projects.length) {
-      throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
+      const filter = toArray(resolved.project).join('", "')
+      if (filter) {
+        throw new Error(`No projects matched the filter "${filter}".`)
+      }
+      else if (options.browser?.enabled) {
+        throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
+      }
+      else {
+        throw new Error(`Vitest wasn't able to resolve any project.`)
+      }
     }
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
