@@ -234,7 +234,12 @@ export function resolveConfig(
 
   const browser = resolved.browser
 
-  if (browser.enabled) {
+  // if browser was enabled via CLI and it's configured by the user, then validate the input
+  if (browser.enabled && viteConfig.test?.browser) {
+    if (!browser.name && !browser.instances) {
+      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
+    }
+
     const instances = browser.instances
     if (browser.name && browser.instances) {
       // --browser=chromium filters configs to a single one
