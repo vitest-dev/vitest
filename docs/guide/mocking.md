@@ -656,7 +656,7 @@ const IncorrectDogClass = vi.fn(name => ({
 const Marti = new CorrectDogClass('Marti')
 const Newt = new IncorrectDogClass('Newt')
 
-Marti instanceof CorrectDogClass // true
+Marti instanceof CorrectDogClass // ✅ true
 Newt instanceof IncorrectDogClass // false!
 ```
 :::
