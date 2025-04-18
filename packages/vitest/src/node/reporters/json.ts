@@ -38,6 +38,14 @@ export interface JsonAssertionResult {
   duration?: Milliseconds | null
   failureMessages: Array<string> | null
   location?: Callsite | null
+  /**
+   * The amount of times the test was retried.
+   */
+  readonly retryCount: number
+  /**
+   * If test passed on a second or later retry.
+   */
+  readonly flaky: boolean
 }
 
 export interface JsonTestResult {
@@ -139,6 +147,10 @@ export class JsonReporter implements Reporter {
           iter = iter.suite
         }
         ancestorTitles.reverse()
+        const entity = this.ctx.state.getReportedEntity(t)
+        const diagnostic = entity?.type === 'test' ? entity.diagnostic() : null
+        const flaky = diagnostic?.flaky ?? false
+        const retryCount = diagnostic?.retryCount ?? 0
 
         return {
           ancestorTitles,
@@ -152,6 +164,8 @@ export class JsonReporter implements Reporter {
             t.result?.errors?.map(e => e.stack || e.message) || [],
           location: t.location,
           meta: t.meta,
+          retryCount,
+          flaky,
         } satisfies JsonAssertionResult
       })
 
