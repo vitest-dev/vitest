@@ -6,7 +6,7 @@ interface CustomMatchers<R = unknown> {
 }
 
 declare module 'vitest' {
-  interface Matchers extends CustomMatchers {}
+  interface Matchers<T = any> extends CustomMatchers<T> {}
 }
 
 test('infers matcher declaration type from a custom matcher type', () => {
@@ -30,18 +30,13 @@ test('infers matcher declaration type from a custom matcher type', () => {
   expect('a').toEqualMultiple('a', 1)
 })
 
-test('errors on missing matcher declarations', () => {
+test('treats matcher declarations as optional', () => {
   expect.extend(
-    // @ts-expect-error Missing declaration for all custom matchers.
+    /**
+     * @note Although annotated, you don't have to declare matchers.
+     * You can call `expect.extend()` multiple times or get the matcher
+     * declarations from a third-party library.
+     */
     {},
-  )
-
-  expect.extend(
-    // @ts-expect-error Missing declaration for some custom matchers.
-    {
-      toMatchSchema(_received, _expected) {
-        return { pass: true, message: () => '' }
-      },
-    },
   )
 })

@@ -34,7 +34,7 @@ interface InlineSnapshotMatcher<T> {
 }
 
 declare module '@vitest/expect' {
-  interface Matchers<_T> {}
+  interface Matchers<T> {}
 
   interface MatcherState {
     environment: string
