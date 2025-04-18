@@ -93,10 +93,10 @@ This methods accepts a config glob pattern, a filepath to the config or an inlin
 ```ts
 // inject a single project with a custom alias
 const newProjects = await injectTestProjects({
-  // you can inherit the current project config by referencing `configFile`
+  // you can inherit the current project config by referencing `extends`
   // note that you cannot have a project with the name that already exists,
   // so it's a good practice to define a custom name
-  configFile: project.vite.config.configFile,
+  extends: project.vite.config.configFile,
   test: {
     name: 'my-custom-alias',
     alias: {
@@ -117,7 +117,7 @@ Note that this will only affect projects injected with [`injectTestProjects`](#i
 :::
 
 ::: tip Referencing the Current Config
-If you want to keep the user configuration, you can specify the `configFile` property. All other properties will be merged with the user defined config.
+If you want to keep the user configuration, you can specify the `extends` property. All other properties will be merged with the user defined config.
 
 The project's `configFile` can be accessed in Vite's config: `project.vite.config.configFile`.
 
