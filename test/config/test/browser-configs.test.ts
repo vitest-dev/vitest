@@ -1,5 +1,6 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { UserConfig, VitestOptions } from 'vitest/node'
+import crypto from 'node:crypto'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
