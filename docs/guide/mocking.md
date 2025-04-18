@@ -602,14 +602,13 @@ class Dog {
 
   constructor(name: string) {
     this.name = name
-    this.greet = this.greet.bind(this)
   }
 
   static getType(): string {
     return 'animal'
   }
 
-  greet(): string {
+  greet = (): string => {
     return `Hi! My name is ${this.name}!`
   }
 
@@ -627,8 +626,8 @@ We can re-create this class with ES5 functions:
 ```ts
 const Dog = vi.fn(function (name) {
   this.name = name
-  // mock bound methods in the constructor, each instance will have its own spy
-  this.greet = vi.fn(() => `Hi! My name is ${name}!`)
+  // mock instance methods in the constructor, each instance will have its own spy
+  this.greet = vi.fn(() => `Hi! My name is ${this.name}!`)
 })
 
 // notice that static methods are mocked directly on the function,
