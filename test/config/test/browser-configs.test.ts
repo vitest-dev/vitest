@@ -350,6 +350,13 @@ function getCliConfig(options: UserConfig, cli: string[], fs: Record<string, str
     `,
   })
   return runVitestCli(
+    {
+      nodeOptions: {
+        env: {
+          CI: 'false',
+        },
+      },
+    },
     '--root',
     root,
     '--no-watch',
