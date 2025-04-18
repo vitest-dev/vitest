@@ -6,7 +6,7 @@ import { isBrowser, isV8Provider, readCoverageMap, runVitest, test } from '../ut
 beforeAll(async () => {
   await runVitest({
     include: ['fixtures/test/vue-fixture.test.ts'],
-    coverage: { reporter: ['json', 'html'], all: false },
+    coverage: { reporter: ['json', 'html'] },
   })
 })
 

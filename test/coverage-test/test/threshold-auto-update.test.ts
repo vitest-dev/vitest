@@ -38,7 +38,6 @@ test('thresholds.autoUpdate updates thresholds', async () => {
 
   await runVitest({
     include: ['fixtures/test/math.test.ts', 'fixtures/test/even.test.ts'],
-    coverage: { all: false },
     config,
   }, { throwOnError: false })
 

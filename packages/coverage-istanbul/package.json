@@ -52,7 +52,6 @@
     "istanbul-lib-source-maps": "catalog:",
     "istanbul-reports": "catalog:",
     "magicast": "catalog:",
-    "test-exclude": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
@@ -62,7 +61,6 @@
     "@types/istanbul-lib-report": "catalog:",
     "@types/istanbul-lib-source-maps": "catalog:",
     "@types/istanbul-reports": "catalog:",
-    "@types/test-exclude": "catalog:",
     "pathe": "catalog:",
     "vitest": "workspace:*"
   }

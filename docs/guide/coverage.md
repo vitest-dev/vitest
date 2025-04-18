@@ -18,7 +18,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     coverage: {
-      provider: 'istanbul' // or 'v8'
+      provider: 'v8' // or 'istanbul'
     },
   },
 })
@@ -39,14 +39,13 @@ npm i -D @vitest/coverage-istanbul
 
 ## Coverage Setup
 
-:::tip
-It's recommended to always define [`coverage.include`](https://vitest.dev/config/#coverage-include) in your configuration file.
-This helps Vitest to reduce the amount of files picked by [`coverage.all`](https://vitest.dev/config/#coverage-all).
+::: tip
+All coverage options are listed in [Coverage Config Reference](/config/#coverage).
 :::
 
-To test with coverage enabled, you can pass the `--coverage` flag in CLI.
-By default, reporter `['text', 'html', 'clover', 'json']` will be used.
+To test with coverage enabled, you can pass the `--coverage` flag in CLI or set `coverage.enabled` in `vitest.config.ts`:
 
+::: code-group
 ```json [package.json]
 {
   "scripts": {
@@ -55,20 +54,92 @@ By default, reporter `['text', 'html', 'clover', 'json']` will be used.
   }
 }
 ```
-
-To configure it, set `test.coverage` options in your config file:
-
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      enabled: true
     },
   },
 })
 ```
+:::
+
+## Including and excluding files from coverage report
+
+You can define what files are shown in coverage report by configuring [`coverage.include`](/config/#coverage-include) and [`coverage.exclude`](/config/#coverage-exclude).
+
+By default Vitest will show only files that were imported during test run.
+To include uncovered files in the report, you'll need to configure [`coverage.include`](/config/#coverage-include) with a pattern that will pick your source files:
+
+::: code-group
+```ts [vitest.config.ts] {6}
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      include: ['src/**.{ts,tsx}']
+    },
+  },
+})
+```
+```sh [Covered Files]
+├── src
+│   ├── components
+│   │   └── counter.tsx   # [!code ++]
+│   ├── mock-data
+│   │   ├── products.json # [!code error]
+│   │   └── users.json    # [!code error]
+│   └── utils
+│       ├── formatters.ts # [!code ++]
+│       ├── time.ts       # [!code ++]
+│       └── users.ts      # [!code ++]
+├── test
+│   └── utils.test.ts     # [!code error]
+│
+├── package.json          # [!code error]
+├── tsup.config.ts        # [!code error]
+└── vitest.config.ts      # [!code error]
+```
+:::
+
+To exclude files that are matching `coverage.include`, you can define an additional [`coverage.exclude`](/config/#coverage-exclude):
+
+::: code-group
+```ts [vitest.config.ts] {7}
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      include: ['src/**.{ts,tsx}'],
+      exclude: ['**/utils/users.ts']
+    },
+  },
+})
+```
+```sh [Covered Files]
+├── src
+│   ├── components
+│   │   └── counter.tsx   # [!code ++]
+│   ├── mock-data
+│   │   ├── products.json # [!code error]
+│   │   └── users.json    # [!code error]
+│   └── utils
+│       ├── formatters.ts # [!code ++]
+│       ├── time.ts       # [!code ++]
+│       └── users.ts      # [!code error]
+├── test
+│   └── utils.test.ts     # [!code error]
+│
+├── package.json          # [!code error]
+├── tsup.config.ts        # [!code error]
+└── vitest.config.ts      # [!code error]
+```
+:::
 
 ## Custom Coverage Reporter
 
@@ -168,22 +239,6 @@ export default CustomCoverageProviderModule
 
 Please refer to the type definition for more details.
 
-## Changing the Default Coverage Folder Location
-
-When running a coverage report, a `coverage` folder is created in the root directory of your project. If you want to move it to a different directory, use the `test.coverage.reportsDirectory` property in the `vitest.config.js` file.
-
-```js [vitest.config.js]
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  test: {
-    coverage: {
-      reportsDirectory: './tests/unit/coverage'
-    }
-  }
-})
-```
-
 ## Ignoring Code
 
 Both coverage providers have their own ways how to ignore code from coverage reports:
@@ -210,10 +265,6 @@ For `v8` this does not cause any issues. You can use `v8 ignore` comments with T
 /* v8 ignore next 3 */
 if (condition) {
 ```
-
-## Other Options
-
-To see all configurable options for coverage, see the [coverage Config Reference](https://vitest.dev/config/#coverage).
 
 ## Coverage performance
 
