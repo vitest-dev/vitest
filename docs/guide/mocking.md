@@ -657,7 +657,7 @@ const Marti = new CorrectDogClass('Marti')
 const Newt = new IncorrectDogClass('Newt')
 
 Marti instanceof CorrectDogClass // ✅ true
-Newt instanceof IncorrectDogClass // false!
+Newt instanceof IncorrectDogClass // ❌ false!
 ```
 :::
 
