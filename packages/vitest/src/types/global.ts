@@ -34,7 +34,7 @@ interface InlineSnapshotMatcher<T> {
 }
 
 declare module '@vitest/expect' {
-  interface Matchers {}
+  interface Matchers<_T> {}
 
   interface MatcherState {
     environment: string
@@ -60,7 +60,7 @@ declare module '@vitest/expect' {
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 
-  interface Assertion<T> extends Matchers {
+  interface Assertion<T> extends Matchers<T> {
     // Snapshots are extended in @vitest/snapshot and are not part of @vitest/expect
     matchSnapshot: SnapshotMatcher<T>
     toMatchSnapshot: SnapshotMatcher<T>

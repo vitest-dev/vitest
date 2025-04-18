@@ -89,13 +89,13 @@ export interface RawMatcherFn<T extends MatcherState = MatcherState, E extends A
   (this: T, received: any, ...expected: E): ExpectationResult
 }
 
-export interface Matchers {}
+export interface Matchers<_T> {}
 
 export type MatchersObject<T extends MatcherState = MatcherState> = Record<
   string,
   RawMatcherFn<T>
 > & ThisType<T> & {
-  [K in keyof Matchers]: RawMatcherFn<T, Parameters<Matchers[K]>>
+  [K in keyof Matchers<T>]: RawMatcherFn<T, Parameters<Matchers<T>[K]>>
 }
 
 export interface ExpectStatic
