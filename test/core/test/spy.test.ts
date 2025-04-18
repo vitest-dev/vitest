@@ -29,4 +29,27 @@ describe('spyOn', () => {
 
     expect(hw.hello()).toEqual('hello world')
   })
+
+  test('spying copies properties from functions', () => {
+    function a() {}
+    a.HELLO_WORLD = true
+    const obj = {
+      a,
+    }
+    const spy = vi.spyOn(obj, 'a')
+    expect(obj.a.HELLO_WORLD).toBe(true)
+    expect((spy as any).HELLO_WORLD).toBe(true)
+  })
+
+  test('spying copies properties from classes', () => {
+    class A {
+      static HELLO_WORLD = true
+    }
+    const obj = {
+      A,
+    }
+    const spy = vi.spyOn(obj, 'A')
+    expect(obj.A.HELLO_WORLD).toBe(true)
+    expect((spy as any).HELLO_WORLD).toBe(true)
+  })
 })
