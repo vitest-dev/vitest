@@ -139,7 +139,6 @@ export async function startVitestExecutor(options: ContextExecutorOptions): Prom
 
   return await createVitestExecutor({
     async fetchModule(id) {
-      console.error('fetch', id)
       const vitest = getVitestImport(id, state)
       if (vitest) {
         return vitest
