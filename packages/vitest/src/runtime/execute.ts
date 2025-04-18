@@ -91,6 +91,36 @@ function listenForErrors(state: () => WorkerGlobalState) {
   })
 }
 
+const relativeIds: Record<string, string> = {}
+
+function getVitestImport(id: string, state: () => WorkerGlobalState) {
+  if (externalizeMap.has(id)) {
+    return { externalize: externalizeMap.get(id)! }
+  }
+  // always externalize Vitest because we import from there before running tests
+  // so we already have it cached by Node.js
+  const root = state().config.root
+  const relativeRoot = relativeIds[root] ?? (relativeIds[root] = normalizedDistDir.slice(root.length))
+  if (
+    // full dist path
+    id.includes(distDir)
+    || id.includes(normalizedDistDir)
+    // "relative" to root path:
+    // /node_modules/.pnpm/vitest/dist
+    || (relativeRoot && relativeRoot !== '/' && id.startsWith(relativeRoot))
+  ) {
+    const { path } = toFilePath(id, root)
+    const externalize = pathToFileURL(path).toString()
+    externalizeMap.set(id, externalize)
+    return { externalize }
+  }
+  if (bareVitestRegexp.test(id)) {
+    externalizeMap.set(id, id)
+    return { externalize: id }
+  }
+  return null
+}
+
 export async function startVitestExecutor(options: ContextExecutorOptions): Promise<VitestExecutor> {
   const state = (): WorkerGlobalState =>
     // @ts-expect-error injected untyped global
@@ -109,20 +139,9 @@ export async function startVitestExecutor(options: ContextExecutorOptions): Prom
 
   return await createVitestExecutor({
     async fetchModule(id) {
-      if (externalizeMap.has(id)) {
-        return { externalize: externalizeMap.get(id)! }
-      }
-      // always externalize Vitest because we import from there before running tests
-      // so we already have it cached by Node.js
-      if (id.includes(distDir) || id.includes(normalizedDistDir)) {
-        const { path } = toFilePath(id, state().config.root)
-        const externalize = pathToFileURL(path).toString()
-        externalizeMap.set(id, externalize)
-        return { externalize }
-      }
-      if (bareVitestRegexp.test(id)) {
-        externalizeMap.set(id, id)
-        return { externalize: id }
+      const vitest = getVitestImport(id, state)
+      if (vitest) {
+        return vitest
       }
 
       const result = await rpc().fetch(id, getTransformMode())
