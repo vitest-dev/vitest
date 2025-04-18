@@ -22,7 +22,7 @@ it('package', async () => {
 it('builtin', async () => {
   await expect(() => notFound.importBuiltin()).rejects.toMatchObject({
     code: 'ERR_MODULE_NOT_FOUND',
-    message: 'Cannot find module \'node:non-existing-builtin\'',
+    message: 'Cannot find package \'node:non-existing-builtin\'',
   })
 })
 
@@ -31,6 +31,6 @@ it('builtin', async () => {
 it('namespace', async () => {
   await expect(() => notFound.importNamespace()).rejects.toMatchObject({
     code: 'ERR_MODULE_NOT_FOUND',
-    message: 'Cannot find module \'non-existing-namespace:xyz\'',
+    message: 'Cannot find package \'non-existing-namespace:xyz\'',
   })
 })
