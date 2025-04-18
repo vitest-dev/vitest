@@ -37,6 +37,9 @@ page.extend({
     return new WebdriverIOLocator(getByTitleSelector(title, options))
   },
 
+  _createLocator(selector: string) {
+    return new WebdriverIOLocator(selector)
+  },
   elementLocator(element: Element) {
     return new WebdriverIOLocator(selectorEngine.generateSelectorSimple(element))
   },
