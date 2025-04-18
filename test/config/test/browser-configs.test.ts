@@ -354,6 +354,7 @@ function getCliConfig(options: UserConfig, cli: string[], fs: Record<string, str
       nodeOptions: {
         env: {
           CI: 'false',
+          GITHUB_ACTIONS: undefined,
         },
       },
     },
