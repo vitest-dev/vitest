@@ -97,12 +97,6 @@ function getVitestImport(id: string, state: () => WorkerGlobalState) {
   if (externalizeMap.has(id)) {
     return { externalize: externalizeMap.get(id)! }
   }
-  // always externalize Vitest because we import from there before running tests
-  // so we already have it cached by Node.js
-  if (bareVitestRegexp.test(id)) {
-    externalizeMap.set(id, id)
-    return { externalize: id }
-  }
   const root = state().config.root
   const relativeRoot = relativeIds[id] || (relativeIds[id] = normalizedDistDir.slice(root.length))
   if (
@@ -117,6 +111,12 @@ function getVitestImport(id: string, state: () => WorkerGlobalState) {
     const externalize = pathToFileURL(path).toString()
     externalizeMap.set(id, externalize)
     return { externalize }
+  }
+  // always externalize Vitest because we import from there before running tests
+  // so we already have it cached by Node.js
+  if (bareVitestRegexp.test(id)) {
+    externalizeMap.set(id, id)
+    return { externalize: id }
   }
   return null
 }
