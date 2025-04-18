@@ -97,23 +97,23 @@ function getVitestImport(id: string, state: () => WorkerGlobalState) {
   if (externalizeMap.has(id)) {
     return { externalize: externalizeMap.get(id)! }
   }
+  // always externalize Vitest because we import from there before running tests
+  // so we already have it cached by Node.js
   const root = state().config.root
-  const relativeRoot = relativeIds[id] || (relativeIds[id] = normalizedDistDir.slice(root.length))
+  const relativeRoot = relativeIds[root] || (relativeIds[root] = normalizedDistDir.slice(root.length))
   if (
     // full dist path
     id.includes(distDir)
     || id.includes(normalizedDistDir)
     // "relative" to root path:
     // /node_modules/.pnpm/vitest/dist
-    || id.startsWith(relativeRoot)
+    || (relativeRoot && relativeRoot !== '/' && id.startsWith(relativeRoot))
   ) {
     const { path } = toFilePath(id, root)
     const externalize = pathToFileURL(path).toString()
     externalizeMap.set(id, externalize)
     return { externalize }
   }
-  // always externalize Vitest because we import from there before running tests
-  // so we already have it cached by Node.js
   if (bareVitestRegexp.test(id)) {
     externalizeMap.set(id, id)
     return { externalize: id }
@@ -139,6 +139,7 @@ export async function startVitestExecutor(options: ContextExecutorOptions): Prom
 
   return await createVitestExecutor({
     async fetchModule(id) {
+      console.error('fetch', id)
       const vitest = getVitestImport(id, state)
       if (vitest) {
         return vitest
