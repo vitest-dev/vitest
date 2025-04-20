@@ -103,8 +103,8 @@ catalogs:
       specifier: ^7.0.1
       version: 7.0.1
     tinyglobby:
-      specifier: ^0.2.12
-      version: 0.2.12
+      specifier: ^0.2.13
+      version: 0.2.13
     tinyrainbow:
       specifier: ^2.0.0
       version: 2.0.0
@@ -224,8 +224,8 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0(picomatch@4.0.2)(rollup@4.40.0)
       tinyglobby:
-        specifier: ^0.2.12
-        version: 0.2.12
+        specifier: 'catalog:'
+        version: 0.2.13
       tsx:
         specifier: ^4.19.3
         version: 4.19.3
@@ -286,7 +286,7 @@ importers:
         version: 4.7.1
       tinyglobby:
         specifier: 'catalog:'
-        version: 0.2.12
+        version: 0.2.13
       unocss:
         specifier: 'catalog:'
         version: 0.65.4(postcss@8.5.3)(rollup@4.40.0)(vite@6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.3))
@@ -786,7 +786,7 @@ importers:
         version: 3.0.1
       tinyglobby:
         specifier: 'catalog:'
-        version: 0.2.12
+        version: 0.2.13
       tinyrainbow:
         specifier: 'catalog:'
         version: 2.0.0
@@ -993,7 +993,7 @@ importers:
         version: 0.3.2
       tinyglobby:
         specifier: 'catalog:'
-        version: 0.2.12
+        version: 0.2.13
       tinypool:
         specifier: ^1.0.2
         version: 1.0.2
@@ -6078,6 +6078,14 @@ packages:
       picomatch:
         optional: true
 
+  fdir@6.4.4:
+    resolution: {integrity: sha512-1NZP+GK4GfuAv3PqKvxQRDMjdSRZjnkq7KfhlNrCNNlZ0ygQFpebfrnfnq/W7fpUnAv9aGWmY1zKx7FYL3gwhg==}
+    peerDependencies:
+      picomatch: ^3 || ^4
+    peerDependenciesMeta:
+      picomatch:
+        optional: true
+
   fetch-blob@3.2.0:
     resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
     engines: {node: ^12.20 || >= 14.13}
@@ -8595,8 +8603,8 @@ packages:
   tinyexec@1.0.1:
     resolution: {integrity: sha512-5uC6DDlmeqiOwCPmK9jMSdOuZTh8bU39Ys6yidB+UTt5hfZUPGAypSgFRiEp+jbi9qH40BLDvy85jIU88wKSqw==}
 
-  tinyglobby@0.2.12:
-    resolution: {integrity: sha512-qkf4trmKSIiMTs/E63cxH+ojC2unam7rJ0WrauAzpT3ECNTxGRMlaXxVbfxMUC/w0LaYk6jQ4y/nGR9uBO3tww==}
+  tinyglobby@0.2.13:
+    resolution: {integrity: sha512-mEwzpUgrLySlveBwEVDMKk5B57bhLPYovRfPAXD5gA/98Opn0rCDj3GtLwFvCvH5RK9uPCExUROW5NjDwvqkxw==}
     engines: {node: '>=12.0.0'}
 
   tinyhighlight@0.3.2:
@@ -12114,7 +12122,7 @@ snapshots:
       magic-string: 0.30.17
       pathe: 1.1.2
       perfect-debounce: 1.0.0
-      tinyglobby: 0.2.12
+      tinyglobby: 0.2.13
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -12150,7 +12158,7 @@ snapshots:
       '@unocss/rule-utils': 0.65.4
       css-tree: 3.1.0
       postcss: 8.5.3
-      tinyglobby: 0.2.12
+      tinyglobby: 0.2.13
     transitivePeerDependencies:
       - supports-color
 
@@ -12233,7 +12241,7 @@ snapshots:
       '@unocss/inspector': 0.65.4(vue@3.5.12(typescript@5.8.3))
       chokidar: 3.6.0
       magic-string: 0.30.17
-      tinyglobby: 0.2.12
+      tinyglobby: 0.2.13
       vite: 6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
     transitivePeerDependencies:
       - rollup
@@ -12999,7 +13007,7 @@ snapshots:
       package-manager-detector: 1.1.0
       semver: 7.7.1
       tinyexec: 0.3.2
-      tinyglobby: 0.2.12
+      tinyglobby: 0.2.13
       yaml: 2.7.0
     transitivePeerDependencies:
       - magicast
@@ -14069,7 +14077,7 @@ snapshots:
       jsonc-eslint-parser: 2.4.0
       pathe: 2.0.3
       pnpm-workspace-yaml: 0.3.1
-      tinyglobby: 0.2.12
+      tinyglobby: 0.2.13
       yaml-eslint-parser: 1.3.0
 
   eslint-plugin-regexp@2.7.0(eslint@9.24.0(jiti@2.4.2)):
@@ -14408,6 +14416,10 @@ snapshots:
       pend: 1.2.0
 
   fdir@6.4.3(picomatch@4.0.2):
+    optionalDependencies:
+      picomatch: 4.0.2
+
+  fdir@6.4.4(picomatch@4.0.2):
     optionalDependencies:
       picomatch: 4.0.2
 
@@ -17337,9 +17349,9 @@ snapshots:
 
   tinyexec@1.0.1: {}
 
-  tinyglobby@0.2.12:
+  tinyglobby@0.2.13:
     dependencies:
-      fdir: 6.4.3(picomatch@4.0.2)
+      fdir: 6.4.4(picomatch@4.0.2)
       picomatch: 4.0.2
 
   tinyhighlight@0.3.2(picocolors@1.1.1):
@@ -17810,7 +17822,7 @@ snapshots:
       local-pkg: 1.1.1
       micromatch: 4.0.8
       picocolors: 1.1.1
-      tinyglobby: 0.2.12
+      tinyglobby: 0.2.13
       vite: 6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
       yaml: 2.7.0
     optionalDependencies:
@@ -17823,7 +17835,7 @@ snapshots:
     dependencies:
       debug: 4.4.0
       pretty-bytes: 6.1.1
-      tinyglobby: 0.2.12
+      tinyglobby: 0.2.13
       vite: 6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
       workbox-build: 7.1.0(@types/babel__core@7.20.5)
       workbox-window: 7.3.0

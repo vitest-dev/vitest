@@ -37,7 +37,7 @@ catalog:
   sirv: ^3.0.1
   std-env: ^3.9.0
   test-exclude: ^7.0.1
-  tinyglobby: ^0.2.12
+  tinyglobby: ^0.2.13
   tinyrainbow: ^2.0.0
   unocss: ^0.65.4
   unplugin-vue-components: ^0.28.0
