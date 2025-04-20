@@ -991,6 +991,9 @@ importers:
       tinyexec:
         specifier: ^0.3.2
         version: 0.3.2
+      tinyglobby:
+        specifier: 'catalog:'
+        version: 0.2.12
       tinypool:
         specifier: ^1.0.2
         version: 1.0.2
@@ -1088,9 +1091,6 @@ importers:
       strip-literal:
         specifier: ^3.0.0
         version: 3.0.0
-      tinyglobby:
-        specifier: 'catalog:'
-        version: 0.2.12
       ws:
         specifier: 'catalog:'
         version: 8.18.1
