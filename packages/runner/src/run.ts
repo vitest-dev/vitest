@@ -19,6 +19,7 @@ import type {
 import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
+import { getContextAbortController } from './context'
 import { AbortError, PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
@@ -27,7 +28,6 @@ import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
 import { partitionSuiteChildren } from './utils/suite'
 import { hasFailed, hasTests } from './utils/tasks'
-import { getContextAbortController } from './context'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
@@ -596,9 +596,9 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
 }
 
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
-  const cancel = runner.cancel
+  const cancel = runner.cancel?.bind(runner)
   runner.cancel = (reason) => {
-    getRunningTests().forEach(test => {
+    getRunningTests().forEach((test) => {
       const ac = getContextAbortController(test.context)
       ac?.abort(new AbortError('The test run was aborted by the user.'))
     })
