@@ -358,7 +358,7 @@ function createSuiteCollector(
           timeout,
           false,
           stackTraceError,
-          abortIfTimeout,
+          (_, error) => abortIfTimeout([context], error),
         ),
       )
     }
