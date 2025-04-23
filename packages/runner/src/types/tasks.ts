@@ -649,6 +649,8 @@ export interface TestContext {
    */
   task: Readonly<Test<TestContext>>
 
+  signal: AbortSignal
+
   /**
    * Extract hooks on test failed
    */

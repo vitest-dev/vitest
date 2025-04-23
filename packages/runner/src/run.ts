@@ -145,7 +145,11 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   async function runHook(hook: Function) {
-    return getBeforeHookCleanupCallback(hook, await hook(...args))
+    return getBeforeHookCleanupCallback(
+      hook,
+      await hook(...args),
+      name === 'beforeEach' ? args[0] : undefined,
+    )
   }
 
   if (sequence === 'parallel') {
