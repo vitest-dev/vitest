@@ -103,17 +103,17 @@
     "@vitest/ui": "workspace:*",
     "@vitest/ws-client": "workspace:*",
     "@wdio/protocols": "^9.12.5",
-    "@wdio/types": "^9.12.3",
+    "@wdio/types": "^9.12.6",
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.6.0",
     "mime": "^4.0.7",
     "pathe": "catalog:",
     "periscopic": "^4.0.2",
-    "playwright": "^1.51.1",
-    "playwright-core": "^1.51.1",
+    "playwright": "^1.52.0",
+    "playwright-core": "^1.52.0",
     "safaridriver": "^1.0.0",
     "vitest": "workspace:*",
-    "webdriverio": "^9.12.5"
+    "webdriverio": "^9.12.7"
   }
 }
