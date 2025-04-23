@@ -9,3 +9,8 @@ export class PendingError extends Error {
     this.taskId = task.id
   }
 }
+
+export class AbortError extends Error {
+  name = 'AbortError'
+  code = 20
+}

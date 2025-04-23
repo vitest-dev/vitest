@@ -19,14 +19,15 @@ import type {
 import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
-import { PendingError } from './errors'
+import { AbortError, PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
-import { setCurrentTest } from './test-state'
+import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
 import { partitionSuiteChildren } from './utils/suite'
 import { hasFailed, hasTests } from './utils/tasks'
+import { getContextAbortController } from './context'
 
 const now = globalThis.performance ? globalThis.performance.now.bind(globalThis.performance) : Date.now
 const unixNow = Date.now
@@ -278,6 +279,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   }
   updateTask('test-prepare', test, runner)
 
+  const cleanupRunningTest = addRunningTest(test)
   setCurrentTest(test)
 
   const suite = test.suite || test.file
@@ -378,6 +380,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
+        cleanupRunningTest()
         return
       }
 
@@ -409,6 +412,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
+  cleanupRunningTest()
   setCurrentTest(undefined)
 
   test.result.duration = now() - start
@@ -592,21 +596,35 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
 }
 
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
-  const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
-  await runner.onBeforeCollect?.(paths)
+  const cancel = runner.cancel
+  runner.cancel = (reason) => {
+    getRunningTests().forEach(test => {
+      const ac = getContextAbortController(test.context)
+      ac?.abort(new AbortError('The test run was aborted by the user.'))
+    })
+    return cancel?.(reason)
+  }
 
-  const files = await collectTests(specs, runner)
+  try {
+    const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
+    await runner.onBeforeCollect?.(paths)
 
-  await runner.onCollected?.(files)
-  await runner.onBeforeRunFiles?.(files)
+    const files = await collectTests(specs, runner)
 
-  await runFiles(files, runner)
+    await runner.onCollected?.(files)
+    await runner.onBeforeRunFiles?.(files)
 
-  await runner.onAfterRunFiles?.(files)
+    await runFiles(files, runner)
 
-  await finishSendTasksUpdate(runner)
+    await runner.onAfterRunFiles?.(files)
 
-  return files
+    await finishSendTasksUpdate(runner)
+
+    return files
+  }
+  finally {
+    runner.cancel = cancel
+  }
 }
 
 async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {

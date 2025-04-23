@@ -23,7 +23,6 @@ const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
 const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
-  // TODO: abortIfTimeout for afterEach
   if (typeof result === 'function') {
     const timeout
       = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
