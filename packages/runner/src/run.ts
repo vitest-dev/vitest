@@ -15,6 +15,7 @@ import type {
   TaskUpdateEvent,
   Test,
   TestContext,
+  WriteableTestContext,
 } from './types/tasks'
 import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
@@ -88,12 +89,14 @@ async function callTestHooks(
     return
   }
 
+  const context = test.context as WriteableTestContext
+
   const onTestFailed = test.context.onTestFailed
   const onTestFinished = test.context.onTestFinished
-  test.context.onTestFailed = () => {
+  context.onTestFailed = () => {
     throw new Error(`Cannot call "onTestFailed" inside a test hook.`)
   }
-  test.context.onTestFinished = () => {
+  context.onTestFinished = () => {
     throw new Error(`Cannot call "onTestFinished" inside a test hook.`)
   }
 
@@ -116,8 +119,8 @@ async function callTestHooks(
     }
   }
 
-  test.context.onTestFailed = onTestFailed
-  test.context.onTestFinished = onTestFinished
+  context.onTestFailed = onTestFailed
+  context.onTestFinished = onTestFinished
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(

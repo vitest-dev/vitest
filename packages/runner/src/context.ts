@@ -5,6 +5,7 @@ import type {
   SuiteCollector,
   Test,
   TestContext,
+  WriteableTestContext,
 } from './types/tasks'
 import { getSafeTimers } from '@vitest/utils'
 import { PendingError } from './errors'
@@ -125,7 +126,7 @@ export function createTestContext(
 ): TestContext {
   const context = function () {
     throw new Error('done() callback is deprecated, use promise instead')
-  } as unknown as TestContext
+  } as unknown as WriteableTestContext
 
   const ac = abortControllers.get(context) || (() => {
     const ac = new AbortController()

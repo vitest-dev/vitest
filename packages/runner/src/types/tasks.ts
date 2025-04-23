@@ -647,25 +647,29 @@ export interface TestContext {
   /**
    * Metadata of the current test
    */
-  task: Readonly<Test<TestContext>>
+  readonly task: Readonly<Test<TestContext>>
 
-  signal: AbortSignal
+  /**
+   * A signal object that will be aborted if the test times out or
+   * the user manually cancelled the test run with Ctrl+C.
+   */
+  readonly signal: AbortSignal
 
   /**
    * Extract hooks on test failed
    */
-  onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
+  readonly onTestFailed: (fn: OnTestFailedHandler, timeout?: number) => void
 
   /**
    * Extract hooks on test failed
    */
-  onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
+  readonly onTestFinished: (fn: OnTestFinishedHandler, timeout?: number) => void
 
   /**
    * Mark tests as skipped. All execution after this call will be skipped.
    * This function throws an error, so make sure you are not catching it accidentally.
    */
-  skip: {
+  readonly skip: {
     (note?: string): never
     (condition: boolean, note?: string): void
   }
@@ -689,3 +693,7 @@ export interface TaskHook<HookListener> {
 
 export type SequenceHooks = 'stack' | 'list' | 'parallel'
 export type SequenceSetupFiles = 'list' | 'parallel'
+
+export type WriteableTestContext = {
+  -readonly [P in keyof TestContext]: TestContext[P]
+}
