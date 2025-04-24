@@ -14,9 +14,9 @@ The first argument for each test callback is a test context.
 ```ts
 import { it } from 'vitest'
 
-it('should work', (ctx) => {
+it('should work', ({ task }) => {
   // prints name of the test
-  console.log(ctx.task.name)
+  console.log(task.name)
 })
 ```
 
@@ -63,6 +63,16 @@ it('math is hard', ({ skip }) => {
   skip()
   expect(2 + 2).toBe(5)
 })
+```
+
+#### `context.signal` <Version>3.2.0</Version> {#context-signal}
+
+A signal object that will be aborted if the test times out or the user manually cancelled the test run with Ctrl+C.
+
+```ts
+it('stop request when test times out', async ({ signal }) => {
+  await fetch('/resource', { signal })
+}, 2000)
 ```
 
 ## Extend Test Context
