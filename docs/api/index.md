@@ -167,7 +167,7 @@ test('skipped test', (context) => {
 })
 ```
 
-Since Vitest 3.1, if the condition is unknonwn, you can provide it to the `skip` method as the first arguments:
+Since Vitest 3.1, if the condition is unknown, you can provide it to the `skip` method as the first arguments:
 
 ```ts
 import { assert, test } from 'vitest'
