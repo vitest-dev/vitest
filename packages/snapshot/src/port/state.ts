@@ -60,6 +60,7 @@ export default class SnapshotState {
   private _snapshotData: SnapshotData
   private _initialData: SnapshotData
   private _inlineSnapshots: Array<InlineSnapshot>
+  // private _inlineSnapshotStacks: Array<ParsedStack & { testId: string }>
   private _inlineSnapshotStacks: Array<ParsedStack & { testId: string; snapshot: string }>
   private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
   private _rawSnapshots: Array<RawSnapshot>
@@ -67,6 +68,11 @@ export default class SnapshotState {
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
   private _fileExists: boolean
+  // private added = new CounterMap<string>()
+  // private matched = new CounterMap<string>()
+  // private unmatched = new CounterMap<string>()
+  // private updated = new CounterMap<string>()
+  // expand: boolean
   expand: boolean
 
   // getter/setter for jest-image-snapshot compat
@@ -84,7 +90,7 @@ export default class SnapshotState {
   get updated(): CounterMap<string> { return this._updated }
   set updated(value: number) { this._updated._total = value }
 
-  private constructor(
+  constructor(
     public testFilePath: string,
     public snapshotPath: string,
     snapshotContent: string | null,
@@ -142,6 +148,17 @@ export default class SnapshotState {
     // clear file
     for (const key of this._testIdToKeys.get(testId)) {
       const name = keyToTestName(key)
+      // const counter = this._counters.get(name)
+      // if (typeof counter !== 'undefined') {
+      //   if (key in this._snapshotData || key in this._initialData) {
+      //     this._snapshotData[key] = this._initialData[key]
+      //   }
+      //   if (counter > 0) {
+      //     this._counters.set(name, counter - 1)
+      //   }
+      //   else {
+      //     this._counters.delete(name)
+      //   }
       const count = this._counters.get(name)
       if (count > 0) {
         if (key in this._snapshotData || key in this._initialData) {
