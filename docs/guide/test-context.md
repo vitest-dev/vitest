@@ -67,7 +67,12 @@ it('math is hard', ({ skip }) => {
 
 #### `context.signal` <Version>3.2.0</Version> {#context-signal}
 
-A signal object that will be aborted if the test times out or the user manually cancelled the test run with Ctrl+C.
+A signal object that can be aborted by Vitest. The signal is aborted in these situations:
+
+- Test times out
+- User manually cancelled the test run with Ctrl+C
+- [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) was called programmatically
+- Another test failed in parallel and the [`bail`](/config/#bail) flag is set
 
 ```ts
 it('stop request when test times out', async ({ signal }) => {

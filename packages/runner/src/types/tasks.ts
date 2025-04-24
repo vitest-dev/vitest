@@ -651,7 +651,7 @@ export interface TestContext {
 
   /**
    * A signal object that will be aborted if the test times out or
-   * the user manually cancelled the test run with Ctrl+C.
+   * the test run was cancelled.
    */
   readonly signal: AbortSignal
 
