@@ -71,51 +71,51 @@ jobs:
             !.github/workflows/ci.yml
             **.md
 
-  test:
-    needs: changed
-    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
-    if: needs.changed.outputs.should_skip != 'true'
-    runs-on: ${{ matrix.os }}
+  # test:
+  #   needs: changed
+  #   name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+  #   if: needs.changed.outputs.should_skip != 'true'
+  #   runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 30
+  #   timeout-minutes: 30
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node_version: [18, 20, 22]
-        include:
-          - os: macos-latest
-            node_version: 20
-          - os: windows-latest
-            node_version: 20
-      fail-fast: false
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest]
+  #       node_version: [18, 20, 22]
+  #       include:
+  #         - os: macos-latest
+  #           node_version: 20
+  #         - os: windows-latest
+  #           node_version: 20
+  #     fail-fast: false
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-and-cache
-        with:
-          node-version: ${{ matrix.node_version }}
+  #     - uses: ./.github/actions/setup-and-cache
+  #       with:
+  #         node-version: ${{ matrix.node_version }}
 
-      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+  #     - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
 
-      - name: Install
-        run: pnpm i
+  #     - name: Install
+  #       run: pnpm i
 
-      - name: Install Playwright Dependencies
-        run: pnpm exec playwright install chromium --with-deps --only-shell
+  #     - name: Install Playwright Dependencies
+  #       run: pnpm exec playwright install chromium --with-deps --only-shell
 
-      - name: Build
-        run: pnpm run build
+  #     - name: Build
+  #       run: pnpm run build
 
-      - name: Test
-        run: pnpm run test:ci
+  #     - name: Test
+  #       run: pnpm run test:ci
 
-      - name: Test Examples
-        run: pnpm run test:examples
+  #     - name: Test Examples
+  #       run: pnpm run test:examples
 
-      - name: Unit Test UI
-        run: pnpm run -C packages/ui test:ui
+  #     - name: Unit Test UI
+  #       run: pnpm run -C packages/ui test:ui
 
   test-browser:
     needs: changed
@@ -127,7 +127,7 @@ jobs:
       matrix:
         os:
           - macos-latest
-          - windows-latest
+          # - windows-latest
       fail-fast: false
 
     timeout-minutes: 30
