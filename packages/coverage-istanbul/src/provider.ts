@@ -164,11 +164,22 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     )
   }
 
+  private async resolveIncludedFiles(root: string): Promise<string[]> {
+    const files = await this.testExclude.glob(root)
+    return files.map(file => resolve(root, file))
+  }
+
+  private async resolveProjectFiles(): Promise<string[]> {
+    const matrix = await Promise.all(this.ctx.projects.map(project =>
+      this.resolveIncludedFiles(project.config.root),
+    ))
+    return matrix.flatMap(files => files)
+  }
+
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
-    const allFiles = await this.testExclude.glob(this.ctx.config.root)
-    let includedFiles = allFiles.map(file =>
-      resolve(this.ctx.config.root, file),
-    )
+    let includedFiles = this.ctx.config.project.length
+      ? await this.resolveProjectFiles()
+      : await this.resolveIncludedFiles(this.ctx.config.root)
 
     if (this.ctx.config.changed) {
       includedFiles = (this.ctx.config.related || []).filter(file =>
