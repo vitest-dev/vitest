@@ -84,7 +84,7 @@
   "dependencies": {
     "cac": "catalog:",
     "debug": "catalog:",
-    "es-module-lexer": "^1.6.0",
+    "es-module-lexer": "^1.7.0",
     "pathe": "catalog:",
     "vite": "^5.0.0 || ^6.0.0"
   },
