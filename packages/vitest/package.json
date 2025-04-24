@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -169,6 +169,7 @@
     "std-env": "catalog:",
     "tinybench": "^2.9.0",
     "tinyexec": "^0.3.2",
+    "tinyglobby": "catalog:",
     "tinypool": "^1.0.2",
     "tinyrainbow": "catalog:",
     "vite": "^5.0.0 || ^6.0.0",
@@ -203,7 +204,6 @@
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
     "strip-literal": "^3.0.0",
-    "tinyglobby": "catalog:",
     "ws": "catalog:"
   }
 }
