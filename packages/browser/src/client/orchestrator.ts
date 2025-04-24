@@ -311,19 +311,20 @@ async function setIframeViewport(
     iframe.parentElement?.setAttribute('data-scale', '1')
   }
   else {
-    const scale = Math.min(
-      1,
-      iframe.parentElement!.parentElement!.clientWidth / width,
-      iframe.parentElement!.parentElement!.clientHeight / height,
-    )
-    iframe.parentElement!.style.cssText = `
-      width: ${width}px;
-      height: ${height}px;
-      transform: scale(${scale});
-      transform-origin: left top;
-    `
-    iframe.parentElement?.setAttribute('data-scale', String(scale))
-    await new Promise(r => requestAnimationFrame(r))
+    iframe.parentElement?.setAttribute('data-scale', '1')
+    // const scale = Math.min(
+    //   1,
+    //   iframe.parentElement!.parentElement!.clientWidth / width,
+    //   iframe.parentElement!.parentElement!.clientHeight / height,
+    // )
+    // iframe.parentElement!.style.cssText = `
+    //   width: ${width}px;
+    //   height: ${height}px;
+    //   transform: scale(${scale});
+    //   transform-origin: left top;
+    // `
+    // iframe.parentElement?.setAttribute('data-scale', String(scale))
+    // await new Promise(r => requestAnimationFrame(r))
   }
 }
 
