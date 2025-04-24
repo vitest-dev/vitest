@@ -127,13 +127,13 @@ export function createTestContext(
     throw new Error('done() callback is deprecated, use promise instead')
   } as unknown as WriteableTestContext
 
-  const ac = abortControllers.get(context) || (() => {
-    const ac = new AbortController()
-    abortControllers.set(context, ac)
-    return ac
+  const abortController = abortControllers.get(context) || (() => {
+    const abortController = new AbortController()
+    abortControllers.set(context, abortController)
+    return abortController
   })()
 
-  context.signal = ac.signal
+  context.signal = abortController.signal
   context.task = test
 
   context.skip = (condition?: boolean | string, note?: string): never => {
@@ -158,7 +158,7 @@ export function createTestContext(
         timeout ?? runner.config.hookTimeout,
         true,
         new Error('STACK_TRACE_ERROR'),
-        (_, error) => ac.abort(error),
+        (_, error) => abortController.abort(error),
       ),
     )
   }
@@ -171,7 +171,7 @@ export function createTestContext(
         timeout ?? runner.config.hookTimeout,
         true,
         new Error('STACK_TRACE_ERROR'),
-        (_, error) => ac.abort(error),
+        (_, error) => abortController.abort(error),
       ),
     )
   }
