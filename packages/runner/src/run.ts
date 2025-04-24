@@ -20,7 +20,7 @@ import type {
 import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
-import { getContextAbortController } from './context'
+import { abortContextSignal } from './context'
 import { AbortError, PendingError } from './errors'
 import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
@@ -601,10 +601,10 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const cancel = runner.cancel?.bind(runner)
   runner.cancel = (reason) => {
-    getRunningTests().forEach((test) => {
-      const ac = getContextAbortController(test.context)
-      ac?.abort(new AbortError('The test run was aborted by the user.'))
-    })
+    const error = new AbortError('The test run was aborted by the user.')
+    getRunningTests().forEach(test =>
+      abortContextSignal(test.context, error),
+    )
     return cancel?.(reason)
   }
 

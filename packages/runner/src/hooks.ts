@@ -10,7 +10,7 @@ import type {
   TestContext,
 } from './types/tasks'
 import { assertTypes } from '@vitest/utils'
-import { abortIfTimeout, getContextAbortController, withTimeout } from './context'
+import { abortContextSignal, abortIfTimeout, withTimeout } from './context'
 import { withFixtures } from './fixture'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
@@ -39,8 +39,7 @@ export function getBeforeHookCleanupCallback(hook: Function, result: any, contex
       stackTraceError,
       (_, error) => {
         if (context) {
-          const ac = getContextAbortController(context)
-          ac?.abort(error)
+          abortContextSignal(context, error)
         }
       },
     )

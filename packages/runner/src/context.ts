@@ -108,16 +108,15 @@ export function withTimeout<T extends (...args: any[]) => any>(
 
 const abortControllers = new WeakMap<TestContext, AbortController>()
 
-export function getContextAbortController(context: TestContext): AbortController | undefined {
-  return abortControllers.get(context)
+export function abortIfTimeout([context]: [TestContext?], error: Error): void {
+  if (context) {
+    abortContextSignal(context, error)
+  }
 }
 
-export function abortIfTimeout([context]: [TestContext?], error: Error): void {
-  if (!context) {
-    return
-  }
-  const ac = getContextAbortController(context)
-  ac?.abort(error)
+export function abortContextSignal(context: TestContext, error: Error): void {
+  const abortController = abortControllers.get(context)
+  abortController?.abort(error)
 }
 
 export function createTestContext(

@@ -647,7 +647,7 @@ export interface TestContext {
   /**
    * Metadata of the current test
    */
-  readonly task: Readonly<Test<TestContext>>
+  readonly task: Readonly<Test>
 
   /**
    * A signal object that will be aborted if the test times out or
