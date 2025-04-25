@@ -287,18 +287,22 @@ export class Vitest {
       }))
     }))
 
+    if (options.browser?.enabled) {
+      const browserProjects = this.projects.filter(p => p.config.browser.enabled)
+      if (!browserProjects.length) {
+        throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
+      }
+    }
     if (!this.projects.length) {
       const filter = toArray(resolved.project).join('", "')
       if (filter) {
         throw new Error(`No projects matched the filter "${filter}".`)
       }
-      else if (options.browser?.enabled) {
-        throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
-      }
       else {
         throw new Error(`Vitest wasn't able to resolve any project.`)
       }
     }
+
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
     }

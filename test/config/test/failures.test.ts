@@ -441,6 +441,12 @@ test('--browser flag without browser configuration throws an error', async () =>
   expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
 })
 
+test('--browser flag without browser configuration in workspaces throws an error', async () => {
+  const { stderr, exitCode } = await runVitestCli('--browser.enabled', '--root=./fixtures/no-browser-workspace')
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
+})
+
 test('browser.name filters all browser.instances are required', async () => {
   const { stderr } = await runVitest({}, {
     test: {
