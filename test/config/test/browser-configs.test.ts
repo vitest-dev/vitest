@@ -1,5 +1,6 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { UserConfig, VitestOptions } from 'vitest/node'
+import type { TestFsStructure } from '../../test-utils'
 import crypto from 'node:crypto'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test } from 'vitest'
@@ -307,7 +308,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   expect(projects[1].config.browser.headless).toBe(true)
 })
 
-function getCliConfig(options: UserConfig, cli: string[], fs: Record<string, string> = {}) {
+function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = {}) {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {
     ...fs,
@@ -324,6 +325,12 @@ function getCliConfig(options: UserConfig, cli: string[], fs: Record<string, str
             {
               onInit(vitest) {
                 const browser = vitest.config.browser
+                const workspace = (p) => ({
+                  name: p.name,
+                  headless: p.config.browser.headless,
+                  browser: p.config.browser.enabled,
+                  ui: p.config.browser.ui,
+                })
                 console.log(JSON.stringify({
                   browser: {
                     headless: browser.headless,
@@ -332,10 +339,8 @@ function getCliConfig(options: UserConfig, cli: string[], fs: Record<string, str
                   },
                   workspace: vitest.projects.map(p => {
                     return {
-                      name: p.name,
-                      headless: p.config.browser.headless,
-                      browser: p.config.browser.enabled,
-                      ui: p.config.browser.ui,
+                      ...workspace(p),
+                      parent: p._parent ? workspace(p._parent) : null,
                     }
                   })
                 }))
@@ -379,6 +384,7 @@ test('[e2e] CLI options correctly override inline workspace options', async () =
           browser: {
             enabled: true,
             headless: true,
+            provider: 'playwright',
             instances: [
               {
                 browser: 'chromium',
@@ -393,16 +399,29 @@ test('[e2e] CLI options correctly override inline workspace options', async () =
   const config = JSON.parse(vitest.stdout)
 
   expect(config.workspace).toHaveLength(2)
-  expect(config.workspace[0].name).toBe('unit')
-  expect(config.workspace[0].browser).toBe(false)
+  expect(config.workspace[0]).toEqual({
+    name: 'unit',
+    headless: false,
+    browser: false,
+    ui: true,
+    parent: null,
+  })
 
-  expect(config.workspace[1].name).toBe('browser (chromium)')
-  expect(config.workspace[1].headless).toBe(false)
-  expect(config.workspace[1].browser).toBe(true)
-  expect(config.workspace[1].ui).toBe(true)
+  expect(config.workspace[1]).toEqual({
+    name: 'browser (chromium)',
+    headless: false,
+    browser: true,
+    ui: true,
+    parent: {
+      name: 'browser',
+      headless: false,
+      browser: true,
+      ui: true,
+    },
+  })
 })
 
-test('[e2e] CLI options correctly override file workspace options', async () => {
+test('[e2e] CLI options correctly override config file workspace options', async () => {
   const vitest = await getCliConfig(
     {
       workspace: [
@@ -416,13 +435,13 @@ test('[e2e] CLI options correctly override file workspace options', async () => 
     },
     ['--browser.headless=false'],
     {
-      'vitest.browser.config.ts': /* ts */ `
-      export default {
+      'vitest.browser.config.ts': {
         test: {
           name: 'browser',
           browser: {
             enabled: true,
             headless: true,
+            provider: 'playwright',
             instances: [
               {
                 browser: 'chromium',
@@ -430,19 +449,31 @@ test('[e2e] CLI options correctly override file workspace options', async () => 
             ],
           },
         },
-      }
-    `,
+      },
     },
   )
 
   const config = JSON.parse(vitest.stdout)
 
   expect(config.workspace).toHaveLength(2)
-  expect(config.workspace[0].name).toBe('unit')
-  expect(config.workspace[0].browser).toBe(false)
+  expect(config.workspace[0]).toEqual({
+    name: 'unit',
+    headless: false,
+    browser: false,
+    ui: true,
+    parent: null,
+  })
 
-  expect(config.workspace[1].name).toBe('browser (chromium)')
-  expect(config.workspace[1].headless).toBe(false)
-  expect(config.workspace[1].browser).toBe(true)
-  expect(config.workspace[1].ui).toBe(true)
+  expect(config.workspace[1]).toEqual({
+    name: 'browser (chromium)',
+    headless: false,
+    browser: true,
+    ui: true,
+    parent: {
+      name: 'browser',
+      headless: false,
+      browser: true,
+      ui: true,
+    },
+  })
 })

@@ -269,7 +269,9 @@ export function resolvePath(baseUrl: string, path: string) {
   return resolve(dirname(filename), path)
 }
 
-export function useFS(root: string, structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>) {
+export type TestFsStructure = Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>
+
+export function useFS(root: string, structure: TestFsStructure) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (!hasConfig) {
