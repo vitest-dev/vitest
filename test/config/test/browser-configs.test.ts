@@ -413,7 +413,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       // headless was set in the config
       headless: true,
       browser: true,
-      // UI is false necause headless is enabled
+      // UI is false because headless is enabled
       ui: false,
       parent: {
         name: 'browser',
