@@ -9,13 +9,13 @@ const devInstances: BrowserInstanceOption[] = [
 
 const playwrightInstances: BrowserInstanceOption[] = [
   { browser: 'chromium' },
-  // { browser: 'firefox' },
-  // { browser: 'webkit' },
+  { browser: 'firefox' },
+  { browser: 'webkit' },
 ]
 
 const webdriverioInstances: BrowserInstanceOption[] = [
   { browser: 'chrome' },
-  // { browser: 'firefox' },
+  { browser: 'firefox' },
 ]
 
 export const instances = process.env.BROWSER
