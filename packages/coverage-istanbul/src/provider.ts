@@ -1,7 +1,7 @@
 import type { CoverageMap } from 'istanbul-lib-coverage'
 import type { Instrumenter } from 'istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
-import type { CoverageProvider, ReportContext, ResolvedCoverageOptions, Vitest } from 'vitest/node'
+import type { BaseCoverageOptions, CoverageProvider, ReportContext, ResolvedConfig, ResolvedCoverageOptions, Vitest } from 'vitest/node'
 import { promises as fs } from 'node:fs'
 // @ts-expect-error missing types
 import { defaults as istanbulDefaults } from '@istanbuljs/schema'
@@ -22,23 +22,33 @@ import { COVERAGE_STORE_KEY } from './constants'
 
 const debug = createDebug('vitest:coverage')
 
+function createTestExcludes(ctx: Vitest, options: BaseCoverageOptions) {
+  const create = (config: ResolvedConfig) => {
+    const exclude = new TestExclude({
+      cwd: config.root,
+      include: options.include,
+      exclude: options.exclude,
+      excludeNodeModules: true,
+      extension: options.extension,
+      relativePath: !options.allowExternal,
+    })
+    return { root: config.root, exclude }
+  }
+  return ctx.config.project.length
+    ? ctx.projects.map(project => create(project.config))
+    : [create(ctx.config)]
+}
+
 export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'istanbul'>> implements CoverageProvider {
   name = 'istanbul' as const
   version: string = version
   instrumenter!: Instrumenter
-  testExclude!: InstanceType<typeof TestExclude>
+  testExcludes!: Array<{ root: string; exclude: InstanceType<typeof TestExclude> }>
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
 
-    this.testExclude = new TestExclude({
-      cwd: ctx.config.root,
-      include: this.options.include,
-      exclude: this.options.exclude,
-      excludeNodeModules: true,
-      extension: this.options.extension,
-      relativePath: !this.options.allowExternal,
-    })
+    this.testExcludes = createTestExcludes(ctx, this.options)
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
@@ -61,7 +71,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   onFileTransform(sourceCode: string, id: string, pluginCtx: any): { code: string; map: any } | undefined {
-    if (!this.testExclude.shouldInstrument(id)) {
+    if (this.testExcludes.every(e => !e.exclude.shouldInstrument(id))) {
       return
     }
 
@@ -119,7 +129,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     }
 
     if (this.options.excludeAfterRemap) {
-      coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+      coverageMap.filter(filename =>
+        this.testExcludes.some(e => e.exclude.shouldInstrument(filename)),
+      )
     }
 
     if (debug.enabled) {
@@ -164,22 +176,16 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     )
   }
 
-  private async resolveIncludedFiles(root: string): Promise<string[]> {
-    const files = await this.testExclude.glob(root)
-    return files.map(file => resolve(root, file))
-  }
-
-  private async resolveProjectFiles(): Promise<string[]> {
-    const matrix = await Promise.all(this.ctx.projects.map(project =>
-      this.resolveIncludedFiles(project.config.root),
-    ))
+  private async resolveIncludedFiles(): Promise<string[]> {
+    const matrix = await Promise.all(this.testExcludes.map(async (e) => {
+      const files = await e.exclude.glob(e.root)
+      return files.map(file => resolve(e.root, file))
+    }))
     return matrix.flatMap(files => files)
   }
 
   private async getCoverageMapForUncoveredFiles(coveredFiles: string[]) {
-    let includedFiles = this.ctx.config.project.length
-      ? await this.resolveProjectFiles()
-      : await this.resolveIncludedFiles(this.ctx.config.root)
+    let includedFiles = await this.resolveIncludedFiles()
 
     if (this.ctx.config.changed) {
       includedFiles = (this.ctx.config.related || []).filter(file =>
