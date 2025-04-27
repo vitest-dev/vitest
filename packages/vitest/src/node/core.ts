@@ -746,7 +746,10 @@ export class Vitest {
         }
 
         this.cache.results.updateResults(files)
-        await this.cache.results.writeToCache()
+        try {
+          await this.cache.results.writeToCache()
+        }
+        catch {}
 
         return {
           testModules: this.state.getTestModules(),
