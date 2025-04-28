@@ -95,7 +95,6 @@ export class VitestTestRunner implements VitestRunner {
       return
     }
 
-
     this.workerState.current = test
   }
 

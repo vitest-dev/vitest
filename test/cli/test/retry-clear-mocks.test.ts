@@ -1,6 +1,6 @@
-import { expect, it } from 'vitest';
-import { runInlineTests } from '../../test-utils';
-import { TestCase } from 'vitest/node';
+import type { TestCase } from 'vitest/node'
+import { expect, it } from 'vitest'
+import { runInlineTests } from '../../test-utils'
 
 it('vitest correctly resets mocks between tests', async () => {
   const { stderr, results } = await runInlineTests({
