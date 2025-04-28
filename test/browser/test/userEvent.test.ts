@@ -1,6 +1,13 @@
-import { userEvent as _uE, server } from '@vitest/browser/context'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { userEvent as _uE, commands, server } from '@vitest/browser/context'
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import '../src/button.css'
+
+beforeAll(async () => {
+  await commands.startTrace()
+  return async () => {
+    await commands.stopTrace()
+  }
+})
 
 beforeEach(() => {
   // clear body

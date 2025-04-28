@@ -161,4 +161,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-errors
-          path: '**/__screenshots__/**'
+          path: trace.zip
