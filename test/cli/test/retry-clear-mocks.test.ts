@@ -55,7 +55,7 @@ it('vitest correctly clears mocks between tests', async () => {
   expect(testCase.diagnostic()?.retryCount).toBe(3)
 })
 
-it('vitest correctly clears restores between tests', async () => {
+it('vitest correctly restores mocks between tests', async () => {
   const { stderr, results } = await runInlineTests({
     'basic.test.js': /* js */`
       import { it, vi, expect } from 'vitest'
