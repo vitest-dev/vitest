@@ -156,3 +156,10 @@ jobs:
 
       - name: Test Browser (webdriverio)
         run: pnpm run test:browser:webdriverio
+
+      - name: Save Test Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-errors
+          path: |
+            **/__screenshots__/**
