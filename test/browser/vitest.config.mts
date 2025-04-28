@@ -107,6 +107,11 @@ export default defineConfig({
     env: {
       BROWSER: browser,
     },
+    onConsoleLog(log) {
+      if (log.includes('MESSAGE ADDED')) {
+        return false
+      }
+    },
   },
   plugins: [
     {
