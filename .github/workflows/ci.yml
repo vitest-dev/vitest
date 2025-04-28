@@ -162,4 +162,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-errors
-          path: trace.zip
+          path: test/browser/trace.zip
