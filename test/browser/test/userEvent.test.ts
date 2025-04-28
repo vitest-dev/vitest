@@ -882,6 +882,7 @@ describe.only('uploading files', async () => {
   test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
     await userEvent.upload(input, file)
@@ -896,6 +897,7 @@ describe.only('uploading files', async () => {
     const file1 = new File(['hello1'], 'hello1.png', { type: 'image/png' })
     const file2 = new File(['hello2'], 'hello2.png', { type: 'image/png' })
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     input.multiple = true
     document.body.appendChild(input)
@@ -915,6 +917,7 @@ describe.only('uploading files', async () => {
     server.provider === 'webdriverio' && server.browser === 'firefox',
   )('can upload a file by filepath relative to test file', async () => {
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
     await userEvent.upload(input, '../src/button.css')
@@ -929,6 +932,7 @@ describe.only('uploading files', async () => {
     server.provider === 'webdriverio' && server.browser === 'firefox',
   )('can upload several files by filepath relative to test file', async () => {
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     input.multiple = true
     document.body.appendChild(input)
