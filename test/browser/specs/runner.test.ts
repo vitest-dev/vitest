@@ -42,7 +42,7 @@ describe('running browser tests', async () => {
         },
         'default',
       ],
-    }))
+    }, ['userEvent']))
 
     const browserResult = await readFile('./browser.json', 'utf-8')
     browserResultJson = JSON.parse(browserResult)
