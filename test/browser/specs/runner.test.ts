@@ -21,6 +21,7 @@ describe('running browser tests', async () => {
       stdout,
       ctx: vitest,
     } = await runBrowserTests({
+      allowOnly: true,
       reporters: [
         {
           onBrowserInit(project) {

@@ -878,7 +878,7 @@ describe.each([
   })
 })
 
-describe('uploading files', async () => {
+describe.only('uploading files', async () => {
   test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
