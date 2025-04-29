@@ -1,3 +1,4 @@
+import type { CancelReason } from './types/runner'
 import type { TaskBase } from './types/tasks'
 
 export class PendingError extends Error {
@@ -10,9 +11,11 @@ export class PendingError extends Error {
   }
 }
 
-export class AbortError extends Error {
-  name = 'AbortError'
-  // 20 is the legacy error code for AbortError
-  // https://developer.mozilla.org/en-US/docs/Web/API/DOMException#error_names
-  code = 20
+export class TestRunAbortError extends Error {
+  public name = 'TestRunAbortError'
+  public reason: CancelReason
+  constructor(message: string, reason: CancelReason) {
+    super(message)
+    this.reason = reason
+  }
 }

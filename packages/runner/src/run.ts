@@ -21,7 +21,7 @@ import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
-import { AbortError, PendingError } from './errors'
+import { PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
@@ -604,7 +604,7 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
   // Adding another onCancel felt wrong (maybe it needs to be refactored)
   runner.cancel = (reason) => {
     // We intentionally create only one error since there is only one test run that can be cancelled
-    const error = new AbortError('The test run was aborted by the user.')
+    const error = new TestRunAbortError('The test run was aborted by the user.', reason)
     getRunningTests().forEach(test =>
       abortContextSignal(test.context, error),
     )
