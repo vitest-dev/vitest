@@ -650,7 +650,7 @@ export interface TestContext {
   readonly task: Readonly<Test>
 
   /**
-   * A signal object that will be aborted if the test times out or
+   * An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that will be aborted if the test times out or
    * the test run was cancelled.
    */
   readonly signal: AbortSignal
