@@ -22,23 +22,6 @@ import { COVERAGE_STORE_KEY } from './constants'
 
 const debug = createDebug('vitest:coverage')
 
-function createTestExcludes(ctx: Vitest, options: BaseCoverageOptions) {
-  const create = (config: ResolvedConfig) => {
-    const exclude = new TestExclude({
-      cwd: config.root,
-      include: options.include,
-      exclude: options.exclude,
-      excludeNodeModules: true,
-      extension: options.extension,
-      relativePath: !options.allowExternal,
-    })
-    return { root: config.root, exclude }
-  }
-  return ctx.config.project.length
-    ? ctx.projects.map(project => create(project.config))
-    : [create(ctx.config)]
-}
-
 export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCoverageOptions<'istanbul'>> implements CoverageProvider {
   name = 'istanbul' as const
   version: string = version
@@ -48,7 +31,21 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
 
-    this.testExcludes = createTestExcludes(ctx, this.options)
+    const roots = ctx.config.project.length
+      ? ctx.projects.map(p => p.config.root)
+      : [ctx.config.root]
+
+    this.testExcludes = roots.map(root => ({
+      root,
+      exclude: new TestExclude({
+        cwd: root,
+        include: this.options.include,
+        exclude: this.options.exclude,
+        excludeNodeModules: true,
+        extension: this.options.extension,
+        relativePath: !this.options.allowExternal,
+      }),
+    }))
 
     this.instrumenter = createInstrumenter({
       produceSourceMap: true,
