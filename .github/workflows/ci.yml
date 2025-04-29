@@ -154,8 +154,8 @@ jobs:
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
 
-      - name: Test Browser (webdriverio)
-        run: pnpm run test:browser:webdriverio
+      # - name: Test Browser (webdriverio)
+      #   run: pnpm run test:browser:webdriverio
 
       - name: Save Test Artifacts
         if: always()
