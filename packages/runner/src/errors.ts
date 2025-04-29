@@ -12,5 +12,7 @@ export class PendingError extends Error {
 
 export class AbortError extends Error {
   name = 'AbortError'
+  // 20 is the legacy error code for AbortError
+  // https://developer.mozilla.org/en-US/docs/Web/API/DOMException#error_names
   code = 20
 }

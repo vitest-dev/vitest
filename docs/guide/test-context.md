@@ -67,7 +67,7 @@ it('math is hard', ({ skip }) => {
 
 #### `context.signal` <Version>3.2.0</Version> {#context-signal}
 
-A signal object that can be aborted by Vitest. The signal is aborted in these situations:
+An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that can be aborted by Vitest. The signal is aborted in these situations:
 
 - Test times out
 - User manually cancelled the test run with Ctrl+C

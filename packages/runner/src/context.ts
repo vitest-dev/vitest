@@ -127,11 +127,12 @@ export function createTestContext(
     throw new Error('done() callback is deprecated, use promise instead')
   } as unknown as WriteableTestContext
 
-  const abortController = abortControllers.get(context) || (() => {
-    const abortController = new AbortController()
+  let abortController = abortControllers.get(context)
+
+  if (!abortController) {
+    abortController = new AbortController()
     abortControllers.set(context, abortController)
-    return abortController
-  })()
+  }
 
   context.signal = abortController.signal
   context.task = test

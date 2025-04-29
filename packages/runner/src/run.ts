@@ -600,7 +600,10 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
 
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const cancel = runner.cancel?.bind(runner)
+  // Ideally, we need to have an event listener for this, but only have a runner here.
+  // Adding another onCancel felt wrong (maybe it needs to be refactored)
   runner.cancel = (reason) => {
+    // We intentionally create only one error since there is only one test run that can be cancelled
     const error = new AbortError('The test run was aborted by the user.')
     getRunningTests().forEach(test =>
       abortContextSignal(test.context, error),
