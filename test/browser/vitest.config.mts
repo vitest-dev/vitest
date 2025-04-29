@@ -22,8 +22,8 @@ const devInstances: BrowserInstanceOption[] = [
 ]
 
 const playwrightInstances: BrowserInstanceOption[] = [
-  // { browser: 'chromium' },
-  // { browser: 'firefox' },
+  { browser: 'chromium' },
+  { browser: 'firefox' },
   { browser: 'webkit' },
 ]
 

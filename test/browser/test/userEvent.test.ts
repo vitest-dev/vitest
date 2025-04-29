@@ -1,13 +1,6 @@
-import { userEvent as _uE, commands, server } from '@vitest/browser/context'
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
+import { userEvent as _uE, server } from '@vitest/browser/context'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import '../src/button.css'
-
-beforeAll(async () => {
-  await commands.startTrace()
-  return async () => {
-    await commands.stopTrace()
-  }
-})
 
 beforeEach(() => {
   // clear body
@@ -878,7 +871,7 @@ describe.each([
   })
 })
 
-describe.only('uploading files', async () => {
+describe('uploading files', async () => {
   test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
