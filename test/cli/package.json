@@ -14,7 +14,7 @@
     "@vitest/test-dep-linked": "link:./deps/linked",
     "@vitest/utils": "workspace:*",
     "debug": "^4.4.0",
-    "unplugin-swc": "^1.5.1",
+    "unplugin-swc": "^1.5.2",
     "vite": "latest",
     "vitest": "workspace:*",
     "ws": "catalog:"

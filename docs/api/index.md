@@ -167,7 +167,7 @@ test('skipped test', (context) => {
 })
 ```
 
-Since Vitest 3.1, if the condition is unknonwn, you can provide it to the `skip` method as the first arguments:
+Since Vitest 3.1, if the condition is unknown, you can provide it to the `skip` method as the first arguments:
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1300,8 +1300,8 @@ import { onTestFailed, test } from 'vitest'
 
 test('performs a query', () => {
   const db = connectDb()
-  onTestFailed((e) => {
-    console.log(e.result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })
@@ -1315,8 +1315,8 @@ import { test } from 'vitest'
 
 test.concurrent('performs a query', ({ onTestFailed }) => {
   const db = connectDb()
-  onTestFailed((result) => {
-    console.log(result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })
