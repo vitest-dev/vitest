@@ -12,9 +12,9 @@ export function getCurrentTest<T extends Test | undefined>(): T {
 
 const tests: Array<Test> = []
 export function addRunningTest(test: Test): () => void {
-  const index = tests.push(test)
+  tests.push(test)
   return () => {
-    tests.splice(index)
+    tests.splice(tests.indexOf(test))
   }
 }
 
