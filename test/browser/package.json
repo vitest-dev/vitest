@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "test": "pnpm run test:webdriverio && pnpm run test:playwright",
-    "test:unit": "DEBUG=\"vitest:browser:*\" vitest --no-watch --config=vitest.config.unit.mts",
+    "test:unit": "DEBUG=\"vitest:browser:*\" vitest specs/fix-4686.test.ts --no-watch --config=vitest.config.unit.mts",
     "test:webdriverio": "PROVIDER=webdriverio pnpm run test:unit",
     "test:playwright": "PROVIDER=playwright pnpm run test:unit",
     "test:safaridriver": "PROVIDER=webdriverio BROWSER=safari pnpm run test:unit",
