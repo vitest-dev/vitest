@@ -83,10 +83,7 @@ class AbortReporter implements Reporter {
     this.vitest = vitest
   }
 
-  idx = 0
-
   onUserConsoleLog(log: UserConsoleLog) {
-    this.idx++
     if (log.content.includes('ready')) {
       this.vitest.cancelCurrentRun('keyboard-input')
     }
