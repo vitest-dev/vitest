@@ -27,7 +27,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   private options?: Capabilities.WebdriverIOConfig
 
-  private closing = true
+  private closing = false
 
   getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
@@ -37,6 +37,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     ctx: TestProject,
     { browser, options }: WebdriverProviderOptions,
   ): Promise<void> {
+    this.closing = false
     this.project = ctx
     this.browserName = browser
     this.options = options as Capabilities.WebdriverIOConfig
