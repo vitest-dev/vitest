@@ -275,7 +275,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (actionTimeout) {
       context.setDefaultTimeout(actionTimeout)
     }
-    debug?.('[%s][%s] the context is ready')
+    debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
     this.contexts.set(sessionId, context)
     return context
   }
@@ -333,7 +333,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const context = await this.createContext(sessionId)
     const page = await context.newPage()
-    debug?.('[%s][%s] the page is ready')
+    debug?.('[%s][%s] the page is ready', sessionId, this.browserName)
     await this._throwIfClosing(page)
     this.pages.set(sessionId, page)
 
@@ -397,9 +397,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   async close(): Promise<void> {
     debug?.('[%s] closing provider', this.browserName)
     this.closing = true
-    this.browserPromise = null
     const browser = this.browser
     this.browser = null
+    if (this.browserPromise) {
+      await this.browserPromise
+      this.browserPromise = null
+    }
     await Promise.all([...this.pages.values()].map(p => p.close()))
     this.pages.clear()
     await Promise.all([...this.contexts.values()].map(c => c.close()))
