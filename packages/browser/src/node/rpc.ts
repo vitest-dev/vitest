@@ -61,7 +61,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
     if (!vitest._browserSessions.sessionIds.has(sessionId)) {
       const ids = [...vitest._browserSessions.sessionIds].join(', ')
       return error(
-        new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`)
+        new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
       )
     }
 
