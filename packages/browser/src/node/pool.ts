@@ -82,6 +82,8 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
           return
         }
 
+        debug?.('provider is ready for %s project', project.name)
+
         const pool = ensurePool(project)
         vitest.state.clearFiles(project, files)
         providers.add(project.browser!.provider)
@@ -112,12 +114,14 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
     name: 'browser',
     async close() {
       await Promise.all([...providers].map(provider => provider.close()))
+      vitest._browserSessions.sessionIds.clear()
       providers.clear()
       vitest.projects.forEach((project) => {
         project.browser?.state.orchestrators.forEach((orchestrator) => {
           orchestrator.$close()
         })
       })
+      debug?.('browser pool closed all providers')
     },
     runTests: files => runWorkspaceTests('run', files),
     collectTests: files => runWorkspaceTests('collect', files),
@@ -161,6 +165,7 @@ class BrowserPool {
     this._promise ??= createDefer<void>()
 
     if (!files.length) {
+      debug?.('no tests found, finishing test run immediately')
       this._promise.resolve()
       return this._promise
     }
@@ -177,6 +182,7 @@ class BrowserPool {
     })
 
     if (this.orchestrators.size >= this.options.maxWorkers) {
+      debug?.('all orchestrators are ready, not creating more')
       return this._promise
     }
 
@@ -190,6 +196,9 @@ class BrowserPool {
     const promises: Promise<void>[] = []
     for (let i = 0; i < workerCount; i++) {
       const sessionId = crypto.randomUUID()
+      this.project.vitest._browserSessions.sessionIds.add(sessionId)
+      const project = this.project.name
+      debug?.('[%s] creating session for %s', sessionId, project)
       const page = this.openPage(sessionId).then(() => {
         // start running tests on the page when it's ready
         this.runNextTest(method, sessionId)
@@ -197,6 +206,7 @@ class BrowserPool {
       promises.push(page)
     }
     await Promise.all(promises)
+    debug?.('all sessions are created')
     return this._promise
   }
 
@@ -230,7 +240,14 @@ class BrowserPool {
     if (this.readySessions.size === this.orchestrators.size) {
       this._promise?.resolve()
       this._promise = undefined
-      debug?.('all tests finished running')
+      debug?.('[%s] all tests finished running', sessionId)
+    }
+    else {
+      debug?.(
+        `did not finish sessions for ${sessionId}: |ready - %s| |overall - %s|`,
+        [...this.readySessions].join(', '),
+        [...this.orchestrators.keys()].join(', '),
+      )
     }
   }
 
@@ -288,6 +305,7 @@ class BrowserPool {
             this.cancel()
             this._promise?.resolve()
             this._promise = undefined
+            debug?.('[%s] browser connection was closed', sessionId)
             return
           }
           debug?.('[%s] error during %s test run: %s', sessionId, file, error)

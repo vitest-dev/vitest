@@ -93,6 +93,12 @@ export default defineConfig({
       commands: {
         myCustomCommand,
         stripVTControlCharacters,
+        async startTrace(ctx) {
+          await ctx.page.context().tracing.start({ screenshots: true, snapshots: true })
+        },
+        async stopTrace(ctx) {
+          await ctx.page.context().tracing.stop({ path: 'trace.zip' })
+        },
       },
     },
     alias: {
@@ -106,6 +112,11 @@ export default defineConfig({
     },
     env: {
       BROWSER: browser,
+    },
+    onConsoleLog(log) {
+      if (log.includes('MESSAGE ADDED')) {
+        return false
+      }
     },
   },
   plugins: [
