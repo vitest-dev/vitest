@@ -76,7 +76,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 
   async openBrowser(): Promise<WebdriverIO.Browser> {
-    await this._throwIfClosing()
+    await this._throwIfClosing('opening the browser')
 
     if (this.browser) {
       debug?.('[%s] the browser is already opened, reusing it', this.browserName)
@@ -147,17 +147,18 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   }
 
   async openPage(sessionId: string, url: string): Promise<void> {
-    await this._throwIfClosing()
+    await this._throwIfClosing('creating the browser')
     debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
     const browserInstance = await this.openBrowser()
     debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserInstance.url(url)
+    await this._throwIfClosing('opening the url')
   }
 
-  private async _throwIfClosing(disposable?: { close: () => Promise<void> }) {
+  private async _throwIfClosing(action?: string) {
     if (this.closing) {
-      debug?.('[%s] provider was closed, cannot perform the action on %s', this.browserName, String(disposable))
-      await disposable?.close()
+      debug?.(`[%s] provider was closed, cannot perform the action${action ? ` ${action}` : ''}`, this.browserName)
+      await (this.browser?.sessionId ? this.browser?.deleteSession?.() : null)
       throw new Error(`[vitest] The provider was closed.`)
     }
   }
