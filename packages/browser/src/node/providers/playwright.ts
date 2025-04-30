@@ -3,6 +3,7 @@ import type {
   Browser,
   BrowserContext,
   BrowserContextOptions,
+  ConnectOptions,
   Frame,
   FrameLocator,
   LaunchOptions,
@@ -41,6 +42,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private options?: {
     launch?: LaunchOptions
+    connect?: {
+      wsEndpoint: string
+      options?: ConnectOptions
+    }
     context?: BrowserContextOptions & { actionTimeout?: number }
   }
 
@@ -85,6 +90,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const options = this.project.config.browser
 
       const playwright = await import('playwright')
+
+      if (this.options?.connect) {
+        const browser = await playwright[this.browserName].connect(this.options.connect.wsEndpoint, this.options.connect.options)
+        this.browser = browser
+        this.browserPromise = null
+        return this.browser
+      }
 
       const launchOptions = {
         ...this.options?.launch,
