@@ -9,9 +9,6 @@ test('tests run in presence of config.base', async () => {
       config: './vitest.config-basepath.mts',
     },
     ['test/basic.test.ts'],
-    {},
-    // TODO: remove when fixed
-    { std: 'inherit' },
   )
 
   expect(stderr).toBe('')
