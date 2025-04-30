@@ -21,114 +21,114 @@ env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
 
 jobs:
-  # lint:
-  #   timeout-minutes: 10
-  #   runs-on: ubuntu-latest
-  #   name: 'Lint: node-latest, ubuntu-latest'
-  #   steps:
-  #     - uses: actions/checkout@v4
+  lint:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    name: 'Lint: node-latest, ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: ./.github/actions/setup-and-cache
+      - uses: ./.github/actions/setup-and-cache
 
-  #     - name: Install
-  #       run: pnpm i
+      - name: Install
+        run: pnpm i
 
-  #     - name: Build
-  #       run: pnpm run build
+      - name: Build
+        run: pnpm run build
 
-  #     # check uncommited LICENSE.md, auto-imports.d.ts, etc...
-  #     - name: Check stale build artifacts
-  #       run: git diff --exit-code
+      # check uncommited LICENSE.md, auto-imports.d.ts, etc...
+      - name: Check stale build artifacts
+        run: git diff --exit-code
 
-  #     - name: Lint
-  #       run: pnpm run lint
+      - name: Lint
+        run: pnpm run lint
 
-  #     - name: Typecheck
-  #       run: pnpm run typecheck
+      - name: Typecheck
+        run: pnpm run typecheck
 
-  #     # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
-  #     - name: Check workflow files
-  #       run: |
-  #         bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-  #         ./actionlint -color -shellcheck=""
+      # From https://github.com/rhysd/actionlint/blob/main/docs/usage.md#use-actionlint-on-github-actions
+      - name: Check workflow files
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color -shellcheck=""
 
-  # changed:
-  #   runs-on: ubuntu-latest
-  #   name: 'Diff: node-latest, ubuntu-latest'
-  #   outputs:
-  #     should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
+  changed:
+    runs-on: ubuntu-latest
+    name: 'Diff: node-latest, ubuntu-latest'
+    outputs:
+      should_skip: ${{ steps.changed-files.outputs.only_changed == 'true' }}
 
-  #   steps:
-  #     - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Get changed files
-  #       id: changed-files
-  #       uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
-  #       with:
-  #         files: |
-  #           docs/**
-  #           .github/**
-  #           !.github/workflows/ci.yml
-  #           **.md
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@a284dc1814e3fd07f2e34267fc8f81227ed29fb8 # v45.0.9
+        with:
+          files: |
+            docs/**
+            .github/**
+            !.github/workflows/ci.yml
+            **.md
 
-  # test:
-  #   needs: changed
-  #   name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
-  #   if: needs.changed.outputs.should_skip != 'true'
-  #   runs-on: ${{ matrix.os }}
+  test:
+    needs: changed
+    name: 'Build&Test: node-${{ matrix.node_version }}, ${{ matrix.os }}'
+    if: needs.changed.outputs.should_skip != 'true'
+    runs-on: ${{ matrix.os }}
 
-  #   timeout-minutes: 30
+    timeout-minutes: 30
 
-  #   strategy:
-  #     matrix:
-  #       os: [ubuntu-latest]
-  #       node_version: [18, 20, 22]
-  #       include:
-  #         - os: macos-latest
-  #           node_version: 20
-  #         - os: windows-latest
-  #           node_version: 20
-  #     fail-fast: false
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        node_version: [18, 20, 22]
+        include:
+          - os: macos-latest
+            node_version: 20
+          - os: windows-latest
+            node_version: 20
+      fail-fast: false
 
-  #   steps:
-  #     - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: ./.github/actions/setup-and-cache
-  #       with:
-  #         node-version: ${{ matrix.node_version }}
+      - uses: ./.github/actions/setup-and-cache
+        with:
+          node-version: ${{ matrix.node_version }}
 
-  #     - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
+      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
 
-  #     - name: Install
-  #       run: pnpm i
+      - name: Install
+        run: pnpm i
 
-  #     - name: Install Playwright Dependencies
-  #       run: pnpm exec playwright install chromium --with-deps --only-shell
+      - name: Install Playwright Dependencies
+        run: pnpm exec playwright install chromium --with-deps --only-shell
 
-  #     - name: Build
-  #       run: pnpm run build
+      - name: Build
+        run: pnpm run build
 
-  #     - name: Test
-  #       run: pnpm run test:ci
+      - name: Test
+        run: pnpm run test:ci
 
-  #     - name: Test Examples
-  #       run: pnpm run test:examples
+      - name: Test Examples
+        run: pnpm run test:examples
 
-  #     - name: Unit Test UI
-  #       run: pnpm run -C packages/ui test:ui
+      - name: Unit Test UI
+        run: pnpm run -C packages/ui test:ui
 
   test-browser:
-    # needs: changed
+    needs: changed
     name: 'Browsers: node-20, ${{ matrix.os }}'
-    # if: needs.changed.outputs.should_skip != 'true'
+    if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - macos-latest
-          # - windows-latest
-      # fail-fast: false
+          - windows-latest
+      fail-fast: false
 
     timeout-minutes: 30
 
@@ -154,12 +154,5 @@ jobs:
       - name: Test Browser (playwright)
         run: pnpm run test:browser:playwright
 
-      # - name: Test Browser (webdriverio)
-      #   run: pnpm run test:browser:webdriverio
-
-      - name: Save Test Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-errors
-          path: test/browser/trace.zip
+      - name: Test Browser (webdriverio)
+        run: pnpm run test:browser:webdriverio
