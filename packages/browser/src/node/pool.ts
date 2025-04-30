@@ -113,8 +113,6 @@ export function createBrowserPool(vitest: Vitest): ProcessPool {
   return {
     name: 'browser',
     async close() {
-      const names = [...providers].map(p => p.name).join(', ')
-      debug?.('closing browser pool with providers: %s', names)
       await Promise.all([...providers].map(provider => provider.close()))
       vitest._browserSessions.sessionIds.clear()
       providers.clear()

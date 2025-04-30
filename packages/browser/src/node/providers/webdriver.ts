@@ -4,6 +4,9 @@ import type {
   BrowserProviderInitializationOptions,
   TestProject,
 } from 'vitest/node'
+import { createDebugger } from 'vitest/node'
+
+const debug = createDebugger('vitest:browser:wdio')
 
 const webdriverBrowsers = ['firefox', 'chrome', 'edge', 'safari'] as const
 type WebdriverBrowser = (typeof webdriverBrowsers)[number]
@@ -23,6 +26,8 @@ export class WebdriverBrowserProvider implements BrowserProvider {
   private project!: TestProject
 
   private options?: Capabilities.WebdriverIOConfig
+
+  private closing = true
 
   getSupportedBrowsers(): readonly string[] {
     return webdriverBrowsers
@@ -72,6 +77,7 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
   async openBrowser(): Promise<WebdriverIO.Browser> {
     if (this.browser) {
+      debug?.('[%s] the browser is already opened, reusing it', this.browserName)
       return this.browser
     }
 
@@ -87,12 +93,15 @@ export class WebdriverBrowserProvider implements BrowserProvider {
 
     const { remote } = await import('webdriverio')
 
-    // TODO: close everything, if browser is closed from the outside
-    this.browser = await remote({
+    const remoteOptions: Capabilities.WebdriverIOConfig = {
       ...this.options,
       logLevel: 'error',
       capabilities: this.buildCapabilities(),
-    })
+    }
+
+    debug?.('[%s] opening the browser with options: %O', this.browserName, remoteOptions)
+    // TODO: close everything, if browser is closed from the outside
+    this.browser = await remote(remoteOptions)
 
     return this.browser
   }
@@ -134,12 +143,16 @@ export class WebdriverBrowserProvider implements BrowserProvider {
     return capabilities
   }
 
-  async openPage(_sessionId: string, url: string): Promise<void> {
+  async openPage(sessionId: string, url: string): Promise<void> {
+    debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
     const browserInstance = await this.openBrowser()
+    debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserInstance.url(url)
   }
 
   async close(): Promise<void> {
+    debug?.('[%s] closing provider', this.browserName)
+    this.closing = true
     await Promise.all([
       this.browser?.sessionId ? this.browser?.deleteSession?.() : null,
     ])

@@ -18,6 +18,9 @@ import type {
   TestProject,
 } from 'vitest/node'
 import { createManualModuleSource } from '@vitest/mocker/node'
+import { createDebugger } from 'vitest/node'
+
+const debug = createDebugger('vitest:browser:playwright')
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
@@ -66,13 +69,15 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async openBrowser() {
-    this._throwIfClosing()
+    await this._throwIfClosing()
 
     if (this.browserPromise) {
+      debug?.('[%s] the browser is resolving, reusing the promise', this.browserName)
       return this.browserPromise
     }
 
     if (this.browser) {
+      debug?.('[%s] the browser is resolved, reusing it', this.browserName)
       return this.browser
     }
 
@@ -108,8 +113,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         }
       }
 
-      const browser = await playwright[this.browserName].launch(launchOptions)
-      this.browser = browser
+      debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
+      this.browser = await playwright[this.browserName].launch(launchOptions)
       this.browserPromise = null
       return this.browser
     })()
@@ -251,6 +256,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     await this._throwIfClosing()
 
     if (this.contexts.has(sessionId)) {
+      debug?.('[%s][%s] the context already exists, reusing it', sessionId, this.browserName)
       return this.contexts.get(sessionId)!
     }
 
@@ -269,6 +275,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     if (actionTimeout) {
       context.setDefaultTimeout(actionTimeout)
     }
+    debug?.('[%s][%s] the context is ready')
     this.contexts.set(sessionId, context)
     return context
   }
@@ -318,6 +325,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     await this._throwIfClosing()
 
     if (this.pages.has(sessionId)) {
+      debug?.('[%s][%s] the page already exists, closing the old one', sessionId, this.browserName)
       const page = this.pages.get(sessionId)!
       await page.close()
       this.pages.delete(sessionId)
@@ -325,6 +333,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const context = await this.createContext(sessionId)
     const page = await context.newPage()
+    debug?.('[%s][%s] the page is ready')
     await this._throwIfClosing(page)
     this.pages.set(sessionId, page)
 
@@ -345,14 +354,17 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async openPage(sessionId: string, url: string, beforeNavigate?: () => Promise<void>): Promise<void> {
+    debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
     const browserPage = await this.openBrowserPage(sessionId)
     await beforeNavigate?.()
+    debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserPage.goto(url, { timeout: 0 })
     await this._throwIfClosing(browserPage)
   }
 
   private async _throwIfClosing(disposable?: { close: () => Promise<void> }) {
     if (this.closing) {
+      debug?.('[%s] provider was closed, cannot perform the action on %s', this.browserName, String(disposable))
       await disposable?.close()
       this.pages.clear()
       this.contexts.clear()
@@ -383,6 +395,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close(): Promise<void> {
+    debug?.('[%s] closing provider', this.browserName)
     this.closing = true
     this.browserPromise = null
     const browser = this.browser
@@ -392,6 +405,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     await Promise.all([...this.contexts.values()].map(c => c.close()))
     this.contexts.clear()
     await browser?.close()
+    debug?.('[%s] provider is closed', this.browserName)
   }
 }
 
