@@ -48,6 +48,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public mocker: BrowserModuleMocker | undefined
 
+  private closing = false
+
   getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
   }
@@ -56,6 +58,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     project: TestProject,
     { browser, options }: PlaywrightProviderOptions,
   ): void {
+    this.closing = false
     this.project = project
     this.browserName = browser
     this.options = options as any
@@ -63,6 +66,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async openBrowser() {
+    this._throwIfClosing()
+
     if (this.browserPromise) {
       return this.browserPromise
     }
@@ -243,11 +248,14 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async createContext(sessionId: string) {
+    await this._throwIfClosing()
+
     if (this.contexts.has(sessionId)) {
       return this.contexts.get(sessionId)!
     }
 
     const browser = await this.openBrowser()
+    await this._throwIfClosing(browser)
     const { actionTimeout, ...contextOptions } = this.options?.context ?? {}
     const options = {
       ...contextOptions,
@@ -257,6 +265,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       options.viewport = null
     }
     const context = await browser.newContext(options)
+    await this._throwIfClosing(context)
     if (actionTimeout) {
       context.setDefaultTimeout(actionTimeout)
     }
@@ -306,6 +315,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async openBrowserPage(sessionId: string) {
+    await this._throwIfClosing()
+
     if (this.pages.has(sessionId)) {
       const page = this.pages.get(sessionId)!
       await page.close()
@@ -314,6 +325,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const context = await this.createContext(sessionId)
     const page = await context.newPage()
+    await this._throwIfClosing(page)
     this.pages.set(sessionId, page)
 
     if (process.env.VITEST_PW_DEBUG) {
@@ -336,6 +348,18 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     const browserPage = await this.openBrowserPage(sessionId)
     await beforeNavigate?.()
     await browserPage.goto(url, { timeout: 0 })
+    await this._throwIfClosing(browserPage)
+  }
+
+  private async _throwIfClosing(disposable?: { close: () => Promise<void> }) {
+    if (this.closing) {
+      await disposable?.close()
+      this.pages.clear()
+      this.contexts.clear()
+      this.browser = null
+      this.browserPromise = null
+      throw new Error(`[vitest] The provider was closed.`)
+    }
   }
 
   async getCDPSession(sessionid: string): Promise<CDPSession> {
@@ -359,6 +383,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close(): Promise<void> {
+    this.closing = true
+    this.browserPromise = null
     const browser = this.browser
     this.browser = null
     await Promise.all([...this.pages.values()].map(p => p.close()))
