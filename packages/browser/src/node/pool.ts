@@ -194,7 +194,8 @@ class BrowserPool {
     const promises: Promise<void>[] = []
     for (let i = 0; i < workerCount; i++) {
       const sessionId = crypto.randomUUID()
-      debug?.('[%s] creating session', sessionId)
+      const project = this.project.name
+      debug?.('[%s] creating session for %s', sessionId, project)
       const page = this.openPage(sessionId).then(() => {
         // start running tests on the page when it's ready
         this.runNextTest(method, sessionId)
