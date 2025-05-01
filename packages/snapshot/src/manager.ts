@@ -8,6 +8,7 @@ import { basename, dirname, isAbsolute, join, resolve } from 'pathe'
 export class SnapshotManager {
   public summary!: SnapshotSummary
   public extension = '.snap'
+  public screenshotExtension = '.png'
 
   constructor(
     public options: Omit<SnapshotStateOptions, 'snapshotEnvironment'>,
@@ -38,6 +39,16 @@ export class SnapshotManager {
 
   resolveRawPath(testPath: string, rawPath: string): string {
     return isAbsolute(rawPath) ? rawPath : resolve(dirname(testPath), rawPath)
+  }
+
+  resolveScreenshotPath(testPath: string, testName: string): string {
+    const screenshotName = [basename(testPath), ...testName.replaceAll('\'', '').split(' > ')]
+      .map(p => p.toLowerCase().replaceAll(/\W/g, '-').replaceAll('/^-|-$/g', ''))
+      .join('_')
+    return join(
+      join(dirname(testPath), '__screenshots__'),
+      `${screenshotName}${this.screenshotExtension}`,
+    )
   }
 }
 

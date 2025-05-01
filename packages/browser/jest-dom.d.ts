@@ -2,6 +2,11 @@
 
 import { ARIARole } from './aria-role.ts'
 
+interface ScreenshotOptions {
+  threshold?: number
+  // other options that might be needed
+}
+
 export interface TestingLibraryMatchers<E, R> {
   /**
    * @description
@@ -627,4 +632,6 @@ export interface TestingLibraryMatchers<E, R> {
    * @see https://vitest.dev/guide/browser/assertion-api#tohaveselection
    */
   toHaveSelection(selection?: string): R
+
+  toMatchScreenshot(options?: ScreenshotOptions): R
 }
