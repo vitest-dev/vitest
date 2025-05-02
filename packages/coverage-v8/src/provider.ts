@@ -65,6 +65,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
+    const start = debug.enabled ? performance.now() : 0
+
     const coverageMap = this.createCoverageMap()
     let merged: RawCoverage = { result: [] }
 
@@ -108,6 +110,10 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
     if (this.options.excludeAfterRemap) {
       coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+    }
+
+    if (debug.enabled) {
+      debug(`Generate coverage total time ${(performance.now() - start!).toFixed()} ms`)
     }
 
     return coverageMap
@@ -189,6 +195,14 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       }
 
       await Promise.all(chunk.map(async (filename) => {
+        let timeout: ReturnType<typeof setTimeout> | undefined
+        let start: number | undefined
+
+        if (debug.enabled) {
+          start = performance.now()
+          timeout = setTimeout(() => debug(c.bgRed(`File "${filename.pathname}" is taking longer than 3s`)), 3_000)
+        }
+
         const sources = await this.getSources(
           filename.href,
           transformResults,
@@ -225,6 +239,14 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         }
 
         coverageMap.merge(converter.toIstanbul())
+
+        if (debug.enabled) {
+          clearTimeout(timeout)
+
+          const diff = performance.now() - start!
+          const color = diff > 500 ? c.bgRed : c.bgGreen
+          debug(`${color(` ${diff.toFixed()} ms `)} ${filename.pathname}`)
+        }
       }))
     }
 
@@ -344,6 +366,14 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
       await Promise.all(
         chunk.map(async ({ url, functions, startOffset }) => {
+          let timeout: ReturnType<typeof setTimeout> | undefined
+          let start: number | undefined
+
+          if (debug.enabled) {
+            start = performance.now()
+            timeout = setTimeout(() => debug(c.bgRed(`File "${fileURLToPath(url)}" is taking longer than 3s`)), 3_000)
+          }
+
           const sources = await this.getSources(
             url,
             transformResults,
@@ -368,6 +398,14 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
           }
 
           coverageMap.merge(converter.toIstanbul())
+
+          if (debug.enabled) {
+            clearTimeout(timeout)
+
+            const diff = performance.now() - start!
+            const color = diff > 500 ? c.bgRed : c.bgGreen
+            debug(`${color(` ${diff.toFixed()} ms `)} ${fileURLToPath(url)}`)
+          }
         }),
       )
     }

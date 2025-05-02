@@ -1,3 +1,4 @@
+import type { MockedModule } from '@vitest/mocker'
 import type {
   Browser,
   BrowserContext,
@@ -7,11 +8,19 @@ import type {
   LaunchOptions,
   Page,
 } from 'playwright'
+import type { SourceMap } from 'rollup'
+import type { ResolvedConfig } from 'vite'
 import type {
+  BrowserModuleMocker,
   BrowserProvider,
   BrowserProviderInitializationOptions,
+  CDPSession,
   TestProject,
 } from 'vitest/node'
+import { createManualModuleSource } from '@vitest/mocker/node'
+import { createDebugger } from 'vitest/node'
+
+const debug = createDebugger('vitest:browser:playwright')
 
 export const playwrightBrowsers = ['firefox', 'webkit', 'chromium'] as const
 export type PlaywrightBrowser = (typeof playwrightBrowsers)[number]
@@ -40,6 +49,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   private browserPromise: Promise<Browser> | null = null
 
+  public mocker: BrowserModuleMocker | undefined
+
+  private closing = false
+
   getSupportedBrowsers(): readonly string[] {
     return playwrightBrowsers
   }
@@ -48,17 +61,23 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     project: TestProject,
     { browser, options }: PlaywrightProviderOptions,
   ): void {
+    this.closing = false
     this.project = project
     this.browserName = browser
     this.options = options as any
+    this.mocker = this.createMocker()
   }
 
   private async openBrowser() {
+    await this._throwIfClosing()
+
     if (this.browserPromise) {
+      debug?.('[%s] the browser is resolving, reusing the promise', this.browserName)
       return this.browserPromise
     }
 
     if (this.browser) {
+      debug?.('[%s] the browser is resolved, reusing it', this.browserName)
       return this.browser
     }
 
@@ -94,8 +113,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         }
       }
 
-      const browser = await playwright[this.browserName].launch(launchOptions)
-      this.browser = browser
+      debug?.('[%s] initializing the browser with launch options: %O', this.browserName, launchOptions)
+      this.browser = await playwright[this.browserName].launch(launchOptions)
       this.browserPromise = null
       return this.browser
     })()
@@ -103,25 +122,160 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
     return this.browserPromise
   }
 
+  private createMocker(): BrowserModuleMocker {
+    const idPreficates = new Map<string, (url: URL) => boolean>()
+    const sessionIds = new Map<string, string[]>()
+
+    function createPredicate(sessionId: string, url: string) {
+      const moduleUrl = new URL(url, 'http://localhost')
+      const predicate = (url: URL) => {
+        if (url.searchParams.has('_vitest_original')) {
+          return false
+        }
+
+        // different modules, ignore request
+        if (url.pathname !== moduleUrl.pathname) {
+          return false
+        }
+
+        url.searchParams.delete('t')
+        url.searchParams.delete('v')
+        url.searchParams.delete('import')
+
+        // different search params, ignore request
+        if (url.searchParams.size !== moduleUrl.searchParams.size) {
+          return false
+        }
+
+        // check that all search params are the same
+        for (const [param, value] of url.searchParams.entries()) {
+          if (moduleUrl.searchParams.get(param) !== value) {
+            return false
+          }
+        }
+
+        return true
+      }
+      const ids = sessionIds.get(sessionId) || []
+      ids.push(moduleUrl.href)
+      sessionIds.set(sessionId, ids)
+      idPreficates.set(moduleUrl.href, predicate)
+      return predicate
+    }
+
+    return {
+      register: async (sessionId: string, module: MockedModule): Promise<void> => {
+        const page = this.getPage(sessionId)
+        await page.route(createPredicate(sessionId, module.url), async (route) => {
+          if (module.type === 'manual') {
+            const exports = Object.keys(await module.resolve())
+            const body = createManualModuleSource(module.url, exports)
+            return route.fulfill({
+              body,
+              headers: getHeaders(this.project.browser!.vite.config),
+            })
+          }
+
+          // webkit doesn't support redirect responses
+          // https://github.com/microsoft/playwright/issues/18318
+          const isWebkit = this.browserName === 'webkit'
+          if (isWebkit) {
+            const url = module.type === 'redirect'
+              ? (() => {
+                  // url has http:// which vite.trasnformRequest doesn't understand
+                  const url = new URL(module.redirect)
+                  return url.href.slice(url.origin.length)
+                })()
+              : (() => {
+                  const url = new URL(route.request().url())
+                  url.searchParams.set('mock', module.type)
+                  return url.href.slice(url.origin.length)
+                })()
+            const result = await this.project.browser!.vite.transformRequest(url).catch(() => null)
+            if (!result) {
+              return route.continue()
+            }
+            let content = result.code
+            if (result.map && 'version' in result.map && result.map.mappings) {
+              const type = isDirectCSSRequest(url) ? 'css' : 'js'
+              content = getCodeWithSourcemap(type, content.toString(), result.map)
+            }
+            return route.fulfill({
+              body: content,
+              headers: getHeaders(this.project.browser!.vite.config),
+            })
+          }
+
+          if (module.type === 'redirect') {
+            return route.fulfill({
+              status: 302,
+              headers: {
+                Location: module.redirect,
+              },
+            })
+          }
+          else if (module.type === 'automock' || module.type === 'autospy') {
+            const url = new URL(route.request().url())
+            url.searchParams.set('mock', module.type)
+            return route.fulfill({
+              status: 302,
+              headers: {
+                Location: url.href,
+              },
+            })
+          }
+          else {
+            // all types are exhausted
+            const _module: never = module
+          }
+        })
+      },
+      delete: async (sessionId: string, id: string): Promise<void> => {
+        const page = this.getPage(sessionId)
+        const predicate = idPreficates.get(id)
+        if (predicate) {
+          await page.unroute(predicate).finally(() => idPreficates.delete(id))
+        }
+      },
+      clear: async (sessionId: string): Promise<void> => {
+        const page = this.getPage(sessionId)
+        const ids = sessionIds.get(sessionId) || []
+        const promises = ids.map((id) => {
+          const predicate = idPreficates.get(id)
+          if (predicate) {
+            return page.unroute(predicate).finally(() => idPreficates.delete(id))
+          }
+          return null
+        })
+        await Promise.all(promises).finally(() => sessionIds.delete(sessionId))
+      },
+    }
+  }
+
   private async createContext(sessionId: string) {
+    await this._throwIfClosing()
+
     if (this.contexts.has(sessionId)) {
+      debug?.('[%s][%s] the context already exists, reusing it', sessionId, this.browserName)
       return this.contexts.get(sessionId)!
     }
 
     const browser = await this.openBrowser()
+    await this._throwIfClosing(browser)
     const { actionTimeout, ...contextOptions } = this.options?.context ?? {}
     const options = {
       ...contextOptions,
       ignoreHTTPSErrors: true,
-      serviceWorkers: 'allow',
     } satisfies BrowserContextOptions
     if (this.project.config.browser.ui) {
       options.viewport = null
     }
     const context = await browser.newContext(options)
+    await this._throwIfClosing(context)
     if (actionTimeout) {
       context.setDefaultTimeout(actionTimeout)
     }
+    debug?.('[%s][%s] the context is ready', sessionId, this.browserName)
     this.contexts.set(sessionId, context)
     return context
   }
@@ -154,7 +308,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
           const timeout = setTimeout(() => {
             const err = new Error(`Cannot find "vitest-iframe" on the page. This is a bug in Vitest, please report it.`)
             reject(err)
-          }, 1000)
+          }, 1000).unref()
           page.on('frameattached', (frame) => {
             clearTimeout(timeout)
             resolve(frame)
@@ -168,7 +322,10 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private async openBrowserPage(sessionId: string) {
+    await this._throwIfClosing()
+
     if (this.pages.has(sessionId)) {
+      debug?.('[%s][%s] the page already exists, closing the old one', sessionId, this.browserName)
       const page = this.pages.get(sessionId)!
       await page.close()
       this.pages.delete(sessionId)
@@ -176,6 +333,8 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
     const context = await this.createContext(sessionId)
     const page = await context.newPage()
+    debug?.('[%s][%s] the page is ready', sessionId, this.browserName)
+    await this._throwIfClosing(page)
     this.pages.set(sessionId, page)
 
     if (process.env.VITEST_PW_DEBUG) {
@@ -191,27 +350,31 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       })
     }
 
-    // unhandled page crashes will hang vitest process
-    page.on('crash', () => {
-      const session = this.project.vitest._browserSessions.getSession(sessionId)
-      session?.reject(new Error('Page crashed when executing tests'))
-    })
-
     return page
   }
 
   async openPage(sessionId: string, url: string, beforeNavigate?: () => Promise<void>): Promise<void> {
+    debug?.('[%s][%s] creating the browser page for %s', sessionId, this.browserName, url)
     const browserPage = await this.openBrowserPage(sessionId)
     await beforeNavigate?.()
+    debug?.('[%s][%s] browser page is created, opening %s', sessionId, this.browserName, url)
     await browserPage.goto(url, { timeout: 0 })
+    await this._throwIfClosing(browserPage)
   }
 
-  async getCDPSession(sessionid: string): Promise<{
-    send: (method: string, params: any) => Promise<unknown>
-    on: (event: string, listener: (...args: any[]) => void) => void
-    off: (event: string, listener: (...args: any[]) => void) => void
-    once: (event: string, listener: (...args: any[]) => void) => void
-  }> {
+  private async _throwIfClosing(disposable?: { close: () => Promise<void> }) {
+    if (this.closing) {
+      debug?.('[%s] provider was closed, cannot perform the action on %s', this.browserName, String(disposable))
+      await disposable?.close()
+      this.pages.clear()
+      this.contexts.clear()
+      this.browser = null
+      this.browserPromise = null
+      throw new Error(`[vitest] The provider was closed.`)
+    }
+  }
+
+  async getCDPSession(sessionid: string): Promise<CDPSession> {
     const page = this.getPage(sessionid)
     const cdp = await page.context().newCDPSession(page)
     return {
@@ -232,12 +395,60 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   async close(): Promise<void> {
+    debug?.('[%s] closing provider', this.browserName)
+    this.closing = true
     const browser = this.browser
     this.browser = null
+    if (this.browserPromise) {
+      await this.browserPromise
+      this.browserPromise = null
+    }
     await Promise.all([...this.pages.values()].map(p => p.close()))
     this.pages.clear()
     await Promise.all([...this.contexts.values()].map(c => c.close()))
     this.contexts.clear()
     await browser?.close()
+    debug?.('[%s] provider is closed', this.browserName)
   }
+}
+
+function getHeaders(config: ResolvedConfig) {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/javascript',
+  }
+
+  for (const name in config.server.headers) {
+    headers[name] = String(config.server.headers[name]!)
+  }
+  return headers
+}
+
+function getCodeWithSourcemap(
+  type: 'js' | 'css',
+  code: string,
+  map: SourceMap,
+): string {
+  if (type === 'js') {
+    code += `\n//# sourceMappingURL=${genSourceMapUrl(map)}`
+  }
+  else if (type === 'css') {
+    code += `\n/*# sourceMappingURL=${genSourceMapUrl(map)} */`
+  }
+
+  return code
+}
+
+function genSourceMapUrl(map: SourceMap | string): string {
+  if (typeof map !== 'string') {
+    map = JSON.stringify(map)
+  }
+  return `data:application/json;base64,${Buffer.from(map).toString('base64')}`
+}
+
+const CSS_LANGS_RE
+  = /\.(?:css|less|sass|scss|styl|stylus|pcss|postcss|sss)(?:$|\?)/
+const directRequestRE = /[?&]direct\b/
+
+function isDirectCSSRequest(request: string): boolean {
+  return CSS_LANGS_RE.test(request) && directRequestRE.test(request)
 }

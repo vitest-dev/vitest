@@ -1,5 +1,6 @@
-import type { SerializedConfig } from 'vitest'
+import { SerializedConfig } from 'vitest'
 import { ARIARole } from './aria-role.js'
+import {} from './matchers.js'
 
 export type BufferEncoding =
   | 'ascii'
@@ -452,6 +453,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#last}
    */
   last(): Locator
+  /**
+   * Returns a locator that matches both the current locator and the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   */
+  and(locator: Locator): Locator
+  /**
+   * Returns a locator that matches either the current locator or the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   */
+  or(locator: Locator): Locator
+  /**
+   * Narrows existing locator according to the options.
+   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   */
+  filter(options: LocatorOptions): Locator
 }
 
 export interface UserEventTabOptions {
@@ -504,6 +520,13 @@ export const server: {
    * Serialized test config.
    */
   config: SerializedConfig
+}
+
+export interface LocatorOptions {
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
 }
 
 /**

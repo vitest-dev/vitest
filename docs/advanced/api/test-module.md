@@ -32,6 +32,33 @@ function state(): TestModuleState
 
 Works the same way as [`testSuite.state()`](/advanced/api/test-suite#state), but can also return `queued` if module wasn't executed yet.
 
+## meta <Version>3.1.0</Version> {#meta}
+
+```ts
+function meta(): TaskMeta
+```
+
+Custom [metadata](/advanced/metadata) that was attached to the module during its execution or collection. The meta can be attached by assigning a property to the `task.meta` object during a test run:
+
+```ts {5,10}
+import { test } from 'vitest'
+
+describe('the validation works correctly', (task) => {
+  // assign "decorated" during collection
+  task.file.meta.decorated = false
+
+  test('some test', ({ task }) => {
+    // assign "decorated" during test run, it will be available
+    // only in onTestCaseReady hook
+    task.file.meta.decorated = false
+  })
+})
+```
+
+:::tip
+If metadata was attached during collection (outside of the `test` function), then it will be available in [`onTestModuleCollected`](./reporters#ontestmodulecollected) hook in the custom reporter.
+:::
+
 ## diagnostic
 
 ```ts
@@ -63,5 +90,10 @@ interface ModuleDiagnostic {
    * Accumulated duration of all tests and hooks in the module.
    */
   readonly duration: number
+  /**
+   * The amount of memory used by the module in bytes.
+   * This value is only available if the test was executed with `logHeapUsage` flag.
+   */
+  readonly heap: number | undefined
 }
 ```

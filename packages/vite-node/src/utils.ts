@@ -21,6 +21,12 @@ export function slash(str: string): string {
   return str.replace(/\\/g, '/')
 }
 
+const bareImportRE = /^(?![a-z]:)[\w@](?!.*:\/\/)/i
+
+export function isBareImport(id: string): boolean {
+  return bareImportRE.test(id)
+}
+
 export const VALID_ID_PREFIX = '/@id/'
 
 export function normalizeRequestId(id: string, base?: string): string {

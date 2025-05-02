@@ -1,3 +1,4 @@
+import type { MockerRegistry } from '@vitest/mocker'
 import type { Duplex } from 'node:stream'
 import type { ErrorWithDiff } from 'vitest'
 import type { BrowserCommandContext, ResolveSnapshotPathHandlerContext, TestProject } from 'vitest/node'
@@ -7,10 +8,11 @@ import type { WebdriverBrowserProvider } from './providers/webdriver'
 import type { BrowserServerState } from './state'
 import type { WebSocketBrowserEvents, WebSocketBrowserHandlers } from './types'
 import { existsSync, promises as fs } from 'node:fs'
+import { AutomockedModule, AutospiedModule, ManualMockedModule, RedirectedModule } from '@vitest/mocker'
 import { ServerMockResolver } from '@vitest/mocker/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
-import { dirname } from 'pathe'
+import { dirname, join } from 'pathe'
 import { createDebugger, isFileServingAllowed, isValidApiRequest } from 'vitest/node'
 import { WebSocketServer } from 'ws'
 
@@ -18,7 +20,7 @@ const debug = createDebugger('vitest:browser:api')
 
 const BROWSER_API_PATH = '/__vitest_browser_api__'
 
-export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
+export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMockerRegistry: MockerRegistry): void {
   const vite = globalServer.vite
   const vitest = globalServer.vitest
 
@@ -56,10 +58,10 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
       )
     }
 
-    const method = searchParams.get('method') as 'run' | 'collect'
-    if (method !== 'run' && method !== 'collect') {
+    if (!vitest._browserSessions.sessionIds.has(sessionId)) {
+      const ids = [...vitest._browserSessions.sessionIds].join(', ')
       return error(
-        new Error(`[vitest] Method query in ${request.url} is invalid. Method should be either "run" or "collect".`),
+        new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
       )
     }
 
@@ -80,7 +82,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit('connection', ws, request)
 
-      const rpc = setupClient(project, rpcId, ws, method)
+      const rpc = setupClient(project, rpcId, ws)
       const state = project.browser!.state as BrowserServerState
       const clients = type === 'tester' ? state.testers : state.orchestrators
       clients.set(rpcId, rpc)
@@ -91,6 +93,13 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         debug?.('[%s] Browser API disconnected from %s', rpcId, type)
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
+        if (type === 'orchestrator') {
+          vitest._browserSessions.destroySession(sessionId)
+        }
+        // this will reject any hanging methods if there are any
+        rpc.$close(
+          new Error(`[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`),
+        )
       })
     })
   })
@@ -109,10 +118,11 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
     }
   }
 
-  function setupClient(project: TestProject, rpcId: string, ws: WebSocket, method: 'run' | 'collect') {
+  function setupClient(project: TestProject, rpcId: string, ws: WebSocket) {
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config.server?.deps?.moduleDirectories,
     })
+    const mocker = project.browser?.provider.mocker
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
@@ -123,7 +133,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           }
           vitest.state.catchError(error, type)
         },
-        async onQueued(file) {
+        async onQueued(method, file) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, [file])
           }
@@ -131,7 +141,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
             await vitest._testRun.enqueued(project, file)
           }
         },
-        async onCollected(files) {
+        async onCollected(method, files) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, files)
           }
@@ -139,7 +149,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
             await vitest._testRun.collected(project, files)
           }
         },
-        async onTaskUpdate(packs, events) {
+        async onTaskUpdate(method, packs, events) {
           if (method === 'collect') {
             vitest.state.updateTasks(packs)
           }
@@ -150,7 +160,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        async sendLog(log) {
+        async sendLog(method, log) {
           if (method === 'collect') {
             vitest.state.updateUserLog(log)
           }
@@ -241,15 +251,70 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
           ) as any as BrowserCommandContext
           return await commands[command](context, ...payload)
         },
-        finishBrowserTests(sessionId: string) {
-          debug?.('[%s] Finishing browser tests for session', sessionId)
-          return vitest._browserSessions.getSession(sessionId)?.resolve()
-        },
         resolveMock(rawId, importer, options) {
           return mockResolver.resolveMock(rawId, importer, options)
         },
         invalidate(ids) {
           return mockResolver.invalidate(ids)
+        },
+
+        async registerMock(sessionId, module) {
+          if (!mocker) {
+            // make sure modules are not processed yet in case they were imported before
+            // and were not mocked
+            mockResolver.invalidate([module.id])
+
+            if (module.type === 'manual') {
+              const mock = ManualMockedModule.fromJSON(module, async () => {
+                try {
+                  const { keys } = await rpc.resolveManualMock(module.url)
+                  return Object.fromEntries(keys.map(key => [key, null]))
+                }
+                catch (err) {
+                  vitest.state.catchError(err, 'Manual Mock Resolver Error')
+                  return {}
+                }
+              })
+              defaultMockerRegistry.add(mock)
+            }
+            else {
+              if (module.type === 'redirect') {
+                const redirectUrl = new URL(module.redirect)
+                module.redirect = join(vite.config.root, redirectUrl.pathname)
+              }
+              defaultMockerRegistry.register(module)
+            }
+            return
+          }
+
+          if (module.type === 'manual') {
+            const manualModule = ManualMockedModule.fromJSON(module, async () => {
+              const { keys } = await rpc.resolveManualMock(module.url)
+              return Object.fromEntries(keys.map(key => [key, null]))
+            })
+            await mocker.register(sessionId, manualModule)
+          }
+          else if (module.type === 'redirect') {
+            await mocker.register(sessionId, RedirectedModule.fromJSON(module))
+          }
+          else if (module.type === 'automock') {
+            await mocker.register(sessionId, AutomockedModule.fromJSON(module))
+          }
+          else if (module.type === 'autospy') {
+            await mocker.register(sessionId, AutospiedModule.fromJSON(module))
+          }
+        },
+        clearMocks(sessionId) {
+          if (!mocker) {
+            return defaultMockerRegistry.clear()
+          }
+          return mocker.clear(sessionId)
+        },
+        unregisterMock(sessionId, id) {
+          if (!mocker) {
+            return defaultMockerRegistry.delete(id)
+          }
+          return mocker.delete(sessionId, id)
         },
 
         // CDP
@@ -267,6 +332,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject): void {
         on: fn => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
+        timeout: -1, // createTesters can take a long time
         deserialize: parse,
         onTimeoutError(functionName) {
           throw new Error(`[vitest-api]: Timeout calling "${functionName}"`)

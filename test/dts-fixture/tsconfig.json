@@ -1,4 +1,5 @@
 {
+  "extends": ["../dts-config/tsconfig.patch.json"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",

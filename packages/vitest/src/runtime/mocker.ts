@@ -291,18 +291,18 @@ export class VitestMocker {
     const id = this.normalizePath(path)
 
     if (mockType === 'manual') {
-      registry.register('manual', originalId, id, factory!)
+      registry.register('manual', originalId, id, id, factory!)
     }
     else if (mockType === 'autospy') {
-      registry.register('autospy', originalId, id)
+      registry.register('autospy', originalId, id, id)
     }
     else {
       const redirect = this.resolveMockPath(id, external)
       if (redirect) {
-        registry.register('redirect', originalId, id, redirect)
+        registry.register('redirect', originalId, id, id, redirect)
       }
       else {
-        registry.register('automock', originalId, id)
+        registry.register('automock', originalId, id, id)
       }
     }
 
@@ -333,10 +333,10 @@ export class VitestMocker {
     if (!mock) {
       const redirect = this.resolveMockPath(normalizedId, external)
       if (redirect) {
-        mock = new RedirectedModule(rawId, normalizedId, redirect)
+        mock = new RedirectedModule(rawId, normalizedId, normalizedId, redirect)
       }
       else {
-        mock = new AutomockedModule(rawId, normalizedId)
+        mock = new AutomockedModule(rawId, normalizedId, normalizedId)
       }
     }
 

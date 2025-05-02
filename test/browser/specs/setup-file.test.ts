@@ -11,8 +11,5 @@ test('setup file imports the same modules', async () => {
   )
 
   expect(stderr).toReportNoErrors()
-
-  instances.forEach(({ browser }) => {
-    expect(stdout).toReportPassedTest('module-equality.test.ts', browser)
-  })
+  expect(stdout).toReportPassedTest('module-equality.test.ts', instances)
 })

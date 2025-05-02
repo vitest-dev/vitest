@@ -1,6 +1,6 @@
 import type { HoistMocksPluginOptions } from '../../../packages/mocker/src/node/hoistMocksPlugin'
 import { stripVTControlCharacters } from 'node:util'
-import { parseAst } from 'rollup/parseAst'
+import { parseAst } from 'vite'
 import { describe, expect, it, test } from 'vitest'
 import { generateCodeFrame } from 'vitest/src/node/error.js'
 import { hoistMocks } from '../../../packages/mocker/src/node/hoistMocksPlugin'
@@ -1270,6 +1270,29 @@ test('test', async () => {
         vi.doMock(dynamicName)
         await import(dynamicName)
       })"
+    `)
+  })
+
+  test('vi.mock already hoisted at the top', () => {
+    expect(
+      hoistSimpleCode(`\
+vi.mock('node:path', () => ({ mocked: true }));
+
+import { test, vi } from 'vitest';
+
+import * as path from 'node:path';
+
+console.log(path.mocked);
+`),
+    ).toMatchInlineSnapshot(`
+      "vi.mock('node:path', () => ({ mocked: true }));
+      const __vi_import_0__ = await import("node:path");
+
+      import { test, vi } from 'vitest';
+
+
+
+      console.log(__vi_import_0__.mocked);"
     `)
   })
 

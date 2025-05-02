@@ -40,9 +40,9 @@ export function createDtsUtils({
         dts({ respectExternal: true }),
         {
           name: 'isolated-decl-dts-extra',
-          buildEnd() {
+          buildEnd(error) {
             // keep temporary type files on watch mode since removing them makes re-build flaky
-            if (!this.meta.watchMode) {
+            if (!error && !this.meta.watchMode) {
               fs.rmSync(`dist/${cleanupDir}`, { recursive: true, force: true })
             }
           },
