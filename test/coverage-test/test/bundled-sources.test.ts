@@ -7,9 +7,8 @@ test('bundled code with source maps to originals', async () => {
   await runVitest({
     include: [normalizeURL(import.meta.url)],
     coverage: {
-      include: ['fixtures/src/**'],
       reporter: 'json',
-      all: false,
+      exclude: ['./utils.ts'],
     },
   })
 

@@ -36,7 +36,6 @@ test('{ changed: "HEAD" }', async () => {
     coverage: {
       include: ['fixtures/src/**'],
       reporter: 'json',
-      all: true,
     },
   })
 

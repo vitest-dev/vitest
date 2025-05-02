@@ -4,7 +4,7 @@ import { readCoverageMap, runVitest, test } from '../utils'
 test('tests with multiple suites are covered (#3514)', async () => {
   await runVitest({
     include: ['fixtures/test/multi-suite-fixture.test.ts'],
-    coverage: { reporter: 'json', all: false },
+    coverage: { reporter: 'json' },
   })
 
   const coverageMap = await readCoverageMap()

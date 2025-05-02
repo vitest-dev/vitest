@@ -9,15 +9,17 @@ import type {
 import type { BaseCoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
 import type { BuiltinPool, ForksOptions, PoolOptions, ThreadsOptions } from '../types/pool-options'
 import crypto from 'node:crypto'
-import { toArray } from '@vitest/utils'
+import { slash, toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
 import {
+  configFiles,
   defaultBrowserPort,
   defaultInspectPort,
   defaultPort,
   extraInlineDeps,
+  workspacesFiles,
 } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { isCI, stdProvider } from '../../utils/env'
@@ -347,22 +349,28 @@ export function resolveConfig(
     resolvePath(file, resolved.root),
   )
 
-  // override original exclude array for cases where user re-uses same object in test.exclude
+  // Add hard-coded default coverage exclusions. These cannot be overidden by user config.
+  // Override original exclude array for cases where user re-uses same object in test.exclude.
   resolved.coverage.exclude = [
     ...resolved.coverage.exclude,
 
     // Exclude setup files
-    ...resolved.setupFiles.map(
-      file =>
-        `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
-          resolved.root,
-          file,
-        )}`,
-    ),
+    ...resolved.setupFiles.map(file => relative(resolved.root, file)),
 
     // Exclude test files
     ...resolved.include,
-  ]
+
+    // Configs
+    resolved.config && slash(resolved.config),
+    ...configFiles,
+    ...workspacesFiles,
+
+    // Vite internal
+    '**\/virtual:*',
+    '**\/__x00__*',
+
+    '**/node_modules/**',
+  ].filter(pattern => pattern != null)
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,

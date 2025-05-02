@@ -6,9 +6,7 @@ test('pre-transpiled code with source maps to original (#5341)', async () => {
   await runVitest({
     include: ['fixtures/test/pre-transpiled-fixture.test.ts'],
     coverage: {
-      include: ['fixtures/src/**'],
       reporter: 'json',
-      all: false,
     },
   })
 

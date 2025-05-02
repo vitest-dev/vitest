@@ -4,7 +4,7 @@ import { readCoverageMap, runVitest, test } from '../utils'
 test('import attributes work', async () => {
   await runVitest({
     include: ['fixtures/test/import-attributes-fixture.test.ts'],
-    coverage: { reporter: 'json', all: false },
+    coverage: { reporter: 'json', exclude: ['**.json'] },
   })
 
   const coverageMap = await readCoverageMap()
