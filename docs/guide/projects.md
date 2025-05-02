@@ -93,7 +93,6 @@ export default defineConfig({
   }
 })
 ```
-:::
 
 ::: warning
 All projects must have unique names; otherwise, Vitest will throw an error. If a name is not provided in the inline configuration, Vitest will assign a number. For project configurations defined with glob syntax, Vitest will default to using the "name" property in the nearest `package.json` file or, if none exists, the folder name.
