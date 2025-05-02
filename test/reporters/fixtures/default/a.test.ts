@@ -26,15 +26,15 @@ describe('a failed', () => {
 })
 
 describe('a skipped', () => {
-  test('skipped with note', (t) => {
-    t.skip('reason')
+  test('skipped with note', ({ skip }) => {
+    skip('reason')
   })
 
-  test('condition', (t) => {
-    t.skip(true)
+  test('condition', ({ skip }) => {
+    skip(true)
   })
 
-  test('condition with note', (t) => {
-    t.skip(true, 'note')
+  test('condition with note', ({ skip }) => {
+    skip(true, 'note')
   })
 })

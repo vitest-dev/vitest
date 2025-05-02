@@ -14,19 +14,19 @@ The first argument for each test callback is a test context.
 ```ts
 import { it } from 'vitest'
 
-it('should work', (ctx) => {
+it('should work', ({ task }) => {
   // prints name of the test
-  console.log(ctx.task.name)
+  console.log(task.name)
 })
 ```
 
 ## Built-in Test Context
 
-#### `context.task`
+#### `task`
 
 A readonly object containing metadata about the test.
 
-#### `context.expect`
+#### `expect`
 
 The `expect` API bound to the current test:
 
@@ -52,7 +52,12 @@ it.concurrent('math is hard', ({ expect }) => {
 })
 ```
 
-#### `context.skip`
+#### `skip`
+
+```ts
+function skip(note?: string): never
+function skip(condition: boolean, note?: string): void
+```
 
 Skips subsequent test execution and marks test as skipped:
 
@@ -65,6 +70,23 @@ it('math is hard', ({ skip }) => {
 })
 ```
 
+Since Vitest 3.1, it accepts a boolean parameter to skip the test conditionally:
+
+```ts
+it('math is hard', ({ skip, mind }) => {
+  skip(mind === 'foggy')
+  expect(2 + 2).toBe(5)
+})
+```
+
+#### `onTestFailed`
+
+The [`onTestFailed`](/api/#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+
+#### `onTestFinished`
+
+The [`onTestFinished`](/api/#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+
 ## Extend Test Context
 
 Vitest provides two different ways to help you extend the test context.
@@ -73,15 +95,15 @@ Vitest provides two different ways to help you extend the test context.
 
 Like [Playwright](https://playwright.dev/docs/api/class-test#test-extend), you can use this method to define your own `test` API with custom fixtures and reuse it anywhere.
 
-For example, we first create `myTest` with two fixtures, `todos` and `archive`.
+For example, we first create the `test` collector with two fixtures: `todos` and `archive`.
 
 ```ts [my-test.ts]
-import { test } from 'vitest'
+import { test as baseTest } from 'vitest'
 
 const todos = []
 const archive = []
 
-export const myTest = test.extend({
+export const test = baseTest.extend({
   todos: async ({}, use) => {
     // setup the fixture before each test function
     todos.push(1, 2, 3)
@@ -100,16 +122,16 @@ Then we can import and use it.
 
 ```ts [my-test.test.ts]
 import { expect } from 'vitest'
-import { myTest } from './my-test.js'
+import { test } from './my-test.js'
 
-myTest('add items to todos', ({ todos }) => {
+test('add items to todos', ({ todos }) => {
   expect(todos.length).toBe(3)
 
   todos.push(4)
   expect(todos.length).toBe(4)
 })
 
-myTest('move items from todos to archive', ({ todos, archive }) => {
+test('move items from todos to archive', ({ todos, archive }) => {
   expect(todos.length).toBe(3)
   expect(archive.length).toBe(0)
 
@@ -119,10 +141,12 @@ myTest('move items from todos to archive', ({ todos, archive }) => {
 })
 ```
 
-We can also add more fixtures or override existing fixtures by extending `myTest`.
+We can also add more fixtures or override existing fixtures by extending our `test`.
 
 ```ts
-export const myTest2 = myTest.extend({
+import { test as todosTest } from './my-test.js'
+
+export const test = todosTest.extend({
   settings: {
     // ...
   }
@@ -134,34 +158,35 @@ export const myTest2 = myTest.extend({
 Vitest runner will smartly initialize your fixtures and inject them into the test context based on usage.
 
 ```ts
-import { test } from 'vitest'
+import { test as baseTest } from 'vitest'
 
-async function todosFn({ task }, use) {
-  await use([1, 2, 3])
-}
-
-const myTest = test.extend({
-  todos: todosFn,
+const test = baseTest.extend<{
+  todos: number[]
+  archive: number[]
+}>({
+  todos: async ({ task }, use) => {
+    await use([1, 2, 3])
+  },
   archive: []
 })
 
-// todosFn will not run
-myTest('', () => {})
-myTest('', ({ archive }) => {})
+// todos will not run
+test('skip', () => {})
+test('skip', ({ archive }) => {})
 
-// todosFn will run
-myTest('', ({ todos }) => {})
+// todos will run
+test('run', ({ todos }) => {})
 ```
 
 ::: warning
 When using `test.extend()` with fixtures, you should always use the object destructuring pattern `{ todos }` to access context both in fixture function and test function.
 
 ```ts
-myTest('context must be destructured', (context) => { // [!code --]
+test('context must be destructured', (context) => { // [!code --]
   expect(context.todos.length).toBe(2)
 })
 
-myTest('context must be destructured', ({ todos }) => { // [!code ++]
+test('context must be destructured', ({ todos }) => { // [!code ++]
   expect(todos.length).toBe(2)
 })
 ```
@@ -316,18 +341,45 @@ interface MyFixtures {
   archive: number[]
 }
 
-const myTest = test.extend<MyFixtures>({
+const test = baseTest.extend<MyFixtures>({
   todos: [],
   archive: []
 })
 
-myTest('types are defined correctly', ({ todos, archive }) => {
+test('types are defined correctly', ({ todos, archive }) => {
   expectTypeOf(todos).toEqualTypeOf<number[]>()
   expectTypeOf(archive).toEqualTypeOf<number[]>()
 })
 ```
 
+::: info Type Infering
+Note that Vitest doesn't support infering the types when the `use` function is called. It is always preferable to pass down the whole context type as the generic type when `test.extend` is called:
+
+```ts
+import { test as baseTest } from 'vitest'
+
+const test = baseTest.extend<{
+  todos: number[]
+  schema: string
+}>({
+  todos: ({ schema }, use) => use([]),
+  schema: 'test'
+})
+
+test('types are correct', ({
+  todos, // number[]
+  schema, // string
+}) => {
+  // ...
+})
+```
+:::
+
 ### `beforeEach` and `afterEach`
+
+::: danger Deprecated
+This is an outdated way of extending context and it will not work when the `test` is extended with `test.extend`.
+:::
 
 The contexts are different for each test. You can access and extend them within the `beforeEach` and `afterEach` hooks.
 
@@ -346,7 +398,7 @@ it('should work', ({ foo }) => {
 
 #### TypeScript
 
-To provide property types for all your custom contexts, you can aggregate the `TestContext` type by adding
+To provide property types for all your custom contexts, you can augment the `TestContext` type by adding
 
 ```ts
 declare module 'vitest' {

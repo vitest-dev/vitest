@@ -149,7 +149,7 @@ export interface TaskResult {
   /** @private */
   note?: string
   /**
-   * Whether the task was skipped by calling `t.skip()`.
+   * Whether the task was skipped by calling `context.skip()`.
    * @internal
    */
   pending?: boolean
