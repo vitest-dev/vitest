@@ -69,6 +69,7 @@
   },
   "pnpm": {
     "overrides": {
+      "jsdom": "beta",
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
