@@ -109,7 +109,7 @@ export async function resolveProjects(
       [
         'No projects were found. Make sure your configuration is correct. ',
         vitest.config.project.length ? `The filter matched no projects: ${vitest.config.project.join(', ')}. ` : '',
-        `The workspace: ${JSON.stringify(projectsDefinition, null, 4)}.`,
+        `The projects definition: ${JSON.stringify(projectsDefinition, null, 4)}.`,
       ].join(''),
     )
   }
@@ -135,7 +135,7 @@ export async function resolveProjects(
   if (errors.length) {
     throw new AggregateError(
       errors,
-      'Failed to initialize projects. There were errors during workspace setup. See below for more details.',
+      'Failed to initialize projects. There were errors during projects setup. See below for more details.',
     )
   }
 
@@ -157,7 +157,7 @@ export async function resolveProjects(
         ' is not unique.',
         duplicate?.vite.config.configFile ? ` The project is already defined by "${relative(vitest.config.root, duplicate.vite.config.configFile)}".` : '',
         filesError,
-        'All projects in a workspace should have unique names. Make sure your configuration is correct.',
+        'All projects should have unique names. Make sure your configuration is correct.',
       ].join(''))
     }
     names.add(name)
@@ -237,7 +237,7 @@ export async function resolveBrowserProjects(
           [
             `Cannot define a nested project for a ${browser} browser. The project name "${name}" was already defined. `,
             'If you have multiple instances for the same browser, make sure to define a custom "name". ',
-            'All projects in a workspace should have unique names. Make sure your configuration is correct.',
+            'All projects should have unique names. Make sure your configuration is correct.',
           ].join(''),
         )
       }
@@ -322,21 +322,21 @@ function cloneConfig(project: TestProject, { browser, ...config }: BrowserInstan
 async function resolveTestProjectConfigs(
   vitest: Vitest,
   workspaceConfigPath: string | undefined,
-  workspaceDefinition: TestProjectConfiguration[],
+  projectsDefinition: TestProjectConfiguration[],
 ) {
   // project configurations that were specified directly
   const projectsOptions: (UserWorkspaceConfig & { extends?: true | string })[] = []
 
   // custom config files that were specified directly or resolved from a directory
-  const workspaceConfigFiles: string[] = []
+  const projectsConfigFiles: string[] = []
 
   // custom glob matches that should be resolved as directories or config files
-  const workspaceGlobMatches: string[] = []
+  const projectsGlobMatches: string[] = []
 
   // directories that don't have a config file inside, but should be treated as projects
   const nonConfigProjectDirectories: string[] = []
 
-  for (const definition of workspaceDefinition) {
+  for (const definition of projectsDefinition) {
     if (typeof definition === 'string') {
       const stringOption = definition.replace('<rootDir>', vitest.config.root)
       // if the string doesn't contain a glob, we can resolve it directly
@@ -345,23 +345,23 @@ async function resolveTestProjectConfigs(
         const file = resolve(vitest.config.root, stringOption)
 
         if (!existsSync(file)) {
-          const relativeWorkSpaceConfigPath = workspaceConfigPath
+          const relativeWorkspaceConfigPath = workspaceConfigPath
             ? relative(vitest.config.root, workspaceConfigPath)
             : undefined
-          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkSpaceConfigPath}"` : 'Inline workspace'
+          const note = workspaceConfigPath ? `Workspace config file "${relativeWorkspaceConfigPath}"` : 'Projects definition'
           throw new Error(`${note} references a non-existing file or a directory: ${file}`)
         }
 
         const stats = await fs.stat(file)
         // user can specify a config file directly
         if (stats.isFile()) {
-          workspaceConfigFiles.push(file)
+          projectsConfigFiles.push(file)
         }
         // user can specify a directory that should be used as a project
         else if (stats.isDirectory()) {
           const configFile = await resolveDirectoryConfig(file)
           if (configFile) {
-            workspaceConfigFiles.push(configFile)
+            projectsConfigFiles.push(configFile)
           }
           else {
             const directory = file[file.length - 1] === '/' ? file : `${file}/`
@@ -376,7 +376,7 @@ async function resolveTestProjectConfigs(
       // if the string is a glob pattern, resolve it later
       // ['./packages/*']
       else {
-        workspaceGlobMatches.push(stringOption)
+        projectsGlobMatches.push(stringOption)
       }
     }
     // if the config is inlined, we can resolve it immediately
@@ -394,7 +394,7 @@ async function resolveTestProjectConfigs(
     }
   }
 
-  if (workspaceGlobMatches.length) {
+  if (projectsGlobMatches.length) {
     const globOptions: GlobOptions = {
       absolute: true,
       dot: true,
@@ -410,27 +410,27 @@ async function resolveTestProjectConfigs(
       ],
     }
 
-    const workspacesFs = await glob(workspaceGlobMatches, globOptions)
+    const projectsFs = await glob(projectsGlobMatches, globOptions)
 
-    await Promise.all(workspacesFs.map(async (path) => {
+    await Promise.all(projectsFs.map(async (path) => {
       // directories are allowed with a glob like `packages/*`
       // in this case every directory is treated as a project
       if (path.endsWith('/')) {
         const configFile = await resolveDirectoryConfig(path)
         if (configFile) {
-          workspaceConfigFiles.push(configFile)
+          projectsConfigFiles.push(configFile)
         }
         else {
           nonConfigProjectDirectories.push(path)
         }
       }
       else {
-        workspaceConfigFiles.push(path)
+        projectsConfigFiles.push(path)
       }
     }))
   }
 
-  const projectConfigFiles = Array.from(new Set(workspaceConfigFiles))
+  const projectConfigFiles = Array.from(new Set(projectsConfigFiles))
 
   return {
     projectConfigs: projectsOptions,

@@ -476,7 +476,7 @@ test('browser.instances throws an error if no custom name is provided', async ()
       },
     },
   })
-  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "firefox" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "firefox" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects should have unique names. Make sure your configuration is correct.')
 })
 
 test('browser.instances throws an error if no custom name is provided, but the config name is inherited', async () => {
@@ -491,12 +491,12 @@ test('browser.instances throws an error if no custom name is provided, but the c
       ],
     },
   })
-  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "custom (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "custom (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects should have unique names. Make sure your configuration is correct.')
 })
 
 test('throws an error if name conflicts with a workspace name', async () => {
   const { stderr } = await runVitest({
-    workspace: [
+    projects: [
       { test: { name: '1 (firefox)' } },
       {
         test: {
@@ -511,7 +511,7 @@ test('throws an error if name conflicts with a workspace name', async () => {
       },
     ],
   })
-  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "1 (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects in a workspace should have unique names. Make sure your configuration is correct.')
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "1 (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects should have unique names. Make sure your configuration is correct.')
 })
 
 test('throws an error if several browsers are headed in nonTTY mode', async () => {

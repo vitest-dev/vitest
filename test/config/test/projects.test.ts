@@ -54,17 +54,16 @@ Your config matched these files:
  - vitest1.config.js
  - vitest2.config.js
 
-All projects in a workspace should have unique names. Make sure your configuration is correct.`,
+All projects should have unique names. Make sure your configuration is correct.`,
   )
 })
 
 it('fails if project names are identical inside the inline config', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-duplicate-inline',
-    workspace: './fixtures/workspace/invalid-duplicate-inline/vitest.workspace.ts',
   }, [], 'test', {}, { fails: true })
   expect(stderr).toContain(
-    'Project name "test" is not unique. All projects in a workspace should have unique names. Make sure your configuration is correct.',
+    'Project name "test" is not unique. All projects should have unique names. Make sure your configuration is correct.',
   )
 })
 
@@ -73,7 +72,7 @@ it('fails if referenced file doesnt exist', async () => {
     root: 'fixtures/workspace/invalid-non-existing-config',
   }, [], 'test', {}, { fails: true })
   expect(stderr).toContain(
-    `Inline workspace references a non-existing file or a directory: ${resolve('fixtures/workspace/invalid-non-existing-config/vitest.config.js')}`,
+    `Projects definition references a non-existing file or a directory: ${resolve('fixtures/workspace/invalid-non-existing-config/vitest.config.js')}`,
   )
 })
 
@@ -91,7 +90,7 @@ it('can define inline workspace config programmatically', async () => {
     env: {
       TEST_ROOT: '1',
     },
-    workspace: [
+    projects: [
       {
         extends: true,
         test: {
@@ -131,9 +130,9 @@ it('correctly inherits the root config', async () => {
 
 it('fails if workspace is empty', async () => {
   const { stderr } = await runVitest({
-    workspace: [],
+    projects: [],
   })
-  expect(stderr).toContain('No projects were found. Make sure your configuration is correct. The workspace: [].')
+  expect(stderr).toContain('No projects were found. Make sure your configuration is correct. The projects definition: [].')
 })
 
 it('fails if workspace is filtered by the project', async () => {
@@ -141,11 +140,11 @@ it('fails if workspace is filtered by the project', async () => {
     project: 'non-existing',
     root: 'fixtures/workspace/config-empty',
     config: './vitest.config.js',
-    workspace: [
+    projects: [
       './vitest.config.js',
     ],
   })
-  expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The workspace: [
+  expect(stderr).toContain(`No projects were found. Make sure your configuration is correct. The filter matched no projects: non-existing. The projects definition: [
     "./vitest.config.js"
 ].`)
 })
