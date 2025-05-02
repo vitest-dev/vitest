@@ -1,3 +1,4 @@
+import type { Pool } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
 
@@ -135,5 +136,20 @@ export default defineConfig({
         return false
       }
     },
+    projects: [
+      project('threads'),
+      project('forks'),
+      project('vmThreads'),
+    ],
   },
 })
+
+function project(pool: Pool) {
+  return {
+    extends: './vite.config.ts',
+    test: {
+      name: pool,
+      pool,
+    },
+  }
+}
