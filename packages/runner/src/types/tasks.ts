@@ -459,7 +459,7 @@ interface ExtendedAPI<ExtraContext> {
 
 export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
   ExtendedAPI<ExtraContext> & {
-    extend: <T extends Record<string, any>>(
+    extend: <T extends Record<string, any> = object>(
       fixtures: Fixtures<T, ExtraContext>
     ) => TestAPI<{
       [K in keyof T | keyof ExtraContext]: K extends keyof T
