@@ -19,6 +19,7 @@ import type {
   TestProject,
 } from 'vitest/node'
 import { createManualModuleSource } from '@vitest/mocker/node'
+import c from 'tinyrainbow'
 import { createDebugger } from 'vitest/node'
 
 const debug = createDebugger('vitest:browser:playwright')
@@ -92,6 +93,13 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       const playwright = await import('playwright')
 
       if (this.options?.connect) {
+        if (this.options.launch) {
+          this.project.vitest.logger.warn(
+            c.yellow(`Found both ${c.bold(c.italic(c.yellow('connect')))} and ${c.bold(c.italic(c.yellow('launch')))} options in browser instance configuration.
+          Ignoring ${c.bold(c.italic(c.yellow('launch')))} options and using ${c.bold(c.italic(c.yellow('connect')))} mode.
+          You probably want to remove one of the two options and keep only the one you want to use.`),
+          )
+        }
         const browser = await playwright[this.browserName].connect(this.options.connect.wsEndpoint, this.options.connect.options)
         this.browser = browser
         this.browserPromise = null
