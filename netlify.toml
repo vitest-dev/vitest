@@ -30,6 +30,11 @@ from = "/guide/workspace"
 to = "/guide/projects"
 status = 301
 
+[[redirects]]
+from = "/guide/workspace.html"
+to = "/guide/projects"
+status = 301
+
 [[headers]]
 for = "/manifest.webmanifest"
 

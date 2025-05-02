@@ -184,7 +184,7 @@ export async function resolveBrowserProjects(
         browser,
         name: project.name ? `${project.name} (${browser})` : browser,
       })
-      console.warn(
+      vitest.logger.warn(
         withLabel(
           'yellow',
           'Vitest',
