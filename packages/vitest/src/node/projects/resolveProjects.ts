@@ -14,17 +14,17 @@ import { VitestFilteredOutProjectError } from '../errors'
 import { initializeProject, TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
 
-export async function resolveWorkspace(
+export async function resolveProjects(
   vitest: Vitest,
   cliOptions: UserConfig,
   workspaceConfigPath: string | undefined,
-  workspaceDefinition: TestProjectConfiguration[],
+  projectsDefinition: TestProjectConfiguration[],
   names: Set<string>,
 ): Promise<TestProject[]> {
   const { configFiles, projectConfigs, nonConfigDirectories } = await resolveTestProjectConfigs(
     vitest,
     workspaceConfigPath,
-    workspaceDefinition,
+    projectsDefinition,
   )
 
   // cli options that affect the project config,
@@ -109,7 +109,7 @@ export async function resolveWorkspace(
       [
         'No projects were found. Make sure your configuration is correct. ',
         vitest.config.project.length ? `The filter matched no projects: ${vitest.config.project.join(', ')}. ` : '',
-        `The workspace: ${JSON.stringify(workspaceDefinition, null, 4)}.`,
+        `The workspace: ${JSON.stringify(projectsDefinition, null, 4)}.`,
       ].join(''),
     )
   }
@@ -163,10 +163,10 @@ export async function resolveWorkspace(
     names.add(name)
   }
 
-  return resolveBrowserWorkspace(vitest, names, resolvedProjects)
+  return resolveBrowserProjects(vitest, names, resolvedProjects)
 }
 
-export async function resolveBrowserWorkspace(
+export async function resolveBrowserProjects(
   vitest: Vitest,
   names: Set<string>,
   resolvedProjects: TestProject[],

@@ -164,7 +164,7 @@ interface File extends Suite {
    */
   filepath: string
   /**
-   * The name of the workspace project the file belongs to.
+   * The name of the test project the file belongs to.
    */
   projectName: string | undefined
   /**

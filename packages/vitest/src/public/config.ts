@@ -65,6 +65,9 @@ export function defineProject(config: UserProjectConfigExport): UserProjectConfi
   return config
 }
 
+/**
+ * @deprecated use the `projects` field in the root config instead
+ */
 export function defineWorkspace(config: TestProjectConfiguration[]): TestProjectConfiguration[] {
   return config
 }

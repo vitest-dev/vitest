@@ -8,7 +8,7 @@ outline: deep
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
 ::: tip
-If you are looking for documentation for `expect`, `vi` or any general API like workspaces or type testing, refer to the ["Getting Started" guide](/guide/).
+If you are looking for documentation for `expect`, `vi` or any general API like test projects or type testing, refer to the ["Getting Started" guide](/guide/).
 :::
 
 <img alt="Vitest UI" img-light src="/ui-browser-1-light.png">
@@ -209,44 +209,48 @@ export default defineConfig({
 ```
 :::
 
-If you need to run some tests using Node-based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
+If you need to run some tests using Node-based runner, you can define a [`projects`](/guide/projects) option with separate configurations for different testing strategies:
 
-{#workspace-config}
+{#projects-config}
 
-```ts [vitest.workspace.ts]
-import { defineWorkspace } from 'vitest/config'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkspace([
-  {
-    test: {
-      // an example of file based convention,
-      // you don't have to follow it
-      include: [
-        'tests/unit/**/*.{test,spec}.ts',
-        'tests/**/*.unit.{test,spec}.ts',
-      ],
-      name: 'unit',
-      environment: 'node',
-    },
-  },
-  {
-    test: {
-      // an example of file based convention,
-      // you don't have to follow it
-      include: [
-        'tests/browser/**/*.{test,spec}.ts',
-        'tests/**/*.browser.{test,spec}.ts',
-      ],
-      name: 'browser',
-      browser: {
-        enabled: true,
-        instances: [
-          { browser: 'chromium' },
-        ],
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          // an example of file based convention,
+          // you don't have to follow it
+          include: [
+            'tests/unit/**/*.{test,spec}.ts',
+            'tests/**/*.unit.{test,spec}.ts',
+          ],
+          name: 'unit',
+          environment: 'node',
+        },
       },
-    },
+      {
+        test: {
+          // an example of file based convention,
+          // you don't have to follow it
+          include: [
+            'tests/browser/**/*.{test,spec}.ts',
+            'tests/**/*.browser.{test,spec}.ts',
+          ],
+          name: 'browser',
+          browser: {
+            enabled: true,
+            instances: [
+              { browser: 'chromium' },
+            ],
+          },
+        },
+      },
+    ],
   },
-])
+})
 ```
 
 ## Browser Option Types

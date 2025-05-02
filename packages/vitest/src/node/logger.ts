@@ -110,6 +110,10 @@ export class Logger {
     printError(err, this.ctx, this, options)
   }
 
+  deprecate(message: string): void {
+    this.log(c.bold(c.bgYellow(' DEPRECATED ')), c.yellow(message))
+  }
+
   clearHighlightCache(filename?: string): void {
     if (filename) {
       this._highlights.delete(filename)

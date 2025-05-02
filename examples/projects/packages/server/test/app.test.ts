@@ -1,8 +1,8 @@
 import supertest from 'supertest'
 import { afterAll, expect, test } from 'vitest'
 
-import { usersData } from '../mockData'
-import app from '../src/app'
+import { usersData } from '../mockData.js'
+import app from '../src/app.js'
 
 test('with HTTP injection', async () => {
   const response = await app.inject({
