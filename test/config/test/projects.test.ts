@@ -15,7 +15,6 @@ it('correctly runs workspace tests when workspace config path is specified', asy
 it('runs the workspace if there are several vitest config files', async () => {
   const { stderr, stdout } = await runVitest({
     root: 'fixtures/workspace/several-configs',
-    workspace: './fixtures/workspace/several-configs/vitest.workspace.ts',
   })
   expect(stderr).toBe('')
   expect(stdout).toContain('workspace/several-configs')
@@ -28,7 +27,6 @@ it('runs the workspace if there are several vitest config files', async () => {
 it('correctly resolves workspace projects with a several folder globs', async () => {
   const { stderr, stdout } = await runVitest({
     root: 'fixtures/workspace/several-folders',
-    workspace: './fixtures/workspace/several-folders/vitest.workspace.ts',
   })
   expect(stderr).toBe('')
   expect(stdout).toContain('test - a')
@@ -38,7 +36,6 @@ it('correctly resolves workspace projects with a several folder globs', async ()
 it('supports glob negation pattern', async () => {
   const { stderr, stdout } = await runVitest({
     root: 'fixtures/workspace/negated',
-    workspace: './fixtures/workspace/negated/vitest.workspace.ts',
   })
   expect(stderr).toBe('')
   expect(stdout).toContain('test - a')
@@ -49,7 +46,6 @@ it('supports glob negation pattern', async () => {
 it('fails if project names are identical with a nice error message', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-duplicate-configs',
-    workspace: './fixtures/workspace/invalid-duplicate-configs/vitest.workspace.ts',
   }, [], 'test', {}, { fails: true })
   expect(stderr).toContain(
     `Project name "test" from "vitest2.config.js" is not unique. The project is already defined by "vitest1.config.js".
@@ -75,17 +71,15 @@ it('fails if project names are identical inside the inline config', async () => 
 it('fails if referenced file doesnt exist', async () => {
   const { stderr } = await runVitest({
     root: 'fixtures/workspace/invalid-non-existing-config',
-    workspace: './fixtures/workspace/invalid-non-existing-config/vitest.workspace.ts',
   }, [], 'test', {}, { fails: true })
   expect(stderr).toContain(
-    `Workspace config file "vitest.workspace.ts" references a non-existing file or a directory: ${resolve('fixtures/workspace/invalid-non-existing-config/vitest.config.js')}`,
+    `Inline workspace references a non-existing file or a directory: ${resolve('fixtures/workspace/invalid-non-existing-config/vitest.config.js')}`,
   )
 })
 
 it('vite import analysis is applied when loading workspace config', async () => {
   const { stderr, stdout } = await runVitest({
     root: 'fixtures/workspace/config-import-analysis',
-    workspace: './fixtures/workspace/config-import-analysis/vitest.workspace.ts',
   })
   expect(stderr).toBe('')
   expect(stdout).toContain('test - a')
