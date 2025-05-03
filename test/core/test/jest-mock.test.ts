@@ -560,6 +560,21 @@ describe('jest mock compat layer', () => {
     expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
   })
 
+  describe('is disposable', () => {
+    it('has dispose property', () => {
+      expect(vi.fn()[Symbol.dispose]).toBeTypeOf('function')
+    })
+    it('calls mockRestore when disposing', () => {
+      const fn = vi.fn()
+      const restoreSpy = vi.spyOn(fn, 'mockRestore')
+      fn[Symbol.dispose]()
+      expect(restoreSpy).toHaveBeenCalled()
+    })
+    it('allows disposal when using mockImplementation', () => {
+      expect(vi.fn().mockImplementation(() => {})[Symbol.dispose]).toBeTypeOf('function')
+    })
+  })
+
   describe('docs example', () => {
     it('mockClear', () => {
       const person = {
