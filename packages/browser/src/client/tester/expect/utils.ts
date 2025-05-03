@@ -279,25 +279,3 @@ export function arrayAsSetComparison(a: unknown, b: unknown): boolean | undefine
   }
   return undefined
 }
-
-export interface CompareImagesOptions {
-  threshold?: number
-}
-
-export interface CompareImagesResult {
-  pass: boolean
-  diffPercentage: number
-  saveDiff: (path: string) => Promise<void>
-}
-
-export async function compareImages(
-  actual: string,
-  expected: string,
-  _options: CompareImagesOptions = {},
-): Promise<CompareImagesResult> {
-  return {
-    pass: true,
-    diffPercentage: 0,
-    saveDiff: async () => {},
-  }
-}

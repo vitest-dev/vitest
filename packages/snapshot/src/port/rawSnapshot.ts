@@ -4,7 +4,6 @@ export interface RawSnapshotInfo {
   file: string
   readonly?: boolean
   content?: string
-  isScreenshot?: boolean
 }
 
 export interface RawSnapshot extends RawSnapshotInfo {
