@@ -489,7 +489,11 @@ export abstract class BaseReporter implements Reporter {
       this.log(padSummaryTitle('Duration'), formatTime(collectTime + testsTime + setupTime))
     }
     else {
-      const executionTime = this.end - this.start
+      const blobs = this.ctx.state.blobs
+
+      // Execution time is either sum of all runs of `--merge-reports` or the current run's time
+      const executionTime = blobs?.executionTimes ? sum(blobs.executionTimes, time => time) : this.end - this.start
+
       const environmentTime = sum(files, file => file.environmentLoad)
       const prepareTime = sum(files, file => file.prepareDuration)
       const transformTime = sum(this.ctx.projects, project => project.vitenode.getTotalDuration())
@@ -506,6 +510,10 @@ export abstract class BaseReporter implements Reporter {
       ].filter(Boolean).join(', ')
 
       this.log(padSummaryTitle('Duration'), formatTime(executionTime) + c.dim(` (${timers})`))
+
+      if (blobs?.executionTimes) {
+        this.log(padSummaryTitle('Per blob') + blobs.executionTimes.map(time => ` ${formatTime(time)}`).join(''))
+      }
     }
 
     this.log()
