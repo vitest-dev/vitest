@@ -2,7 +2,7 @@ import { readFileSync, rmSync } from 'node:fs'
 import { expect, onTestFinished, test } from 'vitest'
 import { runVitestCli } from '../../test-utils'
 
-test.only.each([
+test.each([
   ['--pool=threads'],
   ['--pool=forks'],
   ['--pool=vmForks'],
