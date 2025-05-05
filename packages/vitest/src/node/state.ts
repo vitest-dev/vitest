@@ -1,6 +1,7 @@
 import type { File, Task, TaskResultPack } from '@vitest/runner'
 import type { UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
+import type { MergedBlobs } from './reporters/blob'
 import { createFileTask } from '@vitest/runner/utils'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
@@ -20,6 +21,7 @@ export class StateManager {
   errorsSet: Set<unknown> = new Set()
   processTimeoutCauses: Set<string> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
+  blobs?: MergedBlobs
 
   catchError(err: unknown, type: string): void {
     if (isAggregateError(err)) {
