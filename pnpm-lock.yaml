@@ -1159,6 +1159,9 @@ importers:
       '@vitest/injected-lib':
         specifier: link:./injected-lib
         version: link:injected-lib
+      playwright:
+        specifier: ^1.52.0
+        version: 1.52.0
       react:
         specifier: ^19.1.0
         version: 19.1.0
