@@ -232,7 +232,7 @@ test('works correctly')
 
 #### Default fixture
 
-Since Vitest 3, you can provide different values in different [projects](/guide/workspace). To enable this feature, pass down `{ injected: true }` to the options. If the key is not specified in the [project configuration](/config/#provide), then the default value will be used.
+Since Vitest 3, you can provide different values in different [projects](/guide/projects). To enable this feature, pass down `{ injected: true }` to the options. If the key is not specified in the [project configuration](/config/#provide), then the default value will be used.
 
 :::code-group
 ```ts [fixtures.test.ts]
@@ -253,32 +253,36 @@ test('works correctly', ({ url }) => {
   // url is "/empty" in "project-empty"
 })
 ```
-```ts [vitest.workspace.ts]
-import { defineWorkspace } from 'vitest/config'
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkspace([
-  {
-    test: {
-      name: 'project-new',
-    },
-  },
-  {
-    test: {
-      name: 'project-full',
-      provide: {
-        url: '/full',
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'project-new',
+        },
       },
-    },
-  },
-  {
-    test: {
-      name: 'project-empty',
-      provide: {
-        url: '/empty',
+      {
+        test: {
+          name: 'project-full',
+          provide: {
+            url: '/full',
+          },
+        },
       },
-    },
+      {
+        test: {
+          name: 'project-empty',
+          provide: {
+            url: '/empty',
+          },
+        },
+      },
+    ],
   },
-])
+})
 ```
 :::
 

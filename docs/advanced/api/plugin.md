@@ -53,7 +53,7 @@ Vitest re-exports all Vite type-only imports via a `Vite` namespace, which you c
 ```
 :::
 
-Unlike [`reporter.onInit`](/advanced/api/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [workspace project](/guide/workspace) if your plugin is defined in the project and not in the global config.
+Unlike [`reporter.onInit`](/advanced/api/reporters#oninit), this hooks runs early in Vitest lifecycle allowing you to make changes to configuration like `coverage` and `reporters`. A more notable change is that you can manipulate the global config from a [test project](/guide/projects) if your plugin is defined in the project and not in the global config.
 
 ## Context
 
@@ -107,7 +107,7 @@ const newProjects = await injectTestProjects({
 ```
 
 ::: warning Projects are Filtered
-Vitest filters projects during the config resolution, so if the user defined a filter, injected project might not be resolved unless it [matches the filter](./vitest#matchesprojectfilter). You can update the filter via the `vitest.config.project` option to always include your workspace project:
+Vitest filters projects during the config resolution, so if the user defined a filter, injected project might not be resolved unless it [matches the filter](./vitest#matchesprojectfilter). You can update the filter via the `vitest.config.project` option to always include your test project:
 
 ```ts
 vitest.config.project.push('my-project-name')

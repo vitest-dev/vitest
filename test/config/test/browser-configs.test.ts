@@ -68,7 +68,7 @@ test('filters projects with a wildcard', async () => {
 
 test('assignes names as browsers in a custom project', async () => {
   const { projects } = await vitest({
-    workspace: [
+    projects: [
       {
         test: {
           name: 'custom',
@@ -207,7 +207,7 @@ test('coverage provider v8 works correctly in browser mode if instances are filt
 test('coverage provider v8 works correctly in workspaced browser mode if instances are filtered', async () => {
   const { projects } = await vitest({
     project: 'browser (chromium)',
-    workspace: [
+    projects: [
       {
         test: {
           name: 'browser',
@@ -236,7 +236,7 @@ test('coverage provider v8 works correctly in workspaced browser mode if instanc
 test('filter for the global browser project includes all browser instances', async () => {
   const { projects } = await vitest({
     project: 'myproject',
-    workspace: [
+    projects: [
       {
         test: {
           name: 'myproject',
@@ -275,7 +275,7 @@ test('can enable browser-cli options for multi-project workspace', async () => {
       },
     },
     {
-      workspace: [
+      projects: [
         {
           test: {
             name: 'unit',
@@ -373,7 +373,7 @@ function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = 
 describe('[e2e] workspace configs are affected by the CLI options', () => {
   test('UI is not enabled by default in headless config', async () => {
     const vitest = await getCliConfig({
-      workspace: [
+      projects: [
         {
           test: {
             name: 'unit',
@@ -426,7 +426,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
 
   test('CLI options correctly override inline workspace options', async () => {
     const vitest = await getCliConfig({
-      workspace: [
+      projects: [
         {
           test: {
             name: 'unit',
@@ -481,7 +481,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   test('CLI options correctly override config file workspace options', async () => {
     const vitest = await getCliConfig(
       {
-        workspace: [
+        projects: [
           {
             test: {
               name: 'unit',

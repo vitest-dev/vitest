@@ -119,7 +119,7 @@ If you pass down the config to the `startVitest` or `createVitest` APIs, Vitest 
 :::
 
 ::: warning
-The `resolveConfig` doesn't resolve the `workspace`. To resolve workspace configs, Vitest needs an established Vite server.
+The `resolveConfig` doesn't resolve `projects`. To resolve projects configs, Vitest needs an established Vite server.
 
 Also note that `viteConfig.test` will not be fully resolved. If you need Vitest config, use `vitestConfig` instead.
 :::

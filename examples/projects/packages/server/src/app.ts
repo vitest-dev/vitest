@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import Fastify from 'fastify'
-import { usersData } from '../mockData'
+import { usersData } from '../mockData.js'
 
 const app: FastifyInstance = Fastify({
   logger: process.env.NODE_ENV === 'development',

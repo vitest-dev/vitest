@@ -106,7 +106,7 @@ export default defineConfig({
 
 Since Vitest uses Vite config, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases - these options should be defined on the top level, _not_ within a `test` property.
 
-Configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them. This means they can only be set in the root Vitest config.
+Configuration options that are not supported inside a [project](/guide/projects) config have <NonProjectOption /> sign next to them. This means they can only be set in the root Vitest config.
 :::
 
 ### include
@@ -588,7 +588,7 @@ These options are passed down to `setup` method of current [`environment`](#envi
 - **Default:** `[]`
 
 ::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead.
+This API was deprecated in Vitest 3. Use [projects](/guide/projects) to define different configurations instead.
 
 ```ts
 export default defineConfig({
@@ -596,7 +596,7 @@ export default defineConfig({
     environmentMatchGlobs: [ // [!code --]
       ['./*.jsdom.test.ts', 'jsdom'], // [!code --]
     ], // [!code --]
-    workspace: [ // [!code ++]
+    projects: [ // [!code ++]
       { // [!code ++]
         extends: true, // [!code ++]
         test: { // [!code ++]
@@ -635,7 +635,7 @@ export default defineConfig({
 - **Default:** `[]`
 
 ::: danger DEPRECATED
-This API was deprecated in Vitest 3. Use [workspace](/guide/workspace) to define different configurations instead:
+This API was deprecated in Vitest 3. Use [projects](/guide/projects) to define different configurations instead:
 
 ```ts
 export default defineConfig({
@@ -643,7 +643,7 @@ export default defineConfig({
     poolMatchGlobs: [ // [!code --]
       ['./*.threads.test.ts', 'threads'], // [!code --]
     ], // [!code --]
-    workspace: [ // [!code ++]
+    projects: [ // [!code ++]
       { // [!code ++]
         test: { // [!code ++]
           extends: true, // [!code ++]
@@ -724,7 +724,7 @@ export default defineConfig({
 ```
 
 ::: warning
-Returned files should be either absolute or relative to the root. Note that this is a global option, and it cannot be used inside of [project](/guide/workspace) configs.
+Returned files should be either absolute or relative to the root. Note that this is a global option, and it cannot be used inside of [project](/guide/projects) configs.
 :::
 
 ### root
@@ -2436,13 +2436,24 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 
 ### workspace<NonProjectOption /> {#workspace}
 
-- **Type:** `string | TestProjectConfiguration`
+::: danger DEPRECATED
+This options is deprecated and will be removed in the next major. Please, use [`projects`](#projects) instead.
+:::
+
+- **Type:** `string | TestProjectConfiguration[]`
 - **CLI:** `--workspace=./file.js`
 - **Default:** `vitest.{workspace,projects}.{js,ts,json}` close to the config file or root
 
-Path to a [workspace](/guide/workspace) config file relative to [root](#root).
+Path to a [workspace](/guide/projects) config file relative to [root](#root).
 
 Since Vitest 3, you can also define the workspace array in the root config. If the `workspace` is defined in the config manually, Vitest will ignore the `vitest.workspace` file in the root.
+
+### projects<NonProjectOption /> {#projects}
+
+- **Type:** `TestProjectConfiguration[]`
+- **Default:** `[]`
+
+An array of [projects](/guide/projects).
 
 ### isolate
 
