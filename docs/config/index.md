@@ -699,7 +699,7 @@ In CI, or when run from a non-interactive shell, "watch" mode is not the default
 
 ### watchTriggerPatterns <Version>3.2.0</Version><NonProjectOption /> {#watchtriggerpatterns}
 
-- **Type:** `WatcherTriggerPattern`
+- **Type:** `WatcherTriggerPattern[]`
 
 Vitest reruns tests based on the module graph which is populated by static and dynamic `import` statements. However, if you are reading from the file system or fetching from a proxy, then Vitest cannot detect those dependencies.
 
