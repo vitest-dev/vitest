@@ -66,7 +66,7 @@ Vitest will ignore `launch.headless` option. Instead, use [`test.browser.headles
 Note that Vitest will push debugging flags to `launch.args` if [`--inspect`](/guide/cli#inspect) is enabled.
 :::
 
-## connect
+## connect <Version>3.2.0</Version> {#connect}
 
 These options are directly passed down to `playwright[browser].connect` command. You can read more about the command and available arguments in the [Playwright documentation](https://playwright.dev/docs/api/class-browsertype#browser-type-connect).
 
