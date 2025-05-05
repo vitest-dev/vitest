@@ -269,6 +269,37 @@ export interface VitestUtils {
   ) => Promise<MaybeMockedDeep<T>>
 
   /**
+   * Deeply mocks properties and methods of a given object
+   * in the same way as `vi.mock()` mocks module exports.
+   *
+   * @example
+   * ```ts
+   * const original = {
+   *   simple: () => 'value',
+   *   nested: {
+   *     method: () => 'real'
+   *   },
+   *   prop: 'foo',
+   * }
+   *
+   * const mocked = vi.mockObject(original)
+   * expect(mocked.simple()).toBe(undefined)
+   * expect(mocked.nested.method()).toBe(undefined)
+   * expect(mocked.prop).toBe('foo')
+   *
+   * mocked.simple.mockReturnValue('mocked')
+   * mocked.nested.method.mockReturnValue('mocked nested')
+   *
+   * expect(mocked.simple()).toBe('mocked')
+   * expect(mocked.nested.method()).toBe('mocked nested')
+   * ```
+   *
+   * @param value - The object to be mocked
+   * @returns A deeply mocked version of the input object
+   */
+  mockObject: <T>(value: T) => MaybeMockedDeep<T>
+
+  /**
    * Type helper for TypeScript. Just returns the object that was passed.
    *
    * When `partial` is `true` it will expect a `Partial<T>` as a return value. By default, this will only make TypeScript believe that
@@ -604,6 +635,10 @@ function createVitest(): VitestUtils {
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
       return _mocker().importMock(path, getImporter('importMock'))
+    },
+
+    mockObject<T>(value: T) {
+      return _mocker().mockObject({ value }).value
     },
 
     // this is typed in the interface so it's not necessary to type it here
