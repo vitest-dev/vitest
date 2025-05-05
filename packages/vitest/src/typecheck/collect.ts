@@ -67,6 +67,7 @@ export async function collectTests(
     projectName,
     meta: { typecheck: true },
     file: null!,
+    context: {},
   }
   file.file = file
   const definitions: LocalCallDefinition[] = []
