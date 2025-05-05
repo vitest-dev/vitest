@@ -1273,6 +1273,29 @@ test('test', async () => {
     `)
   })
 
+  test('vi.mock already hoisted at the top', () => {
+    expect(
+      hoistSimpleCode(`\
+vi.mock('node:path', () => ({ mocked: true }));
+
+import { test, vi } from 'vitest';
+
+import * as path from 'node:path';
+
+console.log(path.mocked);
+`),
+    ).toMatchInlineSnapshot(`
+      "vi.mock('node:path', () => ({ mocked: true }));
+      const __vi_import_0__ = await import("node:path");
+
+      import { test, vi } from 'vitest';
+
+
+
+      console.log(__vi_import_0__.mocked);"
+    `)
+  })
+
   test('correctly hoists when import.meta is used', () => {
     expect(hoistSimpleCode(`
 import { calc } from './calc'

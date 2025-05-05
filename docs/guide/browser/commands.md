@@ -11,7 +11,7 @@ Command is a function that invokes another function on the server and passes dow
 
 ### Files Handling
 
-You can use `readFile`, `writeFile` and `removeFile` API to handle files inside your browser tests. All paths are resolved relative to the test file even if they are called in a helper function located in another file.
+You can use the `readFile`, `writeFile`, and `removeFile` APIs to handle files in your browser tests. Since Vitest 3.2, all paths are resolved relative to the [project](/guide/workspace) root (which is `process.cwd()`, unless overriden manually). Previously, paths were resolved relative to the test file.
 
 By default, Vitest uses `utf-8` encoding but you can override it with options.
 

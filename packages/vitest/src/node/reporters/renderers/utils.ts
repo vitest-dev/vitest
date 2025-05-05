@@ -1,5 +1,7 @@
 import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
+import type { Formatter } from 'tinyrainbow'
+import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
@@ -22,6 +24,8 @@ export const taskFail: string = c.red(F_CROSS)
 export const suiteFail: string = c.red(F_POINTER)
 export const pending: string = c.gray('·')
 
+const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
+
 function getCols(delta = 0) {
   let length = process.stdout?.columns
   if (!length || Number.isNaN(length)) {
@@ -30,8 +34,18 @@ function getCols(delta = 0) {
   return Math.max(length + delta, 0)
 }
 
-export function divider(text?: string, left?: number, right?: number): string {
+export function errorBanner(message: string): string {
+  return divider(c.bold(c.bgRed(` ${message} `)), null, null, c.red)
+}
+
+export function divider(
+  text?: string,
+  left?: number | null,
+  right?: number | null,
+  color?: Formatter,
+): string {
   const cols = getCols()
+  const c = color || ((text: string) => text)
 
   if (text) {
     const textLength = stripVTControlCharacters(text).length
@@ -44,7 +58,7 @@ export function divider(text?: string, left?: number, right?: number): string {
     }
     left = Math.max(0, left)
     right = Math.max(0, right)
-    return `${F_LONG_DASH.repeat(left)}${text}${F_LONG_DASH.repeat(right)}`
+    return `${c(F_LONG_DASH.repeat(left))}${text}${c(F_LONG_DASH.repeat(right))}`
   }
   return F_LONG_DASH.repeat(cols)
 }
@@ -212,24 +226,30 @@ export function formatTime(time: number): string {
   return `${Math.round(time)}ms`
 }
 
-export function formatProjectName(name: string | undefined, suffix = ' '): string {
-  if (!name) {
+export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>, suffix = ' '): string {
+  if (!project?.name) {
     return ''
   }
   if (!c.isColorSupported) {
-    return `|${name}|${suffix}`
+    return `|${project.name}|${suffix}`
   }
-  const index = name
-    .split('')
-    .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
 
-  const colors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta]
+  let background = project.color && c[`bg${capitalize(project.color)}`]
 
-  return c.black(colors[index % colors.length](` ${name} `)) + suffix
+  if (!background) {
+    const index = project.name
+      .split('')
+      .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+
+    background = labelDefaultColors[index % labelDefaultColors.length]
+  }
+
+  return c.black(background(` ${project.name} `)) + suffix
 }
 
 export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
-  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${message ? c[color](message) : ''}`
+  const bgColor = `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
+  return `${c.bold(c[bgColor](` ${label} `))} ${message ? c[color](message) : ''}`
 }
 
 export function padSummaryTitle(str: string): string {
@@ -244,4 +264,8 @@ export function truncateString(text: string, maxLength: number): string {
   }
 
   return `${plainText.slice(0, maxLength - 1)}…`
+}
+
+function capitalize<T extends string>(text: T) {
+  return `${text[0].toUpperCase()}${text.slice(1)}` as Capitalize<T>
 }

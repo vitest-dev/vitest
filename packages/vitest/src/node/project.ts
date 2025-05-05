@@ -14,6 +14,7 @@ import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
+  ProjectName,
   ResolvedConfig,
   SerializedConfig,
   TestProjectInlineConfiguration,
@@ -193,6 +194,13 @@ export class TestProject {
    */
   public get name(): string {
     return this.config.name || ''
+  }
+
+  /**
+   * The color used when reporting tasks of this project.
+   */
+  public get color(): ProjectName['color'] {
+    return this.config.color
   }
 
   /**
@@ -516,13 +524,20 @@ export class TestProject {
       this.vitest.version,
     )
     const { createBrowserServer, distRoot } = await import('@vitest/browser')
+    let cacheDir: string
     const browser = await createBrowserServer(
       this,
       this.vite.config.configFile,
       [
+        {
+          name: 'vitest:browser-cacheDir',
+          configResolved(config) {
+            cacheDir = config.cacheDir
+          },
+        },
         ...MocksPlugins({
           filter(id) {
-            if (id.includes(distRoot) || id.includes(browser.vite.config.cacheDir)) {
+            if (id.includes(distRoot) || id.includes(cacheDir)) {
               return false
             }
             return true

@@ -60,5 +60,7 @@ declare module '@vitest/browser/context' {
     }>
 
     stripVTControlCharacters: (text: string) => Promise<string>
+    startTrace: () => Promise<void>
+    stopTrace: () => Promise<void>
   }
 }

@@ -287,9 +287,22 @@ export class Vitest {
       }))
     }))
 
-    if (!this.projects.length) {
-      throw new Error(`No projects matched the filter "${toArray(resolved.project).join('", "')}".`)
+    if (options.browser?.enabled) {
+      const browserProjects = this.projects.filter(p => p.config.browser.enabled)
+      if (!browserProjects.length) {
+        throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
+      }
     }
+    if (!this.projects.length) {
+      const filter = toArray(resolved.project).join('", "')
+      if (filter) {
+        throw new Error(`No projects matched the filter "${filter}".`)
+      }
+      else {
+        throw new Error(`Vitest wasn't able to resolve any project.`)
+      }
+    }
+
     if (!this.coreWorkspaceProject) {
       this.coreWorkspaceProject = TestProject._createBasicProject(this)
     }
@@ -486,7 +499,8 @@ export class Vitest {
       throw new Error('Cannot merge reports when `--reporter=blob` is used. Remove blob reporter from the config first.')
     }
 
-    const { files, errors, coverages } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+    const { files, errors, coverages, executionTimes } = await readBlobs(this.version, directory || this.config.mergeReports, this.projects)
+    this.state.blobs = { files, errors, coverages, executionTimes }
 
     await this.report('onInit', this)
     await this.report('onPathsCollected', files.flatMap(f => f.filepath))
@@ -746,7 +760,10 @@ export class Vitest {
         }
 
         this.cache.results.updateResults(files)
-        await this.cache.results.writeToCache()
+        try {
+          await this.cache.results.writeToCache()
+        }
+        catch {}
 
         return {
           testModules: this.state.getTestModules(),

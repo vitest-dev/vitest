@@ -38,24 +38,62 @@ When a test function returns a promise, the runner will wait until it is resolve
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
-Most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+You can define options by chaining properties on a function:
 
-:::code-group
-```ts [dot-syntax]
+```ts
 import { test } from 'vitest'
 
 test.skip('skipped test', () => {
   // some logic that fails right now
 })
+
+test.concurrent.skip('skipped concurrent test', () => {
+  // some logic that fails right now
+})
 ```
-```ts [object-syntax]
+
+But you can also provide an object as a second argument instead:
+
+```ts
 import { test } from 'vitest'
 
 test('skipped test', { skip: true }, () => {
   // some logic that fails right now
 })
+
+test('skipped concurrent test', { skip: true, concurrent: true }, () => {
+  // some logic that fails right now
+})
 ```
-:::
+
+They both work in exactly the same way. To use either one is purely a stylistic choice.
+
+Note that if you are providing timeout as the last argument, you cannot use options anymore:
+
+```ts
+import { test } from 'vitest'
+
+// ✅ this works
+test.skip('heavy test', () => {
+  // ...
+}, 10_000)
+
+// ❌ this doesn't work
+test('heavy test', { skip: true }, () => {
+  // ...
+}, 10_000)
+```
+
+However, you can provide a timeout inside the object:
+
+```ts
+import { test } from 'vitest'
+
+// ✅ this works
+test('heavy test', { skip: true, timeout: 10_000 }, () => {
+  // ...
+})
+```
 
 ## test
 
@@ -129,7 +167,7 @@ test('skipped test', (context) => {
 })
 ```
 
-Since Vitest 3.1, if the condition is unknonwn, you can provide it to the `skip` method as the first arguments:
+Since Vitest 3.1, if the condition is unknown, you can provide it to the `skip` method as the first arguments:
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1241,16 +1279,6 @@ test('performs an organization query', async () => {
 
 ::: tip
 This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
-
-<!-- TODO: should it be called? https://github.com/vitest-dev/vitest/pull/7069 -->
-Note that this hook is not called if test was skipped with a dynamic `ctx.skip()` call:
-
-```ts{2}
-test('skipped dynamically', (t) => {
-  onTestFinished(() => {}) // not called
-  t.skip()
-})
-```
 :::
 
 ### onTestFailed
@@ -1262,8 +1290,8 @@ import { onTestFailed, test } from 'vitest'
 
 test('performs a query', () => {
   const db = connectDb()
-  onTestFailed((e) => {
-    console.log(e.result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })
@@ -1277,8 +1305,8 @@ import { test } from 'vitest'
 
 test.concurrent('performs a query', ({ onTestFailed }) => {
   const db = connectDb()
-  onTestFailed((result) => {
-    console.log(result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })

@@ -1,7 +1,11 @@
 import type { ViteUserConfig } from 'vitest/config'
 import type { UserConfig, VitestOptions } from 'vitest/node'
-import { expect, onTestFinished, test } from 'vitest'
+import type { TestFsStructure } from '../../test-utils'
+import crypto from 'node:crypto'
+import { resolve } from 'pathe'
+import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
+import { runVitestCli, useFS } from '../../test-utils'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
@@ -302,4 +306,232 @@ test('can enable browser-cli options for multi-project workspace', async () => {
   // browser config
   expect(projects[1].config.browser.enabled).toBe(true)
   expect(projects[1].config.browser.headless).toBe(true)
+})
+
+function getCliConfig(options: UserConfig, cli: string[], fs: TestFsStructure = {}) {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  useFS(root, {
+    ...fs,
+    'basic.test.ts': /* ts */`
+      import { test } from 'vitest'
+      test('basic', () => {
+        expect(1).toBe(1)
+      })
+    `,
+    'vitest.config.ts': /* ts */ `
+      export default {
+        test: {
+          reporters: [
+            {
+              onInit(vitest) {
+                const browser = vitest.config.browser
+                const workspace = (p) => ({
+                  name: p.name,
+                  headless: p.config.browser.headless,
+                  browser: p.config.browser.enabled,
+                  ui: p.config.browser.ui,
+                })
+                console.log(JSON.stringify({
+                  browser: {
+                    headless: browser.headless,
+                    browser: browser.enabled,
+                    ui: browser.ui,
+                  },
+                  workspace: vitest.projects.map(p => {
+                    return {
+                      ...workspace(p),
+                      parent: p._parent ? workspace(p._parent) : null,
+                    }
+                  })
+                }))
+                // throw an error to avoid running tests
+                throw new Error('stop')
+              },
+            },
+          ],
+          ...${JSON.stringify(options)}
+        }
+      }
+    `,
+  })
+  return runVitestCli(
+    {
+      nodeOptions: {
+        env: {
+          CI: 'false',
+          GITHUB_ACTIONS: undefined,
+        },
+      },
+    },
+    '--root',
+    root,
+    '--no-watch',
+    ...cli,
+  )
+}
+
+describe('[e2e] workspace configs are affected by the CLI options', () => {
+  test('UI is not enabled by default in headless config', async () => {
+    const vitest = await getCliConfig({
+      workspace: [
+        {
+          test: {
+            name: 'unit',
+          },
+        },
+        {
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: 'playwright',
+              instances: [
+                {
+                  browser: 'chromium',
+                },
+              ],
+            },
+          },
+        },
+      ],
+    }, [])
+
+    const config = JSON.parse(vitest.stdout)
+
+    expect(config.workspace).toHaveLength(2)
+    expect(config.workspace[0]).toEqual({
+      name: 'unit',
+      headless: false,
+      browser: false,
+      ui: true,
+      parent: null,
+    })
+
+    expect(config.workspace[1]).toEqual({
+      name: 'browser (chromium)',
+      // headless was set in the config
+      headless: true,
+      browser: true,
+      // UI is false because headless is enabled
+      ui: false,
+      parent: {
+        name: 'browser',
+        headless: true,
+        browser: true,
+        ui: false,
+      },
+    })
+  })
+
+  test('CLI options correctly override inline workspace options', async () => {
+    const vitest = await getCliConfig({
+      workspace: [
+        {
+          test: {
+            name: 'unit',
+          },
+        },
+        {
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: 'playwright',
+              instances: [
+                {
+                  browser: 'chromium',
+                },
+              ],
+            },
+          },
+        },
+      ],
+    }, ['--browser.headless=false'])
+
+    const config = JSON.parse(vitest.stdout)
+
+    expect(config.workspace).toHaveLength(2)
+    expect(config.workspace[0]).toEqual({
+      name: 'unit',
+      headless: false,
+      browser: false,
+      ui: true,
+      parent: null,
+    })
+
+    expect(config.workspace[1]).toEqual({
+      name: 'browser (chromium)',
+      // headless was overriden by CLI options
+      headless: false,
+      browser: true,
+      // UI should be true because we always set CI to false,
+      // if headless was `true`, ui would be `false`
+      ui: true,
+      parent: {
+        name: 'browser',
+        headless: false,
+        browser: true,
+        ui: true,
+      },
+    })
+  })
+
+  test('CLI options correctly override config file workspace options', async () => {
+    const vitest = await getCliConfig(
+      {
+        workspace: [
+          {
+            test: {
+              name: 'unit',
+            },
+          },
+          './vitest.browser.config.ts',
+        ],
+      },
+      ['--browser.headless=false'],
+      {
+        'vitest.browser.config.ts': {
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: 'playwright',
+              instances: [
+                {
+                  browser: 'chromium',
+                },
+              ],
+            },
+          },
+        },
+      },
+    )
+
+    const config = JSON.parse(vitest.stdout)
+
+    expect(config.workspace).toHaveLength(2)
+    expect(config.workspace[0]).toEqual({
+      name: 'unit',
+      headless: false,
+      browser: false,
+      ui: true,
+      parent: null,
+    })
+
+    expect(config.workspace[1]).toEqual({
+      name: 'browser (chromium)',
+      headless: false,
+      browser: true,
+      ui: true,
+      parent: {
+        name: 'browser',
+        headless: false,
+        browser: true,
+        ui: true,
+      },
+    })
+  })
 })

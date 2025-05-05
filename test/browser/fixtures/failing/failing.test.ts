@@ -1,7 +1,7 @@
 import { page } from '@vitest/browser/context'
 import { index } from '@vitest/bundled-lib'
 import { expect, it } from 'vitest'
-import { throwError } from '../src/error'
+import { throwError } from './src/error'
 
 document.body.innerHTML = `
   <button>Click me!</button>

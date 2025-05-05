@@ -106,7 +106,7 @@ export default defineConfig({
 
 Since Vitest uses Vite config, you can also use any configuration option from [Vite](https://vitejs.dev/config/). For example, `define` to define global variables, or `resolve.alias` to define aliases - these options should be defined on the top level, _not_ within a `test` property.
 
-Configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them.
+Configuration options that are not supported inside a [workspace](/guide/workspace) project config have <NonProjectOption /> sign next to them. This means they can only be set in the root Vitest config.
 :::
 
 ### include
@@ -146,9 +146,11 @@ When defined, Vitest will run all matched files with `import.meta.vitest` inside
 
 ### name
 
-- **Type:** `string`
+- **Type:** `string | { label: string, color?: LabelColor }`
 
-Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+Assign a custom name to the test project or Vitest process. The name will be visible in the CLI and UI, and available in the Node.js API via [`project.name`](/advanced/api/test-project#name).
+
+Color used by CLI and UI can be changed by providing an object with `color` property.
 
 ### server {#server}
 
@@ -686,10 +688,14 @@ Update snapshot files. This will update all changed snapshots and delete obsolet
 ### watch<NonProjectOption />
 
 - **Type:** `boolean`
-- **Default:** `!process.env.CI`
+- **Default:** `!process.env.CI && process.stdin.isTTY`
 - **CLI:** `-w`, `--watch`, `--watch=false`
 
 Enable watch mode
+
+In interactive environments, this is the default, unless `--run` is specified explicitly.
+
+In CI, or when run from a non-interactive shell, "watch" mode is not the default, but can be enabled explicitly with this flag.
 
 ### watchTriggerPatterns <Version>3.2.0</Version><NonProjectOption /> {#watchtriggerpatterns}
 
@@ -1668,7 +1674,7 @@ Sets thresholds to 100 for files matching the glob pattern.
 - **Available for providers:** `'v8'`
 - **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
 
-Ignore empty lines, comments and other non-runtime code, e.g. Typescript types.
+Ignore empty lines, comments and other non-runtime code, e.g. Typescript types. Requires `experimentalAstAwareRemapping: false`.
 
 This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
 By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
@@ -1692,6 +1698,14 @@ export default defineConfig({
   },
 })
 ```
+#### coverage.experimentalAstAwareRemapping
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8'`
+- **CLI:** `--coverage.experimentalAstAwareRemapping=<boolean>`
+
+Remap coverage with experimental AST based analysis. Provides more accurate results compared to default mode.
 
 #### coverage.ignoreClassMethods
 

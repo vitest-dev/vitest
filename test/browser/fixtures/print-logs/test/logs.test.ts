@@ -59,3 +59,12 @@ test('logging the stack', () => {
   console.error('error with a stack')
   console.trace('trace with a stack')
 })
+
+test('console.time', async () => {
+  vi.useFakeTimers({
+    toFake: ['Date', 'performance'],
+  })
+  console.time('[console-time-fake]')
+  await new Promise(r => setTimeout(r, 500))
+  console.timeEnd('[console-time-fake]')
+})

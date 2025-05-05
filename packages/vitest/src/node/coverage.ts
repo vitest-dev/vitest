@@ -217,7 +217,7 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
         for (const chunk of this.toSlices(filenames, this.options.processingConcurrency)) {
           if (onDebug.enabled) {
             index += chunk.length
-            onDebug('Covered files %d/%d', index, total)
+            onDebug(`Reading coverage results ${index}/${total}`)
           }
 
           await Promise.all(chunk.map(async (filename) => {

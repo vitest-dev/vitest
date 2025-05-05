@@ -89,6 +89,8 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
   }
 
   async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
+    const start = debug.enabled ? performance.now() : 0
+
     const coverageMap = this.createCoverageMap()
     let coverageMapByTransformMode = this.createCoverageMap()
 
@@ -118,6 +120,10 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
 
     if (this.options.excludeAfterRemap) {
       coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+    }
+
+    if (debug.enabled) {
+      debug('Generate coverage total time %d ms', (performance.now() - start!).toFixed())
     }
 
     return coverageMap
@@ -182,12 +188,28 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider<ResolvedCover
     // Note that these cannot be run parallel as synchronous instrumenter.lastFileCoverage
     // returns the coverage of the last transformed file
     for (const [index, filename] of uncoveredFiles.entries()) {
-      debug('Uncovered file %s %d/%d', filename, index, uncoveredFiles.length)
+      let timeout: ReturnType<typeof setTimeout> | undefined
+      let start: number | undefined
+
+      if (debug.enabled) {
+        start = performance.now()
+        timeout = setTimeout(() => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)), 3_000)
+
+        debug('Uncovered file %d/%d', index, uncoveredFiles.length)
+      }
 
       // Make sure file is not served from cache so that instrumenter loads up requested file coverage
       await transform(`${filename}?v=${cacheKey}`)
       const lastCoverage = this.instrumenter.lastFileCoverage()
       coverageMap.addFileCoverage(lastCoverage)
+
+      if (debug.enabled) {
+        clearTimeout(timeout)
+
+        const diff = performance.now() - start!
+        const color = diff > 500 ? c.bgRed : c.bgGreen
+        debug(`${color(` ${diff.toFixed()} ms `)} ${filename}`)
+      }
     }
 
     return coverageMap

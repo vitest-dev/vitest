@@ -1,11 +1,11 @@
 import { expect, it } from 'vitest';
 
-it('skips correctly', (t) => {
-  t.skip(true)
+it('skips correctly', ({ skip }) => {
+  skip(true)
   expect.unreachable()
 })
 
-it('doesnt skip correctly', (t) => {
-  t.skip(false)
+it('doesnt skip correctly', ({ skip }) => {
+  skip(false)
   throw new Error('doesnt skip')
 })
