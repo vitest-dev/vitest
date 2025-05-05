@@ -202,7 +202,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
-        onCancel(reason) {
+        cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {

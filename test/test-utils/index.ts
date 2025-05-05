@@ -149,6 +149,7 @@ export async function runVitest(
 
 interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
+  preserveAnsi?: boolean
 }
 
 async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
@@ -169,6 +170,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
     stderr: subprocess.stderr!,
+    preserveAnsi: typeof _options !== 'string' ? _options?.preserveAnsi : false,
   })
 
   let setDone: (value?: unknown) => void

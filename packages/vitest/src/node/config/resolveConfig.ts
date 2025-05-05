@@ -145,6 +145,12 @@ export function resolveConfig(
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
 
+  resolved.name = typeof options.name === 'string'
+    ? options.name
+    : (options.name?.label || '')
+
+  resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
+
   const inspector = resolved.inspect || resolved.inspectBrk
 
   resolved.inspector = {

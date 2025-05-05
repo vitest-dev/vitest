@@ -3,6 +3,7 @@ import type { TestProject } from './project'
 import { readFileSync } from 'node:fs'
 import { noop, slash } from '@vitest/utils'
 import mm from 'micromatch'
+import { resolve } from 'pathe'
 
 export class VitestWatcher {
   /**
@@ -54,13 +55,41 @@ export class VitestWatcher {
     this._onRerun.forEach(cb => cb(file))
   }
 
+  private getTestFilesFromWatcherTrigger(id: string): boolean {
+    if (!this.vitest.config.watchTriggerPatterns) {
+      return false
+    }
+    let triggered = false
+    this.vitest.config.watchTriggerPatterns.forEach((definition) => {
+      const exec = definition.pattern.exec(id)
+      if (exec) {
+        const files = definition.testsToRun(id, exec)
+        if (Array.isArray(files)) {
+          triggered = true
+          files.forEach(file => this.changedTests.add(resolve(this.vitest.config.root, file)))
+        }
+        else if (typeof files === 'string') {
+          triggered = true
+          this.changedTests.add(resolve(this.vitest.config.root, files))
+        }
+      }
+    })
+    return triggered
+  }
+
   private onChange = (id: string): void => {
     id = slash(id)
     this.vitest.logger.clearHighlightCache(id)
     this.vitest.invalidateFile(id)
-    const needsRerun = this.handleFileChanged(id)
-    if (needsRerun) {
+    const testFiles = this.getTestFilesFromWatcherTrigger(id)
+    if (testFiles) {
       this.scheduleRerun(id)
+    }
+    else {
+      const needsRerun = this.handleFileChanged(id)
+      if (needsRerun) {
+        this.scheduleRerun(id)
+      }
     }
   }
 
@@ -82,6 +111,13 @@ export class VitestWatcher {
   private onAdd = (id: string): void => {
     id = slash(id)
     this.vitest.invalidateFile(id)
+
+    const testFiles = this.getTestFilesFromWatcherTrigger(id)
+    if (testFiles) {
+      this.scheduleRerun(id)
+      return
+    }
+
     let fileContent: string | undefined
 
     const matchingProjects: TestProject[] = []
@@ -170,4 +206,12 @@ export class VitestWatcher {
 
     return !!files.length
   }
+}
+
+export interface WatcherTriggerPattern {
+  pattern: RegExp
+  testsToRun: (
+    file: string,
+    match: RegExpMatchArray
+  ) => string[] | string | null | undefined | void
 }

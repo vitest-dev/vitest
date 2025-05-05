@@ -21,7 +21,7 @@ export interface WebSocketBrowserHandlers {
   onCollected: (method: TestExecutionMethod, files: RunnerTestFile[]) => Promise<void>
   onTaskUpdate: (method: TestExecutionMethod, packs: TaskResultPack[], events: TaskEventPack[]) => void
   onAfterSuiteRun: (meta: AfterSuiteRunMeta) => void
-  onCancel: (reason: CancelReason) => void
+  cancelCurrentRun: (reason: CancelReason) => void
   getCountOfFailedTests: () => number
   readSnapshotFile: (id: string) => Promise<string | null>
   saveSnapshotFile: (id: string, content: string) => Promise<void>

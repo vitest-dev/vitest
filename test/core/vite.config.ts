@@ -1,3 +1,4 @@
+import type { LabelColor } from 'vitest'
 import type { Pool } from 'vitest/node'
 import { basename, dirname, join, resolve } from 'pathe'
 import { defaultExclude, defineConfig } from 'vitest/config'
@@ -137,18 +138,18 @@ export default defineConfig({
       }
     },
     projects: [
-      project('threads'),
-      project('forks'),
-      project('vmThreads'),
+      project('threads', 'red'),
+      project('forks', 'green'),
+      project('vmThreads', 'blue'),
     ],
   },
 })
 
-function project(pool: Pool) {
+function project(pool: Pool, color: LabelColor) {
   return {
     extends: './vite.config.ts',
     test: {
-      name: pool,
+      name: { label: pool, color },
       pool,
     },
   }

@@ -168,7 +168,7 @@ export class Logger {
       const config = project.config
       const printConfig = !project.isRootProject() && project.name
       if (printConfig) {
-        this.console.error(`\n${formatProjectName(project.name)}\n`)
+        this.console.error(`\n${formatProjectName(project)}\n`)
       }
       if (config.include) {
         this.console.error(
@@ -247,7 +247,7 @@ export class Logger {
 
     const output = project.isRootProject()
       ? ''
-      : formatProjectName(project.name)
+      : formatProjectName(project)
     const provider = project.browser.provider.name
     const providerString = provider === 'preview' ? '' : ` by ${c.reset(c.bold(provider))}`
     this.log(
