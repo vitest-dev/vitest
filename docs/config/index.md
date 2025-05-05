@@ -1642,7 +1642,7 @@ Sets thresholds to 100 for files matching the glob pattern.
 - **Available for providers:** `'v8'`
 - **CLI:** `--coverage.ignoreEmptyLines=<boolean>`
 
-Ignore empty lines, comments and other non-runtime code, e.g. Typescript types.
+Ignore empty lines, comments and other non-runtime code, e.g. Typescript types. Requires `experimentalAstAwareRemapping: false`.
 
 This option works only if the used compiler removes comments and other non-runtime code from the transpiled code.
 By default Vite uses ESBuild which removes comments and Typescript types from `.ts`, `.tsx` and `.jsx` files.
@@ -1666,6 +1666,14 @@ export default defineConfig({
   },
 })
 ```
+#### coverage.experimentalAstAwareRemapping
+
+- **Type:** `boolean`
+- **Default:** `false`
+- **Available for providers:** `'v8'`
+- **CLI:** `--coverage.experimentalAstAwareRemapping=<boolean>`
+
+Remap coverage with experimental AST based analysis. Provides more accurate results compared to default mode.
 
 #### coverage.ignoreClassMethods
 
