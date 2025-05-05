@@ -5,7 +5,6 @@ import type { DefaultReporterOptions } from './default'
 import type { HTMLOptions } from './html'
 import type { JsonOptions } from './json'
 import type { JUnitOptions } from './junit'
-import { BasicReporter } from './basic'
 import { BlobReporter } from './blob'
 import { DefaultReporter } from './default'
 import { DotReporter } from './dot'
@@ -18,7 +17,6 @@ import { TapFlatReporter } from './tap-flat'
 import { VerboseReporter } from './verbose'
 
 export {
-  BasicReporter,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
@@ -45,7 +43,6 @@ export type {
 
 export const ReportersMap = {
   'default': DefaultReporter as typeof DefaultReporter,
-  'basic': BasicReporter as typeof BasicReporter,
   'blob': BlobReporter as typeof BlobReporter,
   'verbose': VerboseReporter as typeof VerboseReporter,
   'dot': DotReporter as typeof DotReporter,
@@ -61,7 +58,6 @@ export type BuiltinReporters = keyof typeof ReportersMap
 
 export interface BuiltinReporterOptions {
   'default': DefaultReporterOptions
-  'basic': BaseOptions
   'verbose': DefaultReporterOptions
   'dot': BaseOptions
   'json': JsonOptions

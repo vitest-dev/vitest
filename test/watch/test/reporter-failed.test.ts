@@ -4,7 +4,6 @@ import { editFile, runVitest } from '../../test-utils'
 describe.each([
   ['default', true],
   ['default', false],
-  ['basic', false],
 ])('%s reporter with %s tty', (reporter, isTTY) => {
   it('prints previously failed tests on rerun', async () => {
     const { vitest } = await runVitest({
