@@ -724,7 +724,7 @@ export default defineConfig({
 ```
 
 ::: warning
-Returned files should be either absolute or relative to the root. Note that this is a global option, and it cannot be used inside of [project](/guide/workspace) configs.
+Returned files should be either absolute or relative to the root. Note that this is a global option, and it cannot be used inside of [project](/guide/projects) configs.
 :::
 
 ### root
