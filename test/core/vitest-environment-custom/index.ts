@@ -14,6 +14,7 @@ export default <Environment>{
       option: custom.option,
       setTimeout,
       clearTimeout,
+      AbortController,
     })
     return {
       getVmContext() {

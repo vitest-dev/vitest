@@ -79,6 +79,21 @@ it('math is hard', ({ skip, mind }) => {
 })
 ```
 
+#### `context.signal` <Version>3.2.0</Version> {#context-signal}
+
+An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that can be aborted by Vitest. The signal is aborted in these situations:
+
+- Test times out
+- User manually cancelled the test run with Ctrl+C
+- [`vitest.cancelCurrentRun`](/advanced/api/vitest#cancelcurrentrun) was called programmatically
+- Another test failed in parallel and the [`bail`](/config/#bail) flag is set
+
+```ts
+it('stop request when test times out', async ({ signal }) => {
+  await fetch('/resource', { signal })
+}, 2000)
+```
+
 #### `onTestFailed`
 
 The [`onTestFailed`](/api/#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.

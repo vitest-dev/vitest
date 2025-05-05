@@ -106,7 +106,12 @@ declare module '@vitest/expect' {
 
 declare module '@vitest/runner' {
   interface TestContext {
-    expect: ExpectStatic
+    /**
+     * `expect` instance bound to the current test.
+     *
+     * This API is useful for running snapshot tests concurrently because global expect cannot track them.
+     */
+    readonly expect: ExpectStatic
   }
 
   interface TaskMeta {

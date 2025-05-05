@@ -150,7 +150,7 @@ export async function resolveWorkspace(
             fileProjects.map(p => ` - ${relative(vitest.config.root, p)}`).join('\n'),
             '\n\n',
           ].join('')
-        : [' ']
+        : ' '
       throw new Error([
         `Project name "${name}"`,
         project.vite.config.configFile ? ` from "${relative(vitest.config.root, project.vite.config.configFile)}"` : '',
@@ -226,7 +226,7 @@ export async function resolveBrowserWorkspace(
         const ending = nth === 2 ? 'nd' : nth === 3 ? 'rd' : 'th'
         throw new Error(`The browser configuration must have a "browser" property. The ${nth}${ending} item in "browser.instances" doesn't have it. Make sure your${originalName ? ` "${originalName}"` : ''} configuration is correct.`)
       }
-      const name = config.name!
+      const name = config.name
 
       if (name == null) {
         throw new Error(`The browser configuration must have a "name" property. This is a bug in Vitest. Please, open a new issue with reproduction`)
