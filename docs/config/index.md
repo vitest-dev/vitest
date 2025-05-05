@@ -2397,7 +2397,7 @@ Tells fake timers to clear "native" (i.e. not fake) timers by delegating to thei
 ### workspace<NonProjectOption /> {#workspace}
 
 ::: danger DEPRECATED
-THis options is deprecated and will be removed in the next major. Please, use [`projects`](#projects) instead.
+This options is deprecated and will be removed in the next major. Please, use [`projects`](#projects) instead.
 :::
 
 - **Type:** `string | TestProjectConfiguration[]`

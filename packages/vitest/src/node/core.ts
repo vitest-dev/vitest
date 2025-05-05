@@ -444,7 +444,7 @@ export class Vitest {
 
     if (Array.isArray(this.config.workspace)) {
       this.logger.deprecate(
-        'The `workspace` option is deprecated and will be removed in the next major. To hide this warning, move `workspace` array to `projects`.',
+        'The `workspace` option is deprecated and will be removed in the next major. To hide this warning, rename `workspace` option to `projects`.',
       )
       return resolveProjects(
         this,
