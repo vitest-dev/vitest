@@ -130,12 +130,14 @@ export type { TestRunResult } from '../node/types/tests'
 export const TestFile: typeof _TestFile = _TestFile
 export type { WorkerContext } from '../node/types/worker'
 export { createViteLogger } from '../node/viteLogger'
-export { distDir, rootDir } from '../paths'
+export type { WatcherTriggerPattern } from '../node/watcher'
 
 /**
  * @deprecated Use `ModuleDiagnostic` instead
  */
 export type FileDiagnostic = _FileDiagnostic
+
+export { distDir, rootDir } from '../paths'
 
 export type {
   CollectLineNumbers as TypeCheckCollectLineNumbers,
@@ -147,9 +149,7 @@ export type {
 } from '../typecheck/types'
 
 export type { TestExecutionMethod as TestExecutionType } from '../types/worker'
-
 export { createDebugger } from '../utils/debugger'
-
 export type {
   RunnerTask,
   RunnerTaskResult,

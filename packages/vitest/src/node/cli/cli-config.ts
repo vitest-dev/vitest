@@ -863,6 +863,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   json: null,
   provide: null,
   filesOnly: null,
+  watchTriggerPatterns: null,
 }
 
 export const benchCliOptionsConfig: Pick<
