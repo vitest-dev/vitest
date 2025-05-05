@@ -1,9 +1,10 @@
 import type { File, Task } from '@vitest/runner'
 import type { Writable } from 'node:stream'
 import type { Vitest } from './core'
+import type { TestSpecification } from './spec'
 import type { FilterObject } from './watch-filter'
 import readline from 'node:readline'
-import { isTestCase } from '@vitest/runner/utils'
+import { getTests, isTestCase } from '@vitest/runner/utils'
 import { relative, resolve } from 'pathe'
 import prompt from 'prompts'
 import c from 'tinyrainbow'
@@ -11,23 +12,24 @@ import { stdout } from '../utils/base'
 import { isWindows } from '../utils/env'
 import { WatchFilter } from './watch-filter'
 
-const keys = [
+const helpKeys = [
   [['a', 'return'], 'rerun all tests'],
   ['r', 'rerun current pattern tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
+  ['i', 'update snapshot interactively'],
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
   ['b', 'start the browser server if not started yet'],
   ['q', 'quit'],
 ]
-const cancelKeys = ['space', 'c', 'h', ...keys.map(key => key[0]).flat()]
+const cancelKeys = ['space', 'c', 'h', ...helpKeys.map(key => key[0]).flat()]
 
-export function printShortcutsHelp(): void {
+function printPrompt(title: string, keys: typeof helpKeys): void {
   stdout().write(
     `
-${c.bold('  Watch Usage')}
+${c.bold(`  ${title}`)}
 ${keys
   .map(
     i =>
@@ -70,6 +72,10 @@ function* getFilteredTestNames(pattern: string, suite: File[]): Generator<Filter
   catch {
     // `new RegExp` may throw error when input is invalid regexp
   }
+}
+
+export function printShortcutsHelp(): void {
+  printPrompt('Watch Usage', helpKeys)
 }
 
 export function registerConsoleShortcuts(
@@ -126,6 +132,55 @@ export function registerConsoleShortcuts(
     // update snapshot
     if (name === 'u') {
       return ctx.updateSnapshot()
+    }
+    // update snapshot
+    if (name === 'i') {
+      off()
+
+      const files = ctx.state.getFiles()
+      const tests = getTests(files)
+
+      const specs: TestSpecification[] = []
+      for (const test of tests) {
+        stdout.write('\x1Bc')
+
+        const snapshotErrors = test.result?.errors?.filter(
+          e => typeof e?.message === 'string'
+            && e.message.match(/Snapshot .* mismatched/),
+        )
+
+        if (!snapshotErrors?.length) {
+          continue
+        }
+
+        snapshotErrors.forEach((e) => {
+          ctx.logger.printError(e)
+        })
+
+        printPrompt('', [
+          ['u', 'update snapshots for this test'],
+          ['s', 'skip current test'],
+          ['q', 'quit interactive snapshot mode'],
+        ])
+
+        const { action } = await prompt({
+          type: 'text',
+          message: '',
+          name: 'action',
+        })
+
+        if (action === 'u') {
+          const project = ctx.getProjectByName(test.file.projectName || '')
+
+          specs.push(
+            project.createSpecification(test.file.filepath, [test.location!.line], test.file.pool),
+          )
+        }
+      }
+
+      ctx.rerunTestSpecifications(specs)
+
+      on()
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
