@@ -235,7 +235,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     if (testModule.project.name) {
-      title += ` ${formatProjectName(testModule.project.name, '')}`
+      title += ` ${formatProjectName(testModule.project, '')}`
     }
 
     return ` ${title} ${testModule.task.name} ${suffix}`
@@ -560,7 +560,9 @@ export abstract class BaseReporter implements Reporter {
       }
 
       const groupName = getFullName(group, c.dim(' > '))
-      this.log(`  ${formatProjectName(bench.file.projectName)}${bench.name}${c.dim(` - ${groupName}`)}`)
+      const project = this.ctx.projects.find(p => p.name === bench.file.projectName)
+
+      this.log(`  ${formatProjectName(project)}${bench.name}${c.dim(` - ${groupName}`)}`)
 
       const siblings = group.tasks
         .filter(i => i.meta.benchmark && i.result?.benchmark && i !== bench)
@@ -609,6 +611,7 @@ export abstract class BaseReporter implements Reporter {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
+        const project = this.ctx.projects.find(p => p.name === projectName)
 
         let name = getFullName(task, c.dim(' > '))
 
@@ -617,7 +620,7 @@ export abstract class BaseReporter implements Reporter {
         }
 
         this.ctx.logger.error(
-          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(projectName)}${name}`,
+          `${c.bgRed(c.bold(' FAIL '))} ${formatProjectName(project)}${name}`,
         )
       }
 

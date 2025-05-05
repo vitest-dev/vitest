@@ -19,7 +19,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'v8',
+      name: { label: 'v8', color: 'green' },
       env: { COVERAGE_PROVIDER: 'v8' },
       include: [GENERIC_TESTS, V8_TESTS],
       exclude: [
@@ -54,7 +54,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'istanbul',
+      name: { label: 'istanbul', color: 'magenta' },
       env: { COVERAGE_PROVIDER: 'istanbul' },
       include: [GENERIC_TESTS, ISTANBUL_TESTS],
       exclude: [
@@ -70,7 +70,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'custom',
+      name: { label: 'custom', color: 'yellow' },
       env: { COVERAGE_PROVIDER: 'custom' },
       include: [CUSTOM_TESTS],
     },
@@ -80,7 +80,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'istanbul-browser',
+      name: { label: 'istanbul-browser', color: 'blue' },
       env: { COVERAGE_PROVIDER: 'istanbul', COVERAGE_BROWSER: 'true' },
       include: [
         BROWSER_TESTS,
@@ -106,7 +106,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'v8-browser',
+      name: { label: 'v8-browser', color: 'red' },
       env: { COVERAGE_PROVIDER: 'v8', COVERAGE_BROWSER: 'true' },
       include: [
         BROWSER_TESTS,
@@ -134,7 +134,7 @@ export default defineWorkspace([
   {
     test: {
       ...config.test,
-      name: 'unit',
+      name: { label: 'unit', color: 'cyan' },
       include: [UNIT_TESTS],
       typecheck: {
         enabled: true,
