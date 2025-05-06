@@ -27,11 +27,14 @@ export default (vitest: Vitest): ProcessPool => {
           file,
           project.config.root,
           project.name,
+          'custom'
         )
+        taskFile.mode = 'run'
+        taskFile.result = { state: 'pass' }
         const taskTest: RunnerTestCase = {
           type: 'test',
           name: 'custom test',
-          id: 'custom-test',
+          id: `${taskFile.id}_0`,
           context: {} as any,
           suite: taskFile,
           mode: 'run',

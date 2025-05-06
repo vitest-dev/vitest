@@ -1,4 +1,4 @@
-import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Test, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
@@ -54,7 +54,7 @@ export function createBrowserRunner(
       await super.onBeforeTryTask?.(...args)
     }
 
-    onAfterRunTask = async (task: Task) => {
+    onAfterRunTask = async (task: Test) => {
       await super.onAfterRunTask?.(task)
 
       if (this.config.bail && task.result?.state === 'fail') {
