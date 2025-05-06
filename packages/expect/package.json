@@ -34,13 +34,13 @@
     "dev": "rollup -c --watch"
   },
   "dependencies": {
+    "@types/chai": "catalog:",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
     "chai": "catalog:",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@types/chai": "5.0.1",
     "@vitest/runner": "workspace:*",
     "rollup-plugin-copy": "^3.5.0"
   }
