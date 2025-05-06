@@ -771,7 +771,7 @@ test('throws on pineapples', async () => {
 
 ## toMatchSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -803,7 +803,7 @@ test('matches snapshot', () => {
 
 ## toMatchInlineSnapshot
 
-- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, message?: string) => void`
+- **Type:** `<T>(shape?: Partial<T> | string, snapshot?: string, hint?: string) => void`
 
 This ensures that a value matches the most recent snapshot.
 
@@ -846,7 +846,7 @@ test('matches snapshot', () => {
 
 ## toMatchFileSnapshot {#tomatchfilesnapshot}
 
-- **Type:** `<T>(filepath: string, message?: string) => Promise<void>`
+- **Type:** `<T>(filepath: string, hint?: string) => Promise<void>`
 
 Compare or update the snapshot with the content of a file explicitly specified (instead of the `.snap` file).
 
@@ -863,13 +863,13 @@ Note that since file system operation is async, you need to use `await` with `to
 
 ## toThrowErrorMatchingSnapshot
 
-- **Type:** `(message?: string) => void`
+- **Type:** `(hint?: string) => void`
 
 The same as [`toMatchSnapshot`](#tomatchsnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
 ## toThrowErrorMatchingInlineSnapshot
 
-- **Type:** `(snapshot?: string, message?: string) => void`
+- **Type:** `(snapshot?: string, hint?: string) => void`
 
 The same as [`toMatchInlineSnapshot`](#tomatchinlinesnapshot), but expects the same value as [`toThrowError`](#tothrowerror).
 
