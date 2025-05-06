@@ -9,6 +9,7 @@ catalog:
   '@iconify-json/carbon': ^1.2.8
   '@iconify-json/logos': ^1.2.4
   '@jridgewell/trace-mapping': ^0.3.25
+  '@types/chai': ^5.2.2
   '@types/debug': ^4.1.12
   '@types/estree': ^1.0.7
   '@types/istanbul-lib-coverage': ^2.0.6

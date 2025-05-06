@@ -154,6 +154,7 @@
     }
   },
   "dependencies": {
+    "@types/chai": "catalog:",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:^",

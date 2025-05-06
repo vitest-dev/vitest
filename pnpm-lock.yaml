@@ -18,6 +18,9 @@ catalogs:
     '@jridgewell/trace-mapping':
       specifier: ^0.3.25
       version: 0.3.25
+    '@types/chai':
+      specifier: ^5.2.2
+      version: 5.2.2
     '@types/debug':
       specifier: ^4.1.12
       version: 4.1.12
@@ -134,9 +137,6 @@ patchedDependencies:
   '@sinonjs/fake-timers@14.0.0':
     hash: 6f7091fcf11165157b4bfb8dde6b5b6b7697e3efd6e9b53bb4bdef442f60a278
     path: patches/@sinonjs__fake-timers@14.0.0.patch
-  '@types/chai@5.0.1':
-    hash: d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf
-    path: patches/@types__chai@5.0.1.patch
   '@types/sinonjs__fake-timers@8.1.5':
     hash: 0218b33f433e26861380c2b90c757bde6fea871cb988083c0bd4a9a1f6c00252
     path: patches/@types__sinonjs__fake-timers@8.1.5.patch
@@ -660,6 +660,9 @@ importers:
 
   packages/expect:
     dependencies:
+      '@types/chai':
+        specifier: 'catalog:'
+        version: 5.2.2
       '@vitest/spy':
         specifier: workspace:*
         version: link:../spy
@@ -673,9 +676,6 @@ importers:
         specifier: 'catalog:'
         version: 2.0.0
     devDependencies:
-      '@types/chai':
-        specifier: 5.0.1
-        version: 5.0.1(patch_hash=d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf)
       '@vitest/runner':
         specifier: workspace:*
         version: link:../runner
@@ -940,6 +940,9 @@ importers:
 
   packages/vitest:
     dependencies:
+      '@types/chai':
+        specifier: 'catalog:'
+        version: 5.2.2
       '@vitest/browser':
         specifier: workspace:*
         version: link:../browser
@@ -3961,8 +3964,8 @@ packages:
   '@types/braces@3.0.1':
     resolution: {integrity: sha512-+euflG6ygo4bn0JHtn4pYqcXwRtLvElQ7/nnjDu7iYG56H0+OhCd7d6Ug0IE3WcFpZozBKW2+80FUbv5QGk5AQ==}
 
-  '@types/chai@5.0.1':
-    resolution: {integrity: sha512-5T8ajsg3M/FOncpLYW7sdOcD6yf4+722sze/tc4KQV0P8Z2rAr3SAuHCIkYmYpt8VbcQlnz8SxlOlPQYefe4cA==}
+  '@types/chai@5.2.2':
+    resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
 
   '@types/codemirror@5.60.15':
     resolution: {integrity: sha512-dTOvwEQ+ouKJ/rE9LT1Ue2hmP6H1mZv5+CCnNWu2qtiOe2LQa9lCprEY20HxiDmV/Bxh+dXjywmy5aKvoGjULA==}
@@ -11901,7 +11904,7 @@ snapshots:
 
   '@types/braces@3.0.1': {}
 
-  '@types/chai@5.0.1(patch_hash=d8a67f88e932ba6fd5a5cd04e3ed6474636e1b2a33a589695c5ae18676e23aaf)':
+  '@types/chai@5.2.2':
     dependencies:
       '@types/deep-eql': 4.0.2
 
