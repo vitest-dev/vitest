@@ -239,8 +239,6 @@ export interface File extends Suite {
    * @internal
    */
   local?: boolean
-  /** @internal */
-  context: Record<string, unknown>
 }
 
 export interface Test<ExtraContext = object> extends TaskPopulated {

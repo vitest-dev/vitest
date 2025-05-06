@@ -1,6 +1,7 @@
 import type { VitestRunner } from './types'
 import type { FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, isObject } from '@vitest/utils'
+import { getFileContext } from './context'
 import { getTestFixture } from './map'
 
 export interface FixtureItem extends FixtureOptions {
@@ -204,7 +205,7 @@ function resolveFixtureValue(
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
 ) {
-  const fileContext = context.task.file.context
+  const fileContext = getFileContext(context.task.file)
   const workerContext = runner.getWorkerContext?.()
 
   if (!fixture.isFn) {
@@ -232,7 +233,7 @@ function resolveFixtureValue(
 
   if (fixture.scope === 'worker') {
     if (!workerContext) {
-      throw new TypeError('[@vitets/runner] The worker context is not available by the current test runner. Please, provide the `getWorkerContext` method when initiating the runner.')
+      throw new TypeError('[@vitets/runner] The worker context is not available in the current test runner. Please, provide the `getWorkerContext` method when initiating the runner.')
     }
     fixtureContext = workerContext
   }

@@ -20,7 +20,7 @@ import type {
 import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
-import { abortContextSignal } from './context'
+import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
@@ -538,7 +538,8 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
       await callCleanupHooks(runner, beforeAllCleanups)
       if (suite.file === suite) {
-        await callFixtureCleanup((suite as File).context)
+        const context = getFileContext(suite as File)
+        await callFixtureCleanup(context)
       }
     }
     catch (e) {

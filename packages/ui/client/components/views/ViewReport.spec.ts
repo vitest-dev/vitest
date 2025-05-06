@@ -56,7 +56,6 @@ const fileWithTextStacks: File = {
   tasks: [],
   projectName: '',
   file: null!,
-  context: {},
 }
 fileWithTextStacks.file = fileWithTextStacks
 
@@ -114,7 +113,6 @@ describe('ViewReport', () => {
       tasks: [],
       projectName: '',
       file: null!,
-      context: {},
     }
     file.file = file
     const container = render(ViewReport, {
@@ -173,7 +171,6 @@ describe('ViewReport', () => {
       tasks: [],
       projectName: '',
       file: null!,
-      context: {},
     }
     file.file = file
     const container = render(ViewReport, {
