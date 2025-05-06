@@ -178,13 +178,19 @@ export function registerConsoleShortcuts(
         }
       }
 
-      ctx.enableSnapshotUpdate()
+      if (specs.length) {
+        ctx.enableSnapshotUpdate()
 
-      try {
-        await ctx.rerunTestSpecifications(specs)
+        try {
+          await ctx.rerunTestSpecifications(specs)
+        }
+        finally {
+          ctx.resetSnapshotUpdate()
+        }
       }
-      finally {
-        ctx.resetSnapshotUpdate()
+      else {
+        // TODO: This is a hack to trigger report summary again
+        ctx.report('onFinished')
       }
 
       on()
