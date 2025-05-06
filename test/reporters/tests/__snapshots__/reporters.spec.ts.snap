@@ -993,7 +993,7 @@ exports[`json reporter with outputFile object in non-existing directory 2`] = `
 exports[`tap reporter 1`] = `
 "TAP version 13
 1..1
-not ok 1 - test/core/test/basic.test.ts # time=145.99ms {
+not ok 1 - basic.test.ts # time=145.99ms {
     1..1
     ok 1 - suite # time=1.90ms {
         1..9
@@ -1022,7 +1022,7 @@ not ok 1 - test/core/test/basic.test.ts # time=145.99ms {
 exports[`tap-flat reporter 1`] = `
 "TAP version 13
 1..9
-not ok 1 - test/core/test/basic.test.ts > suite > Math.sqrt() # time=1.44ms
+not ok 1 - basic.test.ts > suite > Math.sqrt() # time=1.44ms
     ---
     error:
         name: "AssertionError"
@@ -1031,13 +1031,13 @@ not ok 1 - test/core/test/basic.test.ts > suite > Math.sqrt() # time=1.44ms
     actual: "2.23606797749979"
     expected: "2"
     ...
-ok 2 - test/core/test/basic.test.ts > suite > JSON # time=1.02ms
-ok 3 - test/core/test/basic.test.ts > suite > async with timeout # SKIP
-ok 4 - test/core/test/basic.test.ts > suite > timeout # time=100.51ms
-ok 5 - test/core/test/basic.test.ts > suite > callback setup success  # time=20.18ms
-ok 6 - test/core/test/basic.test.ts > suite > callback test success  # time=0.33ms
-ok 7 - test/core/test/basic.test.ts > suite > callback setup success done(false) # time=19.74ms
-ok 8 - test/core/test/basic.test.ts > suite > callback test success done(false) # time=0.19ms
-ok 9 - test/core/test/basic.test.ts > suite > todo test # TODO
+ok 2 - basic.test.ts > suite > JSON # time=1.02ms
+ok 3 - basic.test.ts > suite > async with timeout # SKIP
+ok 4 - basic.test.ts > suite > timeout # time=100.51ms
+ok 5 - basic.test.ts > suite > callback setup success  # time=20.18ms
+ok 6 - basic.test.ts > suite > callback test success  # time=0.33ms
+ok 7 - basic.test.ts > suite > callback setup success done(false) # time=19.74ms
+ok 8 - basic.test.ts > suite > callback test success done(false) # time=0.19ms
+ok 9 - basic.test.ts > suite > todo test # TODO
 "
 `;
