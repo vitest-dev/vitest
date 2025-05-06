@@ -84,7 +84,7 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = test.suite || test.file
   }
 
-  onCancel(_reason: CancelReason): void {
+  cancel(_reason: CancelReason): void {
     this.cancelRun = true
   }
 
@@ -102,8 +102,6 @@ export class VitestTestRunner implements VitestRunner {
     if (test.mode !== 'run' && test.mode !== 'queued') {
       return
     }
-
-    clearModuleMocks(this.config)
 
     this.workerState.current = test
   }
@@ -125,6 +123,7 @@ export class VitestTestRunner implements VitestRunner {
   }
 
   onBeforeTryTask(test: Task): void {
+    clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(
       {

@@ -70,7 +70,7 @@ export function getFilePoolName(project: TestProject, file: string): Pool {
   for (const [glob, pool] of project.config.poolMatchGlobs) {
     if ((pool as Pool) === 'browser') {
       throw new Error(
-        'Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a workspace to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/workspace',
+        'Since Vitest 0.31.0 "browser" pool is not supported in "poolMatchGlobs". You can create a project to run some of your tests in browser in parallel. Read more: https://vitest.dev/guide/projects',
       )
     }
     if (mm.isMatch(file, glob, { cwd: project.config.root })) {

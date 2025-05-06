@@ -4,10 +4,8 @@ title: TestProject
 
 # TestProject <Version>3.0.0</Version> {#testproject}
 
-- **Alias**: `WorkspaceProject` before 3.0.0
-
 ::: warning
-This guide describes the advanced Node.js API. If you just want to create a workspace, follow the ["Workspace"](/guide/workspace) guide.
+This guide describes the advanced Node.js API. If you just want to define projects, follow the ["Test Projects"](/guide/projects) guide.
 :::
 
 ## name
@@ -26,28 +24,34 @@ vitest.projects.map(p => p.name) === [
   'custom'
 ]
 ```
-```ts [vitest.workspace.js]
-export default [
-  './packages/server', // has package.json with "@pkg/server"
-  './utils', // doesn't have a package.json file
-  {
-    // doesn't customize the name
-    test: {
-      pool: 'threads',
-    },
+```ts [vitest.config.js]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      './packages/server', // has package.json with "@pkg/server"
+      './utils', // doesn't have a package.json file
+      {
+        // doesn't customize the name
+        test: {
+          pool: 'threads',
+        },
+      },
+      {
+        // customized the name
+        test: {
+          name: 'custom',
+        },
+      },
+    ],
   },
-  {
-    // customized the name
-    test: {
-      name: 'custom',
-    },
-  },
-]
+})
 ```
 :::
 
 ::: info
-If the [root project](/advanced/api/vitest#getroottestproject) is not part of a user workspace, its `name` will not be resolved.
+If the [root project](/advanced/api/vitest#getroottestproject) is not part of user projects, its `name` will not be resolved.
 :::
 
 ## vitest
@@ -279,7 +283,7 @@ dynamicExample !== staticExample // ✅
 :::
 
 ::: info
-Internally, Vitest uses this method to import global setups, custom coverage providers, workspace file, and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
+Internally, Vitest uses this method to import global setups, custom coverage providers and custom reporters, meaning all of them share the same module graph as long as they belong to the same Vite server.
 :::
 
 ## onTestsRerun

@@ -15,15 +15,17 @@ import type {
   TaskUpdateEvent,
   Test,
   TestContext,
+  WriteableTestContext,
 } from './types/tasks'
 import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
-import { PendingError } from './errors'
+import { abortContextSignal } from './context'
+import { PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
 import { getFn, getHooks } from './map'
-import { setCurrentTest } from './test-state'
+import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { limitConcurrency } from './utils/limit-concurrency'
 import { partitionSuiteChildren } from './utils/suite'
 import { hasFailed, hasTests } from './utils/tasks'
@@ -87,12 +89,14 @@ async function callTestHooks(
     return
   }
 
+  const context = test.context as WriteableTestContext
+
   const onTestFailed = test.context.onTestFailed
   const onTestFinished = test.context.onTestFinished
-  test.context.onTestFailed = () => {
+  context.onTestFailed = () => {
     throw new Error(`Cannot call "onTestFailed" inside a test hook.`)
   }
-  test.context.onTestFinished = () => {
+  context.onTestFinished = () => {
     throw new Error(`Cannot call "onTestFinished" inside a test hook.`)
   }
 
@@ -115,8 +119,8 @@ async function callTestHooks(
     }
   }
 
-  test.context.onTestFailed = onTestFailed
-  test.context.onTestFinished = onTestFinished
+  context.onTestFailed = onTestFailed
+  context.onTestFinished = onTestFinished
 }
 
 export async function callSuiteHook<T extends keyof SuiteHooks>(
@@ -145,7 +149,11 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   async function runHook(hook: Function) {
-    return getBeforeHookCleanupCallback(hook, await hook(...args))
+    return getBeforeHookCleanupCallback(
+      hook,
+      await hook(...args),
+      name === 'beforeEach' ? args[0] : undefined,
+    )
   }
 
   if (sequence === 'parallel') {
@@ -274,6 +282,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   }
   updateTask('test-prepare', test, runner)
 
+  const cleanupRunningTest = addRunningTest(test)
   setCurrentTest(test)
 
   const suite = test.suite || test.file
@@ -374,6 +383,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
+        cleanupRunningTest()
         return
       }
 
@@ -405,6 +415,7 @@ export async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
+  cleanupRunningTest()
   setCurrentTest(undefined)
 
   test.result.duration = now() - start
@@ -591,21 +602,38 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
 }
 
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
-  const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
-  await runner.onBeforeCollect?.(paths)
+  const cancel = runner.cancel?.bind(runner)
+  // Ideally, we need to have an event listener for this, but only have a runner here.
+  // Adding another onCancel felt wrong (maybe it needs to be refactored)
+  runner.cancel = (reason) => {
+    // We intentionally create only one error since there is only one test run that can be cancelled
+    const error = new TestRunAbortError('The test run was aborted by the user.', reason)
+    getRunningTests().forEach(test =>
+      abortContextSignal(test.context, error),
+    )
+    return cancel?.(reason)
+  }
 
-  const files = await collectTests(specs, runner)
+  try {
+    const paths = specs.map(f => typeof f === 'string' ? f : f.filepath)
+    await runner.onBeforeCollect?.(paths)
 
-  await runner.onCollected?.(files)
-  await runner.onBeforeRunFiles?.(files)
+    const files = await collectTests(specs, runner)
 
-  await runFiles(files, runner)
+    await runner.onCollected?.(files)
+    await runner.onBeforeRunFiles?.(files)
 
-  await runner.onAfterRunFiles?.(files)
+    await runFiles(files, runner)
 
-  await finishSendTasksUpdate(runner)
+    await runner.onAfterRunFiles?.(files)
 
-  return files
+    await finishSendTasksUpdate(runner)
+
+    return files
+  }
+  finally {
+    runner.cancel = cancel
+  }
 }
 
 async function publicCollect(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {

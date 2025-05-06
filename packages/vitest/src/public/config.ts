@@ -19,6 +19,7 @@ export {
   defaultExclude,
   defaultInclude,
 } from '../defaults'
+export type { WatcherTriggerPattern } from '../node/watcher'
 export { mergeConfig } from 'vite'
 export type { Plugin } from 'vite'
 
@@ -65,6 +66,9 @@ export function defineProject(config: UserProjectConfigExport): UserProjectConfi
   return config
 }
 
+/**
+ * @deprecated use the `projects` field in the root config instead
+ */
 export function defineWorkspace(config: TestProjectConfiguration[]): TestProjectConfiguration[] {
   return config
 }

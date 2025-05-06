@@ -83,6 +83,10 @@ export async function runVitest(
         NO_COLOR: 'true',
         ...rest.env,
       },
+
+      // Test cases are already run with multiple forks/threads
+      maxWorkers: 1,
+      minWorkers: 1,
     }, {
       ...viteOverrides,
       server: {
@@ -145,9 +149,10 @@ export async function runVitest(
 
 interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
+  preserveAnsi?: boolean
 }
 
-export async function runCli(command: string, _options?: CliOptions | string, ...args: string[]) {
+async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
   let options = _options
 
   if (typeof _options === 'string') {
@@ -155,11 +160,17 @@ export async function runCli(command: string, _options?: CliOptions | string, ..
     options = undefined
   }
 
+  if (command === 'vitest') {
+    args.push('--maxWorkers=1')
+    args.push('--minWorkers=1')
+  }
+
   const subprocess = x(command, args, options as Options).process!
   const cli = new Cli({
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
     stderr: subprocess.stderr!,
+    preserveAnsi: typeof _options !== 'string' ? _options?.preserveAnsi : false,
   })
 
   let setDone: (value?: unknown) => void
@@ -260,7 +271,9 @@ export function resolvePath(baseUrl: string, path: string) {
   return resolve(dirname(filename), path)
 }
 
-export function useFS(root: string, structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>) {
+export type TestFsStructure = Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>
+
+export function useFS(root: string, structure: TestFsStructure) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (!hasConfig) {

@@ -5,6 +5,7 @@ import type {
   Locator,
   UserEvent,
 } from '../../../context'
+import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertElementToCssSelector, processTimeoutOptions } from './utils'
@@ -241,15 +242,20 @@ export function cdp(): BrowserRunnerState['cdp'] {
 const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
   viewport(width, height) {
-    const id = getBrowserState().iframeId
-    channel.postMessage({ type: 'viewport', width, height, id })
+    const id = getBrowserState().iframeId!
+    channel.postMessage({
+      event: 'viewport',
+      width,
+      height,
+      iframeId: id,
+    } satisfies IframeViewportEvent)
     return new Promise((resolve, reject) => {
       channel.addEventListener('message', function handler(e) {
-        if (e.data.type === 'viewport:done' && e.data.id === id) {
+        if (e.data.event === 'viewport:done' && e.data.iframeId === id) {
           channel.removeEventListener('message', handler)
           resolve()
         }
-        if (e.data.type === 'viewport:fail' && e.data.id === id) {
+        if (e.data.event === 'viewport:fail' && e.data.iframeId === id) {
           channel.removeEventListener('message', handler)
           reject(new Error(e.data.error))
         }

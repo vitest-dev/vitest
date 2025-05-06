@@ -179,9 +179,11 @@ export type WorkerContext = WorkerContext_
 /** @deprecated import from `vitest/node` instead */
 export type WorkerRPC = WorkerRPC_
 
+export type { BrowserTesterOptions } from '../types/browser'
 export type {
   AfterSuiteRunMeta,
   ErrorWithDiff,
+  LabelColor,
   ModuleCache,
   ModuleGraphData,
   ParsedStack,
@@ -243,6 +245,7 @@ export type {
   ContextRPC,
   ContextTestEnvironment,
   ResolveIdFunction,
+  TestExecutionMethod,
   WorkerGlobalState,
 } from '../types/worker'
 export type {

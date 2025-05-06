@@ -65,7 +65,7 @@ export class BenchmarkReporter extends DefaultReporter {
     const duration = testTask.task.result?.duration || 0
 
     if (benches.length > 0 && benches.every(t => t.result?.state !== 'run' && t.result?.state !== 'queued')) {
-      let title = `\n ${getStateSymbol(testTask.task)} ${formatProjectName(testTask.project.name)}${getFullName(testTask.task, c.dim(' > '))}`
+      let title = `\n ${getStateSymbol(testTask.task)} ${formatProjectName(testTask.project)}${getFullName(testTask.task, c.dim(' > '))}`
 
       if (duration != null && duration > this.ctx.config.slowTestThreshold) {
         title += c.yellow(` ${Math.round(duration)}${c.dim('ms')}`)

@@ -12,8 +12,8 @@ export default defineConfig({
       enabled: true,
       provider: provider,
       screenshotFailures: false,
-      instances,
       headless: true,
+      instances,
     },
   },
 })

@@ -1,4 +1,5 @@
 import type { Environment } from '../../types/environment'
+import type { JSDOMOptions } from '../../types/jsdom-options'
 import { populateGlobal } from './utils'
 
 function catchWindowErrors(window: Window) {
@@ -51,7 +52,7 @@ export default <Environment>{
       console = false,
       cookieJar = false,
       ...restOptions
-    } = jsdom as any
+    } = jsdom as JSDOMOptions
     let dom = new JSDOM(html, {
       pretendToBeVisual,
       resources:

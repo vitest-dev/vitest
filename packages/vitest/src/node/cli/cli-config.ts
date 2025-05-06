@@ -332,7 +332,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<name>',
   },
   workspace: {
-    description: 'Path to a workspace configuration file',
+    description: '[deprecated] Path to a workspace configuration file',
     argument: '<path>',
     normalize: true,
   },
@@ -387,7 +387,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       provider: {
         description:
-          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"preview"`)',
+          'Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)',
         argument: '<name>',
         subcommands: null, // don't support custom objects
       },
@@ -863,6 +863,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   json: null,
   provide: null,
   filesOnly: null,
+  projects: null,
+  watchTriggerPatterns: null,
 }
 
 export const benchCliOptionsConfig: Pick<

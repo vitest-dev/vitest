@@ -167,7 +167,7 @@ test('skipped test', (context) => {
 })
 ```
 
-Since Vitest 3.1, if the condition is unknonwn, you can provide it to the `skip` method as the first arguments:
+Since Vitest 3.1, if the condition is unknown, you can provide it to the `skip` method as the first arguments:
 
 ```ts
 import { assert, test } from 'vitest'
@@ -1279,16 +1279,6 @@ test('performs an organization query', async () => {
 
 ::: tip
 This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
-
-<!-- TODO: should it be called? https://github.com/vitest-dev/vitest/pull/7069 -->
-Note that this hook is not called if test was skipped with a dynamic `ctx.skip()` call:
-
-```ts{2}
-test('skipped dynamically', (t) => {
-  onTestFinished(() => {}) // not called
-  t.skip()
-})
-```
 :::
 
 ### onTestFailed
@@ -1300,8 +1290,8 @@ import { onTestFailed, test } from 'vitest'
 
 test('performs a query', () => {
   const db = connectDb()
-  onTestFailed((e) => {
-    console.log(e.result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })
@@ -1315,8 +1305,8 @@ import { test } from 'vitest'
 
 test.concurrent('performs a query', ({ onTestFailed }) => {
   const db = connectDb()
-  onTestFailed((result) => {
-    console.log(result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })

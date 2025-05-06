@@ -79,7 +79,7 @@ export class ParentBrowserProject {
         if (mod) {
           return id
         }
-        const resolvedPath = resolve(project.config.root, id.slice(1))
+        const resolvedPath = resolve(this.vite.config.root, id.slice(1))
         const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
         if (modUrl) {
           return resolvedPath
@@ -198,7 +198,7 @@ export class ParentBrowserProject {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
+    const session = await this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
       const promise = provider.getCDPSession!(sessionId).finally(() => {
         this.cdpSessionsPromises.delete(rpcId)
       })
@@ -206,7 +206,6 @@ export class ParentBrowserProject {
       return promise
     })()
 
-    const session = await promise
     const rpc = (browser.state as BrowserServerState).testers.get(rpcId)
     if (!rpc) {
       throw new Error(`Tester RPC "${rpcId}" was not established.`)

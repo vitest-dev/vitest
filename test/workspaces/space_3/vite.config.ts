@@ -5,7 +5,7 @@ export default defineConfig({
     {
       name: 'throw-error',
       config() {
-        throw new Error('This file should not initiate a workspace project.')
+        throw new Error('This file should not initiate a test project.')
       },
     },
   ],

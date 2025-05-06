@@ -27,6 +27,7 @@ import {
 } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import {
+  abortIfTimeout,
   collectorContext,
   collectTask,
   createTestContext,
@@ -295,6 +296,7 @@ function createSuiteCollector(
   mode: RunMode,
   each?: boolean,
   suiteOptions?: TestOptions,
+  parentCollectorFixtures?: FixtureItem[],
 ) {
   const tasks: (Test | Suite | SuiteCollector)[] = []
 
@@ -342,22 +344,27 @@ function createSuiteCollector(
     })
     setTestFixture(context, options.fixtures)
 
+    // custom can be called from any place, let's assume the limit is 15 stacks
+    const limit = Error.stackTraceLimit
+    Error.stackTraceLimit = 15
+    const stackTraceError = new Error('STACK_TRACE_ERROR')
+    Error.stackTraceLimit = limit
+
     if (handler) {
       setFn(
         task,
         withTimeout(
           withAwaitAsyncAssertions(withFixtures(runner, handler, context), task),
           timeout,
+          false,
+          stackTraceError,
+          (_, error) => abortIfTimeout([context], error),
         ),
       )
     }
 
     if (runner.config.includeTaskLocation) {
-      const limit = Error.stackTraceLimit
-      // custom can be called from any place, let's assume the limit is 15 stacks
-      Error.stackTraceLimit = 15
-      const error = new Error('stacktrace').stack!
-      Error.stackTraceLimit = limit
+      const error = stackTraceError.stack!
       const stack = findTestFileStackTrace(error, task.each ?? false)
       if (stack) {
         task.location = stack
@@ -395,7 +402,7 @@ function createSuiteCollector(
     test.type = 'test'
   })
 
-  let collectorFixtures: FixtureItem[] | undefined
+  let collectorFixtures = parentCollectorFixtures
 
   const collector: SuiteCollector = {
     type: 'collector',
@@ -555,6 +562,7 @@ function createSuite() {
       mode,
       this.each,
       options,
+      currentSuite?.fixtures(),
     )
   }
 
@@ -768,14 +776,15 @@ export function createTaskCollector(
     ) {
       const collector = getCurrentSuite()
       const scopedFixtures = collector.fixtures()
+      const context = { ...this }
       if (scopedFixtures) {
-        this.fixtures = mergeScopedFixtures(
-          this.fixtures || [],
+        context.fixtures = mergeScopedFixtures(
+          context.fixtures || [],
           scopedFixtures,
         )
       }
       collector.test.fn.call(
-        this,
+        context,
         formatName(name),
         optionsOrFn as TestOptions,
         optionsOrTest as TestFunction,
