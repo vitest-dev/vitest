@@ -178,7 +178,14 @@ export function registerConsoleShortcuts(
         }
       }
 
-      ctx.rerunTestSpecifications(specs)
+      ctx.enableSnapshotUpdate()
+
+      try {
+        await ctx.rerunTestSpecifications(specs)
+      }
+      finally {
+        ctx.resetSnapshotUpdate()
+      }
 
       on()
     }
