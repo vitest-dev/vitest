@@ -488,9 +488,11 @@ export interface FixtureOptions {
   injected?: boolean
   /**
    * When should the fixture be set up.
-   * - **test**: fixture will be set up before ever test
+   * - **test**: fixture will be set up before every test
    * - **worker**: fixture will be set up once per worker
    * - **file**: fixture will be set up once per file
+   *
+   * **Warning:** The `vmThreads` and `vmForks` pools initiate worker fixtures once per test file.
    * @default 'test'
    */
   scope?: 'test' | 'worker' | 'file'

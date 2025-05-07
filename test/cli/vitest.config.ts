@@ -5,6 +5,7 @@ export default defineConfig({
     include: ['test/**.test.ts'],
     reporters: ['verbose'],
     testTimeout: 60_000,
+    globals: true,
     poolOptions: {
       forks: {
         singleFork: true,

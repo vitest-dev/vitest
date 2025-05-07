@@ -271,20 +271,43 @@ export function resolvePath(baseUrl: string, path: string) {
   return resolve(dirname(filename), path)
 }
 
-export type TestFsStructure = Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>
+export type TestFsStructure = Record<
+  string,
+  | string
+  | ViteUserConfig
+  | WorkspaceProjectConfiguration[]
+  | ((...args: any[]) => unknown)
+  | [(...args: any[]) => unknown, { exports?: string[]; imports?: Record<string, string[]> }]
+>
 
-export function useFS(root: string, structure: TestFsStructure) {
+function getGeneratedFileContent(content: TestFsStructure[string]) {
+  if (typeof content === 'string') {
+    return content
+  }
+  if (typeof content === 'function') {
+    return `await (${content})()`
+  }
+  if (Array.isArray(content) && typeof content[1] === 'object' && ('exports' in content[1] || 'imports' in content[1])) {
+    const imports = Object.entries(content[1].imports || [])
+    return `
+${imports.map(([path, is]) => `import { ${is.join(', ')} } from '${path}'`)}
+const results = await (${content[0]})({ ${imports.flatMap(([_, is]) => is).join(', ')} })
+${(content[1].exports || []).map(e => `export const ${e} = results["${e}"]`)}
+    `
+  }
+  return `export default ${JSON.stringify(content)}`
+}
+
+export function useFS<T extends TestFsStructure>(root: string, structure: T) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (!hasConfig) {
-    structure['./vitest.config.js'] = {}
+    ;(structure as any)['./vitest.config.js'] = {}
   }
   for (const file in structure) {
     const filepath = resolve(root, file)
     files.add(filepath)
-    const content = typeof structure[file] === 'string'
-      ? structure[file]
-      : `export default ${JSON.stringify(structure[file])}`
+    const content = getGeneratedFileContent(structure[file])
     fs.mkdirSync(dirname(filepath), { recursive: true })
     fs.writeFileSync(filepath, String(content), 'utf-8')
   }
@@ -316,7 +339,7 @@ export function useFS(root: string, structure: TestFsStructure) {
 }
 
 export async function runInlineTests(
-  structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>,
+  structure: TestFsStructure,
   config?: UserConfig,
   options?: VitestRunnerCLIOptions,
 ) {

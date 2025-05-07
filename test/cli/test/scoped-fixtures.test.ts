@@ -1,0 +1,452 @@
+/// <reference types="vitest/globals" />
+
+import type { TestAPI } from 'vitest'
+import type { ViteUserConfig } from 'vitest/config'
+import type { TestFsStructure } from '../../test-utils'
+import { runInlineTests } from '../../test-utils'
+
+declare module 'vitest' {
+  interface TestContext {
+    file: string
+  }
+}
+
+test('test fixture cannot import from file fixture', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': () => {
+      const extendedTest = it.extend<{
+        file: string
+        local: string
+      }>({
+        local: ({}, use) => use('local'),
+        file: [
+          ({ local }, use) => use(local),
+          { scope: 'file' },
+        ],
+      })
+
+      extendedTest('not working', ({ file: _file }) => {})
+    },
+    'vitest.config.js': { test: { globals: true } },
+  })
+  expect(stderr).toContain('cannot use the test fixture "local" inside the file fixture "file"')
+})
+
+test('can import file fixture inside the local fixture', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(
+    ({ log }) => it.extend<{
+      file: string
+      local: string
+    }>({
+      local: async ({ file }, use) => {
+        log('init local')
+        await use(file)
+        log('teardown local')
+      },
+      file: [
+        async ({}, use) => {
+          log('init file')
+          await use('file')
+          log('teardown file')
+        },
+        { scope: 'file' },
+      ],
+    }),
+    {
+      'basic.test.ts': ({ extendedTest }) => {
+        extendedTest('test1', ({ local: _local }) => {})
+      },
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init file | test1
+    >> fixture | init local | test1
+    >> fixture | teardown local | test1
+    >> fixture | teardown file | test1"
+  `)
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
+})
+
+test.skip('can import worker fixture inside the local fixture', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(
+    ({ log }) => it.extend<{
+      worker: string
+      local: string
+    }>({
+      local: async ({ worker }, use) => {
+        log('init local')
+        await use(worker)
+        log('teardown local')
+      },
+      worker: [
+        async ({}, use) => {
+          log('init worker')
+          await use('worker')
+          log('teardown worker')
+        },
+        { scope: 'worker' },
+      ],
+    }),
+    {
+      'basic.test.ts': ({ extendedTest }) => {
+        extendedTest('test1', ({ local }) => {
+          expect(local).toBe('worker')
+        })
+      },
+    },
+  )
+
+  expect(stderr).toBe('')
+  // TODO: worker teardown is not called
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init worker | test1
+    >> fixture | init local | test1
+    >> fixture | teardown local | test1"
+  `)
+  expect(tests).toMatchInlineSnapshot(`" ✓ basic.test.ts > test1 <time>"`)
+})
+
+test('test fixture cannot import from worker fixture', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': () => {
+      const extendedTest = it.extend<{
+        worker: string
+        local: string
+      }>({
+        local: ({}, use) => use('local'),
+        worker: [
+          ({ local }, use) => use(local),
+          { scope: 'worker' },
+        ],
+      })
+
+      extendedTest('not working', ({ worker: _worker }) => {})
+    },
+    'vitest.config.js': { test: { globals: true } },
+  })
+  expect(stderr).toContain('cannot use the test fixture "local" inside the worker fixture "worker"')
+})
+
+test.skip('auto worker fixture is initialised always before the first test', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
+    worker: [
+      async ({}, use) => {
+        log('init file')
+        await use('worker')
+        log('teardown file')
+      },
+      { scope: 'worker', auto: true },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({}) => {})
+      extendedTest('test2', ({}) => {})
+      extendedTest('test3', ({ worker: _worker }) => {})
+      extendedTest('test4', ({}) => {})
+    },
+  })
+
+  expect(stderr).toBe('')
+  // TODO: teardown is not called
+  expect(fixtures).toMatchInlineSnapshot(`">> fixture | init file | test1"`)
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ basic.test.ts > test1 <time>
+     ✓ basic.test.ts > test2 <time>
+     ✓ basic.test.ts > test3 <time>
+     ✓ basic.test.ts > test4 <time>"
+  `)
+})
+
+test('worker fixture can import a static value from test fixture', async () => {
+  const { stderr, stdout } = await runInlineTests({
+    'basic.test.ts': () => {
+      const extendedTest = it.extend<{
+        worker: string
+        local: string
+      }>({
+        local: 'local',
+        worker: [
+          ({ local }, use) => use(local),
+          { scope: 'worker' },
+        ],
+      })
+
+      extendedTest('working', ({ worker, local }) => {
+        expect(worker).toBe(local)
+        expect(worker).toBe('local')
+      })
+    },
+    'vitest.config.js': { test: { globals: true } },
+  })
+  expect(stdout).toContain('basic.test.ts')
+  expect(stderr).toBe('')
+})
+
+test('file fixture can import a static value from test fixture', async () => {
+  const { stderr, stdout } = await runInlineTests({
+    'basic.test.ts': () => {
+      const extendedTest = it.extend<{
+        file: string
+        local: string
+      }>({
+        local: 'local',
+        file: [
+          ({ local }, use) => use(local),
+          { scope: 'file' },
+        ],
+      })
+
+      extendedTest('working', ({ file, local }) => {
+        expect(file).toBe(local)
+        expect(file).toBe('local')
+      })
+    },
+    'vitest.config.js': { test: { globals: true } },
+  })
+  expect(stdout).toContain('basic.test.ts')
+  expect(stderr).toBe('')
+})
+
+test.skip('worker fixtures are available in beforeEach and afterEach', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ worker: string }>({
+    worker: [
+      async ({}, use) => {
+        log('init worker')
+        await use('worker')
+        log('teardown worker')
+      },
+      { scope: 'worker' },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest }) => {
+      beforeEach(({ file }) => {
+        console.log('>> fixture | beforeEach |', file)
+      })
+      afterEach(({ file }) => {
+        console.log('>> fixture | afterEach |', file)
+      })
+      extendedTest('test1', ({}) => {})
+      extendedTest('test2', ({}) => {})
+    },
+  })
+
+  expect(stderr).toBe('')
+  // TODO: teardown is not called
+  expect(fixtures).toMatchInlineSnapshot()
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ basic.test.ts > test1 <time>
+     ✓ basic.test.ts > test2 <time>"
+  `)
+})
+
+test('file fixtures are available in beforeEach and afterEach', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+    file: string
+  }>({
+    file: [
+      async ({}, use) => {
+        log('init file')
+        await use('file')
+        log('teardown file')
+      },
+      { scope: 'file' },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest }) => {
+      beforeEach(({ file }) => {
+        console.log('>> fixture | beforeEach |', file)
+      })
+      afterEach(({ file }) => {
+        console.log('>> fixture | afterEach |', file)
+      })
+      extendedTest('test1', ({}) => {})
+      extendedTest('test2', ({}) => {})
+    },
+  })
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init file | test1
+    >> fixture | beforeEach | file
+    >> fixture | afterEach | file
+    >> fixture | beforeEach | file
+    >> fixture | afterEach | file
+    >> fixture | teardown file | test2"
+  `)
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ basic.test.ts > test1 <time>
+     ✓ basic.test.ts > test2 <time>"
+  `)
+})
+
+test('auto file fixture is initialised always before the first test', async () => {
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+    file: string
+  }>({
+    file: [
+      async ({}, use) => {
+        log('init file')
+        await use('file')
+        log('teardown file')
+      },
+      { scope: 'file', auto: true },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({}) => {})
+      extendedTest('test2', ({}) => {})
+      extendedTest('test3', ({ file: _file }) => {})
+      extendedTest('test4', ({}) => {})
+    },
+  })
+
+  expect(stderr).toBe('')
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init file | test1
+    >> fixture | teardown file | test4"
+  `)
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ basic.test.ts > test1 <time>
+     ✓ basic.test.ts > test2 <time>
+     ✓ basic.test.ts > test3 <time>
+     ✓ basic.test.ts > test4 <time>"
+  `)
+})
+
+test.for([
+  true,
+  false,
+])('file fixture is provided as a factory and is initialised once in all suites, teardown is called once per file (isolate %s)', async (isolate) => {
+  const { stderr, fixtures, tests } = await runFixtureTests<{ file: string }>(({ log }) => it.extend<{ file: string }>({
+    file: [
+      async ({}, use) => {
+        log('init file')
+        await use('file')
+        log('teardown file')
+      },
+      { scope: 'file' },
+    ],
+  }), {
+    'basic.test.js': ({ extendedTest }) => {
+      extendedTest('[first] test 1', ({ file }) => {
+        expect(file).toBe('file')
+      })
+
+      extendedTest('test 2', ({ file }) => {
+        expect(file).toBe('file')
+      })
+
+      extendedTest('test 3', ({ file }) => {
+        expect(file).toBe('file')
+      })
+
+      describe('suite 1', () => {
+        extendedTest('test 1 1', ({ file }) => {
+          expect(file).toBe('file')
+        })
+
+        extendedTest('test 1 2', ({ file }) => {
+          expect(file).toBe('file')
+        })
+
+        describe('suite 2', () => {
+          extendedTest('[first] test 1 2 1', ({ file }) => {
+            expect(file).toBe('file')
+          })
+        })
+      })
+    },
+
+    'second.test.js': ({ extendedTest }: { extendedTest: TestAPI<{ file: string }> }) => {
+      // doesn't access "file", not initialised
+      extendedTest('[second] test 0', ({}) => {})
+      // accesses "file" for the first time, initialised
+      extendedTest('[second] test 1', ({ file: _file }) => {})
+      extendedTest('[second] test 2', ({ file: _file }) => {})
+
+      describe('suite 1', () => {
+        extendedTest('[second] test 1', ({ file: _file }) => {})
+      })
+    },
+
+    'third.test.js': ({ extendedTest }: { extendedTest: TestAPI<{ file: string }> }) => {
+      // doesn't access "file" at all
+      extendedTest('[third] test 0', ({}) => {})
+    },
+
+    'vitest.config.js': {
+      test: {
+        globals: true,
+        isolate,
+        maxWorkers: 1,
+      },
+    },
+  })
+
+  expect(stderr).toBe('')
+
+  expect(fixtures).toMatchInlineSnapshot(`
+    ">> fixture | init file | [first] test 1
+    >> fixture | teardown file | suite 1 > suite 2 > [first] test 1 2 1
+    >> fixture | init file | [second] test 1
+    >> fixture | teardown file | suite 1 > [second] test 1"
+  `)
+
+  expect(tests).toMatchInlineSnapshot(`
+    " ✓ basic.test.js > [first] test 1 <time>
+     ✓ basic.test.js > test 2 <time>
+     ✓ basic.test.js > test 3 <time>
+     ✓ basic.test.js > suite 1 > test 1 1 <time>
+     ✓ basic.test.js > suite 1 > test 1 2 <time>
+     ✓ basic.test.js > suite 1 > suite 2 > [first] test 1 2 1 <time>
+     ✓ second.test.js > [second] test 0 <time>
+     ✓ second.test.js > [second] test 1 <time>
+     ✓ second.test.js > [second] test 2 <time>
+     ✓ second.test.js > suite 1 > [second] test 1 <time>
+     ✓ third.test.js > [third] test 0 <time>"
+  `)
+})
+
+async function runFixtureTests<T>(
+  extendedTest: ({ log }: { log: typeof console.log }) => TestAPI<T>,
+  fs: Record<string, ((context: { extendedTest: TestAPI<T> }) => unknown) | ViteUserConfig>,
+) {
+  const { stderr, stdout } = await runInlineTests({
+    'test.js': `
+    export const extendedTest = (${extendedTest.toString()})({ log: (...args) => console.log('>> fixture |', ...args, '| ' + expect.getState().currentTestName) })
+    `,
+    'vitest.config.js': { test: { globals: true } },
+    ...Object.entries(fs).reduce((acc, [key, value]) => {
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        acc[key] = value
+      }
+      if (typeof value === 'function') {
+        acc[key] = [value, { imports: { './test.js': ['extendedTest'] } }]
+      }
+      return acc
+    }, {} as TestFsStructure),
+  })
+
+  return {
+    stderr,
+    fixtures: getFixtureLogs(stdout),
+    tests: getSuccessTests(stdout),
+  }
+}
+
+function getSuccessTests(stdout: string) {
+  return stdout
+    .split('\n')
+    .filter(f => f.startsWith(' ✓ '))
+    .map(f => f.replace(/\dms/, '<time>'))
+    .join('\n')
+}
+
+function getFixtureLogs(stdout: string) {
+  return stdout
+    .split('\n')
+    .filter(f => f.startsWith('>> fixture |'))
+    .join('\n')
+}
