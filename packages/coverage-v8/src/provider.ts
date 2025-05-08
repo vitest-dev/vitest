@@ -62,6 +62,22 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     })
   }
 
+  onFileTransform(sourceCode: string, id: string): { code: string; map: any } | undefined {
+    if (!this.testExclude.shouldInstrument(id)) {
+      return
+    }
+
+    if (sourceCode.includes('import.meta.vitest')) {
+      const s = new MagicString(sourceCode)
+      s.replaceAll(/(if +\(import\.meta\.vitest\))/g, '/* v8 ignore next */ $1')
+
+      return {
+        code: s.toString(),
+        map: s.generateMap({ hires: 'boundary' }),
+      }
+    }
+  }
+
   createCoverageMap(): CoverageMap {
     return libCoverage.createCoverageMap({})
   }
