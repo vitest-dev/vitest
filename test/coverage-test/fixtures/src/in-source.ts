@@ -11,7 +11,8 @@ export function add(a: number, b: number) {
 if (import.meta.vitest) {
   const { test, expect } = import.meta.vitest
 
-  test('in source test running add function', () => {
+  // Name of the callback test function is checked in tests
+  test('in source test running add function', function customNamedTestFunction() {
     expect(add(10, 19)).toBe(29)
   })
 }

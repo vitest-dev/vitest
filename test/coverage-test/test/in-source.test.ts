@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { readCoverageMap, runVitest, test } from '../utils'
+import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
 test('in-source tests work', async () => {
   const { stdout } = await runVitest({
@@ -16,6 +16,23 @@ test('in-source tests work', async () => {
   expect(files).toMatchInlineSnapshot(`
     [
       "<process-cwd>/fixtures/src/in-source.ts",
+    ]
+  `)
+
+  const fileCoverage = coverageMap.fileCoverageFor(files[0])
+  const functions = Object.values(fileCoverage.fnMap).map(fn => fn.name)
+
+  // If-branch is not taken - makes sure source maps are correct in in-source testing too
+  expect(fileCoverage.getUncoveredLines()).toContain('5')
+
+  if (isV8Provider()) {
+    return
+  }
+
+  // The "customNamedTestFunction" should be excluded by auto-generated ignore hints
+  expect(functions).toMatchInlineSnapshot(`
+    [
+      "add",
     ]
   `)
 })
