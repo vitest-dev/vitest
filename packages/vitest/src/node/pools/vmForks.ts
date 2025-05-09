@@ -170,7 +170,7 @@ export function createVmForksPool(
           return configs.get(project)!
         }
 
-        const _config = project.getSerializableConfig()
+        const _config = project.serializedConfig
         const config = wrapSerializableConfig(_config)
 
         configs.set(project, config)
@@ -207,7 +207,17 @@ export function createVmForksPool(
     name: 'vmForks',
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => pool.destroy(),
+    close: async () => {
+      const emitter = new EventEmitter()
+
+      const events = { message: 'message', response: 'response' }
+      const channel: TinypoolChannel = {
+        onMessage: callback => emitter.on(events.message, callback),
+        postMessage: message => emitter.emit(events.response, message),
+      }
+      await pool.run({}, { name: 'cleanup', channel })
+      await pool.destroy()
+    },
   }
 }
 
