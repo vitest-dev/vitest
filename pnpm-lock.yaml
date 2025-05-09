@@ -1043,9 +1043,6 @@ importers:
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
-      '@types/micromatch':
-        specifier: ^4.0.9
-        version: 4.0.9
       '@types/node':
         specifier: ^22.14.1
         version: 22.14.1
@@ -1088,9 +1085,6 @@ importers:
       local-pkg:
         specifier: ^1.1.1
         version: 1.1.1
-      micromatch:
-        specifier: ^4.0.8
-        version: 4.0.8
       pretty-format:
         specifier: ^29.7.0
         version: 29.7.0
@@ -3967,9 +3961,6 @@ packages:
   '@types/babel__traverse@7.20.3':
     resolution: {integrity: sha512-Lsh766rGEFbaxMIDH7Qa+Yha8cMVI3qAK6CHt3OR0YfxOIn5Z54iHiyDRycHrBqeIiqGa20Kpsv1cavfBKkRSw==}
 
-  '@types/braces@3.0.1':
-    resolution: {integrity: sha512-+euflG6ygo4bn0JHtn4pYqcXwRtLvElQ7/nnjDu7iYG56H0+OhCd7d6Ug0IE3WcFpZozBKW2+80FUbv5QGk5AQ==}
-
   '@types/chai@5.2.2':
     resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
 
@@ -4044,9 +4035,6 @@ packages:
 
   '@types/mdast@4.0.3':
     resolution: {integrity: sha512-LsjtqsyF+d2/yFOYaN22dHZI1Cpwkrj+g06G8+qtUKlhovPW89YhqSnfKtMbkgmEtYpH2gydRNULd6y8mciAFg==}
-
-  '@types/micromatch@4.0.9':
-    resolution: {integrity: sha512-7V+8ncr22h4UoYRLnLXSpTxjQrNUXtWHGeMPRJt1nULXI57G9bIcpyrHlmrQ7QK24EyyuXvYcSSWAM8GA9nqCg==}
 
   '@types/minimatch@5.1.1':
     resolution: {integrity: sha512-v55NF6Dz0wrj14Rn8iEABTWrhYRmgkJYuokduunSiq++t3hZ9VZ6dvcDt+850Pm5sGJZk8RaHzkFCXPxVINZ+g==}
@@ -11899,8 +11887,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.27.0
 
-  '@types/braces@3.0.1': {}
-
   '@types/chai@5.2.2':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -11986,10 +11972,6 @@ snapshots:
   '@types/mdast@4.0.3':
     dependencies:
       '@types/unist': 3.0.2
-
-  '@types/micromatch@4.0.9':
-    dependencies:
-      '@types/braces': 3.0.1
 
   '@types/minimatch@5.1.1': {}
 
