@@ -316,8 +316,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       const globThresholds = resolveGlobThresholds(this.options.thresholds![glob])
       const globCoverageMap = this.createCoverageMap()
 
+      const matcher = pm(glob)
       const matchingFiles = files.filter(file =>
-        pm.isMatch(relative(this.ctx.config.root, file), glob),
+        matcher(relative(this.ctx.config.root, file)),
       )
 
       for (const file of matchingFiles) {
