@@ -985,6 +985,9 @@ importers:
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
+      picomatch:
+        specifier: ^4.0.2
+        version: 4.0.2
       std-env:
         specifier: 'catalog:'
         version: 3.9.0
@@ -1046,6 +1049,9 @@ importers:
       '@types/node':
         specifier: ^22.14.1
         version: 22.14.1
+      '@types/picomatch':
+        specifier: ^4.0.0
+        version: 4.0.0
       '@types/prompts':
         specifier: ^2.4.9
         version: 2.4.9
@@ -4062,6 +4068,9 @@ packages:
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
+
+  '@types/picomatch@4.0.0':
+    resolution: {integrity: sha512-J1Bng+wlyEERWSgJQU1Pi0HObCLVcr994xT/M+1wcl/yNRTGBupsCxthgkdYG+GCOMaQH7iSVUY3LJVBBqG7MQ==}
 
   '@types/prompts@2.4.9':
     resolution: {integrity: sha512-qTxFi6Buiu8+50/+3DGIWLHM6QuWsEKugJnnP6iv2Mc4ncxE4A/OJkjuVOA+5X0X1S/nq5VJRa8Lu+nwcvbrKA==}
@@ -12001,6 +12010,8 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/normalize-package-data@2.4.4': {}
+
+  '@types/picomatch@4.0.0': {}
 
   '@types/prompts@2.4.9':
     dependencies:
