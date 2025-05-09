@@ -1,4 +1,4 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { File, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
@@ -88,6 +88,11 @@ export interface Reporter {
    * The `result()` cannot be `pending`.
    */
   onTestCaseResult?: (testCase: TestCase) => Awaitable<void>
+
+  /**
+   * Called when annotation is added via the `task.annotate` API.
+   */
+  onTestCaseAnnotate?: (testCase: TestCase, annotation: TestAnnotation) => Awaitable<void>
 
   /**
    * Called when test suite is ready to run.

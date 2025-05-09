@@ -1,4 +1,4 @@
-import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, VitestRunner } from '@vitest/runner'
+import type { CancelReason, File, Suite, Task, TaskEventPack, TaskResultPack, Test, TestAnnotation, VitestRunner } from '@vitest/runner'
 import type { SerializedConfig, TestExecutionMethod, WorkerGlobalState } from 'vitest'
 import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
@@ -143,6 +143,10 @@ export function createBrowserRunner(
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
       return rpc().onTaskUpdate(this.method, task, events)
+    }
+
+    onTestAnnotate = (test: Test, annotation: TestAnnotation): Promise<void> => {
+      return rpc().onTestAnnotate(test.id, annotation)
     }
 
     importFile = async (filepath: string) => {

@@ -4,10 +4,14 @@ import type {
   RuntimeContext,
   SuiteCollector,
   Test,
+  TestAnnotation,
+  TestAnnotationLocation,
+  TestAttachment,
   TestContext,
   WriteableTestContext,
 } from './types/tasks'
 import { getSafeTimers } from '@vitest/utils'
+import { parseSingleStack } from '@vitest/utils/source-map'
 import { PendingError } from './errors'
 import { getRunner } from './suite'
 
@@ -150,6 +154,52 @@ export function createTestContext(
       typeof condition === 'string' ? condition : note,
     )
   }
+
+  function annotate(
+    message: string,
+    location?: TestAnnotationLocation,
+    type?: string,
+    attachment?: TestAttachment,
+  ) {
+    const annotation: TestAnnotation = {
+      message,
+    }
+    if (type) {
+      annotation.type = type
+    }
+    if (attachment) {
+      annotation.attachment = attachment
+    }
+    if (location) {
+      annotation.location = location
+    }
+    test.annotations.push(annotation)
+    runner.onTestAnnotate?.(test, annotation)
+  }
+
+  context.annotate = ((message, type, attachment) => {
+    let location: undefined | TestAnnotationLocation
+
+    if (runner.config.includeTaskLocation) {
+      const stack = new Error('STACK_TRACE').stack!
+      const index = stack.includes('STACK_TRACE') ? 1 : 2
+      const stackLine = stack.split('\n')[index]
+      const parsed = parseSingleStack(stackLine)
+      if (parsed) {
+        location = {
+          line: parsed.line,
+          column: parsed.column,
+        }
+      }
+    }
+
+    if (typeof type === 'object') {
+      annotate(message, location, undefined, type)
+    }
+    else {
+      annotate(message, location, type, attachment)
+    }
+  }) as TestContext['annotate']
 
   context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
