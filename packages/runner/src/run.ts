@@ -602,6 +602,8 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 }
 
+const workerRunners = new WeakSet<VitestRunner>()
+
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
@@ -613,6 +615,16 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
       abortContextSignal(test.context, error),
     )
     return cancel?.(reason)
+  }
+
+  if (!workerRunners.has(runner)) {
+    runner.onCleanupWorkerContext?.(async () => {
+      const context = runner.getWorkerContext?.()
+      if (context) {
+        await callFixtureCleanup(context)
+      }
+    })
+    workerRunners.add(runner)
   }
 
   try {

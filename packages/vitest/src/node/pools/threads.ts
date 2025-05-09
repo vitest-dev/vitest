@@ -224,6 +224,7 @@ export function createThreadsPool(
             await new Promise<void>(resolve =>
               pool.queueSize === 0 ? resolve() : pool.once('drain', resolve),
             )
+            await cleanupWorkers()
             await pool.recycleWorkers()
           }
         }
@@ -259,6 +260,7 @@ export function createThreadsPool(
           )
 
           for (const files of Object.values(filesByOptions)) {
+            await cleanupWorkers()
             // Always run environments isolated between each other
             await pool.recycleWorkers()
 
@@ -276,10 +278,17 @@ export function createThreadsPool(
     }
   }
 
+  async function cleanupWorkers() {
+    // await pool.run({}, { name: 'cleanup' })
+  }
+
   return {
     name: 'threads',
     runTests: runWithFiles('run'),
     collectTests: runWithFiles('collect'),
-    close: () => pool.destroy(),
+    close: async () => {
+      await cleanupWorkers()
+      await pool.destroy()
+    },
   }
 }

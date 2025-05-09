@@ -46,6 +46,10 @@ export class VitestTestRunner implements VitestRunner {
     this.workerState.current = file
   }
 
+  onCleanupWorkerContext(listener: () => unknown): void {
+    this.workerState.onCleanup(listener)
+  }
+
   onAfterRunFiles(): void {
     this.snapshotClient.clear()
     this.workerState.current = undefined

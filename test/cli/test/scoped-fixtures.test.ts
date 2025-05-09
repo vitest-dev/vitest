@@ -33,31 +33,28 @@ test('test fixture cannot import from file fixture', async () => {
 })
 
 test('can import file fixture inside the local fixture', async () => {
-  const { stderr, fixtures, tests } = await runFixtureTests(
-    ({ log }) => it.extend<{
-      file: string
-      local: string
-    }>({
-      local: async ({ file }, use) => {
-        log('init local')
-        await use(file)
-        log('teardown local')
-      },
-      file: [
-        async ({}, use) => {
-          log('init file')
-          await use('file')
-          log('teardown file')
-        },
-        { scope: 'file' },
-      ],
-    }),
-    {
-      'basic.test.ts': ({ extendedTest }) => {
-        extendedTest('test1', ({ local: _local }) => {})
-      },
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+    file: string
+    local: string
+  }>({
+    local: async ({ file }, use) => {
+      log('init local')
+      await use(file)
+      log('teardown local')
     },
-  )
+    file: [
+      async ({}, use) => {
+        log('init file')
+        await use('file')
+        log('teardown file')
+      },
+      { scope: 'file' },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ local: _local }) => {})
+    },
+  })
 
   expect(stderr).toBe('')
   expect(fixtures).toMatchInlineSnapshot(`
@@ -70,33 +67,31 @@ test('can import file fixture inside the local fixture', async () => {
 })
 
 test.skip('can import worker fixture inside the local fixture', async () => {
-  const { stderr, fixtures, tests } = await runFixtureTests(
-    ({ log }) => it.extend<{
-      worker: string
-      local: string
-    }>({
-      local: async ({ worker }, use) => {
-        log('init local')
-        await use(worker)
-        log('teardown local')
-      },
-      worker: [
-        async ({}, use) => {
-          log('init worker')
-          await use('worker')
-          log('teardown worker')
-        },
-        { scope: 'worker' },
-      ],
-    }),
-    {
-      'basic.test.ts': ({ extendedTest }) => {
-        extendedTest('test1', ({ local }) => {
-          expect(local).toBe('worker')
-        })
-      },
+  const { stderr, stdout, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{
+    worker: string
+    local: string
+  }>({
+    local: async ({ worker }, use) => {
+      log('init local')
+      await use(worker)
+      log('teardown local')
     },
-  )
+    worker: [
+      async ({}, use) => {
+        log('init worker')
+        await use('worker')
+        log('teardown worker')
+      },
+      { scope: 'worker' },
+    ],
+  }), {
+    'basic.test.ts': ({ extendedTest }) => {
+      extendedTest('test1', ({ local }) => {
+        expect(local).toBe('worker')
+      })
+    },
+  })
+  console.log(stdout)
 
   expect(stderr).toBe('')
   // TODO: worker teardown is not called
@@ -319,7 +314,7 @@ test.for([
   true,
   false,
 ])('file fixture is provided as a factory and is initialised once in all suites, teardown is called once per file (isolate %s)', async (isolate) => {
-  const { stderr, fixtures, tests } = await runFixtureTests<{ file: string }>(({ log }) => it.extend<{ file: string }>({
+  const { stderr, fixtures, tests } = await runFixtureTests(({ log }) => it.extend<{ file: string }>({
     file: [
       async ({}, use) => {
         log('init file')
@@ -359,7 +354,7 @@ test.for([
       })
     },
 
-    'second.test.js': ({ extendedTest }: { extendedTest: TestAPI<{ file: string }> }) => {
+    'second.test.js': ({ extendedTest }) => {
       // doesn't access "file", not initialised
       extendedTest('[second] test 0', ({}) => {})
       // accesses "file" for the first time, initialised
@@ -371,7 +366,7 @@ test.for([
       })
     },
 
-    'third.test.js': ({ extendedTest }: { extendedTest: TestAPI<{ file: string }> }) => {
+    'third.test.js': ({ extendedTest }) => {
       // doesn't access "file" at all
       extendedTest('[third] test 0', ({}) => {})
     },
@@ -431,6 +426,7 @@ async function runFixtureTests<T>(
 
   return {
     stderr,
+    stdout,
     fixtures: getFixtureLogs(stdout),
     tests: getSuccessTests(stdout),
   }
