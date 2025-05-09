@@ -550,7 +550,7 @@ function enhanceSpy<T extends Procedure>(
   }
 
   if (Symbol.dispose) {
-    stub[Symbol.dispose] = stub.mockRestore
+    stub[Symbol.dispose] = () => stub.mockRestore()
   }
 
   stub.getMockImplementation = () =>
