@@ -68,6 +68,14 @@ export async function resolveTestRunner(
     return p
   }
 
+  // patch some methods, so custom runners don't need to call RPC
+  const originalOnTestAnnotate = testRunner.onTestAnnotate
+  testRunner.onTestAnnotate = async (task, annotation) => {
+    const p = rpc().onTestAnnotate(task.id, annotation)
+    await originalOnTestAnnotate?.call(testRunner, task, annotation)
+    return p
+  }
+
   const originalOnCollectStart = testRunner.onCollectStart
   testRunner.onCollectStart = async (file) => {
     await rpc().onQueued(file)

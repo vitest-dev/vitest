@@ -65,7 +65,14 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
-    reporters: [['default', { summary: true }], 'hanging-process'],
+    reporters: [['default', { summary: true }], 'hanging-process', {
+      onTestCaseAnnotate(test, annotation) {
+        console.log('test', test.name, annotation)
+      },
+      onTestCaseReady(test) {
+        console.log('annotations', test.annotations())
+      },
+    }],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
       provider: 'istanbul',

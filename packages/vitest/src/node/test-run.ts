@@ -1,4 +1,10 @@
-import type { File as RunnerTestFile, TaskEventPack, TaskResultPack, TaskUpdateEvent } from '@vitest/runner'
+import type {
+  File as RunnerTestFile,
+  TaskEventPack,
+  TaskResultPack,
+  TaskUpdateEvent,
+  TestAnnotation,
+} from '@vitest/runner'
 import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
@@ -18,6 +24,18 @@ export class TestRun {
     await this.vitest.report('onPathsCollected', Array.from(new Set(filepaths)))
     await this.vitest.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
     await this.vitest.report('onTestRunStart', [...specifications])
+  }
+
+  async annotate(id: string, annotation: TestAnnotation): Promise<void> {
+    const task = this.vitest.state.idMap.get(id)
+    const entity = task && this.vitest.state.getReportedEntity(task)
+
+    assert(task && entity, `Entity must be found for task ${task?.name || id}`)
+    assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
+
+    entity.task.annotations.push(annotation)
+
+    await this.vitest.report('onTestCaseAnnotate', entity, annotation)
   }
 
   async enqueued(project: TestProject, file: RunnerTestFile): Promise<void> {

@@ -146,7 +146,7 @@ export interface TaskResult {
    * `repeats` option is set. This number also contains `retryCount`.
    */
   repeatCount?: number
-  /** @private */
+  /** @internal */
   note?: string
   /**
    * Whether the task was skipped by calling `context.skip()`.
@@ -197,6 +197,7 @@ export type TaskUpdateEvent =
   | 'before-hook-end'
   | 'after-hook-start'
   | 'after-hook-end'
+  | 'test-annotation'
 
 export interface Suite extends TaskBase {
   type: 'suite'
@@ -251,6 +252,27 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
    * The test timeout in milliseconds.
    */
   timeout: number
+  /**
+   * An array of custom annotations.
+   */
+  annotations: TestAnnotation[]
+}
+
+export interface TestAttachment {
+  contentType?: string
+  path: string
+}
+
+export interface TestAnnotationLocation {
+  line: number
+  column: number
+}
+
+export interface TestAnnotation {
+  message: string
+  type?: string // to group annotations together
+  location?: TestAnnotationLocation
+  attachment?: TestAttachment
 }
 
 /**
@@ -672,6 +694,14 @@ export interface TestContext {
   readonly skip: {
     (note?: string): never
     (condition: boolean, note?: string): void
+  }
+
+  /**
+   * // TODO
+   */
+  readonly annotate: {
+    (message: string, type?: string, attachment?: TestAttachment): void
+    (message: string, attachment?: TestAttachment): void
   }
 }
 
