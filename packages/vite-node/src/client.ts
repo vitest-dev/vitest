@@ -495,6 +495,11 @@ export class ViteNodeRunner {
       __vite_ssr_dynamic_import__: request,
       __vite_ssr_exports__: exports,
       __vite_ssr_exportAll__: (obj: any) => exportAll(exports, obj),
+      __vite_ssr_exportName__: (name: string, getter: () => unknown) => Object.defineProperty(exports, name, {
+        enumerable: true,
+        configurable: true,
+        get: getter,
+      }),
       __vite_ssr_import_meta__: meta,
 
       // cjs compact
