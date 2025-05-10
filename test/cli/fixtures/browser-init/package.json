@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:browser": "vitest --workspace=vitest.workspace.ts"
+    "test:browser": "vitest --config=vitest.browser.config.ts"
   },
   "dependencies": {
     "vitest": "latest"
