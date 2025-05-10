@@ -89,7 +89,9 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/#reporters)
 
-Specify reporters
+Specify which reporter(s) to use. Available values:
+
+`default`, `basic`, `blob`, `verbose`, `dot`, `json`, `tap`, `tap-flat`, `junit`, `hanging-process`, `github-actions`.
 
 ### outputFile
 
