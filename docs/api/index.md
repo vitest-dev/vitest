@@ -461,13 +461,13 @@ You cannot use this syntax when using Vitest as [type checker](/guide/testing-ty
 
 - **Alias:** `it.for`
 
-Alternative of `test.each` to provide [`TestContext`](/guide/test-context).
+Alternative to `test.each` to provide [`TestContext`](/guide/test-context).
 
-The difference from `test.each` is how array case is provided in the arguments.
-Other non array case (including template string usage) works exactly same.
+The difference from `test.each` lies in how arrays are provided in the arguments.
+Non-array arguments to `test.for` (including template string usage) work exactly the same as for `test.each`.
 
 ```ts
-// `each` spreads array case
+// `each` spreads arrays
 test.each([
   [1, 1, 2],
   [1, 2, 3],
@@ -476,7 +476,7 @@ test.each([
   expect(a + b).toBe(expected)
 })
 
-// `for` doesn't spread array case
+// `for` doesn't spread arrays (notice the square brackets around the arguments)
 test.for([
   [1, 1, 2],
   [1, 2, 3],
@@ -486,7 +486,7 @@ test.for([
 })
 ```
 
-2nd argument is [`TestContext`](/guide/test-context) and it can be used for concurrent snapshot, for example,
+The 2nd argument is [`TestContext`](/guide/test-context) and can be used for concurrent snapshots, for example:
 
 ```ts
 test.concurrent.for([
@@ -502,9 +502,9 @@ test.concurrent.for([
 
 - **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
-`bench` defines a benchmark. In Vitest terms benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
+`bench` defines a benchmark. In Vitest terms, benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
 
-Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
+Vitest uses the [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
 
 ```ts
 import { bench } from 'vitest'
