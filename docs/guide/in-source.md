@@ -55,7 +55,7 @@ $ npx vitest
 
 For the production build, you will need to set the `define` options in your config file, letting the bundler do the dead code elimination. For example, in Vite
 
-```ts [vitest.config.ts]
+```ts [vite.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
