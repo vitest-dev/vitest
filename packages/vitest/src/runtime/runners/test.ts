@@ -62,6 +62,14 @@ export class VitestTestRunner implements VitestRunner {
       }
 
       const result = await this.snapshotClient.finish(suite.file.filepath)
+      if (
+        this.workerState.config.snapshotOptions.updateSnapshot === 'none'
+        && result.unchecked
+      ) {
+        const error = new Error(`Obsolete snapshots found: ${result.uncheckedKeys.join(', ')}`)
+        suite.result!.errors ??= []
+        suite.result!.errors.push(error)
+      }
       await rpc().snapshotSaved(result)
     }
 
