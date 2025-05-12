@@ -1073,9 +1073,6 @@ importers:
       flatted:
         specifier: 'catalog:'
         version: 3.3.3
-      get-tsconfig:
-        specifier: ^4.10.0
-        version: 4.10.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.4.6
