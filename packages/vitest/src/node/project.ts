@@ -70,6 +70,7 @@ export class TestProject {
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _config?: ResolvedConfig
   /** @internal */ _vite?: ViteDevServer
+  /** @internal */ _hash?: string
 
   private runner!: ViteNodeRunner
 
@@ -90,6 +91,13 @@ export class TestProject {
     this.vitest = vitest
     this.ctx = vitest
     this.globalConfig = vitest.config
+  }
+
+  public get hash(): string {
+    if (!this._hash) {
+      throw new Error('The server was not set. It means that `project.hash` was called before the Vite server was established.')
+    }
+    return this._hash
   }
 
   // "provide" is a property, not a method to keep the context when destructed in the global setup,
@@ -601,6 +609,12 @@ export class TestProject {
     return this._configureServer(options, server)
   }
 
+  private _setHash() {
+    this._hash = generateHash(
+      this._config!.root + this._config!.name,
+    )
+  }
+
   /** @internal */
   async _configureServer(options: UserConfig, server: ViteDevServer): Promise<void> {
     this._config = resolveConfig(
@@ -611,6 +625,7 @@ export class TestProject {
       },
       server.config,
     )
+    this._setHash()
     for (const _providedKey in this.config.provide) {
       const providedKey = _providedKey as keyof ProvidedContext
       // type is very strict here, so we cast it to any
@@ -699,6 +714,7 @@ export class TestProject {
     project.runner = vitest.runner
     project._vite = vitest.server
     project._config = vitest.config
+    project._setHash()
     project._provideObject(vitest.config.provide)
     return project
   }
@@ -713,6 +729,7 @@ export class TestProject {
     clone.runner = parent.runner
     clone._vite = parent._vite
     clone._config = config
+    clone._setHash()
     clone._parent = parent
     clone._provideObject(config.provide)
     return clone
@@ -770,4 +787,17 @@ export async function initializeProject(
   await createViteServer(config)
 
   return project
+}
+
+function generateHash(str: string): string {
+  let hash = 0
+  if (str.length === 0) {
+    return `${hash}`
+  }
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return `${hash}`
 }

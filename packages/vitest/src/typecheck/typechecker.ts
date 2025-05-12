@@ -8,14 +8,15 @@ import type { TestProject } from '../node/project'
 import type { Awaitable } from '../types/general'
 import type { FileInformation } from './collect'
 import type { TscErrorInfo } from './types'
-import { rm } from 'node:fs/promises'
+import os from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { eachMapping, generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
-import { basename, extname, resolve } from 'pathe'
+import { basename, extname, join, resolve } from 'pathe'
 import { x } from 'tinyexec'
+import { distDir } from '../paths'
 import { convertTasksToEvents } from '../utils/tasks'
 import { collectTests } from './collect'
-import { getRawErrsMapFromTsCompile, getTsconfig } from './parse'
+import { getRawErrsMapFromTsCompile } from './parse'
 import { createIndexMap } from './utils'
 
 export class TypeCheckError extends Error {
@@ -49,13 +50,12 @@ export class Typechecker {
   private _startTime = 0
   private _output = ''
   private _tests: Record<string, FileInformation> | null = {}
-  private tempConfigPath?: string
   private allowJs?: boolean
   private process?: ChildProcess
 
   protected files: string[] = []
 
-  constructor(protected ctx: TestProject) {}
+  constructor(protected project: TestProject) {}
 
   public setFiles(files: string[]): void {
     this.files = files
@@ -76,7 +76,7 @@ export class Typechecker {
   protected async collectFileTests(
     filepath: string,
   ): Promise<FileInformation | null> {
-    return collectTests(this.ctx, filepath)
+    return collectTests(this.project, filepath)
   }
 
   protected getFiles(): string[] {
@@ -225,7 +225,7 @@ export class Typechecker {
       { error: TypeCheckError; originalError: TscErrorInfo }[]
     >()
     errorsMap.forEach((errors, path) => {
-      const filepath = resolve(this.ctx.config.root, path)
+      const filepath = resolve(this.project.config.root, path)
       const suiteErrors = errors.map((info) => {
         const limit = Error.stackTraceLimit
         Error.stackTraceLimit = 0
@@ -260,14 +260,7 @@ export class Typechecker {
     return typesErrors
   }
 
-  public async clear(): Promise<void> {
-    if (this.tempConfigPath) {
-      await rm(this.tempConfigPath, { force: true })
-    }
-  }
-
   public async stop(): Promise<void> {
-    await this.clear()
     this.process?.kill()
     this.process = undefined
   }
@@ -278,15 +271,6 @@ export class Typechecker {
     }
     const packageName = checker === 'tsc' ? 'typescript' : 'vue-tsc'
     await ctx.packageInstaller.ensureInstalled(packageName, ctx.config.root)
-  }
-
-  public async prepare(): Promise<void> {
-    const { root, typecheck } = this.ctx.config
-
-    const { config, path } = await getTsconfig(root, typecheck)
-
-    this.tempConfigPath = path
-    this.allowJs = typecheck.allowJs || config.allowJs || false
   }
 
   public getExitCode(): number | false {
@@ -302,19 +286,28 @@ export class Typechecker {
       return
     }
 
-    if (!this.tempConfigPath) {
-      throw new Error('tsconfig was not initialized')
-    }
+    const { root, watch, typecheck } = this.project.config
 
-    const { root, watch, typecheck } = this.ctx.config
-
-    const args = ['--noEmit', '--pretty', 'false', '-p', this.tempConfigPath]
-    // use builtin watcher, because it's faster
+    const args = [
+      '--noEmit',
+      '--pretty',
+      'false',
+      '--incremental',
+      '--tsBuildInfoFile',
+      join(
+        process.versions.pnp ? join(os.tmpdir(), this.project.hash) : distDir,
+        'tsconfig.tmp.tsbuildinfo',
+      ),
+    ]
+    // use builtin watcher because it's faster
     if (watch) {
       args.push('--watch')
     }
     if (typecheck.allowJs) {
       args.push('--allowJs', '--checkJs')
+    }
+    if (typecheck.tsconfig) {
+      args.push('-p', resolve(this.project.config.root, typecheck.tsconfig))
     }
     this._output = ''
     this._startTime = performance.now()

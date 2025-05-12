@@ -96,7 +96,6 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       await ctx._testRun.updated(packs, events)
     })
 
-    await checker.prepare()
     return checker
   }
 
