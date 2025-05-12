@@ -477,8 +477,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/filtering',
     },
     {
-      text: 'Workspace',
-      link: '/guide/workspace',
+      text: 'Test Projects',
+      link: '/guide/projects',
     },
     {
       text: 'Reporters',

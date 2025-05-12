@@ -5,7 +5,8 @@ import type {
   FrameLocator,
   LaunchOptions,
   Page,
-  CDPSession
+  CDPSession,
+  ConnectOptions
 } from 'playwright'
 import { Protocol } from 'playwright-core/types/protocol'
 import '../matchers.js'
@@ -14,6 +15,10 @@ import type {} from "vitest/node"
 declare module 'vitest/node' {
   export interface BrowserProviderOptions {
     launch?: LaunchOptions
+    connect?: {
+      wsEndpoint: string
+      options?: ConnectOptions
+    }
     context?: Omit<
       BrowserContextOptions,
       'ignoreHTTPSErrors' | 'serviceWorkers'

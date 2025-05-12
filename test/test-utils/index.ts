@@ -149,6 +149,7 @@ export async function runVitest(
 
 interface CliOptions extends Partial<Options> {
   earlyReturn?: boolean
+  preserveAnsi?: boolean
 }
 
 async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | string, ...args: string[]) {
@@ -169,6 +170,7 @@ async function runCli(command: 'vitest' | 'vite-node', _options?: CliOptions | s
     stdin: subprocess.stdin!,
     stdout: subprocess.stdout!,
     stderr: subprocess.stderr!,
+    preserveAnsi: typeof _options !== 'string' ? _options?.preserveAnsi : false,
   })
 
   let setDone: (value?: unknown) => void
@@ -269,7 +271,9 @@ export function resolvePath(baseUrl: string, path: string) {
   return resolve(dirname(filename), path)
 }
 
-export function useFS(root: string, structure: Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>) {
+export type TestFsStructure = Record<string, string | ViteUserConfig | WorkspaceProjectConfiguration[]>
+
+export function useFS(root: string, structure: TestFsStructure) {
   const files = new Set<string>()
   const hasConfig = Object.keys(structure).some(file => file.includes('.config.'))
   if (!hasConfig) {

@@ -118,10 +118,7 @@ export function createTypecheckPool(ctx: Vitest): ProcessPool {
       checker.setFiles(files)
       await checker.collectTests()
       const testFiles = checker.getTestFiles()
-      for (const file of testFiles) {
-        await ctx._testRun.enqueued(project, file)
-      }
-      await ctx._testRun.collected(project, testFiles)
+      ctx.state.collectFiles(project, testFiles)
     }
   }
 

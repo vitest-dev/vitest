@@ -79,7 +79,7 @@ export class ParentBrowserProject {
         if (mod) {
           return id
         }
-        const resolvedPath = resolve(project.config.root, id.slice(1))
+        const resolvedPath = resolve(this.vite.config.root, id.slice(1))
         const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
         if (modUrl) {
           return resolvedPath

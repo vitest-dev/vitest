@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.1.1",
+  "version": "3.2.0-beta.1",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -154,6 +154,7 @@
     }
   },
   "dependencies": {
+    "@types/chai": "catalog:",
     "@vitest/expect": "workspace:*",
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:^",
@@ -166,9 +167,11 @@
     "expect-type": "^1.2.1",
     "magic-string": "catalog:",
     "pathe": "catalog:",
+    "picomatch": "^4.0.2",
     "std-env": "catalog:",
     "tinybench": "^2.9.0",
     "tinyexec": "^0.3.2",
+    "tinyglobby": "catalog:",
     "tinypool": "^1.0.2",
     "tinyrainbow": "catalog:",
     "vite": "^5.0.0 || ^6.0.0",
@@ -185,8 +188,8 @@
     "@types/istanbul-lib-coverage": "catalog:",
     "@types/istanbul-reports": "catalog:",
     "@types/jsdom": "^21.1.7",
-    "@types/micromatch": "^4.0.9",
     "@types/node": "^22.14.1",
+    "@types/picomatch": "^4.0.0",
     "@types/prompts": "^2.4.9",
     "@types/sinonjs__fake-timers": "^8.1.5",
     "acorn-walk": "catalog:",
@@ -199,11 +202,9 @@
     "happy-dom": "^17.4.4",
     "jsdom": "^26.1.0",
     "local-pkg": "^1.1.1",
-    "micromatch": "^4.0.8",
     "pretty-format": "^29.7.0",
     "prompts": "^2.4.2",
     "strip-literal": "^3.0.0",
-    "tinyglobby": "catalog:",
     "ws": "catalog:"
   }
 }

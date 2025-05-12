@@ -58,6 +58,13 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
       )
     }
 
+    if (!vitest._browserSessions.sessionIds.has(sessionId)) {
+      const ids = [...vitest._browserSessions.sessionIds].join(', ')
+      return error(
+        new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`),
+      )
+    }
+
     if (type === 'orchestrator') {
       const session = vitest._browserSessions.getSession(sessionId)
       // it's possible the session was already resolved by the preview provider
@@ -195,7 +202,7 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
           return mod?.transformResult?.map
         },
-        onCancel(reason) {
+        cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
         },
         async resolveId(id, importer) {

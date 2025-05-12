@@ -8,7 +8,7 @@ import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
 import type { EnvironmentOptions } from '../../types/environment'
-import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
+import type { Arrayable, ErrorWithDiff, LabelColor, ParsedStack, ProvidedContext } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import type {
@@ -16,6 +16,7 @@ import type {
   BuiltinReporters,
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
+import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
@@ -49,6 +50,11 @@ export type ApiConfig = Pick<
 export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
+
+export interface ProjectName {
+  label: string
+  color?: LabelColor
+}
 
 interface SequenceOptions {
   /**
@@ -238,7 +244,7 @@ export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
    */
-  name?: string
+  name?: string | ProjectName
 
   /**
    * Benchmark options.
@@ -314,7 +320,7 @@ export interface InlineConfig {
    *
    * Format: [glob, environment-name]
    *
-   * @deprecated use [`workspace`](https://vitest.dev/config/#environmentmatchglobs) instead
+   * @deprecated use [`projects`](https://vitest.dev/config/#projects) instead
    * @default []
    * @example [
    *   // all tests in tests/dom will run in jsdom
@@ -371,7 +377,7 @@ export interface InlineConfig {
    *
    * Format: [glob, pool-name]
    *
-   * @deprecated use [`workspace`](https://vitest.dev/config/#poolmatchglobs) instead
+   * @deprecated use [`projects`](https://vitest.dev/config/#projects) instead
    * @default []
    * @example [
    *   // all tests in "forks" directory will run using "poolOptions.forks" API
@@ -383,7 +389,13 @@ export interface InlineConfig {
   poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
 
   /**
+   * Options for projects
+   */
+  projects?: TestProjectConfiguration[]
+
+  /**
    * Path to a workspace configuration file
+   * @deprecated use `projects` instead
    */
   workspace?: string | TestProjectConfiguration[]
 
@@ -485,6 +497,12 @@ export interface InlineConfig {
    * @default ['**\/package.json/**', '**\/{vitest,vite}.config.*\/**']
    */
   forceRerunTriggers?: string[]
+
+  /**
+   * Pattern configuration to rerun only the tests that are affected
+   * by the changes of specific files in the repository.
+   */
+  watchTriggerPatterns?: WatcherTriggerPattern[]
 
   /**
    * Coverage options
@@ -990,9 +1008,12 @@ export interface ResolvedConfig
     | 'setupFiles'
     | 'snapshotEnvironment'
     | 'bail'
+    | 'name'
   > {
   mode: VitestRunMode
 
+  name: ProjectName['label']
+  color?: ProjectName['color']
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number
@@ -1086,6 +1107,7 @@ type NonProjectOptions =
   | 'minWorkers'
   | 'fileParallelism'
   | 'workspace'
+  | 'watchTriggerPatterns'
 
 export type ProjectConfig = Omit<
   InlineConfig,

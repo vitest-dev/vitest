@@ -75,8 +75,7 @@ test('provider options, generic', () => {
 test('provider specific options, v8', () => {
   assertType<Coverage>({
     provider: 'v8',
-    // @ts-expect-error -- Istanbul-only option is not allowed
-    ignoreClassMethods: ['string'],
+    experimentalAstAwareRemapping: true,
   })
 })
 
@@ -84,6 +83,9 @@ test('provider specific options, istanbul', () => {
   assertType<Coverage>({
     provider: 'istanbul',
     ignoreClassMethods: ['string'],
+
+    // @ts-expect-error -- v8 specific error
+    experimentalAstAwareRemapping: true,
   })
 })
 

@@ -19,18 +19,18 @@ declare global {
 interface SnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
     snapshot: Partial<U>,
-    message?: string
+    hint?: string
   ): void
-  (message?: string): void
+  (hint?: string): void
 }
 
 interface InlineSnapshotMatcher<T> {
   <U extends { [P in keyof T]: any }>(
     properties: Partial<U>,
     snapshot?: string,
-    message?: string
+    hint?: string
   ): void
-  (message?: string): void
+  (hint?: string): void
 }
 
 declare module '@vitest/expect' {
@@ -72,19 +72,19 @@ declare module '@vitest/expect' {
     /**
      * Checks that an error thrown by a function matches a previously recorded snapshot.
      *
-     * @param message - Optional custom error message.
+     * @param hint - Optional custom error message.
      *
      * @example
      * expect(functionWithError).toThrowErrorMatchingSnapshot();
      */
-    toThrowErrorMatchingSnapshot: (message?: string) => void
+    toThrowErrorMatchingSnapshot: (hint?: string) => void
 
     /**
      * Checks that an error thrown by a function matches an inline snapshot within the test file.
      * Useful for keeping snapshots close to the test code.
      *
      * @param snapshot - Optional inline snapshot string to match.
-     * @param message - Optional custom error message.
+     * @param hint - Optional custom error message.
      *
      * @example
      * const throwError = () => { throw new Error('Error occurred') };
@@ -92,7 +92,7 @@ declare module '@vitest/expect' {
      */
     toThrowErrorMatchingInlineSnapshot: (
       snapshot?: string,
-      message?: string
+      hint?: string
     ) => void
 
     /**
@@ -100,12 +100,12 @@ declare module '@vitest/expect' {
      * Useful for cases where snapshot content is large or needs to be shared across tests.
      *
      * @param filepath - Path to the snapshot file.
-     * @param message - Optional custom error message.
+     * @param hint - Optional custom error message.
      *
      * @example
      * await expect(largeData).toMatchFileSnapshot('path/to/snapshot.json');
      */
-    toMatchFileSnapshot: (filepath: string, message?: string) => Promise<void>
+    toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
   }
 
   interface AsymmetricMatchersContaining extends Matchers<any> {}
@@ -113,7 +113,12 @@ declare module '@vitest/expect' {
 
 declare module '@vitest/runner' {
   interface TestContext {
-    expect: ExpectStatic
+    /**
+     * `expect` instance bound to the current test.
+     *
+     * This API is useful for running snapshot tests concurrently because global expect cannot track them.
+     */
+    readonly expect: ExpectStatic
   }
 
   interface TaskMeta {

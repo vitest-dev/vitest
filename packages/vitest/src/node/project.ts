@@ -14,6 +14,7 @@ import type { WorkspaceSpec as DeprecatedWorkspaceSpec } from './pool'
 import type { Reporter } from './reporters'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
 import type {
+  ProjectName,
   ResolvedConfig,
   SerializedConfig,
   TestProjectInlineConfiguration,
@@ -24,8 +25,8 @@ import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { deepMerge, nanoid, slash } from '@vitest/utils'
-import mm from 'micromatch'
 import { isAbsolute, join, relative } from 'pathe'
+import pm from 'picomatch'
 import { glob } from 'tinyglobby'
 import { ViteNodeRunner } from 'vite-node/client'
 import { ViteNodeServer } from 'vite-node/server'
@@ -193,6 +194,13 @@ export class TestProject {
    */
   public get name(): string {
     return this.config.name || ''
+  }
+
+  /**
+   * The color used when reporting tasks of this project.
+   */
+  public get color(): ProjectName['color'] {
+    return this.config.color
   }
 
   /**
@@ -445,16 +453,16 @@ export class TestProject {
       return true
     }
     const relativeId = relative(this.config.dir || this.config.root, moduleId)
-    if (mm.isMatch(relativeId, this.config.exclude)) {
+    if (pm.isMatch(relativeId, this.config.exclude)) {
       return false
     }
-    if (mm.isMatch(relativeId, this.config.include)) {
+    if (pm.isMatch(relativeId, this.config.include)) {
       this.markTestFile(moduleId)
       return true
     }
     if (
       this.config.includeSource?.length
-      && mm.isMatch(relativeId, this.config.includeSource)
+      && pm.isMatch(relativeId, this.config.includeSource)
     ) {
       const code = source?.() || readFileSync(moduleId, 'utf-8')
       if (this.isInSourceTestCode(code)) {

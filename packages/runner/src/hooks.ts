@@ -7,9 +7,10 @@ import type {
   OnTestFinishedHandler,
   TaskHook,
   TaskPopulated,
+  TestContext,
 } from './types/tasks'
 import { assertTypes } from '@vitest/utils'
-import { withTimeout } from './context'
+import { abortContextSignal, abortIfTimeout, withTimeout } from './context'
 import { withFixtures } from './fixture'
 import { getCurrentSuite, getRunner } from './suite'
 import { getCurrentTest } from './test-state'
@@ -21,7 +22,7 @@ function getDefaultHookTimeout() {
 const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
 const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
 
-export function getBeforeHookCleanupCallback(hook: Function, result: any): Function | undefined {
+export function getBeforeHookCleanupCallback(hook: Function, result: any, context?: TestContext): Function | undefined {
   if (typeof result === 'function') {
     const timeout
       = CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
@@ -31,7 +32,17 @@ export function getBeforeHookCleanupCallback(hook: Function, result: any): Funct
       = CLEANUP_STACK_TRACE_KEY in hook && hook[CLEANUP_STACK_TRACE_KEY] instanceof Error
         ? hook[CLEANUP_STACK_TRACE_KEY]
         : undefined
-    return withTimeout(result, timeout, true, stackTraceError)
+    return withTimeout(
+      result,
+      timeout,
+      true,
+      stackTraceError,
+      (_, error) => {
+        if (context) {
+          abortContextSignal(context, error)
+        }
+      },
+    )
   }
 }
 
@@ -136,6 +147,7 @@ export function beforeEach<ExtraContext = object>(
         timeout ?? getDefaultHookTimeout(),
         true,
         stackTraceError,
+        abortIfTimeout,
       ),
       {
         [CLEANUP_TIMEOUT_KEY]: timeout,
@@ -174,6 +186,7 @@ export function afterEach<ExtraContext = object>(
       timeout ?? getDefaultHookTimeout(),
       true,
       new Error('STACK_TRACE_ERROR'),
+      abortIfTimeout,
     ),
   )
 }
@@ -206,6 +219,7 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
         timeout ?? getDefaultHookTimeout(),
         true,
         new Error('STACK_TRACE_ERROR'),
+        abortIfTimeout,
       ),
     )
   },
@@ -244,6 +258,7 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
         timeout ?? getDefaultHookTimeout(),
         true,
         new Error('STACK_TRACE_ERROR'),
+        abortIfTimeout,
       ),
     )
   },

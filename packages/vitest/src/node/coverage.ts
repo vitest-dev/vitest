@@ -5,8 +5,8 @@ import type { BaseCoverageOptions, CoverageModuleLoader, CoverageProvider, Repor
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
-import mm from 'micromatch'
 import { relative, resolve } from 'pathe'
+import pm from 'picomatch'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
@@ -316,8 +316,9 @@ export class BaseCoverageProvider<Options extends ResolvedCoverageOptions<'istan
       const globThresholds = resolveGlobThresholds(this.options.thresholds![glob])
       const globCoverageMap = this.createCoverageMap()
 
+      const matcher = pm(glob)
       const matchingFiles = files.filter(file =>
-        mm.isMatch(relative(this.ctx.config.root, file), glob),
+        matcher(relative(this.ctx.config.root, file)),
       )
 
       for (const file of matchingFiles) {

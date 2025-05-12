@@ -47,7 +47,7 @@ function isPrimeNumber(number: bigint): boolean {
 
   const squareRoot = bigIntSquareRoot(number)
 
-  // Intentionally unefficient to highlight performance issues
+  // Intentionally inefficient to highlight performance issues
   for (let i = 3n; i < squareRoot; i += 2n) {
     if (number % i === 0n) {
       return false

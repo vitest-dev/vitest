@@ -43,7 +43,7 @@ Next generation testing framework powered by Vite.
 - Components testing ([Vue](https://github.com/vitest-tests/browser-examples/tree/main/examples/vue), [React](https://github.com/vitest-tests/browser-examples/tree/main/examples/react), [Svelte](https://github.com/vitest-tests/browser-examples/tree/main/examples/svelte), [Lit](./examples/lit), [Marko](https://github.com/marko-js/examples/tree/master/examples/library-ts))
 - Workers multi-threading via [Tinypool](https://github.com/tinylibs/tinypool) (a lightweight fork of [Piscina](https://github.com/piscinajs/piscina))
 - Benchmarking support with [Tinybench](https://github.com/tinylibs/tinybench)
-- [Workspace](https://vitest.dev/guide/workspace) support
+- [Projects](https://vitest.dev/guide/projects) support
 - [expect-type](https://github.com/mmkal/expect-type) for type-level testing
 - ESM first, top level await
 - Out-of-box TypeScript / JSX support

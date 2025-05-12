@@ -390,6 +390,33 @@ expect(res).toBe(5)
 expect(getApples).toHaveNthReturnedWith(2, 5)
 ```
 
+### vi.mockObject <Version>3.2.0</Version>
+
+- **Type:** `<T>(value: T) => MaybeMockedDeep<T>`
+
+Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
+
+```ts
+const original = {
+  simple: () => 'value',
+  nested: {
+    method: () => 'real'
+  },
+  prop: 'foo',
+}
+
+const mocked = vi.mockObject(original)
+expect(mocked.simple()).toBe(undefined)
+expect(mocked.nested.method()).toBe(undefined)
+expect(mocked.prop).toBe('foo')
+
+mocked.simple.mockReturnValue('mocked')
+mocked.nested.method.mockReturnValue('mocked nested')
+
+expect(mocked.simple()).toBe('mocked')
+expect(mocked.nested.method()).toBe('mocked nested')
+```
+
 ### vi.isMockFunction
 
 - **Type:** `(fn: Function) => boolean`

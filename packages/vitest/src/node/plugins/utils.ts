@@ -59,7 +59,9 @@ export function resolveOptimizerConfig(
       (n: string) => !exclude.includes(n),
     )
 
-    newConfig.cacheDir = (testConfig.cache !== false && testConfig.cache?.dir) || VitestCache.resolveCacheDir(root, viteCacheDir, testConfig.name)
+    const projectName = typeof testConfig.name === 'string' ? testConfig.name : testConfig.name?.label
+
+    newConfig.cacheDir = (testConfig.cache !== false && testConfig.cache?.dir) || VitestCache.resolveCacheDir(root, viteCacheDir, projectName)
     newConfig.optimizeDeps = {
       ...viteOptions,
       ...testOptions,
