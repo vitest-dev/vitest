@@ -174,6 +174,7 @@ export function createTestContext(
       annotation.location = location
     }
     test.annotations.push(annotation)
+    // TODO: send annotations in bulk
     runner.onTestAnnotate?.(test, annotation)
   }
 
@@ -182,7 +183,7 @@ export function createTestContext(
 
     if (runner.config.includeTaskLocation) {
       const stack = new Error('STACK_TRACE').stack!
-      const index = stack.includes('STACK_TRACE') ? 1 : 2
+      const index = stack.includes('STACK_TRACE') ? 2 : 1
       const stackLine = stack.split('\n')[index]
       const parsed = parseSingleStack(stackLine)
       if (parsed) {
