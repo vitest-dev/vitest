@@ -107,8 +107,6 @@ declare module '@vitest/expect' {
      */
     toMatchFileSnapshot: (filepath: string, hint?: string) => Promise<void>
   }
-
-  interface AsymmetricMatchersContaining extends Matchers<any> {}
 }
 
 declare module '@vitest/runner' {

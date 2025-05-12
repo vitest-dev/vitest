@@ -103,6 +103,7 @@ export type MatchersObject<T extends MatcherState = MatcherState> = Record<
 
 export interface ExpectStatic
   extends Chai.ExpectStatic,
+  Matchers,
   AsymmetricMatchersContaining {
   <T>(actual: T, message?: string): Assertion<T>
   extend: (expects: MatchersObject) => void
