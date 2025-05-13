@@ -12,6 +12,7 @@ import type { SerializedConfig } from '../config'
 import type { VitestExecutor } from '../execute'
 import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
 import { getNames, getTestName, getTests } from '@vitest/runner/utils'
+import { processError } from '@vitest/utils/error'
 import { createExpect } from '../../integrations/chai/index'
 import { inject } from '../../integrations/inject'
 import { getSnapshotClient } from '../../integrations/snapshot/chai'
@@ -66,9 +67,9 @@ export class VitestTestRunner implements VitestRunner {
         this.workerState.config.snapshotOptions.updateSnapshot === 'none'
         && result.unchecked
       ) {
-        const error = new Error(`Obsolete snapshots found: ${result.uncheckedKeys.join(', ')}`)
+        const message = `Obsolete snapshots found: ${result.uncheckedKeys.join(', ')}`
         suite.result!.errors ??= []
-        suite.result!.errors.push(error)
+        suite.result!.errors.push(processError(new Error(message)))
         suite.result!.state = 'fail'
       }
       await rpc().snapshotSaved(result)
