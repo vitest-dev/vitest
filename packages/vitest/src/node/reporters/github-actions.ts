@@ -1,7 +1,8 @@
-import type { File } from '@vitest/runner'
+import type { File, TestAnnotation } from '@vitest/runner'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
 import type { Reporter } from '../types/reporter'
+import type { TestCase } from './reported-tasks'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
 import { capturePrintError } from '../error'
@@ -11,6 +12,24 @@ export class GithubActionsReporter implements Reporter {
 
   onInit(ctx: Vitest): void {
     this.ctx = ctx
+  }
+
+  onTestCaseAnnotate(testCase: TestCase, annotation: TestAnnotation): void {
+    if (!annotation.location) {
+      return
+    }
+
+    const formatted = formatMessage({
+      command: annotation.type || 'notice',
+      properties: {
+        file: annotation.location.file,
+        title: 'Test Message',
+        line: String(annotation.location.line),
+        column: String(annotation.location.column),
+      },
+      message: stripVTControlCharacters(annotation.message),
+    })
+    this.ctx.logger.log(`\n${formatted}`)
   }
 
   onFinished(files: File[] = [], errors: unknown[] = []): void {
