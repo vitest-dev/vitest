@@ -13,6 +13,7 @@ import type {
 import { getSafeTimers } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import { PendingError } from './errors'
+import { updateTask } from './run'
 import { getRunner } from './suite'
 
 const now = Date.now
@@ -174,8 +175,7 @@ export function createTestContext(
       annotation.location = location
     }
     test.annotations.push(annotation)
-    // TODO: send annotations in bulk
-    runner.onTestAnnotate?.(test, annotation)
+    updateTask('test-annotation', test, runner, { annotation })
   }
 
   context.annotate = ((message, type, attachment) => {
@@ -188,6 +188,7 @@ export function createTestContext(
       const parsed = parseSingleStack(stackLine)
       if (parsed) {
         location = {
+          file: parsed.file,
           line: parsed.line,
           column: parsed.column,
         }

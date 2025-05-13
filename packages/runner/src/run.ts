@@ -8,6 +8,7 @@ import type {
   Suite,
   SuiteHooks,
   Task,
+  TaskEventData,
   TaskMeta,
   TaskResult,
   TaskResultPack,
@@ -181,7 +182,7 @@ export async function callSuiteHook<T extends keyof SuiteHooks>(
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
-const eventsPacks: [string, TaskUpdateEvent][] = []
+const eventsPacks: [string, TaskUpdateEvent, TaskEventData | undefined][] = []
 const pendingTasksUpdates: Promise<void>[] = []
 
 function sendTasksUpdate(runner: VitestRunner): void {
@@ -223,8 +224,8 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 // throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
-export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
-  eventsPacks.push([task.id, event])
+export function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner, data?: TaskEventData): void {
+  eventsPacks.push([task.id, event, data])
   packs.set(task.id, [task.result, task.meta])
   sendTasksUpdateThrottled(runner)
 }

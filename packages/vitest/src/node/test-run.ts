@@ -1,5 +1,6 @@
 import type {
   File as RunnerTestFile,
+  TaskEventData,
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
@@ -9,10 +10,11 @@ import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { ReportedHookContext, TestCollection, TestModule } from './reporters/reported-tasks'
+import type { ReportedHookContext, TestCase, TestCollection, TestModule, TestSuite } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import assert from 'node:assert'
 import { serializeError } from '@vitest/utils/error'
+import { resolve } from 'pathe'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -26,11 +28,7 @@ export class TestRun {
     await this.vitest.report('onTestRunStart', [...specifications])
   }
 
-  async annotate(id: string, annotation: TestAnnotation): Promise<void> {
-    const task = this.vitest.state.idMap.get(id)
-    const entity = task && this.vitest.state.getReportedEntity(task)
-
-    assert(task && entity, `Entity must be found for task ${task?.name || id}`)
+  async annotate(entity: TestModule | TestCase | TestSuite, annotation: TestAnnotation): Promise<void> {
     assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
 
     entity.task.annotations.push(annotation)
@@ -68,8 +66,8 @@ export class TestRun {
     // TODO: error handling - what happens if custom reporter throws an error?
     await this.vitest.report('onTaskUpdate', update)
 
-    for (const [id, event] of events) {
-      await this.reportEvent(id, event).catch((error) => {
+    for (const [id, event, data] of events) {
+      await this.reportEvent(id, event, data).catch((error) => {
         this.vitest.state.catchError(serializeError(error), 'Unhandled Reporter Error')
       })
     }
@@ -102,7 +100,7 @@ export class TestRun {
     }
   }
 
-  private async reportEvent(id: string, event: TaskUpdateEvent) {
+  private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
     const task = this.vitest.state.idMap.get(id)
     const entity = task && this.vitest.state.getReportedEntity(task)
 
@@ -163,6 +161,22 @@ export class TestRun {
       else {
         await this.vitest.report('onHookEnd', hook)
       }
+    }
+
+    if (event === 'test-annotation') {
+      assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
+      assert(data?.annotation)
+
+      if (data.annotation.attachment) {
+        data.annotation.attachment.path = resolve(
+          entity.project.config.root,
+          data.annotation.attachment.path,
+        )
+      }
+
+      entity.task.annotations.push(data.annotation)
+
+      await this.vitest.report('onTestCaseAnnotate', entity, data.annotation)
     }
   }
 

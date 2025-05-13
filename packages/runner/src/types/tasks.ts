@@ -174,6 +174,10 @@ export type TaskResultPack = [
   meta: TaskMeta,
 ]
 
+export interface TaskEventData {
+  annotation?: TestAnnotation | undefined
+}
+
 export type TaskEventPack = [
   /**
    * Unique task identifier from `task.id`.
@@ -183,6 +187,10 @@ export type TaskEventPack = [
    * The name of the event that triggered the update.
    */
   event: TaskUpdateEvent,
+  /**
+   * Data assosiated with the event
+   */
+  data: TaskEventData | undefined,
 ]
 
 export type TaskUpdateEvent =
@@ -263,9 +271,15 @@ export interface TestAttachment {
   path: string
 }
 
+// TODO: support body
+export interface SerialisedTestAttachment {
+  body: string | number[]
+}
+
 export interface TestAnnotationLocation {
   line: number
   column: number
+  file: string
 }
 
 export interface TestAnnotation {

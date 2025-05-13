@@ -79,7 +79,13 @@ it('math is hard', ({ skip, mind }) => {
 })
 ```
 
-#### `context.signal` <Version>3.2.0</Version> {#context-signal}
+#### `annotate` <Version>3.2.0</Version> {#annotate}
+
+Add a test annotation that will be displayed by your [reporter](/config/#reporter).
+
+<!-- TODO -->
+
+#### `signal` <Version>3.2.0</Version> {#signal}
 
 An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) that can be aborted by Vitest. The signal is aborted in these situations:
 

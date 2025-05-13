@@ -290,6 +290,7 @@ export type {
   TaskCustomOptions,
   TaskMeta,
   TaskState,
+  TestAnnotation,
   TestAPI,
   TestContext,
   TestFunction,
