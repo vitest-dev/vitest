@@ -19,6 +19,10 @@ export class GithubActionsReporter implements Reporter {
       return
     }
 
+    const attachment = annotation.attachment
+      ? `\n<img src="${annotation.attachment.path}" />`
+      : ''
+
     const formatted = formatMessage({
       command: getType(annotation.type),
       properties: {
@@ -26,7 +30,7 @@ export class GithubActionsReporter implements Reporter {
         line: String(annotation.location.line),
         column: String(annotation.location.column),
       },
-      message: stripVTControlCharacters(annotation.message),
+      message: stripVTControlCharacters(annotation.message) + attachment,
     })
     this.ctx.logger.log(`\n${formatted}`)
   }

@@ -17,9 +17,13 @@ describe('API', () => {
         ],
       },
     },
-  ])('annotations are exposed correctly in $name', async (options) => {
+  ])('annotations are exposed correctly in $name', async (options, { annotate }) => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
+
+    annotate('cute puppy', 'warning', {
+      path: 'https://royvon.co.uk/wp-content/uploads/2017/06/ChoosingAPuppy.jpg',
+    })
 
     const { stderr } = await runInlineTests({
       'basic.test.ts': `
@@ -34,6 +38,7 @@ describe('API', () => {
 
         test('second', ({ annotate }) => {
           annotate('5')
+          annotate('6', { path: 'https://absolute-path.com' })
         })
       `,
     }, {
@@ -82,6 +87,7 @@ describe('API', () => {
         "[result] simple",
         "[ready] second",
         "[annotate] second 5 undefined undefined",
+        "[annotate] second 6 undefined https://absolute-path.com",
         "[result] second",
       ]
     `)
@@ -96,6 +102,17 @@ describe('API', () => {
               "line": 12,
             },
             "message": "5",
+          },
+          {
+            "attachment": {
+              "path": "https://absolute-path.com",
+            },
+            "location": {
+              "column": 11,
+              "file": "<root>/basic.test.ts",
+              "line": 13,
+            },
+            "message": "6",
           },
         ],
         "simple": [

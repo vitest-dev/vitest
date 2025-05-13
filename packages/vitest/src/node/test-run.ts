@@ -13,7 +13,7 @@ import type { ReportedHookContext, TestCollection, TestModule } from './reporter
 import type { TestSpecification } from './spec'
 import assert from 'node:assert'
 import { serializeError } from '@vitest/utils/error'
-import { resolve } from 'pathe'
+import { isAbsolute, resolve } from 'pathe'
 
 export class TestRun {
   constructor(private vitest: Vitest) {}
@@ -158,10 +158,11 @@ export class TestRun {
       assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
       assert(data?.annotation)
 
-      if (data.annotation.attachment?.path) {
-        data.annotation.attachment.path = resolve(
+      const path = data.annotation.attachment?.path
+      if (path && !isAbsolute(path) && !path.startsWith('http://') && !path.startsWith('https://')) {
+        data.annotation.attachment!.path = resolve(
           entity.project.config.root,
-          data.annotation.attachment.path,
+          path,
         )
       }
 

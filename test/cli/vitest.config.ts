@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   test: {
     include: ['test/**.test.ts'],
-    reporters: ['verbose'],
+    reporters: ['verbose', 'github-actions'],
     testTimeout: 60_000,
     poolOptions: {
       forks: {
