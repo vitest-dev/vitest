@@ -268,12 +268,8 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
 
 export interface TestAttachment {
   contentType?: string
-  path: string
-}
-
-// TODO: support body
-export interface SerialisedTestAttachment {
-  body: string | number[]
+  path?: string
+  body?: string | Uint8Array
 }
 
 export interface TestAnnotationLocation {

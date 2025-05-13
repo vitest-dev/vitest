@@ -4,13 +4,12 @@ import type {
   TaskEventPack,
   TaskResultPack,
   TaskUpdateEvent,
-  TestAnnotation,
 } from '@vitest/runner'
 import type { SerializedError } from '../public/utils'
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { ReportedHookContext, TestCase, TestCollection, TestModule, TestSuite } from './reporters/reported-tasks'
+import type { ReportedHookContext, TestCollection, TestModule } from './reporters/reported-tasks'
 import type { TestSpecification } from './spec'
 import assert from 'node:assert'
 import { serializeError } from '@vitest/utils/error'
@@ -26,14 +25,6 @@ export class TestRun {
     await this.vitest.report('onPathsCollected', Array.from(new Set(filepaths)))
     await this.vitest.report('onSpecsCollected', specifications.map(spec => spec.toJSON()))
     await this.vitest.report('onTestRunStart', [...specifications])
-  }
-
-  async annotate(entity: TestModule | TestCase | TestSuite, annotation: TestAnnotation): Promise<void> {
-    assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
-
-    entity.task.annotations.push(annotation)
-
-    await this.vitest.report('onTestCaseAnnotate', entity, annotation)
   }
 
   async enqueued(project: TestProject, file: RunnerTestFile): Promise<void> {
@@ -167,7 +158,7 @@ export class TestRun {
       assert(entity.type === 'test', `Annotation can only be added to a test, instead got ${entity.type}`)
       assert(data?.annotation)
 
-      if (data.annotation.attachment) {
+      if (data.annotation.attachment?.path) {
         data.annotation.attachment.path = resolve(
           entity.project.config.root,
           data.annotation.attachment.path,

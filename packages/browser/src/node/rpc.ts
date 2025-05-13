@@ -133,9 +133,6 @@ export function setupBrowserRpc(globalServer: ParentBrowserProject, defaultMocke
           }
           vitest.state.catchError(error, type)
         },
-        async onTestAnnotate(id, annotation) {
-          await vitest._testRun.annotate(id, annotation)
-        },
         async onQueued(method, file) {
           if (method === 'collect') {
             vitest.state.collectFiles(project, [file])

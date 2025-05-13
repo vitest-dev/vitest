@@ -81,9 +81,6 @@ export function createMethodsRPC(project: TestProject, options: MethodsOptions =
     transform(id, environment) {
       return project.vitenode.transformModule(id, environment).catch(handleRollupError)
     },
-    async onTestAnnotate(id, annotation) {
-      await ctx._testRun.annotate(id, annotation)
-    },
     async onQueued(file) {
       if (options.collect) {
         ctx.state.collectFiles(project, [file])

@@ -169,12 +169,16 @@ export function createTestContext(
       annotation.type = type
     }
     if (attachment) {
+      if (!attachment.body && !attachment.path) {
+        throw new TypeError(`Test attachment requires body or path to be set. Both are missing.`)
+      }
       annotation.attachment = attachment
     }
     if (location) {
       annotation.location = location
     }
     test.annotations.push(annotation)
+
     updateTask('test-annotation', test, runner, { annotation })
   }
 

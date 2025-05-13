@@ -3,12 +3,26 @@ import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 describe('API', () => {
-  test('the `onTestAnnotate` hook is called correctly', async () => {
+  test.for([
+    { name: 'forks', pool: 'forks' },
+    { name: 'threads', pool: 'threads' },
+    {
+      name: 'browser',
+      browser: {
+        enabled: true,
+        provider: 'playwright',
+        headless: true,
+        instances: [
+          { browser: 'chromium' },
+        ],
+      },
+    },
+  ])('annotations are exposed correctly in $name', async (options) => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
 
-    const {} = await runInlineTests({
-      'basic.test.js': `
+    const { stderr } = await runInlineTests({
+      'basic.test.ts': `
         import { test } from 'vitest'
 
         test('simple', ({ annotate }) => {
@@ -23,10 +37,13 @@ describe('API', () => {
         })
       `,
     }, {
+      ...options,
+      includeTaskLocation: true,
       reporters: [
+        'default',
         {
           onTestCaseAnnotate(testCase, annotation) {
-            const path = annotation.attachment?.path.replace(testCase.project.config.root, '<root>')
+            const path = annotation.attachment?.path?.replace(testCase.project.config.root, '<root>')
             events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} ${path}`)
           },
           onTestCaseReady(testCase) {
@@ -35,8 +52,14 @@ describe('API', () => {
           onTestCaseResult(testCase) {
             events.push(`[result] ${testCase.name}`)
             annotations[testCase.name] = testCase.annotations().map((annotation) => {
-              if (annotation.attachment) {
+              if (annotation.attachment?.path) {
                 annotation.attachment.path = annotation.attachment.path.replace(
+                  testCase.project.config.root,
+                  '<root>',
+                )
+              }
+              if (annotation.location) {
+                annotation.location.file = annotation.location.file.replace(
                   testCase.project.config.root,
                   '<root>',
                 )
@@ -47,6 +70,8 @@ describe('API', () => {
         },
       ],
     })
+
+    expect(stderr).toBe('')
     expect(events).toMatchInlineSnapshot(`
       [
         "[ready] simple",
@@ -65,14 +90,29 @@ describe('API', () => {
       {
         "second": [
           {
+            "location": {
+              "column": 11,
+              "file": "<root>/basic.test.ts",
+              "line": 12,
+            },
             "message": "5",
           },
         ],
         "simple": [
           {
+            "location": {
+              "column": 11,
+              "file": "<root>/basic.test.ts",
+              "line": 5,
+            },
             "message": "1",
           },
           {
+            "location": {
+              "column": 11,
+              "file": "<root>/basic.test.ts",
+              "line": 6,
+            },
             "message": "2",
             "type": "warn",
           },
@@ -80,11 +120,21 @@ describe('API', () => {
             "attachment": {
               "path": "<root>/test-3.js",
             },
+            "location": {
+              "column": 11,
+              "file": "<root>/basic.test.ts",
+              "line": 7,
+            },
             "message": "3",
           },
           {
             "attachment": {
               "path": "<root>/test-4.js",
+            },
+            "location": {
+              "column": 11,
+              "file": "<root>/basic.test.ts",
+              "line": 8,
             },
             "message": "4",
             "type": "warn",
