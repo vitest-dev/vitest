@@ -292,6 +292,7 @@ function createTest(name: string, file: File): Test {
     mode: 'run',
     file,
     suite: file,
+    annotations: [],
     timeout: 0,
     result: { state: 'pass' },
     meta: {},

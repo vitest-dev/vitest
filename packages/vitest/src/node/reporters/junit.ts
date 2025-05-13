@@ -322,6 +322,7 @@ export class JUnitReporter implements Reporter {
           context: null as any,
           suite: null as any,
           file: null as any,
+          annotations: [],
         } satisfies Task)
       }
 
