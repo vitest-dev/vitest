@@ -307,7 +307,7 @@ export class Typechecker {
       args.push('--allowJs', '--checkJs')
     }
     if (typecheck.tsconfig) {
-      args.push('-p', resolve(this.project.config.root, typecheck.tsconfig))
+      args.push('-p', resolve(root, typecheck.tsconfig))
     }
     this._output = ''
     this._startTime = performance.now()

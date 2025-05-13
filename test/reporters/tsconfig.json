@@ -1,4 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["./tests/**/*.test-d.ts"]
+  "include": [
+    "./tests/**/*.test-d.ts",
+    // include chai-subset
+    "../../packages/vitest/**/*.d.ts",
+    // include browser providers
+    "../../packages/browser/**/*.d.ts"
+  ]
 }
