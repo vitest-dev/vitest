@@ -28,5 +28,8 @@ test('obsolete snapshot fails CI', async () => {
     root,
   )
   expect(vitest.stdout).toContain('1 obsolete')
+  expect(vitest.stdout).toContain('Test Files  1 failed | 1 passed')
+  expect(vitest.stdout).toContain('Tests  4 passed')
   expect(vitest.stderr).toContain(`Error: Obsolete snapshots found: foo 1`)
+  expect(vitest.exitCode).toBe(1)
 })

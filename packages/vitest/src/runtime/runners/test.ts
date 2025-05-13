@@ -69,6 +69,7 @@ export class VitestTestRunner implements VitestRunner {
         const error = new Error(`Obsolete snapshots found: ${result.uncheckedKeys.join(', ')}`)
         suite.result!.errors ??= []
         suite.result!.errors.push(error)
+        suite.result!.state = 'fail'
       }
       await rpc().snapshotSaved(result)
     }
