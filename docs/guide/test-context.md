@@ -83,6 +83,8 @@ it('math is hard', ({ skip, mind }) => {
 
 Add a test annotation that will be displayed by your [reporter](/config/#reporter).
 
+The `github-actions` reporter will print the annotation as a [notice message](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-a-notice-message) by default. You can configure the `type` by passing down the second argument as `notice`, `warning` or `error`. If type is none of these, Vitest will show the message as a notice.
+
 <!-- TODO -->
 
 #### `signal` <Version>3.2.0</Version> {#signal}

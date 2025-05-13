@@ -20,10 +20,9 @@ export class GithubActionsReporter implements Reporter {
     }
 
     const formatted = formatMessage({
-      command: annotation.type || 'notice',
+      command: getType(annotation.type),
       properties: {
         file: annotation.location.file,
-        title: 'Test Message',
         line: String(annotation.location.line),
         column: String(annotation.location.column),
       },
@@ -87,6 +86,13 @@ export class GithubActionsReporter implements Reporter {
       this.ctx.logger.log(`\n${formatted}`)
     }
   }
+}
+
+function getType(type: string | undefined) {
+  if (type && ['notice', 'error', 'warning'].includes(type)) {
+    return type
+  }
+  return 'notice'
 }
 
 // workflow command formatting based on
