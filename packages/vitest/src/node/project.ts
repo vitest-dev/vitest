@@ -93,6 +93,11 @@ export class TestProject {
     this.globalConfig = vitest.config
   }
 
+  /**
+   * The unique hash of this project. This value is consistent between the reruns.
+   *
+   * It is based on the root of the project (not consistent between OS) and its name.
+   */
   public get hash(): string {
     if (!this._hash) {
       throw new Error('The server was not set. It means that `project.hash` was called before the Vite server was established.')
