@@ -638,7 +638,8 @@ export type PromisifyAssertion<T> = Promisify<Assertion<T>>
 
 export interface Assertion<T = any>
   extends VitestAssertion<Chai.Assertion, T>,
-  JestAssertion<T> {
+  JestAssertion<T>,
+  Matchers<T> {
   /**
    * Ensures a value is of a specific type.
    *

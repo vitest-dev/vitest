@@ -34,11 +34,6 @@ interface InlineSnapshotMatcher<T> {
 }
 
 declare module '@vitest/expect' {
-  // Allow unused `T` to preserve its name for extensions.
-  // Type parameter names must be identical when extending those types.
-  // eslint-disable-next-line
-  interface Matchers<T> {}
-
   interface MatcherState {
     environment: string
     snapshotState: SnapshotState
@@ -63,7 +58,7 @@ declare module '@vitest/expect' {
     addSnapshotSerializer: (plugin: PrettyFormatPlugin) => void
   }
 
-  interface Assertion<T> extends Matchers<T> {
+  interface Assertion<T> {
     // Snapshots are extended in @vitest/snapshot and are not part of @vitest/expect
     matchSnapshot: SnapshotMatcher<T>
     toMatchSnapshot: SnapshotMatcher<T>
