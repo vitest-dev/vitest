@@ -11,7 +11,7 @@ import type { TscErrorInfo } from './types'
 import os from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { eachMapping, generatedPositionFor, TraceMap } from '@vitest/utils/source-map'
-import { basename, extname, join, resolve } from 'pathe'
+import { basename, join, resolve } from 'pathe'
 import { x } from 'tinyexec'
 import { distDir } from '../paths'
 import { convertTasksToEvents } from '../utils/tasks'
@@ -79,11 +79,7 @@ export class Typechecker {
   }
 
   protected getFiles(): string[] {
-    const allowJs = this.project.config.typecheck.allowJs
-    return this.files.filter((filename) => {
-      const extension = extname(filename)
-      return extension !== '.js' || allowJs
-    })
+    return this.files
   }
 
   public async collectTests(): Promise<Record<string, FileInformation>> {
