@@ -50,7 +50,6 @@ export class Typechecker {
   private _startTime = 0
   private _output = ''
   private _tests: Record<string, FileInformation> | null = {}
-  private allowJs?: boolean
   private process?: ChildProcess
 
   protected files: string[] = []
@@ -80,9 +79,10 @@ export class Typechecker {
   }
 
   protected getFiles(): string[] {
+    const allowJs = this.project.config.typecheck.allowJs
     return this.files.filter((filename) => {
       const extension = extname(filename)
-      return extension !== '.js' || this.allowJs
+      return extension !== '.js' || allowJs
     })
   }
 
