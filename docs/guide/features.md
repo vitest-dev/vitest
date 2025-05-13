@@ -259,3 +259,60 @@ export default defineConfig(({ mode }) => ({
   },
 }))
 ```
+
+## Unhandled Errors
+
+By default, Vitest catches and reports all [unhandled rejections](https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event), [uncaught exceptions](https://nodejs.org/api/process.html#event-uncaughtexception) (in Node.js) and [error](https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event) events (in the [browser](/guide/browser/)).
+
+You can disable this behaviour by catching them manually. Vitest assumes the callback is handled by you and won't report the error.
+
+::: code-group
+```ts [setup.node.js]
+// in Node.js
+process.on('unhandledRejection', () => {
+  // your own handler
+})
+
+process.on('uncaughtException', () => {
+  // your own handler
+})
+```
+```ts [setup.browser.js]
+// in the browser
+window.addEventListener('error', () => {
+  // your own handler
+})
+
+window.addEventListener('unhandledrejection', () => {
+  // your own handler
+})
+```
+:::
+
+Alternatively, you can also ignore reported errors with a [`dangerouslyIgnoreUnhandledErrors`](/config/#dangerouslyignoreunhandlederrors) option. Vitest will still report them, but they won't affect the test result (exit code won't be changed).
+
+If you need to test that error was not caught, you can create a test that looks like this:
+
+```ts
+test('my function throws uncaught error', async ({ onTestFinished }) => {
+  onTestFinished(() => {
+    // if the event was never called during the test,
+    // make sure it's removed before the next test starts
+    process.removeAllListeners('unhandledrejection')
+  })
+
+  return new Promise((resolve, reject) => {
+    process.once('unhandledrejection', (error) => {
+      try {
+        expect(error.message).toBe('my error')
+        resolve()
+      }
+      catch (error) {
+        reject(error)
+      }
+    })
+
+    callMyFunctionThatRejectsError()
+  })
+})
+```

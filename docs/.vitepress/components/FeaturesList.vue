@@ -26,7 +26,8 @@
     <ListItem>Code coverage via <a target="_blank" href="https://v8.dev/blog/javascript-code-coverage" rel="noopener noreferrer">v8</a> or <a target="_blank" href="https://istanbul.js.org/" rel="noopener noreferrer">istanbul</a></ListItem>
     <ListItem>Rust-like <a href="/guide/in-source">in-source testing</a></ListItem>
     <ListItem>Type Testing via <a target="_blank" href="https://github.com/mmkal/expect-type" rel="noopener noreferrer">expect-type</a></ListItem>
-    <ListItem>Sharding support</ListItem>
+    <ListItem>Sharding Support</ListItem>
+    <ListItem>Reporting Uncaught Errors</ListItem>
   </ul>
 </template>
 

@@ -58,14 +58,11 @@ function listenForErrors(state: () => WorkerGlobalState) {
   function catchError(err: unknown, type: string, event: 'uncaughtException' | 'unhandledRejection') {
     const worker = state()
 
-    // if error happens during a test
-    if (worker.current?.type === 'test') {
-      const listeners = process.listeners(event as 'uncaughtException')
-      // if there is another listener, assume that it's handled by user code
-      // one is Vitest's own listener
-      if (listeners.length > 1) {
-        return
-      }
+    const listeners = process.listeners(event as 'uncaughtException')
+    // if there is another listener, assume that it's handled by user code
+    // one is Vitest's own listener
+    if (listeners.length > 1) {
+      return
     }
 
     const error = processError(err)
