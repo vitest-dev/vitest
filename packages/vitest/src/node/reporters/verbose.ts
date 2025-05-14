@@ -42,7 +42,7 @@ export class VerboseReporter extends DefaultReporter {
       title += formatProjectName(test.project)
     }
 
-    title += getFullName(test.task, c.dim(' > '), true)
+    title += getFullName(test.task, c.dim(' > '))
     title += this.getDurationPrefix(test.task)
 
     const diagnostic = test.diagnostic()

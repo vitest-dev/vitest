@@ -17,13 +17,9 @@ describe('API', () => {
         ],
       },
     },
-  ])('annotations are exposed correctly in $name', async (options, { annotate }) => {
+  ])('annotations are exposed correctly in $name', async (options) => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
-
-    annotate('cute puppy', 'warning', {
-      path: 'https://royvon.co.uk/wp-content/uploads/2017/06/ChoosingAPuppy.jpg',
-    })
 
     const { stderr } = await runInlineTests({
       'basic.test.ts': `
@@ -80,14 +76,14 @@ describe('API', () => {
     expect(events).toMatchInlineSnapshot(`
       [
         "[ready] simple",
-        "[annotate] simple 1 undefined undefined",
+        "[annotate] simple 1 notice undefined",
         "[annotate] simple 2 warn undefined",
-        "[annotate] simple 3 undefined <root>/test-3.js",
+        "[annotate] simple 3 notice <root>/test-3.js",
         "[annotate] simple 4 warn <root>/test-4.js",
         "[result] simple",
         "[ready] second",
-        "[annotate] second 5 undefined undefined",
-        "[annotate] second 6 undefined https://absolute-path.com",
+        "[annotate] second 5 notice undefined",
+        "[annotate] second 6 notice https://absolute-path.com",
         "[result] second",
       ]
     `)
@@ -102,6 +98,7 @@ describe('API', () => {
               "line": 12,
             },
             "message": "5",
+            "type": "notice",
           },
           {
             "attachment": {
@@ -113,6 +110,7 @@ describe('API', () => {
               "line": 13,
             },
             "message": "6",
+            "type": "notice",
           },
         ],
         "simple": [
@@ -123,6 +121,7 @@ describe('API', () => {
               "line": 5,
             },
             "message": "1",
+            "type": "notice",
           },
           {
             "location": {
@@ -143,6 +142,7 @@ describe('API', () => {
               "line": 7,
             },
             "message": "3",
+            "type": "notice",
           },
           {
             "attachment": {

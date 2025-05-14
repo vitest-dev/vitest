@@ -80,16 +80,8 @@ export function getNames(task: Task): string[] {
   return names
 }
 
-export function getFullName(task: Task, separator = ' > ', includeLocation = false): string {
-  const names = getNames(task)
-  // turn
-  // test/basic.test.ts > some > other > name
-  // into
-  // test/basic.test.ts:30:1 > some > other > name
-  if (task.type === 'test' && task.location && includeLocation) {
-    names[0] = `${names[0]}:${task.location.line}:${task.location.column}`
-  }
-  return names.join(separator)
+export function getFullName(task: Task, separator = ' > '): string {
+  return getNames(task).join(separator)
 }
 
 export function getTestName(task: Task, separator = ' > '): string {
