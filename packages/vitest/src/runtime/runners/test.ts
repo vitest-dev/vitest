@@ -67,7 +67,10 @@ export class VitestTestRunner implements VitestRunner {
         this.workerState.config.snapshotOptions.updateSnapshot === 'none'
         && result.unchecked
       ) {
-        const message = `Obsolete snapshots found: ${result.uncheckedKeys.join(', ')}`
+        let message = `Obsolete snapshots found when no snapshot update is expected.\n`
+        for (const key of result.uncheckedKeys) {
+          message += `· ${key}\n`
+        }
         suite.result!.errors ??= []
         suite.result!.errors.push(processError(new Error(message)))
         suite.result!.state = 'fail'
