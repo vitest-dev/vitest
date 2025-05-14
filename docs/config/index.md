@@ -468,6 +468,17 @@ To get TypeScript working with the global APIs, add `vitest/globals` to the `typ
 }
 ```
 
+If you have redefined your [`typeRoots`](https://www.typescriptlang.org/tsconfig/#typeRoots) to include more types in your compilation, you will have to add back the `node_modules` to make `vitest/globals` discoverable.
+
+```json [tsconfig.json]
+{
+  "compilerOptions": {
+    "typeRoots": ["./types", "./node_modules/@types", "./node_modules"],
+    "types": ["vitest/globals"]
+  }
+}
+```
+
 If you are already using [`unplugin-auto-import`](https://github.com/antfu/unplugin-auto-import) in your project, you can also use it directly for auto importing those APIs.
 
 ```ts [vitest.config.js]
