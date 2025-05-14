@@ -103,7 +103,9 @@ The `junit` reporter lists annotations inside the testcase's `properties` tag. T
 </testcase>
 ```
 
-<!-- TODO -->
+The `verbose` reporter in non-TTY terminals will print annotations after the test has finished. Otherwise, annotations are visible only if the test has failed.
+
+The `default` reporter prints annotations only if the test has failed.
 
 #### `signal` <Version>3.2.0</Version> {#signal}
 
