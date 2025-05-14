@@ -19,18 +19,16 @@ export class GithubActionsReporter implements Reporter {
       return
     }
 
-    const attachment = annotation.attachment
-      ? `\n<img src="${annotation.attachment.path}" />`
-      : ''
-
+    const type = getTitle(annotation.type)
     const formatted = formatMessage({
       command: getType(annotation.type),
       properties: {
         file: annotation.location.file,
         line: String(annotation.location.line),
         column: String(annotation.location.column),
+        ...(type && { title: type }),
       },
-      message: stripVTControlCharacters(annotation.message) + attachment,
+      message: stripVTControlCharacters(annotation.message),
     })
     this.ctx.logger.log(`\n${formatted}`)
   }
@@ -92,8 +90,17 @@ export class GithubActionsReporter implements Reporter {
   }
 }
 
-function getType(type: string | undefined) {
-  if (type && ['notice', 'error', 'warning'].includes(type)) {
+const BUILT_IN_TYPES = ['notice', 'error', 'warning']
+
+function getTitle(type: string) {
+  if (BUILT_IN_TYPES.includes(type)) {
+    return undefined
+  }
+  return type
+}
+
+function getType(type: string) {
+  if (BUILT_IN_TYPES.includes(type)) {
     return type
   }
   return 'notice'

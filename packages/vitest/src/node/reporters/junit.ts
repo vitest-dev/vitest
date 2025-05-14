@@ -243,6 +243,21 @@ export class JUnitReporter implements Reporter {
             await this.logger.log('<skipped/>')
           }
 
+          if (task.type === 'test' && task.annotations.length) {
+            await this.logger.log('<properties>')
+            this.logger.indent()
+
+            for (const annotation of task.annotations) {
+              await this.logger.log(
+                `<property name="${escapeXML(annotation.type)}" value="${escapeXML(annotation.message)}">`,
+              )
+              await this.logger.log('</property>')
+            }
+
+            this.logger.unindent()
+            await this.logger.log('</properties>')
+          }
+
           if (task.result?.state === 'fail') {
             const errors = task.result.errors || []
             for (const error of errors) {

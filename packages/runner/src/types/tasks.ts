@@ -280,7 +280,7 @@ export interface TestAnnotationLocation {
 
 export interface TestAnnotation {
   message: string
-  type?: string // to group annotations together
+  type: string
   location?: TestAnnotationLocation
   attachment?: TestAttachment
 }

@@ -164,9 +164,7 @@ export function createTestContext(
   ) {
     const annotation: TestAnnotation = {
       message,
-    }
-    if (type) {
-      annotation.type = type
+      type: type || 'notice',
     }
     if (attachment) {
       if (!attachment.body && !attachment.path) {
