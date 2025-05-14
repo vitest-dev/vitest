@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     include: ['test/**.test.ts'],
     includeTaskLocation: true,
-    reporters: ['verbose', 'github-actions'],
+    reporters: ['verbose'],
     testTimeout: 60_000,
     poolOptions: {
       forks: {

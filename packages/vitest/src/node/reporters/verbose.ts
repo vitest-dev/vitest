@@ -1,9 +1,10 @@
 import type { Task } from '@vitest/runner'
 import type { TestCase, TestModule, TestSuite } from './reported-tasks'
 import { getFullName } from '@vitest/runner/utils'
+import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { DefaultReporter } from './default'
-import { F_RIGHT } from './renderers/figures'
+import { F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './renderers/figures'
 import { formatProjectName, getStateSymbol } from './renderers/utils'
 
 export class VerboseReporter extends DefaultReporter {
@@ -41,7 +42,7 @@ export class VerboseReporter extends DefaultReporter {
       title += formatProjectName(test.project)
     }
 
-    title += getFullName(test.task, c.dim(' > '))
+    title += getFullName(test.task, c.dim(' > '), true)
     title += this.getDurationPrefix(test.task)
 
     const diagnostic = test.diagnostic()
@@ -54,6 +55,21 @@ export class VerboseReporter extends DefaultReporter {
     }
 
     this.log(title)
+    const annotations = test.annotations()
+    if (annotations.length) {
+      this.log('')
+    }
+
+    annotations.forEach(({ type, message, location }) => {
+      if (location) {
+        const file = relative(test.project.config.root, location.file)
+        this.log(`   ${c.blue(F_POINTER)} ${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`)
+      }
+      else {
+        this.log(`   ${c.blue(F_POINTER)} ${c.bold(type)}`)
+      }
+      this.log(`     ${c.blue(F_DOWN_RIGHT)} ${message}\n`)
+    })
 
     if (testResult.state === 'failed') {
       testResult.errors.forEach(error => this.log(c.red(`   ${F_RIGHT} ${error?.message}`)))

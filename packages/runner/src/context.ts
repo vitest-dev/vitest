@@ -183,17 +183,15 @@ export function createTestContext(
   context.annotate = ((message, type, attachment) => {
     let location: undefined | TestAnnotationLocation
 
-    if (runner.config.includeTaskLocation) {
-      const stack = new Error('STACK_TRACE').stack!
-      const index = stack.includes('STACK_TRACE') ? 2 : 1
-      const stackLine = stack.split('\n')[index]
-      const parsed = parseSingleStack(stackLine)
-      if (parsed) {
-        location = {
-          file: parsed.file,
-          line: parsed.line,
-          column: parsed.column,
-        }
+    const stack = new Error('STACK_TRACE').stack!
+    const index = stack.includes('STACK_TRACE') ? 2 : 1
+    const stackLine = stack.split('\n')[index]
+    const parsed = parseSingleStack(stackLine)
+    if (parsed) {
+      location = {
+        file: parsed.file,
+        line: parsed.line,
+        column: parsed.column,
       }
     }
 
