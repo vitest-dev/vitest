@@ -587,4 +587,57 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       },
     })
   })
+
+  test('correctly overrides extended project', async () => {
+    const { stdout } = await getCliConfig({
+      browser: {
+        provider: 'playwright',
+        headless: true,
+        instances: [
+          { browser: 'chromium' },
+        ],
+      },
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'node',
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'browser',
+            browser: {
+              enabled: true,
+            },
+          },
+        },
+      ],
+    }, ['--browser.headless=false'])
+
+    const config = JSON.parse(stdout)
+
+    expect(config.workspace).toHaveLength(2)
+    expect(config.workspace[0]).toEqual({
+      name: 'node',
+      headless: false,
+      browser: false,
+      ui: true,
+      parent: null,
+    })
+
+    expect(config.workspace[1]).toEqual({
+      name: 'browser (chromium)',
+      headless: false,
+      browser: true,
+      ui: true,
+      parent: {
+        name: 'browser',
+        headless: false,
+        browser: true,
+        ui: true,
+      },
+    })
+  })
 })
