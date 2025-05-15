@@ -7,9 +7,9 @@ import { test, describe } from 'vitest'
 
 test('simple', ({ annotate }) => {
   annotate('1')
-  annotate('2', 'warn')
+  annotate('2', 'warning')
   annotate('3', { path: './test-3.js' })
-  annotate('4', 'warn', { path: './test-4.js' })
+  annotate('4', 'warning', { path: './test-4.js' })
 })
 
 describe('suite', () => {
@@ -79,9 +79,9 @@ describe('API', () => {
       [
         "[ready] simple",
         "[annotate] simple 1 notice undefined",
-        "[annotate] simple 2 warn undefined",
+        "[annotate] simple 2 warning undefined",
         "[annotate] simple 3 notice <root>/test-3.js",
-        "[annotate] simple 4 warn <root>/test-4.js",
+        "[annotate] simple 4 warning <root>/test-4.js",
         "[result] simple",
         "[ready] second",
         "[annotate] second 5 notice undefined",
@@ -95,9 +95,9 @@ describe('API', () => {
         "second": [
           {
             "location": {
-              "column": 3,
+              "column": 5,
               "file": "<root>/basic.test.ts",
-              "line": 12,
+              "line": 13,
             },
             "message": "5",
             "type": "notice",
@@ -107,9 +107,9 @@ describe('API', () => {
               "path": "https://absolute-path.com",
             },
             "location": {
-              "column": 3,
+              "column": 5,
               "file": "<root>/basic.test.ts",
-              "line": 13,
+              "line": 14,
             },
             "message": "6",
             "type": "notice",
@@ -132,7 +132,7 @@ describe('API', () => {
               "line": 6,
             },
             "message": "2",
-            "type": "warn",
+            "type": "warning",
           },
           {
             "attachment": {
@@ -156,7 +156,7 @@ describe('API', () => {
               "line": 8,
             },
             "message": "4",
-            "type": "warn",
+            "type": "warning",
           },
         ],
       }
@@ -178,9 +178,9 @@ describe('reporters', () => {
           1..2
           ok 1 - simple # time=<time>
               # notice: 1
-              # warn: 2
+              # warning: 2
               # notice: 3
-              # warn: 4
+              # warning: 4
           ok 2 - suite # time=<time> {
               1..1
               ok 1 - second # time=<time>
@@ -203,9 +203,9 @@ describe('reporters', () => {
       1..2
       ok 1 - basic.test.ts > simple # time=<time>
           # notice: 1
-          # warn: 2
+          # warning: 2
           # notice: 3
-          # warn: 4
+          # warning: 4
       ok 2 - basic.test.ts > suite > second # time=<time>
           # notice: 5
           # notice: 6
@@ -232,11 +232,11 @@ describe('reporters', () => {
                   <properties>
                       <property name="notice" value="1">
                       </property>
-                      <property name="warn" value="2">
+                      <property name="warning" value="2">
                       </property>
                       <property name="notice" value="3">
                       </property>
-                      <property name="warn" value="4">
+                      <property name="warning" value="4">
                       </property>
                   </properties>
               </testcase>
@@ -267,11 +267,11 @@ describe('reporters', () => {
       "
       ::notice file=<root>/basic.test.ts,line=5,column=3::1
 
-      ::notice file=<root>/basic.test.ts,line=6,column=3,title=warn::2
+      ::warning file=<root>/basic.test.ts,line=6,column=3::2
 
       ::notice file=<root>/basic.test.ts,line=7,column=3::3
 
-      ::notice file=<root>/basic.test.ts,line=8,column=3,title=warn::4
+      ::warning file=<root>/basic.test.ts,line=8,column=3::4
 
       ::notice file=<root>/basic.test.ts,line=13,column=5::5
 
