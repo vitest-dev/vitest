@@ -3,7 +3,6 @@ import type { Task, TestAttachment } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
 import type { ErrorWithDiff, File, TestAnnotation, TestError } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
-import { basename } from 'pathe'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
@@ -215,15 +214,16 @@ function createAnnotationElement(annotation: TestAnnotation) {
 
   notice.append(type, message)
   const attachment = annotation.attachment
-  if (attachment?.path) {
+  if (attachment?.path || attachment?.body) {
     if (attachment.contentType?.startsWith('image/')) {
       const link = document.createElement('a')
       const img = document.createElement('img')
       img.classList.add('mt-3')
       img.width = 600
       img.width = 400
-      if (attachment.path.startsWith('http://') || attachment.path.startsWith('https://')) {
-        img.setAttribute('src', attachment.path)
+      const potentialUrl = attachment.path || attachment.body
+      if (typeof potentialUrl === 'string' && (potentialUrl.startsWith('http://') || potentialUrl.startsWith('https://'))) {
+        img.setAttribute('src', potentialUrl)
         link.referrerPolicy = 'no-referrer'
       }
       else {
@@ -236,8 +236,8 @@ function createAnnotationElement(annotation: TestAnnotation) {
     }
     else {
       const download = document.createElement('a')
-      download.download = basename(attachment.path)
       download.href = getAttachmentUrl(attachment)
+      download.download = sanitizeFilePath(annotation.message)
       download.classList.add('flex', 'w-min', 'gap-2', 'items-center', 'font-sans', 'underline', 'cursor-pointer')
       const icon = document.createElement('div')
       icon.classList.add('i-carbon:download', 'block')
@@ -251,11 +251,15 @@ function createAnnotationElement(annotation: TestAnnotation) {
 }
 
 function getAttachmentUrl(attachment: TestAttachment) {
-  if (attachment.path) {
-    return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${attachment.contentType}&token=${(window as any).VITEST_API_TOKEN}`
+  if (isReport) {
+    return `/data/${attachment.path}`
   }
-  // TODO
-  return '/unsupported_yet'
+  const contentType = attachment.contentType ?? 'application/octet-stream'
+  if (attachment.path) {
+    return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${contentType}&token=${(window as any).VITEST_API_TOKEN}`
+  }
+  // attachment.body is always a string outside of the test frame
+  return `data:${contentType};base64,${attachment.body}`
 }
 
 const { pause, resume } = watch(
@@ -380,6 +384,11 @@ async function onSave(content: string) {
 
 // we need to remove listeners before unmounting the component: the watcher will not be called
 onBeforeUnmount(clearListeners)
+
+function sanitizeFilePath(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x2C\x2E\x2F\x3A-\x40\x5B-\x60\x7B-\x7F]+/g, '-')
+}
 </script>
 
 <template>

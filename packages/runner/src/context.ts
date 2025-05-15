@@ -171,6 +171,10 @@ export function createTestContext(
         throw new TypeError(`Test attachment requires body or path to be set. Both are missing.`)
       }
       annotation.attachment = attachment
+      // convert to a string so it's easier to serialise
+      if (attachment.body instanceof Uint8Array) {
+        attachment.body = encodeUin8Array(attachment.body)
+      }
     }
     if (location) {
       annotation.location = location
@@ -245,4 +249,49 @@ function makeTimeoutError(isHook: boolean, timeout: number, stackTraceError?: Er
     error.stack = stackTraceError.stack.replace(error.message, stackTraceError.message)
   }
   return error
+}
+
+const table: string[] = []
+for (let i = 65; i < 91; i++) {
+  table.push(String.fromCharCode(i))
+}
+for (let i = 97; i < 123; i++) {
+  table.push(String.fromCharCode(i))
+}
+for (let i = 0; i < 10; i++) {
+  table.push(i.toString(10))
+}
+
+function encodeUin8Array(bytes: Uint8Array): string {
+  let base64 = ''
+  const len = bytes.byteLength
+  for (let i = 0; i < len; i += 3) {
+    if (len === i + 1) { // last 1 byte
+      const a = (bytes[i] & 0xFC) >> 2
+      const b = ((bytes[i] & 0x03) << 4)
+      base64 += table[a]
+      base64 += table[b]
+      base64 += '=='
+    }
+    else if (len === i + 2) { // last 2 bytes
+      const a = (bytes[i] & 0xFC) >> 2
+      const b = ((bytes[i] & 0x03) << 4) | ((bytes[i + 1] & 0xF0) >> 4)
+      const c = ((bytes[i + 1] & 0x0F) << 2)
+      base64 += table[a]
+      base64 += table[b]
+      base64 += table[c]
+      base64 += '='
+    }
+    else {
+      const a = (bytes[i] & 0xFC) >> 2
+      const b = ((bytes[i] & 0x03) << 4) | ((bytes[i + 1] & 0xF0) >> 4)
+      const c = ((bytes[i + 1] & 0x0F) << 2) | ((bytes[i + 2] & 0xC0) >> 6)
+      const d = bytes[i + 2] & 0x3F
+      base64 += table[a]
+      base64 += table[b]
+      base64 += table[c]
+      base64 += table[d]
+    }
+  }
+  return base64
 }
