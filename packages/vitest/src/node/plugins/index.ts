@@ -1,6 +1,7 @@
 import type { UserConfig as ViteConfig, Plugin as VitePlugin } from 'vite'
 import type { ResolvedConfig, UserConfig } from '../types/config'
 import {
+  deepClone,
   deepMerge,
   notNullish,
   toArray,
@@ -27,13 +28,13 @@ import { VitestCoreResolver } from './vitestResolver'
 
 export async function VitestPlugin(
   options: UserConfig = {},
-  ctx: Vitest = new Vitest('test'),
+  vitest: Vitest = new Vitest('test', deepClone(options)),
 ): Promise<VitePlugin[]> {
   const userConfig = deepMerge({}, options) as UserConfig
 
   async function UIPlugin() {
-    await ctx.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), ctx.version)
-    return (await import('@vitest/ui')).default(ctx)
+    await vitest.packageInstaller.ensureInstalled('@vitest/ui', options.root || process.cwd(), vitest.version)
+    return (await import('@vitest/ui')).default(vitest)
   }
 
   return [
@@ -143,13 +144,13 @@ export async function VitestPlugin(
           },
         }
 
-        if (ctx.configOverride.project) {
+        if (vitest.configOverride.project) {
           // project filter was set by the user, so we need to filter the project
-          options.project = ctx.configOverride.project
+          options.project = vitest.configOverride.project
         }
 
         config.customLogger = createViteLogger(
-          ctx.logger,
+          vitest.logger,
           viteConfig.logLevel || 'warn',
           {
             allowClearScreen: false,
@@ -207,7 +208,7 @@ export async function VitestPlugin(
               name: string,
               filename: string,
             ) => {
-              const root = ctx.config.root || options.root || process.cwd()
+              const root = vitest.config.root || options.root || process.cwd()
               return generateScopedClassName(
                 classNameStrategy,
                 name,
@@ -274,9 +275,9 @@ export async function VitestPlugin(
               console.log('[debug] watcher is ready')
             })
           }
-          await ctx._setServer(options, server, userConfig)
+          await vitest._setServer(options, server)
           if (options.api && options.watch) {
-            (await import('../../api/setup')).setup(ctx)
+            (await import('../../api/setup')).setup(vitest)
           }
 
           // #415, in run mode we don't need the watcher, close it would improve the performance
@@ -287,9 +288,9 @@ export async function VitestPlugin(
       },
     },
     SsrReplacerPlugin(),
-    ...CSSEnablerPlugin(ctx),
-    CoverageTransform(ctx),
-    VitestCoreResolver(ctx),
+    ...CSSEnablerPlugin(vitest),
+    CoverageTransform(vitest),
+    VitestCoreResolver(vitest),
     options.ui ? await UIPlugin() : null,
     ...MocksPlugins(),
     VitestOptimizer(),

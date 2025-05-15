@@ -4,7 +4,6 @@ import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/co
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
-import { mergeConfig } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { VitestFilteredOutProjectError } from '../errors'
@@ -116,16 +115,7 @@ export function WorkspaceVitestPlugin(
           },
         }
 
-        // if this project defines a browser configuration, respect --browser flag
-        // otherwise if we always override the configuration, every project will run in browser mode
-        if (project.vitest._options.browser && viteConfig.test?.browser) {
-          viteConfig.test.browser = mergeConfig(
-            viteConfig.test.browser,
-            project.vitest._options.browser,
-          )
-        }
-
-        (config.test as ResolvedConfig).defines = defines
+        ;(config.test as ResolvedConfig).defines = defines
 
         // keep project names to potentially filter it out
         const workspaceNames = [name]

@@ -1,6 +1,7 @@
 import type { ResolvedConfig as ResolvedViteConfig } from 'vite'
 import type { Vitest } from '../core'
 import type { BenchmarkBuiltinReporters } from '../reporters'
+import type { ResolvedBrowserOptions } from '../types/browser'
 import type {
   ApiConfig,
   ResolvedConfig,
@@ -13,6 +14,7 @@ import { toArray } from '@vitest/utils'
 import { resolveModule } from 'local-pkg'
 import { normalize, relative, resolve } from 'pathe'
 import c from 'tinyrainbow'
+import { mergeConfig } from 'vite'
 import {
   defaultBrowserPort,
   defaultInspectPort,
@@ -205,8 +207,6 @@ export function resolveConfig(
     resolved.minWorkers = resolveInlineWorkerOption(resolved.minWorkers)
   }
 
-  resolved.browser ??= {} as any
-
   // run benchmark sequentially by default
   resolved.fileParallelism ??= mode !== 'benchmark'
 
@@ -238,10 +238,18 @@ export function resolveConfig(
     }
   }
 
+  // apply browser CLI options only if the config already has the browser config and not disabled manually
+  if (vitest._cliOptions.browser && resolved.browser && resolved.browser.enabled !== false) {
+    resolved.browser = mergeConfig(
+      resolved.browser,
+      vitest._cliOptions.browser,
+    ) as ResolvedBrowserOptions
+  }
+
+  resolved.browser ??= {} as any
   const browser = resolved.browser
 
-  // if browser was enabled via CLI and it's configured by the user, then validate the input
-  if (browser.enabled && viteConfig.test?.browser) {
+  if (browser.enabled) {
     if (!browser.name && !browser.instances) {
       throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
     }
