@@ -1,12 +1,16 @@
+import type { Task } from '@vitest/runner'
 import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
 import type { HTMLOptions, Vitest } from 'vitest/node'
 import type { Reporter } from 'vitest/reporters'
+import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
+import { readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { gzip, constants as zlibConstants } from 'node:zlib'
 import { stringify } from 'flatted'
-import { basename, dirname, relative, resolve } from 'pathe'
+import mime from 'mime/lite'
+import { basename, dirname, extname, relative, resolve } from 'pathe'
 import { globSync } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { getModuleGraph } from '../../vitest/src/utils/graph'
@@ -36,7 +40,6 @@ interface HTMLReportData {
   unhandledErrors: unknown[]
   // filename -> source
   sources: Record<string, string>
-  attachments: Record<string, string>
 }
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
@@ -64,7 +67,7 @@ export default class HTMLReporter implements Reporter {
     this.reporterDir = htmlDir
     this.htmlFilePath = resolve(htmlDir, basename(htmlFile))
 
-    await fs.mkdir(this.reporterDir, { recursive: true })
+    await fs.mkdir(resolve(this.reporterDir, 'data'), { recursive: true })
   }
 
   async onFinished(): Promise<void> {
@@ -76,32 +79,76 @@ export default class HTMLReporter implements Reporter {
       projects: this.ctx.projects.map(p => p.name),
       moduleGraph: {},
       sources: {},
-      attachments: {},
     }
-    await Promise.all(
-      result.files.map(async (file) => {
-        const projectName = file.projectName || ''
-        const resolvedConfig = this.ctx.getProjectByName(projectName).config
-        const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
-        result.moduleGraph[projectName] ??= {}
-        result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
-          this.ctx,
-          projectName,
-          file.filepath,
-          browser,
-        )
-        if (!result.sources[file.filepath]) {
-          try {
-            result.sources[file.filepath] = await fs.readFile(file.filepath, {
-              encoding: 'utf-8',
-            })
+    const promises: Promise<void>[] = []
+
+    const processAttachments = (task: Task) => {
+      if (task.type === 'test') {
+        task.annotations.forEach((annotation) => {
+          const attachment = annotation.attachment
+          if (!attachment) {
+            return
           }
-          catch {
-            // just ignore
-          }
+
+          promises.push((async () => {
+            if (attachment.path) {
+              if (attachment.path.startsWith('http://') || attachment.path.startsWith('https://')) {
+                return
+              }
+              const buffer = await readFile(attachment.path)
+              const hash = crypto.createHash('sha1').update(buffer).digest('hex')
+              const filename = hash + extname(attachment.path)
+              await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
+              attachment.path = filename
+              attachment.body = undefined
+              return
+            }
+
+            if (attachment.body) {
+              const buffer = typeof attachment.body === 'string'
+                ? Buffer.from(attachment.body, 'base64')
+                : Buffer.from(attachment.body)
+
+              const hash = crypto.createHash('sha1').update(buffer).digest('hex')
+              const extension = mime.getExtension(attachment.contentType || 'application/octet-stream') || 'dat'
+              const filename = `${hash}.${extension}`
+              await writeFile(resolve(this.reporterDir, 'data', filename), buffer)
+              attachment.path = filename
+              attachment.body = undefined
+            }
+          })())
+        })
+      }
+      else {
+        task.tasks.forEach(processAttachments)
+      }
+    }
+
+    promises.push(...result.files.map(async (file) => {
+      processAttachments(file)
+      const projectName = file.projectName || ''
+      const resolvedConfig = this.ctx.getProjectByName(projectName).config
+      const browser = resolvedConfig.browser.enabled && resolvedConfig.browser.ui
+      result.moduleGraph[projectName] ??= {}
+      result.moduleGraph[projectName][file.filepath] = await getModuleGraph(
+        this.ctx,
+        projectName,
+        file.filepath,
+        browser,
+      )
+      if (!result.sources[file.filepath]) {
+        try {
+          result.sources[file.filepath] = await fs.readFile(file.filepath, {
+            encoding: 'utf-8',
+          })
         }
-      }),
-    )
+        catch {
+          // just ignore
+        }
+      }
+    }))
+
+    await Promise.all(promises)
     await this.writeReport(stringify(result))
   }
 

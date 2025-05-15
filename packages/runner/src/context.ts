@@ -170,6 +170,9 @@ export function createTestContext(
       if (!attachment.body && !attachment.path) {
         throw new TypeError(`Test attachment requires body or path to be set. Both are missing.`)
       }
+      if (attachment.body && attachment.path) {
+        throw new TypeError(`Test attachment requires only one of "body" or "path" to be set. Both are specified.`)
+      }
       annotation.attachment = attachment
       // convert to a string so it's easier to serialise
       if (attachment.body instanceof Uint8Array) {

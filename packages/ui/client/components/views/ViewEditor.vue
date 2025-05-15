@@ -251,6 +251,7 @@ function createAnnotationElement(annotation: TestAnnotation) {
 }
 
 function getAttachmentUrl(attachment: TestAttachment) {
+  // html reporter always saves files into /data/ folder
   if (isReport) {
     return `/data/${attachment.path}`
   }
