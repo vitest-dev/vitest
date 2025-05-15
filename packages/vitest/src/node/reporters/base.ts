@@ -4,6 +4,7 @@ import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestCollection, TestModule, TestModuleState, TestResult, TestSuite, TestSuiteState } from './reported-tasks'
 import { performance } from 'node:perf_hooks'
+import { equals } from '@vitest/expect'
 import { getFullName, getSuites, getTestName, getTests, hasFailed } from '@vitest/runner/utils'
 import { toArray } from '@vitest/utils'
 import { parseStacktrace } from '@vitest/utils/source-map'
@@ -11,7 +12,7 @@ import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { isTTY } from '../../utils/env'
 import { hasFailedSnapshot } from '../../utils/tasks'
-import { F_CHECK, F_POINTER, F_RIGHT } from './renderers/figures'
+import { F_CHECK, F_DOWN_RIGHT, F_POINTER, F_RIGHT } from './renderers/figures'
 import { countTestErrors, divider, errorBanner, formatProjectName, formatTime, formatTimeString, getStateString, getStateSymbol, padSummaryTitle, renderSnapshotSummary, taskFail, withLabel } from './renderers/utils'
 
 const BADGE_PADDING = '       '
@@ -255,6 +256,26 @@ export abstract class BaseReporter implements Reporter {
 
   protected getTestIndentation(_test: Task) {
     return '  '
+  }
+
+  protected printAnnotations(test: TestCase, console: 'log' | 'error', padding = 0): void {
+    const annotations = test.annotations()
+    if (!annotations.length) {
+      return
+    }
+
+    const PADDING = ' '.repeat(padding)
+
+    annotations.forEach(({ location, type, message }) => {
+      if (location) {
+        const file = relative(test.project.config.root, location.file)
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.gray(`${file}:${location.line}:${location.column}`)} ${c.bold(type)}`)
+      }
+      else {
+        this[console](`${PADDING}${c.blue(F_POINTER)} ${c.bold(type)}`)
+      }
+      this[console](`${PADDING}  ${c.blue(F_DOWN_RIGHT)} ${message}`)
+    })
   }
 
   protected getDurationPrefix(task: Task): string {
@@ -594,7 +615,10 @@ export abstract class BaseReporter implements Reporter {
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
 
-            return projectName === currentProjectName
+            const currentAnnotations = task.type === 'test' && task.annotations
+            const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
+
+            return projectName === currentProjectName && equals(currentAnnotations, itemAnnotations)
           })
         }
 
@@ -632,6 +656,12 @@ export abstract class BaseReporter implements Reporter {
         screenshotPaths,
         task: tasks[0],
       })
+
+      if (tasks[0].type === 'test' && tasks[0].annotations) {
+        const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
+        this.printAnnotations(test, 'error', 1)
+        this.error()
+      }
 
       errorDivider()
     }
