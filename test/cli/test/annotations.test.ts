@@ -279,4 +279,182 @@ describe('reporters', () => {
       "
     `)
   })
+
+  test('verbose non-tty reporter prints annotations', async () => {
+    const { stdout } = await runInlineTests(
+      { 'basic.test.ts': annotationTest },
+      { reporters: [['verbose', { isTTY: false }]] },
+    )
+
+    const result = stdout
+      .replace(/\d+ms/g, '<time>')
+      .split('\n')
+      // remove banner and summary
+      .slice(3, -6)
+      .join('\n')
+
+    expect(result).toMatchInlineSnapshot(`
+      " ✓ basic.test.ts > simple <time>
+
+         ❯ basic.test.ts:5:3 notice
+           ↳ 1
+         ❯ basic.test.ts:6:3 warning
+           ↳ 2
+         ❯ basic.test.ts:7:3 notice
+           ↳ 3
+         ❯ basic.test.ts:8:3 warning
+           ↳ 4
+
+       ✓ basic.test.ts > suite > second <time>
+
+         ❯ basic.test.ts:13:5 notice
+           ↳ 5
+         ❯ basic.test.ts:14:5 notice
+           ↳ 6
+
+      "
+    `)
+  })
+
+  describe('default', () => {
+    test('default reporter prints annotations after the error', async () => {
+      const { stdout, stderr } = await runInlineTests(
+        {
+          'basic.test.ts': /* ts */`
+            import { test } from 'vitest'
+
+            test('non-failing test', ({ annotate }) => {
+              annotate('[non-failing] not printed')
+            })
+
+            test('failed test', ({ annotate }) => {
+              annotate('printed')
+              annotate('also printed', 'warning')
+              throw new Error('thrown error')
+            })
+          `,
+        },
+        { reporters: [['default', { isTTY: false }]] },
+      )
+
+      expect(stdout).not.toContain('[non-failing] not printed')
+      expect(stderr).not.toContain('[non-failing] not printed')
+
+      expect(stderr).toMatchInlineSnapshot(`
+        "
+        ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+         FAIL  basic.test.ts > failed test
+        Error: thrown error
+         ❯ basic.test.ts:11:21
+              9|               annotate('printed')
+             10|               annotate('also printed', 'warning')
+             11|               throw new Error('thrown error')
+               |                     ^
+             12|             })
+             13|           
+
+         ❯ basic.test.ts:9:15 notice
+           ↳ printed
+         ❯ basic.test.ts:10:15 warning
+           ↳ also printed
+
+        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+        "
+      `)
+    })
+
+    test('default reporter prints the same error with the same annotations only once', async () => {
+      const { stderr } = await runInlineTests(
+        {
+          'basic.test.ts': /* ts */`
+            import { test } from 'vitest'
+
+            test.for([1, 2])('failed test %i', (num, { annotate }) => {
+              annotate('printed')
+              throw new Error('thrown error')
+            })
+          `,
+        },
+        { reporters: [['default', { isTTY: false }]] },
+      )
+
+      expect(stderr).toMatchInlineSnapshot(`
+        "
+        ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+         FAIL  basic.test.ts > failed test 1
+         FAIL  basic.test.ts > failed test 2
+        Error: thrown error
+         ❯ basic.test.ts:6:21
+              4|             test.for([1, 2])('failed test %i', (num, { annotate }) => {
+              5|               annotate('printed')
+              6|               throw new Error('thrown error')
+               |                     ^
+              7|             })
+              8|           
+
+         ❯ basic.test.ts:5:15 notice
+           ↳ printed
+
+        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+        "
+      `)
+    })
+
+    test('default reporter prints different annotations after the same error', async () => {
+      const { stderr } = await runInlineTests(
+        {
+          'basic.test.ts': /* ts */`
+            import { test } from 'vitest'
+
+            test.for([1, 2])('failed test %i', (num, { annotate }) => {
+              annotate('printed ' + num)
+              throw new Error('thrown error')
+            })
+          `,
+        },
+        { reporters: [['default', { isTTY: false }]] },
+      )
+
+      expect(stderr).toMatchInlineSnapshot(`
+        "
+        ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+         FAIL  basic.test.ts > failed test 1
+        Error: thrown error
+         ❯ basic.test.ts:6:21
+              4|             test.for([1, 2])('failed test %i', (num, { annotate }) => {
+              5|               annotate('printed ' + num)
+              6|               throw new Error('thrown error')
+               |                     ^
+              7|             })
+              8|           
+
+         ❯ basic.test.ts:5:15 notice
+           ↳ printed 1
+
+        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+         FAIL  basic.test.ts > failed test 2
+        Error: thrown error
+         ❯ basic.test.ts:6:21
+              4|             test.for([1, 2])('failed test %i', (num, { annotate }) => {
+              5|               annotate('printed ' + num)
+              6|               throw new Error('thrown error')
+               |                     ^
+              7|             })
+              8|           
+
+         ❯ basic.test.ts:5:15 notice
+           ↳ printed 2
+
+        ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+        "
+      `)
+    })
+  })
 })
