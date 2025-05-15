@@ -3,7 +3,6 @@ import type { ResolvedConfig } from '../node/types/config'
 import crypto from 'node:crypto'
 
 export function isValidApiRequest(config: ResolvedConfig, req: IncomingMessage): boolean {
-  return true // TODO: remove
   const url = new URL(req.url ?? '', 'http://localhost')
 
   // validate token. token is injected in ui/tester/orchestrator html, which is cross origin protected.

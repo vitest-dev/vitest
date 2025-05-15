@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { Task, TestAttachment } from '@vitest/runner'
 import type CodeMirror from 'codemirror'
-import type { ErrorWithDiff, File, TestAnnotation } from 'vitest'
+import type { ErrorWithDiff, File, TestAnnotation, TestError } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
+import { basename } from 'pathe'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
 import { codemirrorRef } from '~/composables/codemirror'
@@ -85,9 +87,33 @@ watch(() => [loading.value, saving.value, props.file, lineNumber.value] as const
 const ext = computed(() => props.file?.filepath?.split(/\./g).pop() || 'js')
 const editor = ref<any>()
 
-const failed = computed(
-  () => props.file?.tasks.filter(i => i.result?.state === 'fail') || [],
-)
+const errors = computed(() => {
+  const errors: TestError[] = []
+  function addFailed(task: Task) {
+    if (task.result?.errors) {
+      errors.push(...task.result.errors as TestError[])
+    }
+    if (task.type === 'suite') {
+      task.tasks.forEach(addFailed)
+    }
+  }
+  props.file?.tasks.forEach(addFailed)
+  return errors
+})
+
+const annotations = computed(() => {
+  const annotations: TestAnnotation[] = []
+  function addAnnotations(task: Task) {
+    if (task.type === 'test') {
+      annotations.push(...task.annotations)
+    }
+    if (task.type === 'suite') {
+      task.tasks.forEach(addAnnotations)
+    }
+  }
+  props.file?.tasks.forEach(addAnnotations)
+  return annotations
+})
 const widgets: CodeMirror.LineWidget[] = []
 const handles: CodeMirror.LineHandle[] = []
 const listeners: [el: HTMLSpanElement, l: EventListener, t: () => void][] = []
@@ -170,37 +196,71 @@ function createAnnotationElement(annotation: TestAnnotation) {
   }
 
   const notice = document.createElement('div')
-  notice.classList.add('wrap', 'bg-active', 'py-2', 'px-6')
+  notice.classList.add(
+    'wrap',
+    'bg-active',
+    'py-3',
+    'px-6',
+    'my-1',
+    'text-white',
+  )
 
   const type = document.createElement('span')
   type.textContent = `${annotation.type}: `
   type.classList.add('font-bold')
 
   const message = document.createElement('span')
-  message.textContent = annotation.message
+  message.classList.add('whitespace-pre')
+  message.textContent = annotation.message.replace(/[^\r]\n/, '\r\n')
 
   notice.append(type, message)
   const attachment = annotation.attachment
   if (attachment?.path) {
     if (attachment.contentType?.startsWith('image/')) {
+      const link = document.createElement('a')
       const img = document.createElement('img')
+      img.classList.add('mt-3')
       img.width = 600
       img.width = 400
       if (attachment.path.startsWith('http://') || attachment.path.startsWith('https://')) {
         img.setAttribute('src', attachment.path)
+        link.referrerPolicy = 'no-referrer'
       }
       else {
-        img.setAttribute('src', `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${attachment.contentType}&token=${(window as any).VITEST_API_TOKEN}`)
+        img.setAttribute('src', getAttachmentUrl(attachment))
       }
-      notice.append(img)
+      link.target = '_blank'
+      link.href = img.src
+      link.append(img)
+      notice.append(link)
+    }
+    else {
+      const download = document.createElement('a')
+      download.download = basename(attachment.path)
+      download.href = getAttachmentUrl(attachment)
+      download.classList.add('flex', 'w-min', 'gap-2', 'items-center', 'font-sans', 'underline', 'cursor-pointer')
+      const icon = document.createElement('div')
+      icon.classList.add('i-carbon:download', 'block')
+      const text = document.createElement('span')
+      text.textContent = 'Download'
+      download.append(icon, text)
+      notice.append(download)
     }
   }
   widgets.push(codemirrorRef.value!.addLineWidget(line - 1, notice))
 }
 
+function getAttachmentUrl(attachment: TestAttachment) {
+  if (attachment.path) {
+    return `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${attachment.contentType}&token=${(window as any).VITEST_API_TOKEN}`
+  }
+  // TODO
+  return '/unsupported_yet'
+}
+
 const { pause, resume } = watch(
-  [codemirrorRef, failed, finished] as const,
-  ([cmValue, f, end]) => {
+  [codemirrorRef, errors, annotations, finished] as const,
+  ([cmValue, errors, annotations, end]) => {
     if (!cmValue) {
       widgets.length = 0
       handles.length = 0
@@ -225,15 +285,9 @@ const { pause, resume } = watch(
 
     setTimeout(() => {
       // add new data
-      f.forEach((i) => {
-        i.result?.errors?.forEach(createErrorElement)
-      })
+      errors.forEach(createErrorElement)
 
-      f.forEach((i) => {
-        if (i.type === 'test') {
-          i.annotations.forEach(createAnnotationElement)
-        }
-      })
+      annotations.forEach(createAnnotationElement)
 
       // Prevent getting access to initial state
       if (!hasBeenEdited.value) {
@@ -308,9 +362,8 @@ async function onSave(content: string) {
   }
 
   // add new data
-  failed.value.forEach((i) => {
-    i.result?.errors?.forEach(createErrorElement)
-  })
+  errors.value.forEach(createErrorElement)
+  annotations.value.forEach(createAnnotationElement)
 
   cmValue?.on('changes', codemirrorChanges)
 

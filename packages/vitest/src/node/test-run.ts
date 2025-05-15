@@ -57,16 +57,16 @@ export class TestRun {
   async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
     this.vitest.state.updateTasks(update)
 
-    // TODO: what is the order or reports here?
-    // "onTaskUpdate" in parallel with others or before all or after all?
-    // TODO: error handling - what happens if custom reporter throws an error?
-    await this.vitest.report('onTaskUpdate', update, events)
-
     for (const [id, event, data] of events) {
       await this.reportEvent(id, event, data).catch((error) => {
         this.vitest.state.catchError(serializeError(error), 'Unhandled Reporter Error')
       })
     }
+
+    // TODO: what is the order or reports here?
+    // "onTaskUpdate" in parallel with others or before all or after all?
+    // TODO: error handling - what happens if custom reporter throws an error?
+    await this.vitest.report('onTaskUpdate', update, events)
   }
 
   async end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {
