@@ -105,7 +105,27 @@ The `junit` reporter lists annotations inside the testcase's `properties` tag. T
 
 The `verbose` reporter in non-TTY terminals will print annotations after the test has finished. Otherwise, annotations are visible only if the test has failed.
 
-The `default` reporter prints annotations only if the test has failed.
+The `default` reporter prints annotations only if the test has failed:
+
+```
+  ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+  FAIL  example.test.js > an example of a test with annotation
+Error: thrown error
+  ❯ example.test.js:11:21
+      9 |    annotate('annotation 1')
+      10|    annotate('annotation 2', 'warning')
+      11|    throw new Error('thrown error')
+        |          ^
+      12|  })
+
+  ❯ example.test.js:9:15 notice
+    ↳ annotation 1
+  ❯ example.test.js:10:15 warning
+    ↳ annotation 2
+
+  ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+```
 
 #### `signal` <Version>3.2.0</Version> {#signal}
 
