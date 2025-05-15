@@ -1,4 +1,4 @@
-import type { File, TaskResultPack, TestAnnotation } from '@vitest/runner'
+import type { File, TaskEventPack, TaskResultPack, TestAnnotation } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { SerializedTestSpecification } from '../../runtime/types/utils'
 import type { Awaitable, UserConsoleLog } from '../../types/general'
@@ -40,7 +40,7 @@ export interface Reporter {
   /**
    * @deprecated use `onTestModuleQueued`, `onTestModuleStart`, `onTestModuleEnd`, `onTestCaseReady`, `onTestCaseResult` instead
    */
-  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
+  onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
   onTestRemoved?: (trigger?: string) => Awaitable<void>
   onWatcherStart?: (files?: File[], errors?: unknown[]) => Awaitable<void>
   onWatcherRerun?: (files: string[], trigger?: string) => Awaitable<void>

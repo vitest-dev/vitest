@@ -1,8 +1,4 @@
-import type {
-  ModuleGraphData,
-  RunnerTestFile,
-  SerializedConfig,
-} from 'vitest'
+import type { ModuleGraphData, RunnerTestFile, SerializedConfig } from 'vitest'
 import type { HTMLOptions, Vitest } from 'vitest/node'
 import type { Reporter } from 'vitest/reporters'
 import { promises as fs } from 'node:fs'
@@ -40,6 +36,7 @@ interface HTMLReportData {
   unhandledErrors: unknown[]
   // filename -> source
   sources: Record<string, string>
+  attachments: Record<string, string>
 }
 
 const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
@@ -47,8 +44,10 @@ const distDir = resolve(fileURLToPath(import.meta.url), '../../dist')
 export default class HTMLReporter implements Reporter {
   start = 0
   ctx!: Vitest
-  reportUIPath!: string
   options: HTMLOptions
+
+  private reporterDir!: string
+  private htmlFilePath!: string
 
   constructor(options: HTMLOptions) {
     this.options = options
@@ -57,6 +56,15 @@ export default class HTMLReporter implements Reporter {
   async onInit(ctx: Vitest): Promise<void> {
     this.ctx = ctx
     this.start = Date.now()
+    const htmlFile
+      = this.options.outputFile
+        || getOutputFile(this.ctx.config)
+        || 'html/index.html'
+    const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
+    this.reporterDir = htmlDir
+    this.htmlFilePath = resolve(htmlDir, basename(htmlFile))
+
+    await fs.mkdir(this.reporterDir, { recursive: true })
   }
 
   async onFinished(): Promise<void> {
@@ -65,9 +73,10 @@ export default class HTMLReporter implements Reporter {
       files: this.ctx.state.getFiles(),
       config: this.ctx.getRootProject().serializedConfig,
       unhandledErrors: this.ctx.state.getUnhandledErrors(),
-      projects: this.ctx.resolvedProjects.map(p => p.name),
+      projects: this.ctx.projects.map(p => p.name),
       moduleGraph: {},
       sources: {},
+      attachments: {},
     }
     await Promise.all(
       result.files.map(async (file) => {
@@ -97,16 +106,8 @@ export default class HTMLReporter implements Reporter {
   }
 
   async writeReport(report: string): Promise<void> {
-    const htmlFile
-      = this.options.outputFile
-        || getOutputFile(this.ctx.config)
-        || 'html/index.html'
-    const htmlFileName = basename(htmlFile)
-    const htmlDir = resolve(this.ctx.config.root, dirname(htmlFile))
-
+    const htmlDir = this.reporterDir
     const metaFile = resolve(htmlDir, 'html.meta.json.gz')
-
-    await fs.mkdir(resolve(htmlDir, 'assets'), { recursive: true })
 
     const promiseGzip = promisify(gzip)
     const data = await promiseGzip(report, {
@@ -122,7 +123,7 @@ export default class HTMLReporter implements Reporter {
           const html = await fs.readFile(resolve(ui, f), 'utf-8')
           const filePath = relative(htmlDir, metaFile)
           await fs.writeFile(
-            resolve(htmlDir, htmlFileName),
+            this.htmlFilePath,
             html.replace(
               '<!-- !LOAD_METADATA! -->',
               `<script>window.METADATA_PATH="${filePath}"</script>`,

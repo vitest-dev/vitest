@@ -1,4 +1,5 @@
 import type { File, TaskResultPack } from '@vitest/runner'
+import type { RunnerTaskEventPack } from 'vitest'
 import type {
   CollectorInfo,
   FilteredTests,
@@ -77,8 +78,8 @@ export class ExplorerTree {
     this.collect(true, false)
   }
 
-  resumeRun(packs: TaskResultPack[]) {
-    preparePendingTasks(packs)
+  resumeRun(packs: TaskResultPack[], events: RunnerTaskEventPack[]) {
+    preparePendingTasks(packs, events)
     if (!this.onTaskUpdateCalled) {
       clearTimeout(this.resumeEndRunId)
       this.onTaskUpdateCalled = true

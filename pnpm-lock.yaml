@@ -1043,6 +1043,9 @@ importers:
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7
+      '@types/mime':
+        specifier: ^4.0.0
+        version: 4.0.0
       '@types/node':
         specifier: ^22.14.1
         version: 22.14.1
@@ -1078,13 +1081,16 @@ importers:
         version: 4.10.0
       happy-dom:
         specifier: ^17.4.4
-        version: 17.4.6
+        version: 17.4.7
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
       local-pkg:
         specifier: ^1.1.1
         version: 1.1.1
+      mime:
+        specifier: ^4.0.7
+        version: 4.0.7
       pretty-format:
         specifier: ^29.7.0
         version: 29.7.0
@@ -1335,7 +1341,7 @@ importers:
         version: 3.0.3
       '@vitejs/plugin-vue':
         specifier: latest
-        version: 5.2.3(vite@6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.3))
+        version: 5.2.4(vite@6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.3))
       '@vitest/browser':
         specifier: workspace:*
         version: link:../../packages/browser
@@ -1353,7 +1359,7 @@ importers:
         version: 2.4.6
       happy-dom:
         specifier: latest
-        version: 17.4.6
+        version: 17.4.7
       istanbul-lib-coverage:
         specifier: ^3.2.2
         version: 3.2.2
@@ -1496,7 +1502,7 @@ importers:
         version: 9.3.4
       happy-dom:
         specifier: latest
-        version: 17.4.6
+        version: 17.4.7
       vitest:
         specifier: workspace:*
         version: link:../../packages/vitest
@@ -4036,6 +4042,10 @@ packages:
   '@types/mdast@4.0.3':
     resolution: {integrity: sha512-LsjtqsyF+d2/yFOYaN22dHZI1Cpwkrj+g06G8+qtUKlhovPW89YhqSnfKtMbkgmEtYpH2gydRNULd6y8mciAFg==}
 
+  '@types/mime@4.0.0':
+    resolution: {integrity: sha512-5eEkJZ/BLvTE3vXGKkWlyTSUVZuzj23Wj8PoyOq2lt5I3CYbiLBOPb3XmCW6QcuOibIUE6emHXHt9E/F/rCa6w==}
+    deprecated: This is a stub types definition. mime provides its own type definitions, so you do not need this installed.
+
   '@types/minimatch@5.1.1':
     resolution: {integrity: sha512-v55NF6Dz0wrj14Rn8iEABTWrhYRmgkJYuokduunSiq++t3hZ9VZ6dvcDt+850Pm5sGJZk8RaHzkFCXPxVINZ+g==}
 
@@ -4391,6 +4401,13 @@ packages:
 
   '@vitejs/plugin-vue@5.2.3':
     resolution: {integrity: sha512-IYSLEQj4LgZZuoVpdSUCw3dIynTWQgPlaRP6iAvMle4My0HdYwr5g5wQAfwOeHQBmYwEkqF70nRpSilr6PoUDg==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      vite: ^6.2.0
+      vue: ^3.2.25
+
+  '@vitejs/plugin-vue@5.2.4':
+    resolution: {integrity: sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
       vite: ^6.2.0
@@ -6407,8 +6424,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@17.4.6:
-    resolution: {integrity: sha512-OEV1hDe9i2rFr66+WZNiwy1S8rAJy6bRXmXql68YJDjdfHBRbN76om+qVh68vQACf6y5Bcr90e/oK53RQxsDdg==}
+  happy-dom@17.4.7:
+    resolution: {integrity: sha512-NZypxadhCiV5NT4A+Y86aQVVKQ05KDmueja3sz008uJfDRwz028wd0aTiJPwo4RQlvlz0fznkEEBBCHVNWc08g==}
     engines: {node: '>=18.0.0'}
 
   has-bigints@1.0.2:
@@ -11973,6 +11990,10 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.2
 
+  '@types/mime@4.0.0':
+    dependencies:
+      mime: 4.0.7
+
   '@types/minimatch@5.1.1': {}
 
   '@types/ms@0.7.31': {}
@@ -12419,6 +12440,11 @@ snapshots:
     dependencies:
       vite: 6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
       vue: 3.5.13(typescript@5.8.3)
+
+  '@vitejs/plugin-vue@5.2.4(vite@6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0))(vue@3.5.12(typescript@5.8.3))':
+    dependencies:
+      vite: 6.2.0(@types/node@22.14.1)(jiti@2.4.2)(terser@5.36.0)(tsx@4.19.3)(yaml@2.7.0)
+      vue: 3.5.12(typescript@5.8.3)
 
   '@vitest/eslint-plugin@1.1.42(@typescript-eslint/utils@8.30.1(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.26.0(jiti@2.4.2))(typescript@5.8.3)(vitest@packages+vitest)':
     dependencies:
@@ -14941,7 +14967,7 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@17.4.6:
+  happy-dom@17.4.7:
     dependencies:
       webidl-conversions: 7.0.0
       whatwg-mimetype: 3.0.0

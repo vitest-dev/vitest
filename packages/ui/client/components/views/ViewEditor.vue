@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type CodeMirror from 'codemirror'
-import type { ErrorWithDiff, File } from 'vitest'
+import type { ErrorWithDiff, File, TestAnnotation } from 'vitest'
 import { createTooltip, destroyTooltip } from 'floating-vue'
 import { client, isReport } from '~/composables/client'
 import { finished } from '~/composables/client/state'
@@ -157,6 +157,47 @@ function createErrorElement(e: ErrorWithDiff) {
   widgets.push(codemirrorRef.value!.addLineWidget(stack.line - 1, div))
 }
 
+function createAnnotationElement(annotation: TestAnnotation) {
+  if (!annotation.location) {
+    // TODO: print unknown annotations somewhere
+    return
+  }
+
+  // TODO: design
+  const { line, file } = annotation.location
+  if (file !== props.file?.filepath) {
+    return
+  }
+
+  const notice = document.createElement('div')
+  notice.classList.add('wrap', 'bg-active', 'py-2', 'px-6')
+
+  const type = document.createElement('span')
+  type.textContent = `${annotation.type}: `
+  type.classList.add('font-bold')
+
+  const message = document.createElement('span')
+  message.textContent = annotation.message
+
+  notice.append(type, message)
+  const attachment = annotation.attachment
+  if (attachment?.path) {
+    if (attachment.contentType?.startsWith('image/')) {
+      const img = document.createElement('img')
+      img.width = 600
+      img.width = 400
+      if (attachment.path.startsWith('http://') || attachment.path.startsWith('https://')) {
+        img.setAttribute('src', attachment.path)
+      }
+      else {
+        img.setAttribute('src', `/__vitest_attachment__?path=${encodeURIComponent(attachment.path)}&contentType=${attachment.contentType}&token=${(window as any).VITEST_API_TOKEN}`)
+      }
+      notice.append(img)
+    }
+  }
+  widgets.push(codemirrorRef.value!.addLineWidget(line - 1, notice))
+}
+
 const { pause, resume } = watch(
   [codemirrorRef, failed, finished] as const,
   ([cmValue, f, end]) => {
@@ -186,6 +227,12 @@ const { pause, resume } = watch(
       // add new data
       f.forEach((i) => {
         i.result?.errors?.forEach(createErrorElement)
+      })
+
+      f.forEach((i) => {
+        if (i.type === 'test') {
+          i.annotations.forEach(createAnnotationElement)
+        }
       })
 
       // Prevent getting access to initial state

@@ -61,7 +61,7 @@ export interface WebSocketEvents {
     errors: unknown[],
     coverage?: unknown
   ) => Awaitable<void>
-  onTaskUpdate?: (packs: TaskResultPack[]) => Awaitable<void>
+  onTaskUpdate?: (packs: TaskResultPack[], events: TaskEventPack[]) => Awaitable<void>
   onUserConsoleLog?: (log: UserConsoleLog) => Awaitable<void>
   onPathsCollected?: (paths?: string[]) => Awaitable<void>
   onSpecsCollected?: (specs?: SerializedTestSpecification[]) => Awaitable<void>

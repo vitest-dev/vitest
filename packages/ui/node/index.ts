@@ -55,6 +55,19 @@ export default (ctx: Vitest): Plugin => {
         const clientDist = resolve(fileURLToPath(import.meta.url), '../client')
         const clientIndexHtml = fs.readFileSync(resolve(clientDist, 'index.html'), 'utf-8')
 
+        // server.middlewares.use(function vitestAttachment(req, res, next) {
+        //   if (!req.url) {
+        //     return
+        //   }
+
+        //   // TODO: validation, use IDs instead
+        //   const url = new URL(req.url, 'http://localhost')
+        //   if (url.pathname === '__vitest_attachment__') {
+        //     const path = url.searchParams.get('path')
+        //     res.setHeader('Content-Type', 'image/png')
+        //   }
+        // })
+
         // serve index.html with api token
         // eslint-disable-next-line prefer-arrow-callback
         server.middlewares.use(function vitestUiHtmlMiddleware(req, res, next) {
