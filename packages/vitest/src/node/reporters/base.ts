@@ -657,7 +657,7 @@ export abstract class BaseReporter implements Reporter {
         task: tasks[0],
       })
 
-      if (tasks[0].type === 'test' && tasks[0].annotations) {
+      if (tasks[0].type === 'test' && tasks[0].annotations.length) {
         const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
         this.printAnnotations(test, 'error', 1)
         this.error()

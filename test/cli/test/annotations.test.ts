@@ -39,40 +39,47 @@ describe('API', () => {
     const events: string[] = []
     const annotations: Record<string, ReadonlyArray<TestAnnotation>> = {}
 
-    const { stderr } = await runInlineTests({ 'basic.test.ts': annotationTest }, {
-      ...options,
-      includeTaskLocation: true,
-      reporters: [
-        'default',
-        {
-          onTestCaseAnnotate(testCase, annotation) {
-            const path = annotation.attachment?.path?.replace(testCase.project.config.root, '<root>')
-            events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} ${path}`)
+    const { stderr } = await runInlineTests(
+      {
+        'basic.test.ts': annotationTest,
+        'test-3.js': '',
+        'test-4.js': '',
+      },
+      {
+        ...options,
+        includeTaskLocation: true,
+        reporters: [
+          'default',
+          {
+            onTestCaseAnnotate(testCase, annotation) {
+              const path = annotation.attachment?.path?.replace(testCase.project.config.root, '<root>').replace(/\w+\.js$/, '<hash>.js')
+              events.push(`[annotate] ${testCase.name} ${annotation.message} ${annotation.type} ${path}`)
+            },
+            onTestCaseReady(testCase) {
+              events.push(`[ready] ${testCase.name}`)
+            },
+            onTestCaseResult(testCase) {
+              events.push(`[result] ${testCase.name}`)
+              annotations[testCase.name] = testCase.annotations().map((annotation) => {
+                if (annotation.attachment?.path) {
+                  annotation.attachment.path = annotation.attachment.path.replace(
+                    testCase.project.config.root,
+                    '<root>',
+                  ).replace(/\w+\.js$/, '<hash>.js')
+                }
+                if (annotation.location) {
+                  annotation.location.file = annotation.location.file.replace(
+                    testCase.project.config.root,
+                    '<root>',
+                  )
+                }
+                return annotation
+              })
+            },
           },
-          onTestCaseReady(testCase) {
-            events.push(`[ready] ${testCase.name}`)
-          },
-          onTestCaseResult(testCase) {
-            events.push(`[result] ${testCase.name}`)
-            annotations[testCase.name] = testCase.annotations().map((annotation) => {
-              if (annotation.attachment?.path) {
-                annotation.attachment.path = annotation.attachment.path.replace(
-                  testCase.project.config.root,
-                  '<root>',
-                )
-              }
-              if (annotation.location) {
-                annotation.location.file = annotation.location.file.replace(
-                  testCase.project.config.root,
-                  '<root>',
-                )
-              }
-              return annotation
-            })
-          },
-        },
-      ],
-    })
+        ],
+      },
+    )
 
     expect(stderr).toBe('')
     expect(events).toMatchInlineSnapshot(`
@@ -80,8 +87,8 @@ describe('API', () => {
         "[ready] simple",
         "[annotate] simple 1 notice undefined",
         "[annotate] simple 2 warning undefined",
-        "[annotate] simple 3 notice <root>/test-3.js",
-        "[annotate] simple 4 warning <root>/test-4.js",
+        "[annotate] simple 3 notice <root>/.vitest-attachments/3-<hash>.js",
+        "[annotate] simple 4 warning <root>/.vitest-attachments/4-<hash>.js",
         "[result] simple",
         "[ready] second",
         "[annotate] second 5 notice undefined",
@@ -136,7 +143,8 @@ describe('API', () => {
           },
           {
             "attachment": {
-              "path": "<root>/test-3.js",
+              "contentType": "text/javascript",
+              "path": "<root>/.vitest-attachments/3-<hash>.js",
             },
             "location": {
               "column": 3,
@@ -148,7 +156,8 @@ describe('API', () => {
           },
           {
             "attachment": {
-              "path": "<root>/test-4.js",
+              "contentType": "text/javascript",
+              "path": "<root>/.vitest-attachments/4-<hash>.js",
             },
             "location": {
               "column": 3,
@@ -167,7 +176,11 @@ describe('API', () => {
 describe('reporters', () => {
   test('tap reporter prints annotations', async () => {
     const { stdout } = await runInlineTests(
-      { 'basic.test.ts': annotationTest },
+      {
+        'basic.test.ts': annotationTest,
+        'test-3.js': '',
+        'test-4.js': '',
+      },
       { reporters: ['tap'] },
     )
 
@@ -194,7 +207,11 @@ describe('reporters', () => {
 
   test('tap-flat reporter prints annotations', async () => {
     const { stdout } = await runInlineTests(
-      { 'basic.test.ts': annotationTest },
+      {
+        'basic.test.ts': annotationTest,
+        'test-3.js': '',
+        'test-4.js': '',
+      },
       { reporters: ['tap-flat'] },
     )
 
@@ -215,7 +232,11 @@ describe('reporters', () => {
 
   test('junit reporter prints annotations', async () => {
     const { stdout } = await runInlineTests(
-      { 'basic.test.ts': annotationTest },
+      {
+        'basic.test.ts': annotationTest,
+        'test-3.js': '',
+        'test-4.js': '',
+      },
       { reporters: ['junit'] },
     )
 
@@ -256,7 +277,11 @@ describe('reporters', () => {
 
   test('github-actions reporter prints annotations', async () => {
     const { stdout, ctx } = await runInlineTests(
-      { 'basic.test.ts': annotationTest },
+      {
+        'basic.test.ts': annotationTest,
+        'test-3.js': '',
+        'test-4.js': '',
+      },
       { reporters: ['github-actions'] },
     )
 
@@ -282,7 +307,11 @@ describe('reporters', () => {
 
   test('verbose non-tty reporter prints annotations', async () => {
     const { stdout } = await runInlineTests(
-      { 'basic.test.ts': annotationTest },
+      {
+        'basic.test.ts': annotationTest,
+        'test-3.js': '',
+        'test-4.js': '',
+      },
       { reporters: [['verbose', { isTTY: false }]] },
     )
 
