@@ -2,7 +2,7 @@ import type { File, Suite, Task, TaskResult } from 'vitest'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { getDuration } from '../../../packages/vitest/src/node/reporters/junit'
-import { runVitest } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 const root = resolve(__dirname, '../fixtures')
 
@@ -36,6 +36,7 @@ test('calc the duration used by junit', () => {
     mode: 'run',
     result,
     file,
+    timeout: 0,
     context: null as any,
     suite,
     meta: {},
@@ -119,8 +120,8 @@ test('options.classname changes classname property', async () => {
 
   // All classname attributes should have the custom value
   expect(xml.match(/<testcase classname="a\.test\.ts"/g)).toBeNull()
-  expect(xml.match(/<testcase classname="/g)).toHaveLength(13)
-  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(13)
+  expect(xml.match(/<testcase classname="/g)).toHaveLength(16)
+  expect(xml.match(/<testcase classname="some-custom-classname"/g)).toHaveLength(16)
 })
 
 test('options.suiteName changes name property', async () => {
@@ -168,4 +169,14 @@ test.each([true, false])('addFileAttribute %s', async (t) => {
     include: ['ok.test.ts'],
   })
   expect(stabilizeReport(stdout)).matchSnapshot()
+})
+
+test('many errors without warning', async () => {
+  const { stderr } = await runVitestCli(
+    'run',
+    '--reporter=junit',
+    '--root',
+    resolve(import.meta.dirname, '../fixtures/many-errors'),
+  )
+  expect(stderr).not.toContain('MaxListenersExceededWarning')
 })

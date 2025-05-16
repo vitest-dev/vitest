@@ -73,8 +73,9 @@ export function stringify(
     })
   }
 
+  // Prevents infinite loop https://github.com/vitest-dev/vitest/issues/7249
   return result.length >= MAX_LENGTH && maxDepth > 1
-    ? stringify(object, Math.floor(maxDepth / 2))
+    ? stringify(object, Math.floor(Math.min(maxDepth, Number.MAX_SAFE_INTEGER) / 2), { maxLength, ...options })
     : result
 }
 
@@ -109,6 +110,9 @@ export function format(...args: unknown[]): string {
           return '-0'
         }
         if (typeof value === 'object' && value !== null) {
+          if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
+            return value.toString()
+          }
           return inspect(value, { depth: 0, colors: false })
         }
         return String(value)

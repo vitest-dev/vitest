@@ -1,10 +1,11 @@
 import { format, stringify } from 'vitest/utils'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
+import { getBrowserRunner } from './runner'
 
-const { Date, console } = globalThis
+const { Date, console, performance } = globalThis
 
-export function setupConsoleLogSpy() {
+export function setupConsoleLogSpy(): void {
   const {
     log,
     info,
@@ -71,7 +72,7 @@ export function setupConsoleLogSpy() {
     if (!(label in timeLabels)) {
       sendLog('stderr', `Timer "${label}" does not exist`)
     }
-    else if (start) {
+    else if (typeof start !== 'undefined') {
       const duration = end - start
       sendLog('stdout', `${label}: ${duration} ms`)
     }
@@ -95,6 +96,13 @@ export function setupConsoleLogSpy() {
 function stdout(base: (...args: unknown[]) => void) {
   return (...args: unknown[]) => {
     base(...args)
+    // ignore shadow root logs from wdio
+    // https://github.com/webdriverio/webdriverio/discussions/14221
+    if (args[0] === '[WDIO]') {
+      if (args[1] === 'newShadowRoot' || args[1] === 'removeShadowRoot') {
+        return
+      }
+    }
     sendLog('stdout', processLog(args))
   }
 }
@@ -134,7 +142,8 @@ function sendLog(
     = getConfig().printConsoleTrace && !disableStack
       ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
       : undefined
-  rpc().sendLog({
+  const runner = getBrowserRunner()
+  rpc().sendLog(runner?.method || 'run', {
     origin,
     content,
     browser: true,

@@ -1,40 +1,109 @@
+import type { BrowserRPC, IframeChannelEvent } from '@vitest/browser/client'
 import { channel, client, onCancel } from '@vitest/browser/client'
-import { page, userEvent } from '@vitest/browser/context'
-import { collectTests, setupCommonEnv, SpyModule, startCoverageInsideWorker, startTests, stopCoverageInsideWorker } from 'vitest/browser'
+import { page, server, userEvent } from '@vitest/browser/context'
+import { parse } from 'flatted'
+import {
+  collectTests,
+  setupCommonEnv,
+  SpyModule,
+  startCoverageInsideWorker,
+  startTests,
+  stopCoverageInsideWorker,
+} from 'vitest/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
-import { setupExpectDom } from './expect-element'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
-import { createModuleMockerInterceptor } from './msw'
+import { createModuleMockerInterceptor } from './mocker-interceptor'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
+import { CommandsManager } from './utils'
 
-const cleanupSymbol = Symbol.for('vitest:component-cleanup')
+const debugVar = getConfig().env.VITEST_BROWSER_DEBUG
+const debug = debugVar && debugVar !== 'false'
+  ? (...args: unknown[]) => client.rpc.debug?.(...args.map(String))
+  : undefined
+
+channel.addEventListener('message', async (e) => {
+  await client.waitForConnection()
+
+  const data = e.data
+  debug?.('event from orchestrator', JSON.stringify(e.data))
+
+  if (!isEvent(data)) {
+    const error = new Error(`Unknown message: ${JSON.stringify(e.data)}`)
+    unhandledError(error, 'Uknown Iframe Message')
+    return
+  }
+
+  // ignore events to other iframes
+  if (!('iframeId' in data) || data.iframeId !== getBrowserState().iframeId) {
+    return
+  }
+
+  switch (data.event) {
+    case 'execute': {
+      const { method, files, context } = data
+      const state = getWorkerState()
+      const parsedContext = parse(context)
+
+      state.ctx.providedContext = parsedContext
+      state.providedContext = parsedContext
+
+      if (method === 'collect') {
+        await executeTests('collect', files).catch(err => unhandledError(err, 'Collect Error'))
+      }
+      else {
+        await executeTests('run', files).catch(err => unhandledError(err, 'Run Error'))
+      }
+      break
+    }
+    case 'cleanup': {
+      await cleanup().catch(err => unhandledError(err, 'Cleanup Error'))
+      break
+    }
+    case 'prepare': {
+      await prepare().catch(err => unhandledError(err, 'Prepare Error'))
+      break
+    }
+    case 'viewport:done':
+    case 'viewport:fail':
+    case 'viewport': {
+      break
+    }
+    default: {
+      const error = new Error(`Unknown event: ${(data as any).event}`)
+      unhandledError(error, 'Uknown Event')
+    }
+  }
+
+  channel.postMessage({
+    event: `response:${data.event}`,
+    iframeId: getBrowserState().iframeId!,
+  })
+})
 
 const url = new URL(location.href)
 const reloadStart = url.searchParams.get('__reloadStart')
+const iframeId = url.searchParams.get('iframeId')!
 
-function debug(...args: unknown[]) {
-  const debug = getConfig().env.VITEST_BROWSER_DEBUG
-  if (debug && debug !== 'false') {
-    client.rpc.debug(...args.map(String))
-  }
-}
+const commands = new CommandsManager()
+getBrowserState().commands = commands
+getBrowserState().iframeId = iframeId
 
-async function prepareTestEnvironment(files: string[]) {
-  debug('trying to resolve runner', `${reloadStart}`)
+let contextSwitched = false
+
+async function prepareTestEnvironment() {
+  debug?.('trying to resolve runner', `${reloadStart}`)
   const config = getConfig()
 
   const rpc = createSafeRpc(client)
 
   const state = getWorkerState()
 
-  state.ctx.files = files
   state.onCancel = onCancel
   state.rpc = rpc as any
 
-  // TODO: expose `worker`
   const interceptor = createModuleMockerInterceptor()
   const mocker = new VitestBrowserClientMocker(
     interceptor,
@@ -49,9 +118,54 @@ async function prepareTestEnvironment(files: string[]) {
 
   setupConsoleLogSpy()
   setupDialogsSpy()
-  setupExpectDom()
 
   const runner = await initiateRunner(state, mocker, config)
+  getBrowserState().runner = runner
+
+  // webdiverio context depends on the iframe state, so we need to switch the context,
+  // we delay this in case the user doesn't use any userEvent commands to avoid the overhead
+  if (server.provider === 'webdriverio') {
+    let switchPromise: Promise<void> | null = null
+
+    commands.onCommand(async () => {
+      if (switchPromise) {
+        await switchPromise
+      }
+      // if this is the first command, make sure we switched the command context to an iframe
+      if (!contextSwitched) {
+        switchPromise = rpc.wdioSwitchContext('iframe').finally(() => {
+          switchPromise = null
+          contextSwitched = true
+        })
+        await switchPromise
+      }
+    })
+  }
+
+  state.durations.prepare = performance.now() - state.durations.prepare
+
+  return {
+    runner,
+    config,
+    state,
+  }
+}
+
+let preparedData:
+  | Awaited<ReturnType<typeof prepareTestEnvironment>>
+  | undefined
+
+async function executeTests(method: 'run' | 'collect', files: string[]) {
+  if (!preparedData) {
+    throw new Error(`Data was not properly initialized. This is a bug in Vitest. Please, open a new issue with reproduction.`)
+  }
+
+  debug?.('runner resolved successfully')
+
+  const { runner, state } = preparedData
+
+  state.ctx.files = files
+  runner.setMethod(method)
 
   const version = url.searchParams.get('browserv') || ''
   files.forEach((filename) => {
@@ -61,119 +175,84 @@ async function prepareTestEnvironment(files: string[]) {
     }
   })
 
-  onCancel.then((reason) => {
-    runner.onCancel?.(reason)
-  })
+  debug?.('prepare time', state.durations.prepare, 'ms')
 
-  return {
-    runner,
-    config,
-    state,
+  for (const file of files) {
+    state.filepath = file
+
+    if (method === 'run') {
+      await startTests([file], runner)
+    }
+    else {
+      await collectTests([file], runner)
+    }
   }
 }
 
-function done(files: string[]) {
-  channel.postMessage({
-    type: 'done',
-    filenames: files,
-    id: getBrowserState().iframeId!,
-  })
-}
-
-async function executeTests(method: 'run' | 'collect', files: string[]) {
-  await client.waitForConnection()
-
-  debug('client is connected to ws server')
-
-  let preparedData:
-    | Awaited<ReturnType<typeof prepareTestEnvironment>>
-    | undefined
-    | false
-
-  // if importing /@id/ failed, we reload the page waiting until Vite prebundles it
-  try {
-    preparedData = await prepareTestEnvironment(files)
-  }
-  catch (error: any) {
-    debug('runner cannot be loaded because it threw an error', error.stack || error.message)
-    await client.rpc.onUnhandledError({
-      name: error.name,
-      message: error.message,
-      stack: String(error.stack),
-    }, 'Preload Error')
-    done(files)
-    return
-  }
+async function prepare() {
+  preparedData = await prepareTestEnvironment()
 
   // page is reloading
-  if (!preparedData) {
-    debug('page is reloading, waiting for the next run')
-    return
-  }
+  debug?.('runner resolved successfully')
 
-  debug('runner resolved successfully')
-
-  const { config, runner, state } = preparedData
+  const { config, state } = preparedData
 
   state.durations.prepare = performance.now() - state.durations.prepare
 
-  debug('prepare time', state.durations.prepare, 'ms')
+  debug?.('prepare time', state.durations.prepare, 'ms')
 
-  try {
-    await Promise.all([
-      setupCommonEnv(config),
-      startCoverageInsideWorker(config.coverage, executor),
-      (async () => {
-        const VitestIndex = await import('vitest')
-        Object.defineProperty(window, '__vitest_index__', {
-          value: VitestIndex,
-          enumerable: false,
-        })
-      })(),
-    ])
-
-    for (const file of files) {
-      state.filepath = file
-
-      if (method === 'run') {
-        await startTests([file], runner)
-      }
-      else {
-        await collectTests([file], runner)
-      }
-    }
-  }
-  finally {
-    try {
-      if (cleanupSymbol in page) {
-        (page[cleanupSymbol] as any)()
-      }
-      // need to cleanup for each tester
-      // since playwright keybaord API is stateful on page instance level
-      await userEvent.cleanup()
-    }
-    catch (error: any) {
-      await client.rpc.onUnhandledError({
-        name: error.name,
-        message: error.message,
-        stack: String(error.stack),
-      }, 'Cleanup Error')
-    }
-    state.environmentTeardownRun = true
-    await stopCoverageInsideWorker(config.coverage, executor).catch((error) => {
-      client.rpc.onUnhandledError({
-        name: error.name,
-        message: error.message,
-        stack: String(error.stack),
-      }, 'Coverage Error').catch(() => {})
-    })
-
-    debug('finished running tests')
-    done(files)
-  }
+  await Promise.all([
+    setupCommonEnv(config),
+    startCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }),
+    (async () => {
+      const VitestIndex = await import('vitest')
+      Object.defineProperty(window, '__vitest_index__', {
+        value: VitestIndex,
+        enumerable: false,
+      })
+    })(),
+  ])
 }
 
-// @ts-expect-error untyped global for internal use
-window.__vitest_browser_runner__.runTests = files => executeTests('run', files)
-// @ts-expect-error untyped global for internal use
-window.__vitest_browser_runner__.collectTests = files => executeTests('collect', files)
+async function cleanup() {
+  const state = getWorkerState()
+  const config = getConfig()
+  const rpc = state.rpc as any as BrowserRPC
+
+  const cleanupSymbol = Symbol.for('vitest:component-cleanup')
+
+  if (cleanupSymbol in page) {
+    try {
+      await (page[cleanupSymbol] as any)()
+    }
+    catch (error: any) {
+      await unhandledError(error, 'Cleanup Error')
+    }
+  }
+  // need to cleanup for each tester
+  // since playwright keyboard API is stateful on page instance level
+  await userEvent.cleanup()
+    .catch(error => unhandledError(error, 'Cleanup Error'))
+
+  // if isolation is disabled, Vitest reuses the same iframe and we
+  // don't need to switch the context back at all
+  if (contextSwitched) {
+    await rpc.wdioSwitchContext('parent')
+      .catch(error => unhandledError(error, 'Cleanup Error'))
+  }
+  state.environmentTeardownRun = true
+  await stopCoverageInsideWorker(config.coverage, executor, { isolate: config.browser.isolate }).catch((error) => {
+    return unhandledError(error, 'Coverage Error')
+  })
+}
+
+function unhandledError(e: Error, type: string) {
+  return client.rpc.onUnhandledError({
+    name: e.name,
+    message: e.message,
+    stack: e.stack,
+  }, type).catch(() => {})
+}
+function isEvent(data: unknown): data is IframeChannelEvent {
+  return typeof data === 'object' && !!data && 'event' in data
+}

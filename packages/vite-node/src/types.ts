@@ -1,6 +1,6 @@
 import type { EncodedSourceMap } from '@jridgewell/trace-mapping'
 import type { ViteHotContext } from 'vite/types/hot.js'
-import type { ModuleCacheMap, ViteNodeRunner } from './client'
+import type { ModuleCacheMap, ModuleExecutionInfo, ViteNodeRunner } from './client'
 
 export type Nullable<T> = T | null | undefined
 export type Arrayable<T> = T | Array<T>
@@ -87,6 +87,7 @@ export interface ViteNodeRunnerOptions {
   createHotContext?: CreateHotContextFunction
   base?: string
   moduleCache?: ModuleCacheMap
+  moduleExecutionInfo?: ModuleExecutionInfo
   interopDefault?: boolean
   requestStubs?: Record<string, any>
   debug?: boolean
@@ -140,4 +141,4 @@ export interface DebuggerOptions {
   loadDumppedModules?: boolean
 }
 
-export type { ModuleCacheMap }
+export type { ModuleCacheMap, ModuleExecutionInfo }

@@ -16,13 +16,13 @@ By default, you can use these environments:
 ::: info
 When using `jsdom` or `happy-dom` environments, Vitest follows the same rules that Vite does when importing [CSS](https://vitejs.dev/guide/features.html#css) and [assets](https://vitejs.dev/guide/features.html#static-assets). If importing external dependency fails with `unknown extension .css` error, you need to inline the whole import chain manually by adding all packages to [`server.deps.external`](/config/#server-deps-external). For example, if the error happens in `package-3` in this import chain: `source code -> package-1 -> package-2 -> package-3`, you need to add all three packages to `server.deps.external`.
 
-Since Vitest 2.0.4 the `require` of CSS and assets inside the external dependencies are resolved automatically.
+The `require` of CSS and assets inside the external dependencies are resolved automatically.
 :::
 
 ::: warning
 "Environments" exist only when running tests in Node.js.
 
-`browser` is not considered an environment in Vitest. If you wish to run part of your tests using [Browser Mode](/guide/browser/), you can create a [workspace project](/guide/browser/#workspace-config).
+`browser` is not considered an environment in Vitest. If you wish to run part of your tests using [Browser Mode](/guide/browser/), you can create a [test project](/guide/browser/#projects-config).
 :::
 
 ## Environments for Specific Files
@@ -46,7 +46,7 @@ Or you can also set [`environmentMatchGlobs`](https://vitest.dev/config/#environ
 You can create your own package to extend Vitest environment. To do so, create package with the name `vitest-environment-${name}` or specify a path to a valid JS/TS file. That package should export an object with the shape of `Environment`:
 
 ```ts
-import type { Environment } from 'vitest'
+import type { Environment } from 'vitest/environments'
 
 export default <Environment>{
   name: 'custom',

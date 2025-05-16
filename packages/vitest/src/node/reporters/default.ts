@@ -1,6 +1,7 @@
-import type { File, TaskResultPack } from '@vitest/runner'
 import type { Vitest } from '../core'
+import type { TestSpecification } from '../spec'
 import type { BaseOptions } from './base'
+import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
 import { BaseReporter } from './base'
 import { SummaryReporter } from './summary'
 
@@ -28,12 +29,46 @@ export class DefaultReporter extends BaseReporter {
     }
   }
 
-  onInit(ctx: Vitest) {
+  onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
+    this.summary?.onTestRunStart(specifications)
+  }
+
+  onTestModuleQueued(file: TestModule): void {
+    this.summary?.onTestModuleQueued(file)
+  }
+
+  onTestModuleCollected(module: TestModule): void {
+    this.summary?.onTestModuleCollected(module)
+  }
+
+  onTestModuleEnd(module: TestModule): void {
+    super.onTestModuleEnd(module)
+    this.summary?.onTestModuleEnd(module)
+  }
+
+  onTestCaseReady(test: TestCase): void {
+    this.summary?.onTestCaseReady(test)
+  }
+
+  onTestCaseResult(test: TestCase): void {
+    super.onTestCaseResult(test)
+    this.summary?.onTestCaseResult(test)
+  }
+
+  onHookStart(hook: ReportedHookContext): void {
+    this.summary?.onHookStart(hook)
+  }
+
+  onHookEnd(hook: ReportedHookContext): void {
+    this.summary?.onHookEnd(hook)
+  }
+
+  onInit(ctx: Vitest): void {
     super.onInit(ctx)
     this.summary?.onInit(ctx, { verbose: this.verbose })
   }
 
-  onPathsCollected(paths: string[] = []) {
+  onPathsCollected(paths: string[] = []): void {
     if (this.isTTY) {
       if (this.renderSucceed === undefined) {
         this.renderSucceed = !!this.renderSucceed
@@ -43,22 +78,9 @@ export class DefaultReporter extends BaseReporter {
         this.renderSucceed = paths.length <= 1
       }
     }
-
-    this.summary?.onPathsCollected(paths)
   }
 
-  onTaskUpdate(packs: TaskResultPack[]) {
-    this.summary?.onTaskUpdate(packs)
-    super.onTaskUpdate(packs)
-  }
-
-  onWatcherRerun(files: string[], trigger?: string) {
-    this.summary?.onWatcherRerun()
-    super.onWatcherRerun(files, trigger)
-  }
-
-  onFinished(files?: File[], errors?: unknown[]) {
-    this.summary?.onFinished()
-    super.onFinished(files, errors)
+  onTestRunEnd(): void {
+    this.summary?.onTestRunEnd()
   }
 }

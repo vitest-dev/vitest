@@ -1,15 +1,14 @@
 import type { DiffOptions } from '@vitest/utils/diff'
 import type {
-  Custom,
-  ExtendedContext,
   File,
   SequenceHooks,
   SequenceSetupFiles,
   Suite,
   Task,
-  TaskContext,
+  TaskEventPack,
   TaskResultPack,
   Test,
+  TestContext,
 } from './tasks'
 
 /**
@@ -40,7 +39,10 @@ export interface VitestRunnerConfig {
   diffOptions?: DiffOptions
 }
 
-export interface FileSpec {
+/**
+ * Possible options to run a single file in a test.
+ */
+export interface FileSpecification {
   filepath: string
   testLocations: number[] | undefined
 }
@@ -75,7 +77,7 @@ export interface VitestRunner {
    * Runner should listen for this method and mark tests and suites as skipped in
    * "onBeforeRunSuite" and "onBeforeRunTask" when called.
    */
-  onCancel?: (reason: CancelReason) => unknown
+  cancel?: (reason: CancelReason) => unknown
 
   /**
    * Called before running a single test. Doesn't have "result" yet.
@@ -91,7 +93,7 @@ export interface VitestRunner {
   /**
    * When the task has finished running, but before cleanup hooks are called
    */
-  onTaskFinished?: (test: Test | Custom) => unknown
+  onTaskFinished?: (test: Test) => unknown
   /**
    * Called after result and state are set.
    */
@@ -127,7 +129,7 @@ export interface VitestRunner {
   /**
    * Called, when a task is updated. The same as "onTaskUpdate" in a reporter, but this is running in the same thread as tests.
    */
-  onTaskUpdate?: (task: TaskResultPack[]) => Promise<void>
+  onTaskUpdate?: (task: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
 
   /**
    * Called before running all tests in collected paths.
@@ -141,13 +143,9 @@ export interface VitestRunner {
    * Called when new context for a test is defined. Useful if you want to add custom properties to the context.
    * If you only want to define custom context, consider using "beforeAll" in "setupFiles" instead.
    *
-   * This method is called for both "test" and "custom" handlers.
-   *
-   * @see https://vitest.dev/advanced/runner.html#your-task-function
+   * @see https://vitest.dev/advanced/runner#your-task-function
    */
-  extendTaskContext?: <T extends Test>(
-    context: TaskContext<T>
-  ) => ExtendedContext<T>
+  extendTaskContext?: (context: TestContext) => TestContext
   /**
    * Called when test and setup files are imported. Can be called in two situations: when collecting tests and when importing setup files.
    */
@@ -164,4 +162,9 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
+
+  /** @private */
+  _currentTaskStartTime?: number
+  /** @private */
+  _currentTaskTimeout?: number
 }

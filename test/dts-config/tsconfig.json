@@ -1,0 +1,12 @@
+{
+  "extends": ["./tsconfig.patch.json"],
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": [],
+    "strict": true,
+    "noEmit": true
+  },
+  "include": ["vite.config.ts"]
+}

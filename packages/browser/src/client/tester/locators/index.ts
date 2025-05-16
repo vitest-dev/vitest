@@ -1,15 +1,16 @@
-import type { BrowserRPC } from '@vitest/browser/client'
 import type {
   LocatorByRoleOptions,
   LocatorOptions,
   LocatorScreenshotOptions,
+  UserEventClearOptions,
   UserEventClickOptions,
   UserEventDragAndDropOptions,
   UserEventFillOptions,
   UserEventHoverOptions,
+  UserEventSelectOptions,
+  UserEventUploadOptions,
 } from '@vitest/browser/context'
-import type { WorkerGlobalState } from 'vitest'
-import type { BrowserRunnerState } from '../../utils'
+import type { ParsedSelector } from 'ivya'
 import { page, server } from '@vitest/browser/context'
 import {
   getByAltTextSelector,
@@ -20,13 +21,14 @@ import {
   getByTextSelector,
   getByTitleSelector,
   Ivya,
-  type ParsedSelector,
+
 } from 'ivya'
-import { ensureAwaited, getBrowserState, getWorkerState } from '../../utils'
+import { ensureAwaited, getBrowserState } from '../../utils'
 import { getElementError } from '../public-utils'
+import { escapeForTextSelector } from '../utils'
 
 // we prefer using playwright locators because they are more powerful and support Shadow DOM
-export const selectorEngine = Ivya.create({
+export const selectorEngine: Ivya = Ivya.create({
   browser: ((name: string) => {
     switch (name) {
       case 'edge':
@@ -60,15 +62,15 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_tripleClick', this.selector, options)
   }
 
-  public clear(): Promise<void> {
-    return this.triggerCommand<void>('__vitest_clear', this.selector)
+  public clear(options?: UserEventClearOptions): Promise<void> {
+    return this.triggerCommand<void>('__vitest_clear', this.selector, options)
   }
 
-  public hover(options: UserEventHoverOptions): Promise<void> {
+  public hover(options?: UserEventHoverOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_hover', this.selector, options)
   }
 
-  public unhover(options: UserEventHoverOptions): Promise<void> {
+  public unhover(options?: UserEventHoverOptions): Promise<void> {
     return this.triggerCommand<void>('__vitest_hover', 'html > body', options)
   }
 
@@ -76,7 +78,7 @@ export abstract class Locator {
     return this.triggerCommand<void>('__vitest_fill', this.selector, text, options)
   }
 
-  public async upload(files: string | string[] | File | File[]): Promise<void> {
+  public async upload(files: string | string[] | File | File[], options?: UserEventUploadOptions): Promise<void> {
     const filesPromise = (Array.isArray(files) ? files : [files]).map(async (file) => {
       if (typeof file === 'string') {
         return file
@@ -94,7 +96,7 @@ export abstract class Locator {
         base64: bas64String,
       }
     })
-    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise))
+    return this.triggerCommand<void>('__vitest_upload', this.selector, await Promise.all(filesPromise), options)
   }
 
   public dropTo(target: Locator, options: UserEventDragAndDropOptions = {}): Promise<void> {
@@ -106,7 +108,10 @@ export abstract class Locator {
     )
   }
 
-  public selectOptions(value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[]): Promise<void> {
+  public selectOptions(
+    value: HTMLElement | HTMLElement[] | Locator | Locator[] | string | string[],
+    options?: UserEventSelectOptions,
+  ): Promise<void> {
     const values = (Array.isArray(value) ? value : [value]).map((v) => {
       if (typeof v !== 'string') {
         const selector = 'element' in v ? v.selector : selectorEngine.generateSelectorSimple(v)
@@ -114,7 +119,7 @@ export abstract class Locator {
       }
       return v
     })
-    return this.triggerCommand('__vitest_selectOptions', this.selector, values)
+    return this.triggerCommand('__vitest_selectOptions', this.selector, values, options)
   }
 
   public screenshot(options: Omit<LocatorScreenshotOptions, 'base64'> & { base64: true }): Promise<{
@@ -163,6 +168,42 @@ export abstract class Locator {
     return this.locator(getByTitleSelector(title, options))
   }
 
+  public filter(filter: LocatorOptions): Locator {
+    const selectors = []
+
+    if (filter?.hasText) {
+      selectors.push(`internal:has-text=${escapeForTextSelector(filter.hasText, false)}`)
+    }
+
+    if (filter?.hasNotText) {
+      selectors.push(`internal:has-not-text=${escapeForTextSelector(filter.hasNotText, false)}`)
+    }
+
+    if (filter?.has) {
+      const locator = filter.has as Locator
+      selectors.push(`internal:has=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+    }
+
+    if (filter?.hasNot) {
+      const locator = filter.hasNot as Locator
+      selectors.push(`internal:has-not=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+    }
+
+    if (!selectors.length) {
+      throw new Error(`Locator.filter expects at least one filter. None provided.`)
+    }
+
+    return this.locator(selectors.join(' >> '))
+  }
+
+  public and(locator: Locator): Locator {
+    return this.locator(`internal:and=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+  }
+
+  public or(locator: Locator): Locator {
+    return this.locator(`internal:or=${JSON.stringify(locator._pwSelector || locator.selector)}`)
+  }
+
   public query(): Element | null {
     const parsedSelector = this._parsedSelector || (this._parsedSelector = selectorEngine.parseSelector(this._pwSelector || this.selector))
     return selectorEngine.querySelector(parsedSelector, document.documentElement, true)
@@ -185,28 +226,32 @@ export abstract class Locator {
     return this.elements().map(element => this.elementLocator(element))
   }
 
-  private get state(): BrowserRunnerState {
-    return getBrowserState()
+  public nth(index: number): Locator {
+    return this.locator(`nth=${index}`)
   }
 
-  private get worker(): WorkerGlobalState {
-    return getWorkerState()
+  public first(): Locator {
+    return this.nth(0)
   }
 
-  private get rpc(): BrowserRPC {
-    return this.worker.rpc as any as BrowserRPC
+  public last(): Locator {
+    return this.nth(-1)
   }
 
-  protected triggerCommand<T>(command: string, ...args: any[]) {
-    const filepath = this.worker.filepath
-      || this.worker.current?.file?.filepath
-      || undefined
+  public toString(): string {
+    return this.selector
+  }
 
-    return ensureAwaited(() => this.rpc.triggerCommand<T>(
-      this.state.contextId,
+  public toJSON(): string {
+    return this.selector
+  }
+
+  protected triggerCommand<T>(command: string, ...args: any[]): Promise<T> {
+    const commands = getBrowserState().commands
+    return ensureAwaited(error => commands.triggerCommand<T>(
       command,
-      filepath,
       args,
+      error,
     ))
   }
 }

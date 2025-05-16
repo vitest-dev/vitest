@@ -32,7 +32,11 @@ export const client = (function createVitestClient() {
         },
         onFinished(_files, errors) {
           explorerTree.endRun()
-          testRunState.value = 'idle'
+          // don't change the testRunState.value here:
+          // - when saving the file in the codemirror requires explorer tree endRun to finish (multiple microtasks)
+          // - if we change here the state before the tasks states are updated, the cursor position will be lost
+          // - line moved to composables/explorer/collector.ts::refreshExplorer after calling updateRunningTodoTests
+          // testRunState.value = 'idle'
           unhandledErrors.value = (errors || []).map(parseError)
         },
         onFinishedReportCoverage() {
@@ -153,10 +157,11 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      let [files, _config, errors] = await Promise.all([
+      let [files, _config, errors, projects] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
+        client.rpc.getResolvedProjectLabels(),
       ])
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
@@ -166,7 +171,7 @@ watch(
           return file
         })
       }
-      explorerTree.loadFiles(files)
+      explorerTree.loadFiles(files, projects)
       client.state.collectFiles(files)
       explorerTree.startRun()
       unhandledErrors.value = (errors || []).map(parseError)

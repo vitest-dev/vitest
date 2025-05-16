@@ -24,7 +24,7 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     await keyboardImplementation(
       unreleased,
       context.provider,
-      context.contextId,
+      context.sessionId,
       text,
       () => element.selectText(),
       skipAutoClose,
@@ -41,11 +41,11 @@ export const type: UserEventCommand<UserEvent['type']> = async (
     await keyboardImplementation(
       unreleased,
       context.provider,
-      context.contextId,
+      context.sessionId,
       text,
       () => browser.execute(() => {
         const element = document.activeElement as HTMLInputElement
-        if (element) {
+        if (element && typeof element.select === 'function') {
           element.select()
         }
       }),

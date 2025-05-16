@@ -1,7 +1,7 @@
 import { groupBy } from '../../utils/base'
 import { RangeLocationFilterProvidedError } from '../errors'
 
-export function parseFilter(filter: string): Filter {
+export function parseFilter(filter: string): FileFilter {
   const colonIndex = filter.lastIndexOf(':')
   if (colonIndex === -1) {
     return { filename: filter }
@@ -26,12 +26,12 @@ export function parseFilter(filter: string): Filter {
   }
 }
 
-interface Filter {
+export interface FileFilter {
   filename: string
   lineNumber?: undefined | number
 }
 
-export function groupFilters(filters: Filter[]) {
+export function groupFilters(filters: FileFilter[]): Record<string, number[]> {
   const groupedFilters_ = groupBy(filters, f => f.filename)
   const groupedFilters = Object.fromEntries(Object.entries(groupedFilters_)
     .map((entry) => {

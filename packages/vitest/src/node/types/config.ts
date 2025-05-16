@@ -8,7 +8,7 @@ import type { ViteNodeServerOptions } from 'vite-node'
 import type { ChaiConfig } from '../../integrations/chai/config'
 import type { SerializedConfig } from '../../runtime/config'
 import type { EnvironmentOptions } from '../../types/environment'
-import type { Arrayable, ErrorWithDiff, ParsedStack, ProvidedContext } from '../../types/general'
+import type { Arrayable, ErrorWithDiff, LabelColor, ParsedStack, ProvidedContext } from '../../types/general'
 import type { HappyDOMOptions } from '../../types/happy-dom-options'
 import type { JSDOMOptions } from '../../types/jsdom-options'
 import type {
@@ -16,6 +16,7 @@ import type {
   BuiltinReporters,
 } from '../reporters'
 import type { TestSequencerConstructor } from '../sequencers/types'
+import type { WatcherTriggerPattern } from '../watcher'
 import type { BenchmarkUserOptions } from './benchmark'
 import type { BrowserConfigOptions, ResolvedBrowserOptions } from './browser'
 import type { CoverageOptions, ResolvedCoverageOptions } from './coverage'
@@ -25,7 +26,7 @@ import type { Reporter } from './reporter'
 export type { CoverageOptions, ResolvedCoverageOptions }
 export type { BenchmarkUserOptions }
 export type { RuntimeConfig, SerializedConfig } from '../../runtime/config'
-export type { BrowserConfigOptions, BrowserScript } from './browser'
+export type { BrowserConfigOptions, BrowserInstanceOption, BrowserScript } from './browser'
 export type { CoverageIstanbulOptions, CoverageV8Options } from './coverage'
 export type { SequenceHooks, SequenceSetupFiles } from '@vitest/runner'
 
@@ -49,6 +50,11 @@ export type ApiConfig = Pick<
 export type { EnvironmentOptions, HappyDOMOptions, JSDOMOptions }
 
 export type VitestRunMode = 'test' | 'benchmark'
+
+export interface ProjectName {
+  label: string
+  color?: LabelColor
+}
 
 interface SequenceOptions {
   /**
@@ -99,7 +105,7 @@ interface SequenceOptions {
    * - `stack` will order "after" hooks in reverse order, "before" hooks will run sequentially
    * - `list` will order hooks in the order they are defined
    * - `parallel` will run hooks in a single group in parallel
-   * @default 'parallel'
+   * @default 'stack'
    */
   hooks?: SequenceHooks
 }
@@ -238,7 +244,7 @@ export interface InlineConfig {
   /**
    * Name of the project. Will be used to display in the reporter.
    */
-  name?: string
+  name?: string | ProjectName
 
   /**
    * Benchmark options.
@@ -314,7 +320,7 @@ export interface InlineConfig {
    *
    * Format: [glob, environment-name]
    *
-   * @deprecated use [`workspace`](https://vitest.dev/config/#environmentmatchglobs) instead
+   * @deprecated use [`projects`](https://vitest.dev/config/#projects) instead
    * @default []
    * @example [
    *   // all tests in tests/dom will run in jsdom
@@ -371,7 +377,7 @@ export interface InlineConfig {
    *
    * Format: [glob, pool-name]
    *
-   * @deprecated use [`workspace`](https://vitest.dev/config/#poolmatchglobs) instead
+   * @deprecated use [`projects`](https://vitest.dev/config/#projects) instead
    * @default []
    * @example [
    *   // all tests in "forks" directory will run using "poolOptions.forks" API
@@ -383,7 +389,13 @@ export interface InlineConfig {
   poolMatchGlobs?: [string, Exclude<Pool, 'browser'>][]
 
   /**
+   * Options for projects
+   */
+  projects?: TestProjectConfiguration[]
+
+  /**
    * Path to a workspace configuration file
+   * @deprecated use `projects` instead
    */
   workspace?: string | TestProjectConfiguration[]
 
@@ -454,9 +466,11 @@ export interface InlineConfig {
   /**
    * Silent mode
    *
+   * Use `'passed-only'` to see logs from failing tests only.
+   *
    * @default false
    */
-  silent?: boolean
+  silent?: boolean | 'passed-only'
 
   /**
    * Hide logs for skipped tests
@@ -483,6 +497,12 @@ export interface InlineConfig {
    * @default ['**\/package.json/**', '**\/{vitest,vite}.config.*\/**']
    */
   forceRerunTriggers?: string[]
+
+  /**
+   * Pattern configuration to rerun only the tests that are affected
+   * by the changes of specific files in the repository.
+   */
+  watchTriggerPatterns?: WatcherTriggerPattern[]
 
   /**
    * Coverage options
@@ -815,7 +835,7 @@ export interface InlineConfig {
   /**
    * By default, Vitest automatically intercepts console logging during tests for extra formatting of test file, test title, etc...
    * This is also required for console log preview on Vitest UI.
-   * However, disabling such interception might help when you want to debug a code with normal synchronus terminal console logging.
+   * However, disabling such interception might help when you want to debug a code with normal synchronous terminal console logging.
    *
    * This option has no effect on browser pool since Vitest preserves original logging on browser devtools.
    *
@@ -840,7 +860,7 @@ export interface InlineConfig {
 
 export interface TypecheckConfig {
   /**
-   * Run typechecking tests alongisde regular tests.
+   * Run typechecking tests alongside regular tests.
    */
   enabled?: boolean
   /**
@@ -965,6 +985,7 @@ export interface UserConfig extends InlineConfig {
 export interface ResolvedConfig
   extends Omit<
     Required<UserConfig>,
+    | 'project'
     | 'config'
     | 'filters'
     | 'browser'
@@ -987,9 +1008,12 @@ export interface ResolvedConfig
     | 'setupFiles'
     | 'snapshotEnvironment'
     | 'bail'
+    | 'name'
   > {
   mode: VitestRunMode
 
+  name: ProjectName['label']
+  color?: ProjectName['color']
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number
@@ -1013,9 +1037,10 @@ export interface ResolvedConfig
 
   defines: Record<string, any>
 
-  api?: ApiConfig
+  api: ApiConfig & { token: string }
   cliExclude?: string[]
 
+  project: string[]
   benchmark?: Required<
     Omit<BenchmarkUserOptions, 'outputFile' | 'compare' | 'outputJson'>
   > &
@@ -1081,14 +1106,17 @@ type NonProjectOptions =
   | 'maxWorkers'
   | 'minWorkers'
   | 'fileParallelism'
+  | 'workspace'
+  | 'watchTriggerPatterns'
 
 export type ProjectConfig = Omit<
-  UserConfig,
+  InlineConfig,
   NonProjectOptions
   | 'sequencer'
   | 'deps'
   | 'poolOptions'
 > & {
+  mode?: string
   sequencer?: Omit<SequenceOptions, 'sequencer' | 'seed'>
   deps?: Omit<DepsOptions, 'moduleDirectories'>
   poolOptions?: {
@@ -1119,7 +1147,7 @@ export type UserProjectConfigExport =
   | Promise<UserWorkspaceConfig>
   | UserProjectConfigFn
 
-export type TestProjectConfiguration = string | (UserProjectConfigExport & {
+export type TestProjectInlineConfiguration = (UserWorkspaceConfig & {
   /**
    * Relative path to the extendable config. All other options will be merged with this config.
    * If `true`, the project will inherit all options from the root config.
@@ -1127,6 +1155,12 @@ export type TestProjectConfiguration = string | (UserProjectConfigExport & {
    */
   extends?: string | true
 })
+
+export type TestProjectConfiguration =
+  string
+  | TestProjectInlineConfiguration
+  | Promise<UserWorkspaceConfig>
+  | UserProjectConfigFn
 
 /** @deprecated use `TestProjectConfiguration` instead */
 export type WorkspaceProjectConfiguration = TestProjectConfiguration

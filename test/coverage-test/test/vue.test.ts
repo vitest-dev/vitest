@@ -22,99 +22,34 @@ test('files should not contain query parameters', () => {
 
 test('coverage results matches snapshot', async () => {
   const coverageMap = await readCoverageMap()
-  const summary = coverageMap.getCoverageSummary()
 
-  if (isV8Provider()) {
-    const { branches, functions, lines, statements } = summary
-
-    expect({ branches, functions }).toMatchInlineSnapshot(`
+  if (isV8Provider() && isBrowser()) {
+    expect(coverageMap).toMatchInlineSnapshot(`
       {
-        "branches": {
-          "covered": 5,
-          "pct": 83.33,
-          "skipped": 0,
-          "total": 6,
-        },
-        "functions": {
-          "covered": 3,
-          "pct": 60,
-          "skipped": 0,
-          "total": 5,
-        },
+        "branches": "5/6 (83.33%)",
+        "functions": "3/5 (60%)",
+        "lines": "40/48 (83.33%)",
+        "statements": "40/48 (83.33%)",
       }
     `)
-
-    // Lines and statements are not 100% identical between node and browser - not sure if it's Vue, Vite or Vitest issue
-    if (isBrowser()) {
-      expect({ lines, statements }).toMatchInlineSnapshot(`
-        {
-          "lines": {
-            "covered": 40,
-            "pct": 83.33,
-            "skipped": 0,
-            "total": 48,
-          },
-          "statements": {
-            "covered": 40,
-            "pct": 83.33,
-            "skipped": 0,
-            "total": 48,
-          },
-        }
-      `)
-    }
-    else {
-      expect({ lines, statements }).toMatchInlineSnapshot(`
-        {
-          "lines": {
-            "covered": 36,
-            "pct": 81.81,
-            "skipped": 0,
-            "total": 44,
-          },
-          "statements": {
-            "covered": 36,
-            "pct": 81.81,
-            "skipped": 0,
-            "total": 44,
-          },
-        }
-      `)
-    }
+  }
+  else if (isV8Provider()) {
+    expect(coverageMap).toMatchInlineSnapshot(`
+      {
+        "branches": "5/6 (83.33%)",
+        "functions": "3/5 (60%)",
+        "lines": "35/43 (81.39%)",
+        "statements": "35/43 (81.39%)",
+      }
+    `)
   }
   else {
-    expect(summary).toMatchInlineSnapshot(`
+    expect(coverageMap).toMatchInlineSnapshot(`
       {
-        "branches": {
-          "covered": 5,
-          "pct": 83.33,
-          "skipped": 0,
-          "total": 6,
-        },
-        "branchesTrue": {
-          "covered": 0,
-          "pct": "Unknown",
-          "skipped": 0,
-          "total": 0,
-        },
-        "functions": {
-          "covered": 5,
-          "pct": 71.42,
-          "skipped": 0,
-          "total": 7,
-        },
-        "lines": {
-          "covered": 13,
-          "pct": 81.25,
-          "skipped": 0,
-          "total": 16,
-        },
-        "statements": {
-          "covered": 14,
-          "pct": 82.35,
-          "skipped": 0,
-          "total": 17,
-        },
+        "branches": "5/6 (83.33%)",
+        "functions": "5/7 (71.42%)",
+        "lines": "13/16 (81.25%)",
+        "statements": "14/17 (82.35%)",
       }
     `)
   }

@@ -10,7 +10,7 @@ When writing tests it's only a matter of time before you need to create a "fake"
 Always remember to clear or restore mocks before or after each test run to undo mock state changes between runs! See [`mockReset`](/api/mock#mockreset) docs for more info.
 :::
 
-If you are not familliar with `vi.fn`, `vi.mock` or `vi.spyOn` methods, check the [API section](/api/vi) first.
+If you are not familiar with `vi.fn`, `vi.mock` or `vi.spyOn` methods, check the [API section](/api/vi) first.
 
 ## Dates
 
@@ -177,6 +177,7 @@ Vitest supports mocking Vite [virtual modules](https://vitejs.dev/guide/api-plug
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
+import { resolve } from 'node:path'
 export default defineConfig({
   test: {
     alias: {
@@ -384,7 +385,7 @@ module.exports = fs.promises
 import { readFileSync } from 'node:fs'
 
 export function readHelloWorld(path) {
-  return readFileSync(path)
+  return readFileSync(path, 'utf-8')
 }
 ```
 
@@ -429,17 +430,20 @@ it('can return a value multiple times', () => {
 
 ## Requests
 
-Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It will let you mock both `REST` and `GraphQL` network requests, and is framework agnostic.
+Because Vitest runs in Node, mocking network requests is tricky; web APIs are not available, so we need something that will mimic network behavior for us. We recommend [Mock Service Worker](https://mswjs.io/) to accomplish this. It allows you to mock `http`, `WebSocket` and `GraphQL` network requests, and is framework agnostic.
 
 Mock Service Worker (MSW) works by intercepting the requests your tests make, allowing you to use it without changing any of your application code. In-browser, this uses the [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API). In Node.js, and for Vitest, it uses the [`@mswjs/interceptors`](https://github.com/mswjs/interceptors) library. To learn more about MSW, read their [introduction](https://mswjs.io/docs/)
 
 ### Configuration
 
 You can use it like below in your [setup file](/config/#setupfiles)
-```js
+
+::: code-group
+
+```js [HTTP Setup]
 import { afterAll, afterEach, beforeAll } from 'vitest'
 import { setupServer } from 'msw/node'
-import { graphql, http, HttpResponse } from 'msw'
+import { http, HttpResponse } from 'msw'
 
 const posts = [
   {
@@ -457,29 +461,84 @@ export const restHandlers = [
   }),
 ]
 
-const graphqlHandlers = [
-  graphql.query('ListPosts', () => {
-    return HttpResponse.json(
-      {
-        data: { posts },
-      },
-    )
-  }),
-]
-
-const server = setupServer(...restHandlers, ...graphqlHandlers)
+const server = setupServer(...restHandlers)
 
 // Start server before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 
-//  Close server after all tests
+// Close server after all tests
 afterAll(() => server.close())
 
-// Reset handlers after each test `important for test isolation`
+// Reset handlers after each test for test isolation
 afterEach(() => server.resetHandlers())
 ```
 
-> Configuring the server with `onUnhandleRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
+```js [GraphQL Setup]
+import { afterAll, afterEach, beforeAll } from 'vitest'
+import { setupServer } from 'msw/node'
+import { graphql, HttpResponse } from 'msw'
+
+const posts = [
+  {
+    userId: 1,
+    id: 1,
+    title: 'first post title',
+    body: 'first post body',
+  },
+  // ...
+]
+
+const graphqlHandlers = [
+  graphql.query('ListPosts', () => {
+    return HttpResponse.json({
+      data: { posts },
+    })
+  }),
+]
+
+const server = setupServer(...graphqlHandlers)
+
+// Start server before all tests
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+
+// Close server after all tests
+afterAll(() => server.close())
+
+// Reset handlers after each test for test isolation
+afterEach(() => server.resetHandlers())
+```
+
+```js [WebSocket Setup]
+import { afterAll, afterEach, beforeAll } from 'vitest'
+import { setupServer } from 'msw/node'
+import { ws } from 'msw'
+
+const chat = ws.link('wss://chat.example.com')
+
+const wsHandlers = [
+  chat.addEventListener('connection', ({ client }) => {
+    client.addEventListener('message', (event) => {
+      console.log('Received message from client:', event.data)
+      // Echo the received message back to the client
+      client.send(`Server received: ${event.data}`)
+    })
+  }),
+]
+
+const server = setupServer(...wsHandlers)
+
+// Start server before all tests
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+
+// Close server after all tests
+afterAll(() => server.close())
+
+// Reset handlers after each test for test isolation
+afterEach(() => server.resetHandlers())
+```
+:::
+
+> Configuring the server with `onUnhandledRequest: 'error'` ensures that an error is thrown whenever there is a request that does not have a corresponding request handler.
 
 ### More
 There is much more to MSW. You can access cookies and query parameters, define mock error responses, and much more! To see all you can do with MSW, read [their documentation](https://mswjs.io/docs).
@@ -549,6 +608,10 @@ class Dog {
     return 'animal'
   }
 
+  greet = (): string => {
+    return `Hi! My name is ${this.name}!`
+  }
+
   speak(): string {
     return 'bark!'
   }
@@ -563,6 +626,8 @@ We can re-create this class with ES5 functions:
 ```ts
 const Dog = vi.fn(function (name) {
   this.name = name
+  // mock instance methods in the constructor, each instance will have its own spy
+  this.greet = vi.fn(() => `Hi! My name is ${this.name}!`)
 })
 
 // notice that static methods are mocked directly on the function,
@@ -570,10 +635,30 @@ const Dog = vi.fn(function (name) {
 Dog.getType = vi.fn(() => 'mocked animal')
 
 // mock the "speak" and "feed" methods on every instance of a class
-// all `new Dog()` instances will inherit these spies
+// all `new Dog()` instances will inherit and share these spies
 Dog.prototype.speak = vi.fn(() => 'loud bark!')
 Dog.prototype.feed = vi.fn()
 ```
+
+::: warning
+If a non-primitive is returned from the constructor function, that value will become the result of the new expression. In this case the `[[Prototype]]` may not be correctly bound:
+
+```ts
+const CorrectDogClass = vi.fn(function (name) {
+  this.name = name
+})
+
+const IncorrectDogClass = vi.fn(name => ({
+  name
+}))
+
+const Marti = new CorrectDogClass('Marti')
+const Newt = new IncorrectDogClass('Newt')
+
+Marti instanceof CorrectDogClass // ✅ true
+Newt instanceof IncorrectDogClass // ❌ false!
+```
+:::
 
 ::: tip WHEN TO USE?
 Generally speaking, you would re-create a class like this inside the module factory if the class is re-exported from another module:
@@ -614,14 +699,22 @@ test('can feed dogs', () => {
 ```
 :::
 
-Now, when we create a new instance of the `Dog` class its `speak` method (alongside `feed`) is already mocked:
+Now, when we create a new instance of the `Dog` class its `speak` method (alongside `feed` and `greet`) is already mocked:
 
 ```ts
-const dog = new Dog('Cooper')
-dog.speak() // loud bark!
+const Cooper = new Dog('Cooper')
+Cooper.speak() // loud bark!
+Cooper.greet() // Hi! My name is Cooper!
 
 // you can use built-in assertions to check the validity of the call
-expect(dog.speak).toHaveBeenCalled()
+expect(Cooper.speak).toHaveBeenCalled()
+expect(Cooper.greet).toHaveBeenCalled()
+
+const Max = new Dog('Max')
+
+// methods assigned to the prototype are shared between instances
+expect(Max.speak).toHaveBeenCalled()
+expect(Max.greet).not.toHaveBeenCalled()
 ```
 
 We can reassign the return value for a specific instance:

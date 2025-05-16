@@ -49,6 +49,7 @@ passedFile.tasks.push({
   suite,
   meta: {},
   file: passedFile,
+  timeout: 0,
   result: {
     state: 'pass',
     duration: 1.4422860145568848,
@@ -65,16 +66,16 @@ const error: ErrorWithDiff = {
 }
 error.showDiff = true
 error.stack = 'AssertionError: expected 2.23606797749979 to equal 2\n'
-+ '    at /vitest/test/core/test/basic.test.ts:8:32\n'
-+ '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
-+ '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
-+ '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'
-+ '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n'
-+ '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n'
-+ '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n'
-+ '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n'
-+ '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
-+ '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
+  + '    at /vitest/test/core/test/basic.test.ts:8:32\n'
+  + '    at /vitest/packages/vitest/dist/vi-ac0504aa.js:73:26\n'
+  + '    at runTest (/vitest/packages/vitest/dist/entry.js:1689:40)\n'
+  + '    at async runSuite (/vitest/packages/vitest/dist/entry.js:1741:13)\n'
+  + '    at async runSuites (/vitest/packages/vitest/dist/entry.js:1769:5)\n'
+  + '    at async startTests (/vitest/packages/vitest/dist/entry.js:1774:3)\n'
+  + '    at async /vitest/packages/vitest/dist/entry.js:1798:7\n'
+  + '    at async withEnv (/vitest/packages/vitest/dist/entry.js:1481:5)\n'
+  + '    at async run (/vitest/packages/vitest/dist/entry.js:1797:5)\n'
+  + '    at async file:///vitest/node_modules/.pnpm/tinypool@0.1.1/node_modules/tinypool/dist/esm/worker.js:96:20'
 
 const tasks: Task[] = [
   {
@@ -95,6 +96,7 @@ const tasks: Task[] = [
       column: 32,
       line: 8,
     },
+    timeout: 0,
     context: null as any,
   },
   {
@@ -104,6 +106,7 @@ const tasks: Task[] = [
     mode: 'run',
     suite,
     fails: undefined,
+    timeout: 0,
     meta: {},
     file,
     result: { state: 'pass', duration: 1.0237109661102295 },
@@ -117,6 +120,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     meta: {},
+    timeout: 0,
     file,
     result: undefined,
     context: null as any,
@@ -129,6 +133,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     meta: {},
+    timeout: 0,
     file,
     result: { state: 'pass', duration: 100.50598406791687 },
     context: null as any,
@@ -141,6 +146,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     meta: {},
+    timeout: 0,
     file,
     result: { state: 'pass', duration: 20.184875011444092 },
     context: null as any,
@@ -153,6 +159,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     meta: {},
+    timeout: 0,
     file,
     result: { state: 'pass', duration: 0.33245420455932617 },
     context: null as any,
@@ -165,6 +172,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     meta: {},
+    timeout: 0,
     file,
     result: { state: 'pass', duration: 19.738605976104736 },
     context: null as any,
@@ -177,6 +185,7 @@ const tasks: Task[] = [
     suite,
     fails: undefined,
     meta: {},
+    timeout: 0,
     file,
     result: { state: 'pass', duration: 0.1923508644104004 },
     context: null as any,
@@ -195,6 +204,7 @@ const tasks: Task[] = [
     name: 'todo test',
     mode: 'todo',
     suite,
+    timeout: 0,
     fails: undefined,
     meta: {},
     file,

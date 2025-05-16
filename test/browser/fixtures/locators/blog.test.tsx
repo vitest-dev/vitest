@@ -18,9 +18,15 @@ test('renders blog posts', async () => {
 
   await expect.element(secondPost.getByRole('heading')).toHaveTextContent('qui est esse')
 
+  // TODO: click doesn't work on webdriverio when iframe is scaled
   await userEvent.click(secondPost.getByRole('button', { name: 'Delete' }))
 
   expect(screen.getByRole('listitem').all()).toHaveLength(3)
+
+  expect(screen.getByRole('listitem').nth(0).element()).toHaveTextContent(/molestiae ut ut quas/)
+  await expect.element(screen.getByRole('listitem').nth(666)).not.toBeInTheDocument()
+  expect(screen.getByRole('listitem').first().element()).toHaveTextContent(/molestiae ut ut quas/)
+  expect(screen.getByRole('listitem').last().element()).toHaveTextContent(/eum et est/)
 
   expect(screen.getByPlaceholder('non-existing').query()).not.toBeInTheDocument()
 })

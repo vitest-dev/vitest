@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { viewport } from '~/composables/browser'
 import type { ViewportSize } from '~/composables/browser'
+import { viewport } from '~/composables/browser'
 import {
   hideRightPanel,
   panels,
@@ -59,7 +59,7 @@ const marginLeft = computed(() => {
   <div h="full" flex="~ col">
     <div p="3" h-10 flex="~ gap-2" items-center bg-header border="b base">
       <IconButton
-        v-show="panels.navigation <= 2"
+        v-show="panels.navigation <= 15"
         v-tooltip.bottom="'Show Navigation Panel'"
         title="Show Navigation Panel"
         rotate-180

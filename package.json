@@ -1,9 +1,9 @@
 {
   "name": "@vitest/monorepo",
   "type": "module",
-  "version": "2.2.0-beta.2",
+  "version": "3.2.0-beta.1",
   "private": true,
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "pnpm@10.9.0",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
@@ -36,42 +36,43 @@
     "test:browser:playwright": "pnpm -C test/browser run test:playwright"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.8.0",
-    "@antfu/ni": "^0.23.0",
-    "@playwright/test": "^1.48.2",
-    "@rollup/plugin-commonjs": "^28.0.1",
+    "@antfu/eslint-config": "^4.12.0",
+    "@antfu/ni": "^24.3.0",
+    "@playwright/test": "^1.52.0",
+    "@rollup/plugin-commonjs": "^28.0.3",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.3.0",
-    "@types/node": "^22.9.0",
-    "@types/ws": "^8.5.13",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@types/node": "^22.14.1",
+    "@types/ws": "catalog:",
     "@vitest/browser": "workspace:*",
     "@vitest/coverage-istanbul": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "bumpp": "^9.8.1",
-    "changelogithub": "^0.13.11",
-    "esbuild": "^0.24.0",
-    "eslint": "^9.14.0",
-    "magic-string": "^0.30.12",
-    "pathe": "^1.1.2",
+    "bumpp": "^10.1.0",
+    "changelogithub": "^13.13.0",
+    "esbuild": "^0.25.3",
+    "eslint": "^9.26.0",
+    "magic-string": "^0.30.17",
+    "pathe": "^2.0.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.25.0",
-    "rollup-plugin-dts": "^6.1.1",
-    "rollup-plugin-esbuild": "^6.1.1",
-    "rollup-plugin-license": "^3.5.3",
-    "tinyglobby": "^0.2.10",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.0",
+    "rollup": "^4.40.0",
+    "rollup-plugin-dts": "^6.2.1",
+    "rollup-plugin-license": "^3.6.0",
+    "tinyglobby": "catalog:",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "unplugin-isolated-decl": "^0.13.9",
+    "unplugin-oxc": "^0.3.5",
+    "vite": "^6.2.0",
     "vitest": "workspace:*",
-    "zx": "^8.2.2"
+    "zx": "^8.5.3"
   },
   "pnpm": {
     "overrides": {
       "@vitest/browser": "workspace:*",
       "@vitest/ui": "workspace:*",
       "acorn": "8.11.3",
-      "mlly": "^1.7.3",
+      "mlly": "^1.7.4",
       "rollup": "$rollup",
       "vite": "$vite",
       "vitest": "workspace:*"
@@ -82,12 +83,22 @@
       ]
     },
     "patchedDependencies": {
-      "@types/chai@4.3.6": "patches/@types__chai@4.3.6.patch",
-      "@sinonjs/fake-timers@11.1.0": "patches/@sinonjs__fake-timers@11.1.0.patch",
+      "@sinonjs/fake-timers@14.0.0": "patches/@sinonjs__fake-timers@14.0.0.patch",
       "cac@6.7.14": "patches/cac@6.7.14.patch",
       "@types/sinonjs__fake-timers@8.1.5": "patches/@types__sinonjs__fake-timers@8.1.5.patch",
       "v8-to-istanbul@9.3.0": "patches/v8-to-istanbul@9.3.0.patch",
       "acorn@8.11.3": "patches/acorn@8.11.3.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@sveltejs/kit",
+      "@swc/core",
+      "edgedriver",
+      "esbuild",
+      "geckodriver",
+      "msw",
+      "sharp",
+      "svelte-preprocess",
+      "vue-demi"
+    ]
   }
 }

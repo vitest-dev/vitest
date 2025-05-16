@@ -1,9 +1,10 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { SerializedConfig } from './config'
 import type { VitestExecutor } from './execute'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
+import timersPromises from 'node:timers/promises'
 import util from 'node:util'
 import { collectTests, startTests } from '@vitest/runner'
 import { KNOWN_ASSET_TYPES } from 'vite-node/constants'
@@ -22,7 +23,7 @@ import { getWorkerState } from './utils'
 
 export async function run(
   method: 'run' | 'collect',
-  files: FileSpec[],
+  files: FileSpecification[],
   config: SerializedConfig,
   executor: VitestExecutor,
 ): Promise<void> {
@@ -56,13 +57,14 @@ export async function run(
   globalThis.__vitest_required__ = {
     util,
     timers,
+    timersPromises,
   }
 
   installSourcemapsSupport({
     getSourceMap: source => workerState.moduleCache.getSourceMap(source),
   })
 
-  await startCoverageInsideWorker(config.coverage, executor)
+  await startCoverageInsideWorker(config.coverage, executor, { isolate: false })
 
   if (config.chaiConfig) {
     setupChaiConfig(config.chaiConfig)
@@ -77,7 +79,7 @@ export async function run(
 
   workerState.onCancel.then((reason) => {
     closeInspector(config)
-    runner.onCancel?.(reason)
+    runner.cancel?.(reason)
   })
 
   workerState.durations.prepare
@@ -101,7 +103,7 @@ export async function run(
     vi.restoreAllMocks()
   }
 
-  await stopCoverageInsideWorker(config.coverage, executor)
+  await stopCoverageInsideWorker(config.coverage, executor, { isolate: false })
 }
 
 function resolveCss(mod: NodeJS.Module) {

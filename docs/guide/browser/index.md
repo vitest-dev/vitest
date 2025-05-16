@@ -8,7 +8,7 @@ outline: deep
 This page provides information about the experimental browser mode feature in the Vitest API, which allows you to run your tests in the browser natively, providing access to browser globals like window and document. This feature is currently under development, and APIs may change in the future.
 
 ::: tip
-If you are looking for documentation for `expect`, `vi` or any general API like workspaces or type testing, refer to the ["Getting Started" guide](/guide/).
+If you are looking for documentation for `expect`, `vi` or any general API like test projects or type testing, refer to the ["Getting Started" guide](/guide/).
 :::
 
 <img alt="Vitest UI" img-light src="/ui-browser-1-light.png">
@@ -95,7 +95,7 @@ bun add -D vitest @vitest/browser webdriverio
 
 ## Configuration
 
-To activate browser mode in your Vitest configuration, you can use the `--browser` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
+To activate browser mode in your Vitest configuration, you can use the `--browser=name` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -104,7 +104,10 @@ export default defineConfig({
     browser: {
       provider: 'playwright', // or 'webdriverio'
       enabled: true,
-      name: 'chromium', // browser name is required
+      // at least one instance is required
+      instances: [
+        { browser: 'chromium' },
+      ],
     },
   }
 })
@@ -129,7 +132,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -144,7 +149,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -159,7 +166,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -174,7 +183,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
@@ -189,97 +200,58 @@ export default defineConfig({
     browser: {
       enabled: true,
       provider: 'playwright',
-      name: 'chromium',
+      instances: [
+        { browser: 'chromium' },
+      ],
     }
   }
 })
 ```
 :::
 
-If you need to run some tests using Node-based runner, you can define a [workspace](/guide/workspace) file with separate configurations for different testing strategies:
+If you need to run some tests using Node-based runner, you can define a [`projects`](/guide/projects) option with separate configurations for different testing strategies:
 
-{#workspace-config}
-
-```ts [vitest.workspace.ts]
-import { defineWorkspace } from 'vitest/config'
-
-export default defineWorkspace([
-  {
-    test: {
-      // an example of file based convention,
-      // you don't have to follow it
-      include: [
-        'tests/unit/**/*.{test,spec}.ts',
-        'tests/**/*.unit.{test,spec}.ts',
-      ],
-      name: 'unit',
-      environment: 'node',
-    },
-  },
-  {
-    test: {
-      // an example of file based convention,
-      // you don't have to follow it
-      include: [
-        'tests/browser/**/*.{test,spec}.ts',
-        'tests/**/*.browser.{test,spec}.ts',
-      ],
-      name: 'browser',
-      browser: {
-        enabled: true,
-        name: 'chrome',
-      },
-    },
-  },
-])
-```
-
-### Provider Configuration
-
-:::tabs key:provider
-== Playwright
-You can configure how Vitest [launches the browser](https://playwright.dev/docs/api/class-browsertype#browser-type-launch) and creates the [page context](https://playwright.dev/docs/api/class-browsercontext) via [`providerOptions`](/config/#browser-provideroptions) field:
+{#projects-config}
 
 ```ts [vitest.config.ts]
-export default defineConfig({
-  test: {
-    browser: {
-      providerOptions: {
-        launch: {
-          devtools: true,
-        },
-        context: {
-          geolocation: {
-            latitude: 45,
-            longitude: -30,
-          },
-          reducedMotion: 'reduce',
-        },
-      },
-    },
-  },
-})
-```
-== WebdriverIO
-You can configure what [options](https://webdriver.io/docs/configuration#webdriverio) Vitest should use when starting a browser via [`providerOptions`](/config/#browser-provideroptions) field:
+import { defineConfig } from 'vitest/config'
 
-```ts
 export default defineConfig({
   test: {
-    browser: {
-      browser: 'chrome',
-      providerOptions: {
-        region: 'eu',
-        capabilities: {
-          browserVersion: '27.0',
-          platformName: 'Windows 10',
+    projects: [
+      {
+        test: {
+          // an example of file based convention,
+          // you don't have to follow it
+          include: [
+            'tests/unit/**/*.{test,spec}.ts',
+            'tests/**/*.unit.{test,spec}.ts',
+          ],
+          name: 'unit',
+          environment: 'node',
         },
       },
-    },
+      {
+        test: {
+          // an example of file based convention,
+          // you don't have to follow it
+          include: [
+            'tests/browser/**/*.{test,spec}.ts',
+            'tests/**/*.browser.{test,spec}.ts',
+          ],
+          name: 'browser',
+          browser: {
+            enabled: true,
+            instances: [
+              { browser: 'chromium' },
+            ],
+          },
+        },
+      },
+    ],
   },
 })
 ```
-:::
 
 ## Browser Option Types
 
@@ -297,7 +269,7 @@ The browser option in Vitest depends on the provider. Vitest will fail, if you p
 
 ## TypeScript
 
-By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfile) or a [config file](/config/) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
+By default, TypeScript doesn't recognize providers options and extra `expect` properties. If you don't use any providers, make sure the `@vitest/browser/matchers` is referenced somewhere in your tests, [setup file](/config/#setupfiles) or a [config file](/config/) to pick up the extra `expect` definitions. If you are using custom providers, make sure to add `@vitest/browser/providers/playwright` or `@vitest/browser/providers/webdriverio` to the same file so TypeScript can pick up definitions for custom options:
 
 ::: code-group
 ```ts [default]
@@ -361,7 +333,7 @@ npx vitest --browser=chrome
 Or you can provide browser options to CLI with dot notation:
 
 ```sh
-npx vitest --browser.name=chrome --browser.headless
+npx vitest --browser.headless
 ```
 
 By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/#browser-viewport).
@@ -390,7 +362,7 @@ export default defineConfig({
 You can also set headless mode using the `--browser.headless` flag in the CLI, like this:
 
 ```sh
-npx vitest --browser.name=chrome --browser.headless
+npx vitest --browser.headless
 ```
 
 In this case, Vitest will run in headless mode using the Chrome browser.
@@ -401,15 +373,43 @@ Headless mode is not available by default. You need to use either [`playwright`]
 
 ## Examples
 
-Vitest provides packages to render components for several popular frameworks out of the box:
+By default, you don't need any external packages to work with the Browser Mode:
+
+```js [example.test.js]
+import { expect, test } from 'vitest'
+import { page } from '@vitest/browser/context'
+import { render } from './my-render-function.js'
+
+test('properly handles form inputs', async () => {
+  render() // mount DOM elements
+
+  // Asserts initial state.
+  await expect.element(page.getByText('Hi, my name is Alice')).toBeInTheDocument()
+
+  // Get the input DOM node by querying the associated label.
+  const usernameInput = page.getByLabelText(/username/i)
+
+  // Type the name into the input. This already validates that the input
+  // is filled correctly, no need to check the value manually.
+  await usernameInput.fill('Bob')
+
+  await expect.element(page.getByText('Hi, my name is Bob')).toBeInTheDocument()
+})
+```
+
+However, Vitest also provides packages to render components for several popular frameworks out of the box:
 
 - [`vitest-browser-vue`](https://github.com/vitest-dev/vitest-browser-vue) to render [vue](https://vuejs.org) components
 - [`vitest-browser-svelte`](https://github.com/vitest-dev/vitest-browser-svelte) to render [svelte](https://svelte.dev) components
 - [`vitest-browser-react`](https://github.com/vitest-dev/vitest-browser-react) to render [react](https://react.dev) components
 
+Community packages are available for other frameworks:
+
+- [`vitest-browser-lit`](https://github.com/EskiMojo14/vitest-browser-lit) to render [lit](https://lit.dev) components
+
 If your framework is not represented, feel free to create your own package - it is a simple wrapper around the framework renderer and `page.elementLocator` API. We will add a link to it on this page. Make sure it has a name starting with `vitest-browser-`.
 
-Besides rendering components and locating elements, you will also need to make assertions. Vitest bundles the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
+Besides rendering components and locating elements, you will also need to make assertions. Vitest forks the [`@testing-library/jest-dom`](https://github.com/testing-library/jest-dom) library to provide a wide range of DOM assertions out of the box. Read more at the [Assertions API](/guide/browser/assertion-api).
 
 ```ts
 import { expect } from 'vitest'
@@ -481,6 +481,21 @@ test('loads and displays greeting', async () => {
   await expect.element(screen.getByRole('button')).toBeDisabled()
 })
 ```
+```ts [lit]
+import { render } from 'vitest-browser-lit'
+import { html } from 'lit'
+import './greeter-button'
+
+test('greeting appears on click', async () => {
+  const screen = render(html`<greeter-button name="World"></greeter-button>`)
+
+  const button = screen.getByRole('button')
+  await button.click()
+  const greeting = screen.getByText(/hello world/iu)
+
+  await expect.element(greeting).toBeInTheDocument()
+})
+```
 :::
 
 Vitest doesn't support all frameworks out of the box, but you can use external tools to run tests with these frameworks. We also encourage the community to create their own `vitest-browser` wrappers - if you have one, feel free to add it to the examples above.
@@ -490,6 +505,8 @@ For unsupported frameworks, we recommend using `testing-library` packages:
 - [`@testing-library/preact`](https://testing-library.com/docs/preact-testing-library/intro) to render [preact](https://preactjs.com) components
 - [`@solidjs/testing-library`](https://testing-library.com/docs/solid-testing-library/intro) to render [solid](https://www.solidjs.com) components
 - [`@marko/testing-library`](https://testing-library.com/docs/marko-testing-library/intro) to render [marko](https://markojs.com) components
+
+You can also see more examples in [`browser-examples`](https://github.com/vitest-tests/browser-examples) repository.
 
 ::: warning
 `testing-library` provides a package `@testing-library/user-event`. We do not recommend using it directly because it simulates events instead of actually triggering them - instead, use [`userEvent`](/guide/browser/interactivity-api) imported from `@vitest/browser/context` that uses Chrome DevTools Protocol or Webdriver (depending on the provider) under the hood.
@@ -527,7 +544,7 @@ test('shows the children when the checkbox is checked', async () => {
 })
 ```
 ```tsx [solid]
-// baed on @testing-library/solid API
+// based on @testing-library/solid API
 // https://testing-library.com/docs/solid-testing-library/api
 
 import { render } from '@testing-library/solid'
@@ -554,7 +571,7 @@ it('uses params', async () => {
 })
 ```
 ```ts [marko]
-// baed on @testing-library/marko API
+// based on @testing-library/marko API
 // https://testing-library.com/docs/marko-testing-library/api
 
 import { render, screen } from '@marko/testing-library'
@@ -564,7 +581,7 @@ test('renders a message', async () => {
   const { baseElement } = await render(Greeting, { name: 'Marko' })
   const screen = page.elementLocator(baseElement)
   await expect.element(screen.getByText(/Marko/)).toBeInTheDocument()
-  await expect.element(container.firstChild).toMatchInlineSnapshot(`
+  expect(container.firstChild).toMatchInlineSnapshot(`
     <h1>Hello, Marko!</h1>
   `)
 })

@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner/types/runner'
+import type { FileSpecification } from '@vitest/runner/types/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
@@ -16,12 +16,12 @@ import { groupBy } from '../../utils/base'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
-function createWorkerChannel(project: TestProject) {
+function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { collect }), {
     eventNames: ['onCancel'],
     post(v) {
       port.postMessage(v)
@@ -96,14 +96,14 @@ export function createThreadsPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: FileSpec[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
       const paths = files.map(f => f.filepath)
       ctx.state.clearFiles(project, paths)
 
-      const { workerPort, port } = createWorkerChannel(project)
+      const { workerPort, port } = createWorkerChannel(project, name === 'collect')
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'threads',

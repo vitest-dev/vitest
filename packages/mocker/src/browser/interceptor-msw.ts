@@ -3,7 +3,7 @@ import type { SetupWorker, StartOptions } from 'msw/browser'
 import type { ManualMockedModule, MockedModule } from '../registry'
 import type { ModuleMockerInterceptor } from './interceptor'
 import { MockerRegistry } from '../registry'
-import { cleanUrl } from '../utils'
+import { cleanUrl, createManualModuleSource } from '../utils'
 
 export interface ModuleMockerMSWInterceptorOptions {
   /**
@@ -61,16 +61,7 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
 
   private async resolveManualMock(mock: ManualMockedModule) {
     const exports = Object.keys(await mock.resolve())
-    const module = `const module = globalThis[${this.options.globalThisAccessor!}].getFactoryModule("${mock.url}");`
-    const keys = exports
-      .map((name) => {
-        if (name === 'default') {
-          return `export default module["default"];`
-        }
-        return `export const ${name} = module["${name}"];`
-      })
-      .join('\n')
-    const text = `${module}\n${keys}`
+    const text = createManualModuleSource(mock.url, exports, this.options.globalThisAccessor)
     return new Response(text, {
       headers: {
         'Content-Type': 'application/javascript',
@@ -128,10 +119,11 @@ export class ModuleMockerMSWInterceptor implements ModuleMockerInterceptor {
   }
 }
 
-const timestampRegexp = /(\?|&)t=\d{13}/
-const versionRegexp = /(\?|&)v=\w{8}/
+const trailingSeparatorRE = /[?&]$/
+const timestampRE = /\bt=\d{13}&?\b/
+const versionRE = /\bv=\w{8}&?\b/
 function cleanQuery(url: string) {
-  return url.replace(timestampRegexp, '').replace(versionRegexp, '')
+  return url.replace(timestampRE, '').replace(versionRE, '').replace(trailingSeparatorRE, '')
 }
 
 function passthrough() {

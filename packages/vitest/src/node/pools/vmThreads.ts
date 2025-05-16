@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextTestEnvironment } from '../../types/worker'
@@ -19,12 +19,12 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createWorkerChannel(project: TestProject) {
+function createWorkerChannel(project: TestProject, collect: boolean) {
   const channel = new MessageChannel()
   const port = channel.port2
   const workerPort = channel.port1
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { collect }), {
     eventNames: ['onCancel'],
     post(v) {
       port.postMessage(v)
@@ -101,14 +101,14 @@ export function createVmThreadsPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: FileSpec[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
       const paths = files.map(f => f.filepath)
       ctx.state.clearFiles(project, paths)
 
-      const { workerPort, port } = createWorkerChannel(project)
+      const { workerPort, port } = createWorkerChannel(project, name === 'collect')
       const workerId = ++id
       const data: WorkerContext = {
         pool: 'vmThreads',
@@ -165,7 +165,7 @@ export function createVmThreadsPool(
           return configs.get(project)!
         }
 
-        const config = project.getSerializableConfig()
+        const config = project.serializedConfig
         configs.set(project, config)
         return config
       }
@@ -206,7 +206,7 @@ export function createVmThreadsPool(
 
 function getMemoryLimit(config: ResolvedConfig) {
   const memory = nodeos.totalmem()
-  const limit = getWorkerMemoryLimit(config)
+  const limit = getWorkerMemoryLimit(config, 'vmThreads')
 
   if (typeof memory === 'number') {
     return stringToBytes(limit, config.watch ? memory / 2 : memory)

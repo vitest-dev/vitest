@@ -1,6 +1,13 @@
 import type { ConfigEnv, UserConfig as ViteUserConfig } from 'vite'
 
-import type { TestProjectConfiguration, UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration } from '../node/types/config'
+import type {
+  TestProjectConfiguration,
+  TestProjectInlineConfiguration,
+  UserProjectConfigExport,
+  UserProjectConfigFn,
+  UserWorkspaceConfig,
+  WorkspaceProjectConfiguration,
+} from '../node/types/config'
 import '../node/types/vite'
 
 export { extraInlineDeps } from '../constants'
@@ -12,6 +19,7 @@ export {
   defaultExclude,
   defaultInclude,
 } from '../defaults'
+export type { WatcherTriggerPattern } from '../node/watcher'
 export { mergeConfig } from 'vite'
 export type { Plugin } from 'vite'
 
@@ -20,7 +28,14 @@ export type { ConfigEnv, ViteUserConfig }
  * @deprecated Use `ViteUserConfig` instead
  */
 export type UserConfig = ViteUserConfig
-export type { TestProjectConfiguration, UserProjectConfigExport, UserProjectConfigFn, UserWorkspaceConfig, WorkspaceProjectConfiguration }
+export type {
+  TestProjectConfiguration,
+  TestProjectInlineConfiguration,
+  UserProjectConfigExport,
+  UserProjectConfigFn,
+  UserWorkspaceConfig,
+  WorkspaceProjectConfiguration,
+}
 export type UserConfigFnObject = (env: ConfigEnv) => ViteUserConfig
 export type UserConfigFnPromise = (env: ConfigEnv) => Promise<ViteUserConfig>
 export type UserConfigFn = (
@@ -51,6 +66,9 @@ export function defineProject(config: UserProjectConfigExport): UserProjectConfi
   return config
 }
 
+/**
+ * @deprecated use the `projects` field in the root config instead
+ */
 export function defineWorkspace(config: TestProjectConfiguration[]): TestProjectConfiguration[] {
   return config
 }

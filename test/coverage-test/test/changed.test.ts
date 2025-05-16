@@ -1,7 +1,7 @@
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { beforeAll, expect } from 'vitest'
-import { readCoverageMap, runVitest, test } from '../utils'
+import { isV8Provider, readCoverageMap, runVitest, test } from '../utils'
 
 // Note that this test may fail if you have new files in "vitest/test/coverage/src"
 // and have not yet committed those
@@ -49,9 +49,43 @@ test('{ changed: "HEAD" }', async () => {
     ]
   `)
 
-  const uncoveredFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/new-uncovered-file.ts').toSummary()
-  expect(uncoveredFile.lines.pct).toBe(0)
+  const uncoveredFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/new-uncovered-file.ts')
+  const changedFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/file-to-change.ts')
 
-  const changedFile = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/file-to-change.ts').toSummary()
-  expect(changedFile.lines.pct).toBeGreaterThanOrEqual(50)
+  if (isV8Provider()) {
+    expect([uncoveredFile, changedFile]).toMatchInlineSnapshot(`
+      {
+        "<process-cwd>/fixtures/src/file-to-change.ts": {
+          "branches": "1/1 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "4/6 (66.66%)",
+          "statements": "4/6 (66.66%)",
+        },
+        "<process-cwd>/fixtures/src/new-uncovered-file.ts": {
+          "branches": "1/1 (100%)",
+          "functions": "1/1 (100%)",
+          "lines": "0/3 (0%)",
+          "statements": "0/3 (0%)",
+        },
+      }
+    `)
+  }
+  else {
+    expect([uncoveredFile, changedFile]).toMatchInlineSnapshot(`
+      {
+        "<process-cwd>/fixtures/src/file-to-change.ts": {
+          "branches": "0/0 (100%)",
+          "functions": "1/2 (50%)",
+          "lines": "1/2 (50%)",
+          "statements": "1/2 (50%)",
+        },
+        "<process-cwd>/fixtures/src/new-uncovered-file.ts": {
+          "branches": "0/0 (100%)",
+          "functions": "0/1 (0%)",
+          "lines": "0/1 (0%)",
+          "statements": "0/1 (0%)",
+        },
+      }
+    `)
+  }
 }, SKIP)

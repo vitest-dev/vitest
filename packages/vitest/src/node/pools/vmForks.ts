@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
@@ -20,7 +20,7 @@ import { createMethodsRPC } from './rpc'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-function createChildProcessChannel(project: TestProject) {
+function createChildProcessChannel(project: TestProject, collect: boolean) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -31,7 +31,7 @@ function createChildProcessChannel(project: TestProject) {
   }
 
   const rpc = createBirpc<RunnerRPC, RuntimeRPC>(
-    createMethodsRPC(project, { cacheFs: true }),
+    createMethodsRPC(project, { cacheFs: true, collect }),
     {
       eventNames: ['onCancel'],
       serialize: v8.serialize,
@@ -110,14 +110,14 @@ export function createVmForksPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: FileSpec[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
       const paths = files.map(f => f.filepath)
       ctx.state.clearFiles(project, paths)
 
-      const { channel, cleanup } = createChildProcessChannel(project)
+      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',
@@ -213,7 +213,7 @@ export function createVmForksPool(
 
 function getMemoryLimit(config: ResolvedConfig) {
   const memory = nodeos.totalmem()
-  const limit = getWorkerMemoryLimit(config)
+  const limit = getWorkerMemoryLimit(config, 'vmForks')
 
   if (typeof memory === 'number') {
     return stringToBytes(limit, config.watch ? memory / 2 : memory)

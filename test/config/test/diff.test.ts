@@ -3,8 +3,8 @@ import { expect, test } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 test.for([
-  [undefined],
-  [{ expand: false, printBasicPrototype: false }],
+  [{ expand: true }],
+  [{ printBasicPrototype: true }],
 ])(`inline diff options: %o`, async ([options]) => {
   const { ctx } = await runVitest({
     root: './fixtures/diff',

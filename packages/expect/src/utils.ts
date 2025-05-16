@@ -19,7 +19,7 @@ export function recordAsyncExpect(
   promise: Promise<any>,
   assertion: string,
   error: Error,
-) {
+): Promise<any> {
   const test = _test as Test | undefined
   // record promise for test, that resolves before test ends
   if (test && promise instanceof Promise) {
@@ -78,7 +78,7 @@ export function wrapAssertion(
   name: string,
   fn: (this: Chai.AssertionStatic & Assertion, ...args: any[]) => void,
 ) {
-  return function (this: Chai.AssertionStatic & Assertion, ...args: any[]) {
+  return function (this: Chai.AssertionStatic & Assertion, ...args: any[]): void {
     // private
     if (name !== 'withTest') {
       utils.flag(this, '_name', name)

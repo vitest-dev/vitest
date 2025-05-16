@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { runVitest } from '../../test-utils'
 
 describe('should fail', async () => {
-  const root = resolve(__dirname, '../failing')
+  const root = resolve(import.meta.dirname, '../failing')
   const files = await glob(['*.test-d.*'], { cwd: root, expandDirectories: false })
 
   it('typecheck files', async () => {
@@ -16,6 +16,7 @@ describe('should fail', async () => {
         enabled: true,
         allowJs: true,
         include: ['**/*.test-d.*'],
+        tsconfig: resolve(import.meta.dirname, '../tsconfig.fails.json'),
       },
     })
 
@@ -42,7 +43,7 @@ describe('should fail', async () => {
     })
   })
 
-  it('typecheks with custom tsconfig', async () => {
+  it('typechecks with custom tsconfig', async () => {
     const { stderr } = await runVitest({
       root,
       dir: resolve(__dirname, '..', './failing'),

@@ -1,7 +1,8 @@
 import type { File, Task } from '@vitest/runner'
+import type { Params } from './params'
 import { client, config, findById } from './client'
 import { testRunState } from './client/state'
-import { activeFileId, lineNumber, viewMode } from './params'
+import { activeFileId, lineNumber, selectedTest, viewMode } from './params'
 
 export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
@@ -18,16 +19,10 @@ export const coverageEnabled = computed(() => {
 export const mainSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-mainSizes',
   [33, 67],
-  {
-    initOnMounted: true,
-  },
 )
 export const detailSizes = useLocalStorage<[left: number, right: number]>(
   'vitest-ui_splitpanes-detailSizes',
   [33, 67],
-  {
-    initOnMounted: true,
-  },
 )
 
 // live sizes of panels in percentage
@@ -99,18 +94,22 @@ export function showDashboard(show: boolean) {
   }
 }
 
-export function navigateTo(task: Task, line: number | null = null) {
-  activeFileId.value = task.file.id
-  // reset line number
-  lineNumber.value = null
-  if (line != null) {
-    nextTick(() => {
-      lineNumber.value = line
-    })
-    viewMode.value = 'editor'
-  }
-  currentModule.value = findById(task.file.id)
+export function navigateTo({ file, line, view, test }: Params) {
+  activeFileId.value = file
+  lineNumber.value = line
+  viewMode.value = view
+  selectedTest.value = test
+  currentModule.value = findById(file)
   showDashboard(false)
+}
+
+export function showReport(task: Task) {
+  navigateTo({
+    file: task.file.id,
+    test: task.type === 'test' ? task.id : null,
+    line: null,
+    view: null,
+  })
 }
 
 export function showCoverage() {

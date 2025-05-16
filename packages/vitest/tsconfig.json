@@ -1,5 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "isolatedDeclarations": true
+  },
   "include": ["src/**/*"],
   "exclude": ["**/dist/**"]
 }

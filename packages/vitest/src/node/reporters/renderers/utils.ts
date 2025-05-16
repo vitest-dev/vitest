@@ -1,5 +1,7 @@
 import type { Task } from '@vitest/runner'
 import type { SnapshotSummary } from '@vitest/snapshot'
+import type { Formatter } from 'tinyrainbow'
+import type { TestProject } from '../../project'
 import { stripVTControlCharacters } from 'node:util'
 import { slash } from '@vitest/utils'
 import { basename, dirname, isAbsolute, relative } from 'pathe'
@@ -14,18 +16,17 @@ import {
   F_POINTER,
 } from './figures'
 
-export const spinnerMap = new WeakMap<Task, () => string>()
-export const hookSpinnerMap = new WeakMap<Task, Map<string, () => string>>()
-export const pointer = c.yellow(F_POINTER)
-export const skipped = c.dim(c.gray(F_DOWN))
+export const pointer: string = c.yellow(F_POINTER)
+export const skipped: string = c.dim(c.gray(F_DOWN))
+export const benchmarkPass: string = c.green(F_DOT)
+export const testPass: string = c.green(F_CHECK)
+export const taskFail: string = c.red(F_CROSS)
+export const suiteFail: string = c.red(F_POINTER)
+export const pending: string = c.gray('·')
 
-export const benchmarkPass = c.green(F_DOT)
-export const testPass = c.green(F_CHECK)
-export const taskFail = c.red(F_CROSS)
-export const suiteFail = c.red(F_POINTER)
-export const pending = c.gray('·')
+const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
 
-export function getCols(delta = 0) {
+function getCols(delta = 0) {
   let length = process.stdout?.columns
   if (!length || Number.isNaN(length)) {
     length = 30
@@ -33,8 +34,18 @@ export function getCols(delta = 0) {
   return Math.max(length + delta, 0)
 }
 
-export function divider(text?: string, left?: number, right?: number) {
+export function errorBanner(message: string): string {
+  return divider(c.bold(c.bgRed(` ${message} `)), null, null, c.red)
+}
+
+export function divider(
+  text?: string,
+  left?: number | null,
+  right?: number | null,
+  color?: Formatter,
+): string {
   const cols = getCols()
+  const c = color || ((text: string) => text)
 
   if (text) {
     const textLength = stripVTControlCharacters(text).length
@@ -47,12 +58,12 @@ export function divider(text?: string, left?: number, right?: number) {
     }
     left = Math.max(0, left)
     right = Math.max(0, right)
-    return `${F_LONG_DASH.repeat(left)}${text}${F_LONG_DASH.repeat(right)}`
+    return `${c(F_LONG_DASH.repeat(left))}${text}${c(F_LONG_DASH.repeat(right))}`
   }
   return F_LONG_DASH.repeat(cols)
 }
 
-export function formatTestPath(root: string, path: string) {
+export function formatTestPath(root: string, path: string): string {
   if (isAbsolute(path)) {
     path = relative(root, path)
   }
@@ -67,7 +78,7 @@ export function formatTestPath(root: string, path: string) {
 export function renderSnapshotSummary(
   rootDir: string,
   snapshots: SnapshotSummary,
-) {
+): string[] {
   const summary: string[] = []
 
   if (snapshots.added) {
@@ -124,7 +135,7 @@ export function renderSnapshotSummary(
   return summary
 }
 
-export function countTestErrors(tasks: Task[]) {
+export function countTestErrors(tasks: Task[]): number {
   return tasks.reduce((c, i) => c + (i.result?.errors?.length || 0), 0)
 }
 
@@ -132,7 +143,7 @@ export function getStateString(
   tasks: Task[],
   name = 'tests',
   showTotal = true,
-) {
+): string {
   if (tasks.length === 0) {
     return c.dim(`no ${name}`)
   }
@@ -154,7 +165,7 @@ export function getStateString(
   )
 }
 
-export function getStateSymbol(task: Task) {
+export function getStateSymbol(task: Task): string {
   if (task.mode === 'skip' || task.mode === 'todo') {
     return skipped
   }
@@ -163,16 +174,10 @@ export function getStateSymbol(task: Task) {
     return pending
   }
 
-  if (task.result.state === 'run') {
+  if (task.result.state === 'run' || task.result.state === 'queued') {
     if (task.type === 'suite') {
       return pointer
     }
-    let spinner = spinnerMap.get(task)
-    if (!spinner) {
-      spinner = elegantSpinner()
-      spinnerMap.set(task, spinner)
-    }
-    return c.yellow(spinner())
   }
 
   if (task.result.state === 'pass') {
@@ -186,21 +191,7 @@ export function getStateSymbol(task: Task) {
   return ' '
 }
 
-export const spinnerFrames
-  = process.platform === 'win32'
-    ? ['-', '\\', '|', '/']
-    : ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
-
-export function elegantSpinner() {
-  let index = 0
-
-  return () => {
-    index = ++index % spinnerFrames.length
-    return spinnerFrames[index]
-  }
-}
-
-export function duration(time: number, locale = 'en-us') {
+export function duration(time: number, locale = 'en-us'): string {
   if (time < 1) {
     return `${Number((time * 1e3).toFixed(2)).toLocaleString(locale)} ps`
   }
@@ -224,37 +215,57 @@ export function duration(time: number, locale = 'en-us') {
   return `${Number((time / 36e11).toFixed(2)).toLocaleString(locale)} h`
 }
 
-export function formatTimeString(date: Date) {
+export function formatTimeString(date: Date): string {
   return date.toTimeString().split(' ')[0]
 }
 
-export function formatTime(time: number) {
+export function formatTime(time: number): string {
   if (time > 1000) {
     return `${(time / 1000).toFixed(2)}s`
   }
   return `${Math.round(time)}ms`
 }
 
-export function formatProjectName(name: string | undefined, suffix = ' ') {
-  if (!name) {
+export function formatProjectName(project?: Pick<TestProject, 'name' | 'color'>, suffix = ' '): string {
+  if (!project?.name) {
     return ''
   }
   if (!c.isColorSupported) {
-    return `|${name}|${suffix}`
+    return `|${project.name}|${suffix}`
   }
-  const index = name
-    .split('')
-    .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
 
-  const colors = [c.black, c.yellow, c.cyan, c.green, c.magenta]
+  let background = project.color && c[`bg${capitalize(project.color)}`]
 
-  return c.inverse(colors[index % colors.length](` ${name} `)) + suffix
+  if (!background) {
+    const index = project.name
+      .split('')
+      .reduce((acc, v, idx) => acc + v.charCodeAt(0) + idx, 0)
+
+    background = labelDefaultColors[index % labelDefaultColors.length]
+  }
+
+  return c.black(background(` ${project.name} `)) + suffix
 }
 
 export function withLabel(color: 'red' | 'green' | 'blue' | 'cyan' | 'yellow', label: string, message?: string) {
-  return `${c.bold(c.inverse(c[color](` ${label} `)))} ${message ? c[color](message) : ''}`
+  const bgColor = `bg${color.charAt(0).toUpperCase()}${color.slice(1)}` as `bg${Capitalize<typeof color>}`
+  return `${c.bold(c[bgColor](` ${label} `))} ${message ? c[color](message) : ''}`
 }
 
-export function padSummaryTitle(str: string) {
+export function padSummaryTitle(str: string): string {
   return c.dim(`${str.padStart(11)} `)
+}
+
+export function truncateString(text: string, maxLength: number): string {
+  const plainText = stripVTControlCharacters(text)
+
+  if (plainText.length <= maxLength) {
+    return text
+  }
+
+  return `${plainText.slice(0, maxLength - 1)}…`
+}
+
+function capitalize<T extends string>(text: T) {
+  return `${text[0].toUpperCase()}${text.slice(1)}` as Capitalize<T>
 }

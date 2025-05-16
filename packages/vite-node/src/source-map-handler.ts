@@ -1,6 +1,6 @@
 // adapted from https://github.com/evanw/node-source-map-support/blob/master/source-map-support.js
 // we need this because "--enable-source-maps" flag doesn't support VM
-// we make a custom implementatin because we don't need some features from source-map-support,
+// we make a custom implementation because we don't need some features from source-map-support,
 // like polyfilled Buffer, browser support, etc.
 
 import type {
@@ -467,7 +467,7 @@ interface Options {
   retrieveSourceMap?: RetrieveMapHandler
 }
 
-export const install = function (options: Options) {
+export function install(options: Options): void {
   options = options || {}
 
   // Allow sources to be found by methods other than reading the files
@@ -498,7 +498,7 @@ export const install = function (options: Options) {
   }
 }
 
-export const resetRetrieveHandlers = function () {
+export function resetRetrieveHandlers(): void {
   retrieveFileHandlers.length = 0
   retrieveMapHandlers.length = 0
 

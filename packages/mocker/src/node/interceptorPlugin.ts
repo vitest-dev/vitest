@@ -3,7 +3,7 @@ import type { MockedModuleSerialized } from '../registry'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path/posix'
 import { ManualMockedModule, MockerRegistry } from '../registry'
-import { cleanUrl } from '../utils'
+import { cleanUrl, createManualModuleSource } from '../utils'
 import { automockModule } from './automockPlugin'
 
 export interface InterceptorPluginOptions {
@@ -11,41 +11,35 @@ export interface InterceptorPluginOptions {
    * @default "__vitest_mocker__"
    */
   globalThisAccessor?: string
+  registry?: MockerRegistry
 }
 
-export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
-  const registry = new MockerRegistry()
+export function interceptorPlugin(options: InterceptorPluginOptions = {}): Plugin {
+  const registry = options.registry || new MockerRegistry()
   return {
     name: 'vitest:mocks:interceptor',
     enforce: 'pre',
-    async load(id) {
-      const mock = registry.get(id)
-      if (!mock) {
-        return
-      }
-      if (mock.type === 'manual') {
-        const exports = Object.keys(await mock.resolve())
-        const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
-        const serverUrl = (mock as any).serverUrl as string
-        const module = `const module = globalThis[${accessor}].getFactoryModule("${serverUrl}");`
-        const keys = exports
-          .map((name) => {
-            if (name === 'default') {
-              return `export default module["default"];`
-            }
-            return `export const ${name} = module["${name}"];`
-          })
-          .join('\n')
-        return `${module}\n${keys}`
-      }
-      if (mock.type === 'redirect') {
-        return readFile(mock.redirect, 'utf-8')
-      }
+    load: {
+      order: 'pre',
+      async handler(id) {
+        const mock = registry.getById(id)
+        if (!mock) {
+          return
+        }
+        if (mock.type === 'manual') {
+          const exports = Object.keys(await mock.resolve())
+          const accessor = options.globalThisAccessor || '"__vitest_mocker__"'
+          return createManualModuleSource(mock.url, exports, accessor)
+        }
+        if (mock.type === 'redirect') {
+          return readFile(mock.redirect, 'utf-8')
+        }
+      },
     },
     transform: {
       order: 'post',
       handler(code, id) {
-        const mock = registry.get(id)
+        const mock = registry.getById(id)
         if (!mock) {
           return
         }
@@ -63,17 +57,10 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
     },
     configureServer(server) {
       server.ws.on('vitest:interceptor:register', (event: MockedModuleSerialized) => {
-        const serverUrl = event.url
-        // the browsers stores the url relative to the root
-        // but on the server "id" operates on the file paths
-        event.url = join(server.config.root, event.url)
         if (event.type === 'manual') {
           const module = ManualMockedModule.fromJSON(event, async () => {
-            const keys = await getFactoryExports(serverUrl)
+            const keys = await getFactoryExports(event.url)
             return Object.fromEntries(keys.map(key => [key, null]))
-          })
-          Object.assign(module, {
-            serverUrl,
           })
           registry.add(module)
         }
@@ -88,11 +75,11 @@ export function interceptorPlugin(options: InterceptorPluginOptions): Plugin {
       })
       server.ws.on('vitest:interceptor:delete', (id: string) => {
         registry.delete(id)
-        server.ws.send('vitest:interceptor:register:delete')
+        server.ws.send('vitest:interceptor:delete:result')
       })
       server.ws.on('vitest:interceptor:invalidate', () => {
         registry.clear()
-        server.ws.send('vitest:interceptor:register:invalidate')
+        server.ws.send('vitest:interceptor:invalidate:result')
       })
 
       function getFactoryExports(url: string) {

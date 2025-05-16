@@ -140,9 +140,10 @@ describe('userEvent.click', () => {
       },
     })
 
+    // not exact due to scaling and rounding
     expect(spy).toHaveBeenCalledWith({
-      x: 200,
-      y: 150,
+      x: expect.closeTo(200, -1),
+      y: expect.closeTo(150, -1),
     })
   })
 })
@@ -538,7 +539,7 @@ describe.each(inputLike)('userEvent.type', (getElement) => {
     ])
   })
 
-  // strangly enough, original userEvent doesn't support this,
+  // strangely enough, original userEvent doesn't support this,
   // but we can implement it
   test.skipIf(server.provider === 'preview')('selectall works correctly', async () => {
     const input = document.createElement('input')
@@ -874,6 +875,7 @@ describe('uploading files', async () => {
   test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
     await userEvent.upload(input, file)
@@ -888,6 +890,7 @@ describe('uploading files', async () => {
     const file1 = new File(['hello1'], 'hello1.png', { type: 'image/png' })
     const file2 = new File(['hello2'], 'hello2.png', { type: 'image/png' })
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     input.multiple = true
     document.body.appendChild(input)
@@ -907,6 +910,7 @@ describe('uploading files', async () => {
     server.provider === 'webdriverio' && server.browser === 'firefox',
   )('can upload a file by filepath relative to test file', async () => {
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     document.body.appendChild(input)
     await userEvent.upload(input, '../src/button.css')
@@ -921,6 +925,7 @@ describe('uploading files', async () => {
     server.provider === 'webdriverio' && server.browser === 'firefox',
   )('can upload several files by filepath relative to test file', async () => {
     const input = document.createElement('input')
+    input.id = 'file'
     input.type = 'file'
     input.multiple = true
     document.body.appendChild(input)

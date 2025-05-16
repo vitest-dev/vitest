@@ -28,3 +28,8 @@ test('can handle top-level throw in self-accepting module', async () => {
   await viteNode.waitForStderr('some error')
   await viteNode.waitForStderr(`[hmr] Failed to reload ${scriptFile}. This could be due to syntax errors or importing non-existent modules. (see errors above)`)
 })
+
+test('basic', async () => {
+  const { viteNode } = await runViteNodeCli('--watch', resolve(__dirname, '../src/testMod.ts'))
+  await viteNode.waitForStdout('[deps.ts] imported')
+})

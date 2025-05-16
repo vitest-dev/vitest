@@ -1,4 +1,5 @@
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash'
+import { transformerNotationWordHighlight } from '@shikijs/transformers'
 import { withPwa } from '@vite-pwa/vitepress'
 import type { DefaultTheme } from 'vitepress'
 import { defineConfig } from 'vitepress'
@@ -30,6 +31,10 @@ export default ({ mode }: { mode: string }) => {
     lang: 'en-US',
     title: vitestName,
     description: vitestDescription,
+    srcExclude: [
+      '**/guide/examples/*',
+      '**/guide/cli-generated.md',
+    ],
     locales: {
       root: {
         label: 'English',
@@ -51,12 +56,10 @@ export default ({ mode }: { mode: string }) => {
       ['meta', { property: 'og:description', content: vitestDescription }],
       ['meta', { property: 'og:url', content: ogUrl }],
       ['meta', { property: 'og:image', content: ogImage }],
-      ['meta', { name: 'twitter:title', content: vitestName }],
-      ['meta', { name: 'twitter:description', content: vitestDescription }],
-      ['meta', { name: 'twitter:image', content: ogImage }],
       ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
       ['link', { rel: 'preload', as: 'style', onload: 'this.onload=null;this.rel=\'stylesheet\'', href: font }],
       ['noscript', {}, `<link rel="stylesheet" crossorigin="anonymous" href="${font}" />`],
+      ['link', { rel: 'me', href: 'https://m.webtoo.ls/@vitest' }],
       ['link', { rel: 'mask-icon', href: '/logo.svg', color: '#ffffff' }],
       ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' }],
     ],
@@ -66,6 +69,7 @@ export default ({ mode }: { mode: string }) => {
         groupIconVitePlugin({
           customIcon: {
             'CLI': 'vscode-icons:file-type-shell',
+            'vitest.shims': 'vscode-icons:file-type-vitest',
             'vitest.workspace': 'vscode-icons:file-type-vitest',
             'vitest.config': 'vscode-icons:file-type-vitest',
             '.spec.ts': 'vscode-icons:file-type-testts',
@@ -87,8 +91,9 @@ export default ({ mode }: { mode: string }) => {
         dark: 'github-dark',
       },
       codeTransformers: mode === 'development'
-        ? []
+        ? [transformerNotationWordHighlight()]
         : [
+            transformerNotationWordHighlight(),
             transformerTwoslash({
               processHoverInfo: (info) => {
                 if (info.includes(process.cwd())) {
@@ -98,6 +103,7 @@ export default ({ mode }: { mode: string }) => {
               },
             }),
           ],
+      languages: ['js', 'jsx', 'ts', 'tsx'],
     },
     themeConfig: {
       logo: '/logo.svg',
@@ -146,12 +152,20 @@ export default ({ mode }: { mode: string }) => {
           items: [
             {
               text: 'Advanced API',
-              link: '/advanced/api',
+              link: '/advanced/api/',
               activeMatch: '^/advanced/',
             },
             {
-              text: 'Team',
-              link: '/team',
+              items: [
+                {
+                  text: 'Blog',
+                  link: '/blog',
+                },
+                {
+                  text: 'Team',
+                  link: '/team',
+                },
+              ],
             },
           ],
         },
@@ -188,6 +202,10 @@ export default ({ mode }: { mode: string }) => {
                   text: 'v1.x',
                   link: 'https://v1.vitest.dev/',
                 },
+                {
+                  text: 'v2.x',
+                  link: 'https://v2.vitest.dev/',
+                },
               ],
             },
           ],
@@ -209,6 +227,27 @@ export default ({ mode }: { mode: string }) => {
                 text: 'Getting Started',
                 link: '/guide/browser/',
                 docFooterText: 'Getting Started | Browser Mode',
+              },
+            ],
+          },
+          {
+            text: 'Configuration',
+            collapsed: false,
+            items: [
+              {
+                text: 'Browser Config Reference',
+                link: '/guide/browser/config',
+                docFooterText: 'Browser Config Reference | Browser Mode',
+              },
+              {
+                text: 'Configuring Playwright',
+                link: '/guide/browser/playwright',
+                docFooterText: 'Configuring Playwright | Browser Mode',
+              },
+              {
+                text: 'Configuring WebdriverIO',
+                link: '/guide/browser/webdriverio',
+                docFooterText: 'Configuring WebdriverIO | Browser Mode',
               },
             ],
           },
@@ -243,7 +282,26 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
-          footer(),
+          {
+            text: 'Guides',
+            collapsed: false,
+            items: [
+              {
+                text: 'Multiple Setups',
+                link: '/guide/browser/multiple-setups',
+                docFooterText: 'Multiple Setups | Browser Mode',
+              },
+            ],
+          },
+          {
+            items: [
+              ...footer(),
+              {
+                text: 'Node API Reference',
+                link: '/advanced/api/',
+              },
+            ],
+          },
         ],
         '/advanced': [
           {
@@ -251,12 +309,58 @@ export default ({ mode }: { mode: string }) => {
             collapsed: false,
             items: [
               {
-                text: 'Vitest Node API',
-                link: '/advanced/api',
+                text: 'Node API',
+                items: [
+                  {
+                    text: 'Getting Started',
+                    link: '/advanced/api/',
+                  },
+                  {
+                    text: 'Vitest',
+                    link: '/advanced/api/vitest',
+                  },
+                  {
+                    text: 'TestProject',
+                    link: '/advanced/api/test-project',
+                  },
+                  {
+                    text: 'TestSpecification',
+                    link: '/advanced/api/test-specification',
+                  },
+                ],
+              },
+              {
+                text: 'Test Task API',
+                items: [
+                  {
+                    text: 'TestCase',
+                    link: '/advanced/api/test-case',
+                  },
+                  {
+                    text: 'TestSuite',
+                    link: '/advanced/api/test-suite',
+                  },
+                  {
+                    text: 'TestModule',
+                    link: '/advanced/api/test-module',
+                  },
+                  {
+                    text: 'TestCollection',
+                    link: '/advanced/api/test-collection',
+                  },
+                ],
+              },
+              {
+                text: 'Plugin API',
+                link: '/advanced/api/plugin',
               },
               {
                 text: 'Runner API',
                 link: '/advanced/runner',
+              },
+              {
+                text: 'Reporters API',
+                link: '/advanced/api/reporters',
               },
               {
                 text: 'Task Metadata',
@@ -282,9 +386,12 @@ export default ({ mode }: { mode: string }) => {
               },
             ],
           },
-          footer(),
+          {
+            items: footer(),
+          },
         ],
         '/team': [],
+        '/blog': [],
         '/': [
           {
             text: 'Introduction',
@@ -308,7 +415,7 @@ export default ({ mode }: { mode: string }) => {
                 link: '/guide/browser',
               },
               {
-                text: 'Advanced API',
+                text: 'Node API Reference',
                 link: '/advanced/api',
               },
               {
@@ -325,19 +432,17 @@ export default ({ mode }: { mode: string }) => {
   }))
 }
 
-function footer(): DefaultTheme.SidebarItem {
-  return {
-    items: [
-      {
-        text: 'Config Reference',
-        link: '/config/',
-      },
-      {
-        text: 'Test API Reference',
-        link: '/api/',
-      },
-    ],
-  }
+function footer(): DefaultTheme.SidebarItem[] {
+  return [
+    {
+      text: 'Config Reference',
+      link: '/config/',
+    },
+    {
+      text: 'Test API Reference',
+      link: '/api/',
+    },
+  ]
 }
 
 function introduction(): DefaultTheme.SidebarItem[] {
@@ -372,8 +477,8 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/filtering',
     },
     {
-      text: 'Workspace',
-      link: '/guide/workspace',
+      text: 'Test Projects',
+      link: '/guide/projects',
     },
     {
       text: 'Reporters',
@@ -424,12 +529,23 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/debugging',
     },
     {
-      text: 'Migration Guide',
-      link: '/guide/migration',
-    },
-    {
       text: 'Common Errors',
       link: '/guide/common-errors',
+    },
+    {
+      text: 'Migration Guide',
+      link: '/guide/migration',
+      collapsed: false,
+      items: [
+        {
+          text: 'Migrating to Vitest 3.0',
+          link: '/guide/migration#vitest-3',
+        },
+        {
+          text: 'Migrating from Jest',
+          link: '/guide/migration#jest',
+        },
+      ],
     },
     {
       text: 'Performance',

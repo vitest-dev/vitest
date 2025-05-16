@@ -1,6 +1,7 @@
+import type { Vitest } from 'vitest/node'
 import { Writable } from 'node:stream'
 import { expect, test } from '@playwright/test'
-import { startVitest, type Vitest } from 'vitest/node'
+import { startVitest } from 'vitest/node'
 
 const port = 9000
 const pageUrl = `http://localhost:${port}/__vitest__/`
@@ -30,6 +31,36 @@ test.describe('ui', () => {
     await vitest?.close()
   })
 
+  test('security', async ({ page }) => {
+    await page.goto('https://example.com/')
+
+    // request html
+    const htmlResult = await page.evaluate(async (pageUrl) => {
+      try {
+        const res = await fetch(pageUrl)
+        return res.status
+      }
+      catch (e) {
+        return e instanceof Error ? e.message : e
+      }
+    }, pageUrl)
+    expect(htmlResult).toBe('Failed to fetch')
+
+    // request websocket
+    const wsResult = await page.evaluate(async (pageUrl) => {
+      const ws = new WebSocket(new URL('/__vitest_api__', pageUrl))
+      return new Promise((resolve) => {
+        ws.addEventListener('open', () => {
+          resolve('open')
+        })
+        ws.addEventListener('error', () => {
+          resolve('error')
+        })
+      })
+    }, pageUrl)
+    expect(wsResult).toBe('error')
+  })
+
   test('basic', async ({ page }) => {
     const pageErrors: unknown[] = []
     page.on('pageerror', error => pageErrors.push(error))
@@ -37,7 +68,7 @@ test.describe('ui', () => {
     await page.goto(pageUrl)
 
     // dashboard
-    await expect(page.locator('[aria-labelledby=tests]')).toContainText('8 Pass 1 Fail 9 Total')
+    await expect(page.locator('[aria-labelledby=tests]')).toContainText('9 Pass 1 Fail 10 Total')
 
     // unhandled errors
     await expect(page.getByTestId('unhandled-errors')).toContainText(
@@ -136,6 +167,13 @@ test.describe('ui', () => {
     await page.getByPlaceholder('Search...').fill('<>\'"')
     await expect(page.getByText('<>\'"')).toBeVisible()
     await expect(page.getByTestId('details-panel').getByText('fixtures/task-name.test.ts', { exact: true })).toBeVisible()
+
+    // pass files with special chars
+    await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
+    await expect(page.getByText('char () - Square root of nine (9)')).toBeVisible()
+    await page.getByText('char () - Square root of nine (9)').hover()
+    await page.getByLabel('Run current test').click()
+    await expect(page.getByText('All tests passed in this file')).toBeVisible()
   })
 })
 

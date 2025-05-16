@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:base", "schedule:weekly", "group:allNonMajor"],
+  "extends": ["config:recommended", "schedule:weekly", "group:allNonMajor"],
   "labels": ["dependencies"],
   "rangeStrategy": "bump",
   "packageRules": [
@@ -9,19 +9,13 @@
       "matchPackageNames": ["/eslint/"]
     },
     {
-      "depTypeList": ["peerDependencies"],
+      "matchDepTypes": ["peerDependencies"],
       "enabled": false
     },
     {
-      "matchPaths": [
-        "examples/**"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "groupName": "all non-major examples dependencies",
-      "groupSlug": "all-minor-patch-examples"
+      "matchDepTypes": ["action"],
+      "matchPackageNames": ["!actions/{/,}**", "!github/{/,}**"],
+      "pinDigests": true
     }
   ],
   "ignoreDeps": [
@@ -35,12 +29,17 @@
     "@types/chai",
     "@sinonjs/fake-timers",
     "cac",
-    // Pinned due to https://github.com/vitest-dev/vitest/issues/4710
-    "log-update",
     // Pinned because it requires "node" condition in the new version
     // But we intentionally build Vitest ambiguously
     "find-up",
     // Transitive dependency that we patch
-    "acorn"
+    "acorn",
+    // Keep using codemirror 5
+    "codemirror",
+    "react-18",
+    "react-is-18"
+  ],
+  "ignorePaths": [
+    "**/node_modules/**"
   ]
 }

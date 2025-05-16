@@ -58,3 +58,19 @@ it('error stack', async () => {
   const { viteNode } = await runViteNodeCli('--watch', entryPath)
   await viteNode.waitForStdout('source-map.ts:7:11')
 })
+
+it('buildStart', async () => {
+  const root = resolve(__dirname, '../src/buildStart')
+  const result = await runViteNodeCli('--root', root, resolve(root, 'test.ts'))
+  await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
+})
+
+it('buildStart with all ssr', async () => {
+  const root = resolve(__dirname, '../src/buildStart')
+  const result = await runViteNodeCli(
+    `--root=${root}`,
+    '--options.transformMode.ssr=.*',
+    resolve(root, 'test.ts'),
+  )
+  await result.viteNode.waitForStdout('["buildStart:in","buildStart:out"]')
+})

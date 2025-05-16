@@ -1,4 +1,4 @@
-import type { FileSpec } from '@vitest/runner'
+import type { FileSpecification } from '@vitest/runner'
 import type { TinypoolChannel, Options as TinypoolOptions } from 'tinypool'
 import type { RunnerRPC, RuntimeRPC } from '../../types/rpc'
 import type { ContextRPC, ContextTestEnvironment } from '../../types/worker'
@@ -17,7 +17,7 @@ import { wrapSerializableConfig } from '../../utils/config-helpers'
 import { envsOrder, groupFilesByEnv } from '../../utils/test-helpers'
 import { createMethodsRPC } from './rpc'
 
-function createChildProcessChannel(project: TestProject) {
+function createChildProcessChannel(project: TestProject, collect = false) {
   const emitter = new EventEmitter()
   const cleanup = () => emitter.removeAllListeners()
 
@@ -27,7 +27,7 @@ function createChildProcessChannel(project: TestProject) {
     postMessage: message => emitter.emit(events.response, message),
   }
 
-  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true }), {
+  const rpc = createBirpc<RunnerRPC, RuntimeRPC>(createMethodsRPC(project, { cacheFs: true, collect }), {
     eventNames: ['onCancel'],
     serialize: v8.serialize,
     deserialize: v => v8.deserialize(Buffer.from(v)),
@@ -102,14 +102,14 @@ export function createForksPool(
     async function runFiles(
       project: TestProject,
       config: SerializedConfig,
-      files: FileSpec[],
+      files: FileSpecification[],
       environment: ContextTestEnvironment,
       invalidates: string[] = [],
     ) {
       const paths = files.map(f => f.filepath)
       ctx.state.clearFiles(project, paths)
 
-      const { channel, cleanup } = createChildProcessChannel(project)
+      const { channel, cleanup } = createChildProcessChannel(project, name === 'collect')
       const workerId = ++id
       const data: ContextRPC = {
         pool: 'forks',

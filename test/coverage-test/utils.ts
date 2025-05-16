@@ -1,4 +1,4 @@
-import type { FileCoverageData } from 'istanbul-lib-coverage'
+import type { CoverageSummary, FileCoverageData } from 'istanbul-lib-coverage'
 import type { TestFunction } from 'vitest'
 import type { UserConfig } from 'vitest/node'
 import { readFileSync } from 'node:fs'
@@ -43,14 +43,16 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
       enabled: true,
       reporter: [],
       ...config.coverage,
-      provider,
+      provider: provider === 'v8-ast-aware' ? 'v8' : provider,
+      experimentalAstAwareRemapping: provider === 'v8-ast-aware',
       customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
     },
     browser: {
       enabled: process.env.COVERAGE_BROWSER === 'true',
       headless: true,
-      name: 'chromium',
+      instances: [{ browser: 'chromium' }],
       provider: 'playwright',
+      ...config.browser,
     },
   })
 
@@ -88,6 +90,13 @@ export async function readCoverageMap(name = './coverage/coverage-final.json') {
   return libCoverage.createCoverageMap(coverageJson)
 }
 
+export function formatSummary(summary: CoverageSummary) {
+  return (['branches', 'functions', 'lines', 'statements'] as const).reduce((all, current) => ({
+    ...all,
+    [current]: `${summary[current].covered}/${summary[current].total} (${summary[current].pct}%)`,
+  }), {})
+}
+
 export function normalizeFilename(filename: string) {
   return normalize(filename)
     .replace(normalize(process.cwd()), '<process-cwd>')
@@ -96,6 +105,10 @@ export function normalizeFilename(filename: string) {
 
 export function isV8Provider() {
   return process.env.COVERAGE_PROVIDER === 'v8'
+}
+
+export function isExperimentalV8Provider() {
+  return process.env.COVERAGE_PROVIDER === 'v8-ast-aware'
 }
 
 export function isBrowser() {

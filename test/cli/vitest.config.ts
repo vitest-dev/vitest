@@ -6,8 +6,8 @@ export default defineConfig({
     reporters: ['verbose'],
     testTimeout: 60_000,
     poolOptions: {
-      threads: {
-        singleThread: true,
+      forks: {
+        singleFork: true,
       },
     },
     chaiConfig: {
@@ -18,6 +18,7 @@ export default defineConfig({
     watch: {
       ignored: [
         '**/fixtures/browser-multiple/**/*',
+        '**/fixtures/browser-init/**/*',
       ],
     },
   },

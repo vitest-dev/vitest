@@ -1,7 +1,8 @@
+import type { MessagePort as NodeMessagePort } from 'node:worker_threads'
 import type { Procedure } from './types'
 import {
   MessageChannel,
-  type MessagePort as NodeMessagePort,
+
 } from 'node:worker_threads'
 import { InlineWorkerRunner } from './runner'
 import { debug, getFileIdFromUrl, getRunnerOptions } from './utils'
@@ -97,7 +98,9 @@ export function createSharedWorkerConstructor(): typeof SharedWorker {
         addEventListener: (...args: any[]) => {
           return this._vw_workerTarget.addEventListener(...args as [any, any])
         },
-        removeEventListener: this._vw_workerTarget.removeEventListener,
+        removeEventListener: (...args: any[]) => {
+          return this._vw_workerTarget.removeEventListener(...args as [any, any])
+        },
         get self() {
           return selfProxy
         },

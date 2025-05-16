@@ -19,18 +19,25 @@ function getDefaultThreadsCount(config: ResolvedConfig) {
     : Math.max(numCpus - 1, 1)
 }
 
-export function getWorkerMemoryLimit(config: ResolvedConfig) {
-  const memoryLimit = config.poolOptions?.vmThreads?.memoryLimit
+export function getWorkerMemoryLimit(config: ResolvedConfig, pool: 'vmThreads' | 'vmForks'): string | number {
+  if (pool === 'vmForks') {
+    const opts = config.poolOptions?.vmForks ?? {}
+    if (opts.memoryLimit) {
+      return opts.memoryLimit
+    }
+    const workers = opts.maxForks ?? getDefaultThreadsCount(config)
 
-  if (memoryLimit) {
-    return memoryLimit
+    return 1 / workers
   }
+  else {
+    const opts = config.poolOptions?.vmThreads ?? {}
+    if (opts.memoryLimit) {
+      return opts.memoryLimit
+    }
+    const workers = opts.maxThreads ?? getDefaultThreadsCount(config)
 
-  return (
-    1
-    / (config.poolOptions?.vmThreads?.maxThreads
-      ?? getDefaultThreadsCount(config))
-  )
+    return 1 / workers
+  }
 }
 
 /**

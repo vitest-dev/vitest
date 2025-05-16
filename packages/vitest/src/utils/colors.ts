@@ -1,6 +1,7 @@
+import type { Colors } from 'tinyrainbow'
 import { highlight } from '@vitest/utils'
 import { extname } from 'pathe'
-import c, { type Colors } from 'tinyrainbow'
+import c from 'tinyrainbow'
 
 const HIGHLIGHT_SUPPORTED_EXTS = new Set(
   ['js', 'ts'].flatMap(lang => [
@@ -13,7 +14,7 @@ const HIGHLIGHT_SUPPORTED_EXTS = new Set(
   ]),
 )
 
-export function highlightCode(id: string, source: string, colors?: Colors) {
+export function highlightCode(id: string, source: string, colors?: Colors): string {
   const ext = extname(id)
   if (!HIGHLIGHT_SUPPORTED_EXTS.has(ext)) {
     return source

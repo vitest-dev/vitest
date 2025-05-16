@@ -12,6 +12,7 @@ import { performance } from 'node:perf_hooks'
 import { pathToFileURL } from 'node:url'
 import createDebug from 'debug'
 import { join, normalize, relative, resolve } from 'pathe'
+import { version as viteVersion } from 'vite'
 import { Debugger } from './debug'
 import { shouldExternalize } from './externalize'
 import { withInlineSourcemap } from './source-map'
@@ -50,14 +51,14 @@ export class ViteNodeServer {
 
   private existingOptimizedDeps = new Set<string>()
 
-  fetchCaches = {
-    ssr: new Map<string, FetchCache>(),
-    web: new Map<string, FetchCache>(),
+  fetchCaches: Record<'ssr' | 'web', Map<string, FetchCache>> = {
+    ssr: new Map(),
+    web: new Map(),
   }
 
-  fetchCache = new Map<string, FetchCache>()
+  fetchCache: Map<string, FetchCache> = new Map()
 
-  externalizeCache = new Map<string, Promise<string | false>>()
+  externalizeCache: Map<string, Promise<string | false>> = new Map()
 
   debugger?: Debugger
 
@@ -120,7 +121,7 @@ export class ViteNodeServer {
 
     const envValue
       = process.env.VITE_NODE_DEPS_MODULE_DIRECTORIES
-      || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
+        || process.env.npm_config_VITE_NODE_DEPS_MODULE_DIRECTORIES
     const customModuleDirectories = envValue?.split(',')
     if (customModuleDirectories) {
       options.deps.moduleDirectories.push(...customModuleDirectories)
@@ -144,11 +145,11 @@ export class ViteNodeServer {
     }
   }
 
-  shouldExternalize(id: string) {
+  shouldExternalize(id: string): Promise<string | false> {
     return shouldExternalize(id, this.options.deps, this.externalizeCache)
   }
 
-  public getTotalDuration() {
+  public getTotalDuration(): number {
     const ssrDurations = [...this.durations.ssr.values()].flat()
     const webDurations = [...this.durations.web.values()].flat()
     return [...ssrDurations, ...webDurations].reduce((a, b) => a + b, 0)
@@ -189,7 +190,7 @@ export class ViteNodeServer {
     })
   }
 
-  getSourceMap(source: string) {
+  getSourceMap(source: string): EncodedSourceMap | null {
     source = normalizeModuleId(source)
     const fetchResult = this.fetchCache.get(source)?.result
     if (fetchResult?.map) {
@@ -218,7 +219,7 @@ export class ViteNodeServer {
     })
   }
 
-  async fetchResult(id: string, mode: 'web' | 'ssr') {
+  async fetchResult(id: string, mode: 'web' | 'ssr'): Promise<FetchResult> {
     const moduleId = normalizeModuleId(id)
     this.assertMode(mode)
     const promiseMap = this.fetchPromiseMap[mode]
@@ -236,9 +237,9 @@ export class ViteNodeServer {
 
   async transformRequest(
     id: string,
-    filepath = id,
+    filepath: string = id,
     transformMode?: 'web' | 'ssr',
-  ) {
+  ): Promise<TransformResult | null | undefined> {
     const mode = transformMode || this.getTransformMode(id)
     this.assertMode(mode)
     const promiseMap = this.transformPromiseMap[mode]
@@ -254,7 +255,9 @@ export class ViteNodeServer {
     return promiseMap.get(id)!
   }
 
-  async transformModule(id: string, transformMode?: 'web' | 'ssr') {
+  async transformModule(id: string, transformMode?: 'web' | 'ssr'): Promise<{
+    code: string | undefined
+  }> {
     if (transformMode !== 'web') {
       throw new Error(
         '`transformModule` only supports `transformMode: "web"`.',
@@ -265,14 +268,14 @@ export class ViteNodeServer {
     const mod = this.server.moduleGraph.getModuleById(normalizedId)
     const result
       = mod?.transformResult
-      || (await this.server.transformRequest(normalizedId))
+        || (await this.server.transformRequest(normalizedId))
 
     return {
       code: result?.code,
     }
   }
 
-  getTransformMode(id: string) {
+  getTransformMode(id: string): 'ssr' | 'web' {
     const withoutQuery = id.split('?')[0]
 
     if (this.options.transformMode?.web?.some(r => withoutQuery.match(r))) {
@@ -291,7 +294,7 @@ export class ViteNodeServer {
   private getChangedModule(id: string, file: string) {
     const module
       = this.server.moduleGraph.getModuleById(id)
-      || this.server.moduleGraph.getModuleById(file)
+        || this.server.moduleGraph.getModuleById(file)
     if (module) {
       return module
     }
@@ -347,9 +350,9 @@ export class ViteNodeServer {
     // we test "timestamp === 0" for expressiveness, but it's not necessary
     const timestamp = moduleNode
       ? Math.max(
-        moduleNode.lastHMRTimestamp,
-        moduleNode.lastInvalidationTimestamp,
-      )
+          moduleNode.lastHMRTimestamp,
+          moduleNode.lastInvalidationTimestamp,
+        )
       : 0
     if (cache && (timestamp === 0 || cache.timestamp >= timestamp)) {
       return cache.result
@@ -387,11 +390,12 @@ export class ViteNodeServer {
   protected async processTransformResult(
     filepath: string,
     result: TransformResult,
-  ) {
+  ): Promise<TransformResult> {
     const mod = this.server.moduleGraph.getModuleById(filepath)
     return withInlineSourcemap(result, {
       filepath: mod?.file || filepath,
       root: this.server.config.root,
+      noFirstLineMapping: Number(viteVersion.split('.')[0]) >= 6,
     })
   }
 
@@ -424,7 +428,7 @@ export class ViteNodeServer {
     }
 
     const sourcemap = this.options.sourcemap ?? 'inline'
-    if (sourcemap === 'inline' && result && !id.includes('node_modules')) {
+    if (sourcemap === 'inline' && result) {
       result = await this.processTransformResult(filepath, result)
     }
 

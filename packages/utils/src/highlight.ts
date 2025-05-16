@@ -1,5 +1,7 @@
-import { highlight as baseHighlight, type TokenColors } from 'tinyhighlight'
-import c, { type Colors } from 'tinyrainbow'
+import type { TokenColors } from 'tinyhighlight'
+import type { Colors } from 'tinyrainbow'
+import { highlight as baseHighlight } from 'tinyhighlight'
+import c from 'tinyrainbow'
 
 function getDefs(c: Colors): TokenColors {
   const Invalid = (text: string) => c.white(c.bgRed(c.bold(text)))

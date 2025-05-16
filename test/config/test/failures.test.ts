@@ -1,7 +1,9 @@
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { UserConfig } from 'vitest/node'
+import type { VitestRunnerCLIOptions } from '../../test-utils'
 import { normalize, resolve } from 'pathe'
-import { beforeEach, expect, test } from 'vitest'
 
+import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
 import * as testUtils from '../../test-utils'
 
@@ -9,8 +11,8 @@ const providers = ['playwright', 'webdriverio', 'preview'] as const
 const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
-function runVitest(config: NonNullable<UserConfig> & { shard?: any }) {
-  return testUtils.runVitest({ root: './fixtures/test', ...config }, [])
+function runVitest(config: NonNullable<UserConfig> & { shard?: any }, viteOverrides: ViteUserConfig = {}, runnerOptions?: VitestRunnerCLIOptions) {
+  return testUtils.runVitest({ root: './fixtures/test', ...config }, [], undefined, viteOverrides, runnerOptions)
 }
 
 function runVitestCli(...cliArgs: string[]) {
@@ -62,7 +64,7 @@ test('inspect cannot be used with multi-threading', async () => {
 })
 
 test('inspect in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
+  const { stderr } = await runVitest({ inspect: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: 'playwright' } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
@@ -74,7 +76,7 @@ test('inspect-brk cannot be used with multi processing', async () => {
 })
 
 test('inspect-brk in browser mode requires no-file-parallelism', async () => {
-  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, name: 'chromium', provider: 'playwright' } })
+  const { stderr } = await runVitest({ inspectBrk: true, browser: { enabled: true, instances: [{ browser: 'chromium' }], provider: 'playwright' } })
 
   expect(stderr).toMatch('Error: You cannot use --inspect-brk without "--no-file-parallelism", "poolOptions.threads.singleThread" or "poolOptions.forks.singleFork"')
 })
@@ -111,7 +113,11 @@ Use either:
 {
   "browser": {
     "provider": "playwright",
-    "name": "chromium"
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
   }
 }
 
@@ -122,7 +128,7 @@ Use either:
   }
 })
 
-test('v8 coverage provider throws when not playwright + chromium', async () => {
+test('v8 coverage provider throws when not playwright + chromium (browser.name)', async () => {
   for (const { provider, name } of browsers) {
     if (provider === 'playwright' && name === 'chromium') {
       continue
@@ -152,7 +158,11 @@ Use either:
 {
   "browser": {
     "provider": "playwright",
-    "name": "chromium"
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
   }
 }
 
@@ -167,16 +177,133 @@ Use either:
   }
 })
 
-test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
-  const { stderr } = await runVitest({ coverage: { enabled: true }, workspace: './fixtures/workspace/browser/workspace-with-browser.ts' })
+test('v8 coverage provider throws when not playwright + chromium (browser.instances)', async () => {
+  for (const { provider, name } of browsers) {
+    if (provider === 'playwright' && name === 'chromium') {
+      continue
+    }
+
+    const { stderr } = await runVitest({
+      coverage: {
+        enabled: true,
+      },
+      browser: {
+        enabled: true,
+        provider,
+        instances: [{ browser: name }],
+      },
+    })
+
+    expect(stderr).toMatch(
+      `Error: @vitest/coverage-v8 does not work with
+{
+  "browser": {
+    "provider": "${provider}",
+    "instances": [
+      {
+        "browser": "${name}"
+      }
+    ]
+  }
+}
+
+Use either:
+{
+  "browser": {
+    "provider": "playwright",
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
+  }
+}
+
+...or change your coverage provider to:
+{
+  "coverage": {
+    "provider": "istanbul"
+  }
+}
+`,
+    )
+  }
+})
+
+test('v8 coverage provider throws when using chromium and other non-chromium browser', async () => {
+  const { stderr } = await runVitest({
+    coverage: {
+      enabled: true,
+    },
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: 'playwright',
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+        { browser: 'webkit' },
+      ],
+    },
+  })
+
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
 {
   "browser": {
-    "provider": "webdriverio",
-    "name": "chrome"
+    "provider": "playwright",
+    "instances": [
+      {
+        "browser": "chromium"
+      },
+      {
+        "browser": "firefox"
+      },
+      {
+        "browser": "webkit"
+      }
+    ]
+  }
+}
+
+Use either:
+{
+  "browser": {
+    "provider": "playwright",
+    "instances": [
+      {
+        "browser": "chromium"
+      }
+    ]
+  }
+}
+
+...or change your coverage provider to:
+{
+  "coverage": {
+    "provider": "istanbul"
   }
 }`,
+  )
+})
+
+test('v8 coverage provider cannot be used in workspace without playwright + chromium', async () => {
+  const { stderr } = await runVitest({
+    coverage: { enabled: true },
+    workspace: './fixtures/workspace/browser/workspace-with-browser.ts',
+  }, {}, { fails: true })
+  expect(stderr).toMatch(
+    `Error: @vitest/coverage-v8 does not work with
+    {
+      "browser": {
+        "provider": "webdriverio",
+        "instances": [
+          {
+            "browser": "chrome"
+          }
+        ]
+      }
+    }`,
   )
 })
 
@@ -287,4 +414,128 @@ test('maxConcurrency 0 prints a warning', async () => {
 
   expect(ctx?.config.maxConcurrency).toBe(5)
   expect(stderr).toMatch('The option "maxConcurrency" cannot be set to 0. Using default value 5 instead.')
+})
+
+test('browser.instances is empty', async () => {
+  const { stderr } = await runVitest({}, {
+    test: {
+      browser: {
+        enabled: true,
+        provider: 'playwright',
+        instances: [],
+      },
+    },
+  })
+  expect(stderr).toMatch('"browser.instances" was set in the config, but the array is empty. Define at least one browser config.')
+})
+
+test('browser.name or browser.instances are required', async () => {
+  const { stderr, exitCode } = await runVitestCli('--browser.enabled', '--root=./fixtures/browser-no-config')
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.')
+})
+
+test('--browser flag without browser configuration throws an error', async () => {
+  const { stderr, exitCode } = await runVitestCli('--browser.enabled')
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
+})
+
+test('--browser flag without browser configuration in workspaces throws an error', async () => {
+  const { stderr, exitCode } = await runVitestCli('--browser.enabled', '--root=./fixtures/no-browser-workspace')
+  expect(exitCode).toBe(1)
+  expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
+})
+
+test('browser.name filters all browser.instances are required', async () => {
+  const { stderr } = await runVitest({}, {
+    test: {
+      browser: {
+        enabled: true,
+        name: 'chromium',
+        provider: 'playwright',
+        instances: [
+          { browser: 'firefox' },
+        ],
+      },
+    },
+  })
+  expect(stderr).toMatch('"browser.instances" was set in the config, but the array is empty. Define at least one browser config. The "browser.name" was set to "chromium" which filtered all configs (firefox). Did you mean to use another name?')
+})
+
+test('browser.instances throws an error if no custom name is provided', async () => {
+  const { stderr } = await runVitest({}, {
+    test: {
+      browser: {
+        enabled: true,
+        provider: 'playwright',
+        instances: [
+          { browser: 'firefox' },
+          { browser: 'firefox' },
+        ],
+      },
+    },
+  })
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "firefox" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects should have unique names. Make sure your configuration is correct.')
+})
+
+test('browser.instances throws an error if no custom name is provided, but the config name is inherited', async () => {
+  const { stderr } = await runVitest({
+    name: 'custom',
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      instances: [
+        { browser: 'firefox' },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "custom (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects should have unique names. Make sure your configuration is correct.')
+})
+
+test('throws an error if name conflicts with a workspace name', async () => {
+  const { stderr } = await runVitest({
+    projects: [
+      { test: { name: '1 (firefox)' } },
+      {
+        test: {
+          browser: {
+            enabled: true,
+            provider: 'playwright',
+            instances: [
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+    ],
+  })
+  expect(stderr).toMatch('Cannot define a nested project for a firefox browser. The project name "1 (firefox)" was already defined. If you have multiple instances for the same browser, make sure to define a custom "name". All projects should have unique names. Make sure your configuration is correct.')
+})
+
+test('throws an error if several browsers are headed in nonTTY mode', async () => {
+  const { stderr } = await runVitest({
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      headless: false,
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+      ],
+    },
+  })
+  expect(stderr).toContain('Found multiple projects that run browser tests in headed mode: "chromium", "firefox"')
+  expect(stderr).toContain('Please, filter projects with --browser=name or --project=name flag or run tests with "headless: true" option')
+})
+
+test('non existing project name will throw', async () => {
+  const { stderr } = await runVitest({ project: 'non-existing-project' })
+  expect(stderr).toMatch('No projects matched the filter "non-existing-project".')
+})
+
+test('non existing project name array will throw', async () => {
+  const { stderr } = await runVitest({ project: ['non-existing-project', 'also-non-existing'] })
+  expect(stderr).toMatch('No projects matched the filter "non-existing-project", "also-non-existing".')
 })

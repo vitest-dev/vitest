@@ -355,7 +355,7 @@ test('teardown should be called once time', () => {
   expect(teardownFn).toBeCalledTimes(1)
 })
 
-describe('asynchonous setup/teardown', () => {
+describe('asynchronous setup/teardown', () => {
   const trackFn = vi.fn()
 
   const myTest = test.extend<{ a: string }>({
@@ -382,5 +382,108 @@ describe('asynchonous setup/teardown', () => {
       ['teardown-sync'],
       ['teardown-async'],
     ])
+  })
+})
+
+describe('scoping variables to suite', () => {
+  const testAPI = test.extend<{
+    dependency: string
+    pkg: { dependency: string }
+  }>({
+    dependency: 'default',
+    pkg: ({ dependency }, use) => use({ dependency }),
+  })
+
+  testAPI('uses default values', ({ pkg }) => {
+    expect(pkg).toEqual({ dependency: 'default' })
+  })
+
+  describe('override dependency', () => {
+    testAPI.scoped({ dependency: 'new' })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'new' })
+    })
+
+    describe('nested keeps parent scope', () => {
+      testAPI('keeps using new values', ({ pkg }) => {
+        expect(pkg).toEqual({ dependency: 'new' })
+      })
+    })
+
+    describe('override nested overriden scope', () => {
+      testAPI.scoped({ dependency: 'override' })
+
+      testAPI('keeps using new values', ({ pkg }) => {
+        expect(pkg).toEqual({ dependency: 'override' })
+      })
+    })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'new' })
+    })
+  })
+
+  testAPI('keeps using default values', ({ pkg }) => {
+    expect(pkg).toEqual({ dependency: 'default' })
+  })
+
+  describe('override the pkg too', () => {
+    testAPI.scoped({ pkg: { dependency: 'override' } })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'override' })
+    })
+  })
+
+  describe('override as dynamic', () => {
+    testAPI.scoped({ dependency: ({}, use) => use('override') })
+
+    testAPI('uses new values', ({ pkg }) => {
+      expect(pkg).toEqual({ dependency: 'override' })
+    })
+  })
+
+  describe.skip('type only', () => {
+    testAPI.scoped({
+      // @ts-expect-error nonExisting is not defined on the testAPI
+      nonExisting: false,
+    })
+  })
+})
+
+describe('test.scoped repro #7793', () => {
+  const extendedTest = test.extend<{ foo: boolean }>({
+    foo: false,
+  })
+
+  describe('top level', () => {
+    extendedTest.scoped({ foo: true })
+
+    describe('second level', () => {
+      extendedTest('foo is true', ({ foo }) => {
+        expect(foo).toBe(true)
+      })
+    })
+  })
+})
+
+describe('test.scoped repro #7813', () => {
+  const extendedTest = test.extend<{ foo?: boolean }>({
+    foo: false,
+  })
+
+  describe('foo is scoped to true', () => {
+    extendedTest.scoped({ foo: true })
+
+    extendedTest('foo is true', ({ foo }) => {
+      expect(foo).toBe(true)
+    })
+  })
+
+  describe('foo is left as default of false', () => {
+    extendedTest('foo is false', ({ foo }) => {
+      expect(foo).toBe(false)
+    })
   })
 })

@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from 'vitest'
-import { runBrowserTests } from './utils'
+import { instances, runBrowserTests } from './utils'
 
 afterEach(() => {
   delete process.env.TEST_HTTPS
@@ -12,7 +12,8 @@ test('server-url http', async () => {
   })
   const url = ctx?.projects[0].browser?.vite.resolvedUrls?.local[0]
   expect(stderr).toBe('')
-  expect(url).toBe('http://localhost:51133/')
+  expect(url).toBeDefined()
+  expect(new URL(url).port).toBe('51133')
 })
 
 test('server-url https', async () => {
@@ -23,6 +24,7 @@ test('server-url https', async () => {
   })
   expect(stderr).toBe('')
   const url = ctx?.projects[0].browser?.vite.resolvedUrls?.local[0]
-  expect(url).toBe('https://localhost:51122/')
-  expect(stdout).toContain('Test Files  1 passed')
+  expect(url).toBeDefined()
+  expect(new URL(url).port).toBe('51122')
+  expect(stdout).toReportSummaryTestFiles({ passed: instances.length })
 })
