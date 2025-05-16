@@ -134,3 +134,15 @@ describe('when the title is dynamic', () => {
     expect(vitest.stdout).toContain('✓ (() => "some name")()')
   })
 })
+
+it('throws an error if typechecker process exists', async () => {
+  const { stderr } = await runVitest({
+    root: resolve(__dirname, '../fixtures/source-error'),
+    typecheck: {
+      enabled: true,
+      checker: 'non-existing-command',
+    },
+  })
+  expect(stderr).toContain('Error: Spawning typechecker failed - is typescript installed?')
+  expect(stderr).toContain('Error: spawn non-existing-command ENOENT')
+})
