@@ -259,7 +259,7 @@ export async function VitestPlugin(
         })
 
         const originalName = options.name
-        if (options.browser?.enabled && options.browser?.instances) {
+        if (options.browser?.instances) {
           options.browser.instances.forEach((instance) => {
             instance.name ??= originalName ? `${originalName} (${instance.browser})` : instance.browser
           })

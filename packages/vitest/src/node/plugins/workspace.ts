@@ -117,21 +117,23 @@ export function WorkspaceVitestPlugin(
 
         ;(config.test as ResolvedConfig).defines = defines
 
+        const isUserBrowserEnabled = viteConfig.test?.browser?.enabled
+        const isBrowserEnabled = isUserBrowserEnabled ?? (viteConfig.test?.browser && project.vitest._cliOptions.browser?.enabled)
         // keep project names to potentially filter it out
         const workspaceNames = [name]
-        if (viteConfig.test?.browser?.enabled) {
-          if (viteConfig.test.browser.name && !viteConfig.test.browser.instances?.length) {
-            const browser = viteConfig.test.browser.name
-            // vitest injects `instances` in this case later on
-            workspaceNames.push(name ? `${name} (${browser})` : browser)
-          }
-
-          viteConfig.test.browser.instances?.forEach((instance) => {
-            // every instance is a potential project
-            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
-            workspaceNames.push(instance.name)
-          })
+        const browser = viteConfig.test!.browser || {}
+        if (isBrowserEnabled && browser.name && !browser.instances?.length) {
+          // vitest injects `instances` in this case later on
+          workspaceNames.push(name ? `${name} (${browser.name})` : browser.name)
         }
+
+        viteConfig.test?.browser?.instances?.forEach((instance) => {
+          // every instance is a potential project
+          instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
+          if (isBrowserEnabled) {
+            workspaceNames.push(instance.name)
+          }
+        })
 
         const filters = project.vitest.config.project
         // if there is `--project=...` filter, check if any of the potential projects match
