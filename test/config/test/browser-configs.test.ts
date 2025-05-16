@@ -640,4 +640,40 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       },
     })
   })
+
+  test.only('CLI options override the config if --browser.enabled is passed down manually', async () => {
+    const { stdout } = await getCliConfig({
+      browser: {
+        enabled: false,
+        provider: 'playwright',
+        headless: true,
+        instances: [
+          { browser: 'chromium' },
+        ],
+      },
+    }, ['--browser.headless=false', '--browser.enabled'])
+
+    const config = JSON.parse(stdout)
+    expect(config).toEqual({
+      browser: {
+        headless: false,
+        browser: true,
+        ui: true,
+      },
+      workspace: [
+        {
+          name: 'chromium',
+          headless: false,
+          browser: true,
+          ui: true,
+          parent: {
+            name: '',
+            headless: false,
+            browser: true,
+            ui: true,
+          },
+        },
+      ],
+    })
+  })
 })

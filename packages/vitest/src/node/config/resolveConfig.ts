@@ -239,7 +239,12 @@ export function resolveConfig(
   }
 
   // apply browser CLI options only if the config already has the browser config and not disabled manually
-  if (vitest._cliOptions.browser && resolved.browser && resolved.browser.enabled !== false) {
+  if (
+    vitest._cliOptions.browser
+    && resolved.browser
+    // if enabled is set to `false`, but CLI overrides it, then always override it
+    && (resolved.browser.enabled !== false || vitest._cliOptions.browser.enabled)
+  ) {
     resolved.browser = mergeConfig(
       resolved.browser,
       vitest._cliOptions.browser,
