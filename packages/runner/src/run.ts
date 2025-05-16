@@ -20,7 +20,7 @@ import type {
 import { shuffle } from '@vitest/utils'
 import { processError } from '@vitest/utils/error'
 import { collectTests } from './collect'
-import { abortContextSignal } from './context'
+import { abortContextSignal, getFileContext } from './context'
 import { PendingError, TestRunAbortError } from './errors'
 import { callFixtureCleanup } from './fixture'
 import { getBeforeHookCleanupCallback } from './hooks'
@@ -537,6 +537,10 @@ export async function runSuite(suite: Suite, runner: VitestRunner): Promise<void
     try {
       await callSuiteHook(suite, suite, 'afterAll', runner, [suite])
       await callCleanupHooks(runner, beforeAllCleanups)
+      if (suite.file === suite) {
+        const context = getFileContext(suite as File)
+        await callFixtureCleanup(context)
+      }
     }
     catch (e) {
       failTask(suite.result, e, runner.config.diffOptions)
@@ -598,6 +602,8 @@ export async function runFiles(files: File[], runner: VitestRunner): Promise<voi
   }
 }
 
+const workerRunners = new WeakSet<VitestRunner>()
+
 export async function startTests(specs: string[] | FileSpecification[], runner: VitestRunner): Promise<File[]> {
   const cancel = runner.cancel?.bind(runner)
   // Ideally, we need to have an event listener for this, but only have a runner here.
@@ -609,6 +615,16 @@ export async function startTests(specs: string[] | FileSpecification[], runner: 
       abortContextSignal(test.context, error),
     )
     return cancel?.(reason)
+  }
+
+  if (!workerRunners.has(runner)) {
+    runner.onCleanupWorkerContext?.(async () => {
+      const context = runner.getWorkerContext?.()
+      if (context) {
+        await callFixtureCleanup(context)
+      }
+    })
+    workerRunners.add(runner)
   }
 
   try {

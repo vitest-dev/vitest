@@ -45,6 +45,7 @@ export interface WorkerGlobalState {
   onCancel: Promise<CancelReason>
   moduleCache: ModuleCacheMap
   moduleExecutionInfo?: ModuleExecutionInfo
+  onCleanup: (listener: () => unknown) => void
   providedContext: Record<string, any>
   durations: {
     environment: number
