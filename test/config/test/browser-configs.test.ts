@@ -641,7 +641,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
     })
   })
 
-  test.only('CLI options override the config if --browser.enabled is passed down manually', async () => {
+  test('CLI options override the config if --browser.enabled is passed down manually', async () => {
     const { stdout } = await getCliConfig({
       browser: {
         enabled: false,
