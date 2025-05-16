@@ -90,6 +90,12 @@ vitest.config === vitest.projects[0].globalConfig
 
 This is the project's resolved test config.
 
+## hash <Version>3.2.0</Version> {#hash}
+
+The unique hash of this project. This value is consistent between the reruns.
+
+It is based on the root of the project and its name. Note that the root path is not consistent between different OS, so the hash will also be different.
+
 ## vite
 
 This is project's [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver). All projects have their own Vite servers.
