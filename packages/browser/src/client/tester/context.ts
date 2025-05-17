@@ -6,12 +6,12 @@ import type {
   Locator,
   UserEvent,
 } from '../../../context'
-import type { Locator as LocatorAPI } from './locators/index'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
+import type { Locator as LocatorAPI } from './locators/index'
+import { getElementLocatorSelectors } from '@vitest/browser/utils'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { convertElementToCssSelector, processTimeoutOptions } from './utils'
-import { getElementLocatorSelectors } from '@vitest/browser/utils'
 
 // this file should not import anything directly, only types and utils
 
@@ -377,12 +377,12 @@ export const locators: BrowserLocators = {
         return selectorOrLocator
       }
     }
-  }
+  },
 }
 
 declare module '@vitest/browser/context' {
   interface BrowserPage {
     /** @internal */
-    _createLocator(selector: string): Locator
+    _createLocator: (selector: string) => Locator
   }
 }
