@@ -225,7 +225,6 @@ export class WatchFilter {
   }
 
   private write(data: string) {
-    // @ts-expect-error -- write() method has different signature on the union type
     this.stdout.write(data)
   }
 
