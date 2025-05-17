@@ -7,6 +7,7 @@ import type {
 } from '../types/pool-options'
 import type { CliOptions } from './cli-api'
 import { defaultBrowserPort, defaultPort } from '../../constants'
+import { ReportersMap } from '../reporters'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends
   | never
@@ -160,7 +161,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   reporters: {
     alias: 'reporter',
-    description: 'Specify reporters',
+    description: `Specify reporters (${Object.keys(ReportersMap).join(', ')})`,
     argument: '<name>',
     subcommands: null, // don't support custom objects
     array: true,

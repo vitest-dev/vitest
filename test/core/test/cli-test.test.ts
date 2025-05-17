@@ -1,5 +1,6 @@
 import { resolveConfig as viteResolveConfig } from 'vite'
 import { expect, test } from 'vitest'
+import { ReportersMap } from 'vitest/reporters'
 import { createCLI, parseCLI } from '../../../packages/vitest/src/node/cli/cac.js'
 import { resolveConfig } from '../../../packages/vitest/src/node/config/resolveConfig.js'
 
@@ -464,4 +465,20 @@ test('public parseCLI works correctly', () => {
       'color': true,
     },
   })
+})
+
+test('should include builtin reporters list', () => {
+  let helpText = ''
+  vitestCli.help((sections) => {
+    for (const section of sections) {
+      helpText += section.body
+    }
+  })
+  vitestCli.parse(['node', '/index.js', '--help'], { run: false })
+  const match = helpText.match(/--reporter[^(]*\(([^)]+)\)/)
+  expect(match).not.toBeNull()
+
+  const listed = match![1].split(',').map(s => s.trim()).filter(Boolean)
+  const expected = Object.keys(ReportersMap)
+  expect(new Set(listed)).toEqual(new Set(expected))
 })
