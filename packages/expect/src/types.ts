@@ -179,7 +179,7 @@ export interface AsymmetricMatchersContaining extends CustomMatcher {
 }
 
 export type DeeplyAllowMatchers<T> = T extends Array<infer Element>
-  ? Element[]
+  ? (DeeplyAllowMatchers<Element> | Element)[]
   : T extends object
     ? {
         [K in keyof T]: DeeplyAllowMatchers<T[K]> | AsymmetricMatcher<unknown>
