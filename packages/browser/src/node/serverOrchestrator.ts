@@ -26,6 +26,11 @@ export async function resolveOrchestrator(
     return
   }
 
+  // ignore uknown pages
+  if (sessionId && sessionId !== 'none' && !globalServer.vitest._browserSessions.sessionIds.has(sessionId)) {
+    return
+  }
+
   const injectorJs = typeof globalServer.injectorJs === 'string'
     ? globalServer.injectorJs
     : await globalServer.injectorJs

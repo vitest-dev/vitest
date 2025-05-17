@@ -5,6 +5,7 @@ import type {
   SuiteCollector,
   Test,
   TestContext,
+  WriteableTestContext,
 } from './types/tasks'
 import { getSafeTimers } from '@vitest/utils'
 import { PendingError } from './errors'
@@ -36,6 +37,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
   timeout: number,
   isHook = false,
   stackTraceError?: Error,
+  onTimeout?: (args: T extends (...args: infer A) => any ? A : never, error: Error) => void,
 ): T {
   if (timeout <= 0 || timeout === Number.POSITIVE_INFINITY) {
     return fn
@@ -58,7 +60,9 @@ export function withTimeout<T extends (...args: any[]) => any>(
       timer.unref?.()
 
       function rejectTimeoutError() {
-        reject_(makeTimeoutError(isHook, timeout, stackTraceError))
+        const error = makeTimeoutError(isHook, timeout, stackTraceError)
+        onTimeout?.(args, error)
+        reject_(error)
       }
 
       function resolve(result: unknown) {
@@ -102,14 +106,35 @@ export function withTimeout<T extends (...args: any[]) => any>(
   }) as T
 }
 
+const abortControllers = new WeakMap<TestContext, AbortController>()
+
+export function abortIfTimeout([context]: [TestContext?], error: Error): void {
+  if (context) {
+    abortContextSignal(context, error)
+  }
+}
+
+export function abortContextSignal(context: TestContext, error: Error): void {
+  const abortController = abortControllers.get(context)
+  abortController?.abort(error)
+}
+
 export function createTestContext(
   test: Test,
   runner: VitestRunner,
 ): TestContext {
   const context = function () {
     throw new Error('done() callback is deprecated, use promise instead')
-  } as unknown as TestContext
+  } as unknown as WriteableTestContext
 
+  let abortController = abortControllers.get(context)
+
+  if (!abortController) {
+    abortController = new AbortController()
+    abortControllers.set(context, abortController)
+  }
+
+  context.signal = abortController.signal
   context.task = test
 
   context.skip = (condition?: boolean | string, note?: string): never => {
@@ -129,14 +154,26 @@ export function createTestContext(
   context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
     test.onFailed.push(
-      withTimeout(handler, timeout ?? runner.config.hookTimeout, true, new Error('STACK_TRACE_ERROR')),
+      withTimeout(
+        handler,
+        timeout ?? runner.config.hookTimeout,
+        true,
+        new Error('STACK_TRACE_ERROR'),
+        (_, error) => abortController.abort(error),
+      ),
     )
   }
 
   context.onTestFinished = (handler, timeout) => {
     test.onFinished ||= []
     test.onFinished.push(
-      withTimeout(handler, timeout ?? runner.config.hookTimeout, true, new Error('STACK_TRACE_ERROR')),
+      withTimeout(
+        handler,
+        timeout ?? runner.config.hookTimeout,
+        true,
+        new Error('STACK_TRACE_ERROR'),
+        (_, error) => abortController.abort(error),
+      ),
     )
   }
 

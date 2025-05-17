@@ -27,6 +27,7 @@ import {
 } from '@vitest/utils'
 import { parseSingleStack } from '@vitest/utils/source-map'
 import {
+  abortIfTimeout,
   collectorContext,
   collectTask,
   createTestContext,
@@ -357,6 +358,7 @@ function createSuiteCollector(
           timeout,
           false,
           stackTraceError,
+          (_, error) => abortIfTimeout([context], error),
         ),
       )
     }

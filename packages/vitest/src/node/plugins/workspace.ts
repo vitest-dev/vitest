@@ -4,6 +4,7 @@ import type { ResolvedConfig, TestProjectInlineConfiguration } from '../types/co
 import { existsSync, readFileSync } from 'node:fs'
 import { deepMerge } from '@vitest/utils'
 import { basename, dirname, relative, resolve } from 'pathe'
+import { mergeConfig } from 'vite'
 import { configDefaults } from '../../defaults'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { VitestFilteredOutProjectError } from '../errors'
@@ -43,7 +44,11 @@ export function WorkspaceVitestPlugin(
         const testConfig = viteConfig.test || {}
 
         const root = testConfig.root || viteConfig.root || options.root
-        let name = testConfig.name
+
+        let { label: name, color } = typeof testConfig.name === 'string'
+          ? { label: testConfig.name }
+          : { label: '', ...testConfig.name }
+
         if (!name) {
           if (typeof options.workspacePath === 'string') {
             // if there is a package.json, read the name from it
@@ -60,35 +65,6 @@ export function WorkspaceVitestPlugin(
           }
           else {
             name = options.workspacePath.toString()
-          }
-        }
-
-        // keep project names to potentially filter it out
-        const workspaceNames = [name]
-        if (viteConfig.test?.browser?.enabled) {
-          if (viteConfig.test.browser.name) {
-            const browser = viteConfig.test.browser.name
-            // vitest injects `instances` in this case later on
-            workspaceNames.push(name ? `${name} (${browser})` : browser)
-          }
-
-          viteConfig.test.browser.instances?.forEach((instance) => {
-            // every instance is a potential project
-            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
-            workspaceNames.push(instance.name)
-          })
-        }
-
-        const filters = project.vitest.config.project
-        // if there is `--project=...` filter, check if any of the potential projects match
-        // if projects don't match, we ignore the test project altogether
-        // if some of them match, they will later be filtered again by `resolveWorkspace`
-        if (filters.length) {
-          const hasProject = workspaceNames.some((name) => {
-            return project.vitest.matchesProjectFilter(name)
-          })
-          if (!hasProject) {
-            throw new VitestFilteredOutProjectError()
           }
         }
 
@@ -136,11 +112,49 @@ export function WorkspaceVitestPlugin(
             },
           },
           test: {
-            name,
+            name: { label: name, color },
           },
-        };
+        }
+
+        // if this project defines a browser configuration, respect --browser flag
+        // otherwise if we always override the configuration, every project will run in browser mode
+        if (project.vitest._options.browser && viteConfig.test?.browser) {
+          viteConfig.test.browser = mergeConfig(
+            viteConfig.test.browser,
+            project.vitest._options.browser,
+          )
+        }
 
         (config.test as ResolvedConfig).defines = defines
+
+        // keep project names to potentially filter it out
+        const workspaceNames = [name]
+        if (viteConfig.test?.browser?.enabled) {
+          if (viteConfig.test.browser.name && !viteConfig.test.browser.instances?.length) {
+            const browser = viteConfig.test.browser.name
+            // vitest injects `instances` in this case later on
+            workspaceNames.push(name ? `${name} (${browser})` : browser)
+          }
+
+          viteConfig.test.browser.instances?.forEach((instance) => {
+            // every instance is a potential project
+            instance.name ??= name ? `${name} (${instance.browser})` : instance.browser
+            workspaceNames.push(instance.name)
+          })
+        }
+
+        const filters = project.vitest.config.project
+        // if there is `--project=...` filter, check if any of the potential projects match
+        // if projects don't match, we ignore the test project altogether
+        // if some of them match, they will later be filtered again by `resolveWorkspace`
+        if (filters.length) {
+          const hasProject = workspaceNames.some((name) => {
+            return project.vitest.matchesProjectFilter(name)
+          })
+          if (!hasProject) {
+            throw new VitestFilteredOutProjectError()
+          }
+        }
 
         const classNameStrategy
           = (typeof testConfig.css !== 'boolean'

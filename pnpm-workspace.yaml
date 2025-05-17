@@ -9,6 +9,7 @@ catalog:
   '@iconify-json/carbon': ^1.2.8
   '@iconify-json/logos': ^1.2.4
   '@jridgewell/trace-mapping': ^0.3.25
+  '@types/chai': ^5.2.2
   '@types/debug': ^4.1.12
   '@types/estree': ^1.0.7
   '@types/istanbul-lib-coverage': ^2.0.6
@@ -32,12 +33,12 @@ catalog:
   istanbul-reports: ^3.1.7
   magic-string: ^0.30.17
   magicast: ^0.3.5
-  msw: ^2.7.4
+  msw: ^2.7.5
   pathe: ^2.0.3
   sirv: ^3.0.1
   std-env: ^3.9.0
   test-exclude: ^7.0.1
-  tinyglobby: ^0.2.12
+  tinyglobby: ^0.2.13
   tinyrainbow: ^2.0.0
   unocss: ^0.65.4
   unplugin-vue-components: ^0.28.0

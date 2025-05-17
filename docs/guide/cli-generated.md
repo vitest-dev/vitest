@@ -89,7 +89,9 @@ Hide logs for skipped tests
 - **CLI:** `--reporter <name>`
 - **Config:** [reporters](/config/#reporters)
 
-Specify reporters
+Specify which reporter(s) to use. Available values:
+
+`default`, `basic`, `blob`, `verbose`, `dot`, `json`, `tap`, `tap-flat`, `junit`, `hanging-process`, `github-actions`.
 
 ### outputFile
 
@@ -291,7 +293,7 @@ Override Vite mode (default: `test` or `benchmark`)
 - **CLI:** `--workspace <path>`
 - **Config:** [workspace](/config/#workspace)
 
-Path to a workspace configuration file
+[deprecated] Path to a workspace configuration file
 
 ### isolate
 
@@ -360,7 +362,7 @@ Set to true to exit if port is already in use, instead of automatically trying t
 - **CLI:** `--browser.provider <name>`
 - **Config:** [browser.provider](/guide/browser/config#browser-provider)
 
-Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/config/#browser-provider) for more information (default: `"preview"`)
+Provider used to run browser tests. Some browsers are only available for specific providers. Can be "webdriverio", "playwright", "preview", or the path to a custom provider. Visit [`browser.provider`](https://vitest.dev/guide/browser/config.html#browser-provider) for more information (default: `"preview"`)
 
 ### browser.providerOptions
 
@@ -760,6 +762,13 @@ Omit annotation lines from the output (default: `false`)
 - **Config:** [diff.printBasicPrototype](/config/#diff-printbasicprototype)
 
 Print basic prototype Object and Array (default: `true`)
+
+### diff.maxDepth
+
+- **CLI:** `--diff.maxDepth <maxDepth>`
+- **Config:** [diff.maxDepth](/config/#diff-maxdepth)
+
+Limit the depth to recurse when printing nested objects (default: `20`)
 
 ### diff.truncateThreshold
 
