@@ -445,6 +445,11 @@ export function resolveConfig(
     resolved.runner = resolvePath(resolved.runner, resolved.root)
   }
 
+  resolved.attachmentsDir = resolve(
+    resolved.root,
+    resolved.attachmentsDir ?? '.vitest-attachments',
+  )
+
   if (resolved.snapshotEnvironment) {
     resolved.snapshotEnvironment = resolvePath(
       resolved.snapshotEnvironment,

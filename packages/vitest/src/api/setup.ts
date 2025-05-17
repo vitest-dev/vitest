@@ -1,4 +1,4 @@
-import type { File, TaskResultPack } from '@vitest/runner'
+import type { File, TaskEventPack, TaskResultPack } from '@vitest/runner'
 
 import type { IncomingMessage } from 'node:http'
 import type { ViteDevServer } from 'vite'
@@ -185,7 +185,7 @@ export class WebSocketReporter implements Reporter {
     })
   }
 
-  async onTaskUpdate(packs: TaskResultPack[]): Promise<void> {
+  async onTaskUpdate(packs: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
     if (this.clients.size === 0) {
       return
     }
@@ -210,7 +210,7 @@ export class WebSocketReporter implements Reporter {
     })
 
     this.clients.forEach((client) => {
-      client.onTaskUpdate?.(packs)?.catch?.(noop)
+      client.onTaskUpdate?.(packs, events)?.catch?.(noop)
     })
   }
 

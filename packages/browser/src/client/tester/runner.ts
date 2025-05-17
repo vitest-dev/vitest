@@ -142,6 +142,37 @@ export function createBrowserRunner(
     }
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
+      events.forEach(([__, _, data]) => {
+        const annotation = data?.annotation
+        if (annotation && annotation.location) {
+          // the file should be the test file
+          // tests from other files are not supported
+          const map = this.sourceMapCache.get(annotation.location.file)
+          const traceMap = new TraceMap(map as any)
+          if (!traceMap) {
+            return
+          }
+          const { line, column, source } = originalPositionFor(traceMap, annotation.location)
+          if (line != null && column != null && source != null) {
+            let file: string = annotation.location.file
+            if (source) {
+              const fileUrl = annotation.location.file.startsWith('file://')
+                ? annotation.location.file
+                : `file://${annotation.location.file}`
+              const sourceRootUrl = map.sourceRoot
+                ? new URL(map.sourceRoot, fileUrl)
+                : fileUrl
+              file = new URL(source, sourceRootUrl).pathname
+            }
+
+            annotation.location = {
+              line,
+              column: column + 1,
+              file,
+            }
+          }
+        }
+      })
       return rpc().onTaskUpdate(this.method, task, events)
     }
 
@@ -215,14 +246,24 @@ export async function initiateRunner(
   return runner
 }
 
+async function getTraceMap(file: string, sourceMaps: Map<string, any>) {
+  const result = sourceMaps.get(file) || await rpc().getBrowserFileSourceMap(file).then((map) => {
+    sourceMaps.set(file, map)
+    return map
+  })
+  if (!result) {
+    return null
+  }
+  return new TraceMap(result as any)
+}
+
 async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, any>) {
   const promises = files.map(async (file) => {
-    const result = sourceMaps.get(file.filepath) || await rpc().getBrowserFileSourceMap(file.filepath)
-    if (!result) {
+    const traceMap = await getTraceMap(file.filepath, sourceMaps)
+    if (!traceMap) {
       return null
     }
-    const traceMap = new TraceMap(result as any)
-    function updateLocation(task: Task) {
+    const updateLocation = (task: Task) => {
       if (task.location) {
         const { line, column } = originalPositionFor(traceMap, task.location)
         if (line != null && column != null) {

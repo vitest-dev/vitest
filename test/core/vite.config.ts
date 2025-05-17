@@ -65,6 +65,7 @@ export default defineConfig({
     setupFiles: [
       './test/setup.ts',
     ],
+    includeTaskLocation: true,
     reporters: [['default', { summary: true }], 'hanging-process'],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {
@@ -134,6 +135,9 @@ export default defineConfig({
         return false
       }
       if (log.includes('Importing WebAssembly ')) {
+        return false
+      }
+      if (log.includes('run [...filters]')) {
         return false
       }
     },
