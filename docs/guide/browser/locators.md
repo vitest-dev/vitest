@@ -798,7 +798,7 @@ const { path, base64 } = await button.screenshot({
 // bas64 - base64 encoded string of the screenshot
 ```
 
-::: warning WARNING <Version>3.1.2</Version>
+::: warning WARNING <Version>3.2.0</Version>
 Note that `screenshot` will always return a base64 string if `save` is set to `false`.
 The `path` is also ignored in that case.
 :::
