@@ -497,6 +497,10 @@ function guide(): DefaultTheme.SidebarItem[] {
       link: '/guide/mocking',
     },
     {
+      text: 'Parallelism',
+      link: '/guide/parallelism',
+    },
+    {
       text: 'Testing Types',
       link: '/guide/testing-types',
     },

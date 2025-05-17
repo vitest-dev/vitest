@@ -769,6 +769,7 @@ await languages.selectOptions([
 ### screenshot
 
 ```ts
+function screenshot(options: LocatorScreenshotOptions & { save: false }): Promise<string>
 function screenshot(options: LocatorScreenshotOptions & { base64: true }): Promise<{
   path: string
   base64: string
@@ -796,6 +797,11 @@ const { path, base64 } = await button.screenshot({
 // path - fullpath to the screenshot
 // bas64 - base64 encoded string of the screenshot
 ```
+
+::: warning WARNING <Version>3.2.0</Version>
+Note that `screenshot` will always return a base64 string if `save` is set to `false`.
+The `path` is also ignored in that case.
+:::
 
 ### query
 

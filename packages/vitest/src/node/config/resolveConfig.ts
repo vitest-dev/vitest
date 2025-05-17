@@ -777,6 +777,7 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
+  resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
   if (resolved.sequence.sequencer === RandomSequencer) {
     resolved.sequence.seed ??= Date.now()
