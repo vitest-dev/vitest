@@ -47,29 +47,24 @@ test('initializes project', async () => {
     [
       "package.json",
       "vitest-example",
+      "vitest.browser.config.ts",
       "vitest.config.ts",
-      "vitest.workspace.ts",
     ]
   `)
 
-  expect(await getFileContent('/vitest.workspace.ts')).toMatchInlineSnapshot(`
-    "import { defineWorkspace } from 'vitest/config'
+  expect(await getFileContent('/vitest.browser.config.ts')).toMatchInlineSnapshot(`
+    "import { defineConfig } from 'vitest/config'
 
-    export default defineWorkspace([
-      // If you want to keep running your existing tests in Node.js, uncomment the next line.
-      // 'vitest.config.ts',
-      {
-        extends: 'vitest.config.ts',
-        test: {
-          browser: {
-            enabled: true,
-            provider: 'preview',
-            instances: [
-            ],
-          },
+    export default defineConfig({
+      test: {
+        browser: {
+          enabled: true,
+          provider: 'preview',
+          instances: [
+          ],
         },
       },
-    ])
+    })
     "
   `)
 
