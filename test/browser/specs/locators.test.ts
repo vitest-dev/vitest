@@ -21,7 +21,7 @@ test('locators work correctly', async () => {
   expect(stdout).toReportSummaryTests({ passed: instances.length * COUNT_TESTS_OVERALL })
 })
 
-test.only('custom locators work', async () => {
+test('custom locators work', async () => {
   const { stderr, stdout } = await runBrowserTests({
     root: './fixtures/locators-custom',
     reporters: [['verbose', { isTTY: false }]],
