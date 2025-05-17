@@ -137,6 +137,9 @@ export default defineConfig({
       if (log.includes('Importing WebAssembly ')) {
         return false
       }
+      if (log.includes('run [...filters]')) {
+        return false
+      }
     },
     projects: [
       project('threads', 'red'),
