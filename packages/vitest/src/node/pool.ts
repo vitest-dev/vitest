@@ -201,7 +201,8 @@ export function createPool(ctx: Vitest): ProcessPool {
       })
     }
 
-    const groupedSpecifications: TestSpecification[][] = []
+    const groupedSpecifications: Record<string, TestSpecification[]> = {}
+    const groups = new Set<number>()
 
     const factories: Record<LocalPool, () => ProcessPool> = {
       vmThreads: () => createVmThreadsPool(ctx, options),
@@ -213,6 +214,7 @@ export function createPool(ctx: Vitest): ProcessPool {
 
     for (const spec of files) {
       const group = spec[0].config.sequence.groupOrder ?? 0
+      groups.add(group)
       groupedSpecifications[group] ??= []
       groupedSpecifications[group].push(spec)
     }
@@ -227,7 +229,14 @@ export function createPool(ctx: Vitest): ProcessPool {
       return sequencer.sort(specs)
     }
 
-    for (const specifications of groupedSpecifications) {
+    const sortedGroups = Array.from(groups).sort()
+    for (const group of sortedGroups) {
+      const specifications = groupedSpecifications[group]
+
+      if (!specifications?.length) {
+        continue
+      }
+
       const filesByPool: Record<LocalPool, TestSpecification[]> = {
         forks: [],
         threads: [],
