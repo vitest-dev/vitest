@@ -1,13 +1,8 @@
-// TODO: This is definitely now how Vitest tests types! 😄
-// I just found this convenient for a quick PoC...
-
 /* eslint-disable no-lone-blocks */
 
-import type { ExpectStatic } from './types'
+import { expect, test } from 'vitest'
 
-declare const expect: ExpectStatic
-
-export function typesTests() {
+test('expect.* allows asymmetrict mattchers with different types', () => {
   // types.ts examples: stringContaining
   expect('I have an apple').toEqual(expect.stringContaining('apple'))
   expect({ a: 'test string' }).toEqual({ a: expect.stringContaining('test') })
@@ -64,6 +59,28 @@ export function typesTests() {
       bar: 'bar',
       createdAt: expect.any(Date),
     })
+
+    expect(actual).toEqual<{
+      foo: string
+      bar: string
+      createdAt: Date
+    }>({
+      foo: 'foo',
+      bar: 'bar',
+      createdAt: expect.any(Date),
+    })
+
+    expect(actual).toEqual<{
+      foo: string
+      bar: string
+      createdAt: Date
+    }[]>([
+      {
+        foo: 'foo',
+        bar: 'bar',
+        createdAt: expect.any(Date),
+      },
+    ])
   }
 
   // expect.arrayContaining
@@ -77,4 +94,4 @@ export function typesTests() {
   // expect.any(Array)
   // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/62831/files#diff-ff7b882e4a29e7fe0e348a6bdf8b11774d606eaa221009b166b01389576d921fR1237
   expect({ list: [1, 2, 3] }).toMatchObject({ list: expect.any(Array) })
-}
+})

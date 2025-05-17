@@ -71,6 +71,10 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text', 'html'],
     },
+    typecheck: {
+      enabled: true,
+      tsconfig: './tsconfig.typecheck.json',
+    },
     environmentMatchGlobs: [
       ['**/*.dom.test.ts', 'happy-dom'],
       ['test/env-glob-dom/**', 'jsdom'],
