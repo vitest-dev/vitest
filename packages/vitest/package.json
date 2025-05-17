@@ -198,7 +198,6 @@
     "chai-subset": "^1.6.0",
     "find-up": "^6.3.0",
     "flatted": "catalog:",
-    "get-tsconfig": "^4.10.0",
     "happy-dom": "^17.4.4",
     "jsdom": "^26.1.0",
     "local-pkg": "^1.1.1",
