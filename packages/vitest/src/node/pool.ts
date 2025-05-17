@@ -212,7 +212,7 @@ export function createPool(ctx: Vitest): ProcessPool {
     }
 
     for (const spec of files) {
-      const group = spec[0].config.poolOrder ?? 0
+      const group = spec[0].config.sequence.groupOrder ?? 0
       groupedSpecifications[group] ??= []
       groupedSpecifications[group].push(spec)
     }

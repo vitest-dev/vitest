@@ -549,6 +549,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"parallel"`)',
         argument: '<order>',
       },
+      groupOrder: null,
     },
   },
   inspect: {
@@ -830,7 +831,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
 
   // disable CLI options
   cliExclude: null,
-  poolOrder: null,
   server: null,
   setupFiles: null,
   globalSetup: null,

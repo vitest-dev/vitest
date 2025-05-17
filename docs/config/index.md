@@ -815,60 +815,6 @@ Please, be aware of these issues when using this option. Vitest team cannot fix 
 
 Similar as `vmThreads` pool but uses `child_process` instead of `worker_threads` via [tinypool](https://github.com/tinylibs/tinypool). Communication between tests and the main process is not as fast as with `vmThreads` pool. Process related APIs such as `process.chdir()` are available in `vmForks` pool. Please be aware that this pool has the same pitfalls listed in `vmThreads`.
 
-### poolOrder <Version>3.2.0</Version> {#poolorder}
-
-- **Type:** `number`
-- **Default:** `0`
-
-The pool group order in which this project runs its tests. If not specified, all projects run in parallel.
-
-This option only works if you have more than one project in your [workspace](/guide/workspace). If the same value is used in different projects, all those project will run together.
-
-Note that this options does not affect how tests run inside the project. To configure isolation or test order, use [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
-
-::: details Example
-Consider this example:
-
-```ts
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    workspace: [
-      {
-        test: {
-          name: 'slow',
-          poolOrder: 0,
-        },
-      },
-      {
-        test: {
-          name: 'fast',
-          poolOrder: 0,
-        },
-      },
-      {
-        test: {
-          name: 'flaky',
-          poolOrder: 1,
-        },
-      },
-    ],
-  },
-})
-```
-
-Tests in these projects will run in this order:
-
-```
- 0. slow  |
-          |> running together
- 0. fast  |
-
- 1. flaky |> runs after slow and fast alone
-```
-:::
-
 ### poolOptions<NonProjectOption /> {#pooloptions}
 
 - **Type:** `Record<'threads' | 'forks' | 'vmThreads' | 'vmForks', {}>`
@@ -2088,7 +2034,7 @@ export default defineConfig({
 
 ### sequence
 
-- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles? }`
+- **Type**: `{ sequencer?, shuffle?, seed?, hooks?, setupFiles?, groupOrder }`
 
 Options for how tests should be sorted.
 
@@ -2107,7 +2053,69 @@ A custom class that defines methods for sharding and sorting. You can extend `Ba
 
 Sharding is happening before sorting, and only if `--shard` option is provided.
 
-If [`poolOrder`](#poolorder) is specified, the sequencer will be called once for each group and pool.
+If [`sequencer.groupOrder`](#groupOrder) is specified, the sequencer will be called once for each group and pool.
+
+#### groupOrder <Version>3.2.0</Version> {#groupOrder}
+
+- **Type:** `number`
+- **Default:** `0`
+
+The group order in which this project runs its tests. If not specified, all projects run in parallel.
+
+Every project with the same group order will run together. Projects will be sorted by the same number (groups run from lowest to highest).
+
+This option only works if you have more than one project in your [workspace](/guide/workspace). If the same value is used in different projects, all those project will run together.
+
+Note that this options does not affect how tests run inside the project. To configure isolation or test order, use [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
+
+::: details Example
+Consider this example:
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'slow',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'fast',
+          sequence: {
+            groupOrder: 0,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'flaky',
+          sequence: {
+            groupOrder: 1,
+          },
+        },
+      },
+    ],
+  },
+})
+```
+
+Tests in these projects will run in this order:
+
+```
+ 0. slow  |
+          |> running together
+ 0. fast  |
+
+ 1. flaky |> runs after slow and fast alone
+```
+:::
 
 #### sequence.shuffle
 

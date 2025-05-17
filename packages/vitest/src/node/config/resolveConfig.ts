@@ -485,8 +485,6 @@ export function resolveConfig(
 
   resolved.pool ??= 'threads'
 
-  resolved.poolOrder ??= 0
-
   if (process.env.VITEST_MAX_THREADS) {
     resolved.poolOptions = {
       ...resolved.poolOptions,
@@ -774,6 +772,7 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
+  resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
   if (resolved.sequence.sequencer === RandomSequencer) {
     resolved.sequence.seed ??= Date.now()

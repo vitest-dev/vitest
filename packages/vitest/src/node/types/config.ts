@@ -65,6 +65,17 @@ interface SequenceOptions {
    */
   sequencer?: TestSequencerConstructor
   /**
+   * The group order in which this project runs its tests.
+   * If not specified, all projects run in parallel.
+   *
+   * You can group tests in certain projects to run together and delay others.
+   *
+   * Every project with the same group order will run together.
+   * Projects will be sorted by the same number (groups run from lowest to highest).
+   * @default 0
+   */
+  groupOrder?: number
+  /**
    * Should files and tests run in random order.
    * @default false
    */
@@ -354,16 +365,6 @@ export interface InlineConfig {
    * Pool options
    */
   poolOptions?: PoolOptions
-
-  /**
-   * The pool group order in which this project runs its tests.
-   * If not specified, all projects run in parallel.
-   *
-   * You can group tests in certain projects to run together and delay others.
-   *
-   * @default 0
-   */
-  poolOrder?: number
 
   /**
    * Maximum number or percentage of workers to run tests in. `poolOptions.{threads,vmThreads}.maxThreads`/`poolOptions.forks.maxForks` has higher priority.
@@ -1076,6 +1077,7 @@ export interface ResolvedConfig
     shuffle?: boolean
     concurrent?: boolean
     seed: number
+    groupOrder: number
   }
 
   typecheck: Omit<TypecheckConfig, 'enabled'> & {
