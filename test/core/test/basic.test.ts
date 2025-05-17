@@ -7,12 +7,7 @@ if (!testPath || !testPath.includes('basic.test.ts')) {
   throw new Error(`testPath is not correct: ${testPath}`)
 }
 
-test.only('Math.sqrt()', async ({ annotate }) => {
-  annotate('cute puppy', {
-    contentType: 'image/jpeg',
-    path: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg',
-  })
-  throw new Error('hello world')
+test.only('Math.sqrt()', async () => {
   assert.equal(Math.sqrt(4), two)
   assert.equal(Math.sqrt(2), Math.SQRT2)
   expect(Math.sqrt(144)).toStrictEqual(12)
