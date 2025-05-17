@@ -27,7 +27,7 @@ export interface VitestRunnerCLIOptions {
 }
 
 export async function runVitest(
-  config: UserConfig,
+  cliOptions: UserConfig,
   cliFilters: string[] = [],
   mode: VitestRunMode = 'test',
   viteOverrides: ViteUserConfig = {},
@@ -72,7 +72,7 @@ export async function runVitest(
   let ctx: Vitest | undefined
   let thrown = false
   try {
-    const { reporters, ...rest } = config
+    const { reporters, ...rest } = cliOptions
 
     ctx = await startVitest(mode, cliFilters, {
       watch: false,

@@ -11,9 +11,6 @@ it.each([
     name: 'running in the browser',
     browser: {
       enabled: true,
-      provider: 'playwright',
-      instances: [{ browser: 'chromium' }],
-      headless: true,
     },
   },
 ] as UserConfig[])('passes down metadata when $name', { timeout: 60_000, retry: 1 }, async (config) => {

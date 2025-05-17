@@ -270,7 +270,7 @@ test('browser by name', () => {
   const { options, args } = parseArguments('--browser=firefox', false)
 
   expect(args).toEqual([])
-  expect(options).toEqual({ browser: { enabled: true, name: 'firefox' } })
+  expect(options).toEqual({ browser: { name: 'firefox' } })
 })
 
 test('clearScreen', async () => {
@@ -293,7 +293,11 @@ test('clearScreen', async () => {
       clearScreen: viteClearScreen,
     }
     const vitestConfig = getCLIOptions(vitestClearScreen)
-    const config = resolveConfig({ logger: undefined, mode: 'test' } as any, vitestConfig, viteConfig)
+    const config = resolveConfig({
+      logger: undefined,
+      mode: 'test',
+      _cliOptions: {},
+    } as any, vitestConfig, viteConfig)
     return config.clearScreen
   })
   expect(results).toMatchInlineSnapshot(`
@@ -374,7 +378,7 @@ test('public parseCLI works correctly', () => {
     filter: [],
     options: {
       'coverage': { enabled: true },
-      'browser': { enabled: true, name: 'chrome' },
+      'browser': { name: 'chrome' },
       '--': [],
       'color': true,
     },
