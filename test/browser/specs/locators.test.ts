@@ -20,3 +20,22 @@ test('locators work correctly', async () => {
   expect(stdout).toReportSummaryTestFiles({ passed: instances.length * COUNT_TEST_FILES })
   expect(stdout).toReportSummaryTests({ passed: instances.length * COUNT_TESTS_OVERALL })
 })
+
+test.only('custom locators work', async () => {
+  const { stderr, stdout } = await runBrowserTests({
+    root: './fixtures/locators-custom',
+    reporters: [['verbose', { isTTY: false }]],
+  })
+
+  expect(stderr).toReportNoErrors()
+
+  instances.forEach(({ browser }) => {
+    expect(stdout).toReportPassedTest('basic.test.tsx', browser)
+  })
+
+  const COUNT_TEST_FILES = 1
+  const COUNT_TESTS_OVERALL = 4
+
+  expect(stdout).toReportSummaryTestFiles({ passed: instances.length * COUNT_TEST_FILES })
+  expect(stdout).toReportSummaryTests({ passed: instances.length * COUNT_TESTS_OVERALL })
+})
