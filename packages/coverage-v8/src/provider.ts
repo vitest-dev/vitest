@@ -62,6 +62,22 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     })
   }
 
+  onFileTransform(sourceCode: string, id: string): { code: string; map: any } | undefined {
+    if (!this.testExclude.shouldInstrument(id)) {
+      return
+    }
+
+    if (sourceCode.includes('import.meta.vitest')) {
+      const s = new MagicString(sourceCode)
+      s.replaceAll(/(if +\(import\.meta\.vitest\))/g, '/* v8 ignore next */ $1')
+
+      return {
+        code: s.toString(),
+        map: s.generateMap({ hires: 'boundary' }),
+      }
+    }
+  }
+
   createCoverageMap(): CoverageMap {
     return libCoverage.createCoverageMap({})
   }
@@ -398,6 +414,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       if (transformMode === 'browser') {
         if (result.url.startsWith('/@fs')) {
           result.url = `${FILE_PROTOCOL}${removeStartsWith(result.url, '/@fs')}`
+        }
+        else if (result.url.startsWith(project.config.root)) {
+          result.url = `${FILE_PROTOCOL}${result.url}`
         }
         else {
           result.url = `${FILE_PROTOCOL}${project.config.root}${result.url}`
