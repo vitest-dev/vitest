@@ -243,7 +243,7 @@ describe('reporters', () => {
     const result = stdout
       .replace(/time="[\d.]+"/g, 'time="0"')
       .replace(/timestamp="[\w\-:.]+"/g, 'timestamp="0"')
-      .replace(/hostname="[\w.]+"/g, 'hostname="CI"')
+      .replace(/hostname="[\w.\-]+"/g, 'hostname="CI"')
 
     expect(result).toMatchInlineSnapshot(`
       "<?xml version="1.0" encoding="UTF-8" ?>
