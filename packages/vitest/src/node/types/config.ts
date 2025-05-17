@@ -907,6 +907,11 @@ export interface TypecheckConfig {
    * Path to tsconfig, relative to the project root.
    */
   tsconfig?: string
+  /**
+   * Minimum time in milliseconds it takes to spawn the typechecker.
+   * @default 10_000
+   */
+  spawnTimeout?: number
 }
 
 export interface UserConfig extends InlineConfig {
