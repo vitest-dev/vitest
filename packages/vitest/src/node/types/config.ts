@@ -65,13 +65,11 @@ interface SequenceOptions {
    */
   sequencer?: TestSequencerConstructor
   /**
-   * The group order in which this project runs its tests.
-   * If not specified, all projects run in parallel.
+   * Controls the order in which this project runs its tests when using multiple [projects](/guide/projects).
    *
-   * You can group tests in certain projects to run together and delay others.
-   *
-   * Every project with the same group order will run together.
-   * Projects will be sorted by the same number (groups run from lowest to highest).
+   * - Projects with the same group order number will run together, and groups are run from lowest to highest.
+   * - If you don’t set this option, all projects run in parallel.
+   * - If several projects use the same group order, they will run at the same time.
    * @default 0
    */
   groupOrder?: number

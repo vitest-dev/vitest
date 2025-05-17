@@ -2060,13 +2060,14 @@ If [`sequencer.groupOrder`](#groupOrder) is specified, the sequencer will be cal
 - **Type:** `number`
 - **Default:** `0`
 
-The group order in which this project runs its tests. If not specified, all projects run in parallel.
+Controls the order in which this project runs its tests when using multiple [projects](/guide/projects).
 
-Every project with the same group order will run together. Projects will be sorted by the same number (groups run from lowest to highest).
+- Projects with the same group order number will run together, and groups are run from lowest to highest.
+- If you don’t set this option, all projects run in parallel.
+- If several projects use the same group order, they will run at the same time.
 
-This option only works if you have more than one [project](/guide/projects). If the same value is used in different projects, all those project will run together.
-
-Note that this options does not affect how tests run inside the project. To configure isolation or test order, use [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
+This setting only affects the order in which projects run, not the order of tests within a project.
+To control test isolation or the order of tests inside a project, use the [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
 
 ::: details Example
 Consider this example:
