@@ -2064,7 +2064,7 @@ The group order in which this project runs its tests. If not specified, all proj
 
 Every project with the same group order will run together. Projects will be sorted by the same number (groups run from lowest to highest).
 
-This option only works if you have more than one project in your [workspace](/guide/workspace). If the same value is used in different projects, all those project will run together.
+This option only works if you have more than one [project](/guide/projects). If the same value is used in different projects, all those project will run together.
 
 Note that this options does not affect how tests run inside the project. To configure isolation or test order, use [`isolate`](#isolate) and [`sequence.sequencer`](#sequence-sequencer) options.
 
