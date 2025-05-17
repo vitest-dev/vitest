@@ -105,7 +105,7 @@ export const page: {
 The `getBy*` API is explained at [Locators API](/guide/browser/locators).
 :::
 
-::: warning WARNING <Version>3.1.2</Version>
+::: warning WARNING <Version>3.2.0</Version>
 Note that `screenshot` will always return a base64 string if `save` is set to `false`.
 The `path` is also ignored in that case.
 :::
