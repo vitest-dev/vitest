@@ -164,7 +164,7 @@ interface File extends Suite {
    */
   filepath: string
   /**
-   * The name of the workspace project the file belongs to.
+   * The name of the test project the file belongs to.
    */
   projectName: string | undefined
   /**
@@ -209,7 +209,7 @@ interface Test<ExtraContext = object> extends TaskBase {
    */
   file: File
   /**
-   * Whether the task was skipped by calling `t.skip()`.
+   * Whether the task was skipped by calling `context.skip()`.
    */
   pending?: boolean
   /**
