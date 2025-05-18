@@ -58,7 +58,7 @@
       "types": "./dist/workers.d.ts",
       "import": "./dist/workers.js"
     },
-    "./browser": {
+    "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
@@ -73,10 +73,6 @@
     "./environments": {
       "types": "./dist/environments.d.ts",
       "default": "./dist/environments.js"
-    },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.js"
     },
     "./config": {
       "types": "./config.d.ts",
