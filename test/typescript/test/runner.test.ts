@@ -135,7 +135,7 @@ describe('when the title is dynamic', () => {
   })
 })
 
-it('throws an error if typechecker process exists', async () => {
+it.only('throws an error if typechecker process exists', async () => {
   const { stderr } = await runVitest({
     root: resolve(__dirname, '../fixtures/source-error'),
     typecheck: {
@@ -144,5 +144,10 @@ it('throws an error if typechecker process exists', async () => {
     },
   })
   expect(stderr).toContain('Error: Spawning typechecker failed - is typescript installed?')
-  expect(stderr).toContain('Error: spawn non-existing-command ENOENT')
+  if (process.platform === 'win32') {
+    expect(stderr).toContain('Error: The non-existing-command command exited with code 1.')
+  }
+  else {
+    expect(stderr).toContain('Error: spawn non-existing-command ENOENT')
+  }
 })

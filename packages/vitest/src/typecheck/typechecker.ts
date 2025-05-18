@@ -313,9 +313,9 @@ export class Typechecker {
     })
 
     this.process = child.process
-    await this._onParseStart?.()
 
     let rerunTriggered = false
+    let dataReceived = false
 
     return new Promise<{ result: Result }>((resolve, reject) => {
       if (!child.process || !child.process.stdout) {
@@ -324,6 +324,7 @@ export class Typechecker {
       }
 
       child.process.stdout.on('data', (chunk) => {
+        dataReceived = true
         this._output += chunk
         if (!watch) {
           return
@@ -357,11 +358,25 @@ export class Typechecker {
       }
 
       child.process.once('spawn', () => {
+        this._onParseStart?.()
         child.process?.off('error', onError)
         clearTimeout(timeout)
-        resolve({ result: child })
+        if (process.platform === 'win32') {
+          // on Windows, the process might be spawned but fail to start
+          // we wait for a potential error here
+          setTimeout(() => {
+            resolve({ result: child })
+          }, 200)
+        }
       })
 
+      if (process.platform === 'win32') {
+        child.process.once('close', (code) => {
+          if (code != null && code !== 0 && !dataReceived) {
+            onError(new Error(`The ${typecheck.checker} command exited with code ${code}.`))
+          }
+        })
+      }
       child.process.once('error', onError)
     })
   }
