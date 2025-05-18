@@ -317,6 +317,7 @@ export class JUnitReporter implements Reporter {
           mode: 'run',
           result: file.result,
           meta: {},
+          timeout: 0,
           // NOTE: not used in JUnitReporter
           context: null as any,
           suite: null as any,

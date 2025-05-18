@@ -38,24 +38,62 @@ When a test function returns a promise, the runner will wait until it is resolve
 In Jest, `TestFunction` can also be of type `(done: DoneCallback) => void`. If this form is used, the test will not be concluded until `done` is called. You can achieve the same using an `async` function, see the [Migration guide Done Callback section](/guide/migration#done-callback).
 :::
 
-Most options support both dot-syntax and object-syntax allowing you to use whatever style you prefer.
+You can define options by chaining properties on a function:
 
-:::code-group
-```ts [dot-syntax]
+```ts
 import { test } from 'vitest'
 
 test.skip('skipped test', () => {
   // some logic that fails right now
 })
+
+test.concurrent.skip('skipped concurrent test', () => {
+  // some logic that fails right now
+})
 ```
-```ts [object-syntax]
+
+But you can also provide an object as a second argument instead:
+
+```ts
 import { test } from 'vitest'
 
 test('skipped test', { skip: true }, () => {
   // some logic that fails right now
 })
+
+test('skipped concurrent test', { skip: true, concurrent: true }, () => {
+  // some logic that fails right now
+})
 ```
-:::
+
+They both work in exactly the same way. To use either one is purely a stylistic choice.
+
+Note that if you are providing timeout as the last argument, you cannot use options anymore:
+
+```ts
+import { test } from 'vitest'
+
+// ✅ this works
+test.skip('heavy test', () => {
+  // ...
+}, 10_000)
+
+// ❌ this doesn't work
+test('heavy test', { skip: true }, () => {
+  // ...
+}, 10_000)
+```
+
+However, you can provide a timeout inside the object:
+
+```ts
+import { test } from 'vitest'
+
+// ✅ this works
+test('heavy test', { skip: true, timeout: 10_000 }, () => {
+  // ...
+})
+```
 
 ## test
 
@@ -124,6 +162,18 @@ import { assert, test } from 'vitest'
 
 test('skipped test', (context) => {
   context.skip()
+  // Test skipped, no error
+  assert.equal(Math.sqrt(4), 3)
+})
+```
+
+Since Vitest 3.1, if the condition is unknown, you can provide it to the `skip` method as the first arguments:
+
+```ts
+import { assert, test } from 'vitest'
+
+test('skipped test', (context) => {
+  context.skip(Math.random() < 0.5, 'optional message')
   // Test skipped, no error
   assert.equal(Math.sqrt(4), 3)
 })
@@ -310,7 +360,8 @@ You can inject parameters with [printf formatting](https://nodejs.org/api/util.h
 - `%f`: floating point value
 - `%j`: json
 - `%o`: object
-- `%#`: index of the test case
+- `%#`: 0-based index of the test case
+- `%$`: 1-based index of the test case
 - `%%`: single percent sign ('%')
 
 ```ts
@@ -330,16 +381,29 @@ test.each([
 // ✓ add(2, 1) -> 3
 ```
 
-You can also access object properties with `$` prefix, if you are using objects as arguments:
+You can also access object properties and array elements with `$` prefix:
 
-  ```ts
-  test.each([
-    { a: 1, b: 1, expected: 2 },
-    { a: 1, b: 2, expected: 3 },
-    { a: 2, b: 1, expected: 3 },
-  ])('add($a, $b) -> $expected', ({ a, b, expected }) => {
-    expect(a + b).toBe(expected)
-  })
+```ts
+test.each([
+  { a: 1, b: 1, expected: 2 },
+  { a: 1, b: 2, expected: 3 },
+  { a: 2, b: 1, expected: 3 },
+])('add($a, $b) -> $expected', ({ a, b, expected }) => {
+  expect(a + b).toBe(expected)
+})
+
+// this will return
+// ✓ add(1, 1) -> 2
+// ✓ add(1, 2) -> 3
+// ✓ add(2, 1) -> 3
+
+test.each([
+  [1, 1, 2],
+  [1, 2, 3],
+  [2, 1, 3],
+])('add($0, $1) -> $2', (a, b, expected) => {
+  expect(a + b).toBe(expected)
+})
 
 // this will return
 // ✓ add(1, 1) -> 2
@@ -397,13 +461,13 @@ You cannot use this syntax when using Vitest as [type checker](/guide/testing-ty
 
 - **Alias:** `it.for`
 
-Alternative of `test.each` to provide [`TestContext`](/guide/test-context).
+Alternative to `test.each` to provide [`TestContext`](/guide/test-context).
 
-The difference from `test.each` is how array case is provided in the arguments.
-Other non array case (including template string usage) works exactly same.
+The difference from `test.each` lies in how arrays are provided in the arguments.
+Non-array arguments to `test.for` (including template string usage) work exactly the same as for `test.each`.
 
 ```ts
-// `each` spreads array case
+// `each` spreads arrays
 test.each([
   [1, 1, 2],
   [1, 2, 3],
@@ -412,7 +476,7 @@ test.each([
   expect(a + b).toBe(expected)
 })
 
-// `for` doesn't spread array case
+// `for` doesn't spread arrays (notice the square brackets around the arguments)
 test.for([
   [1, 1, 2],
   [1, 2, 3],
@@ -422,7 +486,7 @@ test.for([
 })
 ```
 
-2nd argument is [`TestContext`](/guide/test-context) and it can be used for concurrent snapshot, for example,
+The 2nd argument is [`TestContext`](/guide/test-context) and can be used for concurrent snapshots, for example:
 
 ```ts
 test.concurrent.for([
@@ -438,9 +502,9 @@ test.concurrent.for([
 
 - **Type:** `(name: string | Function, fn: BenchFunction, options?: BenchOptions) => void`
 
-`bench` defines a benchmark. In Vitest terms benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
+`bench` defines a benchmark. In Vitest terms, benchmark is a function that defines a series of operations. Vitest runs this function multiple times to display different performance results.
 
-Vitest uses [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
+Vitest uses the [`tinybench`](https://github.com/tinylibs/tinybench) library under the hood, inheriting all its options that can be used as a third argument.
 
 ```ts
 import { bench } from 'vitest'
@@ -1215,16 +1279,6 @@ test('performs an organization query', async () => {
 
 ::: tip
 This hook is always called in reverse order and is not affected by [`sequence.hooks`](/config/#sequence-hooks) option.
-
-<!-- TODO: should it be called? https://github.com/vitest-dev/vitest/pull/7069 -->
-Note that this hook is not called if test was skipped with a dynamic `ctx.skip()` call:
-
-```ts{2}
-test('skipped dynamically', (t) => {
-  onTestFinished(() => {}) // not called
-  t.skip()
-})
-```
 :::
 
 ### onTestFailed
@@ -1236,8 +1290,8 @@ import { onTestFailed, test } from 'vitest'
 
 test('performs a query', () => {
   const db = connectDb()
-  onTestFailed((e) => {
-    console.log(e.result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })
@@ -1251,8 +1305,8 @@ import { test } from 'vitest'
 
 test.concurrent('performs a query', ({ onTestFailed }) => {
   const db = connectDb()
-  onTestFailed((result) => {
-    console.log(result.errors)
+  onTestFailed(({ task }) => {
+    console.log(task.result.errors)
   })
   db.query('SELECT * FROM users')
 })

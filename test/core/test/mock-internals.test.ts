@@ -1,6 +1,7 @@
+import type { MockInstance } from 'vitest'
 import childProcess, { exec } from 'node:child_process'
 import timers from 'node:timers'
-import { afterEach, beforeEach, describe, expect, type MockInstance, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { dynamicImport } from '../src/dynamic-import'
 import { execDefault, execHelloWorld, execImportAll } from '../src/exec'
 

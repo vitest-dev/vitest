@@ -2,8 +2,8 @@ import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestSpecification } from './spec'
 import { existsSync } from 'node:fs'
-import mm from 'micromatch'
 import { join, relative, resolve } from 'pathe'
+import pm from 'picomatch'
 import { isWindows } from '../utils/env'
 import { groupFilters, parseFilter } from './cli/filter'
 import { GitNotFoundError, IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
@@ -55,7 +55,7 @@ export class VitestSpecifications {
       f => ({ ...f, filename: resolve(dir, f.filename) }),
     ))
 
-    // Key is file and val sepcifies whether we have matched this file with testLocation
+    // Key is file and val specifies whether we have matched this file with testLocation
     const testLocHasMatch: { [f: string]: boolean } = {}
 
     await Promise.all(this.vitest.projects.map(async (project) => {
@@ -139,7 +139,8 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    if (forceRerunTriggers.length && mm(related, forceRerunTriggers).length) {
+    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    if (matcher && related.some(file => matcher(file))) {
       return specs
     }
 

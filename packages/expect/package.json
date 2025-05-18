@@ -1,7 +1,7 @@
 {
   "name": "@vitest/expect",
   "type": "module",
-  "version": "3.0.8",
+  "version": "3.2.0-beta.1",
   "description": "Jest's expect matchers as a Chai plugin",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -34,13 +34,13 @@
     "dev": "rollup -c --watch"
   },
   "dependencies": {
+    "@types/chai": "catalog:",
     "@vitest/spy": "workspace:*",
     "@vitest/utils": "workspace:*",
-    "chai": "^5.2.0",
-    "tinyrainbow": "^2.0.0"
+    "chai": "catalog:",
+    "tinyrainbow": "catalog:"
   },
   "devDependencies": {
-    "@types/chai": "5.0.1",
     "@vitest/runner": "workspace:*",
     "rollup-plugin-copy": "^3.5.0"
   }

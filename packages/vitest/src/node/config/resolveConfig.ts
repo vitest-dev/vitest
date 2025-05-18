@@ -145,6 +145,12 @@ export function resolveConfig(
   resolved.project = toArray(resolved.project)
   resolved.provide ??= {}
 
+  resolved.name = typeof options.name === 'string'
+    ? options.name
+    : (options.name?.label || '')
+
+  resolved.color = typeof options.name !== 'string' ? options.name?.color : undefined
+
   const inspector = resolved.inspect || resolved.inspectBrk
 
   resolved.inspector = {
@@ -234,26 +240,23 @@ export function resolveConfig(
 
   const browser = resolved.browser
 
-  if (browser.enabled) {
+  // if browser was enabled via CLI and it's configured by the user, then validate the input
+  if (browser.enabled && viteConfig.test?.browser) {
     if (!browser.name && !browser.instances) {
-      // CLI can enable `--browser.*` flag to change config of workspace projects
-      // the same flag will be applied to the root config that doesn't have to have "name" or "instances"
-      // in this case we just disable the browser mode
-      browser.enabled = false
+      throw new Error(`Vitest Browser Mode requires "browser.name" (deprecated) or "browser.instances" options, none were set.`)
     }
-    else {
-      const instances = browser.instances
-      if (browser.name && browser.instances) {
-        // --browser=chromium filters configs to a single one
-        browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
-      }
 
-      if (browser.instances && !browser.instances.length) {
-        throw new Error([
-          `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
-          browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
-        ].join(''))
-      }
+    const instances = browser.instances
+    if (browser.name && browser.instances) {
+      // --browser=chromium filters configs to a single one
+      browser.instances = browser.instances.filter(instance => instance.browser === browser.name)
+    }
+
+    if (browser.instances && !browser.instances.length) {
+      throw new Error([
+        `"browser.instances" was set in the config, but the array is empty. Define at least one browser config.`,
+        browser.name && instances?.length ? ` The "browser.name" was set to "${browser.name}" which filtered all configs (${instances.map(c => c.browser).join(', ')}). Did you mean to use another name?` : '',
+      ].join(''))
     }
   }
 
@@ -349,7 +352,12 @@ export function resolveConfig(
   resolved.globalSetup = toArray(resolved.globalSetup || []).map(file =>
     resolvePath(file, resolved.root),
   )
-  resolved.coverage.exclude.push(
+
+  // override original exclude array for cases where user re-uses same object in test.exclude
+  resolved.coverage.exclude = [
+    ...resolved.coverage.exclude,
+
+    // Exclude setup files
     ...resolved.setupFiles.map(
       file =>
         `${resolved.coverage.allowExternal ? '**/' : ''}${relative(
@@ -357,8 +365,10 @@ export function resolveConfig(
           file,
         )}`,
     ),
-  )
-  resolved.coverage.exclude.push(...resolved.include)
+
+    // Exclude test files
+    ...resolved.include,
+  ]
 
   resolved.forceRerunTriggers = [
     ...resolved.forceRerunTriggers,
@@ -762,6 +772,7 @@ export function resolveConfig(
       ? RandomSequencer
       : BaseSequencer
   }
+  resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
   if (resolved.sequence.sequencer === RandomSequencer) {
     resolved.sequence.seed ??= Date.now()
@@ -913,7 +924,7 @@ function isPlaywrightChromiumOnly(vitest: Vitest, config: ResolvedConfig) {
   for (const instance of browser.instances) {
     const name = instance.name || (config.name ? `${config.name} (${instance.browser})` : instance.browser)
     // browser config is filtered out
-    if (!vitest._matchesProjectFilter(name)) {
+    if (!vitest.matchesProjectFilter(name)) {
       continue
     }
     if (instance.browser !== 'chromium') {

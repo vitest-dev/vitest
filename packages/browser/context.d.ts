@@ -1,5 +1,6 @@
-import type { SerializedConfig } from 'vitest'
+import { SerializedConfig } from 'vitest'
 import { ARIARole } from './aria-role.js'
+import {} from './matchers.js'
 
 export type BufferEncoding =
   | 'ascii'
@@ -28,12 +29,19 @@ export interface ScreenshotOptions {
   element?: Element | Locator
   /**
    * Path relative to the current test file.
+   * @default `__screenshots__/${testFileName}/${testName}.png`
    */
   path?: string
   /**
    * Will also return the base64 encoded screenshot alongside the path.
    */
   base64?: boolean
+  /**
+   * Keep the screenshot on the file system. If file is not saved,
+   * `page.screenshot` always returns `base64` screenshot.
+   * @default true
+   */
+  save?: boolean
 }
 
 export interface BrowserCommands {
@@ -142,7 +150,7 @@ export interface UserEvent {
    * @see {@link https://webdriver.io/docs/api/element/clearValue} WebdriverIO API
    * @see {@link https://testing-library.com/docs/user-event/utility/#clear} testing-library API
    */
-  clear: (element: Element | Locator) => Promise<void>
+  clear: (element: Element | Locator, options?: UserEventClearOptions) => Promise<void>
   /**
    * Sends a `Tab` key event. Uses provider's API under the hood.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -171,7 +179,7 @@ export interface UserEvent {
    * @see {@link https://playwright.dev/docs/api/class-locator#locator-set-input-files} Playwright API
    * @see {@link https://testing-library.com/docs/user-event/utility#upload} testing-library API
    */
-  upload: (element: Element | Locator, files: File | File[] | string | string[]) => Promise<void>
+  upload: (element: Element | Locator, files: File | File[] | string | string[], options?: UserEventUploadOptions) => Promise<void>
   /**
    * Copies the selected content.
    * @see {@link https://playwright.dev/docs/api/class-keyboard} Playwright API
@@ -218,9 +226,11 @@ export interface UserEventFillOptions {}
 export interface UserEventHoverOptions {}
 export interface UserEventSelectOptions {}
 export interface UserEventClickOptions {}
+export interface UserEventClearOptions {}
 export interface UserEventDoubleClickOptions {}
 export interface UserEventTripleClickOptions {}
 export interface UserEventDragAndDropOptions {}
+export interface UserEventUploadOptions {}
 
 export interface LocatorOptions {
   /**
@@ -358,7 +368,7 @@ export interface Locator extends LocatorSelectors {
    * Clears the input element content
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-clear}
    */
-  clear(): Promise<void>
+  clear(options?: UserEventClearOptions): Promise<void>
   /**
    * Moves the cursor position to the selected element
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-hover}
@@ -391,7 +401,7 @@ export interface Locator extends LocatorSelectors {
    * Change a file input element to have the specified files. Uses provider's API under the hood.
    * @see {@link https://vitest.dev/guide/browser/interactivity-api#userevent-upload}
    */
-  upload(files: File | File[] | string | string[]): Promise<void>
+  upload(files: File | File[] | string | string[], options?: UserEventUploadOptions): Promise<void>
 
   /**
    * Make a screenshot of an element matching the locator.
@@ -450,6 +460,21 @@ export interface Locator extends LocatorSelectors {
    * @see {@link https://vitest.dev/guide/browser/locators#last}
    */
   last(): Locator
+  /**
+   * Returns a locator that matches both the current locator and the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#and}
+   */
+  and(locator: Locator): Locator
+  /**
+   * Returns a locator that matches either the current locator or the provided locator.
+   * @see {@link https://vitest.dev/guide/browser/locators#or}
+   */
+  or(locator: Locator): Locator
+  /**
+   * Narrows existing locator according to the options.
+   * @see {@link https://vitest.dev/guide/browser/locators#filter}
+   */
+  filter(options: LocatorOptions): Locator
 }
 
 export interface UserEventTabOptions {
@@ -504,6 +529,13 @@ export const server: {
   config: SerializedConfig
 }
 
+export interface LocatorOptions {
+  hasText?: string | RegExp
+  hasNotText?: string | RegExp
+  has?: Locator
+  hasNot?: Locator
+}
+
 /**
  * Handler for user interactions. The support is provided by the browser provider (`playwright` or `webdriverio`).
  * If used with `preview` provider, fallbacks to simulated events via `@testing-library/user-event`.
@@ -527,11 +559,16 @@ export interface BrowserPage extends LocatorSelectors {
    * Make a screenshot of the test iframe or a specific element.
    * @returns Path to the screenshot file or path and base64.
    */
+  screenshot(options: Omit<ScreenshotOptions, 'save'> & { save: false }): Promise<string>
   screenshot(options: Omit<ScreenshotOptions, 'base64'> & { base64: true }): Promise<{
     path: string
     base64: string
   }>
-  screenshot(options?: ScreenshotOptions): Promise<string>
+  screenshot(options?: Omit<ScreenshotOptions, 'base64'>): Promise<string>
+  screenshot(options?: ScreenshotOptions): Promise<string | {
+    path: string
+    base64: string
+  }>
   /**
    * Extend default `page` object with custom methods.
    */
@@ -542,6 +579,15 @@ export interface BrowserPage extends LocatorSelectors {
    */
   elementLocator(element: Element): Locator
 }
+
+export interface BrowserLocators {
+  createElementLocators(element: Element): LocatorSelectors
+  extend(methods: {
+    [K in keyof LocatorSelectors]?: (...args: Parameters<LocatorSelectors[K]>) => ReturnType<LocatorSelectors[K]> | string
+  }): void
+}
+
+export const locators: BrowserLocators
 
 export const page: BrowserPage
 export const cdp: () => CDPSession

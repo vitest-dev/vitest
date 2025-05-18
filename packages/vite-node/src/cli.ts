@@ -97,6 +97,10 @@ async function run(files: string[], options: CliOptions = {}) {
   if (Number(viteVersion.split('.')[0]) < 6) {
     await server.pluginContainer.buildStart({})
   }
+  else {
+    // directly access client plugin container until https://github.com/vitejs/vite/issues/19607
+    await server.environments.client.pluginContainer.buildStart({})
+  }
 
   const env = loadEnv(server.config.mode, server.config.envDir, '')
 

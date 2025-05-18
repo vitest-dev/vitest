@@ -263,6 +263,52 @@ describe('TestCase', () => {
     `)
   })
 
+  test('skipped test case in a different order', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        test.skip('skipped', () => {});
+        test('running', () => {});
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestCaseReady     (example.test.ts) |skipped|
+        onTestCaseResult    (example.test.ts) |skipped|
+        onTestCaseReady     (example.test.ts) |running|
+        onTestCaseResult    (example.test.ts) |running|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
+  test('skipped test case in a suite with a different order', async () => {
+    const report = await run({
+      'example.test.ts': ts`
+        describe('suite', () => {
+          test.skip('skipped', () => {});
+          test('running', () => {});
+        })
+      `,
+    })
+
+    expect(report).toMatchInlineSnapshot(`
+      "
+      onTestModuleQueued    (example.test.ts)
+      onTestModuleCollected (example.test.ts)
+      onTestModuleStart     (example.test.ts)
+        onTestSuiteReady    (example.test.ts) |suite|
+          onTestCaseReady   (example.test.ts) |skipped|
+          onTestCaseResult  (example.test.ts) |skipped|
+          onTestCaseReady   (example.test.ts) |running|
+          onTestCaseResult  (example.test.ts) |running|
+        onTestSuiteResult   (example.test.ts) |suite|
+      onTestModuleEnd       (example.test.ts)"
+    `)
+  })
+
   test('dynamically skipped test case', async () => {
     const report = await run({
       'example.test.ts': ts`
@@ -887,17 +933,17 @@ describe('merge reports', () => {
           onTestCaseReady   (example-2.test.ts) |third|
           onTestCaseResult  (example-2.test.ts) |third|
         onTestSuiteResult   (example-2.test.ts) |suite|
-        onTestCaseReady     (example-2.test.ts) |fifth|
-        onTestCaseResult    (example-2.test.ts) |fifth|
         onTestCaseReady     (example-2.test.ts) |fourth|
         onTestCaseResult    (example-2.test.ts) |fourth|
+        onTestCaseReady     (example-2.test.ts) |fifth|
+        onTestCaseResult    (example-2.test.ts) |fifth|
       onTestModuleEnd       (example-2.test.ts)"
     `)
   })
 })
 
 describe('type checking', () => {
-  test('typechking is reported correctly', async () => {
+  test('typechecking is reported correctly', async () => {
     const report = await run({
       'example-1.test-d.ts': ts`
         test('first', () => {});
@@ -954,10 +1000,10 @@ describe('type checking', () => {
           onTestCaseReady   (example-2.test-d.ts) |third|
           onTestCaseResult  (example-2.test-d.ts) |third|
         onTestSuiteResult   (example-2.test-d.ts) |suite|
-        onTestCaseReady     (example-2.test-d.ts) |fifth|
-        onTestCaseResult    (example-2.test-d.ts) |fifth|
         onTestCaseReady     (example-2.test-d.ts) |fourth|
         onTestCaseResult    (example-2.test-d.ts) |fourth|
+        onTestCaseReady     (example-2.test-d.ts) |fifth|
+        onTestCaseResult    (example-2.test-d.ts) |fifth|
       onTestModuleEnd       (example-2.test-d.ts)
 
       onTestRunEnd   (failed, 2 modules, 0 errors)"

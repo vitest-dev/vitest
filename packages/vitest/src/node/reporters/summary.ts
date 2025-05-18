@@ -34,6 +34,7 @@ interface SlowTask {
 interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
   filename: TestModule['task']['name']
   projectName: TestModule['project']['name']
+  projectColor: TestModule['project']['color']
   hook?: Omit<SlowTask, 'hook'>
   tests: Map<TestCase['id'], SlowTask>
   typecheck: boolean
@@ -248,7 +249,7 @@ export class SummaryReporter implements Reporter {
     }
     else {
       // Run is about to end as there are less tests left than whole run had parallel at max.
-      // Remove finished test immediatelly.
+      // Remove finished test immediately.
       this.removeTestModule(module.id)
     }
 
@@ -278,7 +279,7 @@ export class SummaryReporter implements Reporter {
       const typecheck = testFile.typecheck ? `${c.bgBlue(c.bold(' TS '))} ` : ''
       summary.push(
         c.bold(c.yellow(` ${F_POINTER} `))
-        + formatProjectName(testFile.projectName)
+        + formatProjectName({ name: testFile.projectName, color: testFile.projectColor })
         + typecheck
         + testFile.filename
         + c.dim(!testFile.completed && !testFile.total
@@ -382,6 +383,7 @@ function initializeStats(module: TestModule): RunningModule {
     completed: 0,
     filename: module.task.name,
     projectName: module.project.name,
+    projectColor: module.project.color,
     tests: new Map(),
     typecheck: !!module.task.meta.typecheck,
   }

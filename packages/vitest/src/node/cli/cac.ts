@@ -1,8 +1,9 @@
+import type { CAC, Command } from 'cac'
 import type { VitestRunMode } from '../types/config'
 import type { CliOptions } from './cli-api'
 import type { CLIOption, CLIOptions as CLIOptionsConfig } from './cli-config'
 import { toArray } from '@vitest/utils'
-import cac, { type CAC, type Command } from 'cac'
+import cac from 'cac'
 import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { version } from '../../../package.json' with { type: 'json' }
@@ -307,8 +308,8 @@ async function start(mode: VitestRunMode, cliFilters: string[], options: CliOpti
     }
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Startup Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Startup Error')}`)
     console.error(e)
     console.error('\n\n')
 
@@ -364,8 +365,8 @@ async function collect(mode: VitestRunMode, cliFilters: string[], options: CliOp
     await ctx.close()
   }
   catch (e) {
-    const { divider } = await import('../reporters/renderers/utils')
-    console.error(`\n${c.red(divider(c.bold(c.inverse(' Collect Error '))))}`)
+    const { errorBanner } = await import('../reporters/renderers/utils')
+    console.error(`\n${errorBanner('Collect Error')}`)
     console.error(e)
     console.error('\n\n')
 

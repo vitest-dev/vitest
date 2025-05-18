@@ -1,7 +1,7 @@
 import type { ReportOptions } from 'istanbul-reports'
 import type { TransformResult as ViteTransformResult } from 'vite'
-import type { ModuleExecutionInfo } from 'vite-node'
 import type { AfterSuiteRunMeta, Arrayable } from '../../types/general'
+import type { RuntimeCoverageModuleLoader, RuntimeCoverageProviderModule } from '../../utils/coverage'
 import type { Vitest } from '../core'
 
 type TransformResult =
@@ -58,32 +58,15 @@ export interface ReportContext {
   allTestsRun?: boolean
 }
 
-export interface CoverageModuleLoader {
+export interface CoverageModuleLoader extends RuntimeCoverageModuleLoader {
   executeId: (id: string) => Promise<{ default: CoverageProviderModule }>
-  isBrowser?: boolean
-  moduleExecutionInfo?: ModuleExecutionInfo
 }
 
-export interface CoverageProviderModule {
+export interface CoverageProviderModule extends RuntimeCoverageProviderModule {
   /**
    * Factory for creating a new coverage provider
    */
   getProvider: () => CoverageProvider | Promise<CoverageProvider>
-
-  /**
-   * Executed before tests are run in the worker thread.
-   */
-  startCoverage?: (runtimeOptions: { isolate: boolean }) => unknown | Promise<unknown>
-
-  /**
-   * Executed on after each run in the worker thread. Possible to return a payload passed to the provider
-   */
-  takeCoverage?: (runtimeOptions?: { moduleExecutionInfo?: ModuleExecutionInfo }) => unknown | Promise<unknown>
-
-  /**
-   * Executed after all tests have been run in the worker thread.
-   */
-  stopCoverage?: (runtimeOptions: { isolate: boolean }) => unknown | Promise<unknown>
 }
 
 export type CoverageReporter = keyof ReportOptions | (string & {})
@@ -292,8 +275,23 @@ export interface CoverageIstanbulOptions extends BaseCoverageOptions {
 export interface CoverageV8Options extends BaseCoverageOptions {
   /**
    * Ignore empty lines, comments and other non-runtime code, e.g. Typescript types
+   * - Requires `experimentalAstAwareRemapping: false`
    */
   ignoreEmptyLines?: boolean
+
+  /**
+   * Remap coverage with experimental AST based analysis
+   * - Provides more accurate results compared to default mode
+   */
+  experimentalAstAwareRemapping?: boolean
+
+  /**
+   * Set to array of class method names to ignore for coverage.
+   * - Requires `experimentalAstAwareRemapping: true`
+   *
+   * @default []
+   */
+  ignoreClassMethods?: string[]
 }
 
 export interface CustomProviderOptions

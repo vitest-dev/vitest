@@ -428,7 +428,7 @@ export class ViteNodeServer {
     }
 
     const sourcemap = this.options.sourcemap ?? 'inline'
-    if (sourcemap === 'inline' && result && !id.includes('node_modules')) {
+    if (sourcemap === 'inline' && result) {
       result = await this.processTransformResult(filepath, result)
     }
 

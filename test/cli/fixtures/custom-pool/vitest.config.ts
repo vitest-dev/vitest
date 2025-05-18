@@ -8,7 +8,7 @@ export default defineConfig({
         array: [1, 2, 3],
       },
     },
-    workspace: [
+    projects: [
       {
         extends: true,
         test: {

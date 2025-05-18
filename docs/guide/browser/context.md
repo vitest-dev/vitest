@@ -105,6 +105,11 @@ export const page: {
 The `getBy*` API is explained at [Locators API](/guide/browser/locators).
 :::
 
+::: warning WARNING <Version>3.2.0</Version>
+Note that `screenshot` will always return a base64 string if `save` is set to `false`.
+The `path` is also ignored in that case.
+:::
+
 ## `cdp`
 
 The `cdp` export returns the current Chrome DevTools Protocol session. It is mostly useful to library authors to build tools on top of it.

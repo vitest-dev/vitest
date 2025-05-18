@@ -1,3 +1,4 @@
+import type { StackTraceParserOptions } from '@vitest/utils/source-map'
 import type { HtmlTagDescriptor } from 'vite'
 import type { ErrorWithDiff, ParsedStack } from 'vitest'
 import type {
@@ -12,7 +13,7 @@ import type {
 import type { BrowserServerState } from './state'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { parseErrorStacktrace, parseStacktrace, type StackTraceParserOptions } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { dirname, join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
@@ -34,6 +35,7 @@ export class ParentBrowserProject {
   public injectorJs: Promise<string> | string
   public errorCatcherUrl: string
   public locatorsUrl: string | undefined
+  public matchersUrl: string
   public stateJs: Promise<string> | string
 
   public commands: Record<string, BrowserCommand<any>> = {}
@@ -77,7 +79,7 @@ export class ParentBrowserProject {
         if (mod) {
           return id
         }
-        const resolvedPath = resolve(project.config.root, id.slice(1))
+        const resolvedPath = resolve(this.vite.config.root, id.slice(1))
         const modUrl = this.vite.moduleGraph.getModuleById(resolvedPath)
         if (modUrl) {
           return resolvedPath
@@ -130,6 +132,7 @@ export class ParentBrowserProject {
     if (builtinProviders.includes(providerName)) {
       this.locatorsUrl = join('/@fs/', distRoot, 'locators', `${providerName}.js`)
     }
+    this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
     this.stateJs = readFile(
       resolve(distRoot, 'state.js'),
       'utf-8',
@@ -195,7 +198,7 @@ export class ParentBrowserProject {
       throw new Error(`CDP is not supported by the provider "${provider.name}".`)
     }
 
-    const promise = this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
+    const session = await this.cdpSessionsPromises.get(rpcId) ?? await (async () => {
       const promise = provider.getCDPSession!(sessionId).finally(() => {
         this.cdpSessionsPromises.delete(rpcId)
       })
@@ -203,7 +206,6 @@ export class ParentBrowserProject {
       return promise
     })()
 
-    const session = await promise
     const rpc = (browser.state as BrowserServerState).testers.get(rpcId)
     if (!rpc) {
       throw new Error(`Tester RPC "${rpcId}" was not established.`)

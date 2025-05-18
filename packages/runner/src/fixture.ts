@@ -1,6 +1,6 @@
 import type { FixtureOptions, TestContext } from './types/tasks'
 import { createDefer, isObject } from '@vitest/utils'
-import { getFixture } from './map'
+import { getTestFixture } from './map'
 
 export interface FixtureItem extends FixtureOptions {
   prop: string
@@ -15,13 +15,36 @@ export interface FixtureItem extends FixtureOptions {
   deps?: FixtureItem[]
 }
 
-export function mergeContextFixtures(
+export function mergeScopedFixtures(
+  testFixtures: FixtureItem[],
+  scopedFixtures: FixtureItem[],
+): FixtureItem[] {
+  const scopedFixturesMap = scopedFixtures.reduce<Record<string, FixtureItem>>((map, fixture) => {
+    map[fixture.prop] = fixture
+    return map
+  }, {})
+  const newFixtures: Record<string, FixtureItem> = {}
+  testFixtures.forEach((fixture) => {
+    const useFixture = scopedFixturesMap[fixture.prop] || {
+      // we need to clone the fixture because we override its values
+      ...fixture,
+    }
+    newFixtures[useFixture.prop] = useFixture
+  })
+  for (const fixtureKep in newFixtures) {
+    const fixture = newFixtures[fixtureKep]
+    // if the fixture was define before the scope, then its dep
+    // will reference the original fixture instead of the scope
+    fixture.deps = fixture.deps?.map(dep => newFixtures[dep.prop])
+  }
+  return Object.values(newFixtures)
+}
+
+export function mergeContextFixtures<T extends { fixtures?: FixtureItem[] }>(
   fixtures: Record<string, any>,
-  context: { fixtures?: FixtureItem[] },
+  context: T,
   inject: (key: string) => unknown,
-): {
-    fixtures?: FixtureItem[]
-  } {
+): T {
   const fixtureOptionKeys = ['auto', 'injected']
   const fixtureArray: FixtureItem[] = Object.entries(fixtures).map(
     ([prop, value]) => {
@@ -92,7 +115,7 @@ export function withFixtures(fn: Function, testContext?: TestContext) {
       return fn({})
     }
 
-    const fixtures = getFixture(context)
+    const fixtures = getTestFixture(context)
     if (!fixtures?.length) {
       return fn(context)
     }
@@ -222,8 +245,8 @@ function getUsedProps(fn: Function) {
   //   __async(this, null, function*
   //   __async(this, arguments, function*
   //   __async(this, [_0, _1], function*
-  if (/__async\(this, (?:null|arguments|\[[_0-9, ]*\]), function\*/.test(fnString)) {
-    fnString = fnString.split('__async(this,')[1]
+  if (/__async\((?:this|null), (?:null|arguments|\[[_0-9, ]*\]), function\*/.test(fnString)) {
+    fnString = fnString.split(/__async\((?:this|null),/)[1]
   }
   const match = fnString.match(/[^(]*\(([^)]*)/)
   if (!match) {

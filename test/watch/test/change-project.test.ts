@@ -10,7 +10,7 @@ test('reruns tests when config changes', async () => {
 
     export default {
       test: {
-        workspace: [
+        projects: [
           './project-1',
           './project-2',
         ],

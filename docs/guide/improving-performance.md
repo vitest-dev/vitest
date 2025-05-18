@@ -88,7 +88,7 @@ vitest run --reporter=blob --shard=3/3 # 3rd machine
 Collect the results stored in `.vitest-reports` directory from each machine and merge them with [`--merge-reports`](/guide/cli#merge-reports) option:
 
 ```sh
-vitest --merge-reports
+vitest run --merge-reports
 ```
 
 ::: details Github action example
@@ -115,7 +115,7 @@ jobs:
           node-version: 20
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Install dependencies
         run: pnpm i
@@ -144,7 +144,7 @@ jobs:
           node-version: 20
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
       - name: Install dependencies
         run: pnpm i
@@ -180,7 +180,7 @@ VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=3/4 & \
 VITEST_MAX_THREADS=7 vitest run --reporter=blob --shard=4/4 & \
 wait # https://man7.org/linux/man-pages/man2/waitpid.2.html
 
-vitest --merge-reports
+vitest run --merge-reports
 ```
 
 :::

@@ -559,4 +559,77 @@ describe('jest mock compat layer', () => {
     fn.mockImplementationOnce(temporaryMockImplementation)
     expect(fn.getMockImplementation()).toBe(temporaryMockImplementation)
   })
+
+  describe('is disposable', () => {
+    describe.runIf(Symbol.dispose)('in environments supporting it', () => {
+      it('has dispose property', () => {
+        expect(vi.fn()[Symbol.dispose]).toBeTypeOf('function')
+      })
+      it('calls mockRestore when disposing', () => {
+        const fn = vi.fn()
+        const restoreSpy = vi.spyOn(fn, 'mockRestore')
+        {
+          using _fn2 = fn
+        }
+        expect(restoreSpy).toHaveBeenCalled()
+      })
+      it('allows disposal when using mockImplementation', () => {
+        expect(vi.fn().mockImplementation(() => {})[Symbol.dispose]).toBeTypeOf('function')
+      })
+    })
+    describe.skipIf(Symbol.dispose)('in environments not supporting it', () => {
+      it('does not have dispose property', () => {
+        expect(vi.fn()[Symbol.dispose]).toBeUndefined()
+      })
+    })
+  })
+
+  describe('docs example', () => {
+    it('mockClear', () => {
+      const person = {
+        greet: (name: string) => `Hello ${name}`,
+      }
+      const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+      expect(person.greet('Alice')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Alice']])
+
+      // clear call history but keep mock implementation
+      spy.mockClear()
+      expect(spy.mock.calls).toEqual([])
+      expect(person.greet('Bob')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Bob']])
+    })
+
+    it('mockReset', () => {
+      const person = {
+        greet: (name: string) => `Hello ${name}`,
+      }
+      const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+      expect(person.greet('Alice')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Alice']])
+
+      // clear call history and reset implementation, but method is still spied
+      spy.mockReset()
+      expect(spy.mock.calls).toEqual([])
+      expect(person.greet).toBe(spy)
+      expect(person.greet('Bob')).toBe('Hello Bob')
+      expect(spy.mock.calls).toEqual([['Bob']])
+    })
+
+    it('mockRestore', () => {
+      const person = {
+        greet: (name: string) => `Hello ${name}`,
+      }
+      const spy = vi.spyOn(person, 'greet').mockImplementation(() => 'mocked')
+      expect(person.greet('Alice')).toBe('mocked')
+      expect(spy.mock.calls).toEqual([['Alice']])
+
+      // clear call history and restore spied object method
+      spy.mockRestore()
+      expect(spy.mock.calls).toEqual([])
+      expect(person.greet).not.toBe(spy)
+      expect(person.greet('Bob')).toBe('Hello Bob')
+      expect(spy.mock.calls).toEqual([])
+    })
+  })
 })

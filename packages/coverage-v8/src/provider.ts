@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import remapping from '@ampproject/remapping'
 // @ts-expect-error -- untyped
 import { mergeProcessCovs } from '@bcoe/v8-coverage'
+import astV8ToIstanbul from 'ast-v8-to-istanbul'
 import createDebug from 'debug'
 import libCoverage from 'istanbul-lib-coverage'
 import libReport from 'istanbul-lib-report'
@@ -24,6 +25,7 @@ import v8ToIstanbul from 'v8-to-istanbul'
 import { cleanUrl } from 'vite-node/utils'
 
 import { BaseCoverageProvider } from 'vitest/coverage'
+import { parseAstAsync } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
 
 export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
@@ -65,6 +67,8 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
   }
 
   async generateCoverage({ allTestsRun }: ReportContext): Promise<CoverageMap> {
+    const start = debug.enabled ? performance.now() : 0
+
     const coverageMap = this.createCoverageMap()
     let merged: RawCoverage = { result: [] }
 
@@ -103,12 +107,15 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       const coveredFiles = coverageMap.files()
       const untestedCoverage = await this.getUntestedFiles(coveredFiles)
 
-      const converted = await this.convertCoverage(untestedCoverage)
-      coverageMap.merge(await transformCoverage(converted))
+      coverageMap.merge(await transformCoverage(untestedCoverage))
     }
 
     if (this.options.excludeAfterRemap) {
       coverageMap.filter(filename => this.testExclude.shouldInstrument(filename))
+    }
+
+    if (debug.enabled) {
+      debug(`Generate coverage total time ${(performance.now() - start!).toFixed()} ms`)
     }
 
     return coverageMap
@@ -158,7 +165,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
     )
   }
 
-  private async getUntestedFiles(testedFiles: string[]): Promise<RawCoverage> {
+  private async getUntestedFiles(testedFiles: string[]): Promise<CoverageMap> {
     const transformResults = normalizeTransformResults(
       this.ctx.vitenode.fetchCache,
     )
@@ -179,8 +186,9 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
       .map(file => pathToFileURL(file))
       .filter(file => !testedFiles.includes(file.pathname))
 
-    let merged: RawCoverage = { result: [] }
     let index = 0
+
+    const coverageMap = this.createCoverageMap()
 
     for (const chunk of this.toSlices(uncoveredFiles, this.options.processingConcurrency)) {
       if (debug.enabled) {
@@ -188,47 +196,115 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         debug('Uncovered files %d/%d', index, uncoveredFiles.length)
       }
 
-      const coverages = await Promise.all(
-        chunk.map(async (filename) => {
-          const { originalSource } = await this.getSources(
-            filename.href,
-            transformResults,
-            transform,
-          )
+      await Promise.all(chunk.map(async (filename) => {
+        let timeout: ReturnType<typeof setTimeout> | undefined
+        let start: number | undefined
 
-          const coverage = {
-            url: filename.href,
-            scriptId: '0',
-            // Create a made up function to mark whole file as uncovered. Note that this does not exist in source maps.
-            functions: [
+        if (debug.enabled) {
+          start = performance.now()
+          timeout = setTimeout(() => debug(c.bgRed(`File "${filename.pathname}" is taking longer than 3s`)), 3_000)
+        }
+
+        const sources = await this.getSources(
+          filename.href,
+          transformResults,
+          transform,
+        )
+
+        coverageMap.merge(await this.v8ToIstanbul(
+          filename.href,
+          0,
+          sources,
+          [{
+            ranges: [
               {
-                ranges: [
-                  {
-                    startOffset: 0,
-                    endOffset: originalSource.length,
-                    count: 0,
-                  },
-                ],
-                isBlockCoverage: true,
-                // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
-                functionName: '(empty-report)',
+                startOffset: 0,
+                endOffset: sources.originalSource.length,
+                count: 0,
               },
             ],
-          }
+            isBlockCoverage: true,
+            // This is magical value that indicates an empty report: https://github.com/istanbuljs/v8-to-istanbul/blob/fca5e6a9e6ef38a9cdc3a178d5a6cf9ef82e6cab/lib/v8-to-istanbul.js#LL131C40-L131C40
+            functionName: '(empty-report)',
+          }],
+        ))
 
-          return { result: [coverage] }
-        }),
-      )
+        if (debug.enabled) {
+          clearTimeout(timeout)
 
-      merged = mergeProcessCovs([
-        merged,
-        ...coverages.filter(
-          (cov): cov is NonNullable<typeof cov> => cov != null,
-        ),
-      ])
+          const diff = performance.now() - start!
+          const color = diff > 500 ? c.bgRed : c.bgGreen
+          debug(`${color(` ${diff.toFixed()} ms `)} ${filename.pathname}`)
+        }
+      }))
     }
 
-    return merged
+    return coverageMap
+  }
+
+  private async v8ToIstanbul(filename: string, wrapperLength: number, sources: Awaited<ReturnType<typeof this.getSources>>, functions: Profiler.FunctionCoverage[]) {
+    if (this.options.experimentalAstAwareRemapping) {
+      let ast
+      try {
+        ast = await parseAstAsync(sources.source)
+      }
+      catch (error) {
+        this.ctx.logger.error(`Failed to parse ${filename}. Excluding it from coverage.\n`, error)
+        return {}
+      }
+
+      return await astV8ToIstanbul({
+        code: sources.source,
+        sourceMap: sources.sourceMap?.sourcemap,
+        ast,
+        coverage: { functions, url: filename },
+        ignoreClassMethods: this.options.ignoreClassMethods,
+        wrapperLength,
+        ignoreNode: (node, type) => {
+          // SSR transformed imports
+          if (
+            type === 'statement'
+            && node.type === 'AwaitExpression'
+            && node.argument.type === 'CallExpression'
+            && node.argument.callee.type === 'Identifier'
+            && node.argument.callee.name === '__vite_ssr_import__'
+          ) {
+            return true
+          }
+
+          // SSR transformed exports
+          if (
+            type === 'statement'
+            && node.type === 'ExpressionStatement'
+            && node.expression.type === 'AssignmentExpression'
+            && node.expression.left.type === 'MemberExpression'
+            && node.expression.left.object.type === 'Identifier'
+            && node.expression.left.object.name === '__vite_ssr_exports__'
+          ) {
+            return true
+          }
+        },
+      },
+      )
+    }
+
+    const converter = v8ToIstanbul(
+      filename,
+      wrapperLength,
+      sources,
+      undefined,
+      this.options.ignoreEmptyLines,
+    )
+    await converter.load()
+
+    try {
+      converter.applyCoverage(functions)
+    }
+    catch (error) {
+      this.ctx.logger.error(`Failed to convert coverage for ${filename}.\n`, error)
+    }
+
+    return converter.toIstanbul()
   }
 
   private async getSources<TransformResult extends (FetchResult | Awaited<ReturnType<typeof this.ctx.vitenode.transformRequest>>)>(
@@ -258,7 +334,7 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
         // If file does not exist construct a dummy source for it.
         // These can be files that were generated dynamically during the test run and were removed after it.
         const length = findLongestFunctionLength(functions)
-        return '.'.repeat(length)
+        return '/'.repeat(length)
       })
     }
 
@@ -344,6 +420,14 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
 
       await Promise.all(
         chunk.map(async ({ url, functions, startOffset }) => {
+          let timeout: ReturnType<typeof setTimeout> | undefined
+          let start: number | undefined
+
+          if (debug.enabled) {
+            start = performance.now()
+            timeout = setTimeout(() => debug(c.bgRed(`File "${fileURLToPath(url)}" is taking longer than 3s`)), 3_000)
+          }
+
           const sources = await this.getSources(
             url,
             transformResults,
@@ -351,23 +435,20 @@ export class V8CoverageProvider extends BaseCoverageProvider<ResolvedCoverageOpt
             functions,
           )
 
-          const converter = v8ToIstanbul(
+          coverageMap.merge(await this.v8ToIstanbul(
             url,
             startOffset,
             sources,
-            undefined,
-            this.options.ignoreEmptyLines,
-          )
-          await converter.load()
+            functions,
+          ))
 
-          try {
-            converter.applyCoverage(functions)
-          }
-          catch (error) {
-            this.ctx.logger.error(`Failed to convert coverage for ${url}.\n`, error)
-          }
+          if (debug.enabled) {
+            clearTimeout(timeout)
 
-          coverageMap.merge(converter.toIstanbul())
+            const diff = performance.now() - start!
+            const color = diff > 500 ? c.bgRed : c.bgGreen
+            debug(`${color(` ${diff.toFixed()} ms `)} ${fileURLToPath(url)}`)
+          }
         }),
       )
     }

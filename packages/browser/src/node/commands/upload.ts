@@ -1,3 +1,4 @@
+import type { UserEventUploadOptions } from '@vitest/browser/context'
 import type { UserEventCommand } from './utils'
 import { dirname, resolve } from 'pathe'
 import { PlaywrightBrowserProvider } from '../providers/playwright'
@@ -7,10 +8,11 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
   name: string
   mimeType: string
   base64: string
-}>) => void> = async (
+}>, options: UserEventUploadOptions) => void> = async (
   context,
   selector,
   files,
+  options,
 ) => {
   const testPath = context.testPath
   if (!testPath) {
@@ -30,7 +32,7 @@ export const upload: UserEventCommand<(element: string, files: Array<string | {
         buffer: Buffer.from(file.base64, 'base64'),
       }
     })
-    await iframe.locator(selector).setInputFiles(playwrightFiles as string[])
+    await iframe.locator(selector).setInputFiles(playwrightFiles as string[], options)
   }
   else if (context.provider instanceof WebdriverBrowserProvider) {
     for (const file of files) {

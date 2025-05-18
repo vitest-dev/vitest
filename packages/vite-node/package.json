@@ -1,7 +1,7 @@
 {
   "name": "vite-node",
   "type": "module",
-  "version": "3.0.8",
+  "version": "3.2.0-beta.1",
   "description": "Vite as Node.js runtime",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -82,15 +82,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "cac": "^6.7.14",
-    "debug": "^4.4.0",
-    "es-module-lexer": "^1.6.0",
-    "pathe": "^2.0.3",
+    "cac": "catalog:",
+    "debug": "catalog:",
+    "es-module-lexer": "^1.7.0",
+    "pathe": "catalog:",
     "vite": "^5.0.0 || ^6.0.0"
   },
   "devDependencies": {
-    "@jridgewell/trace-mapping": "^0.3.25",
-    "@types/debug": "^4.1.12",
-    "tinyrainbow": "^2.0.0"
+    "@jridgewell/trace-mapping": "catalog:",
+    "@types/debug": "catalog:",
+    "tinyrainbow": "catalog:"
   }
 }

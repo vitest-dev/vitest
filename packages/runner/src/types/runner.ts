@@ -77,7 +77,7 @@ export interface VitestRunner {
    * Runner should listen for this method and mark tests and suites as skipped in
    * "onBeforeRunSuite" and "onBeforeRunTask" when called.
    */
-  onCancel?: (reason: CancelReason) => unknown
+  cancel?: (reason: CancelReason) => unknown
 
   /**
    * Called before running a single test. Doesn't have "result" yet.
@@ -162,4 +162,9 @@ export interface VitestRunner {
    * The name of the current pool. Can affect how stack trace is inferred on the server side.
    */
   pool?: string
+
+  /** @private */
+  _currentTaskStartTime?: number
+  /** @private */
+  _currentTaskTimeout?: number
 }

@@ -265,7 +265,8 @@ JSON reporter now prints `task.meta` for every assertion result.
 Previously `vi.fn<TArgs, TReturn>` accepted two generic types separately for arguments and return value. This is changed to directly accept a function type `vi.fn<T>` to simplify the usage.
 
 ```ts
-import { type Mock, vi } from 'vitest'
+import { vi } from 'vitest'
+import type { Mock } from 'vitest'
 
 const add = (x: number, y: number): number => x + y
 
