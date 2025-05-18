@@ -285,12 +285,12 @@ function getErrorProperties(e: ErrorWithDiff) {
   }
 
   for (const key of Object.getOwnPropertyNames(e)) {
-    if (!skipErrorProperties.has(key)) {
-      errorObject[key] = e[key as keyof ErrorWithDiff]
-    }
     // print the original stack if it was ever changed manually by the user
     if (key === 'stack' && e[key] != null && typeof e[key] !== 'string') {
       errorObject[key] = e[key]
+    }
+    else if (key !== 'stack' && !skipErrorProperties.has(key)) {
+      errorObject[key] = e[key as keyof ErrorWithDiff]
     }
   }
 
