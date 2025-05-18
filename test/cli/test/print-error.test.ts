@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest';
-import { runInlineTests } from '../../test-utils';
+import { expect, test } from 'vitest'
+import { runInlineTests } from '../../test-utils'
 
 test('prints a custom error stack', async () => {
   const { stderr } = await runInlineTests({
@@ -23,7 +23,7 @@ test('prints a custom error stack', async () => {
 
       throw new CustomError('custom error')
     })
-    `
+    `,
   }, { globals: true })
 
   expect(stderr).toContain(`
