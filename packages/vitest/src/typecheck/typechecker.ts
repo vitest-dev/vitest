@@ -363,10 +363,14 @@ export class Typechecker {
         clearTimeout(timeout)
         if (process.platform === 'win32') {
           // on Windows, the process might be spawned but fail to start
-          // we wait for a potential error here
+          // we wait for a potential error here. if "close" event didn't trigger,
+          // we resolve the promise
           setTimeout(() => {
             resolve({ result: child })
           }, 200)
+        }
+        else {
+          resolve({ result: child })
         }
       })
 
