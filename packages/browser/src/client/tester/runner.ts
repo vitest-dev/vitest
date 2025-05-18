@@ -4,8 +4,13 @@ import type { VitestExecutor } from 'vitest/execute'
 import type { VitestBrowserClientMocker } from './mocker'
 import { globalChannel, onCancel } from '@vitest/browser/client'
 import { page, userEvent } from '@vitest/browser/context'
-import { loadDiffConfig, loadSnapshotSerializers, takeCoverageInsideWorker } from 'vitest/browser'
-import { originalPositionFor, TraceMap } from 'vitest/internal/browser'
+import {
+  loadDiffConfig,
+  loadSnapshotSerializers,
+  originalPositionFor,
+  takeCoverageInsideWorker,
+  TraceMap,
+} from 'vitest/internal/browser'
 import { NodeBenchmarkRunner, VitestTestRunner } from 'vitest/runners'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { executor, getWorkerState } from '../utils'
