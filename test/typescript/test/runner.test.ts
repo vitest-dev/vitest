@@ -135,7 +135,7 @@ describe('when the title is dynamic', () => {
   })
 })
 
-it.only('throws an error if typechecker process exists', async () => {
+it('throws an error if typechecker process exists', async () => {
   const { stderr } = await runVitest({
     root: resolve(__dirname, '../fixtures/source-error'),
     typecheck: {
