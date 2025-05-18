@@ -229,6 +229,10 @@ export function parseStacktrace(
         ? new URL(map.sourceRoot, fileUrl)
         : fileUrl
       file = new URL(source, sourceRootUrl).pathname
+      // if the file path is on windows, we need to remove the starting slash
+      if (file.match(/\/\w:\//)) {
+        file = file.slice(1)
+      }
     }
 
     if (shouldFilter(ignoreStackEntries, file)) {

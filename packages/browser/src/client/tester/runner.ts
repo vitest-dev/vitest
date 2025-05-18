@@ -168,7 +168,8 @@ export function createBrowserRunner(
             annotation.location = {
               line,
               column: column + 1,
-              file,
+              // if the file path is on windows, we need to remove the starting slash
+              file: file.match(/\/\w:\//) ? file.slice(1) : file,
             }
           }
         }
