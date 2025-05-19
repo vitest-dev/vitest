@@ -35,23 +35,26 @@ export async function runVitest(config: UserConfig, options = { throwOnError: tr
     config: 'fixtures/configs/vitest.config.ts',
     pool: 'threads',
     ...config,
-    env: {
-      COVERAGE_TEST: 'true',
-      ...config.env,
-    },
-    coverage: {
-      enabled: true,
-      reporter: [],
-      ...config.coverage,
-      provider,
-      customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
-    },
-    browser: {
-      enabled: process.env.COVERAGE_BROWSER === 'true',
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-      provider: 'playwright',
-      ...config.browser,
+    browser: config.browser,
+  }, [], 'test', {
+    test: {
+      env: {
+        COVERAGE_TEST: 'true',
+        ...config.env,
+      },
+      coverage: {
+        enabled: true,
+        reporter: [],
+        ...config.coverage,
+        provider: provider === 'v8-ast-aware' ? 'v8' : provider,
+        customProviderModule: provider === 'custom' ? 'fixtures/custom-provider' : undefined,
+      },
+      browser: {
+        enabled: process.env.COVERAGE_BROWSER === 'true',
+        headless: true,
+        instances: [{ browser: 'chromium' }],
+        provider: 'playwright',
+      },
     },
   })
 
