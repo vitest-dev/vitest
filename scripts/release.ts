@@ -16,11 +16,12 @@ try {
     tag: true,
   })
 
-  if (!result.newVersion.includes('beta')) {
-    console.log('Pushing to release branch')
-    await $`git update-ref refs/heads/release refs/heads/main`
-    await $`git push origin release`
-  }
+  // TODO: make this universal, don't rely on origin
+  // if (!result.newVersion.includes('beta')) {
+  //   console.log('Pushing to release branch')
+  //   await $`git update-ref refs/heads/release refs/heads/main`
+  //   await $`git push origin release`
+  // }
   console.log('New release is ready, waiting for conformation at https://github.com/vitest-dev/vitest/actions')
 }
 catch (err) {
