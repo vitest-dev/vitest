@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 import { resolve } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
-import { runVitestCli, useFS } from '../../test-utils'
+import { runInlineTests, runVitestCli, useFS } from '../../test-utils'
 
 async function vitest(cliOptions: UserConfig, configValue: UserConfig = {}, viteConfig: ViteUserConfig = {}, vitestOptions: VitestOptions = {}) {
   const vitest = await createVitest('test', { ...cliOptions, watch: false }, { ...viteConfig, test: configValue as any }, vitestOptions)
@@ -534,4 +534,31 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
       },
     })
   })
+})
+
+test.only('browser entries are properly escaped', async () => {
+  const { stderr, stdout } = await runInlineTests({
+    './folder/(par)/example.test.ts': `
+    import '@test/analyse'
+    test('')
+    `,
+    './vitest.config.ts': {
+      cacheDir: './.extra-cache',
+      test: {
+        globals: true,
+        browser: {
+          enabled: true,
+          provider: 'playwright',
+          headless: true,
+          instances: [{ browser: 'chromium' }],
+        },
+      },
+    },
+  })
+
+  // check both stdout and stderr just in case the logging is moved
+  expect(stderr).not.toContain('new dependencies optimized')
+  expect(stderr).not.toContain('optimized dependencies changed')
+  expect(stdout).not.toContain('new dependencies optimized')
+  expect(stdout).not.toContain('optimized dependencies changed')
 })
