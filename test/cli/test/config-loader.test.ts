@@ -13,8 +13,11 @@ test('configLoader default', async () => {
   )
   if (!isTypeStrippingSupported) {
     expect(vitest.stderr).toContain('failed to load config')
+    expect(exitCode).not.toBe(0)
   }
-  expect(exitCode).not.toBe(0)
+  else {
+    expect(exitCode).toBe(0)
+  }
 })
 
 test('configLoader runner', async () => {
