@@ -5,6 +5,7 @@ import type { ViteDevServer } from 'vite'
 import type { defineWorkspace } from 'vitest/config'
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
+import type { CliOptions } from './cli/cli-api'
 import type { ProcessPool, WorkspaceSpec } from './pool'
 import type { TestSpecification } from './spec'
 import type { ResolvedConfig, TestProjectConfiguration, UserConfig, VitestRunMode } from './types/config'
@@ -97,7 +98,7 @@ export class Vitest {
   resolvedProjects: TestProject[] = []
   /** @internal */ _browserLastPort = defaultBrowserPort
   /** @internal */ _browserSessions = new BrowserSessions()
-  /** @internal */ _options: UserConfig = {}
+  /** @internal */ _cliOptions: CliOptions = {}
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ vitenode: ViteNodeServer = undefined!
   /** @internal */ runner: ViteNodeRunner = undefined!
@@ -118,8 +119,10 @@ export class Vitest {
 
   constructor(
     public readonly mode: VitestRunMode,
+    cliOptions: UserConfig,
     options: VitestOptions = {},
   ) {
+    this._cliOptions = cliOptions
     this.logger = new Logger(this, options.stdout, options.stderr)
     this.packageInstaller = options.packageInstaller || new VitestPackageInstaller()
     this.specifications = new VitestSpecifications(this)
@@ -192,13 +195,12 @@ export class Vitest {
   }
 
   /** @deprecated internal */
-  setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig): Promise<void> {
-    return this._setServer(options, server, cliOptions)
+  setServer(options: UserConfig, server: ViteDevServer): Promise<void> {
+    return this._setServer(options, server)
   }
 
   /** @internal */
-  async _setServer(options: UserConfig, server: ViteDevServer, cliOptions: UserConfig) {
-    this._options = options
+  async _setServer(options: UserConfig, server: ViteDevServer) {
     this.watcher.unregisterWatcher()
     clearTimeout(this._rerunTimer)
     this.restartsCount += 1
@@ -274,7 +276,7 @@ export class Vitest {
     }
     catch { }
 
-    const projects = await this.resolveProjects(cliOptions)
+    const projects = await this.resolveProjects(this._cliOptions)
     this.resolvedProjects = projects
     this.projects = projects
 
@@ -287,7 +289,7 @@ export class Vitest {
       }))
     }))
 
-    if (options.browser?.enabled) {
+    if (this._cliOptions.browser?.enabled) {
       const browserProjects = this.projects.filter(p => p.config.browser.enabled)
       if (!browserProjects.length) {
         throw new Error(`Vitest received --browser flag, but no project had a browser configuration.`)
@@ -327,7 +329,7 @@ export class Vitest {
     const currentNames = new Set(this.projects.map(p => p.name))
     const projects = await resolveProjects(
       this,
-      this._options,
+      this._cliOptions,
       undefined,
       Array.isArray(config) ? config : [config],
       currentNames,
@@ -1335,7 +1337,7 @@ export class Vitest {
    * Check if the project with a given name should be included.
    */
   matchesProjectFilter(name: string): boolean {
-    const projects = this._config?.project || this._options?.project
+    const projects = this._config?.project || this._cliOptions?.project
     // no filters applied, any project can be included
     if (!projects || !projects.length) {
       return true
