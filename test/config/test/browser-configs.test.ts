@@ -536,7 +536,7 @@ describe('[e2e] workspace configs are affected by the CLI options', () => {
   })
 })
 
-test.only('browser entries are properly escaped', async () => {
+test('browser entries are properly escaped', async () => {
   const { stderr, stdout } = await runInlineTests({
     './folder/(par)/example.test.ts': `
     import '@test/analyse'
