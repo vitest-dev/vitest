@@ -95,7 +95,7 @@ bun add -D vitest @vitest/browser webdriverio
 
 ## Configuration
 
-To activate browser mode in your Vitest configuration, you can use the `--browser=name` flag or set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
+To activate browser mode in your Vitest configuration, set the `browser.enabled` field to `true` in your Vitest configuration file. Here is an example configuration using the browser field:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -327,7 +327,7 @@ When you specify a browser name in the browser option, Vitest will try to run th
 To specify a browser using the CLI, use the `--browser` flag followed by the browser name, like this:
 
 ```sh
-npx vitest --browser=chrome
+npx vitest --browser=chromium
 ```
 
 Or you can provide browser options to CLI with dot notation:
@@ -335,6 +335,10 @@ Or you can provide browser options to CLI with dot notation:
 ```sh
 npx vitest --browser.headless
 ```
+
+::: warning
+Since Vitest 3.2, if you don't have the `browser` option in your config but specify the `--browser` flag, Vitest will fail because it can't assume that config is meant for the browser and not Node.js tests.
+:::
 
 By default, Vitest will automatically open the browser UI for development. Your tests will run inside an iframe in the center. You can configure the viewport by selecting the preferred dimensions, calling `page.viewport` inside the test, or setting default values in [the config](/config/#browser-viewport).
 

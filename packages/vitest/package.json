@@ -1,7 +1,7 @@
 {
   "name": "vitest",
   "type": "module",
-  "version": "3.2.0-beta.1",
+  "version": "3.2.0-beta.2",
   "description": "Next generation testing framework powered by Vite",
   "author": "Anthony Fu <anthonyfu117@hotmail.com>",
   "license": "MIT",
@@ -58,7 +58,7 @@
       "types": "./dist/workers.d.ts",
       "import": "./dist/workers.js"
     },
-    "./browser": {
+    "./internal/browser": {
       "types": "./dist/browser.d.ts",
       "default": "./dist/browser.js"
     },
@@ -73,10 +73,6 @@
     "./environments": {
       "types": "./dist/environments.d.ts",
       "default": "./dist/environments.js"
-    },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.js"
     },
     "./config": {
       "types": "./config.d.ts",

@@ -2258,6 +2258,13 @@ By default, if Vitest finds source error, it will fail test suite.
 
 Path to custom tsconfig, relative to the project root.
 
+#### typecheck.spawnTimeout
+
+- **Type**: `number`
+- **Default**: `10_000`
+
+Minimum time in milliseconds it takes to spawn the typechecker.
+
 ### slowTestThreshold<NonProjectOption />
 
 - **Type**: `number`
