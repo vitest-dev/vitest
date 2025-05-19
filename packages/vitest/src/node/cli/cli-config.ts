@@ -706,6 +706,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         normalize: true,
       },
+      spawnTimeout: {
+        description: 'Minimum time in milliseconds it takes to spawn the typechecker',
+        argument: '<time>',
+      },
       include: null,
       exclude: null,
     },
