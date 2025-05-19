@@ -36,6 +36,7 @@
     "vite-node": "workspace:*",
     "vitest": "workspace:*",
     "vitest-environment-custom": "file:./vitest-environment-custom",
+    "vitest-package-exports": "^0.1.1",
     "vue": "catalog:",
     "zustand": "^4.5.6"
   }

@@ -1312,6 +1312,9 @@ importers:
       vitest-environment-custom:
         specifier: file:./vitest-environment-custom
         version: file:test/core/vitest-environment-custom
+      vitest-package-exports:
+        specifier: ^0.1.1
+        version: 0.1.1
       vue:
         specifier: 'catalog:'
         version: 3.5.12(typescript@5.8.3)
@@ -9074,6 +9077,9 @@ packages:
 
   vitest-environment-custom@file:test/core/vitest-environment-custom:
     resolution: {directory: test/core/vitest-environment-custom, type: directory}
+
+  vitest-package-exports@0.1.1:
+    resolution: {integrity: sha512-rXgU5noxaaMA5VJXgVPhXRzPiQ1WFmWwgo8dQFPg9j/yFM028scO0IAylFHVI8XMRevhozEt1usa6RQYQY26lg==}
 
   vitest-sonar-reporter@0.5.0:
     resolution: {integrity: sha512-6BQlx89502l/Z1NVWxN13ir0jCmC8e4/dit5YhoP6U+rX2Cs+CHt3vHnDDSrBwJTVc8QaAaC/hi9XnIH5I28AA==}
@@ -17850,6 +17856,11 @@ snapshots:
       '@types/react-dom': 18.2.14
 
   vitest-environment-custom@file:test/core/vitest-environment-custom: {}
+
+  vitest-package-exports@0.1.1:
+    dependencies:
+      find-up-simple: 1.0.1
+      pathe: 2.0.3
 
   vitest-sonar-reporter@0.5.0(vitest@packages+vitest):
     dependencies:
