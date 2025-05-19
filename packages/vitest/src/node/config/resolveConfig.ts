@@ -819,7 +819,6 @@ export function resolveConfig(
     )
   }
 
-  resolved.browser ??= {} as any
   resolved.browser.enabled ??= false
   resolved.browser.headless ??= isCI
   resolved.browser.isolate ??= true

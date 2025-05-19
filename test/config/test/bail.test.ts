@@ -37,7 +37,7 @@ if (process.platform !== 'win32') {
   )
 }
 
-for (const isolate of [true/* , false */]) {
+for (const isolate of [true, false]) {
   for (const pool of pools) {
     configs.push({
       ...pool,
