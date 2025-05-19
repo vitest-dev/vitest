@@ -1,13 +1,19 @@
 import { expect, test } from 'vitest'
 import { runVitestCli } from '../../test-utils'
 
+const [nvMajor, nvMinor] = process.versions.node.split('.').map(Number)
+const isTypeStrippingSupported
+  = (nvMajor === 23 && nvMinor >= 6) || nvMajor >= 24
+
 test('configLoader default', async () => {
   const { vitest, exitCode } = await runVitestCli(
     'run',
     '--root',
     'fixtures/config-loader',
   )
-  expect(vitest.stderr).toContain('failed to load config')
+  if (!isTypeStrippingSupported) {
+    expect(vitest.stderr).toContain('failed to load config')
+  }
   expect(exitCode).not.toBe(0)
 })
 
