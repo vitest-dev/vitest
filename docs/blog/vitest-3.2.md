@@ -29,15 +29,15 @@ Vitest 3.2 is out!
 
 _Date Day, 2025_
 
-Vitest 3.2 focuses on improvements to the Browser Mode and TypeScript support. This release also includes some new useful methods, config options and deprecates the `workspace` config in favour of `projects`.
+Vitest 3.2 focuses on improvements to Browser Mode and TypeScript support. This release also includes some new useful methods, config options and deprecates the `workspace` config in favour of `projects`.
 
 ## `workspace` is Deprecated
 
 In an effort to simplify the configuration, the team decided to deprecate the separate `vitest.workspace` file and recommend using only the `projects` option in the root config. This also simplifies how the global options are configured (because you don't need to guess how to add reporters when you have no root config).
 
-We also decided to deprecate the `workspace` name because it clashes with other tools like PNPM that provide the monorepo support via this option. Vitest doesn't run these projects with separate `CWD` and treates them more like sub-Vitests. It also gives us more space to come up with a better solution for monorepos without breaking others.
+We also decided to deprecate the `workspace` name because it clashes with other tools like PNPM that provide monorepo support via this option. Vitest doesn't run these projects with separate `CWD` and treats them more like sub-Vitests. It also gives us more space to come up with a better solution for monorepos without breaking others.
 
-Vitest 4.0 will remove this option completely. Until then, Vitest will print a warning if workspace feature is used.
+This option will be removed completely in a future major. Until then, Vitest will print a warning if workspace feature is used.
 
 ## Custom Project Name Colors
 
@@ -114,7 +114,8 @@ page.getByRole('article', { name: 'Hello World' })
 This method has access to the current locator context, if there is one (if method is called on the `page`, then context will refer to `page`), so you can chain all locator methods inside:
 
 ```ts
-import { locators, type Locator } from '@vitest/browser/context'
+import { locators } from '@vitest/browser/context'
+import type { Locator } from '@vitest/browser/context'
 
 locators.extend({
   getByCommentsCount(this: Locator, count: number) {
@@ -127,7 +128,8 @@ locators.extend({
 Having access to context also allows you to call regular methods of the locator to define a custom user event:
 
 ```ts
-import { page, locators, type Locator } from '@vitest/browser/context'
+import { locators, page } from '@vitest/browser/context'
+import type { Locator } from '@vitest/browser/context'
 
 locators.extend({
   clickAndFill(this: Locator, text: string) {
@@ -141,7 +143,7 @@ await page.getByRole('textbox').clickAndFill('Hello World')
 
 Please, refer to the [`locators.extend` API](/guide/browser/locators/#custom-locators) for more information.
 
-## Explicit Resource Managment in `vi.spyOn` and `vi.fn`
+## Explicit Resource Management in `vi.spyOn` and `vi.fn`
 
 In environments that support [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management), you can use `using` instead of `const` to automatically call `mockRestore` on any mocked function when the containing block is exited. This is especially useful for spied methods:
 
@@ -173,9 +175,11 @@ it('stop request when test times out', async ({ signal }) => {
 
 Vitest now uses `ast-v8-to-istanbul` package developed by one of the Vitest maintainers, [AriPerkkio](https://github.com/AriPerkkio). This brings v8 coverage report in line with istanbul, but has a better performance! Enable this feature by setting [`coverage.experimentalAstAwareRemapping`](/config/#experimentalastawareremapping) to `true`.
 
+We are planning to make this the default remapping mode in the next major. The old `v8-to-istanbul` will be removed completely. Feel free to join discussion at https://github.com/vitest-dev/vitest/issues/7928.
+
 ## `watchTriggerPatterns` Option
 
-When you edit a file, Vitest is smart enough to rerun only tests that import this file. Unfortunetly, Vitest static analisys respects only static and dynamic `import` statement. If you are reading a file or start a process, Vitest will ignore the change to that file.
+When you edit a file, Vitest is smart enough to rerun only tests that import this file. Unfortunetly, Vitest static analysis respects only static and dynamic `import` statement. If you are reading a file or start a process, Vitest will ignore the change to that file.
 
 With `watchTriggerPatterns` option you can configure which tests to rerun depending on the file that was changed. For example, to always rerun `mailers` tests when a template is changed, add a trigger pattern:
 
