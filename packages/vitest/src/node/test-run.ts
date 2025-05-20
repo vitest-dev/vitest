@@ -5,7 +5,7 @@ import type {
   TaskResultPack,
   TaskUpdateEvent,
   TestAnnotation,
-  TestAttachment
+  TestAttachment,
 } from '@vitest/runner'
 import type { SerializedError } from '@vitest/utils'
 import type { UserConsoleLog } from '../types/general'
