@@ -362,7 +362,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         return { enabled: browser === 'yes' }
       }
       if (typeof browser === 'string') {
-        return { enabled: true, name: browser }
+        return { name: browser }
       }
       return browser
     },
@@ -705,6 +705,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Path to a custom tsconfig file',
         argument: '<path>',
         normalize: true,
+      },
+      spawnTimeout: {
+        description: 'Minimum time in milliseconds it takes to spawn the typechecker',
+        argument: '<time>',
       },
       include: null,
       exclude: null,

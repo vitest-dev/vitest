@@ -8,7 +8,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { getSuites } from '@vitest/runner/utils'
 import { dirname, relative, resolve } from 'pathe'
 import { getOutputFile } from '../../utils/config-helpers'
-import { capturePrintError } from '../error'
+import { capturePrintError } from '../printError'
 import { IndentedLogger } from './renderers/indented-logger'
 
 interface ClassnameTemplateVariables {

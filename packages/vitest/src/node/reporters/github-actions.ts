@@ -5,7 +5,7 @@ import type { Reporter } from '../types/reporter'
 import type { TestCase } from './reported-tasks'
 import { stripVTControlCharacters } from 'node:util'
 import { getFullName, getTasks } from '@vitest/runner/utils'
-import { capturePrintError } from '../error'
+import { capturePrintError } from '../printError'
 
 export class GithubActionsReporter implements Reporter {
   ctx: Vitest = undefined!

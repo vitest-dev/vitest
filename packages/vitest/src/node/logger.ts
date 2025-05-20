@@ -8,7 +8,7 @@ import { Console } from 'node:console'
 import { toArray } from '@vitest/utils'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
-import { printError } from './error'
+import { printError } from './printError'
 import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
 import { RandomSequencer } from './sequencers/RandomSequencer'
 

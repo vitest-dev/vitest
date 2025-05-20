@@ -282,7 +282,11 @@ export function parseErrorStacktrace(
   }
 
   const stackStr = e.stack || e.stackStr || ''
-  let stackFrames = parseStacktrace(stackStr, options)
+  // if "stack" property was overwritten at runtime to be something else,
+  // ignore the value because we don't know how to process it
+  let stackFrames = typeof stackStr === 'string'
+    ? parseStacktrace(stackStr, options)
+    : []
 
   if (!stackFrames.length) {
     const e_ = e as any

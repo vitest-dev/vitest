@@ -9,7 +9,7 @@ import {
   startCoverageInsideWorker,
   startTests,
   stopCoverageInsideWorker,
-} from 'vitest/browser'
+} from 'vitest/internal/browser'
 import { executor, getBrowserState, getConfig, getWorkerState } from '../utils'
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
